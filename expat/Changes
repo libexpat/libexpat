@@ -1,7 +1,8 @@
-Release 1.95.6 Fri Jan 24 2003
+Release 1.95.6 Sat Jan 25 2003
         - Added XML_FreeContentModel().
         - Added XML_MemMalloc(), XML_MemRealloc(), XML_MemFree().
-        - Fixed a variety of bugs: see SF issues 615606, 616863, 618199.
+        - Fixed a variety of bugs: see SF issues 615606, 616863,
+          618199, 653180, 673791.
         - Enhanced the regression test suite.
         - Man page improvements: includes SF issue 632146.
 
