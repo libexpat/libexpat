@@ -809,13 +809,15 @@ XMLPARSEAPI(enum XML_Error)
 XML_GetErrorCode(XML_Parser parser);
 
 /* These functions return information about the current parse
-   location.  They may be called when XML_Parse or XML_ParseBuffer
-   return 0; in this case the location is the location of the
-   character at which the error was detected.
-
-   They may also be called from any other callback called to report
-   some parse event; in this the location is the location of the first
-   of the sequence of characters that generated the event.
+   location.  They may be called from any callback called to report
+   some parse event; in this case the location is the location of
+   the first of the sequence of characters that generated the event. 
+   
+   They may also be called after returning from a call to XML_Parse
+   or XML_ParseBuffer.  If the return value is XML_STATUS_ERROR then
+   the location is the location of the character at which the error
+   was detected; otherwise the location is the location of the last
+   parse event, as described above.
 */
 XMLPARSEAPI(int) XML_GetCurrentLineNumber(XML_Parser parser);
 XMLPARSEAPI(int) XML_GetCurrentColumnNumber(XML_Parser parser);

@@ -1393,6 +1393,7 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal)
       return XML_STATUS_ERROR;
     }
     XmlUpdatePosition(encoding, positionPtr, end, &position);
+    positionPtr = end;
     nLeftOver = s + len - end;
     if (nLeftOver) {
       if (buffer == NULL || nLeftOver > bufferLim - buffer) {
@@ -1442,8 +1443,10 @@ XML_ParseBuffer(XML_Parser parser, int len, int isFinal)
   errorCode = processor(parser, start, parseEndPtr = bufferEnd,
                         isFinal ? (const char **)NULL : &bufferPtr);
   if (errorCode == XML_ERROR_NONE) {
-    if (!isFinal)
+    if (!isFinal) {
       XmlUpdatePosition(encoding, positionPtr, bufferPtr, &position);
+      positionPtr = bufferPtr;
+    }
     return XML_STATUS_OK;
   }
   else {
