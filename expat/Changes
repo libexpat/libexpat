@@ -6,8 +6,11 @@ Release 1.95.7 XXX date not determined
           to annotate prototypes and definitions of callback
           implementations in code compiled with a calling convention
           other than the default convention for the host platform.
-        - Fixed a variety of bugs: see SF issues 676844, 679754,
-          692878, 692964, 695401, 699323, 820946.
+        - Improved ability to build without the configure-generated
+          expat_config.h header.  This is useful for applications
+          which embed Expat rather than linking in the library.
+        - Fixed a variety of bugs: see SF issues 458907, 676844,
+          679754, 692878, 692964, 695401, 699323, 699487, 820946.
         - Improved hash table lookups.
         - Added more regression tests and improved documentation.
 
