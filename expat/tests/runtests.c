@@ -497,7 +497,7 @@ UnknownEncodingHandler(void *data,const XML_Char *encoding,XML_Encoding *info)
     return 0;
 }
 
-START_TEST(test_xmldecl_unknown_encoding_internal_entity)
+START_TEST(test_unknown_encoding_internal_entity)
 {
     char *text =
         "<?xml version='1.0' encoding='unsupported-encoding'?>\n"
@@ -666,44 +666,32 @@ static Suite *
 make_basic_suite(void)
 {
     Suite *s = suite_create("basic");
-    TCase *tc_chars = tcase_create("character tests");
-    TCase *tc_attrs = tcase_create("attributes");
-    TCase *tc_xmldecl = tcase_create("XML declaration");
+    TCase *tc_basic = tcase_create("basic tests");
     TCase *tc_namespace = tcase_create("XML namespaces");
-    TCase *tc_elements = tcase_create("element events");
 
-    suite_add_tcase(s, tc_chars);
-    tcase_add_checked_fixture(tc_chars, basic_setup, basic_teardown);
-    tcase_add_test(tc_chars, test_nul_byte);
-    tcase_add_test(tc_chars, test_u0000_char);
-    tcase_add_test(tc_chars, test_bom_utf8);
-    tcase_add_test(tc_chars, test_bom_utf16_be);
-    tcase_add_test(tc_chars, test_bom_utf16_le);
-    tcase_add_test(tc_chars, test_illegal_utf8);
-    tcase_add_test(tc_chars, test_utf16);
-    tcase_add_test(tc_chars, test_latin1_umlauts);
+    suite_add_tcase(s, tc_basic);
+    tcase_add_checked_fixture(tc_basic, basic_setup, basic_teardown);
+    tcase_add_test(tc_basic, test_nul_byte);
+    tcase_add_test(tc_basic, test_u0000_char);
+    tcase_add_test(tc_basic, test_bom_utf8);
+    tcase_add_test(tc_basic, test_bom_utf16_be);
+    tcase_add_test(tc_basic, test_bom_utf16_le);
+    tcase_add_test(tc_basic, test_illegal_utf8);
+    tcase_add_test(tc_basic, test_utf16);
+    tcase_add_test(tc_basic, test_latin1_umlauts);
     /* Regression test for SF bug #491986. */
-    tcase_add_test(tc_chars, test_danish_latin1);
+    tcase_add_test(tc_basic, test_danish_latin1);
     /* Regression test for SF bug #514281. */
-    tcase_add_test(tc_chars, test_french_charref_hexidecimal);
-    tcase_add_test(tc_chars, test_french_charref_decimal);
-    tcase_add_test(tc_chars, test_french_latin1);
-    tcase_add_test(tc_chars, test_french_utf8);
-    tcase_add_test(tc_chars, test_line_count);
-    tcase_add_test(tc_chars, test_really_long_lines);
-
-    suite_add_tcase(s, tc_elements);
-    tcase_add_checked_fixture(tc_elements, basic_setup, basic_teardown);
-    tcase_add_test(tc_elements, test_end_element_events);
-
-    suite_add_tcase(s, tc_attrs);
-    tcase_add_checked_fixture(tc_attrs, basic_setup, basic_teardown);
-    tcase_add_test(tc_attrs, test_attr_whitespace_normalization);
-
-    suite_add_tcase(s, tc_xmldecl);
-    tcase_add_checked_fixture(tc_xmldecl, basic_setup, basic_teardown);
-    tcase_add_test(tc_xmldecl, test_xmldecl_misplaced);
-    tcase_add_test(tc_xmldecl, test_xmldecl_unknown_encoding_internal_entity);
+    tcase_add_test(tc_basic, test_french_charref_hexidecimal);
+    tcase_add_test(tc_basic, test_french_charref_decimal);
+    tcase_add_test(tc_basic, test_french_latin1);
+    tcase_add_test(tc_basic, test_french_utf8);
+    tcase_add_test(tc_basic, test_line_count);
+    tcase_add_test(tc_basic, test_really_long_lines);
+    tcase_add_test(tc_basic, test_end_element_events);
+    tcase_add_test(tc_basic, test_attr_whitespace_normalization);
+    tcase_add_test(tc_basic, test_xmldecl_misplaced);
+    tcase_add_test(tc_basic, test_unknown_encoding_internal_entity);
 
     suite_add_tcase(s, tc_namespace);
     tcase_add_checked_fixture(tc_namespace,
