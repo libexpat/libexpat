@@ -130,21 +130,21 @@ typedef struct {
   void (*free_fcn)(void *ptr);
 } XML_Memory_Handling_Suite;
 
-/* Constructs a new parser; encoding is the encoding specified by the external
-protocol or null if there is none specified. */
+/* Constructs a new parser; encoding is the encoding specified by the
+external protocol or null if there is none specified. */
 
 XML_Parser XMLPARSEAPI
 XML_ParserCreate(const XML_Char *encoding);
 
-/* Constructs a new parser and namespace processor.  Element type names
-and attribute names that belong to a namespace will be expanded;
+/* Constructs a new parser and namespace processor.  Element type
+names and attribute names that belong to a namespace will be expanded;
 unprefixed attribute names are never expanded; unprefixed element type
 names are expanded only if there is a default namespace. The expanded
-name is the concatenation of the namespace URI, the namespace separator character,
-and the local part of the name.  If the namespace separator is '\0' then
-the namespace URI and the local part will be concatenated without any
-separator.  When a namespace is not declared, the name and prefix will be
-passed through without expansion. */
+name is the concatenation of the namespace URI, the namespace
+separator character, and the local part of the name.  If the namespace
+separator is '\0' then the namespace URI and the local part will be
+concatenated without any separator.  When a namespace is not declared,
+the name and prefix will be passed through without expansion. */
 
 XML_Parser XMLPARSEAPI
 XML_ParserCreateNS(const XML_Char *encoding, XML_Char namespaceSeparator);
@@ -305,23 +305,24 @@ The application can parse it immediately or later using
 XML_ExternalEntityParserCreate.
 The parser argument is the parser parsing the entity containing the reference;
 it can be passed as the parser argument to XML_ExternalEntityParserCreate.
-The systemId argument is the system identifier as specified in the entity declaration;
-it will not be null.
+The systemId argument is the system identifier as specified in the entity
+declaration; it will not be null.
 The base argument is the system identifier that should be used as the base for
 resolving systemId if systemId was relative; this is set by XML_SetBase;
 it may be null.
-The publicId argument is the public identifier as specified in the entity declaration,
-or null if none was specified; the whitespace in the public identifier
-will have been normalized as required by the XML spec.
+The publicId argument is the public identifier as specified in the entity
+declaration, or null if none was specified; the whitespace in the public
+identifier will have been normalized as required by the XML spec.
 The context argument specifies the parsing context in the format
 expected by the context argument to
 XML_ExternalEntityParserCreate; context is valid only until the handler
 returns, so if the referenced entity is to be parsed later, it must be copied.
 The handler should return 0 if processing should not continue because of
 a fatal error in the handling of the external entity.
-In this case the calling parser will return an XML_ERROR_EXTERNAL_ENTITY_HANDLING
-error.
-Note that unlike other handlers the first argument is the parser, not userData. */
+In this case the calling parser will return an
+XML_ERROR_EXTERNAL_ENTITY_HANDLING error.
+Note that unlike other handlers the first argument is the parser, not
+userData. */
 
 typedef int (*XML_ExternalEntityRefHandler)(XML_Parser parser,
 					    const XML_Char *context,
@@ -334,7 +335,8 @@ to provide information to the parser about encodings that are unknown
 to the parser.
 The map[b] member gives information about byte sequences
 whose first byte is b.
-If map[b] is c where c is >= 0, then b by itself encodes the Unicode scalar value c.
+If map[b] is c where c is >= 0, then b by itself encodes the Unicode scalar
+value c.
 If map[b] is -1, then the byte sequence is malformed.
 If map[b] is -n, where n >= 2, then b is the first byte of an n-byte
 sequence that encodes a single Unicode scalar value.
@@ -427,15 +429,17 @@ void XMLPARSEAPI
 XML_SetEndCdataSectionHandler(XML_Parser parser,
                               XML_EndCdataSectionHandler end);
 
-/* This sets the default handler and also inhibits expansion of internal entities.
-The entity reference will be passed to the default handler. */
+/* This sets the default handler and also inhibits expansion of
+internal entities.  The entity reference will be passed to the default
+handler. */
 
 void XMLPARSEAPI
 XML_SetDefaultHandler(XML_Parser parser,
 		      XML_DefaultHandler handler);
 
-/* This sets the default handler but does not inhibit expansion of internal entities.
-The entity reference will not be passed to the default handler. */
+/* This sets the default handler but does not inhibit expansion of
+internal entities.  The entity reference will not be passed to the
+default handler. */
 
 void XMLPARSEAPI
 XML_SetDefaultHandlerExpand(XML_Parser parser,
@@ -497,7 +501,8 @@ XML_SetUnknownEncodingHandler(XML_Parser parser,
 /* This can be called within a handler for a start element, end element,
 processing instruction or character data.  It causes the corresponding
 markup to be passed to the default handler. */
-void  XML_DefaultCurrent(XML_Parser parser);
+void XMLPARSEAPI
+XML_DefaultCurrent(XML_Parser parser);
 
 /* If do_nst is non-zero, and namespace processing is in effect, and
    a name has a prefix (i.e. an explicit namespace qualifier) then
@@ -534,10 +539,10 @@ The userData will still be accessible using XML_GetUserData. */
 void XMLPARSEAPI 
 XML_UseParserAsHandlerArg(XML_Parser parser);
 
-/* Sets the base to be used for resolving relative URIs in system identifiers in
-declarations.  Resolving relative identifiers is left to the application:
-this value will be passed through as the base argument to the
-XML_ExternalEntityRefHandler, XML_NotationDeclHandler
+/* Sets the base to be used for resolving relative URIs in system
+identifiers in declarations.  Resolving relative identifiers is left
+to the application: this value will be passed through as the base
+argument to the XML_ExternalEntityRefHandler, XML_NotationDeclHandler
 and XML_UnparsedEntityDeclHandler. The base argument will be copied.
 Returns zero if out of memory, non-zero otherwise. */
 
@@ -576,19 +581,21 @@ XML_GetBuffer(XML_Parser parser, int len);
 int XMLPARSEAPI
 XML_ParseBuffer(XML_Parser parser, int len, int isFinal);
 
-/* Creates an XML_Parser object that can parse an external general entity;
-context is a '\0'-terminated string specifying the parse context;
-encoding is a '\0'-terminated string giving the name of the externally specified encoding,
-or null if there is no externally specified encoding.
-The context string consists of a sequence of tokens separated by formfeeds (\f);
-a token consisting of a name specifies that the general entity of the name
-is open; a token of the form prefix=uri specifies the namespace for a particular
-prefix; a token of the form =uri specifies the default namespace.
-This can be called at any point after the first call to an ExternalEntityRefHandler
-so longer as the parser has not yet been freed.
-The new parser is completely independent and may safely be used in a separate thread.
-The handlers and userData are initialized from the parser argument.
-Returns 0 if out of memory.  Otherwise returns a new XML_Parser object. */
+/* Creates an XML_Parser object that can parse an external general
+entity; context is a '\0'-terminated string specifying the parse
+context; encoding is a '\0'-terminated string giving the name of the
+externally specified encoding, or null if there is no externally
+specified encoding.  The context string consists of a sequence of
+tokens separated by formfeeds (\f); a token consisting of a name
+specifies that the general entity of the name is open; a token of the
+form prefix=uri specifies the namespace for a particular prefix; a
+token of the form =uri specifies the default namespace.  This can be
+called at any point after the first call to an
+ExternalEntityRefHandler so longer as the parser has not yet been
+freed.  The new parser is completely independent and may safely be
+used in a separate thread.  The handlers and userData are initialized
+from the parser argument.  Returns 0 if out of memory.  Otherwise
+returns a new XML_Parser object. */
 XML_Parser XMLPARSEAPI
 XML_ExternalEntityParserCreate(XML_Parser parser,
 			       const XML_Char *context,
@@ -678,7 +685,8 @@ XML_GetCurrentByteCount(XML_Parser parser);
    the integer pointed to by offset to the offset within this buffer
    of the current parse position, and sets the integer pointed to by size
    to the size of this buffer (the number of input bytes). Otherwise
-   returns a null pointer. Also returns a null pointer if a parse isn't active.
+   returns a null pointer. Also returns a null pointer if a parse isn't
+   active.
 
    NOTE: The character pointer returned should not be used outside
    the handler that makes the call. */
