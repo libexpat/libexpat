@@ -126,10 +126,6 @@ maintainer-clean: distclean
 	rm -rf $(DISTDIR)
 
 distdir: MANIFEST
-	if head -3 README | grep -q "Release $(VERSION)"; then \
-	  sed -e "1,3s/Release .*/Release $(VERSION)/" README > README.tmp; \
-	  mv -f README.tmp README; \
-	fi; \
 	test -d $(DISTDIR) && rm -rf $(DISTDIR); \
 	mkdir $(DISTDIR); \
 	flist=`sed -e "s/[ 	]:.*$$//" MANIFEST`; for file in $$flist; do \

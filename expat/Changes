@@ -1,3 +1,5 @@
+Release 1.95.1 Sun Oct 22 15:11:36 EDT 2000
+	- Changes to get expat to build under Microsoft compiler
 	- Removed all aborts and instead return an UNEXPECTED_STATE error.
 	- Fixed a bug where a stray '%' in an entity value would cause an
 	  abort.

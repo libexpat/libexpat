@@ -21,6 +21,7 @@ examples/outline.c
 lib/Makefile.in
 lib/ascii.h
 lib/asciitab.h
+lib/expat.dsp
 lib/expat.h
 lib/iasciitab.h
 lib/latin1tab.h
@@ -34,6 +35,7 @@ lib/xmltok.h
 lib/xmltok_impl.c
 lib/xmltok_impl.h
 lib/xmltok_ns.c
+lib/winconfig.h
 xmlwf/Makefile.in
 xmlwf/codepage.c
 xmlwf/codepage.h

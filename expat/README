@@ -1,5 +1,5 @@
 
-			Expat, Release 1.95.0
+			Expat, Release 1.95.1
 
 This is expat, the C library for parsing XML, written by James Clark. Expat
 is a stream oriented XML parser. This means that you register handlers with
@@ -36,6 +36,13 @@ After running the configure script, the "make" command will build things and
 "make install" will install things into their proper location. Note that
 you need to have write permission into the directories into which things
 will be installed.
+
+Alternatively, on Win32 systems with Microsoft's Developer's Studio installed,
+you can simply double-click on lib/expat.dsp from Windows Explorer and build
+and install in the usual way from with DevStudio.
+
+As a third alternative you may choose to download expat_win32bin which has
+a pre-compiled dll in it.
 
 A reference manual is available in the doc/reference.html in this
 distribution.
