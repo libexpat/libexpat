@@ -1106,11 +1106,14 @@ doContent(XML_Parser parser,
     case XML_TOK_DATA_CHARS:
       if (characterDataHandler) {
 	if (MUST_CONVERT(enc, s)) {
-	  do {
+	  for (;;) {
 	    ICHAR *dataPtr = (ICHAR *)dataBuf;
 	    XmlConvert(enc, &s, next, &dataPtr, (ICHAR *)dataBufEnd);
 	    characterDataHandler(handlerArg, dataBuf, dataPtr - (ICHAR *)dataBuf);
-	  } while (s != next);
+	    if (s == next)
+	      break;
+	    *eventPP = s;
+	  }
 	}
 	else
 	  characterDataHandler(handlerArg,
@@ -1279,11 +1282,14 @@ enum XML_Error doCdataSection(XML_Parser parser,
     case XML_TOK_DATA_CHARS:
       if (characterDataHandler) {
 	if (MUST_CONVERT(enc, s)) {
-	  do {
+	  for (;;) {
   	    ICHAR *dataPtr = (ICHAR *)dataBuf;
 	    XmlConvert(enc, &s, next, &dataPtr, (ICHAR *)dataBufEnd);
 	    characterDataHandler(handlerArg, dataBuf, dataPtr - (ICHAR *)dataBuf);
-	  } while (s != next);
+	    if (s == next)
+	      break;
+	    *eventPP = s;
+	  }
 	}
 	else
 	  characterDataHandler(handlerArg,
@@ -1729,6 +1735,7 @@ prologProcessor(XML_Parser parser,
       case XML_TOK_XML_DECL:
 	break;
       default:
+	eventPtr = s;
 	reportDefault(parser, encoding, s, next);
       }
     }
@@ -2058,9 +2065,15 @@ static void
 reportDefault(XML_Parser parser, const ENCODING *enc, const char *s, const char *end)
 {
   if (MUST_CONVERT(enc, s)) {
-    ICHAR *dataPtr = (ICHAR *)dataBuf;
-    XmlConvert(enc, &s, end, &dataPtr, (ICHAR *)dataBufEnd);
-    defaultHandler(handlerArg, dataBuf, dataPtr - (ICHAR *)dataBuf);
+    for (;;) {
+      ICHAR *dataPtr = (ICHAR *)dataBuf;
+      XmlConvert(enc, &s, end, &dataPtr, (ICHAR *)dataBufEnd);
+      defaultHandler(handlerArg, dataBuf, dataPtr - (ICHAR *)dataBuf);
+      if (s == end)
+	break;
+      if (enc == encoding)
+	eventPtr = s;
+    }
   }
   else
     defaultHandler(handlerArg, (XML_Char *)s, (XML_Char *)end - (XML_Char *)s);
