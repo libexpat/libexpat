@@ -72,6 +72,9 @@ interface.</p>
       <li><a href="#XML_Parse">XML_Parse</a></li>
       <li><a href="#XML_ParseBuffer">XML_ParseBuffer</a></li>
       <li><a href="#XML_GetBuffer">XML_GetBuffer</a></li>
+      <li><a href="#XML_StopParser">XML_StopParser</a></li>
+      <li><a href="#XML_ResumeParser">XML_ResumeParser</a></li>
+      <li><a href="#XML_GetParsingStatus">XML_GetParsingStatus</a></li>
     </ul>
     </li>
     <li><a href="#setting">Handler Setting Functions</a>
@@ -728,6 +731,149 @@ arguments:</p>
 <p>In order to read an external DTD, you also have to set an external
 entity reference handler as described above.</p>
 
+<h3 id="stop-resume">Temporarily Stopping Parsing</h3>
+
+<p>Expat 1.95.8 introduces a new feature: its now possible to stop
+parsing temporarily from within a handler function, even if more data
+has already been passed into the parser.  Applications for this
+include</p>
+
+<ul>
+  <li>Supporting the <a href= "http://www.w3.org/TR/xinclude/"
+  >XInclude</a> specification.</li>
+
+  <li>Delaying further processing until additional information is
+  available from some other source.</li>
+
+  <li>Adjusting processor load as task priorities shift within an
+  application.</li>
+
+  <li>Stopping parsing completely (simply free or reset the parser
+  instead of resuming in the outer parsing loop).  This can be useful
+  if a application-domain error is found in the XML being parsed or if
+  the result of the parse is determined not to be useful after
+  all.</li>
+</ul>
+
+<p>To take advantage of this feature, the main parsing loop of an
+application needs to support this specifically.  It cannot be
+supported with a parsing loop compatible with Expat 1.95.7 or
+earlier (though existing loops will continue to work without
+supporting the stop/resume feature).</p>
+
+<p>An application that uses this feature for a single parser will have
+the rough structure (in pseudo-code):</p>
+
+<pre class="pseudocode">
+fd = open_input()
+p = create_parser()
+
+if parse_xml(p, fd) {
+  /* suspended */
+
+  int suspended = 1;
+
+  while (suspended) {
+    do_something_else()
+    if ready_to_resume() {
+      suspended = continue_parsing(p, fd);
+    }
+  }
+}
+</pre>
+
+<p>An application that may resume any of several parsers based on
+input (either from the XML being parsed or some other source) will
+certainly have more interesting control structures.</p>
+
+<p>This C function could be used for the <code>parse_xml</code>
+function mentioned in the pseudo-code above:</p>
+
+<pre class="eg">
+#define BUFF_SIZE 10240
+
+/* Parse a document from the open file descriptor 'fd' until the parse
+   is complete (the document has been completely parsed, or there's
+   been an error), or the parse is stopped.  Return non-zero when
+   the parse is merely suspended.
+*/
+int
+parse_xml(XML_Parser p, int fd)
+{
+  for (;;) {
+    int last_chunk;
+    int bytes_read;
+    enum XML_Status status;
+
+    void *buff = XML_GetBuffer(p, BUFF_SIZE);
+    if (buff == NULL) {
+      /* handle error... */
+      return 0;
+    }
+    bytes_read = read(fd, buff, BUFF_SIZE);
+    if (bytes_read &lt; 0) {
+      /* handle error... */
+      return 0;
+    }
+    status = XML_ParseBuffer(p, bytes_read, bytes_read == 0);
+    switch (status) {
+      case XML_STATUS_ERROR:
+        /* handle error... */
+        return 0;
+      case XML_STATUS_SUSPENDED:
+        return 1;
+    }
+    if (bytes_read == 0)
+      return 0;
+  }
+}
+</pre>
+
+<p>The corresponding <code>continue_parsing</code> function is
+somewhat simpler, since it only need deal with the return code from
+<code><a href= "#XML_ResumeParser">XML_ResumeParser</a></code>; it can
+delegate the input handling to the <code>parse_xml</code>
+function:</p>
+
+<pre class="eg">
+/* Continue parsing a document which had been suspended.  The 'p' and
+   'fd' arguments are the same as passed to parse_xml().  Return
+   non-zero when the parse is suspended.
+*/
+int
+continue_parsing(XML_Parser p, int fd)
+{
+  enum XML_Status status = XML_ResumeParser(p);
+  switch (status) {
+    case XML_STATUS_ERROR:
+      /* handle error... */
+      return 0;
+    case XML_ERROR_NOT_SUSPENDED:
+      /* handle error... */
+      return 0;.
+    case XML_STATUS_SUSPENDED:
+      return 1;
+  }
+  return parse_xml(p, fd);
+}
+</pre>
+
+<p>Now that we've seen what a mess the top-level parsing loop can
+become, what have we gained?  Very simply, we can now use the <code><a
+href= "#XML_StopParser" >XML_StopParser</a></code> function to stop
+parsing, without having to go to great lengths to avoid additional
+processing that we're expecting to ignore.  As a bonus, we get to stop
+parsing <em>temporarily</em>, and come back to it when we're
+ready.</p>
+
+<p>To stop parsing from a handler function, use the <code><a href=
+"#XML_StopParser" >XML_StopParser</a></code> function.  This function
+takes two arguments; the parser being stopped and a flag indicating
+whether the parse can be resumed in the future.</p>
+
+<!-- XXX really need more here -->
+
+
 <hr />
 <!-- ================================================================ -->
 
@@ -915,6 +1061,125 @@ for (;;) {
 }
 </pre>
 </div>
+
+<pre class="fcndec" id="XML_StopParser">
+enum XML_Status XMLCALL
+XML_StopParser(XML_Parser p,
+               XML_Bool resumable);
+</pre>
+<div class="fcndef">
+
+<p>Stops parsing, causing <code><a href= "#XML_Parse"
+>XML_Parse</a></code> or <code><a href= "#XML_ParseBuffer"
+>XML_ParseBuffer</a></code> to return.  Must be called from within a
+call-back handler, except when aborting (when <code>resumable</code>
+is <code>XML_FALSE</code>) an already suspended parser.  Some
+call-backs may still follow because they would otherwise get
+lost, including
+<ul>
+  <li> the end element handler for empty elements when stopped in the
+       start element handler,</li>
+  <li> end namespace declaration handler when stopped in the end
+       element handler,</li>
+</ul>
+and possibly others.</p>
+
+<p>This can be called from most handlers, including DTD related
+call-backs, except when parsing an external parameter entity and
+<code>resumable</code> is <code>XML_TRUE</code>.  Returns
+<code>XML_STATUS_OK</code> when successful,
+<code>XML_STATUS_ERROR</code> otherwise.  The possible error codes
+are:</p>
+<dl>
+  <dt><code>XML_ERROR_SUSPENDED</code></dt>
+  <dd>when suspending an already suspended parser.</dd>
+  <dt><code>XML_ERROR_FINISHED</code></dt>
+  <dd>when the parser has already finished.</dd>
+  <dt><code>XML_ERROR_SUSPEND_PE</code></dt>
+  <dd>when suspending while parsing an external PE.</dd>
+</dl>
+
+<p>Since the stop/resume feature requires application support in the
+outer parsing loop, it is an error to call this function for a parser
+not being handled appropriately; see <a href= "#stop-resume"
+>Temporarily Stopping Parsing</a> for more information.</p>
+
+<p>When <code>resumable</code> is <code>XML_TRUE</code> then parsing
+is <em>suspended</em>, that is, <code><a href= "#XML_Parse"
+>XML_Parse</a></code> and <code><a href= "#XML_ParseBuffer"
+>XML_ParseBuffer</a></code> return <code>XML_STATUS_SUSPENDED</code>.
+Otherwise, parsing is <em>aborted</em>, that is, <code><a href=
+"#XML_Parse" >XML_Parse</a></code> and <code><a href=
+"#XML_ParseBuffer" >XML_ParseBuffer</a></code> return
+<code>XML_STATUS_ERROR</code> with error code
+<code>XML_ERROR_ABORTED</code>.</p>
+
+<p><strong>Note:</strong>
+This will be applied to the current parser instance only, that is, if
+there is a parent parser then it will continue parsing when the
+external entity reference handler returns.  It is up to the
+implementation of that handler to call <code><a href=
+"#XML_StopParser" >XML_StopParser</a></code> on the parent parser
+(recursively), if one wants to stop parsing altogether.</p>
+
+<p>When suspended, parsing can be resumed by calling <code><a href=
+"#XML_ResumeParser" >XML_ResumeParser</a></code>.</p>
+
+<p>New in Expat 1.95.8.</p>
+</div>
+
+<pre class="fcndec" id="XML_ResumeParser">
+enum XML_Status XMLCALL
+XML_ResumeParser(XML_Parser p);
+</pre>
+<div class="fcndef">
+<p>Resumes parsing after it has been suspended with <code><a href=
+"#XML_StopParser" >XML_StopParser</a></code>.  Must not be called from
+within a handler call-back.  Returns same status codes as <code><a
+href= "#XML_Parse">XML_Parse</a></code> or <code><a href=
+"#XML_ParseBuffer" >XML_ParseBuffer</a></code>.  An additional error
+code, <code>XML_ERROR_NOT_SUSPENDED</code>, will be returned if the
+parser was not currently suspended.</p>
+
+<p><strong>Note:</strong>
+This must be called on the most deeply nested child parser instance
+first, and on its parent parser only after the child parser has
+finished, to be applied recursively until the document entity's parser
+is restarted.  That is, the parent parser will not resume by itself
+and it is up to the application to call <code><a href=
+"#XML_ResumeParser" >XML_ResumeParser</a></code> on it at the
+appropriate moment.</p>
+
+<p>New in Expat 1.95.8.</p>
+</div>
+
+<pre class="fcndec" id="XML_GetParsingStatus">
+void XMLCALL
+XML_GetParsingStatus(XML_Parser p,
+                     XML_ParsingStatus *status);
+</pre>
+<pre class="signature">
+enum XML_Parsing {
+  XML_INITIALIZED,
+  XML_PARSING,
+  XML_FINISHED,
+  XML_SUSPENDED
+};
+
+typedef struct {
+  enum XML_Parsing parsing;
+  XML_Bool finalBuffer;
+} XML_ParsingStatus;
+</pre>
+<div class="fcndef">
+<p>Returns status of parser with respect to being initialized,
+parsing, finished, or suspended, and whether the final buffer is being
+processed.  The <code>status</code> parameter <em>must not</em> be
+NULL.</p>
+
+<p>New in Expat 1.95.8.</p>
+</div>
+
 
 <h3><a name="setting">Handler Setting</a></h3>
 
