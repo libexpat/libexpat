@@ -439,11 +439,29 @@ XML_Parser XML_ParserCreate(const XML_Char *encodingName)
 
 XML_Parser XML_ParserCreateNS(const XML_Char *encodingName, XML_Char nsSep)
 {
+  static
+  const XML_Char implicitContext[] = {
+    XML_T('x'), XML_T('m'), XML_T('l'), XML_T('='),
+    XML_T('h'), XML_T('t'), XML_T('t'), XML_T('p'), XML_T(':'),
+    XML_T('/'), XML_T('/'), XML_T('w'), XML_T('w'), XML_T('w'),
+    XML_T('.'), XML_T('w'), XML_T('3'),
+    XML_T('.'), XML_T('o'), XML_T('r'), XML_T('g'),
+    XML_T('/'), XML_T('X'), XML_T('M'), XML_T('L'),
+    XML_T('/'), XML_T('1'), XML_T('9'), XML_T('9'), XML_T('8'),
+    XML_T('/'), XML_T('n'), XML_T('a'), XML_T('m'), XML_T('e'),
+    XML_T('s'), XML_T('p'), XML_T('a'), XML_T('c'), XML_T('e'),
+    XML_T('\0')
+  };
+
   XML_Parser parser = XML_ParserCreate(encodingName);
   if (parser) {
     XmlInitEncodingNS(&initEncoding, &encoding, 0);
     ns = 1;
     namespaceSeparator = nsSep;
+  }
+  if (!setContext(parser, implicitContext)) {
+    XML_ParserFree(parser);
+    return 0;
   }
   return parser;
 }
