@@ -25,6 +25,7 @@ lib/ascii.h
 lib/asciitab.h
 lib/expat.h
 lib/iasciitab.h
+lib/internal.h
 lib/latin1tab.h
 lib/nametab.h
 lib/utf8tab.h
