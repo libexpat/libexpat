@@ -4,7 +4,7 @@ See the file COPYING for copying permission.
 */
 
 static char RCSId[]
-  = "$Header: /cvsroot/expat/expat/lib/xmlparse.c,v 1.15 2001/07/25 03:05:22 fdrake Exp $";
+  = "$Header: /cvsroot/expat/expat/lib/xmlparse.c,v 1.16 2001/07/25 03:29:56 fdrake Exp $";
 
 #ifdef COMPILED_FROM_DSP
 #  include "winconfig.h"
@@ -608,7 +608,6 @@ XML_ParserCreate_MM(const XML_Char *encodingName,
   notStandaloneHandler = 0;
   externalEntityRefHandler = 0;
   externalEntityRefHandlerArg = parser;
-  internalEntityRefHandler = 0;
   unknownEncodingHandler = 0;
   elementDeclHandler = 0;
   attlistDeclHandler = 0;
