@@ -59,7 +59,7 @@ EXPORTS
 ; added with version 1.95.3
   _XML_ParserReset @55
   _XML_SetSkippedEntityHandler @56
-; added with version 1.95.4
+; added with version 1.95.5
   _XML_GetFeatureList @57
   _XML_UseForeignDTD @58
 ; added with version 1.95.6
