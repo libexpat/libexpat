@@ -23,7 +23,7 @@ Contributor(s):
 #include "nametab.h"
 
 #define VTABLE1 \
-  { PREFIX(prologTok), PREFIX(contentTok) }, \
+  { PREFIX(prologTok), PREFIX(contentTok), PREFIX(cdataSectionTok) }, \
   { PREFIX(attributeValueTok), PREFIX(entityValueTok) }, \
   PREFIX(sameName), \
   PREFIX(nameMatchesAscii), \

@@ -103,12 +103,15 @@ typedef enum XML_Error Processor(XML_Parser parser,
 
 static Processor prologProcessor;
 static Processor contentProcessor;
+static Processor cdataSectionProcessor;
 static Processor epilogProcessor;
 static Processor errorProcessor;
 
 static enum XML_Error
 doContent(XML_Parser parser, int startTagLevel, const ENCODING *enc,
 	  const char *start, const char *end, const char **endPtr);
+static enum XML_Error
+doCdataSection(XML_Parser parser, const char **startPtr, const char *end, const char **nextPtr);
 static enum XML_Error storeAtts(XML_Parser parser, const ENCODING *, const char *tagName, const char *s);
 static int
 defineAttribute(ELEMENT_TYPE *type, ATTRIBUTE_ID *, int isCdata, const char *dfltValue);
@@ -473,7 +476,8 @@ const char *XML_ErrorString(int code)
     "reference to external entity in attribute",
     "xml processing instruction not at start of external entity",
     "unknown encoding",
-    "encoding specified in XML declaration is incorrect"
+    "encoding specified in XML declaration is incorrect",
+    "unclosed CDATA section",
   };
   if (code > 0 && code < sizeof(message)/sizeof(message[0]))
     return message[code];
@@ -744,15 +748,13 @@ doContent(XML_Parser parser,
 	characterDataHandler(userData, &c, 1);
       }
       break;
-    case XML_TOK_CDATA_SECTION:
-      if (characterDataHandler) {
-	const char *lim = next - enc->minBytesPerChar * 3;
-	s += enc->minBytesPerChar * 9;
-	do {
-	  char *dataPtr = dataBuf;
-	  XmlConvert(enc, XML_UTF8_ENCODING, &s, lim, &dataPtr, dataBufEnd);
-	  characterDataHandler(userData, dataBuf, dataPtr - dataBuf);
-	} while (s != lim);
+    case XML_TOK_CDATA_SECT_OPEN:
+      {
+	enum XML_Error result = doCdataSection(parser, &next, end, nextPtr);
+	if (!next) {
+	  processor = cdataSectionProcessor;
+	  return result;
+	}
       }
       break;
     case XML_TOK_TRAILING_RSQB:
@@ -882,6 +884,76 @@ static enum XML_Error storeAtts(XML_Parser parser, const ENCODING *enc,
     ((char *)appAtts[i << 1])[-1] = 0;
   return XML_ERROR_NONE;
 }
+
+/* The idea here is to avoid using stack for each CDATA section when
+the whole file is parsed with one call. */
+
+static
+enum XML_Error cdataSectionProcessor(XML_Parser parser,
+				     const char *start,
+			    	     const char *end,
+				     const char **endPtr)
+{
+  enum XML_Error result = doCdataSection(parser, &start, end, endPtr);
+  if (start) {
+    processor = contentProcessor;
+    return contentProcessor(parser, start, end, endPtr);
+  }
+  return result;
+}
+
+/* startPtr gets set to non-null is the section is closed, and to null if
+the section is not yet closed. */
+
+static
+enum XML_Error doCdataSection(XML_Parser parser,
+			      const char **startPtr,
+			      const char *end,
+			      const char **nextPtr)
+{
+  const char *s = *startPtr;
+  *startPtr = 0;
+  for (;;) {
+    const char *next;
+    int tok = XmlCdataSectionTok(encoding, s, end, &next);
+    switch (tok) {
+    case XML_TOK_CDATA_SECT_CLOSE:
+      *startPtr = next;
+      return XML_ERROR_NONE;
+    case XML_TOK_DATA_NEWLINE:
+      if (characterDataHandler) {
+	char c = '\n';
+	characterDataHandler(userData, &c, 1);
+      }
+      break;
+    case XML_TOK_DATA_CHARS:
+      if (characterDataHandler) {
+	do {
+	  char *dataPtr = dataBuf;
+	  XmlConvert(encoding, XML_UTF8_ENCODING, &s, next, &dataPtr, dataBufEnd);
+	  characterDataHandler(userData, dataBuf, dataPtr - dataBuf);
+	} while (s != next);
+      }
+      break;
+    case XML_TOK_INVALID:
+      errorPtr = next;
+      return XML_ERROR_INVALID_TOKEN;
+    case XML_TOK_PARTIAL:
+    case XML_TOK_NONE:
+      if (nextPtr) {
+	*nextPtr = s;
+	return XML_ERROR_NONE;
+      }
+      errorPtr = s;
+      return XML_ERROR_UNCLOSED_CDATA_SECTION;
+    default:
+      abort();
+    }
+    s = next;
+  }
+  /* not reached */
+}
+
 
 static enum XML_Error
 prologProcessor(XML_Parser parser,

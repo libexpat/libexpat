@@ -293,15 +293,14 @@ int PREFIX(scanPi)(const ENCODING *enc, const char *ptr, const char *end,
   return XML_TOK_PARTIAL;
 }
 
-/* ptr points to character following "<![" */
 
 static
 int PREFIX(scanCdataSection)(const ENCODING *enc, const char *ptr, const char *end,
 			     const char **nextTokPtr)
 {
   int i;
-  /* CDATA[]]> */
-  if (end - ptr < 9 * MINBPC)
+  /* CDATA[ */
+  if (end - ptr < 6 * MINBPC)
     return XML_TOK_PARTIAL;
   for (i = 0; i < 6; i++, ptr += MINBPC) {
     if (!CHAR_MATCHES(enc, ptr, "CDATA["[i])) {
@@ -309,22 +308,86 @@ int PREFIX(scanCdataSection)(const ENCODING *enc, const char *ptr, const char *e
       return XML_TOK_INVALID;
     }
   }
-  end -= 2 * MINBPC;
-  while (ptr != end) {
-    switch (BYTE_TYPE(enc, ptr)) {
-    INVALID_CASES(ptr, nextTokPtr)
-    case BT_RSQB:
-      if (CHAR_MATCHES(enc, ptr + MINBPC, ']')
-	  && CHAR_MATCHES(enc, ptr + 2 * MINBPC, '>')) {
-	*nextTokPtr = ptr + 3 * MINBPC;
-	return XML_TOK_CDATA_SECTION;
-      }
-    /* fall through */
-    default:
-      ptr += MINBPC;
+  *nextTokPtr = ptr;
+  return XML_TOK_CDATA_SECT_OPEN;
+}
+
+static
+int PREFIX(cdataSectionTok)(const ENCODING *enc, const char *ptr, const char *end,
+			    const char **nextTokPtr)
+{
+  if (ptr == end)
+    return XML_TOK_NONE;
+#if MINBPC > 1
+  {
+    size_t n = end - ptr;
+    if (n & (MINBPC - 1)) {
+      n &= ~(MINBPC - 1);
+      if (n == 0)
+	return XML_TOK_PARTIAL;
+      end = ptr + n;
     }
   }
-  return XML_TOK_PARTIAL;
+#endif
+  switch (BYTE_TYPE(enc, ptr)) {
+  case BT_RSQB:
+    ptr += MINBPC;
+    if (ptr == end)
+      return XML_TOK_PARTIAL;
+    if (!CHAR_MATCHES(enc, ptr, ']'))
+      break;
+    ptr += MINBPC;
+    if (ptr == end)
+      return XML_TOK_PARTIAL;
+    if (!CHAR_MATCHES(enc, ptr, '>')) {
+      ptr -= MINBPC;
+      break;
+    }
+    *nextTokPtr = ptr + MINBPC;
+    return XML_TOK_CDATA_SECT_CLOSE;
+  case BT_CR:
+    ptr += MINBPC;
+    if (ptr == end)
+      return XML_TOK_PARTIAL;
+    if (BYTE_TYPE(enc, ptr) == BT_LF)
+      ptr += MINBPC;
+    *nextTokPtr = ptr;
+    return XML_TOK_DATA_NEWLINE;
+  case BT_LF:
+    *nextTokPtr = ptr + MINBPC;
+    return XML_TOK_DATA_NEWLINE;
+  INVALID_CASES(ptr, nextTokPtr)
+  default:
+    ptr += MINBPC;
+    break;
+  }
+  while (ptr != end) {
+    switch (BYTE_TYPE(enc, ptr)) {
+#define LEAD_CASE(n) \
+    case BT_LEAD ## n: \
+      if (end - ptr < n || IS_INVALID_CHAR(enc, ptr, n)) { \
+	*nextTokPtr = ptr; \
+	return XML_TOK_DATA_CHARS; \
+      } \
+      ptr += n; \
+      break;
+    LEAD_CASE(2) LEAD_CASE(3) LEAD_CASE(4)
+#undef LEAD_CASE
+    case BT_NONXML:
+    case BT_MALFORM:
+    case BT_TRAIL:
+    case BT_CR:
+    case BT_LF:
+    case BT_RSQB:
+      *nextTokPtr = ptr;
+      return XML_TOK_DATA_CHARS;
+    default:
+      ptr += MINBPC;
+      break;
+    }
+  }
+  *nextTokPtr = ptr;
+  return XML_TOK_DATA_CHARS;
 }
 
 /* ptr points to character following "</" */

@@ -41,7 +41,7 @@ extern "C" {
 #define XML_TOK_INVALID 0
 
 /* The following tokens are returned by XmlContentTok; some are also
-  returned by XmlAttributeValueTok and XmlEntityTok */
+  returned by XmlAttributeValueTok, XmlEntityTok, XmlCdataSectionTok */
 
 #define XML_TOK_START_TAG_WITH_ATTS 1
 #define XML_TOK_START_TAG_NO_ATTS 2
@@ -50,7 +50,7 @@ extern "C" {
 #define XML_TOK_END_TAG 5
 #define XML_TOK_DATA_CHARS 6
 #define XML_TOK_DATA_NEWLINE 7
-#define XML_TOK_CDATA_SECTION 8
+#define XML_TOK_CDATA_SECT_OPEN 8
 #define XML_TOK_ENTITY_REF 9
 #define XML_TOK_CHAR_REF 10     /* numeric character reference */
 
@@ -88,12 +88,16 @@ extern "C" {
 #define XML_TOK_CLOSE_PAREN_PLUS 37 /* )+ */
 #define XML_TOK_COMMA 38
 
-  /* The following tokens is returned only by XmlAttributeValueTok */
+/* The following token is returned only by XmlAttributeValueTok */
 #define XML_TOK_ATTRIBUTE_VALUE_S 39
 
-#define XML_N_STATES 2
+/* The following token is returned only by XmlCdataSectionTok */
+#define XML_TOK_CDATA_SECT_CLOSE 40
+
+#define XML_N_STATES 3
 #define XML_PROLOG_STATE 0
 #define XML_CONTENT_STATE 1
+#define XML_CDATA_SECTION_STATE 2
 
 #define XML_N_LITERAL_TYPES 2
 #define XML_ATTRIBUTE_VALUE_LITERAL 0
@@ -188,6 +192,9 @@ literals, comments and processing instructions.
 
 #define XmlContentTok(enc, ptr, end, nextTokPtr) \
    XmlTok(enc, XML_CONTENT_STATE, ptr, end, nextTokPtr)
+
+#define XmlCdataSectionTok(enc, ptr, end, nextTokPtr) \
+   XmlTok(enc, XML_CDATA_SECTION_STATE, ptr, end, nextTokPtr)
 
 /* This is used for performing a 2nd-level tokenization on
 the content of a literal that has already been returned by XmlTok. */ 
