@@ -29,6 +29,11 @@ development. </p>
 and have time to write about them. </p>
 
 <ul>
+  <li> The signature of the <code>XML_ParserReset()</code> method will
+  grow an additional argument allowing specification of what should be
+  reset.  See <a href= "" >bug report 1109116: <em>Optimize
+  implementation of XML_ParserReset</em></a> for more information. </li>
+
   <li> All structural event callback functions will return an
   <code>XML_Status</code> value that the parser will check.  This will
   allow an application to stop or suspend processing without having to
