@@ -1,4 +1,4 @@
-%define version 1.95.4
+%define version 1.95.5
 %define release 1
 
 Summary: Expat is an XML 1.0 parser written in C.
@@ -7,13 +7,13 @@ Version: %{version}
 Release: %{release}
 Copyright: MIT/X
 Group: Utilities/parsers
-URL: http://expat.sourceforge.net/
+URL: http://www.libexpat.org/
 Source: http://download.sourceforge.net/expat/expat-%{version}.tar.gz
 BuildRoot: /var/tmp/%{name}-buildroot
 
 %description
 Expat is an XML 1.0 parser written in C by James Clark.  It aims to be
-fully conforming. It is currently not a validating XML parser.
+fully conforming. It is not a validating XML parser.
 
 %prep
 %setup
@@ -31,13 +31,19 @@ make install prefix=$RPM_BUILD_ROOT/usr
 install -D xmlwf/xmlwf $RPM_BUILD_ROOT/usr/bin/xmlwf
 
 %files
-%doc COPYING Changes MANIFEST README doc/reference.html doc/style.css
+%doc COPYING Changes MANIFEST README doc/reference.html doc/style.css doc/valid-xhtml10.png
 /usr/bin/xmlwf
 /usr/lib
 /usr/include/expat.h
 /usr/man/man1/xmlwf.1.gz
 
 %changelog
+* Wed Sep 4 2002 Fred L. Drake, Jr. <fdrake@acm.org>
+[Release 1.95.5-1]
+- Updated for the 1.95.5 release.
+- Updated URL for Expat home page to point to www.libexpat.org.
+- Added "Valid XHTML 1.0" icon to the installed documentation.
+
 * Sat Jun 29 2002 Fred L. Drake, Jr. <fdrake@acm.org>
 [Release 1.95.4-1]
 - Updated for the 1.95.4 release.
