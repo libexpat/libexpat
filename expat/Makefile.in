@@ -57,7 +57,7 @@ clean:
 	cd examples && rm -f elements outline *.o *.lo && rm -rf .libs _libs
 	cd tests && rm -rf .libs runtests runtests.o chardata.o
 	rm -rf .libs libexpat.la
-	find . -name core | xargs rm -f
+	rm -f examples/core tests/core xmlwf/core
 
 distclean: clean
 	rm -f expat_config.h config.status config.log config.cache libtool
