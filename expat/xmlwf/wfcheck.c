@@ -261,7 +261,7 @@ checkContent(size_t level, CONTEXT *context, const ENCODING *enc,
 	  XmlGetAttributes(enc, s, n, context->atts);
 	}
 	for (i = 0; i < n; i++) {
-	  if (context->atts[i].containsRef) {
+	  if (!context->atts[i].normalized) {
 	    enum WfCheckResult result
 	      = checkAttributeValue(&context->dtd, enc,
 			  	    context->atts[i].valuePtr,
