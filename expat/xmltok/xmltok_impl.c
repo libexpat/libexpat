@@ -1338,7 +1338,8 @@ int PREFIX(getAtts)(const ENCODING *enc, const char *ptr,
       else if (open == BT_QUOT) {
         state = other;
 	if (nAtts < attsMax)
-	  atts[nAtts++].valueEnd = ptr;
+	  atts[nAtts].valueEnd = ptr;
+	nAtts++;
       }
       break;
     case BT_APOS:
@@ -1351,7 +1352,8 @@ int PREFIX(getAtts)(const ENCODING *enc, const char *ptr,
       else if (open == BT_APOS) {
         state = other;
 	if (nAtts < attsMax)
-	  atts[nAtts++].valueEnd = ptr;
+	  atts[nAtts].valueEnd = ptr;
+	nAtts++;
       }
       break;
     case BT_AMP:
