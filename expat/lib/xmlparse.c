@@ -1760,7 +1760,7 @@ XML_GetInputContext(XML_Parser parser, int *offset, int *size)
 int XMLCALL
 XML_GetCurrentLineNumber(XML_Parser parser)
 {
-  if (eventPtr) {
+  if (eventPtr && eventPtr >= positionPtr) {
     XmlUpdatePosition(encoding, positionPtr, eventPtr, &position);
     positionPtr = eventPtr;
   }
@@ -1770,7 +1770,7 @@ XML_GetCurrentLineNumber(XML_Parser parser)
 int XMLCALL
 XML_GetCurrentColumnNumber(XML_Parser parser)
 {
-  if (eventPtr) {
+  if (eventPtr && eventPtr >= positionPtr) {
     XmlUpdatePosition(encoding, positionPtr, eventPtr, &position);
     positionPtr = eventPtr;
   }
@@ -2043,8 +2043,12 @@ externalEntityInitProcessor3(XML_Parser parser,
                              const char *end,
                              const char **endPtr)
 {
+  int tok;
   const char *next = start; /* XmlContentTok doesn't always set the last arg */
-  int tok = XmlContentTok(encoding, start, end, &next);
+  eventPtr = start;
+  tok = XmlContentTok(encoding, start, end, &next);
+  eventEndPtr = next;
+
   switch (tok) {
   case XML_TOK_XML_DECL:
     {
@@ -2068,14 +2072,12 @@ externalEntityInitProcessor3(XML_Parser parser,
       *endPtr = start;
       return XML_ERROR_NONE;
     }
-    eventPtr = start;
     return XML_ERROR_UNCLOSED_TOKEN;
   case XML_TOK_PARTIAL_CHAR:
     if (!finalBuffer) {
       *endPtr = start;
       return XML_ERROR_NONE;
     }
-    eventPtr = start;
     return XML_ERROR_PARTIAL_CHAR;
   }
   processor = externalEntityContentProcessor;
@@ -3369,12 +3371,14 @@ entityValueInitProcessor(XML_Parser parser,
                          const char *end,
                          const char **nextPtr)
 {
-  const char *start = s;
-  const char *next = s;
   int tok;
+  const char *start = s;
+  const char *next = start;
+  eventPtr = start;
 
   for (;;) {  
     tok = XmlPrologTok(encoding, start, end, &next);
+    eventEndPtr = next;
     if (tok <= 0) {
       if (!finalBuffer && tok != XML_TOK_INVALID) {
         *nextPtr = s;
@@ -3424,6 +3428,7 @@ entityValueInitProcessor(XML_Parser parser,
       return XML_ERROR_NONE;
     }
     start = next;
+    eventPtr = start;
   }
 }
 
@@ -4489,7 +4494,6 @@ epilogProcessor(XML_Parser parser,
     /* report partial linebreak - it might be the last token */
     case -XML_TOK_PROLOG_S:
       if (defaultHandler) {
-        eventEndPtr = next;
         reportDefault(parser, encoding, s, next);
         if (parsing == XML_FINISHED)
           return XML_ERROR_ABORTED;
