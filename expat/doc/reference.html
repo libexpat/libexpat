@@ -1,8 +1,8 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN"
-                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+                      "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html>
 <head>
-
 <!-- Copyright 1999,2000 Clark Cooper <coopercc@netheaven.com>
      All rights reserved.
      This is free software. You may distribute or modify according to
@@ -15,15 +15,16 @@
 <body>
 <h1>Expat XML Parser</h1>
 
-<p>Expat is a library, written in C, for parsing XML documents. It's the
-underlying XML parser for the open source Mozilla project, perl's
-XML::Parser, and other open-source XML parsers.</p>
+<p>Expat is a library, written in C, for parsing XML documents. It's
+the underlying XML parser for the open source Mozilla project, Perl's
+<code>XML::Parser</code>, Python's <code>xml.parsers.expat</code>, and
+other open-source XML parsers.</p>
 
 <p>This library is the creation of James Clark, who's also given us
 groff (an nroff look-alike), Jade (an implemention of ISO's DSSSL
 stylesheet language for SGML), XP (a Java XML parser package), XT (a
 Java XSL engine).  James was also the technical lead on the XML
-Working Group at W3 that produced the XML specification.</p>
+Working Group at W3C that produced the XML specification.</p>
 
 <p>This is free software, licensed under the <a
 href="../COPYING">MIT/X Consortium license</a>. You may download it
@@ -40,7 +41,6 @@ Clark Cooper to retain copyright and to distribute it with expat.</p>
   <li><a href="#overview">Overview</a></li>
   <li><a href="#building">Building and Installing</a></li>
   <li><a href="#using">Using expat</a></li>
-  <li><a href="#examples">Some examples</a></li>
   <li><a href="#reference">Reference</a>
       <ul>
           <li><a href="#creation">Parser Creation Functions</a>
@@ -229,7 +229,7 @@ configure the Makefiles and headers for your system.</p>
 and you have permission on your system to install into /usr/local, you
 can install expat with this sequence of commands:</p>
 
-<pre>
+<pre class="eg">
    ./configure
    make
    make install
@@ -386,7 +386,7 @@ body.  If we'd decided to increment it first thing in the start
 handler, then we'd have had to decrement it last thing in the end
 handler.</p>
 
-<h3>Communicating between handlers</h3>
+<h3 id="userdata">Communicating between handlers</h3>
 
 <p>In order to be able to pass information between different handlers
 without using globals, you'll need to define a data structure to hold
@@ -560,10 +560,10 @@ entity reference handler as described above.</p>
 
 <h3><a name="creation">Parser Creation</a></h3>
 
-<div class="fcndec"><a name="XML_ParserCreate"><pre>
+<pre class="fcndec" id="XML_ParserCreate">
 XML_Parser
 XML_ParserCreate(const XML_Char *encoding)
-</pre></a></div>
+</pre>
 <div class="fcndef">
 Construct a new parser. If encoding is non-null, it specifies a
 character encoding to use for the document. This overrides the document
@@ -577,11 +577,11 @@ encoding declaration. There are four built-in encodings:
 Any other value will invoke a call to the UnknownEncodingHandler.
 </div>
 
-<div class="fcndec"><a name="XML_ParserCreateNS"><pre>
+<pre class="fcndec" id="XML_ParserCreateNS">
 XML_Parser
 XML_ParserCreateNS(const XML_Char *encoding,
                    XML_Char sep)
-</pre></a></div>
+</pre>
 <div class="fcndef">
 Constructs a new parser that has namespace processing in effect. Namespace
 expanded element names and attribute names are returned as a concatenation
@@ -589,34 +589,34 @@ of the namespace URI, <em>sep</em>, and the local part of the name. This
 means that you should pick a character for <em>sep</em> that can't be
 part of a legal URI.</div>
 
-<div class="fcndec"><a name="XML_ParserCreate_MM"><pre>
+<pre class="fcndec" id="XML_ParserCreate_MM">
 XML_Parser
 XML_ParserCreate_MM(const XML_Char *encoding,
                     const XML_Memory_Handling_Suite *ms,
 		    const XML_Char *sep)
-</pre></a></div>
-<div class="fcndef">
-<p>Construct a new parser using the suite of memory handling functions
-specified in <code>ms</code>. If <code>ms</code> is NULL, then use the
-standard set of memory management functions. If <code>sep</code> is
-non NULL, then namespace processing is enabled in the created parser
-and the character pointed at by sep is used as the separator between
-the namespace URI and the local part of the name</p>
-<pre class="eg">
+</pre>
+<pre class="signature">
 typedef struct {
   void *(*malloc_fcn)(size_t size);
   void *(*realloc_fcn)(void *ptr, size_t size);
   void (*free_fcn)(void *ptr);
 } XML_Memory_Handling_Suite;
 </pre>
+<div class="fcndef">
+<p>Construct a new parser using the suite of memory handling functions
+specified in <code>ms</code>. If <code>ms</code> is NULL, then use the
+standard set of memory management functions. If <code>sep</code> is
+non NULL, then namespace processing is enabled in the created parser
+and the character pointed at by sep is used as the separator between
+the namespace URI and the local part of the name.</p>
 </div>
 
-<div class="fcndec"><a name="XML_ExternalEntityParserCreate"><pre>
+<pre class="fcndec" id="XML_ExternalEntityParserCreate">
 XML_Parser
 XML_ExternalEntityParserCreate(XML_Parser p,
                                const XML_Char *context,
                                const XML_Char *encoding)
-</pre></a></div>
+</pre>
 <div class="fcndef">
 Construct a new <code>XML_Parser</code> object for parsing an external
 general entity. Context is the context argument passed in a call to a
@@ -624,16 +624,16 @@ ExternalEntityRefHandler. Other state information such as handlers,
 user data, namespace processing is inherited from the parser passed as
 the 1st argument. So you shouldn't need to call any of the behavior
 changing functions on this parser (unless you want it to act
-differently than the parent parser.)
+differently than the parent parser).
 </div>
 
-<div class="fcndec"><a name="XML_ParserFree"><pre>
+<pre class="fcndec" id="XML_ParserFree">
 void
 XML_ParserFree(XML_Parser p)
-</pre></a></div>
+</pre>
 <div class="fcndef">
 Free memory used by the parser. Your application is responsible for
-freeing any memory associated with <a href="#userdata">UserData</a>.
+freeing any memory associated with <a href="#userdata">user data</a>.
 </div>
 
 <h3><a name="parsing">Parsing</a></h3>
@@ -649,19 +649,19 @@ is OK to call the parsing functions from within an
 created by <code><a href= "#XML_ExternalEntityParserCreate"
 >XML_ExternalEntityParserCreate</a></code>.</p>
 
-<div class="fcndec"><a name="XML_Parse"><pre>
+<pre class="fcndec" id="XML_Parse">
 XML_Status
 XML_Parse(XML_Parser p,
           const char *s,
           int len,
           int isFinal)
-</pre></a></div>
-<div class="signature"><pre>
+</pre>
+<pre class="signature">
 enum XML_Status {
   XML_STATUS_ERROR = 0,
   XML_STATUS_OK = 1
 };
-</pre></div>
+</pre>
 <div class="fcndef">
 Parse some more of the document. The string <code>s</code> is a buffer
 containing part (or perhaps all) of the document. The number of bytes of s
@@ -676,12 +676,12 @@ If a parse error occurred, it returns <code>XML_STATUS_ERROR</code>.
 Otherwise it returns <code>XML_STATUS_OK</code> value.
 </div>
 
-<div class="fcndec"><a name="XML_ParseBuffer"><pre>
+<pre class="fcndec" id="XML_ParseBuffer">
 XML_Status
 XML_ParseBuffer(XML_Parser p,
                 int len,
                 int isFinal)
-</pre></a></div>
+</pre>
 <div class="fcndef">
 This is just like <code>XML_Parse</code>, except in this case expat
 provides the buffer.  By obtaining the buffer from expat with the
@@ -689,11 +689,11 @@ provides the buffer.  By obtaining the buffer from expat with the
 copying of the input.
 </div>
 
-<div class="fcndec"><a name="XML_GetBuffer"><pre>
+<pre class="fcndec" id="XML_GetBuffer">
 void *
 XML_GetBuffer(XML_Parser p,
               int len)
-</pre></a></div>
+</pre>
 <div class="fcndef">
 Obtain a buffer of size <code>len</code> to read a piece of the document
 into. A NULL value is returned if expat can't allocate enough memory for
@@ -724,6 +724,7 @@ for (;;) {
 </div>
 
 <h3><a name="setting">Handler Setting</a></h3>
+
 <p>Although handlers are typically set prior to parsing and left alone, an
 application may choose to set or change the handler for a parsing event
 while the parse is in progress. For instance, your application may choose
@@ -742,16 +743,16 @@ them in this form independent of the original encoding of the
 document.</p>
 
 <div class="handler">
-<div class="setter"><a name="XML_SetStartElementHandler"><pre>
+<pre class="setter" id="XML_SetStartElementHandler">
 XML_SetStartElementHandler(XML_Parser p,
                            XML_StartElementHandler start);
-</pre></a></div>
-<div class="signature"><pre>
+</pre>
+<pre class="signature">
 typedef void
 (*XML_StartElementHandler)(void *userData,
                            const XML_Char *name,
                            const XML_Char **atts);
-</pre></div>
+</pre>
 <p>Set handler for start (and empty) tags. Attributes are passed to the start
 handler as a pointer to a vector of char pointers. Each attribute seen in
 a start (or empty) tag occupies 2 consecutive places in this vector: the
@@ -762,39 +763,39 @@ by a null pointer.</p>
 </div>
 
 <div class="handler">
-<div class="setter"><a name="XML_SetEndElementHandler"><pre>
+<pre class="setter" id="XML_SetEndElementHandler">
 XML_SetEndElementHandler(XML_Parser p,
                          XML_EndElementHandler);
-</pre></a></div>
-<div class="signature"><pre>
+</pre>
+<pre class="signature">
 typedef void
 (*XML_EndElementHandler)(void *userData,
                          const XML_Char *name);
-</pre></div>
+</pre>
 <p>Set handler for end (and empty) tags. As noted above, an empty tag
 generates a call to both start and end handlers.</p>
 </div>
 
 <div class="handler">
-<div class="setter"><a name="XML_SetElementHandler"><pre>
+<pre class="setter" id="XML_SetElementHandler">
 XML_SetElementHandler(XML_Parser p,
                       XML_StartElementHandler start,
                       XML_EndElementHandler end);
-</pre></a></div>
+</pre>
 <p>Set handlers for start and end tags with one call.</p>
 </div>
 
 <div class="handler">
-<div class="setter"><a name="XML_SetCharacterDataHandler"><pre>
+<pre class="setter" id="XML_SetCharacterDataHandler">
 XML_SetCharacterDataHandler(XML_Parser p,
                             XML_CharacterDataHandler charhndl)
-</pre></a></div>
-<div class="signature"><pre>
+</pre>
+<pre class="signature">
 typedef void
 (*XML_CharacterDataHandler)(void *userData,
                             const XML_Char *s,
                             int len);
-</pre></div>
+</pre>
 <p>Set a text handler. The string your handler receives
 is <em>NOT zero terminated</em>. You have to use the length argument
 to deal with the end of the string. A single block of contiguous text
@@ -804,80 +805,80 @@ be split across calls to this handler.</p>
 </div>
 
 <div class="handler">
-<div class="setter"><a name="XML_SetProcessingInstructionHandler"><pre>
+<pre class="setter" id="XML_SetProcessingInstructionHandler">
 XML_SetProcessingInstructionHandler(XML_Parser p,
                                     XML_ProcessingInstructionHandler proc)
-</pre></a></div>
-<div class="signature"><pre>
+</pre>
+<pre class="signature">
 typedef void
 (*XML_ProcessingInstructionHandler)(void *userData,
                                     const XML_Char *target,
                                     const XML_Char *data);
 
-</pre></div>
+</pre>
 <p>Set a handler for processing instructions. The target is the first word
 in the processing instruction. The data is the rest of the characters in
 it after skipping all whitespace after the initial word.</p>
 </div>
 
 <div class="handler">
-<div class="setter"><a name="XML_SetCommentHandler"><pre>
+<pre class="setter" id="XML_SetCommentHandler">
 XML_SetCommentHandler(XML_Parser p,
                       XML_CommentHandler cmnt)
-</pre></a></div>
-<div class="signature"><pre>
+</pre>
+<pre class="signature">
 typedef void
 (*XML_CommentHandler)(void *userData,
                       const XML_Char *data);
-</pre></div>
+</pre>
 <p>Set a handler for comments. The data is all text inside the comment
 delimiters.</p>
 </div>
 
 <div class="handler">
-<div class="setter"><a name="XML_SetStartCdataSectionHandler"><pre>
+<pre class="setter" id="XML_SetStartCdataSectionHandler">
 XML_SetStartCdataSectionHandler(XML_Parser p,
                                 XML_StartCdataSectionHandler start);
-</pre></a></div>
-<div class="signature"><pre>
+</pre>
+<pre class="signature">
 typedef void
 (*XML_StartCdataSectionHandler)(void *userData);
-</pre></div>
+</pre>
 <p>Set a handler that gets called at the beginning of a CDATA section.</p>
 </div>
 
 <div class="handler">
-<div class="setter"><a name="XML_SetEndCdataSectionHandler"><pre>
+<pre class="setter" id="XML_SetEndCdataSectionHandler">
 XML_SetEndCdataSectionHandler(XML_Parser p,
                               XML_EndCdataSectionHandler end);
-</pre></a></div>
-<div class="signature"><pre>
+</pre>
+<pre class="signature">
 typedef void
 (*XML_EndCdataSectionHandler)(void *userData);
-</pre></div>
+</pre>
 <p>Set a handler that gets called at the end of a CDATA section.</p>
 </div>
 
 <div class="handler">
-<div class="setter"><a name="XML_SetCdataSectionHandler"><pre>
+<pre class="setter" id="XML_SetCdataSectionHandler">
 XML_SetCdataSectionHandler(XML_Parser p,
                            XML_StartCdataSectionHandler start,
                            XML_EndCdataSectionHandler end)
-</pre></a></div>
+</pre>
 <p>Sets both CDATA section handlers with one call.</p>
 </div>
 
 <div class="handler">
-<div class="setter"><a name="XML_SetDefaultHandler"><pre>
+<pre class="setter" id="XML_SetDefaultHandler">
 XML_SetDefaultHandler(XML_Parser p,
                       XML_DefaultHandler hndl)
-</pre></a></div>
-<div class="signature"><pre>
+</pre>
+<pre class="signature">
 typedef void
 (*XML_DefaultHandler)(void *userData,
                       const XML_Char *s,
                       int len);
-</pre></div>
+</pre>
 
 <p>Sets a handler for any characters in the document which wouldn't
 otherwise be handled. This includes both data for which no handlers
@@ -898,16 +899,16 @@ href="#XML_DefaultCurrent">XML_DefaultCurrent</a></code>.</p>
 </div>
 
 <div class="handler">
-<div class="setter"><a name="XML_SetDefaultHandlerExpand"><pre>
+<pre class="setter" id="XML_SetDefaultHandlerExpand">
 XML_SetDefaultHandlerExpand(XML_Parser p,
                             XML_DefaultHandler hndl)
-</pre></a></div>
-<div class="signature"><pre>
+</pre>
+<pre class="signature">
 typedef void
 (*XML_DefaultHandler)(void *userData,
                       const XML_Char *s,
                       int len);
-</pre></div>
+</pre>
 <p>This sets a default handler, but doesn't inhibit the expansion of
 internal entity references.  The entity reference will not be passed
 to the default handler.</p>
@@ -917,18 +918,18 @@ href="#XML_DefaultCurrent">XML_DefaultCurrent</a></code>.</p>
 </div>
 
 <div class="handler">
-<div class="setter"><a name="XML_SetExternalEntityRefHandler"><pre>
+<pre class="setter" id="XML_SetExternalEntityRefHandler">
 XML_SetExternalEntityRefHandler(XML_Parser p,
                                 XML_ExternalEntityRefHandler hndl)
-</pre></a></div>
-<div class="signature"><pre>
+</pre>
+<pre class="signature">
 typedef int
 (*XML_ExternalEntityRefHandler)(XML_Parser p,
                                 const XML_Char *context,
                                 const XML_Char *base,
                                 const XML_Char *systemId,
                                 const XML_Char *publicId);
-</pre></div>
+</pre>
 <p>Set an external entity reference handler. This handler is also
 called for processing an external DTD subset if parameter entity parsing
 is in effect. (See <a href="#XML_SetParamEntityParsing">
@@ -959,16 +960,16 @@ information into global or static variables.</p>
 </div>
 
 <div class="handler">
-<div class="setter"><a name="XML_SetSkippedEntityHandler"><pre>
+<pre class="setter" id="XML_SetSkippedEntityHandler">
 XML_SetSkippedEntityHandler(XML_Parser p,
                             XML_SkippedEntityHandler handler)
-</pre></a></div>
-<div class="signature"><pre>
+</pre>
+<pre class="signature">
 typedef void
 (*XML_SkippedEntityHandler)(void *userData,
                             const XML_Char *entityName,
                             int is_parameter_entity);
-</pre></div>
+</pre>
 <p>Set a skipped entity handler. This is called in two situations:</p>
 <ol>
    <li>An entity reference is encountered for which no declaration
@@ -985,17 +986,17 @@ sync with the reporting of the declarations or attribute values</p>
 </div>
 
 <div class="handler">
-<div class="setter"><a name="XML_SetUnknownEncodingHandler"><pre>
+<pre class="setter" id="XML_SetUnknownEncodingHandler">
 XML_SetUnknownEncodingHandler(XML_Parser p,
                               XML_UnknownEncodingHandler enchandler,
 			                  void *encodingHandlerData)
-</pre></a></div>
-<div class="signature"><pre>
+</pre>
+<pre class="signature">
 typedef int
 (*XML_UnknownEncodingHandler)(void *encodingHandlerData,
                               const XML_Char *name,
                               XML_Encoding *info);
-</pre></div>
+</pre>
 <p>Set a handler to deal with encodings other than the
 <a href="#builtin_encodings">built in set</a>. If the handler knows how
 to deal with an encoding with the given name, it should fill in the info
@@ -1027,16 +1028,16 @@ finished with the encoding. It may be null.</p>
 </div>
 
 <div class="handler">
-<div class="setter"><a name="XML_SetStartNamespaceDeclHandler"><pre>
+<pre class="setter" id="XML_SetStartNamespaceDeclHandler">
 XML_SetStartNamespaceDeclHandler(XML_Parser p,
 			         XML_StartNamespaceDeclHandler start);
-</pre></a></div>
-<div class="signature"><pre>
+</pre>
+<pre class="signature">
 typedef void
 (*XML_StartNamespaceDeclHandler)(void *userData,
                                  const XML_Char *prefix,
                                  const XML_Char *uri);
-</pre></div>
+</pre>
 <p>Set a handler to be called when a namespace is declared. Namespace
 declarations occur inside start tags. But the namespace declaration start
 handler is called before the start tag handler for each namespace declared
@@ -1044,15 +1045,15 @@ in that start tag.</p>
 </div>
 
 <div class="handler">
-<div class="setter"><a name="XML_SetEndNamespaceDeclHandler"><pre>
+<pre class="setter" id="XML_SetEndNamespaceDeclHandler">
 XML_SetEndNamespaceDeclHandler(XML_Parser p,
 			       XML_EndNamespaceDeclHandler end);
-</pre></a></div>
-<div class="signature"><pre>
+</pre>
+<pre class="signature">
 typedef void
 (*XML_EndNamespaceDeclHandler)(void *userData,
                                const XML_Char *prefix);
-</pre></div>
+</pre>
 <p>Set a handler to be called when leaving the scope of a namespace
 declaration. This will be called, for each namespace declaration,
 after the handler for the end tag of the element in which the
@@ -1060,26 +1061,26 @@ namespace was declared.</p>
 </div>
 
 <div class="handler">
-<div class="setter"><a name="XML_SetNamespaceDeclHandler"><pre>
+<pre class="setter" id="XML_SetNamespaceDeclHandler">
 XML_SetNamespaceDeclHandler(XML_Parser p,
                             XML_StartNamespaceDeclHandler start,
                             XML_EndNamespaceDeclHandler end)
-</pre></a></div>
+</pre>
 <p>Sets both namespace declaration handlers with a single call</p>
 </div>
 
 <div class="handler">
-<div class="setter"><a name="XML_SetXmlDeclHandler"><pre>
+<pre class="setter" id="XML_SetXmlDeclHandler">
 XML_SetXmlDeclHandler(XML_Parser p,
 		      XML_XmlDeclHandler xmldecl);
-</pre></a></div>
-<div class="signature"><pre>
+</pre>
+<pre class="signature">
 typedef void
 (*XML_XmlDeclHandler) (void            *userData,
                        const XML_Char  *version,
                        const XML_Char  *encoding,
                        int             standalone);
-</pre></div>
+</pre>
 <p>Sets a handler that is called for XML declarations and also for
 text declarations discovered in external entities. The way to
 distinguish is that the <code>version</code> parameter will be NULL
@@ -1091,18 +1092,18 @@ that it was given as yes.</p>
 </div>
 
 <div class="handler">
-<div class="setter"><a name="XML_SetStartDoctypeDeclHandler"><pre>
+<pre class="setter" id="XML_SetStartDoctypeDeclHandler">
 XML_SetStartDoctypeDeclHandler(XML_Parser p,
 			       XML_StartDoctypeDeclHandler start);
-</pre></a></div>
-<div class="signature"><pre>
+</pre>
+<pre class="signature">
 typedef void
 (*XML_StartDoctypeDeclHandler)(void           *userData,
                                const XML_Char *doctypeName,
                                const XML_Char *sysid,
                                const XML_Char *pubid,
                                int            has_internal_subset);
-</pre></div>
+</pre>
 <p>Set a handler that is called at the start of a DOCTYPE declaration,
 before any external or internal subset is parsed. Both <code>sysid</code>
 and <code>pubid</code> may be NULL. The <code>has_internal_subset</code>
@@ -1110,38 +1111,38 @@ will be non-zero if the DOCTYPE declaration has an internal subset.</p>
 </div>
 
 <div class="handler">
-<div class="setter"><a name="XML_SetEndDoctypeDeclHandler"><pre>
+<pre class="setter" id="XML_SetEndDoctypeDeclHandler">
 XML_SetEndDoctypeDeclHandler(XML_Parser p,
 			     XML_EndDoctypeDeclHandler end);
-</pre></a></div>
-<div class="signature"><pre>
+</pre>
+<pre class="signature">
 typedef void
 (*XML_EndDoctypeDeclHandler)(void *userData);
-</pre></div>
+</pre>
 <p>Set a handler that is called at the end of a DOCTYPE declaration,
 after parsing any external subset.</p>
 </div>
 
 <div class="handler">
-<div class="setter"><a name="XML_SetDoctypeDeclHandler"><pre>
+<pre class="setter" id="XML_SetDoctypeDeclHandler">
 XML_SetDoctypeDeclHandler(XML_Parser p,
 			  XML_StartDoctypeDeclHandler start,
 			  XML_EndDoctypeDeclHandler end);
-</pre></a></div>
+</pre>
 <p>Set both doctype handlers with one call.</p>
 </div>
 
 <div class="handler">
-<div class="setter"><a name="XML_SetElementDeclHandler"><pre>
+<pre class="setter" id="XML_SetElementDeclHandler">
 XML_SetElementDeclHandler(XML_Parser p,
 			  XML_ElementDeclHandler eldecl);
-</pre></a></div>
-<div class="signature"><pre>
+</pre>
+<pre class="signature">
 typedef void
 (*XML_ElementDeclHandler)(void *userData,
                           const XML_Char *name,
                           XML_Content *model);
-</pre></div>
+</pre>
 <div class="signature"><pre>
 enum XML_Content_Type {
   XML_CTYPE_EMPTY = 1,
@@ -1201,11 +1202,11 @@ or sequence and <code>children</code> points to the nodes.</p>
 </div>
 
 <div class="handler">
-<div class="setter"><a name="XML_SetAttlistDeclHandler"><pre>
+<pre class="setter" id="XML_SetAttlistDeclHandler">
 XML_SetAttlistDeclHandler(XML_Parser p,
                           XML_AttlistDeclHandler attdecl);
-</pre></a></div>
-<div class="signature"><pre>
+</pre>
+<pre class="signature">
 typedef void
 (*XML_AttlistDeclHandler) (void           *userData,
                            const XML_Char *elname,
@@ -1213,7 +1214,7 @@ typedef void
                            const XML_Char *att_type,
                            const XML_Char *dflt,
                            int            isrequired);
-</pre></div>
+</pre>
 <p>Set a handler for attlist declarations in the DTD. This handler is
 called for <em>each</em> attribute. So a single attlist declaration
 with multiple attributes declared will generate multiple calls to this
@@ -1233,11 +1234,11 @@ in the <code>dflt</code> parameter.</p>
 </div>
 
 <div class="handler">
-<div class="setter"><a name="XML_SetEntityDeclHandler"><pre>
+<pre class="setter" id="XML_SetEntityDeclHandler">
 XML_SetEntityDeclHandler(XML_Parser p,
 			 XML_EntityDeclHandler handler);
-</pre></a></div>
-<div class="signature"><pre>
+</pre>
+<pre class="signature">
 typedef void
 (*XML_EntityDeclHandler) (void           *userData,
                           const XML_Char *entityName,
@@ -1248,7 +1249,7 @@ typedef void
                           const XML_Char *systemId,
                           const XML_Char *publicId,
                           const XML_Char *notationName);
-</pre></div>
+</pre>
 <p>Sets a handler that will be called for all entity declarations.
 The <code>is_parameter_entity</code> argument will be non-zero in the
 case of parameter entities and zero otherwise.</p>
@@ -1266,11 +1267,11 @@ declarations.</p>
 </div>
 
 <div class="handler">
-<div class="setter"><a name="XML_SetUnparsedEntityDeclHandler"><pre>
+<pre class="setter" id="XML_SetUnparsedEntityDeclHandler">
 XML_SetUnparsedEntityDeclHandler(XML_Parser p,
                                  XML_UnparsedEntityDeclHandler h)
-</pre></a></div>
-<div class="signature"><pre>
+</pre>
+<pre class="signature">
 typedef void
 (*XML_UnparsedEntityDeclHandler)(void *userData,
                                  const XML_Char *entityName,
@@ -1278,7 +1279,7 @@ typedef void
                                  const XML_Char *systemId,
                                  const XML_Char *publicId,
                                  const XML_Char *notationName);
-</pre></div>
+</pre>
 <p>Set a handler that receives declarations of unparsed entities. These
 are entity declarations that have a notation (NDATA) field:</p>
 
@@ -1291,30 +1292,30 @@ compatibility.  Use instead <a href= "#XML_SetEntityDeclHandler"
 </div>
 
 <div class="handler">
-<div class="setter"><a name="XML_SetNotationDeclHandler"><pre>
+<pre class="setter" id="XML_SetNotationDeclHandler">
 XML_SetNotationDeclHandler(XML_Parser p,
                            XML_NotationDeclHandler h)
-</pre></a></div>
-<div class="signature"><pre>
+</pre>
+<pre class="signature">
 typedef void
 (*XML_NotationDeclHandler)(void *userData,
                            const XML_Char *notationName,
                            const XML_Char *base,
                            const XML_Char *systemId,
                            const XML_Char *publicId);
-</pre></div>
+</pre>
 <p>Set a handler that receives notation declarations.</p>
 </div>
 
 <div class="handler">
-<div class="setter"><a name="XML_SetNotStandaloneHandler"><pre>
+<pre class="setter" id="XML_SetNotStandaloneHandler">
 XML_SetNotStandaloneHandler(XML_Parser p,
                             XML_NotStandaloneHandler h)
-</pre></a></div>
-<div class="signature"><pre>
+</pre>
+<pre class="signature">
 typedef int 
 (*XML_NotStandaloneHandler)(void *userData);
-</pre></div>
+</pre>
 <p>Set a handler that is called if the document is not "standalone".
 This happens when there is an external subset or a reference to a
 parameter entity, but does not have standalone set to "yes" in an XML
@@ -1336,53 +1337,53 @@ functions to return 0.)</p>
 DTD.  In other words, they usually return bogus information when
 called from within a DTD declaration handler.</p>
 
-<div class="fcndec"><a name="XML_GetErrorCode"><pre>
+<pre class="fcndec" id="XML_GetErrorCode">
 enum XML_Error
 XML_GetErrorCode(XML_Parser p)
-</pre></a></div>
+</pre>
 <div class="fcndef">
 Return what type of error has occurred.
 </div>
 
-<div class="fcndec"><a name="XML_ErrorString"><pre>
+<pre class="fcndec" id="XML_ErrorString">
 const XML_LChar *
 XML_ErrorString(int code)
-</pre></a></div>
+</pre>
 <div class="fcndef">
 Return a string describing the error corresponding to code.
 The code should be one of the enums that can be returned from
 XML_GetErrorCode.
 </div>
 
-<div class="fcndec"><a name="XML_GetCurrentByteIndex"><pre>
+<pre class="fcndec" id="XML_GetCurrentByteIndex">
 long
 XML_GetCurrentByteIndex(XML_Parser p)
-</pre></a></div>
+</pre>
 <div class="fcndef">
 Return the byte offset of the position.
 </div>
 
-<div class="fcndec"><a name="XML_GetCurrentLineNumber"><pre>
+<pre class="fcndec" id="XML_GetCurrentLineNumber">
 int
 XML_GetCurrentLineNumber(XML_Parser p)
-</pre></a></div>
+</pre>
 <div class="fcndef">
 Return the line number of the position.
 </div>
 
-<div class="fcndec"><a name="XML_GetCurrentColumnNumber"><pre>
+<pre class="fcndec" id="XML_GetCurrentColumnNumber">
 int
 XML_GetCurrentColumnNumber(XML_Parser p)
-</pre></a></div>
+</pre>
 <div class="fcndef">
 Return the offset, from the beginning of the current line, of
 the position.
 </div>
 
-<div class="fcndec"><a name="XML_GetCurrentByteCount"><pre>
+<pre class="fcndec" id="XML_GetCurrentByteCount">
 int
 XML_GetCurrentByteCount(XML_Parser p);
-</pre></a></div>
+</pre>
 <div class="fcndef">
 Return the number of bytes in the current event. Returns
 <code>0</code> if the event is inside a reference to an internal
@@ -1391,12 +1392,12 @@ be used to distinguish empty-element tags from empty elements using
 separate start and end tags).
 </div>
 
-<div class="fcndec"><a name="XML_GetInputContext"><pre>
+<pre class="fcndec" id="XML_GetInputContext">
 const char *
 XML_GetInputContext(XML_Parser p,
                     int *offset,
                     int *size);
-</pre></a></div>
+</pre>
 <div class="fcndef">
 
 <p>Returns the parser's input buffer, sets the integer pointed at by
@@ -1419,11 +1420,11 @@ parse position may be before the beginning of the buffer.</p>
 <p>The functions in this section either obtain state information from
 the parser or can be used to dynamicly set parser options.</p>
 
-<div class="fcndec"><a name="XML_SetUserData"><pre>
+<pre class="fcndec" id="XML_SetUserData">
 void
 XML_SetUserData(XML_Parser p,
                 void *userData)
-</pre></a></div>
+</pre>
 <div class="fcndef">
 This sets the user data pointer that gets passed to handlers.  It
 overwrites any previous value for this pointer. Note that the
@@ -1434,48 +1435,49 @@ the memory associated with it, then you've probably just leaked
 memory.
 </div>
 
-<div class="fcndec"><a name="XML_GetUserData"><pre>
+<pre class="fcndec" id="XML_GetUserData">
 void *
 XML_GetUserData(XML_Parser p)
-</pre></a></div>
+</pre>
 <div class="fcndef">
 This returns the user data pointer that gets passed to handlers.
 It is actually implemented as a macro.
 </div>
 
-<div class="fcndec"><a name="XML_UseParserAsHandlerArg"><pre>
+<pre class="fcndec" id="XML_UseParserAsHandlerArg">
 void
 XML_UseParserAsHandlerArg(XML_Parser p)
-</pre></a></div>
+</pre>
 <div class="fcndef">
-After this is called, handlers receive the parser in the
-userData argument. The userData information can still be obtained using
-the XML_GetUserData function.
+After this is called, handlers receive the parser in the userData
+argument. The userData information can still be obtained using the
+<code><a href= "#XML_GetUserData" >XML_GetUserData</a></code>
+function.
 </div>
 
-<div class="fcndec"><a name="XML_SetBase"><pre>
+<pre class="fcndec" id="XML_SetBase">
 int
 XML_SetBase(XML_Parser p,
             const XML_Char *base)
-</pre></a></div>
+</pre>
 <div class="fcndef">
 Set the base to be used for resolving relative URIs in system
 identifiers.  The return value is 0 if there's no memory to store
 base, otherwise it's non-zero.
 </div>
 
-<div class="fcndec"><a name="XML_GetBase"><pre>
+<pre class="fcndec" id="XML_GetBase">
 const XML_Char *
 XML_GetBase(XML_Parser p)
-</pre></a></div>
+</pre>
 <div class="fcndef">
 Return the base for resolving relative URIs.
 </div>
 
-<div class="fcndec"><a name="XML_GetSpecifiedAttributeCount"><pre>
+<pre class="fcndec" id="XML_GetSpecifiedAttributeCount">
 int
 XML_GetSpecifiedAttributeCount(XML_Parser p)
-</pre></a></div>
+</pre>
 <div class="fcndef">
 When attributes are reported to the start handler in the atts vector,
 attributes that were explicitly set in the element occur before any
@@ -1488,10 +1490,10 @@ call to a start handler. If called inside a start handler, then that
 means the current call.
 </div>
 
-<div class="fcndec"><a name="XML_GetIdAttributeIndex"><pre>
+<pre class="fcndec" id="XML_GetIdAttributeIndex">
 int
 XML_GetIdAttributeIndex(XML_Parser p);
-</pre></a></div>
+</pre>
 <div class="fcndef">
 Returns the index of the ID attribute passed in the atts array in the
 last call to XML_StartElementHandler, or -1 if there is no ID
@@ -1499,11 +1501,11 @@ attribute. If called inside a start handler, then that means the
 current call.
 </div>
 
-<div class="fcndec"><a name="XML_SetEncoding"><pre>
+<pre class="fcndec" id="XML_SetEncoding">
 int
 XML_SetEncoding(XML_Parser p,
                 const XML_Char *encoding)
-</pre></a></div>
+</pre>
 <div class="fcndef">
 Set the encoding to be used by the parser. It is equivalent to
 passing a non-null encoding argument to the parser creation functions.
@@ -1512,11 +1514,11 @@ It must not be called after <code><a href= "#XML_Parse"
 >XML_ParseBuffer</a></code> have been called on the given parser.
 </div>
 
-<div class="fcndec"><a name="XML_SetParamEntityParsing"><pre>
+<pre class="fcndec" id="XML_SetParamEntityParsing">
 int
 XML_SetParamEntityParsing(XML_Parser p,
                           enum XML_ParamEntityParsing code)
-</pre></a></div>
+</pre>
 <div class="fcndef">
 This enables parsing of parameter entities, including the external
 parameter entity that is the external DTD subset, according to
@@ -1529,11 +1531,11 @@ The choices for <code>code</code> are:
 </ul>
 </div>
 
-<div class="fcndec"><a name="XML_SetReturnNSTriplet"><pre>
+<pre class="fcndec" id="XML_SetReturnNSTriplet">
 void
 XML_SetReturnNSTriplet(XML_Parser parser,
                        int        do_nst);
-</pre></a></div>
+</pre>
 <div class="fcndef">
 <p>
 This function only has an effect when using a parser created with
@@ -1551,10 +1553,10 @@ default manner, URI then local_name separated by the namespace
 separator.</p>
 </div>
 
-<div class="fcndec"><a name="XML_DefaultCurrent"><pre>
+<pre class="fcndec" id="XML_DefaultCurrent">
 void
 XML_DefaultCurrent(XML_Parser parser);
-</pre></a></div>
+</pre>
 <div class="fcndef">
 This can be called within a handler for a start element, end element,
 processing instruction or character data.  It causes the corresponding
@@ -1562,30 +1564,30 @@ markup to be passed to the default handler set by <code><a
 href="#XML_SetDefaultHandler" >XML_SetDefaultHandler</a></code> or
 <code><a href="#XML_SetDefaultHandlerExpand"
 >XML_SetDefaultHandlerExpand</a></code>.  It does nothing if there is
->not a default handler.
+not a default handler.
 </div>
 
-<div class="fcndec"><a name="XML_ExpatVersion"><pre>
+<pre class="fcndec" id="XML_ExpatVersion">
 XML_LChar *
 XML_ExpatVersion();
-</pre></a></div>
+</pre>
 <div class="fcndef">
 Return the library version as a string (e.g. "expat_1.95.1").
 </div>
 
-<div class="fcndec"><a name="XML_ExpatVersionInfo"><pre>
+<pre class="fcndec" id="XML_ExpatVersionInfo">
 struct XML_expat_version
 XML_ExpatVersionInfo();
-</pre></a></div>
-<div class="fcndef">
-Return the library version information as a structure.
-<pre class="eg">
+</pre>
+<pre class="signature">
 typedef struct {
   int major;
   int minor;
   int micro;
 } XML_Expat_Version;
 </pre>
+<div class="fcndef">
+Return the library version information as a structure.
 Some macros are also defined that support compile-time tests of the
 library version:
 <ul>
@@ -1597,5 +1599,9 @@ Testing these constants is currently the best way to determine if
 particular parts of the Expat API are available.
 </div>
 
+<hr />
+<p><a href="http://validator.w3.org/check/referer"><img
+        src="valid-xhtml10.png" alt="Valid XHTML 1.0!"
+        border="0" height="31" width="88" /></a></p>
 </body>
 </html>
