@@ -7,15 +7,15 @@
 [Setup]
 AppName=expat
 AppId=expat
-AppVersion=1.95.6
-AppVerName=expat 1.95.6
-AppCopyright=Copyright © 1998-2002 Thai Open Source Software Center, Clark Cooper, and the Expat maintainers
-DefaultDirName={sd}\Expat-1.95.6
+AppVersion=1.95.7
+AppVerName=expat 1.95.7
+AppCopyright=Copyright © 1998-2003 Thai Open Source Software Center, Clark Cooper, and the Expat maintainers
+DefaultDirName={sd}\Expat-1.95.7
 AppPublisher=The Expat Developers
 AppPublisherURL=http://www.libexpat.org/
 AppSupportURL=http://www.libexpat.org/
 AppUpdatesURL=http://www.libexpat.org/
-UninstallDisplayName=Expat XML Parser (version 1.95.6)
+UninstallDisplayName=Expat XML Parser (version 1.95.7)
 UninstallFilesDir={app}\Uninstall
 
 Compression=bzip/9

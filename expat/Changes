@@ -1,3 +1,9 @@
+Release 1.95.7 XXX date not determined
+        - Fixed enum XML_Status issue (reported on SourceForge many
+          times), so compilers that are properly picky will be happy.
+        - Fixed a variety of bugs: see SF issues ...
+        - Added more regression tests.
+
 Release 1.95.6 Tue Jan 28 2003
         - Added XML_FreeContentModel().
         - Added XML_MemMalloc(), XML_MemRealloc(), XML_MemFree().
