@@ -26,13 +26,27 @@ See the file copying.txt for copying permission.
 /* This file can be used for any definitions needed in
 particular environments. */
 
-#ifdef MOZILLA
+/* Mozilla specific defines */
+
+#ifdef MOZILLA_CLIENT
 
 #include "nspr.h"
-#define malloc(x) PR_Malloc(x)
-#define realloc(x, y) PR_Realloc((x), (y))
+#define malloc(x) PR_Malloc((size_t)(x))
+#define realloc(x, y) PR_Realloc((x), (size_t)(y))
 #define calloc(x, y) PR_Calloc((x),(y))
 #define free(x) PR_Free(x)
+#if PR_BYTES_PER_INT != 4
 #define int int32
+#endif
 
-#endif /* MOZILLA */
+/* Enable Unicode string processing in expat. */
+#ifndef XML_UNICODE
+#define XML_UNICODE
+#endif
+
+/* Enable external parameter entity parsing in expat */
+#ifndef XML_DTD
+#define XML_DTD 1
+#endif
+
+#endif /* MOZILLA_CLIENT */
