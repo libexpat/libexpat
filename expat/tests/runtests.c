@@ -511,12 +511,41 @@ END_TEST
 /* Test that no error is reported for unknown entities if we don't
    read an external subset.  This was fixed in Expat 1.95.5.
 */
-START_TEST(test_wfc_declared_entity_unread_external_subset) {
+START_TEST(test_wfc_undeclared_entity_unread_external_subset) {
     char *text =
         "<!DOCTYPE doc SYSTEM 'foo'>\n"
         "<doc>&entity;</doc>";
 
     if (XML_Parse(parser, text, strlen(text), 1) == XML_STATUS_ERROR)
+        xml_failure(parser);
+}
+END_TEST
+
+/* Test that an error is reported for unknown entities if we don't
+   have an external subset.
+*/
+START_TEST(test_wfc_undeclared_entity_no_external_subset) {
+    char *text = "<doc>&entity;</doc>";
+
+    if (XML_Parse(parser, text, strlen(text), 1) == XML_STATUS_OK)
+        fail("Parser did not report error on undefined entity w/out a DTD.");
+    if (XML_GetErrorCode(parser) != XML_ERROR_UNDEFINED_ENTITY)
+        xml_failure(parser);
+}
+END_TEST
+
+/* Test that an error is reported for unknown entities if we don't
+   read an external subset, but have been declared standalone.
+*/
+START_TEST(test_wfc_undeclared_entity_standalone) {
+    char *text =
+        "<?xml version='1.0' encoding='us-ascii' standalone='yes'?>\n"
+        "<!DOCTYPE doc SYSTEM 'foo'>\n"
+        "<doc>&entity;</doc>";
+
+    if (XML_Parse(parser, text, strlen(text), 1) == XML_STATUS_OK)
+        fail("Parser did not report error on undefined entity (standalone).");
+    if (XML_GetErrorCode(parser) != XML_ERROR_UNDEFINED_ENTITY)
         xml_failure(parser);
 }
 END_TEST
@@ -703,7 +732,10 @@ make_basic_suite(void)
     tcase_add_test(tc_basic, test_attr_whitespace_normalization);
     tcase_add_test(tc_basic, test_xmldecl_misplaced);
     tcase_add_test(tc_basic, test_unknown_encoding_internal_entity);
-    tcase_add_test(tc_basic, test_wfc_declared_entity_unread_external_subset);
+    tcase_add_test(tc_basic,
+                   test_wfc_undeclared_entity_unread_external_subset);
+    tcase_add_test(tc_basic, test_wfc_undeclared_entity_no_external_subset);
+    tcase_add_test(tc_basic, test_wfc_undeclared_entity_standalone);
 
     suite_add_tcase(s, tc_namespace);
     tcase_add_checked_fixture(tc_namespace,
