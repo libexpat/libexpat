@@ -150,6 +150,15 @@ tests/runtests.o: tests/runtests.c tests/chardata.h
 tests/runtests: tests/runtests.o tests/chardata.o lib/$(LIBRARY)
 	$(LINK_EXE) $^ -lcheck
 
+tests/xmltest.zip:
+	cd tests && wget ftp://ftp.jclark.com/pub/xml/xmltest.zip
+
+tests/xmltest: tests/xmltest.zip
+	cd tests && unzip -q xmltest.zip
+
+run-xmltest: xmlwf/xmlwf tests/xmltest
+	tests/xmltest.sh
+
 .SUFFIXES: .c .lo .o
 
 .c.o:

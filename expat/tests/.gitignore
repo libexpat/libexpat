@@ -1,3 +1,5 @@
 Makefile
 runtests
+xmltest
+xmltest.zip
 .libs
