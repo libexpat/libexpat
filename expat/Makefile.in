@@ -52,26 +52,21 @@ CC = @CC@
 
 LIBTOOL = @LIBTOOL@
 
+SUBDIRS = lib examples xmlwf
 CONFIG_HEADERS = config.h
 
 APIHEADER = expat.h
 LIBRARY = libexpat.la
 
 
-default:  library xmlwf
+default:  lib xmlwf
 
-buildlib: library
+buildlib: lib
 
-all: library wfchecker samples
+all: $(SUBDIRS)
 
-library:
-	cd lib && $(MAKE)
-
-wfchecker:
-	cd xmlwf && $(MAKE)
-
-samples:
-	cd examples && $(MAKE)
+$(SUBDIRS)::
+	cd $@ && $(MAKE)
 
 clean:
 	cd lib && rm -f $(LIBRARY) *.o *.lo && rm -rf .libs _libs
@@ -88,7 +83,7 @@ extraclean: distclean
 	rm -f conftools/config.guess conftools/config.sub
 	rm -f conftools/ltconfig conftools/ltmain.sh
 
-check:	all
+check:	$(SUBDIRS)
 	cd tests && $(MAKE) check
 
 install: xmlwf/xmlwf lib/$(LIBRARY) lib/$(APIHEADER)
@@ -102,7 +97,7 @@ uninstall:
 	$(LIBTOOL) --mode=uninstall rm -f $(libdir)/$(LIBRARY)
 	rm -f $(libdir)/$(APIHEADER)
 
-.PHONY: buildlib all library wfchecker samples \
+.PHONY: buildlib all $(SUBDIRS) \
 	clean distclean extraclean maintainer-clean \
 	dist distdir \
 	install uninstall
