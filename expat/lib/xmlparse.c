@@ -2591,18 +2591,17 @@ doProlog(XML_Parser parser,
 #ifdef XML_DTD
   static const XML_Char externalSubsetName[] = { '#' , '\0' };
 #endif /* XML_DTD */
-  static const XML_Char atypeCDATA[] = { 'C', 'D', 'A', 'T', 'A' };
-  static const XML_Char atypeID[] = { 'I', 'D' };
-  static const XML_Char atypeIDREF[] = { 'I', 'D', 'R', 'E', 'F' };
-  static const XML_Char atypeIDREFS[] = { 'I', 'D', 'R', 'E', 'F', 'S' };
-  static const XML_Char atypeENTITY[] = { 'E', 'N', 'T', 'I', 'T', 'Y' };
-  static const XML_Char atypeENTITIES[] = { 'E', 'N', 'T', 'I', 'T', 'I', 'E', 'S' };
-  static const XML_Char atypeNMTOKEN[] = { 'N', 'M', 'T', 'O', 'K', 'E', 'N' };
-  static const XML_Char atypeNMTOKENS[] = { 'N', 'M', 'T', 'O', 'K', 'E', 'N', 'S' };
-  static const XML_Char notationPrefix[] = { 'N', 'O', 'T', 'A', 'T', 'I', 'O', 'N', '(' };
-  static const XML_Char enumValueSep[] = { '|' };
-  static const XML_Char enumValueStart[] = { '(' };
-
+  static const XML_Char atypeCDATA[] = { 'C', 'D', 'A', 'T', 'A', '\0' };
+  static const XML_Char atypeID[] = { 'I', 'D', '\0' };
+  static const XML_Char atypeIDREF[] = { 'I', 'D', 'R', 'E', 'F', '\0' };
+  static const XML_Char atypeIDREFS[] = { 'I', 'D', 'R', 'E', 'F', 'S', '\0' };
+  static const XML_Char atypeENTITY[] = { 'E', 'N', 'T', 'I', 'T', 'Y', '\0' };
+  static const XML_Char atypeENTITIES[] = { 'E', 'N', 'T', 'I', 'T', 'I', 'E', 'S', '\0' };
+  static const XML_Char atypeNMTOKEN[] = { 'N', 'M', 'T', 'O', 'K', 'E', 'N', '\0' };
+  static const XML_Char atypeNMTOKENS[] = { 'N', 'M', 'T', 'O', 'K', 'E', 'N', 'S', '\0' };
+  static const XML_Char notationPrefix[] = { 'N', 'O', 'T', 'A', 'T', 'I', 'O', 'N', '(', '\0' };
+  static const XML_Char enumValueSep[] = { '|', '\0' };
+  static const XML_Char enumValueStart[] = { '(', '\0' };
   
   const char **eventPP;
   const char **eventEndPP;
