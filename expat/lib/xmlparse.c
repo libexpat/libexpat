@@ -1836,7 +1836,7 @@ XML_DefaultCurrent(XML_Parser parser)
 const XML_LChar * XMLCALL
 XML_ErrorString(enum XML_Error code)
 {
-  static const XML_LChar *message[] = {
+  static const XML_LChar* const message[] = {
     0,
     XML_L("out of memory"),
     XML_L("syntax error"),
@@ -1916,9 +1916,11 @@ XML_ExpatVersionInfo(void)
 const XML_Feature * XMLCALL
 XML_GetFeatureList(void)
 {
-  static XML_Feature features[] = {
-    {XML_FEATURE_SIZEOF_XML_CHAR,  XML_L("sizeof(XML_Char)"), 0},
-    {XML_FEATURE_SIZEOF_XML_LCHAR, XML_L("sizeof(XML_LChar)"), 0},
+  static const XML_Feature features[] = {
+    {XML_FEATURE_SIZEOF_XML_CHAR,  XML_L("sizeof(XML_Char)"),
+     sizeof(XML_Char)},
+    {XML_FEATURE_SIZEOF_XML_LCHAR, XML_L("sizeof(XML_LChar)"),
+     sizeof(XML_LChar)},
 #ifdef XML_UNICODE
     {XML_FEATURE_UNICODE,          XML_L("XML_UNICODE"), 0},
 #endif
@@ -1938,8 +1940,6 @@ XML_GetFeatureList(void)
     {XML_FEATURE_END,              NULL, 0}
   };
 
-  features[0].value = sizeof(XML_Char);
-  features[1].value = sizeof(XML_LChar);
   return features;
 }
 
