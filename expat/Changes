@@ -1,3 +1,15 @@
+Release 1.95.5 someday
+	- Added XML_UseForeignDTD() for improved SAX2 support.
+	- Added XML_GetFeatureList().
+	- Defined XML_Bool type and the values XML_TRUE and XML_FALSE.
+	- Use an incomplete struct instead of a void* for the parser
+	  (may not retain).
+	- Fixed UTF-8 decoding bug that caused legal UTF-8 to be rejected.
+	- Removed unnecessary DllMain() function that caused static
+	  linking into a DLL to be difficult.
+	- Reduced line-length for all source code and headers to be
+	  no longer than 80 characters, to help with AS/400 support.
+
 Release 1.95.4 Fri Jul 12 2002
 	- Added support for VMS, contributed by Craig Berry.  See
 	  vms/README.vms for more information.
