@@ -434,11 +434,11 @@ BSC32_SBRS= \
 	
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /dll /machine:I386
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /dll /machine:I386 /out:"bin/xmlparse.dll"
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /base:0x20000000 /subsystem:windows /dll /machine:I386 /out:"bin/xmlparse.dll"
 # SUBTRACT LINK32 /profile
 LINK32_FLAGS=kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib\
  advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib\
- odbccp32.lib /nologo /subsystem:windows /dll /incremental:no\
+ odbccp32.lib /nologo /base:0x20000000 /subsystem:windows /dll /incremental:no\
  /pdb:"$(OUTDIR)/xmlparse.pdb" /machine:I386 /out:"bin/xmlparse.dll"\
  /implib:"$(OUTDIR)/xmlparse.lib" 
 LINK32_OBJS= \
@@ -525,10 +525,10 @@ BSC32_SBRS= \
 	
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /dll /debug /machine:I386
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /dll /debug /machine:I386 /out:"dbgbin/xmlparse.dll"
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /base:0x20000000 /subsystem:windows /dll /debug /machine:I386 /out:"dbgbin/xmlparse.dll"
 LINK32_FLAGS=kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib\
  advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib\
- odbccp32.lib /nologo /subsystem:windows /dll /incremental:yes\
+ odbccp32.lib /nologo /base:0x20000000 /subsystem:windows /dll /incremental:yes\
  /pdb:"$(OUTDIR)/xmlparse.pdb" /debug /machine:I386 /out:"dbgbin/xmlparse.dll"\
  /implib:"$(OUTDIR)/xmlparse.lib" 
 LINK32_OBJS= \
@@ -802,9 +802,6 @@ DEP_CPP_READF=\
 # Begin Source File
 
 SOURCE=.\xmlwf\codepage.c
-
-!IF  "$(CFG)" == "xmlwf - Win32 Release"
-
 DEP_CPP_CODEP=\
 	".\xmlwf\codepage.h"\
 	
@@ -812,18 +809,6 @@ DEP_CPP_CODEP=\
 "$(INTDIR)\codepage.obj" : $(SOURCE) $(DEP_CPP_CODEP) "$(INTDIR)"
    $(CPP) $(CPP_PROJ) $(SOURCE)
 
-
-!ELSEIF  "$(CFG)" == "xmlwf - Win32 Debug"
-
-DEP_CPP_CODEP=\
-	".\xmlwf\codepage.h"\
-	
-
-"$(INTDIR)\codepage.obj" : $(SOURCE) $(DEP_CPP_CODEP) "$(INTDIR)"
-   $(CPP) $(CPP_PROJ) $(SOURCE)
-
-
-!ENDIF 
 
 # End Source File
 # End Target
@@ -866,6 +851,9 @@ SOURCE=.\gennmtab\gennmtab.c
 # Begin Source File
 
 SOURCE=.\xmlparse\xmlparse.c
+
+!IF  "$(CFG)" == "xmlparse - Win32 Release"
+
 DEP_CPP_XMLPA=\
 	".\xmlparse\hashtable.h"\
 	".\xmlparse\xmlparse.h"\
@@ -881,11 +869,33 @@ NODEP_CPP_XMLPA=\
    $(CPP) $(CPP_PROJ) $(SOURCE)
 
 
+!ELSEIF  "$(CFG)" == "xmlparse - Win32 Debug"
+
+DEP_CPP_XMLPA=\
+	".\xmlparse\hashtable.h"\
+	".\xmlparse\xmlparse.h"\
+	".\xmltok\xmldef.h"\
+	".\xmltok\xmlrole.h"\
+	".\xmltok\xmltok.h"\
+	
+NODEP_CPP_XMLPA=\
+	".\xmltok\nspr.h"\
+	
+
+"$(INTDIR)\xmlparse.obj" : $(SOURCE) $(DEP_CPP_XMLPA) "$(INTDIR)"
+   $(CPP) $(CPP_PROJ) $(SOURCE)
+
+
+!ENDIF 
+
 # End Source File
 ################################################################################
 # Begin Source File
 
 SOURCE=.\xmlparse\hashtable.c
+
+!IF  "$(CFG)" == "xmlparse - Win32 Release"
+
 DEP_CPP_HASHT=\
 	".\xmlparse\hashtable.h"\
 	".\xmltok\xmldef.h"\
@@ -897,6 +907,22 @@ NODEP_CPP_HASHT=\
 "$(INTDIR)\hashtable.obj" : $(SOURCE) $(DEP_CPP_HASHT) "$(INTDIR)"
    $(CPP) $(CPP_PROJ) $(SOURCE)
 
+
+!ELSEIF  "$(CFG)" == "xmlparse - Win32 Debug"
+
+DEP_CPP_HASHT=\
+	".\xmlparse\hashtable.h"\
+	".\xmltok\xmldef.h"\
+	
+NODEP_CPP_HASHT=\
+	".\xmltok\nspr.h"\
+	
+
+"$(INTDIR)\hashtable.obj" : $(SOURCE) $(DEP_CPP_HASHT) "$(INTDIR)"
+   $(CPP) $(CPP_PROJ) $(SOURCE)
+
+
+!ENDIF 
 
 # End Source File
 ################################################################################
@@ -934,6 +960,9 @@ NODEP_CPP_HASHT=\
 # Begin Source File
 
 SOURCE=.\xmltok\xmlrole.c
+
+!IF  "$(CFG)" == "xmltok - Win32 Release"
+
 DEP_CPP_XMLRO=\
 	".\xmltok\xmldef.h"\
 	".\xmltok\xmlrole.h"\
@@ -947,11 +976,31 @@ NODEP_CPP_XMLRO=\
    $(CPP) $(CPP_PROJ) $(SOURCE)
 
 
+!ELSEIF  "$(CFG)" == "xmltok - Win32 Debug"
+
+DEP_CPP_XMLRO=\
+	".\xmltok\xmldef.h"\
+	".\xmltok\xmlrole.h"\
+	".\xmltok\xmltok.h"\
+	
+NODEP_CPP_XMLRO=\
+	".\xmltok\nspr.h"\
+	
+
+"$(INTDIR)\xmlrole.obj" : $(SOURCE) $(DEP_CPP_XMLRO) "$(INTDIR)"
+   $(CPP) $(CPP_PROJ) $(SOURCE)
+
+
+!ENDIF 
+
 # End Source File
 ################################################################################
 # Begin Source File
 
 SOURCE=.\xmltok\xmltok.c
+
+!IF  "$(CFG)" == "xmltok - Win32 Release"
+
 DEP_CPP_XMLTO=\
 	".\xmltok\asciitab.h"\
 	".\xmltok\iasciitab.h"\
@@ -971,15 +1020,50 @@ NODEP_CPP_XMLTO=\
    $(CPP) $(CPP_PROJ) $(SOURCE)
 
 
+!ELSEIF  "$(CFG)" == "xmltok - Win32 Debug"
+
+DEP_CPP_XMLTO=\
+	".\xmltok\asciitab.h"\
+	".\xmltok\iasciitab.h"\
+	".\xmltok\latin1tab.h"\
+	".\xmltok\nametab.h"\
+	".\xmltok\utf8tab.h"\
+	".\xmltok\xmldef.h"\
+	".\xmltok\xmltok.h"\
+	".\xmltok\xmltok_impl.c"\
+	".\xmltok\xmltok_impl.h"\
+	
+NODEP_CPP_XMLTO=\
+	".\xmltok\nspr.h"\
+	
+
+"$(INTDIR)\xmltok.obj" : $(SOURCE) $(DEP_CPP_XMLTO) "$(INTDIR)"
+   $(CPP) $(CPP_PROJ) $(SOURCE)
+
+
+!ENDIF 
+
 # End Source File
 ################################################################################
 # Begin Source File
 
 SOURCE=.\xmltok\dllmain.c
 
+!IF  "$(CFG)" == "xmltok - Win32 Release"
+
+
 "$(INTDIR)\dllmain.obj" : $(SOURCE) "$(INTDIR)"
    $(CPP) $(CPP_PROJ) $(SOURCE)
 
+
+!ELSEIF  "$(CFG)" == "xmltok - Win32 Debug"
+
+
+"$(INTDIR)\dllmain.obj" : $(SOURCE) "$(INTDIR)"
+   $(CPP) $(CPP_PROJ) $(SOURCE)
+
+
+!ENDIF 
 
 # End Source File
 # End Target
