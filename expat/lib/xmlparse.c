@@ -5758,8 +5758,10 @@ lookup(HASH_TABLE *table, KEY name, size_t createSize)
     table->size = (size_t)1 << INIT_POWER;
     tsize = table->size * sizeof(NAMED *);
     table->v = (NAMED **)table->mem->malloc_fcn(tsize);
-    if (!table->v)
+    if (!table->v) {
+      table->size = 0;
       return NULL;
+    }
     memset(table->v, 0, tsize);
     i = hash(name) & ((unsigned long)table->size - 1);
   }
