@@ -1142,7 +1142,7 @@ static enum XML_Error storeAtts(XML_Parser parser, const ENCODING *enc,
     appAtts[i << 1] = 0;
   }
   while (i-- > 0)
-    ((char *)appAtts[i << 1])[-1] = 0;
+    ((XML_Char *)appAtts[i << 1])[-1] = 0;
   return XML_ERROR_NONE;
 }
 
