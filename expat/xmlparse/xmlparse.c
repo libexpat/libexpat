@@ -277,6 +277,7 @@ typedef struct {
   XML_NotationDeclHandler m_notationDeclHandler;
   XML_StartNamespaceDeclHandler m_startNamespaceDeclHandler;
   XML_EndNamespaceDeclHandler m_endNamespaceDeclHandler;
+  XML_NotStandaloneHandler m_notStandaloneHandler;
   XML_ExternalEntityRefHandler m_externalEntityRefHandler;
   void *m_externalEntityRefHandlerArg;
   XML_UnknownEncodingHandler m_unknownEncodingHandler;
@@ -334,6 +335,7 @@ typedef struct {
 #define notationDeclHandler (((Parser *)parser)->m_notationDeclHandler)
 #define startNamespaceDeclHandler (((Parser *)parser)->m_startNamespaceDeclHandler)
 #define endNamespaceDeclHandler (((Parser *)parser)->m_endNamespaceDeclHandler)
+#define notStandaloneHandler (((Parser *)parser)->m_notStandaloneHandler)
 #define externalEntityRefHandler (((Parser *)parser)->m_externalEntityRefHandler)
 #define externalEntityRefHandlerArg (((Parser *)parser)->m_externalEntityRefHandlerArg)
 #define unknownEncodingHandler (((Parser *)parser)->m_unknownEncodingHandler)
@@ -415,6 +417,7 @@ XML_Parser XML_ParserCreate(const XML_Char *encodingName)
   notationDeclHandler = 0;
   startNamespaceDeclHandler = 0;
   endNamespaceDeclHandler = 0;
+  notStandaloneHandler = 0;
   externalEntityRefHandler = 0;
   externalEntityRefHandlerArg = parser;
   unknownEncodingHandler = 0;
@@ -523,6 +526,7 @@ XML_Parser XML_ExternalEntityParserCreate(XML_Parser oldParser,
   XML_DefaultHandler oldDefaultHandler = defaultHandler;
   XML_StartNamespaceDeclHandler oldStartNamespaceDeclHandler = startNamespaceDeclHandler;
   XML_EndNamespaceDeclHandler oldEndNamespaceDeclHandler = endNamespaceDeclHandler;
+  XML_NotStandaloneHandler oldNotStandaloneHandler = notStandaloneHandler;
   XML_ExternalEntityRefHandler oldExternalEntityRefHandler = externalEntityRefHandler;
   XML_UnknownEncodingHandler oldUnknownEncodingHandler = unknownEncodingHandler;
   void *oldUserData = userData;
@@ -545,6 +549,7 @@ XML_Parser XML_ExternalEntityParserCreate(XML_Parser oldParser,
   defaultHandler = oldDefaultHandler;
   startNamespaceDeclHandler = oldStartNamespaceDeclHandler;
   endNamespaceDeclHandler = oldEndNamespaceDeclHandler;
+  notStandaloneHandler = oldNotStandaloneHandler;
   externalEntityRefHandler = oldExternalEntityRefHandler;
   unknownEncodingHandler = oldUnknownEncodingHandler;
   userData = oldUserData;
@@ -709,6 +714,12 @@ void XML_SetNamespaceDeclHandler(XML_Parser parser,
 {
   startNamespaceDeclHandler = start;
   endNamespaceDeclHandler = end;
+}
+
+void XML_SetNotStandaloneHandler(XML_Parser parser,
+				 XML_NotStandaloneHandler handler)
+{
+  notStandaloneHandler = handler;
 }
 
 void XML_SetExternalEntityRefHandler(XML_Parser parser,
@@ -908,7 +919,8 @@ const XML_LChar *XML_ErrorString(int code)
     XML_T("unknown encoding"),
     XML_T("encoding specified in XML declaration is incorrect"),
     XML_T("unclosed CDATA section"),
-    XML_T("error in processing external entity reference")
+    XML_T("error in processing external entity reference"),
+    XML_T("document is not standalone")
   };
   if (code > 0 && code < sizeof(message)/sizeof(message[0]))
     return message[code];
@@ -1974,6 +1986,10 @@ prologProcessor(XML_Parser parser,
       }
       break;
     case XML_ROLE_DOCTYPE_SYSTEM_ID:
+      if (!dtd.standalone
+	  && notStandaloneHandler
+	  && !notStandaloneHandler(handlerArg))
+	return XML_ERROR_NOT_STANDALONE;
       hadExternalDoctype = 1;
       break;
     case XML_ROLE_DOCTYPE_PUBLIC_ID:
@@ -2202,6 +2218,10 @@ prologProcessor(XML_Parser parser,
       groupConnector[prologState.level] = '|';
       break;
     case XML_ROLE_PARAM_ENTITY_REF:
+      if (!dtd.standalone
+	  && notStandaloneHandler
+	  && !notStandaloneHandler(handlerArg))
+	return XML_ERROR_NOT_STANDALONE;
       dtd.complete = 0;
       break;
     case XML_ROLE_NONE:

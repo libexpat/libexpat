@@ -162,6 +162,14 @@ typedef void (*XML_StartNamespaceDeclHandler)(void *userData,
 typedef void (*XML_EndNamespaceDeclHandler)(void *userData,
 					    const XML_Char *prefix);
 
+/* This is called if the document is not standalone (it has an
+external subset or a reference to a parameter entity, but does not
+have standalone="yes"). If this handler returns 0, then processing
+will not continue, and the parser will return a
+XML_ERROR_NOT_STANDALONE error. */
+
+typedef int (*XML_NotStandaloneHandler)(void *userData);
+
 /* This is called for a reference to an external parsed general entity.
 The referenced entity is not automatically parsed.
 The application can parse it immediately or later using
@@ -304,6 +312,10 @@ XML_SetNamespaceDeclHandler(XML_Parser parser,
 			    XML_EndNamespaceDeclHandler end);
 
 void XMLPARSEAPI
+XML_SetNotStandaloneHandler(XML_Parser parser,
+			    XML_NotStandaloneHandler handler);
+
+void XMLPARSEAPI
 XML_SetExternalEntityRefHandler(XML_Parser parser,
 				XML_ExternalEntityRefHandler handler);
 
@@ -415,7 +427,8 @@ enum XML_Error {
   XML_ERROR_UNKNOWN_ENCODING,
   XML_ERROR_INCORRECT_ENCODING,
   XML_ERROR_UNCLOSED_CDATA_SECTION,
-  XML_ERROR_EXTERNAL_ENTITY_HANDLING
+  XML_ERROR_EXTERNAL_ENTITY_HANDLING,
+  XML_ERROR_NOT_STANDALONE
 };
 
 /* If XML_Parse or XML_ParseBuffer have returned 0, then XML_GetErrorCode
