@@ -515,8 +515,6 @@ checkProlog(DTD *dtd, const char *s, const char *end,
     case XML_ROLE_ERROR:
       *nextPtr = s;
       switch (tok) {
-      case XML_TOK_COND_SECT_OPEN:
-	return condSect;
       case XML_TOK_PARAM_ENTITY_REF:
 	return paramEntityRef;
       case XML_TOK_INVALID:
