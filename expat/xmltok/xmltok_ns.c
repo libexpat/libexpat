@@ -45,7 +45,7 @@ int NS(XmlInitEncoding)(INIT_ENCODING *p, const ENCODING **encPtr, const char *n
   int i = getEncodingIndex(name);
   if (i == UNKNOWN_ENC)
     return 0;
-  INIT_ENC_INDEX(p) = (char)i;
+  SET_INIT_ENC_INDEX(p, i);
   p->initEnc.scanners[XML_PROLOG_STATE] = NS(initScanProlog);
   p->initEnc.scanners[XML_CONTENT_STATE] = NS(initScanContent);
   p->initEnc.updatePosition = initUpdatePosition;
