@@ -1,6 +1,5 @@
-/*
-Copyright (c) 1998, 1999 Thai Open Source Software Center Ltd
-See the file COPYING for copying permission.
+/* Copyright (c) 1998, 1999 Thai Open Source Software Center Ltd
+   See the file COPYING for copying permission.
 */
 
 #ifndef XmlRole_INCLUDED
@@ -80,10 +79,10 @@ enum {
 
 typedef struct prolog_state {
   int (*handler)(struct prolog_state *state,
-	         int tok,
-		 const char *ptr,
-		 const char *end,
-		 const ENCODING *enc);
+                 int tok,
+                 const char *ptr,
+                 const char *end,
+                 const ENCODING *enc);
   unsigned level;
 #ifdef XML_DTD
   unsigned includeLevel;
