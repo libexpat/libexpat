@@ -167,6 +167,7 @@ typedef void (*XML_StartElementHandler)(void *userData,
 typedef void (*XML_EndElementHandler)(void *userData,
 				      const XML_Char *name);
 
+
 /* s is not 0 terminated. */
 typedef void (*XML_CharacterDataHandler)(void *userData,
 					 const XML_Char *s,
@@ -389,10 +390,10 @@ XML_SetElementHandler(XML_Parser parser,
 		      XML_EndElementHandler end);
 
 void 
-XML_SetStartElementHandler(XML_Parser parser, XML_StartElementHandler);
+XML_SetStartElementHandler(XML_Parser, XML_StartElementHandler);
 
 void 
-XML_SetEndElementHandler(XML_Parser parser, XML_EndElementHandler);
+XML_SetEndElementHandler(XML_Parser, XML_EndElementHandler);
 
 void 
 XML_SetCharacterDataHandler(XML_Parser parser,
@@ -489,6 +490,20 @@ XML_SetUnknownEncodingHandler(XML_Parser parser,
 processing instruction or character data.  It causes the corresponding
 markup to be passed to the default handler. */
 void  XML_DefaultCurrent(XML_Parser parser);
+
+/* If do_nst is non-zero, and namespace processing is in effect, and
+   a name has a prefix (i.e. an explicit namespace qualifier) then
+   that name is returned as a triplet in a single
+   string separated by the separator character specified when the parser
+   was created: URI + sep + local_name + sep + prefix.
+
+   If do_nst is zero, then namespace information is returned in the
+   default manner (URI + sep + local_name) whether or not the names
+   has a prefix.
+*/
+
+void
+XML_SetReturnNSTriplet(XML_Parser parser, int do_nst);
 
 /* This value is passed as the userData argument to callbacks. */
 void 

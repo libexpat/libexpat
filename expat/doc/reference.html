@@ -389,14 +389,20 @@ namespace declaration handlers with
 <code>XML_SetNamespaceDeclHandler</code></a>.
 
 <p>Element type and attribute names that belong to a given namespace are
-passed to the appropriate handler in expanded form. This expanded form
-is a concatenation of the namespace URI, the separator character (which
+passed to the appropriate handler in expanded form. By default this expanded
+form is a concatenation of the namespace URI, the separator character (which
 is the 2nd argument to <code>XML_ParserCreateNS</code>), and the local
 name (i.e. the part after the colon). Names with undeclared prefixes are
 passed through to the handlers unchanged, with the prefix and colon still
 attached. Unprefixed attribute names are never expanded, and unprefixed
 element names are only expanded when they are in the scope of a default
 namespace.
+
+<p>However if <a href="XML_SetReturnNSTriplet">XML_SetReturnNSTriplet</a>
+has been called with a non-zero <code>do_nst</code> parameter, then the
+expanded form for names with an explicit prefix is a concatenation of:
+URI, separator, local name, separator, prefix.
+</p>
 
 <p>You can set handlers for the start of a namespace declaration and for
 the end of a scope of a declaration with the
@@ -1433,6 +1439,26 @@ The choices for <code>code</code> are:
 <li>XML_PARAM_ENTITY_PARSING_UNLESS_STANDALONE
 <li>XML_PARAM_ENTITY_PARSING_ALWAYS
 </ul>
+</div>
+
+<div class="fcndec"><a name="XML_SetReturnNSTriplet"><pre>
+void
+XML_SetReturnNSTriplet(XML_Parser parser,
+                       int        do_nst);
+</pre></a></div>
+<div class="fcndef">
+<p>
+This function only has an effect when using a parser created with
+<a href="#XML_ParserCreateNS">XML_ParserCreateNS</a>, i.e. when namespace
+processing is in effect. The <code>do_nst</code> sets whether or not prefixes
+are returned with names qualified with a namespace prefix. If this function
+is called with <code>do_nst</code> non-zero, then afterwards namespace
+qualified names (that is qualified with a prefix as opposed to belonging
+to a default namespace) are returned as a triplet with the three parts
+separated by the namespace separator specified when the parser was created.
+The order of returned parts is URI, local name, and prefix.</p>
+<p>If <code>do_nst</code> is zero, then namespaces are reported in the
+default manner, URI then local_name separated by the namespace separator.</p>
 </div>
 
 </body>

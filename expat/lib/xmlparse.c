@@ -362,6 +362,7 @@ typedef struct {
   const ENCODING *m_internalEncoding;
   const XML_Char *m_protocolEncodingName;
   int m_ns;
+  int m_ns_triplets;
   void *m_unknownEncodingMem;
   void *m_unknownEncodingData;
   void *m_unknownEncodingHandlerData;
@@ -447,6 +448,7 @@ typedef struct {
 #define unknownEncodingRelease (((Parser *)parser)->m_unknownEncodingRelease)
 #define protocolEncodingName (((Parser *)parser)->m_protocolEncodingName)
 #define ns (((Parser *)parser)->m_ns)
+#define ns_triplets (((Parser *)parser)->m_ns_triplets)
 #define prologState (((Parser *)parser)->m_prologState)
 #define processor (((Parser *)parser)->m_processor)
 #define errorCode (((Parser *)parser)->m_errorCode)
@@ -627,6 +629,7 @@ XML_ParserCreate_MM(const XML_Char *encodingName,
   paramEntityParsing = XML_PARAM_ENTITY_PARSING_NEVER;
 #endif
   ns = 0;
+  ns_triplets = 0;
   poolInit(&tempPool, &(((Parser *) parser)->m_mem));
   poolInit(&temp2Pool, &(((Parser *) parser)->m_mem));
   protocolEncodingName = encodingName ? poolCopyString(&tempPool, encodingName) : 0;
@@ -695,6 +698,7 @@ XML_Parser XML_ExternalEntityParserCreate(XML_Parser oldParser,
   XML_EntityDeclHandler oldEntityDeclHandler = entityDeclHandler;
   XML_XmlDeclHandler oldXmlDeclHandler = xmlDeclHandler;
   ELEMENT_TYPE * oldDeclElementType = declElementType;
+
   void *oldUserData = userData;
   void *oldHandlerArg = handlerArg;
   int oldDefaultExpandInternalEntities = defaultExpandInternalEntities;
@@ -702,6 +706,7 @@ XML_Parser XML_ExternalEntityParserCreate(XML_Parser oldParser,
 #ifdef XML_DTD
   int oldParamEntityParsing = paramEntityParsing;
 #endif
+  int oldns_triplets = ns_triplets;
 
   if (ns) {
     XML_Char tmp[2];
@@ -746,6 +751,7 @@ XML_Parser XML_ExternalEntityParserCreate(XML_Parser oldParser,
   if (oldExternalEntityRefHandlerArg != oldParser)
     externalEntityRefHandlerArg = oldExternalEntityRefHandlerArg;
   defaultExpandInternalEntities = oldDefaultExpandInternalEntities;
+  ns_triplets = oldns_triplets;
 #ifdef XML_DTD
   paramEntityParsing = oldParamEntityParsing;
   if (context) {
@@ -825,6 +831,11 @@ void XML_ParserFree(XML_Parser parser)
 void XML_UseParserAsHandlerArg(XML_Parser parser)
 {
   handlerArg = parser;
+}
+
+void
+XML_SetReturnNSTriplet(XML_Parser parser, int do_nst) {
+  ns_triplets = do_nst;
 }
 
 void XML_SetUserData(XML_Parser parser, void *p)
@@ -1985,6 +1996,15 @@ static enum XML_Error storeAtts(XML_Parser parser, const ENCODING *enc,
 	    if (!poolAppendChar(&tempPool, *s))
 	      return XML_ERROR_NO_MEMORY;
 	  } while (*s++);
+	  if (ns_triplets) {
+	    tempPool.ptr[-1] = namespaceSeparator;
+	    s = b->prefix->name;
+	    do {
+	      if (!poolAppendChar(&tempPool, *s))
+		return XML_ERROR_NO_MEMORY;
+	    } while (*s++);
+	  }
+
 	  appAtts[i] = poolStart(&tempPool);
 	  poolFinish(&tempPool);
 	}
