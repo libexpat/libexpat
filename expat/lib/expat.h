@@ -560,7 +560,7 @@ XML_SetExternalEntityRefHandlerArg(XML_Parser, void *arg);
 
 XMLPARSEAPI(void)
 XML_SetSkippedEntityHandler(XML_Parser parser,
-                                XML_SkippedEntityHandler handler);
+                            XML_SkippedEntityHandler handler);
 
 XMLPARSEAPI(void)
 XML_SetUnknownEncodingHandler(XML_Parser parser,
