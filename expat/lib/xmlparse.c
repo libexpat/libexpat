@@ -4944,7 +4944,10 @@ nextScaffoldPart(XML_Parser parser)
       dtd.scaffSize *= 2;
     }
     else {
-      temp = MALLOC(dtd.scaffSize * sizeof(CONTENT_SCAFFOLD));
+      /* 32 is the new value of dtd.scaffSize;
+         these two occurances must be kept in sync:
+      */
+      temp = MALLOC(32 * sizeof(CONTENT_SCAFFOLD));
       if (temp == NULL)
         return -1;
       dtd.scaffSize = 32;
