@@ -692,7 +692,7 @@ freeing any memory associated with <a href="#userdata">user data</a>.
 
 <pre class="fcndec" id="XML_ParserReset">
 XML_Bool
-XML_ParserReset(XML_Parser p);
+XML_ParserReset(XML_Parser p, const XML_Char *encoding);
 </pre>
 <div class="fcndef">
 Clean up the memory structures maintained by the parser so that it may
@@ -708,9 +708,9 @@ dealing with any memory associated with <a href="#userdata">user data</a>.
 <h3><a name="parsing">Parsing</a></h3>
 
 <p>To state the obvious: the three parsing functions <code><a href=
-"#XML_Parse" >XML_Parse</a></code>, <code><a href= "#XML_ParseBuffer"
->XML_ParseBuffer</a></code> and <code><a href= "#XML_GetBuffer"
->>XML_GetBuffer</a></code> must not be
+"#XML_Parse" >XML_Parse</a></code>, <code><a href= "#XML_ParseBuffer">
+XML_ParseBuffer</a></code> and <code><a href= "#XML_GetBuffer">
+XML_GetBuffer</a></code> must not be
 called from within a handler unless they operate on a separate parser
 instance, that is, one that did not call the handler. For example, it
 is OK to call the parsing functions from within an
