@@ -3866,7 +3866,8 @@ int poolGrow(STRING_POOL *pool)
     tem->size = blockSize;
     tem->next = pool->blocks;
     pool->blocks = tem;
-    memcpy(tem->s, pool->start, (pool->ptr - pool->start) * sizeof(XML_Char));
+    if (pool->ptr != pool->start)
+      memcpy(tem->s, pool->start, (pool->ptr - pool->start) * sizeof(XML_Char));
     pool->ptr = tem->s + (pool->ptr - pool->start);
     pool->start = tem->s;
     pool->end = tem->s + blockSize;
