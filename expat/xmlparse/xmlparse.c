@@ -496,6 +496,7 @@ XML_Parser XML_ParserCreate(const XML_Char *encodingName)
   namespaceSeparator = '!';
 #ifdef XML_DTD
   parentParser = 0;
+  paramEntityParsing = XML_PARAM_ENTITY_PARSING_NEVER;
 #endif
   ns = 0;
   poolInit(&tempPool);
