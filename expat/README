@@ -53,11 +53,12 @@ bash, use this command to build:
 	PATH=/usr/ccs/bin:$PATH make
 
 Alternatively, on Win32 systems with Microsoft's Developer's Studio
-installed, you can simply double-click on lib/expat.dsw from Windows
+installed, you can simply double-click on win32/expat.dsw from Windows
 Explorer and build and install in the usual way from with DevStudio.
 
 Another alternative you may choose to download expat_win32bin which
-includes a pre-compiled DLL.
+includes a pre-compiled DLL and LIB files for expat, and the xmlwf
+application as an EXE file.
 
 A reference manual is available in the file doc/reference.html in this
 distribution.
