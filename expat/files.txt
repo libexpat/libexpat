@@ -27,5 +27,5 @@ xmlwf/readfilemap.c
 xmlwf/unixfilemap.c
 xmlwf/win32filemap.c
 xmlwf/xmlwf.c
-demo/demo.c
-demo/makedemo.bat
+sample/elements.c
+sample/build.bat
