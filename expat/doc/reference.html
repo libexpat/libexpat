@@ -525,11 +525,12 @@ in Expat:</p>
 protocol encoding specified in the parser constructor, triggers a call
 to the <code>UnknownEncodingHandler</code>. This handler gets passed
 the encoding name and a pointer to an <code>XML_Encoding</code> data
-structure. Your handler must fill in this structure and return 1 if it
-knows how to deal with the encoding. Otherwise the handler should
-return 0.  The handler also gets passed a pointer to an optional
-application data structure that you may indicate when you set the
-handler.</p>
+structure. Your handler must fill in this structure and return
+<code>XML_STATUS_OK</code> if it knows how to deal with the
+encoding. Otherwise the handler should return
+<code>XML_STATUS_ERROR</code>.  The handler also gets passed a pointer
+to an optional application data structure that you may indicate when
+you set the handler.</p>
 
 <p>Expat places restrictions on character encodings that it can
 support by filling in the <code>XML_Encoding</code> structure.
@@ -1016,18 +1017,20 @@ href="#XML_SetBase">XML_SetBase</a></code> and may be NULL. The
 declaration and may be NULL.  <code>systemId</code> is the system
 identifier specified in the entity declaration and is never NULL.</p>
 
-<p>There are a couple of ways in which this handler differs from others.
-First, this handler returns an integer. A non-zero value should be returned
-for successful handling of the external entity reference. Returning a zero
-indicates failure, and causes the calling parser to return
-an <code>XML_ERROR_EXTERNAL_ENTITY_HANDLING</code> error.</p>
+<p>There are a couple of ways in which this handler differs from
+others.  First, this handler returns a status indicator (an
+integer). <code>XML_STATUS_OK</code> should be returned for successful
+handling of the external entity reference.  Returning
+<code>XML_STATUS_ERROR</code> indicates failure, and causes the
+calling parser to return an
+<code>XML_ERROR_EXTERNAL_ENTITY_HANDLING</code> error.</p>
 
-<p>Second, instead of having userData as its first argument, it receives the
-parser that encountered the entity reference. This, along with the context
-parameter, may be used as arguments to a call to <code><a href=
-"#XML_ExternalEntityParserCreate">XML_ExternalEntityParserCreate</a></code>.
-Using the returned parser, the body of the external entity can be recursively
-parsed.</p>
+<p>Second, instead of having the user data as its first argument, it
+receives the parser that encountered the entity reference. This, along
+with the context parameter, may be used as arguments to a call to
+<code><a href= "#XML_ExternalEntityParserCreate"
+>XML_ExternalEntityParserCreate</a></code>.  Using the returned
+parser, the body of the external entity can be recursively parsed.</p>
 
 <p>Since this handler may be called recursively, it should not be saving
 information into global or static variables.</p>
@@ -1078,17 +1081,17 @@ typedef struct {
   void (*release)(void *data);
 } XML_Encoding;
 </pre>
-<p>Set a handler to deal with encodings other than the
-<a href="#builtin_encodings">built in set</a>. This should  be done before
+<p>Set a handler to deal with encodings other than the <a
+href="#builtin_encodings">built in set</a>. This should be done before
 <code><a href= "#XML_Parse" >XML_Parse</a></code> or <code><a href=
 "#XML_ParseBuffer" >XML_ParseBuffer</a></code> have been called on the
-given parser.</p>
-<p>If the handler knows how to deal with an encoding with the given
-name, it should fill in the <code>info</code> data structure and return
-1. Otherwise it should return 0. The handler will be called at most
-once per parsed (external) entity. The optional application data
-pointer <code>encodingHandlerData</code> will be passed back to the
-handler.</p>
+given parser.</p> <p>If the handler knows how to deal with an encoding
+with the given name, it should fill in the <code>info</code> data
+structure and return <code>XML_STATUS_ERROR</code>. Otherwise it
+should return <code>XML_STATUS_OK</code>. The handler will be called
+at most once per parsed (external) entity. The optional application
+data pointer <code>encodingHandlerData</code> will be passed back to
+the handler.</p>
 
 <p>The map array contains information for every possible possible leading
 byte in a byte sequence. If the corresponding value is &gt;= 0, then it's
@@ -1399,19 +1402,20 @@ typedef int
 <p>Set a handler that is called if the document is not "standalone".
 This happens when there is an external subset or a reference to a
 parameter entity, but does not have standalone set to "yes" in an XML
-declaration.  If this handler returns 0, then the parser will throw an
-<code>XML_ERROR_NOT_STANDALONE</code> error.</p>
+declaration.  If this handler returns <code>XML_STATUS_ERROR</code>,
+then the parser will throw an <code>XML_ERROR_NOT_STANDALONE</code>
+error.</p>
 </div>
 
 <h3><a name="position">Parse position and error reporting functions</a></h3>
 
 <p>These are the functions you'll want to call when the parse
-functions return 0 (i.e. a parse error has ocurred), although the
-position reporting functions are useful outside of errors. The
-position reported is the byte position (in the original document or
-entity encoding) of the first of the sequence of characters that
-generated the current event (or the error that caused the parse
-functions to return 0.)</p>
+functions return <code>XML_STATUS_ERROR</code> (a parse error has
+ocurred), although the position reporting functions are useful outside
+of errors. The position reported is the byte position (in the original
+document or entity encoding) of the first of the sequence of
+characters that generated the current event (or the error that caused
+the parse functions to return <code>XML_STATUS_ERROR</code>.)</p>
 
 <p>The position reporting functions are accurate only outside of the
 DTD.  In other words, they usually return bogus information when
@@ -1529,10 +1533,10 @@ void
 XML_UseParserAsHandlerArg(XML_Parser p);
 </pre>
 <div class="fcndef">
-After this is called, handlers receive the parser in the userData
-argument. The userData information can still be obtained using the
-<code><a href= "#XML_GetUserData" >XML_GetUserData</a></code>
-function.
+After this is called, handlers receive the parser in their
+<code>userData</code> arguments.  The user data can still be obtained
+using the <code><a href= "#XML_GetUserData"
+>XML_GetUserData</a></code> function.
 </div>
 
 <pre class="fcndec" id="XML_SetBase">
@@ -1542,8 +1546,9 @@ XML_SetBase(XML_Parser p,
 </pre>
 <div class="fcndef">
 Set the base to be used for resolving relative URIs in system
-identifiers.  The return value is 0 if there's no memory to store
-base, otherwise it's non-zero.
+identifiers.  The return value is <code>XML_STATUS_ERROR</code> if
+there's no memory to store base, otherwise it's
+<code>XML_STATUS_OK</code>.
 </div>
 
 <pre class="fcndec" id="XML_GetBase">
