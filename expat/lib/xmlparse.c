@@ -437,8 +437,8 @@ typedef struct {
   INIT_ENCODING m_initEncoding;
   const ENCODING *m_internalEncoding;
   const XML_Char *m_protocolEncodingName;
-  int m_ns;
-  int m_ns_triplets;
+  XML_Bool m_ns;
+  XML_Bool m_ns_triplets;
   void *m_unknownEncodingMem;
   void *m_unknownEncodingData;
   void *m_unknownEncodingHandlerData;
@@ -450,7 +450,7 @@ typedef struct {
   const char *m_eventEndPtr;
   const char *m_positionPtr;
   OPEN_INTERNAL_ENTITY *m_openInternalEntities;
-  int m_defaultExpandInternalEntities;
+  XML_Bool m_defaultExpandInternalEntities;
   int m_tagLevel;
   ENTITY *m_declEntity;
   const XML_Char *m_doctypeName;
@@ -666,8 +666,8 @@ XML_ParserCreate_MM(const XML_Char *encodingName,
   freeTagList = NULL;
 
   namespaceSeparator = '!';
-  ns = 0;
-  ns_triplets = 0;
+  ns = XML_FALSE;
+  ns_triplets = XML_FALSE;
   poolInit(&tempPool, &(((Parser *) parser)->m_mem));
   poolInit(&temp2Pool, &(((Parser *) parser)->m_mem));
 
@@ -678,7 +678,7 @@ XML_ParserCreate_MM(const XML_Char *encodingName,
   }
 
   if (nameSep) {
-    ns = 1;
+    ns = XML_TRUE;
     internalEncoding = XmlGetInternalEncodingNS();
     namespaceSeparator = *nameSep;
 
@@ -750,7 +750,7 @@ parserInit(XML_Parser parser, const XML_Char *encodingName)
   eventEndPtr = NULL;
   positionPtr = NULL;
   openInternalEntities = 0;
-  defaultExpandInternalEntities = 1;
+  defaultExpandInternalEntities = XML_TRUE;
   tagLevel = 0;
   tagStack = 0;
   nSpecifiedAtts = 0;
@@ -824,7 +824,7 @@ XML_ExternalEntityParserCreate(XML_Parser oldParser,
 
   void *oldUserData = userData;
   void *oldHandlerArg = handlerArg;
-  int oldDefaultExpandInternalEntities = defaultExpandInternalEntities;
+  XML_Bool oldDefaultExpandInternalEntities = defaultExpandInternalEntities;
   void *oldExternalEntityRefHandlerArg = externalEntityRefHandlerArg;
 #ifdef XML_DTD
   int oldParamEntityParsing = paramEntityParsing;
@@ -965,7 +965,7 @@ XML_UseParserAsHandlerArg(XML_Parser parser)
 
 void
 XML_SetReturnNSTriplet(XML_Parser parser, int do_nst) {
-  ns_triplets = do_nst;
+  ns_triplets = do_nst ? XML_TRUE : XML_FALSE;
 }
 
 void
@@ -1077,7 +1077,7 @@ XML_SetDefaultHandler(XML_Parser parser,
                       XML_DefaultHandler handler)
 {
   defaultHandler = handler;
-  defaultExpandInternalEntities = 0;
+  defaultExpandInternalEntities = XML_FALSE;
 }
 
 void
@@ -1085,7 +1085,7 @@ XML_SetDefaultHandlerExpand(XML_Parser parser,
                             XML_DefaultHandler handler)
 {
   defaultHandler = handler;
-  defaultExpandInternalEntities = 1;
+  defaultExpandInternalEntities = XML_TRUE;
 }
 
 void
