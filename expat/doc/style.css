@@ -1,5 +1,37 @@
 body {
-  background-color: white
+  background-color: white;
+  border: 0px;
+  margin: 0px;
+  padding: 0px;
+}
+
+.corner {
+  width: 200px;
+  height: 80px;
+  text-align: center;
+}
+
+.banner {
+  background-color: rgb(110,139,61);
+  color: rgb(255,236,176);
+  padding-left: 2em;
+}
+
+.banner h1 {
+  font-size: 200%;
+}
+
+.content {
+  padding: 0em 2em 1em 2em;
+}
+
+.releaseno {
+  background-color: rgb(110,139,61);
+  color: rgb(255,236,176);
+  padding-bottom: 0.3em;
+  padding-top: 0.5em;
+  text-align: center;
+  font-weight: bold;
 }
 
 .noborder {
