@@ -1424,8 +1424,9 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal)
   case XML_FINISHED:
     errorCode = XML_ERROR_FINISHED;
     return XML_STATUS_ERROR;
+  default:
+    parsing = XML_PARSING;
   }
-  parsing = XML_PARSING;
 
   if (len == 0) {
     finalBuffer = (XML_Bool)isFinal;
@@ -1449,8 +1450,10 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal)
       case XML_INITIALIZED: 
       case XML_PARSING:
         parsing = XML_FINISHED;
+        /* fall through */
+      default:
+        return XML_STATUS_OK;
       }
-      return XML_STATUS_OK;
     }
     eventEndPtr = eventPtr;
     processor = errorProcessor;
@@ -1531,7 +1534,7 @@ enum XML_Status XMLCALL
 XML_ParseBuffer(XML_Parser parser, int len, int isFinal)
 {
   const char *start;
-  enum XML_Error result;
+  enum XML_Error result = XML_STATUS_OK;
 
   switch (parsing) {
   case XML_SUSPENDED:
@@ -1540,8 +1543,9 @@ XML_ParseBuffer(XML_Parser parser, int len, int isFinal)
   case XML_FINISHED:
     errorCode = XML_ERROR_FINISHED;
     return XML_STATUS_ERROR;
+  default:
+    parsing = XML_PARSING;
   }
-  parsing = XML_PARSING;
 
   start = bufferPtr;
   positionPtr = start;
@@ -1564,11 +1568,11 @@ XML_ParseBuffer(XML_Parser parser, int len, int isFinal)
       break;
     case XML_INITIALIZED: 
     case XML_PARSING:
-      result = XML_STATUS_OK;
       if (isFinal) {
         parsing = XML_FINISHED;
         return result;
       }
+    default: ;  /* should not happen */
     }
   }
 
@@ -1587,7 +1591,9 @@ XML_GetBuffer(XML_Parser parser, int len)
   case XML_FINISHED:
     errorCode = XML_ERROR_FINISHED;
     return NULL;
+  default: ;
   }
+
   if (len > bufferLim - bufferEnd) {
     /* FIXME avoid integer overflow */
     int neededSize = len + (bufferEnd - bufferPtr);
@@ -1664,15 +1670,16 @@ XML_StopParser(XML_Parser parser, XML_Bool resumable)
   case XML_FINISHED:
     errorCode = XML_ERROR_FINISHED;
     return XML_STATUS_ERROR;
+  default:
+    parsing = resumable ? XML_SUSPENDED : XML_FINISHED;
   }
-  parsing = resumable ? XML_SUSPENDED : XML_FINISHED;
   return XML_STATUS_OK;
 }
 
 enum XML_Status XMLCALL
 XML_ResumeParser(XML_Parser parser)
 {
-  enum XML_Error result;
+  enum XML_Error result = XML_STATUS_OK;
 
   if (parsing != XML_SUSPENDED) {
     errorCode = XML_ERROR_NOT_SUSPENDED;
@@ -1694,11 +1701,11 @@ XML_ResumeParser(XML_Parser parser)
       break;
     case XML_INITIALIZED: 
     case XML_PARSING:
-      result = XML_STATUS_OK;
       if (finalBuffer) {
         parsing = XML_FINISHED;
         return result;
       }
+    default: ;
     }
   }
 
@@ -2049,8 +2056,9 @@ externalEntityInitProcessor3(XML_Parser parser,
         return XML_ERROR_NONE;
       case XML_FINISHED:
         return XML_ERROR_ABORTED;
+      default:
+        start = next;
       }
-      start = next;
     }
     break;
   case XML_TOK_PARTIAL:
@@ -2536,6 +2544,7 @@ doContent(XML_Parser parser,
       return XML_ERROR_NONE;
     case XML_FINISHED:
       return XML_ERROR_ABORTED;
+    default: ;
     }
   }
   /* not reached */
@@ -3068,6 +3077,7 @@ doCdataSection(XML_Parser parser,
       return XML_ERROR_NONE;
     case XML_FINISHED:
       return XML_ERROR_ABORTED;
+    default: ;
     }
   }
   /* not reached */
@@ -3393,8 +3403,9 @@ entityValueInitProcessor(XML_Parser parser,
         return XML_ERROR_NONE;
       case XML_FINISHED:
         return XML_ERROR_ABORTED;
+      default:
+        *nextPtr = next;
       }
-      *nextPtr = next;
       /* stop scanning for text declaration - we found one */
       processor = entityValueProcessor;
       return entityValueProcessor(parser, next, end, nextPtr);
@@ -4448,10 +4459,10 @@ doProlog(XML_Parser parser,
       return XML_ERROR_NONE;
     case XML_FINISHED:
       return XML_ERROR_ABORTED;
+    default:
+      s = next;
+      tok = XmlPrologTok(enc, s, end, &next);
     }
-
-    s = next;
-    tok = XmlPrologTok(enc, s, end, &next);
   }
   /* not reached */
 }
@@ -4519,6 +4530,7 @@ epilogProcessor(XML_Parser parser,
       return XML_ERROR_NONE;
     case XML_FINISHED:
       return XML_ERROR_ABORTED;
+    default: ;
     }
   }
 }
@@ -4527,7 +4539,7 @@ static enum XML_Error
 processInternalEntity(XML_Parser parser, ENTITY *entity)
 {
   const char *textStart, *textEnd;
-  char *next;
+  const char *next;
   enum XML_Error result;
   OPEN_INTERNAL_ENTITY *openEntity;
 
@@ -4585,7 +4597,7 @@ internalEntityProcessor(XML_Parser parser,
 {
   ENTITY *entity;
   const char *textStart, *textEnd;
-  char *next;
+  const char *next;
   int processorTagLevel;
   enum XML_Error result;
   OPEN_INTERNAL_ENTITY *openEntity = openInternalEntities;
