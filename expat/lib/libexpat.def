@@ -67,3 +67,7 @@ EXPORTS
   XML_MemMalloc @60
   XML_MemRealloc @61
   XML_MemFree @62
+; added with version 1.95.8
+  XML_StopParser @63
+  XML_ResumeParser @64
+  XML_GetParsingStatus @65

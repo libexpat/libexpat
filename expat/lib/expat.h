@@ -127,8 +127,10 @@ typedef unsigned char XML_Bool;
 enum XML_Status {
   XML_STATUS_ERROR = 0,
 #define XML_STATUS_ERROR XML_STATUS_ERROR
-  XML_STATUS_OK = 1
+  XML_STATUS_OK = 1,
 #define XML_STATUS_OK XML_STATUS_OK
+  XML_STATUS_SUSPENDED = 2,
+#define XML_STATUS_SUSPENDED XML_STATUS_SUSPENDED
 };
 
 enum XML_Error {
@@ -159,7 +161,11 @@ enum XML_Error {
   XML_ERROR_ENTITY_DECLARED_IN_PE,
   XML_ERROR_FEATURE_REQUIRES_XML_DTD,
   XML_ERROR_CANT_CHANGE_FEATURE_ONCE_PARSING,
-  XML_ERROR_UNBOUND_PREFIX
+  XML_ERROR_UNBOUND_PREFIX,
+  XML_ERROR_SUSPENDED,
+  XML_ERROR_NOT_SUSPENDED,
+  XML_ERROR_ABORTED,
+  XML_ERROR_FINISHED
 };
 
 enum XML_Content_Type {
@@ -817,6 +823,53 @@ XML_GetBuffer(XML_Parser parser, int len);
 
 XMLPARSEAPI(enum XML_Status)
 XML_ParseBuffer(XML_Parser parser, int len, int isFinal);
+
+/* Stops parsing, causing XML_Parse() or XML_ParseBuffer() to return as
+   soon as possible, but some handler call-backs - which would otherwise
+   get lost - may still follow. Examples: endElementHandler() for empty 
+   elements when stopped in startElementHandler(), endNameSpaceDeclHandler()
+   when stopped in endElementHandler(), and possibly others.
+
+   Can be called from most handlers, including DTD related call-backs.
+   Returns XML_STATUS_OK when successful, XML_STATUS_ERROR otherwise.
+   Possible error codes: XML_ERROR_SUSPENDED, XML_ERROR_FINISHED.
+   When resumable = XML_TRUE then parsing is suspended, that is, 
+   XML_Parse() and XML_ParseBuffer() return XML_STATUS_SUSPENDED. 
+   Otherwise, parsing is aborted, that is, XML_Parse() and XML_ParseBuffer()
+   return XML_STATUS_ERROR with error code XML_ERROR_ABORTED.
+
+   When suspended, parsing can be resumed by calling XML_ResumeParser(). 
+*/
+XMLPARSEAPI(enum XML_Status)
+XML_StopParser(XML_Parser parser, XML_Bool resumable);
+
+/* Resumes parsing after it has been suspended with XML_StopParser().
+   Must not be called from within a handler call-back. Returns same
+   status codes as XML_Parse() or XML_ParseBuffer().
+   Additional error code XML_ERROR_NOT_SUSPENDED possible.   
+*/
+XMLPARSEAPI(enum XML_Status)
+XML_ResumeParser(XML_Parser parser);
+
+enum XML_Parsing {
+  XML_INITIALIZED,
+  XML_PARSING,
+  XML_FINISHED,
+  XML_SUSPENDED
+};
+
+typedef struct {
+  enum XML_Parsing parsing;
+  XML_Bool finalBuffer;
+} XML_ParsingStatus;
+
+/* Returns status of parser with respect to being initialized, parsing,
+   finished, or suspended and processing the final buffer.
+   XXX XML_Parse() and XML_ParseBuffer() should return XML_ParsingStatus,
+   XXX with XML_FINISHED_OK or XML_FINISHED_ERROR replacing XML_FINISHED
+*/
+XMLPARSEAPI(XML_ParsingStatus)
+XML_GetParsingStatus(XML_Parser parser);
 
 /* Creates an XML_Parser object that can parse an external general
    entity; context is a '\0'-terminated string specifying the parse
