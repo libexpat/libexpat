@@ -41,16 +41,30 @@ and have time to write about them. </p>
   <li> All structural event callback functions will return an
   <code>XML_Status</code> value that the parser will check.  This will
   allow an application to stop or suspend processing without having to
-  use <code>setjmp()</code>/<code>longjmp()</code> hackery. </li>
-
-  <li> The parser will support suspension of parsing to allow an
-  application to pause parsing temporarily.  A new
-  <code>XML_Status</code> value, <code>XML_STATUS_SUSPEND</code>, can
-  be returned by the event callbacks to indicate that Expat should
-  suspend parsing; the parser will then return from
-  <code>XML_Parse()</code>, returning <code>XML_STATUS_SUSPEND</code>.
-  Applications can resume parsing by calling
-  <code>XML_ParseResume()</code>. </li>
+  call <code>XML_StopParser</code>, which will therefore become obsolete. </li>
+  
+  <li> The memory management function signatures will gain an additional
+  userData-like parameter, so that memory usage can be associated
+  with a context, allowing usage of memory pools and tracking of memory
+  usage per parser.  The latter could be used to prevent the so-called
+  "million laughs" DoS attack. </li>
+  
+  <li> Change how qualified names are reported.  Instead of passing one
+  string where the name parts are separated by a special character, we
+  are going to use <code>QName</code> structs with members for local name,
+  namespace URI and prefix. This will apply to element names and attribute
+  names passed to <code>XML_StartElementHandler</code> and  
+  <code>XML_EndElementHandler</code>.  </li>
+  
+  <li> We will try to add a way of setting additional encodings
+  by name, using the existing framework built around
+  <code>XML_UnknownEncodingHandler</code>. </li>
+  
+  <li> Create different link symbols for different XML_Char sizes.
+  This would make it possible for different shared libraries making up an
+  application on linux, to link against expat shared libraries that have
+  been compiled with different definitions for XML_Char.</li>
+  
 </ul>
 
         </td>
@@ -66,4 +80,4 @@ and have time to write about them. </p>
       </tr>
     </table>
   </body>
-</html>
+</html>@
