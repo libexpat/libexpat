@@ -90,6 +90,7 @@ tests/chardata.h
 tests/minicheck.c
 tests/minicheck.h
 tests/runtests.c
+tests/runtestspp.cpp
 tests/xmltest.sh
 vms/README.vms
 vms/descrip.mms
