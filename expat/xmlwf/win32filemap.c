@@ -1,6 +1,5 @@
-/*
-Copyright (c) 1998, 1999 Thai Open Source Software Center Ltd
-See the file COPYING for copying permission.
+/* Copyright (c) 1998, 1999 Thai Open Source Software Center Ltd
+   See the file COPYING for copying permission.
 */
 
 #define STRICT 1
@@ -23,9 +22,10 @@ See the file COPYING for copying permission.
 
 static void win32perror(const TCHAR *);
 
-int filemap(const TCHAR *name,
-	    void (*processor)(const void *, size_t, const TCHAR *, void *arg),
-	    void *arg)
+int
+filemap(const TCHAR *name,
+        void (*processor)(const void *, size_t, const TCHAR *, void *arg),
+        void *arg)
 {
   HANDLE f;
   HANDLE m;
@@ -34,7 +34,7 @@ int filemap(const TCHAR *name,
   void *p;
 
   f = CreateFile(name, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING,
-			  FILE_FLAG_SEQUENTIAL_SCAN, NULL);
+                          FILE_FLAG_SEQUENTIAL_SCAN, NULL);
   if (f == INVALID_HANDLE_VALUE) {
     win32perror(name);
     return 0;
@@ -75,17 +75,18 @@ int filemap(const TCHAR *name,
   return 1;
 }
 
-static
-void win32perror(const TCHAR *s)
+static void
+win32perror(const TCHAR *s)
 {
   LPVOID buf;
-  if (FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
-		    NULL,
-		    GetLastError(),
-		    MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-		    (LPTSTR) &buf,
-		    0,
-		    NULL)) {
+  if (FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER
+                    | FORMAT_MESSAGE_FROM_SYSTEM,
+                    NULL,
+                    GetLastError(),
+                    MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+                    (LPTSTR) &buf,
+                    0,
+                    NULL)) {
     _ftprintf(stderr, _T("%s: %s"), s, buf);
     fflush(stderr);
     LocalFree(buf);

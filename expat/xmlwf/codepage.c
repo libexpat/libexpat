@@ -1,6 +1,5 @@
-/*
-Copyright (c) 1998, 1999 Thai Open Source Software Center Ltd
-See the file COPYING for copying permission.
+/* Copyright (c) 1998, 1999 Thai Open Source Software Center Ltd
+   See the file COPYING for copying permission.
 */
 
 #include "codepage.h"
@@ -11,7 +10,8 @@ See the file COPYING for copying permission.
 
 #include <windows.h>
 
-int codepageMap(int cp, int *map)
+int
+codepageMap(int cp, int *map)
 {
   int i;
   CPINFO info;
@@ -26,7 +26,7 @@ int codepageMap(int cp, int *map)
         break;
       lim = info.LeadByte[i + 1];
       for (j = info.LeadByte[i]; j < lim; j++)
-	map[j] = -2;
+        map[j] = -2;
     }
   }
   for (i = 0; i < 256; i++) {
@@ -34,30 +34,33 @@ int codepageMap(int cp, int *map)
      char c = (char)i;
      unsigned short n;
      if (MultiByteToWideChar(cp, MB_PRECOMPOSED|MB_ERR_INVALID_CHARS,
-		             &c, 1, &n, 1) == 1)
+                             &c, 1, &n, 1) == 1)
        map[i] = n;
    }
   }
   return 1;
 }
 
-int codepageConvert(int cp, const char *p)
+int
+codepageConvert(int cp, const char *p)
 {
   unsigned short c;
   if (MultiByteToWideChar(cp, MB_PRECOMPOSED|MB_ERR_INVALID_CHARS,
-		          p, 2, &c, 1) == 1)
+                          p, 2, &c, 1) == 1)
     return c;
   return -1;
 }
 
 #else /* not WIN32 */
 
-int codepageMap(int cp, int *map)
+int
+codepageMap(int cp, int *map)
 {
   return 0;
 }
 
-int codepageConvert(int cp, const char *p)
+int
+codepageConvert(int cp, const char *p)
 {
   return -1;
 }

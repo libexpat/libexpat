@@ -1,6 +1,5 @@
-/*
-Copyright (c) 1998, 1999 Thai Open Source Software Center Ltd
-See the file COPYING for copying permission.
+/* Copyright (c) 1998, 1999 Thai Open Source Software Center Ltd
+   See the file COPYING for copying permission.
 */
 
 #include <stdio.h>
@@ -41,7 +40,6 @@ See the file COPYING for copying permission.
 #endif
 
 
-
 typedef struct {
   XML_Parser parser;
   int *retPtr;
@@ -54,17 +52,17 @@ reportError(XML_Parser parser, const XML_Char *filename)
   const XML_Char *message = XML_ErrorString(code);
   if (message)
     ftprintf(stdout, T("%s:%d:%d: %s\n"),
-	     filename,
-	     XML_GetErrorLineNumber(parser),
-	     XML_GetErrorColumnNumber(parser),
-	     message);
+             filename,
+             XML_GetErrorLineNumber(parser),
+             XML_GetErrorColumnNumber(parser),
+             message);
   else
     ftprintf(stderr, T("%s: (unknown message %d)\n"), filename, code);
 }
 
 static void
 processFile(const void *data, size_t size,
-	    const XML_Char *filename, void *args)
+            const XML_Char *filename, void *args)
 {
   XML_Parser parser = ((PROCESS_ARGS *)args)->parser;
   int *retPtr = ((PROCESS_ARGS *)args)->retPtr;
@@ -88,7 +86,7 @@ isAsciiLetter(XML_Char c)
 
 static const XML_Char *
 resolveSystemId(const XML_Char *base, const XML_Char *systemId,
-		XML_Char **toFree)
+                XML_Char **toFree)
 {
   XML_Char *s;
   *toFree = 0;
@@ -101,7 +99,7 @@ resolveSystemId(const XML_Char *base, const XML_Char *systemId,
      )
     return systemId;
   *toFree = (XML_Char *)malloc((tcslen(base) + tcslen(systemId) + 2)
-			       * sizeof(XML_Char));
+                               * sizeof(XML_Char));
   if (!*toFree)
     return systemId;
   tcscpy(*toFree, base);
@@ -118,10 +116,10 @@ resolveSystemId(const XML_Char *base, const XML_Char *systemId,
 
 static int
 externalEntityRefFilemap(XML_Parser parser,
-			 const XML_Char *context,
-			 const XML_Char *base,
-			 const XML_Char *systemId,
-			 const XML_Char *publicId)
+                         const XML_Char *context,
+                         const XML_Char *base,
+                         const XML_Char *systemId,
+                         const XML_Char *publicId)
 {
   int result;
   XML_Char *s;
@@ -157,27 +155,27 @@ processStream(const XML_Char *filename, XML_Parser parser)
     char *buf = XML_GetBuffer(parser, READ_SIZE);
     if (!buf) {
       if (filename != NULL)
-	close(fd);
+        close(fd);
       ftprintf(stderr, T("%s: out of memory\n"),
-	       filename != NULL ? filename : "xmlwf");
+               filename != NULL ? filename : "xmlwf");
       return 0;
     }
     nread = read(fd, buf, READ_SIZE);
     if (nread < 0) {
       tperror(filename != NULL ? filename : "STDIN");
       if (filename != NULL)
-	close(fd);
+        close(fd);
       return 0;
     }
     if (!XML_ParseBuffer(parser, nread, nread == 0)) {
       reportError(parser, filename != NULL ? filename : "STDIN");
       if (filename != NULL)
-	close(fd);
+        close(fd);
       return 0;
     }
     if (nread == 0) {
       if (filename != NULL)
-	close(fd);
+        close(fd);
       break;;
     }
   }
@@ -186,10 +184,10 @@ processStream(const XML_Char *filename, XML_Parser parser)
 
 static int
 externalEntityRefStream(XML_Parser parser,
-			const XML_Char *context,
-			const XML_Char *base,
-			const XML_Char *systemId,
-			const XML_Char *publicId)
+                        const XML_Char *context,
+                        const XML_Char *base,
+                        const XML_Char *systemId,
+                        const XML_Char *publicId)
 {
   XML_Char *s;
   const XML_Char *filename;
@@ -205,8 +203,8 @@ externalEntityRefStream(XML_Parser parser,
 
 int
 XML_ProcessFile(XML_Parser parser,
-		const XML_Char *filename,
-		unsigned flags)
+                const XML_Char *filename,
+                unsigned flags)
 {
   int result;
 
@@ -217,9 +215,9 @@ XML_ProcessFile(XML_Parser parser,
 
   if (flags & XML_EXTERNAL_ENTITIES)
       XML_SetExternalEntityRefHandler(parser,
-	                              (flags & XML_MAP_FILE)
-				      ? externalEntityRefFilemap
-				      : externalEntityRefStream);
+                                      (flags & XML_MAP_FILE)
+                                      ? externalEntityRefFilemap
+                                      : externalEntityRefStream);
   if (flags & XML_MAP_FILE) {
     PROCESS_ARGS args;
     args.retPtr = &result;
