@@ -42,7 +42,8 @@ RSC=rc.exe
 # PROP Intermediate_Dir "Release"
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MT /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "EXPAT_EXPORTS" /Yu"stdafx.h" /FD /c
-# ADD CPP /nologo /MT /W3 /GX /O2 /D "NDEBUG" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "EXPAT_EXPORTS" /D "COMPILED_FROM_DSP" /Yu"stdafx.h" /FD /c
+# ADD CPP /nologo /MT /W3 /GX /O2 /D "NDEBUG" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "EXPAT_EXPORTS" /D "COMPILED_FROM_DSP" /FD /c
+# SUBTRACT CPP /YX /Yc /Yu
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0x409 /d "NDEBUG"
@@ -68,7 +69,7 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MTd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "EXPAT_EXPORTS" /Yu"stdafx.h" /FD /GZ /c
-# ADD CPP /nologo /MTd /W3 /GX /ZI /Od /D "_DEBUG" /D "COMPILED_FROM_DSP" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "EXPAT_EXPORTS" /FD /GZ /c
+# ADD CPP /nologo /MTd /W3 /GX /ZI /Od /D "_DEBUG" /D "COMPILED_FROM_DSP" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "EXPAT_EXPORTS" /FR /FD /GZ /c
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0x409 /d "_DEBUG"
@@ -95,11 +96,11 @@ SOURCE=.\xmlparse.c
 
 !IF  "$(CFG)" == "expat - Win32 Release"
 
-# ADD CPP /D VERSION=\"expat_1.95.1\"
+# ADD CPP /D VERSION=\"expat_1.95.2\"
 
 !ELSEIF  "$(CFG)" == "expat - Win32 Debug"
 
-# ADD CPP /GX- /Od /D VERSION=\"expat_1.95.1\"
+# ADD CPP /GX- /Od /D VERSION=\"expat_1.95.2\"
 
 !ENDIF 
 
@@ -107,64 +108,12 @@ SOURCE=.\xmlparse.c
 # Begin Source File
 
 SOURCE=.\xmlrole.c
-
-!IF  "$(CFG)" == "expat - Win32 Release"
-
-# ADD CPP /D VERSION=\"expat_1.95.1\"
-
-!ELSEIF  "$(CFG)" == "expat - Win32 Debug"
-
-# ADD CPP /D VERSION=\"expat_1.95.1\"
-
-!ENDIF 
-
+# ADD CPP /D VERSION=\"expat_1.95.2\"
 # End Source File
 # Begin Source File
 
 SOURCE=.\xmltok.c
-
-!IF  "$(CFG)" == "expat - Win32 Release"
-
-# ADD CPP /D VERSION=\"expat_1.95.1\"
-
-!ELSEIF  "$(CFG)" == "expat - Win32 Debug"
-
-# ADD CPP /D VERSION=\"expat_1.95.1\"
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
-SOURCE=xmltok_impl.c
-
-!IF  "$(CFG)" == "expat - Win32 Release"
-
-# ADD CPP /D VERSION=\"expat_1.95.1\"
-
-!ELSEIF  "$(CFG)" == "expat - Win32 Debug"
-
-# PROP Exclude_From_Build 1
-# ADD CPP /D VERSION=\"expat_1.95.1\"
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
-SOURCE=xmltok_ns.c
-
-!IF  "$(CFG)" == "expat - Win32 Release"
-
-# ADD CPP /D VERSION=\"expat_1.95.1\"
-
-!ELSEIF  "$(CFG)" == "expat - Win32 Debug"
-
-# PROP Exclude_From_Build 1
-# ADD CPP /D VERSION=\"expat_1.95.1\"
-
-!ENDIF 
-
+# ADD CPP /D VERSION=\"expat_1.95.2\"
 # End Source File
 # End Group
 # Begin Group "Header Files"
@@ -219,9 +168,5 @@ SOURCE=.\xmltok_impl.h
 
 # PROP Default_Filter "ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe"
 # End Group
-# Begin Source File
-
-SOURCE=.\ReadMe.txt
-# End Source File
 # End Target
 # End Project
