@@ -76,12 +76,14 @@ PACKAGE = @PACKAGE@
 RANLIB = @RANLIB@
 VERSION = @VERSION@
 
-SUBDIRS = lib
+SUBDIRS = lib examples sample xmlwf
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 CONFIG_HEADERS = config.h:config.hin
 
 DISTDIR = $(PACKAGE)-$(VERSION)
 DISTRIBUTION = $(DISTDIR).tar.gz
+
+buildlib: lib
 
 all: $(SUBDIRS)
 
@@ -119,7 +121,7 @@ distclean:
 	@list='$(SUBDIRS)'; for dir in $$list; do \
 	  cd $$dir; $(MAKE) distclean; cd ..; \
 	done
-	rm -f config.h config.status config.log libtool examples/Makefile xmlwf/Makefile
+	rm -f config.h config.status config.log libtool examples/Makefile xmlwf/Makefile sample/Makefile
 
 maintainer-clean: distclean
 	rm -f $(DISTRIBUTION)
