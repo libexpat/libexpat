@@ -293,6 +293,19 @@ enum XML_Error {
   XML_ERROR_EXTERNAL_ENTITY_HANDLING
 };
 
+/* If XML_Parse or XML_ParseBuffer have returned 0, then XML_GetErrorCode
+returns information about the error. */
+
+enum XML_Error XMLPARSEAPI XML_GetErrorCode(XML_Parser parser);
+
+/* These functions return information about the current parse location.
+They may be called when XML_Parse or XML_ParseBuffer return 0;
+in this case the location is the location of the character at which
+the error was detected.
+They may also be called from any other callback called to report
+some parse event; in this the location is the location of the first
+of the sequence of characters that generated the event. */
+
 int XMLPARSEAPI XML_GetCurrentLineNumber(XML_Parser parser);
 int XMLPARSEAPI XML_GetCurrentColumnNumber(XML_Parser parser);
 long XMLPARSEAPI XML_GetCurrentByteIndex(XML_Parser parser);
@@ -302,14 +315,11 @@ long XMLPARSEAPI XML_GetCurrentByteIndex(XML_Parser parser);
 #define XML_GetErrorColumnNumber XML_GetCurrentColumnNumber
 #define XML_GetErrorByteIndexNumber XML_GetCurrentByteIndexNumber
 
-/* If XML_Parser or XML_ParseEnd have returned 0, then XML_GetErrorCode
-returns information about the error. */
-
-enum XML_Error XMLPARSEAPI XML_GetErrorCode(XML_Parser parser);
-
+/* Frees memory used by the parser. */
 void XMLPARSEAPI
 XML_ParserFree(XML_Parser parser);
 
+/* Returns a string describing the error. */
 const XML_Char XMLPARSEAPI *
 XML_ErrorString(int code);
 
