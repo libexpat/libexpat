@@ -10,35 +10,34 @@ extern "C" {
 #endif
 
 /* The following tokens may be returned by both XmlPrologTok and XmlContentTok */
-#define XML_TOK_NONE -3    /* The string to be scanned is empty */
+#define XML_TOK_NONE -4    /* The string to be scanned is empty */
+#define XML_TOK_TRAILING_CR -3 /* A CR at the end of the scan;
+                                  might be part of CRLF sequence */ 
 #define XML_TOK_PARTIAL_CHAR -2 /* only part of a multibyte sequence */
 #define XML_TOK_PARTIAL -1 /* only part of a token */
 #define XML_TOK_INVALID 0
 
-/* The following token is returned by XmlPrologTok when it detects the end
-of the prolog and is also returned by XmlContentTok */
+/* The following tokens are returned by XmlContentTok; some are also
+  returned by XmlAttributeValueTok and XmlEntityTok */
 
 #define XML_TOK_START_TAG_WITH_ATTS 1
 #define XML_TOK_START_TAG_NO_ATTS 2
 #define XML_TOK_EMPTY_ELEMENT_WITH_ATTS 3 /* empty element tag <e/> */
 #define XML_TOK_EMPTY_ELEMENT_NO_ATTS 4
-
-/* The following tokens are returned only by XmlContentTok */
-
 #define XML_TOK_END_TAG 5
 #define XML_TOK_DATA_CHARS 6
-#define XML_TOK_CDATA_SECTION 7
-#define XML_TOK_ENTITY_REF 8
-#define XML_TOK_CHAR_REF 9     /* numeric character reference */
+#define XML_TOK_DATA_NEWLINE 7
+#define XML_TOK_CDATA_SECTION 8
+#define XML_TOK_ENTITY_REF 9
+#define XML_TOK_CHAR_REF 10     /* numeric character reference */
 
 /* The following tokens may be returned by both XmlPrologTok and XmlContentTok */
-#define XML_TOK_PI 10      /* processing instruction */
-#define XML_TOK_COMMENT 11
-#define XML_TOK_BOM 12     /* Byte order mark */
+#define XML_TOK_PI 11      /* processing instruction */
+#define XML_TOK_COMMENT 12
+#define XML_TOK_BOM 13     /* Byte order mark */
 
 /* The following tokens are returned only by XmlPrologTok */
-#define XML_TOK_LITERAL 13
-#define XML_TOK_PARAM_ENTITY_REF 14
+#define XML_TOK_INSTANCE_START 14
 #define XML_TOK_PROLOG_S 15
 #define XML_TOK_DECL_OPEN 16 /* <!foo */
 #define XML_TOK_DECL_CLOSE 17 /* > */
@@ -51,47 +50,89 @@ of the prolog and is also returned by XmlContentTok */
 #define XML_TOK_CLOSE_PAREN 24
 #define XML_TOK_OPEN_BRACKET 25
 #define XML_TOK_CLOSE_BRACKET 26
-/* The following occur only in element type declarations */
-#define XML_TOK_COMMA 27
-#define XML_TOK_CLOSE_PAREN_QUESTION 28 /* )? */
-#define XML_TOK_CLOSE_PAREN_ASTERISK 29 /* )* */
-#define XML_TOK_CLOSE_PAREN_PLUS 30 /* )+ */
-#define XML_TOK_NAME_QUESTION 31 /* name? */
-#define XML_TOK_NAME_ASTERISK 32 /* name* */
-#define XML_TOK_NAME_PLUS 33 /* name+ */
-#define XML_TOK_COND_SECT_OPEN 34 /* <![ */
-#define XML_TOK_COND_SECT_CLOSE 35 /* ]]> */
+#define XML_TOK_LITERAL 27
+#define XML_TOK_PARAM_ENTITY_REF 28
 
-#define XML_NSTATES 2
+/* The following occur only in element type declarations */
+#define XML_TOK_COMMA 29
+#define XML_TOK_NAME_QUESTION 30 /* name? */
+#define XML_TOK_NAME_ASTERISK 31 /* name* */
+#define XML_TOK_NAME_PLUS 32 /* name+ */
+#define XML_TOK_COND_SECT_OPEN 33 /* <![ */
+#define XML_TOK_COND_SECT_CLOSE 34 /* ]]> */
+#define XML_TOK_CLOSE_PAREN_QUESTION 35 /* )? */
+#define XML_TOK_CLOSE_PAREN_ASTERISK 36 /* )* */
+#define XML_TOK_CLOSE_PAREN_PLUS 37 /* )+ */
+
+
+#define XML_N_STATES 2
 #define XML_PROLOG_STATE 0
 #define XML_CONTENT_STATE 1
+
+#define XML_N_LITERAL_TYPES 2
+#define XML_ATTRIBUTE_VALUE_LITERAL 0
+#define XML_ENTITY_VALUE_LITERAL 1
+
+#define XML_N_INTERNAL_ENCODINGS 1
+#define XML_UTF8_ENCODING 0
+#if 0
+#define XML_UTF16_ENCODING 1
+#define XML_UCS4_ENCODING 2
+#endif
+
+#define XML_MAX_BYTES_PER_CHAR 4
 
 typedef struct position {
   /* first line and first column are 0 not 1 */
   unsigned long lineNumber;
   unsigned long columnNumber;
-  /* if the last character counted was CR, then an immediately
-     following LF should be ignored */
-  int ignoreInitialLF;
 } POSITION;
 
-typedef struct encoding {
-  int (*scanners[XML_NSTATES])(const struct encoding *,
-			       const char *,
-			       const char *,
-			       const char **);
-  int (*sameName)(const struct encoding *,
+typedef struct {
+  const char *name;
+  const char *valuePtr;
+  const char *valueEnd;
+  char containsRef;
+} ATTRIBUTE;
+
+struct encoding;
+typedef struct encoding ENCODING;
+
+struct encoding {
+  int (*scanners[XML_N_STATES])(const ENCODING *,
+			        const char *,
+			        const char *,
+			        const char **);
+  int (*literalScanners[XML_N_LITERAL_TYPES])(const ENCODING *,
+					      const char *,
+					      const char *,
+					      const char **);
+  int (*sameName)(const ENCODING *,
 	          const char *, const char *);
-  int (*nameMatchesAscii)(const struct encoding *,
+  int (*nameMatchesAscii)(const ENCODING *,
 			  const char *, const char *);
-  int (*getAtts)(const struct encoding *enc, const char *ptr,
-	         int attsMax, const char **atts);
-  void (*updatePosition)(const struct encoding *,
+  int (*nameLength)(const ENCODING *, const char *);
+  int (*getAtts)(const ENCODING *enc, const char *ptr,
+	         int attsMax, ATTRIBUTE *atts);
+  int (*charRefNumber)(const ENCODING *enc, const char *ptr);
+  void (*updatePosition)(const ENCODING *,
 			 const char *ptr,
 			 const char *end,
 			 POSITION *);
+  int (*isPublicId)(const ENCODING *enc, const char *ptr, const char *end,
+		    const char **badPtr);
+  int (*isSystemId)(const ENCODING *enc, const char *ptr, const char *end,
+		    const char **badPtr);
+  int (*encode)(const ENCODING *enc,
+		int charNum,
+		char *buf);
+  void (*convert[XML_N_INTERNAL_ENCODINGS])(const ENCODING *enc,
+					    const char **fromP,
+					    const char *fromLim,
+					    char **toP,
+					    const char *toLim);
   int minBytesPerChar;
-} ENCODING;
+};
 
 /*
 Scan the string starting at ptr until the end of the next complete token,
@@ -123,21 +164,64 @@ literals, comments and processing instructions.
 #define XmlContentTok(enc, ptr, end, nextTokPtr) \
    XmlTok(enc, XML_CONTENT_STATE, ptr, end, nextTokPtr)
 
+/* This is used for performing a 2nd-level tokenization on
+the content of a literal that has already been returned by XmlTok. */ 
+
+#define XmlLiteralTok(enc, literalType, ptr, end, nextTokPtr) \
+  (((enc)->literalScanners[literalType])(enc, ptr, end, nextTokPtr))
+
+#define XmlAttributeValueTok(enc, ptr, end, nextTokPtr) \
+   XmlLiteralTok(enc, XML_ATTRIBUTE_VALUE_LITERAL, ptr, end, nextTokPtr)
+
+#define XmlEntityValueTok(enc, ptr, end, nextTokPtr) \
+   XmlLiteralTok(enc, XML_ENTITY_VALUE_LITERAL, ptr, end, nextTokPtr)
+
 #define XmlSameName(enc, ptr1, ptr2) (((enc)->sameName)(enc, ptr1, ptr2))
-#define XmlNameMatchesAscii(enc, ptr1, ptr2) (((enc)->nameMatchesAscii)(enc, ptr1, ptr2))
+
+#define XmlNameMatchesAscii(enc, ptr1, ptr2) \
+  (((enc)->nameMatchesAscii)(enc, ptr1, ptr2))
+
+#define XmlNameLength(enc, ptr) \
+  (((enc)->nameLength)(enc, ptr))
 
 #define XmlGetAttributes(enc, ptr, attsMax, atts) \
   (((enc)->getAtts)(enc, ptr, attsMax, atts))
 
+#define XmlCharRefNumber(enc, ptr) \
+  (((enc)->charRefNumber)(enc, ptr))
+
 #define XmlUpdatePosition(enc, ptr, end, pos) \
   (((enc)->updatePosition)(enc, ptr, end, pos))
+
+#define XmlIsPublicId(enc, ptr, end, badPtr) \
+  (((enc)->isPublicId)(enc, ptr, end, badPtr))
+
+#define XmlIsSystemId(enc, ptr, end, badPtr) \
+  (((enc)->isSystemId)(enc, ptr, end, badPtr))
+
+#define XmlEncode(enc, ch, buf) \
+  (((enc)->encode)(enc, ch, buf))
+
+#define XmlConvert(enc, targetEnc, fromP, fromLim, toP, toLim) \
+  (((enc)->convert[targetEnc])(enc, fromP, fromLim, toP, toLim))
 
 typedef struct {
   ENCODING initEnc;
   const ENCODING **encPtr;
 } INIT_ENCODING;
 
+int XMLTOKAPI XmlParseXmlDecl(int isGeneralTextEntity,
+			      const ENCODING *enc,
+			      const char *ptr,
+	  		      const char *end,
+			      const char **badPtr,
+			      const char **versionPtr,
+			      const char **encodingNamePtr,
+			      const ENCODING **namedEncodingPtr,
+			      int *standalonePtr);
+
 void XMLTOKAPI XmlInitEncoding(INIT_ENCODING *, const ENCODING **);
+const ENCODING XMLTOKAPI *XmlGetInternalEncoding(int);
 
 #ifdef __cplusplus
 }

@@ -10,6 +10,8 @@ extern "C" {
 enum {
   XML_ROLE_ERROR = -1,
   XML_ROLE_NONE = 0,
+  XML_ROLE_XML_DECL,
+  XML_ROLE_INSTANCE_START,
   XML_ROLE_DOCTYPE_NAME,
   XML_ROLE_DOCTYPE_SYSTEM_ID,
   XML_ROLE_DOCTYPE_PUBLIC_ID,
@@ -43,11 +45,11 @@ enum {
   XML_ROLE_CONTENT_ANY,
   XML_ROLE_CONTENT_EMPTY,
   XML_ROLE_CONTENT_PCDATA,
-  XML_ROLE_CONTENT_GROUP_OPEN,
-  XML_ROLE_END_GROUP,
-  XML_ROLE_END_GROUP_REP,
-  XML_ROLE_END_GROUP_OPT,
-  XML_ROLE_END_GROUP_PLUS,
+  XML_ROLE_GROUP_OPEN,
+  XML_ROLE_GROUP_CLOSE,
+  XML_ROLE_GROUP_CLOSE_REP,
+  XML_ROLE_GROUP_CLOSE_OPT,
+  XML_ROLE_GROUP_CLOSE_PLUS,
   XML_ROLE_GROUP_CHOICE,
   XML_ROLE_GROUP_SEQUENCE,
   XML_ROLE_CONTENT_ELEMENT,
@@ -56,14 +58,12 @@ enum {
   XML_ROLE_CONTENT_ELEMENT_PLUS
 };
 
-typedef int PROLOG_HANDLER(struct prolog_state *state,
-			   int tok,
-			   const char *ptr,
-			   const char *end,
-			   const ENCODING *enc);
-
 typedef struct prolog_state {
-  PROLOG_HANDLER *handler;
+  int (*handler)(struct prolog_state *state,
+	         int tok,
+		 const char *ptr,
+		 const char *end,
+		 const ENCODING *enc);
   unsigned level;
 } PROLOG_STATE;
 

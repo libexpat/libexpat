@@ -11,11 +11,29 @@ enum WfCheckResult {
   partialChar,
   tagMismatch,
   duplicateAttribute,
-  junkAfterDocElement
+  junkAfterDocElement,
+  paramEntityRef,
+  condSect,
+  undefinedEntity,
+  recursiveEntityRef,
+  asyncEntity,
+  badCharRef,
+  binaryEntityRef,
+  attributeExternalEntityRef,
+  misplacedXmlPi,
+  unknownEncoding,
+  incorrectEncoding
 };
 
-enum WfCheckResult wfCheck(const char *s, size_t n,
+enum EntityType {
+  documentEntity,
+  generalTextEntity
+};
+
+enum WfCheckResult wfCheck(enum EntityType entityType,
+			   const char *s, size_t n,
 			   const char **errorPtr,
 			   unsigned long *errorLineNumber,
 			   unsigned long *errorColNumber);
+const char *wfCheckMessage(enum WfCheckResult);
 

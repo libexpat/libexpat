@@ -51,7 +51,7 @@ int filemap(const char *name,
     fprintf(stderr, "%s: out of memory\n", name);
     return 0;
   }
-  n = _read(fd, p, nbytes);
+  n = read(fd, p, nbytes);
   if (n < 0) {
     perror(name);
     close(fd);

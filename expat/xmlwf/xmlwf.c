@@ -1,52 +1,59 @@
 #include <stdio.h>
+#include <string.h>
 #include "wfcheck.h"
 #include "filemap.h"
 
+struct ProcessFileArg {
+  enum EntityType entityType;
+  int result;
+};
+
 static
-void processFile(const void *data, size_t size, const char *filename, void *arg)
+void processFile(const void *data, size_t size, const char *filename, void *p)
 {
   const char *badPtr = 0;
   unsigned long badLine = 0;
   unsigned long badCol = 0;
-  int *ret = arg;
+  struct ProcessFileArg *arg = p;
   enum WfCheckResult result;
 
-  result = wfCheck(data, size, &badPtr, &badLine, &badCol);
+  result = wfCheck(arg->entityType, data, size, &badPtr, &badLine, &badCol);
   if (result) {
-    static const char *message[] = {
-      0,
-      "out of memory",
-      "syntax error",
-      "no element found",
-      "invalid token",
-      "unclosed token",
-      "unclosed token",
-      "mismatched tag",
-      "duplicate attribute",
-      "junk after document element",
-    };
-    fprintf(stderr, "%s:", filename);
+    const char *msg = wfCheckMessage(result);
+    fprintf(stdout, "%s:", filename);
     if (badPtr != 0)
-      fprintf(stderr, "%lu:%lu:", badLine+1, badCol);
-    fprintf(stderr, "E: %s", message[result]);
-    putc('\n', stderr);
-    if (!*ret)
-      *ret = 1;
+      fprintf(stdout, "%lu:%lu:", badLine+1, badCol);
+    fprintf(stdout, "E: %s", msg ? msg : "(unknown message)");
+    putc('\n', stdout);
+    arg->result = 1;
   }
+  else
+    arg->result = 0;
 }
-
 
 int main(int argc, char **argv)
 {
-  int i;
+  int i = 1;
   int ret = 0;
-  if (argc == 1) {
-    fprintf(stderr, "usage: %s filename ...\n", argv[0]);
+  struct ProcessFileArg arg;
+
+  arg.entityType = documentEntity;
+
+  if (i < argc && strcmp(argv[i], "-g") == 0) {
+    i++;
+    arg.entityType = generalTextEntity;
+  }
+  if (i < argc && strcmp(argv[i], "--") == 0)
+    i++;
+  if (i == argc) {
+    fprintf(stderr, "usage: %s [-g] filename ...\n", argv[0]);
     return 1;
   }
-  for (i = 1; i < argc; i++) {
-    if (!filemap(argv[i], processFile, &ret))
+  for (; i < argc; i++) {
+    if (!filemap(argv[i], processFile, &arg))
       ret = 2;
+    else if (arg.result && !ret)
+      ret = 1;
   }
   return ret;
 }
