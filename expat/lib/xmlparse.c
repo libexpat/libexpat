@@ -6,7 +6,7 @@ See the file COPYING for copying permission.
 #ifdef COMPILED_FROM_DSP
 #  include "winconfig.h"
 #  define XMLPARSEAPI(type) __declspec(dllexport) type __cdecl
-#  define XMLCALLBACK(type) type __cdecl
+#  define XMLCALLBACK(type,name) type (* __cdecl name)
 #  include "expat.h"
 #  undef XMLPARSEAPI
 #  undef XMLCALLBACK
@@ -15,7 +15,7 @@ See the file COPYING for copying permission.
 
 #ifdef __declspec
 #  define XMLPARSEAPI(type) __declspec(dllexport) type __cdecl
-#  define XMLCALLBACK(type) type __cdecl
+#  define XMLCALLBACK(type,name) type (* __cdecl name)
 #endif
 
 #include "expat.h"
