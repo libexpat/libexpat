@@ -33,14 +33,14 @@ from <a href="http://www.libexpat.org/">the Expat home page</a>.
 
 <p>The bulk of this document was originally commissioned as an article by
 <a href="http://www.xml.com/">XML.com</a>. They graciously allowed
-Clark Cooper to retain copyright and to distribute it with expat.</p>
+Clark Cooper to retain copyright and to distribute it with Expat.</p>
 
 <hr />
 <h2>Table of Contents</h2>
 <ul>
   <li><a href="#overview">Overview</a></li>
   <li><a href="#building">Building and Installing</a></li>
-  <li><a href="#using">Using expat</a></li>
+  <li><a href="#using">Using Expat</a></li>
   <li><a href="#reference">Reference</a>
   <ul>
     <li><a href="#creation">Parser Creation Functions</a>
@@ -208,9 +208,9 @@ end(void *data, const char *el) {
 shoveling the document to the parser so that it can do its work.</p>
 
 <hr />
-<h2><a name="building">Building and Installing expat</a></h2>
+<h2><a name="building">Building and Installing Expat</a></h2>
 
-<p>The expat distribution comes as a compressed (with GNU gzip) tar
+<p>The Expat distribution comes as a compressed (with GNU gzip) tar
 file.  You may download the latest version from <a href=
 "http://sourceforge.net/projects/expat/" >Source Forge</a>.  After
 unpacking this, cd into the directory. Then follow either the Win32
@@ -225,7 +225,7 @@ Developer Studio installed, then from Windows Explorer double-click on
 manner.</p>
 
 <p>Alternatively, you may download the Win32 binary package that
-contains the expat.h include file and a pre-built DLL.</p>
+contains the "expat.h" include file and a pre-built DLL.</p>
 
 <h3>Building under Unix (or GNU)</h3>
 
@@ -234,7 +234,7 @@ configure the Makefiles and headers for your system.</p>
 
 <p>If you're happy with all the defaults that configure picks for you,
 and you have permission on your system to install into /usr/local, you
-can install expat with this sequence of commands:</p>
+can install Expat with this sequence of commands:</p>
 
 <pre class="eg">
    ./configure
@@ -258,20 +258,21 @@ library and header would get installed in
 <hr />
 <h2><a name="using">Using Expat</a></h2>
 
-<h3>Compiling and Linking against expat</h3>
+<h3>Compiling and Linking Against Expat</h3>
 
-<p>Unless you installed expat in a location not expected by your
-compiler and linker, all you have to do to use expat in your programs
-is to include the expat header (<code>#include &lt;expat.h&gt;</code>)
+<p>Unless you installed Expat in a location not expected by your
+compiler and linker, all you have to do to use Expat in your programs
+is to include the Expat header (<code>#include &lt;expat.h&gt;</code>)
 in your files that make calls to it and to tell the linker that it
-needs to link against the expat library. On Unix systems, this would
-be the <code>-lexpat</code> argument.  Otherwise, you'll need to tell
-the compiler where to look for the expat header and the linker where
-to find the expat library. You may also need to take steps to tell the
-operating system where to find this libary at run time.</p>
+needs to link against the Expat library.  On Unix systems, this would
+usually be done with the <code>-lexpat</code> argument.  Otherwise,
+you'll need to tell the compiler where to look for the Expat header
+and the linker where to find the Expat library.  You may also need to
+take steps to tell the operating system where to find this libary at
+run time.</p>
 
 <p>On a Unix-based system, here's what a Makefile might look like when
-expat is installed in a standard location:</p>
+Expat is installed in a standard location:</p>
 
 <pre class="eg">
 CC=cc
@@ -281,7 +282,7 @@ xmlapp: xmlapp.o
         $(CC) $(LDFLAGS) -o xmlapp xmlapp.o $(LIBS)
 </pre>
 
-<p>If you installed expat in, say, <code>/home/me/mystuff</code>, then
+<p>If you installed Expat in, say, <code>/home/me/mystuff</code>, then
 the Makefile would look like this:</p>
 
 <pre class="eg">
@@ -302,13 +303,13 @@ your application.</p>
 <h3>Expat Basics</h3>
 
 <p>As we saw in the example in the overview, the first step in parsing
-an XML document with expat is to create a parser object. There are <a
-href="#creation">three functions</a> in the expat API for creating a
+an XML document with Expat is to create a parser object. There are <a
+href="#creation">three functions</a> in the Expat API for creating a
 parser object.  However, only two of these (<code><a href=
 "#XML_ParserCreate" >XML_ParserCreate</a></code> and <code><a href=
 "#XML_ParserCreateNS" >XML_ParserCreateNS</a></code>) can be used for
 constructing a parser for a top-level document.  The object returned
-by these functions is an opaque pointer (i.e. expat.h declares it as
+by these functions is an opaque pointer (i.e. "expat.h" declares it as
 void *) to data with further internal structure. In order to free the
 memory associated with this object you must call <code><a href=
 "#XML_ParserFree" >XML_ParserFree</a></code>. Note that if you have
@@ -397,7 +398,7 @@ handler.</p>
 
 <p>In order to be able to pass information between different handlers
 without using globals, you'll need to define a data structure to hold
-the shared variables. You can then tell expat (with the <code><a href=
+the shared variables. You can then tell Expat (with the <code><a href=
 "#XML_SetUserData" >XML_SetUserData</a></code> function) to pass a
 pointer to this structure to the handlers. This is typically the first
 argument received by most handlers.</p>
@@ -445,8 +446,8 @@ xmldecl_handler(void            *userData,
 <h3>Namespace Processing</h3>
 
 <p>When the parser is created using the <code><a href=
-"#XML_ParserCreateNS" >XML_ParserCreateNS</a></code>, function, expat
-performs namespace processing. Under namespace processing, expat
+"#XML_ParserCreateNS" >XML_ParserCreateNS</a></code>, function, Expat
+performs namespace processing. Under namespace processing, Expat
 consumes <code>xmlns</code> and <code>xmlns:...</code> attributes,
 which declare namespaces for the scope of the element in which they
 occur. This means that your start handler will not see these
@@ -506,13 +507,13 @@ looks like an XML declaration with just an encoding declaration:</p>
 &lt;?xml encoding="Big5"?&gt;
 </pre>
 
-<p>With expat, you may also specify an encoding at the time of
+<p>With Expat, you may also specify an encoding at the time of
 creating a parser. This is useful when the encoding information may
 come from a source outside the document itself (like a higher level
 protocol.)</p>
 
 <p><a name="builtin_encodings"></a>There are four built-in encodings
-in expat:</p>
+in Expat:</p>
 <ul>
 <li>UTF-8</li>
 <li>UTF-16</li>
@@ -556,11 +557,11 @@ function pointed at in the <code>XML_Encoding</code> structure. This
 function should return the Unicode scalar value for the sequence or -1
 if the sequence is malformed.</p>
 
-<p>One pitfall that novice expat users are likely to fall into is that
-although expat may accept input in various encodings, the strings that
-it passes to the handlers are always encoded in UTF-8. Your
-application is responsible for any translation of these strings into
-other encodings.</p>
+<p>One pitfall that novice Expat users are likely to fall into is that
+although Expat may accept input in various encodings, the strings that
+it passes to the handlers are always encoded in UTF-8 or UTF-16
+(depending on how Expat was compiled). Your application is responsible
+for any translation of these strings into other encodings.</p>
 
 <h3>Handling External Entity References</h3>
 
@@ -759,7 +760,7 @@ XML_GetBuffer(XML_Parser p,
 </pre>
 <div class="fcndef">
 Obtain a buffer of size <code>len</code> to read a piece of the document
-into. A NULL value is returned if expat can't allocate enough memory for
+into. A NULL value is returned if Expat can't allocate enough memory for
 this buffer. This has to be called prior to every call to
 <code><a href= "#XML_ParseBuffer" >XML_ParseBuffer</a></code>. A
 typical use would look like this:
@@ -1675,11 +1676,11 @@ XML_LChar *
 XML_ExpatVersion();
 </pre>
 <div class="fcndef">
-Return the library version as a string (e.g. "expat_1.95.1").
+Return the library version as a string (e.g. <code>"expat_1.95.1"</code>).
 </div>
 
 <pre class="fcndec" id="XML_ExpatVersionInfo">
-struct XML_expat_version
+struct XML_Expat_Version
 XML_ExpatVersionInfo();
 </pre>
 <pre class="signature">
