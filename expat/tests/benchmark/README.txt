@@ -4,7 +4,7 @@ Use this benchmark command line utility as follows:
 
 The command line arguments are:
 
-  -n             ... optional; if supplied, then namepsace processing is turned on
+  -n             ... optional; if supplied, then namespace processing is turned on
   <file name>    ... name/path of test xml file
   <buffer size>  ... size of processing buffer;
                      the file is parsed in chunks of this size
