@@ -1,15 +1,19 @@
 
 			Expat, Release 1.95.2
 
-This is expat, the C library for parsing XML, written by James Clark.
-Expat is a stream oriented XML parser.  This means that you register
-handlers with the parser prior to starting the parse.  These handlers
+This is expat, a C library for parsing XML, written by James Clark.
+Expat is a stream-oriented XML parser.  This means that you register
+handlers with the parser before starting the parse.  These handlers
 are called when the parser discovers the associated structures in the
 document being parsed.  A start tag is an example of the kind of
 structures for which you may register handlers.
 
+Windows users should use the expat_win32bin package, which includes
+both precompiled libraries and executalbes, and source code for
+developers.
+
 Expat is free software.  You may copy, distribute, and modify it under
-the terms of the License contained in the file, COPYING, distributed
+the terms of the License contained in the file COPYING distributed
 with this package.  This license is the same as the MIT/X Consortium
 license.
 
@@ -27,9 +31,10 @@ There are many options which you may provide to configure (which you
 can discover by running configure with the --help option).  But the
 one of most interest is the one that sets the installation directory.
 By default, the configure script will set things up to install
-libexpat into /usr/local/lib and expat.h into /usr/local/include.  If,
-for example, you'd prefer to install into /home/me/mystuff/lib and
-/home/me/mystuff/include, you can tell configure about that with:
+libexpat into /usr/local/lib, expat.h into /usr/local/include, and
+xmlwf into /usr/local/bin.  If, for example, you'd prefer to install
+into /home/me/mystuff/lib, /home/me/mystuff/include, and
+/home/me/mystuff/bin, you can tell configure about that with:
 
 	./configure --prefix=/home/me/mystuff
 
@@ -53,14 +58,6 @@ properly -- appearantly it does not understand .PHONY directives).  If
 you're using ksh or bash, use this command to build:
 
 	PATH=/usr/ccs/bin:$PATH make
-
-Alternatively, on Win32 systems with Microsoft's Developer's Studio
-installed, you can simply double-click on win32/expat.dsw from Windows
-Explorer and build and install in the usual way from with DevStudio.
-
-Another alternative you may choose to download expat_win32bin which
-includes a pre-compiled DLL and LIB files for expat, and the xmlwf
-application as an EXE file.
 
 A reference manual is available in the file doc/reference.html in this
 distribution.
