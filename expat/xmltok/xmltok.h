@@ -45,13 +45,14 @@ of the prolog and is also returned by XmlContentTok */
 #define XML_TOK_NAME 18
 #define XML_TOK_NMTOKEN 19
 #define XML_TOK_POUND_NAME 20 /* #name */
-#define XML_TOK_COMMA 21
-#define XML_TOK_OR 22 /* | */
-#define XML_TOK_PERCENT 23
-#define XML_TOK_OPEN_PAREN 24
-#define XML_TOK_CLOSE_PAREN 25
-#define XML_TOK_OPEN_BRACKET 26
-#define XML_TOK_CLOSE_BRACKET 27
+#define XML_TOK_OR 21 /* | */
+#define XML_TOK_PERCENT 22
+#define XML_TOK_OPEN_PAREN 23
+#define XML_TOK_CLOSE_PAREN 24
+#define XML_TOK_OPEN_BRACKET 25
+#define XML_TOK_CLOSE_BRACKET 26
+/* The following occur only in element type declarations */
+#define XML_TOK_COMMA 27
 #define XML_TOK_CLOSE_PAREN_QUESTION 28 /* )? */
 #define XML_TOK_CLOSE_PAREN_ASTERISK 29 /* )* */
 #define XML_TOK_CLOSE_PAREN_PLUS 30 /* )+ */
