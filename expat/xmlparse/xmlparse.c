@@ -2146,12 +2146,15 @@ defineAttribute(ELEMENT_TYPE *type, ATTRIBUTE_ID *attId, int isCdata, const XML_
 {
   DEFAULT_ATTRIBUTE *att;
   if (type->nDefaultAtts == type->allocDefaultAtts) {
-    if (type->allocDefaultAtts == 0)
+    if (type->allocDefaultAtts == 0) {
       type->allocDefaultAtts = 8;
-    else
+      type->defaultAtts = malloc(type->allocDefaultAtts*sizeof(DEFAULT_ATTRIBUTE));
+    }
+    else {
       type->allocDefaultAtts *= 2;
-    type->defaultAtts = realloc(type->defaultAtts,
-				type->allocDefaultAtts*sizeof(DEFAULT_ATTRIBUTE));
+      type->defaultAtts = realloc(type->defaultAtts,
+				  type->allocDefaultAtts*sizeof(DEFAULT_ATTRIBUTE));
+    }
     if (!type->defaultAtts)
       return 0;
   }
@@ -2279,7 +2282,8 @@ static void dtdDestroy(DTD *p)
     ELEMENT_TYPE *e = (ELEMENT_TYPE *)hashTableIterNext(&iter);
     if (!e)
       break;
-    free(e->defaultAtts);
+    if (e->allocDefaultAtts != 0)
+      free(e->defaultAtts);
   }
   hashTableDestroy(&(p->generalEntities));
   hashTableDestroy(&(p->elementTypes));
