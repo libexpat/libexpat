@@ -278,7 +278,7 @@ void metaStartElement(XML_Parser parser, const XML_Char *name, const XML_Char **
       ftprintf(fp, T("<attribute name=\"%s\" value=\""), atts[0]);
       characterData(fp, atts[1], tcslen(atts[1]));
       if (atts >= specifiedAttsEnd)
-	fputs(T("\" defaulted=\"yes\"/>\n"), fp);
+	fputts(T("\" defaulted=\"yes\"/>\n"), fp);
       else
 	fputts(T("\"/>\n"), fp);
     } while (*(atts += 2));
