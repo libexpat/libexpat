@@ -19,6 +19,7 @@ html       { border: 0px;
 
 dl dt      { font-weight: bold; }
 
+
 .content thead { background-color: rgb(110,139,61);
                  color: rgb(255,236,176);
                  }
@@ -34,3 +35,23 @@ dl dt      { font-weight: bold; }
 .content li    { margin: 0em;
                  padding-bottom: 0.75em;
                  }
+
+/* These margin and padding settings are tedious at best.  The idea is
+   to make sure we can put news items on the site that aren't just a
+   ordered or unordered list, and have it not look too ugly.
+*/
+dl dd ul,
+dl dd ul li    { padding-left: 0em;
+             margin-left: 0em; }
+
+dl dd      { margin-left: 2em; }
+
+dl, ol, ul,
+dl dt      { margin-top: 0em;
+             margin-bottom: 0em;
+             padding-top: 0em;
+             padding-bottom: 0em; }
+
+li,
+dl dd      { margin-top: 0em;
+             margin-bottom: 0.5em; }
