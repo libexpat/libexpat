@@ -9,7 +9,7 @@
 
 <H1>expat - XML Parser Toolkit</H1>
 
-<H3>Version 1.1</H3>
+<H3>Version 19990626</H3>
 
 <P>Copyright (c) 1998, 1999 James Clark.  Expat is subject to the <A
 HREF="http://www.mozilla.org/NPL/NPL-1_1Final.html">Mozilla Public
@@ -17,6 +17,14 @@ License Version 1.1</A>.  Alternatively you may use expat under the <A
 href="http://www.gnu.org/copyleft/gpl.html">GNU General Public
 License</A> instead.  Please contact me if you wish to negotiate an
 alternative license.</P>
+
+<P>This is a test version of expat which adds support for parsing
+external DTDs and parameter entities.  Compiling with -DXML_DTD
+enables this support.  There's a new <CODE>-p</CODE> option for xmlwf
+which will cause it to process external DTDs and parameter entities;
+this implies the <CODE>-x</CODE> option.  See the comment above
+<CODE>XML_SetParamEntityParsing</CODE> in <CODE>xmlparse.h</CODE> for
+the API addition that enables this.</P>
 
 <P>Expat is an <A
 HREF="http://www.w3.org/TR/1998/REC-xml-19980210">XML 1.0</A> parser
