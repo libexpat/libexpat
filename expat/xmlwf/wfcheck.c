@@ -175,6 +175,7 @@ int skipProlog(const char **startp, const char *end,
     case XML_TOK_PROLOG_S:
     case XML_TOK_LITERAL:
     case XML_TOK_COMMENT:
+    case XML_TOK_PI:
       break;
     default:
       if (!*doctypeP) {
