@@ -190,7 +190,7 @@ XML_ParserCreate_MM(const XML_Char *encoding,
    Added in Expat 1.95.3.
 */
 XMLPARSEAPI(int)
-XML_ParserReset(XML_Parser parser, const XML_Char *encodingName);
+XML_ParserReset(XML_Parser parser, const XML_Char *encoding);
 
 /* atts is array of name/value pairs, terminated by 0;
    names and values are 0 terminated.
@@ -366,6 +366,16 @@ typedef int (*XML_ExternalEntityRefHandler)(XML_Parser parser,
                                             const XML_Char *systemId,
                                             const XML_Char *publicId);
 
+/* This is called in two situations:
+   1) An entity reference is encountered for which no declaration
+      has been read *and* this is not an error.
+   2) An internal entity reference is read, but not expanded, because
+      XML_SetDefaultHandler has been called.
+*/
+typedef void (*XML_SkippedEntityHandler)(void *userData,
+                                         const XML_Char *entityName,
+                                         int is_parameter_entity);
+
 /* This structure is filled in by the XML_UnknownEncodingHandler to
    provide information to the parser about encodings that are unknown
    to the parser.
@@ -480,8 +490,8 @@ XML_SetEndCdataSectionHandler(XML_Parser parser,
                               XML_EndCdataSectionHandler end);
 
 /* This sets the default handler and also inhibits expansion of
-   internal entities.  The entity reference will be passed to the
-   default handler.
+   internal entities. These entity references will be passed to the
+   default handler, or to the skipped entity handler, if one is set.
 */
 XMLPARSEAPI(void)
 XML_SetDefaultHandler(XML_Parser parser,
@@ -543,6 +553,10 @@ XML_SetExternalEntityRefHandler(XML_Parser parser,
 */
 XMLPARSEAPI(void)
 XML_SetExternalEntityRefHandlerArg(XML_Parser, void *arg);
+
+XMLPARSEAPI(void)
+XML_SetSkippedEntityHandler(XML_Parser parser,
+				XML_SkippedEntityHandler handler);
 
 XMLPARSEAPI(void)
 XML_SetUnknownEncodingHandler(XML_Parser parser,

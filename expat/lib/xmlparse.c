@@ -417,6 +417,7 @@ typedef struct {
   XML_NotStandaloneHandler m_notStandaloneHandler;
   XML_ExternalEntityRefHandler m_externalEntityRefHandler;
   void *m_externalEntityRefHandlerArg;
+  XML_SkippedEntityHandler m_skippedEntityHandler;
   XML_UnknownEncodingHandler m_unknownEncodingHandler;
   XML_ElementDeclHandler m_elementDeclHandler;
   XML_AttlistDeclHandler m_attlistDeclHandler;
@@ -500,6 +501,7 @@ typedef struct {
 #define externalEntityRefHandler (((Parser *)parser)->m_externalEntityRefHandler)
 #define externalEntityRefHandlerArg (((Parser *)parser)->m_externalEntityRefHandlerArg)
 #define internalEntityRefHandler (((Parser *)parser)->m_internalEntityRefHandler)
+#define skippedEntityHandler (((Parser *)parser)->m_skippedEntityHandler)
 #define unknownEncodingHandler (((Parser *)parser)->m_unknownEncodingHandler)
 #define elementDeclHandler (((Parser *)parser)->m_elementDeclHandler)
 #define attlistDeclHandler (((Parser *)parser)->m_attlistDeclHandler)
@@ -708,6 +710,7 @@ int parserInit(XML_Parser parser, const XML_Char *encodingName)
   notStandaloneHandler = NULL;
   externalEntityRefHandler = NULL;
   externalEntityRefHandlerArg = parser;
+  skippedEntityHandler = NULL;
   unknownEncodingHandler = NULL;
   elementDeclHandler = NULL;
   attlistDeclHandler = NULL;
@@ -798,6 +801,7 @@ XML_Parser XML_ExternalEntityParserCreate(XML_Parser oldParser,
   XML_EndNamespaceDeclHandler oldEndNamespaceDeclHandler = endNamespaceDeclHandler;
   XML_NotStandaloneHandler oldNotStandaloneHandler = notStandaloneHandler;
   XML_ExternalEntityRefHandler oldExternalEntityRefHandler = externalEntityRefHandler;
+  XML_SkippedEntityHandler oldSkippedEntityHandler = skippedEntityHandler;
   XML_UnknownEncodingHandler oldUnknownEncodingHandler = unknownEncodingHandler;
   XML_ElementDeclHandler oldElementDeclHandler = elementDeclHandler;
   XML_AttlistDeclHandler oldAttlistDeclHandler = attlistDeclHandler;
@@ -844,6 +848,7 @@ XML_Parser XML_ExternalEntityParserCreate(XML_Parser oldParser,
   endNamespaceDeclHandler = oldEndNamespaceDeclHandler;
   notStandaloneHandler = oldNotStandaloneHandler;
   externalEntityRefHandler = oldExternalEntityRefHandler;
+  skippedEntityHandler = oldSkippedEntityHandler;
   unknownEncodingHandler = oldUnknownEncodingHandler;
   elementDeclHandler = oldElementDeclHandler;
   attlistDeclHandler = oldAttlistDeclHandler;
@@ -1116,6 +1121,12 @@ void XML_SetExternalEntityRefHandlerArg(XML_Parser parser, void *arg)
     externalEntityRefHandlerArg = arg;
   else
     externalEntityRefHandlerArg = parser;
+}
+
+void XML_SetSkippedEntityHandler(XML_Parser parser,
+				 XML_SkippedEntityHandler handler)
+{
+  skippedEntityHandler = handler;
 }
 
 void XML_SetUnknownEncodingHandler(XML_Parser parser,
@@ -1626,7 +1637,7 @@ doContent(XML_Parser parser,
 	XML_Char ch = (XML_Char) XmlPredefinedEntityName(enc,
 					      s + enc->minBytesPerChar,
 					      next - enc->minBytesPerChar);
-	if (ch) {
+  if (ch) {
 	  if (characterDataHandler)
 	    characterDataHandler(handlerArg, &ch, 1);
 	  else if (defaultHandler)
@@ -1642,9 +1653,11 @@ doContent(XML_Parser parser,
 	poolDiscard(&dtd.pool);
 	if (!entity) {
 	  if (!hadExternalDoctype || dtd.standalone)
-	    return XML_ERROR_UNDEFINED_ENTITY;
-	  if (defaultHandler)                       
-	    reportDefault(parser, enc, s, next);
+      return XML_ERROR_UNDEFINED_ENTITY;
+    if (skippedEntityHandler)
+      skippedEntityHandler(handlerArg, name, 0);
+    else if (defaultHandler)                       
+      reportDefault(parser, enc, s, next);
 	  break;
 	}
 	if (entity->open)
@@ -1655,8 +1668,11 @@ doContent(XML_Parser parser,
 	  if (entity->textPtr) {
 	    enum XML_Error result;
 	    OPEN_INTERNAL_ENTITY openEntity;
-	    if (defaultHandler && !defaultExpandInternalEntities) {
-	      reportDefault(parser, enc, s, next);  
+      if (!defaultExpandInternalEntities) {
+        if (skippedEntityHandler)
+          skippedEntityHandler(handlerArg, entity->name, 0);
+        else if (defaultHandler)
+          reportDefault(parser, enc, s, next);  
 	      break;
 	    }
 	    entity->open = 1;
@@ -1665,7 +1681,7 @@ doContent(XML_Parser parser,
 	    openEntity.entity = entity;
 	    openEntity.internalEventPtr = NULL;
 	    openEntity.internalEventEndPtr = NULL;
-	    result = doContent(parser,
+      result = doContent(parser,
 			       tagLevel,
 			       internalEncoding,
 			       (char *)entity->textPtr,
@@ -3417,6 +3433,8 @@ doProlog(XML_Parser parser,
 	if (!entity) {
     if (!hadExternalDoctype || dtd.standalone)
  	    return XML_ERROR_UNDEFINED_ENTITY;
+    if (skippedEntityHandler)
+      skippedEntityHandler(handlerArg, name, 1);
     break; 
 	}
 	if (entity->open)
@@ -3782,6 +3800,8 @@ appendAttributeValue(XML_Parser parser, const ENCODING *enc, int isCdata,
 	      eventPtr = ptr;
 	    return XML_ERROR_UNDEFINED_ENTITY;
 	  }
+    if (skippedEntityHandler)
+      skippedEntityHandler(handlerArg, name, 0);
 	}
 	else if (entity->open) {
 	  if (enc == encoding)
@@ -3903,7 +3923,10 @@ enum XML_Error storeEntityValue(XML_Parser parser,
       /* in the internal subset, PE references are
          not allowed within markup declarations    */
       eventPtr = entityTextPtr;
-      result = XML_ERROR_SYNTAX;
+      if (prologState.documentEntity)
+        result = XML_ERROR_PARAM_ENTITY_REF;
+      else
+        result = XML_ERROR_SYNTAX;
       goto endEntityValue;
     case XML_TOK_NONE:
       result = XML_ERROR_NONE;
