@@ -15,7 +15,7 @@ AppPublisherURL=http://expat.sourceforge.net/
 AppSupportURL=http://expat.sourceforge.net/
 AppUpdatesURL=http://expat.sourceforge.net/
 UninstallDisplayName=Expat XML Parser (version 1.95.2)
-UninstallFilesDir={app}\Uninstaller
+UninstallFilesDir={app}\Uninstall
 
 CompressLevel=9
 SourceDir=..
