@@ -74,7 +74,7 @@ copyright and to distribute it with expat.
 		  <li><a href="#XML_SetDefaultHandlerExpand">XML_SetDefaultHandlerExpand</a></li>
 		  <li><a href="#XML_SetExternalEntityRefHandler">XML_SetExternalEntityRefHandler</a></li>
 		  <li><a href="#XML_SetUnknownEncodingHandler">XML_SetUnknownEncodingHandler</a></li>
-		  <li><a href="#XML_SetStartCdataSectionHandler">XML_SetStartCdataSectionHandler</a></li>
+		  <li><a href="#XML_SetStartNamespaceDeclHandler">XML_SetStartNamespaceDeclHandler</a></li>
 		  <li><a href="#XML_SetEndNamespaceDeclHandler">XML_SetEndNamespaceDeclHandler</a></li>
 		  <li><a href="#XML_SetNamespaceDeclHandler">XML_SetNamespaceDeclHandler</a></li>
 		  <li><a href="#XML_SetXmlDeclHandler">XML_SetXmlDeclHandler</a></li>		  
@@ -958,9 +958,9 @@ finished with the encoding. It may be null.</p>
 </div>
 
 <div class="handler">
-<div class="setter"><a name="XML_SetStartCdataSectionHandler"><pre>
-XML_SetStartCdataSectionHandler(XML_Parser p,
-                                XML_StartCdataSectionHandler start);
+<div class="setter"><a name="XML_SetStartNamespaceDeclHandler"><pre>
+XML_SetStartNamespaceDeclHandler(XML_Parser p,
+			         XML_StartNamespaceDeclHandler start);
 </pre></a></div>
 <div class="signature"><pre>
 typedef void
@@ -1468,7 +1468,7 @@ default manner, URI then local_name separated by the namespace separator.</p>
 <div class="fcndec"><a name="XML_ExpatVersion"><pre>
 XML_LChar *
 XML_ExpatVersion();
-</pre></a>
+</pre></a></div>
 <div class="fcndef">
 Return the library version string.
 </div>
