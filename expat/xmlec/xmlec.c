@@ -7,7 +7,7 @@
 #ifdef _MSC_VER
 #define XMLTOKAPI __declspec(dllimport)
 #endif
-#include "XmlTok.h"
+#include "xmltok.h"
 
 #ifdef FILEMAP
 
