@@ -1559,7 +1559,7 @@ doContent(XML_Parser parser,
       {
 	const XML_Char *name;
 	ENTITY *entity;
-	XML_Char ch = XmlPredefinedEntityName(enc,
+	XML_Char ch = (XML_Char) XmlPredefinedEntityName(enc,
 					      s + enc->minBytesPerChar,
 					      next - enc->minBytesPerChar);
 	if (ch) {
@@ -3527,7 +3527,7 @@ appendAttributeValue(XML_Parser parser, const ENCODING *enc, int isCdata,
       {
 	const XML_Char *name;
 	ENTITY *entity;
-	XML_Char ch = XmlPredefinedEntityName(enc,
+	XML_Char ch = (XML_Char) XmlPredefinedEntityName(enc,
 					      ptr + enc->minBytesPerChar,
 					      next - enc->minBytesPerChar);
 	if (ch) {

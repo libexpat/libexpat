@@ -31,7 +31,7 @@ int codepageMap(int cp, int *map)
   }
   for (i = 0; i < 256; i++) {
    if (map[i] == -1) {
-     char c = i;
+     char c = (char)i;
      unsigned short n;
      if (MultiByteToWideChar(cp, MB_PRECOMPOSED|MB_ERR_INVALID_CHARS,
 		             &c, 1, &n, 1) == 1)
