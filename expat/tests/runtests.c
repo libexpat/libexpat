@@ -377,6 +377,7 @@ START_TEST(test_line_number_after_parse)
         "\n"
         "\n</tag>";
     int lineno;
+
     if (XML_Parse(parser, text, strlen(text), 0) == XML_STATUS_ERROR)
         xml_failure(parser);
     lineno = XML_GetCurrentLineNumber(parser);
@@ -393,12 +394,114 @@ START_TEST(test_column_number_after_parse)
 {
     char *text = "<tag></tag>";
     int colno;
+
     if (XML_Parse(parser, text, strlen(text), 0) == XML_STATUS_ERROR)
         xml_failure(parser);
     colno = XML_GetCurrentColumnNumber(parser);
     if (colno != 11) {
         char buffer[100];
         sprintf(buffer, "expected 11 columns, saw %d", colno);
+        fail(buffer);
+    }
+}
+END_TEST
+
+static void
+start_element_event_handler2(void *userData, const XML_Char *name,
+			     const XML_Char **attr)
+{
+    CharData *storage = (CharData *) userData;
+    char buffer[100];
+
+    sprintf(buffer, "<%s> at col:%d line:%d\n", name,
+	    XML_GetCurrentColumnNumber(parser),
+	    XML_GetCurrentLineNumber(parser));
+    CharData_AppendString(storage, buffer);
+}
+
+static void
+end_element_event_handler2(void *userData, const XML_Char *name)
+{
+    CharData *storage = (CharData *) userData;
+    char buffer[100];
+
+    sprintf(buffer, "</%s> at col:%d line:%d\n", name,
+	    XML_GetCurrentColumnNumber(parser),
+	    XML_GetCurrentLineNumber(parser));
+    CharData_AppendString(storage, buffer);
+}
+
+/* Regression test #3 for SF bug #653180. */
+START_TEST(test_line_and_column_numbers_inside_handlers)
+{
+    char *text =
+        "<a>\n"        /* Unix end-of-line */
+        "  <b>\r\n"    /* Windows end-of-line */
+        "    <c/>\r"   /* Mac OS end-of-line */
+        "  </b>\n"
+        "  <d>\n"
+        "    <f/>\n"
+        "  </d>\n"
+        "</a>";
+    char *expected =
+        "<a> at col:0 line:1\n"
+        "<b> at col:2 line:2\n"
+        "<c> at col:4 line:3\n"
+        "</c> at col:8 line:3\n"
+        "</b> at col:2 line:4\n"
+        "<d> at col:2 line:5\n"
+        "<f> at col:4 line:6\n"
+        "</f> at col:8 line:6\n"
+        "</d> at col:2 line:7\n"
+        "</a> at col:0 line:8\n";
+    CharData storage;
+
+    CharData_Init(&storage);
+    XML_SetUserData(parser, &storage);
+    XML_SetStartElementHandler(parser, start_element_event_handler2);
+    XML_SetEndElementHandler(parser, end_element_event_handler2);
+    if (XML_Parse(parser, text, strlen(text), 1) == XML_STATUS_ERROR)
+        xml_failure(parser);
+
+    CharData_CheckString(&storage, expected); 
+}
+END_TEST
+
+/* Regression test #4 for SF bug #653180. */
+START_TEST(test_line_number_after_error)
+{
+    char *text =
+        "<a>\n"
+        "  <b>\n"
+        "  </a>";  /* missing </b> */
+    int lineno;
+    if (XML_Parse(parser, text, strlen(text), 0) != XML_STATUS_ERROR)
+        fail("Expected a parse error");
+
+    lineno = XML_GetCurrentLineNumber(parser);
+    if (lineno != 3) {
+        char buffer[100];
+        sprintf(buffer, "expected 3 lines, saw %d", lineno);
+        fail(buffer);
+    }
+}
+END_TEST
+    
+/* Regression test #5 for SF bug #653180. */
+START_TEST(test_column_number_after_error)
+{
+    char *text =
+        "<a>\n"
+        "  <b>\n"
+        "  </a>";  /* missing </b> */
+    int colno;
+    if (XML_Parse(parser, text, strlen(text), 0) != XML_STATUS_ERROR)
+        fail("Expected a parse error");
+
+    colno = XML_GetCurrentColumnNumber(parser);
+    if (colno != 4) { 
+        char buffer[100];
+        sprintf(buffer, "expected 4 columns, saw %d", colno);
         fail(buffer);
     }
 }
@@ -1049,6 +1152,9 @@ make_basic_suite(void)
     tcase_add_test(tc_basic, test_utf8_false_rejection);
     tcase_add_test(tc_basic, test_line_number_after_parse);
     tcase_add_test(tc_basic, test_column_number_after_parse);
+    tcase_add_test(tc_basic, test_line_and_column_numbers_inside_handlers);
+    tcase_add_test(tc_basic, test_line_number_after_error);
+    tcase_add_test(tc_basic, test_column_number_after_error);
     tcase_add_test(tc_basic, test_really_long_lines);
     tcase_add_test(tc_basic, test_end_element_events);
     tcase_add_test(tc_basic, test_attr_whitespace_normalization);
