@@ -1425,6 +1425,59 @@ int PREFIX(charRefNumber)(const ENCODING *enc, const char *ptr)
 }
 
 static
+int PREFIX(predefinedEntityName)(const ENCODING *enc, const char *ptr, const char *end)
+{
+  switch (end - ptr) {
+  case 2 * MINBPC:
+    if (CHAR_MATCHES(enc, ptr + MINBPC, 't')) {
+      switch (BYTE_TO_ASCII(enc, ptr)) {
+      case 'l':
+	return '<';
+      case 'g':
+	return '>';
+      }
+    }
+    break;
+  case 3 * MINBPC:
+    if (CHAR_MATCHES(enc, ptr, 'a')) {
+      ptr += MINBPC;
+      if (CHAR_MATCHES(enc, ptr, 'm')) {
+	ptr += MINBPC;
+	if (CHAR_MATCHES(enc, ptr, 'p'))
+	  return '&';
+      }
+    }
+    break;
+  case 4 * MINBPC:
+    switch (BYTE_TO_ASCII(enc, ptr)) {
+    case 'q':
+      ptr += MINBPC;
+      if (CHAR_MATCHES(enc, ptr, 'u')) {
+	ptr += MINBPC;
+	if (CHAR_MATCHES(enc, ptr, 'o')) {
+	  ptr += MINBPC;
+  	  if (CHAR_MATCHES(enc, ptr, 't'))
+	    return '"';
+	}
+      }
+      break;
+    case 'a':
+      ptr += MINBPC;
+      if (CHAR_MATCHES(enc, ptr, 'p')) {
+	ptr += MINBPC;
+	if (CHAR_MATCHES(enc, ptr, 'o')) {
+	  ptr += MINBPC;
+  	  if (CHAR_MATCHES(enc, ptr, 's'))
+	    return '\'';
+	}
+      }
+      break;
+    }
+  }
+  return 0;
+}
+
+static
 int PREFIX(sameName)(const ENCODING *enc, const char *ptr1, const char *ptr2)
 {
   for (;;) {

@@ -78,7 +78,6 @@ typedef struct {
   const XML_Char *publicId;
   const XML_Char *notation;
   char open;
-  char magic;
 } ENTITY;
 
 typedef struct block {
@@ -811,10 +810,19 @@ doContent(XML_Parser parser,
       return XML_ERROR_PARTIAL_CHAR;
     case XML_TOK_ENTITY_REF:
       {
-	const XML_Char *name = poolStoreString(&dtd.pool, enc,
-					   s + enc->minBytesPerChar,
-					   next - enc->minBytesPerChar);
+	const XML_Char *name;
 	ENTITY *entity;
+	XML_Char ch = XmlPredefinedEntityName(enc,
+					      s + enc->minBytesPerChar,
+					      next - enc->minBytesPerChar);
+	if (ch) {
+	  if (characterDataHandler)
+	    characterDataHandler(userData, &ch, 1);
+	  break;
+	}
+	name = poolStoreString(&dtd.pool, enc,
+				s + enc->minBytesPerChar,
+				next - enc->minBytesPerChar);
 	if (!name)
 	  return XML_ERROR_NO_MEMORY;
 	entity = (ENTITY *)lookup(&dtd.generalEntities, name, 0);
@@ -824,11 +832,6 @@ doContent(XML_Parser parser,
 	    errorPtr = s;
 	    return XML_ERROR_UNDEFINED_ENTITY;
 	  }
-	  break;
-	}
-	if (entity->magic) {
-	  if (characterDataHandler)
-	    characterDataHandler(userData, entity->textPtr, entity->textLen);
 	  break;
 	}
 	if (entity->open) {
@@ -1438,7 +1441,12 @@ prologProcessor(XML_Parser parser,
       break;
     case XML_ROLE_GENERAL_ENTITY_NAME:
       {
-	const XML_Char *name = poolStoreString(&dtd.pool, encoding, s, next);
+	const XML_Char *name;
+	if (XmlPredefinedEntityName(encoding, s, next)) {
+	  declEntity = 0;
+	  break;
+	}
+	name = poolStoreString(&dtd.pool, encoding, s, next);
 	if (!name)
 	  return XML_ERROR_NO_MEMORY;
 	if (dtd.complete) {
@@ -1694,10 +1702,19 @@ appendAttributeValue(XML_Parser parser, const ENCODING *enc, int isCdata,
       break;
     case XML_TOK_ENTITY_REF:
       {
-	const XML_Char *name = poolStoreString(&temp2Pool, enc,
-					       ptr + enc->minBytesPerChar,
-					       next - enc->minBytesPerChar);
+	const XML_Char *name;
 	ENTITY *entity;
+	XML_Char ch = XmlPredefinedEntityName(enc,
+					      ptr + enc->minBytesPerChar,
+					      next - enc->minBytesPerChar);
+	if (ch) {
+	  if (!poolAppendChar(pool, ch))
+  	    return XML_ERROR_NO_MEMORY;
+	  break;
+	}
+	name = poolStoreString(&temp2Pool, enc,
+			       ptr + enc->minBytesPerChar,
+			       next - enc->minBytesPerChar);
 	if (!name)
 	  return XML_ERROR_NO_MEMORY;
 	entity = (ENTITY *)lookup(&dtd.generalEntities, name, 0);
@@ -1715,12 +1732,6 @@ appendAttributeValue(XML_Parser parser, const ENCODING *enc, int isCdata,
 	else if (entity->notation) {
 	  errorPtr = ptr;
 	  return XML_ERROR_BINARY_ENTITY_REF;
-	}
-	else if (entity->magic) {
-	  int i;
-	  for (i = 0; i < entity->textLen; i++)
-	    if (!poolAppendChar(pool, entity->textPtr[i]))
-	      return XML_ERROR_NO_MEMORY;
 	}
 	else if (!entity->textPtr) {
 	  errorPtr = ptr;
@@ -1986,20 +1997,8 @@ void normalizePublicId(XML_Char *publicId)
 
 static int dtdInit(DTD *p)
 {
-  static const XML_Char *names[] = { XML_T("lt"), XML_T("amp"), XML_T("gt"), XML_T("quot"), XML_T("apos") };
-  static const XML_Char chars[] = { XML_T('<'), XML_T('&'), XML_T('>'), XML_T('"'), XML_T('\'') };
-  int i;
-
   poolInit(&(p->pool));
   hashTableInit(&(p->generalEntities));
-  for (i = 0; i < 5; i++) {
-    ENTITY *entity = (ENTITY *)lookup(&(p->generalEntities), names[i], sizeof(ENTITY));
-    if (!entity)
-      return 0;
-    entity->textPtr = chars + i;
-    entity->textLen = 1;
-    entity->magic = 1;
-  }
   hashTableInit(&(p->elementTypes));
   hashTableInit(&(p->attributeIds));
   p->complete = 1;
@@ -2101,8 +2100,6 @@ static int dtdCopy(DTD *newDtd, const DTD *oldDtd)
     const ENTITY *oldE = (ENTITY *)hashTableIterNext(&iter);
     if (!oldE)
       break;
-    if (oldE->magic)
-      continue;
     name = poolCopyString(&(newDtd->pool), oldE->name);
     if (!name)
       return 0;

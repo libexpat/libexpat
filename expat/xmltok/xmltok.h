@@ -142,6 +142,7 @@ struct encoding {
   int (*getAtts)(const ENCODING *enc, const char *ptr,
 	         int attsMax, ATTRIBUTE *atts);
   int (*charRefNumber)(const ENCODING *enc, const char *ptr);
+  int (*predefinedEntityName)(const ENCODING *, const char *, const char *);
   void (*updatePosition)(const ENCODING *,
 			 const char *ptr,
 			 const char *end,
@@ -224,6 +225,9 @@ the content of a literal that has already been returned by XmlTok. */
 
 #define XmlCharRefNumber(enc, ptr) \
   (((enc)->charRefNumber)(enc, ptr))
+
+#define XmlPredefinedEntityName(enc, ptr, end) \
+  (((enc)->predefinedEntityName)(enc, ptr, end))
 
 #define XmlUpdatePosition(enc, ptr, end, pos) \
   (((enc)->updatePosition)(enc, ptr, end, pos))

@@ -31,6 +31,7 @@ Contributor(s):
   PREFIX(skipS), \
   PREFIX(getAtts), \
   PREFIX(charRefNumber), \
+  PREFIX(predefinedEntityName), \
   PREFIX(updatePosition), \
   PREFIX(isPublicId)
 
