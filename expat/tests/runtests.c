@@ -1254,6 +1254,36 @@ START_TEST(test_ns_default_with_empty_uri)
 }
 END_TEST
 
+/* Regression test for SF bug #692964: two prefixes for one namespace. */
+START_TEST(test_ns_duplicate_attrs_diff_prefixes)
+{
+    char *text =
+        "<doc xmlns:a='http://xml.libexpat.org/a'\n"
+        "     xmlns:b='http://xml.libexpat.org/a'\n"
+        "     a:a='v' b:a='v' />";
+    if (XML_Parse(parser, text, strlen(text), XML_TRUE) != XML_STATUS_ERROR)
+        fail("did not report multiple attributes with same URI+name");
+}
+END_TEST
+
+/* Regression test for SF bug #695401: unbound prefix. */
+START_TEST(test_ns_unbound_prefix_on_attribute)
+{
+    char *text = "<doc a:attr=''/>";
+    if (XML_Parse(parser, text, strlen(text), XML_TRUE) != XML_STATUS_ERROR)
+        fail("did not report unbound prefix on attribute");
+}
+END_TEST
+
+/* Regression test for SF bug #695401: unbound prefix. */
+START_TEST(test_ns_unbound_prefix_on_element)
+{
+    char *text = "<a:doc/>";
+    if (XML_Parse(parser, text, strlen(text), XML_TRUE) != XML_STATUS_ERROR)
+        fail("did not report unbound prefix on element");
+}
+END_TEST
+
 static Suite *
 make_basic_suite(void)
 {
@@ -1315,6 +1345,9 @@ make_basic_suite(void)
     tcase_add_test(tc_namespace, test_ns_prefix_with_empty_uri_3);
     tcase_add_test(tc_namespace, test_ns_prefix_with_empty_uri_4);
     tcase_add_test(tc_namespace, test_ns_default_with_empty_uri);
+    tcase_add_test(tc_namespace, test_ns_duplicate_attrs_diff_prefixes);
+    tcase_add_test(tc_namespace, test_ns_unbound_prefix_on_attribute);
+    tcase_add_test(tc_namespace, test_ns_unbound_prefix_on_element);
 
     return s;
 }
