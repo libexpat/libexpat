@@ -716,7 +716,7 @@ int PREFIX(scanPoundName)(const ENCODING *enc, const char *ptr, const char *end,
     switch (BYTE_TYPE(enc, ptr)) {
     CHECK_NAME_CASES(enc, ptr, end, nextTokPtr)
     case BT_CR: case BT_LF: case BT_S:
-    case BT_RPAR: case BT_GT: case BT_PERCNT:
+    case BT_RPAR: case BT_GT: case BT_PERCNT: case BT_VERBAR:
       *nextTokPtr = ptr;
       return XML_TOK_POUND_NAME;
     default:
