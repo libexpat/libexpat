@@ -63,7 +63,7 @@ void reportError(XML_Parser parser, const XML_Char *filename)
   int code = XML_GetErrorCode(parser);
   const XML_Char *message = XML_ErrorString(code);
   if (message)
-    ftprintf(stderr, T("%s:%d:%ld: %s\n"),
+    ftprintf(stdout, T("%s:%d:%ld: %s\n"),
 	     filename,
 	     XML_GetErrorLineNumber(parser),
 	     XML_GetErrorColumnNumber(parser),
