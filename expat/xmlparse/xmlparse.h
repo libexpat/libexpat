@@ -31,8 +31,8 @@ extern "C" {
 
 typedef void *XML_Parser;
 
-/* Constructs a new parser; encoding should be the name of the charset from
-the Content-Type header if the Content-Type is text/xml, or null otherwise. */
+/* Constructs a new parser; encoding is the externally specified encoding,
+or null if there is no externally specified encoding. */
 
 XML_Parser XMLPARSEAPI
 XML_ParserCreate(const char *encoding);
@@ -58,9 +58,30 @@ typedef void (*XML_ProcessingInstructionHandler)(void *userData,
 						 const char *target,
 						 const char *data);
 
-/* Returns 0 if processing should not continue because of
+/* Reports a reference to an external parsed general entity.
+The referenced entity is not automatically parsed.
+The application can parse it immediately or later using
+XML_ExternalEntityParserCreate.
+The parser argument is the parser parsing the entity containing the reference;
+it can be passed as the parser argument to XML_ExternalEntityParserCreate.
+The systemId argument is the system identifier as specified in the entity declaration;
+it will not be null.
+The base argument is the system identifier that should be used as the base for
+resolving systemId if systemId was relative; this is set by XML_SetBase;
+it may be null.
+The publicId argument is the public identifier as specified in the entity declaration,
+or null if none was specified; the whitespace in the public identifier
+will have been normalized as required by the XML spec.
+The openEntityNames argument is a space-separated list of the names of the entities
+that are open for the parse of this entity (including the name of the referenced
+entity); this can be passed as the openEntityNames argument to
+XML_ExternalEntityParserCreate; openEntityNames is valid only until the handler
+returns, so if the referenced entity is to be parsed later, it must be copied.
+The handler should return 0 if processing should not continue because of
 a fatal error in the handling of the external entity.
-Note that the first argument is the parser, not userData. */
+In this case the calling parser will return an XML_ERROR_EXTERNAL_ENTITY_HANDLING
+error.
+Note that unlike other handlers the first argument is the parser, not userData. */
 
 typedef int (*XML_ExternalEntityRefHandler)(XML_Parser parser,
 					    const char *openEntityNames,
@@ -94,6 +115,11 @@ XML_SetUserData(XML_Parser parser, void *userData);
 void XMLPARSEAPI *
 XML_GetUserData(XML_Parser parser);
 
+/* Sets the base to be used for resolving relative URIs in system identifiers in
+declarations.  Resolving relative identifiers is left to the application:
+this value will be passed through as the base argumentto the ExternalEntityRefHandler.
+The base argument will be copied. Returns zero if out of memory, non-zero otherwise. */
+
 int XMLPARSEAPI
 XML_SetBase(XML_Parser parser, const char *base);
 
@@ -109,6 +135,16 @@ XML_GetBuffer(XML_Parser parser, int len);
 int XMLPARSEAPI
 XML_ParseBuffer(XML_Parser parser, int len, int isFinal);
 
+/* Creates an XML_Parser object that can parse an external general entity;
+openEntityNames is a space-separated list of the names of the entities that are open
+for the parse of this entity (including the name of this one);
+encoding is the externally specified encoding,
+or null if there is no externally specified encoding.
+This can be called at any point after the first call to an ExternalEntityRefHandler
+so longer as the parser has not yet been freed.
+The new parser is completely independent and may safely be used in a separate thread.
+The handlers and userData are initialized from the parser argument.
+Returns 0 if out of memory.  Otherwise returns a new XML_Parser object. */
 XML_Parser XMLPARSEAPI
 XML_ExternalEntityParserCreate(XML_Parser parser,
 			       const char *openEntityNames,
