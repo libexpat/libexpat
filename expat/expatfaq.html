@@ -72,21 +72,8 @@ an argument of <code>"iso-8859-1"</code> to
 
 <H4>How can I get expat to read my DTD?</H4>
 
-<p>expat only reads the internal DTD subset.  It doesn't process an
-external DTD nor parameter entity references.  This behaviour is in
-conformance with the XML Recommendation.</p>
-
-<H4>Why does expat give the wrong result for the more complex example in
-Appendix D of the XML Recommendation?</H4>
-
-<P>expat does not process parameter entity references.  (The XML
-Recommendation only requires parsers to process parameter entity
-references when validating. See section 4.4.8.)</P>
-
-<H4>Why does expat give the wrong result for test cases in James
-Clark's test suite in the <code>xmltest/valid/not-sa</code>?</H4>
-
-<P>expat doesn't process parameter entities.</P>
+<p>Compile with <code>-DXML_DTD</code> and call
+<code>XML_SetParamEntityParsing</code>.</p>
 
 <H4>How can I get expat to recover from errors?</H4>
 
