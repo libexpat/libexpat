@@ -4,9 +4,9 @@
   <MACROS>
     <VERSION value="BCB.05.03"/>
     <PROJECT value="Release\libexpatws_mtd.lib"/>
-    <OBJFILES value="Release\obj\libexpat_static\xmlparse.obj 
-      Release\obj\libexpat_static\xmlrole.obj 
-      Release\obj\libexpat_static\xmltok.obj"/>
+    <OBJFILES value="Release\obj\libexpatw_static\xmlparse.obj 
+      Release\obj\libexpatw_static\xmlrole.obj 
+      Release\obj\libexpatw_static\xmltok.obj"/>
     <RESFILES value=""/>
     <IDLFILES value=""/>
     <IDLGENFILES value=""/>
@@ -34,7 +34,8 @@
   <OPTIONS>
     <IDLCFLAGS value="-I$(BCB)\include"/>
     <CFLAG1 value="-O2 -X- -a8 -b -k- -vi -q -tWM -c"/>
-    <PFLAGS value="-N2Release\obj\libexpat_static -N0Release\obj\libexpat_static -$Y- -$L- -$D-"/>
+    <PFLAGS value="-N2Release\obj\libexpatw_static -N0Release\obj\libexpatw_static -$Y- -$L- 
+      -$D-"/>
     <RFLAGS value="/l 0x409 /d &quot;NDEBUG&quot; /i$(BCB)\include"/>
     <AFLAGS value="/mx /w2 /zn"/>
     <LFLAGS value=""/>
@@ -110,12 +111,13 @@ Item13=WIN32;_WINDOWS;NDEBUG;_MBCS;_LIB;COMPILED_FROM_DSP;XML_UNICODE_WCHAR_T
 Item14=WIN32;_WINDOWS;NDEBUG;_MBCS;_LIB;COMPILED_FROM_DSP;XML_UNICODE_WCHAR_T;XML_UNICODE
 
 [HistoryLists\hlIntOutputDir]
-Count=5
-Item0=Release\obj\libexpat_static
-Item1=Release\obj\mts
-Item2=Release\obj\mt
-Item3=..\lib\Release-w_static
-Item4=Release-w_static
+Count=6
+Item0=Release\obj\libexpatw_static
+Item1=Release\obj\libexpat_static
+Item2=Release\obj\mts
+Item3=Release\obj\mt
+Item4=..\lib\Release-w_static
+Item5=Release-w_static
 
 [HistoryLists\hlFinalOutputDir]
 Count=3

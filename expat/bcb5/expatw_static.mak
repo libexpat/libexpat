@@ -14,9 +14,9 @@ BCB = $(MAKEDIR)\..
 VERSION = BCB.05.03
 # ---------------------------------------------------------------------------
 PROJECT = Release\libexpatws_mtd.lib
-OBJFILES = Release\obj\libexpat_static\xmlparse.obj \
-    Release\obj\libexpat_static\xmlrole.obj \
-    Release\obj\libexpat_static\xmltok.obj
+OBJFILES = Release\obj\libexpatw_static\xmlparse.obj \
+    Release\obj\libexpatw_static\xmlrole.obj \
+    Release\obj\libexpatw_static\xmltok.obj
 RESFILES = 
 MAINSOURCE = expatw_static.bpf
 RESDEPEN = $(RESFILES)
@@ -44,7 +44,8 @@ LISTFILE =
 # ---------------------------------------------------------------------------
 CFLAG1 = -O2 -X- -a8 -b -k- -vi -q -tWM -c
 IDLCFLAGS = -I$(BCB)\include
-PFLAGS = -N2Release\obj\libexpat_static -N0Release\obj\libexpat_static -$Y- -$L- -$D-
+PFLAGS = -N2Release\obj\libexpatw_static -N0Release\obj\libexpatw_static -$Y- -$L- \
+    -$D-
 RFLAGS = /l 0x409 /d "NDEBUG" /i$(BCB)\include
 AFLAGS = /mx /w2 /zn
 LFLAGS = 

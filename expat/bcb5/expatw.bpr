@@ -4,8 +4,8 @@
   <MACROS>
     <VERSION value="BCB.05.03"/>
     <PROJECT value="Release\libexpatw_mtd.dll"/>
-    <OBJFILES value="Release\obj\libexpat\xmlparse.obj Release\obj\libexpat\xmlrole.obj 
-      Release\obj\libexpat\xmltok.obj"/>
+    <OBJFILES value="Release\obj\libexpatw\xmlparse.obj Release\obj\libexpatw\xmlrole.obj 
+      Release\obj\libexpatw\xmltok.obj"/>
     <RESFILES value=""/>
     <IDLFILES value=""/>
     <IDLGENFILES value=""/>
@@ -35,10 +35,10 @@
   <OPTIONS>
     <IDLCFLAGS value="-I$(BCB)\include"/>
     <CFLAG1 value="-WD -O2 -X- -a8 -b -k- -vi -q -tWM -c -tWD"/>
-    <PFLAGS value="-N2Release\obj\libexpat -N0Release\obj\libexpat -$Y- -$L- -$D-"/>
+    <PFLAGS value="-N2Release\obj\libexpatw -N0Release\obj\libexpatw -$Y- -$L- -$D-"/>
     <RFLAGS value="/l 0x409 /d &quot;NDEBUG&quot; /i$(BCB)\include"/>
     <AFLAGS value="/mx /w2 /zn"/>
-    <LFLAGS value="-IRelease\obj\libexpat -D&quot;&quot; -aa -Tpd -x -Gn -Gi -w -q"/>
+    <LFLAGS value="-IRelease\obj\libexpatw -D&quot;&quot; -aa -Tpd -x -Gn -Gi -w -q"/>
   </OPTIONS>
   <LINKER>
     <ALLOBJ value="c0d32w.obj $(OBJFILES)"/>
@@ -105,14 +105,15 @@ Item7=NDEBUG;COMPILED_FROM_DSP;WIN32;_WINDOWS;_MBCS;_USRDLL;EXPAT_EXPORTS;XML_UN
 Item8=NDEBUG;COMPILED_FROM_DSP;WIN32;_WINDOWS;_MBCS;_USRDLL;EXPAT_EXPORTS;XML_UNICODE_WCHAR_T
 
 [HistoryLists\hlIntOutputDir]
-Count=7
-Item0=Release\obj\libexpat
-Item1=Release\obj\mtd
-Item2=Release\obj\mt
-Item3=Release_w\obj
-Item4=Release-w\obj
-Item5=Release-w
-Item6=..\lib\Release-w
+Count=8
+Item0=Release\obj\libexpatw
+Item1=Release\obj\libexpat
+Item2=Release\obj\mtd
+Item3=Release\obj\mt
+Item4=Release_w\obj
+Item5=Release-w\obj
+Item6=Release-w
+Item7=..\lib\Release-w
 
 [HistoryLists\hlFinalOutputDir]
 Count=5

@@ -14,8 +14,8 @@ BCB = $(MAKEDIR)\..
 VERSION = BCB.05.03
 # ---------------------------------------------------------------------------
 PROJECT = Release\libexpatw_mtd.dll
-OBJFILES = Release\obj\libexpat\xmlparse.obj Release\obj\libexpat\xmlrole.obj \
-    Release\obj\libexpat\xmltok.obj
+OBJFILES = Release\obj\libexpatw\xmlparse.obj Release\obj\libexpatw\xmlrole.obj \
+    Release\obj\libexpatw\xmltok.obj
 RESFILES = 
 MAINSOURCE = expatw.bpf
 RESDEPEN = $(RESFILES)
@@ -44,10 +44,10 @@ WARNINGS= -w-rch -w-par -w-8027 -w-8026 -w-ccc
 # ---------------------------------------------------------------------------
 CFLAG1 = -WD -O2 -X- -a8 -b -k- -vi -q -tWM -c -tWD
 IDLCFLAGS = -I$(BCB)\include
-PFLAGS = -N2Release\obj\libexpat -N0Release\obj\libexpat -$Y- -$L- -$D-
+PFLAGS = -N2Release\obj\libexpatw -N0Release\obj\libexpatw -$Y- -$L- -$D-
 RFLAGS = /l 0x409 /d "NDEBUG" /i$(BCB)\include
 AFLAGS = /mx /w2 /zn
-LFLAGS = -IRelease\obj\libexpat -D"" -aa -Tpd -x -Gn -Gi -w -q
+LFLAGS = -IRelease\obj\libexpatw -D"" -aa -Tpd -x -Gn -Gi -w -q
 # ---------------------------------------------------------------------------
 ALLOBJ = c0d32w.obj $(OBJFILES)
 ALLRES = $(RESFILES)
