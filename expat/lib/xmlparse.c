@@ -2822,7 +2822,7 @@ storeAtts(XML_Parser parser, const ENCODING *enc,
             }
             if (!step)
               step = PROBE_STEP(uriHash, mask, nsAttsPower);
-            j < step ? ( j += nsAttsSize - step) : (j -= step);
+            j < step ? (j += nsAttsSize - step) : (j -= step);
           }
         }
 
@@ -2879,14 +2879,14 @@ storeAtts(XML_Parser parser, const ENCODING *enc,
   prefixLen = 0;
   if (ns_triplets && binding->prefix->name) {
     for (; binding->prefix->name[prefixLen++];)
-      ;
+      ;  /* prefixLen includes null terminator */
   }
   tagNamePtr->localPart = localPart;
   tagNamePtr->uriLen = binding->uriLen;
   tagNamePtr->prefix = binding->prefix->name;
   tagNamePtr->prefixLen = prefixLen;
   for (i = 0; localPart[i++];)
-    ;
+    ;  /* i includes null terminator */
   n = i + binding->uriLen + prefixLen;
   if (n > binding->uriAlloc) {
     TAG *p;
@@ -2901,12 +2901,13 @@ storeAtts(XML_Parser parser, const ENCODING *enc,
     FREE(binding->uri);
     binding->uri = uri;
   }
+  /* if namespaceSeparator != '\0' then uri includes it already */
   uri = binding->uri + binding->uriLen;
   memcpy(uri, localPart, i * sizeof(XML_Char));
+  /* we always have a namespace separator between localPart and prefix */
   if (prefixLen) {
-    uri = uri + (i - 1);
-    if (namespaceSeparator)
-      *uri = namespaceSeparator;
+    uri += i - 1;
+    *uri = namespaceSeparator;  /* replace null terminator */
     memcpy(uri + 1, binding->prefix->name, prefixLen * sizeof(XML_Char));
   }
   tagNamePtr->str = binding->uri;
@@ -5286,7 +5287,7 @@ getContext(XML_Parser parser)
     if (!poolAppendChar(&tempPool, XML_T('=')))
       return NULL;
     len = dtd->defaultPrefix.binding->uriLen;
-    if (namespaceSeparator != XML_T('\0'))
+    if (namespaceSeparator)
       len--;
     for (i = 0; i < len; i++)
       if (!poolAppendChar(&tempPool, dtd->defaultPrefix.binding->uri[i]))
@@ -5312,7 +5313,7 @@ getContext(XML_Parser parser)
     if (!poolAppendChar(&tempPool, XML_T('=')))
       return NULL;
     len = prefix->binding->uriLen;
-    if (namespaceSeparator != XML_T('\0'))
+    if (namespaceSeparator)
       len--;
     for (i = 0; i < len; i++)
       if (!poolAppendChar(&tempPool, prefix->binding->uri[i]))
