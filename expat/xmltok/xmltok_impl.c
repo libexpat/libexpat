@@ -953,7 +953,7 @@ int PREFIX(scanPoundName)(const ENCODING *enc, const char *ptr, const char *end,
       return XML_TOK_INVALID;
     }
   }
-  return XML_TOK_PARTIAL;
+  return -XML_TOK_POUND_NAME;
 }
 
 static
@@ -971,7 +971,7 @@ int PREFIX(scanLit)(int open, const ENCODING *enc,
       if (t != open)
 	break;
       if (ptr == end)
-	return XML_TOK_PARTIAL;
+	return -XML_TOK_LITERAL;
       *nextTokPtr = ptr;
       switch (BYTE_TYPE(enc, ptr)) {
       case BT_S: case BT_CR: case BT_LF:
@@ -1033,7 +1033,7 @@ int PREFIX(prologTok)(const ENCODING *enc, const char *ptr, const char *end,
     }
   case BT_CR:
     if (ptr + MINBPC(enc) == end)
-      return XML_TOK_TRAILING_CR;
+      return -XML_TOK_PROLOG_S;
     /* fall through */
   case BT_S: case BT_LF:
     for (;;) {
@@ -1066,7 +1066,7 @@ int PREFIX(prologTok)(const ENCODING *enc, const char *ptr, const char *end,
   case BT_RSQB:
     ptr += MINBPC(enc);
     if (ptr == end)
-      return XML_TOK_PARTIAL;
+      return -XML_TOK_CLOSE_BRACKET;
     if (CHAR_MATCHES(enc, ptr, ']')) {
       if (ptr + MINBPC(enc) == end)
 	return XML_TOK_PARTIAL;
@@ -1083,7 +1083,7 @@ int PREFIX(prologTok)(const ENCODING *enc, const char *ptr, const char *end,
   case BT_RPAR:
     ptr += MINBPC(enc);
     if (ptr == end)
-      return XML_TOK_PARTIAL;
+      return -XML_TOK_CLOSE_PAREN;
     switch (BYTE_TYPE(enc, ptr)) {
     case BT_AST:
       *nextTokPtr = ptr + MINBPC(enc);
@@ -1213,7 +1213,7 @@ int PREFIX(prologTok)(const ENCODING *enc, const char *ptr, const char *end,
       return XML_TOK_INVALID;
     }
   }
-  return XML_TOK_PARTIAL;
+  return -tok;
 }
 
 static
@@ -1691,29 +1691,16 @@ int PREFIX(sameName)(const ENCODING *enc, const char *ptr1, const char *ptr2)
 }
 
 static
-int PREFIX(nameMatchesAscii)(const ENCODING *enc, const char *ptr1, const char *ptr2)
+int PREFIX(nameMatchesAscii)(const ENCODING *enc, const char *ptr1,
+			     const char *end1, const char *ptr2)
 {
   for (; *ptr2; ptr1 += MINBPC(enc), ptr2++) {
+    if (ptr1 == end1)
+      return 0;
     if (!CHAR_MATCHES(enc, ptr1, *ptr2))
       return 0;
   }
-  switch (BYTE_TYPE(enc, ptr1)) {
-  case BT_LEAD2:
-  case BT_LEAD3:
-  case BT_LEAD4:
-  case BT_NONASCII:
-  case BT_NMSTRT:
-#ifdef XML_NS
-  case BT_COLON:
-#endif
-  case BT_HEX:
-  case BT_DIGIT:
-  case BT_NAME:
-  case BT_MINUS:
-    return 0;
-  default:
-    return 1;
-  }
+  return ptr1 == end1;
 }
 
 static

@@ -933,6 +933,7 @@ int parsePseudoAttribute(const ENCODING *enc,
 			 const char *ptr,
 			 const char *end,
 			 const char **namePtr,
+			 const char **nameEndPtr,
 			 const char **valPtr,
 			 const char **nextTokPtr)
 {
@@ -960,9 +961,12 @@ int parsePseudoAttribute(const ENCODING *enc,
       *nextTokPtr = ptr;
       return 0;
     }
-    if (c == '=')
+    if (c == '=') {
+      *nameEndPtr = ptr;
       break;
+    }
     if (isSpace(c)) {
+      *nameEndPtr = ptr;
       do {
 	ptr += enc->minBytesPerChar;
       } while (isSpace(c = toAscii(enc, ptr, end)));
@@ -1025,13 +1029,14 @@ int doParseXmlDecl(const ENCODING *(*encodingFinder)(const ENCODING *,
 {
   const char *val = 0;
   const char *name = 0;
+  const char *nameEnd = 0;
   ptr += 5 * enc->minBytesPerChar;
   end -= 2 * enc->minBytesPerChar;
-  if (!parsePseudoAttribute(enc, ptr, end, &name, &val, &ptr) || !name) {
+  if (!parsePseudoAttribute(enc, ptr, end, &name, &nameEnd, &val, &ptr) || !name) {
     *badPtr = ptr;
     return 0;
   }
-  if (!XmlNameMatchesAscii(enc, name, "version")) {
+  if (!XmlNameMatchesAscii(enc, name, nameEnd, "version")) {
     if (!isGeneralTextEntity) {
       *badPtr = name;
       return 0;
@@ -1040,7 +1045,7 @@ int doParseXmlDecl(const ENCODING *(*encodingFinder)(const ENCODING *,
   else {
     if (versionPtr)
       *versionPtr = val;
-    if (!parsePseudoAttribute(enc, ptr, end, &name, &val, &ptr)) {
+    if (!parsePseudoAttribute(enc, ptr, end, &name, &nameEnd, &val, &ptr)) {
       *badPtr = ptr;
       return 0;
     }
@@ -1053,7 +1058,7 @@ int doParseXmlDecl(const ENCODING *(*encodingFinder)(const ENCODING *,
       return 1;
     }
   }
-  if (XmlNameMatchesAscii(enc, name, "encoding")) {
+  if (XmlNameMatchesAscii(enc, name, nameEnd, "encoding")) {
     int c = toAscii(enc, val, end);
     if (!('a' <= c && c <= 'z') && !('A' <= c && c <= 'Z')) {
       *badPtr = val;
@@ -1063,22 +1068,22 @@ int doParseXmlDecl(const ENCODING *(*encodingFinder)(const ENCODING *,
       *encodingName = val;
     if (encoding)
       *encoding = encodingFinder(enc, val, ptr - enc->minBytesPerChar);
-    if (!parsePseudoAttribute(enc, ptr, end, &name, &val, &ptr)) {
+    if (!parsePseudoAttribute(enc, ptr, end, &name, &nameEnd, &val, &ptr)) {
       *badPtr = ptr;
       return 0;
     }
     if (!name)
       return 1;
   }
-  if (!XmlNameMatchesAscii(enc, name, "standalone") || isGeneralTextEntity) {
+  if (!XmlNameMatchesAscii(enc, name, nameEnd, "standalone") || isGeneralTextEntity) {
     *badPtr = name;
     return 0;
   }
-  if (XmlNameMatchesAscii(enc, val, "yes")) {
+  if (XmlNameMatchesAscii(enc, val, ptr - enc->minBytesPerChar, "yes")) {
     if (standalone)
       *standalone = 1;
   }
-  else if (XmlNameMatchesAscii(enc, val, "no")) {
+  else if (XmlNameMatchesAscii(enc, val, ptr - enc->minBytesPerChar, "no")) {
     if (standalone)
       *standalone = 0;
   }

@@ -162,7 +162,7 @@ struct encoding {
   int (*sameName)(const ENCODING *,
 	          const char *, const char *);
   int (*nameMatchesAscii)(const ENCODING *,
-			  const char *, const char *);
+			  const char *, const char *, const char *);
   int (*nameLength)(const ENCODING *, const char *);
   const char *(*skipS)(const ENCODING *, const char *);
   int (*getAtts)(const ENCODING *enc, const char *ptr,
@@ -244,8 +244,8 @@ the content of a literal that has already been returned by XmlTok. */
 
 #define XmlSameName(enc, ptr1, ptr2) (((enc)->sameName)(enc, ptr1, ptr2))
 
-#define XmlNameMatchesAscii(enc, ptr1, ptr2) \
-  (((enc)->nameMatchesAscii)(enc, ptr1, ptr2))
+#define XmlNameMatchesAscii(enc, ptr1, end1, ptr2) \
+  (((enc)->nameMatchesAscii)(enc, ptr1, end1, ptr2))
 
 #define XmlNameLength(enc, ptr) \
   (((enc)->nameLength)(enc, ptr))

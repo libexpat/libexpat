@@ -102,6 +102,7 @@ int prolog0(PROLOG_STATE *state,
   case XML_TOK_DECL_OPEN:
     if (!XmlNameMatchesAscii(enc,
 			     ptr + 2 * MIN_BYTES_PER_CHAR(enc),
+			     end,
 			     "DOCTYPE"))
       break;
     state->handler = doctype0;
@@ -130,6 +131,7 @@ int prolog1(PROLOG_STATE *state,
   case XML_TOK_DECL_OPEN:
     if (!XmlNameMatchesAscii(enc,
 			     ptr + 2 * MIN_BYTES_PER_CHAR(enc),
+			     end,
 			     "DOCTYPE"))
       break;
     state->handler = doctype0;
@@ -196,11 +198,11 @@ int doctype1(PROLOG_STATE *state,
     state->handler = prolog2;
     return XML_ROLE_DOCTYPE_CLOSE;
   case XML_TOK_NAME:
-    if (XmlNameMatchesAscii(enc, ptr, "SYSTEM")) {
+    if (XmlNameMatchesAscii(enc, ptr, end, "SYSTEM")) {
       state->handler = doctype3;
       return XML_ROLE_NONE;
     }
-    if (XmlNameMatchesAscii(enc, ptr, "PUBLIC")) {
+    if (XmlNameMatchesAscii(enc, ptr, end, "PUBLIC")) {
       state->handler = doctype2;
       return XML_ROLE_NONE;
     }
@@ -293,24 +295,28 @@ int internalSubset(PROLOG_STATE *state,
   case XML_TOK_DECL_OPEN:
     if (XmlNameMatchesAscii(enc,
 			    ptr + 2 * MIN_BYTES_PER_CHAR(enc),
+			    end,
 			    "ENTITY")) {
       state->handler = entity0;
       return XML_ROLE_NONE;
     }
     if (XmlNameMatchesAscii(enc,
 			    ptr + 2 * MIN_BYTES_PER_CHAR(enc),
+			    end,
 			    "ATTLIST")) {
       state->handler = attlist0;
       return XML_ROLE_NONE;
     }
     if (XmlNameMatchesAscii(enc,
 			    ptr + 2 * MIN_BYTES_PER_CHAR(enc),
+			    end,
 			    "ELEMENT")) {
       state->handler = element0;
       return XML_ROLE_NONE;
     }
     if (XmlNameMatchesAscii(enc,
 			    ptr + 2 * MIN_BYTES_PER_CHAR(enc),
+			    end,
 			    "NOTATION")) {
       state->handler = notation0;
       return XML_ROLE_NONE;
@@ -419,11 +425,11 @@ int entity2(PROLOG_STATE *state,
   case XML_TOK_PROLOG_S:
     return XML_ROLE_NONE;
   case XML_TOK_NAME:
-    if (XmlNameMatchesAscii(enc, ptr, "SYSTEM")) {
+    if (XmlNameMatchesAscii(enc, ptr, end, "SYSTEM")) {
       state->handler = entity4;
       return XML_ROLE_NONE;
     }
-    if (XmlNameMatchesAscii(enc, ptr, "PUBLIC")) {
+    if (XmlNameMatchesAscii(enc, ptr, end, "PUBLIC")) {
       state->handler = entity3;
       return XML_ROLE_NONE;
     }
@@ -484,7 +490,7 @@ int entity5(PROLOG_STATE *state,
     setTopLevel(state);
     return XML_ROLE_NONE;
   case XML_TOK_NAME:
-    if (XmlNameMatchesAscii(enc, ptr, "NDATA")) {
+    if (XmlNameMatchesAscii(enc, ptr, end, "NDATA")) {
       state->handler = entity6;
       return XML_ROLE_NONE;
     }
@@ -521,11 +527,11 @@ int entity7(PROLOG_STATE *state,
   case XML_TOK_PROLOG_S:
     return XML_ROLE_NONE;
   case XML_TOK_NAME:
-    if (XmlNameMatchesAscii(enc, ptr, "SYSTEM")) {
+    if (XmlNameMatchesAscii(enc, ptr, end, "SYSTEM")) {
       state->handler = entity9;
       return XML_ROLE_NONE;
     }
-    if (XmlNameMatchesAscii(enc, ptr, "PUBLIC")) {
+    if (XmlNameMatchesAscii(enc, ptr, end, "PUBLIC")) {
       state->handler = entity8;
       return XML_ROLE_NONE;
     }
@@ -599,11 +605,11 @@ int notation1(PROLOG_STATE *state,
   case XML_TOK_PROLOG_S:
     return XML_ROLE_NONE;
   case XML_TOK_NAME:
-    if (XmlNameMatchesAscii(enc, ptr, "SYSTEM")) {
+    if (XmlNameMatchesAscii(enc, ptr, end, "SYSTEM")) {
       state->handler = notation3;
       return XML_ROLE_NONE;
     }
-    if (XmlNameMatchesAscii(enc, ptr, "PUBLIC")) {
+    if (XmlNameMatchesAscii(enc, ptr, end, "PUBLIC")) {
       state->handler = notation2;
       return XML_ROLE_NONE;
     }
@@ -729,12 +735,12 @@ int attlist2(PROLOG_STATE *state,
       };
       int i;
       for (i = 0; i < (int)(sizeof(types)/sizeof(types[0])); i++)
-	if (XmlNameMatchesAscii(enc, ptr, types[i])) {
+	if (XmlNameMatchesAscii(enc, ptr, end, types[i])) {
 	  state->handler = attlist8;
 	  return XML_ROLE_ATTRIBUTE_TYPE_CDATA + i;
 	}
     }
-    if (XmlNameMatchesAscii(enc, ptr, "NOTATION")) {
+    if (XmlNameMatchesAscii(enc, ptr, end, "NOTATION")) {
       state->handler = attlist5;
       return XML_ROLE_NONE;
     }
@@ -854,18 +860,21 @@ int attlist8(PROLOG_STATE *state,
   case XML_TOK_POUND_NAME:
     if (XmlNameMatchesAscii(enc,
 			    ptr + MIN_BYTES_PER_CHAR(enc),
+			    end,
 			    "IMPLIED")) {
       state->handler = attlist1;
       return XML_ROLE_IMPLIED_ATTRIBUTE_VALUE;
     }
     if (XmlNameMatchesAscii(enc,
 			    ptr + MIN_BYTES_PER_CHAR(enc),
+			    end,
 			    "REQUIRED")) {
       state->handler = attlist1;
       return XML_ROLE_REQUIRED_ATTRIBUTE_VALUE;
     }
     if (XmlNameMatchesAscii(enc,
 			    ptr + MIN_BYTES_PER_CHAR(enc),
+			    end,
 			    "FIXED")) {
       state->handler = attlist9;
       return XML_ROLE_NONE;
@@ -924,11 +933,11 @@ int element1(PROLOG_STATE *state,
   case XML_TOK_PROLOG_S:
     return XML_ROLE_NONE;
   case XML_TOK_NAME:
-    if (XmlNameMatchesAscii(enc, ptr, "EMPTY")) {
+    if (XmlNameMatchesAscii(enc, ptr, end, "EMPTY")) {
       state->handler = declClose;
       return XML_ROLE_CONTENT_EMPTY;
     }
-    if (XmlNameMatchesAscii(enc, ptr, "ANY")) {
+    if (XmlNameMatchesAscii(enc, ptr, end, "ANY")) {
       state->handler = declClose;
       return XML_ROLE_CONTENT_ANY;
     }
@@ -954,6 +963,7 @@ int element2(PROLOG_STATE *state,
   case XML_TOK_POUND_NAME:
     if (XmlNameMatchesAscii(enc,
 			    ptr + MIN_BYTES_PER_CHAR(enc),
+			    end,
 			    "PCDATA")) {
       state->handler = element3;
       return XML_ROLE_CONTENT_PCDATA;
@@ -1122,11 +1132,11 @@ int condSect0(PROLOG_STATE *state,
   case XML_TOK_PROLOG_S:
     return XML_ROLE_NONE;
   case XML_TOK_NAME:
-    if (XmlNameMatchesAscii(enc, ptr, "INCLUDE")) {
+    if (XmlNameMatchesAscii(enc, ptr, end, "INCLUDE")) {
       state->handler = condSect1;
       return XML_ROLE_NONE;
     }
-    if (XmlNameMatchesAscii(enc, ptr, "IGNORE")) {
+    if (XmlNameMatchesAscii(enc, ptr, end, "IGNORE")) {
       state->handler = condSect2;
       return XML_ROLE_NONE;
     }
