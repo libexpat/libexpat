@@ -32,7 +32,11 @@ vsn="`$tmpdir/conftools/get-version.sh $tmpdir/lib/expat.h`"
 echo ""
 echo "Release version: $vsn"
 
-distdir=expat-$vsn
+if test "$1" = HEAD ; then
+    distdir=expat-`date '+%Y-%m-%d'`
+else
+    distdir=expat-$vsn
+fi
 if test -e $distdir; then
   echo "ERROR: for safety, you must manually remove $distdir."
   rm -rf $tmpdir
