@@ -38,6 +38,7 @@ COMPILE = $(CC) $(DEFS) $(INCLUDES) $(CPPFLAGS) $(CFLAGS)
        IF F$SEARCH("$(LIBRARY)") .EQS. "" THEN $(LIBR) /CREATE /OBJECT $(LIBRARY)
 
 all : $(LIBRARY)
+        @ write sys$output "All made."
  
 .SUFFIXES : 
 .SUFFIXES : $(OLB) $(O) .C .H  
