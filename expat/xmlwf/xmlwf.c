@@ -8,7 +8,7 @@ See the file copying.txt for copying permission.
 #include <stddef.h>
 #include <string.h>
 
-#include "xmlparse.h"
+#include "expat.h"
 #include "codepage.h"
 #include "xmlfile.h"
 #include "xmltchar.h"

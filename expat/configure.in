@@ -1,0 +1,58 @@
+dnl   configuration script for expat
+dnl   Process this file with autoconf to produce a configure script.
+dnl
+dnl   Copyright 2000 Clark Cooper
+dnl
+dnl   This file is part of EXPAT.
+dnl
+dnl   EXPAT is free software; you can redistribute it and/or modify it
+dnl   under the terms of the License (based on the MIT/X license) contained
+dnl   in the file COPYING that comes with this distribution.
+dnl
+
+AC_INIT(Makefile.in)
+AC_CONFIG_AUX_DIR(conftools)
+
+EXPAT_MAJOR_VERSION=2
+EXPAT_MINOR_VERSION=0
+EXPAT_VERSION=$EXPAT_MAJOR_VERSION.$EXPAT_MINOR_VERSION
+VERSION=$EXPAT_VERSION
+PACKAGE=expat
+
+AC_CONFIG_HEADER(config.h:config.hin)
+AC_PROG_LIBTOOL
+
+AC_SUBST(PACKAGE)
+AC_SUBST(VERSION)
+AC_SUBST(CONFIG_HEADERS)
+
+dnl Checks for programs.
+AC_PROG_CC
+AC_PROG_INSTALL
+
+dnl Checks for libraries.
+
+dnl Checks for header files.
+AC_HEADER_STDC
+AC_CHECK_HEADERS(fcntl.h unistd.h)
+
+dnl Checks for typedefs, structures, and compiler characteristics.
+AC_C_BIGENDIAN
+AC_C_CONST
+AC_TYPE_OFF_T
+AC_TYPE_SIZE_T
+
+dnl Checks for library functions.
+
+AC_FUNC_MEMCMP
+AC_FUNC_MMAP
+AC_SUBST(FILEMAP_OBJ)
+if test -z "$HAVE_MMAP"; then
+FILEMAP_OBJ=unixfilemap.o
+else
+FILEMAP_OBJ=readfilemap.o
+fi
+
+AC_CHECK_FUNCS(memmove bcopy)
+
+AC_OUTPUT(Makefile lib/Makefile xmlwf/Makefile examples/Makefile)

@@ -3,8 +3,8 @@ Copyright (c) 1998, 1999, 2000 Thai Open Source Software Center Ltd
 See the file copying.txt for copying permission.
 */
 
-#include "xmldef.h"
-#include "xmlparse.h"
+#include <config.h>
+#include "expat.h"
 #include <stddef.h>
 
 #ifdef XML_UNICODE
