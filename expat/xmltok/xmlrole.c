@@ -7,6 +7,10 @@
 
 */
 
+#ifndef MIN_BYTES_PER_CHAR
+#define MIN_BYTES_PER_CHAR(enc) ((enc)->minBytesPerChar)
+#endif
+
 typedef int PROLOG_HANDLER(struct prolog_state *state,
 			   int tok,
 			   const char *ptr,
@@ -53,7 +57,7 @@ int prolog0(PROLOG_STATE *state,
     return XML_ROLE_NONE;
   case XML_TOK_DECL_OPEN:
     if (!XmlNameMatchesAscii(enc,
-			     ptr + 2 * enc->minBytesPerChar,
+			     ptr + 2 * MIN_BYTES_PER_CHAR(enc),
 			     "DOCTYPE"))
       break;
     state->handler = doctype0;
@@ -81,7 +85,7 @@ int prolog1(PROLOG_STATE *state,
     return XML_ROLE_NONE;
   case XML_TOK_DECL_OPEN:
     if (!XmlNameMatchesAscii(enc,
-			     ptr + 2 * enc->minBytesPerChar,
+			     ptr + 2 * MIN_BYTES_PER_CHAR(enc),
 			     "DOCTYPE"))
       break;
     state->handler = doctype0;
@@ -243,25 +247,25 @@ int internalSubset(PROLOG_STATE *state,
     return XML_ROLE_NONE;
   case XML_TOK_DECL_OPEN:
     if (XmlNameMatchesAscii(enc,
-			    ptr + 2 * enc->minBytesPerChar,
+			    ptr + 2 * MIN_BYTES_PER_CHAR(enc),
 			    "ENTITY")) {
       state->handler = entity0;
       return XML_ROLE_NONE;
     }
     if (XmlNameMatchesAscii(enc,
-			    ptr + 2 * enc->minBytesPerChar,
+			    ptr + 2 * MIN_BYTES_PER_CHAR(enc),
 			    "ATTLIST")) {
       state->handler = attlist0;
       return XML_ROLE_NONE;
     }
     if (XmlNameMatchesAscii(enc,
-			    ptr + 2 * enc->minBytesPerChar,
+			    ptr + 2 * MIN_BYTES_PER_CHAR(enc),
 			    "ELEMENT")) {
       state->handler = element0;
       return XML_ROLE_NONE;
     }
     if (XmlNameMatchesAscii(enc,
-			    ptr + 2 * enc->minBytesPerChar,
+			    ptr + 2 * MIN_BYTES_PER_CHAR(enc),
 			    "NOTATION")) {
       state->handler = notation0;
       return XML_ROLE_NONE;
@@ -758,19 +762,19 @@ int attlist8(PROLOG_STATE *state,
     return XML_ROLE_NONE;
   case XML_TOK_POUND_NAME:
     if (XmlNameMatchesAscii(enc,
-			    ptr + enc->minBytesPerChar,
+			    ptr + MIN_BYTES_PER_CHAR(enc),
 			    "IMPLIED")) {
       state->handler = attlist1;
       return XML_ROLE_IMPLIED_ATTRIBUTE_VALUE;
     }
     if (XmlNameMatchesAscii(enc,
-			    ptr + enc->minBytesPerChar,
+			    ptr + MIN_BYTES_PER_CHAR(enc),
 			    "REQUIRED")) {
       state->handler = attlist1;
       return XML_ROLE_REQUIRED_ATTRIBUTE_VALUE;
     }
     if (XmlNameMatchesAscii(enc,
-			    ptr + enc->minBytesPerChar,
+			    ptr + MIN_BYTES_PER_CHAR(enc),
 			    "FIXED")) {
       state->handler = attlist9;
       return XML_ROLE_NONE;
@@ -857,7 +861,7 @@ int element2(PROLOG_STATE *state,
     return XML_ROLE_NONE;
   case XML_TOK_POUND_NAME:
     if (XmlNameMatchesAscii(enc,
-			    ptr + enc->minBytesPerChar,
+			    ptr + MIN_BYTES_PER_CHAR(enc),
 			    "PCDATA")) {
       state->handler = element3;
       return XML_ROLE_CONTENT_PCDATA;
