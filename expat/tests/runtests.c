@@ -54,16 +54,42 @@ START_TEST(test_u0000_char)
 END_TEST
 
 
+START_TEST(test_xmldecl_misplaced)
+{
+    char *text =
+        "\n"
+        "<?xml version='1.0'?>\n"
+        "<a>&eee;</a>";
+
+    if (parser == NULL)
+        fail("Parser not created.");
+
+    if (!XML_Parse(parser, text, strlen(text), 1)) {
+        fail_unless(XML_GetErrorCode(parser) == XML_ERROR_MISPLACED_XML_PI,
+                    "wrong error when XML declaration is misplaced");
+    }
+    else {
+        fail("expected XML_ERROR_MISPLACED_XML_PI with misplaced XML decl");
+    }
+}
+END_TEST
+
+
 static Suite *
 make_basic_suite(void)
 {
     Suite *s = suite_create("basic");
     TCase *tc_nulls = tcase_create("null characters");
+    TCase *tc_xmldecl = tcase_create("XML declaration");
 
     suite_add_tcase(s, tc_nulls);
     tcase_set_fixture(tc_nulls, basic_setup, basic_teardown);
     tcase_add_test(tc_nulls, test_nul_byte);
     tcase_add_test(tc_nulls, test_u0000_char);
+
+    suite_add_tcase(s, tc_xmldecl);
+    tcase_set_fixture(tc_xmldecl, basic_setup, basic_teardown);
+    tcase_add_test(tc_xmldecl, test_xmldecl_misplaced);
 
     return s;
 }
