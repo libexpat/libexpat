@@ -6,7 +6,7 @@ EndOptions
 $(projectdir)/MPL-1_0.html a 1.1 
 $(projectdir)/Makefile a 1.6 
 $(projectdir)/expat.dsw a 1.1.1.1 _mks_variant=1.1.1
-$(projectdir)/expat.html a 1.8.1.2 _mks_variant=1.8.1
+$(projectdir)/expat.html a 1.8.1.3 _mks_variant=1.8.1
 $(projectdir)/expat.mak a 1.14 
 $(projectdir)/files.txt a 1.4.1.1 _mks_variant=1.4.1
 $(projectdir)/gplelect.html a 1.1 
@@ -28,10 +28,10 @@ $(projectdir)/xmltok/utf8tab.h a 1.4
 $(projectdir)/xmltok/xmldef.h a 1.3 
 $(projectdir)/xmltok/xmlrole.c a 1.9 
 $(projectdir)/xmltok/xmlrole.h a 1.5 
-$(projectdir)/xmltok/xmltok.c a 1.35 _mks_variant=1.35.1
+$(projectdir)/xmltok/xmltok.c a 1.35.1.2 _mks_variant=1.35.1
 $(projectdir)/xmltok/xmltok.dsp a 1.1.1.1 _mks_variant=1.1.1
 $(projectdir)/xmltok/xmltok.h a 1.24 
-$(projectdir)/xmltok/xmltok_impl.c a 1.26.1.2 _mks_variant=1.26.1
+$(projectdir)/xmltok/xmltok_impl.c a 1.26.1.3 _mks_variant=1.26.1
 $(projectdir)/xmltok/xmltok_impl.h a 1.5 
 $(projectdir)/xmlwf/codepage.c a 1.4 
 $(projectdir)/xmlwf/codepage.h a 1.3 
