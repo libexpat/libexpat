@@ -42,6 +42,9 @@ tests/chardata.c
 tests/chardata.h
 tests/runtests.c
 tests/xmltest.sh
+vms/descrip.mms
+vms/expat_config.h
+vms/README.vms
 xmlwf/codepage.c
 xmlwf/codepage.h
 xmlwf/ct.c

@@ -2,6 +2,10 @@
    See the file COPYING for copying permission.
 */
 
+#ifdef __VMS
+#include <string.h> /* memset(), memcpy() */
+#endif
+
 #ifdef COMPILED_FROM_DSP
 
 #include "winconfig.h"
