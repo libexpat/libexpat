@@ -316,7 +316,9 @@ XML_Parser XML_ExternalEntityParserCreate(XML_Parser oldParser,
     return 0;
   }
 
-  processor = externalEntityInitProcessor;
+  if (errorCode != XML_ERROR_UNKNOWN_ENCODING)
+    processor = externalEntityInitProcessor;
+
   return parser;
 }
 
