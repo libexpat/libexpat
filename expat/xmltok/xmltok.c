@@ -875,3 +875,84 @@ int XmlUtf16Encode(int charNum, unsigned short *buf)
   }
   return 0;
 }
+
+struct single_encoding {
+  struct normal_encoding normal;
+  unsigned short utf16[256];
+  unsigned char utf8[256][4];
+};
+
+int XmlSizeOfSingleByteEncoding()
+{
+  return sizeof(struct single_encoding);
+}
+
+static
+void single_toUtf8(const ENCODING *enc,
+		   const char **fromP, const char *fromLim,
+		   char **toP, const char *toLim)
+{
+  for (;;) {
+    const unsigned char *utf8;
+    int n;
+    if (*fromP == fromLim)
+      break;
+    utf8 = ((const struct single_encoding *)enc)->utf8[(unsigned char)**fromP];
+    n = *utf8++;
+    if (n > toLim - *toP)
+      break;
+    do {
+      *(*toP)++ = *utf8++;
+    } while (--n != 0);
+    (*fromP)++;
+  }
+}
+
+static
+void single_toUtf16(const ENCODING *enc,
+		    const char **fromP, const char *fromLim,
+		    unsigned short **toP, const unsigned short *toLim)
+{
+  while (*fromP != fromLim && *toP != toLim)
+    *(*toP)++ = ((const struct single_encoding *)enc)->utf16[(unsigned char)*(*fromP)++];
+}
+
+ENCODING *XmlInitSingleByteEncoding(void *mem, unsigned short *table)
+{
+  int i;
+  struct single_encoding *e = mem;
+  for (i = 0; i < sizeof(struct normal_encoding); i++)
+    ((char *)mem)[i] = ((char *)&latin1_encoding)[i];
+  for (i = 0; i < 128; i++)
+    if (latin1_encoding.type[i] != BT_OTHER
+        && latin1_encoding.type[i] != BT_NONXML
+	&& table[i] != i)
+      return 0;
+  for (i = 0; i < 256; i++) {
+    unsigned short c = table[i];
+    if (c < 0x80) {
+      if (latin1_encoding.type[c] != BT_OTHER
+	  && latin1_encoding.type[c] != BT_NONXML
+	  && c != i)
+	 return 0;
+      e->normal.type[i] = latin1_encoding.type[c];
+      e->utf8[i][0] = 1;
+      e->utf8[i][1] = (char)c;
+    }
+    else if (checkCharRefNumber(c) < 0)
+      e->normal.type[i] = BT_NONXML;
+    else {
+      if (UCS2_GET_NAMING(nmstrtPages, c >> 8, c & 0xff))
+	e->normal.type[i] = BT_NMSTRT;
+      else if (UCS2_GET_NAMING(namePages, c >> 8, c & 0xff))
+	e->normal.type[i] = BT_NAME;
+      else
+	e->normal.type[i] = BT_OTHER;
+      e->utf8[i][0] = (char)XmlUtf8Encode(c, e->utf8[i] + 1);
+    }
+    e->utf16[i] = c;
+  }
+  e->normal.enc.utf8Convert = single_toUtf8;
+  e->normal.enc.utf16Convert = single_toUtf16;
+  return &(e->normal.enc);
+}

@@ -111,6 +111,10 @@ typedef int (*XML_ExternalEntityRefHandler)(XML_Parser parser,
 					    const XML_Char *publicId);
 
 
+typedef int (*XML_SingleByteEncodingHandler)(void *userData,
+					     const XML_Char *encoding,
+					     unsigned short *table);
+
 void XMLPARSEAPI
 XML_SetElementHandler(XML_Parser parser,
 		      XML_StartElementHandler start,
@@ -136,6 +140,9 @@ void XMLPARSEAPI
 XML_SetExternalEntityRefHandler(XML_Parser parser,
 				XML_ExternalEntityRefHandler handler);
 
+void XMLPARSEAPI
+XML_SetSingleByteEncodingHandler(XML_Parser parser,
+				 XML_SingleByteEncodingHandler handler);
 
 /* This value is passed as the userData argument to callbacks. */
 void XMLPARSEAPI

@@ -20,6 +20,7 @@ Contributor(s):
 
 #include "xmlparse.h"
 #include "filemap.h"
+#include "codepage.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -56,6 +57,7 @@ Contributor(s):
 #ifdef XML_UNICODE
 #define T(x) L ## x
 #define ftprintf fwprintf
+#define stscanf swscanf
 #define tfopen _wfopen
 #define fputts fputws
 #define puttc putwc
@@ -72,6 +74,7 @@ Contributor(s):
 #else /* not XML_UNICODE */
 #define T(x) x
 #define ftprintf fprintf
+#define stscanf sscanf
 #define tfopen fopen
 #define fputts fputs
 #define puttc putc
@@ -366,9 +369,37 @@ int externalEntityRefStream(XML_Parser parser,
 }
 
 static
+int singleByteEncoding(void *userData,
+		       const XML_Char *encoding,
+		       unsigned short *table)
+{
+  int cp;
+  static const XML_Char prefixL[] = T("windows-");
+  static const XML_Char prefixU[] = T("WINDOWS-");
+  int i;
+
+  for (i = 0; prefixU[i]; i++)
+    if (encoding[i] != prefixU[i] && encoding[i] != prefixL[i])
+      return 0;
+  
+  cp = 0;
+  for (; encoding[i]; i++) {
+    static const XML_Char digits[] = T("0123456789");
+    const XML_Char *s = tcschr(digits, encoding[i]);
+    if (!s)
+      return 0;
+    cp *= 10;
+    cp += s - digits;
+    if (cp >= 0x10000)
+      return 0;
+  }
+  return codepage(cp, table);
+}
+
+static
 void usage(const XML_Char *prog)
 {
-  ftprintf(stderr, T("usage: %s [-r] [-x] [-d output-dir] [-e encoding] file ...\n"), prog);
+  ftprintf(stderr, T("usage: %s [-r] [-w] [-x] [-d output-dir] [-e encoding] file ...\n"), prog);
   exit(1);
 }
 
@@ -379,6 +410,7 @@ int tmain(int argc, XML_Char **argv)
   const XML_Char *encoding = 0;
   int useFilemap = 1;
   int processExternalEntities = 0;
+  int windowsCodePages = 0;
 
 #ifdef _MSC_VER
   _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF|_CRTDBG_LEAK_CHECK_DF);
@@ -398,6 +430,10 @@ int tmain(int argc, XML_Char **argv)
     }
     if (argv[i][j] == T('x')) {
       processExternalEntities = 1;
+      j++;
+    }
+    if (argv[i][j] == T('w')) {
+      windowsCodePages = 1;
       j++;
     }
     if (argv[i][j] == T('d')) {
@@ -456,11 +492,13 @@ int tmain(int argc, XML_Char **argv)
       XML_SetElementHandler(parser, startElement, endElement);
       XML_SetCharacterDataHandler(parser, characterData);
       XML_SetProcessingInstructionHandler(parser, processingInstruction);
-    }
 #ifdef DEBUG_UNPARSED_ENTITIES
-    XML_SetUnparsedEntityDeclHandler(parser, unparsedEntityDecl);
-    XML_SetNotationDeclHandler(parser, notationDecl);
+      XML_SetUnparsedEntityDeclHandler(parser, unparsedEntityDecl);
+      XML_SetNotationDeclHandler(parser, notationDecl);
 #endif
+    }
+    if (windowsCodePages)
+      XML_SetSingleByteEncodingHandler(parser, singleByteEncoding);
     if (processExternalEntities) {
       if (!XML_SetBase(parser, argv[i])) {
 	ftprintf(stderr, T("%s: out of memory"), argv[0]);
