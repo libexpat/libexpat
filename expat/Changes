@@ -1,10 +1,12 @@
-Release 1.95.3 (not yet)
+Release 1.95.3 Mon Jun 3 2002
 	- Added a project to the MSVC workspace to create a wchar_t
 	  version of the library; the DLLs are named libexpatw.dll.
 	- Changed the name of the Windows DLLs from expat.dll to
 	  libexpat.dll; this fixes SF bug #432456.
 	- Added the XML_ParserReset() API function.
+	- Fixed XML_SetReturnNSTriplet() to work for element names.
 	- Made the XML_UNICODE builds usable (thanks, Karl!).
+	- Allow xmlwf to read from standard input.
 	- Install a man page for xmlwf on Unix systems.
 	- Fixed many bugs; see SF bug reports 231864, 461380, 464837,
 	  466885, 469226, 477667, 484419, 487840, 494749, 496505,
