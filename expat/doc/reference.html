@@ -110,7 +110,6 @@ copyright and to distribute it with expat.
 		  <li><a href="#XML_GetIdAttributeIndex">XML_GetIdAttributeIndex</a></li>
 		  <li><a href="#XML_SetEncoding">XML_SetEncoding</a></li>
 		  <li><a href="#XML_SetParamEntityParsing">XML_SetParamEntityParsing</a></li>
-		  <li><a href="#XML_ContentFree">XML_ContentFree</a></li>
 	      </ul>
 	  </li>
       </ul>  
@@ -563,6 +562,28 @@ expanded element names and attribute names are returned as a concatenation
 of the namespace URI, <em>sep</em>, and the local part of the name. This
 means that you should pick a character for <em>sep</em> that can't be
 part of a legal URI.</div>
+
+<div class="fcndec"><a name="XML_ParserCreate_MM"><pre>
+XML_Parser
+XML_ParserCreate_MM(const XML_Char *encoding,
+                    const XML_Memory_Handling_Suite *ms,
+		    const XML_Char *sep)
+</pre></a></div>
+<div class="fcndef">
+<p>Construct a new parser using the suite of memory handling functions
+specified in <code>ms</code>. If <code>ms</code> is NULL, then use the
+standard set of memory management functions. If <code>sep</code> is
+non NULL, then namespace processing is enabled in the created parser
+and the character pointed at by sep is used as the separator between
+the namespace URI and the local part of the name</p>
+<div class="eg"><pre>
+typedef struct {
+  void *(*malloc_fcn)(size_t size);
+  void *(*realloc_fcn)(void *ptr, size_t size);
+  void (*free_fcn)(void *ptr);
+} XML_Memory_Handling_Suite;
+</pre></div>
+</div>
 
 <div class="fcndec"><a name="XML_ExternalEntityParserCreate"><pre>
 XML_Parser
@@ -1071,8 +1092,7 @@ struct XML_cp {
 <p>Sets a handler for element declarations in a DTD. The handler gets called
 with the name of the element in the declaration and a pointer to a structure
 that contains the element model. It is the application's responsibility to
-free this data structure by calling
-<a href="#XML_ContentFree">XML_ContentFree</a>.</p>
+free this data structure.</p>
 
 <p>The <code>model</code> argument is the root of a tree of
 <code>XML_Content</code> nodes. If <code>type</code> equals
@@ -1413,14 +1433,6 @@ The choices for <code>code</code> are:
 <li>XML_PARAM_ENTITY_PARSING_UNLESS_STANDALONE
 <li>XML_PARAM_ENTITY_PARSING_ALWAYS
 </ul>
-</div>
-
-<div class="fcndec"><a name="XML_ContentFree"><pre>
-void
-XML_ContentFree(XML_Content *content);
-</pre></a></div>
-<div class="fcndef">
-Free the model data structure passed to an element declaration handler.
 </div>
 
 </body>

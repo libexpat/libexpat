@@ -80,15 +80,20 @@ mkinstalldirs = $(SHELL) $(top_srcdir)/conftools/mkinstalldirs
 CONFIG_HEADER = ../config.h
 CONFIG_CLEAN_FILES = 
 
-DEFS = @DEFS@ -I. -I$(srcdir) -I..
+DEFS = @DEFS@ -I$(srcdir) -I..
 CPPFLAGS = @CPPFLAGS@
 LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
 CFLAGS = @CFLAGS@
+
+LIBREVISION = @LIBREVISION@
+LIBCURRENT  = @LIBCURRENT@
+LIBAGE      = @LIBAGE@
+
 COMPILE = $(CC) $(DEFS) $(INCLUDES) $(CPPFLAGS) $(CFLAGS)
 LTCOMPILE = $(LIBTOOL) --mode=compile $(CC) $(DEFS) $(INCLUDES) $(CPPFLAGS) $(CFLAGS)
 CCLD = $(CC)
-LINK = $(LIBTOOL) --mode=link $(CCLD) $(CFLAGS) $(LDFLAGS) -o $@
+LINK = $(LIBTOOL) --mode=link  $(CCLD) -version-info $(LIBCURRENT):$(LIBREVISION):$(LIBAGE) $(CFLAGS) $(LDFLAGS) -o $@
 DIST_COMMON =  Makefile.in
 
 
@@ -169,10 +174,13 @@ distdir: $(DISTFILES)
 	  fi; \
 	done
 
-xmlparse.o: xmlparse.c expat.h xmlrole.h xmltok.h $(top_builddir)/config.h
+xmlparse.o \
+xmlparse.lo: xmlparse.c expat.h xmlrole.h xmltok.h $(top_builddir)/config.h
 
-xmlrole.o: xmlrole.c ascii.h xmldef.h xmlrole.h $(top_builddir)/config.h
+xmlrole.o \
+xmlrole.lo: xmlrole.c ascii.h xmldef.h xmlrole.h $(top_builddir)/config.h
 
-xmltok.o: xmltok.c xmltok_impl.c xmltok_ns.c \
+xmltok.o \
+xmltok.lo: xmltok.c xmltok_impl.c xmltok_ns.c \
           ascii.h asciitab.h iasciitab.h latin1tab.h nametab.h utf8tab.h \
           xmldef.h xmltok.h xmltok_impl.h $(top_builddir)/config.h

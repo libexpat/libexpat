@@ -49,8 +49,6 @@
 /* Version number of package */
 #undef VERSION
 
-#include <stdlib.h>
-
 #define XML_NS
 #define XML_DTD
 
@@ -68,5 +66,6 @@
 #else
 #define memmove(d,s,l) ;punting on memmove;
 #endif
+
 #endif
 

@@ -6,47 +6,17 @@ See the file COPYING for copying permission.
 #ifndef XmlParse_INCLUDED
 #define XmlParse_INCLUDED 1
 
+#include <stdlib.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#ifndef XMLPARSEAPI
-#define XMLPARSEAPI /* as nothing */
-#endif
-
 typedef void *XML_Parser;
-
-#ifdef XML_UNICODE_WCHAR_T
-
-/* XML_UNICODE_WCHAR_T will work only if sizeof(wchar_t) == 2 and wchar_t
-uses Unicode. */
-/* Information is UTF-16 encoded as wchar_ts */
-
-#ifndef XML_UNICODE
-#define XML_UNICODE
-#endif
-
-#include <stddef.h>
-typedef wchar_t XML_Char;
-typedef wchar_t XML_LChar;
-
-#else /* not XML_UNICODE_WCHAR_T */
-
-#ifdef XML_UNICODE
-
-/* Information is UTF-16 encoded as unsigned shorts */
-typedef unsigned short XML_Char;
-typedef char XML_LChar;
-
-#else /* not XML_UNICODE */
 
 /* Information is UTF-8 encoded. */
 typedef char XML_Char;
 typedef char XML_LChar;
-
-#endif /* not XML_UNICODE */
-
-#endif /* not XML_UNICODE_WCHAR_T */
 
 enum XML_Content_Type {
   XML_CTYPE_EMPTY = 1,
@@ -95,20 +65,16 @@ struct XML_cp {
 
 /* This is called for an element declaration. See above for
    description of the model argument. It's the caller's responsibility
-   to free model when finished with it by calling XML_ContentFree.
+   to free model when finished with it.
 */
 
 typedef void (*XML_ElementDeclHandler) (void *userData,
 					const XML_Char *name,
 					XML_Content *model);
 
-void XMLPARSEAPI
+void 
 XML_SetElementDeclHandler(XML_Parser parser,
 			  XML_ElementDeclHandler eldecl);
-
-
-void XMLPARSEAPI
-XML_ContentFree(XML_Content *content);
 
 /*
   The Attlist declaration handler is called for *each* attribute. So
@@ -127,7 +93,7 @@ typedef void (*XML_AttlistDeclHandler) (void		*userData,
 					const XML_Char	*dflt,
 					int		isrequired);
 
-void XMLPARSEAPI
+void 
 XML_SetAttlistDeclHandler(XML_Parser parser,
 			  XML_AttlistDeclHandler attdecl);
 
@@ -145,17 +111,21 @@ typedef void (*XML_XmlDeclHandler) (void		*userData,
 				    const XML_Char	*encoding,
 				    int			standalone);
 
-
-
-void XMLPARSEAPI
+void 
 XML_SetXmlDeclHandler(XML_Parser parser,
 		      XML_XmlDeclHandler xmldecl);
 
 
+typedef struct {
+  void *(*malloc_fcn)(size_t size);
+  void *(*realloc_fcn)(void *ptr, size_t size);
+  void (*free_fcn)(void *ptr);
+} XML_Memory_Handling_Suite;
+
 /* Constructs a new parser; encoding is the encoding specified by the external
 protocol or null if there is none specified. */
 
-XML_Parser XMLPARSEAPI
+XML_Parser 
 XML_ParserCreate(const XML_Char *encoding);
 
 /* Constructs a new parser and namespace processor.  Element type names
@@ -168,9 +138,24 @@ the namespace URI and the local part will be concatenated without any
 separator.  When a namespace is not declared, the name and prefix will be
 passed through without expansion. */
 
-XML_Parser XMLPARSEAPI
+XML_Parser 
 XML_ParserCreateNS(const XML_Char *encoding, XML_Char namespaceSeparator);
 
+
+/* Constructs a new parser using the memory management suit referred to
+   by memsuite. If memsuite is NULL, then use the standard library memory
+   suite. If namespaceSeparator is non-NULL it creates a parser with
+   namespace processing as described above. The character pointed at
+   will serve as the namespace separator.
+
+   All further memory operations used for the created parser will come from
+   the given suite.
+*/
+
+XML_Parser
+XML_ParserCreate_MM(const XML_Char *encoding,
+		    const XML_Memory_Handling_Suite *memsuite,
+		    const XML_Char *namespaceSeparator);
 
 /* atts is array of name/value pairs, terminated by 0;
    names and values are 0 terminated. */
@@ -255,7 +240,7 @@ typedef void (*XML_EntityDeclHandler) (void *userData,
 				       const XML_Char *publicId,
 				       const XML_Char *notationName);
 				       
-void XMLPARSEAPI
+void 
 XML_SetEntityDeclHandler(XML_Parser parser,
 			 XML_EntityDeclHandler handler);
 
@@ -398,104 +383,104 @@ typedef int (*XML_UnknownEncodingHandler)(void *encodingHandlerData,
 					  const XML_Char *name,
 					  XML_Encoding *info);
 
-void XMLPARSEAPI
+void 
 XML_SetElementHandler(XML_Parser parser,
 		      XML_StartElementHandler start,
 		      XML_EndElementHandler end);
 
-void XMLPARSEAPI
+void 
 XML_SetStartElementHandler(XML_Parser parser, XML_StartElementHandler);
 
-void XMLPARSEAPI
+void 
 XML_SetEndElementHandler(XML_Parser parser, XML_EndElementHandler);
 
-void XMLPARSEAPI
+void 
 XML_SetCharacterDataHandler(XML_Parser parser,
 			    XML_CharacterDataHandler handler);
 
-void XMLPARSEAPI
+void 
 XML_SetProcessingInstructionHandler(XML_Parser parser,
 				    XML_ProcessingInstructionHandler handler);
-void XMLPARSEAPI
+void 
 XML_SetCommentHandler(XML_Parser parser,
                       XML_CommentHandler handler);
 
-void XMLPARSEAPI
+void 
 XML_SetCdataSectionHandler(XML_Parser parser,
 			   XML_StartCdataSectionHandler start,
 			   XML_EndCdataSectionHandler end);
 
-void XMLPARSEAPI
+void 
 XML_SetStartCdataSectionHandler(XML_Parser parser,
                                 XML_StartCdataSectionHandler start);
 
-void XMLPARSEAPI
+void 
 XML_SetEndCdataSectionHandler(XML_Parser parser,
                               XML_EndCdataSectionHandler end);
 
 /* This sets the default handler and also inhibits expansion of internal entities.
 The entity reference will be passed to the default handler. */
 
-void XMLPARSEAPI
+void 
 XML_SetDefaultHandler(XML_Parser parser,
 		      XML_DefaultHandler handler);
 
 /* This sets the default handler but does not inhibit expansion of internal entities.
 The entity reference will not be passed to the default handler. */
 
-void XMLPARSEAPI
+void 
 XML_SetDefaultHandlerExpand(XML_Parser parser,
 		            XML_DefaultHandler handler);
 
-void XMLPARSEAPI
+void 
 XML_SetDoctypeDeclHandler(XML_Parser parser,
 			  XML_StartDoctypeDeclHandler start,
 			  XML_EndDoctypeDeclHandler end);
 
-void XMLPARSEAPI
+void 
 XML_SetStartDoctypeDeclHandler(XML_Parser parser,
 			       XML_StartDoctypeDeclHandler start);
 
-void XMLPARSEAPI
+void 
 XML_SetEndDoctypeDeclHandler(XML_Parser parser,
 			     XML_EndDoctypeDeclHandler end);
 
-void XMLPARSEAPI
+void 
 XML_SetUnparsedEntityDeclHandler(XML_Parser parser,
 				 XML_UnparsedEntityDeclHandler handler);
 
-void XMLPARSEAPI
+void 
 XML_SetNotationDeclHandler(XML_Parser parser,
 			   XML_NotationDeclHandler handler);
 
-void XMLPARSEAPI
+void 
 XML_SetNamespaceDeclHandler(XML_Parser parser,
 			    XML_StartNamespaceDeclHandler start,
 			    XML_EndNamespaceDeclHandler end);
 
-void XMLPARSEAPI
+void 
 XML_SetStartNamespaceDeclHandler(XML_Parser parser,
 				 XML_StartNamespaceDeclHandler start);
 
-void XMLPARSEAPI
+void 
 XML_SetEndNamespaceDeclHandler(XML_Parser parser,
 			       XML_EndNamespaceDeclHandler end);
 
-void XMLPARSEAPI
+void 
 XML_SetNotStandaloneHandler(XML_Parser parser,
 			    XML_NotStandaloneHandler handler);
 
-void XMLPARSEAPI
+void 
 XML_SetExternalEntityRefHandler(XML_Parser parser,
 				XML_ExternalEntityRefHandler handler);
 
 /* If a non-null value for arg is specified here, then it will be passed
 as the first argument to the external entity ref handler instead
 of the parser object. */
-void XMLPARSEAPI
+void 
 XML_SetExternalEntityRefHandlerArg(XML_Parser, void *arg);
 
-void XMLPARSEAPI
+void 
 XML_SetUnknownEncodingHandler(XML_Parser parser,
 			      XML_UnknownEncodingHandler handler,
 			      void *encodingHandlerData);
@@ -503,10 +488,10 @@ XML_SetUnknownEncodingHandler(XML_Parser parser,
 /* This can be called within a handler for a start element, end element,
 processing instruction or character data.  It causes the corresponding
 markup to be passed to the default handler. */
-void XMLPARSEAPI XML_DefaultCurrent(XML_Parser parser);
+void  XML_DefaultCurrent(XML_Parser parser);
 
 /* This value is passed as the userData argument to callbacks. */
-void XMLPARSEAPI
+void 
 XML_SetUserData(XML_Parser parser, void *userData);
 
 /* Returns the last value set by XML_SetUserData or null. */
@@ -516,14 +501,14 @@ XML_SetUserData(XML_Parser parser, void *userData);
 to XML_ParserCreate. It must not be called after XML_Parse
 or XML_ParseBuffer. */
 
-int XMLPARSEAPI
+int 
 XML_SetEncoding(XML_Parser parser, const XML_Char *encoding);
 
 /* If this function is called, then the parser will be passed
 as the first argument to callbacks instead of userData.
 The userData will still be accessible using XML_GetUserData. */
 
-void XMLPARSEAPI
+void 
 XML_UseParserAsHandlerArg(XML_Parser parser);
 
 /* Sets the base to be used for resolving relative URIs in system identifiers in
@@ -533,10 +518,10 @@ XML_ExternalEntityRefHandler, XML_NotationDeclHandler
 and XML_UnparsedEntityDeclHandler. The base argument will be copied.
 Returns zero if out of memory, non-zero otherwise. */
 
-int XMLPARSEAPI
+int 
 XML_SetBase(XML_Parser parser, const XML_Char *base);
 
-const XML_Char XMLPARSEAPI *
+const XML_Char  *
 XML_GetBase(XML_Parser parser);
 
 /* Returns the number of the attribute/value pairs passed in last call
@@ -545,24 +530,24 @@ rather than defaulted. Each attribute/value pair counts as 2; thus
 this correspondds to an index into the atts array passed to the
 XML_StartElementHandler. */
 
-int XMLPARSEAPI XML_GetSpecifiedAttributeCount(XML_Parser parser);
+int  XML_GetSpecifiedAttributeCount(XML_Parser parser);
 
 /* Returns the index of the ID attribute passed in the last call to
 XML_StartElementHandler, or -1 if there is no ID attribute.  Each
 attribute/value pair counts as 2; thus this correspondds to an index
 into the atts array passed to the XML_StartElementHandler. */
-int XMLPARSEAPI XML_GetIdAttributeIndex(XML_Parser parser);
+int  XML_GetIdAttributeIndex(XML_Parser parser);
 
 /* Parses some input. Returns 0 if a fatal error is detected.
 The last call to XML_Parse must have isFinal true;
 len may be zero for this call (or any other). */
-int XMLPARSEAPI
+int 
 XML_Parse(XML_Parser parser, const char *s, int len, int isFinal);
 
-void XMLPARSEAPI *
+void  *
 XML_GetBuffer(XML_Parser parser, int len);
 
-int XMLPARSEAPI
+int 
 XML_ParseBuffer(XML_Parser parser, int len, int isFinal);
 
 /* Creates an XML_Parser object that can parse an external general entity;
@@ -578,7 +563,7 @@ so longer as the parser has not yet been freed.
 The new parser is completely independent and may safely be used in a separate thread.
 The handlers and userData are initialized from the parser argument.
 Returns 0 if out of memory.  Otherwise returns a new XML_Parser object. */
-XML_Parser XMLPARSEAPI
+XML_Parser 
 XML_ExternalEntityParserCreate(XML_Parser parser,
 			       const XML_Char *context,
 			       const XML_Char *encoding);
@@ -608,7 +593,7 @@ parsing (ie without XML_DTD being defined), then
 XML_SetParamEntityParsing will return 0 if parsing of parameter
 entities is requested; otherwise it will return non-zero. */
 
-int XMLPARSEAPI
+int 
 XML_SetParamEntityParsing(XML_Parser parser,
 			  enum XML_ParamEntityParsing parsing);
 
@@ -641,7 +626,7 @@ enum XML_Error {
 /* If XML_Parse or XML_ParseBuffer have returned 0, then XML_GetErrorCode
 returns information about the error. */
 
-enum XML_Error XMLPARSEAPI XML_GetErrorCode(XML_Parser parser);
+enum XML_Error  XML_GetErrorCode(XML_Parser parser);
 
 /* These functions return information about the current parse location.
 They may be called when XML_Parse or XML_ParseBuffer return 0;
@@ -651,14 +636,14 @@ They may also be called from any other callback called to report
 some parse event; in this the location is the location of the first
 of the sequence of characters that generated the event. */
 
-int XMLPARSEAPI XML_GetCurrentLineNumber(XML_Parser parser);
-int XMLPARSEAPI XML_GetCurrentColumnNumber(XML_Parser parser);
-long XMLPARSEAPI XML_GetCurrentByteIndex(XML_Parser parser);
+int  XML_GetCurrentLineNumber(XML_Parser parser);
+int  XML_GetCurrentColumnNumber(XML_Parser parser);
+long  XML_GetCurrentByteIndex(XML_Parser parser);
 
 /* Return the number of bytes in the current event.
 Returns 0 if the event is in an internal entity. */
 
-int XMLPARSEAPI XML_GetCurrentByteCount(XML_Parser parser);
+int  XML_GetCurrentByteCount(XML_Parser parser);
 
 /* If XML_CONTEXT_BYTES is defined, returns the input buffer, sets
    the integer pointed to by offset to the offset within this buffer
@@ -669,7 +654,7 @@ int XMLPARSEAPI XML_GetCurrentByteCount(XML_Parser parser);
    NOTE: The character pointer returned should not be used outside
    the handler that makes the call. */
 
-const char XMLPARSEAPI * XML_GetInputContext(XML_Parser parser,
+const char  * XML_GetInputContext(XML_Parser parser,
 					     int *offset,
 					     int *size);
 
@@ -679,11 +664,11 @@ const char XMLPARSEAPI * XML_GetInputContext(XML_Parser parser,
 #define XML_GetErrorByteIndex XML_GetCurrentByteIndex
 
 /* Frees memory used by the parser. */
-void XMLPARSEAPI
+void 
 XML_ParserFree(XML_Parser parser);
 
 /* Returns a string describing the error. */
-const XML_LChar XMLPARSEAPI *XML_ErrorString(int code);
+const XML_LChar  *XML_ErrorString(int code);
 
 #ifdef __cplusplus
 }
