@@ -1,4 +1,8 @@
+	- Defined XML_SetEndNamespaceDeclHandler. Thanks to Darryl Miles for
+	  finding this oversight.
 	- Changed default patterns in lib/Makefile.in to fit non-GNU makes
+	  Thanks to robin@unrated.net for reporting and providing an
+	  account to test on.
 	- The reference had the wrong label for XML_SetStartNamespaceDecl.
 	  Reported by an anonymous user.
 Release 1.95.0 Fri Sep 29 2000

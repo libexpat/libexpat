@@ -4,7 +4,7 @@ See the file COPYING for copying permission.
 */
 
 static char RCSId[]
-  = "$Header: /cvsroot/expat/expat/lib/xmlparse.c,v 1.6 2000/09/29 14:57:45 coopercc Exp $";
+  = "$Header: /cvsroot/expat/expat/lib/xmlparse.c,v 1.7 2000/10/09 06:26:10 jclark Exp $";
 
 #include <config.h>
 
@@ -999,7 +999,9 @@ void XML_SetStartNamespaceDeclHandler(XML_Parser parser,
 }
 
 void XML_SetEndNamespaceDeclHandler(XML_Parser parser,
-				    XML_EndNamespaceDeclHandler end);
+				    XML_EndNamespaceDeclHandler end) {
+  endNamespaceDeclHandler = end;
+}
 
 
 void XML_SetNotStandaloneHandler(XML_Parser parser,
