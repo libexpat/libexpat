@@ -2123,7 +2123,7 @@ doContent(XML_Parser parser,
         break;
       }
     case XML_TOK_EMPTY_ELEMENT_WITH_ATTS:
-      if (!startElementHandler) {
+      if (!startElementHandler && !endElementHandler) {
         enum XML_Error result = storeAtts(parser, enc, s, 0, 0);
         if (result)
           return result;
