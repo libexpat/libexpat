@@ -438,13 +438,7 @@ checkProlog(DTD *dtd, const char *s, const char *end,
 	  break;
 	}
       case XML_ROLE_DOCTYPE_SYSTEM_ID:
-	if (!XmlIsSystemId(*enc, s, next, nextPtr))
-	  return syntaxError;
 	dtd->containsRef = 1;
-	break;
-      case XML_ROLE_NOTATION_SYSTEM_ID:
-	if (!XmlIsSystemId(*enc, s, next, nextPtr))
-	  return syntaxError;
 	break;
       case XML_ROLE_DOCTYPE_PUBLIC_ID:
       case XML_ROLE_ENTITY_PUBLIC_ID:
@@ -485,8 +479,6 @@ checkProlog(DTD *dtd, const char *s, const char *end,
 	}
 	break;
       case XML_ROLE_ENTITY_SYSTEM_ID:
-	if (!XmlIsSystemId(*enc, s, next, nextPtr))
-	  return syntaxError;
 	if (entityNamePtr) {
 	  const char *name = poolStoreString(&dtd->pool, *enc, entityNamePtr, entityNameEnd);
 	  entity = (ENTITY *)lookup(&dtd->generalEntities, name, sizeof(ENTITY));

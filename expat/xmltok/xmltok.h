@@ -121,8 +121,6 @@ struct encoding {
 			 POSITION *);
   int (*isPublicId)(const ENCODING *enc, const char *ptr, const char *end,
 		    const char **badPtr);
-  int (*isSystemId)(const ENCODING *enc, const char *ptr, const char *end,
-		    const char **badPtr);
   int (*encode)(const ENCODING *enc,
 		int charNum,
 		char *buf);
@@ -195,9 +193,6 @@ the content of a literal that has already been returned by XmlTok. */
 
 #define XmlIsPublicId(enc, ptr, end, badPtr) \
   (((enc)->isPublicId)(enc, ptr, end, badPtr))
-
-#define XmlIsSystemId(enc, ptr, end, badPtr) \
-  (((enc)->isSystemId)(enc, ptr, end, badPtr))
 
 #define XmlEncode(enc, ch, buf) \
   (((enc)->encode)(enc, ch, buf))

@@ -10,8 +10,7 @@
   PREFIX(getAtts), \
   PREFIX(charRefNumber), \
   PREFIX(updatePosition), \
-  PREFIX(isPublicId), \
-  PREFIX(isSystemId)
+  PREFIX(isPublicId)
 
 #define VTABLE2 \
   PREFIX(encode), \

@@ -1116,53 +1116,6 @@ int PREFIX(isPublicId)(const ENCODING *enc, const char *ptr, const char *end,
   return 1;
 }
 
-static
-int PREFIX(isSystemId)(const ENCODING *enc, const char *ptr, const char *end,
-		       const char **badPtr)
-{
-  ptr += MINBPC;
-  end -= MINBPC;
-  for (; ptr != end; ptr += MINBPC) {
-    switch (BYTE_TYPE(enc, ptr)) {
-    case BT_DIGIT:
-    case BT_HEX:
-    case BT_MINUS:
-    case BT_APOS:
-    case BT_LPAR:
-    case BT_RPAR:
-    case BT_PLUS:
-    case BT_COMMA:
-    case BT_SOL:
-    case BT_AMP:
-    case BT_SEMI:
-    case BT_EQUALS:
-    case BT_QUEST:
-    case BT_EXCL:
-    case BT_AST:
-    case BT_PERCNT:
-      break;
-    case BT_NAME:
-    case BT_NMSTRT:
-      if (BYTE_TO_ASCII(enc, ptr) & ~0x7f) {
-	*badPtr = ptr;
-	return 0;
-      }
-      break;
-    default:
-      switch (BYTE_TO_ASCII(enc, ptr)) {
-      case '@':
-      case '$':
-	break;
-      default:
-	*badPtr = ptr;
-        return 0;
-      }
-      break;
-    }
-  }
-  return 1;
-}
-
 /* This must only be called for a well-formed start-tag or empty element tag.
 Returns the number of attributes.  Pointers to the first attsMax attributes 
 are stored in atts. */
