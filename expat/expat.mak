@@ -54,7 +54,6 @@ INTDIR=.\Release
 ALL : "$(OUTDIR)\xmltok.dll"
 
 CLEAN : 
-	-@erase "$(INTDIR)\wxmltok.obj"
 	-@erase "$(INTDIR)\xmltok.obj"
 	-@erase "$(OUTDIR)\xmltok.dll"
 	-@erase "$(OUTDIR)\xmltok.exp"
@@ -112,7 +111,6 @@ LINK32_FLAGS=kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib\
  /pdb:"$(OUTDIR)/xmltok.pdb" /machine:I386 /out:"$(OUTDIR)/xmltok.dll"\
  /implib:"$(OUTDIR)/xmltok.lib" 
 LINK32_OBJS= \
-	"$(INTDIR)\wxmltok.obj" \
 	"$(INTDIR)\xmltok.obj"
 
 "$(OUTDIR)\xmltok.dll" : "$(OUTDIR)" $(DEF_FILE) $(LINK32_OBJS)
@@ -140,7 +138,6 @@ ALL : "$(OUTDIR)\xmltok.dll"
 CLEAN : 
 	-@erase "$(INTDIR)\vc40.idb"
 	-@erase "$(INTDIR)\vc40.pdb"
-	-@erase "$(INTDIR)\wxmltok.obj"
 	-@erase "$(INTDIR)\xmltok.obj"
 	-@erase "$(OUTDIR)\xmltok.dll"
 	-@erase "$(OUTDIR)\xmltok.exp"
@@ -199,7 +196,6 @@ LINK32_FLAGS=kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib\
  /pdb:"$(OUTDIR)/xmltok.pdb" /debug /machine:I386 /out:"$(OUTDIR)/xmltok.dll"\
  /implib:"$(OUTDIR)/xmltok.lib" 
 LINK32_OBJS= \
-	"$(INTDIR)\wxmltok.obj" \
 	"$(INTDIR)\xmltok.obj"
 
 "$(OUTDIR)\xmltok.dll" : "$(OUTDIR)" $(DEF_FILE) $(LINK32_OBJS)
@@ -380,37 +376,40 @@ LINK32_OBJS= \
 # Begin Source File
 
 SOURCE=.\xmltok.c
-DEP_CPP_XMLTO=\
-	".\xmltok.h"\
-	
-
-"$(INTDIR)\xmltok.obj" : $(SOURCE) $(DEP_CPP_XMLTO) "$(INTDIR)"
-
-
-# End Source File
-################################################################################
-# Begin Source File
-
-SOURCE=.\wxmltok.c
 
 !IF  "$(CFG)" == "xmltok - Win32 Release"
 
-DEP_CPP_WXMLT=\
-	".\xmltok.c"\
+DEP_CPP_XMLTO=\
+	".\asciitab.h"\
+	".\latin1tab.h"\
+	".\nametab.h"\
+	".\utf8tab.h"\
 	".\xmltok.h"\
+	".\xmltok_impl.c"\
+	".\xmltok_impl.h"\
 	
+# ADD CPP /Ob2
 
-"$(INTDIR)\wxmltok.obj" : $(SOURCE) $(DEP_CPP_WXMLT) "$(INTDIR)" ".\xmltok.c"
+"$(INTDIR)\xmltok.obj" : $(SOURCE) $(DEP_CPP_XMLTO) "$(INTDIR)"
+   $(CPP) /nologo /MT /W3 /GX /O2 /Ob2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS"\
+ /Fp"$(INTDIR)/xmltok.pch" /YX /Fo"$(INTDIR)/" /c $(SOURCE)
 
 
 !ELSEIF  "$(CFG)" == "xmltok - Win32 Debug"
 
-DEP_CPP_WXMLT=\
-	".\xmltok.c"\
+DEP_CPP_XMLTO=\
+	".\asciitab.h"\
+	".\latin1tab.h"\
+	".\nametab.h"\
+	".\utf8tab.h"\
 	".\xmltok.h"\
+	".\xmltok_impl.c"\
+	".\xmltok_impl.h"\
 	
 
-"$(INTDIR)\wxmltok.obj" : $(SOURCE) $(DEP_CPP_WXMLT) "$(INTDIR)" ".\xmltok.c"
+"$(INTDIR)\xmltok.obj" : $(SOURCE) $(DEP_CPP_XMLTO) "$(INTDIR)"
+   $(CPP) /nologo /MTd /W3 /Gm /GX /Zi /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS"\
+ /Fp"$(INTDIR)/xmltok.pch" /YX /Fo"$(INTDIR)/" /Fd"$(INTDIR)/" /c $(SOURCE)
 
 
 !ENDIF 
@@ -451,6 +450,9 @@ DEP_CPP_WXMLT=\
 # Begin Source File
 
 SOURCE=.\xmlec\xmlec.c
+
+!IF  "$(CFG)" == "xmlec - Win32 Release"
+
 DEP_CPP_XMLEC=\
 	".\xmltok.h"\
 	
@@ -458,6 +460,18 @@ DEP_CPP_XMLEC=\
 "$(INTDIR)\xmlec.obj" : $(SOURCE) $(DEP_CPP_XMLEC) "$(INTDIR)"
    $(CPP) $(CPP_PROJ) $(SOURCE)
 
+
+!ELSEIF  "$(CFG)" == "xmlec - Win32 Debug"
+
+DEP_CPP_XMLEC=\
+	".\xmltok.h"\
+	
+
+"$(INTDIR)\xmlec.obj" : $(SOURCE) $(DEP_CPP_XMLEC) "$(INTDIR)"
+   $(CPP) $(CPP_PROJ) $(SOURCE)
+
+
+!ENDIF 
 
 # End Source File
 # End Target

@@ -1,389 +1,221 @@
+/* TODO
+
+Provide methods to convert to any of UTF-8, UTF-18, UCS-4.
+
+Better prolog tokenization
+
+<!NAME
+NMTOKEN
+NAME
+PEREF
+
+*/
+
 #ifdef _MSC_VER
 #define XMLTOKAPI __declspec(dllexport)
 #endif
 
 #include "xmltok.h"
+#include "nametab.h"
 
-#ifdef UNICODE
-typedef wchar_t TCHAR;
-#else
-typedef char TCHAR;
-#endif
+#define UCS2_GET_NAMING(pages, hi, lo) \
+   (namingBitmap[(pages[hi] << 3) + ((lo) >> 5)] & (1 << ((lo) & 0x1F)))
 
-#define DIGIT_CASES \
-  case '0': case '1': case '2': case '3': case '4': \
-  case '5': case '6': case '7': case '8': case '9':
+/* A 2 byte UTF-8 representation splits the characters 11 bits
+between the bottom 5 and 6 bits of the bytes.
+We need 8 bits to index into pages, 3 bits to add to that index and
+5 bits to generate the mask. */
+#define UTF8_GET_NAMING2(pages, byte) \
+    (namingBitmap[((pages)[(((byte)[0]) >> 2) & 7] << 3) \
+                      + ((((byte)[0]) & 3) << 1) \
+                      + ((((byte)[1]) >> 5) & 1)] \
+         & (1 << (((byte)[1]) & 0x1F)))
 
-#define HEX_DIGIT_CASES DIGIT_CASES \
-  case 'a': case 'b': case 'c': case 'd': case 'e': case 'f': \
-  case 'A': case 'B': case 'C': case 'D': case 'E': case 'F': 
+/* A 3 byte UTF-8 representation splits the characters 16 bits
+between the bottom 4, 6 and 6 bits of the bytes.
+We need 8 bits to index into pages, 3 bits to add to that index and
+5 bits to generate the mask. */
+#define UTF8_GET_NAMING3(pages, byte) \
+  (namingBitmap[((pages)[((((byte)[0]) & 0xF) << 4) \
+                             + ((((byte)[1]) >> 2) & 0xF)] \
+		       << 3) \
+                      + ((((byte)[1]) & 3) << 1) \
+                      + ((((byte)[2]) >> 5) & 1)] \
+         & (1 << (((byte)[2]) & 0x1F)))
 
-#define S_CASES case ' ': case '\t': case '\r':  case '\n':
+#define UTF8_GET_NAMING(pages, p, n) \
+  ((n) == 2 \
+  ? UTF8_GET_NAMING2(pages, (const unsigned char *)(p)) \
+  : ((n) == 3 \
+     ? UTF8_GET_NAMING3(pages, (const unsigned char *)(p)) \
+     : 0))
 
-/* ptr points to character following "<!-" */
 
-static
-int scanComment(const TCHAR *ptr, const TCHAR *end, const TCHAR **nextTokPtr)
+#include "xmltok_impl.h"
+
+struct normal_encoding {
+  ENCODING enc;
+  unsigned char type[256];
+};
+
+/* minimum bytes per character */
+#define MINBPC 1
+#define BYTE_TYPE(enc, p) \
+  (((struct normal_encoding *)(enc))->type[(unsigned char)*(p)])
+#define IS_NAME_CHAR(enc, p, n) UTF8_GET_NAMING(namePages, p, n)
+#define IS_NMSTRT_CHAR(enc, p, n) UTF8_GET_NAMING(nmstrtPages, p, n)
+
+/* c is an ASCII character */
+#define CHAR_MATCHES(enc, p, c) (*(p) == c)
+
+#define PREFIX(ident) normal_ ## ident
+#include "xmltok_impl.c"
+
+#undef MINBPC
+#undef BYTE_TYPE
+#undef CHAR_MATCHES
+#undef IS_NAME_CHAR
+#undef IS_NMSTRT_CHAR
+
+const struct normal_encoding utf8_encoding = {
+  { { PREFIX(prologTok), PREFIX(contentTok) }, 1 },
+#include "asciitab.h"
+#include "utf8tab.h"
+};
+
+#undef PREFIX
+
+static unsigned char latin1tab[256] = {
+#include "asciitab.h"
+#include "latin1tab.h"
+};
+
+static int unicode_byte_type(char hi, char lo)
 {
-  if (ptr != end) {
-    if (*ptr != '-') {
-      *nextTokPtr = ptr;
-      return XML_TOK_INVALID;
+  switch ((unsigned char)hi) {
+  case 0xD8: case 0xD9: case 0xDA: case 0xDB:
+    return BT_LEAD4;
+  case 0xDC: case 0xDD: case 0xDE: case 0xDF:
+    return BT_TRAIL;
+  case 0xFF:
+    switch ((unsigned char)lo) {
+    case 0xFF:
+    case 0xFE:
+      return BT_NONXML;
     }
-    for (++ptr; ptr != end; ptr++) {
-      if (*ptr == '-') {
-	if (++ptr == end)
-	  return XML_TOK_PARTIAL;
-	if (*ptr == '-') {
-	  if (++ptr == end)
-	    return XML_TOK_PARTIAL;
-	  if (*ptr != '>') {
-	    *nextTokPtr = ptr;
-	    return XML_TOK_INVALID;
-	  }
-	  *nextTokPtr = ptr + 1;
-	  return XML_TOK_COMMENT;
-	}
-      }
-    }
+    break;
   }
-  return XML_TOK_PARTIAL;
+  return BT_NONASCII;
 }
 
-/* ptr points to character following "<!" */
+#define PREFIX(ident) little2_ ## ident
+#define MINBPC 2
+#define BYTE_TYPE(enc, p) \
+ ((p)[1] == 0 ? latin1tab[(unsigned char)*(p)] : unicode_byte_type((p)[1], (p)[0]))
+#define CHAR_MATCHES(enc, p, c) ((p)[1] == 0 && (p)[0] == c)
+#define IS_NAME_CHAR(enc, p, n) \
+  UCS2_GET_NAMING(namePages, (unsigned char)p[1], (unsigned char)p[0])
+#define IS_NMSTRT_CHAR(enc, p, n) \
+  UCS2_GET_NAMING(nmstrtPages, (unsigned char)p[1], (unsigned char)p[0])
+
+#include "xmltok_impl.c"
+
+#undef MINBPC
+#undef BYTE_TYPE
+#undef CHAR_MATCHES
+#undef IS_NAME_CHAR
+#undef IS_NMSTRT_CHAR
+
+const struct encoding little2_encoding = {
+ { PREFIX(prologTok), PREFIX(contentTok) }, 2
+};
+
+#undef PREFIX
+
+#define PREFIX(ident) big2_ ## ident
+#define MINBPC 2
+/* CHAR_MATCHES is guaranteed to have MINBPC bytes available. */
+#define BYTE_TYPE(enc, p) \
+ ((p)[0] == 0 ? latin1tab[(unsigned char)(p)[1]] : unicode_byte_type((p)[0], (p)[1]))
+#define CHAR_MATCHES(enc, p, c) ((p)[0] == 0 && (p)[1] == c)
+#define IS_NAME_CHAR(enc, p, n) \
+  UCS2_GET_NAMING(namePages, (unsigned char)p[0], (unsigned char)p[1])
+#define IS_NMSTRT_CHAR(enc, p, n) \
+  UCS2_GET_NAMING(nmstrtPages, (unsigned char)p[0], (unsigned char)p[1])
+
+#include "xmltok_impl.c"
+
+#undef MINBPC
+#undef BYTE_TYPE
+#undef CHAR_MATCHES
+#undef IS_NAME_CHAR
+#undef IS_NMSTRT_CHAR
+
+const struct encoding big2_encoding = {
+ { PREFIX(prologTok), PREFIX(contentTok) }, 2
+};
+
+#undef PREFIX
 
 static
-int scanDecl(const TCHAR *ptr, const TCHAR *end, const TCHAR **nextTokPtr)
+int initScan(const ENCODING *enc, int state, const char *ptr, const char *end,
+	     const char **nextTokPtr)
 {
-  if (ptr != end) {
-    if (*ptr == '-')
-      return scanComment(ptr + 1, end, nextTokPtr);
-    do {
-      switch (*ptr) {
-      case '\'':
-      case '"':
-      case '<':
-	*nextTokPtr = ptr;
-	return XML_TOK_PROLOG_CHARS;
-      }
-    } while (++ptr != end);
-    *nextTokPtr = ptr;
-    return XML_TOK_PROLOG_CHARS;
-  }
-  return XML_TOK_PARTIAL;
-}
+  const ENCODING **encPtr;
 
-/* ptr points to character following "<?" */
-
-static
-int scanPi(const TCHAR *ptr, const TCHAR *end, const TCHAR **nextTokPtr)
-{
-  for (; ptr != end; ++ptr) {
-    switch (*ptr) {
-    case '?':
-      if (ptr + 1 == end)
-	return XML_TOK_PARTIAL;
-      if (ptr[1] == '>') {
-	*nextTokPtr = ptr + 2;
-	return XML_TOK_PI;
-      }
+  if (ptr == end)
+    return XML_TOK_NONE;
+  encPtr = ((const INIT_ENCODING *)enc)->encPtr;
+  if (ptr + 1 == end) {
+    switch ((unsigned char)*ptr) {
+    case 0xFE:
+    case 0xFF:
+    case 0x00:
+    case 0x3C:
+      return XML_TOK_PARTIAL;
     }
   }
-  return XML_TOK_PARTIAL;
-}
-
-/* ptr points to character following "<" */
-
-static
-int scanStartTag(const TCHAR *ptr, const TCHAR *end, const TCHAR **nextTokPtr)
-{
-  for (; ptr != end; ++ptr) {
-    switch (*ptr) {
-    case '<':
-      *nextTokPtr = ptr;
-      return XML_TOK_INVALID;
-    case '>':
-      *nextTokPtr = ptr + 1;
-      return XML_TOK_START_TAG;
-    case '"':
-      for (++ptr;; ++ptr) {
-	if (ptr == end)
-	  return XML_TOK_PARTIAL;
-	if (*ptr == '"')
-	  break;
-      }
-      break;
-    case '\'':
-      for (++ptr;; ++ptr) {
-	if (ptr == end)
-	  return XML_TOK_PARTIAL;
-	if (*ptr == '\'')
-	  break;
-      }
-      break;
-    case '/':
-      if (++ptr == end)
-	return XML_TOK_PARTIAL;
-      if (*ptr != '>') {
-	*nextTokPtr = ptr;
-	return XML_TOK_INVALID;
-      }
-      *nextTokPtr = ptr + 1;
-      return XML_TOK_EMPTY_ELEMENT;
+  else {
+    switch (((unsigned char)ptr[0] << 8) | (unsigned char)ptr[1]) {
+    case 0x003C:
+      *encPtr = &big2_encoding;
+      return XmlTok(*encPtr, state, ptr, end, nextTokPtr);
+    case 0xFEFF:
+      *nextTokPtr = ptr + 2;
+      *encPtr = &big2_encoding;
+      return XML_TOK_BOM;
+    case 0x3C00:
+      *encPtr = &little2_encoding;
+      return XmlTok(*encPtr, state, ptr, end, nextTokPtr);
+    case 0xFFFE:
+      *nextTokPtr = ptr + 2;
+      *encPtr = &little2_encoding;
+      return XML_TOK_BOM;
     }
   }
-  return XML_TOK_PARTIAL;
-}
-
-/* ptr points to character following "</" */
-
-static
-int scanEndTag(const TCHAR *ptr, const TCHAR *end, const TCHAR **nextTokPtr)
-{
-  for (; ptr != end; ++ptr) {
-    switch (*ptr) {
-    case '<':
-    case '&':
-      *nextTokPtr = ptr;
-      return XML_TOK_INVALID;
-    case '>':
-      *nextTokPtr = ptr + 1;
-      return XML_TOK_END_TAG;
-    }
-  }
-  return XML_TOK_PARTIAL;
-}
-
-/* ptr points to character following "&#X" */
-
-static
-int scanHexCharRef(const TCHAR *ptr, const TCHAR *end, const TCHAR **nextTokPtr)
-{
-  if (ptr != end) {
-    switch (*ptr) {
-    HEX_DIGIT_CASES
-      break;
-    default:
-      *nextTokPtr = ptr;
-      return XML_TOK_INVALID;
-    }
-    for (++ptr; ptr != end; ++ptr) {
-      switch (*ptr) {
-      HEX_DIGIT_CASES
-	break;
-      case ';':
-	*nextTokPtr = ptr + 1;
-	return XML_TOK_CHAR_REF;
-      default:
-	*nextTokPtr = ptr;
-	return XML_TOK_INVALID;
-      }
-    }
-  }
-  return XML_TOK_PARTIAL;
-}
-
-/* ptr points to character following "&#" */
-
-static
-int scanCharRef(const TCHAR *ptr, const TCHAR *end, const TCHAR **nextTokPtr)
-{
-  if (ptr != end) {
-    switch (*ptr) {
-    case 'x':
-    case 'X':
-      return scanHexCharRef(ptr + 1, end, nextTokPtr);
-    DIGIT_CASES
-      break;
-    default:
-      *nextTokPtr = ptr;
-      return XML_TOK_INVALID;
-    }
-    for (++ptr; ptr != end; ++ptr) {
-      switch (*ptr) {
-      DIGIT_CASES
-	break;
-      case ';':
-	*nextTokPtr = ptr + 1;
-	return XML_TOK_CHAR_REF;
-      default:
-	*nextTokPtr = ptr;
-	return XML_TOK_INVALID;
-      }
-    }
-  }
-  return XML_TOK_PARTIAL;
+  *encPtr = &utf8_encoding.enc;
+  return XmlTok(*encPtr, state, ptr, end, nextTokPtr);
 }
 
 static
-int scanEntityRef(const TCHAR *ptr, const TCHAR *end, const TCHAR **nextTokPtr)
+int initScanProlog(const ENCODING *enc, const char *ptr, const char *end,
+		   const char **nextTokPtr)
 {
-  for (; ptr != end; ++ptr) {
-    switch (*ptr) {
-    case '<':
-    case '>':
-    case '&':
-    S_CASES
-      *nextTokPtr = ptr;
-      return XML_TOK_INVALID;
-    case ';':
-      *nextTokPtr = ptr + 1;
-      return XML_TOK_ENTITY_REF;
-    }
-  }
-  return XML_TOK_PARTIAL;
+  return initScan(enc, XML_PROLOG_STATE, ptr, end, nextTokPtr);
 }
-
-/* ptr points to character following "<![" */
 
 static
-int scanCdataSection(const TCHAR *ptr, const TCHAR *end, const TCHAR **nextTokPtr)
+int initScanContent(const ENCODING *enc, const char *ptr, const char *end,
+		    const char **nextTokPtr)
 {
-  int i;
-  /* CDATA[]]> */
-  if (end - ptr < 9)
-    return XML_TOK_PARTIAL;
-  for (i = 0; i < 6; i++, ptr++) {
-    if (*ptr != "CDATA["[i]) {
-       *nextTokPtr = ptr;
-      return XML_TOK_INVALID;
-    }
-  }
-  end -= 2;
-  for (; ptr != end; ++ptr) {
-    if (*ptr == ']') {
-      if (ptr[1] == ']' && ptr[2] == '>') {
-	*nextTokPtr = ptr + 3;
-	return XML_TOK_CDATA_SECTION;
-      }
-    }
-  }
-  return XML_TOK_PARTIAL;
-
+  return initScan(enc, XML_CONTENT_STATE, ptr, end, nextTokPtr);
 }
 
-int XmlContentTok(const TCHAR *ptr, const TCHAR *end, const TCHAR **nextTokPtr)
+void XmlInitEncoding(INIT_ENCODING *p, const ENCODING **encPtr)
 {
-  if (ptr != end) {
-    switch (*ptr) {
-    case '<':
-      {
-	++ptr;
-	if (ptr == end)
-	  return XML_TOK_PARTIAL;
-	switch (*ptr) {
-	case '!':
-	  if (++ptr == end)
-	    return XML_TOK_PARTIAL;
-	  switch (*ptr) {
-	  case '-':
-	    return scanComment(ptr + 1, end, nextTokPtr);
-	  case '[':
-	    return scanCdataSection(ptr + 1, end, nextTokPtr);
-	  }
-	  *nextTokPtr = ptr;
-	  return XML_TOK_INVALID;
-	case '?':
-	  return scanPi(ptr + 1, end, nextTokPtr);
-	case '/':
-	  return scanEndTag(ptr + 1, end, nextTokPtr);
-	case '>':
-	S_CASES
-	  *nextTokPtr = ptr;
-	  return XML_TOK_INVALID;
-	default:
-	  return scanStartTag(ptr, end, nextTokPtr);
-	}
-      }
-    case '&':
-      {
-	++ptr;
-	if (ptr == end)
-	  return XML_TOK_PARTIAL;
-	switch (*ptr) {
-	case '#':
-	  return scanCharRef(ptr + 1, end, nextTokPtr);
-	S_CASES
-	case ';':
-	  *nextTokPtr = ptr;
-	  return XML_TOK_INVALID;
-	}
-	return scanEntityRef(ptr + 1, end, nextTokPtr);
-      }
-    default:
-      {
-	for (++ptr; ptr != end; ++ptr) {
-	  switch (*ptr) {
-	  case '&':
-	  case '<':
-	    *nextTokPtr = ptr;
-	    return XML_TOK_DATA_CHARS;
-	  }
-	}
-	*nextTokPtr = ptr;
-	return XML_TOK_DATA_CHARS;
-      }
-    }
-  }
-  return XML_TOK_NONE;
-}
-
-int XmlPrologTok(const TCHAR *ptr, const TCHAR *end, const TCHAR **nextTokPtr)
-{
-  if (ptr != end) {
-    switch (*ptr) {
-    case '"':
-      {
-	for (++ptr; ptr != end; ++ptr) {
-	  if (*ptr == '"') {
-	    *nextTokPtr = ptr + 1;
-	    return XML_TOK_LITERAL;
-	  }
-	}
-	return XML_TOK_PARTIAL;
-      }
-    case '\'':
-      {
-	for (++ptr; ptr != end; ++ptr) {
-	  if (*ptr == '\'') {
-	    *nextTokPtr = ptr + 1;
-	    return XML_TOK_LITERAL;
-	  }
-	}
-	return XML_TOK_PARTIAL;
-      }
-    case '<':
-      {
-	++ptr;
-	if (ptr == end)
-	  return XML_TOK_PARTIAL;
-	switch (*ptr) {
-	case '!':
-	  return scanDecl(ptr + 1, end, nextTokPtr);
-	case '?':
-	  return scanPi(ptr + 1, end, nextTokPtr);
-	case '/':
-	  *nextTokPtr = ptr;
-	  return XML_TOK_INVALID;
-	default:
-	  return XmlContentTok(ptr - 1, end, nextTokPtr);
-	}
-      }
-    default:
-      {
-	for (++ptr; ptr != end; ++ptr) {
-	  switch (*ptr) {
-	  case '<':
-	  case '"':
-	  case '\'':
-	    *nextTokPtr = ptr;
-	    return XML_TOK_PROLOG_CHARS;
-	  }
-	}
-	*nextTokPtr = ptr;
-	return XML_TOK_PROLOG_CHARS;
-      }
-    }
-  }
-  return XML_TOK_NONE;
+  p->initEnc.scanners[XML_PROLOG_STATE] = initScanProlog;
+  p->initEnc.scanners[XML_CONTENT_STATE] = initScanContent;
+  p->initEnc.minBytesPerChar = 1;
+  p->encPtr = encPtr;
+  *encPtr = &(p->initEnc);
 }

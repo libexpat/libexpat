@@ -1,40 +1,53 @@
 #ifndef XmlTok_INCLUDED
 #define XmlTok_INCLUDED 1
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef XMLTOKAPI
 #define XMLTOKAPI /* as nothing */
 #endif
 
-#include <stddef.h>
-
 /* The following tokens may be returned by both XmlPrologTok and XmlContentTok */
-#define XML_TOK_NONE -2    /* The string to be scanned is empty */
-#define XML_TOK_PARTIAL -1
+#define XML_TOK_NONE -3    /* The string to be scanned is empty */
+#define XML_TOK_PARTIAL_CHAR -2 /* only part of a multibyte sequence */
+#define XML_TOK_PARTIAL -1 /* only part of a token */
 #define XML_TOK_INVALID 0
-#define XML_TOK_COMMENT 1
-#define XML_TOK_PI 2      /* processing instruction */
+#define XML_TOK_BOM 1     /* Byte order mark */
+#define XML_TOK_COMMENT 2
+#define XML_TOK_PI 3      /* processing instruction */
 
 /* The following tokens are returned only by XmlPrologTok */
-#define XML_TOK_LITERAL 3
-#define XML_TOK_PROLOG_CHARS 4
+#define XML_TOK_LITERAL 4
+#define XML_TOK_PROLOG_CHARS 5
+#define XML_TOK_PROLOG_S 6
 
 /* The following token is returned by XmlPrologTok when it detects the end
 of the prolog and is also returned by XmlContentTok */
 
-#define XML_TOK_START_TAG 5
+#define XML_TOK_START_TAG 7
 
 /* The following tokens are returned only by XmlContentTok */
 
-#define XML_TOK_END_TAG 6
-#define XML_TOK_EMPTY_ELEMENT 7 /* empty element tag <e/> */
-#define XML_TOK_DATA_CHARS 8
-#define XML_TOK_CDATA_SECTION 9
-#define XML_TOK_ENTITY_REF 10
-#define XML_TOK_CHAR_REF 11     /* numeric character reference */
+#define XML_TOK_END_TAG 8
+#define XML_TOK_EMPTY_ELEMENT 9 /* empty element tag <e/> */
+#define XML_TOK_DATA_CHARS 10
+#define XML_TOK_CDATA_SECTION 11
+#define XML_TOK_ENTITY_REF 12
+#define XML_TOK_CHAR_REF 13     /* numeric character reference */
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#define XML_NSTATES 2
+#define XML_PROLOG_STATE 0
+#define XML_CONTENT_STATE 1
+
+typedef struct encoding {
+  int (*scanners[XML_NSTATES])(const struct encoding *,
+			       const char *,
+			       const char *,
+			       const char **);
+  int minBytesPerChar;
+} ENCODING;
 
 /*
 Scan the string starting at ptr until the end of the next complete token,
@@ -56,30 +69,25 @@ may be returned together.  Similarly for characters in the prolog outside
 literals, comments and processing instructions.
 */
 
-int XMLTOKAPI XmlPrologTokA(const char *ptr,
-			    const char *eptr,
-			    const char **nextTokPtr);
-int XMLTOKAPI XmlContentTokA(const char *ptr,
-			     const char *eptr,
-			     const char **nextTokPtr);
 
-int XMLTOKAPI XmlPrologTokW(const wchar_t *ptr,
-			    const wchar_t *eptr,
-			    const wchar_t **nextTokPtr);
-int XMLTOKAPI XmlContentTokW(const wchar_t *ptr,
-			     const wchar_t *eptr,
-			     const wchar_t **nextTokPtr);
+#define XmlTok(enc, state, ptr, end, nextTokPtr) \
+  (((enc)->scanners[state])(enc, ptr, end, nextTokPtr))
+
+#define XmlPrologTok(enc, ptr, end, nextTokPtr) \
+   XmlTok(enc, XML_PROLOG_STATE, ptr, end, nextTokPtr)
+
+#define XmlContentTok(enc, ptr, end, nextTokPtr) \
+   XmlTok(enc, XML_CONTENT_STATE, ptr, end, nextTokPtr)
+
+typedef struct {
+  ENCODING initEnc;
+  const ENCODING **encPtr;
+} INIT_ENCODING;
+
+void XMLTOKAPI XmlInitEncoding(INIT_ENCODING *, const ENCODING **);
 
 #ifdef __cplusplus
 }
-#endif
-
-#ifdef UNICODE
-#define XmlPrologTok XmlPrologTokW
-#define XmlContentTok XmlContentTokW
-#else
-#define XmlPrologTok XmlPrologTokA
-#define XmlContentTok XmlContentTokA
 #endif
 
 #endif /* not XmlTok_INCLUDED */

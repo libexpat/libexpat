@@ -11,7 +11,8 @@
 #include <windows.h>
 
 static
-int XmlSkipProlog(const char **s, const char *end, const char **nextTokP);
+int XmlSkipProlog(const char **s, const char *end, const char **nextTokP,
+		  const ENCODING **enc);
 
 int XmlParse(const char *s, size_t n, const char *filename)
 {
@@ -19,7 +20,8 @@ int XmlParse(const char *s, size_t n, const char *filename)
   const char *start = s;
   const char *end = s + n;
   const char *next;
-  int tok = XmlSkipProlog(&s, end, &next);
+  const ENCODING *enc;
+  int tok = XmlSkipProlog(&s, end, &next, &enc);
   for (;;) {
     switch (tok) {
     case XML_TOK_NONE:
@@ -31,11 +33,14 @@ int XmlParse(const char *s, size_t n, const char *filename)
       return 1;
     case XML_TOK_INVALID:
       fprintf(stderr, "%s: well-formedness error at byte %lu\n",
-	      filename, (unsigned long)(s - start));
+	      filename, (unsigned long)(next - start));
       return 0;
     case XML_TOK_PARTIAL:
       fprintf(stderr, "%s: unclosed token started at byte %lu\n",
 	      filename, (unsigned long)(s - start));
+      return 0;
+    case XML_TOK_PARTIAL_CHAR:
+      fprintf(stderr, "%s: malformed input\n", filename);
       return 0;
     case XML_TOK_COMMENT:
       break;
@@ -46,22 +51,25 @@ int XmlParse(const char *s, size_t n, const char *filename)
       break;
     }
     s = next;
-    tok = XmlContentTok(s, end, &next);
+    tok = XmlContentTok(enc, s, end, &next);
   }
   /* not reached */
 }
 
 static
-int XmlSkipProlog(const char **startp, const char *end, const char **nextTokP)
+int XmlSkipProlog(const char **startp, const char *end,
+		  const char **nextTokP, const ENCODING **enc)
 {
   const char *s = *startp;
+  INIT_ENCODING initEnc;
+  XmlInitEncoding(&initEnc, enc);
   for (;;) {
-    int tok = XmlPrologTok(s, end, nextTokP);
+    int tok = XmlPrologTok(*enc, s, end, nextTokP);
     switch (tok) {
-    case XML_TOK_NONE:
-    case XML_TOK_INVALID:
-    case XML_TOK_PARTIAL:
     case XML_TOK_START_TAG:
+    case XML_TOK_INVALID:
+    case XML_TOK_NONE:
+    case XML_TOK_PARTIAL:
       *startp = s;
       return tok;
     default:
@@ -122,9 +130,11 @@ struct XmlTokBuffer {
   char *ptr;
   size_t size;
   int fd;
-  int doneProlog;
+  int state;
   int eof;
   unsigned long endOffset;
+  const ENCODING *enc;
+  INIT_ENCODING initEnc;
 };
 
 #define XmlTokBufferOffset(tb) ((tb)->endOffset - ((tb)->end - (tb)->ptr))
@@ -145,9 +155,10 @@ void XmlTokBufferInit(struct XmlTokBuffer *tb, int fd)
   tb->ptr = tb->buf;
   tb->size = READSIZE;
   tb->fd = fd;
-  tb->doneProlog = 0;
+  tb->state = XML_PROLOG_STATE;
   tb->eof = 0;
   tb->endOffset = 0;
+  XmlInitEncoding(&(tb->initEnc), &(tb->enc));
 }
 
 void XmlTokBufferFree(struct XmlTokBuffer *tb)
@@ -161,14 +172,10 @@ int XmlGetToken(struct XmlTokBuffer *tb, const char **tokStart, size_t *tokLengt
   for (;;) {
     int nBytes;
     const char *start = tb->ptr;
-    if (!tb->doneProlog) {
-      tok = XmlPrologTok(start, tb->end, &tb->ptr);
-      if (tok == XML_TOK_START_TAG)
-	tb->doneProlog = 1;
-    }
-    else
-      tok = XmlContentTok(start, tb->end, &tb->ptr);
+    tok = XmlTok(tb->enc, tb->state, start, tb->end, &tb->ptr);
     if (tok >= 0) {
+      if (tok == XML_TOK_START_TAG)
+	tb->state = XML_CONTENT_STATE;
       *tokStart = start;
       *tokLength = tb->ptr - start;
       break;
@@ -275,6 +282,7 @@ int main(int argc, char **argv)
     fprintf(stderr, "usage: %s filename ...\n", argv[0]);
     return 1;
   }
+  fprintf(stderr, "version 0.1\n");
   for (i = 1; i < argc; i++)
     if (!doFile(argv[i]))
       ret = 1;
