@@ -262,8 +262,12 @@ const ENCODING XMLTOKAPI *XmlGetUtf16InternalEncoding();
 int XMLTOKAPI XmlUtf8Encode(int charNumber, char *buf);
 int XMLTOKAPI XmlUtf16Encode(int charNumber, unsigned short *buf);
 
-int XMLTOKAPI XmlSizeOfSingleByteEncoding();
-ENCODING XMLTOKAPI *XmlInitSingleByteEncoding(void *mem, unsigned short *table);
+int XMLTOKAPI XmlSizeOfUnknownEncoding();
+ENCODING XMLTOKAPI *
+XmlInitUnknownEncoding(void *mem,
+		       unsigned short *table,
+		       unsigned short (*convert)(void *userData, const char *p),
+		       void *userData);
 
 #ifdef __cplusplus
 }

@@ -215,11 +215,14 @@ typedef struct {
   XML_UnparsedEntityDeclHandler unparsedEntityDeclHandler;
   XML_NotationDeclHandler notationDeclHandler;
   XML_ExternalEntityRefHandler externalEntityRefHandler;
-  XML_SingleByteEncodingHandler singleByteEncodingHandler;
+  XML_UnknownEncodingHandler unknownEncodingHandler;
   const ENCODING *encoding;
   INIT_ENCODING initEncoding;
   const XML_Char *protocolEncodingName;
-  void *singleByteEncodingMem;
+  void *unknownEncodingMem;
+  void *unknownEncodingData;
+  void *unknownEncodingHandlerData;
+  void (*unknownEncodingRelease)(void *);
   PROLOG_STATE prologState;
   Processor *processor;
   enum XML_Error errorCode;
@@ -253,10 +256,14 @@ typedef struct {
 #define unparsedEntityDeclHandler (((Parser *)parser)->unparsedEntityDeclHandler)
 #define notationDeclHandler (((Parser *)parser)->notationDeclHandler)
 #define externalEntityRefHandler (((Parser *)parser)->externalEntityRefHandler)
-#define singleByteEncodingHandler (((Parser *)parser)->singleByteEncodingHandler)
+#define unknownEncodingHandler (((Parser *)parser)->unknownEncodingHandler)
 #define encoding (((Parser *)parser)->encoding)
 #define initEncoding (((Parser *)parser)->initEncoding)
-#define singleByteEncodingMem (((Parser *)parser)->singleByteEncodingMem)
+#define unknownEncodingMem (((Parser *)parser)->unknownEncodingMem)
+#define unknownEncodingData (((Parser *)parser)->unknownEncodingData)
+#define unknownEncodingHandlerData \
+  (((Parser *)parser)->unknownEncodingHandlerData)
+#define unknownEncodingRelease (((Parser *)parser)->unknownEncodingRelease)
 #define protocolEncodingName (((Parser *)parser)->protocolEncodingName)
 #define prologState (((Parser *)parser)->prologState)
 #define processor (((Parser *)parser)->processor)
@@ -304,7 +311,7 @@ XML_Parser XML_ParserCreate(const XML_Char *encodingName)
   unparsedEntityDeclHandler = 0;
   notationDeclHandler = 0;
   externalEntityRefHandler = 0;
-  singleByteEncodingHandler = 0;
+  unknownEncodingHandler = 0;
   buffer = 0;
   bufferPtr = 0;
   bufferEnd = 0;
@@ -328,7 +335,10 @@ XML_Parser XML_ParserCreate(const XML_Char *encodingName)
   groupSize = 0;
   groupConnector = 0;
   hadExternalDoctype = 0;
-  singleByteEncodingMem = 0;
+  unknownEncodingMem = 0;
+  unknownEncodingRelease = 0;
+  unknownEncodingData = 0;
+  unknownEncodingHandlerData = 0;
   poolInit(&tempPool);
   poolInit(&temp2Pool);
   protocolEncodingName = encodingName ? poolCopyString(&tempPool, encodingName) : 0;
@@ -353,7 +363,7 @@ XML_Parser XML_ExternalEntityParserCreate(XML_Parser oldParser,
   XML_CharacterDataHandler oldCharacterDataHandler = characterDataHandler;
   XML_ProcessingInstructionHandler oldProcessingInstructionHandler = processingInstructionHandler;
   XML_ExternalEntityRefHandler oldExternalEntityRefHandler = externalEntityRefHandler;
-  XML_SingleByteEncodingHandler oldSingleByteEncodingHandler = singleByteEncodingHandler;
+  XML_UnknownEncodingHandler oldUnknownEncodingHandler = unknownEncodingHandler;
   void *oldUserData = userData;
  
   parser = XML_ParserCreate(encodingName);
@@ -364,7 +374,7 @@ XML_Parser XML_ExternalEntityParserCreate(XML_Parser oldParser,
   characterDataHandler = oldCharacterDataHandler;
   processingInstructionHandler = oldProcessingInstructionHandler;
   externalEntityRefHandler = oldExternalEntityRefHandler;
-  singleByteEncodingHandler = oldSingleByteEncodingHandler;
+  unknownEncodingHandler = oldUnknownEncodingHandler;
   userData = oldUserData;
   if (!dtdCopy(&dtd, oldDtd) || !setOpenEntityNames(parser, openEntityNames)) {
     XML_ParserFree(parser);
@@ -396,7 +406,9 @@ void XML_ParserFree(XML_Parser parser)
   free(groupConnector);
   free(buffer);
   free(dataBuf);
-  free(singleByteEncodingMem);
+  free(unknownEncodingMem);
+  if (unknownEncodingRelease)
+    unknownEncodingRelease(unknownEncodingData);
   free(parser);
 }
 
@@ -461,10 +473,12 @@ void XML_SetExternalEntityRefHandler(XML_Parser parser,
   externalEntityRefHandler = handler;
 }
 
-void XML_SetSingleByteEncodingHandler(XML_Parser parser,
-				      XML_SingleByteEncodingHandler handler)
+void XML_SetUnknownEncodingHandler(XML_Parser parser,
+				   XML_UnknownEncodingHandler handler,
+				   void *data)
 {
-  singleByteEncodingHandler = handler;
+  unknownEncodingHandler = handler;
+  unknownEncodingHandlerData = data;
 }
 
 int XML_Parse(XML_Parser parser, const char *s, int len, int isFinal)
@@ -1331,22 +1345,35 @@ processXmlDecl(XML_Parser parser, int isGeneralTextEntity,
 static enum XML_Error
 handleUnknownEncoding(XML_Parser parser, const XML_Char *encodingName)
 {
-  if (singleByteEncodingHandler) {
-    unsigned short table[256];
+  if (unknownEncodingHandler) {
+    XML_Encoding info;
     int i;
     for (i = 0; i < 256; i++)
-      table[i] = 0;
-    if (singleByteEncodingHandler(userData, encodingName, table)) {
+      info.map[i] = 0;
+    info.convert = 0;
+    info.data = 0;
+    info.release = 0;
+    if (unknownEncodingHandler(unknownEncodingHandlerData, encodingName, &info)) {
       ENCODING *enc;
-      singleByteEncodingMem = malloc(XmlSizeOfSingleByteEncoding());
-      if (!singleByteEncodingMem)
+      unknownEncodingMem = malloc(XmlSizeOfUnknownEncoding());
+      if (!unknownEncodingMem) {
+	if (info.release)
+	  info.release(info.data);
 	return XML_ERROR_NO_MEMORY;
-      enc = XmlInitSingleByteEncoding(singleByteEncodingMem, table);
+      }
+      enc = XmlInitUnknownEncoding(unknownEncodingMem,
+				   info.map,
+				   info.convert,
+				   info.data);
       if (enc) {
+	unknownEncodingData = info.data;
+	unknownEncodingRelease = info.release;
 	encoding = enc;
 	return XML_ERROR_NONE;
       }
     }
+    if (info.release)
+      info.release(info.data);
   }
   return XML_ERROR_UNKNOWN_ENCODING;
 }

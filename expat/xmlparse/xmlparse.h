@@ -110,10 +110,19 @@ typedef int (*XML_ExternalEntityRefHandler)(XML_Parser parser,
 					    const XML_Char *systemId,
 					    const XML_Char *publicId);
 
+typedef struct {
+  unsigned short map[256];
+  void *data;
+  unsigned short (*convert)(void *data, const char *s);
+  void (*release)(void *data);
+} XML_Encoding;
 
-typedef int (*XML_SingleByteEncodingHandler)(void *userData,
-					     const XML_Char *encoding,
-					     unsigned short *table);
+/* The encodingHandlerData passed to this call is that which was passed as the
+second argument to XML_SetUnknownEncodingHandler. */
+
+typedef int (*XML_UnknownEncodingHandler)(void *encodingHandlerData,
+					  const XML_Char *name,
+					  XML_Encoding *info);
 
 void XMLPARSEAPI
 XML_SetElementHandler(XML_Parser parser,
@@ -141,8 +150,9 @@ XML_SetExternalEntityRefHandler(XML_Parser parser,
 				XML_ExternalEntityRefHandler handler);
 
 void XMLPARSEAPI
-XML_SetSingleByteEncodingHandler(XML_Parser parser,
-				 XML_SingleByteEncodingHandler handler);
+XML_SetUnknownEncodingHandler(XML_Parser parser,
+			      XML_UnknownEncodingHandler handler,
+			      void *encodingHandlerData);
 
 /* This value is passed as the userData argument to callbacks. */
 void XMLPARSEAPI

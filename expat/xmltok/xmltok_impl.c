@@ -56,7 +56,7 @@ Contributor(s):
 
 #define CHECK_NAME_CASES(enc, ptr, end, nextTokPtr) \
   case BT_NONASCII: \
-    if (!IS_NAME_CHAR(enc, ptr, MINBPC)) { \
+    if (!IS_NAME_CHAR_MINBPC(enc, ptr)) { \
       *nextTokPtr = ptr; \
       return XML_TOK_INVALID; \
     } \
@@ -84,7 +84,7 @@ Contributor(s):
 
 #define CHECK_NMSTRT_CASES(enc, ptr, end, nextTokPtr) \
   case BT_NONASCII: \
-    if (!IS_NMSTRT_CHAR(enc, ptr, MINBPC)) { \
+    if (!IS_NMSTRT_CHAR_MINBPC(enc, ptr)) { \
       *nextTokPtr = ptr; \
       return XML_TOK_INVALID; \
     } \
@@ -1082,12 +1082,12 @@ int PREFIX(prologTok)(const ENCODING *enc, const char *ptr, const char *end,
     ptr += MINBPC;
     break;
   case BT_NONASCII:
-    if (IS_NMSTRT_CHAR(enc, ptr, MINBPC)) {
+    if (IS_NMSTRT_CHAR_MINBPC(enc, ptr)) {
       ptr += MINBPC;
       tok = XML_TOK_NAME;
       break;
     }
-    if (IS_NAME_CHAR(enc, ptr, MINBPC)) {
+    if (IS_NAME_CHAR_MINBPC(enc, ptr)) {
       ptr += MINBPC;
       tok = XML_TOK_NMTOKEN;
       break;

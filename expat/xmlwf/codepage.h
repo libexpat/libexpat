@@ -18,4 +18,5 @@ James Clark. All Rights Reserved.
 Contributor(s):
 */
 
-int codepage(int cp, unsigned short *map);
+int codepageMap(int cp, unsigned short *map);
+unsigned short codepageConvert(int cp, const char *p);

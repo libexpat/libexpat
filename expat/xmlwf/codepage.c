@@ -23,24 +23,52 @@ Contributor(s):
 #ifdef WIN32
 #include <windows.h>
 
-int codepage(int cp, unsigned short *map)
+int codepageMap(int cp, unsigned short *map)
 {
   int i;
   CPINFO info;
-  if (!GetCPInfo(cp, &info) || info.MaxCharSize > 1)
+  if (!GetCPInfo(cp, &info) || info.MaxCharSize > 2)
     return 0;
+  for (i = 0; i < 256; i++)
+    map[i] = 0;
+  if (info.MaxCharSize > 1) {
+    for (i = 0; i < MAX_LEADBYTES; i++) {
+      int j, lim;
+      if (info.LeadByte[i] == 0 && info.LeadByte[i + 1] == 0)
+        break;
+      lim = info.LeadByte[i + 1];
+      for (j = info.LeadByte[i]; j < lim; j++)
+	map[j] = 2;
+    }
+  }
   for (i = 0; i < 256; i++) {
-    char c = i;
-    if (MultiByteToWideChar(cp, MB_PRECOMPOSED|MB_ERR_INVALID_CHARS,
-			    &c, 1, map + i, 1) == 0)
-      map[i] = 0;
+   if (map[i] == 0) {
+     char c = i;
+     if (MultiByteToWideChar(cp, MB_PRECOMPOSED|MB_ERR_INVALID_CHARS,
+		             &c, 1, map + i, 1) == 0)
+       map[i] = 0;
+   }
   }
   return 1;
 }
 
+unsigned short codepageConvert(int cp, const char *p)
+{
+  unsigned short c;
+  if (MultiByteToWideChar(cp, MB_PRECOMPOSED|MB_ERR_INVALID_CHARS,
+		          p, 2, &c, 1) == 1)
+    return c;
+  return 0;
+}
+
 #else /* not WIN32 */
 
-int codepage(int cp, unsigned short *map)
+int codepageMap(int cp, unsigned short *map)
+{
+  return 0;
+}
+
+unsigned short codepageConvert(int cp, const char *p)
 {
   return 0;
 }
