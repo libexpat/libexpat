@@ -67,18 +67,23 @@ extraclean: distclean
 check: tests/runtests
 	tests/runtests
 
-install: xmlwf/xmlwf lib/$(LIBRARY) lib/$(APIHEADER)
-	$(mkinstalldirs) $(bindir) $(libdir) $(includedir) $(mandir)
+install: xmlwf/xmlwf installlib
+	$(mkinstalldirs) $(bindir) $(mandir)
 	$(LIBTOOL) --mode=install $(INSTALL_PROGRAM) xmlwf/xmlwf $(bindir)/xmlwf
-	$(LIBTOOL) --mode=install $(INSTALL) lib/$(LIBRARY) $(libdir)/$(LIBRARY)
-	$(INSTALL_DATA) lib/$(APIHEADER) $(includedir)
 	$(INSTALL_DATA) doc/xmlwf.1 $(mandir)
 
-uninstall:
+installlib: lib/$(LIBRARY) lib/$(APIHEADER)
+	$(mkinstalldirs) $(libdir) $(includedir)
+	$(LIBTOOL) --mode=install $(INSTALL) lib/$(LIBRARY) $(libdir)/$(LIBRARY)
+	$(INSTALL_DATA) lib/$(APIHEADER) $(includedir)
+
+uninstall: uninstalllib
 	$(LIBTOOL) --mode=uninstall rm -f $(bindir)/xmlwf
+	rm -f $(mandir)/xmlwf.1
+
+uninstalllib:
 	$(LIBTOOL) --mode=uninstall rm -f $(libdir)/$(LIBRARY)
 	rm -f $(includedir)/$(APIHEADER)
-	rm -f $(mandir)/xmlwf.1
 
 # for VPATH builds (invoked by configure)
 mkdir-init:
