@@ -1705,6 +1705,8 @@ processXmlDecl(XML_Parser parser, int isGeneralTextEntity,
 		           &newEncoding,
 		           &standalone))
     return XML_ERROR_SYNTAX;
+  if (!isGeneralTextEntity && standalone == 1)
+    dtd.standalone = 1;
   if (defaultHandler)
     reportDefault(parser, encoding, s, next);
   if (!protocolEncodingName) {
@@ -1731,8 +1733,6 @@ processXmlDecl(XML_Parser parser, int isGeneralTextEntity,
       return result;
     }
   }
-  if (!isGeneralTextEntity && standalone == 1)
-    dtd.standalone = 1;
   return XML_ERROR_NONE;
 }
 
@@ -2731,6 +2731,7 @@ static int dtdInit(DTD *p)
   hashTableInit(&(p->attributeIds));
   hashTableInit(&(p->prefixes));
   p->complete = 1;
+  p->standalone = 0;
   p->base = 0;
   p->defaultPrefix.name = 0;
   p->defaultPrefix.binding = 0;
