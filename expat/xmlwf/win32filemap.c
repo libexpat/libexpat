@@ -19,6 +19,13 @@ Contributor(s):
 */
 
 #define STRICT 1
+
+#ifdef XML_UNICODE_WCHAR_T
+#ifndef XML_UNICODE
+#define XML_UNICODE
+#endif
+#endif
+
 #ifdef XML_UNICODE
 #define UNICODE
 #define _UNICODE
