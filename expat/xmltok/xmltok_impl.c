@@ -453,7 +453,7 @@ int PREFIX(scanAtts)(const ENCODING *enc, const char *ptr, const char *end,
 	    continue;
 	  case BT_GT:
 	    *nextTokPtr = ptr + MINBPC;
-	    return XML_TOK_START_TAG;
+	    return XML_TOK_START_TAG_WITH_ATTS;
 	  case BT_SOL:
 	    ptr += MINBPC;
 	    if (ptr == end)
@@ -463,7 +463,7 @@ int PREFIX(scanAtts)(const ENCODING *enc, const char *ptr, const char *end,
 	      return XML_TOK_INVALID;
 	    }
 	    *nextTokPtr = ptr + MINBPC;
-	    return XML_TOK_EMPTY_ELEMENT;
+	    return XML_TOK_EMPTY_ELEMENT_WITH_ATTS;
 	  default:
 	    *nextTokPtr = ptr;
 	    return XML_TOK_INVALID;
@@ -537,7 +537,7 @@ int PREFIX(scanLt)(const ENCODING *enc, const char *ptr, const char *end,
     case BT_GT:
     gt:
       *nextTokPtr = ptr + MINBPC;
-      return XML_TOK_START_TAG;
+      return XML_TOK_START_TAG_NO_ATTS;
     case BT_SOL:
     sol:
       ptr += MINBPC;
@@ -548,7 +548,7 @@ int PREFIX(scanLt)(const ENCODING *enc, const char *ptr, const char *end,
 	return XML_TOK_INVALID;
       }
       *nextTokPtr = ptr + MINBPC;
-      return XML_TOK_EMPTY_ELEMENT;
+      return XML_TOK_EMPTY_ELEMENT_NO_ATTS;
     default:
       *nextTokPtr = ptr;
       return XML_TOK_INVALID;
@@ -726,6 +726,120 @@ int PREFIX(prologTok)(const ENCODING *enc, const char *ptr, const char *end,
   }
   *nextTokPtr = ptr;
   return XML_TOK_PROLOG_CHARS;
+}
+
+/* This must only be called for a well-formed start-tag or empty element tag.
+Returns the number of attributes.  Pointers to the names of up to the first
+attsMax attributes are stored in atts. */
+static
+int PREFIX(getAtts)(const ENCODING *enc, const char *ptr,
+		    int attsMax, const char **atts)
+{
+  enum { other, inName, inValue } state = inName;
+  int nAtts = 0;
+  int open;
+
+  for (ptr += MINBPC;; ptr += MINBPC) {
+    switch (BYTE_TYPE(enc, ptr)) {
+#define START_NAME \
+      if (state == other) { \
+	if (nAtts < attsMax) \
+	  atts[nAtts] = ptr; \
+	++nAtts; \
+	state = inName; \
+      }
+#define LEAD_CASE(n) \
+    case BT_LEAD ## n: START_NAME ptr += (n - MINBPC); break;
+    LEAD_CASE(2) LEAD_CASE(3) LEAD_CASE(4) LEAD_CASE(5) LEAD_CASE(6)
+#undef LEAD_CASE
+    case BT_NONASCII:
+    case BT_NMSTRT:
+    case BT_HEX:
+      START_NAME
+      break;
+#undef START_NAME
+    case BT_QUOT:
+      if (state == other) {
+        state = inValue;
+        open = BT_QUOT;
+      }
+      else if (open == BT_QUOT)
+        state = other;
+      break;
+    case BT_APOS:
+      if (state == other) {
+        state = inValue;
+        open = BT_APOS;
+      }
+      else if (open == BT_APOS)
+        state = other;
+      break;
+    case BT_S:
+      /* This case ensures that the first attribute name is counted
+         Apart from that we could just change state on the quote. */
+      if (state == inName)
+        state = other;
+      break;
+    case BT_GT:
+    case BT_SOL:
+      if (state != inValue)
+	return nAtts;
+      break;
+    default:
+      break;
+    }
+  }
+  /* not reached */
+}
+
+static
+int PREFIX(sameName)(const ENCODING *enc, const char *ptr1, const char *ptr2)
+{
+  for (;;) {
+    switch (BYTE_TYPE(enc, ptr1)) {
+#define LEAD_CASE(n) \
+    case BT_LEAD ## n: \
+      if (*ptr1++ != *ptr2++) \
+	return 0;
+    LEAD_CASE(6) LEAD_CASE(5) LEAD_CASE(4) LEAD_CASE(3) LEAD_CASE(2)
+#undef LEAD_CASE
+      /* fall through */
+      if (*ptr1++ != *ptr2++)
+	return 0;
+      break;
+    case BT_NONASCII:
+    case BT_NMSTRT:
+    case BT_HEX:
+    case BT_DIGIT:
+    case BT_NAME:
+    case BT_MINUS:
+      if (*ptr2 != *ptr1)
+	return 0;
+      ptr1 += MINBPC;
+      ptr2 += MINBPC;
+      break;
+    default:
+      if (*ptr1 == *ptr2)
+	return 1;
+      switch (BYTE_TYPE(enc, ptr2)) {
+      case BT_LEAD2:
+      case BT_LEAD3:
+      case BT_LEAD4:
+      case BT_LEAD5:
+      case BT_LEAD6:
+      case BT_NONASCII:
+      case BT_NMSTRT:
+      case BT_HEX:
+      case BT_DIGIT:
+      case BT_NAME:
+      case BT_MINUS:
+	return 0;
+      default:
+	return 1;
+      }
+    }
+  }
+  /* not reached */
 }
 
 #undef DO_LEAD_CASE

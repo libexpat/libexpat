@@ -14,28 +14,32 @@ extern "C" {
 #define XML_TOK_PARTIAL_CHAR -2 /* only part of a multibyte sequence */
 #define XML_TOK_PARTIAL -1 /* only part of a token */
 #define XML_TOK_INVALID 0
-#define XML_TOK_BOM 1     /* Byte order mark */
-#define XML_TOK_COMMENT 2
-#define XML_TOK_PI 3      /* processing instruction */
-
-/* The following tokens are returned only by XmlPrologTok */
-#define XML_TOK_LITERAL 4
-#define XML_TOK_PROLOG_CHARS 5
-#define XML_TOK_PROLOG_S 6
 
 /* The following token is returned by XmlPrologTok when it detects the end
 of the prolog and is also returned by XmlContentTok */
 
-#define XML_TOK_START_TAG 7
+#define XML_TOK_START_TAG_WITH_ATTS 1
+#define XML_TOK_START_TAG_NO_ATTS 2
+#define XML_TOK_EMPTY_ELEMENT_WITH_ATTS 3 /* empty element tag <e/> */
+#define XML_TOK_EMPTY_ELEMENT_NO_ATTS 4
 
 /* The following tokens are returned only by XmlContentTok */
 
-#define XML_TOK_END_TAG 8
-#define XML_TOK_EMPTY_ELEMENT 9 /* empty element tag <e/> */
-#define XML_TOK_DATA_CHARS 10
-#define XML_TOK_CDATA_SECTION 11
-#define XML_TOK_ENTITY_REF 12
-#define XML_TOK_CHAR_REF 13     /* numeric character reference */
+#define XML_TOK_END_TAG 5
+#define XML_TOK_DATA_CHARS 6
+#define XML_TOK_CDATA_SECTION 7
+#define XML_TOK_ENTITY_REF 8
+#define XML_TOK_CHAR_REF 9     /* numeric character reference */
+
+/* The following tokens may be returned by both XmlPrologTok and XmlContentTok */
+#define XML_TOK_PI 10      /* processing instruction */
+#define XML_TOK_COMMENT 11
+#define XML_TOK_BOM 12     /* Byte order mark */
+
+/* The following tokens are returned only by XmlPrologTok */
+#define XML_TOK_LITERAL 13
+#define XML_TOK_PROLOG_CHARS 14
+#define XML_TOK_PROLOG_S 15
 
 #define XML_NSTATES 2
 #define XML_PROLOG_STATE 0
@@ -46,6 +50,10 @@ typedef struct encoding {
 			       const char *,
 			       const char *,
 			       const char **);
+  int (*sameName)(const struct encoding *,
+	          const char *, const char *);
+  int (*getAtts)(const struct encoding *enc, const char *ptr,
+	         int attsMax, const char **atts);
   int minBytesPerChar;
 } ENCODING;
 
@@ -78,6 +86,11 @@ literals, comments and processing instructions.
 
 #define XmlContentTok(enc, ptr, end, nextTokPtr) \
    XmlTok(enc, XML_CONTENT_STATE, ptr, end, nextTokPtr)
+
+#define XmlSameName(enc, ptr1, ptr2) (((enc)->sameName)(enc, ptr1, ptr2))
+
+#define XmlGetAttributes(enc, ptr, attsMax, atts) \
+  (((enc)->getAtts)(enc, ptr, attsMax, atts))
 
 typedef struct {
   ENCODING initEnc;

@@ -1,5 +1,12 @@
 /* TODO
 
+method to get name length
+method to extract attribute names (returns number of atts)
+size_t getAttributes(const char *ptr, const char *end, const char **atts, size_t maxAtts)
+
+
+Provide method to count lines/columns.
+
 Provide methods to convert to any of UTF-8, UTF-18, UCS-4.
 
 Better prolog tokenization
@@ -8,6 +15,8 @@ Better prolog tokenization
 NMTOKEN
 NAME
 PEREF
+
+MatchEndTag(endTagStart, endTagEnd, startTagPtr, startTagEnd)
 
 */
 
@@ -78,7 +87,7 @@ struct normal_encoding {
 #undef IS_NMSTRT_CHAR
 
 const struct normal_encoding utf8_encoding = {
-  { { PREFIX(prologTok), PREFIX(contentTok) }, 1 },
+  { { PREFIX(prologTok), PREFIX(contentTok) }, PREFIX(sameName), PREFIX(getAtts), 1 },
 #include "asciitab.h"
 #include "utf8tab.h"
 };
@@ -127,7 +136,7 @@ static int unicode_byte_type(char hi, char lo)
 #undef IS_NMSTRT_CHAR
 
 const struct encoding little2_encoding = {
- { PREFIX(prologTok), PREFIX(contentTok) }, 2
+ { PREFIX(prologTok), PREFIX(contentTok) }, PREFIX(sameName), PREFIX(getAtts), 2
 };
 
 #undef PREFIX
@@ -152,7 +161,7 @@ const struct encoding little2_encoding = {
 #undef IS_NMSTRT_CHAR
 
 const struct encoding big2_encoding = {
- { PREFIX(prologTok), PREFIX(contentTok) }, 2
+ { PREFIX(prologTok), PREFIX(contentTok) }, PREFIX(sameName), PREFIX(getAtts), 2
 };
 
 #undef PREFIX
