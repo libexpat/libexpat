@@ -11,3 +11,16 @@
              }
 .banner h2 { font-size: 200%; }
 .content   { padding: 2em; }
+
+.content thead { background-color: rgb(110,139,61);
+                 color: rgb(255,236,176);
+                 }
+
+.content td,
+.content th    { padding: .2em;
+                 margin: 0em;
+                 border-width: 0px;
+                 vertical-align: baseline;
+                 border-top: 2px solid rgb(110,139,61); }
+
+.content tr:first-child td { border-top: 0px; }
