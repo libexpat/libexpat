@@ -13,16 +13,16 @@ XMLWF_OBJS=xmltok.o \
 XMLEC_OBJS=xmltok.o xmlec/xmlec.o
 EXE=
 
-all: xmlwf xmlec
+all: xmlwf/xmlwf$(EXE) xmlec/xmlec$(EXE)
 
-xmlwf: $(XMLWF_OBJS)
+xmlwf/xmlwf$(EXE): $(XMLWF_OBJS)
 	$(CC) $(CFLAGS) -o $@ $(XMLWF_OBJS)
 
-xmlec: $(XMLEC_OBJS)
+xmlec/xmlec$(EXE): $(XMLEC_OBJS)
 	$(CC) $(CFLAGS) -o $@ $(XMLEC_OBJS)
 
 clean:
-	rm -f $(XMLWF_OBJS) xmlwf$(EXE) $(XMLEC_OBJS) xmlec$(EXE)
+	rm -f $(XMLWF_OBJS) xmlwf/xmlwf$(EXE) $(XMLEC_OBJS) xmlec/xmlec$(EXE)
 
 nametab.h: gennmtab/gennmtab$(EXE)
 	rm -f $@
@@ -32,3 +32,6 @@ gennmtab/gennmtab$(EXE): gennmtab/gennmtab.c
 	$(CC) $(CFLAGS) -o $@ gennmtab/gennmtab.c
 
 xmltok.o: nametab.h
+
+.c.o:
+	$(CC) $(CFLAGS) -c -o $@ $<
