@@ -992,7 +992,7 @@ XML_GetFeatureList(void);
 */
 #define XML_MAJOR_VERSION 1
 #define XML_MINOR_VERSION 95
-#define XML_MICRO_VERSION 7
+#define XML_MICRO_VERSION 8
 
 #ifdef __cplusplus
 }
