@@ -1442,11 +1442,15 @@ error.</p>
 
 <p>These are the functions you'll want to call when the parse
 functions return <code>XML_STATUS_ERROR</code> (a parse error has
-ocurred), although the position reporting functions are useful outside
+occurred), although the position reporting functions are useful outside
 of errors. The position reported is the byte position (in the original
 document or entity encoding) of the first of the sequence of
 characters that generated the current event (or the error that caused
-the parse functions to return <code>XML_STATUS_ERROR</code>.)</p>
+the parse functions to return <code>XML_STATUS_ERROR</code>.)  The
+exceptions are callbacks trigged by declarations in the document
+prologue, in which case they exact position reported is somewhere in the
+relevant markup, but not necessarily as meaningful as for other
+events.</p>
 
 <p>The position reporting functions are accurate only outside of the
 DTD.  In other words, they usually return bogus information when
@@ -1475,7 +1479,10 @@ long
 XML_GetCurrentByteIndex(XML_Parser p);
 </pre>
 <div class="fcndef">
-Return the byte offset of the position.
+Return the byte offset of the position.  This always corresponds to
+the values returned by <code><a href= "#XML_GetCurrentLineNumber"
+>XML_GetCurrentLineNumber</a></code> and <code><a href=
+"#XML_GetCurrentColumnNumber" >XML_GetCurrentColumnNumber</a></code>.
 </div>
 
 <pre class="fcndec" id="XML_GetCurrentLineNumber">
@@ -1483,7 +1490,8 @@ int
 XML_GetCurrentLineNumber(XML_Parser p);
 </pre>
 <div class="fcndef">
-Return the line number of the position.
+Return the line number of the position.  The first line is reported as
+<code>1</code>.
 </div>
 
 <pre class="fcndec" id="XML_GetCurrentColumnNumber">
