@@ -2116,6 +2116,8 @@ doContent(XML_Parser parser,
           if (startElementHandler)
             startElementHandler(handlerArg, tag->name.str,
                                 (const XML_Char **)atts);
+          else if (defaultHandler)
+            reportDefault(parser, enc, s, next);
         }
         else if (defaultHandler)
           reportDefault(parser, enc, s, next);
@@ -2134,6 +2136,7 @@ doContent(XML_Parser parser,
         const char *rawName = s + enc->minBytesPerChar;
         enum XML_Error result;
         BINDING *bindings = NULL;
+        XML_Bool noElmHandlers = XML_TRUE;
         TAG_NAME name;
         name.str = poolStoreString(&tempPool, enc, rawName,
                                    rawName + XmlNameLength(enc, rawName));
@@ -2144,13 +2147,18 @@ doContent(XML_Parser parser,
         if (result)
           return result;
         poolFinish(&tempPool);
-        if (startElementHandler)
+        if (startElementHandler) {
           startElementHandler(handlerArg, name.str, (const XML_Char **)atts);
+          noElmHandlers = XML_FALSE;
+        }
         if (endElementHandler) {
           if (startElementHandler)
             *eventPP = *eventEndPP;
           endElementHandler(handlerArg, name.str);
+          noElmHandlers = XML_FALSE;
         }
+        if (noElmHandlers && defaultHandler)
+          reportDefault(parser, enc, s, next);
         poolClear(&tempPool);
         while (bindings) {
           BINDING *b = bindings;
