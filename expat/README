@@ -22,8 +22,19 @@ the release above), are development releases and should be considered
 as beta software.  Releases with even minor version numbers are
 intended to be production grade software.
 
-To build Expat, you first run the configuration shell script in the
-top level distribution directory:
+If you are building Expat from a check-out from the CVS repository,
+you need to run a script that generates the configure script using the
+GNU autoconf and libtool tools.  To do this, you need to have
+autoconf 2.52 or newer and libtool 1.4 or newer.  Run the script like
+this:
+
+        ./buildconf.sh
+
+Once this has been done, follow the same instructions as for building
+from a source distribution.
+
+To build Expat from a source distribution, you first run the
+configuration shell script in the top level distribution directory:
 
         ./configure
 
