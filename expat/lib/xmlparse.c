@@ -4,7 +4,7 @@ See the file COPYING for copying permission.
 */
 
 static char RCSId[]
-  = "$Header: /cvsroot/expat/expat/lib/xmlparse.c,v 1.12 2000/12/21 00:32:47 fdrake Exp $";
+  = "$Header: /cvsroot/expat/expat/lib/xmlparse.c,v 1.13 2000/12/27 19:37:37 coopercc Exp $";
 
 #ifdef COMPILED_FROM_DSP
 #  include "winconfig.h"
@@ -1332,9 +1332,9 @@ XML_Expat_Version
 XML_ExpatVersionInfo(void) {
   XML_Expat_Version version;
 
-  version.major = EXPAT_VMAJOR;
-  version.minor = EXPAT_VMINOR;
-  version.micro = EXPAT_VMICRO;
+  version.major = XML_MAJOR_VERSION;
+  version.minor = XML_MINOR_VERSION;
+  version.micro = XML_MICRO_VERSION;
 
   return version;
 }
