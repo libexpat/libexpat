@@ -919,6 +919,7 @@ doContent(XML_Parser parser,
 	      return XML_ERROR_NO_MEMORY;
 	    if (!externalEntityRefHandler(parser, openEntityNames, dtd.base, entity->systemId, entity->publicId))
 	      return XML_ERROR_EXTERNAL_ENTITY_HANDLING;
+	    poolDiscard(&tempPool);
 	  }
 	  else if (defaultHandler)
 	    reportDefault(parser, enc, s, next);
@@ -1028,7 +1029,7 @@ doContent(XML_Parser parser,
 	}
 	if (endElementHandler) {
 	  if (startElementHandler)
-	    *eventEndPP = *eventPP;
+	    *eventPP = *eventEndPP;
 	  endElementHandler(handlerArg, name);
 	}
 	poolClear(&tempPool);
@@ -1418,6 +1419,8 @@ processXmlDecl(XML_Parser parser, int isGeneralTextEntity,
 		       &newEncoding,
 		       &standalone))
     return XML_ERROR_SYNTAX;
+  if (!isGeneralTextEntity && standalone == 1)
+    dtd.standalone = 1;
   if (defaultHandler)
     reportDefault(parser, encoding, s, next);
   if (!protocolEncodingName) {
@@ -1444,8 +1447,6 @@ processXmlDecl(XML_Parser parser, int isGeneralTextEntity,
       return result;
     }
   }
-  if (!isGeneralTextEntity && standalone == 1)
-    dtd.standalone = 1;
   return XML_ERROR_NONE;
 }
 
@@ -2270,6 +2271,7 @@ static int dtdInit(DTD *p)
   hashTableInit(&(p->elementTypes));
   hashTableInit(&(p->attributeIds));
   p->complete = 1;
+  p->standalone = 0;
   p->base = 0;
   return 1;
 }
