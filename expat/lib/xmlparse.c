@@ -832,6 +832,11 @@ XML_ExternalEntityParserCreate(XML_Parser oldParser,
 #endif
   int oldns_triplets = ns_triplets;
 
+  /* Note that the magical uses of the pre-processor to make field
+     access look more like C++ require that `parser' be overwritten
+     here.  This makes this function more painful to follow than it
+     would be otherwise.
+  */
   if (ns) {
     XML_Char tmp[2];
 
@@ -2769,9 +2774,9 @@ prologInitProcessor(XML_Parser parser,
 
 static enum XML_Error
 externalParEntInitProcessor(XML_Parser parser,
-                    const char *s,
-                    const char *end,
-                    const char **nextPtr)
+                            const char *s,
+                            const char *end,
+                            const char **nextPtr)
 {
   enum XML_Error result = initializeEncoding(parser);
   if (result != XML_ERROR_NONE)
@@ -2794,9 +2799,9 @@ externalParEntInitProcessor(XML_Parser parser,
 
 static enum XML_Error
 entityValueInitProcessor(XML_Parser parser,
-                const char *s,
-                const char *end,
-                const char **nextPtr)
+                         const char *s,
+                         const char *end,
+                         const char **nextPtr)
 {
   const char *start = s;
   const char *next = s;
@@ -2848,9 +2853,9 @@ entityValueInitProcessor(XML_Parser parser,
 
 static enum XML_Error
 externalParEntProcessor(XML_Parser parser,
-                const char *s,
-                const char *end,
-                const char **nextPtr)
+                        const char *s,
+                        const char *end,
+                        const char **nextPtr)
 {
   const char *start = s;
   const char *next = s;
@@ -2889,9 +2894,9 @@ externalParEntProcessor(XML_Parser parser,
 
 static enum XML_Error
 entityValueProcessor(XML_Parser parser,
-                const char *s,
-                const char *end,
-                const char **nextPtr)
+                     const char *s,
+                     const char *end,
+                     const char **nextPtr)
 {
   const char *start = s;
   const char *next = s;
@@ -2952,10 +2957,14 @@ doProlog(XML_Parser parser,
   static const XML_Char atypeIDREF[] = { 'I', 'D', 'R', 'E', 'F', '\0' };
   static const XML_Char atypeIDREFS[] = { 'I', 'D', 'R', 'E', 'F', 'S', '\0' };
   static const XML_Char atypeENTITY[] = { 'E', 'N', 'T', 'I', 'T', 'Y', '\0' };
-  static const XML_Char atypeENTITIES[] = { 'E', 'N', 'T', 'I', 'T', 'I', 'E', 'S', '\0' };
-  static const XML_Char atypeNMTOKEN[] = { 'N', 'M', 'T', 'O', 'K', 'E', 'N', '\0' };
-  static const XML_Char atypeNMTOKENS[] = { 'N', 'M', 'T', 'O', 'K', 'E', 'N', 'S', '\0' };
-  static const XML_Char notationPrefix[] = { 'N', 'O', 'T', 'A', 'T', 'I', 'O', 'N', '(', '\0' };
+  static const XML_Char atypeENTITIES[] =
+      { 'E', 'N', 'T', 'I', 'T', 'I', 'E', 'S', '\0' };
+  static const XML_Char atypeNMTOKEN[] = {
+      'N', 'M', 'T', 'O', 'K', 'E', 'N', '\0' };
+  static const XML_Char atypeNMTOKENS[] = {
+      'N', 'M', 'T', 'O', 'K', 'E', 'N', 'S', '\0' };
+  static const XML_Char notationPrefix[] = {
+      'N', 'O', 'T', 'A', 'T', 'I', 'O', 'N', '(', '\0' };
   static const XML_Char enumValueSep[] = { '|', '\0' };
   static const XML_Char enumValueStart[] = { '(', '\0' };
 
