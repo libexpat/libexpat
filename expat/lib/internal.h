@@ -20,8 +20,10 @@
          and therefore subject to change.
 */
 
-#if defined(__GNUC__)
-/* Instability reported with egcs on a RedHat Linux 7.3.
+#if defined(__GNUC__) && !defined(sun)
+/* regparm() generates warnings on Solaris boxes.   See SF bug #692878.
+
+   Instability reported with egcs on a RedHat Linux 7.3.
    Let's comment it out:
    #define FASTCALL __attribute__((stdcall, regparm(3)))
    and let's try this:
