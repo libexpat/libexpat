@@ -36,7 +36,8 @@ extern "C" {
 #define XML_UNICODE
 #endif
 
-typedef void *XML_Parser;
+struct XML_ParserStruct;
+typedef struct XML_ParserStruct *XML_Parser;
 
 #ifdef XML_UNICODE     /* Information is UTF-16 encoded. */
 #ifdef XML_UNICODE_WCHAR_T
@@ -638,12 +639,15 @@ XML_UseParserAsHandlerArg(XML_Parser parser);
    argument (the publicId and context arguments will be NULL as well).
    Note: If this function is called, then this must be done before
      the first call to XML_Parse or XML_ParseBuffer, since it will
-     have no effect after that.
+     have no effect after that.  Returns
+     XML_ERROR_CANT_CHANGE_FEATURE_ONCE_PARSING.
    Note: If the document does not have a DOCTYPE declaration at all,
      then startDoctypeDeclHandler and endDoctypeDeclHandler will not
      be called, despite an external subset being parsed.
+   Note: If XML_DTD is not defined when Expat is compiled, returns
+     XML_ERROR_FEATURE_REQUIRES_XML_DTD.
 */
-XMLPARSEAPI(void)
+XMLPARSEAPI(enum XML_Error)
 XML_UseForeignDTD(XML_Parser parser, XML_Bool useDTD);
 
 
@@ -792,7 +796,9 @@ enum XML_Error {
   XML_ERROR_EXTERNAL_ENTITY_HANDLING,
   XML_ERROR_NOT_STANDALONE,
   XML_ERROR_UNEXPECTED_STATE,
-  XML_ERROR_ENTITY_DECLARED_IN_PE
+  XML_ERROR_ENTITY_DECLARED_IN_PE,
+  XML_ERROR_FEATURE_REQUIRES_XML_DTD,
+  XML_ERROR_CANT_CHANGE_FEATURE_ONCE_PARSING
 };
 
 /* If XML_Parse or XML_ParseBuffer have returned 0, then
