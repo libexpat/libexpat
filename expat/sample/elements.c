@@ -4,7 +4,7 @@ name of each element to standard output indenting child elements by
 one tab stop more than their parent element. */
 
 #include <stdio.h>
-#include "xmlparse.h"
+#include "expat.h"
 
 void startElement(void *userData, const char *name, const char **atts)
 {
