@@ -769,7 +769,7 @@ doContent(XML_Parser parser,
 {
   const ENCODING *internalEnc = XmlGetInternalEncoding();
   const char *dummy;
-  const char **eventPP = enc == internalEnc ? &dummy : &eventPtr;
+  const char **eventPP = enc == encoding ? &eventPtr : &dummy;
   *eventPP = s;
   for (;;) {
     const char *next;
@@ -1210,7 +1210,10 @@ enum XML_Error doCdataSection(XML_Parser parser,
 			      const char *end,
 			      const char **nextPtr)
 {
+  const char *dummy;
+  const char **eventPP = enc == encoding ? &eventPtr : &dummy;
   const char *s = *startPtr;
+  *eventPP = s;
   *startPtr = 0;
   for (;;) {
     const char *next;
@@ -1241,14 +1244,13 @@ enum XML_Error doCdataSection(XML_Parser parser,
       }
       break;
     case XML_TOK_INVALID:
-      eventPtr = next;
+      *eventPP = next;
       return XML_ERROR_INVALID_TOKEN;
     case XML_TOK_PARTIAL_CHAR:
       if (nextPtr) {
 	*nextPtr = s;
 	return XML_ERROR_NONE;
       }
-      eventPtr = s;
       return XML_ERROR_PARTIAL_CHAR;
     case XML_TOK_PARTIAL:
     case XML_TOK_NONE:
@@ -1256,12 +1258,11 @@ enum XML_Error doCdataSection(XML_Parser parser,
 	*nextPtr = s;
 	return XML_ERROR_NONE;
       }
-      eventPtr = s;
       return XML_ERROR_UNCLOSED_CDATA_SECTION;
     default:
       abort();
     }
-    s = next;
+    *eventPP = s = next;
   }
   /* not reached */
 }
@@ -1526,13 +1527,15 @@ prologProcessor(XML_Parser parser,
 	if (!declEntity->notation)
 	  return XML_ERROR_NO_MEMORY;
 	poolFinish(&dtd.pool);
-	if (unparsedEntityDeclHandler)
+	if (unparsedEntityDeclHandler) {
+	  eventPtr = s;
 	  unparsedEntityDeclHandler(handlerArg,
 				    declEntity->name,
 				    declEntity->base,
 				    declEntity->systemId,
 				    declEntity->publicId,
 				    declEntity->notation);
+	}
 
       }
       break;
@@ -1599,6 +1602,7 @@ prologProcessor(XML_Parser parser,
 	  		    next - encoding->minBytesPerChar);
 	if (!systemId)
 	  return XML_ERROR_NO_MEMORY;
+	eventPtr = s;
 	notationDeclHandler(handlerArg,
 			    declNotationName,
 			    dtd.base,
@@ -1608,12 +1612,14 @@ prologProcessor(XML_Parser parser,
       poolClear(&tempPool);
       break;
     case XML_ROLE_NOTATION_NO_SYSTEM_ID:
-      if (declNotationPublicId && notationDeclHandler)
+      if (declNotationPublicId && notationDeclHandler) {
+	eventPtr = s;
 	notationDeclHandler(handlerArg,
 			    declNotationName,
 			    dtd.base,
 			    0,
 			    declNotationPublicId);
+      }
       poolClear(&tempPool);
       break;
     case XML_ROLE_ERROR:
@@ -1660,11 +1666,6 @@ prologProcessor(XML_Parser parser,
 	eventPtr = s;
 	if (!reportProcessingInstruction(parser, encoding, s, next))
 	  return XML_ERROR_NO_MEMORY;
-	break;
-      case XML_TOK_DECL_OPEN:
-	/* Do this so that locations for unparsed entity decls and notation decls
-	   are correct. */
-	eventPtr = s;
 	break;
       }
       break;
