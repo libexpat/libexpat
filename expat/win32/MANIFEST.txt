@@ -15,7 +15,7 @@ directory you specified to the installer.
 
     <top>\Libs\         Pre-compiled dynamic libraries for developers.
 
-	<top>\StaticLibs\   Pre-compiled static libraries for developers.
+    <top>\StaticLibs\   Pre-compiled static libraries for developers.
 
     <top>\Source\       Source code, which may interest some developers,
                         including a workspace for Microsft Visual C++.
