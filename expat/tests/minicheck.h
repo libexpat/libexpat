@@ -18,8 +18,10 @@ extern "C" {
 #define CK_NORMAL  1
 #define CK_VERBOSE 2
 
-#define START_TEST(testname) static void testname(void) {
-#define END_TEST }
+#define START_TEST(testname) static void testname(void) { \
+    _check_set_test_info(__func__, __FILE__, __LINE__);   \
+    {
+#define END_TEST } }
 
 #define fail(msg)  _fail_unless(0, __FILE__, __LINE__, msg)
 
@@ -52,6 +54,11 @@ struct TCase {
     int allocated;
     TCase *next_tcase;
 };
+
+
+/* Internal helper. */
+void _check_set_test_info(char const *function,
+                          char const *filename, int lineno);
 
 
 /*

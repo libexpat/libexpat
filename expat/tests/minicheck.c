@@ -90,6 +90,29 @@ srunner_set_fork_status(SRunner *runner, int status)
 
 static jmp_buf env;
 
+static char const *_check_current_function = NULL;
+static int _check_current_lineno = -1;
+static char const *_check_current_filename = NULL;
+
+void
+_check_set_test_info(char const *function, char const *filename, int lineno)
+{
+    _check_current_function = function;
+    _check_current_lineno = lineno;
+    _check_current_filename = filename;
+}
+
+
+static void
+add_failure(SRunner *runner, int verbosity)
+{
+    runner->nfailures++;
+    if (verbosity >= CK_VERBOSE) {
+        printf("%s:%s:%d\n", _check_current_function,
+               _check_current_filename, _check_current_lineno);
+    }
+}
+
 void
 srunner_run_all(SRunner *runner, int verbosity)
 {
@@ -106,14 +129,14 @@ srunner_run_all(SRunner *runner, int verbosity)
             if (tc->setup != NULL) {
                 /* setup */
                 if (setjmp(env)) {
-                    runner->nfailures++;
+                    add_failure(runner, verbosity);
                     continue;
                 }
                 tc->setup();
             }
             /* test */
             if (setjmp(env)) {
-                runner->nfailures++;
+                add_failure(runner, verbosity);
                 continue;
             }
             (tc->tests[i])();
@@ -121,7 +144,7 @@ srunner_run_all(SRunner *runner, int verbosity)
             /* teardown */
             if (tc->teardown != NULL) {
                 if (setjmp(env)) {
-                    runner->nfailures++;
+                    add_failure(runner, verbosity);
                     continue;
                 }
                 tc->teardown();
