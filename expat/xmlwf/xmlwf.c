@@ -118,7 +118,7 @@ void reportError(XML_Parser parser, const char *filename)
   int code = XML_GetErrorCode(parser);
   const char *message = XML_ErrorString(code);
   if (message)
-    fprintf(stderr, "%s:%d:%ld: %s\n",
+    fprintf(stdout, "%s:%d:%ld: %s\n",
 	    filename,
 	    XML_GetErrorLineNumber(parser),
 	    XML_GetErrorColumnNumber(parser),
