@@ -794,7 +794,7 @@ END_TEST
 /* Regression test for SF bug #620343. */
 static void
 start_element_fail(void *userData,
-                    const XML_Char *name, const XML_Char **atts)
+                   const XML_Char *name, const XML_Char **atts)
 {
     /* We should never get here. */
     fail("should never reach start_element_fail()");
@@ -802,8 +802,8 @@ start_element_fail(void *userData,
 
 static void
 start_ns_clearing_start_element(void *userData,
-                                       const XML_Char *prefix,
-                                       const XML_Char *uri)
+                                const XML_Char *prefix,
+                                const XML_Char *uri)
 {
     XML_SetStartElementHandler((XML_Parser) userData, NULL);
 }
@@ -824,6 +824,63 @@ START_TEST(test_start_ns_clears_start_element)
 }
 END_TEST
 
+/* Regression test for SF bug #616863. */
+static int
+external_entity_handler(XML_Parser parser,
+                        const XML_Char *context,
+                        const XML_Char *base,
+                        const XML_Char *systemId,
+                        const XML_Char *publicId) 
+{
+    int callno = 1 + (int)XML_GetUserData(parser);
+    char *text;
+    XML_Parser p2;
+
+    if (callno == 1)
+        text = ("<!ELEMENT doc (e+)>\n"
+                "<!ATTLIST doc xmlns CDATA #IMPLIED>\n"
+                "<!ELEMENT e EMPTY>\n");
+    else
+        text = ("<?xml version='1.0' encoding='us-ascii'?>"
+                "<e/>");
+
+    XML_SetUserData(parser, (void *) callno);
+    p2 = XML_ExternalEntityParserCreate(parser, context, NULL);
+    if (XML_Parse(p2, text, strlen(text), 1) == XML_STATUS_ERROR) {
+        xml_failure(p2);
+        return 0;
+    }
+    XML_ParserFree(p2);
+    return 1;
+}
+
+static void
+start_element_dummy(void *userData,
+                    const XML_Char *name, const XML_Char **atts)
+{
+    return;
+}
+
+START_TEST(test_default_ns_from_ext_subset_and_ext_ge)
+{
+    char *text =
+        "<?xml version='1.0'?>\n"
+        "<!DOCTYPE doc SYSTEM 'http://xml.libexpat.org/doc.dtd' [\n"
+        "  <!ENTITY en SYSTEM 'http://xml.libexpat.org/entity.ent'>\n"
+        "]>\n"
+        "<doc xmlns='http://xml.libexpat.org/ns1'>\n"
+        "&en;\n"
+        "</doc>";
+
+    XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+    XML_SetExternalEntityRefHandler(parser, external_entity_handler);
+    /* We actually need to set this handler to tickle this bug. */
+    XML_SetStartElementHandler(parser, start_element_dummy);
+    XML_SetUserData(parser, NULL);
+    if (XML_Parse(parser, text, strlen(text), 1) == XML_STATUS_ERROR)
+        xml_failure(parser);
+}
+END_TEST
 
 static Suite *
 make_basic_suite(void)
@@ -871,6 +928,7 @@ make_basic_suite(void)
     tcase_add_test(tc_namespace, test_ns_tagname_overwrite);
     tcase_add_test(tc_namespace, test_ns_tagname_overwrite_triplet);
     tcase_add_test(tc_namespace, test_start_ns_clears_start_element);
+    tcase_add_test(tc_namespace, test_default_ns_from_ext_subset_and_ext_ge);
 
     return s;
 }
@@ -909,6 +967,8 @@ main(int argc, char *argv[])
     }
     if (forking_set)
         srunner_set_fork_status(sr, forking ? CK_FORK : CK_NOFORK);
+    if (verbosity != CK_SILENT)
+        printf("Expat version: %s\n", XML_ExpatVersion());
     srunner_run_all(sr, verbosity);
     nf = srunner_ntests_failed(sr);
     srunner_free(sr);
