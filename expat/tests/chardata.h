@@ -10,8 +10,6 @@
 #include "expat.h"                      /* need XML_Char */
 #endif
 
-#include <stdbool.h>
-
 
 typedef struct {
     int count;                          /* # of chars, < 0 if not set */
@@ -25,9 +23,9 @@ void CharData_AppendString(CharData *storage, const char *s);
 
 void CharData_AppendXMLChars(CharData *storage, const XML_Char *s, int len);
 
-bool CharData_CheckString(CharData *storage, const char *s);
+int CharData_CheckString(CharData *storage, const char *s);
 
-bool CharData_CheckXMLChars(CharData *storage, const XML_Char *s);
+int CharData_CheckXMLChars(CharData *storage, const XML_Char *s);
 
 
 #endif  /* XML_CHARDATA_H */

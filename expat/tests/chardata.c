@@ -70,7 +70,7 @@ CharData_AppendXMLChars(CharData *storage, const XML_Char *s, int len)
     }
 }
 
-bool
+int
 CharData_CheckString(CharData *storage, const char *expected)
 {
     char buffer[1280];
@@ -90,16 +90,16 @@ CharData_CheckString(CharData *storage, const char *expected)
                     "wrong number of data characters: got %d, expected %d",
                     count, len);
         fail(buffer);
-        return false;
+        return 0;
     }
     if (memcmp(expected, storage->data, len) != 0) {
         fail("got bad data bytes");
-        return false;
+        return 0;
     }
-    return true;
+    return 1;
 }
 
-bool
+int
 CharData_CheckXMLChars(CharData *storage, const XML_Char *expected)
 {
     char buffer[1024];
@@ -112,11 +112,11 @@ CharData_CheckXMLChars(CharData *storage, const XML_Char *expected)
         sprintf(buffer, "wrong number of data characters: got %d, expected %d",
                 count, len);
         fail(buffer);
-        return false;
+        return 0;
     }
     if (memcmp(expected, storage->data, len * sizeof(storage->data[0])) != 0) {
         fail("got bad data bytes");
-        return false;
+        return 0;
     }
-    return true;
+    return 1;
 }
