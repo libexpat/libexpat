@@ -191,10 +191,6 @@ SOURCE=.\hashtable.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\xmltok\xmldef.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\xmlparse.h
 # End Source File
 # End Group
