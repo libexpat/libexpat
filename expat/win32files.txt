@@ -1,0 +1,12 @@
+expat.dsw
+expat.mak
+gennmtab/gennmtab.dsp
+sample/build.bat
+xmlparse/xmlparse.dsp
+xmltok/xmltok.dsp
+xmlwf/xmlwf.dsp
+bin/xmltok.dll
+bin/xmlparse.dll
+bin/xmlwf.exe
+lib/xmltok.lib
+lib/xmlparse.lib
