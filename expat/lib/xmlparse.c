@@ -1609,10 +1609,10 @@ XML_GetFeatureList(void)
   return features;
 }
 
-/* initially tag->rawName always points into the parse buffer;
+/* Initially tag->rawName always points into the parse buffer;
    for those TAG instances opened while the current parse buffer was
    processed, and not yet closed, we need to store tag->rawName in a more
-   permanent location, since the parse buffer is about to be discarded
+   permanent location, since the parse buffer is about to be discarded.
 */
 static XML_Bool
 storeRawNames(XML_Parser parser)
@@ -1622,11 +1622,11 @@ storeRawNames(XML_Parser parser)
     int bufSize;
     int nameLen = sizeof(XML_Char) * (tag->name.strLen + 1);
     char *rawNameBuf = tag->buf + nameLen;
-    /* stop if already stored */
+    /* Stop if already stored. */
     if (tag->rawName == rawNameBuf) 
       break;
-    /* for re-use purposes we need to ensure that the
-       size of tag->buf is a multiple of sizeof(XML_Char)
+    /* For re-use purposes we need to ensure that the
+       size of tag->buf is a multiple of sizeof(XML_Char).
     */
     bufSize = nameLen + ROUND_UP(tag->rawNameLength, sizeof(XML_Char));
     if (bufSize > tag->bufEnd - tag->buf) {
