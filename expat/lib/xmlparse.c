@@ -1072,6 +1072,8 @@ destroyBindings(BINDING *bindings, XML_Parser parser)
 void XMLCALL
 XML_ParserFree(XML_Parser parser)
 {
+  if (parser == NULL)
+    return;
   for (;;) {
     TAG *p;
     if (tagStack == NULL) {
