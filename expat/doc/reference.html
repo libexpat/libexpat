@@ -47,6 +47,7 @@ copyright and to distribute it with expat.
               <ul>
                   <li><a href="#XML_ParserCreate">XML_ParserCreate</a></li>
 		  <li><a href="#XML_ParserCreateNS">XML_ParserCreateNS</a></li>
+		  <li><a href="#XML_ParserCreate_MM">XML_ParserCreate_MM</a></li>
 		  <li><a href="#XML_ExternalEntityParserCreate">XML_ExternalEntityParserCreate</a></li>
 		  <li><a href="#XML_ParserFree">XML_ParserFree</a></li>
               </ul>
@@ -110,6 +111,8 @@ copyright and to distribute it with expat.
 		  <li><a href="#XML_GetIdAttributeIndex">XML_GetIdAttributeIndex</a></li>
 		  <li><a href="#XML_SetEncoding">XML_SetEncoding</a></li>
 		  <li><a href="#XML_SetParamEntityParsing">XML_SetParamEntityParsing</a></li>
+		  <li><a href="#XML_SetReturnNSTriplet">XML_SetReturnNSTriplet</a></li>
+		  <li><a href="#XML_ExpatVersion">XML_ExpatVersion</a></li>
 	      </ul>
 	  </li>
       </ul>  
@@ -1460,6 +1463,14 @@ separated by the namespace separator specified when the parser was created.
 The order of returned parts is URI, local name, and prefix.</p>
 <p>If <code>do_nst</code> is zero, then namespaces are reported in the
 default manner, URI then local_name separated by the namespace separator.</p>
+</div>
+
+<div class="fcndec"><a name="XML_ExpatVersion"><pre>
+XML_LChar *
+XML_ExpatVersion();
+</pre></a>
+<div class="fcndef">
+Return the library version string.
 </div>
 
 </body>

@@ -699,6 +699,10 @@ XML_ParserFree(XML_Parser parser);
 const XML_LChar XMLPARSEAPI *
 XML_ErrorString(int code);
 
+/* Return a string containing the version number of this expat */
+const XML_LChar XMLPARSEAPI *
+XML_ExpatVersion();
+
 #ifdef __cplusplus
 }
 #endif

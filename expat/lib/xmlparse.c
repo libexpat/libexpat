@@ -3,6 +3,9 @@ Copyright (c) 1998, 1999, 2000 Thai Open Source Software Center Ltd
 See the file COPYING for copying permission.
 */
 
+static char RCSId[]
+  = "$Header$";
+
 #include <config.h>
 
 #ifdef __declspec
@@ -1302,6 +1305,11 @@ const XML_LChar *XML_ErrorString(int code)
   if (code > 0 && code < sizeof(message)/sizeof(message[0]))
     return message[code];
   return 0;
+}
+
+const XML_LChar *
+XML_ExpatVersion() {
+  return VERSION;
 }
 
 static
