@@ -340,10 +340,10 @@ make_basic_suite(void)
     /* Regression test for SF bug #491986. */
     tcase_add_test(tc_chars, test_danish_latin1);
     /* Regression test for SF bug #514281. */
-    tcase_add_test(tc_attrs, test_french_charref_hexidecimal);
-    tcase_add_test(tc_attrs, test_french_charref_decimal);
-    tcase_add_test(tc_attrs, test_french_latin1);
-    tcase_add_test(tc_attrs, test_french_utf8);
+    tcase_add_test(tc_chars, test_french_charref_hexidecimal);
+    tcase_add_test(tc_chars, test_french_charref_decimal);
+    tcase_add_test(tc_chars, test_french_latin1);
+    tcase_add_test(tc_chars, test_french_utf8);
 
     suite_add_tcase(s, tc_attrs);
     tcase_add_checked_fixture(tc_attrs, basic_setup, basic_teardown);
