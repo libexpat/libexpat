@@ -113,6 +113,7 @@ copyright and to distribute it with expat.
 		  <li><a href="#XML_SetParamEntityParsing">XML_SetParamEntityParsing</a></li>
 		  <li><a href="#XML_SetReturnNSTriplet">XML_SetReturnNSTriplet</a></li>
 		  <li><a href="#XML_ExpatVersion">XML_ExpatVersion</a></li>
+		  <li><a href="#XML_ExpatVersionInfo">XML_ExpatVersionInfo</a></li>
 	      </ul>
 	  </li>
       </ul>  
@@ -1470,8 +1471,33 @@ XML_LChar *
 XML_ExpatVersion();
 </pre></a></div>
 <div class="fcndef">
-Return the library version string.
+Return the library version as a string.
 </div>
+
+<div class="fcndec"><a name="XML_ExpatVersionInfo"><pre>
+struct XML_expat_version
+XML_ExpatVersionInfo();
+</pre></a></div>
+<div class="fcndef">
+Return the library version information as a structure.
+<div class="eg"><pre>
+typedef struct {
+  int major;
+  int minor;
+  int micro;
+} XML_Expat_Version;
+</pre></div>
+</div>
+<p>The following constants are defined using pre-processor symbols,
+and so may be tested at compile time.</p>
+<dl>
+<dt><code>XML_MAJOR_VERSION</code></dt>
+<dd>The major version number.</dd>
+<dt><code>XML_MINOR_VERSION</code></dt>
+<dd>The minor version number.</dd>
+<dt><code>XML_MICRO_VERSION</code></dt>
+<dd>The "patch level".</dd>
+</dl>
 
 </body>
 </html>
