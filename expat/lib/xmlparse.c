@@ -1765,12 +1765,6 @@ doContent(XML_Parser parser,
 	}
 	--tagLevel;
 	if (endElementHandler && tag->name.str) {
-	  if (tag->name.localPart) {
-	    XML_Char *to = (XML_Char *)tag->name.str + tag->name.uriLen;
-	    const XML_Char *from = tag->name.localPart;
-	    while ((*to++ = *from++) != 0)
-	      ;
-	  }
 	  endElementHandler(handlerArg, tag->name.str);
 	}
 	else if (defaultHandler)
@@ -1920,8 +1914,10 @@ static enum XML_Error storeAtts(XML_Parser parser, const ENCODING *enc,
   int nDefaultAtts = 0;
   const XML_Char **appAtts;   /* the attribute list for the application */
   int attIndex = 0;
+  int prefixLen = 0;   
   int i;
   int n;
+  XML_Char *uri;       
   int nPrefixes = 0;
   BINDING *binding;
   const XML_Char *localPart;
@@ -2124,6 +2120,13 @@ static enum XML_Error storeAtts(XML_Parser parser, const ENCODING *enc,
     localPart = tagNamePtr->str;
   }
   else
+    localPart = NULL;
+  if (ns && ns_triplets && binding->prefix->name) {
+    for (prefixLen = 0; binding->prefix->name[prefixLen++];)
+      ;
+    n += prefixLen;
+  }
+  else
     return XML_ERROR_NONE;
   tagNamePtr->localPart = localPart;
   tagNamePtr->uriLen = binding->uriLen;
@@ -2132,7 +2135,7 @@ static enum XML_Error storeAtts(XML_Parser parser, const ENCODING *enc,
   n = i + binding->uriLen;
   if (n > binding->uriAlloc) {
     TAG *p;
-    XML_Char *uri = MALLOC((n + EXPAND_SPARE) * sizeof(XML_Char));
+    uri = MALLOC((n + EXPAND_SPARE) * sizeof(XML_Char)); 
     if (!uri)
       return XML_ERROR_NO_MEMORY;
     binding->uriAlloc = n + EXPAND_SPARE;
@@ -2143,7 +2146,13 @@ static enum XML_Error storeAtts(XML_Parser parser, const ENCODING *enc,
     FREE(binding->uri);
     binding->uri = uri;
   }
-  memcpy(binding->uri + binding->uriLen, localPart, i * sizeof(XML_Char));
+  uri = binding->uri + binding->uriLen;
+  memcpy(uri, localPart, i * sizeof(XML_Char));
+  if (prefixLen) {
+	uri = uri + (i - 1);
+    if (namespaceSeparator) { *(uri) = namespaceSeparator; }
+    memcpy(uri + 1, binding->prefix->name, prefixLen * sizeof(XML_Char));
+  }
   tagNamePtr->str = binding->uri;
   return XML_ERROR_NONE;
 }
