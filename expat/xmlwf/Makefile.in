@@ -18,6 +18,8 @@
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN EXPAT.
 #
 
+bindir = @bindir@
+
 LIBDIR= ../lib/.libs
 INCDIR= ../lib
 
@@ -28,13 +30,28 @@ FILEMAP_OBJ= @FILEMAP_OBJ@
 OBJS= xmlwf.o xmlfile.o codepage.o $(FILEMAP_OBJ)
 LIBS= -L$(LIBDIR) -lexpat
 
+INSTALL = @INSTALL@
+INSTALL_PROGRAM = ${INSTALL}
+LIBTOOL = @LIBTOOL@
+mkinstalldirs = $(SHELL) $(top_srcdir)/conftools/mkinstalldirs
+
 srcdir = @srcdir@
+top_builddir = ..
 top_srcdir = @top_srcdir@
 VPATH = @srcdir@
+prefix = @prefix@
+exec_prefix = @exec_prefix@
 
 
 xmlwf: $(OBJS)
 	$(CC) -o xmlwf $(LDFLAGS) $(OBJS) $(LIBS)
+
+install: xmlwf
+	$(mkinstalldirs) $(bindir)
+	$(LIBTOOL) --mode=install $(INSTALL_PROGRAM) xmlwf $(bindir)/xmlwf
+
+uninstall:
+	$(LIBTOOL) --mode=uninstall rm -f $(bindir)/xmlwf
 
 check:	$(SUBDIRS)
 	@echo
