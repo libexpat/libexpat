@@ -2,6 +2,7 @@
 #include <check.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "expat.h"
 
@@ -12,7 +13,7 @@ static XML_Parser parser;
 static void
 basic_setup(void)
 {
-    parser = XML_ParserCreate("us-ascii");
+    parser = XML_ParserCreate(NULL);
     if (parser == NULL)
         fail("Parser not created.");
 }
@@ -29,15 +30,18 @@ basic_teardown(void)
  * expecting.
  */
 static void
-xml_failure(void)
+_xml_failure(const char *file, int line)
 {
-    char buffer[256];
-    sprintf(buffer, "%s (line %d, offset %d)",
+    char buffer[1024];
+    sprintf(buffer, "%s (line %d, offset %d)\n    reported from %s, line %d",
             XML_ErrorString(XML_GetErrorCode(parser)),
             XML_GetCurrentLineNumber(parser),
-            XML_GetCurrentColumnNumber(parser));
+            XML_GetCurrentColumnNumber(parser),
+            file, line);
     fail(buffer);
 }
+
+#define xml_failure() _xml_failure(__FILE__, __LINE__)
 
 START_TEST(test_nul_byte)
 {
@@ -109,6 +113,104 @@ START_TEST(test_bom_utf16_le)
         xml_failure();
 }
 END_TEST
+
+
+typedef struct 
+{
+    int count;
+    XML_Char data[1024];
+} CharData;
+
+static void
+accumulate_characters(void *userData, const XML_Char *s, int len)
+{
+    CharData *storage = (CharData *)userData;
+    if (len + storage->count < sizeof(storage->data)) {
+        memcpy(storage->data + storage->count, s, len);
+        storage->count += len;
+    }
+}
+
+static void
+check_characters(CharData *storage, XML_Char *expected)
+{
+    char buffer[1024];
+    int len = strlen(expected);
+    if (len != storage->count) {
+        sprintf(buffer, "wrong number of data characters: got %d, expected %d",
+                storage->count, len);
+        fail(buffer);
+        return;
+    }
+    if (memcmp(expected, storage->data, len) != 0)
+        fail("got bad data bytes");
+}
+
+static void
+run_character_check(XML_Char *text, XML_Char *expected)
+{
+    CharData storage;
+    storage.count = 0;
+    XML_SetUserData(parser, &storage);
+    XML_SetCharacterDataHandler(parser, accumulate_characters);
+    if (!XML_Parse(parser, text, strlen(text), 1))
+        xml_failure();
+    check_characters(&storage, expected);
+}
+
+/* Regression test for SF bug #491986. */
+START_TEST(test_danish_latin1)
+{
+    char *text =
+        "<?xml version='1.0' encoding='iso-8859-1'?>\n"
+        "<e>Jørgen æøåÆØÅ</e>";
+    run_character_check(text,
+             "J\xC3\xB8rgen \xC3\xA6\xC3\xB8\xC3\xA5\xC3\x86\xC3\x98\xC3\x85");
+}
+END_TEST
+/* End regression test for SF bug #491986. */
+
+
+/* Regression test for SF bug #514281. */
+START_TEST(test_french_charref_hexidecimal)
+{
+    char *text =
+        "<?xml version='1.0' encoding='iso-8859-1'?>\n"
+        "<doc>&#xE9;&#xE8;&#xE0;&#xE7;&#xEA;&#xC8;</doc>";
+    run_character_check(text,
+                        "\xC3\xA9\xC3\xA8\xC3\xA0\xC3\xA7\xC3\xAA\xC3\x88");
+}
+END_TEST
+
+START_TEST(test_french_charref_decimal)
+{
+    char *text =
+        "<?xml version='1.0' encoding='iso-8859-1'?>\n"
+        "<doc>&#233;&#232;&#224;&#231;&#234;&#200;</doc>";
+    run_character_check(text,
+                        "\xC3\xA9\xC3\xA8\xC3\xA0\xC3\xA7\xC3\xAA\xC3\x88");
+}
+END_TEST
+
+START_TEST(test_french_latin1)
+{
+    char *text =
+        "<?xml version='1.0' encoding='iso-8859-1'?>\n"
+        "<doc>\xE9\xE8\xE0\xE7\xEa\xC8</doc>";
+    run_character_check(text,
+                        "\xC3\xA9\xC3\xA8\xC3\xA0\xC3\xA7\xC3\xAA\xC3\x88");
+}
+END_TEST
+
+START_TEST(test_french_utf8)
+{
+    char *text =
+        "<?xml version='1.0' encoding='utf-8'?>\n"
+        "<doc>\xC3\xA9</doc>";
+    run_character_check(text, "\xC3\xA9");
+}
+END_TEST
+/* End regression test for SF bug #514281. */
 
 
 /* Helpers used by the following test; this checks any "attr" and "refs"
@@ -235,6 +337,13 @@ make_basic_suite(void)
     tcase_add_test(tc_chars, test_bom_utf8);
     tcase_add_test(tc_chars, test_bom_utf16_be);
     tcase_add_test(tc_chars, test_bom_utf16_le);
+    /* Regression test for SF bug #491986. */
+    tcase_add_test(tc_chars, test_danish_latin1);
+    /* Regression test for SF bug #514281. */
+    tcase_add_test(tc_attrs, test_french_charref_hexidecimal);
+    tcase_add_test(tc_attrs, test_french_charref_decimal);
+    tcase_add_test(tc_attrs, test_french_latin1);
+    tcase_add_test(tc_attrs, test_french_utf8);
 
     suite_add_tcase(s, tc_attrs);
     tcase_add_checked_fixture(tc_attrs, basic_setup, basic_teardown);
