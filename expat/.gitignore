@@ -1,4 +1,6 @@
 Makefile
+.libs
+*.la
 configure
 config.cache
 config.log
