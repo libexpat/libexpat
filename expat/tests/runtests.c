@@ -50,7 +50,9 @@ _expect_failure(char *text, enum XML_Error errorCode, char *errorMessage,
                 char *file, int lineno)
 {
     if (XML_Parse(parser, text, strlen(text), 1) == XML_STATUS_OK)
-        fail(errorMessage);
+        /* Hackish use of _fail_unless() macro, but let's us report
+           the right filename and line number. */
+        _fail_unless(0, file, lineno, errorMessage);
     if (XML_GetErrorCode(parser) != errorCode)
         _xml_failure(parser, file, lineno);
 }
@@ -1161,6 +1163,17 @@ START_TEST(test_default_ns_from_ext_subset_and_ext_ge)
 }
 END_TEST
 
+START_TEST(test_ns_default_with_empty_uri)
+{
+    char *text =
+        "<doc xmlns='http://xml.libexpat.org/'>\n"
+        "  <e xmlns=''/>\n"
+        "</doc>";
+    if (XML_Parse(parser, text, strlen(text), 1) == XML_STATUS_ERROR)
+        xml_failure(parser);
+}
+END_TEST
+
 static Suite *
 make_basic_suite(void)
 {
@@ -1217,6 +1230,7 @@ make_basic_suite(void)
     tcase_add_test(tc_namespace, test_ns_tagname_overwrite_triplet);
     tcase_add_test(tc_namespace, test_start_ns_clears_start_element);
     tcase_add_test(tc_namespace, test_default_ns_from_ext_subset_and_ext_ge);
+    tcase_add_test(tc_namespace, test_ns_default_with_empty_uri);
 
     return s;
 }
