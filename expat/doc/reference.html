@@ -113,6 +113,7 @@ copyright and to distribute it with expat.
 		  <li><a href="#XML_SetEncoding">XML_SetEncoding</a></li>
 		  <li><a href="#XML_SetParamEntityParsing">XML_SetParamEntityParsing</a></li>
 		  <li><a href="#XML_SetReturnNSTriplet">XML_SetReturnNSTriplet</a></li>
+		  <li><a href="#XML_DefaultCurrent">XML_DefaultCurrent</a></li>
 		  <li><a href="#XML_ExpatVersion">XML_ExpatVersion</a></li>
 		  <li><a href="#XML_ExpatVersionInfo">XML_ExpatVersionInfo</a></li>
 	      </ul>
@@ -876,15 +877,23 @@ typedef void
                       const XML_Char *s,
                       int len);
 </pre></div>
+
 <p>Sets a handler for any characters in the document which wouldn't
-otherwise be handled. This includes both data for which no handlers can be
-set (like some kinds of DTD declarations) and data which could be reported
-but which currently has no handler set. Note that a contiguous piece of
-data that is destined to be reported to the default handler may actually
-be reported over several calls to the handler. Setting the handler with
+otherwise be handled. This includes both data for which no handlers
+can be set (like some kinds of DTD declarations) and data which could
+be reported but which currently has no handler set.  The characters
+are passed exactly as they were present in the XML document except
+that they will be encoded in UTF-8.  Line boundaries are not
+normalized. Note that a byte order mark character is not passed to the
+default handler. There are no guarantees about how characters are
+divided between calls to the default handler: for example, a comment
+might be split between multiple calls.  Setting the handler with
 this call has the side effect of turning off expansion of references
 to internally defined general entities. Instead these references are
 passed to the default handler.</p>
+
+<p>See also <code><a
+href="#XML_DefaultCurrent">XML_DefaultCurrent</a></code>.</p>
 </div>
 
 <div class="handler">
@@ -898,8 +907,12 @@ typedef void
                       const XML_Char *s,
                       int len);
 </pre></div>
-<p>This sets a default handler, but doesn't affect expansion of internal
-entity references.</p>
+<p>This sets a default handler, but doesn't inhibit the expansion of
+internal entity references.  The entity reference will not be passed
+to the default handler.</p>
+
+<p>See also <code><a
+href="#XML_DefaultCurrent">XML_DefaultCurrent</a></code>.</p>
 </div>
 
 <div class="handler">
@@ -1521,6 +1534,20 @@ separated by the namespace separator specified when the parser was created.
 The order of returned parts is URI, local name, and prefix.</p>
 <p>If <code>do_nst</code> is zero, then namespaces are reported in the
 default manner, URI then local_name separated by the namespace separator.</p>
+</div>
+
+<div class="fcndec"><a name="XML_DefaultCurrent"><pre>
+void
+XML_DefaultCurrent(XML_Parser parser);
+</pre></a></div>
+<div class="fcndef">
+This can be called within a handler for a start element, end element,
+processing instruction or character data.  It causes the corresponding
+markup to be passed to the default handler set by <code><a
+href="#XML_SetDefaultHandler" >XML_SetDefaultHandler</a></code> or
+<code><a href="#XML_SetDefaultHandlerExpand"
+>XML_SetDefaultHandlerExpand</a></code>.  It does nothing if there is
+>not a default handler.
 </div>
 
 <div class="fcndec"><a name="XML_ExpatVersion"><pre>
