@@ -1,3 +1,6 @@
+Release 1.95.6
+        - Fixed a variety of bugs: see SF issues 615606, 616863, 618199.
+
 Release 1.95.5 Fri Sep 6 2002
         - Added XML_UseForeignDTD() for improved SAX2 support.
         - Added XML_GetFeatureList().
