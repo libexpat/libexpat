@@ -141,7 +141,7 @@ static enum XML_Error
 doContent(XML_Parser parser, int startTagLevel, const ENCODING *enc,
 	  const char *start, const char *end, const char **endPtr);
 static enum XML_Error
-doCdataSection(XML_Parser parser, const char **startPtr, const char *end, const char **nextPtr);
+doCdataSection(XML_Parser parser, const ENCODING *, const char **startPtr, const char *end, const char **nextPtr);
 static enum XML_Error storeAtts(XML_Parser parser, const ENCODING *, const XML_Char *tagName, const char *s);
 static int
 defineAttribute(ELEMENT_TYPE *type, ATTRIBUTE_ID *, int isCdata, const XML_Char *dfltValue);
@@ -1009,7 +1009,7 @@ doContent(XML_Parser parser,
       break;
     case XML_TOK_CDATA_SECT_OPEN:
       {
-	enum XML_Error result = doCdataSection(parser, &next, end, nextPtr);
+	enum XML_Error result = doCdataSection(parser, enc, &next, end, nextPtr);
 	if (!next) {
 	  processor = cdataSectionProcessor;
 	  return result;
@@ -1155,7 +1155,7 @@ enum XML_Error cdataSectionProcessor(XML_Parser parser,
 			    	     const char *end,
 				     const char **endPtr)
 {
-  enum XML_Error result = doCdataSection(parser, &start, end, endPtr);
+  enum XML_Error result = doCdataSection(parser, encoding, &start, end, endPtr);
   if (start) {
     processor = contentProcessor;
     return contentProcessor(parser, start, end, endPtr);
@@ -1168,6 +1168,7 @@ the section is not yet closed. */
 
 static
 enum XML_Error doCdataSection(XML_Parser parser,
+			      const ENCODING *enc,
 			      const char **startPtr,
 			      const char *end,
 			      const char **nextPtr)
@@ -1176,7 +1177,7 @@ enum XML_Error doCdataSection(XML_Parser parser,
   *startPtr = 0;
   for (;;) {
     const char *next;
-    int tok = XmlCdataSectionTok(encoding, s, end, &next);
+    int tok = XmlCdataSectionTok(enc, s, end, &next);
     switch (tok) {
     case XML_TOK_CDATA_SECT_CLOSE:
       *startPtr = next;
@@ -1191,7 +1192,7 @@ enum XML_Error doCdataSection(XML_Parser parser,
       if (characterDataHandler) {
 	do {
 	  ICHAR *dataPtr = (ICHAR *)dataBuf;
-	  XmlConvert(encoding, &s, next, &dataPtr, (ICHAR *)dataBufEnd);
+	  XmlConvert(enc, &s, next, &dataPtr, (ICHAR *)dataBufEnd);
 	  characterDataHandler(userData, dataBuf, dataPtr - (ICHAR *)dataBuf);
 	} while (s != next);
       }
