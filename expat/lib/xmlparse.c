@@ -873,17 +873,20 @@ XML_ParserReset(XML_Parser parser, const XML_Char *encodingName)
 int
 XML_SetEncoding(XML_Parser parser, const XML_Char *encodingName)
 {
-  /* block after XML_Parse()/XML_ParseBuffer() has been called */
+  /* Block after XML_Parse()/XML_ParseBuffer() has been called.
+     XXX There's no way for the caller to determine which of the
+     XXX possible error cases caused the XML_STATUS_ERROR return.
+  */
   if (parsing)
-    return 0;
+    return XML_STATUS_ERROR;
   if (encodingName == NULL)
     protocolEncodingName = NULL;
   else {
     protocolEncodingName = poolCopyString(&tempPool, encodingName);
     if (!protocolEncodingName)
-      return 0;
+      return XML_STATUS_ERROR;
   }
-  return 1;
+  return XML_STATUS_OK;
 }
 
 XML_Parser
@@ -1116,12 +1119,12 @@ XML_SetBase(XML_Parser parser, const XML_Char *p)
   if (p) {
     p = poolCopyString(&_dtd->pool, p);
     if (!p)
-      return 0;
+      return XML_STATUS_ERROR;
     curBase = p;
   }
   else
     curBase = NULL;
-  return 1;
+  return XML_STATUS_OK;
 }
 
 const XML_Char *
