@@ -10,10 +10,6 @@ See the file COPYING for copying permission.
 extern "C" {
 #endif
 
-#ifndef XMLTOKAPI
-#define XMLTOKAPI /* as nothing */
-#endif
-
 /* The following token may be returned by XmlContentTok */
 #define XML_TOK_TRAILING_RSQB -5 /* ] or ]] at the end of the scan; might be start of
                                     illegal ]]> sequence */
@@ -254,7 +250,7 @@ typedef struct {
   const ENCODING **encPtr;
 } INIT_ENCODING;
 
-int XMLTOKAPI XmlParseXmlDecl(int isGeneralTextEntity,
+int  XmlParseXmlDecl(int isGeneralTextEntity,
 			      const ENCODING *enc,
 			      const char *ptr,
 	  		      const char *end,
@@ -265,20 +261,20 @@ int XMLTOKAPI XmlParseXmlDecl(int isGeneralTextEntity,
 			      const ENCODING **namedEncodingPtr,
 			      int *standalonePtr);
 
-int XMLTOKAPI XmlInitEncoding(INIT_ENCODING *, const ENCODING **, const char *name);
-const ENCODING XMLTOKAPI *XmlGetUtf8InternalEncoding(void);
-const ENCODING XMLTOKAPI *XmlGetUtf16InternalEncoding(void);
-int XMLTOKAPI XmlUtf8Encode(int charNumber, char *buf);
-int XMLTOKAPI XmlUtf16Encode(int charNumber, unsigned short *buf);
+int  XmlInitEncoding(INIT_ENCODING *, const ENCODING **, const char *name);
+const ENCODING  *XmlGetUtf8InternalEncoding(void);
+const ENCODING  *XmlGetUtf16InternalEncoding(void);
+int  XmlUtf8Encode(int charNumber, char *buf);
+int  XmlUtf16Encode(int charNumber, unsigned short *buf);
 
-int XMLTOKAPI XmlSizeOfUnknownEncoding(void);
-ENCODING XMLTOKAPI *
+int  XmlSizeOfUnknownEncoding(void);
+ENCODING  *
 XmlInitUnknownEncoding(void *mem,
 		       int *table,
 		       int (*conv)(void *userData, const char *p),
 		       void *userData);
 
-int XMLTOKAPI XmlParseXmlDeclNS(int isGeneralTextEntity,
+int  XmlParseXmlDeclNS(int isGeneralTextEntity,
 			        const ENCODING *enc,
 			        const char *ptr,
 	  		        const char *end,
@@ -288,10 +284,10 @@ int XMLTOKAPI XmlParseXmlDeclNS(int isGeneralTextEntity,
 			        const char **encodingNamePtr,
 			        const ENCODING **namedEncodingPtr,
 			        int *standalonePtr);
-int XMLTOKAPI XmlInitEncodingNS(INIT_ENCODING *, const ENCODING **, const char *name);
-const ENCODING XMLTOKAPI *XmlGetUtf8InternalEncodingNS(void);
-const ENCODING XMLTOKAPI *XmlGetUtf16InternalEncodingNS(void);
-ENCODING XMLTOKAPI *
+int  XmlInitEncodingNS(INIT_ENCODING *, const ENCODING **, const char *name);
+const ENCODING  *XmlGetUtf8InternalEncodingNS(void);
+const ENCODING  *XmlGetUtf16InternalEncodingNS(void);
+ENCODING  *
 XmlInitUnknownEncodingNS(void *mem,
 		         int *table,
 		         int (*conv)(void *userData, const char *p),

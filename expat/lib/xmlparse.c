@@ -4,7 +4,17 @@ See the file COPYING for copying permission.
 */
 
 #include <config.h>
+
+#ifdef __declspec
+#  define XMLPARSEAPI __declspec(dllexport)
+#endif
+
 #include "expat.h"
+
+#ifdef __declspec
+#  undef XMLPARSEAPI
+#endif
+
 #include <stddef.h>
 
 #ifdef XML_UNICODE

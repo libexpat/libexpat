@@ -4,7 +4,6 @@ See the file COPYING for copying permission.
 */
 
 #include <config.h>
-#include "xmldef.h"
 #include "xmlrole.h"
 #include "ascii.h"
 
