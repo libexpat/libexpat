@@ -42,7 +42,9 @@ your version of this file under either the MPL or the GPL.
 #include <crtdbg.h>
 #endif
 
-#define NSSEP T('#')
+/* This ensures proper sorting. */
+
+#define NSSEP T('\001')
 
 static void characterData(void *userData, const XML_Char *s, int len)
 {
@@ -58,6 +60,11 @@ static void characterData(void *userData, const XML_Char *s, int len)
     case T('>'):
       fputts(T("&gt;"), fp);
       break;
+#ifdef W3C14N
+    case 13:
+      fputts(T("&#xD;"), fp);
+      break;
+#else
     case T('"'):
       fputts(T("&quot;"), fp);
       break;
@@ -66,10 +73,58 @@ static void characterData(void *userData, const XML_Char *s, int len)
     case 13:
       ftprintf(fp, T("&#%d;"), *s);
       break;
+#endif
     default:
       puttc(*s, fp);
       break;
     }
+  }
+}
+
+static void attributeValue(FILE *fp, const XML_Char *s)
+{
+  puttc(T('='), fp);
+  puttc(T('"'), fp);
+  for (;;) {
+    switch (*s) {
+    case 0:
+    case NSSEP:
+      puttc(T('"'), fp);
+      return;
+    case T('&'):
+      fputts(T("&amp;"), fp);
+      break;
+    case T('<'):
+      fputts(T("&lt;"), fp);
+      break;
+    case T('"'):
+      fputts(T("&quot;"), fp);
+      break;
+#ifdef W3C14N
+    case 9:
+      fputts(T("&#x9;"), fp);
+      break;
+    case 10:
+      fputts(T("&#xA;"), fp);
+      break;
+    case 13:
+      fputts(T("&#xD;"), fp);
+      break;
+#else
+    case T('>'):
+      fputts(T("&gt;"), fp);
+      break;
+    case 9:
+    case 10:
+    case 13:
+      ftprintf(fp, T("&#%d;"), *s);
+      break;
+#endif
+    default:
+      puttc(*s, fp);
+      break;
+    }
+    s++;
   }
 }
 
@@ -98,10 +153,7 @@ static void startElement(void *userData, const XML_Char *name, const XML_Char **
   while (*atts) {
     puttc(T(' '), fp);
     fputts(*atts++, fp);
-    puttc(T('='), fp);
-    puttc(T('"'), fp);
-    characterData(userData, *atts, tcslen(*atts));
-    puttc(T('"'), fp);
+    attributeValue(fp, *atts);
     atts++;
   }
   puttc(T('>'), fp);
@@ -116,6 +168,17 @@ static void endElement(void *userData, const XML_Char *name)
   puttc(T('>'), fp);
 }
 
+static int nsattcmp(const void *p1, const void *p2)
+{
+  const XML_Char *att1 = *(const XML_Char **)p1;
+  const XML_Char *att2 = *(const XML_Char **)p2;
+  int sep1 = (tcsrchr(att1, NSSEP) != 0);
+  int sep2 = (tcsrchr(att1, NSSEP) != 0);
+  if (sep1 != sep2)
+    return sep1 - sep2;
+  return tcscmp(att1, att2);
+}
+
 static void startElementNS(void *userData, const XML_Char *name, const XML_Char **atts)
 {
   int nAtts;
@@ -127,16 +190,15 @@ static void startElementNS(void *userData, const XML_Char *name, const XML_Char 
 
   sep = tcsrchr(name, NSSEP);
   if (sep) {
-    fputts(T("ns0:"), fp);
+    fputts(T("n1:"), fp);
     fputts(sep + 1, fp);
-    fputts(T(" xmlns:ns0=\""), fp);
-    characterData(userData, name, sep - name);
-    puttc(T('"'), fp);
-    nsi = 1;
+    fputts(T(" xmlns:n1"), fp);
+    attributeValue(fp, name);
+    nsi = 2;
   }
   else {
     fputts(name, fp);
-    nsi = 0;
+    nsi = 1;
   }
 
   p = atts;
@@ -144,24 +206,22 @@ static void startElementNS(void *userData, const XML_Char *name, const XML_Char 
     ++p;
   nAtts = (p - atts) >> 1;
   if (nAtts > 1)
-    qsort((void *)atts, nAtts, sizeof(XML_Char *) * 2, attcmp);
+    qsort((void *)atts, nAtts, sizeof(XML_Char *) * 2, nsattcmp);
   while (*atts) {
     name = *atts++;
     sep = tcsrchr(name, NSSEP);
+    puttc(T(' '), fp);
     if (sep) {
-      ftprintf(fp, T(" xmlns:ns%d=\""), nsi);
-      characterData(userData, name, sep - name);
-      puttc(T('"'), fp);
-      name = sep + 1;
-      ftprintf(fp, T(" ns%d:"), nsi++);
+      ftprintf(fp, T("n%d:"), nsi);
+      fputts(sep + 1, fp);
     }
     else
-      puttc(T(' '), fp);
-    fputts(name, fp);
-    puttc(T('='), fp);
-    puttc(T('"'), fp);
-    characterData(userData, *atts, tcslen(*atts));
-    puttc(T('"'), fp);
+      fputts(name, fp);
+    attributeValue(fp, *atts);
+    if (sep) {
+      ftprintf(fp, T(" xmlns:n%d"), nsi++);
+      attributeValue(fp, name);
+    }
     atts++;
   }
   puttc(T('>'), fp);
@@ -175,13 +235,15 @@ static void endElementNS(void *userData, const XML_Char *name)
   puttc(T('/'), fp);
   sep = tcsrchr(name, NSSEP);
   if (sep) {
-    fputts(T("ns0:"), fp);
+    fputts(T("n1:"), fp);
     fputts(sep + 1, fp);
   }
   else
     fputts(name, fp);
   puttc(T('>'), fp);
 }
+
+#ifndef W3C14N
 
 static void processingInstruction(void *userData, const XML_Char *target, const XML_Char *data)
 {
@@ -194,6 +256,8 @@ static void processingInstruction(void *userData, const XML_Char *target, const 
   puttc(T('?'), fp);
   puttc(T('>'), fp);
 }
+
+#endif /* not W3C14N */
 
 static void defaultCharacterData(XML_Parser parser, const XML_Char *s, int len)
 {
@@ -641,7 +705,9 @@ int tmain(int argc, XML_Char **argv)
 	else
 	  XML_SetElementHandler(parser, startElement, endElement);
 	XML_SetCharacterDataHandler(parser, characterData);
+#ifndef W3C14N
 	XML_SetProcessingInstructionHandler(parser, processingInstruction);
+#endif /* not W3C14N */
 	break;
       }
     }
