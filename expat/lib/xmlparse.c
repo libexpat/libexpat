@@ -102,11 +102,35 @@ typedef struct {
 
 typedef struct {
   NAMED **v;
+  unsigned char power;
   size_t size;
   size_t used;
-  size_t usedLim;
   const XML_Memory_Handling_Suite *mem;
 } HASH_TABLE;
+
+/* Basic character hash algorithm, taken from Python's string hash:
+   h = h * 1000003(prime number) ^ character.
+*/
+#ifdef XML_UNICODE
+#define CHAR_HASH(h, c) \
+  (((h) * 0xF4243) ^ (unsigned short)(c))
+#else
+#define CHAR_HASH(h, c) \
+  (((h) * 0xF4243) ^ (unsigned char)(c))
+#endif
+
+/* For probing (after a collision) we need a step size relative prime 
+   to the hash table size, which is a power of 2. We use double-hashing,
+   since we can calculate a second hash value cheaply by taking those bits
+   of the first hash value that were discarded (masked out) when the table
+   index was calculated: index = hash & mask, where mask = table->size - 1.
+   We limit the maximum step size to table->size / 4 (mask >> 2) and make
+   it odd, since odd numbers are always relative prime to a power of 2.
+*/
+#define SECOND_HASH(hash, mask, power) \
+  ((((hash) & ~(mask)) >> ((power) - 1)) & ((mask) >> 2))
+#define PROBE_STEP(hash, mask, power) \
+  ((unsigned char)((SECOND_HASH(hash, mask, power)) | 1))
 
 typedef struct {
   NAMED **p;
@@ -116,6 +140,7 @@ typedef struct {
 #define INIT_TAG_BUF_SIZE 32  /* must be a multiple of sizeof(XML_Char) */
 #define INIT_DATA_BUF_SIZE 1024
 #define INIT_ATTS_SIZE 16
+#define INIT_ATTS_VERSION 0xFFFFFFFF
 #define INIT_BLOCK_SIZE 1024
 #define INIT_BUFFER_SIZE 1024
 
@@ -224,6 +249,7 @@ typedef struct {
 } DEFAULT_ATTRIBUTE;
 
 typedef struct {
+  unsigned long version;
   unsigned long hash;
   const XML_Char *uriName;
 } NS_ATT;
@@ -505,12 +531,13 @@ struct XML_ParserStruct {
   int m_idAttIndex;
   ATTRIBUTE *m_atts;
   NS_ATT *m_nsAtts;
-  int m_nsAttsSize;
+  unsigned long m_nsAttsVersion;
+  unsigned char m_nsAttsPower;
   POSITION m_position;
   STRING_POOL m_tempPool;
   STRING_POOL m_temp2Pool;
   char *m_groupConnector;
-  unsigned m_groupSize;
+  unsigned int m_groupSize;
   XML_Char m_namespaceSeparator;
   XML_Parser m_parentParser;
 #ifdef XML_DTD
@@ -609,7 +636,8 @@ struct XML_ParserStruct {
 #define nSpecifiedAtts (parser->m_nSpecifiedAtts)
 #define idAttIndex (parser->m_idAttIndex)
 #define nsAtts (parser->m_nsAtts)
-#define nsAttsSize (parser->m_nsAttsSize)
+#define nsAttsVersion (parser->m_nsAttsVersion)
+#define nsAttsPower (parser->m_nsAttsPower)
 #define tempPool (parser->m_tempPool)
 #define temp2Pool (parser->m_temp2Pool)
 #define groupConnector (parser->m_groupConnector)
@@ -757,7 +785,8 @@ parserCreate(const XML_Char *encodingName,
   ns_triplets = XML_FALSE;
 
   nsAtts = NULL;
-  nsAttsSize = 0;
+  nsAttsVersion = 0;
+  nsAttsPower = 0;
 
   poolInit(&tempPool, &(parser->m_mem));
   poolInit(&temp2Pool, &(parser->m_mem));
@@ -2419,7 +2448,10 @@ storeAtts(XML_Parser parser, const ENCODING *enc,
                                          + XmlNameLength(enc, atts[i].name));
     if (!attId)
       return XML_ERROR_NO_MEMORY;
-    /* detect duplicate attributes by their QNames */
+    /* Detect duplicate attributes by their QNames. This does not work when
+       namespace processing is turned on and different prefixes for the same
+       namespace are used. For this case we have a check further down.
+    */
     if ((attId->name)[-1]) {
       if (enc == encoding)
         eventPtr = atts[i].name;
@@ -2519,64 +2551,87 @@ storeAtts(XML_Parser parser, const ENCODING *enc,
   }
   appAtts[attIndex] = 0;
 
-  /* expand prefixed attribute names and
-     clear flags that say whether attributes were specified */
+  /* expand prefixed attribute names, check for duplicates,
+     and clear flags that say whether attributes were specified */
   i = 0;
   if (nPrefixes) {
-    int j;
-    if ((nPrefixes * 2) > nsAttsSize) {
-      NS_ATT *temp = (NS_ATT *)REALLOC(nsAtts, nPrefixes * 2 * sizeof(NS_ATT));
+    int j;  /* hash table index */
+    unsigned long version = nsAttsVersion;
+    int nsAttsSize = (int)1 << nsAttsPower;
+    /* size of hash table must be at least 2 * (# of prefixed attributes) */
+    if ((nPrefixes << 1) >> nsAttsPower) {  /* true for nsAttsPower = 0 */
+      NS_ATT *temp;
+      /* hash table size must also be a power of 2 and >= 8 */
+      while (nPrefixes >> nsAttsPower++);
+      if (nsAttsPower < 3)
+        nsAttsPower = 3;
+      nsAttsSize = (int)1 << nsAttsPower;
+      temp = (NS_ATT *)REALLOC(nsAtts, nsAttsSize * sizeof(NS_ATT));
       if (!temp)
         return XML_ERROR_NO_MEMORY;
       nsAtts = temp;
-      nsAttsSize = nPrefixes * 2;
+      version = 0;  /* force re-initialization of nsAtts hash table */
     }
-    /* clear nsAtts hash table */
-    for (j = 0; j < nsAttsSize; j++)
-      nsAtts[j].uriName = NULL;
+    /* using a version flag saves us from initializing nsAtts every time */
+    if (!version) {  /* initialize version flags when version wraps around */
+      version = INIT_ATTS_VERSION;
+      for (j = nsAttsSize; j != 0; )
+        nsAtts[--j].version = version;
+    }
+    nsAttsVersion = --version;
 
+    /* expand prefixed names and check for duplicates */
     for (; i < attIndex; i += 2) {
       const XML_Char *s = appAtts[i];
-      if (s[-1] == 2) {
+      if (s[-1] == 2) {  /* prefixed */
         ATTRIBUTE_ID *id;
         const BINDING *b;
         unsigned long uriHash = 0;
-        ((XML_Char *)s)[-1] = 0;
+        ((XML_Char *)s)[-1] = 0;  /* clear flag */
         id = (ATTRIBUTE_ID *)lookup(&dtd->attributeIds, s, 0);
         b = id->prefix->binding;
         if (!b) 
           return XML_ERROR_UNBOUND_PREFIX;
 
-        /* b->uri includes namespace separator */
+        /* as we expand the name we also calculate its hash value */
         for (j = 0; j < b->uriLen; j++) {
           const XML_Char c = b->uri[j];
           if (!poolAppendChar(&tempPool, c))
             return XML_ERROR_NO_MEMORY;
-          uriHash = (uriHash << 5) + uriHash + (unsigned char)c;
+          uriHash = CHAR_HASH(uriHash, c);
         }
         while (*s++ != XML_T(':'))
           ;
-        do {
+        do {  /* copies null terminator */
           const XML_Char c = *s;
           if (!poolAppendChar(&tempPool, *s))
             return XML_ERROR_NO_MEMORY;
-          uriHash = (uriHash << 5) + uriHash + (unsigned char)c;
+          uriHash = CHAR_HASH(uriHash, c);
         } while (*s++);
 
-        /* detect duplicate attributes based on uriName = uri + local name */
-        for (j = uriHash & (nsAttsSize - 1);
-             nsAtts[j].uriName; 
-             j == 0 ? j = nsAttsSize - 1 : --j) {
-          if (uriHash == nsAtts[j].hash) {
-            const XML_Char *s1 = poolStart(&tempPool); /* null-terminated */
-            const XML_Char *s2 = nsAtts[j].uriName;
-            for (; *s1 == *s2 && *s1 != 0; s1++, s2++);
-            if (*s1 == 0)
-              return XML_ERROR_DUPLICATE_ATTRIBUTE;
+        { /* Check hash table for duplicate of expanded name (uriName).
+             Derived from code in lookup(HASH_TABLE *table, ...).
+          */
+          unsigned char step = 0;
+          unsigned long mask = nsAttsSize - 1;
+          j = uriHash & mask;  /* index into hash table */
+          while (nsAtts[j].version == version) { 
+            /* for speed we compare stored hash values first */
+            if (uriHash == nsAtts[j].hash) {  
+              const XML_Char *s1 = poolStart(&tempPool);
+              const XML_Char *s2 = nsAtts[j].uriName;
+              /* s1 is null terminated, but not s2 */
+              for (; *s1 == *s2 && *s1 != 0; s1++, s2++);
+              if (*s1 == 0)
+                return XML_ERROR_DUPLICATE_ATTRIBUTE;
+            }
+            if (!step)
+              step = PROBE_STEP(uriHash, mask, nsAttsPower);
+            j < step ? ( j += nsAttsSize - step) : (j -= step);
           }
         }
 
-        if (ns_triplets) {
+        if (ns_triplets) {  /* append namespace separator and prefix */
           tempPool.ptr[-1] = namespaceSeparator;
           s = b->prefix->name;
           do {
@@ -2585,19 +2640,21 @@ storeAtts(XML_Parser parser, const ENCODING *enc,
           } while (*s++);
         }
 
+        /* store expanded name in attribute list */
         s = poolStart(&tempPool);
-        appAtts[i] = s;
         poolFinish(&tempPool);
+        appAtts[i] = s;
 
-        /* fill empty slot with new attribute */
+        /* fill empty slot with new version, uriName and hash value */
+        nsAtts[j].version = version;
         nsAtts[j].hash = uriHash;
         nsAtts[j].uriName = s;
         
         if (!--nPrefixes)
           break;
       }
-      else
-        ((XML_Char *)s)[-1] = 0;
+      else  /* not prefixed */
+        ((XML_Char *)s)[-1] = 0;  /* clear flag */
     }
   }
   /* clear flags for the remaining attributes */
@@ -5312,7 +5369,7 @@ copyEntityTable(HASH_TABLE *newTable,
   return 1;
 }
 
-#define INIT_SIZE 64
+#define INIT_POWER 6
 
 static XML_Bool FASTCALL
 keyeq(KEY s1, KEY s2)
@@ -5328,7 +5385,7 @@ hash(KEY s)
 {
   unsigned long h = 0;
   while (*s)
-    h = (h << 5) + h + (unsigned char)*s++;
+    h = CHAR_HASH(h, *s++);
   return h;
 }
 
@@ -5338,31 +5395,38 @@ lookup(HASH_TABLE *table, KEY name, size_t createSize)
   size_t i;
   if (table->size == 0) {
     size_t tsize;
-
     if (!createSize)
       return NULL;
-    tsize = INIT_SIZE * sizeof(NAMED *);
+    table->power = INIT_POWER;
+    /* table->size is a power of 2 */
+    table->size = (size_t)1 << INIT_POWER;
+    tsize = table->size * sizeof(NAMED *);
     table->v = (NAMED **)table->mem->malloc_fcn(tsize);
     if (!table->v)
       return NULL;
     memset(table->v, 0, tsize);
-    table->size = INIT_SIZE;
-    table->usedLim = INIT_SIZE / 2;
-    i = hash(name) & (table->size - 1);
+    i = hash(name) & ((unsigned long)table->size - 1);
   }
   else {
     unsigned long h = hash(name);
-    for (i = h & (table->size - 1);
-         table->v[i];
-         i == 0 ? i = table->size - 1 : --i) {
+    unsigned long mask = (unsigned long)table->size - 1;
+    unsigned char step = 0;
+    i = h & mask;
+    while (table->v[i]) {
       if (keyeq(name, table->v[i]->name))
         return table->v[i];
+      if (!step)
+        step = PROBE_STEP(h, mask, table->power);
+      i < step ? (i += table->size - step) : (i -= step);
     }
     if (!createSize)
       return NULL;
-    if (table->used == table->usedLim) {
-      /* check for overflow */
-      size_t newSize = table->size * 2;
+
+    /* check for overflow (table is half full) */
+    if (table->used >> (table->power - 1)) {
+      unsigned char newPower = table->power + 1; 
+      size_t newSize = (size_t)1 << newPower;
+      unsigned long newMask = (unsigned long)newSize - 1;
       size_t tsize = newSize * sizeof(NAMED *);
       NAMED **newV = (NAMED **)table->mem->malloc_fcn(tsize);
       if (!newV)
@@ -5370,21 +5434,27 @@ lookup(HASH_TABLE *table, KEY name, size_t createSize)
       memset(newV, 0, tsize);
       for (i = 0; i < table->size; i++)
         if (table->v[i]) {
-          size_t j;
-          for (j = hash(table->v[i]->name) & (newSize - 1);
-               newV[j];
-               j == 0 ? j = newSize - 1 : --j)
-            ;
+          unsigned long newHash = hash(table->v[i]->name);
+          size_t j = newHash & newMask;
+          step = 0;
+          while (newV[j]) {
+            if (!step)
+              step = PROBE_STEP(newHash, newMask, newPower);
+            j < step ? (j += newSize - step) : (j -= step);
+          }
           newV[j] = table->v[i];
         }
       table->mem->free_fcn(table->v);
       table->v = newV;
+      table->power = newPower;
       table->size = newSize;
-      table->usedLim = newSize/2;
-      for (i = h & (table->size - 1);
-           table->v[i];
-           i == 0 ? i = table->size - 1 : --i)
-        ;
+      i = h & newMask;
+      step = 0;
+      while (table->v[i]) {
+        if (!step)
+          step = PROBE_STEP(h, newMask, newPower);
+        i < step ? (i += newSize - step) : (i -= step);
+      }
     }
   }
   table->v[i] = (NAMED *)table->mem->malloc_fcn(createSize);
@@ -5404,7 +5474,6 @@ hashTableClear(HASH_TABLE *table)
     table->mem->free_fcn(table->v[i]);
     table->v[i] = NULL;
   }
-  table->usedLim = table->size / 2;
   table->used = 0;
 }
 
@@ -5420,8 +5489,8 @@ hashTableDestroy(HASH_TABLE *table)
 static void FASTCALL
 hashTableInit(HASH_TABLE *p, const XML_Memory_Handling_Suite *ms)
 {
+  p->power = 0;
   p->size = 0;
-  p->usedLim = 0;
   p->used = 0;
   p->v = NULL;
   p->mem = ms;
@@ -5752,4 +5821,5 @@ getElementType(XML_Parser parser,
   }
   return ret;
 }
+
 
