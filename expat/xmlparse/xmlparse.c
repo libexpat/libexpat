@@ -6,11 +6,20 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define INIT_TAG_STACK_SIZE 128
+#define INIT_TAG_BUF_SIZE 32
 #define INIT_DATA_BUF_SIZE 1024
 #define INIT_ATTS_SIZE 16
 #define INIT_BLOCK_SIZE 1024
 #define INIT_BUFFER_SIZE 1024
+
+typedef struct tag {
+  struct tag *parent;
+  const char *rawName;
+  size_t rawNameLength;
+  const char *name;
+  char *buf;
+  char *bufEnd;
+} TAG;
 
 typedef struct {
   const char *name;
@@ -105,9 +114,6 @@ storeEntityValue(XML_Parser parser, const char *start, const char *end);
 static int
 reportProcessingInstruction(XML_Parser parser, const ENCODING *enc, const char *start, const char *end);
 
-static
-const char *pushTag(XML_Parser parser, const ENCODING *enc, const char *rawName);
-
 static int dtdInit(DTD *);
 static void dtdDestroy(DTD *);
 static void poolInit(STRING_POOL *);
@@ -159,9 +165,8 @@ typedef struct {
   ATTRIBUTE_ID *declAttributeId;
   char declAttributeIsCdata;
   DTD dtd;
-  char *tagStack;
-  char *tagStackPtr;
-  const char *tagStackEnd;
+  TAG *tagStack;
+  TAG *freeTagList;
   int attsSize;
   ATTRIBUTE *atts;
   POSITION position;
@@ -198,8 +203,7 @@ typedef struct {
 #define declElementType (((Parser *)parser)->declElementType)
 #define declAttributeId (((Parser *)parser)->declAttributeId)
 #define declAttributeIsCdata (((Parser *)parser)->declAttributeIsCdata)
-#define tagStackEnd (((Parser *)parser)->tagStackEnd)
-#define tagStackPtr (((Parser *)parser)->tagStackPtr)
+#define freeTagList (((Parser *)parser)->freeTagList)
 #define tagStack (((Parser *)parser)->tagStack)
 #define atts (((Parser *)parser)->atts)
 #define attsSize (((Parser *)parser)->attsSize)
@@ -234,8 +238,8 @@ XML_Parser XML_ParserCreate(const char *encodingName)
   errorByteIndex = 0;
   errorPtr = 0;
   tagLevel = 0;
-  tagStack = malloc(INIT_TAG_STACK_SIZE);
-  tagStackPtr = tagStack;
+  tagStack = 0;
+  freeTagList = 0;
   attsSize = INIT_ATTS_SIZE;
   atts = malloc(attsSize * sizeof(ATTRIBUTE));
   dataBuf = malloc(INIT_DATA_BUF_SIZE);
@@ -243,22 +247,32 @@ XML_Parser XML_ParserCreate(const char *encodingName)
   groupConnector = 0;
   poolInit(&tempPool);
   poolInit(&temp2Pool);
-  if (!dtdInit(&dtd) || !atts || !tagStack || !dataBuf) {
+  if (!dtdInit(&dtd) || !atts || !dataBuf) {
     XML_ParserFree(parser);
     return 0;
   }
-  tagStackEnd = tagStack + INIT_TAG_STACK_SIZE;
   dataBufEnd = dataBuf + INIT_DATA_BUF_SIZE;
-  *tagStackPtr++ = '\0';
   return parser;
 }
 
 void XML_ParserFree(XML_Parser parser)
 {
+  for (;;) {
+    TAG *p;
+    if (tagStack == 0) {
+      if (freeTagList == 0)
+	break;
+      tagStack = freeTagList;
+      freeTagList = 0;
+    }
+    p = tagStack;
+    tagStack = tagStack->parent;
+    free(p->buf);
+    free(p);
+  }
   poolDestroy(&tempPool);
   poolDestroy(&temp2Pool);
   dtdDestroy(&dtd);
-  free((void *)tagStack);
   free((void *)atts);
   free(groupConnector);
   free(buffer);
@@ -554,38 +568,75 @@ doContent(XML_Parser parser,
 	break;
       }
     case XML_TOK_START_TAG_WITH_ATTS:
-      {
-	const char *name;
-	name = pushTag(parser, enc, s + enc->minBytesPerChar);
-	if (!name)
-	  return XML_ERROR_NO_MEMORY;
-	++tagLevel;
-	if (startElementHandler) {
-	  enum XML_Error result = storeAtts(parser, enc, name, s);
-	  if (result)
-	    return result;
-	  startElementHandler(userData, name, (const char **)atts);
-	  poolClear(&tempPool);
-	}
-	else {
-	  enum XML_Error result = storeAtts(parser, enc, 0, s);
-	  if (result)
-	    return result;
-	}
-	break;
+      if (!startElementHandler) {
+	enum XML_Error result = storeAtts(parser, enc, 0, s);
+	if (result)
+	  return result;
       }
+      /* fall through */
     case XML_TOK_START_TAG_NO_ATTS:
       {
-	const char *name = pushTag(parser, enc, s + enc->minBytesPerChar);
+	TAG *tag;
+	if (freeTagList) {
+	  tag = freeTagList;
+	  freeTagList = freeTagList->parent;
+	}
+	else {
+	  tag = malloc(sizeof(TAG));
+	  if (!tag)
+	    return XML_ERROR_NO_MEMORY;
+	  tag->buf = malloc(INIT_TAG_BUF_SIZE);
+	  if (!tag->buf)
+	    return XML_ERROR_NO_MEMORY;
+	  tag->bufEnd = tag->buf + INIT_TAG_BUF_SIZE;
+	}
+	tag->parent = tagStack;
+	tagStack = tag;
+	tag->rawName = s + enc->minBytesPerChar;
+	tag->rawNameLength = XmlNameLength(enc, tag->rawName);
+	if (nextPtr) {
+	  if (tag->rawNameLength > tag->bufEnd - tag->buf) {
+	    size_t bufSize = tag->rawNameLength * 4;
+	    tag->buf = realloc(tag->buf, bufSize);
+	    if (!tag->buf)
+	      return XML_ERROR_NO_MEMORY;
+	    tag->bufEnd = tag->buf + bufSize;
+	  }
+	  memcpy(tag->buf, tag->rawName, tag->rawNameLength);
+	  tag->rawName = tag->buf;
+	}
 	++tagLevel;
-	if (!name)
-	  return XML_ERROR_NO_MEMORY;
 	if (startElementHandler) {
-	  enum XML_Error result = storeAtts(parser, enc, name, s);
+	  enum XML_Error result;
+	  char *toPtr;
+	  const char *rawNameEnd = tag->rawName + tag->rawNameLength;
+	  for (;;) {
+	    const char *fromPtr = tag->rawName;
+	    int bufSize;
+	    toPtr = tag->buf;
+	    if (nextPtr)
+	      toPtr += tag->rawNameLength;
+	    tag->name = toPtr;
+	    XmlConvert(enc, XML_UTF8_ENCODING,
+		       &fromPtr, rawNameEnd,
+	               &toPtr, tag->bufEnd - 1);
+	    if (fromPtr == rawNameEnd)
+	      break;
+	    bufSize = (tag->bufEnd - tag->buf) << 1;
+	    tag->buf = realloc(tag->buf, bufSize);
+	    if (!tag->buf)
+	      return XML_ERROR_NO_MEMORY;
+	    tag->bufEnd = tag->buf + bufSize;
+	  }
+	  *toPtr = 0;
+	  result = storeAtts(parser, enc, tag->name, s);
 	  if (result)
 	    return result;
-	  startElementHandler(userData, name, (const char **)atts);
+	  startElementHandler(userData, tag->name, (const char **)atts);
+	  poolClear(&tempPool);
 	}
+	else
+	  tag->name = 0;
 	break;
       }
     case XML_TOK_EMPTY_ELEMENT_WITH_ATTS:
@@ -623,29 +674,32 @@ doContent(XML_Parser parser,
         return XML_ERROR_ASYNC_ENTITY;
       }
       else {
-	const char *rawNameStart = s + enc->minBytesPerChar * 2;
-	const char *nameEnd;
-	const char *name = poolStoreString(&tempPool, enc, rawNameStart,
-					   rawNameStart
-					   + XmlNameLength(enc, rawNameStart));
-	if (!name)
-	  return XML_ERROR_NO_MEMORY;
-	nameEnd = poolEnd(&tempPool);
-	for (;;) {
-	  --nameEnd;
-	  --tagStackPtr;
-	  if (nameEnd == name) {
-	    if (tagStackPtr[-1] == '\0')
-	      break;
-	    return XML_ERROR_TAG_MISMATCH;
-	  }
-	  if (*nameEnd != *tagStackPtr)
-	    return XML_ERROR_TAG_MISMATCH;
+	size_t len;
+	const char *rawName;
+	TAG *tag = tagStack;
+	tagStack = tag->parent;
+	tag->parent = freeTagList;
+	freeTagList = tag;
+	rawName = s + enc->minBytesPerChar*2;
+	len = XmlNameLength(enc, rawName);
+	if (len != tag->rawNameLength
+	    || memcmp(tag->rawName, rawName, len) != 0) {
+	  errorPtr = rawName;
+	  return XML_ERROR_TAG_MISMATCH;
 	}
 	--tagLevel;
-	if (endElementHandler)
-	  endElementHandler(userData, name);
-	poolDiscard(&tempPool);
+	if (endElementHandler) {
+	  if (tag->name)
+	    endElementHandler(userData, tag->name);
+	  else {
+	    const char *name = poolStoreString(&tempPool, enc, rawName,
+	                                       rawName + len);
+	    if (!name)
+	    return XML_ERROR_NO_MEMORY;
+	    endElementHandler(userData, name);
+	    poolClear(&tempPool);
+	  }
+	}
 	if (tagLevel == 0)
 	  return epilogProcessor(parser, next, end, nextPtr);
       }
@@ -700,32 +754,6 @@ doContent(XML_Parser parser,
     s = next;
   }
   /* not reached */
-}
-
-static
-const char *pushTag(XML_Parser parser, const ENCODING *enc, const char *rawName)
-{
-  const char *name = tagStackPtr;
-  const char *rawNameEnd = rawName + XmlNameLength(enc, rawName);
-  for (;;) {
-    char *newStack;
-    size_t newSize;
-    XmlConvert(enc, XML_UTF8_ENCODING,
-	       &rawName, rawNameEnd,
-	       &tagStackPtr, tagStackEnd - 1);
-    if (rawName == rawNameEnd)
-      break;
-    newSize = (tagStackEnd - tagStack) >> 1;
-    newStack = realloc(tagStack, newSize);
-    if (!newStack)
-      return 0;
-    tagStackEnd = newStack + newSize;
-    tagStackPtr = newStack + (tagStackPtr - tagStack);
-    name = newStack + (name - tagStack);
-    tagStack = newStack;
-  }
-  *tagStackPtr++ = '\0';
-  return name;
 }
 
 /* If tagName is non-null, build a real list of attributes,
@@ -1036,14 +1064,14 @@ prologProcessor(XML_Parser parser,
       break;
     case XML_ROLE_GROUP_SEQUENCE:
       if (groupConnector[prologState.level] == '|') {
-	*nextPtr = s;
+	errorPtr = s;
 	return XML_ERROR_SYNTAX;
       }
       groupConnector[prologState.level] = ',';
       break;
     case XML_ROLE_GROUP_CHOICE:
       if (groupConnector[prologState.level] == ',') {
-	*nextPtr = s;
+	errorPtr = s;
 	return XML_ERROR_SYNTAX;
       }
       groupConnector[prologState.level] = '|';
