@@ -1,13 +1,19 @@
-all: setup expat expatw elements outline xmlwf
+all: setup expat expatw expat_static expatw_static elements outline xmlwf
 
 setup:
  setup
 
 expat:
- make -l -flibexpat.mak
+ make -l -fexpat.mak
 
 expatw:
- make -l -flibexpatw.mak
+ make -l -fexpatw.mak
+
+expat_static:
+ make -l -fexpat_static.mak
+
+expatw_static:
+ make -l -fexpatw_static.mak
 
 elements:
  make -l -felements.mak
@@ -20,12 +26,12 @@ xmlwf:
 
 clean:
 # works on Win98/ME
-# deltree /y debug\obj
+ deltree /y release\obj
 # works on WinNT/2000
- del /s/f/q debug\obj
+# del /s/f/q release\obj
 
 distclean:
 # works on Win98/ME
-# deltree /y debug\*.*
+ deltree /y release\*.*
 # works on WinNT/2000
- del /s/f/q debug\*
+# del /s/f/q release\*

@@ -13,12 +13,12 @@ BCB = $(MAKEDIR)\..
 
 VERSION = BCB.05.03
 # ---------------------------------------------------------------------------
-PROJECT = debug\elements.exe
-OBJFILES = debug\obj\elements.obj
+PROJECT = Release\elements.exe
+OBJFILES = Release\obj\examples\elements.obj
 RESFILES = 
 MAINSOURCE = elements.bpf
 RESDEPEN = $(RESFILES)
-LIBFILES = 
+LIBFILES = Release\libexpats_mtd.lib
 IDLFILES = 
 IDLGENFILES = 
 LIBRARIES = 
@@ -35,22 +35,22 @@ PATHPAS = .;
 PATHRC = .;
 DEBUGLIBPATH = $(BCB)\lib\debug
 RELEASELIBPATH = $(BCB)\lib\release
-USERDEFINES = WIN32;NDEBUG;_CONSOLE;_MBCS;_DEBUG
-SYSDEFINES = _MSC_VER=1100;_NO_VCL;_ASSERTE;NO_STRICT;_RTLDLL
-INCLUDEPATH = $(BCB)\include;..\examples;..\lib
-LIBPATH = $(BCB)\lib;..\examples;debug
+USERDEFINES = WIN32;NDEBUG;_CONSOLE;XML_STATIC
+SYSDEFINES = _NO_VCL;_ASSERTE;NO_STRICT;_RTLDLL
+INCLUDEPATH = ..\examples;$(BCB)\include
+LIBPATH = ..\examples;$(BCB)\lib;$(RELEASELIBPATH)
 WARNINGS= -w-par -w-8027 -w-8026
 # ---------------------------------------------------------------------------
-CFLAG1 = -Od -X- -r- -a8 -5 -b -k -y -v -vi- -q -I..\lib -c
+CFLAG1 = -O2 -X- -a8 -b -k- -vi -q -I..\lib -c
 IDLCFLAGS = -I$(BCB)\include
-PFLAGS = -N2debug\obj -N0debug\obj -$YD -$W -$O-
-RFLAGS = /l 0x409 /d "NDEBUG" /i$(BCB)\include;$(BCB)\include\mfc
-AFLAGS = /mx /w2 /zi
-LFLAGS = -Idebug\obj -D"" -ap -Tpe -x -Gn -v -q
+PFLAGS = -N2Release\obj\examples -N0Release\obj\examples -$Y- -$L- -$D-
+RFLAGS = /l 0x409 /d "NDEBUG" /i$(BCB)\include
+AFLAGS = /mx /w2 /zn
+LFLAGS = -IRelease\obj\examples -D"" -ap -Tpe -x -Gn -q -L..\LIB\RELEASE_STATIC
 # ---------------------------------------------------------------------------
 ALLOBJ = c0x32.obj $(OBJFILES)
 ALLRES = $(RESFILES)
-ALLLIB = $(LIBFILES) $(LIBRARIES) libexpat.lib import32.lib cw32i.lib
+ALLLIB = $(LIBFILES) $(LIBRARIES) import32.lib cw32mti.lib
 # ---------------------------------------------------------------------------
 !ifdef IDEOPTIONS
 

@@ -13,13 +13,13 @@ BCB = $(MAKEDIR)\..
 
 VERSION = BCB.05.03
 # ---------------------------------------------------------------------------
-PROJECT = debug\xmlwf.exe
-OBJFILES = debug\obj\xmlfile.obj debug\obj\win32filemap.obj debug\obj\codepage.obj \
-    debug\obj\xmlwf.obj
+PROJECT = Release\xmlwf.exe
+OBJFILES = Release\obj\xmlwf\codepage.obj Release\obj\xmlwf\win32filemap.obj \
+    Release\obj\xmlwf\xmlfile.obj Release\obj\xmlwf\xmlwf.obj
 RESFILES = 
 MAINSOURCE = xmlwf.bpf
 RESDEPEN = $(RESFILES)
-LIBFILES = 
+LIBFILES = Release\libexpat_mtd.lib
 IDLFILES = 
 IDLGENFILES = 
 LIBRARIES = 
@@ -38,20 +38,20 @@ DEBUGLIBPATH = $(BCB)\lib\debug
 RELEASELIBPATH = $(BCB)\lib\release
 USERDEFINES = NDEBUG;WIN32;_CONSOLE;COMPILED_FROM_DSP
 SYSDEFINES = _NO_VCL;_ASSERTE;NO_STRICT;_RTLDLL
-INCLUDEPATH = $(BCB)\include;..\xmlwf;..\lib
-LIBPATH = $(BCB)\lib;..\xmlwf;debug
-WARNINGS= -w-8065 -w-par -w-8027 -w-8026 -w-csu
+INCLUDEPATH = ..\xmlwf;$(BCB)\include
+LIBPATH = ..\xmlwf;$(BCB)\lib;$(RELEASELIBPATH)
+WARNINGS= -w-8065 -w-par -w-8027 -w-8026
 # ---------------------------------------------------------------------------
-CFLAG1 = -O2 -X- -a8 -5 -b -k -vi -q -I..\lib -c
+CFLAG1 = -O2 -X- -a8 -b -k- -vi -q -tWM -I..\lib -c
 IDLCFLAGS = -I$(BCB)\include
-PFLAGS = -N2debug\obj -N0debug\obj -$YD
-RFLAGS = /l 0x809 /d "NDEBUG" /i$(BCB)\include;$(BCB)\include\mfc
-AFLAGS = /mx /w2 /zd
-LFLAGS = -Idebug\obj -D"" -ap -Tpe -x -Gn -v -q
+PFLAGS = -N2Release\obj\xmlwf -N0Release\obj\xmlwf -$Y- -$L- -$D-
+RFLAGS = /l 0x409 /d "NDEBUG" /i$(BCB)\include
+AFLAGS = /mx /w2 /zn
+LFLAGS = -IRelease\obj\xmlwf -D"" -ap -Tpe -x -Gn -q
 # ---------------------------------------------------------------------------
 ALLOBJ = c0x32.obj $(OBJFILES)
 ALLRES = $(RESFILES)
-ALLLIB = $(LIBFILES) $(LIBRARIES) libexpat.lib import32.lib cw32i.lib
+ALLLIB = $(LIBFILES) $(LIBRARIES) import32.lib cw32mti.lib
 # ---------------------------------------------------------------------------
 !ifdef IDEOPTIONS
 

@@ -3,14 +3,14 @@
 <PROJECT>
   <MACROS>
     <VERSION value="BCB.05.03"/>
-    <PROJECT value="debug\elements.exe"/>
-    <OBJFILES value="debug\obj\elements.obj"/>
+    <PROJECT value="Release\elements.exe"/>
+    <OBJFILES value="Release\obj\examples\elements.obj"/>
     <RESFILES value=""/>
     <IDLFILES value=""/>
     <IDLGENFILES value=""/>
     <DEFFILE value=""/>
     <RESDEPEN value="$(RESFILES)"/>
-    <LIBFILES value=""/>
+    <LIBFILES value="Release\libexpats_mtd.lib"/>
     <LIBRARIES value=""/>
     <SPARELIBS value=""/>
     <PACKAGES value="VCL50.bpi VCLX50.bpi bcbsmp50.bpi QRPT50.bpi VCLDB50.bpi VCLBDE50.bpi 
@@ -24,25 +24,25 @@
     <DEBUGLIBPATH value="$(BCB)\lib\debug"/>
     <RELEASELIBPATH value="$(BCB)\lib\release"/>
     <LINKER value="ilink32"/>
-    <USERDEFINES value="WIN32;NDEBUG;_CONSOLE;_MBCS;_DEBUG"/>
-    <SYSDEFINES value="_MSC_VER=1100;_NO_VCL;_ASSERTE;NO_STRICT;_RTLDLL"/>
+    <USERDEFINES value="WIN32;NDEBUG;_CONSOLE;XML_STATIC"/>
+    <SYSDEFINES value="_NO_VCL;_ASSERTE;NO_STRICT;_RTLDLL"/>
     <MAINSOURCE value="elements.bpf"/>
-    <INCLUDEPATH value="$(BCB)\include;..\examples;..\lib"/>
-    <LIBPATH value="$(BCB)\lib;..\examples;debug"/>
+    <INCLUDEPATH value="..\examples;$(BCB)\include"/>
+    <LIBPATH value="..\examples;$(BCB)\lib;$(RELEASELIBPATH)"/>
     <WARNINGS value="-w-par -w-8027 -w-8026"/>
   </MACROS>
   <OPTIONS>
     <IDLCFLAGS value="-I$(BCB)\include"/>
-    <CFLAG1 value="-Od -X- -r- -a8 -5 -b -k -y -v -vi- -q -I..\lib -c"/>
-    <PFLAGS value="-N2debug\obj -N0debug\obj -$YD -$W -$O-"/>
-    <RFLAGS value="/l 0x409 /d &quot;NDEBUG&quot; /i$(BCB)\include;$(BCB)\include\mfc"/>
-    <AFLAGS value="/mx /w2 /zi"/>
-    <LFLAGS value="-Idebug\obj -D&quot;&quot; -ap -Tpe -x -Gn -v -q -L..\LIB\RELEASE"/>
+    <CFLAG1 value="-O2 -X- -a8 -b -k- -vi -q -tWM -I..\lib -c"/>
+    <PFLAGS value="-N2Release\obj\examples -N0Release\obj\examples -$Y- -$L- -$D-"/>
+    <RFLAGS value="/l 0x409 /d &quot;NDEBUG&quot; /i$(BCB)\include"/>
+    <AFLAGS value="/mx /w2 /zn"/>
+    <LFLAGS value="-IRelease\obj\examples -D&quot;&quot; -ap -Tpe -x -Gn -q -L..\LIB\RELEASE_STATIC"/>
   </OPTIONS>
   <LINKER>
     <ALLOBJ value="c0x32.obj $(OBJFILES)"/>
     <ALLRES value="$(RESFILES)"/>
-    <ALLLIB value="$(LIBFILES) $(LIBRARIES) libexpat.lib import32.lib cw32i.lib"/>
+    <ALLLIB value="$(LIBFILES) $(LIBRARIES) import32.lib cw32mti.lib"/>
   </LINKER>
   <IDEOPTIONS>
 [Version Info]
@@ -73,51 +73,58 @@ ProductVersion=1.0.0.0
 Comments=
 
 [HistoryLists\hlIncludePath]
-Count=7
-Item0=$(BCB)\include;..\Source\examples;..\Source\lib
-Item1=..\Source\examples;..\examples;$(BCB)\include;..\lib
-Item2=..\examples;$(BCB)\include;..\lib
-Item3=..\..\..\examples;$(BCB)\include;..\..\..\lib
-Item4=..\..\..\examples;$(BCB)\include
-Item5=$(BCB)\include
-Item6=$(BCB)\include;$(BCB)\include\mfc;$(BCB)\include\atl;
+Count=4
+Item0=..\examples;$(BCB)\include
+Item1=$(BCB)\include
+Item2=$(BCB)\include;$(BCB)\include\mfc;$(BCB)\include\atl
+Item3=$(BCB)\include;$(BCB)\include\mfc;$(BCB)\include\atl;
 
 [HistoryLists\hlLibraryPath]
-Count=9
-Item0=$(BCB)\lib;..\Source\examples;debug
-Item1=..\Source\examples;$(BCB)\lib;debug
-Item2=..\Source\examples;$(BCB)\lib;.\debug
-Item3=..\Source\examples;..\examples;$(BCB)\lib;..\lib\release
-Item4=..\examples;$(BCB)\lib;..\lib\release
-Item5=..\..\..\examples;$(BCB)\lib;..\..\..\lib\release
-Item6=..\..\..\examples;$(BCB)\lib;..\..\..\examples\$(RELEASELIBPATH)
-Item7=$(BCB)\lib;$(RELEASELIBPATH)
-Item8=$(BCB)\lib;$(RELEASELIBPATH);;$(BCB)\lib\psdk;
+Count=8
+Item0=..\examples;$(BCB)\lib;$(RELEASELIBPATH)
+Item1=..\examples;$(BCB)\lib;..\examples\$(RELEASELIBPATH)
+Item2=$(BCB)\lib;$(RELEASELIBPATH)
+Item3=$(BCB)\lib;$(RELEASELIBPATH);..\lib\Release-w_static
+Item4=$(BCB)\lib;$(RELEASELIBPATH);..\lib\Release_static
+Item5=$(BCB)\lib;$(RELEASELIBPATH);C:\src\expat\lib\Release_static
+Item6=$(BCB)\lib;$(RELEASELIBPATH);$(BCB)\lib\psdk
+Item7=$(BCB)\lib;$(RELEASELIBPATH);;$(BCB)\lib\psdk;
 
 [HistoryLists\hlDebugSourcePath]
 Count=1
 Item0=$(BCB)\source\vcl
 
 [HistoryLists\hlConditionals]
-Count=1
-Item0=WIN32;NDEBUG;_CONSOLE;_MBCS;_DEBUG
+Count=17
+Item0=WIN32;NDEBUG;_CONSOLE;XML_STATIC
+Item1=WIN32;NDEBUG;_CONSOLE;_DEBUG;XML_STATIC
+Item2=WIN32;NDEBUG;_CONSOLE;_DEBUG;XML_UNICODE_WCHAR_T;_UNICODE;XML_STATIC
+Item3=WIN32;NDEBUG;_CONSOLE;_DEBUG;XML_UNICODE_WCHAR_T;_UNICODE
+Item4=WIN32;NDEBUG;_CONSOLE;_DEBUG
+Item5=WIN32;NDEBUG;_CONSOLE;XML_STATIC;_DEBUG
+Item6=WIN32;NDEBUG;_CONSOLE;XML_STATIC;_DEBUG;_UNICODE
+Item7=WIN32;NDEBUG;_CONSOLE;XML_STATIC;_DEBUG;XML_UNICODE_WCHAR_T
+Item8=WIN32;NDEBUG;_CONSOLE;_MBCS;XML_STATIC;_DEBUG;XML_UNICODE_WCHAR_T
+Item9=WIN32;NDEBUG;_CONSOLE;_UNICODE;XML_STATIC;_DEBUG;XML_UNICODE_WCHAR_T
+Item10=WIN32;NDEBUG;_CONSOLE;_UNICODE;XML_STATIC;_DEBUG;XML_UNICODE
+Item11=WIN32;NDEBUG;_CONSOLE;_MBCS;XML_STATIC;_DEBUG;XML_UNICODE_WCHAR_T;__WCHAR_T
+Item12=WIN32;NDEBUG;_CONSOLE;_MBCS;XML_STATIC;_DEBUG;XML_UNICODE_WCHAR_T;_UNICODE
+Item13=WIN32;NDEBUG;_CONSOLE;_MBCS;XML_STATIC;_DEBUG;XML_UNICODE;_UNICODE
+Item14=WIN32;NDEBUG;_CONSOLE;_MBCS;XML_STATIC;_DEBUG;XML_UNICODE
+Item15=WIN32;NDEBUG;_CONSOLE;_MBCS;XML_STATIC;_DEBUG
+Item16=WIN32;NDEBUG;_CONSOLE;_MBCS;XML_STATIC
 
 [HistoryLists\hlIntOutputDir]
-Count=6
-Item0=debug\obj
-Item1=..\..\win32\debug\obj
-Item2=..\..\..\..\win32\debug\obj
-Item3=..\..\..\..\win32\debug
-Item4=..\..\..\examples\Release
-Item5=Release
+Count=5
+Item0=Release\obj\examples
+Item1=Release\obj\elements
+Item2=Release\obj\mts
+Item3=..\examples\Release
+Item4=Release
 
 [HistoryLists\hlFinalOutputDir]
-Count=5
-Item0=debug\
-Item1=..\..\..\..\win32\debug\
-Item2=..\..\..\..\win32\debug
-Item3=..\..\..\examples\Release\
-Item4=Release\
+Count=1
+Item0=Release\
 
 [Debugging]
 DebugSourceDirs=
@@ -139,4 +146,4 @@ ActiveLang=
 ProjectLang=
 RootDir=
   </IDEOPTIONS>
-</PROJECT>
+</PROJECT>@

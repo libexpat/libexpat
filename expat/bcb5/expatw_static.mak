@@ -13,44 +13,45 @@ BCB = $(MAKEDIR)\..
 
 VERSION = BCB.05.03
 # ---------------------------------------------------------------------------
-PROJECT = Release\outline.exe
-OBJFILES = Release\obj\examples\outline.obj
+PROJECT = Release\libexpatws_mtd.lib
+OBJFILES = Release\obj\libexpat_static\xmlparse.obj \
+    Release\obj\libexpat_static\xmlrole.obj \
+    Release\obj\libexpat_static\xmltok.obj
 RESFILES = 
-MAINSOURCE = outline.bpf
+MAINSOURCE = expatw_static.bpf
 RESDEPEN = $(RESFILES)
-LIBFILES = Release\libexpat_mtd.lib
+LIBFILES = 
 IDLFILES = 
 IDLGENFILES = 
 LIBRARIES = 
-PACKAGES = VCL50.bpi VCLX50.bpi bcbsmp50.bpi QRPT50.bpi VCLDB50.bpi VCLBDE50.bpi \
-    ibsmp50.bpi VCLDBX50.bpi TEEUI50.bpi TEEDB50.bpi TEE50.bpi TEEQR50.bpi \
-    VCLIB50.bpi bcbie50.bpi VCLIE50.bpi INETDB50.bpi INET50.bpi NMFAST50.bpi \
-    dclocx50.bpi bcb2kaxserver50.bpi dclusr50.bpi
+PACKAGES = 
 SPARELIBS = 
 DEFFILE = 
 # ---------------------------------------------------------------------------
-PATHCPP = .;..\examples
+PATHCPP = .;..\lib
 PATHASM = .;
 PATHPAS = .;
 PATHRC = .;
+LINKER = TLib
 DEBUGLIBPATH = $(BCB)\lib\debug
 RELEASELIBPATH = $(BCB)\lib\release
-USERDEFINES = WIN32;NDEBUG;_CONSOLE
+USERDEFINES = _WINDOWS;WIN32;NDEBUG;_LIB;COMPILED_FROM_DSP;XML_STATIC;XML_UNICODE_WCHAR_T
 SYSDEFINES = _NO_VCL;_ASSERTE;NO_STRICT;_RTLDLL
-INCLUDEPATH = ..\examples;$(BCB)\include
-LIBPATH = ..\examples;$(BCB)\lib;$(RELEASELIBPATH)
-WARNINGS= -w-par -w-8027 -w-8026
+INCLUDEPATH = ..\lib;$(BCB)\include
+LIBPATH = ..\lib;$(BCB)\lib;$(RELEASELIBPATH)
+WARNINGS = -w-rch -w-par -w-8027 -w-8026 -w-ccc
+LISTFILE = 
 # ---------------------------------------------------------------------------
-CFLAG1 = -O2 -X- -a8 -b -k- -vi -q -tWM -I..\lib -c
+CFLAG1 = -O2 -X- -a8 -b -k- -vi -q -tWM -c
 IDLCFLAGS = -I$(BCB)\include
-PFLAGS = -N2Release\obj\examples -N0Release\obj\examples -$Y- -$L- -$D-
+PFLAGS = -N2Release\obj\libexpat_static -N0Release\obj\libexpat_static -$Y- -$L- -$D-
 RFLAGS = /l 0x409 /d "NDEBUG" /i$(BCB)\include
 AFLAGS = /mx /w2 /zn
-LFLAGS = -IRelease\obj\examples -D"" -ap -Tpe -x -Gn -q
+LFLAGS = 
 # ---------------------------------------------------------------------------
-ALLOBJ = c0x32.obj $(OBJFILES)
+ALLOBJ = $(OBJFILES)
 ALLRES = $(RESFILES)
-ALLLIB = $(LIBFILES) $(LIBRARIES) import32.lib cw32mti.lib
+ALLLIB = $(LIBFILES) $(LIBRARIES)
 # ---------------------------------------------------------------------------
 !ifdef IDEOPTIONS
 
@@ -120,7 +121,7 @@ TASM32 = tasm32
 !endif
 
 !if !$d(LINKER)
-LINKER = ilink32
+LINKER = TLib
 !endif
 
 !if !$d(BRCC32)
@@ -146,14 +147,16 @@ BRCC32 = brcc32
 .PATH.RC  = $(PATHRC)
 !endif
 # ---------------------------------------------------------------------------
+!if "$(LISTFILE)" ==  ""
+COMMA =
+!else
+COMMA = ,
+!endif
+
 $(PROJECT): $(IDLGENFILES) $(OBJFILES) $(RESDEPEN) $(DEFFILE)
-    $(BCB)\BIN\$(LINKER) @&&!
-    $(LFLAGS) -L$(LIBPATH) +
-    $(ALLOBJ), +
-    $(PROJECT),, +
-    $(ALLLIB), +
-    $(DEFFILE), +
-    $(ALLRES)
+    $(BCB)\BIN\$(LINKER) /u $@ @&&!
+    $(LFLAGS) $? $(COMMA) $(LISTFILE)
+
 !
 # ---------------------------------------------------------------------------
 .pas.hpp:
