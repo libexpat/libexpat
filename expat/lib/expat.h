@@ -606,10 +606,12 @@ XML_SetElementHandler(XML_Parser parser,
                       XML_EndElementHandler end);
 
 XMLPARSEAPI(void)
-XML_SetStartElementHandler(XML_Parser, XML_StartElementHandler);
+XML_SetStartElementHandler(XML_Parser parser,
+                           XML_StartElementHandler handler);
 
 XMLPARSEAPI(void)
-XML_SetEndElementHandler(XML_Parser, XML_EndElementHandler);
+XML_SetEndElementHandler(XML_Parser parser,
+                         XML_EndElementHandler handler);
 
 XMLPARSEAPI(void)
 XML_SetCharacterDataHandler(XML_Parser parser,
@@ -698,7 +700,8 @@ XML_SetExternalEntityRefHandler(XML_Parser parser,
    instead of the parser object.
 */
 XMLPARSEAPI(void)
-XML_SetExternalEntityRefHandlerArg(XML_Parser, void *arg);
+XML_SetExternalEntityRefHandlerArg(XML_Parser parser,
+                                   void *arg);
 
 XMLPARSEAPI(void)
 XML_SetSkippedEntityHandler(XML_Parser parser,
