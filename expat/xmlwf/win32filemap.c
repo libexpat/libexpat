@@ -19,6 +19,7 @@ Contributor(s):
 */
 
 #define STRICT 1
+#define WIN32_LEAN_AND_MEAN 1
 
 #ifdef XML_UNICODE_WCHAR_T
 #ifndef XML_UNICODE
