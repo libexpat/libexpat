@@ -1054,7 +1054,7 @@ doContent(XML_Parser parser,
   }
   *eventPP = s;
   for (;;) {
-    const char *next;
+    const char *next = s; /* XmlContentTok doesn't always set the last arg */
     int tok = XmlContentTok(enc, s, end, &next);
     *eventEndPP = next;
     switch (tok) {
