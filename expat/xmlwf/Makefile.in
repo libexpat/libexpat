@@ -18,6 +18,8 @@
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN EXPAT.
 #
 
+SHELL = @SHELL@
+
 bindir = @bindir@
 
 LIBDIR= ../lib/.libs
