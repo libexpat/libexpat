@@ -29,6 +29,9 @@ extern "C" {
 #define XMLTOKAPI /* as nothing */
 #endif
 
+/* The following token may be returned by XmlContentTok */
+#define XML_TOK_TRAILING_RSQB -5 /* ] or ]] at the end of the scan; might be start of
+                                    illegal ]]> sequence */
 /* The following tokens may be returned by both XmlPrologTok and XmlContentTok */
 #define XML_TOK_NONE -4    /* The string to be scanned is empty */
 #define XML_TOK_TRAILING_CR -3 /* A CR at the end of the scan;

@@ -755,6 +755,25 @@ doContent(XML_Parser parser,
 	} while (s != lim);
       }
       break;
+    case XML_TOK_TRAILING_RSQB:
+      if (nextPtr) {
+	*nextPtr = s;
+	return XML_ERROR_NONE;
+      }
+      if (characterDataHandler) {
+	char *dataPtr = dataBuf;
+	XmlConvert(enc, XML_UTF8_ENCODING, &s, end, &dataPtr, dataBufEnd);
+	characterDataHandler(userData, dataBuf, dataPtr - dataBuf);
+      }
+      if (startTagLevel == 0) {
+        errorPtr = end;
+	return XML_ERROR_NO_ELEMENTS;
+      }
+      if (tagLevel != startTagLevel) {
+	errorPtr = end;
+	return XML_ERROR_ASYNC_ENTITY;
+      }
+      return XML_ERROR_NONE;
     case XML_TOK_DATA_CHARS:
       if (characterDataHandler) {
 	do {

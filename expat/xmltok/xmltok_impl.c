@@ -694,12 +694,12 @@ int PREFIX(contentTok)(const ENCODING *enc, const char *ptr, const char *end,
   case BT_RSQB:
     ptr += MINBPC;
     if (ptr == end)
-      return XML_TOK_PARTIAL;
+      return XML_TOK_TRAILING_RSQB;
     if (!CHAR_MATCHES(enc, ptr, ']'))
       break;
     ptr += MINBPC;
     if (ptr == end)
-      return XML_TOK_PARTIAL;
+      return XML_TOK_TRAILING_RSQB;
     if (!CHAR_MATCHES(enc, ptr, '>')) {
       ptr -= MINBPC;
       break;
