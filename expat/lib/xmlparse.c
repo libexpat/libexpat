@@ -3553,6 +3553,8 @@ doProlog(XML_Parser parser,
       if (dtd.in_eldecl)
 	{
 	  ELEMENT_TYPE *el;
+    const XML_Char *name;
+    int nameLen;
 	  const char *nxt = quant == XML_CQUANT_NONE ? next : next - enc->minBytesPerChar;
 	  int myindex = nextScaffoldPart(parser);
 	  if (myindex < 0)
@@ -3562,8 +3564,11 @@ doProlog(XML_Parser parser,
 	  el = getElementType(parser, enc, s, nxt);
 	  if (! el)
 	    return XML_ERROR_NO_MEMORY;
-	  dtd.scaffold[myindex].name = el->name;
-	  dtd.contentStringLen +=  nxt - s + 1;
+    name = el->name;
+    dtd.scaffold[myindex].name = name;
+    nameLen = 0;
+    for (; name[nameLen++]; );
+    dtd.contentStringLen +=  nameLen;
 	}
       break;
 
