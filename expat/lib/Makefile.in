@@ -131,6 +131,11 @@ distclean: clean
 
 maintainer-clean: distclean
 
+check:	$(SUBDIRS)
+	@echo
+	@echo This package does not yet have a regression test.
+	@echo
+
 install: $(LIBRARY) $(APIHEADER)
 	$(mkinstalldirs) $(DESTDIR)$(libdir) $(DESTDIR)$(includedir)
 	$(LIBTOOL)  --mode=install $(INSTALL) $(LIBRARY) $(DESTDIR)$(libdir)/$(LIBRARY)

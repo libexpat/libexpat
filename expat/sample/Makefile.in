@@ -34,5 +34,15 @@ all: elements
 elements: elements.o
 	$(CC) -o elements elements.o $(LDFLAGS) $(LIBS)
 
+check:	$(SUBDIRS)
+	@echo
+	@echo This package does not yet have a regression test.
+	@echo
+
 clean:
 	rm -f elements core *.o
+
+distclean: clean
+	rm -r Makefile
+
+maintainer-clean: distclean

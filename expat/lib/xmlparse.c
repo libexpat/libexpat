@@ -4,7 +4,7 @@ See the file COPYING for copying permission.
 */
 
 static char RCSId[]
-  = "$Header: /cvsroot/expat/expat/lib/xmlparse.c,v 1.13 2000/12/27 19:37:37 coopercc Exp $";
+  = "$Header: /cvsroot/expat/expat/lib/xmlparse.c,v 1.14 2001/01/24 19:38:54 fdrake Exp $";
 
 #ifdef COMPILED_FROM_DSP
 #  include "winconfig.h"
@@ -371,6 +371,7 @@ typedef struct {
   XML_EndNamespaceDeclHandler m_endNamespaceDeclHandler;
   XML_NotStandaloneHandler m_notStandaloneHandler;
   XML_ExternalEntityRefHandler m_externalEntityRefHandler;
+  XML_InternalEntityRefHandler m_internalEntityRefHandler;
   void *m_externalEntityRefHandlerArg;
   XML_UnknownEncodingHandler m_unknownEncodingHandler;
   XML_ElementDeclHandler m_elementDeclHandler;
@@ -453,6 +454,7 @@ typedef struct {
 #define notStandaloneHandler (((Parser *)parser)->m_notStandaloneHandler)
 #define externalEntityRefHandler (((Parser *)parser)->m_externalEntityRefHandler)
 #define externalEntityRefHandlerArg (((Parser *)parser)->m_externalEntityRefHandlerArg)
+#define internalEntityRefHandler (((Parser *)parser)->m_internalEntityRefHandler)
 #define unknownEncodingHandler (((Parser *)parser)->m_unknownEncodingHandler)
 #define elementDeclHandler (((Parser *)parser)->m_elementDeclHandler)
 #define attlistDeclHandler (((Parser *)parser)->m_attlistDeclHandler)
@@ -607,6 +609,7 @@ XML_ParserCreate_MM(const XML_Char *encodingName,
   notStandaloneHandler = 0;
   externalEntityRefHandler = 0;
   externalEntityRefHandlerArg = parser;
+  internalEntityRefHandler = 0;
   unknownEncodingHandler = 0;
   elementDeclHandler = 0;
   attlistDeclHandler = 0;
@@ -718,6 +721,7 @@ XML_Parser XML_ExternalEntityParserCreate(XML_Parser oldParser,
   XML_EndNamespaceDeclHandler oldEndNamespaceDeclHandler = endNamespaceDeclHandler;
   XML_NotStandaloneHandler oldNotStandaloneHandler = notStandaloneHandler;
   XML_ExternalEntityRefHandler oldExternalEntityRefHandler = externalEntityRefHandler;
+  XML_InternalEntityRefHandler oldInternalEntityRefHandler = internalEntityRefHandler;
   XML_UnknownEncodingHandler oldUnknownEncodingHandler = unknownEncodingHandler;
   XML_ElementDeclHandler oldElementDeclHandler = elementDeclHandler;
   XML_AttlistDeclHandler oldAttlistDeclHandler = attlistDeclHandler;
@@ -1035,6 +1039,12 @@ void XML_SetExternalEntityRefHandlerArg(XML_Parser parser, void *arg)
     externalEntityRefHandlerArg = arg;
   else
     externalEntityRefHandlerArg = parser;
+}
+
+void XML_SetInternalEntityRefHandler(XML_Parser parser,
+				     XML_InternalEntityRefHandler handler)
+{
+  internalEntityRefHandler = handler;
 }
 
 void XML_SetUnknownEncodingHandler(XML_Parser parser,

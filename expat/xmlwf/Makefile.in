@@ -36,5 +36,15 @@ VPATH = @srcdir@
 xmlwf: $(OBJS)
 	$(CC) -o xmlwf $(LDFLAGS) $(OBJS) $(LIBS)
 
+check:	$(SUBDIRS)
+	@echo
+	@echo This package does not yet have a regression test.
+	@echo
+
 clean:
 	rm -f xmlwf core *.o
+
+distclean: clean
+	rm -f Makefile
+
+maintainer-clean: distclean

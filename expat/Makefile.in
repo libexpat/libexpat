@@ -136,6 +136,11 @@ distdir: MANIFEST
 	  cp -P $$file $(DISTDIR); \
 	done
 
+check:	$(SUBDIRS)
+	@echo
+	@echo This package does not yet have a regression test.
+	@echo
+
 $(DISTRIBUTION): distdir
 	tar cf - $(DISTDIR) | gzip -9 >$(DISTRIBUTION)
 

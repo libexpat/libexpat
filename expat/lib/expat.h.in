@@ -330,6 +330,11 @@ typedef int (*XML_ExternalEntityRefHandler)(XML_Parser parser,
 					    const XML_Char *systemId,
 					    const XML_Char *publicId);
 
+typedef int (*XML_InternalEntityRefHandler)(XML_Parser parser,
+					    const XML_Char *context,
+					    const XML_Char *name,
+					    const XML_Char *text);
+
 /* This structure is filled in by the XML_UnknownEncodingHandler
 to provide information to the parser about encodings that are unknown
 to the parser.
