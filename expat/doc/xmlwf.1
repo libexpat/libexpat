@@ -183,8 +183,16 @@ And here are some examples of external entities:
 .fi
 .TP
 \fB--\fR
-For some reason, \fBxmlwf\fR specifically
-ignores "--" anywhere it appears on the command line.
+(Two hyphens.)
+Terminates the list of options.  This is only needed if a filename
+starts with a hyphen.  For example:
+
+.nf
+xmlwf -- -myfile.xml
+.fi
+
+will run \fBxmlwf\fR on the file
+\fI-myfile.xml\fR.
 .PP
 Older versions of \fBxmlwf\fR do not support
 reading from standard input.
