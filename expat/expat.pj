@@ -5,11 +5,11 @@ block _mks_variant_projects
 end
 EndOptions
 $(projectdir)/MPL-1_0.html a 1.1 
-$(projectdir)/Makefile a 1.10 
+$(projectdir)/Makefile a 1.11 
 $(projectdir)/expat.dsw a 1.1 
-$(projectdir)/expat.html a 1.15 
+$(projectdir)/expat.html a 1.17 
 $(projectdir)/expat.mak a 1.14 
-$(projectdir)/expatfaq.html a 1.1 
+$(projectdir)/expatfaq.html a 1.2 
 $(projectdir)/files.txt a 1.8 
 $(projectdir)/gplelect.html a 1.1 
 $(projectdir)/makedist.ksh a 1.2 
@@ -19,10 +19,10 @@ $(projectdir)/gennmtab/gennmtab.dsp a 1.1
 $(projectdir)/sample/build.bat a 1.2 
 $(projectdir)/sample/elements.c a 1.1 
 $(projectdir)/xmlparse/hashtable.c a 1.8 
-$(projectdir)/xmlparse/hashtable.h a 1.4 
-$(projectdir)/xmlparse/xmlparse.c a 1.77 
+$(projectdir)/xmlparse/hashtable.h a 1.5 
+$(projectdir)/xmlparse/xmlparse.c a 1.84 
 $(projectdir)/xmlparse/xmlparse.dsp a 1.5 
-$(projectdir)/xmlparse/xmlparse.h a 1.31 
+$(projectdir)/xmlparse/xmlparse.h a 1.34 
 $(projectdir)/xmltok/asciitab.h a 1.5 
 $(projectdir)/xmltok/dllmain.c a 1.3 
 $(projectdir)/xmltok/iasciitab.h a 1.3 
@@ -31,12 +31,12 @@ $(projectdir)/xmltok/utf8tab.h a 1.4
 $(projectdir)/xmltok/xmldef.h a 1.7 
 $(projectdir)/xmltok/xmlrole.c a 1.10 
 $(projectdir)/xmltok/xmlrole.h a 1.5 
-$(projectdir)/xmltok/xmltok.c a 1.45 
+$(projectdir)/xmltok/xmltok.c a 1.46 
 $(projectdir)/xmltok/xmltok.dsp a 1.4 
-$(projectdir)/xmltok/xmltok.h a 1.25 
+$(projectdir)/xmltok/xmltok.h a 1.26 
 $(projectdir)/xmltok/xmltok_impl.c a 1.33 
 $(projectdir)/xmltok/xmltok_impl.h a 1.6 
-$(projectdir)/xmltok/xmltok_ns.c a 1.3 
+$(projectdir)/xmltok/xmltok_ns.c a 1.4 
 $(projectdir)/xmlwf/codepage.c a 1.5 
 $(projectdir)/xmlwf/codepage.h a 1.3 
 $(projectdir)/xmlwf/filemap.h a 1.3 
@@ -49,6 +49,6 @@ $(projectdir)/xmlwf/xmlmime.c a 1.1
 $(projectdir)/xmlwf/xmlmime.h a 1.1 
 $(projectdir)/xmlwf/xmltchar.h a 1.1 
 $(projectdir)/xmlwf/xmlurl.h a 1.1 
-$(projectdir)/xmlwf/xmlwf.c a 1.40 
+$(projectdir)/xmlwf/xmlwf.c a 1.43 
 $(projectdir)/xmlwf/xmlwf.dsp a 1.2 
 $(projectdir)/xmlwf/xmlwin32url.cxx a 1.1 
