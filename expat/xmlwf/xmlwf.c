@@ -561,6 +561,19 @@ int notStandalone(void *userData)
 }
 
 static
+void showVersion(XML_Char *prog)
+{
+  XML_Char *s = prog;
+  XML_Char ch;
+  while ((ch = *s) != 0) {
+    if (ch == '/' || ch == '\\')
+      prog = s + 1;
+    ++s;
+  }
+  ftprintf(stdout, T("%s using %s\n"), prog, XML_ExpatVersion());
+}
+
+static
 void usage(const XML_Char *prog)
 {
   ftprintf(stderr, T("usage: %s [-n] [-p] [-r] [-s] [-w] [-x] [-d output-dir] [-e encoding] file ...\n"), prog);
@@ -654,6 +667,9 @@ int tmain(int argc, XML_Char **argv)
       i++;
       j = 0;
       break;
+    case T('v'):
+      showVersion(argv[0]);
+      return 0;
     case T('\0'):
       if (j > 1) {
 	i++;
