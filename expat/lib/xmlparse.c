@@ -4,6 +4,7 @@
 
 #include <stddef.h>
 #include <string.h>                     /* memset(), memcpy() */
+#include <assert.h>
 
 #define XML_BUILDING_EXPAT 1
 
@@ -1735,6 +1736,7 @@ XML_ResumeParser(XML_Parser parser)
 void XMLCALL
 XML_GetParsingStatus(XML_Parser parser, XML_ParsingStatus *status)
 {
+  assert(status != NULL);
   *status = parser->m_parsingStatus;
 }
 
