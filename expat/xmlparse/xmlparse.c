@@ -1574,7 +1574,7 @@ static enum XML_Error storeAtts(XML_Parser parser, const ENCODING *enc,
 {
   ELEMENT_TYPE *elementType = 0;
   int nDefaultAtts = 0;
-  const XML_Char **appAtts;
+  const XML_Char **appAtts;   /* the attribute list to pass to the application */
   int attIndex = 0;
   int i;
   int n;
@@ -1582,6 +1582,7 @@ static enum XML_Error storeAtts(XML_Parser parser, const ENCODING *enc,
   BINDING *binding;
   const XML_Char *localPart;
 
+  /* lookup the element type name */
   if (tagNamePtr) {
     elementType = (ELEMENT_TYPE *)lookup(&dtd.elementTypes, tagNamePtr->str, 0);
     if (!elementType) {
@@ -1596,6 +1597,7 @@ static enum XML_Error storeAtts(XML_Parser parser, const ENCODING *enc,
     }
     nDefaultAtts = elementType->nDefaultAtts;
   }
+  /* get the attributes from the tokenizer */
   n = XmlGetAttributes(enc, attStr, attsSize, atts);
   if (n + nDefaultAtts > attsSize) {
     int oldAttsSize = attsSize;
@@ -1608,11 +1610,13 @@ static enum XML_Error storeAtts(XML_Parser parser, const ENCODING *enc,
   }
   appAtts = (const XML_Char **)atts;
   for (i = 0; i < n; i++) {
+    /* add the name and value to the attribute list */
     ATTRIBUTE_ID *attId = getAttributeId(parser, enc, atts[i].name,
 					 atts[i].name
 					 + XmlNameLength(enc, atts[i].name));
     if (!attId)
       return XML_ERROR_NO_MEMORY;
+    /* detect duplicate attributes */
     if ((attId->name)[-1]) {
       if (enc == encoding)
 	eventPtr = atts[i].name;
@@ -1624,6 +1628,7 @@ static enum XML_Error storeAtts(XML_Parser parser, const ENCODING *enc,
       enum XML_Error result;
       int isCdata = 1;
 
+      /* figure out whether declared as other than CDATA */
       if (attId->maybeTokenized) {
 	int j;
 	for (j = 0; j < nDefaultAtts; j++) {
@@ -1634,6 +1639,7 @@ static enum XML_Error storeAtts(XML_Parser parser, const ENCODING *enc,
 	}
       }
 
+      /* normalize the attribute value */
       result = storeAttributeValue(parser, enc, isCdata,
 				   atts[i].valuePtr, atts[i].valueEnd,
 			           &tempPool);
@@ -1647,18 +1653,22 @@ static enum XML_Error storeAtts(XML_Parser parser, const ENCODING *enc,
 	poolDiscard(&tempPool);
     }
     else if (tagNamePtr) {
+      /* the value did not need normalizing */
       appAtts[attIndex] = poolStoreString(&tempPool, enc, atts[i].valuePtr, atts[i].valueEnd);
       if (appAtts[attIndex] == 0)
 	return XML_ERROR_NO_MEMORY;
       poolFinish(&tempPool);
     }
+    /* handle prefixed attribute names */
     if (attId->prefix && tagNamePtr) {
       if (attId->xmlns) {
+	/* deal with namespace declarations here */
         if (!addBinding(parser, attId->prefix, attId, appAtts[attIndex], bindingsPtr))
           return XML_ERROR_NO_MEMORY;
         --attIndex;
       }
       else {
+	/* deal with other prefixed names later */
         attIndex++;
         nPrefixes++;
         (attId->name)[-1] = 2;
@@ -1668,6 +1678,7 @@ static enum XML_Error storeAtts(XML_Parser parser, const ENCODING *enc,
       attIndex++;
   }
   nSpecifiedAtts = attIndex;
+  /* do attribute defaulting */
   if (tagNamePtr) {
     int j;
     for (j = 0; j < nDefaultAtts; j++) {
@@ -1696,6 +1707,7 @@ static enum XML_Error storeAtts(XML_Parser parser, const ENCODING *enc,
   }
   i = 0;
   if (nPrefixes) {
+    /* expand prefixed attribute names */
     for (; i < attIndex; i += 2) {
       if (appAtts[i][-1] == 2) {
         ATTRIBUTE_ID *id;
@@ -1725,12 +1737,14 @@ static enum XML_Error storeAtts(XML_Parser parser, const ENCODING *enc,
 	((XML_Char *)(appAtts[i]))[-1] = 0;
     }
   }
+  /* clear the flags that say whether attributes were specified */
   for (; i < attIndex; i += 2)
     ((XML_Char *)(appAtts[i]))[-1] = 0;
   if (!tagNamePtr)
     return XML_ERROR_NONE;
   for (binding = *bindingsPtr; binding; binding = binding->nextTagBinding)
     binding->attId->name[-1] = 0;
+  /* expand the element type name */
   if (elementType->prefix) {
     binding = elementType->prefix->binding;
     if (!binding)
