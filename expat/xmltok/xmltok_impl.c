@@ -1007,7 +1007,7 @@ int PREFIX(prologTok)(const ENCODING *enc, const char *ptr, const char *end,
   case BT_RPAR:
     ptr += MINBPC;
     if (ptr == end)
-      return XML_TOK_INVALID;
+      return XML_TOK_PARTIAL;
     switch (BYTE_TYPE(enc, ptr)) {
     case BT_AST:
       *nextTokPtr = ptr + MINBPC;
