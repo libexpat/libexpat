@@ -393,11 +393,19 @@ XML_SetBase(XML_Parser parser, const XML_Char *base);
 const XML_Char XMLPARSEAPI *
 XML_GetBase(XML_Parser parser);
 
-/* Returns the number of the attributes passed in last call to the
-XML_StartElementHandler that were specified in the start-tag rather
-than defaulted. */
+/* Returns the number of the attribute/value pairs passed in last call
+to the XML_StartElementHandler that were specified in the start-tag
+rather than defaulted. Each attribute/value pair counts as 2; thus
+this correspondds to an index into the atts array passed to the
+XML_StartElementHandler. */
 
 int XMLPARSEAPI XML_GetSpecifiedAttributeCount(XML_Parser parser);
+
+/* Returns the index of the ID attribute passed in the last call to
+XML_StartElementHandler, or -1 if there is no ID attribute.  Each
+attribute/value pair counts as 2; thus this correspondds to an index
+into the atts array passed to the XML_StartElementHandler. */
+int XMLPARSEAPI XML_GetIdAttributeIndex(XML_Parser parser);
 
 /* Parses some input. Returns 0 if a fatal error is detected.
 The last call to XML_Parse must have isFinal true;

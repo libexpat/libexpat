@@ -333,7 +333,14 @@ void metaStartElement(XML_Parser parser, const XML_Char *name, const XML_Char **
 {
   FILE *fp = XML_GetUserData(parser);
   const XML_Char **specifiedAttsEnd
-    = atts + 2*XML_GetSpecifiedAttributeCount(parser);
+    = atts + XML_GetSpecifiedAttributeCount(parser);
+  const XML_Char **idAttPtr;
+  int idAttIndex = XML_GetIdAttributeIndex(parser);
+  if (idAttIndex < 0)
+    idAttPtr = 0;
+  else
+    idAttPtr = atts + idAttIndex;
+    
   ftprintf(fp, T("<starttag name=\"%s\""), name);
   metaLocation(parser);
   if (*atts) {
@@ -343,6 +350,8 @@ void metaStartElement(XML_Parser parser, const XML_Char *name, const XML_Char **
       characterData(fp, atts[1], tcslen(atts[1]));
       if (atts >= specifiedAttsEnd)
 	fputts(T("\" defaulted=\"yes\"/>\n"), fp);
+      else if (atts == idAttPtr)
+	fputts(T("\" id=\"yes\"/>\n"), fp);
       else
 	fputts(T("\"/>\n"), fp);
     } while (*(atts += 2));

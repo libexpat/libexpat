@@ -173,6 +173,7 @@ typedef struct {
 typedef struct {
   const XML_Char *name;
   PREFIX *prefix;
+  const ATTRIBUTE_ID *idAtt;
   int nDefaultAtts;
   int allocDefaultAtts;
   DEFAULT_ATTRIBUTE *defaultAtts;
@@ -243,7 +244,7 @@ static enum XML_Error storeAtts(XML_Parser parser, const ENCODING *, const char 
 static
 int addBinding(XML_Parser parser, PREFIX *prefix, const ATTRIBUTE_ID *attId, const XML_Char *uri, BINDING **bindingsPtr);
 static int
-defineAttribute(ELEMENT_TYPE *type, ATTRIBUTE_ID *, int isCdata, const XML_Char *dfltValue);
+defineAttribute(ELEMENT_TYPE *type, ATTRIBUTE_ID *, int isCdata, int isId, const XML_Char *dfltValue);
 static enum XML_Error
 storeAttributeValue(XML_Parser parser, const ENCODING *, int isCdata, const char *, const char *,
 		    STRING_POOL *);
@@ -357,6 +358,7 @@ typedef struct {
   ELEMENT_TYPE *m_declElementType;
   ATTRIBUTE_ID *m_declAttributeId;
   char m_declAttributeIsCdata;
+  char m_declAttributeIsId;
   DTD m_dtd;
   const XML_Char *m_curBase;
   TAG *m_tagStack;
@@ -365,6 +367,7 @@ typedef struct {
   BINDING *m_freeBindingList;
   int m_attsSize;
   int m_nSpecifiedAtts;
+  int m_idAttIndex;
   ATTRIBUTE *m_atts;
   POSITION m_position;
   STRING_POOL m_tempPool;
@@ -435,6 +438,7 @@ typedef struct {
 #define declElementType (((Parser *)parser)->m_declElementType)
 #define declAttributeId (((Parser *)parser)->m_declAttributeId)
 #define declAttributeIsCdata (((Parser *)parser)->m_declAttributeIsCdata)
+#define declAttributeIsId (((Parser *)parser)->m_declAttributeIsId)
 #define freeTagList (((Parser *)parser)->m_freeTagList)
 #define freeBindingList (((Parser *)parser)->m_freeBindingList)
 #define inheritedBindings (((Parser *)parser)->m_inheritedBindings)
@@ -442,6 +446,7 @@ typedef struct {
 #define atts (((Parser *)parser)->m_atts)
 #define attsSize (((Parser *)parser)->m_attsSize)
 #define nSpecifiedAtts (((Parser *)parser)->m_nSpecifiedAtts)
+#define idAttIndex (((Parser *)parser)->m_idAttIndex)
 #define tempPool (((Parser *)parser)->m_tempPool)
 #define temp2Pool (((Parser *)parser)->m_temp2Pool)
 #define groupConnector (((Parser *)parser)->m_groupConnector)
@@ -744,6 +749,11 @@ const XML_Char *XML_GetBase(XML_Parser parser)
 int XML_GetSpecifiedAttributeCount(XML_Parser parser)
 {
   return nSpecifiedAtts;
+}
+
+int XML_GetIdAttributeIndex(XML_Parser parser)
+{
+  return idAttIndex;
 }
 
 void XML_SetElementHandler(XML_Parser parser,
@@ -1700,10 +1710,19 @@ static enum XML_Error storeAtts(XML_Parser parser, const ENCODING *enc,
     else
       attIndex++;
   }
-  nSpecifiedAtts = attIndex;
-  /* do attribute defaulting */
   if (tagNamePtr) {
     int j;
+    nSpecifiedAtts = attIndex;
+    if (elementType->idAtt && (elementType->idAtt->name)[-1]) {
+      for (i = 0; i < attIndex; i += 2)
+	if (appAtts[i] == elementType->idAtt->name) {
+	  idAttIndex = i;
+	  break;
+	}
+    }
+    else
+      idAttIndex = -1;
+    /* do attribute defaulting */
     for (j = 0; j < nDefaultAtts; j++) {
       const DEFAULT_ATTRIBUTE *da = elementType->defaultAtts + j;
       if (!(da->id->name)[-1] && da->value) {
@@ -2351,14 +2370,19 @@ doProlog(XML_Parser parser,
       if (!declAttributeId)
 	return XML_ERROR_NO_MEMORY;
       declAttributeIsCdata = 0;
+      declAttributeIsId = 0;
       break;
     case XML_ROLE_ATTRIBUTE_TYPE_CDATA:
       declAttributeIsCdata = 1;
       break;
+    case XML_ROLE_ATTRIBUTE_TYPE_ID:
+      declAttributeIsId = 1;
+      break;
     case XML_ROLE_IMPLIED_ATTRIBUTE_VALUE:
     case XML_ROLE_REQUIRED_ATTRIBUTE_VALUE:
       if (dtd.complete
-	  && !defineAttribute(declElementType, declAttributeId, declAttributeIsCdata, 0))
+	  && !defineAttribute(declElementType, declAttributeId, declAttributeIsCdata,
+			      declAttributeIsId, 0))
 	return XML_ERROR_NO_MEMORY;
       break;
     case XML_ROLE_DEFAULT_ATTRIBUTE_VALUE:
@@ -2375,7 +2399,8 @@ doProlog(XML_Parser parser,
 	attVal = poolStart(&dtd.pool);
 	poolFinish(&dtd.pool);
 	if (dtd.complete
-	    && !defineAttribute(declElementType, declAttributeId, declAttributeIsCdata, attVal))
+	    // ID attributes aren't allowed to have a default
+	    && !defineAttribute(declElementType, declAttributeId, declAttributeIsCdata, 0, attVal))
 	  return XML_ERROR_NO_MEMORY;
 	break;
       }
@@ -3113,16 +3138,18 @@ reportDefault(XML_Parser parser, const ENCODING *enc, const char *s, const char 
 
 
 static int
-defineAttribute(ELEMENT_TYPE *type, ATTRIBUTE_ID *attId, int isCdata, const XML_Char *value)
+defineAttribute(ELEMENT_TYPE *type, ATTRIBUTE_ID *attId, int isCdata, int isId, const XML_Char *value)
 {
   DEFAULT_ATTRIBUTE *att;
-  if (value) {
+  if (value || isId) {
     /* The handling of default attributes gets messed up if we have
        a default which duplicates a non-default. */
     int i;
     for (i = 0; i < type->nDefaultAtts; i++)
       if (attId == type->defaultAtts[i].id)
 	return 1;
+    if (isId && !type->idAtt && !attId->xmlns)
+      type->idAtt = attId;
   }
   if (type->nDefaultAtts == type->allocDefaultAtts) {
     if (type->allocDefaultAtts == 0) {
@@ -3502,6 +3529,8 @@ static int dtdCopy(DTD *newDtd, const DTD *oldDtd)
       if (!newE->defaultAtts)
 	return 0;
     }
+    if (oldE->idAtt)
+      newE->idAtt = (ATTRIBUTE_ID *)lookup(&(newDtd->attributeIds), oldE->idAtt->name, 0);
     newE->allocDefaultAtts = newE->nDefaultAtts = oldE->nDefaultAtts;
     if (oldE->prefix)
       newE->prefix = (PREFIX *)lookup(&(newDtd->prefixes), oldE->prefix->name, 0);
