@@ -2563,7 +2563,7 @@ prologProcessor(XML_Parser parser,
 		const char *end,
 		const char **nextPtr)
 {
-  const char *next;
+  const char *next = s;
   int tok = XmlPrologTok(encoding, s, end, &next);
   return doProlog(parser, encoding, s, end, tok, next, nextPtr);
 }
@@ -3473,7 +3473,6 @@ appendAttributeValue(XML_Parser parser, const ENCODING *enc, int isCdata,
     case XML_TOK_DATA_CHARS:
       if (!poolAppend(pool, enc, ptr, next))
 	return XML_ERROR_NO_MEMORY;
-      break;
       break;
     case XML_TOK_TRAILING_CR:
       next = ptr + enc->minBytesPerChar;
