@@ -63,7 +63,7 @@ AC_PROG_CC
 AC_PROG_INSTALL
 
 if test "$GCC" = yes ; then
-    CFLAGS="$CFLAGS -Wall -Wstrict-prototypes"
+    CFLAGS="$CFLAGS -Wall -Wmissing-prototypes -Wstrict-prototypes -fexceptions"
 fi
 
 dnl Checks for libraries.
