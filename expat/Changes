@@ -1,8 +1,10 @@
-Release 1.95.4 (eventually)
+Release 1.95.4 Fri Jul 12 2002
 	- Added support for VMS, contributed by Craig Berry.  See
 	  vms/README.vms for more information.
 	- Added Mac OS (classic) support, with a makefile for MPW,
 	  contributed by Thomas Wegner and Daryle Walker.
+	- Fixed a variety of bugs: see SF bug reports 441449, 563184,
+	  564342, 566334, 575168, 579196.
 
 Release 1.95.3 Mon Jun 3 2002
 	- Added a project to the MSVC workspace to create a wchar_t
