@@ -646,12 +646,18 @@ functions from within an <code>XML_ExternalEntityRefHandler</code>, if they
 apply to the parser created by <code>XML_ExternalEntityParserCreate</code>.</p>
 
 <div class="fcndec"><a name="XML_Parse"><pre>
-int
+XML_Status
 XML_Parse(XML_Parser p,
           const char *s,
           int len,
           int isFinal)
 </pre></a></div>
+<div class="signature"><pre>
+enum XML_Status {
+  XML_STATUS_ERROR = 0,
+  XML_STATUS_OK = 1
+};
+</pre></div>
 <div class="fcndef">
 Parse some more of the document. The string <code>s</code> is a buffer
 containing part (or perhaps all) of the document. The number of bytes of s
@@ -662,20 +668,21 @@ memory that <code>s</code> points at, then a memory fault is likely. The
 <code>isFinal</code> parameter informs the parser that this is the last
 piece of the document. Frequently, the last piece is empty (i.e.
 <code>len</code> is zero.)
-If a parse error occurred, it returns 0. Otherwise it returns a non-zero
-value.
+If a parse error occurred, it returns <code>XML_STATUS_ERROR</code>.
+Otherwise it returns <code>XML_STATUS_OK</code> value.
 </div>
 
 <div class="fcndec"><a name="XML_ParseBuffer"><pre>
-int
+XML_Status
 XML_ParseBuffer(XML_Parser p,
                 int len,
                 int isFinal)
 </pre></a></div>
 <div class="fcndef">
-This is just like XML_Parse, except in this case expat provides the buffer.
-By obtaining the buffer from expat with the <code>XML_GetBuffer</code>
-function, the application can avoid double copying of the input.
+This is just like <code>XML_Parse</code>, except in this case expat
+provides the buffer.  By obtaining the buffer from expat with the
+<code>XML_GetBuffer</code> function, the application can avoid double
+copying of the input.
 </div>
 
 <div class="fcndec"><a name="XML_GetBuffer"><pre>
