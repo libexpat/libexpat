@@ -1656,8 +1656,10 @@ doContent(XML_Parser parser,
 	  if (!tag)
 	    return XML_ERROR_NO_MEMORY;
 	  tag->buf = MALLOC(INIT_TAG_BUF_SIZE);
-	  if (!tag->buf)
+	  if (!tag->buf) {
+	    FREE(tag);
 	    return XML_ERROR_NO_MEMORY;
+	  }
 	  tag->bufEnd = tag->buf + INIT_TAG_BUF_SIZE;
 	}
 	tag->bindings = 0;
@@ -2199,9 +2201,11 @@ int addBinding(XML_Parser parser, PREFIX *prefix, const ATTRIBUTE_ID *attId,
   if (freeBindingList) {
     b = freeBindingList;
     if (len > b->uriAlloc) {
-      b->uri = REALLOC(b->uri, sizeof(XML_Char) * (len + EXPAND_SPARE));
-      if (!b->uri)
+      XML_Char *temp = REALLOC(b->uri,
+                               sizeof(XML_Char) * (len + EXPAND_SPARE));
+      if (temp == NULL)
 	return 0;
+      b->uri = temp;
       b->uriAlloc = len + EXPAND_SPARE;
     }
     freeBindingList = b->nextTagBinding;
@@ -3141,14 +3145,22 @@ doProlog(XML_Parser parser,
     case XML_ROLE_GROUP_OPEN:
       if (prologState.level >= groupSize) {
 	if (groupSize) {
-	  groupConnector = REALLOC(groupConnector, groupSize *= 2);
-	  if (dtd.scaffIndex)
-	    dtd.scaffIndex = REALLOC(dtd.scaffIndex, groupSize * sizeof(int));
+	  char *temp = REALLOC(groupConnector, groupSize *= 2);
+	  if (temp == NULL)
+	    return XML_ERROR_NO_MEMORY;
+	  groupConnector = temp;
+	  if (dtd.scaffIndex) {
+	    int *temp = REALLOC(dtd.scaffIndex, groupSize * sizeof(int));
+	    if (temp == NULL)
+	      return XML_ERROR_NO_MEMORY;
+	    dtd.scaffIndex = temp;
+	  }
 	}
-	else
+	else {
 	  groupConnector = MALLOC(groupSize = 32);
-	if (!groupConnector)
-	  return XML_ERROR_NO_MEMORY;
+	  if (!groupConnector)
+	    return XML_ERROR_NO_MEMORY;
+	}
       }
       groupConnector[prologState.level] = 0;
       if (dtd.in_eldecl) {
@@ -3830,16 +3842,19 @@ defineAttribute(ELEMENT_TYPE *type, ATTRIBUTE_ID *attId, int isCdata,
     if (type->allocDefaultAtts == 0) {
       type->allocDefaultAtts = 8;
       type->defaultAtts = MALLOC(type->allocDefaultAtts
-                                 * sizeof(DEFAULT_ATTRIBUTE));
+				 * sizeof(DEFAULT_ATTRIBUTE));
+      if (!type->defaultAtts)
+	return 0;
     }
     else {
-      type->allocDefaultAtts *= 2;
-      type->defaultAtts = REALLOC(type->defaultAtts,
-				  (type->allocDefaultAtts
-                                   * sizeof(DEFAULT_ATTRIBUTE)));
+      DEFAULT_ATTRIBUTE *temp;
+      int count = type->allocDefaultAtts * 2;
+      temp = REALLOC(type->defaultAtts, (count * sizeof(DEFAULT_ATTRIBUTE)));
+      if (temp == NULL)
+	return 0;
+      type->allocDefaultAtts = count;
+      type->defaultAtts = temp;
     }
-    if (!type->defaultAtts)
-      return 0;
   }
   att = type->defaultAtts + type->nDefaultAtts;
   att->id = attId;
@@ -4230,8 +4245,10 @@ static int dtdCopy(DTD *newDtd, const DTD *oldDtd, XML_Parser parser)
     if (oldE->nDefaultAtts) {
       newE->defaultAtts = (DEFAULT_ATTRIBUTE *)
           MALLOC(oldE->nDefaultAtts * sizeof(DEFAULT_ATTRIBUTE));
-      if (!newE->defaultAtts)
+      if (!newE->defaultAtts) {
+	FREE(newE);
 	return 0;
+      }
     }
     if (oldE->idAtt)
       newE->idAtt = (ATTRIBUTE_ID *)
@@ -4660,18 +4677,21 @@ nextScaffoldPart(XML_Parser parser)
   }
 
   if (dtd.scaffCount >= dtd.scaffSize) {
+    CONTENT_SCAFFOLD *temp;
     if (dtd.scaffold) {
+      temp = (CONTENT_SCAFFOLD *)
+        REALLOC(dtd.scaffold, dtd.scaffSize * 2 * sizeof(CONTENT_SCAFFOLD));
+      if (temp == NULL)
+        return -1;
       dtd.scaffSize *= 2;
-      dtd.scaffold = (CONTENT_SCAFFOLD *)
-          REALLOC(dtd.scaffold, dtd.scaffSize * sizeof(CONTENT_SCAFFOLD));
     }
     else {
+      temp = MALLOC(dtd.scaffSize * sizeof(CONTENT_SCAFFOLD));
+      if (temp == NULL)
+        return -1;
       dtd.scaffSize = 32;
-      dtd.scaffold = (CONTENT_SCAFFOLD *)
-          MALLOC(dtd.scaffSize * sizeof(CONTENT_SCAFFOLD));
     }
-    if (! dtd.scaffold)
-      return -1;
+    dtd.scaffold = temp;
   }
   next = dtd.scaffCount++;
   me = &dtd.scaffold[next];
