@@ -965,8 +965,10 @@ XML_ParserReset(XML_Parser p,
 <div class="fcndef">
 Clean up the memory structures maintained by the parser so that it may
 be used again.  After this has been called, <code>parser</code> is
-ready to start parsing a new document.  This function may not be used
-on a parser created using <code><a href=
+ready to start parsing a new document.  All handlers are cleared from
+the parser, except for the unknownEncodingHandler.  The parser's external
+state is re-initialized except for the values of ns and ns_triplets.
+This function may not be used on a parser created using <code><a href=
 "#XML_ExternalEntityParserCreate" >XML_ExternalEntityParserCreate</a
 ></code>; it will return <code>XML_FALSE</code> in that case.  Returns
 <code>XML_TRUE</code> on success.  Your application is responsible for
@@ -2306,4 +2308,4 @@ have been allocated by <code><a href="#XML_MemMalloc"
         height="31" width="88" class="noborder" /></a></p>
 </div>
 </body>
-</html>
+</html>@
