@@ -230,7 +230,7 @@ int sb_byteToAscii(const ENCODING *enc, const char *p)
   return *p;
 }
 #else
-#define BYTE_TO_ASCII(enc, p) (*p)
+#define BYTE_TO_ASCII(enc, p) (*(p))
 #endif
 
 #define IS_NAME_CHAR(enc, p, n) \
