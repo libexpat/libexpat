@@ -1,20 +1,28 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <memory.h>
 #include <string.h>
-#include <io.h>
+#include <sys/types.h>
 #include <fcntl.h>
+
 #ifdef _MSC_VER
 #define XMLTOKAPI __declspec(dllimport)
 #endif
 #include "xmltok.h"
+
+#ifndef O_BINARY
+#ifdef _O_BINARY
+#define O_BINARY _O_BINARY
+#else
+#define O_BINARY 0
+#endif
+#endif
 
 static void outOfMemory();
 
 struct XmlTokBuffer {
   char *buf;
   char *end;
-  char *ptr;
+  const char *ptr;
   size_t size;
   int fd;
   int state;
@@ -55,16 +63,8 @@ int XmlGetToken(struct XmlTokBuffer *tb, const char **tokStart, size_t *tokLengt
     const char *start = tb->ptr;
     tok = XmlTok(tb->enc, tb->state, start, tb->end, &tb->ptr);
     if (tok >= 0) {
-      if (tb->state == XML_PROLOG_STATE) {
-	switch (tok) {
-	case XML_TOK_START_TAG_NO_ATTS:
-	case XML_TOK_START_TAG_WITH_ATTS:
-	case XML_TOK_EMPTY_ELEMENT_NO_ATTS:
-	case XML_TOK_EMPTY_ELEMENT_WITH_ATTS:
-	  tb->state = XML_CONTENT_STATE;
-	  break;
-	}
-      }
+      if (tok == XML_TOK_INSTANCE_START)
+	tb->state = XML_CONTENT_STATE;
       *tokStart = start;
       *tokLength = tb->ptr - start;
       break;
