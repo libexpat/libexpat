@@ -3376,10 +3376,12 @@ int setContext(XML_Parser parser, const XML_Char *context)
 	prefix = (PREFIX *)lookup(&dtd.prefixes, poolStart(&tempPool), sizeof(PREFIX));
 	if (!prefix)
 	  return 0;
-        if (prefix->name == poolStart(&tempPool))
-          poolFinish(&tempPool);
-        else
-	  poolDiscard(&tempPool);
+        if (prefix->name == poolStart(&tempPool)) {
+	  prefix->name = poolCopyString(&dtd.pool, prefix->name);
+	  if (!prefix->name)
+	    return 0;
+	}
+	poolDiscard(&tempPool);
       }
       for (context = s + 1; *context != CONTEXT_SEP && *context != XML_T('\0'); context++)
         if (!poolAppendChar(&tempPool, *context))
