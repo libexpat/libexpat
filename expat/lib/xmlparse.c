@@ -1863,6 +1863,11 @@ XML_ErrorString(enum XML_Error code)
     XML_L("requested feature requires XML_DTD support in Expat"),
     XML_L("cannot change setting once parsing has begun"),
     XML_L("unbound prefix"),
+    XML_L("must not undeclare prefix"),
+    XML_L("incomplete markup in parameter entity"),
+    XML_L("XML declaration not well-formed"),
+    XML_L("text declaration not well-formed"),
+    XML_L("illegal character(s) in public id"),
     XML_L("parser suspended"),
     XML_L("parser not suspended"),
     XML_L("parsing aborted"),
@@ -2916,9 +2921,9 @@ addBinding(XML_Parser parser, PREFIX *prefix, const ATTRIBUTE_ID *attId,
   BINDING *b;
   int len;
 
-  /* empty string is only valid when there is no prefix per XML NS 1.0 */
+  /* empty URI is only valid for default namespace per XML NS 1.0 (not 1.1) */
   if (*uri == XML_T('\0') && prefix->name)
-    return XML_ERROR_SYNTAX;
+    return XML_ERROR_UNDECLARING_PREFIX;
 
   for (len = 0; uri[len]; len++)
     ;
@@ -3242,8 +3247,12 @@ processXmlDecl(XML_Parser parser, int isGeneralTextEntity,
                            &versionend,
                            &encodingName,
                            &newEncoding,
-                           &standalone))
-    return XML_ERROR_SYNTAX;
+                           &standalone)) {
+    if (isGeneralTextEntity)
+      return XML_ERROR_TEXT_DECL;
+    else
+      return XML_ERROR_XML_DECL;
+  }
   if (!isGeneralTextEntity && standalone == 1) {
     _dtd->standalone = XML_TRUE;
 #ifdef XML_DTD
@@ -3618,7 +3627,7 @@ doProlog(XML_Parser parser,
         if (isParamEntity || enc != encoding) {
           if (XmlTokenRole(&prologState, XML_TOK_NONE, end, end, enc)
               == XML_ROLE_ERROR)
-            return XML_ERROR_SYNTAX;
+            return XML_ERROR_INCOMPLETE_PE;
           *nextPtr = s;
           return XML_ERROR_NONE;
         }
@@ -3684,7 +3693,7 @@ doProlog(XML_Parser parser,
       dtd->hasParamEntityRefs = XML_TRUE;
       if (startDoctypeDeclHandler) {
         if (!XmlIsPublicId(enc, s, next, eventPP))
-          return XML_ERROR_SYNTAX;
+          return XML_ERROR_PUBLICID;
         doctypePubid = poolStoreString(&tempPool, enc,
                                        s + enc->minBytesPerChar,
                                        next - enc->minBytesPerChar);
@@ -3698,7 +3707,7 @@ doProlog(XML_Parser parser,
       /* fall through */
     case XML_ROLE_ENTITY_PUBLIC_ID:
       if (!XmlIsPublicId(enc, s, next, eventPP))
-        return XML_ERROR_SYNTAX;
+        return XML_ERROR_PUBLICID;
     alreadyChecked:
       if (dtd->keepProcessing && declEntity) {
         XML_Char *tem = poolStoreString(&dtd->pool,
@@ -4122,7 +4131,7 @@ doProlog(XML_Parser parser,
       break;
     case XML_ROLE_NOTATION_PUBLIC_ID:
       if (!XmlIsPublicId(enc, s, next, eventPP))
-        return XML_ERROR_SYNTAX;
+        return XML_ERROR_PUBLICID;
       if (declNotationName) {  /* means notationDeclHandler != NULL */
         XML_Char *tem = poolStoreString(&tempPool,
                                         enc,
