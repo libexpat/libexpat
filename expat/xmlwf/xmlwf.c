@@ -579,16 +579,15 @@ int tmain(int argc, XML_Char **argv)
     }
     if (windowsCodePages)
       XML_SetUnknownEncodingHandler(parser, unknownEncoding, 0);
-    if (processExternalEntities) {
-      if (!XML_SetBase(parser, argv[i])) {
-	ftprintf(stderr, T("%s: out of memory"), argv[0]);
-	exit(1);
-      }
+    if (!XML_SetBase(parser, argv[i])) {
+      ftprintf(stderr, T("%s: out of memory"), argv[0]);
+      exit(1);
+    }
+    if (processExternalEntities)
       XML_SetExternalEntityRefHandler(parser,
 	                              useFilemap
 				      ? externalEntityRefFilemap
 				      : externalEntityRefStream);
-    }
     if (useFilemap) {
       PROCESS_ARGS args;
       args.retPtr = &result;
