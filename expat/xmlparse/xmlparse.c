@@ -109,6 +109,7 @@ static Processor cdataSectionProcessor;
 static Processor epilogProcessor;
 static Processor errorProcessor;
 static Processor externalEntityInitProcessor;
+static Processor externalEntityInitProcessor2;
 static Processor externalEntityContentProcessor;
 
 static enum XML_Error
@@ -576,10 +577,35 @@ enum XML_Error externalEntityInitProcessor(XML_Parser parser,
   switch (tok) {
   case XML_TOK_BOM:
     start = next;
-    tok = XmlContentTok(encoding, start, end, &next);
-    if (tok != XML_TOK_XML_DECL)
-      break;
-    /* fall through */
+    break;
+  case XML_TOK_PARTIAL:
+    if (endPtr) {
+      *endPtr = start;
+      return XML_ERROR_NONE;
+    }
+    errorPtr = start;
+    return XML_ERROR_UNCLOSED_TOKEN;
+  case XML_TOK_PARTIAL_CHAR:
+    if (endPtr) {
+      *endPtr = start;
+      return XML_ERROR_NONE;
+    }
+    errorPtr = start;
+    return XML_ERROR_PARTIAL_CHAR;
+  }
+  processor = externalEntityInitProcessor2;
+  return externalEntityInitProcessor2(parser, start, end, endPtr);
+}
+
+static
+enum XML_Error externalEntityInitProcessor2(XML_Parser parser,
+					    const char *start,
+					    const char *end,
+					    const char **endPtr)
+{
+  const char *next;
+  int tok = XmlContentTok(encoding, start, end, &next);
+  switch (tok) {
   case XML_TOK_XML_DECL:
     {
       const char *encodingName = 0;
