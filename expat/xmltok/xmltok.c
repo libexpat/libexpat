@@ -2,8 +2,6 @@
 
 Provide method to get name length.
 
-Provide method to count lines/columns.
-
 Provide methods to convert to any of UTF-8, UTF-18, UCS-4.
 
 Tokenize prologs in a way useful for well-formedness checking
@@ -82,7 +80,7 @@ struct normal_encoding {
 #undef IS_NMSTRT_CHAR
 
 const struct normal_encoding utf8_encoding = {
-  { { PREFIX(prologTok), PREFIX(contentTok) }, PREFIX(sameName), PREFIX(getAtts), 1 },
+  { { PREFIX(prologTok), PREFIX(contentTok) }, PREFIX(sameName), PREFIX(getAtts), PREFIX(updatePosition), 1 },
 #include "asciitab.h"
 #include "utf8tab.h"
 };
@@ -131,7 +129,7 @@ static int unicode_byte_type(char hi, char lo)
 #undef IS_NMSTRT_CHAR
 
 const struct encoding little2_encoding = {
- { PREFIX(prologTok), PREFIX(contentTok) }, PREFIX(sameName), PREFIX(getAtts), 2
+ { PREFIX(prologTok), PREFIX(contentTok) }, PREFIX(sameName), PREFIX(getAtts), PREFIX(updatePosition), 2
 };
 
 #undef PREFIX
@@ -156,7 +154,7 @@ const struct encoding little2_encoding = {
 #undef IS_NMSTRT_CHAR
 
 const struct encoding big2_encoding = {
- { PREFIX(prologTok), PREFIX(contentTok) }, PREFIX(sameName), PREFIX(getAtts), 2
+ { PREFIX(prologTok), PREFIX(contentTok) }, PREFIX(sameName), PREFIX(getAtts), PREFIX(updatePosition), 2
 };
 
 #undef PREFIX
@@ -215,10 +213,18 @@ int initScanContent(const ENCODING *enc, const char *ptr, const char *end,
   return initScan(enc, XML_CONTENT_STATE, ptr, end, nextTokPtr);
 }
 
+static
+void initUpdatePosition(const ENCODING *enc, const char *ptr,
+			const char *end, POSITION *pos)
+{
+  normal_updatePosition(&utf8_encoding.enc, ptr, end, pos);
+}
+
 void XmlInitEncoding(INIT_ENCODING *p, const ENCODING **encPtr)
 {
   p->initEnc.scanners[XML_PROLOG_STATE] = initScanProlog;
   p->initEnc.scanners[XML_CONTENT_STATE] = initScanContent;
+  p->initEnc.updatePosition = initUpdatePosition;
   p->initEnc.minBytesPerChar = 1;
   p->encPtr = encPtr;
   *encPtr = &(p->initEnc);

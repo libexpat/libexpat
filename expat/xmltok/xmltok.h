@@ -45,6 +45,15 @@ of the prolog and is also returned by XmlContentTok */
 #define XML_PROLOG_STATE 0
 #define XML_CONTENT_STATE 1
 
+typedef struct position {
+  /* first line and first column are 0 not 1 */
+  unsigned long lineNumber;
+  unsigned long columnNumber;
+  /* if the last character counted was CR, then an immediately
+     following LF should be ignored */
+  int ignoreInitialLF;
+} POSITION;
+
 typedef struct encoding {
   int (*scanners[XML_NSTATES])(const struct encoding *,
 			       const char *,
@@ -54,6 +63,10 @@ typedef struct encoding {
 	          const char *, const char *);
   int (*getAtts)(const struct encoding *enc, const char *ptr,
 	         int attsMax, const char **atts);
+  void (*updatePosition)(const struct encoding *,
+			 const char *ptr,
+			 const char *end,
+			 POSITION *);
   int minBytesPerChar;
 } ENCODING;
 
@@ -91,6 +104,9 @@ literals, comments and processing instructions.
 
 #define XmlGetAttributes(enc, ptr, attsMax, atts) \
   (((enc)->getAtts)(enc, ptr, attsMax, atts))
+
+#define XmlUpdatePosition(enc, ptr, end, pos) \
+  (((enc)->updatePosition)(enc, ptr, end, pos))
 
 typedef struct {
   ENCODING initEnc;

@@ -21,6 +21,8 @@ enum {
   BT_LSQB,
   BT_RSQB,
   BT_S,
+  BT_CR,
+  BT_LF,
   BT_NMSTRT,
   BT_HEX,
   BT_DIGIT,

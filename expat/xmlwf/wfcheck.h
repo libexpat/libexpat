@@ -13,5 +13,8 @@ enum WfCheckResult {
   junkAfterDocElement
 };
 
-enum WfCheckResult wfCheck(const char *s, size_t n, const char **badPtr);
+enum WfCheckResult wfCheck(const char *s, size_t n,
+			   const char **errorPtr,
+			   unsigned long *errorLineNumber,
+			   unsigned long *errorColNumber);
 

@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <string.h>
 #include "wfcheck.h"
 
 #ifdef _MSC_VER
@@ -10,9 +11,14 @@
 static
 int skipProlog(const char **s, const char *end, const char **nextTokP,
 	       const ENCODING **enc);
+static
+void setPosition(const ENCODING *enc,
+		 const char *start, const char *end,
+		 const char **badPtr, unsigned long *badLine, unsigned long *badCol);
 
 enum WfCheckResult
-wfCheck(const char *s, size_t n, const char **badPtr)
+wfCheck(const char *s, size_t n,
+	const char **badPtr, unsigned long *badLine, unsigned long *badCol)
 {
   unsigned nElements = 0;
   unsigned nAtts = 0;
@@ -33,16 +39,16 @@ wfCheck(const char *s, size_t n, const char **badPtr)
   for (;;) {
     switch (tok) {
     case XML_TOK_NONE:
-      *badPtr = s;
+      setPosition(enc, start, s, badPtr, badLine, badCol);
       RETURN_CLEANUP(noElements);
     case XML_TOK_INVALID:
-      *badPtr = next;
+      setPosition(enc, start, next, badPtr, badLine, badCol);
       RETURN_CLEANUP(invalidToken);
     case XML_TOK_PARTIAL:
-      *badPtr = s;
+      setPosition(enc, start, s, badPtr, badLine, badCol);
       RETURN_CLEANUP(unclosedToken);
     case XML_TOK_PARTIAL_CHAR:
-      *badPtr = s;
+      setPosition(enc, start, s, badPtr, badLine, badCol);
       RETURN_CLEANUP(partialChar);
     case XML_TOK_EMPTY_ELEMENT_NO_ATTS:
       nElements++;
@@ -87,7 +93,7 @@ wfCheck(const char *s, size_t n, const char **badPtr)
 	  int j;
 	  for (j = 0; j < i; j++) {
 	    if (XmlSameName(enc, atts[i], atts[j])) {
-	      *badPtr = atts[i];
+	      setPosition(enc, start, atts[i], badPtr, badLine, badCol);
 	      RETURN_CLEANUP(duplicateAttribute);
 	    }
 	  }
@@ -97,7 +103,7 @@ wfCheck(const char *s, size_t n, const char **badPtr)
     case XML_TOK_END_TAG:
       --level;
       if (!XmlSameName(enc, startName[level], s + enc->minBytesPerChar * 2)) {
-	*badPtr = s;
+	setPosition(enc, start, s, badPtr, badLine, badCol);
 	RETURN_CLEANUP(tagMismatch);
       }
       break;
@@ -116,7 +122,7 @@ wfCheck(const char *s, size_t n, const char **badPtr)
 	  break;
 	default:
 	  if (tok > 0) {
-	    *badPtr = s;
+	    setPosition(enc, start, s, badPtr, badLine, badCol);
 	    RETURN_CLEANUP(junkAfterDocElement);
 	  }
 	  break;
@@ -155,4 +161,17 @@ int skipProlog(const char **startp, const char *end,
     s = *nextTokP;
   }
   /* not reached */
+}
+
+static
+void setPosition(const ENCODING *enc,
+		 const char *start, const char *end,
+		 const char **badPtr, unsigned long *badLine, unsigned long *badCol)
+{
+  POSITION pos;
+  memset(&pos, 0, sizeof(POSITION));
+  XmlUpdatePosition(enc, start, end, &pos);
+  *badPtr = end;
+  *badLine = pos.lineNumber;
+  *badCol = pos.columnNumber;
 }

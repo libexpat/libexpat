@@ -10,8 +10,11 @@ int doFile(const char *name)
   HANDLE f;
   HANDLE m;
   DWORD size;
+  DWORD sizeHi;
   const char *p;
-  const char *bad = 0;
+  const char *badPtr = 0;
+  unsigned long badLine = 0;
+  unsigned long badCol = 0;
   int ret;
   enum WfCheckResult result;
 
@@ -21,7 +24,16 @@ int doFile(const char *name)
     fprintf(stderr, "%s: CreateFile failed\n", name);
     return 0;
   }
-  size = GetFileSize(f, NULL);
+  size = GetFileSize(f, &sizeHi);
+  if (sizeHi) {
+    fprintf(stderr, "%s: too big (limit 2Gb)\n", name);
+    return 0;
+  }
+  /* CreateFileMapping barfs on zero length files */
+  if (size == 0) {
+    fprintf(stderr, "%s: zero-length file\n", name);
+    return 0;
+  }
   m = CreateFileMapping(f, NULL, PAGE_READONLY, 0, 0, NULL);
   if (m == NULL) {
     fprintf(stderr, "%s: CreateFileMapping failed\n", name);
@@ -35,21 +47,23 @@ int doFile(const char *name)
     fprintf(stderr, "%s: MapViewOfFile failed\n", name);
     return 0;
   }
-  result = wfCheck(p, size, &bad);
+  result = wfCheck(p, size, &badPtr, &badLine, &badCol);
   if (result) {
     static const char *message[] = {
       0,
       "out of memory",
       "no element found",
-      "invalid token after %lu bytes",
-      "unclosed token started after %lu bytes",
-      "unclosed token started after %lu bytes",
-      "mismatched tag after %lu bytes",
-      "duplicate attribute after %lu bytes",
-      "junk after document element after %lu bytes",
+      "invalid token",
+      "unclosed token",
+      "unclosed token",
+      "mismatched tag",
+      "duplicate attribute",
+      "junk after document element",
     };
-    fprintf(stderr, "%s: ", name);
-    fprintf(stderr, message[result], (unsigned long)(bad - p));
+    fprintf(stderr, "%s:", name);
+    if (badPtr != 0)
+      fprintf(stderr, "%lu:%lu:", badLine+1, badCol);
+    fprintf(stderr, "E: %s", message[result]);
     putc('\n', stderr);
     ret = 1;
   }
