@@ -262,6 +262,28 @@ START_TEST(test_latin1_umlauts)
 }
 END_TEST
 
+/* Regression test for SF bug #422239 (maybe).
+   It's not clear that this reproduces enough of the context
+   of the reported bug.
+*/
+START_TEST(test_line_count)
+{
+    char *text =
+        "<e>\n"
+        "  <e/>\n"
+        "</e>";
+    int lineno;
+    if (!XML_Parse(parser, text, strlen(text), 1))
+        xml_failure(parser);
+    lineno = XML_GetCurrentLineNumber(parser);
+    if (lineno != 3) {
+        char buffer[100];
+        sprintf(buffer, "expected 3 lines, saw %d", lineno);
+        fail(buffer);
+    }
+}
+END_TEST
+
 
 /*
  * Attribute tests.
@@ -495,6 +517,7 @@ make_basic_suite(void)
     tcase_add_test(tc_chars, test_french_charref_decimal);
     tcase_add_test(tc_chars, test_french_latin1);
     tcase_add_test(tc_chars, test_french_utf8);
+    tcase_add_test(tc_chars, test_line_count);
 
     suite_add_tcase(s, tc_attrs);
     tcase_add_checked_fixture(tc_attrs, basic_setup, basic_teardown);
