@@ -42,8 +42,8 @@ typedef struct {
   int *retPtr;
 } PROCESS_ARGS;
 
-static
-void reportError(XML_Parser parser, const XML_Char *filename)
+static void
+reportError(XML_Parser parser, const XML_Char *filename)
 {
   int code = XML_GetErrorCode(parser);
   const XML_Char *message = XML_ErrorString(code);
@@ -57,11 +57,9 @@ void reportError(XML_Parser parser, const XML_Char *filename)
     ftprintf(stderr, T("%s: (unknown message %d)\n"), filename, code);
 }
 
-static
-void processFile(const void *data,
-		 size_t size,
-		 const XML_Char *filename,
-		 void *args)
+static void
+processFile(const void *data, size_t size,
+	    const XML_Char *filename, void *args)
 {
   XML_Parser parser = ((PROCESS_ARGS *)args)->parser;
   int *retPtr = ((PROCESS_ARGS *)args)->retPtr;
@@ -75,16 +73,17 @@ void processFile(const void *data,
 
 #ifdef WIN32
 
-static
-int isAsciiLetter(XML_Char c)
+static int
+isAsciiLetter(XML_Char c)
 {
   return (T('a') <= c && c <= T('z')) || (T('A') <= c && c <= T('Z'));
 }
 
 #endif /* WIN32 */
 
-static
-const XML_Char *resolveSystemId(const XML_Char *base, const XML_Char *systemId, XML_Char **toFree)
+static const XML_Char *
+resolveSystemId(const XML_Char *base, const XML_Char *systemId,
+		XML_Char **toFree)
 {
   XML_Char *s;
   *toFree = 0;
@@ -96,7 +95,8 @@ const XML_Char *resolveSystemId(const XML_Char *base, const XML_Char *systemId, 
 #endif
      )
     return systemId;
-  *toFree = (XML_Char *)malloc((tcslen(base) + tcslen(systemId) + 2)*sizeof(XML_Char));
+  *toFree = (XML_Char *)malloc((tcslen(base) + tcslen(systemId) + 2)
+			       * sizeof(XML_Char));
   if (!*toFree)
     return systemId;
   tcscpy(*toFree, base);
@@ -111,12 +111,12 @@ const XML_Char *resolveSystemId(const XML_Char *base, const XML_Char *systemId, 
   return *toFree;
 }
 
-static
-int externalEntityRefFilemap(XML_Parser parser,
-			     const XML_Char *context,
-			     const XML_Char *base,
-			     const XML_Char *systemId,
-			     const XML_Char *publicId)
+static int
+externalEntityRefFilemap(XML_Parser parser,
+			 const XML_Char *context,
+			 const XML_Char *base,
+			 const XML_Char *systemId,
+			 const XML_Char *publicId)
 {
   int result;
   XML_Char *s;
@@ -134,47 +134,57 @@ int externalEntityRefFilemap(XML_Parser parser,
   return result;
 }
 
-static
-int processStream(const XML_Char *filename, XML_Parser parser)
+static int
+processStream(const XML_Char *filename, XML_Parser parser)
 {
-  int fd = topen(filename, O_BINARY|O_RDONLY);
-  if (fd < 0) {
-    tperror(filename);
-    return 0;
+  /* passing NULL for filename means read intput from stdin */
+  int fd = 0;   /* 0 is the fileno for stdin */
+
+  if (filename != NULL) {
+    fd = topen(filename, O_BINARY|O_RDONLY);
+    if (fd < 0) {
+      tperror(filename);
+      return 0;
+    }
   }
   for (;;) {
     int nread;
     char *buf = XML_GetBuffer(parser, READ_SIZE);
     if (!buf) {
-      close(fd);
-      ftprintf(stderr, T("%s: out of memory\n"), filename);
+      if (filename != NULL)
+	close(fd);
+      ftprintf(stderr, T("%s: out of memory\n"),
+	       filename != NULL ? filename : "xmlwf");
       return 0;
     }
     nread = read(fd, buf, READ_SIZE);
     if (nread < 0) {
-      tperror(filename);
-      close(fd);
+      tperror(filename != NULL ? filename : "STDIN");
+      if (filename != NULL)
+	close(fd);
       return 0;
     }
     if (!XML_ParseBuffer(parser, nread, nread == 0)) {
-      reportError(parser, filename);
-      close(fd);
+      reportError(parser, filename != NULL ? filename : "STDIN");
+      if (filename != NULL)
+	close(fd);
       return 0;
     }
     if (nread == 0) {
-      close(fd);
+      if (filename != NULL)
+	close(fd);
       break;;
     }
   }
   return 1;
 }
 
-static
-int externalEntityRefStream(XML_Parser parser,
-			    const XML_Char *context,
-			    const XML_Char *base,
-			    const XML_Char *systemId,
-			    const XML_Char *publicId)
+static int
+externalEntityRefStream(XML_Parser parser,
+			const XML_Char *context,
+			const XML_Char *base,
+			const XML_Char *systemId,
+			const XML_Char *publicId)
 {
   XML_Char *s;
   const XML_Char *filename;
@@ -188,9 +198,10 @@ int externalEntityRefStream(XML_Parser parser,
   return ret;
 }
 
-int XML_ProcessFile(XML_Parser parser,
-		    const XML_Char *filename,
-		    unsigned flags)
+int
+XML_ProcessFile(XML_Parser parser,
+		const XML_Char *filename,
+		unsigned flags)
 {
   int result;
 
