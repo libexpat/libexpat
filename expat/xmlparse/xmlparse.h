@@ -137,6 +137,15 @@ typedef void (*XML_DefaultHandler)(void *userData,
 				   const XML_Char *s,
 				   int len);
 
+/* This is called for the start of the DOCTYPE declaration when the
+name of the DOCTYPE is encountered. */
+typedef void (*XML_StartDoctypeDeclHandler)(void *userData,
+					    const XML_Char *doctypeName);
+
+/* This is called for the start of the DOCTYPE declaration when the
+closing > is encountered, but after processing any external subset. */
+typedef void (*XML_EndDoctypeDeclHandler)(void *userData);
+
 /* This is called for a declaration of an unparsed (NDATA)
 entity.  The base argument is whatever was set by XML_SetBase.
 The entityName, systemId and notationName arguments will never be null.
@@ -307,6 +316,11 @@ The entity reference will not be passed to the default handler. */
 void XMLPARSEAPI
 XML_SetDefaultHandlerExpand(XML_Parser parser,
 		            XML_DefaultHandler handler);
+
+void XMLPARSEAPI
+XML_SetDoctypeDeclHandler(XML_Parser parser,
+			  XML_StartDoctypeDeclHandler start,
+			  XML_EndDoctypeDeclHandler end);
 
 void XMLPARSEAPI
 XML_SetUnparsedEntityDeclHandler(XML_Parser parser,

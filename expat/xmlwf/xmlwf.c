@@ -413,12 +413,30 @@ void metaCharacterData(XML_Parser parser, const XML_Char *s, int len)
 }
 
 static
+void metaStartDoctypeDecl(XML_Parser parser, const XML_Char *doctypeName)
+{
+  FILE *fp = XML_GetUserData(parser);
+  ftprintf(fp, T("<startdoctype name=\"%s\""), doctypeName);
+  metaLocation(parser);
+  fputts(T("/>\n"), fp);
+}
+
+static
+void metaEndDoctypeDecl(XML_Parser parser)
+{
+  FILE *fp = XML_GetUserData(parser);
+  fputts(T("<enddoctype"), fp);
+  metaLocation(parser);
+  fputts(T("/>\n"), fp);
+}
+
+static
 void metaUnparsedEntityDecl(XML_Parser parser,
-			       const XML_Char *entityName,
-			       const XML_Char *base,
-			       const XML_Char *systemId,
-			       const XML_Char *publicId,
-			       const XML_Char *notationName)
+			    const XML_Char *entityName,
+			    const XML_Char *base,
+			    const XML_Char *systemId,
+			    const XML_Char *publicId,
+			    const XML_Char *notationName)
 {
   FILE *fp = XML_GetUserData(parser);
   ftprintf(fp, T("<entity name=\"%s\""), entityName);
@@ -687,6 +705,7 @@ int tmain(int argc, XML_Char **argv)
 	XML_SetCommentHandler(parser, metaComment);
 	XML_SetCdataSectionHandler(parser, metaStartCdataSection, metaEndCdataSection);
 	XML_SetCharacterDataHandler(parser, metaCharacterData);
+	XML_SetDoctypeDeclHandler(parser, metaStartDoctypeDecl, metaEndDoctypeDecl);
 	XML_SetUnparsedEntityDeclHandler(parser, metaUnparsedEntityDecl);
 	XML_SetNotationDeclHandler(parser, metaNotationDecl);
 	XML_SetNamespaceDeclHandler(parser, metaStartNamespaceDecl, metaEndNamespaceDecl);
