@@ -18,9 +18,6 @@ James Clark. All Rights Reserved.
 Contributor(s):
 */
 
-#include <stdlib.h>
-#include <string.h>
-
 #include "xmldef.h"
 
 #ifdef XML_UNICODE_WCHAR_T

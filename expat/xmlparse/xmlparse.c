@@ -18,10 +18,6 @@ James Clark. All Rights Reserved.
 Contributor(s):
 */
 
-#include <stdlib.h>
-#include <string.h>
-#include <stddef.h>
-
 #include "xmldef.h"
 #include "xmlparse.h"
 
