@@ -39,8 +39,8 @@ install -D xmlwf/xmlwf $RPM_BUILD_ROOT/usr/bin/xmlwf
 /usr/man/man1/xmlwf.1.gz
 
 %changelog
-[Release 1.95.8-1]
 * Fri Jul 16 2004 Fred L. Drake, Jr. <fdrake@acm.org>
+[Release 1.95.8-1]
 - Update for the 1.95.8 release.
 - Add the expat_external.h header to the installed files.
 
