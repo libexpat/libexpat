@@ -1,3 +1,7 @@
 Makefile
 elements
+elements.plg
 outline
+outline.plg
+Debug
+Release
