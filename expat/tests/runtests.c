@@ -346,6 +346,78 @@ START_TEST(test_attr_whitespace_normalization)
 END_TEST
 
 
+/*
+ * Namespaces tests.
+ */
+
+static void
+namespace_setup(void)
+{
+    parser = XML_ParserCreateNS(NULL, ' ');
+    if (parser == NULL)
+        fail("Parser not created.");
+}
+
+static void
+namespace_teardown(void)
+{
+    basic_teardown();
+}
+
+/* Check that an element name and attribute name match the expected values.
+ * The expected values are passed as an array reference of string pointers
+ * provided as the userData argument; the first is the expected
+ * element name, and the second is the expected attribute name.
+ */
+static void
+triplet_start_checker(void *userData, const XML_Char *name,
+                      const XML_Char **atts)
+{
+    char **elemstr = (char **)userData;
+    char buffer[1024];
+    if (strcmp(elemstr[0], name) != 0) {
+        sprintf(buffer, "unexpected start string: '%s'", name);
+        fail(buffer);
+    }
+    if (strcmp(elemstr[1], atts[0]) != 0) {
+        sprintf(buffer, "unexpected attribute string: '%s'", atts[0]);
+        fail(buffer);
+    }
+}
+
+/* Check that the element name passed to the end-element handler matches
+ * the expected value.  The expected value is passed as the first element
+ * in an array of strings passed as the userData argument.
+ */
+static void
+triplet_end_checker(void *userData, const XML_Char *name)
+{
+    char **elemstr = (char **)userData;
+    if (strcmp(elemstr[0], name) != 0) {
+        char buffer[1024];
+        sprintf(buffer, "unexpected end string: '%s'", name);
+        fail(buffer);
+    }
+}
+
+START_TEST(test_return_ns_triplet)
+{
+    char *text =
+        "<foo:e xmlns:foo='http://expat.sf.net/' bar:a='12'\n"
+        "       xmlns:bar='http://expat.sf.net/'></foo:e>";
+    char *elemstr[] = {
+        "http://expat.sf.net/ e foo",
+        "http://expat.sf.net/ a bar"
+    };
+    XML_SetReturnNSTriplet(parser, 1);
+    XML_SetUserData(parser, elemstr);
+    XML_SetElementHandler(parser, triplet_start_checker, triplet_end_checker);
+    if (!XML_Parse(parser, text, strlen(text), 1))
+        xml_failure();
+}
+END_TEST
+
+
 static Suite *
 make_basic_suite(void)
 {
@@ -353,6 +425,7 @@ make_basic_suite(void)
     TCase *tc_chars = tcase_create("character tests");
     TCase *tc_attrs = tcase_create("attributes");
     TCase *tc_xmldecl = tcase_create("XML declaration");
+    TCase *tc_namespace = tcase_create("XML namespaces");
 
     suite_add_tcase(s, tc_chars);
     tcase_add_checked_fixture(tc_chars, basic_setup, basic_teardown);
@@ -377,6 +450,11 @@ make_basic_suite(void)
     suite_add_tcase(s, tc_xmldecl);
     tcase_add_checked_fixture(tc_xmldecl, basic_setup, basic_teardown);
     tcase_add_test(tc_xmldecl, test_xmldecl_misplaced);
+
+    suite_add_tcase(s, tc_namespace);
+    tcase_add_checked_fixture(tc_namespace,
+                              namespace_setup, namespace_teardown);
+    tcase_add_test(tc_namespace, test_return_ns_triplet);
 
     return s;
 }
