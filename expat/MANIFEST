@@ -18,11 +18,11 @@ conftools/mkinstalldirs
 doc/reference.html
 doc/style.css
 examples/Makefile.in
+examples/elements.c
 examples/outline.c
 lib/Makefile.in
 lib/ascii.h
 lib/asciitab.h
-lib/expat.dsp
 lib/expat.h.in
 lib/iasciitab.h
 lib/latin1tab.h
@@ -37,10 +37,6 @@ lib/xmltok_impl.c
 lib/xmltok_impl.h
 lib/xmltok_ns.c
 lib/winconfig.h
-sample/Makefile.in
-sample/build.bat
-sample/elements.c
-win32/expat.dsw
 xmlwf/Makefile.in
 xmlwf/codepage.c
 xmlwf/codepage.h
@@ -59,5 +55,4 @@ xmlwf/xmlmime.h
 xmlwf/xmltchar.h
 xmlwf/xmlurl.h
 xmlwf/xmlwf.c
-xmlwf/xmlwf.dsp
 xmlwf/xmlwin32url.cxx
