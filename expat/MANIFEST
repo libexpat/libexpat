@@ -22,7 +22,7 @@ examples/outline.c
 lib/Makefile.in
 lib/ascii.h
 lib/asciitab.h
-lib/expat.h.in
+lib/expat.h
 lib/iasciitab.h
 lib/latin1tab.h
 lib/nametab.h
