@@ -16,10 +16,8 @@ conftools/ltmain.sh
 conftools/mkinstalldirs
 doc/reference.html
 doc/style.css
-examples/Makefile.in
 examples/elements.c
 examples/outline.c
-lib/Makefile.in
 lib/ascii.h
 lib/asciitab.h
 lib/expat.h
@@ -36,7 +34,6 @@ lib/xmltok_impl.c
 lib/xmltok_impl.h
 lib/xmltok_ns.c
 lib/winconfig.h
-xmlwf/Makefile.in
 xmlwf/codepage.c
 xmlwf/codepage.h
 xmlwf/ct.c
