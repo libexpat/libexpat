@@ -4,7 +4,7 @@ See the file COPYING for copying permission.
 */
 
 static char RCSId[]
-  = "$Header: /cvsroot/expat/expat/lib/xmlparse.c,v 1.7 2000/10/09 06:26:10 jclark Exp $";
+  = "$Header: /cvsroot/expat/expat/lib/xmlparse.c,v 1.8 2000/10/10 18:48:48 coopercc Exp $";
 
 #include <config.h>
 
@@ -3532,11 +3532,6 @@ enum XML_Error storeEntityValue(XML_Parser parser,
       if (pool->end == pool->ptr && !poolGrow(pool))
 	return XML_ERROR_NO_MEMORY;
       *(pool->ptr)++ = 0xA;
-      break;
-    case XML_TOK_PERCENT:
-      if (pool->end == pool->ptr && !poolGrow(pool))
-	return XML_ERROR_NO_MEMORY;
-      *(pool->ptr)++ = '%';
       break;
     case XML_TOK_CHAR_REF:
       {

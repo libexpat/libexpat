@@ -1,3 +1,5 @@
+	- Fixed a bug where parameter entities weren't being expanded inside
+	  entity literals.
 	- Defined XML_SetEndNamespaceDeclHandler. Thanks to Darryl Miles for
 	  finding this oversight.
 	- Changed default patterns in lib/Makefile.in to fit non-GNU makes
