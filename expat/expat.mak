@@ -58,6 +58,7 @@ ALL : ".\bin\xmltok.dll"
 
 CLEAN : 
 	-@erase "$(INTDIR)\dllmain.obj"
+	-@erase "$(INTDIR)\xmlrole.obj"
 	-@erase "$(INTDIR)\xmltok.obj"
 	-@erase "$(OUTDIR)\xmltok.exp"
 	-@erase "$(OUTDIR)\xmltok.lib"
@@ -114,6 +115,7 @@ LINK32_FLAGS=/nologo /entry:"DllMain" /subsystem:windows /dll /incremental:no\
  /implib:"$(OUTDIR)/xmltok.lib" 
 LINK32_OBJS= \
 	"$(INTDIR)\dllmain.obj" \
+	"$(INTDIR)\xmlrole.obj" \
 	"$(INTDIR)\xmltok.obj"
 
 ".\bin\xmltok.dll" : "$(OUTDIR)" $(DEF_FILE) $(LINK32_OBJS)
@@ -142,6 +144,7 @@ CLEAN :
 	-@erase "$(INTDIR)\dllmain.obj"
 	-@erase "$(INTDIR)\vc40.idb"
 	-@erase "$(INTDIR)\vc40.pdb"
+	-@erase "$(INTDIR)\xmlrole.obj"
 	-@erase "$(INTDIR)\xmltok.obj"
 	-@erase "$(OUTDIR)\xmltok.dll"
 	-@erase "$(OUTDIR)\xmltok.exp"
@@ -201,6 +204,7 @@ LINK32_FLAGS=kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib\
  /implib:"$(OUTDIR)/xmltok.lib" 
 LINK32_OBJS= \
 	"$(INTDIR)\dllmain.obj" \
+	"$(INTDIR)\xmlrole.obj" \
 	"$(INTDIR)\xmltok.obj"
 
 "$(OUTDIR)\xmltok.dll" : "$(OUTDIR)" $(DEF_FILE) $(LINK32_OBJS)
@@ -381,6 +385,7 @@ ALL : "xmltok - Win32 Release" ".\bin\xmlwf.exe"
 
 CLEAN : 
 	-@erase "$(INTDIR)\wfcheck.obj"
+	-@erase "$(INTDIR)\win32filemap.obj"
 	-@erase "$(INTDIR)\xmlwf.obj"
 	-@erase ".\bin\xmlwf.exe"
 
@@ -431,6 +436,7 @@ LINK32_FLAGS=setargv.obj kernel32.lib user32.lib gdi32.lib winspool.lib\
  /pdb:"$(OUTDIR)/xmlwf.pdb" /machine:I386 /out:"bin/xmlwf.exe" 
 LINK32_OBJS= \
 	"$(INTDIR)\wfcheck.obj" \
+	"$(INTDIR)\win32filemap.obj" \
 	"$(INTDIR)\xmlwf.obj" \
 	".\Release\xmltok.lib"
 
@@ -460,6 +466,7 @@ CLEAN :
 	-@erase "$(INTDIR)\vc40.idb"
 	-@erase "$(INTDIR)\vc40.pdb"
 	-@erase "$(INTDIR)\wfcheck.obj"
+	-@erase "$(INTDIR)\win32filemap.obj"
 	-@erase "$(INTDIR)\xmlwf.obj"
 	-@erase "$(OUTDIR)\xmlwf.pdb"
 	-@erase ".\Debug\xmlwf.exe"
@@ -512,6 +519,7 @@ LINK32_FLAGS=setargv.obj kernel32.lib user32.lib gdi32.lib winspool.lib\
  /pdb:"$(OUTDIR)/xmlwf.pdb" /debug /machine:I386 /out:"Debug/xmlwf.exe" 
 LINK32_OBJS= \
 	"$(INTDIR)\wfcheck.obj" \
+	"$(INTDIR)\win32filemap.obj" \
 	"$(INTDIR)\xmlwf.obj" \
 	".\Debug\xmltok.lib"
 
@@ -582,8 +590,47 @@ DEP_CPP_XMLTO=\
 
 SOURCE=.\dllmain.c
 
+!IF  "$(CFG)" == "xmltok - Win32 Release"
+
+
 "$(INTDIR)\dllmain.obj" : $(SOURCE) "$(INTDIR)"
 
+
+!ELSEIF  "$(CFG)" == "xmltok - Win32 Debug"
+
+
+"$(INTDIR)\dllmain.obj" : $(SOURCE) "$(INTDIR)"
+
+
+!ENDIF 
+
+# End Source File
+################################################################################
+# Begin Source File
+
+SOURCE=.\xmlrole.c
+
+!IF  "$(CFG)" == "xmltok - Win32 Release"
+
+DEP_CPP_XMLRO=\
+	".\xmlrole.h"\
+	".\xmltok.h"\
+	
+
+"$(INTDIR)\xmlrole.obj" : $(SOURCE) $(DEP_CPP_XMLRO) "$(INTDIR)"
+
+
+!ELSEIF  "$(CFG)" == "xmltok - Win32 Debug"
+
+DEP_CPP_XMLRO=\
+	".\xmlrole.h"\
+	".\xmltok.h"\
+	
+
+"$(INTDIR)\xmlrole.obj" : $(SOURCE) $(DEP_CPP_XMLRO) "$(INTDIR)"
+
+
+!ENDIF 
 
 # End Source File
 # End Target
@@ -666,6 +713,7 @@ DEP_CPP_XMLEC=\
 
 SOURCE=.\xmlwf\wfcheck.c
 DEP_CPP_WFCHE=\
+	".\xmlrole.h"\
 	".\xmltok.h"\
 	".\xmlwf\wfcheck.h"\
 	
@@ -680,10 +728,24 @@ DEP_CPP_WFCHE=\
 
 SOURCE=.\xmlwf\xmlwf.c
 DEP_CPP_XMLWF=\
+	".\xmlwf\filemap.h"\
 	".\xmlwf\wfcheck.h"\
 	
 
 "$(INTDIR)\xmlwf.obj" : $(SOURCE) $(DEP_CPP_XMLWF) "$(INTDIR)"
+   $(CPP) $(CPP_PROJ) $(SOURCE)
+
+
+# End Source File
+################################################################################
+# Begin Source File
+
+SOURCE=.\xmlwf\win32filemap.c
+DEP_CPP_WIN32=\
+	".\xmlwf\filemap.h"\
+	
+
+"$(INTDIR)\win32filemap.obj" : $(SOURCE) $(DEP_CPP_WIN32) "$(INTDIR)"
    $(CPP) $(CPP_PROJ) $(SOURCE)
 
 
