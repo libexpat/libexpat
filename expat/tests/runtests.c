@@ -40,7 +40,7 @@ _xml_failure(XML_Parser parser, const char *file, int line)
             XML_GetCurrentLineNumber(parser),
             XML_GetCurrentColumnNumber(parser),
             file, line);
-    fail(buffer);
+    _fail_unless(0, file, line, buffer);
 }
 
 #define xml_failure(parser) _xml_failure((parser), __FILE__, __LINE__)
@@ -199,7 +199,8 @@ accumulate_attribute(void *userData, const XML_Char *name,
 
 
 static void
-run_character_check(XML_Char *text, XML_Char *expected)
+_run_character_check(XML_Char *text, XML_Char *expected,
+                     const char *file, int line)
 {
     CharData storage;
 
@@ -207,12 +208,16 @@ run_character_check(XML_Char *text, XML_Char *expected)
     XML_SetUserData(parser, &storage);
     XML_SetCharacterDataHandler(parser, accumulate_characters);
     if (XML_Parse(parser, text, strlen(text), 1) == XML_STATUS_ERROR)
-        xml_failure(parser);
+        _xml_failure(parser, file, line);
     CharData_CheckXMLChars(&storage, expected);
 }
 
+#define run_character_check(text, expected) \
+        _run_character_check(text, expected, __FILE__, __LINE__)
+
 static void
-run_attribute_check(XML_Char *text, XML_Char *expected)
+_run_attribute_check(XML_Char *text, XML_Char *expected,
+                     const char *file, int line)
 {
     CharData storage;
 
@@ -220,9 +225,12 @@ run_attribute_check(XML_Char *text, XML_Char *expected)
     XML_SetUserData(parser, &storage);
     XML_SetStartElementHandler(parser, accumulate_attribute);
     if (XML_Parse(parser, text, strlen(text), 1) == XML_STATUS_ERROR)
-        xml_failure(parser);
+        _xml_failure(parser, file, line);
     CharData_CheckXMLChars(&storage, expected);
 }
+
+#define run_attribute_check(text, expected) \
+        _run_attribute_check(text, expected, __FILE__, __LINE__)
 
 /* Regression test for SF bug #491986. */
 START_TEST(test_danish_latin1)
