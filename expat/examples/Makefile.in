@@ -32,10 +32,13 @@ top_srcdir = @top_srcdir@
 VPATH = @srcdir@
 
 
-all: outline
+all: elements outline
+
+elements: elements.o
+	$(CC) -o $@ $< $(LDFLAGS) $(LIBS)
 
 outline: outline.o
-	$(CC) -o outline outline.o $(LDFLAGS) $(LIBS)
+	$(CC) -o $@ $< $(LDFLAGS) $(LIBS)
 
 check:	$(SUBDIRS)
 	@echo
@@ -43,7 +46,7 @@ check:	$(SUBDIRS)
 	@echo
 
 clean:
-	rm -f outline core *.o
+	rm -f elements outline core *.o
 
 distclean: clean
 	rm -f Makefile
