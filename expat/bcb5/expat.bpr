@@ -9,7 +9,7 @@
     <RESFILES value=""/>
     <IDLFILES value=""/>
     <IDLGENFILES value=""/>
-    <DEFFILE value="..\lib\libexpatborl.def"/>
+    <DEFFILE value="libexpat_mtd.def"/>
     <RESDEPEN value="$(RESFILES)"/>
     <LIBFILES value=""/>
     <LIBRARIES value=""/>

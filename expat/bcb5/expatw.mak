@@ -28,7 +28,7 @@ PACKAGES = VCL50.bpi VCLX50.bpi bcbsmp50.bpi QRPT50.bpi VCLDB50.bpi VCLBDE50.bpi
     VCLIB50.bpi bcbie50.bpi VCLIE50.bpi INETDB50.bpi INET50.bpi NMFAST50.bpi \
     dclocx50.bpi bcb2kaxserver50.bpi dclusr50.bpi
 SPARELIBS = 
-DEFFILE = ..\lib\libexpatwborl.def
+DEFFILE = libexpatw_mtd.def
 # ---------------------------------------------------------------------------
 PATHCPP = .;..\lib
 PATHASM = .;
