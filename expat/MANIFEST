@@ -13,7 +13,6 @@ conftools/config.sub
 conftools/install-sh
 conftools/ltconfig
 conftools/ltmain.sh
-conftools/missing
 conftools/mkinstalldirs
 doc/reference.html
 doc/style.css

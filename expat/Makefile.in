@@ -75,13 +75,9 @@ $(SUBDIRS):
 	cd $@ && $(MAKE)
 
 clean:
-	# clean up the lib dir
 	cd lib && rm -f $(LIBRARY) *.o *.lo && rm -rf .libs _libs
-	# clean up the xmlwf dir
 	cd xmlwf && rm -f xmlwf *.o
-	# clean up the examples dir
 	cd examples && rm -f elements outline *.o
-	# other random cleanup
 	find . -name core | xargs rm -f
 
 distclean: clean
@@ -90,7 +86,7 @@ distclean: clean
 	rm -f lib/expat.h
 
 extraclean: distclean
-	rm -f aclocal.m4 config.h.in configure
+	rm -f config.h.in configure
 	rm -f conftools/config.guess conftools/config.sub
 	rm -f conftools/ltconfig conftools/ltmain.sh
 

@@ -44,6 +44,9 @@ LIBAGE=1
 
 AC_CONFIG_HEADER(config.h)
 
+sinclude(conftools/libtool.m4)
+sinclude(conftools/ac_c_bigendian_cross.m4)
+
 AC_LIBTOOL_WIN32_DLL
 AC_PROG_LIBTOOL
 

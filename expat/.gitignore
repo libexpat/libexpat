@@ -1,5 +1,4 @@
 Makefile
-aclocal.m4
 configure
 config.cache
 config.log
