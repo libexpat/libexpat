@@ -159,6 +159,8 @@ struct encoding {
 		       unsigned short **toP,
 		       const unsigned short *toLim);
   int minBytesPerChar;
+  char isUtf8;
+  char isUtf16;
 };
 
 /*

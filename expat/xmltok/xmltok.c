@@ -178,7 +178,7 @@ void utf8_toUtf16(const ENCODING *enc,
 }
 
 static const struct normal_encoding utf8_encoding = {
-  { VTABLE1, utf8_toUtf8, utf8_toUtf16, 1 },
+  { VTABLE1, utf8_toUtf8, utf8_toUtf16, 1, 1, 0 },
   {
 #include "asciitab.h"
 #include "utf8tab.h"
@@ -186,7 +186,7 @@ static const struct normal_encoding utf8_encoding = {
 };
 
 static const struct normal_encoding internal_utf8_encoding = {
-  { VTABLE1, utf8_toUtf8, utf8_toUtf16, 1 },
+  { VTABLE1, utf8_toUtf8, utf8_toUtf16, 1, 1, 0 },
   {
 #include "iasciitab.h"
 #include "utf8tab.h"
@@ -228,7 +228,7 @@ void latin1_toUtf16(const ENCODING *enc,
 }
 
 static const struct normal_encoding latin1_encoding = {
-  { VTABLE1, latin1_toUtf8, latin1_toUtf16, 1 },
+  { VTABLE1, latin1_toUtf8, latin1_toUtf16, 1, 0, 0 },
   {
 #include "asciitab.h"
 #include "latin1tab.h"
@@ -245,7 +245,7 @@ void ascii_toUtf8(const ENCODING *enc,
 }
 
 static const struct normal_encoding ascii_encoding = {
-  { VTABLE1, ascii_toUtf8, latin1_toUtf16, 1 },
+  { VTABLE1, ascii_toUtf8, latin1_toUtf16, 1, 1, 0 },
   {
 #include "asciitab.h"
 /* BT_NONXML == 0 */
@@ -384,7 +384,13 @@ DEFINE_UTF16_TO_UTF16
 #undef IS_INVALID_CHAR
 
 static const struct normal_encoding little2_encoding = { 
-  { VTABLE, 2 },
+  { VTABLE, 2, 0,
+#if BYTE_ORDER == 12
+    1
+#else
+    0
+#endif
+  },
 #include "asciitab.h"
 #include "latin1tab.h"
 };
@@ -392,7 +398,7 @@ static const struct normal_encoding little2_encoding = {
 #if BYTE_ORDER != 21
 
 static const struct normal_encoding internal_little2_encoding = { 
-  { VTABLE, 2 },
+  { VTABLE, 2, 0, 1 },
 #include "iasciitab.h"
 #include "latin1tab.h"
 };
@@ -437,7 +443,13 @@ DEFINE_UTF16_TO_UTF16
 #undef IS_INVALID_CHAR
 
 static const struct normal_encoding big2_encoding = {
-  { VTABLE, 2 },
+  { VTABLE, 2, 0,
+#if BYTE_ORDER == 21
+  1
+#else
+  0
+#endif
+  },
 #include "asciitab.h"
 #include "latin1tab.h"
 };
@@ -445,7 +457,7 @@ static const struct normal_encoding big2_encoding = {
 #if BYTE_ORDER != 12
 
 static const struct normal_encoding internal_big2_encoding = {
-  { VTABLE, 2 },
+  { VTABLE, 2, 0, 1 },
 #include "iasciitab.h"
 #include "latin1tab.h"
 };

@@ -29,6 +29,7 @@ Contributor(s):
 #define XmlConvert XmlUtf16Convert
 #define XmlGetInternalEncoding XmlGetUtf16InternalEncoding
 #define XmlEncode XmlUtf16Encode
+#define MUST_CONVERT(enc, s) (!(enc)->isUtf16 || (((unsigned long)s) & 1))
 #define xmlstrchr wcschr
 #define xmlstrcmp wcscmp
 #define XML_T(x) L ## x
@@ -38,6 +39,7 @@ typedef unsigned short ICHAR;
 #define XmlConvert XmlUtf8Convert
 #define XmlGetInternalEncoding XmlGetUtf8InternalEncoding
 #define XmlEncode XmlUtf8Encode
+#define MUST_CONVERT(enc, s) (!(enc)->isUtf8)
 #define xmlstrchr strchr
 #define xmlstrcmp strcmp
 #define XML_T(x) x
@@ -1046,9 +1048,15 @@ doContent(XML_Parser parser,
 	return XML_ERROR_NONE;
       }
       if (characterDataHandler) {
-	ICHAR *dataPtr = (ICHAR *)dataBuf;
-	XmlConvert(enc, &s, end, &dataPtr, (ICHAR *)dataBufEnd);
-	characterDataHandler(userData, dataBuf, dataPtr - (ICHAR *)dataBuf);
+	if (MUST_CONVERT(enc, s)) {
+	  ICHAR *dataPtr = (ICHAR *)dataBuf;
+	  XmlConvert(enc, &s, end, &dataPtr, (ICHAR *)dataBufEnd);
+	  characterDataHandler(userData, dataBuf, dataPtr - (ICHAR *)dataBuf);
+	}
+	else
+	  characterDataHandler(userData,
+		  	       (XML_Char *)s,
+			       (XML_Char *)end - (XML_Char *)s);
       }
       if (startTagLevel == 0) {
         errorPtr = end;
@@ -1061,11 +1069,17 @@ doContent(XML_Parser parser,
       return XML_ERROR_NONE;
     case XML_TOK_DATA_CHARS:
       if (characterDataHandler) {
-	do {
-	  ICHAR *dataPtr = (ICHAR *)dataBuf;
-	  XmlConvert(enc, &s, next, &dataPtr, (ICHAR *)dataBufEnd);
-	  characterDataHandler(userData, dataBuf, dataPtr - (ICHAR *)dataBuf);
-	} while (s != next);
+	if (MUST_CONVERT(enc, s)) {
+	  do {
+	    ICHAR *dataPtr = (ICHAR *)dataBuf;
+	    XmlConvert(enc, &s, next, &dataPtr, (ICHAR *)dataBufEnd);
+	    characterDataHandler(userData, dataBuf, dataPtr - (ICHAR *)dataBuf);
+	  } while (s != next);
+	}
+	else
+	  characterDataHandler(userData,
+			       (XML_Char *)s,
+			       (XML_Char *)next - (XML_Char *)s);
       }
       break;
     case XML_TOK_PI:
@@ -1214,11 +1228,17 @@ enum XML_Error doCdataSection(XML_Parser parser,
       break;
     case XML_TOK_DATA_CHARS:
       if (characterDataHandler) {
-	do {
-	  ICHAR *dataPtr = (ICHAR *)dataBuf;
-	  XmlConvert(enc, &s, next, &dataPtr, (ICHAR *)dataBufEnd);
-	  characterDataHandler(userData, dataBuf, dataPtr - (ICHAR *)dataBuf);
-	} while (s != next);
+	if (MUST_CONVERT(enc, s)) {
+	  do {
+  	    ICHAR *dataPtr = (ICHAR *)dataBuf;
+	    XmlConvert(enc, &s, next, &dataPtr, (ICHAR *)dataBufEnd);
+	    characterDataHandler(userData, dataBuf, dataPtr - (ICHAR *)dataBuf);
+	  } while (s != next);
+	}
+	else
+	  characterDataHandler(userData,
+		  	       (XML_Char *)s,
+			       (XML_Char *)next - (XML_Char *)s);
       }
       break;
     case XML_TOK_INVALID:
