@@ -14,7 +14,7 @@ BCB = $(MAKEDIR)\..
 VERSION = BCB.05.03
 # ---------------------------------------------------------------------------
 PROJECT = debug\xmlwf.exe
-OBJFILES = debug\obj\xmlfile.obj debug\obj\readfilemap.obj debug\obj\win32filemap.obj \
+OBJFILES = debug\obj\xmlfile.obj debug\obj\win32filemap.obj \
     debug\obj\codepage.obj debug\obj\xmlwf.obj
 RESFILES = 
 MAINSOURCE = xmlwf.bpf
