@@ -5,26 +5,33 @@ CC=gcc
 # -DXML_NS adds support for checking of lexical aspects of XML namespaces spec
 # -DXML_MIN_SIZE makes a smaller but slower parser
 # -DXML_DTD adds full support for parsing DTDs
-CFLAGS=-O2 -Ixmltok -Ixmlparse -DXML_NS -DXML_DTD
+CFLAGS=-Wall -O2 -Ixmltok -Ixmlparse -DXML_NS -DXML_DTD
+AR=ar
 # Use one of the next two lines; unixfilemap is better if it works.
 FILEMAP_OBJ=xmlwf/unixfilemap.o
 #FILEMAP_OBJ=xmlwf/readfilemap.o
-OBJS=xmltok/xmltok.o \
+LIBOBJS=xmltok/xmltok.o \
   xmltok/xmlrole.o \
-  xmlwf/xmlwf.o \
+  xmlparse/xmlparse.o
+
+OBJS=xmlwf/xmlwf.o \
   xmlwf/xmlfile.o \
   xmlwf/codepage.o \
-  xmlparse/xmlparse.o \
   $(FILEMAP_OBJ)
+LIB=xmlparse/libexpat.a
 EXE=
+XMLWF=xmlwf/xmlwf$(EXE)
 
-all: xmlwf/xmlwf$(EXE)
+all: $(XMLWF)
 
-xmlwf/xmlwf$(EXE): $(OBJS)
-	$(CC) $(CFLAGS) -o $@ $(OBJS)
+$(XMLWF): $(OBJS) $(LIB)
+	$(CC) $(CFLAGS) -o $@ $(OBJS) $(LIB)
+
+$(LIB): $(LIBOBJS)
+	$(AR) rc $(LIB) $(LIBOBJS)
 
 clean:
-	rm -f $(OBJS) xmlwf/xmlwf$(EXE)
+	rm -f $(OBJS) $(LIBOBJS) $(LIB) $(XMLWF)
 
 xmltok/nametab.h: gennmtab/gennmtab$(EXE)
 	rm -f $@
