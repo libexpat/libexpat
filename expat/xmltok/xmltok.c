@@ -1027,8 +1027,14 @@ int doParseXmlDecl(const ENCODING *(*encodingFinder)(const ENCODING *,
       *badPtr = ptr;
       return 0;
     }
-    if (!name)
+    if (!name) {
+      if (isGeneralTextEntity) {
+	/* a TextDecl must have an EncodingDecl */
+	*badPtr = ptr;
+	return 0;
+      }
       return 1;
+    }
   }
   if (XmlNameMatchesAscii(enc, name, "encoding")) {
     int c = toAscii(enc, val, end);
