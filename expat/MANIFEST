@@ -6,6 +6,7 @@ README
 configure
 configure.in
 expat_config.h.in
+expat.dsw
 bcb5/README.txt
 bcb5/elements.bpf
 bcb5/elements.bpr
@@ -47,13 +48,20 @@ doc/valid-xhtml10.png
 doc/xmlwf.1
 doc/xmlwf.sgml
 examples/elements.c
+examples/elements.dsp
 examples/outline.c
+examples/outline.dsp
 lib/ascii.h
 lib/asciitab.h
+lib/expat.dsp
 lib/expat.h
+lib/expatw.dsp
+lib/expat_static.dsp
+lib/expatw_static.dsp
 lib/iasciitab.h
 lib/internal.h
 lib/latin1tab.h
+lib/libexpatw.def
 lib/nametab.h
 lib/utf8tab.h
 lib/xmlparse.c
@@ -89,4 +97,5 @@ xmlwf/xmlmime.h
 xmlwf/xmltchar.h
 xmlwf/xmlurl.h
 xmlwf/xmlwf.c
+xmlwf/xmlwf.dsp
 xmlwf/xmlwin32url.cxx
