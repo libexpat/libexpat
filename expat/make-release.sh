@@ -33,9 +33,9 @@ echo ""
 echo "Release version: $vsn"
 
 if test "$1" = HEAD ; then
-    distdir=expat-`date '+%Y-%m-%d'`
+  distdir=expat-`date '+%Y-%m-%d'`
 else
-    distdir=expat-$vsn
+  distdir=expat-$vsn
 fi
 if test -e $distdir; then
   echo "ERROR: for safety, you must manually remove $distdir."
@@ -44,13 +44,20 @@ if test -e $distdir; then
 fi
 mkdir $distdir || exit 1
 
+CPOPTS=-Pp
+if (cp --version 2>/dev/null | grep -q 'Free Software Foundation') ; then
+  # If we're using GNU cp, we can avoid the warnings about forward
+  # compatibility of the options.
+  CPOPTS='--parents --preserve'
+fi
+
 echo ""
 echo "----------------------------------------------------------------------"
 echo "Building $distdir based on the MANIFEST:"
 files="`sed -e 's/[ 	]:.*$//' $tmpdir/MANIFEST`"
 for file in $files; do
   echo "Copying $file..."
-  (cd $tmpdir && cp -Pp $file ../$distdir) || exit 1
+  (cd $tmpdir && cp $CPOPTS $file ../$distdir) || exit 1
 done
 
 echo ""
@@ -60,6 +67,7 @@ rm -rf $tmpdir
 
 tarball=$distdir.tar.gz
 echo "Constructing $tarball..."
-tar cf - $distdir | gzip -9 > $tarball
+tar cf - $distdir | gzip -9 > $tarball || exit $?
+rm -r $distdir
 
 echo "Done."
