@@ -1,22 +1,17 @@
 /* TODO
 
-method to get name length
-method to extract attribute names (returns number of atts)
-size_t getAttributes(const char *ptr, const char *end, const char **atts, size_t maxAtts)
-
+Provide method to get name length.
 
 Provide method to count lines/columns.
 
 Provide methods to convert to any of UTF-8, UTF-18, UCS-4.
 
-Better prolog tokenization
+Tokenize prologs in a way useful for well-formedness checking
 
 <!NAME
 NMTOKEN
 NAME
 PEREF
-
-MatchEndTag(endTagStart, endTagEnd, startTagPtr, startTagEnd)
 
 */
 
