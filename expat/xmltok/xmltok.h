@@ -103,6 +103,7 @@ extern "C" {
 #define XML_ATTRIBUTE_VALUE_LITERAL 0
 #define XML_ENTITY_VALUE_LITERAL 1
 
+/* The size of the buffer passed to XmlUtf8Encode and XmlUtf16Encode must be at least this. */
 #define XML_MAX_BYTES_PER_CHAR 4
 
 typedef struct position {
@@ -120,8 +121,6 @@ typedef struct {
 
 struct encoding;
 typedef struct encoding ENCODING;
-
-typedef unsigned short UTF16_CHAR;
 
 struct encoding {
   int (*scanners[XML_N_STATES])(const ENCODING *,
@@ -155,8 +154,8 @@ struct encoding {
   void (*utf16Convert)(const ENCODING *enc,
 		       const char **fromP,
 		       const char *fromLim,
-		       UTF16_CHAR **toP,
-		       const UTF16_CHAR *toLim);
+		       char **toP,
+		       const char *toLim);
   int minBytesPerChar;
 };
 
@@ -253,7 +252,7 @@ int XMLTOKAPI XmlInitEncoding(INIT_ENCODING *, const ENCODING **, const char *na
 const ENCODING XMLTOKAPI *XmlGetUtf8InternalEncoding();
 const ENCODING XMLTOKAPI *XmlGetUtf16InternalEncoding();
 int XMLTOKAPI XmlUtf8Encode(int charNumber, char *buf);
-int XMLTOKAPI XmlUtf16Encode(int charNumber, UTF16_CHAR *buf);
+int XMLTOKAPI XmlUtf16Encode(int charNumber, char *buf);
 
 #ifdef __cplusplus
 }

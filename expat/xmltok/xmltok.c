@@ -141,7 +141,7 @@ void utf8_toUtf8(const ENCODING *enc,
 static
 void utf8_toUtf16(const ENCODING *enc,
 		  const char **fromP, const char *fromLim,
-		  UTF16_CHAR **toP, const UTF16_CHAR *toLim)
+		  char **toP, const char *toLim)
 {
   /* FIXME */
 }
@@ -190,7 +190,7 @@ void latin1_toUtf8(const ENCODING *enc,
 static
 void latin1_toUtf16(const ENCODING *enc,
 		    const char **fromP, const char *fromLim,
-		    UTF16_CHAR **toP, const UTF16_CHAR *toLim)
+		    char **toP, const char *toLim)
 {
 }
 
@@ -216,7 +216,7 @@ void ascii_toUtf8(const ENCODING *enc,
 static
 void ascii_toUtf16(const ENCODING *enc,
 		   const char **fromP, const char *fromLim,
-		   UTF16_CHAR **toP, const UTF16_CHAR *toLim)
+		   char **toP, const char *toLim)
 {
   /* FIXME */
 }
@@ -316,7 +316,7 @@ void PREFIX(toUtf8)(const ENCODING *enc, \
 static \
 void PREFIX(toUtf16)(const ENCODING *enc, \
 		     const char **fromP, const char *fromLim, \
-		     UTF16_CHAR **toP, const UTF16_CHAR *toLim) \
+		     char **toP, const char *toLim) \
 { \
   /* FIXME */ \
 }
@@ -780,19 +780,21 @@ int XmlUtf8Encode(int c, char *buf)
   return 0;
 }
 
-int XmlUtf16Encode(int charNum, UTF16_CHAR *buf)
+int XmlUtf16Encode(int charNum, char *buf)
 {
+#if 0
   if (charNum < 0)
     return 0;
   if (charNum < 0x10000) {
-    buf[0] = charNum;
+    UTF16_SET(buf[0], charNum);
     return 1;
   }
   if (charNum < 0x110000) {
     charNum -= 0x10000;
-    buf[0] = (charNum >> 10) + 0xD800;
-    buf[1] = (charNum & 0x3FF) + 0xDC00;
+    UTF16_SET(buf[0], (charNum >> 10) + 0xD800);
+    UTF16_SET(buf[1] = (charNum & 0x3FF) + 0xDC00);
     return 2;
   }
+#endif
   return 0;
 }
