@@ -4,13 +4,12 @@ block _mks_variant_projects
 1.11=vp0000.pj, "V1_0maintain"
 end
 EndOptions
-$(projectdir)/MPL-1_1.html a 1.1 
 $(projectdir)/Makefile a 1.11 
 $(projectdir)/expat.dsw a 1.1 
-$(projectdir)/expat.html a 1.18 
+$(projectdir)/expat.html a 1.19 
 $(projectdir)/expat.mak a 1.14 
 $(projectdir)/expatfaq.html a 1.3 
-$(projectdir)/files.txt a 1.10 
+$(projectdir)/files.txt a 1.11 
 $(projectdir)/makedist.ksh a 1.2 
 $(projectdir)/win32files.txt a 1.1 
 $(projectdir)/gennmtab/gennmtab.c a 1.3 
