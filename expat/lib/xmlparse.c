@@ -3672,7 +3672,9 @@ doProlog(XML_Parser parser,
            otherwise call the skipped entity handler
         */
         if (prologState.documentEntity &&
-            (dtd.standalone ? !openInternalEntities : !dtd.hasParamEntityRefs)) {
+            (dtd.standalone
+             ? !openInternalEntities
+             : !dtd.hasParamEntityRefs)) {
           if (!entity)
             return XML_ERROR_UNDEFINED_ENTITY;
           else if (!entity->is_internal)
@@ -4081,7 +4083,9 @@ appendAttributeValue(XML_Parser parser, const ENCODING *enc, XML_Bool isCdata,
 #ifdef XML_DTD
               prologState.documentEntity &&
 #endif /* XML_DTD */
-              (dtd.standalone ? !openInternalEntities : !dtd.hasParamEntityRefs);
+              (dtd.standalone
+               ? !openInternalEntities
+               : !dtd.hasParamEntityRefs);
         else /* if (pool == &tempPool): we are called from content */
           checkEntityDecl = !dtd.hasParamEntityRefs || dtd.standalone;
         if (checkEntityDecl) {
