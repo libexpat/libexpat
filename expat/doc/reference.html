@@ -1703,20 +1703,38 @@ particular parts of the Expat API are available.
 </div>
 
 <pre class="fcndec" id="XML_GetFeatureList">
-const char **
+const XML_Feature *
 XML_GetFeatureList();
 </pre>
+<pre class="signature">
+enum XML_FeatureEnum {
+  XML_FEATURE_END = 0,
+  XML_FEATURE_UNICODE,
+  XML_FEATURE_UNICODE_WCHAR_T,
+  XML_FEATURE_DTD
+};
+
+typedef struct {
+  enum XML_FeatureEnum  feature;
+  XML_Char             *name;
+} XML_Feature;
+</pre>
 <div class="fcndef">
-<p>Returns a list of "feature" identifiers that provide details on how
+<p>Returns a list of "feature" records, providing details on how
 Expat was configured at compile time.  Most applications should not
 need to worry about this, but this information is otherwise not
 available from Expat.  This function allows code that does need to
 check these features to do so at runtime.</p>
 
-<p>The return value is an array of strings, terminated by NULL,
-identifying the feature-test macros Expat was compiled with.  Common
-features which may be found in this list include
-<code>"XML_DTD"</code> and <code>"XML_UNICODE"</code>.</p>
+<p>The return value is an array of <code>XML_Feature</code>,
+terminated by a record with a <code>feature</code> of
+<code>XML_FEATURE_END</code> and <code>name</code> of NULL,
+identifying the feature-test macros Expat was compiled with.  Since
+an application that requires this kind of information needs to
+determine the type of character the <code>name</code> points to,
+records for the <code>XML_UNICODE</code> and
+<code>XML_UNICODE_WCHAR_T</code> features will be located at the
+beginning of the list, if they are present at all.</p>
 </div>
 
 <hr />

@@ -1604,21 +1604,22 @@ XML_ExpatVersionInfo(void)
   return version;
 }
 
-const char **
+const XML_Feature *
 XML_GetFeatureList(void)
 {
-  static const char *features[] = {
-#ifdef XML_DTD
-    "XML_DTD",
-#endif
+  static const XML_Feature features[] = {
 #ifdef XML_UNICODE
-    "XML_UNICODE",
+    {XML_FEATURE_UNICODE,         XML_L("XML_UNICODE")},
 #endif
 #ifdef XML_UNICODE_WCHAR_T
-    "XML_UNICODE_WCHAR_T",
+    {XML_FEATURE_UNICODE_WCHAR_T, XML_L("XML_UNICODE_WCHAR_T")},
 #endif
-    NULL
+#ifdef XML_DTD
+    {XML_FEATURE_DTD,             XML_L("XML_DTD")},
+#endif
+    {XML_FEATURE_END,             NULL}
   };
+
   return features;
 }
 

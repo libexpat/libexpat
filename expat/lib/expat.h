@@ -870,7 +870,21 @@ typedef struct {
 XMLPARSEAPI(XML_Expat_Version)
 XML_ExpatVersionInfo(void);
 
-XMLPARSEAPI(const char **)
+/* Added in Expat 1.95.5. */
+enum XML_FeatureEnum {
+  XML_FEATURE_END = 0,
+  XML_FEATURE_UNICODE,
+  XML_FEATURE_UNICODE_WCHAR_T,
+  XML_FEATURE_DTD
+  /* Additional features must be added to the end of this enum. */
+};
+
+typedef struct {
+  enum XML_FeatureEnum  feature;
+  XML_Char             *name;
+} XML_Feature;
+
+XMLPARSEAPI(const XML_Feature *)
 XML_GetFeatureList(void);
 
 
