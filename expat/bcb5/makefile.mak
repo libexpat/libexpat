@@ -4,22 +4,28 @@ setup:
  setup
 
 expat:
- make -f libexpat.mak
+ make -l -flibexpat.mak
 
 expatw:
- make -f libexpatw.mak
+ make -l -flibexpatw.mak
 
 elements:
- make -f elements.mak
+ make -l -felements.mak
 
 outline:
- make -f outline.mak
+ make -l -foutline.mak
 
 xmlwf:
- make -f xmlwf.mak
+ make -l -fxmlwf.mak
 
 clean:
- deltree /y debug\obj
+# works on Win98/ME
+# deltree /y debug\obj
+# works on WinNT/2000
+ del /s/f/q debug\obj
 
 distclean:
- deltree /y debug\*.*
+# works on Win98/ME
+# deltree /y debug\*.*
+# works on WinNT/2000
+ del /s/f/q debug\*

@@ -46,7 +46,7 @@ IDLCFLAGS = -I$(BCB)\include
 PFLAGS = -N2debug\obj -N0debug\obj -$YD -$W -$O-
 RFLAGS = /l 0x409 /d "NDEBUG" /i$(BCB)\include;$(BCB)\include\mfc
 AFLAGS = /mx /w2 /zi
-LFLAGS = -Idebug\obj -D"" -ap -Tpe -x -Gn -v -q -L..\LIB\RELEASE
+LFLAGS = -Idebug\obj -D"" -ap -Tpe -x -Gn -v -q
 # ---------------------------------------------------------------------------
 ALLOBJ = c0x32.obj $(OBJFILES)
 ALLRES = $(RESFILES)
