@@ -82,6 +82,7 @@ typedef struct prolog_state {
 #ifdef XML_DTD
   unsigned includeLevel;
   int documentEntity;
+  int inEntityValue;
 #endif /* XML_DTD */
 } PROLOG_STATE;
 

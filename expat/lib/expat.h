@@ -185,7 +185,7 @@ XML_ParserCreate_MM(const XML_Char *encoding,
    Added in Expat 1.95.3.
 */
 
-XMLPARSEAPI(void)
+XMLPARSEAPI(int)
 XML_ParserReset(XML_Parser parser, const XML_Char *encodingName);
 
 /* atts is array of name/value pairs, terminated by 0;

@@ -66,7 +66,7 @@ static PROLOG_HANDLER
   doctype0, doctype1, doctype2, doctype3, doctype4, doctype5,
   internalSubset,
   entity0, entity1, entity2, entity3, entity4, entity5, entity6,
-  entity7, entity8, entity9,
+  entity7, entity8, entity9, entity10,
   notation0, notation1, notation2, notation3, notation4,
   attlist0, attlist1, attlist2, attlist3, attlist4, attlist5, attlist6,
   attlist7, attlist8, attlist9,
@@ -579,8 +579,25 @@ int entity9(PROLOG_STATE *state,
   case XML_TOK_PROLOG_S:
     return XML_ROLE_NONE;
   case XML_TOK_LITERAL:
-    state->handler = declClose;
+    state->handler = entity10;
     return XML_ROLE_ENTITY_SYSTEM_ID;
+  }
+  return common(state, tok);
+}
+
+static
+int entity10(PROLOG_STATE *state,
+	    int tok,
+	    const char *ptr,
+	    const char *end,
+	    const ENCODING *enc)
+{
+  switch (tok) {
+  case XML_TOK_PROLOG_S:
+    return XML_ROLE_NONE;
+  case XML_TOK_DECL_CLOSE:
+    setTopLevel(state);
+    return XML_ROLE_ENTITY_COMPLETE;
   }
   return common(state, tok);
 }
@@ -1256,6 +1273,7 @@ void XmlPrologStateInit(PROLOG_STATE *state)
 #ifdef XML_DTD
   state->documentEntity = 1;
   state->includeLevel = 0;
+  state->inEntityValue = 0;
 #endif /* XML_DTD */
 }
 
