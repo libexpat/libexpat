@@ -229,6 +229,37 @@ static void notationDecl(void *userData,
 
 #endif /* DEBUG_UNPARSED_ENTITIES */
 
+static
+void metaLocation(XML_Parser parser)
+{
+  const XML_Char *uri = XML_GetBase(parser);
+  if (uri)
+    ftprintf(XML_GetUserData(parser), T(" uri='%s'"), uri);
+  ftprintf(XML_GetUserData(parser),
+           T(" byte='%ld' line='%d' col='%d'"),
+	   XML_GetCurrentByteIndex(parser),
+	   XML_GetCurrentLineNumber(parser),
+	   XML_GetCurrentColumnNumber(parser));
+}
+
+static
+void metaStartElement(XML_Parser parser, const XML_Char *name, const XML_Char **atts)
+{
+  FILE *fp = XML_GetUserData(parser);
+  ftprintf(fp, T("<starttag name='%s'"), name);
+  metaLocation(parser);
+  fputts(T("/>\n"), fp);
+}
+
+static
+void metaEndElement(XML_Parser parser, const XML_Char *name)
+{
+  FILE *fp = XML_GetUserData(parser);
+  ftprintf(fp, T("<endtag name='%s'"), name);
+  metaLocation(parser);
+  fputts(T("/>\n"), fp);
+}
+
 typedef struct {
   XML_Parser parser;
   int *retPtr;
@@ -305,11 +336,14 @@ int externalEntityRefFilemap(XML_Parser parser,
 {
   int result;
   XML_Char *s;
+  const XML_Char *filename;
   XML_Parser entParser = XML_ExternalEntityParserCreate(parser, openEntityNames, 0);
   PROCESS_ARGS args;
   args.retPtr = &result;
   args.parser = entParser;
-  if (!filemap(resolveSystemId(base, systemId, &s), processFile, &args))
+  filename = resolveSystemId(base, systemId, &s);
+  XML_SetBase(entParser, filename);
+  if (!filemap(filename, processFile, &args))
     result = 0;
   free(s);
   XML_ParserFree(entParser);
@@ -359,8 +393,12 @@ int externalEntityRefStream(XML_Parser parser,
 			    const XML_Char *publicId)
 {
   XML_Char *s;
+  const XML_Char *filename;
+  int ret;
   XML_Parser entParser = XML_ExternalEntityParserCreate(parser, openEntityNames, 0);
-  int ret = processStream(resolveSystemId(base, systemId, &s), entParser);
+  filename = resolveSystemId(base, systemId, &s);
+  XML_SetBase(entParser, filename);
+  ret = processStream(filename, entParser);
   free(s);
   XML_ParserFree(entParser);
   return ret;
@@ -425,6 +463,7 @@ int tmain(int argc, XML_Char **argv)
   int useFilemap = 1;
   int processExternalEntities = 0;
   int windowsCodePages = 0;
+  int metaOutput = 0;
 
 #ifdef _MSC_VER
   _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF|_CRTDBG_LEAK_CHECK_DF);
@@ -448,6 +487,10 @@ int tmain(int argc, XML_Char **argv)
     }
     if (argv[i][j] == T('w')) {
       windowsCodePages = 1;
+      j++;
+    }
+    if (argv[i][j] == T('m')) {
+      metaOutput = 1;
       j++;
     }
     if (argv[i][j] == T('d')) {
@@ -503,13 +546,19 @@ int tmain(int argc, XML_Char **argv)
       puttc(0xFEFF, fp);
 #endif
       XML_SetUserData(parser, fp);
-      XML_SetElementHandler(parser, startElement, endElement);
-      XML_SetCharacterDataHandler(parser, characterData);
-      XML_SetProcessingInstructionHandler(parser, processingInstruction);
+      if (metaOutput) {
+	XML_UseParserAsHandlerArg(parser);
+	XML_SetElementHandler(parser, metaStartElement, metaEndElement);
+      }
+      else {
+	XML_SetElementHandler(parser, startElement, endElement);
+	XML_SetCharacterDataHandler(parser, characterData);
+	XML_SetProcessingInstructionHandler(parser, processingInstruction);
 #ifdef DEBUG_UNPARSED_ENTITIES
-      XML_SetUnparsedEntityDeclHandler(parser, unparsedEntityDecl);
-      XML_SetNotationDeclHandler(parser, notationDecl);
+	XML_SetUnparsedEntityDeclHandler(parser, unparsedEntityDecl);
+	XML_SetNotationDeclHandler(parser, notationDecl);
 #endif
+      }
     }
     if (windowsCodePages)
       XML_SetUnknownEncodingHandler(parser, unknownEncoding, 0);
