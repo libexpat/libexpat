@@ -59,6 +59,70 @@ _expect_failure(char *text, enum XML_Error errorCode, char *errorMessage,
         _expect_failure((text), (errorCode), (errorMessage), \
                         __FILE__, __LINE__)
 
+/* Dummy handlers for when we need to set a handler to tickle a bug,
+   but it doesn't need to do anything.
+*/
+
+static void
+dummy_start_doctype_handler(void           *userData,
+                            const XML_Char *doctypeName,
+                            const XML_Char *sysid,
+                            const XML_Char *pubid,
+                            int            has_internal_subset)
+{}
+
+static void
+dummy_end_doctype_handler(void *userData)
+{}
+
+static void
+dummy_entity_decl_handler(void           *userData,
+                          const XML_Char *entityName,
+                          int            is_parameter_entity,
+                          const XML_Char *value,
+                          int            value_length,
+                          const XML_Char *base,
+                          const XML_Char *systemId,
+                          const XML_Char *publicId,
+                          const XML_Char *notationName)
+{}
+
+static void
+dummy_notation_decl_handler(void *userData,
+                            const XML_Char *notationName,
+                            const XML_Char *base,
+                            const XML_Char *systemId,
+                            const XML_Char *publicId)
+{}
+
+static void
+dummy_element_decl_handler(void *userData,
+                           const XML_Char *name,
+                           XML_Content *model)
+{}
+
+static void
+dummy_attlist_decl_handler(void           *userData,
+                           const XML_Char *elname,
+                           const XML_Char *attname,
+                           const XML_Char *att_type,
+                           const XML_Char *dflt,
+                           int            isrequired)
+{}
+
+static void
+dummy_comment_handler(void *userData, const XML_Char *data)
+{}
+
+static void
+dummy_pi_handler(void *userData, const XML_Char *target, const XML_Char *data)
+{}
+
+static void
+dummy_start_element(void *userData,
+                    const XML_Char *name, const XML_Char **atts)
+{}
+
 
 /*
  * Character & encoding tests.
@@ -680,6 +744,33 @@ START_TEST(test_wfc_no_recursive_entity_refs)
 }
 END_TEST
 
+/* Regression test for SF bug #483514. */
+START_TEST(test_dtd_default_handling)
+{
+    char *text =
+        "<!DOCTYPE doc [\n"
+        "<!ENTITY e SYSTEM 'http://xml.libexpat.org/e'>\n"
+        "<!NOTATION n SYSTEM 'http://xml.libexpat.org/n'>\n"
+        "<!ELEMENT doc EMPTY>\n"
+        "<!ATTLIST doc a CDATA #IMPLIED>\n"
+        "<?pi in dtd?>\n"
+        "<!--comment in dtd-->\n"
+        "]><doc/>";
+
+    XML_SetDefaultHandler(parser, accumulate_characters);
+    XML_SetDoctypeDeclHandler(parser,
+                              dummy_start_doctype_handler,
+                              dummy_end_doctype_handler);
+    XML_SetEntityDeclHandler(parser, dummy_entity_decl_handler);
+    XML_SetNotationDeclHandler(parser, dummy_notation_decl_handler);
+    XML_SetElementDeclHandler(parser, dummy_element_decl_handler);
+    XML_SetAttlistDeclHandler(parser, dummy_attlist_decl_handler);
+    XML_SetProcessingInstructionHandler(parser, dummy_pi_handler);
+    XML_SetCommentHandler(parser, dummy_comment_handler);
+    run_character_check(text, "\n\n\n\n\n\n\n<doc/>");
+}
+END_TEST
+
 
 /*
  * Namespaces tests.
@@ -896,13 +987,6 @@ external_entity_handler(XML_Parser parser,
     return 1;
 }
 
-static void
-start_element_dummy(void *userData,
-                    const XML_Char *name, const XML_Char **atts)
-{
-    return;
-}
-
 START_TEST(test_default_ns_from_ext_subset_and_ext_ge)
 {
     char *text =
@@ -917,7 +1001,7 @@ START_TEST(test_default_ns_from_ext_subset_and_ext_ge)
     XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
     XML_SetExternalEntityRefHandler(parser, external_entity_handler);
     /* We actually need to set this handler to tickle this bug. */
-    XML_SetStartElementHandler(parser, start_element_dummy);
+    XML_SetStartElementHandler(parser, dummy_start_element);
     XML_SetUserData(parser, NULL);
     if (XML_Parse(parser, text, strlen(text), 1) == XML_STATUS_ERROR)
         xml_failure(parser);
@@ -963,6 +1047,7 @@ make_basic_suite(void)
     tcase_add_test(tc_basic, test_wfc_undeclared_entity_with_external_subset);
     tcase_add_test(tc_basic, test_wfc_no_recursive_entity_refs);
     tcase_add_test(tc_basic, test_ext_entity_set_encoding);
+    tcase_add_test(tc_basic, test_dtd_default_handling);
 
     suite_add_tcase(s, tc_namespace);
     tcase_add_checked_fixture(tc_namespace,
