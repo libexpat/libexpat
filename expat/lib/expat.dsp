@@ -125,10 +125,6 @@ SOURCE=.\asciitab.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\config.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\expat.h
 # End Source File
 # Begin Source File
