@@ -3,10 +3,16 @@ COPYING
 MANIFEST
 Makefile.in
 README
+config.h.in
 configure
 configure.in
 conftools/PrintPath
+conftools/ac_c_bigendian_cross.m4
+conftools/config.guess
+conftools/config.sub
 conftools/install-sh
+conftools/ltconfig
+conftools/ltmain.sh
 conftools/missing
 conftools/mkinstalldirs
 doc/reference.html
@@ -17,6 +23,7 @@ lib/Makefile.in
 lib/ascii.h
 lib/asciitab.h
 lib/expat.dsp
+lib/expat.h.in
 lib/iasciitab.h
 lib/latin1tab.h
 lib/nametab.h
@@ -30,6 +37,9 @@ lib/xmltok_impl.c
 lib/xmltok_impl.h
 lib/xmltok_ns.c
 lib/winconfig.h
+sample/Makefile.in
+sample/build.bat
+sample/elements.c
 xmlwf/Makefile.in
 xmlwf/codepage.c
 xmlwf/codepage.h
