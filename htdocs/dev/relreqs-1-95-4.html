@@ -35,9 +35,6 @@ section at the end and the reason for the change will be noted.</p>
   >SF bug #441449</a> should be resolved.<br />
   <strong>Status: <em>Done.</em></strong>
   <p>
-  <li> The build process on Unix should create both libexpat.{a,so}
-  and libexpatw.{a,so} by default.
-  <p>
   <li> Hard tab characters will be removed from all source files.
   They will be replaced with spaces.<br />
   See <a href=
@@ -58,6 +55,12 @@ section at the end and the reason for the change will be noted.</p>
   released sooner rather than being delayed by this feature.  The
   interface for this feature is proving difficult to design, so this
   deserves more consideration.
+  <p>
+  <li> The build process on Unix should create both libexpat.{a,so}
+  and libexpatw.{a,so} by default.
+  <strong>Status: <em>Delayed</em>:</strong>
+  Delayed since we don't want the build process changes to hold up
+  the release of real bug fixes.  We can have another release later.
 </ul>
 
 <h3>Dropped Requirements</h3>
