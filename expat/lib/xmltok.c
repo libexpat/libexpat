@@ -4,9 +4,14 @@ See the file COPYING for copying permission.
 */
 
 static char RCSId[]
-  = "$Header$";
+  = "$Header: /cvsroot/expat/expat/lib/xmltok.c,v 1.4 2000/09/29 14:57:45 coopercc Exp $";
 
-#include <config.h>
+#ifdef COMPILED_FROM_DSP
+#  include "winconfig.h"
+#else
+#  include <config.h>
+#endif /* ndef COMPILED_FROM_DSP */
+
 #include "xmltok.h"
 #include "nametab.h"
 

@@ -653,7 +653,8 @@ enum XML_Error {
 /* If XML_Parse or XML_ParseBuffer have returned 0, then XML_GetErrorCode
 returns information about the error. */
 
-enum XML_Error  XML_GetErrorCode(XML_Parser parser);
+enum XML_Error  XMLPARSEAPI
+XML_GetErrorCode(XML_Parser parser);
 
 /* These functions return information about the current parse location.
 They may be called when XML_Parse or XML_ParseBuffer return 0;
@@ -663,9 +664,9 @@ They may also be called from any other callback called to report
 some parse event; in this the location is the location of the first
 of the sequence of characters that generated the event. */
 
-int  XML_GetCurrentLineNumber(XML_Parser parser);
-int  XML_GetCurrentColumnNumber(XML_Parser parser);
-long  XML_GetCurrentByteIndex(XML_Parser parser);
+int XMLPARSEAPI XML_GetCurrentLineNumber(XML_Parser parser);
+int XMLPARSEAPI XML_GetCurrentColumnNumber(XML_Parser parser);
+long XMLPARSEAPI XML_GetCurrentByteIndex(XML_Parser parser);
 
 /* Return the number of bytes in the current event.
 Returns 0 if the event is in an internal entity. */
