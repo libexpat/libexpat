@@ -44,6 +44,7 @@ int prolog0(PROLOG_STATE *state,
 	    const ENCODING *enc)
 {
   switch (tok) {
+  case XML_TOK_BOM:
   case XML_TOK_PI:
   case XML_TOK_COMMENT:
     return XML_ROLE_NONE;
@@ -54,6 +55,12 @@ int prolog0(PROLOG_STATE *state,
       break;
     state->handler = doctype0;
     return XML_ROLE_NONE;
+  case XML_TOK_START_TAG_WITH_ATTS:
+  case XML_TOK_START_TAG_NO_ATTS:
+  case XML_TOK_EMPTY_ELEMENT_WITH_ATTS:
+  case XML_TOK_EMPTY_ELEMENT_NO_ATTS:
+    state->handler = error;
+    return XML_ROLE_INSTANCE_START;
   }
   return syntaxError(state);
 }
@@ -69,6 +76,12 @@ int prolog1(PROLOG_STATE *state,
   case XML_TOK_PI:
   case XML_TOK_COMMENT:
     return XML_ROLE_NONE;
+  case XML_TOK_START_TAG_WITH_ATTS:
+  case XML_TOK_START_TAG_NO_ATTS:
+  case XML_TOK_EMPTY_ELEMENT_WITH_ATTS:
+  case XML_TOK_EMPTY_ELEMENT_NO_ATTS:
+    state->handler = error;
+    return XML_ROLE_INSTANCE_START;
   }
   return syntaxError(state);
 }
@@ -271,7 +284,7 @@ int entity2(PROLOG_STATE *state,
     }
     break;
   case XML_TOK_LITERAL:
-    state->handler = entity4;
+    state->handler = declClose;
     return XML_ROLE_ENTITY_VALUE;
   }
   return syntaxError(state);
