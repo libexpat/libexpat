@@ -236,8 +236,8 @@ typedef void (*XML_EndCdataSectionHandler)(void *userData);
    (comments, markup declarations), or characters that are part of a
    construct which could be reported but for which no handler has been
    supplied. The characters are passed exactly as they were in the XML
-   document except that they will be encoded in UTF-8.  Line
-   boundaries are not normalized. Note that a byte order mark
+   document except that they will be encoded in UTF-8 or UTF-16. 
+   Line boundaries are not normalized. Note that a byte order mark
    character is not passed to the default handler. There are no
    guarantees about how characters are divided between calls to the
    default handler: for example, a comment might be split between

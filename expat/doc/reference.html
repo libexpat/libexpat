@@ -932,7 +932,7 @@ otherwise be handled. This includes both data for which no handlers
 can be set (like some kinds of DTD declarations) and data which could
 be reported but which currently has no handler set.  The characters
 are passed exactly as they were present in the XML document except
-that they will be encoded in UTF-8.  Line boundaries are not
+that they will be encoded in UTF-8 or UTF-16. Line boundaries are not
 normalized. Note that a byte order mark character is not passed to the
 default handler. There are no guarantees about how characters are
 divided between calls to the default handler: for example, a comment
