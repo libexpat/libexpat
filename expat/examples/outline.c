@@ -30,7 +30,7 @@ char Buff[BUFFSIZE];
 
 int Depth;
 
-void
+static void
 start(void *data, const char *el, const char **attr) {
   int i;
 
@@ -47,12 +47,13 @@ start(void *data, const char *el, const char **attr) {
   Depth++;
 }  /* End of start handler */
 
-void
+static void
 end(void *data, const char *el) {
   Depth--;
 }  /* End of end handler */
 
-main(int argc, char **argv) {
+int
+main(int argc, char *argv[]) {
   XML_Parser p = XML_ParserCreate(NULL);
   if (! p) {
     fprintf(stderr, "Couldn't allocate memory for parser\n");
@@ -82,5 +83,6 @@ main(int argc, char **argv) {
     if (done)
       break;
   }
+  return 0;
 }  /* End of main */
 
