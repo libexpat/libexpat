@@ -45,6 +45,20 @@ _xml_failure(XML_Parser parser, const char *file, int line)
 
 #define xml_failure(parser) _xml_failure((parser), __FILE__, __LINE__)
 
+static void
+_expect_failure(char *text, enum XML_Error errorCode, char *errorMessage,
+                char *file, int lineno)
+{
+    if (XML_Parse(parser, text, strlen(text), 1) == XML_STATUS_OK)
+        fail(errorMessage);
+    if (XML_GetErrorCode(parser) != errorCode)
+        _xml_failure(parser, file, lineno);
+}
+
+#define expect_failure(text, errorCode, errorMessage) \
+        _expect_failure((text), (errorCode), (errorMessage), \
+                        __FILE__, __LINE__)
+
 
 /*
  * Character & encoding tests.
@@ -65,13 +79,10 @@ END_TEST
 
 START_TEST(test_u0000_char)
 {
-    char *text = "<doc>&#0;</doc>";
-
     /* test that a NUL byte (in US-ASCII data) is an error */
-    if (XML_Parse(parser, text, strlen(text), 1) == XML_STATUS_OK)
-        fail("Parser did not report error on NUL-byte.");
-    if (XML_GetErrorCode(parser) != XML_ERROR_BAD_CHAR_REF)
-        xml_failure(parser);
+    expect_failure("<doc>&#0;</doc>",
+                   XML_ERROR_BAD_CHAR_REF,
+                   "Parser did not report error on NUL-byte.");
 }
 END_TEST
 
@@ -464,18 +475,11 @@ END_TEST
 
 START_TEST(test_xmldecl_misplaced)
 {
-    char *text =
-        "\n"
-        "<?xml version='1.0'?>\n"
-        "<a>&eee;</a>";
-
-    if (XML_Parse(parser, text, strlen(text), 1) == XML_STATUS_ERROR) {
-        if (XML_GetErrorCode(parser) != XML_ERROR_MISPLACED_XML_PI)
-            xml_failure(parser);
-    }
-    else {
-        fail("expected XML_ERROR_MISPLACED_XML_PI with misplaced XML decl");
-    }
+    expect_failure("\n"
+                   "<?xml version='1.0'?>\n"
+                   "<a/>",
+                   XML_ERROR_MISPLACED_XML_PI,
+                   "failed to report misplaced XML declaration");
 }
 END_TEST
 
@@ -525,12 +529,9 @@ END_TEST
    have an external subset.
 */
 START_TEST(test_wfc_undeclared_entity_no_external_subset) {
-    char *text = "<doc>&entity;</doc>";
-
-    if (XML_Parse(parser, text, strlen(text), 1) == XML_STATUS_OK)
-        fail("Parser did not report error on undefined entity w/out a DTD.");
-    if (XML_GetErrorCode(parser) != XML_ERROR_UNDEFINED_ENTITY)
-        xml_failure(parser);
+    expect_failure("<doc>&entity;</doc>",
+                   XML_ERROR_UNDEFINED_ENTITY,
+                   "Parser did not report undefined entity w/out a DTD.");
 }
 END_TEST
 
@@ -543,10 +544,9 @@ START_TEST(test_wfc_undeclared_entity_standalone) {
         "<!DOCTYPE doc SYSTEM 'foo'>\n"
         "<doc>&entity;</doc>";
 
-    if (XML_Parse(parser, text, strlen(text), 1) == XML_STATUS_OK)
-        fail("Parser did not report error on undefined entity (standalone).");
-    if (XML_GetErrorCode(parser) != XML_ERROR_UNDEFINED_ENTITY)
-        xml_failure(parser);
+    expect_failure(text,
+                   XML_ERROR_UNDEFINED_ENTITY,
+                   "Parser did not report undefined entity (standalone).");
 }
 END_TEST
 
