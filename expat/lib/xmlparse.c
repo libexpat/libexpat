@@ -109,7 +109,8 @@ typedef struct {
 } HASH_TABLE;
 
 /* Basic character hash algorithm, taken from Python's string hash:
-   h = h * 1000003(prime number) ^ character.
+   h = h * 1000003 ^ character, the constant being a prime number.
+
 */
 #ifdef XML_UNICODE
 #define CHAR_HASH(h, c) \
