@@ -240,6 +240,35 @@ static const struct normal_encoding latin1_encoding = {
 
 #define latin1tab (latin1_encoding.type)
 
+static
+int ascii_encode(const ENCODING *enc, int c, char *buf)
+{
+  if (c < 0)
+    return 0;
+  if (c <= 0x7F) {
+    buf[0] = (char)c;
+    return 1;
+  }
+  return 0;
+}
+
+static
+void ascii_toUtf8(const ENCODING *enc,
+		  const char **fromP, const char *fromLim,
+		  char **toP, const char *toLim)
+{
+  while (*fromP != fromLim && *toP != toLim)
+    *(*toP)++ = *(*fromP)++;
+}
+
+static const struct normal_encoding ascii_encoding = {
+  { VTABLE1, ascii_encode, { ascii_toUtf8 }, 1 },
+  {
+#include "asciitab.h"
+/* BT_NONXML == 0 */
+  }
+};
+
 #undef PREFIX
 
 static int unicode_byte_type(char hi, char lo)
@@ -514,6 +543,10 @@ int XmlInitEncoding(INIT_ENCODING *p, const ENCODING **encPtr, const char *name)
       *encPtr = &utf8_encoding.enc;
       return 1;
     }
+    if (streqci(name, "US-ASCII")) {
+      *encPtr = &ascii_encoding.enc;
+      return 1;
+    }
     if (!streqci(name, "UTF-16"))
       return 0;
   }
@@ -653,6 +686,8 @@ const ENCODING *findEncoding(const ENCODING *enc, const char *ptr, const char *e
     return &utf8_encoding.enc;
   if (streqci(buf, "ISO-8859-1"))
     return &latin1_encoding.enc;
+  if (streqci(buf, "US-ASCII"))
+    return &ascii_encoding.enc;
   if (streqci(buf, "UTF-16")) {
     static const unsigned short n = 1;
     if (enc->minBytesPerChar == 2)
