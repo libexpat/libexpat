@@ -137,7 +137,9 @@ typedef struct prefix {
 typedef struct {
   const XML_Char *str;
   const XML_Char *localPart;
+  const XML_Char *prefix;
   int uriLen;
+  int prefixLen;
 } TAG_NAME;
 
 typedef struct tag {
@@ -864,10 +866,10 @@ XML_Parser XML_ExternalEntityParserCreate(XML_Parser oldParser,
     externalEntityRefHandlerArg = oldExternalEntityRefHandlerArg;
   defaultExpandInternalEntities = oldDefaultExpandInternalEntities;
   ns_triplets = oldns_triplets;
+  parentParser = oldParser;   
 #ifdef XML_DTD
   paramEntityParsing = oldParamEntityParsing;
   prologState.inEntityValue = oldInEntityValue;  
-  parentParser = oldParser;   
   if (context) {
 #endif /* XML_DTD */
     if (!dtdCopy(&dtd, oldDtd, parser) || !setContext(parser, context)) {
@@ -1741,6 +1743,7 @@ doContent(XML_Parser parser,
 	tag->parent = tagStack;
 	tagStack = tag;
 	tag->name.localPart = NULL;
+  tag->name.prefix = NULL;
 	tag->rawName = s + enc->minBytesPerChar;
 	tag->rawNameLength = XmlNameLength(enc, tag->rawName);
 	if (nextPtr) {
@@ -1786,7 +1789,7 @@ doContent(XML_Parser parser,
 	      char *temp = REALLOC(tag->buf, bufSize);
 	      if (temp == NULL)
 		return XML_ERROR_NO_MEMORY;
-              tag->buf = temp;
+        tag->buf = temp;
 	    }
 	    tag->bufEnd = tag->buf + bufSize;
 	    if (nextPtr)
@@ -1870,7 +1873,26 @@ doContent(XML_Parser parser,
 	  return XML_ERROR_TAG_MISMATCH;
 	}
 	--tagLevel;
-	if (endElementHandler && tag->name.str) {
+  if (endElementHandler && tag->name.str) {
+    const XML_Char *localPart;
+    const XML_Char *prefix;
+    XML_Char *uri;
+    localPart = tag->name.localPart;
+    if (ns && localPart) {
+      /* localPart and prefix may have been overwritten in 
+         tag->name.str, since this points to the binding->uri
+         buffer which gets re-used; so we have to add them again
+      */
+      uri = (XML_Char *)tag->name.str + tag->name.uriLen;
+      /* don't need to check for space - already done in storeAtts() */
+      while (*localPart) *uri++ = *localPart++;
+      prefix = (XML_Char *)tag->name.prefix;
+      if (ns_triplets && prefix) {
+        *uri++ = namespaceSeparator;
+        while (*prefix) *uri++ = *prefix++;
+       }
+      *uri = XML_T('\0');
+    }    
 	  endElementHandler(handlerArg, tag->name.str);
 	}
 	else if (defaultHandler)
@@ -2236,6 +2258,8 @@ static enum XML_Error storeAtts(XML_Parser parser, const ENCODING *enc,
   }
   tagNamePtr->localPart = localPart;
   tagNamePtr->uriLen = binding->uriLen;
+  tagNamePtr->prefix = binding->prefix->name;
+  tagNamePtr->prefixLen = prefixLen;
   for (i = 0; localPart[i++];)
     ;
   n = i + binding->uriLen + prefixLen;
@@ -2327,8 +2351,14 @@ enum XML_Error cdataSectionProcessor(XML_Parser parser,
   enum XML_Error result = doCdataSection(parser, encoding, &start,
                                          end, endPtr);
   if (start) {
-    processor = contentProcessor;
-    return contentProcessor(parser, start, end, endPtr);
+    if (parentParser) {  /* we are parsing an external entity */
+      processor = externalEntityContentProcessor;
+      return externalEntityContentProcessor(parser, start, end, endPtr);
+    }
+    else {
+      processor = contentProcessor;
+      return contentProcessor(parser, start, end, endPtr);
+    }
   }
   return result;
 }
