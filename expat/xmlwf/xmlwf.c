@@ -184,6 +184,7 @@ int main(int argc, char **argv)
 {
   int i;
   const char *outputDir = 0;
+  const char *encoding = 0;
   int useFilemap = 1;
 
 #ifdef _MSC_VER
@@ -212,6 +213,16 @@ int main(int argc, char **argv)
 	outputDir = argv[i] + j + 1;
       i++;
     }
+    if (argv[i][j] == 'e') {
+      if (argv[i][j + 1] == '\0') {
+	if (++i == argc)
+	  usage(argv[0]);
+	encoding = argv[i];
+      }
+      else
+	encoding = argv[i] + j + 1;
+      i++;
+    }
     else if (argv[i][j] == '\0' && j > 1)
       i++;
     else
@@ -223,7 +234,7 @@ int main(int argc, char **argv)
     FILE *fp = 0;
     char *outName = 0;
     int result;
-    XML_Parser parser = XML_ParserCreate(0);
+    XML_Parser parser = XML_ParserCreate(encoding);
     if (outputDir) {
       outName = malloc(strlen(outputDir) + strlen(argv[i]) + 2);
       strcpy(outName, outputDir);

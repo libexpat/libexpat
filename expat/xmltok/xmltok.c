@@ -394,6 +394,24 @@ static const struct encoding big2_encoding = { VTABLE, 2 };
 #undef PREFIX
 
 static
+int streqci(const char *s1, const char *s2)
+{
+  for (;;) {
+    char c1 = *s1++;
+    char c2 = *s2++;
+    if ('a' <= c1 && c1 <= 'z')
+      c1 += 'A' - 'a';
+    if ('a' <= c2 && c2 <= 'z')
+      c2 += 'A' - 'a';
+    if (c1 != c2)
+      return 0;
+    if (!c1)
+      break;
+  }
+  return 1;
+}
+
+static
 int initScan(const ENCODING *enc, int state, const char *ptr, const char *end,
 	     const char **nextTokPtr)
 {
@@ -463,14 +481,27 @@ const ENCODING *XmlGetInternalEncoding(int e)
   return 0;
 }
 
-void XmlInitEncoding(INIT_ENCODING *p, const ENCODING **encPtr)
+int XmlInitEncoding(INIT_ENCODING *p, const ENCODING **encPtr, const char *name)
 {
+  if (name) {
+    if (streqci(name, "ISO-8859-1")) {
+      *encPtr = &latin1_encoding.enc;
+      return 1;
+    }
+    if (streqci(name, "UTF-8")) {
+      *encPtr = &utf8_encoding.enc;
+      return 1;
+    }
+    if (!streqci(name, "UTF-16"))
+      return 0;
+  }
   p->initEnc.scanners[XML_PROLOG_STATE] = initScanProlog;
   p->initEnc.scanners[XML_CONTENT_STATE] = initScanContent;
   p->initEnc.updatePosition = initUpdatePosition;
   p->initEnc.minBytesPerChar = 1;
   p->encPtr = encPtr;
   *encPtr = &(p->initEnc);
+  return 1;
 }
 
 static
@@ -582,15 +613,6 @@ int parsePseudoAttribute(const ENCODING *enc,
 }
 
 static
-int streq(const char *s1, const char *s2)
-{
-  for (; *s1 == *s2; s1++, s2++)
-    if (!*s1)
-      return 1;
-  return 0;
-}
-
-static
 const ENCODING *findEncoding(const ENCODING *enc, const char *ptr, const char *end)
 {
 #define ENCODING_MAX 128
@@ -605,18 +627,15 @@ const ENCODING *findEncoding(const ENCODING *enc, const char *ptr, const char *e
     if ('a' <= buf[i] && buf[i] <= 'z')
       buf[i] +=  'A' - 'a';
   }
-  if (streq(buf, "UTF-8"))
+  if (streqci(buf, "UTF-8"))
     return &utf8_encoding.enc;
-  if (streq(buf, "ISO-8859-1"))
+  if (streqci(buf, "ISO-8859-1"))
     return &latin1_encoding.enc;
-  if (streq(buf, "UTF-16")) {
+  if (streqci(buf, "UTF-16")) {
     static const unsigned short n = 1;
     if (enc->minBytesPerChar == 2)
       return enc;
-    if (*(const char *)&n)
-      return &little2_encoding;
-    else
-      return &big2_encoding;
+    return &big2_encoding;
   }
   return 0;  
 }

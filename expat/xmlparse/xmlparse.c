@@ -84,6 +84,7 @@ typedef enum XML_Error Processor(XML_Parser parser,
 static Processor prologProcessor;
 static Processor contentProcessor;
 static Processor epilogProcessor;
+static Processor errorProcessor;
 
 static enum XML_Error
 doContent(XML_Parser parser, int startTagLevel, const ENCODING *enc,
@@ -210,7 +211,6 @@ XML_Parser XML_ParserCreate(const char *encodingName)
   if (!parser)
     return parser;
   processor = prologProcessor;
-  XmlInitEncoding(&initEncoding, &encoding);
   XmlPrologStateInit(&prologState);
   userData = 0;
   startElementHandler = 0;
@@ -245,6 +245,10 @@ XML_Parser XML_ParserCreate(const char *encodingName)
     return 0;
   }
   dataBufEnd = dataBuf + INIT_DATA_BUF_SIZE;
+  if (!XmlInitEncoding(&initEncoding, &encoding, encodingName)) {
+    errorCode = XML_ERROR_UNKNOWN_ENCODING;
+    processor = errorProcessor;
+  }
   return parser;
 }
 
@@ -1145,6 +1149,15 @@ enum XML_Error epilogProcessor(XML_Parser parser,
     }
     s = next;
   }
+}
+
+static
+enum XML_Error errorProcessor(XML_Parser parser,
+			      const char *s,
+			      const char *end,
+			      const char **nextPtr)
+{
+  return errorCode;
 }
 
 static enum XML_Error

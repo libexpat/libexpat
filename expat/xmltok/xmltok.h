@@ -222,7 +222,7 @@ int XMLTOKAPI XmlParseXmlDecl(int isGeneralTextEntity,
 			      const ENCODING **namedEncodingPtr,
 			      int *standalonePtr);
 
-void XMLTOKAPI XmlInitEncoding(INIT_ENCODING *, const ENCODING **);
+int XMLTOKAPI XmlInitEncoding(INIT_ENCODING *, const ENCODING **, const char *name);
 const ENCODING XMLTOKAPI *XmlGetInternalEncoding(int);
 
 #ifdef __cplusplus
