@@ -1393,6 +1393,22 @@ int PREFIX(nameLength)(const ENCODING *enc, const char *ptr)
 }
 
 static
+const char *PREFIX(skipS)(const ENCODING *enc, const char *ptr)
+{
+  for (;;) {
+    switch (BYTE_TYPE(enc, ptr)) {
+    case BT_LF:
+    case BT_CR:
+    case BT_S:
+      ptr += MINBPC;
+      break;
+    default:
+      return ptr;
+    }
+  }
+}
+
+static
 void PREFIX(updatePosition)(const ENCODING *enc,
 			    const char *ptr,
 			    const char *end,

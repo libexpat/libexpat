@@ -7,6 +7,7 @@
   PREFIX(sameName), \
   PREFIX(nameMatchesAscii), \
   PREFIX(nameLength), \
+  PREFIX(skipS), \
   PREFIX(getAtts), \
   PREFIX(charRefNumber), \
   PREFIX(updatePosition), \

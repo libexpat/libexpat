@@ -112,6 +112,7 @@ struct encoding {
   int (*nameMatchesAscii)(const ENCODING *,
 			  const char *, const char *);
   int (*nameLength)(const ENCODING *, const char *);
+  const char *(*skipS)(const ENCODING *, const char *);
   int (*getAtts)(const ENCODING *enc, const char *ptr,
 	         int attsMax, ATTRIBUTE *atts);
   int (*charRefNumber)(const ENCODING *enc, const char *ptr);
@@ -181,6 +182,9 @@ the content of a literal that has already been returned by XmlTok. */
 
 #define XmlNameLength(enc, ptr) \
   (((enc)->nameLength)(enc, ptr))
+
+#define XmlSkipS(enc, ptr) \
+  (((enc)->skipS)(enc, ptr))
 
 #define XmlGetAttributes(enc, ptr, attsMax, atts) \
   (((enc)->getAtts)(enc, ptr, attsMax, atts))
