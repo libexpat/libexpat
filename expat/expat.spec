@@ -31,13 +31,17 @@ make install prefix=$RPM_BUILD_ROOT/usr
 install -D xmlwf/xmlwf $RPM_BUILD_ROOT/usr/bin/xmlwf
 
 %files
-%doc COPYING Changes MANIFEST README doc/reference.html doc/style.css doc/valid-xhtml10.png
+%doc COPYING Changes MANIFEST README doc/reference.html doc/style.css doc/*.png
 /usr/bin/xmlwf
 /usr/lib
 /usr/include/expat.h
 /usr/man/man1/xmlwf.1.gz
 
 %changelog
+* Tue Oct 21 2003 Fred L. Drake, Jr. <fdrake@acm.org>
+- Update list of documentation files; we missed a .png file in the
+  previous release.
+
 * Mon Oct 20 2003 Fred L. Drake, Jr. <fdrake@acm.org>
 [Release 1.95.7-1]
 - Updated for the 1.95.7 release.
@@ -46,7 +50,7 @@ install -D xmlwf/xmlwf $RPM_BUILD_ROOT/usr/bin/xmlwf
 [Release 1.95.6-1]
 - Updated for the 1.95.6 release.
 
-* Wed Sep 4 2002 Fred L. Drake, Jr. <fdrake@acm.org>
+* Wed Sep  4 2002 Fred L. Drake, Jr. <fdrake@acm.org>
 [Release 1.95.5-1]
 - Updated for the 1.95.5 release.
 - Updated URL for Expat home page to point to www.libexpat.org.
@@ -76,7 +80,7 @@ install -D xmlwf/xmlwf $RPM_BUILD_ROOT/usr/bin/xmlwf
 - Moved xmlparse.h into "/usr/include/expat" directory to prevent conflict
   with w3c-libwww-devel package.
 
-* Wed Sep 6 2000 Sean Reifschneider <jafo-rpms@tummy.com>
+* Wed Sep  6 2000 Sean Reifschneider <jafo-rpms@tummy.com>
 - Modified to install into /usr.
 - Modified to use RPM_BUILD_ROOT instead of writing directly to install
   location.
