@@ -59,6 +59,8 @@ clean:
 	rm -rf .libs libexpat.la
 	rm -f examples/core tests/core xmlwf/core
 
+clobber: clean
+
 distclean: clean
 	rm -f expat_config.h config.status config.log config.cache libtool
 	rm -f Makefile
