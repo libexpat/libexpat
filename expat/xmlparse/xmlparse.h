@@ -70,8 +70,18 @@ protocol or null if there is none specified. */
 XML_Parser XMLPARSEAPI
 XML_ParserCreate(const XML_Char *encoding);
 
+/* Constructs a new parser and namespace processor.  Element type names
+and attribute names that belong to a namespace will be expanded;
+unprefixed attribute names are never expanded; unprefixed element type
+names are expanded only if there is a default namespace. The expanded
+name is the concatenation of the namespace URI, the namespace separator character,
+and the local part of the name.  If the namespace separator is '\0' then
+the namespace URI and the local part will be concatenated without any
+separator.  When a namespace is not declared, the name and prefix will be
+passed through without expansion. */
+
 XML_Parser XMLPARSEAPI
-XML_ParserCreateNS(const XML_Char *encoding);
+XML_ParserCreateNS(const XML_Char *encoding, XML_Char namespaceSeparator);
 
 
 /* atts is array of name/value pairs, terminated by 0;
@@ -148,10 +158,9 @@ it may be null.
 The publicId argument is the public identifier as specified in the entity declaration,
 or null if none was specified; the whitespace in the public identifier
 will have been normalized as required by the XML spec.
-The openEntityNames argument is a space-separated list of the names of the entities
-that are open for the parse of this entity (including the name of the referenced
-entity); this can be passed as the openEntityNames argument to
-XML_ExternalEntityParserCreate; openEntityNames is valid only until the handler
+The context argument specifies the parsing context in the format
+expected by the context argument to
+XML_ExternalEntityParserCreate; context is valid only until the handler
 returns, so if the referenced entity is to be parsed later, it must be copied.
 The handler should return 0 if processing should not continue because of
 a fatal error in the handling of the external entity.
@@ -160,7 +169,7 @@ error.
 Note that unlike other handlers the first argument is the parser, not userData. */
 
 typedef int (*XML_ExternalEntityRefHandler)(XML_Parser parser,
-					    const XML_Char *openEntityNames,
+					    const XML_Char *context,
 					    const XML_Char *base,
 					    const XML_Char *systemId,
 					    const XML_Char *publicId);
@@ -310,10 +319,13 @@ int XMLPARSEAPI
 XML_ParseBuffer(XML_Parser parser, int len, int isFinal);
 
 /* Creates an XML_Parser object that can parse an external general entity;
-openEntityNames is a space-separated list of the names of the entities that are open
-for the parse of this entity (including the name of this one);
-encoding is the externally specified encoding,
+context is a '\0'-terminated string specifying the parse context;
+encoding is a '\0'-terminated string giving the name of the externally specified encoding,
 or null if there is no externally specified encoding.
+The context string consists of a sequence of tokens separated by formfeeds (\f);
+a token consisting of a name specifies that the general entity of the name
+is open; a token of the form prefix=uri specifies the namespace for a particular
+prefix; a token of the form =uri specifies the default namespace.
 This can be called at any point after the first call to an ExternalEntityRefHandler
 so longer as the parser has not yet been freed.
 The new parser is completely independent and may safely be used in a separate thread.
@@ -321,7 +333,7 @@ The handlers and userData are initialized from the parser argument.
 Returns 0 if out of memory.  Otherwise returns a new XML_Parser object. */
 XML_Parser XMLPARSEAPI
 XML_ExternalEntityParserCreate(XML_Parser parser,
-			       const XML_Char *openEntityNames,
+			       const XML_Char *context,
 			       const XML_Char *encoding);
 
 enum XML_Error {

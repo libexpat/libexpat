@@ -91,6 +91,8 @@ Contributor(s):
 #define tremove remove
 #endif /* not XML_UNICODE */
 
+#define NSSEP T('\001')
+
 static void characterData(void *userData, const XML_Char *s, int len)
 {
   FILE *fp = userData;
@@ -160,6 +162,73 @@ static void endElement(void *userData, const XML_Char *name)
   puttc(T('<'), fp);
   puttc(T('/'), fp);
   fputts(name, fp);
+  puttc(T('>'), fp);
+}
+
+static void startElementNS(void *userData, const XML_Char *name, const XML_Char **atts)
+{
+  int nAtts;
+  int nsi;
+  const XML_Char **p;
+  FILE *fp = userData;
+  const XML_Char *sep;
+  puttc(T('<'), fp);
+
+  sep = tcsrchr(name, NSSEP);
+  if (sep) {
+    fputts(T("ns0:"), fp);
+    fputts(sep + 1, fp);
+    fputts(T(" xmlns:ns0=\""), fp);
+    characterData(userData, name, sep - name);
+    puttc(T('"'), fp);
+    nsi = 1;
+  }
+  else {
+    fputts(name, fp);
+    nsi = 0;
+  }
+
+  p = atts;
+  while (*p)
+    ++p;
+  nAtts = (p - atts) >> 1;
+  if (nAtts > 1)
+    qsort((void *)atts, nAtts, sizeof(XML_Char *) * 2, attcmp);
+  while (*atts) {
+    name = *atts++;
+    sep = tcsrchr(name, NSSEP);
+    if (sep) {
+      ftprintf(fp, T(" xmlns:ns%d=\""), nsi);
+      characterData(userData, name, sep - name);
+      puttc(T('"'), fp);
+      name = sep + 1;
+      ftprintf(fp, T(" ns%d:"), nsi++);
+    }
+    else
+      puttc(T(' '), fp);
+    fputts(name, fp);
+    puttc(T('='), fp);
+    puttc(T('"'), fp);
+    characterData(userData, *atts, tcslen(*atts));
+    puttc(T('"'), fp);
+    atts++;
+  }
+  puttc(T('>'), fp);
+}
+
+static void endElementNS(void *userData, const XML_Char *name)
+{
+  FILE *fp = userData;
+  const XML_Char *sep;
+  puttc(T('<'), fp);
+  puttc(T('/'), fp);
+  sep = tcsrchr(name, NSSEP);
+  if (sep) {
+    fputts(T("ns0:"), fp);
+    fputts(sep + 1, fp);
+  }
+  else
+    fputts(name, fp);
   puttc(T('>'), fp);
 }
 
@@ -374,7 +443,7 @@ const XML_Char *resolveSystemId(const XML_Char *base, const XML_Char *systemId, 
 
 static
 int externalEntityRefFilemap(XML_Parser parser,
-			     const XML_Char *openEntityNames,
+			     const XML_Char *context,
 			     const XML_Char *base,
 			     const XML_Char *systemId,
 			     const XML_Char *publicId)
@@ -382,7 +451,7 @@ int externalEntityRefFilemap(XML_Parser parser,
   int result;
   XML_Char *s;
   const XML_Char *filename;
-  XML_Parser entParser = XML_ExternalEntityParserCreate(parser, openEntityNames, 0);
+  XML_Parser entParser = XML_ExternalEntityParserCreate(parser, context, 0);
   PROCESS_ARGS args;
   args.retPtr = &result;
   args.parser = entParser;
@@ -432,7 +501,7 @@ int processStream(const XML_Char *filename, XML_Parser parser)
 
 static
 int externalEntityRefStream(XML_Parser parser,
-			    const XML_Char *openEntityNames,
+			    const XML_Char *context,
 			    const XML_Char *base,
 			    const XML_Char *systemId,
 			    const XML_Char *publicId)
@@ -440,7 +509,7 @@ int externalEntityRefStream(XML_Parser parser,
   XML_Char *s;
   const XML_Char *filename;
   int ret;
-  XML_Parser entParser = XML_ExternalEntityParserCreate(parser, openEntityNames, 0);
+  XML_Parser entParser = XML_ExternalEntityParserCreate(parser, context, 0);
   filename = resolveSystemId(base, systemId, &s);
   XML_SetBase(entParser, filename);
   ret = processStream(filename, entParser);
@@ -496,7 +565,7 @@ int unknownEncoding(void *userData,
 static
 void usage(const XML_Char *prog)
 {
-  ftprintf(stderr, T("usage: %s [-r] [-w] [-x] [-d output-dir] [-e encoding] file ...\n"), prog);
+  ftprintf(stderr, T("usage: %s [-n] [-r] [-w] [-x] [-d output-dir] [-e encoding] file ...\n"), prog);
   exit(1);
 }
 
@@ -509,9 +578,7 @@ int tmain(int argc, XML_Char **argv)
   int processExternalEntities = 0;
   int windowsCodePages = 0;
   int outputType = 0;
-#ifdef XMLNS
-  int enforceNamespaceSyntax = 0;
-#endif
+  int useNamespaces = 0;
 
 #ifdef _MSC_VER
   _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF|_CRTDBG_LEAK_CHECK_DF);
@@ -529,12 +596,11 @@ int tmain(int argc, XML_Char **argv)
       useFilemap = 0;
       j++;
     }
-#ifdef XMLNS
     if (argv[i][j] == T('n')) {
-      enforceNamespaceSyntax = 1;
+      useNamespaces = 1;
+      outputType = 0;
       j++;
     }
-#endif
     if (argv[i][j] == T('x')) {
       processExternalEntities = 1;
       j++;
@@ -545,10 +611,12 @@ int tmain(int argc, XML_Char **argv)
     }
     if (argv[i][j] == T('m')) {
       outputType = 'm';
+      useNamespaces = 0;
       j++;
     }
     if (argv[i][j] == T('c')) {
       outputType = 'c';
+      useNamespaces = 0;
       j++;
     }
     if (argv[i][j] == T('d')) {
@@ -582,13 +650,11 @@ int tmain(int argc, XML_Char **argv)
     FILE *fp = 0;
     XML_Char *outName = 0;
     int result;
-#ifdef XMLNS
-    XML_Parser parser = (enforceNamespaceSyntax
-                         ? XML_ParserCreateNS
-			 : XML_ParserCreate)(encoding);
-#else
-    XML_Parser parser = XML_ParserCreate(encoding);
-#endif
+    XML_Parser parser;
+    if (useNamespaces)
+      parser = XML_ParserCreateNS(encoding, NSSEP);
+    else
+      parser = XML_ParserCreate(encoding);
     if (outputDir) {
       const XML_Char *file = argv[i];
       if (tcsrchr(file, T('/')))
@@ -606,6 +672,7 @@ int tmain(int argc, XML_Char **argv)
 	tperror(outName);
 	exit(1);
       }
+      setvbuf(fp, NULL, _IOFBF, 16384);
 #ifdef XML_UNICODE
       puttc(0xFEFF, fp);
 #endif
@@ -628,7 +695,10 @@ int tmain(int argc, XML_Char **argv)
 	XML_SetProcessingInstructionHandler(parser, defaultProcessingInstruction);
 	break;
       default:
-	XML_SetElementHandler(parser, startElement, endElement);
+	if (useNamespaces)
+	  XML_SetElementHandler(parser, startElementNS, endElementNS);
+	else
+	  XML_SetElementHandler(parser, startElement, endElement);
 	XML_SetCharacterDataHandler(parser, characterData);
 	XML_SetProcessingInstructionHandler(parser, processingInstruction);
 	break;
