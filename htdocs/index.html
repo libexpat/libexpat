@@ -51,11 +51,41 @@ of Expat.</p>
 <h3 id="news">News</h3>
 
 <dl>
+  <dt><em>20 October 2003</em>,
+      Expat 1.95.7 released.
+    </dt>
+  <dd>
+    <ul>
+      <li> Fixed <code>enum XML_Status</code> issue (reported on
+           SourceForge many times), so compilers that are properly
+           picky will be happy. </li>
+      <li> Introduced an <code>XMLCALL</code> macro to control the
+           calling convention used by the Expat API; this macro should
+           be used to annotate prototypes and definitions of callback
+           implementations in code compiled with a calling convention
+           other than the default convention for the host
+           platform. </li>
+      <li> Improved ability to build without the
+           <b>configure</b>-generated <span
+           class="filename">expat_config.h</span> header.  This is
+           useful for applications which embed Expat rather than
+           linking in the library. </li>
+      <li> Fixed a variety of bugs: see SF issues 458907, 609603,
+           676844, 679754, 692878, 692964, 695401, 699323, 699487,
+           820946. </li>
+      <li> Improved hash table lookups. </li>
+      <li> Added more regression tests and improved documentation. </li>
+    </ul>
+    <p>Our plan is to wait for a short while and re-release this
+    version as the long-awaited Expat 2.0 if no major problems are
+    identified.  If significant problems are found, additional
+    iterative releases will be made as fixes are made.</p>
+    </dd>
   <dt><em>15 October 2003</em>,
       Upcoming release.
     </dt>
   <dd>
-      We're working on getting the long-delayed Expat 1.95.7 out the
+    <p>We're working on getting the long-delayed Expat 1.95.7 out the
       door.  A snapshot of the current source code is available as <a
       href= "expat-2003-10-15.tar.gz" >expat-2003-10-15.tar.gz</a>;
       please give this a try on your platform and report how it works
@@ -63,8 +93,7 @@ of Expat.</p>
       "http://mail.libexpat.org/mailman/listinfo/expat-discuss"
       >expat-discuss</a> mailing list.  Our goals for this release are
       portability and stability.
-    </dt>
-  <dd>
+      </p>
     </dd>
   <dt><em>28 January 2003</em>,
       Expat 1.95.6 released.

@@ -36,6 +36,8 @@ dl dt      { font-weight: bold; }
                  padding-bottom: 0.75em;
                  }
 
+.filename  { font-family: sans-serif; }
+
 /* These margin and padding settings are tedious at best.  The idea is
    to make sure we can put news items on the site that aren't just a
    ordered or unordered list, and have it not look too ugly.
@@ -49,6 +51,11 @@ dl dd      { margin-left: 2em; }
 dl, ol, ul,
 dl dt      { margin-top: 0em;
              margin-bottom: 0em;
+             padding-top: 0em;
+             padding-bottom: 0em; }
+
+p          { margin-top: 0em;
+             margin-bottom: 1em;
              padding-top: 0em;
              padding-bottom: 0em; }
 
