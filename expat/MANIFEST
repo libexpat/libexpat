@@ -51,9 +51,11 @@ examples/elements.c
 examples/elements.dsp
 examples/outline.c
 examples/outline.dsp
+lib/Makefile.MPW
 lib/ascii.h
 lib/asciitab.h
 lib/expat.dsp
+lib/expat_external.h
 lib/expat.h
 lib/expatw.dsp
 lib/expat_static.dsp
