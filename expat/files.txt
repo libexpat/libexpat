@@ -1,5 +1,6 @@
 expat.html
 MPL-1_0.html
+gplelect.html
 xmltok/asciitab.h
 xmltok/dllmain.c
 gennmtab/gennmtab.c
