@@ -12,6 +12,8 @@
 .banner h2 { font-size: 200%; }
 .content   { padding: 2em; }
 
+dl dt      { font-weight: bold; }
+
 .content thead { background-color: rgb(110,139,61);
                  color: rgb(255,236,176);
                  }
