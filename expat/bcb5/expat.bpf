@@ -1,5 +1,0 @@
-USEUNIT("..\Source\lib\xmltok.c");
-USEUNIT("..\Source\lib\xmlrole.c");
-USEUNIT("..\Source\lib\xmlparse.c");
-//---------------------------------------------------------------------------
-#define DllEntryPoint

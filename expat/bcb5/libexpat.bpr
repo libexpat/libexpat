@@ -3,8 +3,8 @@
 <PROJECT>
   <MACROS>
     <VERSION value="BCB.05.03"/>
-    <PROJECT value="debug\gennmtab.exe"/>
-    <OBJFILES value="debug\obj\gennmtab.obj"/>
+    <PROJECT value="debug\libexpat.dll"/>
+    <OBJFILES value="debug\obj\xmltok.obj debug\obj\xmlrole.obj debug\obj\xmlparse.obj"/>
     <RESFILES value=""/>
     <IDLFILES value=""/>
     <IDLGENFILES value=""/>
@@ -17,32 +17,32 @@
       ibsmp50.bpi VCLDBX50.bpi TEEUI50.bpi TEEDB50.bpi TEE50.bpi TEEQR50.bpi 
       VCLIB50.bpi bcbie50.bpi VCLIE50.bpi INETDB50.bpi INET50.bpi NMFAST50.bpi 
       dclocx50.bpi bcb2kaxserver50.bpi dclusr50.bpi"/>
-    <PATHCPP value=".;..\Source\gennmtab"/>
+    <PATHCPP value=".;..\lib"/>
     <PATHPAS value=".;"/>
     <PATHRC value=".;"/>
     <PATHASM value=".;"/>
     <DEBUGLIBPATH value="$(BCB)\lib\debug"/>
     <RELEASELIBPATH value="$(BCB)\lib\release"/>
     <LINKER value="ilink32"/>
-    <USERDEFINES value="WIN32;NDEBUG;_CONSOLE;_DEBUG"/>
+    <USERDEFINES value="NDEBUG;WIN32;_WINDOWS;_MBCS;_USRDLL;EXPAT_EXPORTS;COMPILED_FROM_DSP;_DEBUG"/>
     <SYSDEFINES value="_MSC_VER=1100;_NO_VCL;_ASSERTE;NO_STRICT;_RTLDLL"/>
-    <MAINSOURCE value="gennmtab.bpf"/>
-    <INCLUDEPATH value="$(BCB)\include;..\Source\gennmtab;..\Source\lib"/>
-    <LIBPATH value="$(BCB)\lib;..\Source\gennmtab;debug"/>
-    <WARNINGS value="-w-par -w-8027 -w-8026"/>
+    <MAINSOURCE value="libexpat.bpf"/>
+    <INCLUDEPATH value="$(BCB)\include;..\lib"/>
+    <LIBPATH value="..\lib;$(BCB)\lib"/>
+    <WARNINGS value="-w-rch -w-par -w-ccc"/>
   </MACROS>
   <OPTIONS>
     <IDLCFLAGS value="-I$(BCB)\include"/>
-    <CFLAG1 value="-Od -X- -r- -a8 -5 -b -k -y -v -vi- -q -c"/>
+    <CFLAG1 value="-WD -Od -X- -r- -a8 -5 -b -k -y -v -vi- -q -tWM -c -tWD"/>
     <PFLAGS value="-N2debug\obj -N0debug\obj -$YD -$W -$O-"/>
-    <RFLAGS value="/l 0x809 /d &quot;NDEBUG&quot; /i$(BCB)\include;$(BCB)\include\mfc"/>
+    <RFLAGS value="/l 0x409 /d &quot;NDEBUG&quot; /i$(BCB)\include;$(BCB)\include\mfc"/>
     <AFLAGS value="/mx /w2 /zi"/>
-    <LFLAGS value="-Idebug\obj -D&quot;&quot; -ap -Tpe -x -Gn -v -q"/>
+    <LFLAGS value="-Idebug\obj -D&quot;&quot; -aa -Tpd -x -Gn -Gi -v -q"/>
   </OPTIONS>
   <LINKER>
-    <ALLOBJ value="c0x32.obj $(OBJFILES)"/>
+    <ALLOBJ value="c0d32.obj $(OBJFILES)"/>
     <ALLRES value="$(RESFILES)"/>
-    <ALLLIB value="$(LIBFILES) $(LIBRARIES) libexpat.lib import32.lib cw32i.lib"/>
+    <ALLLIB value="$(LIBFILES) $(LIBRARIES) import32.lib cw32mti.lib"/>
   </LINKER>
   <IDEOPTIONS>
 [Version Info]
@@ -73,26 +73,25 @@ ProductVersion=1.0.0.0
 Comments=
 
 [HistoryLists\hlIncludePath]
-Count=8
-Item0=$(BCB)\include;..\Source\gennmtab;..\Source\lib
-Item1=..\Source\gennmtab;$(BCB)\include;..\Source\Source\gennmtab
-Item2=$(BCB)\include;..\Source\gennmtab
-Item3=..\..\gennmtab;$(BCB)\include
-Item4=..\gennmtab;$(BCB)\include
-Item5=..\..\..\gennmtab;$(BCB)\include
-Item6=$(BCB)\include
-Item7=$(BCB)\include;$(BCB)\include\mfc;$(BCB)\include\atl;
+Count=7
+Item0=$(BCB)\include;..\Source\lib
+Item1=..\Source\lib;$(BCB)\include
+Item2=..\Source\lib;..\lib;$(BCB)\include
+Item3=..\lib;$(BCB)\include
+Item4=..\..\..\lib;$(BCB)\include
+Item5=$(BCB)\include
+Item6=$(BCB)\include;$(BCB)\include\mfc;$(BCB)\include\atl;
 
 [HistoryLists\hlLibraryPath]
 Count=9
-Item0=$(BCB)\lib;..\Source\gennmtab;debug
-Item1=$(BCB)\lib;..\Source\gennmtab;.\debug
-Item2=..\Source\gennmtab;$(BCB)\lib;..\Source\Source\gennmtab;..\Source\gennmtab\debug
-Item3=..\..\gennmtab;$(BCB)\lib;..\..\BCB5\debug
-Item4=$(BCB)\lib;.\debug
-Item5=..\gennmtab;$(BCB)\lib;..\lib\release
-Item6=..\..\..\gennmtab;$(BCB)\lib;..\..\..\lib\release
-Item7=$(BCB)\lib;..\lib\release
+Item0=..\Source\lib;$(BCB)\lib
+Item1=$(BCB)\lib
+Item2=$(BCB)\lib;..\Source\lib
+Item3=..\Source\lib
+Item4=..\Source\lib;..\lib;$(BCB)\lib;..\lib\$(RELEASELIBPATH)
+Item5=..\lib;$(BCB)\lib;..\lib\$(RELEASELIBPATH)
+Item6=..\..\..\lib;$(BCB)\lib;..\..\..\lib\$(RELEASELIBPATH)
+Item7=$(BCB)\lib;$(RELEASELIBPATH)
 Item8=$(BCB)\lib;$(RELEASELIBPATH);;$(BCB)\lib\psdk;
 
 [HistoryLists\hlDebugSourcePath]
@@ -101,26 +100,25 @@ Item0=$(BCB)\source\vcl
 
 [HistoryLists\hlConditionals]
 Count=1
-Item0=WIN32;NDEBUG;_CONSOLE;_DEBUG
+Item0=NDEBUG;WIN32;_WINDOWS;_MBCS;_USRDLL;EXPAT_EXPORTS;COMPILED_FROM_DSP;_DEBUG
 
 [HistoryLists\hlIntOutputDir]
-Count=8
+Count=6
 Item0=debug\obj
-Item1=..\..\BCB5\debug\obj
-Item2=..\..\win32\debug\obj
-Item3=..\..\..\..\win32\debug\obj
-Item4=..\..\..\..\win32\debug
-Item5=..\..\..\gennmtab\Release
-Item6=Release
-Item7=.\Release
+Item1=..\..\win32\debug\obj
+Item2=..\..\..\..\win32\debug\obj
+Item3=..\..\..\..\win32\debug
+Item4=..\..\..\lib\Release
+Item5=Release
 
 [HistoryLists\hlFinalOutputDir]
-Count=5
+Count=6
 Item0=debug\
 Item1=..\..\..\..\win32\debug\
 Item2=..\..\..\..\win32\debug
-Item3=..\..\..\Release\
-Item4=.\Release\
+Item3=..\..\..\lib\Release\
+Item4=..\..\..\lib\Release
+Item5=Release\
 
 [Debugging]
 DebugSourceDirs=

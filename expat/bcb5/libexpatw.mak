@@ -13,10 +13,10 @@ BCB = $(MAKEDIR)\..
 
 VERSION = BCB.05.03
 # ---------------------------------------------------------------------------
-PROJECT = debug\libexpat.dll
+PROJECT = debug\libexpatw.dll
 OBJFILES = debug\obj\xmltok.obj debug\obj\xmlrole.obj debug\obj\xmlparse.obj
 RESFILES = 
-MAINSOURCE = expat.bpf
+MAINSOURCE = libexpatw.bpf
 RESDEPEN = $(RESFILES)
 LIBFILES = 
 IDLFILES = 
@@ -29,24 +29,24 @@ PACKAGES = VCL50.bpi VCLX50.bpi bcbsmp50.bpi QRPT50.bpi VCLDB50.bpi VCLBDE50.bpi
 SPARELIBS = 
 DEFFILE = 
 # ---------------------------------------------------------------------------
-PATHCPP = .;..\Source\lib
+PATHCPP = .;..\lib
 PATHASM = .;
 PATHPAS = .;
 PATHRC = .;
 DEBUGLIBPATH = $(BCB)\lib\debug
 RELEASELIBPATH = $(BCB)\lib\release
-USERDEFINES = NDEBUG;WIN32;_WINDOWS;_MBCS;_USRDLL;EXPAT_EXPORTS;COMPILED_FROM_DSP;_DEBUG
+USERDEFINES = NDEBUG;COMPILED_FROM_DSP;WIN32;_WINDOWS;_MBCS;_USRDLL;EXPAT_EXPORTS;XML_UNICODE_WCHAR_T;_DEBUG
 SYSDEFINES = _MSC_VER=1100;_NO_VCL;_ASSERTE;NO_STRICT;_RTLDLL
-INCLUDEPATH = $(BCB)\include;..\Source\lib
-LIBPATH = ..\Source\lib;$(BCB)\lib
-WARNINGS= -w-rch -w-par -w-ccc
+INCLUDEPATH = $(BCB)\include;..\lib
+LIBPATH = $(BCB)\lib;..\lib
+WARNINGS= -w-rch -w-par -w-8027 -w-8026 -w-ccc
 # ---------------------------------------------------------------------------
 CFLAG1 = -WD -Od -X- -r- -a8 -5 -b -k -y -v -vi- -q -tWM -c -tWD
 IDLCFLAGS = -I$(BCB)\include
 PFLAGS = -N2debug\obj -N0debug\obj -$YD -$W -$O-
 RFLAGS = /l 0x409 /d "NDEBUG" /i$(BCB)\include;$(BCB)\include\mfc
 AFLAGS = /mx /w2 /zi
-LFLAGS = -Idebug\obj -D"" -aa -Tpd -x -Gn -Gi -v -q
+LFLAGS = -Idebug\obj -D"" -aa -Tpd -x -Gn -Gi -w -v -q
 # ---------------------------------------------------------------------------
 ALLOBJ = c0d32.obj $(OBJFILES)
 ALLRES = $(RESFILES)

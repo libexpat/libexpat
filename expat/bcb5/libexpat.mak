@@ -13,10 +13,10 @@ BCB = $(MAKEDIR)\..
 
 VERSION = BCB.05.03
 # ---------------------------------------------------------------------------
-PROJECT = debug\gennmtab.exe
-OBJFILES = debug\obj\gennmtab.obj
+PROJECT = debug\libexpat.dll
+OBJFILES = debug\obj\xmltok.obj debug\obj\xmlrole.obj debug\obj\xmlparse.obj
 RESFILES = 
-MAINSOURCE = gennmtab.bpf
+MAINSOURCE = libexpat.bpf
 RESDEPEN = $(RESFILES)
 LIBFILES = 
 IDLFILES = 
@@ -29,28 +29,28 @@ PACKAGES = VCL50.bpi VCLX50.bpi bcbsmp50.bpi QRPT50.bpi VCLDB50.bpi VCLBDE50.bpi
 SPARELIBS = 
 DEFFILE = 
 # ---------------------------------------------------------------------------
-PATHCPP = .;..\Source\gennmtab
+PATHCPP = .;..\lib
 PATHASM = .;
 PATHPAS = .;
 PATHRC = .;
 DEBUGLIBPATH = $(BCB)\lib\debug
 RELEASELIBPATH = $(BCB)\lib\release
-USERDEFINES = WIN32;NDEBUG;_CONSOLE;_DEBUG
+USERDEFINES = NDEBUG;WIN32;_WINDOWS;_MBCS;_USRDLL;EXPAT_EXPORTS;COMPILED_FROM_DSP;_DEBUG
 SYSDEFINES = _MSC_VER=1100;_NO_VCL;_ASSERTE;NO_STRICT;_RTLDLL
-INCLUDEPATH = $(BCB)\include;..\Source\gennmtab;..\Source\lib
-LIBPATH = $(BCB)\lib;..\Source\gennmtab;debug
-WARNINGS= -w-par -w-8027 -w-8026
+INCLUDEPATH = $(BCB)\include;..\lib
+LIBPATH = ..\lib;$(BCB)\lib
+WARNINGS= -w-rch -w-par -w-ccc
 # ---------------------------------------------------------------------------
-CFLAG1 = -Od -X- -r- -a8 -5 -b -k -y -v -vi- -q -c
+CFLAG1 = -WD -Od -X- -r- -a8 -5 -b -k -y -v -vi- -q -tWM -c -tWD
 IDLCFLAGS = -I$(BCB)\include
 PFLAGS = -N2debug\obj -N0debug\obj -$YD -$W -$O-
-RFLAGS = /l 0x809 /d "NDEBUG" /i$(BCB)\include;$(BCB)\include\mfc
+RFLAGS = /l 0x409 /d "NDEBUG" /i$(BCB)\include;$(BCB)\include\mfc
 AFLAGS = /mx /w2 /zi
-LFLAGS = -Idebug\obj -D"" -ap -Tpe -x -Gn -v -q
+LFLAGS = -Idebug\obj -D"" -aa -Tpd -x -Gn -Gi -v -q
 # ---------------------------------------------------------------------------
-ALLOBJ = c0x32.obj $(OBJFILES)
+ALLOBJ = c0d32.obj $(OBJFILES)
 ALLRES = $(RESFILES)
-ALLLIB = $(LIBFILES) $(LIBRARIES) libexpat.lib import32.lib cw32i.lib
+ALLLIB = $(LIBFILES) $(LIBRARIES) import32.lib cw32mti.lib
 # ---------------------------------------------------------------------------
 !ifdef IDEOPTIONS
 
