@@ -1716,10 +1716,10 @@ XML_ResumeParser(XML_Parser parser)
   return result;
 }
 
-XML_ParsingStatus XMLCALL
-XML_GetParsingStatus(XML_Parser parser)
+void XMLCALL
+XML_GetParsingStatus(XML_Parser parser, XML_ParsingStatus *status)
 {
-  return parser->m_parsingStatus;
+  *status = parser->m_parsingStatus;
 }
 
 enum XML_Error XMLCALL

@@ -828,8 +828,8 @@ XMLPARSEAPI(enum XML_Status)
 XML_ParseBuffer(XML_Parser parser, int len, int isFinal);
 
 /* Stops parsing, causing XML_Parse() or XML_ParseBuffer() to return.
-   Must be called from within a call-back handler. Some handler call-backs
-   may still follow, because they would otherwise get lost. Examples:
+   Must be called from within a call-back handler. Some call-backs
+   may still follow because they would otherwise get lost. Examples:
    - endElementHandler() for empty elements when stopped in
      startElementHandler(), 
    - endNameSpaceDeclHandler() when stopped in endElementHandler(), 
@@ -837,7 +837,8 @@ XML_ParseBuffer(XML_Parser parser, int len, int isFinal);
 
    Can be called from most handlers, including DTD related call-backs.
    Returns XML_STATUS_OK when successful, XML_STATUS_ERROR otherwise.
-   Possible error codes: XML_ERROR_SUSPENDED, XML_ERROR_FINISHED.
+   Possible error codes: XML_ERROR_SUSPENDED - when the parser is already
+   suspended, XML_ERROR_FINISHED - when the parser has already finished.
 
    When resumable = XML_TRUE then parsing is suspended, that is, 
    XML_Parse() and XML_ParseBuffer() return XML_STATUS_SUSPENDED. 
@@ -862,8 +863,8 @@ XML_StopParser(XML_Parser parser, XML_Bool resumable);
    Additional error code XML_ERROR_NOT_SUSPENDED possible.   
 
    *Note*:
-   This must be applied to the most deeply nested child parser instance
-   first, and to its parent parser only after the child parser has finished,
+   This must be called on the most deeply nested child parser instance
+   first, and on its parent parser only after the child parser has finished,
    to be applied recursively until the document entity's parser is restarted.
    That is, the parent parser will not resume by itself and it is up to the
    application to call XML_ResumeParser() on it at the appropriate moment.
@@ -888,8 +889,8 @@ typedef struct {
    XXX XML_Parse() and XML_ParseBuffer() should return XML_ParsingStatus,
    XXX with XML_FINISHED_OK or XML_FINISHED_ERROR replacing XML_FINISHED
 */
-XMLPARSEAPI(XML_ParsingStatus)
-XML_GetParsingStatus(XML_Parser parser);
+XMLPARSEAPI(void)
+XML_GetParsingStatus(XML_Parser parser, XML_ParsingStatus *status);
 
 /* Creates an XML_Parser object that can parse an external general
    entity; context is a '\0'-terminated string specifying the parse
