@@ -37,6 +37,11 @@ lib/xmltok_impl.c
 lib/xmltok_impl.h
 lib/xmltok_ns.c
 lib/winconfig.h
+tests/README.txt
+tests/chardata.c
+tests/chardata.h
+tests/runtests.c
+tests/xmltest.sh
 xmlwf/codepage.c
 xmlwf/codepage.h
 xmlwf/ct.c
