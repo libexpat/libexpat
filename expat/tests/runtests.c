@@ -67,18 +67,48 @@ START_TEST(test_xmldecl_misplaced)
 }
 END_TEST
 
+START_TEST(test_bom_utf8)
+{
+    /* This test is really just making sure we don't core on a UTF-8 BOM. */
+    char *text = "\357\273\277<e/>";
+
+    if (!XML_Parse(parser, text, strlen(text), 1))
+        fail("false error reported for UTF-8 BOM");
+}
+END_TEST
+
+START_TEST(test_bom_utf16_be)
+{
+    char text[] = "\376\377\0<\0e\0/\0>";
+
+    if (!XML_Parse(parser, text, sizeof(text) - 1, 1))
+        fail("false error reported for UTF-16-BE BOM");
+}
+END_TEST
+
+START_TEST(test_bom_utf16_le)
+{
+    char text[] = "\377\376<\0e\0/\0>\0";
+
+    if (!XML_Parse(parser, text, sizeof(text) - 1, 1))
+        fail("false error reported for UTF-16-LE BOM");
+}
+END_TEST
 
 static Suite *
 make_basic_suite(void)
 {
     Suite *s = suite_create("basic");
-    TCase *tc_nulls = tcase_create("null characters");
+    TCase *tc_chars = tcase_create("character tests");
     TCase *tc_xmldecl = tcase_create("XML declaration");
 
-    suite_add_tcase(s, tc_nulls);
-    tcase_add_checked_fixture(tc_nulls, basic_setup, basic_teardown);
-    tcase_add_test(tc_nulls, test_nul_byte);
-    tcase_add_test(tc_nulls, test_u0000_char);
+    suite_add_tcase(s, tc_chars);
+    tcase_add_checked_fixture(tc_chars, basic_setup, basic_teardown);
+    tcase_add_test(tc_chars, test_nul_byte);
+    tcase_add_test(tc_chars, test_u0000_char);
+    tcase_add_test(tc_chars, test_bom_utf8);
+    tcase_add_test(tc_chars, test_bom_utf16_be);
+    tcase_add_test(tc_chars, test_bom_utf16_le);
 
     suite_add_tcase(s, tc_xmldecl);
     tcase_add_checked_fixture(tc_xmldecl, basic_setup, basic_teardown);
@@ -91,18 +121,29 @@ make_basic_suite(void)
 int
 main(int argc, char *argv[])
 {
-    int nf;
+    int i, nf;
+    int forking = 0, forking_set = 0;
     int verbosity = CK_NORMAL;
     Suite *s = make_basic_suite();
     SRunner *sr = srunner_create(s);
 
-    if (argc >= 2) {
-        char *opt = argv[1];
+    for (i = 1; i < argc; ++i) {
+        char *opt = argv[i];
         if (strcmp(opt, "-v") == 0 || strcmp(opt, "--verbose") == 0)
             verbosity = CK_VERBOSE;
         else if (strcmp(opt, "-q") == 0 || strcmp(opt, "--quiet") == 0)
             verbosity = CK_SILENT;
+        else if (strcmp(opt, "-f") == 0 || strcmp(opt, "--fork") == 0) {
+            forking = 1;
+            forking_set = 1;
+        }
+        else if (strcmp(opt, "-n") == 0 || strcmp(opt, "--no-fork") == 0) {
+            forking = 0;
+            forking_set = 1;
+        }
     }
+    if (forking_set)
+        srunner_set_fork_status(sr, forking ? CK_FORK : CK_NOFORK);
     srunner_run_all(sr, verbosity);
     nf = srunner_ntests_failed(sr);
     srunner_free(sr);
