@@ -1,4 +1,4 @@
-Release 1.95.6 Sat Jan 25 2003
+Release 1.95.6 Tue Jan 28 2003
         - Added XML_FreeContentModel().
         - Added XML_MemMalloc(), XML_MemRealloc(), XML_MemFree().
         - Fixed a variety of bugs: see SF issues 615606, 616863,
