@@ -203,9 +203,24 @@ shoveling the document to the parser so that it can do its work.
 <hr>
 <h2><a name="building">Building and Installing expat</a></h2>
 <p>The expat distribution comes as a compressed (with GNU gzip) tar file.
-After unpacking this, cd into the directory and run the configure shell
-script.
-</p>
+You may download the latest version from
+<a href="http://sourceforge.net/projects/expat/">Source Forge</a>.
+After unpacking this, cd into the directory. Then follow either the
+Win32 directions or Unix directions below.</p>
+
+<h3>Building under Win32</h3>
+<p>If you're using the GNU compiler under cygwin, follow the Unix directions
+in the next section. Otherwise if you have Microsoft's Developer Studio
+installed, then from Windows Explorer double-click on "expat.dsp" in the
+lib directory and build and install in the usual manner.</p>
+
+<p>Alternatively, you may download the win32 binary package that contains
+the expat.h include file and a pre-built dll.</p>
+
+<h3>Building under Unix (or GNU)</h3>
+<p>First you'll need to run the configure shell script in order to configure
+the Makefiles and headers for your system.</p>
+
 <p>If you're happy with all the defaults that configure picks for you,
 and you have permission on your system to install into /usr/local, you can
 install expat with this sequence of commands:</p>
@@ -1471,7 +1486,7 @@ XML_LChar *
 XML_ExpatVersion();
 </pre></a></div>
 <div class="fcndef">
-Return the library version as a string.
+Return the library version as a string (e.g. "expat_1.95.1").
 </div>
 
 <div class="fcndec"><a name="XML_ExpatVersionInfo"><pre>
@@ -1488,15 +1503,6 @@ typedef struct {
 } XML_Expat_Version;
 </pre></div>
 </div>
-<p>The following constants are defined using pre-processor symbols,
-and so may be tested at compile time.</p>
-<dl>
-<dt><code>XML_MAJOR_VERSION</code></dt>
-<dd>The major version number.</dd>
-<dt><code>XML_MINOR_VERSION</code></dt>
-<dd>The minor version number.</dd>
-<dt><code>XML_MICRO_VERSION</code></dt>
-<dd>The "patch level".</dd>
 </dl>
 
 </body>
