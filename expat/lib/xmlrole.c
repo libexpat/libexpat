@@ -10,6 +10,7 @@
 #include <expat_config.h>
 #endif /* ndef COMPILED_FROM_DSP */
 
+#include "internal.h"
 #include "xmlrole.h"
 #include "ascii.h"
 
@@ -84,11 +85,11 @@ static const char KW_SYSTEM[] = {
 #define setTopLevel(state) ((state)->handler = internalSubset)
 #endif /* not XML_DTD */
 
-typedef int PROLOG_HANDLER(PROLOG_STATE *state,
-                           int tok,
-                           const char *ptr,
-                           const char *end,
-                           const ENCODING *enc);
+typedef int FASTCALL PROLOG_HANDLER(PROLOG_STATE *state,
+                                    int tok,
+                                    const char *ptr,
+                                    const char *end,
+                                    const ENCODING *enc);
 
 static PROLOG_HANDLER
   prolog0, prolog1, prolog2,
@@ -108,9 +109,9 @@ static PROLOG_HANDLER
   declClose,
   error;
 
-static int common(PROLOG_STATE *state, int tok);
+static int FASTCALL common(PROLOG_STATE *state, int tok);
 
-static int
+static int FASTCALL
 prolog0(PROLOG_STATE *state,
         int tok,
         const char *ptr,
@@ -147,7 +148,7 @@ prolog0(PROLOG_STATE *state,
   return common(state, tok);
 }
 
-static int
+static int FASTCALL
 prolog1(PROLOG_STATE *state,
         int tok,
         const char *ptr,
@@ -178,7 +179,7 @@ prolog1(PROLOG_STATE *state,
   return common(state, tok);
 }
 
-static int
+static int FASTCALL
 prolog2(PROLOG_STATE *state,
         int tok,
         const char *ptr,
@@ -199,7 +200,7 @@ prolog2(PROLOG_STATE *state,
   return common(state, tok);
 }
 
-static int
+static int FASTCALL
 doctype0(PROLOG_STATE *state,
          int tok,
          const char *ptr,
@@ -217,7 +218,7 @@ doctype0(PROLOG_STATE *state,
   return common(state, tok);
 }
 
-static int
+static int FASTCALL
 doctype1(PROLOG_STATE *state,
          int tok,
          const char *ptr,
@@ -247,7 +248,7 @@ doctype1(PROLOG_STATE *state,
   return common(state, tok);
 }
 
-static int
+static int FASTCALL
 doctype2(PROLOG_STATE *state,
          int tok,
          const char *ptr,
@@ -264,7 +265,7 @@ doctype2(PROLOG_STATE *state,
   return common(state, tok);
 }
 
-static int
+static int FASTCALL
 doctype3(PROLOG_STATE *state,
          int tok,
          const char *ptr,
@@ -281,7 +282,7 @@ doctype3(PROLOG_STATE *state,
   return common(state, tok);
 }
 
-static int
+static int FASTCALL
 doctype4(PROLOG_STATE *state,
          int tok,
          const char *ptr,
@@ -301,7 +302,7 @@ doctype4(PROLOG_STATE *state,
   return common(state, tok);
 }
 
-static int
+static int FASTCALL
 doctype5(PROLOG_STATE *state,
          int tok,
          const char *ptr,
@@ -318,7 +319,7 @@ doctype5(PROLOG_STATE *state,
   return common(state, tok);
 }
 
-static int
+static int FASTCALL
 internalSubset(PROLOG_STATE *state,
                int tok,
                const char *ptr,
@@ -373,7 +374,7 @@ internalSubset(PROLOG_STATE *state,
 
 #ifdef XML_DTD
 
-static int
+static int FASTCALL
 externalSubset0(PROLOG_STATE *state,
                 int tok,
                 const char *ptr,
@@ -386,7 +387,7 @@ externalSubset0(PROLOG_STATE *state,
   return externalSubset1(state, tok, ptr, end, enc);
 }
 
-static int
+static int FASTCALL
 externalSubset1(PROLOG_STATE *state,
                 int tok,
                 const char *ptr,
@@ -418,7 +419,7 @@ externalSubset1(PROLOG_STATE *state,
 
 #endif /* XML_DTD */
 
-static int
+static int FASTCALL
 entity0(PROLOG_STATE *state,
         int tok,
         const char *ptr,
@@ -438,7 +439,7 @@ entity0(PROLOG_STATE *state,
   return common(state, tok);
 }
 
-static int
+static int FASTCALL
 entity1(PROLOG_STATE *state,
         int tok,
         const char *ptr,
@@ -455,7 +456,7 @@ entity1(PROLOG_STATE *state,
   return common(state, tok);
 }
 
-static int
+static int FASTCALL
 entity2(PROLOG_STATE *state,
         int tok,
         const char *ptr,
@@ -483,7 +484,7 @@ entity2(PROLOG_STATE *state,
   return common(state, tok);
 }
 
-static int
+static int FASTCALL
 entity3(PROLOG_STATE *state,
         int tok,
         const char *ptr,
@@ -500,7 +501,7 @@ entity3(PROLOG_STATE *state,
   return common(state, tok);
 }
 
-static int
+static int FASTCALL
 entity4(PROLOG_STATE *state,
         int tok,
         const char *ptr,
@@ -517,7 +518,7 @@ entity4(PROLOG_STATE *state,
   return common(state, tok);
 }
 
-static int
+static int FASTCALL
 entity5(PROLOG_STATE *state,
         int tok,
         const char *ptr,
@@ -540,7 +541,7 @@ entity5(PROLOG_STATE *state,
   return common(state, tok);
 }
 
-static int
+static int FASTCALL
 entity6(PROLOG_STATE *state,
         int tok,
         const char *ptr,
@@ -558,7 +559,7 @@ entity6(PROLOG_STATE *state,
   return common(state, tok);
 }
 
-static int
+static int FASTCALL
 entity7(PROLOG_STATE *state,
         int tok,
         const char *ptr,
@@ -586,7 +587,7 @@ entity7(PROLOG_STATE *state,
   return common(state, tok);
 }
 
-static int
+static int FASTCALL
 entity8(PROLOG_STATE *state,
         int tok,
         const char *ptr,
@@ -603,7 +604,7 @@ entity8(PROLOG_STATE *state,
   return common(state, tok);
 }
 
-static int
+static int FASTCALL
 entity9(PROLOG_STATE *state,
         int tok,
         const char *ptr,
@@ -620,7 +621,7 @@ entity9(PROLOG_STATE *state,
   return common(state, tok);
 }
 
-static int
+static int FASTCALL
 entity10(PROLOG_STATE *state,
          int tok,
          const char *ptr,
@@ -637,7 +638,7 @@ entity10(PROLOG_STATE *state,
   return common(state, tok);
 }
 
-static int
+static int FASTCALL
 notation0(PROLOG_STATE *state,
           int tok,
           const char *ptr,
@@ -654,7 +655,7 @@ notation0(PROLOG_STATE *state,
   return common(state, tok);
 }
 
-static int
+static int FASTCALL
 notation1(PROLOG_STATE *state,
           int tok,
           const char *ptr,
@@ -678,7 +679,7 @@ notation1(PROLOG_STATE *state,
   return common(state, tok);
 }
 
-static int
+static int FASTCALL
 notation2(PROLOG_STATE *state,
           int tok,
           const char *ptr,
@@ -695,7 +696,7 @@ notation2(PROLOG_STATE *state,
   return common(state, tok);
 }
 
-static int
+static int FASTCALL
 notation3(PROLOG_STATE *state,
           int tok,
           const char *ptr,
@@ -713,7 +714,7 @@ notation3(PROLOG_STATE *state,
   return common(state, tok);
 }
 
-static int
+static int FASTCALL
 notation4(PROLOG_STATE *state,
           int tok,
           const char *ptr,
@@ -734,7 +735,7 @@ notation4(PROLOG_STATE *state,
   return common(state, tok);
 }
 
-static int
+static int FASTCALL
 attlist0(PROLOG_STATE *state,
          int tok,
          const char *ptr,
@@ -752,7 +753,7 @@ attlist0(PROLOG_STATE *state,
   return common(state, tok);
 }
 
-static int
+static int FASTCALL
 attlist1(PROLOG_STATE *state,
          int tok,
          const char *ptr,
@@ -773,7 +774,7 @@ attlist1(PROLOG_STATE *state,
   return common(state, tok);
 }
 
-static int
+static int FASTCALL
 attlist2(PROLOG_STATE *state,
          int tok,
          const char *ptr,
@@ -814,7 +815,7 @@ attlist2(PROLOG_STATE *state,
   return common(state, tok);
 }
 
-static int
+static int FASTCALL
 attlist3(PROLOG_STATE *state,
          int tok,
          const char *ptr,
@@ -833,7 +834,7 @@ attlist3(PROLOG_STATE *state,
   return common(state, tok);
 }
 
-static int
+static int FASTCALL
 attlist4(PROLOG_STATE *state,
          int tok,
          const char *ptr,
@@ -853,7 +854,7 @@ attlist4(PROLOG_STATE *state,
   return common(state, tok);
 }
 
-static int
+static int FASTCALL
 attlist5(PROLOG_STATE *state,
          int tok,
          const char *ptr,
@@ -870,7 +871,7 @@ attlist5(PROLOG_STATE *state,
   return common(state, tok);
 }
 
-static int
+static int FASTCALL
 attlist6(PROLOG_STATE *state,
          int tok,
          const char *ptr,
@@ -887,7 +888,7 @@ attlist6(PROLOG_STATE *state,
   return common(state, tok);
 }
 
-static int
+static int FASTCALL
 attlist7(PROLOG_STATE *state,
          int tok,
          const char *ptr,
@@ -908,7 +909,7 @@ attlist7(PROLOG_STATE *state,
 }
 
 /* default value */
-static int
+static int FASTCALL
 attlist8(PROLOG_STATE *state,
          int tok,
          const char *ptr,
@@ -948,7 +949,7 @@ attlist8(PROLOG_STATE *state,
   return common(state, tok);
 }
 
-static int
+static int FASTCALL
 attlist9(PROLOG_STATE *state,
          int tok,
          const char *ptr,
@@ -965,7 +966,7 @@ attlist9(PROLOG_STATE *state,
   return common(state, tok);
 }
 
-static int
+static int FASTCALL
 element0(PROLOG_STATE *state,
          int tok,
          const char *ptr,
@@ -983,7 +984,7 @@ element0(PROLOG_STATE *state,
   return common(state, tok);
 }
 
-static int
+static int FASTCALL
 element1(PROLOG_STATE *state,
          int tok,
          const char *ptr,
@@ -1013,7 +1014,7 @@ element1(PROLOG_STATE *state,
   return common(state, tok);
 }
 
-static int
+static int FASTCALL
 element2(PROLOG_STATE *state,
          int tok,
          const char *ptr,
@@ -1053,7 +1054,7 @@ element2(PROLOG_STATE *state,
   return common(state, tok);
 }
 
-static int
+static int FASTCALL
 element3(PROLOG_STATE *state,
          int tok,
          const char *ptr,
@@ -1078,7 +1079,7 @@ element3(PROLOG_STATE *state,
   return common(state, tok);
 }
 
-static int
+static int FASTCALL
 element4(PROLOG_STATE *state,
          int tok,
          const char *ptr,
@@ -1096,7 +1097,7 @@ element4(PROLOG_STATE *state,
   return common(state, tok);
 }
 
-static int
+static int FASTCALL
 element5(PROLOG_STATE *state,
          int tok,
          const char *ptr,
@@ -1117,7 +1118,7 @@ element5(PROLOG_STATE *state,
   return common(state, tok);
 }
 
-static int
+static int FASTCALL
 element6(PROLOG_STATE *state,
          int tok,
          const char *ptr,
@@ -1147,7 +1148,7 @@ element6(PROLOG_STATE *state,
   return common(state, tok);
 }
 
-static int
+static int FASTCALL
 element7(PROLOG_STATE *state,
          int tok,
          const char *ptr,
@@ -1197,7 +1198,7 @@ element7(PROLOG_STATE *state,
 
 #ifdef XML_DTD
 
-static int
+static int FASTCALL
 condSect0(PROLOG_STATE *state,
           int tok,
           const char *ptr,
@@ -1221,7 +1222,7 @@ condSect0(PROLOG_STATE *state,
   return common(state, tok);
 }
 
-static int
+static int FASTCALL
 condSect1(PROLOG_STATE *state,
           int tok,
           const char *ptr,
@@ -1239,7 +1240,7 @@ condSect1(PROLOG_STATE *state,
   return common(state, tok);
 }
 
-static int
+static int FASTCALL
 condSect2(PROLOG_STATE *state,
           int tok,
           const char *ptr,
@@ -1258,7 +1259,7 @@ condSect2(PROLOG_STATE *state,
 
 #endif /* XML_DTD */
 
-static int
+static int FASTCALL
 declClose(PROLOG_STATE *state,
           int tok,
           const char *ptr,
@@ -1275,7 +1276,7 @@ declClose(PROLOG_STATE *state,
   return common(state, tok);
 }
 
-static int
+static int FASTCALL
 error(PROLOG_STATE *state,
       int tok,
       const char *ptr,
@@ -1285,7 +1286,7 @@ error(PROLOG_STATE *state,
   return XML_ROLE_NONE;
 }
 
-static int
+static int FASTCALL
 common(PROLOG_STATE *state, int tok)
 {
 #ifdef XML_DTD

@@ -116,10 +116,10 @@ $(LIBRARY): $(LIB_OBJS)
 	$(LINK_LIB) $(LIB_OBJS)
 
 lib/xmlparse.lo: lib/xmlparse.c lib/expat.h lib/xmlrole.h lib/xmltok.h \
-	$(top_builddir)/expat_config.h
+	$(top_builddir)/expat_config.h lib/internal.h
 
 lib/xmlrole.lo: lib/xmlrole.c lib/ascii.h lib/xmlrole.h \
-	$(top_builddir)/expat_config.h
+	$(top_builddir)/expat_config.h lib/internal.h
 
 lib/xmltok.lo: lib/xmltok.c lib/xmltok_impl.c lib/xmltok_ns.c \
 	lib/ascii.h lib/asciitab.h lib/iasciitab.h lib/latin1tab.h \
