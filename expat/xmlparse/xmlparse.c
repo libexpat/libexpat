@@ -1048,6 +1048,7 @@ doContent(XML_Parser parser,
 	      return XML_ERROR_NO_MEMORY;
 	    if (!externalEntityRefHandler(parser, context, dtd.base, entity->systemId, entity->publicId))
 	      return XML_ERROR_EXTERNAL_ENTITY_HANDLING;
+	    poolDiscard(&tempPool);
 	  }
 	  else if (defaultHandler)
 	    reportDefault(parser, enc, s, next);
