@@ -284,6 +284,7 @@ typedef struct open_internal_entity {
   const char *internalEventEndPtr;
   struct open_internal_entity *next;
   ENTITY *entity;
+  XML_Bool betweenDecl; /* WFC: PE Between Declarations */
 } OPEN_INTERNAL_ENTITY;
 
 typedef enum XML_Error PTRCALL Processor(XML_Parser parser,
@@ -322,7 +323,8 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s,
          const char *end, int tok, const char *next, const char **nextPtr, 
          XML_Bool haveMore);
 static enum XML_Error
-processInternalEntity(XML_Parser parser, ENTITY *entity);
+processInternalEntity(XML_Parser parser, ENTITY *entity, 
+                      XML_Bool betweenDecl);
 static enum XML_Error
 doContent(XML_Parser parser, int startTagLevel, const ENCODING *enc,
           const char *start, const char *end, const char **endPtr, 
@@ -2224,7 +2226,7 @@ doContent(XML_Parser parser,
               reportDefault(parser, enc, s, next);
             break;
           }
-          result = processInternalEntity(parser, entity);
+          result = processInternalEntity(parser, entity, XML_FALSE);
           if (result != XML_ERROR_NONE)
             return result;
         }
@@ -3581,11 +3583,16 @@ doProlog(XML_Parser parser,
         return XML_ERROR_PARTIAL_CHAR;
       case XML_TOK_NONE:
 #ifdef XML_DTD
-        if (enc != encoding) {
+        /* for internal PE NOT referenced between declarations */
+        if (enc != encoding && !openInternalEntities->betweenDecl) {
           *nextPtr = s;
           return XML_ERROR_NONE;
         }
-        if (isParamEntity) {
+        /* WFC: PE Between Declarations - must check that PE contains
+           complete markup, not only for external PEs, but also for
+           internal PEs if the reference occurs between declarations.
+        */
+        if (isParamEntity || enc != encoding) {
           if (XmlTokenRole(&prologState, XML_TOK_NONE, end, end, enc)
               == XML_ROLE_ERROR)
             return XML_ERROR_SYNTAX;
@@ -4136,6 +4143,8 @@ doProlog(XML_Parser parser,
     case XML_ROLE_ERROR:
       switch (tok) {
       case XML_TOK_PARAM_ENTITY_REF:
+        /* PE references in internal subset are
+           not allowed within declarations. */  
         return XML_ERROR_PARAM_ENTITY_REF;
       case XML_TOK_XML_DECL:
         return XML_ERROR_MISPLACED_XML_PI;
@@ -4217,11 +4226,6 @@ doProlog(XML_Parser parser,
     case XML_ROLE_PARAM_ENTITY_REF:
 #ifdef XML_DTD
     case XML_ROLE_INNER_PARAM_ENTITY_REF:
-      /* PE references in internal subset are
-         not allowed within declarations      */
-      if (prologState.documentEntity &&
-          role == XML_ROLE_INNER_PARAM_ENTITY_REF)
-        return XML_ERROR_PARAM_ENTITY_REF;
       dtd->hasParamEntityRefs = XML_TRUE;
       if (!paramEntityParsing)
         dtd->keepProcessing = dtd->standalone;
@@ -4261,7 +4265,9 @@ doProlog(XML_Parser parser,
           return XML_ERROR_RECURSIVE_ENTITY_REF;
         if (entity->textPtr) {
           enum XML_Error result;
-          result = processInternalEntity(parser, entity);
+          XML_Bool betweenDecl = 
+            (role == XML_ROLE_PARAM_ENTITY_REF ? XML_TRUE : XML_FALSE);
+          result = processInternalEntity(parser, entity, betweenDecl);
           if (result != XML_ERROR_NONE)
             return result;
           handleDefault = XML_FALSE;
@@ -4536,7 +4542,8 @@ epilogProcessor(XML_Parser parser,
 }
 
 static enum XML_Error
-processInternalEntity(XML_Parser parser, ENTITY *entity)
+processInternalEntity(XML_Parser parser, ENTITY *entity,
+                      XML_Bool betweenDecl)
 {
   const char *textStart, *textEnd;
   const char *next;
@@ -4557,6 +4564,7 @@ processInternalEntity(XML_Parser parser, ENTITY *entity)
   openEntity->next = openInternalEntities;
   openInternalEntities = openEntity;
   openEntity->entity = entity;
+  openEntity->betweenDecl = betweenDecl;
   openEntity->internalEventPtr = NULL;
   openEntity->internalEventEndPtr = NULL;
   textStart = (char *)entity->textPtr;
@@ -4917,8 +4925,8 @@ storeEntityValue(XML_Parser parser,
         break;
       }
 #endif /* XML_DTD */
-      /* in the internal subset, PE references are not legal
-         within markup declarations, e.g entity values in this case */
+      /* In the internal subset, PE references are not legal
+         within markup declarations, e.g entity values in this case. */
       eventPtr = entityTextPtr;
       result = XML_ERROR_PARAM_ENTITY_REF;
       goto endEntityValue;

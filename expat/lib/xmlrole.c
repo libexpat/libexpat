@@ -370,6 +370,8 @@ internalSubset(PROLOG_STATE *state,
   case XML_TOK_CLOSE_BRACKET:
     state->handler = doctype5;
     return XML_ROLE_DOCTYPE_NONE;
+  case XML_TOK_NONE:
+    return XML_ROLE_NONE;
   }
   return common(state, tok);
 }
