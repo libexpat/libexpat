@@ -15,8 +15,14 @@
 #if defined(__GNUC__)
 #define FASTCALL __attribute__((stdcall, regparm(3)))
 #elif defined(WIN32)
-#define FASTCALL __fastcall
-#else
+/* XXX This seems to have an unexpected negative effect on Windows so
+   we'll disable it for now on that platform.  It may be reconsidered
+   for a future release if it can be made more effective.
+*/
+/* #define FASTCALL __fastcall */
+#endif
+
+#ifndef FASTCALL
 #define FASTCALL
 #endif
 
