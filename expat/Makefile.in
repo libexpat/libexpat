@@ -132,7 +132,7 @@ xmlwf/xmlwf.o: xmlwf/xmlwf.c
 xmlwf/xmlfile.o: xmlwf/xmlfile.c
 xmlwf/codepage.o: xmlwf/codepage.c
 xmlwf/@FILEMAP@.o: xmlwf/@FILEMAP@.c
-xmlwf/xmlwf: $(XMLWF_OBJS)
+xmlwf/xmlwf: $(XMLWF_OBJS) lib/$(LIBRARY)
 	$(LINK_EXE) $(XMLWF_OBJS) lib/$(LIBRARY)
 
 examples/elements.o: examples/elements.c
