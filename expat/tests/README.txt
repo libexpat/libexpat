@@ -8,7 +8,7 @@ information on Check can be found at:
 
 	http://check.sourceforge.net/
 
-Check must be installed before the unit tests can be compiled & run.
+Check 0.8 must be installed before the unit tests can be compiled & run.
 
 Since both Check and this test suite are young, it can all change in a
 later version.
