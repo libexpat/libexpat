@@ -97,6 +97,41 @@ SOURCE=.\dllmain.c
 # End Source File
 # Begin Source File
 
+SOURCE=..\gennmtab\gennmtab.c
+
+!IF  "$(CFG)" == "xmltok - Win32 Release"
+
+# PROP Ignore_Default_Tool 1
+# Begin Custom Build - Creating nametab.h
+InputDir=\temp\expat\gennmtab
+OutDir=.\Release
+ProjDir=.
+InputPath=..\gennmtab\gennmtab.c
+
+"$(ProjDir)\nametab.h" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	$(InputDir)\$(OutDir)\gennmtab >$(ProjDir)\nametab.h
+
+# End Custom Build
+
+!ELSEIF  "$(CFG)" == "xmltok - Win32 Debug"
+
+# PROP Ignore_Default_Tool 1
+# Begin Custom Build - Creating nametab.h
+InputDir=\temp\expat\gennmtab
+OutDir=.\Debug
+ProjDir=.
+InputPath=..\gennmtab\gennmtab.c
+
+"$(ProjDir)\nametab.h" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	$(InputDir)\$(OutDir)\gennmtab >$(ProjDir)\nametab.h
+
+# End Custom Build
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\xmlrole.c
 # End Source File
 # Begin Source File
