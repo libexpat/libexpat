@@ -633,18 +633,18 @@ XML_ParserCreateNS(const XML_Char *encodingName, XML_Char nsSep)
   return XML_ParserCreate_MM(encodingName, NULL, tmp);
 }
 
-XML_Parser
+static const XML_Char implicitContext[] = {
+  'x', 'm', 'l', '=', 'h', 't', 't', 'p', ':', '/', '/',
+  'w', 'w', 'w', '.', 'w', '3', '.', 'o', 'r', 'g', '/',
+  'X', 'M', 'L', '/', '1', '9', '9', '8', '/',
+  'n', 'a', 'm', 'e', 's', 'p', 'a', 'c', 'e', '\0'
+};
+
+ XML_Parser
 XML_ParserCreate_MM(const XML_Char *encodingName,
                     const XML_Memory_Handling_Suite *memsuite,
                     const XML_Char *nameSep) {
   XML_Parser parser;
-  static const XML_Char implicitContext[] = {
-    'x', 'm', 'l', '=', 'h', 't', 't', 'p', ':', '/', '/',
-    'w', 'w', 'w', '.', 'w', '3', '.', 'o', 'r', 'g', '/',
-    'X', 'M', 'L', '/', '1', '9', '9', '8', '/',
-    'n', 'a', 'm', 'e', 's', 'p', 'a', 'c', 'e', '\0'
-  };
-
 
   if (memsuite) {
     XML_Memory_Handling_Suite *mtemp;
@@ -835,7 +835,7 @@ XML_ParserReset(XML_Parser parser, const XML_Char *encodingName)
   poolClear(&temp2Pool);
   parserInit(parser, encodingName);
   dtdReset(&dtd, parser);
-  return XML_TRUE;
+  return setContext(parser, implicitContext);
 }
 
 int
