@@ -1508,8 +1508,8 @@ int PREFIX(charRefNumber)(const ENCODING *enc, const char *ptr)
 static
 int PREFIX(predefinedEntityName)(const ENCODING *enc, const char *ptr, const char *end)
 {
-  switch (end - ptr) {
-  case 2 * MINBPC(enc):
+  switch ((end - ptr)/MINBPC(enc)) {
+  case 2:
     if (CHAR_MATCHES(enc, ptr + MINBPC(enc), 't')) {
       switch (BYTE_TO_ASCII(enc, ptr)) {
       case 'l':
@@ -1519,7 +1519,7 @@ int PREFIX(predefinedEntityName)(const ENCODING *enc, const char *ptr, const cha
       }
     }
     break;
-  case 3 * MINBPC(enc):
+  case 3:
     if (CHAR_MATCHES(enc, ptr, 'a')) {
       ptr += MINBPC(enc);
       if (CHAR_MATCHES(enc, ptr, 'm')) {
@@ -1529,7 +1529,7 @@ int PREFIX(predefinedEntityName)(const ENCODING *enc, const char *ptr, const cha
       }
     }
     break;
-  case 4 * MINBPC(enc):
+  case 4:
     switch (BYTE_TO_ASCII(enc, ptr)) {
     case 'q':
       ptr += MINBPC(enc);
@@ -1626,7 +1626,7 @@ static
 int PREFIX(nameMatchesAscii)(const ENCODING *enc, const char *ptr1, const char *ptr2)
 {
   for (; *ptr2; ptr1 += MINBPC(enc), ptr2++) {
-    if (!CHAR_MATCHES(end, ptr1, *ptr2))
+    if (!CHAR_MATCHES(enc, ptr1, *ptr2))
       return 0;
   }
   switch (BYTE_TYPE(enc, ptr1)) {
