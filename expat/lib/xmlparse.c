@@ -1670,8 +1670,12 @@ storeRawNames(XML_Parser parser)
       char *temp = REALLOC(tag->buf, bufSize);
       if (temp == NULL)
         return XML_FALSE;
+      /* if tag->name.str points to tag->buf (i.e. when namespace
+         processing is off) then we have to update it 
+      */
+      if (tag->name.str == (XML_Char *)tag->buf)
+        tag->name.str = (XML_Char *)temp;
       tag->buf = temp;
-      tag->name.str = (XML_Char *)temp;
       tag->bufEnd = temp + bufSize;
       rawNameBuf = temp + nameLen;
     }
