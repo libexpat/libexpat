@@ -80,11 +80,26 @@ AC_FUNC_MEMCMP
 AC_FUNC_MMAP
 AC_SUBST(FILEMAP_OBJ)
 if test -z "$HAVE_MMAP"; then
-FILEMAP_OBJ=unixfilemap.o
+    FILEMAP_OBJ=unixfilemap.o
 else
-FILEMAP_OBJ=readfilemap.o
+    FILEMAP_OBJ=readfilemap.o
 fi
 
 AC_CHECK_FUNCS(memmove bcopy)
 
-AC_OUTPUT(Makefile lib/Makefile lib/expat.h xmlwf/Makefile examples/Makefile)
+dnl Generate makefiles only for the directories that are present;
+dnl this allows this (and the generated configure script) to work
+dnl in "embedded distributions", where only part of the Expat sources
+dnl are included in the sources for another project.
+
+OUTPUT="Makefile lib/Makefile lib/expat.h"
+if test -d xmlwf; then
+    OUTPUT="$OUTPUT xmlwf/Makefile"
+fi
+if test -d sample; then
+    OUTPUT="$OUTPUT sample/Makefile"
+fi
+if test -d examples; then
+    OUTPUT="$OUTPUT examples/Makefile"
+fi
+AC_OUTPUT($OUTPUT)
