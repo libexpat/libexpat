@@ -1,0 +1,104 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN"
+"http://www.w3.org/TR/REC-html40/loose.dtd">
+
+<HTML>
+
+<TITLE>expat FAQ</TITLE>
+
+<BODY>
+
+<H1>Frequently Asked Questions about Expat</H1>
+
+<H4>Where can I get the latest version of expat?</H4>
+
+<p>The latest production version is always available from <a
+href="ftp://ftp.jclark.com/pub/xml/expat.zip"
+>ftp://ftp.jclark.com/pub/xml/expat.zip</a>.  The latest test version
+is always available from <a
+href="ftp://ftp.jclark.com/pub/test/expat.zip"
+>ftp://ftp.jclark.com/pub/test/expat.zip</a>.</p>
+
+<H4>Where can I get help in using expat?</H4>
+
+<p>Try the xml-dev mailing list (subscribe by mailing to <a
+href="mailto:majordomo@ic.ac.uk">majordomo@ic.ac.uk</a> with the
+message <code>subscribe xml-dev</code>).  Alternatively try the <a
+href="news:comp.text.xml">comp.text.xml</a> USENET newsgroup.</p>
+
+<H4>Where is expat's API documented?</H4>
+
+<p>In <code>xmlparse/xmlparse.h</code>.  There's also an advanced,
+low-level API you can use which is documented in
+<code>xmltok/xmltok.h</code>.</p>
+
+<H4>Is there a simple example of using expat's API?</H4>
+
+<p>See <code>sample/elements.c</code></p>
+
+<H4>How can I get expat to deal with non-ASCII characters?</H4>
+
+<P>By default, expat assumes that documents are encoded in UTF-8.  In
+UTF-8, ASCII characters are represented by a single byte as they would
+be in ASCII, but non-ASCII characters are represented by a sequence of
+two or more bytes all with the 8th bit set.  The encoding most widely
+used for European languages is ISO 8859-1 which is not compatible with
+UTF-8.  To use this encoding, expat must be told either by supplying
+an argument of <code>"iso-8859-1"</code> to
+<code>XML_ParserCreate</code>, or by starting the document with
+<code>&lt;?xml version="1.0" encoding="iso-8859-1"?&gt;</code>.</P>
+
+<H4>What encodings does expat support?</H4>
+
+<P>expat has built in support for the following encodings:</P>
+
+<ul>
+<li><code>utf-8</code></li>
+<li><code>utf-16</code></li>
+<li><code>iso-8859-1</code></li>
+<li><code>us-ascii</code></li>
+</ul>
+
+<P>Additional encodings can be supported by using
+<code>XML_SetUnknownEncodingHandler</code>.</P>
+
+<H4>How can I get expat to validate my XML documents?</H4>
+
+<p>You can't.  expat is not a validating parser.</p>
+
+<H4>How can I get expat to read my DTD?</H4>
+
+<p>expat only reads the internal DTD subset.  It doesn't process an
+external DTD nor parameter entity references.  This behaviour is in
+conformance with the XML Recommendation.</p>
+
+<H4>Why does expat give the wrong result for the more complex example in
+Appendix D of the XML Recommendation?</H4>
+
+<P>expat does not process parameter entity references.  (The XML
+Recommendation only requires parsers to process parameter entity
+references when validating. See section 4.4.8.)</P>
+
+<H4>Why does expat give the wrong result for test cases in James
+Clark's test suite in the <code>xmltest/valid/not-sa</code>?</H4>
+
+<P>expat doesn't process parameter entities.</P>
+
+<H4>How can I get expat to recover from errors?</H4>
+
+<p>You can't.  All well-formedness errors stop processing.  Note that
+the XML Recommendation does not permit conforming XML processors to
+continue normal processing after a fatal error.</p>
+
+<H4>How do I get at the characters between tags?</H4>
+
+<p>Use <code>XML_SetCharacterDataHandler</code>.</p>
+
+<ADDRESS>
+
+<A HREF="mailto:jjc@jclark.com">James Clark</A>
+
+</ADDRESS>
+
+</BODY>
+
+</HTML>
