@@ -1466,10 +1466,10 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal)
   else if (bufferPtr == bufferEnd) {
     const char *end;
     int nLeftOver;
+    enum XML_Error result;
     parseEndByteIndex += len;
     positionPtr = s;
     finalBuffer = (XML_Bool)isFinal;
-    enum XML_Error result;
 
     errorCode = processor(parser, s, parseEndPtr = s + len, &end);
 
@@ -1483,7 +1483,8 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal)
       case XML_SUSPENDED:
         result = XML_STATUS_SUSPENDED;
         break;
-      case XML_INITIALIZED, XML_PARSING:
+      case XML_INITIALIZED:
+      case XML_PARSING:
         result = XML_STATUS_OK;
         if (isFinal) {
           parsing = XML_FINISHED;
@@ -1679,10 +1680,12 @@ XML_StopParser(XML_Parser parser, XML_Bool resumable)
     return XML_STATUS_ERROR;
   default:
     if (resumable) {
+#ifdef XML_DTD
       if (isParamEntity) {
         errorCode = XML_ERROR_SUSPEND_PE;
         return XML_STATUS_ERROR;
       }
+#endif
       parsing = XML_SUSPENDED;
     }
     else
