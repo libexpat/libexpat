@@ -163,7 +163,7 @@ typedef struct {
   const XML_Char *notation;
   XML_Bool open;
   XML_Bool is_param;
-  XML_Bool is_internal; /* true if declared in internal subset outside any PE */
+  XML_Bool is_internal; /* true if declared in internal subset outside PE */
 } ENTITY;
 
 typedef struct {
@@ -339,7 +339,8 @@ static XML_Bool setContext(XML_Parser parser, const XML_Char *context);
 static void normalizePublicId(XML_Char *s);
 static void dtdInit(DTD *, XML_Parser parser);
 
-static void dtdReset(DTD *, XML_Parser parser); /* do not call if parentParser != NULL */
+/* do not call if parentParser != NULL */
+static void dtdReset(DTD *, XML_Parser parser);
 static void dtdDestroy(DTD *, XML_Parser parser);
 
 static int dtdCopy(DTD *newDtd, const DTD *oldDtd, XML_Parser parser);
@@ -497,21 +498,28 @@ typedef struct {
 #define startElementHandler (((Parser *)parser)->m_startElementHandler)
 #define endElementHandler (((Parser *)parser)->m_endElementHandler)
 #define characterDataHandler (((Parser *)parser)->m_characterDataHandler)
-#define processingInstructionHandler (((Parser *)parser)->m_processingInstructionHandler)
+#define processingInstructionHandler \
+        (((Parser *)parser)->m_processingInstructionHandler)
 #define commentHandler (((Parser *)parser)->m_commentHandler)
-#define startCdataSectionHandler (((Parser *)parser)->m_startCdataSectionHandler)
+#define startCdataSectionHandler \
+        (((Parser *)parser)->m_startCdataSectionHandler)
 #define endCdataSectionHandler (((Parser *)parser)->m_endCdataSectionHandler)
 #define defaultHandler (((Parser *)parser)->m_defaultHandler)
 #define startDoctypeDeclHandler (((Parser *)parser)->m_startDoctypeDeclHandler)
 #define endDoctypeDeclHandler (((Parser *)parser)->m_endDoctypeDeclHandler)
-#define unparsedEntityDeclHandler (((Parser *)parser)->m_unparsedEntityDeclHandler)
+#define unparsedEntityDeclHandler \
+        (((Parser *)parser)->m_unparsedEntityDeclHandler)
 #define notationDeclHandler (((Parser *)parser)->m_notationDeclHandler)
-#define startNamespaceDeclHandler (((Parser *)parser)->m_startNamespaceDeclHandler)
+#define startNamespaceDeclHandler \
+        (((Parser *)parser)->m_startNamespaceDeclHandler)
 #define endNamespaceDeclHandler (((Parser *)parser)->m_endNamespaceDeclHandler)
 #define notStandaloneHandler (((Parser *)parser)->m_notStandaloneHandler)
-#define externalEntityRefHandler (((Parser *)parser)->m_externalEntityRefHandler)
-#define externalEntityRefHandlerArg (((Parser *)parser)->m_externalEntityRefHandlerArg)
-#define internalEntityRefHandler (((Parser *)parser)->m_internalEntityRefHandler)
+#define externalEntityRefHandler \
+        (((Parser *)parser)->m_externalEntityRefHandler)
+#define externalEntityRefHandlerArg \
+        (((Parser *)parser)->m_externalEntityRefHandlerArg)
+#define internalEntityRefHandler \
+        (((Parser *)parser)->m_internalEntityRefHandler)
 #define skippedEntityHandler (((Parser *)parser)->m_skippedEntityHandler)
 #define unknownEncodingHandler (((Parser *)parser)->m_unknownEncodingHandler)
 #define elementDeclHandler (((Parser *)parser)->m_elementDeclHandler)
@@ -537,7 +545,8 @@ typedef struct {
 #define positionPtr (((Parser *)parser)->m_positionPtr)
 #define position (((Parser *)parser)->m_position)
 #define openInternalEntities (((Parser *)parser)->m_openInternalEntities)
-#define defaultExpandInternalEntities (((Parser *)parser)->m_defaultExpandInternalEntities)
+#define defaultExpandInternalEntities \
+        (((Parser *)parser)->m_defaultExpandInternalEntities)
 #define tagLevel (((Parser *)parser)->m_tagLevel)
 #define buffer (((Parser *)parser)->m_buffer)
 #define bufferPtr (((Parser *)parser)->m_bufferPtr)
@@ -837,19 +846,27 @@ XML_ExternalEntityParserCreate(XML_Parser oldParser,
   XML_StartElementHandler oldStartElementHandler = startElementHandler;
   XML_EndElementHandler oldEndElementHandler = endElementHandler;
   XML_CharacterDataHandler oldCharacterDataHandler = characterDataHandler;
-  XML_ProcessingInstructionHandler oldProcessingInstructionHandler = processingInstructionHandler;
+  XML_ProcessingInstructionHandler oldProcessingInstructionHandler
+      = processingInstructionHandler;
   XML_CommentHandler oldCommentHandler = commentHandler;
-  XML_StartCdataSectionHandler oldStartCdataSectionHandler = startCdataSectionHandler;
-  XML_EndCdataSectionHandler oldEndCdataSectionHandler = endCdataSectionHandler;
+  XML_StartCdataSectionHandler oldStartCdataSectionHandler
+      = startCdataSectionHandler;
+  XML_EndCdataSectionHandler oldEndCdataSectionHandler
+      = endCdataSectionHandler;
   XML_DefaultHandler oldDefaultHandler = defaultHandler;
-  XML_UnparsedEntityDeclHandler oldUnparsedEntityDeclHandler = unparsedEntityDeclHandler;
+  XML_UnparsedEntityDeclHandler oldUnparsedEntityDeclHandler
+      = unparsedEntityDeclHandler;
   XML_NotationDeclHandler oldNotationDeclHandler = notationDeclHandler;
-  XML_StartNamespaceDeclHandler oldStartNamespaceDeclHandler = startNamespaceDeclHandler;
-  XML_EndNamespaceDeclHandler oldEndNamespaceDeclHandler = endNamespaceDeclHandler;
+  XML_StartNamespaceDeclHandler oldStartNamespaceDeclHandler
+      = startNamespaceDeclHandler;
+  XML_EndNamespaceDeclHandler oldEndNamespaceDeclHandler
+      = endNamespaceDeclHandler;
   XML_NotStandaloneHandler oldNotStandaloneHandler = notStandaloneHandler;
-  XML_ExternalEntityRefHandler oldExternalEntityRefHandler = externalEntityRefHandler;
+  XML_ExternalEntityRefHandler oldExternalEntityRefHandler
+      = externalEntityRefHandler;
   XML_SkippedEntityHandler oldSkippedEntityHandler = skippedEntityHandler;
-  XML_UnknownEncodingHandler oldUnknownEncodingHandler = unknownEncodingHandler;
+  XML_UnknownEncodingHandler oldUnknownEncodingHandler
+      = unknownEncodingHandler;
   XML_ElementDeclHandler oldElementDeclHandler = elementDeclHandler;
   XML_AttlistDeclHandler oldAttlistDeclHandler = attlistDeclHandler;
   XML_EntityDeclHandler oldEntityDeclHandler = entityDeclHandler;
@@ -1533,8 +1550,8 @@ XML_ExpatVersion(void) {
      with the correct numerals. */
   /* ### I'm assuming cpp is portable in this respect... */
 
-#define V1(a,b,c) XML_L("expat_")XML_L(#a)XML_L(".")XML_L(#b)XML_L(".")XML_L(#c)
-#define V2(a,b,c) V1(a,b,c)
+#define V1(a,b,c) XML_L(#a)XML_L(".")XML_L(#b)XML_L(".")XML_L(#c)
+#define V2(a,b,c) XML_L("expat_")V1(a,b,c)
 
   return V2(XML_MAJOR_VERSION, XML_MINOR_VERSION, XML_MICRO_VERSION);
 
