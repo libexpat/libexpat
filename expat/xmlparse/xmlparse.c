@@ -30,9 +30,6 @@ Contributor(s):
 #define XmlGetInternalEncoding XmlGetUtf16InternalEncoding
 #define XmlEncode XmlUtf16Encode
 #define MUST_CONVERT(enc, s) (!(enc)->isUtf16 || (((unsigned long)s) & 1))
-#define xmlstrchr wcschr
-#define xmlstrcmp wcscmp
-#define XML_T(x) L ## x
 typedef unsigned short ICHAR;
 #else
 #define XML_ENCODE_MAX XML_UTF8_ENCODE_MAX
@@ -40,10 +37,13 @@ typedef unsigned short ICHAR;
 #define XmlGetInternalEncoding XmlGetUtf8InternalEncoding
 #define XmlEncode XmlUtf8Encode
 #define MUST_CONVERT(enc, s) (!(enc)->isUtf8)
-#define xmlstrchr strchr
-#define xmlstrcmp strcmp
-#define XML_T(x) x
 typedef char ICHAR;
+#endif
+
+#ifdef XML_UNICODE_WCHAR_T
+#define XML_T(x) L ## x
+#else
+#define XML_T(x) x
 #endif
 
 /* Round up n to be a multiple of sz, where sz is a power of 2. */
@@ -642,9 +642,9 @@ int XML_GetCurrentColumnNumber(XML_Parser parser)
   return position.columnNumber;
 }
 
-const XML_Char *XML_ErrorString(int code)
+const XML_LChar *XML_ErrorString(int code)
 {
-  static const XML_Char *message[] = {
+  static const XML_LChar *message[] = {
     0,
     XML_T("out of memory"),
     XML_T("syntax error"),
@@ -2017,11 +2017,14 @@ static void
 normalizeLines(XML_Char *s)
 {
   XML_Char *p;
-  s = xmlstrchr(s, XML_T('\r'));
-  if (!s)
-    return;
+  for (;; s++) {
+    if (*s == XML_T('\0'))
+      return;
+    if (*s == XML_T('\r'))
+      break;
+  }
   p = s;
-  while (*s) {
+  do {
     if (*s == XML_T('\r')) {
       *p++ = XML_T('\n');
       if (*++s == XML_T('\n'))
@@ -2029,7 +2032,7 @@ normalizeLines(XML_Char *s)
     }
     else
       *p++ = *s++;
-  }
+  } while (*s);
   *p = XML_T('\0');
 }
 
