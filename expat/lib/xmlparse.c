@@ -1766,7 +1766,7 @@ doContent(XML_Parser parser,
 	  tag->rawName = tag->buf;
 	}
 	++tagLevel;
-	if (startElementHandler) {
+	if (startElementHandler || endElementHandler) {
 	  enum XML_Error result;
 	  XML_Char *toPtr;
 	  for (;;) {
@@ -1799,8 +1799,9 @@ doContent(XML_Parser parser,
 	  result = storeAtts(parser, enc, s, &(tag->name), &(tag->bindings));
 	  if (result)
 	    return result;
-	  startElementHandler(handlerArg, tag->name.str,
-                              (const XML_Char **)atts);
+	  if (startElementHandler)
+	    startElementHandler(handlerArg, tag->name.str,
+	                        (const XML_Char **)atts);
 	  poolClear(&tempPool);
 	}
 	else {

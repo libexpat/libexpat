@@ -286,6 +286,34 @@ END_TEST
 
 
 /*
+ * Element event tests.
+ */
+
+static void
+end_element_event_handler(void *userData, const XML_Char *name)
+{
+    CharData *storage = (CharData *) userData;
+    CharData_AppendString(storage, "/");
+    CharData_AppendXMLChars(storage, name, -1);
+}
+
+START_TEST(test_end_element_events)
+{
+    char *text = "<a><b><c/></b><d><f/></d></a>";
+    char *expected = "/c/b/f/d/a";
+    CharData storage;
+
+    CharData_Init(&storage);
+    XML_SetUserData(parser, &storage);
+    XML_SetEndElementHandler(parser, end_element_event_handler);
+    if (!XML_Parse(parser, text, strlen(text), 1))
+        xml_failure(parser);
+    CharData_CheckString(&storage, expected);
+}
+END_TEST
+
+
+/*
  * Attribute tests.
  */
 
@@ -578,6 +606,7 @@ make_basic_suite(void)
     TCase *tc_attrs = tcase_create("attributes");
     TCase *tc_xmldecl = tcase_create("XML declaration");
     TCase *tc_namespace = tcase_create("XML namespaces");
+    TCase *tc_elements = tcase_create("element events");
 
     suite_add_tcase(s, tc_chars);
     tcase_add_checked_fixture(tc_chars, basic_setup, basic_teardown);
@@ -597,6 +626,10 @@ make_basic_suite(void)
     tcase_add_test(tc_chars, test_french_latin1);
     tcase_add_test(tc_chars, test_french_utf8);
     tcase_add_test(tc_chars, test_line_count);
+
+    suite_add_tcase(s, tc_elements);
+    tcase_add_checked_fixture(tc_elements, basic_setup, basic_teardown);
+    tcase_add_test(tc_elements, test_end_element_events);
 
     suite_add_tcase(s, tc_attrs);
     tcase_add_checked_fixture(tc_attrs, basic_setup, basic_teardown);
