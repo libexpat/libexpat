@@ -76,7 +76,7 @@ PACKAGE = @PACKAGE@
 RANLIB = @RANLIB@
 VERSION = @VERSION@
 
-SUBDIRS = lib examples sample xmlwf
+SUBDIRS = lib examples xmlwf
 INSTALLSUBDIRS = lib xmlwf
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 CONFIG_HEADERS = config.h
@@ -121,7 +121,7 @@ distclean:
 		(cd $$dir && $(MAKE) distclean); \
 	done
 	rm -f config.h config.status config.log config.cache libtool
-	rm -f Makefile examples/Makefile xmlwf/Makefile sample/Makefile
+	rm -f Makefile examples/Makefile xmlwf/Makefile
 
 extraclean: distclean
 	rm -f aclocal.m4 config.h.in configure

@@ -105,9 +105,6 @@ OUTPUT="Makefile lib/Makefile lib/expat.h"
 if test -d ${srcdir}/xmlwf; then
     OUTPUT="$OUTPUT xmlwf/Makefile"
 fi
-if test -d ${srcdir}/sample; then
-    OUTPUT="$OUTPUT sample/Makefile"
-fi
 if test -d ${srcdir}/examples; then
     OUTPUT="$OUTPUT examples/Makefile"
 fi
