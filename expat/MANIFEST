@@ -36,7 +36,7 @@ conftools/ltmain.sh
 conftools/mkinstalldirs
 doc/reference.html
 doc/style.css
-doc/valid-xhtml0.png
+doc/valid-xhtml10.png
 doc/xmlwf.1
 doc/xmlwf.sgml
 examples/elements.c
