@@ -274,6 +274,10 @@ main(int argc, char *argv[])
             forking = 0;
             forking_set = 1;
         }
+        else {
+            fprintf(stderr, "runtests: unknown option '%s'\n", opt);
+            return 2;
+        }
     }
     if (forking_set)
         srunner_set_fork_status(sr, forking ? CK_FORK : CK_NOFORK);
