@@ -1,4 +1,5 @@
 expat.html
+xmltok/ascii.h
 xmltok/asciitab.h
 xmltok/dllmain.c
 gennmtab/gennmtab.c
