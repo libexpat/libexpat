@@ -606,7 +606,7 @@ separator, prefix.</p>
 for the end of a scope of a declaration with the <code><a href=
 "#XML_SetNamespaceDeclHandler" >XML_SetNamespaceDeclHandler</a></code>
 function.  The StartNamespaceDeclHandler is called prior to the start
-tag handler and the EndNamespaceDeclHandler is called before the
+tag handler and the EndNamespaceDeclHandler is called after the
 corresponding end tag that ends the namespace's scope.  The namespace
 start handler gets passed the prefix and URI for the namespace.  For a
 default namespace declaration (xmlns='...'), the prefix will be null.
@@ -2312,4 +2312,4 @@ have been allocated by <code><a href="#XML_MemMalloc"
         height="31" width="88" class="noborder" /></a></p>
 </div>
 </body>
-</html>@
+</html>
