@@ -7,6 +7,10 @@
  * This is *source* compatible, but not necessary *link* compatible.
  */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define CK_NOFORK 0
 #define CK_FORK   1
 
@@ -67,3 +71,7 @@ void srunner_set_fork_status(SRunner *runner, int forking);
 void srunner_run_all(SRunner *runner, int verbosity);
 int srunner_ntests_failed(SRunner *runner);
 void srunner_free(SRunner *runner);
+
+#ifdef __cplusplus
+}
+#endif
