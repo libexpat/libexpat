@@ -1,0 +1,60 @@
+<html>
+  <head>
+    <title>Changes in Expat 3</title>
+    <link rel="STYLESHEET" href="../style.css" type="text/css" />
+  </head>
+  <body marginwidth="0" marginheight="0">
+    <table cellspacing="0" cellpadding="0" width="100%">
+      <tr>
+        <td class="corner"><a href="../"><img src="../expat.png"
+                                              border="0"/></a></td>
+        <td class="banner"><h2>Changes in Expat 3</h2></td>
+      </tr>
+      <tr>
+        <td class="navbar">
+        </td>
+        <td class="content">
+
+<p> This page describes some of the changes which should be expected
+in Expat 3.  These are intended as notes made by the developers as
+things get thought through; these can change at any time.  This is
+<em>not</em> a projected feature list for Expat 3; to learn about the
+target features, please read the <cite><a href="roadmap.html">Expat
+Development Roadmap</a></cite>.  The changes described here are much
+more focused on the details of Expat 3, and no attempt has been made
+to balance the description of small changes with major new feature
+development. </p>
+
+<p> This list is not complete; we'll add to this as we think of things
+and have time to write about them. </p>
+
+<ul>
+  <li> All structural event callback functions will return an
+  <code>XML_Status</code> value that the parser will check.  This will
+  allow an application to stop or suspend processing without having to
+  use <code>setjmp()</code>/<code>longjmp()</code> hackery. </li>
+
+  <li> The parser will support suspension of parsing to allow an
+  application to pause parsing temporarily.  A new
+  <code>XML_Status</code> value, <code>XML_STATUS_SUSPEND</code>, can
+  be returned by the event callbacks to indicate that Expat should
+  suspend parsing; the parser will then return from
+  <code>XML_Parse()</code>, returning <code>XML_STATUS_SUSPEND</code>.
+  Applications can resume parsing by calling
+  <code>XML_ParseResume()</code>. </li>
+</ul>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="corner">
+          <a href="http://sourceforge.net/"> 
+            <img src="http://cvs.sourceforge.net/sourceforge_whitebg.gif"
+                 width="136" height="79" border="0" alt="SourceForge
+                 Logo" />
+          </a>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>
