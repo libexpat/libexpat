@@ -1,12 +1,4 @@
-
-/* FIXME
-
-Normalize tokenized attribute values.
-
-Do attribute defaulting.
-
-*/
-
+/* FIXME Normalize tokenized attribute values. */
 
 #include "xmlparse.h"
 #include "xmltok.h"
@@ -43,9 +35,29 @@ typedef struct {
   char *start;
 } STRING_POOL;
 
+/* The byte before the name is a scratch byte used to determine whether
+an attribute has been specified. */
+typedef struct {
+  char *name;
+} ATTRIBUTE_ID;
+
+typedef struct {
+  const ATTRIBUTE_ID *id;
+  const char *value;
+} DEFAULT_ATTRIBUTE;
+
+typedef struct {
+  const char *name;
+  int nDefaultAtts;
+  int allocDefaultAtts;
+  DEFAULT_ATTRIBUTE *defaultAtts;
+} ELEMENT_TYPE;
+
 typedef struct {
   HASH_TABLE generalEntities;
   HASH_TABLE paramEntities;
+  HASH_TABLE elementTypes;
+  HASH_TABLE attributeIds;
   STRING_POOL pool;
   int containsRef;
   int standalone;
@@ -75,12 +87,14 @@ checkGeneralTextEntity(XML_Parser parser,
 		       const char *s, const char *end,
 		       const char **nextPtr,
 		       const ENCODING **enc);
-static enum XML_Error storeAtts(XML_Parser parser, const ENCODING *, const char *s);
+static enum XML_Error storeAtts(XML_Parser parser, const ENCODING *, const char *tagName, const char *s);
+static int
+addDefaultAttribute(ELEMENT_TYPE *type, ATTRIBUTE_ID *, const char *value);
 static enum XML_Error
 storeAttributeValue(XML_Parser parser, const ENCODING *, const char *, const char *,
 		    STRING_POOL *);
-static enum XML_Error
-checkAttributeUniqueness(XML_Parser parser, const ENCODING *enc, int nAtts);
+static ATTRIBUTE_ID *
+getAttributeId(XML_Parser parser, const ENCODING *enc, const char *start, const char *end);
 static enum XML_Error
 storeEntityValue(XML_Parser parser, const char *start, const char *end);
 static int
@@ -88,7 +102,6 @@ reportProcessingInstruction(XML_Parser parser, const ENCODING *enc, const char *
 
 static
 const char *pushTag(XML_Parser parser, const ENCODING *enc, const char *rawName);
-
 
 static int dtdInit(DTD *);
 static void dtdDestroy(DTD *);
@@ -133,6 +146,8 @@ typedef struct {
   const char *errorPtr;
   int tagLevel;
   ENTITY *declEntity;
+  ELEMENT_TYPE *declElementType;
+  ATTRIBUTE_ID *declAttributeId;
   DTD dtd;
   char *tagStack;
   char *tagStackPtr;
@@ -165,6 +180,8 @@ typedef struct {
 #define bufferLim (((Parser *)parser)->bufferLim)
 #define dtd (((Parser *)parser)->dtd)
 #define declEntity (((Parser *)parser)->declEntity)
+#define declElementType (((Parser *)parser)->declElementType)
+#define declAttributeId (((Parser *)parser)->declAttributeId)
 #define tagStackEnd (((Parser *)parser)->tagStackEnd)
 #define tagStackPtr (((Parser *)parser)->tagStackPtr)
 #define tagStack (((Parser *)parser)->tagStack)
@@ -190,6 +207,9 @@ XML_Parser XML_ParserCreate(const char *encodingName)
   bufferEnd = 0;
   bufferEndByteIndex = 0;
   bufferLim = 0;
+  declElementType = 0;
+  declAttributeId = 0;
+  declEntity = 0;
   memset(&position, 0, sizeof(POSITION));
   errorCode = XML_ERROR_NONE;
   errorByteIndex = 0;
@@ -330,7 +350,9 @@ void *XML_GetBuffer(XML_Parser parser, size_t len)
     }
     else {
       char *newBuf;
-      size_t bufferSize = bufferLim  - bufferPtr;
+      size_t bufferSize = bufferLim - bufferPtr;
+      if (bufferSize == 0)
+	bufferSize = 1024;
       do {
 	bufferSize *= 2;
       } while (bufferSize < neededSize);
@@ -417,7 +439,6 @@ doContent(XML_Parser parser,
   static const char *nullPtr = 0;
   const ENCODING *utf8 = XmlGetInternalEncoding(XML_UTF8_ENCODING);
   for (;;) {
-    const char **appAtts;
     const char *next;
     int tok = XmlContentTok(enc, s, end, &next);
     switch (tok) {
@@ -505,16 +526,21 @@ doContent(XML_Parser parser,
     case XML_TOK_START_TAG_WITH_ATTS:
       {
 	const char *name;
-	enum XML_Error result = storeAtts(parser, enc, s);
-	if (result)
-	  return result;
 	name = pushTag(parser, enc, s + enc->minBytesPerChar);
 	if (!name)
 	  return XML_ERROR_NO_MEMORY;
 	++tagLevel;
 	if (startElementHandler) {
+	  enum XML_Error result = storeAtts(parser, enc, name, s);
+	  if (result)
+	    return result;
 	  startElementHandler(userData, name, (const char **)atts);
 	  poolClear(&tempPool);
+	}
+	else {
+	  enum XML_Error result = storeAtts(parser, enc, 0, s);
+	  if (result)
+	    return result;
 	}
 	break;
       }
@@ -524,30 +550,36 @@ doContent(XML_Parser parser,
 	++tagLevel;
 	if (!name)
 	  return XML_ERROR_NO_MEMORY;
-	if (startElementHandler)
-	  startElementHandler(userData, name, &nullPtr);
+	if (startElementHandler) {
+	  enum XML_Error result = storeAtts(parser, enc, name, s);
+	  if (result)
+	    return result;
+	  startElementHandler(userData, name, (const char **)atts);
+	}
 	break;
       }
     case XML_TOK_EMPTY_ELEMENT_WITH_ATTS:
-      {
-	enum XML_Error result = storeAtts(parser, enc, s);
+      if (!startElementHandler) {
+	enum XML_Error result = storeAtts(parser, enc, 0, s);
 	if (result)
 	  return result;
-	appAtts = (const char **)atts;
-	goto emptyElement;
       }
+      /* fall through */
     case XML_TOK_EMPTY_ELEMENT_NO_ATTS:
-      appAtts = &nullPtr;
-    emptyElement:
       if (startElementHandler || endElementHandler) {
-	const char *nameStart = s + enc->minBytesPerChar;
-	const char *name = poolStoreString(&tempPool, enc, nameStart,
-					   nameStart
-					   + XmlNameLength(enc, nameStart));
+	const char *rawName = s + enc->minBytesPerChar;
+	const char *name = poolStoreString(&tempPool, enc, rawName,
+					   rawName
+					   + XmlNameLength(enc, rawName));
 	if (!name)
 	  return XML_ERROR_NO_MEMORY;
-	if (startElementHandler)
-	  startElementHandler(userData, name, appAtts);
+	poolFinish(&tempPool);
+	if (startElementHandler) {
+	  enum XML_Error result = storeAtts(parser, enc, name, s);
+	  if (result)
+	    return result;
+	  startElementHandler(userData, name, (const char **)atts);
+	}
 	if (endElementHandler)
 	  endElementHandler(userData, name);
 	poolClear(&tempPool);
@@ -649,52 +681,62 @@ const char *pushTag(XML_Parser parser, const ENCODING *enc, const char *rawName)
     char *newStack;
     size_t newSize;
     XmlConvert(enc, XML_UTF8_ENCODING,
-	&rawName, rawNameEnd,
-	        &tagStackPtr, tagStackEnd - 1);
-     if (rawName == rawNameEnd)
-       break;
-     newSize = (tagStackEnd - tagStack) >> 1;
-     newStack = realloc(tagStack, newSize);
+	       &rawName, rawNameEnd,
+	       &tagStackPtr, tagStackEnd - 1);
+    if (rawName == rawNameEnd)
+      break;
+    newSize = (tagStackEnd - tagStack) >> 1;
+    newStack = realloc(tagStack, newSize);
     if (!newStack)
       return 0;
     tagStackEnd = newStack + newSize;
     tagStackPtr = newStack + (tagStackPtr - tagStack);
     name = newStack + (name - tagStack);
     tagStack = newStack;
-   }
+  }
   *tagStackPtr++ = '\0';
   return name;
 }
 
-static enum XML_Error storeAtts(XML_Parser parser, const ENCODING *enc,	const char *s)
+/* If tagName is non-null, build a real list of attributes,
+otherwise just check the attributes for well-formedness. */
+
+static enum XML_Error storeAtts(XML_Parser parser, const ENCODING *enc,
+				const char *tagName, const char *s)
 {
-  const char **appAtts = 0;
+  ELEMENT_TYPE *elementType = 0;
+  int nDefaultAtts = 0;
+  const char **appAtts = (const char **)atts;
   int i;
-  int n = XmlGetAttributes(enc, s, attsSize, atts);
-  if (n > attsSize) {
+  int n;
+
+  if (tagName) {
+    elementType = (ELEMENT_TYPE *)lookup(&dtd.elementTypes, tagName, 0);
+    if (elementType)
+      nDefaultAtts = elementType->nDefaultAtts;
+  }
+  
+  n = XmlGetAttributes(enc, s, attsSize, atts);
+  if (n + nDefaultAtts > attsSize) {
     attsSize = 2*n;
     atts = realloc((void *)atts, attsSize * sizeof(ATTRIBUTE));
     if (!atts)
       return XML_ERROR_NO_MEMORY;
-    XmlGetAttributes(enc, s, n, atts);
+    if (n > attsSize)
+      XmlGetAttributes(enc, s, n, atts);
   }
-  if (n > 1) {
-    enum XML_Error result = checkAttributeUniqueness(parser, enc, n);
-    if (result)
-      return result;
-  }
-  if (startElementHandler)
-    appAtts = (const char **)atts;
   for (i = 0; i < n; i++) {
-    if (appAtts) {
-      appAtts[i << 1] = poolStoreString(&tempPool, enc,
-					atts[i].name,
-					atts[i].name
-					+ XmlNameLength(enc, atts[i].name));
-      if (appAtts[i << 1] == 0)
-	return XML_ERROR_NO_MEMORY;
-      poolFinish(&tempPool);
+    ATTRIBUTE_ID *attId = getAttributeId(parser, enc, atts[i].name,
+					  atts[i].name
+					  + XmlNameLength(enc, atts[i].name));
+    if (!attId)
+      return XML_ERROR_NO_MEMORY;
+    if (attId->name[-1]) {
+      errorPtr = atts[i].name;
+      return XML_ERROR_DUPLICATE_ATTRIBUTE;
     }
+    attId->name[-1] = 1;
+    appAtts[i << 1] = attId->name;
     if (!atts[i].normalized) {
       enum XML_Error result
 	= storeAttributeValue(parser, enc,
@@ -705,22 +747,35 @@ static enum XML_Error storeAtts(XML_Parser parser, const ENCODING *enc,	const ch
 	return result;
       if (!poolAppendByte(&tempPool, '\0'))
 	return XML_ERROR_NO_MEMORY;
-      if (appAtts) {
+      if (tagName) {
 	appAtts[(i << 1) + 1] = poolStart(&tempPool);
 	poolFinish(&tempPool);
       }
       else
 	poolDiscard(&tempPool);
     }
-    else if (appAtts) {
+    else if (tagName) {
       appAtts[(i << 1) + 1] = poolStoreString(&tempPool, enc, atts[i].valuePtr, atts[i].valueEnd);
       if (appAtts[(i << 1) + 1] == 0)
 	return XML_ERROR_NO_MEMORY;
       poolFinish(&tempPool);
     }
   }
-  if (appAtts)
-    appAtts[n << 1] = 0;
+  if (tagName) {
+    int j;
+    for (j = 0; j < nDefaultAtts; j++) {
+      const DEFAULT_ATTRIBUTE *da = elementType->defaultAtts + j;
+      if (!da->id->name[-1]) {
+	da->id->name[-1] = 1;
+	appAtts[i << 1] = da->id->name;
+	appAtts[(i << 1) + 1] = da->value;
+	i++;
+      }
+    }
+    appAtts[i << 1] = 0;
+  }
+  for (i = 0; i < n; i++)
+    ((char *)appAtts[i << 1])[-1] = 0;
   return XML_ERROR_NONE;
 }
 
@@ -799,6 +854,25 @@ prologProcessor(XML_Parser parser,
     case XML_ROLE_INSTANCE_START:
       processor = contentProcessor;
       return contentProcessor(parser, s, end, nextPtr);
+    case XML_ROLE_ATTLIST_ELEMENT_NAME:
+      {
+	const char *name = poolStoreString(&dtd.pool, encoding, s, next);
+	if (!name)
+	  return XML_ERROR_NO_MEMORY;
+	declElementType = (ELEMENT_TYPE *)lookup(&dtd.elementTypes, name, sizeof(ELEMENT_TYPE));
+	if (!declElementType)
+	  return XML_ERROR_NO_MEMORY;
+	if (declElementType->name != name)
+	  poolDiscard(&dtd.pool);
+	else
+	  poolFinish(&dtd.pool);
+	break;
+      }
+    case XML_ROLE_ATTRIBUTE_NAME:
+      declAttributeId = getAttributeId(parser, encoding, s, next);
+      if (!declAttributeId)
+	return XML_ERROR_NO_MEMORY;
+      break;
     case XML_ROLE_DEFAULT_ATTRIBUTE_VALUE:
     case XML_ROLE_FIXED_ATTRIBUTE_VALUE:
       {
@@ -808,6 +882,10 @@ prologProcessor(XML_Parser parser,
 			        &dtd.pool);
 	if (result)
 	  return result;
+	if (!poolAppendByte(&dtd.pool, 0))
+	  return XML_ERROR_NO_MEMORY;
+	if (!addDefaultAttribute(declElementType, declAttributeId, poolStart(&dtd.pool)))
+	  return XML_ERROR_NO_MEMORY;
 	poolFinish(&dtd.pool);
 	break;
       }
@@ -860,6 +938,8 @@ prologProcessor(XML_Parser parser,
 	if (!name)
 	  return XML_ERROR_NO_MEMORY;
 	declEntity = (ENTITY *)lookup(&dtd.generalEntities, name, sizeof(ENTITY));
+	if (!declEntity)
+	  return XML_ERROR_NO_MEMORY;
 	if (declEntity->name != name) {
 	  poolDiscard(&dtd.pool);
 	  declEntity = 0;
@@ -874,6 +954,8 @@ prologProcessor(XML_Parser parser,
 	if (!name)
 	  return XML_ERROR_NO_MEMORY;
 	declEntity = (ENTITY *)lookup(&dtd.paramEntities, name, sizeof(ENTITY));
+	if (!declEntity)
+	  return XML_ERROR_NO_MEMORY;
 	if (declEntity->name != name) {
 	  poolDiscard(&dtd.pool);
 	  declEntity = 0;
@@ -980,22 +1062,6 @@ enum XML_Error epilogProcessor(XML_Parser parser,
     }
     s = next;
   }
-}
-
-static enum XML_Error
-checkAttributeUniqueness(XML_Parser parser, const ENCODING *enc, int nAtts)
-{
-  int i;
-  for (i = 1; i < nAtts; i++) {
-    int j;
-    for (j = 0; j < i; j++) {
-      if (XmlSameName(enc, atts[i].name, atts[j].name)) {
-	errorPtr = atts[i].name;
-	return XML_ERROR_DUPLICATE_ATTRIBUTE;
-      }
-    }
-  }
-  return XML_ERROR_NONE;
 }
 
 static enum XML_Error
@@ -1184,25 +1250,64 @@ static int
 reportProcessingInstruction(XML_Parser parser, const ENCODING *enc, const char *start, const char *end)
 {
   const char *target;
-  int targetLen;
   const char *data;
   if (!processingInstructionHandler)
     return 1;
   target = start + enc->minBytesPerChar * 2;
-  targetLen = XmlNameLength(enc, target);
-  target = poolStoreString(&tempPool, enc, target, target + targetLen);
+  data = target + XmlNameLength(enc, target);
+  target = poolStoreString(&tempPool, enc, target, data);
   if (!target)
     return 0;
   poolFinish(&tempPool);
-  data = XmlSkipS(enc, start + enc->minBytesPerChar*2 + targetLen);
   data = poolStoreString(&tempPool, enc,
-			 data,
+			 XmlSkipS(enc, data),
 			 end - enc->minBytesPerChar*2);
   if (!data)
     return 0;
   processingInstructionHandler(userData, target, data);
   poolClear(&tempPool);
   return 1;
+}
+
+static int
+addDefaultAttribute(ELEMENT_TYPE *type, ATTRIBUTE_ID *attId, const char *value)
+{
+  DEFAULT_ATTRIBUTE *att;
+  if (type->nDefaultAtts == type->allocDefaultAtts) {
+    if (type->allocDefaultAtts == 0)
+      type->allocDefaultAtts = 8;
+    else
+      type->allocDefaultAtts *= 2;
+    type->defaultAtts = realloc(type->defaultAtts, type->allocDefaultAtts);
+    if (!type->defaultAtts)
+      return 0;
+  }
+  att = type->defaultAtts + type->nDefaultAtts;
+  att->id = attId;
+  att->value = value;
+  type->nDefaultAtts += 1;
+  return 1;
+}
+
+static ATTRIBUTE_ID *
+getAttributeId(XML_Parser parser, const ENCODING *enc, const char *start, const char *end)
+{
+  ATTRIBUTE_ID *id;
+  const char *name;
+  if (!poolAppendByte(&dtd.pool, 0))
+    return 0;
+  name = poolStoreString(&dtd.pool, enc, start, end);
+  if (!name)
+    return 0;
+  ++name;
+  id = (ATTRIBUTE_ID *)lookup(&dtd.attributeIds, name, sizeof(ATTRIBUTE_ID));
+  if (!id)
+    return 0;
+  if (id->name != name)
+    poolDiscard(&dtd.pool);
+  else
+    poolFinish(&dtd.pool);
+  return id;
 }
 
 static int dtdInit(DTD *p)
@@ -1222,6 +1327,8 @@ static int dtdInit(DTD *p)
     entity->magic = 1;
   }
   hashTableInit(&(p->paramEntities));
+  hashTableInit(&(p->elementTypes));
+  hashTableInit(&(p->attributeIds));
   p->containsRef = 0;
   p->groupSize = 0;
   p->groupConnector = 0;
@@ -1233,6 +1340,8 @@ static void dtdDestroy(DTD *p)
   poolDestroy(&(p->pool));
   hashTableDestroy(&(p->generalEntities));
   hashTableDestroy(&(p->paramEntities));
+  hashTableDestroy(&(p->elementTypes));
+  hashTableDestroy(&(p->attributeIds));
   free(p->groupConnector);
 }
 
