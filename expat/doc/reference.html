@@ -345,10 +345,11 @@ short</code> is used.  Defining this implies
 <dd>The number of input bytes of markup context which the parser will
 ensure are available for reporting via <code><a href=
 "#XML_GetInputContext" >XML_GetInputContext</a></code>.  This is
-normally set to 1024.  If this is not defined, the input context will
-not be available and <code><a href= "#XML_GetInputContext"
->XML_GetInputContext</a></code> will always report NULL.  Without
-this, Expat has a smaller memory footprint and can be faster.</dd>
+normally set to 1024, and must be set to a positive interger.  If this
+is not defined, the input context will not be available and <code><a
+href= "#XML_GetInputContext" >XML_GetInputContext</a></code> will
+always report NULL.  Without this, Expat has a smaller memory
+footprint and can be faster.</dd>
 
 <dt>XML_STATIC</dt>
 <dd>On Windows, this should be set if Expat is going to be linked
@@ -1685,6 +1686,9 @@ untranslated bytes of the input.</p>
 <p>Only a limited amount of context is kept, so if the event
 triggering a call spans over a very large amount of input, the actual
 parse position may be before the beginning of the buffer.</p>
+
+<p>If <code>XML_CONTEXT_BYTES</code> is not defined, this will always
+return NULL.</p>
 </div>
 
 <h3><a name="miscellaneous">Miscellaneous functions</a></h3>
