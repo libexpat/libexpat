@@ -422,7 +422,7 @@ xmldecl_handler(void            *userData,
 
   int i;
 
-  for (i = 0; i < (sizeof(Version_1_0) / sizeof(Version_1_0[0])); ++i) {
+  for (i = 0; i &lt; (sizeof(Version_1_0) / sizeof(Version_1_0[0])); ++i) {
     if (version[i] != Version_1_0[i]) {
       wrong_version = 1;
       /* also clear all other handlers: */
