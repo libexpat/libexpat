@@ -551,31 +551,31 @@ long XML_GetErrorByteIndex(XML_Parser parser)
   return errorByteIndex;
 }
 
-const char *XML_ErrorString(int code)
+const XML_Char *XML_ErrorString(int code)
 {
-  static const char *message[] = {
+  static const XML_Char *message[] = {
     0,
-    "out of memory",
-    "syntax error",
-    "no element found",
-    "not well-formed",
-    "unclosed token",
-    "unclosed token",
-    "mismatched tag",
-    "duplicate attribute",
-    "junk after document element",
-    "illegal parameter entity reference",
-    "undefined entity",
-    "recursive entity reference",
-    "asynchronous entity",
-    "reference to invalid character number",
-    "reference to binary entity",
-    "reference to external entity in attribute",
-    "xml processing instruction not at start of external entity",
-    "unknown encoding",
-    "encoding specified in XML declaration is incorrect",
-    "unclosed CDATA section",
-    "error in processing external entity reference"
+    XML_T("out of memory"),
+    XML_T("syntax error"),
+    XML_T("no element found"),
+    XML_T("not well-formed"),
+    XML_T("unclosed token"),
+    XML_T("unclosed token"),
+    XML_T("mismatched tag"),
+    XML_T("duplicate attribute"),
+    XML_T("junk after document element"),
+    XML_T("illegal parameter entity reference"),
+    XML_T("undefined entity"),
+    XML_T("recursive entity reference"),
+    XML_T("asynchronous entity"),
+    XML_T("reference to invalid character number"),
+    XML_T("reference to binary entity"),
+    XML_T("reference to external entity in attribute"),
+    XML_T("xml processing instruction not at start of external entity"),
+    XML_T("unknown encoding"),
+    XML_T("encoding specified in XML declaration is incorrect"),
+    XML_T("unclosed CDATA section"),
+    XML_T("error in processing external entity reference")
   };
   if (code > 0 && code < sizeof(message)/sizeof(message[0]))
     return message[code];

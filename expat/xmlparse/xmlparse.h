@@ -194,7 +194,7 @@ long XMLPARSEAPI XML_GetErrorByteIndex(XML_Parser parser);
 void XMLPARSEAPI
 XML_ParserFree(XML_Parser parser);
 
-const char XMLPARSEAPI *
+const XML_Char XMLPARSEAPI *
 XML_ErrorString(int code);
 
 #ifdef __cplusplus
