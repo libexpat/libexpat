@@ -94,13 +94,13 @@ dnl in "embedded distributions", where only part of the Expat sources
 dnl are included in the sources for another project.
 
 OUTPUT="Makefile lib/Makefile lib/expat.h"
-if test -d xmlwf; then
+if test -d ${srcdir}/xmlwf; then
     OUTPUT="$OUTPUT xmlwf/Makefile"
 fi
-if test -d sample; then
+if test -d ${srcdir}/sample; then
     OUTPUT="$OUTPUT sample/Makefile"
 fi
-if test -d examples; then
+if test -d ${srcdir}/examples; then
     OUTPUT="$OUTPUT examples/Makefile"
 fi
 AC_OUTPUT($OUTPUT)
