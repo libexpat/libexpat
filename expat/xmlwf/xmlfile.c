@@ -66,7 +66,7 @@ processFile(const void *data, size_t size,
 {
   XML_Parser parser = ((PROCESS_ARGS *)args)->parser;
   int *retPtr = ((PROCESS_ARGS *)args)->retPtr;
-  if (!XML_Parse(parser, data, size, 1)) {
+  if (XML_Parse(parser, data, size, 1) == XML_STATUS_ERROR) {
     reportError(parser, filename);
     *retPtr = 0;
   }
@@ -167,7 +167,7 @@ processStream(const XML_Char *filename, XML_Parser parser)
         close(fd);
       return 0;
     }
-    if (!XML_ParseBuffer(parser, nread, nread == 0)) {
+    if (XML_ParseBuffer(parser, nread, nread == 0) == XML_STATUS_ERROR) {
       reportError(parser, filename != NULL ? filename : "STDIN");
       if (filename != NULL)
         close(fd);

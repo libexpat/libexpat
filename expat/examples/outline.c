@@ -76,7 +76,7 @@ main(int argc, char *argv[])
     }
     done = feof(stdin);
 
-    if (! XML_Parse(p, Buff, len, done)) {
+    if (XML_Parse(p, Buff, len, done) == XML_STATUS_ERROR) {
       fprintf(stderr, "Parse error at line %d:\n%s\n",
               XML_GetCurrentLineNumber(p),
               XML_ErrorString(XML_GetErrorCode(p)));

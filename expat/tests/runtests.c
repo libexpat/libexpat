@@ -55,7 +55,7 @@ START_TEST(test_nul_byte)
     char text[] = "<doc>\0</doc>";
 
     /* test that a NUL byte (in US-ASCII data) is an error */
-    if (XML_Parse(parser, text, sizeof(text) - 1, 1))
+    if (XML_Parse(parser, text, sizeof(text) - 1, 1) == XML_STATUS_OK)
         fail("Parser did not report error on NUL-byte.");
     if (XML_GetErrorCode(parser) != XML_ERROR_INVALID_TOKEN)
         xml_failure(parser);
@@ -68,7 +68,7 @@ START_TEST(test_u0000_char)
     char *text = "<doc>&#0;</doc>";
 
     /* test that a NUL byte (in US-ASCII data) is an error */
-    if (XML_Parse(parser, text, strlen(text), 1))
+    if (XML_Parse(parser, text, strlen(text), 1) == XML_STATUS_OK)
         fail("Parser did not report error on NUL-byte.");
     if (XML_GetErrorCode(parser) != XML_ERROR_BAD_CHAR_REF)
         xml_failure(parser);
@@ -80,7 +80,7 @@ START_TEST(test_bom_utf8)
     /* This test is really just making sure we don't core on a UTF-8 BOM. */
     char *text = "\357\273\277<e/>";
 
-    if (!XML_Parse(parser, text, strlen(text), 1))
+    if (XML_Parse(parser, text, strlen(text), 1) == XML_STATUS_ERROR)
         xml_failure(parser);
 }
 END_TEST
@@ -89,7 +89,7 @@ START_TEST(test_bom_utf16_be)
 {
     char text[] = "\376\377\0<\0e\0/\0>";
 
-    if (!XML_Parse(parser, text, sizeof(text) - 1, 1))
+    if (XML_Parse(parser, text, sizeof(text) - 1, 1) == XML_STATUS_ERROR)
         xml_failure(parser);
 }
 END_TEST
@@ -98,7 +98,7 @@ START_TEST(test_bom_utf16_le)
 {
     char text[] = "\377\376<\0e\0/\0>\0";
 
-    if (!XML_Parse(parser, text, sizeof(text) - 1, 1))
+    if (XML_Parse(parser, text, sizeof(text) - 1, 1) == XML_STATUS_ERROR)
         xml_failure(parser);
 }
 END_TEST
@@ -129,7 +129,7 @@ run_character_check(XML_Char *text, XML_Char *expected)
     CharData_Init(&storage);
     XML_SetUserData(parser, &storage);
     XML_SetCharacterDataHandler(parser, accumulate_characters);
-    if (!XML_Parse(parser, text, strlen(text), 1))
+    if (XML_Parse(parser, text, strlen(text), 1) == XML_STATUS_ERROR)
         xml_failure(parser);
     CharData_CheckXMLChars(&storage, expected);
 }
@@ -142,7 +142,7 @@ run_attribute_check(XML_Char *text, XML_Char *expected)
     CharData_Init(&storage);
     XML_SetUserData(parser, &storage);
     XML_SetStartElementHandler(parser, accumulate_attribute);
-    if (!XML_Parse(parser, text, strlen(text), 1))
+    if (XML_Parse(parser, text, strlen(text), 1) == XML_STATUS_ERROR)
         xml_failure(parser);
     CharData_CheckXMLChars(&storage, expected);
 }
@@ -211,7 +211,7 @@ START_TEST(test_illegal_utf8)
 
     for (i = 128; i <= 255; ++i) {
         sprintf(text, "<e>%ccd</e>", i);
-        if (XML_Parse(parser, text, strlen(text), 1)) {
+        if (XML_Parse(parser, text, strlen(text), 1) == XML_STATUS_OK) {
             sprintf(text,
                     "expected token error for '%c' (ordinal %d) in UTF-8 text",
                     i, i);
@@ -238,7 +238,7 @@ START_TEST(test_utf16)
         "\000<\000d\000o\000c\000 \000a\000=\000'\0001\0002\0003\000'"
         "\000>\000s\000o\000m\000e\000 \000t\000e\000x\000t\000<\000/"
         "\000d\000o\000c\000>";
-    if (!XML_Parse(parser, text, sizeof(text) - 1, 1))
+    if (XML_Parse(parser, text, sizeof(text) - 1, 1) == XML_STATUS_ERROR)
         xml_failure(parser);
 }
 END_TEST
@@ -271,7 +271,7 @@ START_TEST(test_line_count)
         "  <e/>\n"
         "</e>";
     int lineno;
-    if (!XML_Parse(parser, text, strlen(text), 1))
+    if (XML_Parse(parser, text, strlen(text), 1) == XML_STATUS_ERROR)
         xml_failure(parser);
     lineno = XML_GetCurrentLineNumber(parser);
     if (lineno != 3) {
@@ -312,7 +312,7 @@ START_TEST(test_really_long_lines)
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-+"
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-+"
         "</e>";
-    if (!XML_Parse(parser, text, strlen(text), 1))
+    if (XML_Parse(parser, text, strlen(text), 1) == XML_STATUS_ERROR)
         xml_failure(parser);
 }
 END_TEST
@@ -339,7 +339,7 @@ START_TEST(test_end_element_events)
     CharData_Init(&storage);
     XML_SetUserData(parser, &storage);
     XML_SetEndElementHandler(parser, end_element_event_handler);
-    if (!XML_Parse(parser, text, strlen(text), 1))
+    if (XML_Parse(parser, text, strlen(text), 1) == XML_STATUS_ERROR)
         xml_failure(parser);
     CharData_CheckString(&storage, expected);
 }
@@ -452,7 +452,7 @@ START_TEST(test_attr_whitespace_normalization)
 
     XML_SetStartElementHandler(parser,
                                check_attr_contains_normalized_whitespace);
-    if (!XML_Parse(parser, text, strlen(text), 1))
+    if (XML_Parse(parser, text, strlen(text), 1) == XML_STATUS_ERROR)
         xml_failure(parser);
 }
 END_TEST
@@ -469,7 +469,7 @@ START_TEST(test_xmldecl_misplaced)
         "<?xml version='1.0'?>\n"
         "<a>&eee;</a>";
 
-    if (!XML_Parse(parser, text, strlen(text), 1)) {
+    if (XML_Parse(parser, text, strlen(text), 1) == XML_STATUS_ERROR) {
         if (XML_GetErrorCode(parser) != XML_ERROR_MISPLACED_XML_PI)
             xml_failure(parser);
     }
@@ -503,7 +503,7 @@ START_TEST(test_unknown_encoding_internal_entity)
         "<test a='&foo;'/>";
 
     XML_SetUnknownEncodingHandler(parser, UnknownEncodingHandler, NULL);
-    if (!XML_Parse(parser, text, strlen(text), 1))
+    if (XML_Parse(parser, text, strlen(text), 1) == XML_STATUS_ERROR)
         xml_failure(parser);
 }
 END_TEST
@@ -575,7 +575,7 @@ START_TEST(test_return_ns_triplet)
     XML_SetReturnNSTriplet(parser, 1);
     XML_SetUserData(parser, elemstr);
     XML_SetElementHandler(parser, triplet_start_checker, triplet_end_checker);
-    if (!XML_Parse(parser, text, strlen(text), 1))
+    if (XML_Parse(parser, text, strlen(text), 1) == XML_STATUS_ERROR)
         xml_failure(parser);
 }
 END_TEST
@@ -612,7 +612,7 @@ run_ns_tagname_overwrite_test(char *text, char *result)
     XML_SetUserData(parser, &storage);
     XML_SetElementHandler(parser,
                           overwrite_start_checker, overwrite_end_checker);
-    if (!XML_Parse(parser, text, strlen(text), 1))
+    if (XML_Parse(parser, text, strlen(text), 1) == XML_STATUS_ERROR)
         xml_failure(parser);
     CharData_CheckString(&storage, result);
 }

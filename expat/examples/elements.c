@@ -37,7 +37,7 @@ main(int argc, char *argv[])
   do {
     size_t len = fread(buf, 1, sizeof(buf), stdin);
     done = len < sizeof(buf);
-    if (!XML_Parse(parser, buf, len, done)) {
+    if (XML_Parse(parser, buf, len, done) == XML_STATUS_ERROR) {
       fprintf(stderr,
               "%s at line %d\n",
               XML_ErrorString(XML_GetErrorCode(parser)),
