@@ -606,6 +606,22 @@ int PREFIX(scanAtts)(const ENCODING *enc, const char *ptr, const char *end,
 	    break;
 	  }
 	}
+	ptr += MINBPC;
+	if (ptr == end)
+	  return XML_TOK_PARTIAL;
+	switch (BYTE_TYPE(enc, ptr)) {
+	case BT_S:
+	case BT_CR:
+	case BT_LF:
+	  break;
+	case BT_SOL:
+	  goto sol;
+	case BT_GT:
+	  goto gt;
+	default:
+	  *nextTokPtr = ptr;
+	  return XML_TOK_INVALID;
+	}
 	/* ptr points to closing quote */
 	for (;;) {
 	  ptr += MINBPC;
@@ -616,9 +632,11 @@ int PREFIX(scanAtts)(const ENCODING *enc, const char *ptr, const char *end,
 	  case BT_S: case BT_CR: case BT_LF:
 	    continue;
 	  case BT_GT:
+          gt:
 	    *nextTokPtr = ptr + MINBPC;
 	    return XML_TOK_START_TAG_WITH_ATTS;
 	  case BT_SOL:
+          sol:
 	    ptr += MINBPC;
 	    if (ptr == end)
 	      return XML_TOK_PARTIAL;
