@@ -678,10 +678,10 @@ XML_ParserCreate_MM(const XML_Char *encodingName,
   ns = XML_FALSE;
   ns_triplets = XML_FALSE;
 
-  parserInit(parser, encodingName);
-  dtdInit(&dtd, parser);
   poolInit(&tempPool, &(parser->m_mem));
   poolInit(&temp2Pool, &(parser->m_mem));
+  parserInit(parser, encodingName);
+  dtdInit(&dtd, parser);
 
   if (!atts || !dataBuf || (encodingName && !protocolEncodingName)) {
     XML_ParserFree(parser);
