@@ -1225,6 +1225,9 @@ int initScan(const ENCODING **encodingTable,
       *encPtr = encodingTable[UTF_16BE_ENC];
       return XmlTok(*encPtr, state, ptr, end, nextTokPtr);
     case 0xFEFF:
+      if (INIT_ENC_INDEX(enc) == ISO_8859_1_ENC
+	  && state == XML_CONTENT_STATE)
+	break;
       *nextTokPtr = ptr + 2;
       *encPtr = encodingTable[UTF_16BE_ENC];
       return XML_TOK_BOM;
@@ -1235,6 +1238,9 @@ int initScan(const ENCODING **encodingTable,
       *encPtr = encodingTable[UTF_16LE_ENC];
       return XmlTok(*encPtr, state, ptr, end, nextTokPtr);
     case 0xFFFE:
+      if (INIT_ENC_INDEX(enc) == ISO_8859_1_ENC
+	  && state == XML_CONTENT_STATE)
+	break;
       *nextTokPtr = ptr + 2;
       *encPtr = encodingTable[UTF_16LE_ENC];
       return XML_TOK_BOM;
