@@ -1,7 +1,7 @@
 CC=gcc
-# If you know what your system's byte order is, define BYTE_ORDER:
-# use -DBYTE_ORDER=12 for little-endian byte order;
-# use -DBYTE_ORDER=21 for big-endian (network) byte order.
+# If you know what your system's byte order is, define XML_BYTE_ORDER:
+# use -DXML_BYTE_ORDER=12 for little-endian byte order;
+# use -DXML_BYTE_ORDER=21 for big-endian (network) byte order.
 # -DXML_NS adds support for checking of lexical aspects of XML namespaces spec
 # -DXML_MIN_SIZE makes a smaller but slower parser
 CFLAGS=-O2 -Ixmltok -Ixmlparse -DXML_NS
