@@ -29,7 +29,7 @@ PACKAGES = VCL50.bpi VCLX50.bpi bcbsmp50.bpi QRPT50.bpi VCLDB50.bpi VCLBDE50.bpi
 SPARELIBS = 
 DEFFILE = 
 # ---------------------------------------------------------------------------
-PATHCPP = .;..\Source\examples
+PATHCPP = .;..\examples
 PATHASM = .;
 PATHPAS = .;
 PATHRC = .;
@@ -37,8 +37,8 @@ DEBUGLIBPATH = $(BCB)\lib\debug
 RELEASELIBPATH = $(BCB)\lib\release
 USERDEFINES = WIN32;NDEBUG;_CONSOLE;_MBCS;_DEBUG
 SYSDEFINES = _MSC_VER=1100;_NO_VCL;_ASSERTE;NO_STRICT;_RTLDLL
-INCLUDEPATH = $(BCB)\include;..\Source\examples;..\Source\lib
-LIBPATH = $(BCB)\lib;..\Source\examples;debug
+INCLUDEPATH = $(BCB)\include;..\examples;..\lib
+LIBPATH = $(BCB)\lib;..\examples;debug
 WARNINGS= -w-par -w-8027 -w-8026
 # ---------------------------------------------------------------------------
 CFLAG1 = -Od -X- -r- -a8 -5 -b -k -y -v -vi- -q -I..\lib -c

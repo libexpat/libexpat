@@ -1,6 +1,6 @@
-USEUNIT("..\Source\xmlwf\xmlfile.c");
-USEUNIT("..\Source\xmlwf\win32filemap.c");
-USEUNIT("..\Source\xmlwf\codepage.c");
-USEUNIT("..\Source\xmlwf\xmlwf.c");
+USEUNIT("..\xmlwf\xmlfile.c");
+USEUNIT("..\xmlwf\win32filemap.c");
+USEUNIT("..\xmlwf\codepage.c");
+USEUNIT("..\xmlwf\xmlwf.c");
 //---------------------------------------------------------------------------
 #define WinMain

@@ -1,19 +1,16 @@
-all: setup expat expatw elements gennmtab outline xmlwf
+all: setup expat expatw elements outline xmlwf
 
 setup:
  setup
 
 expat:
- make -f expat.mak
+ make -f libexpat.mak
 
 expatw:
- make -f expatw.mak
+ make -f libexpatw.mak
 
 elements:
  make -f elements.mak
-
-gennmtab:
- make -f gennmtab.mak
 
 outline:
  make -f outline.mak

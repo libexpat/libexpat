@@ -4,8 +4,8 @@
   <MACROS>
     <VERSION value="BCB.05.03"/>
     <PROJECT value="debug\xmlwf.exe"/>
-    <OBJFILES value="debug\obj\xmlfile.obj debug\obj\win32filemap.obj 
-      debug\obj\codepage.obj debug\obj\xmlwf.obj"/>
+    <OBJFILES value="debug\obj\xmlfile.obj debug\obj\win32filemap.obj debug\obj\codepage.obj 
+      debug\obj\xmlwf.obj"/>
     <RESFILES value=""/>
     <IDLFILES value=""/>
     <IDLGENFILES value=""/>
@@ -18,7 +18,7 @@
       ibsmp50.bpi VCLDBX50.bpi TEEUI50.bpi TEEDB50.bpi TEE50.bpi TEEQR50.bpi 
       VCLIB50.bpi bcbie50.bpi VCLIE50.bpi INETDB50.bpi INET50.bpi NMFAST50.bpi 
       dclocx50.bpi bcb2kaxserver50.bpi dclusr50.bpi"/>
-    <PATHCPP value=".;..\Source\xmlwf"/>
+    <PATHCPP value=".;..\xmlwf"/>
     <PATHPAS value=".;"/>
     <PATHRC value=".;"/>
     <PATHASM value=".;"/>
@@ -28,8 +28,8 @@
     <USERDEFINES value="NDEBUG;WIN32;_CONSOLE;COMPILED_FROM_DSP"/>
     <SYSDEFINES value="_NO_VCL;_ASSERTE;NO_STRICT;_RTLDLL"/>
     <MAINSOURCE value="xmlwf.bpf"/>
-    <INCLUDEPATH value="$(BCB)\include;..\Source\xmlwf;..\Source\lib"/>
-    <LIBPATH value="$(BCB)\lib;..\Source\xmlwf;debug"/>
+    <INCLUDEPATH value="$(BCB)\include;..\xmlwf;..\lib"/>
+    <LIBPATH value="$(BCB)\lib;..\xmlwf;debug"/>
     <WARNINGS value="-w-8065 -w-par -w-8027 -w-8026 -w-csu"/>
   </MACROS>
   <OPTIONS>

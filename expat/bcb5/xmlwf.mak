@@ -14,8 +14,8 @@ BCB = $(MAKEDIR)\..
 VERSION = BCB.05.03
 # ---------------------------------------------------------------------------
 PROJECT = debug\xmlwf.exe
-OBJFILES = debug\obj\xmlfile.obj debug\obj\win32filemap.obj \
-    debug\obj\codepage.obj debug\obj\xmlwf.obj
+OBJFILES = debug\obj\xmlfile.obj debug\obj\win32filemap.obj debug\obj\codepage.obj \
+    debug\obj\xmlwf.obj
 RESFILES = 
 MAINSOURCE = xmlwf.bpf
 RESDEPEN = $(RESFILES)
@@ -30,7 +30,7 @@ PACKAGES = VCL50.bpi VCLX50.bpi bcbsmp50.bpi QRPT50.bpi VCLDB50.bpi VCLBDE50.bpi
 SPARELIBS = 
 DEFFILE = 
 # ---------------------------------------------------------------------------
-PATHCPP = .;..\Source\xmlwf
+PATHCPP = .;..\xmlwf
 PATHASM = .;
 PATHPAS = .;
 PATHRC = .;
@@ -38,8 +38,8 @@ DEBUGLIBPATH = $(BCB)\lib\debug
 RELEASELIBPATH = $(BCB)\lib\release
 USERDEFINES = NDEBUG;WIN32;_CONSOLE;COMPILED_FROM_DSP
 SYSDEFINES = _NO_VCL;_ASSERTE;NO_STRICT;_RTLDLL
-INCLUDEPATH = $(BCB)\include;..\Source\xmlwf;..\Source\lib
-LIBPATH = $(BCB)\lib;..\Source\xmlwf;debug
+INCLUDEPATH = $(BCB)\include;..\xmlwf;..\lib
+LIBPATH = $(BCB)\lib;..\xmlwf;debug
 WARNINGS= -w-8065 -w-par -w-8027 -w-8026 -w-csu
 # ---------------------------------------------------------------------------
 CFLAG1 = -O2 -X- -a8 -5 -b -k -vi -q -I..\lib -c
