@@ -1,3 +1,4 @@
+#include "xmldef.h"
 #include "xmltok.h"
 #include "nametab.h"
 

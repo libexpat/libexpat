@@ -1,3 +1,4 @@
+#include "xmldef.h"
 #include "xmlparse.h"
 #include "xmltok.h"
 #include "xmlrole.h"

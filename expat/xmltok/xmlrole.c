@@ -1,3 +1,4 @@
+#include "xmldef.h"
 #include "xmlrole.h"
 
 /* Doesn't check:

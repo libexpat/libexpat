@@ -1,3 +1,4 @@
+#include "xmldef.h"
 #include "hashtable.h"
 #include <stdlib.h>
 #include <string.h>
