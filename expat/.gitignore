@@ -6,7 +6,4 @@ config.log
 config.status
 config.h.in
 config.h
-expat-[0-9]*.[0-9]*
-expat*.tar.gz
 libtool
-*~
