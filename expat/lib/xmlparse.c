@@ -3830,7 +3830,7 @@ defineAttribute(ELEMENT_TYPE *type, ATTRIBUTE_ID *attId, int isCdata,
   att = type->defaultAtts + type->nDefaultAtts;
   att->id = attId;
   att->value = value;
-  att->isCdata = isCdata;
+  att->isCdata = (char)isCdata;
   if (!isCdata)
     attId->maybeTokenized = 1;
   type->nDefaultAtts += 1;

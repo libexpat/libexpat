@@ -293,11 +293,11 @@ void utf8_toUtf16(const ENCODING *enc,
   while (from != fromLim && to != toLim) {
     switch (((struct normal_encoding *)enc)->type[(unsigned char)*from]) {
     case BT_LEAD2:
-      *to++ = ((from[0] & 0x1f) << 6) | (from[1] & 0x3f);
+      *to++ = (unsigned short)(((from[0] & 0x1f) << 6) | (from[1] & 0x3f));
       from += 2;
       break;
     case BT_LEAD3:
-      *to++ = ((from[0] & 0xf) << 12) | ((from[1] & 0x3f) << 6) | (from[2] & 0x3f);
+      *to++ = (unsigned short)(((from[0] & 0xf) << 12) | ((from[1] & 0x3f) << 6) | (from[2] & 0x3f));
       from += 3;
       break;
     case BT_LEAD4:
@@ -381,8 +381,8 @@ void latin1_toUtf8(const ENCODING *enc,
     if (c & 0x80) {
       if (toLim - *toP < 2)
 	break;
-      *(*toP)++ = ((c >> 6) | UTF8_cval2);
-      *(*toP)++ = ((c & 0x3f) | 0x80);
+      *(*toP)++ = (char)((c >> 6) | UTF8_cval2);
+      *(*toP)++ = (char)((c & 0x3f) | 0x80);
       (*fromP)++;
     }
     else {
@@ -973,7 +973,7 @@ int parsePseudoAttribute(const ENCODING *enc,
     *nextTokPtr = ptr;
     return 0;
   }
-  open = c;
+  open = (char)c;
   ptr += enc->minBytesPerChar;
   *valPtr = ptr;
   for (;; ptr += enc->minBytesPerChar) {
@@ -1135,25 +1135,25 @@ int XmlUtf8Encode(int c, char *buf)
   if (c < 0)
     return 0;
   if (c < min2) {
-    buf[0] = (c | UTF8_cval1);
+    buf[0] = (char)(c | UTF8_cval1);
     return 1;
   }
   if (c < min3) {
-    buf[0] = ((c >> 6) | UTF8_cval2);
-    buf[1] = ((c & 0x3f) | 0x80);
+    buf[0] = (char)((c >> 6) | UTF8_cval2);
+    buf[1] = (char)((c & 0x3f) | 0x80);
     return 2;
   }
   if (c < min4) {
-    buf[0] = ((c >> 12) | UTF8_cval3);
-    buf[1] = (((c >> 6) & 0x3f) | 0x80);
-    buf[2] = ((c & 0x3f) | 0x80);
+    buf[0] = (char)((c >> 12) | UTF8_cval3);
+    buf[1] = (char)(((c >> 6) & 0x3f) | 0x80);
+    buf[2] = (char)((c & 0x3f) | 0x80);
     return 3;
   }
   if (c < 0x110000) {
-    buf[0] = ((c >> 18) | UTF8_cval4);
-    buf[1] = (((c >> 12) & 0x3f) | 0x80);
-    buf[2] = (((c >> 6) & 0x3f) | 0x80);
-    buf[3] = ((c & 0x3f) | 0x80);
+    buf[0] = (char)((c >> 18) | UTF8_cval4);
+    buf[1] = (char)(((c >> 12) & 0x3f) | 0x80);
+    buf[2] = (char)(((c >> 6) & 0x3f) | 0x80);
+    buf[3] = (char)((c & 0x3f) | 0x80);
     return 4;
   }
   return 0;
@@ -1164,13 +1164,13 @@ int XmlUtf16Encode(int charNum, unsigned short *buf)
   if (charNum < 0)
     return 0;
   if (charNum < 0x10000) {
-    buf[0] = charNum;
+    buf[0] = (unsigned short)charNum;
     return 1;
   }
   if (charNum < 0x110000) {
     charNum -= 0x10000;
-    buf[0] = (charNum >> 10) + 0xD800;
-    buf[1] = (charNum & 0x3FF) + 0xDC00;
+    buf[0] = (unsigned short)((charNum >> 10) + 0xD800);
+    buf[1] = (unsigned short)((charNum & 0x3FF) + 0xDC00);
     return 2;
   }
   return 0;
@@ -1298,7 +1298,7 @@ XmlInitUnknownEncoding(void *mem,
     else if (c < 0) {
       if (c < -4)
 	return 0;
-      e->normal.type[i] = BT_LEAD2 - (c + 2);
+      e->normal.type[i] = (unsigned char)(BT_LEAD2 - (c + 2));
       e->utf8[i][0] = 0;
       e->utf16[i] = 0;
     }
@@ -1310,7 +1310,7 @@ XmlInitUnknownEncoding(void *mem,
       e->normal.type[i] = latin1_encoding.type[c];
       e->utf8[i][0] = 1;
       e->utf8[i][1] = (char)c;
-      e->utf16[i] = c == 0 ? 0xFFFF : c;
+      e->utf16[i] = (unsigned short)(c == 0 ? 0xFFFF : c);
     }
     else if (checkCharRefNumber(c) < 0) {
       e->normal.type[i] = BT_NONXML;
@@ -1329,7 +1329,7 @@ XmlInitUnknownEncoding(void *mem,
       else
 	e->normal.type[i] = BT_OTHER;
       e->utf8[i][0] = (char)XmlUtf8Encode(c, e->utf8[i] + 1);
-      e->utf16[i] = c;
+      e->utf16[i] = (unsigned short)c;
     }
   }
   e->userData = userData;
