@@ -1504,6 +1504,8 @@ static
 char *poolAppend(STRING_POOL *pool, const ENCODING *enc,
 		 const char *ptr, const char *end)
 {
+  if (!pool->ptr && !poolGrow(pool))
+    return 0;
   for (;;) {
     XmlConvert(enc, XML_UTF8_ENCODING, &ptr, end, &(pool->ptr), pool->end);
     if (ptr == end)
