@@ -90,3 +90,7 @@ typedef char XML_LChar;
 typedef char XML_Char;
 typedef char XML_LChar;
 #endif /* XML_UNICODE */
+
+#ifdef __cplusplus
+}
+#endif

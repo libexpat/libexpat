@@ -17,6 +17,10 @@
 #include <stdlib.h>
 #include "expat_external.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 struct XML_ParserStruct;
 typedef struct XML_ParserStruct *XML_Parser;
 
