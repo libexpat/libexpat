@@ -108,8 +108,8 @@ add_failure(SRunner *runner, int verbosity)
 {
     runner->nfailures++;
     if (verbosity >= CK_VERBOSE) {
-        printf("%s:%s:%d\n", _check_current_function,
-               _check_current_filename, _check_current_lineno);
+        printf("%s:%d: %s\n", _check_current_filename,
+               _check_current_lineno, _check_current_function);
     }
 }
 
