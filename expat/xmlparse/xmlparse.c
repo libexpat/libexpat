@@ -407,7 +407,7 @@ int XML_GetErrorCode(XML_Parser parser)
 
 int XML_GetErrorLineNumber(XML_Parser parser)
 {
-  return position.lineNumber;
+  return position.lineNumber + 1;
 }
 
 int XML_GetErrorColumnNumber(XML_Parser parser)
