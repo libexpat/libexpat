@@ -210,6 +210,18 @@ START_TEST(test_french_utf8)
 }
 END_TEST
 
+/* Regression test for SF bug #600479.
+   XXX There should be a test that exercises all legal XML Unicode
+   characters as PCDATA and attribute value content, and XML Name
+   characters as part of element and attribute names.
+*/
+START_TEST(test_utf8_false_rejection)
+{
+    char *text = "<doc>\xEF\xBA\xBF</doc>";
+    run_character_check(text, "\xEF\xBA\xBF");
+}
+END_TEST
+
 /* Regression test for SF bug #477667.
    This test assures that any 8-bit character followed by a 7-bit
    character will not be mistakenly interpreted as a valid UTF-8
@@ -424,7 +436,7 @@ testhelper_is_whitespace_normalized(void)
 }
 
 static void
-check_attr_contains_normalized_whitespace(void *userdata,
+check_attr_contains_normalized_whitespace(void *userData,
                                           const XML_Char *name,
                                           const XML_Char **atts)
 {
@@ -558,7 +570,7 @@ external_entity_loader(XML_Parser parser,
                        const XML_Char *publicId)
 {
     char *text = (char *)XML_GetUserData(parser);
-    XML_Parser *extparser;
+    XML_Parser extparser;
 
     extparser = XML_ExternalEntityParserCreate(parser, context, NULL);
     if (extparser == NULL)
@@ -780,6 +792,7 @@ make_basic_suite(void)
     tcase_add_test(tc_basic, test_french_charref_decimal);
     tcase_add_test(tc_basic, test_french_latin1);
     tcase_add_test(tc_basic, test_french_utf8);
+    tcase_add_test(tc_basic, test_utf8_false_rejection);
     tcase_add_test(tc_basic, test_line_count);
     tcase_add_test(tc_basic, test_really_long_lines);
     tcase_add_test(tc_basic, test_end_element_events);
