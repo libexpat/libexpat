@@ -3,15 +3,10 @@ COPYING
 MANIFEST
 Makefile.in
 README
-aclocal.m4
-config.hin
 configure
 configure.in
-conftools/config.guess
-conftools/config.sub
+conftools/PrintPath
 conftools/install-sh
-conftools/ltconfig
-conftools/ltmain.sh
 conftools/missing
 conftools/mkinstalldirs
 doc/reference.html
@@ -22,7 +17,6 @@ lib/Makefile.in
 lib/ascii.h
 lib/asciitab.h
 lib/expat.dsp
-lib/expat.h
 lib/iasciitab.h
 lib/latin1tab.h
 lib/nametab.h
