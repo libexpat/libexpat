@@ -14,7 +14,6 @@
 # output differs are prefixed with "Output differs:", and a diff file
 # is generated in the appropriate subdirectory under $OUTPUT.
 
-# The script does not use "invalid" test cases for validating parsers.
 # If there are output files provided, the script will use
 # output from xmlwf and compare the desired output against it.
 # However, one has to take into account that the canonical output
@@ -26,12 +25,11 @@ cd "$MYDIR"
 MYDIR="`pwd`"
 XMLWF="`dirname \"$MYDIR\"`/xmlwf/xmlwf"
 # XMLWF=/usr/local/bin/xmlwf
-# XMLWF=f:/Libraries/XML/expat/xmlwf/release/xmlwf
 TS="$MYDIR/XML-Test-Suite"
-# OUTPUT must terminate with the directory separater.
+# OUTPUT must terminate with the directory separator.
 OUTPUT="$TS/out/"
 # OUTPUT=/home/tmp/xml-testsuite-out/
-# OUTPUT=f:/Libraries/XML/XML-Test-Suite/out/
+
 
 RunXmlwfNotWF() {
   $XMLWF $1 $2 > outfile || return $?
@@ -66,12 +64,20 @@ RunXmlwfWF() {
 SUCCESS=0
 ERROR=0
 
+##########################
+# well-formed test cases #
+##########################
+
 cd "$TS/xmlconf"
 for xmldir in ibm/valid/P*/ \
+              ibm/invalid/P*/ \
               xmltest/valid/ext-sa/ \
               xmltest/valid/not-sa/ \
+              xmltest/invalid/ \
+              xmltest/invalid/not-sa/ \
               xmltest/valid/sa/ \
-              sun/valid/ ; do
+              sun/valid/ \
+              sun/invalid/ ; do
   cd "$TS/xmlconf/$xmldir"
   mkdir -p "$OUTPUT$xmldir"
   for xmlfile in *.xml ; do
@@ -94,6 +100,10 @@ for xmlfile in *pass*.xml ; do
     fi
 done
 rm outfile
+
+##############################
+# not well-formed test cases #
+##############################
 
 cd "$TS/xmlconf"
 for xmldir in ibm/not-wf/P*/ \
