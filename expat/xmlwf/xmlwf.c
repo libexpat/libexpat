@@ -236,10 +236,17 @@ int main(int argc, char **argv)
     int result;
     XML_Parser parser = XML_ParserCreate(encoding);
     if (outputDir) {
-      outName = malloc(strlen(outputDir) + strlen(argv[i]) + 2);
+      const char *file = argv[i];
+      if (strrchr(file, '/'))
+	file = strrchr(file, '/') + 1;
+#ifdef WIN32
+      if (strrchr(file, '\\'))
+	file = strrchr(file, '\\') + 1;
+#endif
+      outName = malloc(strlen(outputDir) + strlen(file) + 2);
       strcpy(outName, outputDir);
       strcat(outName, "/");
-      strcat(outName, argv[i]);
+      strcat(outName, file);
       fp = fopen(outName, "wb");
       if (!fp) {
 	perror(outName);
