@@ -809,10 +809,10 @@ XML_ParserReset(XML_Parser parser, const XML_Char *encodingName)
     FREE(unknownEncodingMem);
   if (unknownEncodingRelease)
     unknownEncodingRelease(unknownEncodingData);
-  parserInit(parser, encodingName);
-  dtdReset(&dtd, parser);
   poolClear(&tempPool);
   poolClear(&temp2Pool);
+  parserInit(parser, encodingName);
+  dtdReset(&dtd, parser);
   return XML_TRUE;
 }
 
@@ -5229,11 +5229,11 @@ hashTableIterNext(HASH_TABLE_ITER *iter)
 static void
 poolInit(STRING_POOL *pool, XML_Memory_Handling_Suite *ms)
 {
-  pool->blocks = 0;
-  pool->freeBlocks = 0;
-  pool->start = 0;
-  pool->ptr = 0;
-  pool->end = 0;
+  pool->blocks = NULL;
+  pool->freeBlocks = NULL;
+  pool->start = NULL;
+  pool->ptr = NULL;
+  pool->end = NULL;
   pool->mem = ms;
 }
 
