@@ -6,6 +6,12 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define INIT_TAG_STACK_SIZE 128
+#define INIT_DATA_BUF_SIZE 1024
+#define INIT_ATTS_SIZE 16
+#define INIT_BLOCK_SIZE 1024
+#define INIT_BUFFER_SIZE 1024
+
 typedef struct {
   const char *name;
   const char *textPtr;
@@ -16,8 +22,6 @@ typedef struct {
   char open;
   char magic;
 } ENTITY;
-
-#define INIT_BLOCK_SIZE 1024
 
 typedef struct block {
   struct block *next;
@@ -230,11 +234,11 @@ XML_Parser XML_ParserCreate(const char *encodingName)
   errorByteIndex = 0;
   errorPtr = 0;
   tagLevel = 0;
-  tagStack = malloc(1024);
+  tagStack = malloc(INIT_TAG_STACK_SIZE);
   tagStackPtr = tagStack;
-  attsSize = 1024;
+  attsSize = INIT_ATTS_SIZE;
   atts = malloc(attsSize * sizeof(ATTRIBUTE));
-  dataBuf = malloc(1024);
+  dataBuf = malloc(INIT_DATA_BUF_SIZE);
   groupSize = 0;
   groupConnector = 0;
   poolInit(&tempPool);
@@ -243,8 +247,8 @@ XML_Parser XML_ParserCreate(const char *encodingName)
     XML_ParserFree(parser);
     return 0;
   }
-  tagStackEnd = tagStack + 1024;
-  dataBufEnd = dataBuf + 1024;
+  tagStackEnd = tagStack + INIT_TAG_STACK_SIZE;
+  dataBufEnd = dataBuf + INIT_DATA_BUF_SIZE;
   *tagStackPtr++ = '\0';
   return parser;
 }
@@ -375,7 +379,7 @@ void *XML_GetBuffer(XML_Parser parser, size_t len)
       char *newBuf;
       size_t bufferSize = bufferLim - bufferPtr;
       if (bufferSize == 0)
-	bufferSize = 1024;
+	bufferSize = INIT_BUFFER_SIZE;
       do {
 	bufferSize *= 2;
       } while (bufferSize < neededSize);
