@@ -705,12 +705,12 @@ UnknownEncodingHandler(void *data,const XML_Char *encoding,XML_Encoding *info)
         int i;
         for (i = 0; i < 256; ++i)
             info->map[i] = i;
-        info->data=NULL;
-        info->convert=NULL;
-        info->release=NULL;
-        return 1;
+        info->data = NULL;
+        info->convert = NULL;
+        info->release = NULL;
+        return XML_STATUS_OK;
     }
-    return 0;
+    return XML_STATUS_ERROR;
 }
 
 START_TEST(test_unknown_encoding_internal_entity)
@@ -821,9 +821,9 @@ external_entity_loader(XML_Parser parser,
         fail("Could not create external entity parser.");
     if (XML_Parse(extparser, text, strlen(text), 1) == XML_STATUS_ERROR) {
         xml_failure(parser);
-        return 0;
+        return XML_STATUS_ERROR;
     }
-    return 1;
+    return XML_STATUS_OK;
 }
 
 /* Test that an error is reported for unknown entities if we have read
@@ -842,7 +842,7 @@ START_TEST(test_wfc_undeclared_entity_with_external_subset) {
     XML_SetExternalEntityRefHandler(parser, external_entity_loader);
     expect_failure(text,
                    XML_ERROR_UNDEFINED_ENTITY,
-                   "Parser did not report undefined entity with DTD.");
+                   "Parser did not report undefined entity (external DTD).");
 }
 END_TEST
 
