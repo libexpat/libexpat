@@ -26,7 +26,7 @@ basic_teardown(void)
 }
 
 /* Generate a failure using the parser state to create an error message;
- * this should be used when the parser reports and error we weren't
+ * this should be used when the parser reports an error we weren't
  * expecting.
  */
 static void
