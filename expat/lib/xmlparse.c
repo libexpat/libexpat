@@ -335,9 +335,9 @@ reportDefault(XML_Parser parser, const ENCODING *enc, const char *start,
               const char *end);
 
 static const XML_Char *getContext(XML_Parser parser);
-static int setContext(XML_Parser parser, const XML_Char *context);
+static XML_Bool setContext(XML_Parser parser, const XML_Char *context);
 static void normalizePublicId(XML_Char *s);
-static int dtdInit(DTD *, XML_Parser parser);
+static void dtdInit(DTD *, XML_Parser parser);
 
 static void dtdDestroy(DTD *, XML_Parser parser);
 
@@ -365,7 +365,7 @@ static XML_Char *poolAppend(STRING_POOL *pool, const ENCODING *enc,
 static XML_Char *poolStoreString(STRING_POOL *pool, const ENCODING *enc,
                                   const char *ptr, const char *end);
 
-static int poolGrow(STRING_POOL *pool);
+static XML_Bool poolGrow(STRING_POOL *pool);
 
 static int nextScaffoldPart(XML_Parser parser);
 static XML_Content *build_model(XML_Parser parser);
@@ -379,7 +379,7 @@ static ELEMENT_TYPE * getElementType(XML_Parser Paraser,
                                      const char *ptr,
                                      const char *end);
 
-static int parserInit(XML_Parser parser, const XML_Char *encodingName);
+static XML_Bool parserInit(XML_Parser parser, const XML_Char *encodingName);
 
 #define poolStart(pool) ((pool)->start)
 #define poolEnd(pool) ((pool)->ptr)
@@ -694,7 +694,7 @@ XML_ParserCreate_MM(const XML_Char *encodingName,
   return parser;
 }
 
-static int
+static XML_Bool
 parserInit(XML_Parser parser, const XML_Char *encodingName)
 {
   processor = prologInitProcessor;
@@ -765,7 +765,8 @@ parserInit(XML_Parser parser, const XML_Char *encodingName)
   isParamEntity = XML_FALSE;
   paramEntityParsing = XML_PARAM_ENTITY_PARSING_NEVER;
 #endif
-  return dtdInit(&dtd, parser);
+  dtdInit(&dtd, parser);
+  return XML_TRUE;
 }
 
 int
@@ -1222,19 +1223,19 @@ XML_SetParamEntityParsing(XML_Parser parser,
 #endif
 }
 
-int
+enum XML_Status
 XML_Parse(XML_Parser parser, const char *s, int len, int isFinal)
 {
   if (len == 0) {
     if (!isFinal)
-      return 1;
+      return XML_STATUS_OK;
     positionPtr = bufferPtr;
     errorCode = processor(parser, bufferPtr, parseEndPtr = bufferEnd, 0);
     if (errorCode == XML_ERROR_NONE)
-      return 1;
+      return XML_STATUS_OK;
     eventEndPtr = eventPtr;
     processor = errorProcessor;
-    return 0;
+    return XML_STATUS_ERROR;
   }
 #ifndef XML_CONTEXT_BYTES
   else if (bufferPtr == bufferEnd) {
@@ -1245,16 +1246,16 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal)
     if (isFinal) {
       errorCode = processor(parser, s, parseEndPtr = s + len, 0);
       if (errorCode == XML_ERROR_NONE)
-        return 1;
+        return XML_STATUS_OK;
       eventEndPtr = eventPtr;
       processor = errorProcessor;
-      return 0;
+      return XML_STATUS_ERROR;
     }
     errorCode = processor(parser, s, parseEndPtr = s + len, &end);
     if (errorCode != XML_ERROR_NONE) {
       eventEndPtr = eventPtr;
       processor = errorProcessor;
-      return 0;
+      return XML_STATUS_ERROR;
     }
     XmlUpdatePosition(encoding, positionPtr, end, &position);
     nLeftOver = s + len - end;
@@ -1265,14 +1266,14 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal)
         temp = buffer == 0 ? MALLOC(len * 2) : REALLOC(buffer, len * 2);
         if (temp == NULL) {
           errorCode = XML_ERROR_NO_MEMORY;
-          return 0;
+          return XML_STATUS_ERROR;
         }
         buffer = temp;
         if (!buffer) {
           errorCode = XML_ERROR_NO_MEMORY;
           eventPtr = eventEndPtr = NULL;
           processor = errorProcessor;
-          return 0;
+          return XML_STATUS_ERROR;
         }
         bufferLim = buffer + len * 2;
       }
@@ -1280,13 +1281,13 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal)
       bufferPtr = buffer;
       bufferEnd = buffer + nLeftOver;
     }
-    return 1;
+    return XML_STATUS_OK;
   }
 #endif  /* not defined XML_CONTEXT_BYTES */
   else {
     void *buff = XML_GetBuffer(parser, len);
     if (buff == NULL)
-      return 0;
+      return XML_STATUS_ERROR;
     else {
       memcpy(buff, s, len);
       return XML_ParseBuffer(parser, len, isFinal);
@@ -1294,7 +1295,7 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal)
   }
 }
 
-int
+enum XML_Status
 XML_ParseBuffer(XML_Parser parser, int len, int isFinal)
 {
   const char *start = bufferPtr;
@@ -1302,16 +1303,16 @@ XML_ParseBuffer(XML_Parser parser, int len, int isFinal)
   bufferEnd += len;
   parseEndByteIndex += len;
   errorCode = processor(parser, start, parseEndPtr = bufferEnd,
-                        isFinal ? (const char **)0 : &bufferPtr);
+                        isFinal ? (const char **)NULL : &bufferPtr);
   if (errorCode == XML_ERROR_NONE) {
     if (!isFinal)
       XmlUpdatePosition(encoding, positionPtr, bufferPtr, &position);
-    return 1;
+    return XML_STATUS_OK;
   }
   else {
     eventEndPtr = eventPtr;
     processor = errorProcessor;
-    return 0;
+    return XML_STATUS_ERROR;
   }
 }
 
@@ -4490,7 +4491,7 @@ getContext(XML_Parser parser)
   return tempPool.start;
 }
 
-static int
+static XML_Bool
 setContext(XML_Parser parser, const XML_Char *context)
 {
   const XML_Char *s = context;
@@ -4499,7 +4500,7 @@ setContext(XML_Parser parser, const XML_Char *context)
     if (*s == CONTEXT_SEP || *s == XML_T('\0')) {
       ENTITY *e;
       if (!poolAppendChar(&tempPool, XML_T('\0')))
-        return 0;
+        return XML_FALSE;
       e = (ENTITY *)lookup(&dtd.generalEntities, poolStart(&tempPool), 0);
       if (e)
         e->open = XML_TRUE;
@@ -4514,15 +4515,15 @@ setContext(XML_Parser parser, const XML_Char *context)
         prefix = &dtd.defaultPrefix;
       else {
         if (!poolAppendChar(&tempPool, XML_T('\0')))
-          return 0;
+          return XML_FALSE;
         prefix = (PREFIX *)lookup(&dtd.prefixes, poolStart(&tempPool),
                                   sizeof(PREFIX));
         if (!prefix)
-          return 0;
+          return XML_FALSE;
         if (prefix->name == poolStart(&tempPool)) {
           prefix->name = poolCopyString(&dtd.pool, prefix->name);
           if (!prefix->name)
-            return 0;
+            return XML_FALSE;
         }
         poolDiscard(&tempPool);
       }
@@ -4530,12 +4531,12 @@ setContext(XML_Parser parser, const XML_Char *context)
            *context != CONTEXT_SEP && *context != XML_T('\0');
            context++)
         if (!poolAppendChar(&tempPool, *context))
-          return 0;
+          return XML_FALSE;
       if (!poolAppendChar(&tempPool, XML_T('\0')))
-        return 0;
+        return XML_FALSE;
       if (!addBinding(parser, prefix, 0, poolStart(&tempPool),
                       &inheritedBindings))
-        return 0;
+        return XML_FALSE;
       poolDiscard(&tempPool);
       if (*context != XML_T('\0'))
         ++context;
@@ -4543,11 +4544,11 @@ setContext(XML_Parser parser, const XML_Char *context)
     }
     else {
       if (!poolAppendChar(&tempPool, *s))
-        return 0;
+        return XML_FALSE;
       s++;
     }
   }
-  return 1;
+  return XML_TRUE;
 }
 
 static void
@@ -4572,7 +4573,7 @@ normalizePublicId(XML_Char *publicId)
   *p = XML_T('\0');
 }
 
-static int
+static void
 dtdInit(DTD *p, XML_Parser parser)
 {
   XML_Memory_Handling_Suite *ms = &((Parser *) parser)->m_mem;
@@ -4601,8 +4602,6 @@ dtdInit(DTD *p, XML_Parser parser)
   p->contentStringLen = 0;
   p->scaffSize = 0;
   p->scaffCount = 0;
-
-  return 1;
 }
 
 #ifdef XML_DTD
@@ -4999,10 +4998,10 @@ poolClear(STRING_POOL *pool)
       p = tem;
     }
   }
-  pool->blocks = 0;
-  pool->start = 0;
-  pool->ptr = 0;
-  pool->end = 0;
+  pool->blocks = NULL;
+  pool->start = NULL;
+  pool->ptr = NULL;
+  pool->end = NULL;
 }
 
 static void
@@ -5014,17 +5013,17 @@ poolDestroy(STRING_POOL *pool)
     pool->mem->free_fcn(p);
     p = tem;
   }
-  pool->blocks = 0;
+  pool->blocks = NULL;
   p = pool->freeBlocks;
   while (p) {
     BLOCK *tem = p->next;
     pool->mem->free_fcn(p);
     p = tem;
   }
-  pool->freeBlocks = 0;
-  pool->ptr = 0;
-  pool->start = 0;
-  pool->end = 0;
+  pool->freeBlocks = NULL;
+  pool->ptr = NULL;
+  pool->start = NULL;
+  pool->end = NULL;
 }
 
 static XML_Char *
@@ -5092,7 +5091,7 @@ poolStoreString(STRING_POOL *pool, const ENCODING *enc,
   return pool->start;
 }
 
-static int
+static XML_Bool
 poolGrow(STRING_POOL *pool)
 {
   if (pool->freeBlocks) {
@@ -5103,7 +5102,7 @@ poolGrow(STRING_POOL *pool)
       pool->start = pool->blocks->s;
       pool->end = pool->start + pool->blocks->size;
       pool->ptr = pool->start;
-      return 1;
+      return XML_TRUE;
     }
     if (pool->end - pool->start < pool->freeBlocks->size) {
       BLOCK *tem = pool->freeBlocks->next;
@@ -5115,7 +5114,7 @@ poolGrow(STRING_POOL *pool)
       pool->ptr = pool->blocks->s + (pool->ptr - pool->start);
       pool->start = pool->blocks->s;
       pool->end = pool->start + pool->blocks->size;
-      return 1;
+      return XML_TRUE;
     }
   }
   if (pool->blocks && pool->start == pool->blocks->s) {
@@ -5123,8 +5122,8 @@ poolGrow(STRING_POOL *pool)
     pool->blocks = pool->mem->realloc_fcn(pool->blocks,
                                           offsetof(BLOCK, s)
                                           + blockSize * sizeof(XML_Char));
-    if (!pool->blocks)
-      return 0;
+    if (pool->blocks == NULL)
+      return XML_FALSE;
     pool->blocks->size = blockSize;
     pool->ptr = pool->blocks->s + (pool->ptr - pool->start);
     pool->start = pool->blocks->s;
@@ -5140,7 +5139,7 @@ poolGrow(STRING_POOL *pool)
     tem = pool->mem->malloc_fcn(offsetof(BLOCK, s)
                                 + blockSize * sizeof(XML_Char));
     if (!tem)
-      return 0;
+      return XML_FALSE;
     tem->size = blockSize;
     tem->next = pool->blocks;
     pool->blocks = tem;
@@ -5151,7 +5150,7 @@ poolGrow(STRING_POOL *pool)
     pool->start = tem->s;
     pool->end = tem->s + blockSize;
   }
-  return 1;
+  return XML_TRUE;
 }
 
 static int
