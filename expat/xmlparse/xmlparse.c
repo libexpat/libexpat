@@ -730,6 +730,7 @@ int XML_Parse(XML_Parser parser, const char *s, int len, int isFinal)
   if (len == 0) {
     if (!isFinal)
       return 1;
+    positionPtr = bufferPtr;
     errorCode = processor(parser, bufferPtr, parseEndPtr = bufferEnd, 0);
     if (errorCode == XML_ERROR_NONE)
       return 1;
