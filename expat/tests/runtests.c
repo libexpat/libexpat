@@ -27,9 +27,9 @@ basic_teardown(void)
 }
 
 /* Generate a failure using the parser state to create an error message;
- * this should be used when the parser reports an error we weren't
- * expecting.
- */
+   this should be used when the parser reports an error we weren't
+   expecting.
+*/
 static void
 _xml_failure(XML_Parser parser, const char *file, int line)
 {
@@ -202,10 +202,10 @@ END_TEST
 /* End regression test for SF bug #514281. */
 
 /* Regression test for SF bug #477667.
- * This test assures that any 8-bit character followed by a 7-bit
- * character will not be mistakenly interpreted as a valid UTF-8
- * sequence.
- */
+   This test assures that any 8-bit character followed by a 7-bit
+   character will not be mistakenly interpreted as a valid UTF-8
+   sequence.
+*/
 START_TEST(test_illegal_utf8)
 {
     char text[100];
@@ -230,8 +230,8 @@ END_TEST
 START_TEST(test_utf16)
 {
     /* <?xml version="1.0" encoding="UTF-16"?>
-     * <doc a='123'>some text</doc>
-     */
+       <doc a='123'>some text</doc>
+    */
     char text[] =
         "\000<\000?\000x\000m\000\154\000 \000v\000e\000r\000s\000i\000o"
         "\000n\000=\000'\0001\000.\000\060\000'\000 \000e\000n\000c\000o"
@@ -268,15 +268,14 @@ END_TEST
  */
 
 /* Helpers used by the following test; this checks any "attr" and "refs"
- * attributes to make sure whitespace has been normalized.
- */
+   attributes to make sure whitespace has been normalized.
 
-/* Return true if whitespace has been normalized in a string, using
- * the rules for attribute value normalization.  The 'is_cdata' flag
- * is needed since CDATA attributes don't need to have multiple
- * whitespace characters collapsed to a single space, while other
- * attribute data types do.  (Section 3.3.3 of the recommendation.)
- */
+   Return true if whitespace has been normalized in a string, using
+   the rules for attribute value normalization.  The 'is_cdata' flag
+   is needed since CDATA attributes don't need to have multiple
+   whitespace characters collapsed to a single space, while other
+   attribute data types do.  (Section 3.3.3 of the recommendation.)
+*/
 static int
 is_whitespace_normalized(const XML_Char *s, int is_cdata)
 {
@@ -417,10 +416,10 @@ namespace_teardown(void)
 }
 
 /* Check that an element name and attribute name match the expected values.
- * The expected values are passed as an array reference of string pointers
- * provided as the userData argument; the first is the expected
- * element name, and the second is the expected attribute name.
- */
+   The expected values are passed as an array reference of string pointers
+   provided as the userData argument; the first is the expected
+   element name, and the second is the expected attribute name.
+*/
 static void
 triplet_start_checker(void *userData, const XML_Char *name,
                       const XML_Char **atts)
@@ -438,9 +437,9 @@ triplet_start_checker(void *userData, const XML_Char *name,
 }
 
 /* Check that the element name passed to the end-element handler matches
- * the expected value.  The expected value is passed as the first element
- * in an array of strings passed as the userData argument.
- */
+   the expected value.  The expected value is passed as the first element
+   in an array of strings passed as the userData argument.
+*/
 static void
 triplet_end_checker(void *userData, const XML_Char *name)
 {
