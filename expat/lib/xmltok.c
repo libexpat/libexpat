@@ -66,12 +66,40 @@
      ? UTF8_GET_NAMING3(pages, (const unsigned char *)(p)) \
      : 0))
 
-#define UTF8_INVALID3(p) \
-  ((((*p) && 0xF0) == 0xE0) \
-   && (((p)[1] && 0xC0) == 0x80) \
-   && (((p)[2] && 0xC0) == 0x80))
+/* Detection of invalid UTF-8 sequences is based on Table 3.1B
+   of Unicode 3.2: http://www.unicode.org/unicode/reports/tr28/.
+   Implementation details:
+     (A & 0x80) == 0     means A < 0x80
+   and
+     (A & 0xC0) == 0xC0  means A > 0xBF
+*/
 
-#define UTF8_INVALID4(p) ((*p) == 0xF4 && ((p)[1] & 0x30) != 0)
+#define UTF8_INVALID2(p) \
+  ((*p) < 0xC2 || ((p)[1] & 0x80) == 0 || ((p)[1] & 0xC0) == 0xC0)
+
+#define UTF8_INVALID3(p) \
+  (((p)[2] & 0x80) == 0 || ((p)[2] & 0xC0) == 0xC0 \
+  || \
+  ((*p) == 0xE0 \
+    ? \
+    (p)[1] < 0xA0 || ((p)[1] & 0xC0) == 0xC0 \
+    : \
+    ((p)[1] & 0x80) == 0 \
+    || \
+    ((*p) == 0xED ? (p)[1] > 0x9F : ((p)[1] & 0xC0) == 0xC0)))
+
+#define UTF8_INVALID4(p) \
+  (((p)[3] & 0x80) == 0 || ((p)[3] & 0xC0) == 0xC0 \
+  || \
+  ((p)[2] & 0x80) == 0 || ((p)[2] & 0xC0) == 0xC0 \
+  || \
+  ((*p) == 0xF0 \
+    ? \
+    (p)[1] < 0x90 || ((p)[1] & 0xC0) == 0xC0 \
+    : \
+    ((p)[1] & 0x80) == 0 \
+    || \
+    ((*p) == 0xF4 ? (p)[1] > 0x8F : ((p)[1] & 0xC0) == 0xC0)))
 
 static int
 isNever(const ENCODING *enc, const char *p)
@@ -107,7 +135,11 @@ utf8_isNmstrt3(const ENCODING *enc, const char *p)
 
 #define utf8_isNmstrt4 isNever
 
-#define utf8_isInvalid2 isNever
+static int
+utf8_isInvalid2(const ENCODING *enc, const char *p)
+{
+  return UTF8_INVALID2((const unsigned char *)p);
+}
 
 static int
 utf8_isInvalid3(const ENCODING *enc, const char *p)
