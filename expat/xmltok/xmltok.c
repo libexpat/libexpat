@@ -1489,6 +1489,7 @@ int initScan(const ENCODING **encodingTable,
       if (ptr + 2 == end)
 	return XML_TOK_PARTIAL;
       if ((unsigned char)ptr[2] == 0xBF) {
+	*nextTokPtr = ptr + 3;
 	*encPtr = encodingTable[UTF_8_ENC];
 	return XML_TOK_BOM;
       }
