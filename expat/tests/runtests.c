@@ -31,7 +31,7 @@ basic_teardown(void)
  * expecting.
  */
 static void
-_xml_failure(const char *file, int line)
+_xml_failure(XML_Parser parser, const char *file, int line)
 {
     char buffer[1024];
     sprintf(buffer,
@@ -43,7 +43,7 @@ _xml_failure(const char *file, int line)
     fail(buffer);
 }
 
-#define xml_failure() _xml_failure(__FILE__, __LINE__)
+#define xml_failure(parser) _xml_failure((parser), __FILE__, __LINE__)
 
 
 /*
@@ -58,7 +58,7 @@ START_TEST(test_nul_byte)
     if (XML_Parse(parser, text, sizeof(text) - 1, 1))
         fail("Parser did not report error on NUL-byte.");
     if (XML_GetErrorCode(parser) != XML_ERROR_INVALID_TOKEN)
-        xml_failure();
+        xml_failure(parser);
 }
 END_TEST
 
@@ -71,7 +71,7 @@ START_TEST(test_u0000_char)
     if (XML_Parse(parser, text, strlen(text), 1))
         fail("Parser did not report error on NUL-byte.");
     if (XML_GetErrorCode(parser) != XML_ERROR_BAD_CHAR_REF)
-        xml_failure();
+        xml_failure(parser);
 }
 END_TEST
 
@@ -81,7 +81,7 @@ START_TEST(test_bom_utf8)
     char *text = "\357\273\277<e/>";
 
     if (!XML_Parse(parser, text, strlen(text), 1))
-        xml_failure();
+        xml_failure(parser);
 }
 END_TEST
 
@@ -90,7 +90,7 @@ START_TEST(test_bom_utf16_be)
     char text[] = "\376\377\0<\0e\0/\0>";
 
     if (!XML_Parse(parser, text, sizeof(text) - 1, 1))
-        xml_failure();
+        xml_failure(parser);
 }
 END_TEST
 
@@ -99,7 +99,7 @@ START_TEST(test_bom_utf16_le)
     char text[] = "\377\376<\0e\0/\0>\0";
 
     if (!XML_Parse(parser, text, sizeof(text) - 1, 1))
-        xml_failure();
+        xml_failure(parser);
 }
 END_TEST
 
@@ -130,7 +130,7 @@ run_character_check(XML_Char *text, XML_Char *expected)
     XML_SetUserData(parser, &storage);
     XML_SetCharacterDataHandler(parser, accumulate_characters);
     if (!XML_Parse(parser, text, strlen(text), 1))
-        xml_failure();
+        xml_failure(parser);
     CharData_CheckXMLChars(&storage, expected);
 }
 
@@ -143,7 +143,7 @@ run_attribute_check(XML_Char *text, XML_Char *expected)
     XML_SetUserData(parser, &storage);
     XML_SetStartElementHandler(parser, accumulate_attribute);
     if (!XML_Parse(parser, text, strlen(text), 1))
-        xml_failure();
+        xml_failure(parser);
     CharData_CheckXMLChars(&storage, expected);
 }
 
@@ -220,7 +220,7 @@ START_TEST(test_illegal_utf8)
             fail(text);
         }
         else if (XML_GetErrorCode(parser) != XML_ERROR_INVALID_TOKEN)
-            xml_failure();
+            xml_failure(parser);
     }
 }
 END_TEST
@@ -239,7 +239,7 @@ START_TEST(test_utf16)
         "\000>\000s\000o\000m\000e\000 \000t\000e\000x\000t\000<\000/"
         "\000d\000o\000c\000>";
     if (!XML_Parse(parser, text, sizeof(text) - 1, 1))
-        xml_failure();
+        xml_failure(parser);
 }
 END_TEST
 
@@ -369,7 +369,7 @@ START_TEST(test_attr_whitespace_normalization)
     XML_SetStartElementHandler(parser,
                                check_attr_contains_normalized_whitespace);
     if (!XML_Parse(parser, text, strlen(text), 1))
-        xml_failure();
+        xml_failure(parser);
 }
 END_TEST
 
@@ -387,7 +387,7 @@ START_TEST(test_xmldecl_misplaced)
 
     if (!XML_Parse(parser, text, strlen(text), 1)) {
         if (XML_GetErrorCode(parser) != XML_ERROR_MISPLACED_XML_PI)
-            xml_failure();
+            xml_failure(parser);
     }
     else {
         fail("expected XML_ERROR_MISPLACED_XML_PI with misplaced XML decl");
@@ -463,7 +463,7 @@ START_TEST(test_return_ns_triplet)
     XML_SetUserData(parser, elemstr);
     XML_SetElementHandler(parser, triplet_start_checker, triplet_end_checker);
     if (!XML_Parse(parser, text, strlen(text), 1))
-        xml_failure();
+        xml_failure(parser);
 }
 END_TEST
 
