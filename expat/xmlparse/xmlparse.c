@@ -136,6 +136,8 @@ typedef struct {
   /* allocated end of buffer */
   const char *bufferLim;
   long bufferEndByteIndex;
+  char *dataBuf;
+  char *dataBufEnd;
   void *userData;
   XML_StartElementHandler startElementHandler;
   XML_EndElementHandler endElementHandler;
@@ -185,6 +187,8 @@ typedef struct {
 #define bufferEnd (((Parser *)parser)->bufferEnd)
 #define bufferEndByteIndex (((Parser *)parser)->bufferEndByteIndex)
 #define bufferLim (((Parser *)parser)->bufferLim)
+#define dataBuf (((Parser *)parser)->dataBuf)
+#define dataBufEnd (((Parser *)parser)->dataBufEnd)
 #define dtd (((Parser *)parser)->dtd)
 #define declEntity (((Parser *)parser)->declEntity)
 #define declElementType (((Parser *)parser)->declElementType)
@@ -230,15 +234,17 @@ XML_Parser XML_ParserCreate(const char *encodingName)
   tagStackPtr = tagStack;
   attsSize = 1024;
   atts = malloc(attsSize * sizeof(ATTRIBUTE));
+  dataBuf = malloc(1024);
   groupSize = 0;
   groupConnector = 0;
   poolInit(&tempPool);
   poolInit(&temp2Pool);
-  if (!dtdInit(&dtd) || !atts || !tagStack) {
+  if (!dtdInit(&dtd) || !atts || !tagStack || !dataBuf) {
     XML_ParserFree(parser);
     return 0;
   }
   tagStackEnd = tagStack + 1024;
+  dataBufEnd = dataBuf + 1024;
   *tagStackPtr++ = '\0';
   return parser;
 }
@@ -252,6 +258,7 @@ void XML_ParserFree(XML_Parser parser)
   free((void *)atts);
   free(groupConnector);
   free(buffer);
+  free(dataBuf);
   free(parser);
 }
 
@@ -663,22 +670,22 @@ doContent(XML_Parser parser,
       break;
     case XML_TOK_CDATA_SECTION:
       if (characterDataHandler) {
-	if (!poolAppend(&tempPool,
-			enc,
-			s + enc->minBytesPerChar * 9,
-			next - enc->minBytesPerChar * 3))
-	  return XML_ERROR_NO_MEMORY;
-	characterDataHandler(userData, poolStart(&tempPool), poolLength(&tempPool));
-	poolDiscard(&tempPool);
+	const char *lim = next - enc->minBytesPerChar * 3;
+	s += enc->minBytesPerChar * 9;
+	do {
+	  char *dataPtr = dataBuf;
+	  XmlConvert(enc, XML_UTF8_ENCODING, &s, lim, &dataPtr, dataBufEnd);
+	  characterDataHandler(userData, dataBuf, dataPtr - dataBuf);
+	} while (s != lim);
       }
       break;
     case XML_TOK_DATA_CHARS:
       if (characterDataHandler) {
-	/* FIXME Do this efficiently */
-	if (!poolAppend(&tempPool, enc, s, next))
-	  return XML_ERROR_NO_MEMORY;
-	characterDataHandler(userData, poolStart(&tempPool), poolLength(&tempPool));
-	poolDiscard(&tempPool);
+	do {
+	  char *dataPtr = dataBuf;
+	  XmlConvert(enc, XML_UTF8_ENCODING, &s, next, &dataPtr, dataBufEnd);
+	  characterDataHandler(userData, dataBuf, dataPtr - dataBuf);
+	} while (s != next);
       }
       break;
     case XML_TOK_PI:
