@@ -7,26 +7,62 @@
 #endif
 
 #include "xmltok.h"
+#include "xmlrole.h"
+
+typedef struct {
+  const char *name;
+} NAMED;
+
+typedef struct {
+  NAMED **v;
+  size_t size;
+  size_t used;
+  size_t usedLim;
+} HASH_TABLE;
+
+#define BLOCK_SIZE 1024
+
+typedef struct block {
+  struct block *next;
+  char s[1];
+} BLOCK;
+
+typedef struct {
+  BLOCK *blocks;
+  const char *end;
+  const char *ptr;
+  const char *start;
+} STRING_POOL;
+
+typedef struct {
+  STRING_POOL pool;
+  HASH_TABLE paramEntities;
+  HASH_TABLE generalEntities;
+} DTD;
+
+static enum WfCheckResult
+checkProlog(int *tok, const char **s, const char *end, const char **nextTokP,
+	    const ENCODING **enc);
 
 static
-int skipProlog(const char **s, const char *end, const char **nextTokP,
-	       const ENCODING **enc, const char **doctypeP);
-static
 void setPosition(const ENCODING *enc,
-		 const char *start, const char *end,
-		 const char **badPtr, unsigned long *badLine, unsigned long *badCol);
+		 const char *start,
+		 const char *end,
+		 const char **badPtr,
+		 unsigned long *badLine,
+		 unsigned long *badCol);
 
 enum WfCheckResult
 wfCheck(const char *s, size_t n,
 	const char **badPtr, unsigned long *badLine, unsigned long *badCol)
 {
+  enum WfCheckResult result;
   unsigned nElements = 0;
   unsigned nAtts = 0;
   const char *start = s;
   const char *end = s + n;
   const char *next;
   const ENCODING *enc;
-  const char *doctype = 0;
   size_t stackSize = 1024;
   size_t level = 0;
   int tok;
@@ -36,7 +72,11 @@ wfCheck(const char *s, size_t n,
 #define RETURN_CLEANUP(n) return (free((void *)startName), free((void *)atts), (n))
   if (!startName)
     return noMemory;
-  tok = skipProlog(&s, end, &next, &enc, &doctype);
+  result = checkProlog(&tok, &s, end, &next, &enc);
+  if (result) {
+    setPosition(enc, start, s, badPtr, badLine, badCol);
+    RETURN_CLEANUP(result);
+  }
   for (;;) {
     switch (tok) {
     case XML_TOK_NONE:
@@ -115,10 +155,6 @@ wfCheck(const char *s, size_t n,
 	tok = XmlPrologTok(enc, s, end, &next);
 	switch (tok) {
 	case XML_TOK_NONE:
-	  if (doctype) {
-	    setPosition(enc, start, doctype, badPtr, badLine, badCol);
-	    RETURN_CLEANUP(wellFormedOutsideDtd);
-	  }
 	  RETURN_CLEANUP(wellFormed);
 	case XML_TOK_PROLOG_S:
 	case XML_TOK_COMMENT:
@@ -142,14 +178,15 @@ wfCheck(const char *s, size_t n,
 }
 
 static
-int skipProlog(const char **startp, const char *end,
-	       const char **nextTokP, const ENCODING **enc,
-	       const char **doctypeP)
+int checkProlog(int *tokp,
+		const char **startp, const char *end,
+	        const char **nextTokP, const ENCODING **enc)
 {
+  PROLOG_STATE state;
   const char *s = *startp;
   INIT_ENCODING initEnc;
   XmlInitEncoding(&initEnc, enc);
-  *doctypeP = 0;
+  XmlPrologStateInit(&state);
   for (;;) {
     int tok = XmlPrologTok(*enc, s, end, nextTokP);
     switch (tok) {
@@ -160,30 +197,17 @@ int skipProlog(const char **startp, const char *end,
     case XML_TOK_INVALID:
     case XML_TOK_NONE:
     case XML_TOK_PARTIAL:
+      *tokp = tok;
       *startp = s;
-      return tok;
-    case XML_TOK_DECL_OPEN:
-      if (!*doctypeP) {
-	if (XmlNameMatchesAscii(*enc, s + 2 * (*enc)->minBytesPerChar, "DOCTYPE"))
-	  *doctypeP = s;
-	else {
-	  *startp = s;
-	  return XML_TOK_INVALID;
-	}
-      }
-      break;
+      return wellFormed;
+    case XML_TOK_BOM:
     case XML_TOK_PROLOG_S:
-    case XML_TOK_LITERAL:
-    case XML_TOK_COMMENT:
-    case XML_TOK_PI:
       break;
-    case XML_TOK_COND_SECT_OPEN:
-      *startp = s;
-      return XML_TOK_INVALID;
     default:
-      if (!*doctypeP) {
+      switch (XmlTokenRole(&state, tok, s, *nextTokP, *enc)) {
+      case XML_ROLE_ERROR:
 	*startp = s;
-	return XML_TOK_INVALID;
+	return syntaxError;
       }
       break;
     }

@@ -15,8 +15,8 @@ void processFile(const void *data, size_t size, const char *filename, void *arg)
   if (result) {
     static const char *message[] = {
       0,
-      "DOCTYPE declaration ignored",
       "out of memory",
+      "syntax error",
       "no element found",
       "invalid token",
       "unclosed token",
@@ -28,7 +28,7 @@ void processFile(const void *data, size_t size, const char *filename, void *arg)
     fprintf(stderr, "%s:", filename);
     if (badPtr != 0)
       fprintf(stderr, "%lu:%lu:", badLine+1, badCol);
-    fprintf(stderr, "%c: %s", (result == wellFormedOutsideDtd ? 'W' : 'E'), message[result]);
+    fprintf(stderr, "E: %s", message[result]);
     putc('\n', stderr);
     if (!*ret)
       *ret = 1;
