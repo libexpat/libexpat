@@ -803,7 +803,7 @@ static enum XML_Error storeAtts(XML_Parser parser, const ENCODING *enc,
 {
   ELEMENT_TYPE *elementType = 0;
   int nDefaultAtts = 0;
-  const char **appAtts = (const char **)atts;
+  const char **appAtts;
   int i;
   int n;
 
@@ -815,13 +815,15 @@ static enum XML_Error storeAtts(XML_Parser parser, const ENCODING *enc,
   
   n = XmlGetAttributes(enc, s, attsSize, atts);
   if (n + nDefaultAtts > attsSize) {
-    attsSize = 2*n;
+    int oldAttsSize = attsSize;
+    attsSize = n + nDefaultAtts + INIT_ATTS_SIZE;
     atts = realloc((void *)atts, attsSize * sizeof(ATTRIBUTE));
     if (!atts)
       return XML_ERROR_NO_MEMORY;
-    if (n > attsSize)
+    if (n > oldAttsSize)
       XmlGetAttributes(enc, s, n, atts);
   }
+  appAtts = (const char **)atts;
   for (i = 0; i < n; i++) {
     ATTRIBUTE_ID *attId = getAttributeId(parser, enc, atts[i].name,
 					  atts[i].name
