@@ -3720,7 +3720,8 @@ void hashTableDestroy(HASH_TABLE *table)
     if (p)
       free(p);
   }
-  free(table->v);
+  if (table->v)
+    free(table->v);
 }
 
 static
