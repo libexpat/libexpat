@@ -171,6 +171,63 @@ static void processingInstruction(void *userData, const XML_Char *target, const 
   puttc(T('>'), fp);
 }
 
+#ifdef DEBUG_UNPARSED_ENTITIES
+
+static void unparsedEntityDecl(void *userData,
+			       const XML_Char *entityName,
+			       const XML_Char *base,
+			       const XML_Char *systemId,
+			       const XML_Char *publicId,
+			       const XML_Char *notationName)
+{
+  FILE *fp = userData;
+  XML_Char lit = tcschr(systemId, T('"')) ? '\'' : '"';
+  fputts(T("<!ENTITY "), fp);
+  fputts(entityName, fp);
+  if (publicId) {
+    fputts(T(" PUBLIC \""), fp);
+    fputts(publicId, fp);
+    puttc(T('"'), fp);
+    puttc(T(' '), fp);
+  }
+  else
+    fputts(T(" SYSTEM "), fp);
+  puttc(lit, fp);
+  fputts(systemId, fp);
+  puttc(lit, fp);
+  fputts(T(" NDATA "), fp);
+  fputts(notationName, fp);
+  puttc(T('>'), fp);
+}
+
+static void notationDecl(void *userData,
+			 const XML_Char *notationName,
+			 const XML_Char *base,
+			 const XML_Char *systemId,
+			 const XML_Char *publicId)
+{
+  FILE *fp = userData;
+  fputts(T("<!NOTATION "), fp);
+  fputts(notationName, fp);
+  if (publicId) {
+    fputts(T(" PUBLIC \""), fp);
+    fputts(publicId, fp);
+    puttc(T('"'), fp);
+  }
+  else
+    fputts(T(" SYSTEM"), fp);
+  if (systemId) {
+    XML_Char lit = tcschr(systemId, T('"')) ? '\'' : '"';
+    puttc(T(' '), fp);
+    puttc(lit, fp);
+    fputts(systemId, fp);
+    puttc(lit, fp);
+  }
+  puttc(T('>'), fp);
+}
+
+#endif /* DEBUG_UNPARSED_ENTITIES */
+
 typedef struct {
   XML_Parser parser;
   int *retPtr;
@@ -400,6 +457,10 @@ int tmain(int argc, XML_Char **argv)
       XML_SetCharacterDataHandler(parser, characterData);
       XML_SetProcessingInstructionHandler(parser, processingInstruction);
     }
+#ifdef DEBUG_UNPARSED_ENTITIES
+    XML_SetUnparsedEntityDeclHandler(parser, unparsedEntityDecl);
+    XML_SetNotationDeclHandler(parser, notationDecl);
+#endif
     if (processExternalEntities) {
       if (!XML_SetBase(parser, argv[i])) {
 	ftprintf(stderr, T("%s: out of memory"), argv[0]);
