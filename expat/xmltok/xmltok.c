@@ -101,7 +101,7 @@ int utf8_isName3(const ENCODING *enc, const char *p)
 static
 int utf8_isNmstrt2(const ENCODING *enc, const char *p)
 {
-  return UTF8_GET_NAMING2(namePages, (const unsigned char *)p);
+  return UTF8_GET_NAMING2(nmstrtPages, (const unsigned char *)p);
 }
 
 static
