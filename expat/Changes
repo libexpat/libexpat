@@ -1,5 +1,8 @@
 Release 1.95.6
+        - Added XML_FreeContentModel().
+        - Added XML_MemMalloc(), XML_MemRealloc(), XML_MemFree().
         - Fixed a variety of bugs: see SF issues 615606, 616863, 618199.
+        - Enhanced the regression test suite.
 
 Release 1.95.5 Fri Sep 6 2002
         - Added XML_UseForeignDTD() for improved SAX2 support.
