@@ -15,7 +15,6 @@ OBJS=xmltok/xmltok.o \
   xmlwf/xmlfile.o \
   xmlwf/codepage.o \
   xmlparse/xmlparse.o \
-  xmlparse/hashtable.o \
   $(FILEMAP_OBJ)
 EXE=
 

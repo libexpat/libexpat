@@ -141,10 +141,6 @@ SOURCE=..\xmltok\dllmain.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\hashtable.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\xmlparse.c
 # End Source File
 # Begin Source File
@@ -185,10 +181,6 @@ SOURCE=..\xmltok\xmltok.c
 # Begin Group "Header Files"
 
 # PROP Default_Filter "h;hpp;hxx;hm;inl;fi;fd"
-# Begin Source File
-
-SOURCE=.\hashtable.h
-# End Source File
 # Begin Source File
 
 SOURCE=.\xmlparse.h
