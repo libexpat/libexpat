@@ -3,6 +3,7 @@
 
 enum WfCheckResult {
   wellFormed,
+  wellFormedOutsideDtd,
   noMemory,
   noElements,
   invalidToken,

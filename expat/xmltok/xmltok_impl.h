@@ -29,7 +29,14 @@ enum {
   BT_NAME,
   BT_MINUS,
   BT_OTHER, /* known not to be a name or name start character */
-  BT_NONASCII /* might be a name or name start character */
+  BT_NONASCII, /* might be a name or name start character */
+  BT_PERCNT,
+  BT_LPAR,
+  BT_RPAR,
+  BT_AST,
+  BT_PLUS,
+  BT_COMMA,
+  BT_VERBAR
 };
 
 #include <stddef.h>

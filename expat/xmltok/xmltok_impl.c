@@ -125,22 +125,43 @@ static
 int PREFIX(scanDecl)(const ENCODING *enc, const char *ptr, const char *end,
 		     const char **nextTokPtr)
 {
-  if (ptr != end) {
-    if (BYTE_TYPE(enc, ptr) == BT_MINUS)
-      return PREFIX(scanComment)(enc, ptr + MINBPC, end, nextTokPtr);
-    do {
-      switch (BYTE_TYPE(enc, ptr)) {
-      MULTIBYTE_CASES(ptr, end, (*nextTokPtr = ptr, XML_TOK_PROLOG_CHARS))
-      INVALID_CASES(ptr, nextTokPtr)
-      case BT_APOS:
-      case BT_QUOT:
-      case BT_LT:
-	*nextTokPtr = ptr;
-	return XML_TOK_PROLOG_CHARS;
-      }
-    } while ((ptr += MINBPC) != end);
+  if (ptr == end)
+    return XML_TOK_PARTIAL;
+  if (CHAR_MATCHES(enc, ptr, '-'))
+    return PREFIX(scanComment)(enc, ptr + MINBPC, end, nextTokPtr);
+  /* FIXME check for <![ */
+  switch (BYTE_TYPE(enc, ptr)) {
+  case BT_NMSTRT:
+  case BT_HEX:
+    ptr += MINBPC;
+    break;
+  default:
     *nextTokPtr = ptr;
-    return XML_TOK_PROLOG_CHARS;
+    return XML_TOK_INVALID;
+  }
+  while (ptr != end) {
+    switch (BYTE_TYPE(enc, ptr)) {
+    case BT_PERCNT:
+      if (ptr + MINBPC == end)
+	return XML_TOK_PARTIAL;
+      /* don't allow <!ENTITY% foo "whatever"> */
+      switch (BYTE_TYPE(enc, ptr + MINBPC)) {
+      case BT_S: case BT_CR: case BT_LF: case BT_PERCNT:
+	*nextTokPtr = ptr;
+	return XML_TOK_INVALID;
+      }
+      /* fall through */
+    case BT_S: case BT_CR: case BT_LF:
+      *nextTokPtr = ptr;
+      return XML_TOK_DECL_OPEN;
+    case BT_NMSTRT:
+    case BT_HEX:
+      ptr += MINBPC;
+      break;
+    default:
+      *nextTokPtr = ptr;
+      return XML_TOK_INVALID;
+    }
   }
   return XML_TOK_PARTIAL;
 }
@@ -645,10 +666,70 @@ int PREFIX(contentTok)(const ENCODING *enc, const char *ptr, const char *end,
   return XML_TOK_DATA_CHARS;
 }
 
+/* ptr points to character following "%" */
+
+static
+int PREFIX(scanPercent)(const ENCODING *enc, const char *ptr, const char *end,
+			const char **nextTokPtr)
+{
+  if (ptr == end)
+    return XML_TOK_PARTIAL;
+  switch (BYTE_TYPE(enc, ptr)) {
+  CHECK_NMSTRT_CASES(end, ptr, end, nextTokPtr)
+  case BT_S: case BT_LF: case BT_CR: case BT_PERCNT:
+    *nextTokPtr = ptr;
+    return XML_TOK_PERCENT;
+  default:
+    *nextTokPtr = ptr;
+    return XML_TOK_INVALID;
+  }
+  while (ptr != end) {
+    switch (BYTE_TYPE(enc, ptr)) {
+    CHECK_NAME_CASES(enc, ptr, end, nextTokPtr)
+    case BT_SEMI:
+      *nextTokPtr = ptr + MINBPC;
+      return XML_TOK_PARAM_ENTITY_REF;
+    default:
+      *nextTokPtr = ptr;
+      return XML_TOK_INVALID;
+    }
+  }
+  return XML_TOK_PARTIAL;
+}
+
+static
+int PREFIX(scanPoundName)(const ENCODING *enc, const char *ptr, const char *end,
+			  const char **nextTokPtr)
+{
+  if (ptr == end)
+    return XML_TOK_PARTIAL;
+  switch (BYTE_TYPE(enc, ptr)) {
+  CHECK_NMSTRT_CASES(end, ptr, end, nextTokPtr)
+  default:
+    *nextTokPtr = ptr;
+    return XML_TOK_INVALID;
+  }
+  while (ptr != end) {
+    switch (BYTE_TYPE(enc, ptr)) {
+    CHECK_NAME_CASES(enc, ptr, end, nextTokPtr)
+    case BT_CR: case BT_LF: case BT_S:
+    case BT_RPAR: case BT_GT: case BT_PERCNT:
+      *nextTokPtr = ptr;
+      return XML_TOK_POUND_NAME;
+    default:
+      *nextTokPtr = ptr;
+      return XML_TOK_INVALID;
+    }
+  }
+  return XML_TOK_PARTIAL;
+}
+
+
 static
 int PREFIX(prologTok)(const ENCODING *enc, const char *ptr, const char *end,
 		      const char **nextTokPtr)
 {
+  int tok;
   if (ptr == end)
     return XML_TOK_NONE;
 #if MINBPC > 1
@@ -663,10 +744,9 @@ int PREFIX(prologTok)(const ENCODING *enc, const char *ptr, const char *end,
   }
 #endif
   switch (BYTE_TYPE(enc, ptr)) {
-  INVALID_CASES(ptr, nextTokPtr)
-  MULTIBYTE_CASES(ptr, end, XML_TOK_PARTIAL_CHAR)
   case BT_QUOT:
     {
+      /* FIXME multibyte, plus require S, > or % afterwards */
       for (ptr += MINBPC; ptr != end; ptr += MINBPC) {
 	if (BYTE_TYPE(enc, ptr) == BT_QUOT) {
 	  *nextTokPtr = ptr + MINBPC;
@@ -677,6 +757,7 @@ int PREFIX(prologTok)(const ENCODING *enc, const char *ptr, const char *end,
     }
   case BT_APOS:
     {
+      /* FIXME multibyte, plus require S, > or % afterwards */
       for (ptr += MINBPC; ptr != end; ptr += MINBPC) {
 	if (BYTE_TYPE(enc, ptr) == BT_APOS) {
 	  *nextTokPtr = ptr + MINBPC;
@@ -722,29 +803,126 @@ int PREFIX(prologTok)(const ENCODING *enc, const char *ptr, const char *end,
     }
     *nextTokPtr = ptr;
     return XML_TOK_PROLOG_S;
-  default:
+  case BT_PERCNT:
+    return PREFIX(scanPercent)(enc, ptr + MINBPC, end, nextTokPtr);
+  case BT_COMMA:
+    *nextTokPtr = ptr + MINBPC;
+    return XML_TOK_COMMA;
+  case BT_LSQB:
+    *nextTokPtr = ptr + MINBPC;
+    return XML_TOK_OPEN_BRACKET;
+  case BT_RSQB:
+    /* FIXME check for ]]> */
+    *nextTokPtr = ptr + MINBPC;
+    return XML_TOK_CLOSE_BRACKET;
+  case BT_LPAR:
+    *nextTokPtr = ptr + MINBPC;
+    return XML_TOK_OPEN_PAREN;
+  case BT_RPAR:
+    ptr += MINBPC;
+    if (ptr == end)
+      return XML_TOK_INVALID;
+    switch (BYTE_TYPE(enc, ptr)) {
+    case BT_AST:
+      *nextTokPtr = ptr + MINBPC;
+      return XML_TOK_CLOSE_PAREN_ASTERISK;
+    case BT_QUEST:
+      *nextTokPtr = ptr + MINBPC;
+      return XML_TOK_CLOSE_PAREN_QUESTION;
+    case BT_PLUS:
+      *nextTokPtr = ptr + MINBPC;
+      return XML_TOK_CLOSE_PAREN_PLUS;
+    }
+    *nextTokPtr = ptr;
+    return XML_TOK_CLOSE_PAREN;
+  case BT_VERBAR:
+    *nextTokPtr = ptr + MINBPC;
+    return XML_TOK_OR;
+  case BT_GT:
+    *nextTokPtr = ptr + MINBPC;
+    return XML_TOK_DECL_CLOSE;
+  case BT_NUM:
+    return PREFIX(scanPoundName)(enc, ptr + MINBPC, end, nextTokPtr);
+#define LEAD_CASE(n) \
+  case BT_LEAD ## n: \
+    if (end - ptr < n) \
+      return XML_TOK_PARTIAL_CHAR; \
+    if (IS_NMSTRT_CHAR(enc, ptr, n)) { \
+      ptr += n; \
+      tok = XML_TOK_NAME; \
+      break; \
+    } \
+    if (IS_NAME_CHAR(enc, ptr, n)) { \
+      ptr += n; \
+      tok = XML_TOK_NMTOKEN; \
+      break; \
+    } \
+    *nextTokPtr = ptr; \
+    return XML_TOK_INVALID;
+    LEAD_CASE(2) LEAD_CASE(3) LEAD_CASE(4) LEAD_CASE(5) LEAD_CASE(6)
+#undef LEAD_CASE
+  case BT_NMSTRT:
+  case BT_HEX:
+    tok = XML_TOK_NAME;
     ptr += MINBPC;
     break;
-  }
-  for (; ptr != end;) {
-    switch (BYTE_TYPE(enc, ptr)) {
-    case BT_LT:
-    case BT_QUOT:
-    case BT_APOS:
-    case BT_NONXML:
-    case BT_MALFORM:
-    case BT_TRAIL:
-    case BT_S: case BT_CR: case BT_LF:
-      *nextTokPtr = ptr;
-      return XML_TOK_PROLOG_CHARS;
-    MULTIBYTE_CASES(ptr, end, (*nextTokPtr = ptr, XML_TOK_PROLOG_CHARS))
-    default:
+  case BT_DIGIT:
+  case BT_NAME:
+  case BT_MINUS:
+    tok = XML_TOK_NMTOKEN;
+    ptr += MINBPC;
+    break;
+  case BT_NONASCII:
+    if (IS_NMSTRT_CHAR(enc, ptr, MINBPC)) {
       ptr += MINBPC;
+      tok = XML_TOK_NAME;
       break;
     }
+    if (IS_NAME_CHAR(enc, ptr, MINBPC)) {
+      ptr += MINBPC;
+      tok = XML_TOK_NMTOKEN;
+      break;
+    }
+    /* fall through */
+  default:
+    *nextTokPtr = ptr;
+    return XML_TOK_INVALID;
   }
-  *nextTokPtr = ptr;
-  return XML_TOK_PROLOG_CHARS;
+  while (ptr != end) {
+    switch (BYTE_TYPE(enc, ptr)) {
+    CHECK_NAME_CASES(enc, ptr, end, nextTokPtr)
+    case BT_GT: case BT_RPAR: case BT_COMMA:
+    case BT_VERBAR: case BT_LSQB: case BT_PERCNT:
+    case BT_S: case BT_CR: case BT_LF:
+      *nextTokPtr = ptr;
+      return tok;
+    case BT_PLUS:
+      if (tok != XML_TOK_NAME)  {
+	*nextTokPtr = ptr;
+	return XML_TOK_INVALID;
+      }
+      *nextTokPtr = ptr + MINBPC;
+      return XML_TOK_NAME_PLUS;
+    case BT_AST:
+      if (tok != XML_TOK_NAME)  {
+	*nextTokPtr = ptr;
+	return XML_TOK_INVALID;
+      }
+      *nextTokPtr = ptr + MINBPC;
+      return XML_TOK_NAME_ASTERISK;
+    case BT_QUEST:
+      if (tok != XML_TOK_NAME)  {
+	*nextTokPtr = ptr;
+	return XML_TOK_INVALID;
+      }
+      *nextTokPtr = ptr + MINBPC;
+      return XML_TOK_NAME_QUESTION;
+    default:
+      *nextTokPtr = ptr;
+      return XML_TOK_INVALID;
+    }
+  }
+  return XML_TOK_PARTIAL;
 }
 
 /* This must only be called for a well-formed start-tag or empty element tag.
@@ -859,6 +1037,31 @@ int PREFIX(sameName)(const ENCODING *enc, const char *ptr1, const char *ptr2)
     }
   }
   /* not reached */
+}
+
+static
+int PREFIX(nameMatchesAscii)(const ENCODING *enc, const char *ptr1, const char *ptr2)
+{
+  for (; *ptr2; ptr1 += MINBPC, ptr2++) {
+    if (!CHAR_MATCHES(end, ptr1, *ptr2))
+      return 0;
+  }
+  switch (BYTE_TYPE(enc, ptr1)) {
+  case BT_LEAD2:
+  case BT_LEAD3:
+  case BT_LEAD4:
+  case BT_LEAD5:
+  case BT_LEAD6:
+  case BT_NONASCII:
+  case BT_NMSTRT:
+  case BT_HEX:
+  case BT_DIGIT:
+  case BT_NAME:
+  case BT_MINUS:
+    return 0;
+  default:
+    return 1;
+  }
 }
 
 static

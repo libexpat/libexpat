@@ -1,18 +1,3 @@
-/* TODO
-
-Provide method to get name length.
-
-Provide methods to convert to any of UTF-8, UTF-18, UCS-4.
-
-Tokenize prologs in a way useful for well-formedness checking
-
-<!NAME
-NMTOKEN
-NAME
-PEREF
-
-*/
-
 #ifdef _MSC_VER
 #define XMLTOKAPI __declspec(dllexport)
 #endif
@@ -80,7 +65,7 @@ struct normal_encoding {
 #undef IS_NMSTRT_CHAR
 
 const struct normal_encoding utf8_encoding = {
-  { { PREFIX(prologTok), PREFIX(contentTok) }, PREFIX(sameName), PREFIX(getAtts), PREFIX(updatePosition), 1 },
+  { { PREFIX(prologTok), PREFIX(contentTok) }, PREFIX(sameName), PREFIX(nameMatchesAscii), PREFIX(getAtts), PREFIX(updatePosition), 1 },
 #include "asciitab.h"
 #include "utf8tab.h"
 };
@@ -129,7 +114,7 @@ static int unicode_byte_type(char hi, char lo)
 #undef IS_NMSTRT_CHAR
 
 const struct encoding little2_encoding = {
- { PREFIX(prologTok), PREFIX(contentTok) }, PREFIX(sameName), PREFIX(getAtts), PREFIX(updatePosition), 2
+ { PREFIX(prologTok), PREFIX(contentTok) }, PREFIX(sameName), PREFIX(nameMatchesAscii), PREFIX(getAtts), PREFIX(updatePosition), 2
 };
 
 #undef PREFIX
@@ -154,7 +139,7 @@ const struct encoding little2_encoding = {
 #undef IS_NMSTRT_CHAR
 
 const struct encoding big2_encoding = {
- { PREFIX(prologTok), PREFIX(contentTok) }, PREFIX(sameName), PREFIX(getAtts), PREFIX(updatePosition), 2
+ { PREFIX(prologTok), PREFIX(contentTok) }, PREFIX(sameName), PREFIX(nameMatchesAscii), PREFIX(getAtts), PREFIX(updatePosition), 2
 };
 
 #undef PREFIX

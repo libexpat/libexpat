@@ -38,8 +38,28 @@ of the prolog and is also returned by XmlContentTok */
 
 /* The following tokens are returned only by XmlPrologTok */
 #define XML_TOK_LITERAL 13
-#define XML_TOK_PROLOG_CHARS 14
+#define XML_TOK_PARAM_ENTITY_REF 14
 #define XML_TOK_PROLOG_S 15
+#define XML_TOK_DECL_OPEN 16 /* <!foo */
+#define XML_TOK_DECL_CLOSE 17 /* > */
+#define XML_TOK_NAME 18
+#define XML_TOK_NMTOKEN 19
+#define XML_TOK_POUND_NAME 20 /* #name */
+#define XML_TOK_COMMA 21
+#define XML_TOK_OR 22 /* | */
+#define XML_TOK_PERCENT 23
+#define XML_TOK_OPEN_PAREN 24
+#define XML_TOK_CLOSE_PAREN 25
+#define XML_TOK_OPEN_BRACKET 26
+#define XML_TOK_CLOSE_BRACKET 27
+#define XML_TOK_CLOSE_PAREN_QUESTION 28 /* )? */
+#define XML_TOK_CLOSE_PAREN_ASTERISK 29 /* )* */
+#define XML_TOK_CLOSE_PAREN_PLUS 30 /* )+ */
+#define XML_TOK_NAME_QUESTION 31 /* name? */
+#define XML_TOK_NAME_ASTERISK 32 /* name* */
+#define XML_TOK_NAME_PLUS 33 /* name+ */
+#define XML_TOK_COND_SECT_OPEN 34 /* <![ */
+#define XML_TOK_COND_SECT_CLOSE 35 /* ]]> */
 
 #define XML_NSTATES 2
 #define XML_PROLOG_STATE 0
@@ -61,6 +81,8 @@ typedef struct encoding {
 			       const char **);
   int (*sameName)(const struct encoding *,
 	          const char *, const char *);
+  int (*nameMatchesAscii)(const struct encoding *,
+			  const char *, const char *);
   int (*getAtts)(const struct encoding *enc, const char *ptr,
 	         int attsMax, const char **atts);
   void (*updatePosition)(const struct encoding *,
@@ -101,6 +123,7 @@ literals, comments and processing instructions.
    XmlTok(enc, XML_CONTENT_STATE, ptr, end, nextTokPtr)
 
 #define XmlSameName(enc, ptr1, ptr2) (((enc)->sameName)(enc, ptr1, ptr2))
+#define XmlNameMatchesAscii(enc, ptr1, ptr2) (((enc)->nameMatchesAscii)(enc, ptr1, ptr2))
 
 #define XmlGetAttributes(enc, ptr, attsMax, atts) \
   (((enc)->getAtts)(enc, ptr, attsMax, atts))

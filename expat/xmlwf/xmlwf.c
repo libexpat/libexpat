@@ -51,6 +51,7 @@ int doFile(const char *name)
   if (result) {
     static const char *message[] = {
       0,
+      "DOCTYPE declaration ignored",
       "out of memory",
       "no element found",
       "invalid token",
@@ -63,7 +64,7 @@ int doFile(const char *name)
     fprintf(stderr, "%s:", name);
     if (badPtr != 0)
       fprintf(stderr, "%lu:%lu:", badLine+1, badCol);
-    fprintf(stderr, "E: %s", message[result]);
+    fprintf(stderr, "%c: %s", (result == wellFormedOutsideDtd ? 'W' : 'E'), message[result]);
     putc('\n', stderr);
     ret = 1;
   }

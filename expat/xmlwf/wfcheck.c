@@ -10,7 +10,7 @@
 
 static
 int skipProlog(const char **s, const char *end, const char **nextTokP,
-	       const ENCODING **enc);
+	       const ENCODING **enc, const char **doctypeP);
 static
 void setPosition(const ENCODING *enc,
 		 const char *start, const char *end,
@@ -26,6 +26,7 @@ wfCheck(const char *s, size_t n,
   const char *end = s + n;
   const char *next;
   const ENCODING *enc;
+  const char *doctype = 0;
   size_t stackSize = 1024;
   size_t level = 0;
   int tok;
@@ -35,7 +36,7 @@ wfCheck(const char *s, size_t n,
 #define RETURN_CLEANUP(n) return (free((void *)startName), free((void *)atts), (n))
   if (!startName)
     return noMemory;
-  tok = skipProlog(&s, end, &next, &enc);
+  tok = skipProlog(&s, end, &next, &enc, &doctype);
   for (;;) {
     switch (tok) {
     case XML_TOK_NONE:
@@ -114,6 +115,10 @@ wfCheck(const char *s, size_t n,
 	tok = XmlPrologTok(enc, s, end, &next);
 	switch (tok) {
 	case XML_TOK_NONE:
+	  if (doctype) {
+	    setPosition(enc, start, doctype, badPtr, badLine, badCol);
+	    RETURN_CLEANUP(wellFormedOutsideDtd);
+	  }
 	  RETURN_CLEANUP(wellFormed);
 	case XML_TOK_PROLOG_S:
 	case XML_TOK_COMMENT:
@@ -138,11 +143,13 @@ wfCheck(const char *s, size_t n,
 
 static
 int skipProlog(const char **startp, const char *end,
-	       const char **nextTokP, const ENCODING **enc)
+	       const char **nextTokP, const ENCODING **enc,
+	       const char **doctypeP)
 {
   const char *s = *startp;
   INIT_ENCODING initEnc;
   XmlInitEncoding(&initEnc, enc);
+  *doctypeP = 0;
   for (;;) {
     int tok = XmlPrologTok(*enc, s, end, nextTokP);
     switch (tok) {
@@ -155,7 +162,25 @@ int skipProlog(const char **startp, const char *end,
     case XML_TOK_PARTIAL:
       *startp = s;
       return tok;
+    case XML_TOK_DECL_OPEN:
+      if (!*doctypeP) {
+	if (XmlNameMatchesAscii(*enc, s + 2 * (*enc)->minBytesPerChar, "DOCTYPE"))
+	  *doctypeP = s;
+	else {
+	  *startp = s;
+	  return XML_TOK_INVALID;
+	}
+      }
+      break;
+    case XML_TOK_PROLOG_S:
+    case XML_TOK_LITERAL:
+    case XML_TOK_COMMENT:
+      break;
     default:
+      if (!*doctypeP) {
+	*startp = s;
+	return XML_TOK_INVALID;
+      }
       break;
     }
     s = *nextTokP;
