@@ -586,6 +586,7 @@ showVersion(XML_Char *prog)
 {
   XML_Char *s = prog;
   XML_Char ch;
+  const char **features = XML_GetFeatureList();
   while ((ch = *s) != 0) {
     if (ch == '/'
 #ifdef WIN32
@@ -595,7 +596,18 @@ showVersion(XML_Char *prog)
       prog = s + 1;
     ++s;
   }
-  ftprintf(stdout, T("%s using %s\n"), prog, XML_ExpatVersion());
+  ftprintf(stdout, T("%s using %s"), prog, XML_ExpatVersion());
+  if (features[0] == NULL)
+    ftprintf(stdout, T("\n"));
+  else {
+    int i = 1;
+    ftprintf(stdout, T(" (%s"), features[0]);
+    while (features[i] != NULL) {
+      ftprintf(stdout, T(", %s"), features[i]);
+      ++i;
+    }
+    ftprintf(stdout, T(")\n"));
+  }
 }
 
 static void
