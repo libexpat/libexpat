@@ -363,17 +363,17 @@ START_TEST(test_utf16_le_epilog_newline)
 }
 END_TEST
 
-/* Regression test for SF bug #481609. */
+/* Regression test for SF bug #481609, #774028. */
 START_TEST(test_latin1_umlauts)
 {
     char *text =
         "<?xml version='1.0' encoding='iso-8859-1'?>\n"
-        "<e a='ä ö ü &#228; &#246; &#252; &#x00E4; &#x0F6; &#xFC;'\n"
-        "  >ä ö ü &#228; &#246; &#252; &#x00E4; &#x0F6; &#xFC;</e>";
+        "<e a='ä ö ü &#228; &#246; &#252; &#x00E4; &#x0F6; &#xFC; >'\n"
+        "  >ä ö ü &#228; &#246; &#252; &#x00E4; &#x0F6; &#xFC; ></e>";
     char *utf8 =
         "\xC3\xA4 \xC3\xB6 \xC3\xBC "
         "\xC3\xA4 \xC3\xB6 \xC3\xBC "
-        "\xC3\xA4 \xC3\xB6 \xC3\xBC";
+        "\xC3\xA4 \xC3\xB6 \xC3\xBC >";
     run_character_check(text, utf8);
     XML_ParserReset(parser, NULL);
     run_attribute_check(text, utf8);
