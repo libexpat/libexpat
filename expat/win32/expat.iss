@@ -51,6 +51,7 @@ CopyMode: alwaysoverwrite; Source: lib\*.dsp;                  DestDir: "{app}\S
 CopyMode: alwaysoverwrite; Source: examples\*.c;               DestDir: "{app}\Source\examples"
 CopyMode: alwaysoverwrite; Source: examples\*.dsp;             DestDir: "{app}\Source\examples"
 CopyMode: alwaysoverwrite; Source: tests\*.c;                  DestDir: "{app}\Source\tests"
+CopyMode: alwaysoverwrite; Source: tests\*.cpp;                DestDir: "{app}\Source\tests"
 CopyMode: alwaysoverwrite; Source: tests\*.h;                  DestDir: "{app}\Source\tests"
 CopyMode: alwaysoverwrite; Source: tests\README.txt;           DestDir: "{app}\Source\tests"
 CopyMode: alwaysoverwrite; Source: xmlwf\*.c*;                 DestDir: "{app}\Source\xmlwf"
