@@ -11,6 +11,8 @@ static void
 basic_setup(void)
 {
     parser = XML_ParserCreate("us-ascii");
+    if (parser == NULL)
+        fail("Parser not created.");
 }
 
 static void
@@ -26,9 +28,6 @@ START_TEST(test_nul_byte)
 {
     char *text = "<doc>\0</doc>";
 
-    if (parser == NULL)
-        fail("Parser not created.");
-
     /* test that a NUL byte (in US-ASCII data) is an error */
     if (XML_Parse(parser, text, 12, 1))
         fail("Parser did not report error on NUL-byte.");
@@ -41,9 +40,6 @@ END_TEST
 START_TEST(test_u0000_char)
 {
     char *text = "<doc>&#0;</doc>";
-
-    if (parser == NULL)
-        fail("Parser not created.");
 
     /* test that a NUL byte (in US-ASCII data) is an error */
     if (XML_Parse(parser, text, strlen(text), 1))
@@ -60,9 +56,6 @@ START_TEST(test_xmldecl_misplaced)
         "\n"
         "<?xml version='1.0'?>\n"
         "<a>&eee;</a>";
-
-    if (parser == NULL)
-        fail("Parser not created.");
 
     if (!XML_Parse(parser, text, strlen(text), 1)) {
         fail_unless(XML_GetErrorCode(parser) == XML_ERROR_MISPLACED_XML_PI,
@@ -83,12 +76,12 @@ make_basic_suite(void)
     TCase *tc_xmldecl = tcase_create("XML declaration");
 
     suite_add_tcase(s, tc_nulls);
-    tcase_set_fixture(tc_nulls, basic_setup, basic_teardown);
+    tcase_add_checked_fixture(tc_nulls, basic_setup, basic_teardown);
     tcase_add_test(tc_nulls, test_nul_byte);
     tcase_add_test(tc_nulls, test_u0000_char);
 
     suite_add_tcase(s, tc_xmldecl);
-    tcase_set_fixture(tc_xmldecl, basic_setup, basic_teardown);
+    tcase_add_checked_fixture(tc_xmldecl, basic_setup, basic_teardown);
     tcase_add_test(tc_xmldecl, test_xmldecl_misplaced);
 
     return s;
@@ -99,16 +92,16 @@ int
 main(int argc, char *argv[])
 {
     int nf;
-    int verbosity = CRNORMAL;
+    int verbosity = CK_NORMAL;
     Suite *s = make_basic_suite();
     SRunner *sr = srunner_create(s);
 
     if (argc >= 2) {
         char *opt = argv[1];
         if (strcmp(opt, "-v") == 0 || strcmp(opt, "--verbose") == 0)
-            verbosity = CRVERBOSE;
+            verbosity = CK_VERBOSE;
         else if (strcmp(opt, "-q") == 0 || strcmp(opt, "--quiet") == 0)
-            verbosity = CRSILENT;
+            verbosity = CK_SILENT;
     }
     srunner_run_all(sr, verbosity);
     nf = srunner_ntests_failed(sr);
