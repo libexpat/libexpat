@@ -65,7 +65,7 @@ typedef struct XML_cp XML_Content;
 struct XML_cp {
   enum XML_Content_Type		type;
   enum XML_Content_Quant	quant;
-  const XML_Char *		name;
+  XML_Char *			name;
   unsigned int			numchildren;
   XML_Content *			children;
 };
