@@ -1216,7 +1216,7 @@ START_TEST(test_ns_prefix_with_empty_uri_1)
         "</doc>";
 
     expect_failure(text,
-                   XML_ERROR_SYNTAX,
+                   XML_ERROR_UNDECLARING_PREFIX,
                    "Did not report re-setting namespace"
                    " URI with prefix to ''.");
 }
@@ -1230,7 +1230,7 @@ START_TEST(test_ns_prefix_with_empty_uri_2)
         "<docelem xmlns:pre=''/>";
 
     expect_failure(text,
-                   XML_ERROR_SYNTAX,
+                   XML_ERROR_UNDECLARING_PREFIX,
                    "Did not report setting namespace URI with prefix to ''.");
 }
 END_TEST
@@ -1247,7 +1247,7 @@ START_TEST(test_ns_prefix_with_empty_uri_3)
         "<doc/>";
 
     expect_failure(text,
-                   XML_ERROR_SYNTAX,
+                   XML_ERROR_UNDECLARING_PREFIX,
                    "Didn't report attr default setting NS w/ prefix to ''.");
 }
 END_TEST
