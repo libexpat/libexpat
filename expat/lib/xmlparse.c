@@ -1441,7 +1441,7 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal)
 
     /* If data are left over from last buffer, and we now know that these
        data are the final chunk of input, then we have to check them again
-       to detect errors based on this information.
+       to detect errors based on that fact.
     */
     errorCode = processor(parser, bufferPtr, parseEndPtr, &bufferPtr);
 
@@ -1495,7 +1495,6 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal)
     }
 
     XmlUpdatePosition(encoding, positionPtr, end, &position);
-    positionPtr = end;
     nLeftOver = s + len - end;
     if (nLeftOver) {
       if (buffer == NULL || nLeftOver > bufferLim - buffer) {
@@ -1518,9 +1517,13 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal)
         bufferLim = buffer + len * 2;
       }
       memcpy(buffer, end, nLeftOver);
-      bufferPtr = buffer;
-      bufferEnd = buffer + nLeftOver;
     }
+    bufferPtr = buffer;
+    bufferEnd = buffer + nLeftOver;
+    positionPtr = bufferPtr;
+    parseEndPtr = bufferEnd;
+    eventPtr = bufferPtr;
+    eventEndPtr = bufferPtr;
     return result;
   }
 #endif  /* not defined XML_CONTEXT_BYTES */
