@@ -1,5 +1,7 @@
-/* Copyright (c) 1998, 1999 Thai Open Source Software Center Ltd
-See the file copying.txt for copying permission. */
+/*
+Copyright (c) 1998, 1999 Thai Open Source Software Center Ltd
+See the file copying.txt for copying permission.
+*/
 
 #include <string.h>
 #include <stdio.h>
@@ -222,6 +224,7 @@ struct range nmstrt[] = {
   { 0x3021, 0x3029 },
 };
 
+/* name chars that are not name start chars */
 struct range name[] = {
   { '.' },
   { '-' },

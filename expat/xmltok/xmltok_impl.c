@@ -1,5 +1,7 @@
-/* Copyright (c) 1998, 1999 Thai Open Source Software Center Ltd
-See the file copying.txt for copying permission. */
+/*
+Copyright (c) 1998, 1999 Thai Open Source Software Center Ltd
+See the file copying.txt for copying permission.
+*/
 
 #ifndef IS_INVALID_CHAR
 #define IS_INVALID_CHAR(enc, ptr, n) (0)
@@ -83,6 +85,7 @@ See the file copying.txt for copying permission. */
 #define PREFIX(ident) ident
 #endif
 
+/* ptr points to character following "<!-" */
 
 static
 int PREFIX(scanComment)(const ENCODING *enc, const char *ptr, const char *end,
@@ -120,6 +123,7 @@ int PREFIX(scanComment)(const ENCODING *enc, const char *ptr, const char *end,
   return XML_TOK_PARTIAL;
 }
 
+/* ptr points to character following "<!" */
 
 static
 int PREFIX(scanDecl)(const ENCODING *enc, const char *ptr, const char *end,
@@ -210,6 +214,7 @@ int PREFIX(checkPiTarget)(const ENCODING *enc, const char *ptr, const char *end,
   return 1;
 }
 
+/* ptr points to character following "<?" */
 
 static
 int PREFIX(scanPi)(const ENCODING *enc, const char *ptr, const char *end,
@@ -369,6 +374,7 @@ int PREFIX(cdataSectionTok)(const ENCODING *enc, const char *ptr, const char *en
   return XML_TOK_DATA_CHARS;
 }
 
+/* ptr points to character following "</" */
 
 static
 int PREFIX(scanEndTag)(const ENCODING *enc, const char *ptr, const char *end,
@@ -416,6 +422,7 @@ int PREFIX(scanEndTag)(const ENCODING *enc, const char *ptr, const char *end,
   return XML_TOK_PARTIAL;
 }
 
+/* ptr points to character following "&#X" */
 
 static
 int PREFIX(scanHexCharRef)(const ENCODING *enc, const char *ptr, const char *end,
@@ -447,6 +454,7 @@ int PREFIX(scanHexCharRef)(const ENCODING *enc, const char *ptr, const char *end
   return XML_TOK_PARTIAL;
 }
 
+/* ptr points to character following "&#" */
 
 static
 int PREFIX(scanCharRef)(const ENCODING *enc, const char *ptr, const char *end,
@@ -478,6 +486,7 @@ int PREFIX(scanCharRef)(const ENCODING *enc, const char *ptr, const char *end,
   return XML_TOK_PARTIAL;
 }
 
+/* ptr points to character following "&" */
 
 static
 int PREFIX(scanRef)(const ENCODING *enc, const char *ptr, const char *end,
@@ -507,6 +516,7 @@ int PREFIX(scanRef)(const ENCODING *enc, const char *ptr, const char *end,
   return XML_TOK_PARTIAL;
 }
 
+/* ptr points to character following first character of attribute name */
 
 static
 int PREFIX(scanAtts)(const ENCODING *enc, const char *ptr, const char *end,
@@ -666,6 +676,7 @@ int PREFIX(scanAtts)(const ENCODING *enc, const char *ptr, const char *end,
   return XML_TOK_PARTIAL;
 }
 
+/* ptr points to character following "<" */
 
 static
 int PREFIX(scanLt)(const ENCODING *enc, const char *ptr, const char *end,
@@ -863,6 +874,7 @@ int PREFIX(contentTok)(const ENCODING *enc, const char *ptr, const char *end,
   return XML_TOK_DATA_CHARS;
 }
 
+/* ptr points to character following "%" */
 
 static
 int PREFIX(scanPercent)(const ENCODING *enc, const char *ptr, const char *end,
@@ -1400,6 +1412,7 @@ int PREFIX(isPublicId)(const ENCODING *enc, const char *ptr, const char *end,
   return 1;
 }
 
+/* This must only be called for a well-formed start-tag or empty element tag.
 Returns the number of attributes.  Pointers to the first attsMax attributes 
 are stored in atts. */
 

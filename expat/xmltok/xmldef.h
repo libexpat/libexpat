@@ -1,5 +1,7 @@
-/* Copyright (c) 1998, 1999 Thai Open Source Software Center Ltd
-See the file copying.txt for copying permission. */
+/*
+Copyright (c) 1998, 1999 Thai Open Source Software Center Ltd
+See the file copying.txt for copying permission.
+*/
 
 #include <string.h>
 
@@ -21,6 +23,7 @@ See the file copying.txt for copying permission. */
 
 #endif /* not XML_WINLIB */
 
+/* This file can be used for any definitions needed in
 particular environments. */
 
 #ifdef MOZILLA

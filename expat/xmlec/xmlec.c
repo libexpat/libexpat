@@ -1,5 +1,3 @@
-/* Copyright (c) 1998, 1999 Thai Open Source Software Center Ltd
-See the file copying.txt for copying permission. */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

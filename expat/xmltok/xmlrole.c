@@ -1,14 +1,18 @@
-/* Copyright (c) 1998, 1999 Thai Open Source Software Center Ltd
-See the file copying.txt for copying permission. */
+/*
+Copyright (c) 1998, 1999 Thai Open Source Software Center Ltd
+See the file copying.txt for copying permission.
+*/
 
 #include "xmldef.h"
 #include "xmlrole.h"
 #include "ascii.h"
 
+/* Doesn't check:
 
  that ,| are not mixed in a model group
  content of literals
 
+*/
 
 static const char KW_ANY[] = { ASCII_A, ASCII_N, ASCII_Y, '\0' };
 static const char KW_ATTLIST[] = { ASCII_A, ASCII_T, ASCII_T, ASCII_L, ASCII_I, ASCII_S, ASCII_T, '\0' };
@@ -846,6 +850,7 @@ int attlist7(PROLOG_STATE *state,
   return common(state, tok);
 }
 
+/* default value */
 static
 int attlist8(PROLOG_STATE *state,
 	     int tok,

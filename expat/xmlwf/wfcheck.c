@@ -1,5 +1,3 @@
-/* Copyright (c) 1998, 1999 Thai Open Source Software Center Ltd
-See the file copying.txt for copying permission. */
 #include <stdlib.h>
 #include <string.h>
 
@@ -356,6 +354,7 @@ int attcmp(const void *p1, const void *p2)
     return 1;
 }
 
+/* Note that this trashes the attribute values. */
 
 static enum WfCheckResult
 checkAttributeUniqueness(CONTEXT *context, const ENCODING *enc, int nAtts,

@@ -1,5 +1,7 @@
-/* Copyright (c) 1998, 1999 Thai Open Source Software Center Ltd
-See the file copying.txt for copying permission. */
+/*
+Copyright (c) 1998, 1999 Thai Open Source Software Center Ltd
+See the file copying.txt for copying permission.
+*/
 
 #define XML_MAP_FILE 01
 #define XML_EXTERNAL_ENTITIES 02

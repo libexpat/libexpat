@@ -1,5 +1,7 @@
-/* Copyright (c) 1998, 1999 Thai Open Source Software Center Ltd
-See the file copying.txt for copying permission. */
+/*
+Copyright (c) 1998, 1999 Thai Open Source Software Center Ltd
+See the file copying.txt for copying permission.
+*/
 
 #include "xmldef.h"
 #include "xmlparse.h"
@@ -40,6 +42,7 @@ typedef char ICHAR;
 #define XML_T(x) x
 #endif
 
+/* Round up n to be a multiple of sz, where sz is a power of 2. */
 #define ROUND_UP(n, sz) (((n) + ((sz) - 1)) & ~((sz) - 1))
 
 #include "xmltok.h"
@@ -127,6 +130,7 @@ typedef struct {
   XML_Char *start;
 } STRING_POOL;
 
+/* The XML_Char before the name is used to determine whether
 an attribute has been specified. */
 typedef struct attribute_id {
   XML_Char *name;
@@ -1569,6 +1573,7 @@ doContent(XML_Parser parser,
   /* not reached */
 }
 
+/* If tagNamePtr is non-null, build a real list of attributes,
 otherwise just check the attributes for well-formedness. */
 
 static enum XML_Error storeAtts(XML_Parser parser, const ENCODING *enc,
@@ -1843,6 +1848,7 @@ int addBinding(XML_Parser parser, PREFIX *prefix, const ATTRIBUTE_ID *attId, con
   return 1;
 }
 
+/* The idea here is to avoid using stack for each CDATA section when
 the whole file is parsed with one call. */
 
 static
@@ -1859,6 +1865,7 @@ enum XML_Error cdataSectionProcessor(XML_Parser parser,
   return result;
 }
 
+/* startPtr gets set to non-null is the section is closed, and to null if
 the section is not yet closed. */
 
 static
@@ -1954,6 +1961,7 @@ enum XML_Error doCdataSection(XML_Parser parser,
 
 #ifdef XML_DTD
 
+/* The idea here is to avoid using stack for each IGNORE section when
 the whole file is parsed with one call. */
 
 static
@@ -1970,6 +1978,7 @@ enum XML_Error ignoreSectionProcessor(XML_Parser parser,
   return result;
 }
 
+/* startPtr gets set to non-null is the section is closed, and to null if
 the section is not yet closed. */
 
 static
@@ -3420,6 +3429,7 @@ static void dtdDestroy(DTD *p)
   poolDestroy(&(p->pool));
 }
 
+/* Do a deep copy of the DTD.  Return 0 for out of memory; non-zero otherwise.
 The new DTD has already been initialized. */
 
 static int dtdCopy(DTD *newDtd, const DTD *oldDtd)

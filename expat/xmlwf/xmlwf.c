@@ -1,5 +1,7 @@
-/* Copyright (c) 1998, 1999 Thai Open Source Software Center Ltd
-See the file copying.txt for copying permission. */
+/*
+Copyright (c) 1998, 1999 Thai Open Source Software Center Ltd
+See the file copying.txt for copying permission.
+*/
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -15,6 +17,7 @@ See the file copying.txt for copying permission. */
 #include <crtdbg.h>
 #endif
 
+/* This ensures proper sorting. */
 
 #define NSSEP T('\001')
 
@@ -100,6 +103,7 @@ static void attributeValue(FILE *fp, const XML_Char *s)
   }
 }
 
+/* Lexicographically comparing UTF-8 encoded attribute values,
 is equivalent to lexicographically comparing based on the character number. */
 
 static int attcmp(const void *att1, const void *att2)
