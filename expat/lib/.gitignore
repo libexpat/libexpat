@@ -3,3 +3,8 @@ Makefile
 *.lo
 *.la
 expat.h
+Debug
+Release
+expat.ncb
+expat.opt
+expat.plg
