@@ -549,7 +549,7 @@ Returns zero if out of memory, non-zero otherwise. */
 int XMLPARSEAPI
 XML_SetBase(XML_Parser parser, const XML_Char *base);
 
-const XML_Char  XMLPARSEAPI *
+const XML_Char * XMLPARSEAPI
 XML_GetBase(XML_Parser parser);
 
 /* Returns the number of the attribute/value pairs passed in last call
@@ -575,7 +575,7 @@ len may be zero for this call (or any other). */
 int XMLPARSEAPI
 XML_Parse(XML_Parser parser, const char *s, int len, int isFinal);
 
-void XMLPARSEAPI *
+void * XMLPARSEAPI
 XML_GetBuffer(XML_Parser parser, int len);
 
 int XMLPARSEAPI
@@ -691,7 +691,7 @@ XML_GetCurrentByteCount(XML_Parser parser);
    NOTE: The character pointer returned should not be used outside
    the handler that makes the call. */
 
-const char XMLPARSEAPI *
+const char * XMLPARSEAPI
 XML_GetInputContext(XML_Parser parser,
 		    int *offset,
 		    int *size);
@@ -706,11 +706,11 @@ void XMLPARSEAPI
 XML_ParserFree(XML_Parser parser);
 
 /* Returns a string describing the error. */
-const XML_LChar XMLPARSEAPI *
+const XML_LChar * XMLPARSEAPI
 XML_ErrorString(int code);
 
 /* Return a string containing the version number of this expat */
-const XML_LChar XMLPARSEAPI *
+const XML_LChar * XMLPARSEAPI
 XML_ExpatVersion(void);
 
 typedef struct {
