@@ -209,8 +209,8 @@ XML_ParserCreate(const XML_Char *encoding);
    URI, the namespace separator character, and the local part of the
    name.  If the namespace separator is '\0' then the namespace URI
    and the local part will be concatenated without any separator.
-   When a namespace is not declared, the name and prefix will be
-   passed through without expansion.
+   It is a programming error to use the separator '\0' with namespace
+   triplets (see XML_SetReturnNSTriplet).
 */
 XMLPARSEAPI(XML_Parser)
 XML_ParserCreateNS(const XML_Char *encoding, XML_Char namespaceSeparator);
