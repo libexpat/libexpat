@@ -65,6 +65,9 @@ extern "C" {
 #define XML_TOK_CLOSE_PAREN_PLUS 37 /* )+ */
 #define XML_TOK_COMMA 38
 
+  /* The following tokens is returned only by XmlAttributeValueTok */
+#define XML_TOK_ATTRIBUTE_VALUE_S 39
+
 #define XML_N_STATES 2
 #define XML_PROLOG_STATE 0
 #define XML_CONTENT_STATE 1

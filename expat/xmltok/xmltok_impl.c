@@ -1066,6 +1066,13 @@ int PREFIX(attributeValueTok)(const ENCODING *enc, const char *ptr, const char *
       }
       *nextTokPtr = ptr;
       return XML_TOK_DATA_CHARS;
+    case BT_S:
+      if (ptr == start) {
+	*nextTokPtr = ptr + MINBPC;
+	return XML_TOK_ATTRIBUTE_VALUE_S;
+      }
+      *nextTokPtr = ptr;
+      return XML_TOK_DATA_CHARS;
     default:
       ptr += MINBPC;
       break;
@@ -1225,12 +1232,23 @@ int PREFIX(getAtts)(const ENCODING *enc, const char *ptr,
     case BT_AMP:
       atts[nAtts].normalized = 0;
       break;
-    case BT_S: case BT_CR: case BT_LF:
+    case BT_S:
+      if (state == inName)
+        state = other;
+      else if (state == inValue
+	       && atts[nAtts].normalized
+	       && (ptr == atts[nAtts].valuePtr
+		   || BYTE_TO_ASCII(enc, ptr) != ' '
+		   || BYTE_TO_ASCII(enc, ptr + MINBPC) == ' '
+	           || BYTE_TYPE(enc, ptr + MINBPC) == open))
+	atts[nAtts].normalized = 0;
+      break;
+    case BT_CR: case BT_LF:
       /* This case ensures that the first attribute name is counted
          Apart from that we could just change state on the quote. */
       if (state == inName)
         state = other;
-      if (state == inValue)
+      else if (state == inValue)
 	atts[nAtts].normalized = 0;
       break;
     case BT_GT:
