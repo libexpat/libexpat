@@ -1877,7 +1877,10 @@ XML_ErrorString(enum XML_Error code)
     XML_L("parser not suspended"),
     XML_L("parsing aborted"),
     XML_L("parsing finished"),
-    XML_L("cannot suspend in external parameter entity")
+    XML_L("cannot suspend in external parameter entity"),
+    XML_L("reserved prefix (xml) must not be undeclared or bound to another namespace name"),
+    XML_L("reserved prefix (xmlns) must not be declared or undeclared"),
+    XML_L("prefix must not be bound to one of the reserved namespace names")
   };
   if (code > 0 && code < sizeof(message)/sizeof(message[0]))
     return message[code];
@@ -2931,8 +2934,64 @@ addBinding(XML_Parser parser, PREFIX *prefix, const ATTRIBUTE_ID *attId,
   if (*uri == XML_T('\0') && prefix->name)
     return XML_ERROR_UNDECLARING_PREFIX;
 
-  for (len = 0; uri[len]; len++)
-    ;
+  if (ns) {
+    static const XML_Char xmlNamespace[] = {
+      'h', 't', 't', 'p', ':', '/', '/',
+      'w', 'w', 'w', '.', 'w', '3', '.', 'o', 'r', 'g', '/',
+      'X', 'M', 'L', '/', '1', '9', '9', '8', '/',
+      'n', 'a', 'm', 'e', 's', 'p', 'a', 'c', 'e', '\0'
+    };
+    static const int xmlLen = 
+      (int)sizeof(xmlNamespace)/sizeof(XML_Char) - 1;
+    static const XML_Char xmlnsNamespace[] = {
+      'h', 't', 't', 'p', ':', '/', '/',
+      'w', 'w', 'w', '.', 'w', '3', '.', 'o', 'r', 'g', '/',
+      '2', '0', '0', '0', '/', 'x', 'm', 'l', 'n', 's', '/', '\0'
+    };
+    static const int xmlnsLen = 
+      (int)sizeof(xmlnsNamespace)/sizeof(XML_Char) - 1;
+
+    XML_Bool mustBeXML = XML_FALSE;
+    XML_Bool isXML = XML_TRUE;
+    XML_Bool isXMLNS = XML_TRUE;
+
+    if (prefix->name
+        && prefix->name[0] == XML_T('x')
+        && prefix->name[1] == XML_T('m')
+        && prefix->name[2] == XML_T('l')) {
+
+      /* Not allowed to bind xmlns */
+      if (prefix->name[3] == XML_T('n')
+          && prefix->name[4] == XML_T('s')
+          && prefix->name[5] == XML_T('\0'))
+        return XML_ERROR_RESERVED_PREFIX_XMLNS;
+
+      if (prefix->name[3] == XML_T('\0'))
+        mustBeXML = XML_TRUE;
+    }
+
+    for (len = 0; uri[len]; len++) {
+      if (isXML && (len > xmlLen || uri[len] != xmlNamespace[len]))
+        isXML = XML_FALSE;
+
+      if (!mustBeXML && isXMLNS 
+          && (len > xmlnsLen || uri[len] != xmlnsNamespace[len]))
+        isXMLNS = XML_FALSE;
+    }
+    isXML = isXML && len == xmlLen;
+    isXMLNS = isXMLNS && len == xmlnsLen;
+
+    if (mustBeXML != isXML)
+      return mustBeXML ? XML_ERROR_RESERVED_PREFIX_XML
+                       : XML_ERROR_RESERVED_NAMESPACE_URI;
+
+    if (isXMLNS)
+      return XML_ERROR_RESERVED_NAMESPACE_URI;
+  }
+  else
+    for (len = 0; uri[len]; len++)
+      ;
+
   if (namespaceSeparator)
     len++;
   if (freeBindingList) {
