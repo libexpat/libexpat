@@ -1391,7 +1391,8 @@ int PREFIX(getAtts)(const ENCODING *enc, const char *ptr,
 {
   enum { other, inName, inValue } state = inName;
   int nAtts = 0;
-  int open; /* defined when state == inValue */
+  int open = 0; /* defined when state == inValue;
+		   initialization just to shut up compilers */
 
   for (ptr += MINBPC(enc);; ptr += MINBPC(enc)) {
     switch (BYTE_TYPE(enc, ptr)) {
