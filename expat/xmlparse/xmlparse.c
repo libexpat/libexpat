@@ -2196,6 +2196,7 @@ doProlog(XML_Parser parser,
 	enum XML_Error result = processXmlDecl(parser, 0, s, next);
 	if (result != XML_ERROR_NONE)
 	  return result;
+	enc = encoding;
       }
       break;
 #ifdef XML_DTD
@@ -2204,6 +2205,7 @@ doProlog(XML_Parser parser,
 	enum XML_Error result = processXmlDecl(parser, 1, s, next);
 	if (result != XML_ERROR_NONE)
 	  return result;
+	enc = encoding;
       }
       break;
 #endif /* XML_DTD */
