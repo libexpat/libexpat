@@ -508,6 +508,19 @@ START_TEST(test_unknown_encoding_internal_entity)
 }
 END_TEST
 
+/* Test that no error is reported for unknown entities if we don't
+   read an external subset.  This was fixed in Expat 1.95.5.
+*/
+START_TEST(test_wfc_declared_entity_unread_external_subset) {
+    char *text =
+        "<!DOCTYPE doc SYSTEM 'foo'>\n"
+        "<doc>&entity;</doc>";
+
+    if (XML_Parse(parser, text, strlen(text), 1) == XML_STATUS_ERROR)
+        xml_failure(parser);
+}
+END_TEST
+
 
 /*
  * Namespaces tests.
@@ -690,6 +703,7 @@ make_basic_suite(void)
     tcase_add_test(tc_basic, test_attr_whitespace_normalization);
     tcase_add_test(tc_basic, test_xmldecl_misplaced);
     tcase_add_test(tc_basic, test_unknown_encoding_internal_entity);
+    tcase_add_test(tc_basic, test_wfc_declared_entity_unread_external_subset);
 
     suite_add_tcase(s, tc_namespace);
     tcase_add_checked_fixture(tc_namespace,
