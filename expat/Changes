@@ -1,3 +1,4 @@
+	- Changed default patterns in lib/Makefile.in to fit non-GNU makes
 	- The reference had the wrong label for XML_SetStartNamespaceDecl.
 	  Reported by an anonymous user.
 Release 1.95.0 Fri Sep 29 2000

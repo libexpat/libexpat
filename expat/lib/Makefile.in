@@ -105,7 +105,7 @@ all: $(LIBRARY)
 .SUFFIXES: .c .lo .o
 .PHONY: all clean distclean maintainer-clean
 
-%.o: %.c
+.c.o:
 	@echo '$(COMPILE) -c $<'; \
 	$(COMPILE) -Wp,-MD,.deps/$(*F).pp -c $<
 	@-cp .deps/$(*F).pp .deps/$(*F).P; \
@@ -114,7 +114,7 @@ all: $(LIBRARY)
 	    >> .deps/$(*F).P; \
 	rm .deps/$(*F).pp
 
-%.lo: %.c
+.c.lo:
 	@echo '$(LTCOMPILE) -c $<'; \
 	test -d .deps || mkdir .deps ; \
 	$(LTCOMPILE) -Wp,-MD,.deps/$(*F).pp -c $<
