@@ -4022,7 +4022,8 @@ epilogProcessor(XML_Parser parser,
     int tok = XmlPrologTok(encoding, s, end, &next);
     eventEndPtr = next;
     switch (tok) {
-    case -XML_TOK_PROLOG_S:
+    /* report partial linebreak - it might be the last token */
+    case -XML_TOK_PROLOG_S: 
       if (defaultHandler) {
         eventEndPtr = next;
         reportDefault(parser, encoding, s, next);

@@ -1011,6 +1011,7 @@ PREFIX(prologTok)(const ENCODING *enc, const char *ptr, const char *end,
   case BT_CR:
     if (ptr + MINBPC(enc) == end) {
       *nextTokPtr = end;
+      /* indicate that this might be part of a CR/LF pair */
       return -XML_TOK_PROLOG_S;
     }
     /* fall through */
