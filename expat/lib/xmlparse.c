@@ -224,6 +224,11 @@ typedef struct {
 } DEFAULT_ATTRIBUTE;
 
 typedef struct {
+  unsigned long hash;
+  const XML_Char *uriName;
+} NS_ATT;
+
+typedef struct {
   const XML_Char *name;
   PREFIX *prefix;
   const ATTRIBUTE_ID *idAtt;
@@ -499,6 +504,8 @@ struct XML_ParserStruct {
   int m_nSpecifiedAtts;
   int m_idAttIndex;
   ATTRIBUTE *m_atts;
+  NS_ATT *m_nsAtts;
+  int m_nsAttsSize;
   POSITION m_position;
   STRING_POOL m_tempPool;
   STRING_POOL m_temp2Pool;
@@ -601,6 +608,8 @@ struct XML_ParserStruct {
 #define attsSize (parser->m_attsSize)
 #define nSpecifiedAtts (parser->m_nSpecifiedAtts)
 #define idAttIndex (parser->m_idAttIndex)
+#define nsAtts (parser->m_nsAtts)
+#define nsAttsSize (parser->m_nsAttsSize)
 #define tempPool (parser->m_tempPool)
 #define temp2Pool (parser->m_temp2Pool)
 #define groupConnector (parser->m_groupConnector)
@@ -747,6 +756,9 @@ parserCreate(const XML_Char *encodingName,
   ns = XML_FALSE;
   ns_triplets = XML_FALSE;
 
+  nsAtts = NULL;
+  nsAttsSize = 0;
+
   poolInit(&tempPool, &(parser->m_mem));
   poolInit(&temp2Pool, &(parser->m_mem));
   parserInit(parser, encodingName);
@@ -868,8 +880,7 @@ XML_ParserReset(XML_Parser parser, const XML_Char *encodingName)
     freeTagList = tag;
   }
   moveToFreeBindingList(parser, inheritedBindings);
-  if (unknownEncodingMem)
-    FREE(unknownEncodingMem);
+  FREE(unknownEncodingMem);
   if (unknownEncodingRelease)
     unknownEncodingRelease(unknownEncodingData);
   poolClear(&tempPool);
@@ -1072,13 +1083,11 @@ XML_ParserFree(XML_Parser parser)
 #endif /* XML_DTD */
     dtdDestroy(_dtd, (XML_Bool)!parentParser, &parser->m_mem);
   FREE((void *)atts);
-  if (groupConnector)
-    FREE(groupConnector);
-  if (buffer)
-    FREE(buffer);
+  FREE(groupConnector);
+  FREE(buffer);
   FREE(dataBuf);
-  if (unknownEncodingMem)
-    FREE(unknownEncodingMem);
+  FREE(nsAtts);
+  FREE(unknownEncodingMem);
   if (unknownEncodingRelease)
     unknownEncodingRelease(unknownEncodingData);
   FREE(parser);
@@ -1660,7 +1669,8 @@ XML_ErrorString(enum XML_Error code)
     XML_L("unexpected parser state - please send a bug report"),
     XML_L("entity declared in parameter entity"),
     XML_L("requested feature requires XML_DTD support in Expat"),
-    XML_L("cannot change setting once parsing has begun")
+    XML_L("cannot change setting once parsing has begun"),
+    XML_L("unbound prefix")
   };
   if (code > 0 && code < sizeof(message)/sizeof(message[0]))
     return message[code];
@@ -2409,7 +2419,7 @@ storeAtts(XML_Parser parser, const ENCODING *enc,
                                          + XmlNameLength(enc, atts[i].name));
     if (!attId)
       return XML_ERROR_NO_MEMORY;
-    /* detect duplicate attributes */
+    /* detect duplicate attributes by their QNames */
     if ((attId->name)[-1]) {
       if (enc == encoding)
         eventPtr = atts[i].name;
@@ -2509,48 +2519,88 @@ storeAtts(XML_Parser parser, const ENCODING *enc,
   }
   appAtts[attIndex] = 0;
 
+  /* expand prefixed attribute names and
+     clear flags that say whether attributes were specified */
   i = 0;
   if (nPrefixes) {
-    /* expand prefixed attribute names */
+    int j;
+    if ((nPrefixes * 2) > nsAttsSize) {
+      NS_ATT *temp = (NS_ATT *)REALLOC(nsAtts, nPrefixes * 2 * sizeof(NS_ATT));
+      if (!temp)
+        return XML_ERROR_NO_MEMORY;
+      nsAtts = temp;
+      nsAttsSize = nPrefixes * 2;
+    }
+    /* clear nsAtts hash table */
+    for (j = 0; j < nsAttsSize; j++)
+      nsAtts[j].uriName = NULL;
+
     for (; i < attIndex; i += 2) {
-      if (appAtts[i][-1] == 2) {
+      const XML_Char *s = appAtts[i];
+      if (s[-1] == 2) {
         ATTRIBUTE_ID *id;
-        ((XML_Char *)(appAtts[i]))[-1] = 0;
-        id = (ATTRIBUTE_ID *)lookup(&dtd->attributeIds, appAtts[i], 0);
-        if (id->prefix->binding) {
-          int j;
-          const BINDING *b = id->prefix->binding;
-          const XML_Char *s = appAtts[i];
-          for (j = 0; j < b->uriLen; j++) {
-            if (!poolAppendChar(&tempPool, b->uri[j]))
-              return XML_ERROR_NO_MEMORY;
+        const BINDING *b;
+        unsigned long uriHash = 0;
+        ((XML_Char *)s)[-1] = 0;
+        id = (ATTRIBUTE_ID *)lookup(&dtd->attributeIds, s, 0);
+        b = id->prefix->binding;
+        if (!b) 
+          return XML_ERROR_UNBOUND_PREFIX;
+
+        /* b->uri includes namespace separator */
+        for (j = 0; j < b->uriLen; j++) {
+          const XML_Char c = b->uri[j];
+          if (!poolAppendChar(&tempPool, c))
+            return XML_ERROR_NO_MEMORY;
+          uriHash = (uriHash << 5) + uriHash + (unsigned char)c;
+        }
+        while (*s++ != XML_T(':'))
+          ;
+        do {
+          const XML_Char c = *s;
+          if (!poolAppendChar(&tempPool, *s))
+            return XML_ERROR_NO_MEMORY;
+          uriHash = (uriHash << 5) + uriHash + (unsigned char)c;
+        } while (*s++);
+
+        /* detect duplicate attributes based on uriName = uri + local name */
+        for (j = uriHash & (nsAttsSize - 1);
+             nsAtts[j].uriName; 
+             j == 0 ? j = nsAttsSize - 1 : --j) {
+          if (uriHash == nsAtts[j].hash) {
+            const XML_Char *s1 = poolStart(&tempPool); /* null-terminated */
+            const XML_Char *s2 = nsAtts[j].uriName;
+            for (; *s1 == *s2 && *s1 != 0; s1++, s2++);
+            if (*s1 == 0)
+              return XML_ERROR_DUPLICATE_ATTRIBUTE;
           }
-          while (*s++ != XML_T(':'))
-            ;
+        }
+
+        if (ns_triplets) {
+          tempPool.ptr[-1] = namespaceSeparator;
+          s = b->prefix->name;
           do {
             if (!poolAppendChar(&tempPool, *s))
               return XML_ERROR_NO_MEMORY;
           } while (*s++);
-          if (ns_triplets) {
-            tempPool.ptr[-1] = namespaceSeparator;
-            s = b->prefix->name;
-            do {
-              if (!poolAppendChar(&tempPool, *s))
-                return XML_ERROR_NO_MEMORY;
-            } while (*s++);
-          }
-
-          appAtts[i] = poolStart(&tempPool);
-          poolFinish(&tempPool);
         }
+
+        s = poolStart(&tempPool);
+        appAtts[i] = s;
+        poolFinish(&tempPool);
+
+        /* fill empty slot with new attribute */
+        nsAtts[j].hash = uriHash;
+        nsAtts[j].uriName = s;
+        
         if (!--nPrefixes)
           break;
       }
       else
-        ((XML_Char *)(appAtts[i]))[-1] = 0;
+        ((XML_Char *)s)[-1] = 0;
     }
   }
-  /* clear the flags that say whether attributes were specified */
+  /* clear flags for the remaining attributes */
   for (; i < attIndex; i += 2)
     ((XML_Char *)(appAtts[i]))[-1] = 0;
   for (binding = *bindingsPtr; binding; binding = binding->nextTagBinding)
@@ -2560,7 +2610,7 @@ storeAtts(XML_Parser parser, const ENCODING *enc,
   if (elementType->prefix) {
     binding = elementType->prefix->binding;
     if (!binding)
-      return XML_ERROR_NONE;
+      return XML_ERROR_UNBOUND_PREFIX;
     localPart = tagNamePtr->str;
     while (*localPart++ != XML_T(':'))
       ;
@@ -2599,8 +2649,9 @@ storeAtts(XML_Parser parser, const ENCODING *enc,
   uri = binding->uri + binding->uriLen;
   memcpy(uri, localPart, i * sizeof(XML_Char));
   if (prefixLen) {
-        uri = uri + (i - 1);
-    if (namespaceSeparator) { *(uri) = namespaceSeparator; }
+    uri = uri + (i - 1);
+    if (namespaceSeparator)
+      *uri = namespaceSeparator;
     memcpy(uri + 1, binding->prefix->name, prefixLen * sizeof(XML_Char));
   }
   tagNamePtr->str = binding->uri;
@@ -2655,6 +2706,7 @@ addBinding(XML_Parser parser, PREFIX *prefix, const ATTRIBUTE_ID *attId,
   b->prefix = prefix;
   b->attId = attId;
   b->prevPrefixBinding = prefix->binding;
+  /* NULL binding when default namespace undeclared */
   if (*uri == XML_T('\0') && prefix == &_dtd->defaultPrefix)
     prefix->binding = NULL;
   else
@@ -3502,8 +3554,8 @@ doProlog(XML_Parser parser,
     case XML_ROLE_REQUIRED_ATTRIBUTE_VALUE:
       if (dtd->keepProcessing) {
         if (!defineAttribute(declElementType, declAttributeId,
-                              declAttributeIsCdata, declAttributeIsId, 0,
-                              parser))
+                             declAttributeIsCdata, declAttributeIsId,
+                             0, parser))
           return XML_ERROR_NO_MEMORY;
         if (attlistDeclHandler && declAttributeType) {
           if (*declAttributeType == XML_T('(')
@@ -3529,11 +3581,11 @@ doProlog(XML_Parser parser,
     case XML_ROLE_FIXED_ATTRIBUTE_VALUE:
       if (dtd->keepProcessing) {
         const XML_Char *attVal;
-        enum XML_Error result
-          = storeAttributeValue(parser, enc, declAttributeIsCdata,
-                                s + enc->minBytesPerChar,
-                                next - enc->minBytesPerChar,
-                                &dtd->pool);
+        enum XML_Error result =
+          storeAttributeValue(parser, enc, declAttributeIsCdata,
+                              s + enc->minBytesPerChar,
+                              next - enc->minBytesPerChar,
+                              &dtd->pool);
         if (result)
           return result;
         attVal = poolStart(&dtd->pool);
@@ -4749,6 +4801,7 @@ getAttributeId(XML_Parser parser, const ENCODING *enc,
   name = poolStoreString(&dtd->pool, enc, start, end);
   if (!name)
     return NULL;
+  /* skip quotation mark - its storage will be re-used (like in name[-1]) */
   ++name;
   id = (ATTRIBUTE_ID *)lookup(&dtd->attributeIds, name, sizeof(ATTRIBUTE_ID));
   if (!id)
@@ -4774,6 +4827,7 @@ getAttributeId(XML_Parser parser, const ENCODING *enc,
     else {
       int i;
       for (i = 0; name[i]; i++) {
+        /* attributes without prefix are *not* in the default namespace */
         if (name[i] == XML_T(':')) {
           int j;
           for (j = 0; j < i; j++) {
@@ -5013,14 +5067,12 @@ dtdReset(DTD *p, const XML_Memory_Handling_Suite *ms)
   p->defaultPrefix.binding = NULL;
 
   p->in_eldecl = XML_FALSE;
-  if (p->scaffIndex) {
-    ms->free_fcn(p->scaffIndex);
-    p->scaffIndex = NULL;
-  }
-  if (p->scaffold) {
-    ms->free_fcn(p->scaffold);
-    p->scaffold = NULL;
-  }
+
+  ms->free_fcn(p->scaffIndex);
+  p->scaffIndex = NULL;
+  ms->free_fcn(p->scaffold);
+  p->scaffold = NULL;
+
   p->scaffLevel = 0;
   p->scaffSize = 0;
   p->scaffCount = 0;
@@ -5055,10 +5107,8 @@ dtdDestroy(DTD *p, XML_Bool isDocEntity, const XML_Memory_Handling_Suite *ms)
   poolDestroy(&(p->entityValuePool));
 #endif /* XML_DTD */
   if (isDocEntity) {
-    if (p->scaffIndex)
-      ms->free_fcn(p->scaffIndex);
-    if (p->scaffold)
-      ms->free_fcn(p->scaffold);
+    ms->free_fcn(p->scaffIndex);
+    ms->free_fcn(p->scaffold);
   }
   ms->free_fcn(p);
 }
@@ -5264,13 +5314,13 @@ copyEntityTable(HASH_TABLE *newTable,
 
 #define INIT_SIZE 64
 
-static int FASTCALL
+static XML_Bool FASTCALL
 keyeq(KEY s1, KEY s2)
 {
   for (; *s1 == *s2; s1++, s2++)
     if (*s1 == 0)
-      return 1;
-  return 0;
+      return XML_TRUE;
+  return XML_FALSE;
 }
 
 static unsigned long FASTCALL
@@ -5351,11 +5401,8 @@ hashTableClear(HASH_TABLE *table)
 {
   size_t i;
   for (i = 0; i < table->size; i++) {
-    NAMED *p = table->v[i];
-    if (p) {
-      table->mem->free_fcn(p);
-      table->v[i] = NULL;
-    }
+    table->mem->free_fcn(table->v[i]);
+    table->v[i] = NULL;
   }
   table->usedLim = table->size / 2;
   table->used = 0;
@@ -5365,13 +5412,9 @@ static void FASTCALL
 hashTableDestroy(HASH_TABLE *table)
 {
   size_t i;
-  for (i = 0; i < table->size; i++) {
-    NAMED *p = table->v[i];
-    if (p)
-      table->mem->free_fcn(p);
-  }
-  if (table->v)
-    table->mem->free_fcn(table->v);
+  for (i = 0; i < table->size; i++)
+    table->mem->free_fcn(table->v[i]);
+  table->mem->free_fcn(table->v);
 }
 
 static void FASTCALL
@@ -5709,3 +5752,4 @@ getElementType(XML_Parser parser,
   }
   return ret;
 }
+
