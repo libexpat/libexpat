@@ -19,14 +19,19 @@ Contributor(s):
 */
 
 #define STRICT 1
+#ifdef XML_UNICODE
+#define UNICODE
+#define _UNICODE
+#endif /* XML_UNICODE */
 #include <windows.h>
 #include <stdio.h>
+#include <tchar.h>
 #include "filemap.h"
 
-static void win32perror(const char *);
+static void win32perror(const TCHAR *);
 
-int filemap(const char *name,
-	    void (*processor)(const void *, size_t, const char *, void *arg),
+int filemap(const TCHAR *name,
+	    void (*processor)(const void *, size_t, const TCHAR *, void *arg),
 	    void *arg)
 {
   HANDLE f;
@@ -47,7 +52,7 @@ int filemap(const char *name,
     return 0;
   }
   if (sizeHi) {
-    fprintf(stderr, "%s: bigger than 2Gb\n", name);
+    _ftprintf(stderr, _T("%s: bigger than 2Gb\n"), name);
     return 0;
   }
   /* CreateFileMapping barfs on zero length files */
@@ -78,7 +83,7 @@ int filemap(const char *name,
 }
 
 static
-void win32perror(const char *s)
+void win32perror(const TCHAR *s)
 {
   LPVOID buf;
   if (FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
@@ -88,10 +93,10 @@ void win32perror(const char *s)
 		    (LPTSTR) &buf,
 		    0,
 		    NULL)) {
-    fprintf(stderr, "%s: %s", s, buf);
+    _ftprintf(stderr, _T("%s: %s"), s, buf);
     fflush(stderr);
     LocalFree(buf);
   }
   else
-    fprintf(stderr, "%s: unknown Windows error\n", s);
+    _ftprintf(stderr, _T("%s: unknown Windows error\n"), s);
 }

@@ -53,30 +53,64 @@ Contributor(s):
 #define READ_SIZE (1024*8)
 #endif
 
-static void characterData(void *userData, const char *s, int len)
+#ifdef XML_UNICODE
+#define T(x) L ## x
+#define ftprintf fwprintf
+#define tfopen _wfopen
+#define fputts fputws
+#define puttc putwc
+#define tcscmp wcscmp
+#define tcscpy wcscpy
+#define tcscat wcscat
+#define tcschr wcschr
+#define tcsrchr wcsrchr
+#define tcslen wcslen
+#define tperror _wperror
+#define topen _wopen
+#define tmain wmain
+#define tremove _wremove
+#else /* not XML_UNICODE */
+#define T(x) x
+#define ftprintf fprintf
+#define tfopen fopen
+#define fputts fputs
+#define puttc putc
+#define tcscmp strcmp
+#define tcscpy strcpy
+#define tcscat strcat
+#define tcschr strchr
+#define tcsrchr strrchr
+#define tcslen strlen
+#define tperror perror
+#define topen open
+#define tmain main
+#define tremove remove
+#endif /* not XML_UNICODE */
+
+static void characterData(void *userData, const XML_Char *s, int len)
 {
   FILE *fp = userData;
   for (; len > 0; --len, ++s) {
     switch (*s) {
-    case '&':
-      fputs("&amp;", fp);
+    case T('&'):
+      fputts(T("&amp;"), fp);
       break;
-    case '<':
-      fputs("&lt;", fp);
+    case T('<'):
+      fputts(T("&lt;"), fp);
       break;
-    case '>':
-      fputs("&gt;", fp);
+    case T('>'):
+      fputts(T("&gt;"), fp);
       break;
-    case '"':
-      fputs("&quot;", fp);
+    case T('"'):
+      fputts(T("&quot;"), fp);
       break;
     case 9:
     case 10:
     case 13:
-      fprintf(fp, "&#%d;", *s);
+      ftprintf(fp, T("&#%d;"), *s);
       break;
     default:
-      putc(*s, fp);
+      puttc(*s, fp);
       break;
     }
   }
@@ -87,48 +121,54 @@ is equivalent to lexicographically comparing based on the character number. */
 
 static int attcmp(const void *att1, const void *att2)
 {
-  return strcmp(*(const char **)att1, *(const char **)att2);
+  return tcscmp(*(const XML_Char **)att1, *(const XML_Char **)att2);
 }
 
-static void startElement(void *userData, const char *name, const char **atts)
+static void startElement(void *userData, const XML_Char *name, const XML_Char **atts)
 {
   int nAtts;
-  const char **p;
+  const XML_Char **p;
   FILE *fp = userData;
-  putc('<', fp);
-  fputs(name, fp);
+  puttc(T('<'), fp);
+  fputts(name, fp);
 
   p = atts;
   while (*p)
     ++p;
   nAtts = (p - atts) >> 1;
   if (nAtts > 1)
-    qsort((void *)atts, nAtts, sizeof(char *) * 2, attcmp);
+    qsort((void *)atts, nAtts, sizeof(XML_Char *) * 2, attcmp);
   while (*atts) {
-    putc(' ', fp);
-    fputs(*atts++, fp);
-    putc('=', fp);
-    putc('"', fp);
-    characterData(userData, *atts, strlen(*atts));
-    putc('"', fp);
+    puttc(T(' '), fp);
+    fputts(*atts++, fp);
+    puttc(T('='), fp);
+    puttc(T('"'), fp);
+    characterData(userData, *atts, tcslen(*atts));
+    puttc(T('"'), fp);
     atts++;
   }
-  putc('>', fp);
+  puttc(T('>'), fp);
 }
 
-static void endElement(void *userData, const char *name)
+static void endElement(void *userData, const XML_Char *name)
 {
   FILE *fp = userData;
-  putc('<', fp);
-  putc('/', fp);
-  fputs(name, fp);
-  putc('>', fp);
+  puttc(T('<'), fp);
+  puttc(T('/'), fp);
+  fputts(name, fp);
+  puttc(T('>'), fp);
 }
 
-static void processingInstruction(void *userData, const char *target, const char *data)
+static void processingInstruction(void *userData, const XML_Char *target, const XML_Char *data)
 {
   FILE *fp = userData;
-  fprintf(fp, "<?%s %s?>", target, data);
+  puttc(T('<'), fp);
+  puttc(T('?'), fp);
+  fputts(target, fp);
+  puttc(T(' '), fp);
+  fputts(data, fp);
+  puttc(T('?'), fp);
+  puttc(T('>'), fp);
 }
 
 typedef struct {
@@ -137,22 +177,22 @@ typedef struct {
 } PROCESS_ARGS;
 
 static
-void reportError(XML_Parser parser, const char *filename)
+void reportError(XML_Parser parser, const XML_Char *filename)
 {
   int code = XML_GetErrorCode(parser);
-  const char *message = XML_ErrorString(code);
+  const XML_Char *message = XML_ErrorString(code);
   if (message)
-    fprintf(stdout, "%s:%d:%ld: %s\n",
-	    filename,
-	    XML_GetErrorLineNumber(parser),
-	    XML_GetErrorColumnNumber(parser),
-	  message);
+    ftprintf(stdout, T("%s:%d:%ld: %s\n"),
+	     filename,
+	     XML_GetErrorLineNumber(parser),
+	     XML_GetErrorColumnNumber(parser),
+	     message);
   else
-    fprintf(stderr, "%s: (unknown message %d)\n", filename, code);
+    ftprintf(stderr, T("%s: (unknown message %d)\n"), filename, code);
 }
 
 static
-void processFile(const void *data, size_t size, const char *filename, void *args)
+void processFile(const void *data, size_t size, const XML_Char *filename, void *args)
 {
   XML_Parser parser = ((PROCESS_ARGS *)args)->parser;
   int *retPtr = ((PROCESS_ARGS *)args)->retPtr;
@@ -165,48 +205,48 @@ void processFile(const void *data, size_t size, const char *filename, void *args
 }
 
 static
-int isAsciiLetter(char c)
+int isAsciiLetter(XML_Char c)
 {
-  return ('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z');
+  return (T('a') <= c && c <= T('z')) || (T('A') <= c && c <= T('Z'));
 }
 
 static
-const char *resolveSystemId(const char *base, const char *systemId, char **toFree)
+const XML_Char *resolveSystemId(const XML_Char *base, const XML_Char *systemId, XML_Char **toFree)
 {
-  char *s;
+  XML_Char *s;
   *toFree = 0;
   if (!base
-      || *systemId == '/'
+      || *systemId == T('/')
 #ifdef WIN32
-      || *systemId == '\\'
-      || (isAsciiLetter(systemId[0]) && systemId[1] == ':')
+      || *systemId == T('\\')
+      || (isAsciiLetter(systemId[0]) && systemId[1] == T(':'))
 #endif
      )
     return systemId;
-  *toFree = (char *)malloc(strlen(base) + strlen(systemId) + 2);
+  *toFree = (XML_Char *)malloc((tcslen(base) + tcslen(systemId) + 2)*sizeof(XML_Char));
   if (!*toFree)
     return systemId;
-  strcpy(*toFree, base);
+  tcscpy(*toFree, base);
   s = *toFree;
-  if (strrchr(s, '/'))
-    s = strrchr(s, '/') + 1;
+  if (tcsrchr(s, T('/')))
+    s = tcsrchr(s, T('/')) + 1;
 #ifdef WIN32
-  if (strrchr(s, '\\'))
-    s = strrchr(s, '\\') + 1;
+  if (tcsrchr(s, T('\\')))
+    s = tcsrchr(s, T('\\')) + 1;
 #endif
-  strcpy(s, systemId);
+  tcscpy(s, systemId);
   return *toFree;
 }
 
 static
 int externalEntityRefFilemap(XML_Parser parser,
-			     const char *openEntityNames,
-			     const char *base,
-			     const char *systemId,
-			     const char *publicId)
+			     const XML_Char *openEntityNames,
+			     const XML_Char *base,
+			     const XML_Char *systemId,
+			     const XML_Char *publicId)
 {
   int result;
-  char *s;
+  XML_Char *s;
   XML_Parser entParser = XML_ExternalEntityParserCreate(parser, openEntityNames, 0);
   PROCESS_ARGS args;
   args.retPtr = &result;
@@ -219,11 +259,11 @@ int externalEntityRefFilemap(XML_Parser parser,
 }
 
 static
-int processStream(const char *filename, XML_Parser parser)
+int processStream(const XML_Char *filename, XML_Parser parser)
 {
-  int fd = open(filename, O_BINARY|O_RDONLY);
+  int fd = topen(filename, O_BINARY|O_RDONLY);
   if (fd < 0) {
-    perror(filename);
+    tperror(filename);
     return 0;
   }
   for (;;) {
@@ -231,12 +271,12 @@ int processStream(const char *filename, XML_Parser parser)
     char *buf = XML_GetBuffer(parser, READ_SIZE);
     if (!buf) {
       close(fd);
-      fprintf(stderr, "%s: out of memory\n", filename);
+      ftprintf(stderr, T("%s: out of memory\n"), filename);
       return 0;
     }
     nread = read(fd, buf, READ_SIZE);
     if (nread < 0) {
-      perror(filename);
+      tperror(filename);
       close(fd);
       return 0;
     }
@@ -255,12 +295,12 @@ int processStream(const char *filename, XML_Parser parser)
 
 static
 int externalEntityRefStream(XML_Parser parser,
-			    const char *openEntityNames,
-			    const char *base,
-			    const char *systemId,
-			    const char *publicId)
+			    const XML_Char *openEntityNames,
+			    const XML_Char *base,
+			    const XML_Char *systemId,
+			    const XML_Char *publicId)
 {
-  char *s;
+  XML_Char *s;
   XML_Parser entParser = XML_ExternalEntityParserCreate(parser, openEntityNames, 0);
   int ret = processStream(resolveSystemId(base, systemId, &s), entParser);
   free(s);
@@ -269,17 +309,17 @@ int externalEntityRefStream(XML_Parser parser,
 }
 
 static
-void usage(const char *prog)
+void usage(const XML_Char *prog)
 {
-  fprintf(stderr, "usage: %s [-r] [-x] [-d output-dir] [-e encoding] file ...\n", prog);
+  ftprintf(stderr, T("usage: %s [-r] [-x] [-d output-dir] [-e encoding] file ...\n"), prog);
   exit(1);
 }
 
-int main(int argc, char **argv)
+int tmain(int argc, XML_Char **argv)
 {
   int i;
-  const char *outputDir = 0;
-  const char *encoding = 0;
+  const XML_Char *outputDir = 0;
+  const XML_Char *encoding = 0;
   int useFilemap = 1;
   int processExternalEntities = 0;
 
@@ -288,23 +328,23 @@ int main(int argc, char **argv)
 #endif
 
   i = 1;
-  while (i < argc && argv[i][0] == '-') {
+  while (i < argc && argv[i][0] == T('-')) {
     int j;
-    if (argv[i][1] == '-' && argv[i][2] == '\0') {
+    if (argv[i][1] == T('-') && argv[i][2] == T('\0')) {
       i++;
       break;
     }
     j = 1;
-    if (argv[i][j] == 'r') {
+    if (argv[i][j] == T('r')) {
       useFilemap = 0;
       j++;
     }
-    if (argv[i][j] == 'x') {
+    if (argv[i][j] == T('x')) {
       processExternalEntities = 1;
       j++;
     }
-    if (argv[i][j] == 'd') {
-      if (argv[i][j + 1] == '\0') {
+    if (argv[i][j] == T('d')) {
+      if (argv[i][j + 1] == T('\0')) {
 	if (++i == argc)
 	  usage(argv[0]);
 	outputDir = argv[i];
@@ -313,8 +353,8 @@ int main(int argc, char **argv)
 	outputDir = argv[i] + j + 1;
       i++;
     }
-    else if (argv[i][j] == 'e') {
-      if (argv[i][j + 1] == '\0') {
+    else if (argv[i][j] == T('e')) {
+      if (argv[i][j + 1] == T('\0')) {
 	if (++i == argc)
 	  usage(argv[0]);
 	encoding = argv[i];
@@ -323,7 +363,7 @@ int main(int argc, char **argv)
 	encoding = argv[i] + j + 1;
       i++;
     }
-    else if (argv[i][j] == '\0' && j > 1)
+    else if (argv[i][j] == T('\0') && j > 1)
       i++;
     else
       usage(argv[0]);
@@ -332,26 +372,29 @@ int main(int argc, char **argv)
     usage(argv[0]);
   for (; i < argc; i++) {
     FILE *fp = 0;
-    char *outName = 0;
+    XML_Char *outName = 0;
     int result;
     XML_Parser parser = XML_ParserCreate(encoding);
     if (outputDir) {
-      const char *file = argv[i];
-      if (strrchr(file, '/'))
-	file = strrchr(file, '/') + 1;
+      const XML_Char *file = argv[i];
+      if (tcsrchr(file, T('/')))
+	file = tcsrchr(file, T('/')) + 1;
 #ifdef WIN32
-      if (strrchr(file, '\\'))
-	file = strrchr(file, '\\') + 1;
+      if (tcsrchr(file, T('\\')))
+	file = tcsrchr(file, T('\\')) + 1;
 #endif
-      outName = malloc(strlen(outputDir) + strlen(file) + 2);
-      strcpy(outName, outputDir);
-      strcat(outName, "/");
-      strcat(outName, file);
-      fp = fopen(outName, "wb");
+      outName = malloc((tcslen(outputDir) + tcslen(file) + 2) * sizeof(XML_Char));
+      tcscpy(outName, outputDir);
+      tcscat(outName, T("/"));
+      tcscat(outName, file);
+      fp = tfopen(outName, T("wb"));
       if (!fp) {
-	perror(outName);
+	tperror(outName);
 	exit(1);
       }
+#ifdef XML_UNICODE
+      puttc(0xFEFF, fp);
+#endif
       XML_SetUserData(parser, fp);
       XML_SetElementHandler(parser, startElement, endElement);
       XML_SetCharacterDataHandler(parser, characterData);
@@ -359,7 +402,7 @@ int main(int argc, char **argv)
     }
     if (processExternalEntities) {
       if (!XML_SetBase(parser, argv[i])) {
-	fprintf(stderr, "%s: out of memory", argv[0]);
+	ftprintf(stderr, T("%s: out of memory"), argv[0]);
 	exit(1);
       }
       XML_SetExternalEntityRefHandler(parser,
@@ -379,7 +422,7 @@ int main(int argc, char **argv)
     if (outputDir) {
       fclose(fp);
       if (!result)
-	remove(outName);
+	tremove(outName);
       free(outName);
     }
     XML_ParserFree(parser);
