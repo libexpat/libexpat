@@ -538,7 +538,15 @@ int tmain(int argc, XML_Char **argv)
       parser = XML_ParserCreateNS(encoding, NSSEP);
     else
       parser = XML_ParserCreate(encoding);
-    if (outputDir) {
+    if (outputType == 't') {
+      /* This is for doing timings; this gives a more realistic estimate of
+	 the parsing time. */
+      outputDir = 0;
+      XML_SetElementHandler(parser, nopStartElement, nopEndElement);
+      XML_SetCharacterDataHandler(parser, nopCharacterData);
+      XML_SetProcessingInstructionHandler(parser, nopProcessingInstruction);
+    }
+    else if (outputDir) {
       const XML_Char *file = argv[i];
       if (tcsrchr(file, T('/')))
 	file = tcsrchr(file, T('/')) + 1;
@@ -579,13 +587,6 @@ int tmain(int argc, XML_Char **argv)
 	XML_SetElementHandler(parser, defaultStartElement, defaultEndElement);
 	XML_SetCharacterDataHandler(parser, defaultCharacterData);
 	XML_SetProcessingInstructionHandler(parser, defaultProcessingInstruction);
-	break;
-      case 't':
-	/* This is for doing timings; this gives a more realistic estimate of
-	   the parsing time. */
-	XML_SetElementHandler(parser, nopStartElement, nopEndElement);
-	XML_SetCharacterDataHandler(parser, nopCharacterData);
-	XML_SetProcessingInstructionHandler(parser, nopProcessingInstruction);
 	break;
       default:
 	if (useNamespaces)
