@@ -1038,9 +1038,13 @@ typedef int
                               XML_Encoding *info);
 </pre>
 <p>Set a handler to deal with encodings other than the
-<a href="#builtin_encodings">built in set</a>. If the handler knows how
-to deal with an encoding with the given name, it should fill in the info
-data structure and return 1. Otherwise it should return 0.</p>
+<a href="#builtin_encodings">built in set</a>. This should  be done before
+XML_Parse or XML_ParseBuffer have been called on the given parser.</p>
+<p>If the handler knows how to deal with an encoding with the given name,
+it should fill in the info data structure and return 1. Otherwise it should
+return 0. The handler will be called at most once per parsed (external) entity.
+The optional application data pointer <code>encodingHandlerData</code>
+will be passed back to the handler.</p>
 
 <pre>
     typedef struct {
