@@ -1,5 +1,5 @@
 
-			Expat, Release 1.95.2
+			Expat, Release 1.95.3
 
 This is expat, a C library for parsing XML, written by James Clark.
 Expat is a stream-oriented XML parser.  This means that you register
@@ -42,13 +42,6 @@ After running the configure script, the "make" command will build
 things and "make install" will install things into their proper
 location.  Note that you need to have write permission into the
 directories into which things will be installed.
-
-When building for use with C++, you may need to add additional
-compiler flags to support proper interaction with exceptions.  This
-can be done by setting the CFLAGS environment variable.  For example,
-when using GCC, you can use:
-
-	CFLAGS=-fexceptions ./configure
 
 Note for Solaris users:  The "ar" command is usually located in
 "/usr/ccs/bin", which is not in the default PATH.  You will need to
