@@ -143,6 +143,17 @@ typedef void (*XML_NotationDeclHandler)(void *userData,
 					const XML_Char *systemId,
 					const XML_Char *publicId);
 
+typedef void (*XML_ExternalParsedEntityDeclHandler)(void *userData,
+						    const XML_Char *entityName,
+						    const XML_Char *base,
+						    const XML_Char *systemId,
+						    const XML_Char *publicId);
+
+typedef void (*XML_InternalParsedEntityDeclHandler)(void *userData,
+						    const XML_Char *entityName,
+						    const XML_Char *replacementText,
+						    int replacementTextLength);
+
 /* When namespace processing is enabled, these are called once for
 each namespace declaration. The call to the start and end element
 handlers occur between the calls to the start and end namespace
@@ -304,6 +315,14 @@ XML_SetUnparsedEntityDeclHandler(XML_Parser parser,
 void XMLPARSEAPI
 XML_SetNotationDeclHandler(XML_Parser parser,
 			   XML_NotationDeclHandler handler);
+
+void XMLPARSEAPI
+XML_SetExternalParsedEntityDeclHandler(XML_Parser parser,
+				       XML_ExternalParsedEntityDeclHandler handler);
+
+void XMLPARSEAPI
+XML_SetInternalParsedEntityDeclHandler(XML_Parser parser,
+				       XML_InternalParsedEntityDeclHandler handler);
 
 void XMLPARSEAPI
 XML_SetNamespaceDeclHandler(XML_Parser parser,

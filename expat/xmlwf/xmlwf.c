@@ -454,6 +454,39 @@ void metaNotationDecl(XML_Parser parser,
   fputts(T("/>\n"), fp);
 }
 
+
+static
+void metaExternalParsedEntityDecl(XML_Parser parser,
+				  const XML_Char *entityName,
+				  const XML_Char *base,
+				  const XML_Char *systemId,
+				  const XML_Char *publicId)
+{
+  FILE *fp = XML_GetUserData(parser);
+  ftprintf(fp, T("<entity name=\"%s\""), entityName);
+  if (publicId)
+    ftprintf(fp, T(" public=\"%s\""), publicId);
+  fputts(T(" system=\""), fp);
+  characterData(fp, systemId, tcslen(systemId));
+  puttc(T('"'), fp);
+  metaLocation(parser);
+  fputts(T("/>\n"), fp);
+}
+
+static
+void metaInternalParsedEntityDecl(XML_Parser parser,
+				  const XML_Char *entityName,
+				  const XML_Char *text,
+				  int textLen)
+{
+  FILE *fp = XML_GetUserData(parser);
+  ftprintf(fp, T("<entity name=\"%s\""), entityName);
+  metaLocation(parser);
+  puttc(T('>'), fp);
+  characterData(fp, text, textLen);
+  fputts(T("</entity/>\n"), fp);
+}
+
 static
 void metaStartNamespaceDecl(XML_Parser parser,
 			    const XML_Char *prefix,
@@ -692,6 +725,8 @@ int tmain(int argc, XML_Char **argv)
 	XML_SetDoctypeDeclHandler(parser, metaStartDoctypeDecl, metaEndDoctypeDecl);
 	XML_SetUnparsedEntityDeclHandler(parser, metaUnparsedEntityDecl);
 	XML_SetNotationDeclHandler(parser, metaNotationDecl);
+	XML_SetExternalParsedEntityDeclHandler(parser, metaExternalParsedEntityDecl);
+	XML_SetInternalParsedEntityDeclHandler(parser, metaInternalParsedEntityDecl);
 	XML_SetNamespaceDeclHandler(parser, metaStartNamespaceDecl, metaEndNamespaceDecl);
 	metaStartDocument(parser);
 	break;

@@ -303,6 +303,8 @@ typedef struct {
   XML_EndDoctypeDeclHandler m_endDoctypeDeclHandler;
   XML_UnparsedEntityDeclHandler m_unparsedEntityDeclHandler;
   XML_NotationDeclHandler m_notationDeclHandler;
+  XML_ExternalParsedEntityDeclHandler m_externalParsedEntityDeclHandler;
+  XML_InternalParsedEntityDeclHandler m_internalParsedEntityDeclHandler;
   XML_StartNamespaceDeclHandler m_startNamespaceDeclHandler;
   XML_EndNamespaceDeclHandler m_endNamespaceDeclHandler;
   XML_NotStandaloneHandler m_notStandaloneHandler;
@@ -371,6 +373,8 @@ typedef struct {
 #define endDoctypeDeclHandler (((Parser *)parser)->m_endDoctypeDeclHandler)
 #define unparsedEntityDeclHandler (((Parser *)parser)->m_unparsedEntityDeclHandler)
 #define notationDeclHandler (((Parser *)parser)->m_notationDeclHandler)
+#define externalParsedEntityDeclHandler (((Parser *)parser)->m_externalParsedEntityDeclHandler)
+#define internalParsedEntityDeclHandler (((Parser *)parser)->m_internalParsedEntityDeclHandler)
 #define startNamespaceDeclHandler (((Parser *)parser)->m_startNamespaceDeclHandler)
 #define endNamespaceDeclHandler (((Parser *)parser)->m_endNamespaceDeclHandler)
 #define notStandaloneHandler (((Parser *)parser)->m_notStandaloneHandler)
@@ -463,6 +467,8 @@ XML_Parser XML_ParserCreate(const XML_Char *encodingName)
   endDoctypeDeclHandler = 0;
   unparsedEntityDeclHandler = 0;
   notationDeclHandler = 0;
+  externalParsedEntityDeclHandler = 0;
+  internalParsedEntityDeclHandler = 0;
   startNamespaceDeclHandler = 0;
   endNamespaceDeclHandler = 0;
   notStandaloneHandler = 0;
@@ -791,6 +797,18 @@ void XML_SetUnparsedEntityDeclHandler(XML_Parser parser,
 				      XML_UnparsedEntityDeclHandler handler)
 {
   unparsedEntityDeclHandler = handler;
+}
+
+void XML_SetExternalParsedEntityDeclHandler(XML_Parser parser,
+					    XML_ExternalParsedEntityDeclHandler handler)
+{
+  externalParsedEntityDeclHandler = handler;
+}
+
+void XML_SetInternalParsedEntityDeclHandler(XML_Parser parser,
+					    XML_InternalParsedEntityDeclHandler handler)
+{
+  internalParsedEntityDeclHandler = handler;
 }
 
 void XML_SetNotationDeclHandler(XML_Parser parser,
@@ -2388,6 +2406,16 @@ doProlog(XML_Parser parser,
 	  declEntity->textPtr = poolStart(&dtd.pool);
 	  declEntity->textLen = poolLength(&dtd.pool);
 	  poolFinish(&dtd.pool);
+	  if (internalParsedEntityDeclHandler
+	      // Check it's not a parameter entity
+	      && ((ENTITY *)lookup(&dtd.generalEntities, declEntity->name, 0)
+		  == declEntity)) {
+	    *eventEndPP = s;
+	    internalParsedEntityDeclHandler(handlerArg,
+					    declEntity->name,
+					    declEntity->textPtr,
+					    declEntity->textLen);
+	  }
 	}
 	else
 	  poolDiscard(&dtd.pool);
@@ -2443,6 +2471,16 @@ doProlog(XML_Parser parser,
 				    declEntity->notation);
 	}
 
+      }
+      break;
+    case XML_ROLE_EXTERNAL_GENERAL_ENTITY_NO_NOTATION:
+      if (declEntity && externalParsedEntityDeclHandler) {
+	*eventEndPP = s;
+	externalParsedEntityDeclHandler(handlerArg,
+					declEntity->name,
+					declEntity->base,
+					declEntity->systemId,
+					declEntity->publicId);
       }
       break;
     case XML_ROLE_GENERAL_ENTITY_NAME:

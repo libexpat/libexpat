@@ -492,7 +492,7 @@ int entity5(PROLOG_STATE *state,
     return XML_ROLE_NONE;
   case XML_TOK_DECL_CLOSE:
     setTopLevel(state);
-    return XML_ROLE_NONE;
+    return XML_ROLE_EXTERNAL_GENERAL_ENTITY_NO_NOTATION;
   case XML_TOK_NAME:
     if (XmlNameMatchesAscii(enc, ptr, end, KW_NDATA)) {
       state->handler = entity6;
