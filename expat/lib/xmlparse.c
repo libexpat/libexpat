@@ -775,7 +775,8 @@ parserInit(XML_Parser parser, const XML_Char *encodingName)
 }
 
 /* moves list of bindings to freeBindingList */
-void moveToFreeBindingList(XML_Parser parser, BINDING *bindings)
+static void
+moveToFreeBindingList(XML_Parser parser, BINDING *bindings)
 {
   while (bindings) {
     BINDING *b = bindings;
