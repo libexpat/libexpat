@@ -2,6 +2,8 @@
    See the file COPYING for copying permission.
 */
 
+#include <stddef.h>
+
 #ifdef COMPILED_FROM_DSP
 #include "winconfig.h"
 #elif defined(MACOS_CLASSIC)
