@@ -5,31 +5,33 @@
 # TARGTYPE "Win32 (x86) Dynamic-Link Library" 0x0102
 
 !IF "$(CFG)" == ""
-CFG=gennmtab - Win32 Debug
-!MESSAGE No configuration specified.  Defaulting to gennmtab - Win32 Debug.
+CFG=xmltok - Win32 Release
+!MESSAGE No configuration specified.  Defaulting to xmltok - Win32 Release.
 !ENDIF 
 
 !IF "$(CFG)" != "xmltok - Win32 Release" && "$(CFG)" != "xmltok - Win32 Debug"\
- && "$(CFG)" != "xmlec - Win32 Release" && "$(CFG)" != "xmlec - Win32 Debug" &&\
- "$(CFG)" != "xmlwf - Win32 Release" && "$(CFG)" != "xmlwf - Win32 Debug" &&\
- "$(CFG)" != "gennmtab - Win32 Release" && "$(CFG)" != "gennmtab - Win32 Debug"
+ && "$(CFG)" != "xmlwf - Win32 Release" && "$(CFG)" != "xmlwf - Win32 Debug" &&\
+ "$(CFG)" != "gennmtab - Win32 Release" && "$(CFG)" != "gennmtab - Win32 Debug"\
+ && "$(CFG)" != "xmlparse - Win32 Release" && "$(CFG)" !=\
+ "xmlparse - Win32 Debug"
 !MESSAGE Invalid configuration "$(CFG)" specified.
 !MESSAGE You can specify a configuration when running NMAKE on this makefile
 !MESSAGE by defining the macro CFG on the command line.  For example:
 !MESSAGE 
-!MESSAGE NMAKE /f "xmltok.mak" CFG="gennmtab - Win32 Debug"
+!MESSAGE NMAKE /f "xmltok.mak" CFG="xmltok - Win32 Release"
 !MESSAGE 
 !MESSAGE Possible choices for configuration are:
 !MESSAGE 
 !MESSAGE "xmltok - Win32 Release" (based on "Win32 (x86) Dynamic-Link Library")
 !MESSAGE "xmltok - Win32 Debug" (based on "Win32 (x86) Dynamic-Link Library")
-!MESSAGE "xmlec - Win32 Release" (based on "Win32 (x86) Console Application")
-!MESSAGE "xmlec - Win32 Debug" (based on "Win32 (x86) Console Application")
 !MESSAGE "xmlwf - Win32 Release" (based on "Win32 (x86) Console Application")
 !MESSAGE "xmlwf - Win32 Debug" (based on "Win32 (x86) Console Application")
 !MESSAGE "gennmtab - Win32 Release" (based on\
  "Win32 (x86) Console Application")
 !MESSAGE "gennmtab - Win32 Debug" (based on "Win32 (x86) Console Application")
+!MESSAGE "xmlparse - Win32 Release" (based on\
+ "Win32 (x86) Dynamic-Link Library")
+!MESSAGE "xmlparse - Win32 Debug" (based on "Win32 (x86) Dynamic-Link Library")
 !MESSAGE 
 !ERROR An invalid configuration is specified.
 !ENDIF 
@@ -220,162 +222,6 @@ LINK32_OBJS= \
   $(LINK32_FLAGS) $(LINK32_OBJS)
 <<
 
-!ELSEIF  "$(CFG)" == "xmlec - Win32 Release"
-
-# PROP BASE Use_MFC 0
-# PROP BASE Use_Debug_Libraries 0
-# PROP BASE Output_Dir "xmlec\Release"
-# PROP BASE Intermediate_Dir "xmlec\Release"
-# PROP BASE Target_Dir "xmlec"
-# PROP Use_MFC 0
-# PROP Use_Debug_Libraries 0
-# PROP Output_Dir "xmlec\Release"
-# PROP Intermediate_Dir "xmlec\Release"
-# PROP Target_Dir "xmlec"
-OUTDIR=.\xmlec\Release
-INTDIR=.\xmlec\Release
-
-ALL : "xmltok - Win32 Release" ".\bin\xmlec.exe"
-
-CLEAN : 
-	-@erase "$(INTDIR)\xmlec.obj"
-	-@erase ".\bin\xmlec.exe"
-
-"$(OUTDIR)" :
-    if not exist "$(OUTDIR)/$(NULL)" mkdir "$(OUTDIR)"
-
-CPP=cl.exe
-# ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /YX /c
-# ADD CPP /nologo /W3 /GX /O2 /Ob2 /I "." /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D XMLTOKAPI=__declspec(dllimport) /YX /c
-CPP_PROJ=/nologo /ML /W3 /GX /O2 /Ob2 /I "." /D "NDEBUG" /D "WIN32" /D\
- "_CONSOLE" /D XMLTOKAPI=__declspec(dllimport) /Fp"$(INTDIR)/xmlec.pch" /YX\
- /Fo"$(INTDIR)/" /c 
-CPP_OBJS=.\xmlec\Release/
-CPP_SBRS=.\.
-
-.c{$(CPP_OBJS)}.obj:
-   $(CPP) $(CPP_PROJ) $<  
-
-.cpp{$(CPP_OBJS)}.obj:
-   $(CPP) $(CPP_PROJ) $<  
-
-.cxx{$(CPP_OBJS)}.obj:
-   $(CPP) $(CPP_PROJ) $<  
-
-.c{$(CPP_SBRS)}.sbr:
-   $(CPP) $(CPP_PROJ) $<  
-
-.cpp{$(CPP_SBRS)}.sbr:
-   $(CPP) $(CPP_PROJ) $<  
-
-.cxx{$(CPP_SBRS)}.sbr:
-   $(CPP) $(CPP_PROJ) $<  
-
-RSC=rc.exe
-# ADD BASE RSC /l 0x809 /d "NDEBUG"
-# ADD RSC /l 0x809 /d "NDEBUG"
-BSC32=bscmake.exe
-# ADD BASE BSC32 /nologo
-# ADD BSC32 /nologo
-BSC32_FLAGS=/nologo /o"$(OUTDIR)/xmlec.bsc" 
-BSC32_SBRS= \
-	
-LINK32=link.exe
-# ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /machine:I386
-# ADD LINK32 setargv.obj kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /machine:I386 /out:"bin/xmlec.exe"
-LINK32_FLAGS=setargv.obj kernel32.lib user32.lib gdi32.lib winspool.lib\
- comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib\
- odbc32.lib odbccp32.lib /nologo /subsystem:console /incremental:no\
- /pdb:"$(OUTDIR)/xmlec.pdb" /machine:I386 /out:"bin/xmlec.exe" 
-LINK32_OBJS= \
-	"$(INTDIR)\xmlec.obj" \
-	".\Release\xmltok.lib"
-
-".\bin\xmlec.exe" : "$(OUTDIR)" $(DEF_FILE) $(LINK32_OBJS)
-    $(LINK32) @<<
-  $(LINK32_FLAGS) $(LINK32_OBJS)
-<<
-
-!ELSEIF  "$(CFG)" == "xmlec - Win32 Debug"
-
-# PROP BASE Use_MFC 0
-# PROP BASE Use_Debug_Libraries 1
-# PROP BASE Output_Dir "xmlec\Debug"
-# PROP BASE Intermediate_Dir "xmlec\Debug"
-# PROP BASE Target_Dir "xmlec"
-# PROP Use_MFC 0
-# PROP Use_Debug_Libraries 1
-# PROP Output_Dir "xmlec\Debug"
-# PROP Intermediate_Dir "xmlec\Debug"
-# PROP Target_Dir "xmlec"
-OUTDIR=.\xmlec\Debug
-INTDIR=.\xmlec\Debug
-
-ALL : "xmltok - Win32 Debug" ".\Debug\xmlec.exe"
-
-CLEAN : 
-	-@erase "$(INTDIR)\vc40.idb"
-	-@erase "$(INTDIR)\vc40.pdb"
-	-@erase "$(INTDIR)\xmlec.obj"
-	-@erase "$(OUTDIR)\xmlec.pdb"
-	-@erase ".\Debug\xmlec.exe"
-	-@erase ".\Debug\xmlec.ilk"
-
-"$(OUTDIR)" :
-    if not exist "$(OUTDIR)/$(NULL)" mkdir "$(OUTDIR)"
-
-CPP=cl.exe
-# ADD BASE CPP /nologo /W3 /Gm /GX /Zi /Od /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /YX /c
-# ADD CPP /nologo /W3 /Gm /GX /Zi /Od /I "." /D "_DEBUG" /D "WIN32" /D "_CONSOLE" /D XMLTOKAPI=__declspec(dllimport) /YX /c
-CPP_PROJ=/nologo /MLd /W3 /Gm /GX /Zi /Od /I "." /D "_DEBUG" /D "WIN32" /D\
- "_CONSOLE" /D XMLTOKAPI=__declspec(dllimport) /Fp"$(INTDIR)/xmlec.pch" /YX\
- /Fo"$(INTDIR)/" /Fd"$(INTDIR)/" /c 
-CPP_OBJS=.\xmlec\Debug/
-CPP_SBRS=.\.
-
-.c{$(CPP_OBJS)}.obj:
-   $(CPP) $(CPP_PROJ) $<  
-
-.cpp{$(CPP_OBJS)}.obj:
-   $(CPP) $(CPP_PROJ) $<  
-
-.cxx{$(CPP_OBJS)}.obj:
-   $(CPP) $(CPP_PROJ) $<  
-
-.c{$(CPP_SBRS)}.sbr:
-   $(CPP) $(CPP_PROJ) $<  
-
-.cpp{$(CPP_SBRS)}.sbr:
-   $(CPP) $(CPP_PROJ) $<  
-
-.cxx{$(CPP_SBRS)}.sbr:
-   $(CPP) $(CPP_PROJ) $<  
-
-RSC=rc.exe
-# ADD BASE RSC /l 0x809 /d "_DEBUG"
-# ADD RSC /l 0x809 /d "_DEBUG"
-BSC32=bscmake.exe
-# ADD BASE BSC32 /nologo
-# ADD BSC32 /nologo
-BSC32_FLAGS=/nologo /o"$(OUTDIR)/xmlec.bsc" 
-BSC32_SBRS= \
-	
-LINK32=link.exe
-# ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /debug /machine:I386
-# ADD LINK32 setargv.obj kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /debug /machine:I386 /out:"Debug/xmlec.exe"
-LINK32_FLAGS=setargv.obj kernel32.lib user32.lib gdi32.lib winspool.lib\
- comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib\
- odbc32.lib odbccp32.lib /nologo /subsystem:console /incremental:yes\
- /pdb:"$(OUTDIR)/xmlec.pdb" /debug /machine:I386 /out:"Debug/xmlec.exe" 
-LINK32_OBJS= \
-	"$(INTDIR)\xmlec.obj" \
-	".\Debug\xmltok.lib"
-
-".\Debug\xmlec.exe" : "$(OUTDIR)" $(DEF_FILE) $(LINK32_OBJS)
-    $(LINK32) @<<
-  $(LINK32_FLAGS) $(LINK32_OBJS)
-<<
-
 !ELSEIF  "$(CFG)" == "xmlwf - Win32 Release"
 
 # PROP BASE Use_MFC 0
@@ -391,12 +237,9 @@ LINK32_OBJS= \
 OUTDIR=.\xmlwf\Release
 INTDIR=.\xmlwf\Release
 
-ALL : "xmltok - Win32 Release" ".\bin\xmlwf.exe"
+ALL : "xmlparse - Win32 Release" "xmltok - Win32 Release" ".\bin\xmlwf.exe"
 
 CLEAN : 
-	-@erase "$(INTDIR)\hashtable.obj"
-	-@erase "$(INTDIR)\wfcheck.obj"
-	-@erase "$(INTDIR)\wfcheckmessage.obj"
 	-@erase "$(INTDIR)\win32filemap.obj"
 	-@erase "$(INTDIR)\xmlwf.obj"
 	-@erase ".\bin\xmlwf.exe"
@@ -406,10 +249,11 @@ CLEAN :
 
 CPP=cl.exe
 # ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /YX /c
-# ADD CPP /nologo /W3 /GX /O2 /I "." /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D XMLTOKAPI=__declspec(dllimport) /YX /c
-CPP_PROJ=/nologo /ML /W3 /GX /O2 /I "." /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D\
- XMLTOKAPI=__declspec(dllimport) /Fp"$(INTDIR)/xmlwf.pch" /YX /Fo"$(INTDIR)/" /c\
- 
+# ADD CPP /nologo /W3 /GX /O2 /I "." /I "xmlparse" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D XMLTOKAPI=__declspec(dllimport) /D XMLPARSEAPI=__declspec(dllimport) /YX /c
+CPP_PROJ=/nologo /ML /W3 /GX /O2 /I "." /I "xmlparse" /D "NDEBUG" /D "WIN32" /D\
+ "_CONSOLE" /D XMLTOKAPI=__declspec(dllimport) /D\
+ XMLPARSEAPI=__declspec(dllimport) /Fp"$(INTDIR)/xmlwf.pch" /YX /Fo"$(INTDIR)/"\
+ /c 
 CPP_OBJS=.\xmlwf\Release/
 CPP_SBRS=.\.
 
@@ -448,12 +292,10 @@ LINK32_FLAGS=setargv.obj kernel32.lib user32.lib gdi32.lib winspool.lib\
  odbc32.lib odbccp32.lib /nologo /subsystem:console /incremental:no\
  /pdb:"$(OUTDIR)/xmlwf.pdb" /machine:I386 /out:"bin/xmlwf.exe" 
 LINK32_OBJS= \
-	"$(INTDIR)\hashtable.obj" \
-	"$(INTDIR)\wfcheck.obj" \
-	"$(INTDIR)\wfcheckmessage.obj" \
 	"$(INTDIR)\win32filemap.obj" \
 	"$(INTDIR)\xmlwf.obj" \
-	".\Release\xmltok.lib"
+	".\Release\xmltok.lib" \
+	".\xmlparse\Release\xmlparse.lib"
 
 ".\bin\xmlwf.exe" : "$(OUTDIR)" $(DEF_FILE) $(LINK32_OBJS)
     $(LINK32) @<<
@@ -475,14 +317,11 @@ LINK32_OBJS= \
 OUTDIR=.\xmlwf\Debug
 INTDIR=.\xmlwf\Debug
 
-ALL : "xmltok - Win32 Debug" ".\Debug\xmlwf.exe"
+ALL : "xmlparse - Win32 Debug" "xmltok - Win32 Debug" ".\Debug\xmlwf.exe"
 
 CLEAN : 
-	-@erase "$(INTDIR)\hashtable.obj"
 	-@erase "$(INTDIR)\vc40.idb"
 	-@erase "$(INTDIR)\vc40.pdb"
-	-@erase "$(INTDIR)\wfcheck.obj"
-	-@erase "$(INTDIR)\wfcheckmessage.obj"
 	-@erase "$(INTDIR)\win32filemap.obj"
 	-@erase "$(INTDIR)\xmlwf.obj"
 	-@erase "$(OUTDIR)\xmlwf.pdb"
@@ -494,10 +333,11 @@ CLEAN :
 
 CPP=cl.exe
 # ADD BASE CPP /nologo /W3 /Gm /GX /Zi /Od /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /YX /c
-# ADD CPP /nologo /W3 /Gm /GX /Zi /Od /I "." /D "_DEBUG" /D "WIN32" /D "_CONSOLE" /D XMLTOKAPI=__declspec(dllimport) /YX /c
-CPP_PROJ=/nologo /MLd /W3 /Gm /GX /Zi /Od /I "." /D "_DEBUG" /D "WIN32" /D\
- "_CONSOLE" /D XMLTOKAPI=__declspec(dllimport) /Fp"$(INTDIR)/xmlwf.pch" /YX\
- /Fo"$(INTDIR)/" /Fd"$(INTDIR)/" /c 
+# ADD CPP /nologo /MDd /W3 /Gm /GX /Zi /Od /I "." /I "xmlparse" /D "_DEBUG" /D "WIN32" /D "_CONSOLE" /D XMLTOKAPI=__declspec(dllimport) /D XMLPARSEAPI=__declspec(dllimport) /YX /c
+CPP_PROJ=/nologo /MDd /W3 /Gm /GX /Zi /Od /I "." /I "xmlparse" /D "_DEBUG" /D\
+ "WIN32" /D "_CONSOLE" /D XMLTOKAPI=__declspec(dllimport) /D\
+ XMLPARSEAPI=__declspec(dllimport) /Fp"$(INTDIR)/xmlwf.pch" /YX /Fo"$(INTDIR)/"\
+ /Fd"$(INTDIR)/" /c 
 CPP_OBJS=.\xmlwf\Debug/
 CPP_SBRS=.\.
 
@@ -536,12 +376,10 @@ LINK32_FLAGS=setargv.obj kernel32.lib user32.lib gdi32.lib winspool.lib\
  odbc32.lib odbccp32.lib /nologo /subsystem:console /incremental:yes\
  /pdb:"$(OUTDIR)/xmlwf.pdb" /debug /machine:I386 /out:"Debug/xmlwf.exe" 
 LINK32_OBJS= \
-	"$(INTDIR)\hashtable.obj" \
-	"$(INTDIR)\wfcheck.obj" \
-	"$(INTDIR)\wfcheckmessage.obj" \
 	"$(INTDIR)\win32filemap.obj" \
 	"$(INTDIR)\xmlwf.obj" \
-	".\Debug\xmltok.lib"
+	".\Debug\xmltok.lib" \
+	".\xmlparse\Debug\xmlparse.lib"
 
 ".\Debug\xmlwf.exe" : "$(OUTDIR)" $(DEF_FILE) $(LINK32_OBJS)
     $(LINK32) @<<
@@ -701,6 +539,183 @@ LINK32_OBJS= \
   $(LINK32_FLAGS) $(LINK32_OBJS)
 <<
 
+!ELSEIF  "$(CFG)" == "xmlparse - Win32 Release"
+
+# PROP BASE Use_MFC 0
+# PROP BASE Use_Debug_Libraries 0
+# PROP BASE Output_Dir "xmlparse\Release"
+# PROP BASE Intermediate_Dir "xmlparse\Release"
+# PROP BASE Target_Dir "xmlparse"
+# PROP Use_MFC 0
+# PROP Use_Debug_Libraries 0
+# PROP Output_Dir "xmlparse\Release"
+# PROP Intermediate_Dir "xmlparse\Release"
+# PROP Target_Dir "xmlparse"
+OUTDIR=.\xmlparse\Release
+INTDIR=.\xmlparse\Release
+
+ALL : "xmltok - Win32 Release" ".\bin\xmlparse.dll"
+
+CLEAN : 
+	-@erase "$(INTDIR)\hashtable.obj"
+	-@erase "$(INTDIR)\xmlparse.obj"
+	-@erase "$(OUTDIR)\xmlparse.exp"
+	-@erase "$(OUTDIR)\xmlparse.lib"
+	-@erase ".\bin\xmlparse.dll"
+
+"$(OUTDIR)" :
+    if not exist "$(OUTDIR)/$(NULL)" mkdir "$(OUTDIR)"
+
+CPP=cl.exe
+# ADD BASE CPP /nologo /MT /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /YX /c
+# ADD CPP /nologo /W3 /GX /O2 /I "." /I "xmlwf" /D "NDEBUG" /D "WIN32" /D "_WINDOWS" /D XMLTOKAPI=__declspec(dllimport) /D XMLPARSEAPI=__declspec(dllexport) /YX /c
+CPP_PROJ=/nologo /ML /W3 /GX /O2 /I "." /I "xmlwf" /D "NDEBUG" /D "WIN32" /D\
+ "_WINDOWS" /D XMLTOKAPI=__declspec(dllimport) /D\
+ XMLPARSEAPI=__declspec(dllexport) /Fp"$(INTDIR)/xmlparse.pch" /YX\
+ /Fo"$(INTDIR)/" /c 
+CPP_OBJS=.\xmlparse\Release/
+CPP_SBRS=.\.
+
+.c{$(CPP_OBJS)}.obj:
+   $(CPP) $(CPP_PROJ) $<  
+
+.cpp{$(CPP_OBJS)}.obj:
+   $(CPP) $(CPP_PROJ) $<  
+
+.cxx{$(CPP_OBJS)}.obj:
+   $(CPP) $(CPP_PROJ) $<  
+
+.c{$(CPP_SBRS)}.sbr:
+   $(CPP) $(CPP_PROJ) $<  
+
+.cpp{$(CPP_SBRS)}.sbr:
+   $(CPP) $(CPP_PROJ) $<  
+
+.cxx{$(CPP_SBRS)}.sbr:
+   $(CPP) $(CPP_PROJ) $<  
+
+MTL=mktyplib.exe
+# ADD BASE MTL /nologo /D "NDEBUG" /win32
+# ADD MTL /nologo /D "NDEBUG" /win32
+MTL_PROJ=/nologo /D "NDEBUG" /win32 
+RSC=rc.exe
+# ADD BASE RSC /l 0x809 /d "NDEBUG"
+# ADD RSC /l 0x809 /d "NDEBUG"
+BSC32=bscmake.exe
+# ADD BASE BSC32 /nologo
+# ADD BSC32 /nologo
+BSC32_FLAGS=/nologo /o"$(OUTDIR)/xmlparse.bsc" 
+BSC32_SBRS= \
+	
+LINK32=link.exe
+# ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /dll /machine:I386
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /dll /machine:I386 /out:"bin/xmlparse.dll"
+# SUBTRACT LINK32 /profile
+LINK32_FLAGS=kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib\
+ advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib\
+ odbccp32.lib /nologo /subsystem:windows /dll /incremental:no\
+ /pdb:"$(OUTDIR)/xmlparse.pdb" /machine:I386 /out:"bin/xmlparse.dll"\
+ /implib:"$(OUTDIR)/xmlparse.lib" 
+LINK32_OBJS= \
+	"$(INTDIR)\hashtable.obj" \
+	"$(INTDIR)\xmlparse.obj" \
+	".\Release\xmltok.lib"
+
+".\bin\xmlparse.dll" : "$(OUTDIR)" $(DEF_FILE) $(LINK32_OBJS)
+    $(LINK32) @<<
+  $(LINK32_FLAGS) $(LINK32_OBJS)
+<<
+
+!ELSEIF  "$(CFG)" == "xmlparse - Win32 Debug"
+
+# PROP BASE Use_MFC 0
+# PROP BASE Use_Debug_Libraries 1
+# PROP BASE Output_Dir "xmlparse\Debug"
+# PROP BASE Intermediate_Dir "xmlparse\Debug"
+# PROP BASE Target_Dir "xmlparse"
+# PROP Use_MFC 0
+# PROP Use_Debug_Libraries 1
+# PROP Output_Dir "xmlparse\Debug"
+# PROP Intermediate_Dir "xmlparse\Debug"
+# PROP Target_Dir "xmlparse"
+OUTDIR=.\xmlparse\Debug
+INTDIR=.\xmlparse\Debug
+
+ALL : "xmltok - Win32 Debug" ".\Debug\xmlparse.dll"
+
+CLEAN : 
+	-@erase "$(INTDIR)\hashtable.obj"
+	-@erase "$(INTDIR)\vc40.idb"
+	-@erase "$(INTDIR)\vc40.pdb"
+	-@erase "$(INTDIR)\xmlparse.obj"
+	-@erase "$(OUTDIR)\xmlparse.exp"
+	-@erase "$(OUTDIR)\xmlparse.lib"
+	-@erase "$(OUTDIR)\xmlparse.pdb"
+	-@erase ".\Debug\xmlparse.dll"
+	-@erase ".\Debug\xmlparse.ilk"
+
+"$(OUTDIR)" :
+    if not exist "$(OUTDIR)/$(NULL)" mkdir "$(OUTDIR)"
+
+CPP=cl.exe
+# ADD BASE CPP /nologo /MTd /W3 /Gm /GX /Zi /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /YX /c
+# ADD CPP /nologo /MDd /W3 /Gm /GX /Zi /Od /I "." /I "xmlwf" /D "_DEBUG" /D "WIN32" /D "_WINDOWS" /D XMLTOKAPI=__declspec(dllimport) /D XMLPARSEAPI=__declspec(dllexport) /YX /c
+CPP_PROJ=/nologo /MDd /W3 /Gm /GX /Zi /Od /I "." /I "xmlwf" /D "_DEBUG" /D\
+ "WIN32" /D "_WINDOWS" /D XMLTOKAPI=__declspec(dllimport) /D\
+ XMLPARSEAPI=__declspec(dllexport) /Fp"$(INTDIR)/xmlparse.pch" /YX\
+ /Fo"$(INTDIR)/" /Fd"$(INTDIR)/" /c 
+CPP_OBJS=.\xmlparse\Debug/
+CPP_SBRS=.\.
+
+.c{$(CPP_OBJS)}.obj:
+   $(CPP) $(CPP_PROJ) $<  
+
+.cpp{$(CPP_OBJS)}.obj:
+   $(CPP) $(CPP_PROJ) $<  
+
+.cxx{$(CPP_OBJS)}.obj:
+   $(CPP) $(CPP_PROJ) $<  
+
+.c{$(CPP_SBRS)}.sbr:
+   $(CPP) $(CPP_PROJ) $<  
+
+.cpp{$(CPP_SBRS)}.sbr:
+   $(CPP) $(CPP_PROJ) $<  
+
+.cxx{$(CPP_SBRS)}.sbr:
+   $(CPP) $(CPP_PROJ) $<  
+
+MTL=mktyplib.exe
+# ADD BASE MTL /nologo /D "_DEBUG" /win32
+# ADD MTL /nologo /D "_DEBUG" /win32
+MTL_PROJ=/nologo /D "_DEBUG" /win32 
+RSC=rc.exe
+# ADD BASE RSC /l 0x809 /d "_DEBUG"
+# ADD RSC /l 0x809 /d "_DEBUG"
+BSC32=bscmake.exe
+# ADD BASE BSC32 /nologo
+# ADD BSC32 /nologo
+BSC32_FLAGS=/nologo /o"$(OUTDIR)/xmlparse.bsc" 
+BSC32_SBRS= \
+	
+LINK32=link.exe
+# ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /dll /debug /machine:I386
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /dll /debug /machine:I386 /out:"Debug/xmlparse.dll"
+LINK32_FLAGS=kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib\
+ advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib\
+ odbccp32.lib /nologo /subsystem:windows /dll /incremental:yes\
+ /pdb:"$(OUTDIR)/xmlparse.pdb" /debug /machine:I386 /out:"Debug/xmlparse.dll"\
+ /implib:"$(OUTDIR)/xmlparse.lib" 
+LINK32_OBJS= \
+	"$(INTDIR)\hashtable.obj" \
+	"$(INTDIR)\xmlparse.obj" \
+	".\Debug\xmltok.lib"
+
+".\Debug\xmlparse.dll" : "$(OUTDIR)" $(DEF_FILE) $(LINK32_OBJS)
+    $(LINK32) @<<
+  $(LINK32_FLAGS) $(LINK32_OBJS)
+<<
+
 !ENDIF 
 
 ################################################################################
@@ -752,6 +767,9 @@ DEP_CPP_XMLTO=\
 	".\xmltok_impl.c"\
 	".\xmltok_impl.h"\
 	
+NODEP_CPP_XMLTO=\
+	".\("\
+	
 
 "$(INTDIR)\xmltok.obj" : $(SOURCE) $(DEP_CPP_XMLTO) "$(INTDIR)" ".\nametab.h"
    $(CPP) /nologo /MTd /W3 /Gm /GX /Zi /Od /D "_DEBUG" /D "WIN32" /D "_WINDOWS"\
@@ -767,8 +785,19 @@ DEP_CPP_XMLTO=\
 
 SOURCE=.\dllmain.c
 
+!IF  "$(CFG)" == "xmltok - Win32 Release"
+
+
 "$(INTDIR)\dllmain.obj" : $(SOURCE) "$(INTDIR)"
 
+
+!ELSEIF  "$(CFG)" == "xmltok - Win32 Debug"
+
+
+"$(INTDIR)\dllmain.obj" : $(SOURCE) "$(INTDIR)"
+
+
+!ENDIF 
 
 # End Source File
 ################################################################################
@@ -865,51 +894,6 @@ InputPath=.\gennmtab\Debug\gennmtab.exe
 ################################################################################
 # Begin Target
 
-# Name "xmlec - Win32 Release"
-# Name "xmlec - Win32 Debug"
-
-!IF  "$(CFG)" == "xmlec - Win32 Release"
-
-!ELSEIF  "$(CFG)" == "xmlec - Win32 Debug"
-
-!ENDIF 
-
-################################################################################
-# Begin Project Dependency
-
-# Project_Dep_Name "xmltok"
-
-!IF  "$(CFG)" == "xmlec - Win32 Release"
-
-"xmltok - Win32 Release" : 
-   $(MAKE) /$(MAKEFLAGS) /F ".\xmltok.mak" CFG="xmltok - Win32 Release" 
-
-!ELSEIF  "$(CFG)" == "xmlec - Win32 Debug"
-
-"xmltok - Win32 Debug" : 
-   $(MAKE) /$(MAKEFLAGS) /F ".\xmltok.mak" CFG="xmltok - Win32 Debug" 
-
-!ENDIF 
-
-# End Project Dependency
-################################################################################
-# Begin Source File
-
-SOURCE=.\xmlec\xmlec.c
-DEP_CPP_XMLEC=\
-	".\xmltok.h"\
-	{$(INCLUDE)}"\sys\TYPES.H"\
-	
-
-"$(INTDIR)\xmlec.obj" : $(SOURCE) $(DEP_CPP_XMLEC) "$(INTDIR)"
-   $(CPP) $(CPP_PROJ) $(SOURCE)
-
-
-# End Source File
-# End Target
-################################################################################
-# Begin Target
-
 # Name "xmlwf - Win32 Release"
 # Name "xmlwf - Win32 Debug"
 
@@ -940,47 +924,13 @@ DEP_CPP_XMLEC=\
 ################################################################################
 # Begin Source File
 
-SOURCE=.\xmlwf\wfcheck.c
-
-!IF  "$(CFG)" == "xmlwf - Win32 Release"
-
-DEP_CPP_WFCHE=\
-	".\xmlrole.h"\
-	".\xmltok.h"\
-	".\xmlwf\hashtable.h"\
-	".\xmlwf\wfcheck.h"\
-	
-
-"$(INTDIR)\wfcheck.obj" : $(SOURCE) $(DEP_CPP_WFCHE) "$(INTDIR)"
-   $(CPP) $(CPP_PROJ) $(SOURCE)
-
-
-!ELSEIF  "$(CFG)" == "xmlwf - Win32 Debug"
-
-DEP_CPP_WFCHE=\
-	".\xmlrole.h"\
-	".\xmltok.h"\
-	".\xmlwf\hashtable.h"\
-	".\xmlwf\wfcheck.h"\
-	
-
-"$(INTDIR)\wfcheck.obj" : $(SOURCE) $(DEP_CPP_WFCHE) "$(INTDIR)"
-   $(CPP) $(CPP_PROJ) $(SOURCE)
-
-
-!ENDIF 
-
-# End Source File
-################################################################################
-# Begin Source File
-
 SOURCE=.\xmlwf\xmlwf.c
 
 !IF  "$(CFG)" == "xmlwf - Win32 Release"
 
 DEP_CPP_XMLWF=\
+	".\xmlparse.h"\
 	".\xmlwf\filemap.h"\
-	".\xmlwf\wfcheck.h"\
 	
 
 "$(INTDIR)\xmlwf.obj" : $(SOURCE) $(DEP_CPP_XMLWF) "$(INTDIR)"
@@ -990,8 +940,8 @@ DEP_CPP_XMLWF=\
 !ELSEIF  "$(CFG)" == "xmlwf - Win32 Debug"
 
 DEP_CPP_XMLWF=\
+	".\xmlparse.h"\
 	".\xmlwf\filemap.h"\
-	".\xmlwf\wfcheck.h"\
 	
 
 "$(INTDIR)\xmlwf.obj" : $(SOURCE) $(DEP_CPP_XMLWF) "$(INTDIR)"
@@ -1005,6 +955,9 @@ DEP_CPP_XMLWF=\
 # Begin Source File
 
 SOURCE=.\xmlwf\win32filemap.c
+
+!IF  "$(CFG)" == "xmlwf - Win32 Release"
+
 DEP_CPP_WIN32=\
 	".\xmlwf\filemap.h"\
 	
@@ -1013,18 +966,20 @@ DEP_CPP_WIN32=\
    $(CPP) $(CPP_PROJ) $(SOURCE)
 
 
-# End Source File
-################################################################################
-# Begin Source File
+!ELSEIF  "$(CFG)" == "xmlwf - Win32 Debug"
 
-SOURCE=.\xmlwf\hashtable.c
-DEP_CPP_HASHT=\
-	".\xmlwf\hashtable.h"\
+DEP_CPP_WIN32=\
+	".\xmlwf\filemap.h"\
+	
+NODEP_CPP_WIN32=\
+	".\xmlwf\("\
 	
 
-"$(INTDIR)\hashtable.obj" : $(SOURCE) $(DEP_CPP_HASHT) "$(INTDIR)"
+"$(INTDIR)\win32filemap.obj" : $(SOURCE) $(DEP_CPP_WIN32) "$(INTDIR)"
    $(CPP) $(CPP_PROJ) $(SOURCE)
 
+
+!ENDIF 
 
 # End Source File
 ################################################################################
@@ -1049,18 +1004,23 @@ DEP_CPP_READF=\
 # PROP Exclude_From_Build 1
 # End Source File
 ################################################################################
-# Begin Source File
+# Begin Project Dependency
 
-SOURCE=.\xmlwf\wfcheckmessage.c
-DEP_CPP_WFCHEC=\
-	".\xmlwf\wfcheck.h"\
-	
+# Project_Dep_Name "xmlparse"
 
-"$(INTDIR)\wfcheckmessage.obj" : $(SOURCE) $(DEP_CPP_WFCHEC) "$(INTDIR)"
-   $(CPP) $(CPP_PROJ) $(SOURCE)
+!IF  "$(CFG)" == "xmlwf - Win32 Release"
 
+"xmlparse - Win32 Release" : 
+   $(MAKE) /$(MAKEFLAGS) /F ".\xmltok.mak" CFG="xmlparse - Win32 Release" 
 
-# End Source File
+!ELSEIF  "$(CFG)" == "xmlwf - Win32 Debug"
+
+"xmlparse - Win32 Debug" : 
+   $(MAKE) /$(MAKEFLAGS) /F ".\xmltok.mak" CFG="xmlparse - Win32 Debug" 
+
+!ENDIF 
+
+# End Project Dependency
 # End Target
 ################################################################################
 # Begin Target
@@ -1090,6 +1050,102 @@ SOURCE=.\gennmtab\gennmtab.c
 
 
 "$(INTDIR)\gennmtab.obj" : $(SOURCE) "$(INTDIR)"
+   $(CPP) $(CPP_PROJ) $(SOURCE)
+
+
+!ENDIF 
+
+# End Source File
+# End Target
+################################################################################
+# Begin Target
+
+# Name "xmlparse - Win32 Release"
+# Name "xmlparse - Win32 Debug"
+
+!IF  "$(CFG)" == "xmlparse - Win32 Release"
+
+!ELSEIF  "$(CFG)" == "xmlparse - Win32 Debug"
+
+!ENDIF 
+
+################################################################################
+# Begin Project Dependency
+
+# Project_Dep_Name "xmltok"
+
+!IF  "$(CFG)" == "xmlparse - Win32 Release"
+
+"xmltok - Win32 Release" : 
+   $(MAKE) /$(MAKEFLAGS) /F ".\xmltok.mak" CFG="xmltok - Win32 Release" 
+
+!ELSEIF  "$(CFG)" == "xmlparse - Win32 Debug"
+
+"xmltok - Win32 Debug" : 
+   $(MAKE) /$(MAKEFLAGS) /F ".\xmltok.mak" CFG="xmltok - Win32 Debug" 
+
+!ENDIF 
+
+# End Project Dependency
+################################################################################
+# Begin Source File
+
+SOURCE=.\xmlparse\xmlparse.c
+
+!IF  "$(CFG)" == "xmlparse - Win32 Release"
+
+DEP_CPP_XMLPA=\
+	".\xmlparse.h"\
+	".\xmlparse\hashtable.h"\
+	".\xmlrole.h"\
+	".\xmltok.h"\
+	
+NODEP_CPP_XMLPA=\
+	".\xmlparse\}"\
+	
+
+"$(INTDIR)\xmlparse.obj" : $(SOURCE) $(DEP_CPP_XMLPA) "$(INTDIR)"
+   $(CPP) $(CPP_PROJ) $(SOURCE)
+
+
+!ELSEIF  "$(CFG)" == "xmlparse - Win32 Debug"
+
+DEP_CPP_XMLPA=\
+	".\xmlparse.h"\
+	".\xmlparse\hashtable.h"\
+	".\xmlrole.h"\
+	".\xmltok.h"\
+	
+
+"$(INTDIR)\xmlparse.obj" : $(SOURCE) $(DEP_CPP_XMLPA) "$(INTDIR)"
+   $(CPP) $(CPP_PROJ) $(SOURCE)
+
+
+!ENDIF 
+
+# End Source File
+################################################################################
+# Begin Source File
+
+SOURCE=.\xmlparse\hashtable.c
+
+!IF  "$(CFG)" == "xmlparse - Win32 Release"
+
+DEP_CPP_HASHT=\
+	".\xmlparse\hashtable.h"\
+	
+
+"$(INTDIR)\hashtable.obj" : $(SOURCE) $(DEP_CPP_HASHT) "$(INTDIR)"
+   $(CPP) $(CPP_PROJ) $(SOURCE)
+
+
+!ELSEIF  "$(CFG)" == "xmlparse - Win32 Debug"
+
+DEP_CPP_HASHT=\
+	".\xmlparse\hashtable.h"\
+	
+
+"$(INTDIR)\hashtable.obj" : $(SOURCE) $(DEP_CPP_HASHT) "$(INTDIR)"
    $(CPP) $(CPP_PROJ) $(SOURCE)
 
 
