@@ -273,16 +273,20 @@ int XmlParseXmlDecl(int isGeneralTextEntity,
                     const char **encodingNamePtr,
                     const ENCODING **namedEncodingPtr,
                     int *standalonePtr);
+
 int XmlInitEncoding(INIT_ENCODING *, const ENCODING **, const char *name);
 const ENCODING *XmlGetUtf8InternalEncoding(void);
 const ENCODING *XmlGetUtf16InternalEncoding(void);
 int FASTCALL XmlUtf8Encode(int charNumber, char *buf);
 int FASTCALL XmlUtf16Encode(int charNumber, unsigned short *buf);
 int XmlSizeOfUnknownEncoding(void);
+
+typedef int (*CONVERTER)(void *userData, const char *p);
+
 ENCODING *
 XmlInitUnknownEncoding(void *mem,
                        int *table,
-                       int (*conv)(void *userData, const char *p),
+                       CONVERTER convert,
                        void *userData);
 
 int XmlParseXmlDeclNS(int isGeneralTextEntity,
@@ -295,13 +299,14 @@ int XmlParseXmlDeclNS(int isGeneralTextEntity,
                       const char **encodingNamePtr,
                       const ENCODING **namedEncodingPtr,
                       int *standalonePtr);
+
 int XmlInitEncodingNS(INIT_ENCODING *, const ENCODING **, const char *name);
 const ENCODING *XmlGetUtf8InternalEncodingNS(void);
 const ENCODING *XmlGetUtf16InternalEncodingNS(void);
 ENCODING *
 XmlInitUnknownEncodingNS(void *mem,
                          int *table,
-                         int (*conv)(void *userData, const char *p),
+                         CONVERTER convert,
                          void *userData);
 #ifdef __cplusplus
 }

@@ -1330,7 +1330,7 @@ unknown_toUtf16(const ENCODING *enc,
 ENCODING *
 XmlInitUnknownEncoding(void *mem,
                        int *table,
-                       int (*convert)(void *userData, const char *p),
+                       CONVERTER convert, 
                        void *userData)
 {
   int i;
@@ -1620,7 +1620,7 @@ initScan(const ENCODING **encodingTable,
 ENCODING *
 XmlInitUnknownEncodingNS(void *mem,
                          int *table,
-                         int (*convert)(void *userData, const char *p),
+                         CONVERTER convert, 
                          void *userData)
 {
   ENCODING *enc = XmlInitUnknownEncoding(mem, table, convert, userData);
