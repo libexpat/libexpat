@@ -8,7 +8,7 @@ AppName=expat
 AppId=expat
 AppVersion=1.95.3
 AppVerName=expat 1.95.3
-AppCopyright=Copyright © 1998-2001 Thai Open Source Software Center, Clark Cooper, and the Expat maintainers
+AppCopyright=Copyright © 1998-2002 Thai Open Source Software Center, Clark Cooper, and the Expat maintainers
 DefaultDirName={sd}\Expat-1.95.3
 AppPublisher=The Expat Developers
 AppPublisherURL=http://expat.sourceforge.net/
@@ -35,12 +35,17 @@ CopyMode: alwaysoverwrite; Source: doc\*.html;          DestDir: "{app}\Doc"
 CopyMode: alwaysoverwrite; Source: doc\*.css;           DestDir: "{app}\Doc"
 CopyMode: alwaysoverwrite; Source: lib\Release\*.dll;   DestDir: "{app}\Libs"
 CopyMode: alwaysoverwrite; Source: lib\Release\*.lib;   DestDir: "{app}\Libs"
+CopyMode: alwaysoverwrite; Source: lib\Release-w\*.dll; DestDir: "{app}\Libs"
+CopyMode: alwaysoverwrite; Source: lib\Release-w\*.lib; DestDir: "{app}\Libs"
 CopyMode: alwaysoverwrite; Source: expat.dsw;           DestDir: "{app}\Source"
 CopyMode: alwaysoverwrite; Source: lib\*.c;             DestDir: "{app}\Source\lib"
 CopyMode: alwaysoverwrite; Source: lib\*.h;             DestDir: "{app}\Source\lib"
 CopyMode: alwaysoverwrite; Source: lib\*.dsp;           DestDir: "{app}\Source\lib"
 CopyMode: alwaysoverwrite; Source: examples\*.c;        DestDir: "{app}\Source\examples"
 CopyMode: alwaysoverwrite; Source: examples\*.dsp;      DestDir: "{app}\Source\examples"
+CopyMode: alwaysoverwrite; Source: tests\*.c;           DestDir: "{app}\Source\tests"
+CopyMode: alwaysoverwrite; Source: tests\*.h;           DestDir: "{app}\Source\tests"
+CopyMode: alwaysoverwrite; Source: tests\README.txt;    DestDir: "{app}\Source\tests"
 CopyMode: alwaysoverwrite; Source: xmlwf\*.c*;          DestDir: "{app}\Source\xmlwf"
 CopyMode: alwaysoverwrite; Source: xmlwf\*.h;           DestDir: "{app}\Source\xmlwf"
 CopyMode: alwaysoverwrite; Source: xmlwf\*.dsp;         DestDir: "{app}\Source\xmlwf"
