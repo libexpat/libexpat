@@ -317,12 +317,12 @@ and the definition of character types in the case of
 <dl class="cpp-symbols">
 <dt>XML_DTD</dt>
 <dd>Include support for using and reporting DTD-based content.  If
-this is defined, default attribute values from the DTD are reported
-and attribute value normalization occurs based on the type of
-attributes.  Callbacks can be registered which report information from
-the DTD (including content models and attribute definitions) only if
-this is defined.  Without this, Expat has a smaller memory footprint
-and can be faster.</dd>
+this is defined, default attribute values from an external DTD subset
+are reported and attribute value normalization occurs based on the
+type of attributes defined in the external subset.  Without
+this, Expat has a smaller memory footprint and can be faster, but will
+not load external entities or process conditional sections.  This does
+not affect the set of functions available in the API.</dd>
 
 <dt>XML_NS</dt>
 <dd>When defined, support for the <cite><a href=
@@ -509,7 +509,7 @@ argument received by most handlers.  In the <a href="#reference"
 data is passed; it will have the type <code>XML_Parser</code> if the
 parser itself is passed.  When the parser is passed, the user data may
 be retrieved using <code><a href="#XML_GetUserData"
->XML_GetUserData</code></a>.</p>
+>XML_GetUserData</a></code>.</p>
 
 <p>One common case where multiple calls to a single handler may need
 to communicate using an application data structure is the case when
