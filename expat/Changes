@@ -7,6 +7,7 @@ Release 1.95.5 someday
 	- Fixed UTF-8 decoding bug that caused legal UTF-8 to be rejected.
 	- Removed unnecessary DllMain() function that caused static
 	  linking into a DLL to be difficult.
+      - Added VC++ projects for building static libraries
 	- Reduced line-length for all source code and headers to be
 	  no longer than 80 characters, to help with AS/400 support.
 	- Reduced memory copying during parsing (SF patch #600964).
