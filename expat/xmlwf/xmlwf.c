@@ -469,7 +469,7 @@ int notStandalone(void *userData)
 static
 void usage(const XML_Char *prog)
 {
-  ftprintf(stderr, T("usage: %s [-n] [-r] [-s] [-w] [-x] [-d output-dir] [-e encoding] file ...\n"), prog);
+  ftprintf(stderr, T("usage: %s [-n] [-p] [-r] [-s] [-w] [-x] [-d output-dir] [-e encoding] file ...\n"), prog);
   exit(1);
 }
 
@@ -483,6 +483,7 @@ int tmain(int argc, XML_Char **argv)
   int outputType = 0;
   int useNamespaces = 0;
   int requireStandalone = 0;
+  int paramEntityParsing = XML_PARAM_ENTITY_PARSING_NEVER;
 
 #ifdef _MSC_VER
   _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF|_CRTDBG_LEAK_CHECK_DF);
@@ -513,6 +514,9 @@ int tmain(int argc, XML_Char **argv)
       useNamespaces = 1;
       j++;
       break;
+    case T('p'):
+      paramEntityParsing = XML_PARAM_ENTITY_PARSING_ALWAYS;
+      /* fall through */
     case T('x'):
       processFlags |= XML_EXTERNAL_ENTITIES;
       j++;
@@ -580,6 +584,7 @@ int tmain(int argc, XML_Char **argv)
       parser = XML_ParserCreate(encoding);
     if (requireStandalone)
       XML_SetNotStandaloneHandler(parser, notStandalone);
+    XML_SetParamEntityParsing(parser, paramEntityParsing);
     if (outputType == 't') {
       /* This is for doing timings; this gives a more realistic estimate of
 	 the parsing time. */

@@ -28,12 +28,6 @@ GPL. If you do not delete the provisions above, a recipient may use
 your version of this file under either the MPL or the GPL.
 */
 
-/* FIXME
-need current base rather than dtd.base
-check parse state at end of outer param entity
-default handler
-eventPtr incorrectly set within internal entities
- */
 #include "xmldef.h"
 #include "xmlparse.h"
 
@@ -174,10 +168,8 @@ typedef struct {
   STRING_POOL pool;
   int complete;
   int standalone;
-  const XML_Char *base;
 #ifdef XML_DTD
   HASH_TABLE paramEntities;
-  const XML_Char *systemId;
 #endif /* XML_DTD */
   PREFIX defaultPrefix;
 } DTD;
@@ -214,6 +206,11 @@ static enum XML_Error
 processXmlDecl(XML_Parser parser, int isGeneralTextEntity, const char *, const char *);
 static enum XML_Error
 initializeEncoding(XML_Parser parser);
+static enum XML_Error
+doProlog(XML_Parser parser, const ENCODING *enc, const char *s,
+	 const char *end, int tok, const char *next, const char **nextPtr);
+static enum XML_Error
+processInternalParamEntity(XML_Parser parser, ENTITY *entity);
 static enum XML_Error
 doContent(XML_Parser parser, int startTagLevel, const ENCODING *enc,
 	  const char *start, const char *end, const char **endPtr);
@@ -313,6 +310,7 @@ typedef struct {
   XML_UnknownEncodingHandler m_unknownEncodingHandler;
   const ENCODING *m_encoding;
   INIT_ENCODING m_initEncoding;
+  const ENCODING *m_internalEncoding;
   const XML_Char *m_protocolEncodingName;
   int m_ns;
   void *m_unknownEncodingMem;
@@ -335,6 +333,7 @@ typedef struct {
   ATTRIBUTE_ID *m_declAttributeId;
   char m_declAttributeIsCdata;
   DTD m_dtd;
+  const XML_Char *m_curBase;
   TAG *m_tagStack;
   TAG *m_freeTagList;
   BINDING *m_inheritedBindings;
@@ -350,6 +349,7 @@ typedef struct {
   int m_hadExternalDoctype;
   XML_Char m_namespaceSeparator;
 #ifdef XML_DTD
+  enum XML_ParamEntityParsing m_paramEntityParsing;
   XML_Parser m_parentParser;
 #endif
 } Parser;
@@ -374,6 +374,7 @@ typedef struct {
 #define unknownEncodingHandler (((Parser *)parser)->m_unknownEncodingHandler)
 #define encoding (((Parser *)parser)->m_encoding)
 #define initEncoding (((Parser *)parser)->m_initEncoding)
+#define internalEncoding (((Parser *)parser)->m_internalEncoding)
 #define unknownEncodingMem (((Parser *)parser)->m_unknownEncodingMem)
 #define unknownEncodingData (((Parser *)parser)->m_unknownEncodingData)
 #define unknownEncodingHandlerData \
@@ -400,6 +401,7 @@ typedef struct {
 #define dataBuf (((Parser *)parser)->m_dataBuf)
 #define dataBufEnd (((Parser *)parser)->m_dataBufEnd)
 #define dtd (((Parser *)parser)->m_dtd)
+#define curBase (((Parser *)parser)->m_curBase)
 #define declEntity (((Parser *)parser)->m_declEntity)
 #define declNotationName (((Parser *)parser)->m_declNotationName)
 #define declNotationPublicId (((Parser *)parser)->m_declNotationPublicId)
@@ -421,7 +423,8 @@ typedef struct {
 #define namespaceSeparator (((Parser *)parser)->m_namespaceSeparator)
 #ifdef XML_DTD
 #define parentParser (((Parser *)parser)->m_parentParser)
-#endif
+#define paramEntityParsing (((Parser *)parser)->m_paramEntityParsing)
+#endif /* XML_DTD */
 
 #ifdef _MSC_VER
 #ifdef _DEBUG
@@ -498,6 +501,7 @@ XML_Parser XML_ParserCreate(const XML_Char *encodingName)
   poolInit(&tempPool);
   poolInit(&temp2Pool);
   protocolEncodingName = encodingName ? poolCopyString(&tempPool, encodingName) : 0;
+  curBase = 0;
   if (!dtdInit(&dtd) || !atts || !dataBuf
       || (encodingName && !protocolEncodingName)) {
     XML_ParserFree(parser);
@@ -505,6 +509,7 @@ XML_Parser XML_ParserCreate(const XML_Char *encodingName)
   }
   dataBufEnd = dataBuf + INIT_DATA_BUF_SIZE;
   XmlInitEncoding(&initEncoding, &encoding, 0);
+  internalEncoding = XmlGetInternalEncoding();
   return parser;
 }
 
@@ -528,6 +533,7 @@ XML_Parser XML_ParserCreateNS(const XML_Char *encodingName, XML_Char nsSep)
   if (parser) {
     XmlInitEncodingNS(&initEncoding, &encoding, 0);
     ns = 1;
+    internalEncoding = XmlGetInternalEncodingNS();
     namespaceSeparator = nsSep;
   }
   if (!setContext(parser, implicitContext)) {
@@ -572,7 +578,9 @@ XML_Parser XML_ExternalEntityParserCreate(XML_Parser oldParser,
   void *oldHandlerArg = handlerArg;
   int oldDefaultExpandInternalEntities = defaultExpandInternalEntities;
   void *oldExternalEntityRefHandlerArg = externalEntityRefHandlerArg;
-
+#ifdef XML_DTD
+  int oldParamEntityParsing = paramEntityParsing;
+#endif
   parser = (ns
             ? XML_ParserCreateNS(encodingName, namespaceSeparator)
 	    : XML_ParserCreate(encodingName));
@@ -600,6 +608,7 @@ XML_Parser XML_ExternalEntityParserCreate(XML_Parser oldParser,
     externalEntityRefHandlerArg = oldExternalEntityRefHandlerArg;
   defaultExpandInternalEntities = oldDefaultExpandInternalEntities;
 #ifdef XML_DTD
+  paramEntityParsing = oldParamEntityParsing;
   if (context) {
 #endif /* XML_DTD */
     if (!dtdCopy(&dtd, oldDtd) || !setContext(parser, context)) {
@@ -690,16 +699,16 @@ int XML_SetBase(XML_Parser parser, const XML_Char *p)
     p = poolCopyString(&dtd.pool, p);
     if (!p)
       return 0;
-    dtd.base = p;
+    curBase = p;
   }
   else
-    dtd.base = 0;
+    curBase = 0;
   return 1;
 }
 
 const XML_Char *XML_GetBase(XML_Parser parser)
 {
-  return dtd.base;
+  return curBase;
 }
 
 int XML_GetSpecifiedAttributeCount(XML_Parser parser)
@@ -801,6 +810,17 @@ void XML_SetUnknownEncodingHandler(XML_Parser parser,
 {
   unknownEncodingHandler = handler;
   unknownEncodingHandlerData = data;
+}
+
+int XML_SetParamEntityParsing(XML_Parser parser,
+			      enum XML_ParamEntityParsing parsing)
+{
+#ifdef XML_DTD
+  paramEntityParsing = parsing;
+  return 1;
+#else
+  return parsing == XML_PARAM_ENTITY_PARSING_NEVER;
+#endif
 }
 
 int XML_Parse(XML_Parser parser, const char *s, int len, int isFinal)
@@ -959,7 +979,7 @@ void XML_DefaultCurrent(XML_Parser parser)
   if (defaultHandler) {
     if (openInternalEntities)
       reportDefault(parser,
-	            ns ? XmlGetInternalEncodingNS() : XmlGetInternalEncoding(),
+	            internalEncoding,
 		    openInternalEntities->internalEventPtr,
 		    openInternalEntities->internalEventEndPtr);
     else
@@ -1106,7 +1126,6 @@ doContent(XML_Parser parser,
 	  const char *end,
 	  const char **nextPtr)
 {
-  const ENCODING *internalEnc = ns ? XmlGetInternalEncodingNS() : XmlGetInternalEncoding();
   const char **eventPP;
   const char **eventEndPP;
   if (enc == encoding) {
@@ -1214,7 +1233,7 @@ doContent(XML_Parser parser,
 	    openEntity.internalEventEndPtr = 0;
 	    result = doContent(parser,
 			       tagLevel,
-			       internalEnc,
+			       internalEncoding,
 			       (char *)entity->textPtr,
 			       (char *)(entity->textPtr + entity->textLen),
 			       0);
@@ -1232,7 +1251,7 @@ doContent(XML_Parser parser,
 	      return XML_ERROR_NO_MEMORY;
 	    if (!externalEntityRefHandler(externalEntityRefHandlerArg,
 				          context,
-					  dtd.base,
+					  entity->base,
 					  entity->systemId,
 					  entity->publicId))
 	      return XML_ERROR_EXTERNAL_ENTITY_HANDLING;
@@ -2013,8 +2032,13 @@ processXmlDecl(XML_Parser parser, int isGeneralTextEntity,
 		           &newEncoding,
 		           &standalone))
     return XML_ERROR_SYNTAX;
-  if (!isGeneralTextEntity && standalone == 1)
+  if (!isGeneralTextEntity && standalone == 1) {
     dtd.standalone = 1;
+#ifdef XML_DTD
+    if (paramEntityParsing == XML_PARAM_ENTITY_PARSING_UNLESS_STANDALONE)
+      paramEntityParsing = XML_PARAM_ENTITY_PARSING_NEVER;
+#endif /* XML_DTD */
+  }
   if (defaultHandler)
     reportDefault(parser, encoding, s, next);
   if (!protocolEncodingName) {
@@ -2096,15 +2120,6 @@ prologInitProcessor(XML_Parser parser,
 }
 
 static enum XML_Error
-doProlog(XML_Parser parser,
-	 const ENCODING *enc,
-	 const char *s,
-	 const char *end,
-	 int tok,
-	 const char *next,
-	 const char **nextPtr);
-
-static enum XML_Error
 prologProcessor(XML_Parser parser,
 		const char *s,
 		const char *end,
@@ -2115,34 +2130,6 @@ prologProcessor(XML_Parser parser,
   return doProlog(parser, encoding, s, end, tok, next, nextPtr);
 }
 
-#ifdef XML_DTD
-
-static enum XML_Error
-processInternalParamEntity(XML_Parser parser,
-			   ENTITY *entity)
-{
-  const char *s, *end, *next;
-  const ENCODING *enc = ns ? XmlGetInternalEncodingNS() : XmlGetInternalEncoding();
-  int tok;
-  enum XML_Error result;
-  OPEN_INTERNAL_ENTITY openEntity;
-  entity->open = 1;
-  openEntity.next = openInternalEntities;
-  openInternalEntities = &openEntity;
-  openEntity.entity = entity;
-  openEntity.internalEventPtr = 0;
-  openEntity.internalEventEndPtr = 0;
-  s = (char *)entity->textPtr;
-  end = (char *)(entity->textPtr + entity->textLen);
-  tok = XmlPrologTok(enc, s, end, &next);
-  result = doProlog(parser, enc, s, end, tok, next, 0);
-  entity->open = 0;
-  openInternalEntities = openEntity.next;
-  return result;
-}
-
-#endif /* XML_DTD */
-
 static enum XML_Error
 doProlog(XML_Parser parser,
 	 const ENCODING *enc,
@@ -2152,6 +2139,10 @@ doProlog(XML_Parser parser,
 	 const char *next,
 	 const char **nextPtr)
 {
+#ifdef XML_DTD
+  static const XML_Char externalSubsetName[] = { '#' , '\0' };
+#endif /* XML_DTD */
+
   const char **eventPP;
   const char **eventEndPP;
   if (enc == encoding) {
@@ -2162,8 +2153,10 @@ doProlog(XML_Parser parser,
     eventPP = &(openInternalEntities->internalEventPtr);
     eventEndPP = &(openInternalEntities->internalEventEndPtr);
   }
-  /* FIXME use eventPP not eventPtr */
   for (;;) {
+    int role;
+    *eventPP = s;
+    *eventEndPP = next;
     if (tok <= 0) {
       if (nextPtr != 0 && tok != XML_TOK_INVALID) {
 	*nextPtr = s;
@@ -2171,7 +2164,7 @@ doProlog(XML_Parser parser,
       }
       switch (tok) {
       case XML_TOK_INVALID:
-	eventPtr = next;
+	*eventPP = next;
 	return XML_ERROR_INVALID_TOKEN;
       case XML_TOK_PARTIAL:
 	return XML_ERROR_UNCLOSED_TOKEN;
@@ -2182,6 +2175,9 @@ doProlog(XML_Parser parser,
 	if (enc != encoding)
 	  return XML_ERROR_NONE;
 	if (parentParser) {
+	  if (XmlTokenRole(&prologState, XML_TOK_NONE, end, end, enc)
+	      == XML_ROLE_ERROR)
+	    return XML_ERROR_SYNTAX;
 	  hadExternalDoctype = 0;
 	  return XML_ERROR_NONE;
 	}
@@ -2193,7 +2189,8 @@ doProlog(XML_Parser parser,
 	break;
       }
     }
-    switch (XmlTokenRole(&prologState, tok, s, next, enc)) {
+    role = XmlTokenRole(&prologState, tok, s, next, enc);
+    switch (role) {
     case XML_ROLE_XML_DECL:
       {
 	enum XML_Error result = processXmlDecl(parser, 0, s, next);
@@ -2210,27 +2207,17 @@ doProlog(XML_Parser parser,
       }
       break;
 #endif /* XML_DTD */
-    case XML_ROLE_DOCTYPE_SYSTEM_ID:
-#ifndef XML_DTD /* FIXME */
-      if (!dtd.standalone
-	  && notStandaloneHandler
-	  && !notStandaloneHandler(handlerArg))
-	return XML_ERROR_NOT_STANDALONE;
-#endif /* not XML_DTD */
-#ifdef XML_DTD
-      dtd.systemId = poolStoreString(&dtd.pool, enc,
-				     s + enc->minBytesPerChar,
-				     next - enc->minBytesPerChar);
-      if (!dtd.systemId)
-	return XML_ERROR_NO_MEMORY;
-      poolFinish(&dtd.pool);
-#endif /* XML_DTD */
-      hadExternalDoctype = 1;
-      break;
     case XML_ROLE_DOCTYPE_PUBLIC_ID:
-      /* FIXME */
+#ifdef XML_DTD
+      declEntity = (ENTITY *)lookup(&dtd.paramEntities,
+				    externalSubsetName,
+				    sizeof(ENTITY));
+      if (!declEntity)
+	return XML_ERROR_NO_MEMORY;
+#endif /* XML_DTD */
+      /* fall through */
     case XML_ROLE_ENTITY_PUBLIC_ID:
-      if (!XmlIsPublicId(enc, s, next, &eventPtr))
+      if (!XmlIsPublicId(enc, s, next, eventPP))
 	return XML_ERROR_SYNTAX;
       if (declEntity) {
 	XML_Char *tem = poolStoreString(&dtd.pool,
@@ -2244,33 +2231,31 @@ doProlog(XML_Parser parser,
 	poolFinish(&dtd.pool);
       }
       break;
-#ifdef XML_DTD
     case XML_ROLE_DOCTYPE_CLOSE:
       if (dtd.complete && hadExternalDoctype) {
 	dtd.complete = 0;
-	if (dtd.systemId /* && paramEntities*/ && externalEntityRefHandler) {
+#ifdef XML_DTD
+	if (paramEntityParsing && externalEntityRefHandler) {
+	  ENTITY *entity = (ENTITY *)lookup(&dtd.paramEntities,
+					    externalSubsetName,
+					    0);
 	  if (!externalEntityRefHandler(externalEntityRefHandlerArg,
 					0,
-					dtd.base,
-					dtd.systemId,
-					0))
+					entity->base,
+					entity->systemId,
+					entity->publicId))
 	   return XML_ERROR_EXTERNAL_ENTITY_HANDLING;
-	  if (!dtd.complete
-	      && !dtd.standalone
-	      && notStandaloneHandler
-	      && !notStandaloneHandler(handlerArg))
-	    return XML_ERROR_NOT_STANDALONE;
-	  errorCode = XML_ERROR_NONE;
 	}
+#endif /* XML_DTD */
+	if (!dtd.complete
+	    && !dtd.standalone
+	    && notStandaloneHandler
+	    && !notStandaloneHandler(handlerArg))
+	  return XML_ERROR_NOT_STANDALONE;
       }
       break;
-#endif /* XML_DTD */
     case XML_ROLE_INSTANCE_START:
       processor = contentProcessor;
-#ifndef XML_DTD
-      if (hadExternalDoctype)
-	dtd.complete = 0;
-#endif /* not XML_DTD */
       return contentProcessor(parser, s, end, nextPtr);
     case XML_ROLE_ATTLIST_ELEMENT_NAME:
       {
@@ -2338,6 +2323,27 @@ doProlog(XML_Parser parser,
 	  return result;
       }
       break;
+    case XML_ROLE_DOCTYPE_SYSTEM_ID:
+      if (!dtd.standalone
+#ifdef XML_DTD
+	  && !paramEntityParsing
+#endif /* XML_DTD */
+	  && notStandaloneHandler
+	  && !notStandaloneHandler(handlerArg))
+	return XML_ERROR_NOT_STANDALONE;
+      hadExternalDoctype = 1;
+#ifndef XML_DTD
+      break;
+#else /* XML_DTD */
+      if (!declEntity) {
+	declEntity = (ENTITY *)lookup(&dtd.paramEntities,
+				      externalSubsetName,
+				      sizeof(ENTITY));
+	if (!declEntity)
+	  return XML_ERROR_NO_MEMORY;
+      }
+      /* fall through */
+#endif /* XML_DTD */
     case XML_ROLE_ENTITY_SYSTEM_ID:
       if (declEntity) {
 	declEntity->systemId = poolStoreString(&dtd.pool, enc,
@@ -2345,7 +2351,7 @@ doProlog(XML_Parser parser,
 	  				       next - enc->minBytesPerChar);
 	if (!declEntity->systemId)
 	  return XML_ERROR_NO_MEMORY;
-	declEntity->base = dtd.base;
+	declEntity->base = curBase;
 	poolFinish(&dtd.pool);
       }
       break;
@@ -2356,7 +2362,7 @@ doProlog(XML_Parser parser,
 	  return XML_ERROR_NO_MEMORY;
 	poolFinish(&dtd.pool);
 	if (unparsedEntityDeclHandler) {
-	  eventPtr = eventEndPtr = s;
+	  *eventEndPP = s;
 	  unparsedEntityDeclHandler(handlerArg,
 				    declEntity->name,
 				    declEntity->base,
@@ -2425,7 +2431,7 @@ doProlog(XML_Parser parser,
       }
       break;
     case XML_ROLE_NOTATION_PUBLIC_ID:
-      if (!XmlIsPublicId(enc, s, next, &eventPtr))
+      if (!XmlIsPublicId(enc, s, next, eventPP))
 	return XML_ERROR_SYNTAX;
       if (declNotationName) {
 	XML_Char *tem = poolStoreString(&tempPool,
@@ -2447,10 +2453,10 @@ doProlog(XML_Parser parser,
 	  		    next - enc->minBytesPerChar);
 	if (!systemId)
 	  return XML_ERROR_NO_MEMORY;
-	eventPtr = eventEndPtr = s;
+	*eventEndPP = s;
 	notationDeclHandler(handlerArg,
 			    declNotationName,
-			    dtd.base,
+			    curBase,
 			    systemId,
 			    declNotationPublicId);
       }
@@ -2458,17 +2464,16 @@ doProlog(XML_Parser parser,
       break;
     case XML_ROLE_NOTATION_NO_SYSTEM_ID:
       if (declNotationPublicId && notationDeclHandler) {
-	eventPtr = eventEndPtr = s;
+	*eventEndPP = s;
 	notationDeclHandler(handlerArg,
 			    declNotationName,
-			    dtd.base,
+			    curBase,
 			    0,
 			    declNotationPublicId);
       }
       poolClear(&tempPool);
       break;
     case XML_ROLE_ERROR:
-      eventPtr = s;
       switch (tok) {
       case XML_TOK_PARAM_ENTITY_REF:
 	return XML_ERROR_PARAM_ENTITY_REF;
@@ -2503,59 +2508,20 @@ doProlog(XML_Parser parser,
       groupConnector[prologState.level] = 0;
       break;
     case XML_ROLE_GROUP_SEQUENCE:
-      if (groupConnector[prologState.level] == '|') {
-	eventPtr = s;
+      if (groupConnector[prologState.level] == '|')
 	return XML_ERROR_SYNTAX;
-      }
       groupConnector[prologState.level] = ',';
       break;
     case XML_ROLE_GROUP_CHOICE:
-      if (groupConnector[prologState.level] == ',') {
-	eventPtr = s;
+      if (groupConnector[prologState.level] == ',')
 	return XML_ERROR_SYNTAX;
-      }
       groupConnector[prologState.level] = '|';
       break;
-#ifdef XML_DTD /* FIXME merge code with following case */
-    case XML_ROLE_INNER_PARAM_ENTITY_REF:
-      {
-	/* FIXME what if !dtd.complete */
-	const XML_Char *name;
-	ENTITY *entity;
-	name = poolStoreString(&dtd.pool, enc,
-				s + enc->minBytesPerChar,
-				next - enc->minBytesPerChar);
-	if (!name)
-	  return XML_ERROR_NO_MEMORY;
-	entity = (ENTITY *)lookup(&dtd.paramEntities, name, 0);
-	poolDiscard(&dtd.pool);
-	if (!entity)
-	  return XML_ERROR_UNDEFINED_ENTITY;
-	if (entity->open)
-	  return XML_ERROR_RECURSIVE_ENTITY_REF;
-	if (entity->textPtr) {
-	  enum XML_Error result;
-#if 0 /* do we need this? */
-	  if (defaultHandler && !defaultExpandInternalEntities) {
-	    reportDefault(parser, enc, s, next);
-	    break;
-	  }
-#endif
-	  result = processInternalParamEntity(parser, entity);
-	  if (result != XML_ERROR_NONE)
-	    return result;
-	}
-	else
-	  return XML_ERROR_PARAM_ENTITY_REF;
-      }
-      break;
-#endif
     case XML_ROLE_PARAM_ENTITY_REF:
-      if (!dtd.complete)
-	break;
-      dtd.complete = 0;
 #ifdef XML_DTD
-      {
+    case XML_ROLE_INNER_PARAM_ENTITY_REF:
+      if (paramEntityParsing
+	  && (dtd.complete || role == XML_ROLE_INNER_PARAM_ENTITY_REF)) {
 	const XML_Char *name;
 	ENTITY *entity;
 	name = poolStoreString(&dtd.pool, enc,
@@ -2565,28 +2531,27 @@ doProlog(XML_Parser parser,
 	  return XML_ERROR_NO_MEMORY;
 	entity = (ENTITY *)lookup(&dtd.paramEntities, name, 0);
 	poolDiscard(&dtd.pool);
-	if (!entity)
+	if (!entity) {
+	  /* FIXME what to do if !dtd.complete? */
 	  return XML_ERROR_UNDEFINED_ENTITY;
+	}
 	if (entity->open)
 	  return XML_ERROR_RECURSIVE_ENTITY_REF;
 	if (entity->textPtr) {
 	  enum XML_Error result;
-#if 0 /* do we need this */
-	  if (defaultHandler && !defaultExpandInternalEntities) {
-	    reportDefault(parser, enc, s, next);
-	    break;
-	  }
-#endif
-	  dtd.complete = 1;
 	  result = processInternalParamEntity(parser, entity);
 	  if (result != XML_ERROR_NONE)
 	    return result;
+	  break;
 	}
-	else if (externalEntityRefHandler) {
+	if (role == XML_ROLE_INNER_PARAM_ENTITY_REF)
+	  return XML_ERROR_PARAM_ENTITY_REF;
+	if (externalEntityRefHandler) {
+	  dtd.complete = 0;
 	  entity->open = 1;
 	  if (!externalEntityRefHandler(externalEntityRefHandlerArg,
 					0,
-					dtd.base,
+					entity->base,
 					entity->systemId,
 					entity->publicId)) {
 	    entity->open = 0;
@@ -2602,18 +2567,17 @@ doProlog(XML_Parser parser,
 	  && notStandaloneHandler
 	  && !notStandaloneHandler(handlerArg))
 	return XML_ERROR_NOT_STANDALONE;
+      dtd.complete = 0;
+      if (defaultHandler)
+	reportDefault(parser, enc, s, next);
       break;
     case XML_ROLE_NONE:
       switch (tok) {
       case XML_TOK_PI:
-	eventPtr = s;
-	eventEndPtr = next;
 	if (!reportProcessingInstruction(parser, enc, s, next))
 	  return XML_ERROR_NO_MEMORY;
 	break;
       case XML_TOK_COMMENT:
-	eventPtr = s;
-	eventEndPtr = next;
 	if (!reportComment(parser, enc, s, next))
 	  return XML_ERROR_NO_MEMORY;
 	break;
@@ -2626,10 +2590,10 @@ doProlog(XML_Parser parser,
       case XML_TOK_COMMENT:
       case XML_TOK_BOM:
       case XML_TOK_XML_DECL:
+      case XML_TOK_IGNORE_SECT:
+      case XML_TOK_PARAM_ENTITY_REF:
 	break;
       default:
-	eventPtr = s;
-	eventEndPtr = next;
 	reportDefault(parser, enc, s, next);
       }
     }
@@ -2696,6 +2660,32 @@ enum XML_Error epilogProcessor(XML_Parser parser,
   }
 }
 
+#ifdef XML_DTD
+
+static enum XML_Error
+processInternalParamEntity(XML_Parser parser, ENTITY *entity)
+{
+  const char *s, *end, *next;
+  int tok;
+  enum XML_Error result;
+  OPEN_INTERNAL_ENTITY openEntity;
+  entity->open = 1;
+  openEntity.next = openInternalEntities;
+  openInternalEntities = &openEntity;
+  openEntity.entity = entity;
+  openEntity.internalEventPtr = 0;
+  openEntity.internalEventEndPtr = 0;
+  s = (char *)entity->textPtr;
+  end = (char *)(entity->textPtr + entity->textLen);
+  tok = XmlPrologTok(internalEncoding, s, end, &next);
+  result = doProlog(parser, internalEncoding, s, end, tok, next, 0);
+  entity->open = 0;
+  openInternalEntities = openEntity.next;
+  return result;
+}
+
+#endif /* XML_DTD */
+
 static
 enum XML_Error errorProcessor(XML_Parser parser,
 			      const char *s,
@@ -2725,7 +2715,6 @@ appendAttributeValue(XML_Parser parser, const ENCODING *enc, int isCdata,
 		     const char *ptr, const char *end,
 		     STRING_POOL *pool)
 {
-  const ENCODING *internalEnc = ns ? XmlGetInternalEncodingNS() : XmlGetInternalEncoding();
   for (;;) {
     const char *next;
     int tok = XmlAttributeValueTok(enc, ptr, end, &next);
@@ -2826,7 +2815,7 @@ appendAttributeValue(XML_Parser parser, const ENCODING *enc, int isCdata,
 	  enum XML_Error result;
 	  const XML_Char *textEnd = entity->textPtr + entity->textLen;
 	  entity->open = 1;
-	  result = appendAttributeValue(parser, internalEnc, isCdata, (char *)entity->textPtr, (char *)textEnd, pool);
+	  result = appendAttributeValue(parser, internalEncoding, isCdata, (char *)entity->textPtr, (char *)textEnd, pool);
 	  entity->open = 0;
 	  if (result)
 	    return result;
@@ -2847,7 +2836,6 @@ enum XML_Error storeEntityValue(XML_Parser parser,
 				const char *entityTextPtr,
 				const char *entityTextEnd)
 {
-  /* FIXME eventPtr */
   STRING_POOL *pool = &(dtd.pool);
   for (;;) {
     const char *next;
@@ -2883,7 +2871,7 @@ enum XML_Error storeEntityValue(XML_Parser parser,
 	}
 	entity->open = 1;
 	result = storeEntityValue(parser,
-				  ns ? XmlGetInternalEncodingNS() : XmlGetInternalEncoding(),
+				  internalEncoding,
 				  (char *)entity->textPtr,
 				  (char *)(entity->textPtr + entity->textLen));
 	entity->open = 0;
@@ -2915,12 +2903,14 @@ enum XML_Error storeEntityValue(XML_Parser parser,
 	int i;
 	int n = XmlCharRefNumber(enc, entityTextPtr);
 	if (n < 0) {
-	  eventPtr = entityTextPtr;
+	  if (enc == encoding)
+	    eventPtr = entityTextPtr;
 	  return XML_ERROR_BAD_CHAR_REF;
 	}
 	n = XmlEncode(n, (ICHAR *)buf);
 	if (!n) {
-	  eventPtr = entityTextPtr;
+	  if (enc == encoding)
+	    eventPtr = entityTextPtr;
 	  return XML_ERROR_BAD_CHAR_REF;
 	}
 	for (i = 0; i < n; i++) {
@@ -2931,10 +2921,12 @@ enum XML_Error storeEntityValue(XML_Parser parser,
       }
       break;
     case XML_TOK_PARTIAL:
-      eventPtr = entityTextPtr;
+      if (enc == encoding)
+	eventPtr = entityTextPtr;
       return XML_ERROR_INVALID_TOKEN;
     case XML_TOK_INVALID:
-      eventPtr = next;
+      if (enc == encoding)
+	eventPtr = next;
       return XML_ERROR_INVALID_TOKEN;
     default:
       abort();
@@ -3317,10 +3309,8 @@ static int dtdInit(DTD *p)
   hashTableInit(&(p->prefixes));
   p->complete = 1;
   p->standalone = 0;
-  p->base = 0;
 #ifdef XML_DTD
   hashTableInit(&(p->paramEntities));
-  p->systemId = 0;
 #endif /* XML_DTD */
   p->defaultPrefix.name = 0;
   p->defaultPrefix.binding = 0;
@@ -3366,22 +3356,6 @@ The new DTD has already been initialized. */
 static int dtdCopy(DTD *newDtd, const DTD *oldDtd)
 {
   HASH_TABLE_ITER iter;
-
-  if (oldDtd->base) {
-    const XML_Char *tem = poolCopyString(&(newDtd->pool), oldDtd->base);
-    if (!tem)
-      return 0;
-    newDtd->base = tem;
-  }
-
-#ifdef XML_DTD
-  if (oldDtd->systemId) {
-    const XML_Char *tem = poolCopyString(&(newDtd->pool), oldDtd->systemId);
-    if (!tem)
-      return 0;
-    newDtd->systemId = tem;
-  }
-#endif /* XML_DTD */
 
   /* Copy the prefix table. */
 
@@ -3490,6 +3464,8 @@ static int copyEntityTable(HASH_TABLE *newTable,
 			   const HASH_TABLE *oldTable)
 {
   HASH_TABLE_ITER iter;
+  const XML_Char *cachedOldBase = 0;
+  const XML_Char *cachedNewBase = 0;
 
   hashTableIterInit(&iter, oldTable);
 
@@ -3511,14 +3487,15 @@ static int copyEntityTable(HASH_TABLE *newTable,
 	return 0;
       newE->systemId = tem;
       if (oldE->base) {
-#if 0 /* FIXME */
-	if (oldE->base == oldDtd->base)
-	  newE->base = newDtd->base;
-#endif
-	tem = poolCopyString(newPool, oldE->base);
-	if (!tem)
-	  return 0;
-	newE->base = tem;
+	if (oldE->base == cachedOldBase)
+	  newE->base = cachedNewBase;
+	else {
+	  cachedOldBase = oldE->base;
+	  tem = poolCopyString(newPool, cachedOldBase);
+	  if (!tem)
+	    return 0;
+	  cachedNewBase = newE->base = tem;
+	}
       }
     }
     else {

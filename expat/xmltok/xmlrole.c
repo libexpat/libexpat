@@ -369,6 +369,10 @@ int externalSubset1(PROLOG_STATE *state,
     return XML_ROLE_NONE;
   case XML_TOK_CLOSE_BRACKET:
     break;
+  case XML_TOK_NONE:
+    if (state->includeLevel)
+      break;
+    return XML_ROLE_NONE;
   default:
     return internalSubset(state, tok, ptr, end, enc);
   }
@@ -1254,13 +1258,6 @@ void XmlPrologStateInit(PROLOG_STATE *state)
 void XmlPrologStateInitExternalEntity(PROLOG_STATE *state)
 {
   state->handler = externalSubset0;
-  state->documentEntity = 0;
-  state->includeLevel = 0;
-}
-
-void XmlPrologStateInitInternalEntity(PROLOG_STATE *state)
-{
-  state->handler = externalSubset1;
   state->documentEntity = 0;
   state->includeLevel = 0;
 }

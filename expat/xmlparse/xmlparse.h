@@ -415,6 +415,35 @@ XML_ExternalEntityParserCreate(XML_Parser parser,
 			       const XML_Char *context,
 			       const XML_Char *encoding);
 
+enum XML_ParamEntityParsing {
+  XML_PARAM_ENTITY_PARSING_NEVER,
+  XML_PARAM_ENTITY_PARSING_UNLESS_STANDALONE,
+  XML_PARAM_ENTITY_PARSING_ALWAYS
+};
+
+/* Controls parsing of parameter entities (including the external DTD
+subset). If parsing of parameter entities is enabled, then references
+to external parameter entities (including the external DTD subset)
+will be passed to the handler set with
+XML_SetExternalEntityRefHandler.  The context passed will be 0.
+Unlike external general entities, external parameter entities can only
+be parsed synchronously.  If the external parameter entity is to be
+parsed, it must be parsed during the call to the external entity ref
+handler: the complete sequence of XML_ExternalEntityParserCreate,
+XML_Parse/XML_ParseBuffer and XML_ParserFree calls must be made during
+this call.  After XML_ExternalEntityParserCreate has been called to
+create the parser for the external parameter entity (context must be 0
+for this call), it is illegal to make any calls on the old parser
+until XML_ParserFree has been called on the newly created parser.  If
+the library has been compiled without support for parameter entity
+parsing (ie without XML_DTD being defined), then
+XML_SetParamEntityParsing will return 0 if parsing of parameter
+entities is requested; otherwise it will return non-zero. */
+
+int XMLPARSEAPI
+XML_SetParamEntityParsing(XML_Parser parser,
+			  enum XML_ParamEntityParsing parsing);
+
 enum XML_Error {
   XML_ERROR_NONE,
   XML_ERROR_NO_MEMORY,

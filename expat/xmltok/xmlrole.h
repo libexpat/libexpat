@@ -110,7 +110,6 @@ typedef struct prolog_state {
 
 void XMLTOKAPI XmlPrologStateInit(PROLOG_STATE *);
 #ifdef XML_DTD
-void XMLTOKAPI XmlPrologStateInitInternalEntity(PROLOG_STATE *);
 void XMLTOKAPI XmlPrologStateInitExternalEntity(PROLOG_STATE *);
 #endif /* XML_DTD */
 
