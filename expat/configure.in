@@ -46,10 +46,18 @@ AC_PROG_CC
 AC_PROG_INSTALL
 
 if test "$GCC" = yes ; then
-    CFLAGS="$CFLAGS -Wall -Wmissing-prototypes -Wstrict-prototypes -fexceptions"
+    dnl
+    dnl Be careful about adding the -fexceptions option; some versions of
+    dnl don't support it and it causes extra warnings that are only
+    dnl distracting; avoid.
+    dnl
+    OLDCFLAGS="$CFLAGS -Wall -Wmissing-prototypes -Wstrict-prototypes"
+    CFLAGS="$OLDCFLAGS -fexceptions"
+    AC_MSG_CHECKING(whether gcc accepts -fexceptions)
+    AC_TRY_COMPILE(,(void)1,
+                   AC_MSG_RESULT(yes),
+                   AC_MSG_RESULT(no); CFLAGS="$OLDCFLAGS")
 fi
-
-dnl Checks for libraries.
 
 dnl Checks for header files.
 AC_HEADER_STDC
@@ -70,7 +78,7 @@ dnl Checks for library functions.
 AC_FUNC_MEMCMP
 AC_FUNC_MMAP
 
-if test -z "$HAVE_MMAP"; then
+if test "$ac_cv_func_mmap_fixed_mapped" = "yes"; then
     FILEMAP_OBJ=unixfilemap.o
 else
     FILEMAP_OBJ=readfilemap.o
