@@ -43,7 +43,7 @@ NULL=nul
 !ENDIF 
 ################################################################################
 # Begin Project
-# PROP Target_Last_Scanned "gennmtab - Win32 Debug"
+# PROP Target_Last_Scanned "xmlparse - Win32 Debug"
 
 !IF  "$(CFG)" == "xmltok - Win32 Release"
 
@@ -237,7 +237,7 @@ LINK32_OBJS= \
 OUTDIR=.\xmlwf\Release
 INTDIR=.\xmlwf\Release
 
-ALL : "xmlparse - Win32 Release" "xmltok - Win32 Release" ".\bin\xmlwf.exe"
+ALL : "xmlparse - Win32 Release" ".\bin\xmlwf.exe"
 
 CLEAN : 
 	-@erase "$(INTDIR)\win32filemap.obj"
@@ -294,7 +294,6 @@ LINK32_FLAGS=setargv.obj kernel32.lib user32.lib gdi32.lib winspool.lib\
 LINK32_OBJS= \
 	"$(INTDIR)\win32filemap.obj" \
 	"$(INTDIR)\xmlwf.obj" \
-	".\Release\xmltok.lib" \
 	".\xmlparse\Release\xmlparse.lib"
 
 ".\bin\xmlwf.exe" : "$(OUTDIR)" $(DEF_FILE) $(LINK32_OBJS)
@@ -317,7 +316,7 @@ LINK32_OBJS= \
 OUTDIR=.\xmlwf\Debug
 INTDIR=.\xmlwf\Debug
 
-ALL : "xmlparse - Win32 Debug" "xmltok - Win32 Debug" ".\Debug\xmlwf.exe"
+ALL : "xmlparse - Win32 Debug" ".\Debug\xmlwf.exe"
 
 CLEAN : 
 	-@erase "$(INTDIR)\vc40.idb"
@@ -378,7 +377,6 @@ LINK32_FLAGS=setargv.obj kernel32.lib user32.lib gdi32.lib winspool.lib\
 LINK32_OBJS= \
 	"$(INTDIR)\win32filemap.obj" \
 	"$(INTDIR)\xmlwf.obj" \
-	".\Debug\xmltok.lib" \
 	".\xmlparse\Debug\xmlparse.lib"
 
 ".\Debug\xmlwf.exe" : "$(OUTDIR)" $(DEF_FILE) $(LINK32_OBJS)
@@ -767,9 +765,6 @@ DEP_CPP_XMLTO=\
 	".\xmltok_impl.c"\
 	".\xmltok_impl.h"\
 	
-NODEP_CPP_XMLTO=\
-	".\("\
-	
 
 "$(INTDIR)\xmltok.obj" : $(SOURCE) $(DEP_CPP_XMLTO) "$(INTDIR)" ".\nametab.h"
    $(CPP) /nologo /MTd /W3 /Gm /GX /Zi /Od /D "_DEBUG" /D "WIN32" /D "_WINDOWS"\
@@ -904,60 +899,23 @@ InputPath=.\gennmtab\Debug\gennmtab.exe
 !ENDIF 
 
 ################################################################################
-# Begin Project Dependency
-
-# Project_Dep_Name "xmltok"
-
-!IF  "$(CFG)" == "xmlwf - Win32 Release"
-
-"xmltok - Win32 Release" : 
-   $(MAKE) /$(MAKEFLAGS) /F ".\xmltok.mak" CFG="xmltok - Win32 Release" 
-
-!ELSEIF  "$(CFG)" == "xmlwf - Win32 Debug"
-
-"xmltok - Win32 Debug" : 
-   $(MAKE) /$(MAKEFLAGS) /F ".\xmltok.mak" CFG="xmltok - Win32 Debug" 
-
-!ENDIF 
-
-# End Project Dependency
-################################################################################
 # Begin Source File
 
 SOURCE=.\xmlwf\xmlwf.c
-
-!IF  "$(CFG)" == "xmlwf - Win32 Release"
-
 DEP_CPP_XMLWF=\
-	".\xmlparse.h"\
+	".\xmlparse\xmlparse.h"\
 	".\xmlwf\filemap.h"\
 	
 
 "$(INTDIR)\xmlwf.obj" : $(SOURCE) $(DEP_CPP_XMLWF) "$(INTDIR)"
    $(CPP) $(CPP_PROJ) $(SOURCE)
 
-
-!ELSEIF  "$(CFG)" == "xmlwf - Win32 Debug"
-
-DEP_CPP_XMLWF=\
-	".\xmlparse.h"\
-	".\xmlwf\filemap.h"\
-	
-
-"$(INTDIR)\xmlwf.obj" : $(SOURCE) $(DEP_CPP_XMLWF) "$(INTDIR)"
-   $(CPP) $(CPP_PROJ) $(SOURCE)
-
-
-!ENDIF 
 
 # End Source File
 ################################################################################
 # Begin Source File
 
 SOURCE=.\xmlwf\win32filemap.c
-
-!IF  "$(CFG)" == "xmlwf - Win32 Release"
-
 DEP_CPP_WIN32=\
 	".\xmlwf\filemap.h"\
 	
@@ -965,21 +923,6 @@ DEP_CPP_WIN32=\
 "$(INTDIR)\win32filemap.obj" : $(SOURCE) $(DEP_CPP_WIN32) "$(INTDIR)"
    $(CPP) $(CPP_PROJ) $(SOURCE)
 
-
-!ELSEIF  "$(CFG)" == "xmlwf - Win32 Debug"
-
-DEP_CPP_WIN32=\
-	".\xmlwf\filemap.h"\
-	
-NODEP_CPP_WIN32=\
-	".\xmlwf\("\
-	
-
-"$(INTDIR)\win32filemap.obj" : $(SOURCE) $(DEP_CPP_WIN32) "$(INTDIR)"
-   $(CPP) $(CPP_PROJ) $(SOURCE)
-
-
-!ENDIF 
 
 # End Source File
 ################################################################################
@@ -1095,13 +1038,10 @@ SOURCE=.\xmlparse\xmlparse.c
 !IF  "$(CFG)" == "xmlparse - Win32 Release"
 
 DEP_CPP_XMLPA=\
-	".\xmlparse.h"\
 	".\xmlparse\hashtable.h"\
+	".\xmlparse\xmlparse.h"\
 	".\xmlrole.h"\
 	".\xmltok.h"\
-	
-NODEP_CPP_XMLPA=\
-	".\xmlparse\}"\
 	
 
 "$(INTDIR)\xmlparse.obj" : $(SOURCE) $(DEP_CPP_XMLPA) "$(INTDIR)"
@@ -1111,8 +1051,8 @@ NODEP_CPP_XMLPA=\
 !ELSEIF  "$(CFG)" == "xmlparse - Win32 Debug"
 
 DEP_CPP_XMLPA=\
-	".\xmlparse.h"\
 	".\xmlparse\hashtable.h"\
+	".\xmlparse\xmlparse.h"\
 	".\xmlrole.h"\
 	".\xmltok.h"\
 	
