@@ -256,12 +256,15 @@ void PREFIX(toUtf8)(const ENCODING *enc, \
     unsigned char hi = GET_HI(from); \
     switch (hi) { \
     case 0: \
-      if (*toP == toLim) { \
-        *fromP = from; \
-	return; \
+      if (lo < 0x80) { \
+        if (*toP == toLim) { \
+          *fromP = from; \
+	  return; \
+        } \
+        *(*toP)++ = lo; \
+        break; \
       } \
-      *(*toP)++ = lo; \
-      break; \
+      /* fall through */ \
     case 0x1: case 0x2: case 0x3: \
     case 0x4: case 0x5: case 0x6: case 0x7: \
       if (toLim -  *toP < 2) { \
