@@ -93,13 +93,9 @@ LINK32=link.exe
 
 SOURCE=.\xmlparse.c
 
-!IF  "$(CFG)" == "expat - Win32 Release"
+!IF  "$(CFG)" == "expat - Win32 Debug"
 
-# ADD CPP /D VERSION="expat_1.95.1"
-
-!ELSEIF  "$(CFG)" == "expat - Win32 Debug"
-
-# ADD CPP /GX- /Od /D VERSION="\"expat_1.95.1\""
+# ADD CPP /GX- /Od
 
 !ENDIF 
 
@@ -108,44 +104,19 @@ SOURCE=.\xmlparse.c
 
 SOURCE=.\xmlrole.c
 
-!IF  "$(CFG)" == "expat - Win32 Release"
-
-# ADD CPP /D VERSION=\"expat_1.95.1\"
-
-!ELSEIF  "$(CFG)" == "expat - Win32 Debug"
-
-# ADD CPP /D VERSION=\"expat_1.95.1\"
-
-!ENDIF 
-
 # End Source File
 # Begin Source File
 
 SOURCE=.\xmltok.c
-
-!IF  "$(CFG)" == "expat - Win32 Release"
-
-# ADD CPP /D VERSION=\"expat_1.95.1\"
-
-!ELSEIF  "$(CFG)" == "expat - Win32 Debug"
-
-# ADD CPP /D VERSION=\"expat_1.95.1\"
-
-!ENDIF 
 
 # End Source File
 # Begin Source File
 
 SOURCE=xmltok_impl.c
 
-!IF  "$(CFG)" == "expat - Win32 Release"
-
-# ADD CPP /D VERSION=\"expat_1.95.1\"
-
-!ELSEIF  "$(CFG)" == "expat - Win32 Debug"
+!IF  "$(CFG)" == "expat - Win32 Debug"
 
 # PROP Exclude_From_Build 1
-# ADD CPP /D VERSION=\"expat_1.95.1\"
 
 !ENDIF 
 
@@ -154,14 +125,9 @@ SOURCE=xmltok_impl.c
 
 SOURCE=xmltok_ns.c
 
-!IF  "$(CFG)" == "expat - Win32 Release"
-
-# ADD CPP /D VERSION=\"expat_1.95.1\"
-
-!ELSEIF  "$(CFG)" == "expat - Win32 Debug"
+!IF  "$(CFG)" == "expat - Win32 Debug"
 
 # PROP Exclude_From_Build 1
-# ADD CPP /D VERSION=\"expat_1.95.1\"
 
 !ENDIF 
 
