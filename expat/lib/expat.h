@@ -47,6 +47,11 @@ typedef char XML_Char;
 typedef char XML_LChar;
 #endif /* XML_UNICODE */
 
+/* Should this be defined using stdbool.h when C99 is available? */
+typedef unsigned char XML_Bool;
+#define XML_TRUE   ((XML_Bool) 1)
+#define XML_FALSE  ((XML_Bool) 0)
+
 enum XML_Content_Type {
   XML_CTYPE_EMPTY = 1,
   XML_CTYPE_ANY,
@@ -265,6 +270,9 @@ typedef void (*XML_EndDoctypeDeclHandler)(void *userData);
    non-NULL. The publicId argument will be NULL unless a public
    identifier was provided. The notationName argument will have a
    non-NULL value only for unparsed entity declarations.
+
+   Note that is_parameter_entity can't be changed to XML_Bool, since
+   that would break binary compatibility.
 */
 typedef void (*XML_EntityDeclHandler) (void *userData,
                                        const XML_Char *entityName,
