@@ -1,5 +1,5 @@
 expat.html
-MPL-1_0.html
+MPL-1_1.html
 gplelect.html
 xmltok/asciitab.h
 xmltok/dllmain.c
