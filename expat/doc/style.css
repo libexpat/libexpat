@@ -49,3 +49,10 @@ body {
 dd {
   margin-bottom: 2em;
 }
+
+.cpp-symbols dt {
+  font-family: monospace;
+}
+.cpp-symbols dd {
+  margin-bottom: 1em;
+}
