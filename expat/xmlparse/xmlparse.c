@@ -1894,11 +1894,10 @@ static int dtdCopy(DTD *newDtd, const DTD *oldDtd)
     newE = (ELEMENT_TYPE *)lookup(&(newDtd->elementTypes), name, sizeof(ELEMENT_TYPE));
     if (!newE)
       return 0;
-    newE->defaultAtts = (DEFAULT_ATTRIBUTE *)malloc(oldE->allocDefaultAtts * sizeof(DEFAULT_ATTRIBUTE));
-    if (!newE)
+    newE->defaultAtts = (DEFAULT_ATTRIBUTE *)malloc(oldE->nDefaultAtts * sizeof(DEFAULT_ATTRIBUTE));
+    if (!newE->defaultAtts)
       return 0;
-    newE->nDefaultAtts = oldE->nDefaultAtts;
-    memcpy(newE, oldE, newE->nDefaultAtts * sizeof(DEFAULT_ATTRIBUTE));
+    newE->allocDefaultAtts = newE->nDefaultAtts = oldE->nDefaultAtts;
     for (i = 0; i < newE->nDefaultAtts; i++) {
       newE->defaultAtts[i].id = (ATTRIBUTE_ID *)lookup(&(newDtd->attributeIds), oldE->defaultAtts[i].id->name, 0);
       newE->defaultAtts[i].isCdata = oldE->defaultAtts[i].isCdata;
