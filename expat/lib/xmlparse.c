@@ -1552,7 +1552,7 @@ XML_ErrorString(int code)
     XML_L("reference to invalid character number"),
     XML_L("reference to binary entity"),
     XML_L("reference to external entity in attribute"),
-    XML_L("xml processing instruction not at start of external entity"),
+    XML_L("xml declaration not at start of external entity"),
     XML_L("unknown encoding"),
     XML_L("encoding specified in XML declaration is incorrect"),
     XML_L("unclosed CDATA section"),
