@@ -464,7 +464,7 @@ const char *XML_ErrorString(int code)
     "mismatched tag",
     "duplicate attribute",
     "junk after document element",
-    "parameter entity reference not allowed within declaration in internal subset",
+    "illegal parameter entity reference",
     "undefined entity",
     "recursive entity reference",
     "asynchronous entity",
