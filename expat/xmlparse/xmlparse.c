@@ -550,7 +550,7 @@ int XML_Parse(XML_Parser parser, const char *s, int len, int isFinal)
     if (nLeftOver) {
       if (buffer == 0 || nLeftOver > bufferLim - buffer) {
 	/* FIXME avoid integer overflow */
-	buffer = realloc(buffer, len * 2);
+	buffer = buffer == 0 ? malloc(len * 2) : realloc(buffer, len * 2);
 	if (!buffer) {
 	  errorCode = XML_ERROR_NO_MEMORY;
 	  eventPtr = eventEndPtr = 0;
