@@ -1,0 +1,21 @@
+                     Overview of the Expat distribution
+
+The Expat distribution creates several subdirectories on your system.
+Some of these directories contain components of interest to all Expat
+users, and some contain material of interest to developers who wish to
+use Expat in their applications.
+
+    Directory                   Contents
+    -------------------------------------------------------------
+    Expat-<version>\            The XML well-formedness checker,
+                                some general information files,
+                                and the uninstaller.
+
+    Expat-<version>\Doc\        API documentation for developers.
+
+    Expat-<version>\Libs\       Pre-compiled libraries for
+                                developers.
+
+    Expat-<version>\Source\     Source code, which may interest some
+                                developers, including a project file
+                                for Microsft Visual C++.
