@@ -1000,6 +1000,12 @@ called for processing an external DTD subset if parameter entity parsing
 is in effect. (See <a href="#XML_SetParamEntityParsing">
 <code>XML_SetParamEntityParsing</code></a>.)</p>
 
+<p>The context parameter specifies the parsing context in the format
+expected by the context argument to XML_ExternalEntityParserCreate.
+context is valid only until the handler returns, so if the
+referenced entity is to be parsed later, it must be copied.
+context is NULL only when the entity is a parameter entity, which
+is how one can differentiate between general and parameter entities.</p>
 
 <p>The base parameter is the base to use for relative system identifiers.
 It is set by <a href="#XML_SetBase">XML_SetBase</a> and may be null. The

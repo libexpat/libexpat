@@ -399,6 +399,7 @@ typedef int (*XML_NotStandaloneHandler)(void *userData);
    expected by the context argument to XML_ExternalEntityParserCreate;
    context is valid only until the handler returns, so if the
    referenced entity is to be parsed later, it must be copied.
+   context is NULL only when the entity is a parameter entity.
 
    The handler should return 0 if processing should not continue
    because of a fatal error in the handling of the external entity.
