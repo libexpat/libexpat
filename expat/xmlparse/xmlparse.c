@@ -464,6 +464,7 @@ XML_Parser XML_ExternalEntityParserCreate(XML_Parser oldParser,
   XML_UnknownEncodingHandler oldUnknownEncodingHandler = unknownEncodingHandler;
   void *oldUserData = userData;
   void *oldHandlerArg = handlerArg;
+  int oldDefaultExpandInternalEntities = defaultExpandInternalEntities;
  
   parser = (ns
             ? XML_ParserCreateNS(encodingName, namespaceSeparator)
@@ -483,6 +484,7 @@ XML_Parser XML_ExternalEntityParserCreate(XML_Parser oldParser,
     handlerArg = userData;
   else
     handlerArg = parser;
+  defaultExpandInternalEntities = oldDefaultExpandInternalEntities;
   if (!dtdCopy(&dtd, oldDtd) || !setContext(parser, context)) {
     XML_ParserFree(parser);
     return 0;
