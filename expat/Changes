@@ -1,3 +1,7 @@
+Release 1.95.4 (eventually)
+	- Added support for VMS, contributed by Craig Berry.  See
+	  vms/README.vms for more information.
+
 Release 1.95.3 Mon Jun 3 2002
 	- Added a project to the MSVC workspace to create a wchar_t
 	  version of the library; the DLLs are named libexpatw.dll.
