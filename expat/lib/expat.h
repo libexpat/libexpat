@@ -703,7 +703,20 @@ XML_ErrorString(int code);
 
 /* Return a string containing the version number of this expat */
 const XML_LChar XMLPARSEAPI *
-XML_ExpatVersion();
+XML_ExpatVersion(void);
+
+#define XML_MAJOR_VERSION       1
+#define XML_MINOR_VERSION       96
+#define XML_MICRO_VERSION       0
+
+typedef struct {
+  int major;
+  int minor;
+  int micro;
+} XML_Expat_Version;
+
+XML_Expat_Version XMLPARSEAPI
+XML_ExpatVersionInfo(void);
 
 #ifdef __cplusplus
 }
