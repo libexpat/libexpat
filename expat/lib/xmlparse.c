@@ -572,7 +572,6 @@ XML_Parser
 XML_ParserCreate_MM(const XML_Char *encodingName,
 		    const XML_Memory_Handling_Suite *memsuite,
 		    const XML_Char *nameSep) {
-  
   XML_Parser parser;
   static const XML_Char implicitContext[] = {
     'x', 'm', 'l', '=', 'h', 't', 't', 'p', ':', '/', '/',
@@ -585,18 +584,22 @@ XML_ParserCreate_MM(const XML_Char *encodingName,
   if (memsuite) {
     XML_Memory_Handling_Suite *mtemp;
     parser = memsuite->malloc_fcn(sizeof(Parser));
-    mtemp = &(((Parser *) parser)->m_mem);
-    mtemp->malloc_fcn = memsuite->malloc_fcn;
-    mtemp->realloc_fcn = memsuite->realloc_fcn;
-    mtemp->free_fcn = memsuite->free_fcn;
+    if (parser != NULL) {
+      mtemp = &(((Parser *) parser)->m_mem);
+      mtemp->malloc_fcn = memsuite->malloc_fcn;
+      mtemp->realloc_fcn = memsuite->realloc_fcn;
+      mtemp->free_fcn = memsuite->free_fcn;
+    }
   }
   else {
     XML_Memory_Handling_Suite *mtemp;
     parser = malloc(sizeof(Parser));
-    mtemp = &(((Parser *) parser)->m_mem);
-    mtemp->malloc_fcn = malloc;
-    mtemp->realloc_fcn = realloc;
-    mtemp->free_fcn = free;
+    if (parser != NULL) {
+      mtemp = &(((Parser *) parser)->m_mem);
+      mtemp->malloc_fcn = malloc;
+      mtemp->realloc_fcn = realloc;
+      mtemp->free_fcn = free;
+    }
   }
 
   if (!parser)
@@ -607,7 +610,16 @@ XML_ParserCreate_MM(const XML_Char *encodingName,
 
   attsSize = INIT_ATTS_SIZE;
   atts = MALLOC(attsSize * sizeof(ATTRIBUTE));
+  if (atts == NULL) {
+    FREE(parser);
+    return NULL;
+  }
   dataBuf = MALLOC(INIT_DATA_BUF_SIZE * sizeof(XML_Char));
+  if (dataBuf == NULL) {
+    FREE(atts);
+    FREE(parser);
+    return NULL;
+  }
   dataBufEnd = dataBuf + INIT_DATA_BUF_SIZE;
   freeBindingList = 0;
   inheritedBindings = 0;
