@@ -918,7 +918,7 @@ declaration and is never null.</p>
 First, this handler returns an integer. A non-zero value should be returned
 for successful handling of the external entity reference. Returning a zero
 indicates failure, and causes the calling parser to return
-an XML_ERROR_EXTERNAL_ENTITY_HANDLING error.</p>
+an <code>XML_ERROR_EXTERNAL_ENTITY_HANDLING</code> error.</p>
 
 <p>Second, instead of having userData as its first argument, it receives the
 parser that encountered the entity reference. This, along with the context
@@ -1264,7 +1264,7 @@ typedef int
 This happens when there is an external subset or a reference to a parameter
 entity, but does not have standalone set to "yes" in an XML declaration.
 If this handler returns 0, then the parser will throw an
-XML_ERROR_NOT_STANDALONE error.</p>
+<code>XML_ERROR_NOT_STANDALONE</code> error.</p>
 </div>
 
 <h3><a name="position">Parse position and error reporting functions</a></h3>
@@ -1455,9 +1455,9 @@ parameter entity that is the external DTD subset, according to
 <code>code</code>.
 The choices for <code>code</code> are:
 <ul>
-<li>XML_PARAM_ENTITY_PARSING_NEVER
-<li>XML_PARAM_ENTITY_PARSING_UNLESS_STANDALONE
-<li>XML_PARAM_ENTITY_PARSING_ALWAYS
+<li><code>XML_PARAM_ENTITY_PARSING_NEVER</code></li>
+<li><code>XML_PARAM_ENTITY_PARSING_UNLESS_STANDALONE</code></li>
+<li><code>XML_PARAM_ENTITY_PARSING_ALWAYS</code></li>
 </ul>
 </div>
 
@@ -1502,6 +1502,15 @@ typedef struct {
   int micro;
 } XML_Expat_Version;
 </pre></div>
+Some macros are also defined that support compile-time tests of the
+library version:
+<ul>
+<li><code>XML_MAJOR_VERSION</code></li>
+<li><code>XML_MINOR_VERSION</code></li>
+<li><code>XML_MICRO_VERSION</code></li>
+</ul>
+Testing these constants is currently the best way to determine if
+particular parts of the Expat API are available.
 </div>
 </dl>
 
