@@ -213,7 +213,7 @@ int main(int argc, char **argv)
 	outputDir = argv[i] + j + 1;
       i++;
     }
-    if (argv[i][j] == 'e') {
+    else if (argv[i][j] == 'e') {
       if (argv[i][j + 1] == '\0') {
 	if (++i == argc)
 	  usage(argv[0]);
