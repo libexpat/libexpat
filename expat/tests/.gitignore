@@ -1,5 +1,5 @@
 Makefile
 runtests
-xmltest
-xmltest.zip
+xmlts.zip
+XML-Test-Suite
 .libs
