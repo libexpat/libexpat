@@ -593,13 +593,6 @@ typedef struct {
 #define paramEntityParsing (((Parser *)parser)->m_paramEntityParsing)
 #endif /* XML_DTD */
 
-#ifdef COMPILED_FROM_DSP
-BOOL WINAPI
-DllMain(HINSTANCE h, DWORD r, LPVOID p) {
-  return TRUE;
-}
-#endif /* def COMPILED_FROM_DSP */
-
 #ifdef _MSC_VER
 #ifdef _DEBUG
 Parser *
