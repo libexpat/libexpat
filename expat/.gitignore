@@ -3,8 +3,8 @@ configure
 config.cache
 config.log
 config.status
-config.h.in
-config.h
+expat_config.h.in
+expat_config.h
 libtool
 expat.ncb
 expat.opt
