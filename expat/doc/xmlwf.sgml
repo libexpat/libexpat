@@ -354,8 +354,16 @@ supports both.
         <term><option>--</option></term>
         <listitem>
 		<para>
-    For some reason, <command>&dhpackage;</command> specifically
-    ignores "--" anywhere it appears on the command line.
+    (Two hyphens.)
+    Terminates the list of options.  This is only needed if a filename
+    starts with a hyphen.  For example:
+	   </para>
+<literallayout>
+&dhpackage; -- -myfile.xml
+</literallayout>
+		<para>
+    will run <command>&dhpackage;</command> on the file
+    <filename>-myfile.xml</filename>.
 	   </para>
         </listitem>
       </varlistentry>
