@@ -23,7 +23,6 @@ fully conforming. It is currently not a validating XML parser.
 make lib xmlwf
 
 %install
-
 rm -rf $RPM_BUILD_ROOT
 mkdir -p $RPM_BUILD_ROOT/bin
 mkdir -p $RPM_BUILD_ROOT/usr/lib
@@ -38,6 +37,10 @@ install -D xmlwf/xmlwf $RPM_BUILD_ROOT/usr/bin/xmlwf
 /usr/include
 
 %changelog
+* Wed Jul 25 2001 Fred L. Drake, Jr. <fdrake@acm.org>
+[Release 1.95.2-1]
+- Updated for the 1.95.2 release.
+
 * Sun Feb 18 2001 Sean Reifschneider <jafo-rpms@tummy.com>
 [Release 1.95.1-1tummy]
 - Updated to 1.95.1 release.
