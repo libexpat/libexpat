@@ -54,14 +54,14 @@ NULL=nul
 OUTDIR=.\Release
 INTDIR=.\Release
 
-ALL : "$(OUTDIR)\xmltok.dll"
+ALL : ".\bin\xmltok.dll"
 
 CLEAN : 
 	-@erase "$(INTDIR)\dllmain.obj"
 	-@erase "$(INTDIR)\xmltok.obj"
-	-@erase "$(OUTDIR)\xmltok.dll"
 	-@erase "$(OUTDIR)\xmltok.exp"
 	-@erase "$(OUTDIR)\xmltok.lib"
+	-@erase ".\bin\xmltok.dll"
 
 "$(OUTDIR)" :
     if not exist "$(OUTDIR)/$(NULL)" mkdir "$(OUTDIR)"
@@ -107,16 +107,16 @@ BSC32_SBRS= \
 	
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /dll /machine:I386
-# ADD LINK32 /nologo /entry:"DllMain" /subsystem:windows /dll /machine:I386
+# ADD LINK32 /nologo /entry:"DllMain" /subsystem:windows /dll /machine:I386 /out:"bin/xmltok.dll"
 # SUBTRACT LINK32 /nodefaultlib
 LINK32_FLAGS=/nologo /entry:"DllMain" /subsystem:windows /dll /incremental:no\
- /pdb:"$(OUTDIR)/xmltok.pdb" /machine:I386 /out:"$(OUTDIR)/xmltok.dll"\
+ /pdb:"$(OUTDIR)/xmltok.pdb" /machine:I386 /out:"bin/xmltok.dll"\
  /implib:"$(OUTDIR)/xmltok.lib" 
 LINK32_OBJS= \
 	"$(INTDIR)\dllmain.obj" \
 	"$(INTDIR)\xmltok.obj"
 
-"$(OUTDIR)\xmltok.dll" : "$(OUTDIR)" $(DEF_FILE) $(LINK32_OBJS)
+".\bin\xmltok.dll" : "$(OUTDIR)" $(DEF_FILE) $(LINK32_OBJS)
     $(LINK32) @<<
   $(LINK32_FLAGS) $(LINK32_OBJS)
 <<
@@ -223,11 +223,11 @@ LINK32_OBJS= \
 OUTDIR=.\xmlec\Release
 INTDIR=.\xmlec\Release
 
-ALL : "xmltok - Win32 Release" ".\Release\xmlec.exe"
+ALL : "xmltok - Win32 Release" ".\bin\xmlec.exe"
 
 CLEAN : 
 	-@erase "$(INTDIR)\xmlec.obj"
-	-@erase ".\Release\xmlec.exe"
+	-@erase ".\bin\xmlec.exe"
 
 "$(OUTDIR)" :
     if not exist "$(OUTDIR)/$(NULL)" mkdir "$(OUTDIR)"
@@ -269,16 +269,16 @@ BSC32_SBRS= \
 	
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /machine:I386
-# ADD LINK32 setargv.obj kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /machine:I386 /out:"Release/xmlec.exe"
+# ADD LINK32 setargv.obj kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /machine:I386 /out:"bin/xmlec.exe"
 LINK32_FLAGS=setargv.obj kernel32.lib user32.lib gdi32.lib winspool.lib\
  comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib\
  odbc32.lib odbccp32.lib /nologo /subsystem:console /incremental:no\
- /pdb:"$(OUTDIR)/xmlec.pdb" /machine:I386 /out:"Release/xmlec.exe" 
+ /pdb:"$(OUTDIR)/xmlec.pdb" /machine:I386 /out:"bin/xmlec.exe" 
 LINK32_OBJS= \
 	"$(INTDIR)\xmlec.obj" \
 	".\Release\xmltok.lib"
 
-".\Release\xmlec.exe" : "$(OUTDIR)" $(DEF_FILE) $(LINK32_OBJS)
+".\bin\xmlec.exe" : "$(OUTDIR)" $(DEF_FILE) $(LINK32_OBJS)
     $(LINK32) @<<
   $(LINK32_FLAGS) $(LINK32_OBJS)
 <<
@@ -377,12 +377,12 @@ LINK32_OBJS= \
 OUTDIR=.\xmlwf\Release
 INTDIR=.\xmlwf\Release
 
-ALL : "xmltok - Win32 Release" ".\Release\xmlwf.exe"
+ALL : "xmltok - Win32 Release" ".\bin\xmlwf.exe"
 
 CLEAN : 
 	-@erase "$(INTDIR)\wfcheck.obj"
 	-@erase "$(INTDIR)\xmlwf.obj"
-	-@erase ".\Release\xmlwf.exe"
+	-@erase ".\bin\xmlwf.exe"
 
 "$(OUTDIR)" :
     if not exist "$(OUTDIR)/$(NULL)" mkdir "$(OUTDIR)"
@@ -424,17 +424,17 @@ BSC32_SBRS= \
 	
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /machine:I386
-# ADD LINK32 setargv.obj kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /machine:I386 /out:"Release/xmlwf.exe"
+# ADD LINK32 setargv.obj kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /machine:I386 /out:"bin/xmlwf.exe"
 LINK32_FLAGS=setargv.obj kernel32.lib user32.lib gdi32.lib winspool.lib\
  comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib\
  odbc32.lib odbccp32.lib /nologo /subsystem:console /incremental:no\
- /pdb:"$(OUTDIR)/xmlwf.pdb" /machine:I386 /out:"Release/xmlwf.exe" 
+ /pdb:"$(OUTDIR)/xmlwf.pdb" /machine:I386 /out:"bin/xmlwf.exe" 
 LINK32_OBJS= \
 	"$(INTDIR)\wfcheck.obj" \
 	"$(INTDIR)\xmlwf.obj" \
 	".\Release\xmltok.lib"
 
-".\Release\xmlwf.exe" : "$(OUTDIR)" $(DEF_FILE) $(LINK32_OBJS)
+".\bin\xmlwf.exe" : "$(OUTDIR)" $(DEF_FILE) $(LINK32_OBJS)
     $(LINK32) @<<
   $(LINK32_FLAGS) $(LINK32_OBJS)
 <<
@@ -582,19 +582,8 @@ DEP_CPP_XMLTO=\
 
 SOURCE=.\dllmain.c
 
-!IF  "$(CFG)" == "xmltok - Win32 Release"
-
-
 "$(INTDIR)\dllmain.obj" : $(SOURCE) "$(INTDIR)"
 
-
-!ELSEIF  "$(CFG)" == "xmltok - Win32 Debug"
-
-
-"$(INTDIR)\dllmain.obj" : $(SOURCE) "$(INTDIR)"
-
-
-!ENDIF 
 
 # End Source File
 # End Target
@@ -632,9 +621,6 @@ SOURCE=.\dllmain.c
 # Begin Source File
 
 SOURCE=.\xmlec\xmlec.c
-
-!IF  "$(CFG)" == "xmlec - Win32 Release"
-
 DEP_CPP_XMLEC=\
 	".\xmltok.h"\
 	
@@ -642,18 +628,6 @@ DEP_CPP_XMLEC=\
 "$(INTDIR)\xmlec.obj" : $(SOURCE) $(DEP_CPP_XMLEC) "$(INTDIR)"
    $(CPP) $(CPP_PROJ) $(SOURCE)
 
-
-!ELSEIF  "$(CFG)" == "xmlec - Win32 Debug"
-
-DEP_CPP_XMLEC=\
-	".\xmltok.h"\
-	
-
-"$(INTDIR)\xmlec.obj" : $(SOURCE) $(DEP_CPP_XMLEC) "$(INTDIR)"
-   $(CPP) $(CPP_PROJ) $(SOURCE)
-
-
-!ENDIF 
 
 # End Source File
 # End Target
@@ -691,9 +665,6 @@ DEP_CPP_XMLEC=\
 # Begin Source File
 
 SOURCE=.\xmlwf\wfcheck.c
-
-!IF  "$(CFG)" == "xmlwf - Win32 Release"
-
 DEP_CPP_WFCHE=\
 	".\xmltok.h"\
 	".\xmlwf\wfcheck.h"\
@@ -702,28 +673,12 @@ DEP_CPP_WFCHE=\
 "$(INTDIR)\wfcheck.obj" : $(SOURCE) $(DEP_CPP_WFCHE) "$(INTDIR)"
    $(CPP) $(CPP_PROJ) $(SOURCE)
 
-
-!ELSEIF  "$(CFG)" == "xmlwf - Win32 Debug"
-
-DEP_CPP_WFCHE=\
-	".\xmltok.h"\
-	".\xmlwf\wfcheck.h"\
-	
-
-"$(INTDIR)\wfcheck.obj" : $(SOURCE) $(DEP_CPP_WFCHE) "$(INTDIR)"
-   $(CPP) $(CPP_PROJ) $(SOURCE)
-
-
-!ENDIF 
 
 # End Source File
 ################################################################################
 # Begin Source File
 
 SOURCE=.\xmlwf\xmlwf.c
-
-!IF  "$(CFG)" == "xmlwf - Win32 Release"
-
 DEP_CPP_XMLWF=\
 	".\xmlwf\wfcheck.h"\
 	
@@ -731,18 +686,6 @@ DEP_CPP_XMLWF=\
 "$(INTDIR)\xmlwf.obj" : $(SOURCE) $(DEP_CPP_XMLWF) "$(INTDIR)"
    $(CPP) $(CPP_PROJ) $(SOURCE)
 
-
-!ELSEIF  "$(CFG)" == "xmlwf - Win32 Debug"
-
-DEP_CPP_XMLWF=\
-	".\xmlwf\wfcheck.h"\
-	
-
-"$(INTDIR)\xmlwf.obj" : $(SOURCE) $(DEP_CPP_XMLWF) "$(INTDIR)"
-   $(CPP) $(CPP_PROJ) $(SOURCE)
-
-
-!ENDIF 
 
 # End Source File
 # End Target
