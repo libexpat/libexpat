@@ -4,7 +4,9 @@
    chardata.c
 */
 
+#ifdef HAVE_EXPAT_CONFIG_H
 #include <expat_config.h>
+#endif
 #ifdef HAVE_CHECK_H
 #include <check.h>
 #else
