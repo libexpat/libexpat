@@ -21,4 +21,9 @@
                  margin: 0em;
                  border-width: 0px;
                  vertical-align: baseline;
-                 border-bottom: 2px solid rgb(110,139,61); }
+                 border-bottom: 2px solid rgb(110,139,61);
+                 }
+
+.content li    { margin: 0em;
+                 padding-bottom: 0.75em;
+                 }
