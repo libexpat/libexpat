@@ -1072,9 +1072,14 @@ XmlInitUnknownEncoding(void *mem,
       return 0;
   for (i = 0; i < 256; i++) {
     int c = table[i];
-    if (c == -1)
-      c = 0xFFFF;
-    if (c < 0) {
+    if (c == -1) {
+      e->normal.type[i] = BT_MALFORM;
+      /* This shouldn't really get used. */
+      e->utf16[i] = 0xFFFF;
+      e->utf8[i][0] = 1;
+      e->utf8[i][1] = 0;
+    }
+    else if (c < 0) {
       if (c < -4)
 	return 0;
       e->normal.type[i] = BT_LEAD2 - (c + 2);
@@ -1093,6 +1098,7 @@ XmlInitUnknownEncoding(void *mem,
     }
     else if (checkCharRefNumber(c) < 0) {
       e->normal.type[i] = BT_NONXML;
+      /* This shouldn't really get used. */
       e->utf16[i] = 0xFFFF;
       e->utf8[i][0] = 1;
       e->utf8[i][1] = 0;
