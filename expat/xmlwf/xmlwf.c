@@ -57,7 +57,6 @@ Contributor(s):
 #ifdef XML_UNICODE
 #define T(x) L ## x
 #define ftprintf fwprintf
-#define stscanf swscanf
 #define tfopen _wfopen
 #define fputts fputws
 #define puttc putwc
@@ -74,7 +73,6 @@ Contributor(s):
 #else /* not XML_UNICODE */
 #define T(x) x
 #define ftprintf fprintf
-#define stscanf sscanf
 #define tfopen fopen
 #define fputts fputs
 #define puttc putc
