@@ -15,6 +15,8 @@
 <body>
 <h1>Expat XML Parser</h1>
 
+<p><em>Release 1.95.7.</em></p>
+
 <p>Expat is a library, written in C, for parsing XML documents. It's
 the underlying XML parser for the open source Mozilla project, Perl's
 <code>XML::Parser</code>, Python's <code>xml.parsers.expat</code>, and
@@ -223,7 +225,23 @@ callbacks should be defined using this annotation.</p>
 existing working Expat applications don't need to add it (since they
 are already using the "cdecl" calling convention, or they wouldn't be
 working).  The annotation is only needed if the default calling
-convention may be something other than "cdecl".</p>
+convention may be something other than "cdecl".  To use the annotation
+safely with older versions of Expat, you can conditionally define it
+<em>after</em> including Expat's header file:</p>
+
+<pre class="eg">
+#include &lt;expat.h&gt;
+
+#ifndef XMLCALL
+#if defined(_MSC_EXTENSIONS) && !defined(__BEOS__) && !defined(__CYGWIN__)
+#define XMLCALL __cdecl
+#elif defined(__GNUC__)
+#define XMLCALL __attribute__((cdecl))
+#else
+#define XMLCALL
+#endif
+#endif
+</pre>
 
 <p>After creating the parser, the main program just has the job of
 shoveling the document to the parser so that it can do its work.</p>
