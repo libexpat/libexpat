@@ -43,3 +43,7 @@ CopyMode: alwaysoverwrite; Source: examples\*.dsp;      DestDir: "{app}\Source\e
 CopyMode: alwaysoverwrite; Source: xmlwf\*.c*;          DestDir: "{app}\Source\xmlwf"
 CopyMode: alwaysoverwrite; Source: xmlwf\*.h;           DestDir: "{app}\Source\xmlwf"
 CopyMode: alwaysoverwrite; Source: xmlwf\*.dsp;         DestDir: "{app}\Source\xmlwf"
+
+[Messages]
+WelcomeLabel1=Welcome to the Expat XML Parser Setup Wizard
+WelcomeLabel2=This will install [name/ver] on your computer.%n%nExpat is an XML parser with a C-language API, and is primarily made available to allow developers to build applications which use XML using a portable API and fast implementation.%n%nIt is strongly recommended that you close all other applications you have running before continuing. This will help prevent any conflicts during the installation process.
