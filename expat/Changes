@@ -5,6 +5,9 @@ Release 1.95.5 someday
         - Use an incomplete struct instead of a void* for the parser
           (may not retain).
         - Fixed UTF-8 decoding bug that caused legal UTF-8 to be rejected.
+        - Finally fixed bug where default handler would report DTD
+          events that were already handled by another handler.
+          Initial patch contributed by Darryl Miller.
         - Removed unnecessary DllMain() function that caused static
           linking into a DLL to be difficult.
         - Added VC++ projects for building static libraries.
