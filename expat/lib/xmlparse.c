@@ -4024,13 +4024,15 @@ epilogProcessor(XML_Parser parser,
     switch (tok) {
     case -XML_TOK_PROLOG_S:
       if (defaultHandler) {
-        eventEndPtr = end;
-        reportDefault(parser, encoding, s, end);
+        eventEndPtr = next;
+        reportDefault(parser, encoding, s, next);
       }
-      /* fall through */
+      if (nextPtr)
+        *nextPtr = next;
+      return XML_ERROR_NONE;
     case XML_TOK_NONE:
       if (nextPtr)
-        *nextPtr = end;
+        *nextPtr = s;
       return XML_ERROR_NONE;
     case XML_TOK_PROLOG_S:
       if (defaultHandler)

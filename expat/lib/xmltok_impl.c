@@ -1009,8 +1009,10 @@ PREFIX(prologTok)(const ENCODING *enc, const char *ptr, const char *end,
       return XML_TOK_INVALID;
     }
   case BT_CR:
-    if (ptr + MINBPC(enc) == end)
+    if (ptr + MINBPC(enc) == end) {
+      *nextTokPtr = end;
       return -XML_TOK_PROLOG_S;
+    }
     /* fall through */
   case BT_S: case BT_LF:
     for (;;) {
