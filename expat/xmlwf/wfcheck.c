@@ -37,6 +37,7 @@ typedef struct {
 
 typedef struct {
   HASH_TABLE generalEntities;
+  HASH_TABLE paramEntities;
   STRING_POOL pool;
   int containsRef;
   int standalone;
@@ -89,6 +90,7 @@ checkParsedEntities(CONTEXT *context, const char **badPtr);
 static
 enum WfCheckResult storeEntity(DTD *dtd,
 			       const ENCODING *enc,
+			       int isParam,
 			       const char *entityNamePtr,
 			       const char *entityNameEnd,
 			       const char *entityTextPtr,
@@ -400,6 +402,7 @@ checkProlog(DTD *dtd, const char *s, const char *end,
 	    const char **nextPtr, const ENCODING **enc)
 {
   const char *entityNamePtr, *entityNameEnd;
+  int entityIsParam;
   PROLOG_STATE state;
   ENTITY *entity;
   INIT_ENCODING initEnc;
@@ -472,6 +475,7 @@ checkProlog(DTD *dtd, const char *s, const char *end,
 	enum WfCheckResult result
 	  = storeEntity(dtd,
 			*enc,
+			entityIsParam,
 			entityNamePtr,
 			entityNameEnd,
 			s,
@@ -480,11 +484,12 @@ checkProlog(DTD *dtd, const char *s, const char *end,
 	if (result != wellFormed)
 	  return result;
       }
-    break;
+      break;
     case XML_ROLE_ENTITY_SYSTEM_ID:
-      if (entityNamePtr) {
+      {
 	const char *name = poolStoreString(&dtd->pool, *enc, entityNamePtr, entityNameEnd);
-	entity = (ENTITY *)lookup(&dtd->generalEntities, name, sizeof(ENTITY));
+	entity = (ENTITY *)lookup(entityIsParam ? &dtd->paramEntities : &dtd->generalEntities,
+				  name, sizeof(ENTITY));
 	if (entity->name != name) {
 	  poolDiscard(&dtd->pool);
 	  entity = 0;
@@ -498,6 +503,21 @@ checkProlog(DTD *dtd, const char *s, const char *end,
 	}
       }
       break;
+    case XML_ROLE_PARAM_ENTITY_REF:
+      {
+	const char *name = poolStoreString(&dtd->pool, *enc,
+					   s + (*enc)->minBytesPerChar,
+					   next - (*enc)->minBytesPerChar);
+	ENTITY *entity = (ENTITY *)lookup(&dtd->paramEntities, name, 0);
+	poolDiscard(&dtd->pool);
+	if (!entity) {
+	  if (!dtd->containsRef || dtd->standalone) {
+	    *nextPtr = s;
+	    return undefinedEntity;
+	  }
+	}
+      }
+      break;
     case XML_ROLE_ENTITY_NOTATION_NAME:
       if (entity) {
 	entity->notation = poolStoreString(&dtd->pool, *enc, s, next);
@@ -507,10 +527,12 @@ checkProlog(DTD *dtd, const char *s, const char *end,
     case XML_ROLE_GENERAL_ENTITY_NAME:
       entityNamePtr = s;
       entityNameEnd = next;
+      entityIsParam = 0;
       break;
     case XML_ROLE_PARAM_ENTITY_NAME:
-      entityNamePtr = 0;
-      entityNameEnd = 0;
+      entityNamePtr = s;
+      entityNameEnd = next;
+      entityIsParam = 1;
       break;
     case XML_ROLE_ERROR:
       *nextPtr = s;
@@ -824,6 +846,7 @@ static int dtdInit(DTD *dtd)
     entity->wfInContent = 1;
     entity->wfInAttribute = 1;
   }
+  hashTableInit(&(dtd->paramEntities));
   dtd->containsRef = 0;
   dtd->groupSize = 0;
   dtd->groupConnector = 0;
@@ -834,12 +857,14 @@ static void dtdDestroy(DTD *dtd)
 {
   poolDestroy(&(dtd->pool));
   hashTableDestroy(&(dtd->generalEntities));
+  hashTableDestroy(&(dtd->paramEntities));
   free(dtd->groupConnector);
 }
 
 static
 enum WfCheckResult storeEntity(DTD *dtd,
 			       const ENCODING *enc,
+			       int isParam,
 			       const char *entityNamePtr,
 			       const char *entityNameEnd,
 			       const char *entityTextPtr,
@@ -849,21 +874,20 @@ enum WfCheckResult storeEntity(DTD *dtd,
   ENTITY *entity;
   const ENCODING *utf8 = XmlGetInternalEncoding(XML_UTF8_ENCODING);
   STRING_POOL *pool = &(dtd->pool);
-  if (entityNamePtr) {
-    if (!poolStoreString(pool, enc, entityNamePtr, entityNameEnd))
-      return noMemory;
-    entity = (ENTITY *)lookup(&(dtd->generalEntities), pool->start, sizeof(ENTITY));
-    if (entity->name != pool->start) {
-      poolDiscard(pool);
-      entityNamePtr = 0;
-    }
-    else
-      poolFinish(pool);
+  if (!poolStoreString(pool, enc, entityNamePtr, entityNameEnd))
+    return noMemory;
+  entity = (ENTITY *)lookup(isParam ? &(dtd->paramEntities) : &(dtd->generalEntities),
+			    pool->start,
+			    sizeof(ENTITY));
+  if (entity->name != pool->start) {
+    poolDiscard(pool);
+    entityNamePtr = 0;
   }
+  else
+    poolFinish(pool);
   entityTextPtr += enc->minBytesPerChar;
   entityTextEnd -= enc->minBytesPerChar;
-  if (entityNamePtr)
-    entity->docTextPtr = entityTextPtr;
+  entity->docTextPtr = entityTextPtr;
   for (;;) {
     const char *next;
     int tok = XmlEntityValueTok(enc, entityTextPtr, entityTextEnd, &next);

@@ -269,8 +269,9 @@ int internalSubset(PROLOG_STATE *state,
     break;
   case XML_TOK_PI:
   case XML_TOK_COMMENT:
-  case XML_TOK_PARAM_ENTITY_REF:
     return XML_ROLE_NONE;
+  case XML_TOK_PARAM_ENTITY_REF:
+    return XML_ROLE_PARAM_ENTITY_REF;
   case XML_TOK_CLOSE_BRACKET:
     state->handler = doctype5;
     return XML_ROLE_NONE;
