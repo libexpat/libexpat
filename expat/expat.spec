@@ -38,7 +38,7 @@ install -D xmlwf/xmlwf $RPM_BUILD_ROOT/usr/bin/xmlwf
 /usr/man/man1/xmlwf.1.gz
 
 %changelog
-* Fri Oct 10 2003 Fred L. Drake, Jr. <fdrake@acm.org>
+* Mon Oct 20 2003 Fred L. Drake, Jr. <fdrake@acm.org>
 [Release 1.95.7-1]
 - Updated for the 1.95.7 release.
 

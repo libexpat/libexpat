@@ -1,4 +1,4 @@
-Release 1.95.7 XXX date not determined
+Release 1.95.7 Mon Oct 20 2003
         - Fixed enum XML_Status issue (reported on SourceForge many
           times), so compilers that are properly picky will be happy.
         - Introduced an XMLCALL macro to control the calling
