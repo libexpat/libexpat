@@ -10,8 +10,9 @@ conftools/PrintPath
 conftools/ac_c_bigendian_cross.m4
 conftools/config.guess
 conftools/config.sub
+conftools/expat.m4
 conftools/install-sh
-conftools/ltconfig
+conftools/libtool.m4
 conftools/ltmain.sh
 conftools/mkinstalldirs
 doc/reference.html
