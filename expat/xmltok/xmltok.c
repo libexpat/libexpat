@@ -141,9 +141,40 @@ void utf8_toUtf8(const ENCODING *enc,
 static
 void utf8_toUtf16(const ENCODING *enc,
 		  const char **fromP, const char *fromLim,
-		  char **toP, const char *toLim)
+		  unsigned short **toP, const unsigned short *toLim)
 {
-  /* FIXME */
+  unsigned short *to = *toP;
+  const char *from = *fromP;
+  while (from != fromLim && to != toLim) {
+    switch (((struct normal_encoding *)enc)->type[(unsigned char)*from]) {
+    case BT_LEAD2:
+      *to++ = ((from[0] & 0x1f) << 6) | (from[1] & 0x3f);
+      from += 2;
+      break;
+    case BT_LEAD3:
+      *to++ = ((from[0] & 0xf) << 12) | ((from[1] & 0x3f) << 6) | (from[2] & 0x3f);
+      from += 3;
+      break;
+    case BT_LEAD4:
+      {
+	unsigned long n;
+	if (to + 1 == toLim)
+	  break;
+	n = ((from[0] & 0x7) << 18) | ((from[1] & 0x3f) << 12) | ((from[2] & 0x3f) << 6) | (from[3] & 0x3f);
+	n -= 0x10000;
+	to[0] = (unsigned short)((n >> 10) | 0xD800);
+	to[1] = (unsigned short)((n & 0x3FF) | 0xDC00);
+	to += 2;
+	from += 4;
+      }
+      break;
+    default:
+      *to++ = *from++;
+      break;
+    }
+  }
+  *fromP = from;
+  *toP = to;
 }
 
 static const struct normal_encoding utf8_encoding = {
@@ -190,8 +221,10 @@ void latin1_toUtf8(const ENCODING *enc,
 static
 void latin1_toUtf16(const ENCODING *enc,
 		    const char **fromP, const char *fromLim,
-		    char **toP, const char *toLim)
+		    unsigned short **toP, const unsigned short *toLim)
 {
+  while (*fromP != fromLim && *toP != toLim)
+    *(*toP)++ = (unsigned char)*(*fromP)++;
 }
 
 static const struct normal_encoding latin1_encoding = {
@@ -202,8 +235,6 @@ static const struct normal_encoding latin1_encoding = {
   }
 };
 
-#define latin1tab (latin1_encoding.type)
-
 static
 void ascii_toUtf8(const ENCODING *enc,
 		  const char **fromP, const char *fromLim,
@@ -213,16 +244,8 @@ void ascii_toUtf8(const ENCODING *enc,
     *(*toP)++ = *(*fromP)++;
 }
 
-static
-void ascii_toUtf16(const ENCODING *enc,
-		   const char **fromP, const char *fromLim,
-		   char **toP, const char *toLim)
-{
-  /* FIXME */
-}
-
 static const struct normal_encoding ascii_encoding = {
-  { VTABLE1, ascii_toUtf8, ascii_toUtf16, 1 },
+  { VTABLE1, ascii_toUtf8, latin1_toUtf16, 1 },
   {
 #include "asciitab.h"
 /* BT_NONXML == 0 */
@@ -316,15 +339,22 @@ void PREFIX(toUtf8)(const ENCODING *enc, \
 static \
 void PREFIX(toUtf16)(const ENCODING *enc, \
 		     const char **fromP, const char *fromLim, \
-		     char **toP, const char *toLim) \
+		     unsigned short **toP, const unsigned short *toLim) \
 { \
-  /* FIXME */ \
+  /* Avoid copying first half only of surrogate */ \
+  if (fromLim - *fromP > ((toLim - *toP) << 1) \
+      && (GET_HI(fromLim - 2) & 0xF8) == 0xD8) \
+    fromLim -= 2; \
+  for (; *fromP != fromLim && *toP != toLim; *fromP += 2) \
+    *(*toP)++ = (GET_HI(*fromP) << 8) | GET_LO(*fromP); \
 }
 
 #define PREFIX(ident) little2_ ## ident
 #define MINBPC 2
 #define BYTE_TYPE(enc, p) \
- ((p)[1] == 0 ? latin1tab[(unsigned char)*(p)] : unicode_byte_type((p)[1], (p)[0]))
+ ((p)[1] == 0 \
+  ? ((struct normal_encoding *)(enc))->type[(unsigned char)*(p)] \
+  : unicode_byte_type((p)[1], (p)[0]))
 #define BYTE_TO_ASCII(enc, p) ((p)[1] == 0 ? (p)[0] : -1)
 #define CHAR_MATCHES(enc, p, c) ((p)[1] == 0 && (p)[0] == c)
 #define IS_NAME_CHAR(enc, p, n) \
@@ -353,7 +383,21 @@ DEFINE_UTF16_TO_UTF16
 #undef IS_NMSTRT_CHAR
 #undef IS_INVALID_CHAR
 
-static const struct encoding little2_encoding = { VTABLE, 2 };
+static const struct normal_encoding little2_encoding = { 
+  { VTABLE, 2 },
+#include "asciitab.h"
+#include "latin1tab.h"
+};
+
+#if BYTE_ORDER != 21
+
+static const struct normal_encoding internal_little2_encoding = { 
+  { VTABLE, 2 },
+#include "iasciitab.h"
+#include "latin1tab.h"
+};
+
+#endif
 
 #undef PREFIX
 
@@ -361,7 +405,9 @@ static const struct encoding little2_encoding = { VTABLE, 2 };
 #define MINBPC 2
 /* CHAR_MATCHES is guaranteed to have MINBPC bytes available. */
 #define BYTE_TYPE(enc, p) \
- ((p)[0] == 0 ? latin1tab[(unsigned char)(p)[1]] : unicode_byte_type((p)[0], (p)[1]))
+ ((p)[0] == 0 \
+  ? ((struct normal_encoding *)(enc))->type[(unsigned char)(p)[1]] \
+  : unicode_byte_type((p)[0], (p)[1]))
 #define BYTE_TO_ASCII(enc, p) ((p)[0] == 0 ? (p)[1] : -1)
 #define CHAR_MATCHES(enc, p, c) ((p)[0] == 0 && (p)[1] == c)
 #define IS_NAME_CHAR(enc, p, n) \
@@ -390,7 +436,21 @@ DEFINE_UTF16_TO_UTF16
 #undef IS_NMSTRT_CHAR
 #undef IS_INVALID_CHAR
 
-static const struct encoding big2_encoding = { VTABLE, 2 };
+static const struct normal_encoding big2_encoding = {
+  { VTABLE, 2 },
+#include "asciitab.h"
+#include "latin1tab.h"
+};
+
+#if BYTE_ORDER != 12
+
+static const struct normal_encoding internal_big2_encoding = {
+  { VTABLE, 2 },
+#include "iasciitab.h"
+#include "latin1tab.h"
+};
+
+#endif
 
 #undef PREFIX
 
@@ -433,18 +493,18 @@ int initScan(const ENCODING *enc, int state, const char *ptr, const char *end,
   else {
     switch (((unsigned char)ptr[0] << 8) | (unsigned char)ptr[1]) {
     case 0x003C:
-      *encPtr = &big2_encoding;
+      *encPtr = &big2_encoding.enc;
       return XmlTok(*encPtr, state, ptr, end, nextTokPtr);
     case 0xFEFF:
       *nextTokPtr = ptr + 2;
-      *encPtr = &big2_encoding;
+      *encPtr = &big2_encoding.enc;
       return XML_TOK_BOM;
     case 0x3C00:
-      *encPtr = &little2_encoding;
+      *encPtr = &little2_encoding.enc;
       return XmlTok(*encPtr, state, ptr, end, nextTokPtr);
     case 0xFFFE:
       *nextTokPtr = ptr + 2;
-      *encPtr = &little2_encoding;
+      *encPtr = &little2_encoding.enc;
       return XML_TOK_BOM;
     }
   }
@@ -480,8 +540,14 @@ const ENCODING *XmlGetUtf8InternalEncoding()
 
 const ENCODING *XmlGetUtf16InternalEncoding()
 {
-  /* FIXME */
-  return 0;
+#if BYTE_ORDER == 12
+  return &internal_little2_encoding.enc;
+#elif BYTE_ORDER == 21
+  return &internal_big2_encoding.enc;
+#else
+  const short n = 1;
+  return *(const char *)&n ? &internal_little2_encoding.enc : &internal_big2_encoding.enc;
+#endif
 }
 
 int XmlInitEncoding(INIT_ENCODING *p, const ENCODING **encPtr, const char *name)
@@ -644,7 +710,7 @@ const ENCODING *findEncoding(const ENCODING *enc, const char *ptr, const char *e
     static const unsigned short n = 1;
     if (enc->minBytesPerChar == 2)
       return enc;
-    return &big2_encoding;
+    return &big2_encoding.enc;
   }
   return 0;  
 }
@@ -780,21 +846,19 @@ int XmlUtf8Encode(int c, char *buf)
   return 0;
 }
 
-int XmlUtf16Encode(int charNum, char *buf)
+int XmlUtf16Encode(int charNum, unsigned short *buf)
 {
-#if 0
   if (charNum < 0)
     return 0;
   if (charNum < 0x10000) {
-    UTF16_SET(buf[0], charNum);
+    buf[0] = charNum;
     return 1;
   }
   if (charNum < 0x110000) {
     charNum -= 0x10000;
-    UTF16_SET(buf[0], (charNum >> 10) + 0xD800);
-    UTF16_SET(buf[1] = (charNum & 0x3FF) + 0xDC00);
+    buf[0] = (charNum >> 10) + 0xD800;
+    buf[1] = (charNum & 0x3FF) + 0xDC00;
     return 2;
   }
-#endif
   return 0;
 }

@@ -25,19 +25,23 @@ Contributor(s):
 #include "xmldef.h"
 
 #ifdef XML_UNICODE
+#define XML_ENCODE_MAX XML_UTF16_ENCODE_MAX
 #define XmlConvert XmlUtf16Convert
 #define XmlGetInternalEncoding XmlGetUtf16InternalEncoding
 #define XmlEncode XmlUtf16Encode
 #define xmlstrchr wcschr
 #define xmlstrcmp wcscmp
 #define XML_T(x) L ## x
+typedef unsigned short ICHAR;
 #else
+#define XML_ENCODE_MAX XML_UTF8_ENCODE_MAX
 #define XmlConvert XmlUtf8Convert
 #define XmlGetInternalEncoding XmlGetUtf8InternalEncoding
 #define XmlEncode XmlUtf8Encode
 #define xmlstrchr strchr
 #define xmlstrcmp strcmp
 #define XML_T(x) x
+typedef char ICHAR;
 #endif
 
 /* Round up n to be a multiple of sz, where sz is a power of 2. */
@@ -852,18 +856,19 @@ doContent(XML_Parser parser,
 	++tagLevel;
 	if (startElementHandler) {
 	  enum XML_Error result;
-	  char *toPtr;
+	  XML_Char *toPtr;
 	  for (;;) {
 	    const char *rawNameEnd = tag->rawName + tag->rawNameLength;
 	    const char *fromPtr = tag->rawName;
 	    int bufSize;
-	    toPtr = tag->buf;
 	    if (nextPtr)
-	      toPtr += ROUND_UP(tag->rawNameLength, sizeof(XML_Char));
-	    tag->name = (XML_Char *)toPtr;
+	      toPtr = (XML_Char *)(tag->buf + ROUND_UP(tag->rawNameLength, sizeof(XML_Char)));
+	    else
+	      toPtr = (XML_Char *)tag->buf;
+	    tag->name = toPtr;
 	    XmlConvert(enc,
 		       &fromPtr, rawNameEnd,
-		       &toPtr, tag->bufEnd - sizeof(XML_Char));
+		       (ICHAR **)&toPtr, (ICHAR *)tag->bufEnd - 1);
 	    if (fromPtr == rawNameEnd)
 	      break;
 	    bufSize = (tag->bufEnd - tag->buf) << 1;
@@ -874,7 +879,7 @@ doContent(XML_Parser parser,
 	    if (nextPtr)
 	      tag->rawName = tag->buf;
 	  }
-	  *(XML_Char *)toPtr = XML_T('\0');
+	  *toPtr = XML_T('\0');
 	  result = storeAtts(parser, enc, tag->name, s);
 	  if (result)
 	    return result;
@@ -958,8 +963,8 @@ doContent(XML_Parser parser,
 	  return XML_ERROR_BAD_CHAR_REF;
 	}
 	if (characterDataHandler) {
-	  XML_Char buf[XML_MAX_BYTES_PER_CHAR];
-	  characterDataHandler(userData, buf, XmlEncode(n, (char *)buf)/sizeof(XML_Char));
+	  XML_Char buf[XML_ENCODE_MAX];
+	  characterDataHandler(userData, buf, XmlEncode(n, (ICHAR *)buf));
 	}
       }
       break;
@@ -987,9 +992,9 @@ doContent(XML_Parser parser,
 	return XML_ERROR_NONE;
       }
       if (characterDataHandler) {
-	char *dataPtr = (char *)dataBuf;
-	XmlConvert(enc, &s, end, &dataPtr, (char *)dataBufEnd);
-	characterDataHandler(userData, dataBuf, (XML_Char *)dataPtr - dataBuf);
+	ICHAR *dataPtr = (ICHAR *)dataBuf;
+	XmlConvert(enc, &s, end, &dataPtr, (ICHAR *)dataBufEnd);
+	characterDataHandler(userData, dataBuf, dataPtr - (ICHAR *)dataBuf);
       }
       if (startTagLevel == 0) {
         errorPtr = end;
@@ -1003,9 +1008,9 @@ doContent(XML_Parser parser,
     case XML_TOK_DATA_CHARS:
       if (characterDataHandler) {
 	do {
-	  char *dataPtr = (char *)dataBuf;
-	  XmlConvert(enc, &s, next, &dataPtr, (char *)dataBufEnd);
-	  characterDataHandler(userData, dataBuf, (XML_Char *)dataPtr - dataBuf);
+	  ICHAR *dataPtr = (ICHAR *)dataBuf;
+	  XmlConvert(enc, &s, next, &dataPtr, (ICHAR *)dataBufEnd);
+	  characterDataHandler(userData, dataBuf, dataPtr - (ICHAR *)dataBuf);
 	} while (s != next);
       }
       break;
@@ -1155,9 +1160,9 @@ enum XML_Error doCdataSection(XML_Parser parser,
     case XML_TOK_DATA_CHARS:
       if (characterDataHandler) {
 	do {
-	  char *dataPtr = (char *)dataBuf;
-	  XmlConvert(encoding, &s, next, &dataPtr, (char *)dataBufEnd);
-	  characterDataHandler(userData, dataBuf, (XML_Char *)dataPtr - dataBuf);
+	  ICHAR *dataPtr = (ICHAR *)dataBuf;
+	  XmlConvert(encoding, &s, next, &dataPtr, (ICHAR *)dataBufEnd);
+	  characterDataHandler(userData, dataBuf, dataPtr - (ICHAR *)dataBuf);
 	} while (s != next);
       }
       break;
@@ -1521,7 +1526,7 @@ appendAttributeValue(XML_Parser parser, const ENCODING *enc, int isCdata,
       return XML_ERROR_INVALID_TOKEN;
     case XML_TOK_CHAR_REF:
       {
-	XML_Char buf[XML_MAX_BYTES_PER_CHAR];
+	XML_Char buf[XML_ENCODE_MAX];
 	int i;
 	int n = XmlCharRefNumber(enc, ptr);
 	if (n < 0) {
@@ -1532,7 +1537,7 @@ appendAttributeValue(XML_Parser parser, const ENCODING *enc, int isCdata,
 	    && n == 0x20 /* space */
 	    && (poolLength(pool) == 0 || poolLastChar(pool) == XML_T(' ')))
 	  break;
-	n = XmlEncode(n, (char *)buf)/sizeof(XML_Char);
+	n = XmlEncode(n, (ICHAR *)buf);
 	if (!n) {
 	  errorPtr = ptr;
 	  return XML_ERROR_BAD_CHAR_REF;
@@ -1653,14 +1658,14 @@ enum XML_Error storeEntityValue(XML_Parser parser,
       break;
     case XML_TOK_CHAR_REF:
       {
-	XML_Char buf[XML_MAX_BYTES_PER_CHAR];
+	XML_Char buf[XML_ENCODE_MAX];
 	int i;
 	int n = XmlCharRefNumber(encoding, entityTextPtr);
 	if (n < 0) {
 	  errorPtr = entityTextPtr;
 	  return XML_ERROR_BAD_CHAR_REF;
 	}
-	n = XmlEncode(n, (char *)buf)/sizeof(XML_Char);
+	n = XmlEncode(n, (ICHAR *)buf);
 	if (!n) {
 	  errorPtr = entityTextPtr;
 	  return XML_ERROR_BAD_CHAR_REF;
@@ -2068,9 +2073,7 @@ XML_Char *poolAppend(STRING_POOL *pool, const ENCODING *enc,
   if (!pool->ptr && !poolGrow(pool))
     return 0;
   for (;;) {
-    /* The cast to (char **) won't work on machines with different
-       representations for char * and wchar_t *. */
-    XmlConvert(enc, &ptr, end, (char **)&(pool->ptr), (char *)pool->end);
+    XmlConvert(enc, &ptr, end, (ICHAR **)&(pool->ptr), (ICHAR *)pool->end);
     if (ptr == end)
       break;
     if (!poolGrow(pool))
