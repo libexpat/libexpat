@@ -3,9 +3,6 @@ Copyright (c) 1998, 1999, 2000 Thai Open Source Software Center Ltd
 See the file COPYING for copying permission.
 */
 
-static char RCSId[]
-  = "$Header: /cvsroot/expat/expat/lib/xmlparse.c,v 1.16 2001/07/25 03:29:56 fdrake Exp $";
-
 #ifdef COMPILED_FROM_DSP
 #  include "winconfig.h"
 #  define XMLPARSEAPI __declspec(dllexport)
@@ -26,6 +23,7 @@ static char RCSId[]
 #endif /* ndef COMPILED_FROM_DSP */
 
 #include <stddef.h>
+#include <string.h>
 
 #ifdef XML_UNICODE
 #define XML_ENCODE_MAX XML_UTF16_ENCODE_MAX
@@ -2754,7 +2752,7 @@ doProlog(XML_Parser parser,
 	return XML_ERROR_NO_MEMORY;
       if (attlistDeclHandler && declAttributeType) {
 	if (*declAttributeType == '('
-	    || *declAttributeType == 'N' && declAttributeType[1] == 'O') {
+	    || (*declAttributeType == 'N' && declAttributeType[1] == 'O')) {
 	  /* Enumerated or Notation type */
 	  if (! poolAppendChar(&tempPool, ')')
 	      || ! poolAppendChar(&tempPool, '\0'))
@@ -2788,7 +2786,7 @@ doProlog(XML_Parser parser,
 	  return XML_ERROR_NO_MEMORY;
 	if (attlistDeclHandler && declAttributeType) {
 	  if (*declAttributeType == '('
-	      || *declAttributeType == 'N' && declAttributeType[1] == 'O') {
+	      || (*declAttributeType == 'N' && declAttributeType[1] == 'O')) {
 	    /* Enumerated or Notation type */
 	    if (! poolAppendChar(&tempPool, ')')
 		|| ! poolAppendChar(&tempPool, '\0'))
