@@ -448,6 +448,11 @@ int XMLPARSEAPI XML_GetCurrentLineNumber(XML_Parser parser);
 int XMLPARSEAPI XML_GetCurrentColumnNumber(XML_Parser parser);
 long XMLPARSEAPI XML_GetCurrentByteIndex(XML_Parser parser);
 
+/* Return the number of bytes in the current event.
+Returns 0 if the event is in an internal entity. */
+
+int XMLPARSEAPI XML_GetCurrentByteCount(XML_Parser parser);
+
 /* For backwards compatibility with previous versions. */
 #define XML_GetErrorLineNumber XML_GetCurrentLineNumber
 #define XML_GetErrorColumnNumber XML_GetCurrentColumnNumber

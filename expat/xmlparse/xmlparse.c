@@ -864,6 +864,13 @@ long XML_GetCurrentByteIndex(XML_Parser parser)
   return -1;
 }
 
+int XML_GetCurrentByteCount(XML_Parser parser)
+{
+  if (eventEndPtr && eventPtr)
+    return eventEndPtr - eventPtr;
+  return 0;
+}
+
 int XML_GetCurrentLineNumber(XML_Parser parser)
 {
   if (eventPtr) {

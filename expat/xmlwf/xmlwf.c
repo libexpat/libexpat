@@ -235,8 +235,9 @@ void metaLocation(XML_Parser parser)
   if (uri)
     ftprintf(XML_GetUserData(parser), T(" uri=\"%s\""), uri);
   ftprintf(XML_GetUserData(parser),
-           T(" byte=\"%ld\" line=\"%d\" col=\"%d\""),
+           T(" byte=\"%ld\" nbytes=\"%d\" line=\"%d\" col=\"%d\""),
 	   XML_GetCurrentByteIndex(parser),
+	   XML_GetCurrentByteCount(parser),
 	   XML_GetCurrentLineNumber(parser),
 	   XML_GetCurrentColumnNumber(parser));
 }
