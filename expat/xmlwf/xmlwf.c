@@ -1,65 +1,259 @@
-#include <stdio.h>
-#include <string.h>
-#include "wfcheck.h"
+#include "xmlparse.h"
 #include "filemap.h"
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <fcntl.h>
+
+#ifdef _MSC_VER
+#include <io.h>
+#endif
+
+#ifndef O_BINARY
+#ifdef _O_BINARY
+#define O_BINARY _O_BINARY
+#else
+#define O_BINARY 0
+#endif
+#endif
+
 #ifdef _MSC_VER
 #include <crtdbg.h>
 #endif
 
-struct ProcessFileArg {
-  enum EntityType entityType;
-  int result;
-};
+#ifdef _DEBUG
+#define READ_SIZE 16
+#else
+#define READ_SIZE (1024*8)
+#endif
+
+static void characterData(void *userData, const char *s, size_t len)
+{
+  FILE *fp = userData;
+  for (; len > 0; --len, ++s) {
+    switch (*s) {
+    case '&':
+      fputs("&amp;", fp);
+      break;
+    case '<':
+      fputs("&lt;", fp);
+      break;
+    case '>':
+      fputs("&gt;", fp);
+      break;
+    case '"':
+      fputs("&quot;", fp);
+      break;
+    case '\r':
+      fputs("&#13;", fp);
+      break;
+    default:
+      putc(*s, fp);
+      break;
+    }
+  }
+}
+
+/* Lexicographically comparing UTF-8 encoded attribute values,
+is equivalent to lexicographically comparing based on the character number. */
+
+static int attcmp(const void *att1, const void *att2)
+{
+  return strcmp(*(const char **)att1, *(const char **)att2);
+}
+
+static void startElement(void *userData, const char *name, const char **atts)
+{
+  int nAtts;
+  const char **p;
+  FILE *fp = userData;
+  putc('<', fp);
+  fputs(name, fp);
+
+  p = atts;
+  while (*p)
+    ++p;
+  nAtts = (p - atts) >> 1;
+  if (nAtts > 1)
+    qsort((void *)atts, nAtts, sizeof(char *) * 2, attcmp);
+  while (*atts) {
+    putc(' ', fp);
+    fputs(*atts++, fp);
+    putc('=', fp);
+    putc('"', fp);
+    characterData(userData, *atts, strlen(*atts));
+    putc('"', fp);
+    atts++;
+  }
+  putc('>', fp);
+}
+
+static void endElement(void *userData, const char *name)
+{
+  FILE *fp = userData;
+  putc('<', fp);
+  putc('/', fp);
+  fputs(name, fp);
+  putc('>', fp);
+}
+
+static void processingInstruction(void *userData, const char *target, const char *data)
+{
+  FILE *fp = userData;
+  fprintf(fp, "<?%s %s?>", target, data);
+}
+
+typedef struct {
+  XML_Parser parser;
+  int *retPtr;
+} PROCESS_ARGS;
 
 static
-void processFile(const void *data, size_t size, const char *filename, void *p)
+void reportError(XML_Parser parser, const char *filename)
 {
-  const char *badPtr = 0;
-  unsigned long badLine = 0;
-  unsigned long badCol = 0;
-  struct ProcessFileArg *arg = p;
-  enum WfCheckResult result;
+  int code = XML_GetErrorCode(parser);
+  const char *message = XML_ErrorString(code);
+  if (message)
+    fprintf(stderr, "%s:%d:%ld: %s\n",
+	    filename,
+	    XML_GetErrorLineNumber(parser),
+	    XML_GetErrorColumnNumber(parser),
+	  message);
+  else
+    fprintf(stderr, "%s: (unknown message %d)\n", filename, code);
+}
 
-  result = wfCheck(arg->entityType, data, size, &badPtr, &badLine, &badCol);
-  if (result) {
-    const char *msg = wfCheckMessage(result);
-    fprintf(stdout, "%s:", filename);
-    if (badPtr != 0)
-      fprintf(stdout, "%lu:%lu:", badLine+1, badCol);
-    fprintf(stdout, "E: %s", msg ? msg : "(unknown message)");
-    putc('\n', stdout);
-    arg->result = 1;
+static
+void processFile(const void *data, size_t size, const char *filename, void *args)
+{
+  XML_Parser parser = ((PROCESS_ARGS *)args)->parser;
+  int *retPtr = ((PROCESS_ARGS *)args)->retPtr;
+  if (!XML_Parse(parser, data, size, 1)) {
+    reportError(parser, filename);
+    *retPtr = 0;
   }
   else
-    arg->result = 0;
+    *retPtr = 1;
+}
+
+static
+int processStream(const char *filename, XML_Parser parser)
+{
+  int fd = open(filename, O_BINARY|O_RDONLY);
+  if (fd < 0) {
+    perror(filename);
+    return 0;
+  }
+  for (;;) {
+    int nread;
+    char *buf = XML_GetBuffer(parser, READ_SIZE);
+    if (!buf) {
+      close(fd);
+      fprintf(stderr, "%s: out of memory\n", filename);
+      return 0;
+    }
+    nread = read(fd, buf, READ_SIZE);
+    if (nread < 0) {
+      perror(filename);
+      close(fd);
+      return 0;
+    }
+    if (!XML_ParseBuffer(parser, nread, nread == 0)) {
+      reportError(parser, filename);
+      close(fd);
+      return 0;
+    }
+    if (nread == 0) {
+      close(fd);
+      break;;
+    }
+  }
+  return 1;
+}
+
+static
+void usage(const char *prog)
+{
+  fprintf(stderr, "usage: %s [-d output-dir] file ...\n", prog);
+  exit(1);
 }
 
 int main(int argc, char **argv)
 {
-  int i = 1;
-  int ret = 0;
-  struct ProcessFileArg arg;
+  int i;
+  const char *outputDir = 0;
+  int useFilemap = 1;
 
 #ifdef _MSC_VER
   _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF|_CRTDBG_LEAK_CHECK_DF);
 #endif
-  arg.entityType = documentEntity;
 
-  if (i < argc && strcmp(argv[i], "-g") == 0) {
-    i++;
-    arg.entityType = generalTextEntity;
+  i = 1;
+  while(i < argc && argv[i][0] == '-') {
+    int j;
+    if (argv[i][1] == '-' && argv[i][2] == '\0') {
+      i++;
+      break;
+    }
+    j = 1;
+    if (argv[i][j] == 'r') {
+      useFilemap = 0;
+      j++;
+    }
+    if (argv[i][j] == 'd') {
+      if (argv[i][j + 1] == '\0') {
+	if (++i == argc)
+	  usage(argv[0]);
+	outputDir = argv[i];
+      }
+      else
+	outputDir = argv[i] + j + 1;
+      i++;
+    }
+    else if (argv[i][j] == '\0' && j > 1)
+      i++;
+    else
+      usage(argv[0]);
   }
-  if (i < argc && strcmp(argv[i], "--") == 0)
-    i++;
-  if (i == argc) {
-    fprintf(stderr, "usage: %s [-g] filename ...\n", argv[0]);
-    return 1;
-  }
+  if (i == argc)
+    usage(argv[0]);
   for (; i < argc; i++) {
-    if (!filemap(argv[i], processFile, &arg))
-      ret = 2;
-    else if (arg.result && !ret)
-      ret = 1;
+    FILE *fp = 0;
+    char *outName = 0;
+    int result;
+    XML_Parser parser = XML_ParserCreate(0);
+    if (outputDir) {
+      outName = malloc(strlen(outputDir) + strlen(argv[i]) + 2);
+      strcpy(outName, outputDir);
+      strcat(outName, "/");
+      strcat(outName, argv[i]);
+      fp = fopen(outName, "wb");
+      if (!fp) {
+	perror(outName);
+	exit(1);
+      }
+      XML_SetUserData(parser, fp);
+      XML_SetElementHandler(parser, startElement, endElement);
+      XML_SetCharacterDataHandler(parser, characterData);
+      XML_SetProcessingInstructionHandler(parser, processingInstruction);
+    }
+    if (useFilemap) {
+      PROCESS_ARGS args;
+      args.retPtr = &result;
+      args.parser = parser;
+      if (!filemap(argv[i], processFile, &args))
+	result = 0;
+    }
+    else
+      result = processStream(argv[i], parser);
+    if (outputDir) {
+      fclose(fp);
+      if (!result)
+	remove(outName);
+      free(outName);
+    }
+    XML_ParserFree(parser);
   }
-  return ret;
+  return 0;
 }
