@@ -827,7 +827,27 @@ external_entity_loader(XML_Parser parser,
 }
 
 /* Test that an error is reported for unknown entities if we have read
-   an external subset.
+   an external subset, and standalone is true.
+*/
+START_TEST(test_wfc_undeclared_entity_with_external_subset_standalone) {
+    char *text =
+        "<?xml version='1.0' encoding='us-ascii' standalone='yes'?>\n"
+        "<!DOCTYPE doc SYSTEM 'foo'>\n"
+        "<doc>&entity;</doc>";
+    char *foo_text =
+        "<!ELEMENT doc (#PCDATA)*>";
+
+    XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+    XML_SetUserData(parser, foo_text);
+    XML_SetExternalEntityRefHandler(parser, external_entity_loader);
+    expect_failure(text,
+                   XML_ERROR_UNDEFINED_ENTITY,
+                   "Parser did not report undefined entity (external DTD).");
+}
+END_TEST
+
+/* Test that no error is reported for unknown entities if we have read
+   an external subset, and standalone is false.
 */
 START_TEST(test_wfc_undeclared_entity_with_external_subset) {
     char *text =
@@ -840,9 +860,8 @@ START_TEST(test_wfc_undeclared_entity_with_external_subset) {
     XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
     XML_SetUserData(parser, foo_text);
     XML_SetExternalEntityRefHandler(parser, external_entity_loader);
-    expect_failure(text,
-                   XML_ERROR_UNDEFINED_ENTITY,
-                   "Parser did not report undefined entity (external DTD).");
+    if (XML_Parse(parser, text, strlen(text), 1) == XML_STATUS_ERROR)
+        xml_failure(parser);
 }
 END_TEST
 
@@ -1165,6 +1184,8 @@ make_basic_suite(void)
     tcase_add_test(tc_basic, test_wfc_undeclared_entity_no_external_subset);
     tcase_add_test(tc_basic, test_wfc_undeclared_entity_standalone);
     tcase_add_test(tc_basic, test_wfc_undeclared_entity_with_external_subset);
+    tcase_add_test(tc_basic,
+                   test_wfc_undeclared_entity_with_external_subset_standalone);
     tcase_add_test(tc_basic, test_wfc_no_recursive_entity_refs);
     tcase_add_test(tc_basic, test_ext_entity_set_encoding);
     tcase_add_test(tc_basic, test_dtd_default_handling);
