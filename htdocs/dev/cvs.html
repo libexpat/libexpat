@@ -1,0 +1,77 @@
+<html>
+  <head>
+    <title>CVS Access to Expat</title>
+    <link rel="STYLESHEET" href="../style.css" type="text/css" />
+  </head>
+  <body marginwidth="0" marginheight="0">
+    <table cellspacing="0" cellpadding="0" width="100%">
+      <tr>
+        <td class="corner"><a href="../"><img src="../expat.png"
+                                              border="0"/></a></td>
+        <td class="banner"><h2>CVS Access to Expat</h2></td>
+      </tr>
+      <tr>
+        <td class="navbar">
+        </td>
+        <td class="content">
+
+<h3>Anonymous CVS Access</h3>
+
+<p>The Expat CVS repository can be checked out through anonymous
+(pserver) CVS with the following instructions.  The module you wish to
+check out must be specified as the <i>modulename</i>. When prompted
+for a password for <i>anonymous</i>, simply press the Enter key.</p>
+
+<pre>
+cvs -d:pserver:anonymous@cvs.libexpat.org:/cvsroot/expat login
+
+cvs -z3 -d:pserver:anonymous@cvs.libexpat.org:/cvsroot/expat co <i>modulename</i>
+</pre>
+
+<p>Updates from within the module's directory do not need the -d
+parameter.</p>
+
+<h3>Developer CVS Access via SSH</h3>
+
+<p>Only project developers can access the CVS tree via this method.
+SSH1 must be installed on your client machine.  Substitute
+<i>modulename</i> with the name of the source module you want to check
+out, and <i>developername</i> with your SourceForge user name.  Enter
+your site password when prompted.</p>
+
+<pre>
+export CVS_RSH=ssh
+
+cvs -z3 -d:ext:<i>developername</i>@cvs.libexpat.org:/cvsroot/expat co <i>modulename</i>
+</pre>
+
+<h3>Source Modules</h3>
+
+<p>There are only two source modules for Expat at this time.  They
+are:</p>
+
+<dl>
+  <dt> <strong>expat</strong> </dt>
+  <dd> This contains the C source code for the library, xmlwf, example
+       applications, and test suite.  This is what most people will be
+       interested in. </dd>
+
+  <dt> <strong>htdocs</strong> </dt>
+  <dd> The content for <a href="../">www.libexpat.org</a> is located
+       in this module. </dd>
+</dl>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="corner">
+          <a href="http://sourceforge.net/"> 
+            <img src="http://cvs.sourceforge.net/sourceforge_whitebg.gif"
+                 width="136" height="79" border="0" alt="SourceForge
+                 Logo" />
+          </a>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>
