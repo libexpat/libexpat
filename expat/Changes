@@ -3,8 +3,10 @@ Release 1.95.4 Fri Jul 12 2002
 	  vms/README.vms for more information.
 	- Added Mac OS (classic) support, with a makefile for MPW,
 	  contributed by Thomas Wegner and Daryle Walker.
-	- Fixed a variety of bugs: see SF bug reports 441449, 563184,
-	  564342, 566334, 569461, 570263, 575168, 579196.
+	- Added Borland C++ Builder 5 / BCC 5.5 support, contributed
+	  by Patrick McConnell (SF patch #538032).
+	- Fixed a variety of bugs: see SF issues 441449, 563184,
+	  564342, 566334, 566901, 569461, 570263, 575168, 579196.
 	- Made skippedEntityHandler conform to SAX2 (see source comment)
 	- Re-implemented WFC: Entity Declared from XML 1.0 spec and
 	  added a new error "entity declared in parameter entity":
