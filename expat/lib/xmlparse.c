@@ -1730,7 +1730,7 @@ storeRawNames(XML_Parser parser)
       if (tag->name.str == (XML_Char *)tag->buf)
         tag->name.str = (XML_Char *)temp;
       /* if tag->name.localPart is set (when namespace processing is on)
-         then update it as well, since it will always point into tag-buf
+         then update it as well, since it will always point into tag->buf
       */
       if (tag->name.localPart)
         tag->name.localPart = (XML_Char *)temp + (tag->name.localPart -
@@ -2344,10 +2344,10 @@ storeAtts(XML_Parser parser, const ENCODING *enc,
   if (tagNamePtr) {
     elementType = (ELEMENT_TYPE *)lookup(&dtd->elementTypes, tagNamePtr->str,0);
     if (!elementType) {
-      tagNamePtr->str = poolCopyString(&dtd->pool, tagNamePtr->str);
-      if (!tagNamePtr->str)
+      const XML_Char *name = poolCopyString(&dtd->pool, tagNamePtr->str);
+      if (!name)
         return XML_ERROR_NO_MEMORY;
-      elementType = (ELEMENT_TYPE *)lookup(&dtd->elementTypes, tagNamePtr->str,
+      elementType = (ELEMENT_TYPE *)lookup(&dtd->elementTypes, name,
                                            sizeof(ELEMENT_TYPE));
       if (!elementType)
         return XML_ERROR_NO_MEMORY;
