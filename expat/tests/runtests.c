@@ -33,7 +33,8 @@ static void
 _xml_failure(const char *file, int line)
 {
     char buffer[1024];
-    sprintf(buffer, "%s (line %d, offset %d)\n    reported from %s, line %d",
+    sprintf(buffer,
+            "\n    %s (line %d, offset %d)\n    reported from %s, line %d",
             XML_ErrorString(XML_GetErrorCode(parser)),
             XML_GetCurrentLineNumber(parser),
             XML_GetCurrentColumnNumber(parser),
@@ -117,7 +118,7 @@ END_TEST
 
 typedef struct 
 {
-    int count;
+    int count;                          /* # of chars, < 0 if not set */
     XML_Char data[1024];
 } CharData;
 
@@ -125,9 +126,31 @@ static void
 accumulate_characters(void *userData, const XML_Char *s, int len)
 {
     CharData *storage = (CharData *)userData;
+    if (storage->count < 0)
+        storage->count = 0;
     if (len + storage->count < sizeof(storage->data)) {
-        memcpy(storage->data + storage->count, s, len);
+        memcpy(storage->data + storage->count, s,
+               len * sizeof(storage->data[0]));
         storage->count += len;
+    }
+}
+
+static void
+accumulate_attribute(void *userData, const XML_Char *name,
+                     const XML_Char **atts)
+{
+    CharData *storage = (CharData *)userData;
+    if (storage->count < 0 && atts != NULL && atts[0] != NULL) {
+        /* "accumulate" the value of the first attribute we see */
+        int maxchars = sizeof(storage->data) / sizeof(storage->data[0]);
+        int i;
+        for (i = 0; i < maxchars; ++i) {
+            XML_Char ch = atts[1][i];
+            if (ch == 0)
+                break;
+            storage->data[i] = ch;
+        }
+        storage->count = i;
     }
 }
 
@@ -136,13 +159,15 @@ check_characters(CharData *storage, XML_Char *expected)
 {
     char buffer[1024];
     int len = strlen(expected);
+    if (storage->count < 0)
+        storage->count = 0;
     if (len != storage->count) {
         sprintf(buffer, "wrong number of data characters: got %d, expected %d",
                 storage->count, len);
         fail(buffer);
         return;
     }
-    if (memcmp(expected, storage->data, len) != 0)
+    if (memcmp(expected, storage->data, len * sizeof(storage->data[0])) != 0)
         fail("got bad data bytes");
 }
 
@@ -150,12 +175,36 @@ static void
 run_character_check(XML_Char *text, XML_Char *expected)
 {
     CharData storage;
-    storage.count = 0;
+    XML_Parser parser = XML_ParserCreate(NULL);
+
+    if (parser == NULL)
+        fail("Parser not created.");
+
+    storage.count = -1;
     XML_SetUserData(parser, &storage);
     XML_SetCharacterDataHandler(parser, accumulate_characters);
     if (!XML_Parse(parser, text, strlen(text), 1))
         xml_failure();
     check_characters(&storage, expected);
+    XML_ParserFree(parser);
+}
+
+static void
+run_attribute_check(XML_Char *text, XML_Char *expected)
+{
+    CharData storage;
+    XML_Parser parser = XML_ParserCreate(NULL);
+
+    if (parser == NULL)
+        fail("Parser not created.");
+
+    storage.count = -1; /* magical "not-set" value */
+    XML_SetUserData(parser, &storage);
+    XML_SetStartElementHandler(parser, accumulate_attribute);
+    if (!XML_Parse(parser, text, strlen(text), 1))
+        xml_failure();
+    check_characters(&storage, expected);
+    XML_ParserFree(parser);
 }
 
 /* Regression test for SF bug #491986. */
