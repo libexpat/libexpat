@@ -1261,8 +1261,9 @@ START_TEST(test_ns_duplicate_attrs_diff_prefixes)
         "<doc xmlns:a='http://xml.libexpat.org/a'\n"
         "     xmlns:b='http://xml.libexpat.org/a'\n"
         "     a:a='v' b:a='v' />";
-    if (XML_Parse(parser, text, strlen(text), XML_TRUE) != XML_STATUS_ERROR)
-        fail("did not report multiple attributes with same URI+name");
+    expect_failure(text,
+                   XML_ERROR_DUPLICATE_ATTRIBUTE,
+                   "did not report multiple attributes with same URI+name");
 }
 END_TEST
 
@@ -1270,8 +1271,9 @@ END_TEST
 START_TEST(test_ns_unbound_prefix_on_attribute)
 {
     char *text = "<doc a:attr=''/>";
-    if (XML_Parse(parser, text, strlen(text), XML_TRUE) != XML_STATUS_ERROR)
-        fail("did not report unbound prefix on attribute");
+    expect_failure(text,
+                   XML_ERROR_UNBOUND_PREFIX,
+                   "did not report unbound prefix on attribute");
 }
 END_TEST
 
@@ -1279,13 +1281,14 @@ END_TEST
 START_TEST(test_ns_unbound_prefix_on_element)
 {
     char *text = "<a:doc/>";
-    if (XML_Parse(parser, text, strlen(text), XML_TRUE) != XML_STATUS_ERROR)
-        fail("did not report unbound prefix on element");
+    expect_failure(text,
+                   XML_ERROR_UNBOUND_PREFIX,
+                   "did not report unbound prefix on element");
 }
 END_TEST
 
 static Suite *
-make_basic_suite(void)
+make_suite(void)
 {
     Suite *s = suite_create("basic");
     TCase *tc_basic = tcase_create("basic tests");
@@ -1359,7 +1362,7 @@ main(int argc, char *argv[])
     int i, nf;
     int forking = 0, forking_set = 0;
     int verbosity = CK_NORMAL;
-    Suite *s = make_basic_suite();
+    Suite *s = make_suite();
     SRunner *sr = srunner_create(s);
 
     /* run the tests for internal helper functions */
