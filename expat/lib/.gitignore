@@ -4,7 +4,9 @@ Makefile
 *.la
 expat.h
 Debug
+Debug-w
 Release
+Release-w
 expat.ncb
 expat.opt
 expat.plg
