@@ -143,6 +143,7 @@ typedef struct {
   const XML_Char *str;
   const XML_Char *localPart;
   const XML_Char *prefix;
+  int strLen;
   int uriLen;
   int prefixLen;
 } TAG_NAME;
@@ -1608,13 +1609,55 @@ XML_GetFeatureList(void)
   return features;
 }
 
-static
-enum XML_Error contentProcessor(XML_Parser parser,
-                                const char *start,
-                                const char *end,
-                                const char **endPtr)
+/* initially tag->rawName always points into the parse buffer;
+   for those TAG instances opened while the current parse buffer was
+   processed, and not yet closed, we need to store tag->rawName in a more
+   permanent location, since the parse buffer is about to be discarded
+*/
+static XML_Bool
+storeRawNames(XML_Parser parser)
 {
-  return doContent(parser, 0, encoding, start, end, endPtr);
+  TAG *tag = tagStack;
+  while (tag) {
+    int bufSize;
+    int nameLen = sizeof(XML_Char) * (tag->name.strLen + 1);
+    char *rawNameBuf = tag->buf + nameLen;
+    /* stop if already stored */
+    if (tag->rawName == rawNameBuf) 
+      break;
+    /* for re-use purposes we need to ensure that the
+       size of tag->buf is a multiple of sizeof(XML_Char)
+    */
+    bufSize = nameLen + ROUND_UP(tag->rawNameLength, sizeof(XML_Char));
+    if (bufSize > tag->bufEnd - tag->buf) {
+      char *temp = REALLOC(tag->buf, bufSize);
+      if (temp == NULL)
+        return XML_FALSE;
+      tag->buf = temp;
+      tag->name.str = (XML_Char *)temp;
+      tag->bufEnd = temp + bufSize;
+      rawNameBuf = temp + nameLen;
+    }
+    memcpy(rawNameBuf, tag->rawName, tag->rawNameLength);
+    tag->rawName = rawNameBuf;
+    tag = tag->parent;
+  }
+  return XML_TRUE;
+}
+
+static enum XML_Error
+contentProcessor(XML_Parser parser,
+                 const char *start,
+                 const char *end,
+                 const char **endPtr)
+{
+  enum XML_Error result = 
+    doContent(parser, 0, encoding, start, end, endPtr);
+  if (result != XML_ERROR_NONE) 
+    return result;
+  if (!storeRawNames(parser))
+    return XML_ERROR_NO_MEMORY;
+  return result;
 }
 
 static enum XML_Error
@@ -1704,7 +1747,7 @@ externalEntityInitProcessor3(XML_Parser parser,
   }
   processor = externalEntityContentProcessor;
   tagLevel = 1;
-  return doContent(parser, 1, encoding, start, end, endPtr);
+  return externalEntityContentProcessor(parser, start, end, endPtr);
 }
 
 static enum XML_Error
@@ -1713,7 +1756,13 @@ externalEntityContentProcessor(XML_Parser parser,
                                const char *end,
                                const char **endPtr)
 {
-  return doContent(parser, 1, encoding, start, end, endPtr);
+  enum XML_Error result = 
+    doContent(parser, 1, encoding, start, end, endPtr);
+  if (result != XML_ERROR_NONE) 
+    return result;
+  if (!storeRawNames(parser))
+    return XML_ERROR_NO_MEMORY;
+  return result;
 }
 
 static enum XML_Error
@@ -1905,52 +1954,34 @@ doContent(XML_Parser parser,
         tag->name.prefix = NULL;
         tag->rawName = s + enc->minBytesPerChar;
         tag->rawNameLength = XmlNameLength(enc, tag->rawName);
-        if (nextPtr) {
-          /* Need to guarantee that:
-             tag->buf + ROUND_UP(tag->rawNameLength, sizeof(XML_Char))
-                <= tag->bufEnd - sizeof(XML_Char) */
-          if (tag->rawNameLength + (int)(sizeof(XML_Char) - 1)
-              + (int)sizeof(XML_Char) > tag->bufEnd - tag->buf) {
-            int bufSize = tag->rawNameLength * 4;
-            bufSize = ROUND_UP(bufSize, sizeof(XML_Char));
+        ++tagLevel;
+        {
+          const char *rawNameEnd = tag->rawName + tag->rawNameLength;
+          const char *fromPtr = tag->rawName;
+          toPtr = (XML_Char *)tag->buf;
+          for (;;) {
+            int bufSize;
+            int convLen;
+            XmlConvert(enc,
+                       &fromPtr, rawNameEnd,
+                       (ICHAR **)&toPtr, (ICHAR *)tag->bufEnd - 1);
+            convLen = toPtr - (XML_Char *)tag->buf;
+            if (fromPtr == rawNameEnd) {
+              tag->name.strLen = convLen;
+              break;
+            }
+            bufSize = (tag->bufEnd - tag->buf) << 1;
             {
               char *temp = REALLOC(tag->buf, bufSize);
               if (temp == NULL)
                 return XML_ERROR_NO_MEMORY;
               tag->buf = temp;
+              tag->bufEnd = temp + bufSize;
+              toPtr = (XML_Char *)temp + convLen;
             }
-            tag->bufEnd = tag->buf + bufSize;
           }
-          memcpy(tag->buf, tag->rawName, tag->rawNameLength);
-          tag->rawName = tag->buf;
         }
-        ++tagLevel;
-        for (;;) {
-          const char *rawNameEnd = tag->rawName + tag->rawNameLength;
-          const char *fromPtr = tag->rawName;
-          int bufSize;
-          if (nextPtr)
-            toPtr = (XML_Char *)(tag->buf + ROUND_UP(tag->rawNameLength,
-                                                     sizeof(XML_Char)));
-          else
-            toPtr = (XML_Char *)tag->buf;
-          tag->name.str = toPtr;
-          XmlConvert(enc,
-                     &fromPtr, rawNameEnd,
-                     (ICHAR **)&toPtr, (ICHAR *)tag->bufEnd - 1);
-          if (fromPtr == rawNameEnd)
-            break;
-          bufSize = (tag->bufEnd - tag->buf) << 1;
-          {
-            char *temp = REALLOC(tag->buf, bufSize);
-            if (temp == NULL)
-              return XML_ERROR_NO_MEMORY;
-            tag->buf = temp;
-          }
-          tag->bufEnd = tag->buf + bufSize;
-          if (nextPtr)
-            tag->rawName = tag->buf;
-        }
+        tag->name.str = (XML_Char *)tag->buf;
         *toPtr = XML_T('\0');
         if (startElementHandler) {
           result = storeAtts(parser, enc, s, &(tag->name), &(tag->bindings));
