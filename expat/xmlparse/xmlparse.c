@@ -275,6 +275,8 @@ typedef struct {
   XML_DefaultHandler defaultHandler;
   XML_UnparsedEntityDeclHandler unparsedEntityDeclHandler;
   XML_NotationDeclHandler notationDeclHandler;
+  XML_StartNamespaceDeclHandler startNamespaceDeclHandler;
+  XML_EndNamespaceDeclHandler endNamespaceDeclHandler;
   XML_ExternalEntityRefHandler externalEntityRefHandler;
   void *externalEntityRefHandlerArg;
   XML_UnknownEncodingHandler unknownEncodingHandler;
@@ -329,6 +331,8 @@ typedef struct {
 #define defaultHandler (((Parser *)parser)->defaultHandler)
 #define unparsedEntityDeclHandler (((Parser *)parser)->unparsedEntityDeclHandler)
 #define notationDeclHandler (((Parser *)parser)->notationDeclHandler)
+#define startNamespaceDeclHandler (((Parser *)parser)->startNamespaceDeclHandler)
+#define endNamespaceDeclHandler (((Parser *)parser)->endNamespaceDeclHandler)
 #define externalEntityRefHandler (((Parser *)parser)->externalEntityRefHandler)
 #define externalEntityRefHandlerArg (((Parser *)parser)->externalEntityRefHandlerArg)
 #define unknownEncodingHandler (((Parser *)parser)->unknownEncodingHandler)
@@ -407,6 +411,8 @@ XML_Parser XML_ParserCreate(const XML_Char *encodingName)
   defaultHandler = 0;
   unparsedEntityDeclHandler = 0;
   notationDeclHandler = 0;
+  startNamespaceDeclHandler = 0;
+  endNamespaceDeclHandler = 0;
   externalEntityRefHandler = 0;
   externalEntityRefHandlerArg = parser;
   unknownEncodingHandler = 0;
@@ -512,6 +518,8 @@ XML_Parser XML_ExternalEntityParserCreate(XML_Parser oldParser,
   XML_StartCdataSectionHandler oldStartCdataSectionHandler = startCdataSectionHandler;
   XML_EndCdataSectionHandler oldEndCdataSectionHandler = endCdataSectionHandler;
   XML_DefaultHandler oldDefaultHandler = defaultHandler;
+  XML_StartNamespaceDeclHandler oldStartNamespaceDeclHandler = startNamespaceDeclHandler;
+  XML_EndNamespaceDeclHandler oldEndNamespaceDeclHandler = endNamespaceDeclHandler;
   XML_ExternalEntityRefHandler oldExternalEntityRefHandler = externalEntityRefHandler;
   XML_UnknownEncodingHandler oldUnknownEncodingHandler = unknownEncodingHandler;
   void *oldUserData = userData;
@@ -532,6 +540,8 @@ XML_Parser XML_ExternalEntityParserCreate(XML_Parser oldParser,
   startCdataSectionHandler = oldStartCdataSectionHandler;
   endCdataSectionHandler = oldEndCdataSectionHandler;
   defaultHandler = oldDefaultHandler;
+  startNamespaceDeclHandler = oldStartNamespaceDeclHandler;
+  endNamespaceDeclHandler = oldEndNamespaceDeclHandler;
   externalEntityRefHandler = oldExternalEntityRefHandler;
   unknownEncodingHandler = oldUnknownEncodingHandler;
   userData = oldUserData;
@@ -683,6 +693,14 @@ void XML_SetNotationDeclHandler(XML_Parser parser,
 				XML_NotationDeclHandler handler)
 {
   notationDeclHandler = handler;
+}
+
+void XML_SetNamespaceDeclHandler(XML_Parser parser,
+				 XML_StartNamespaceDeclHandler start,
+				 XML_EndNamespaceDeclHandler end)
+{
+  startNamespaceDeclHandler = start;
+  endNamespaceDeclHandler = end;
 }
 
 void XML_SetExternalEntityRefHandler(XML_Parser parser,
@@ -1247,6 +1265,8 @@ doContent(XML_Parser parser,
 	poolClear(&tempPool);
 	while (bindings) {
 	  BINDING *b = bindings;
+	  if (endNamespaceDeclHandler)
+	    endNamespaceDeclHandler(handlerArg, b->prefix->name);
 	  bindings = bindings->nextTagBinding;
 	  b->nextTagBinding = freeBindingList;
 	  freeBindingList = b;
@@ -1289,6 +1309,8 @@ doContent(XML_Parser parser,
 	  reportDefault(parser, enc, s, next);
 	while (tag->bindings) {
 	  BINDING *b = tag->bindings;
+	  if (endNamespaceDeclHandler)
+	    endNamespaceDeclHandler(handlerArg, b->prefix->name);
 	  tag->bindings = tag->bindings->nextTagBinding;
 	  b->nextTagBinding = freeBindingList;
 	  freeBindingList = b;
@@ -1646,10 +1668,16 @@ int addBinding(XML_Parser parser, PREFIX *prefix, const ATTRIBUTE_ID *attId, con
     b->uri[len - 1] = namespaceSeparator;
   b->prefix = prefix;
   b->attId = attId;
-  b->prevPrefixBinding = b->prefix->binding;
-  b->prefix->binding = *uri == XML_T('\0') ? 0 : b;
+  b->prevPrefixBinding = prefix->binding;
+  if (*uri == XML_T('\0') && prefix == &dtd.defaultPrefix)
+    prefix->binding = 0;
+  else
+    prefix->binding = b;
   b->nextTagBinding = *bindingsPtr;
   *bindingsPtr = b;
+  if (startNamespaceDeclHandler)
+    startNamespaceDeclHandler(handlerArg, prefix->name,
+			      prefix->binding ? uri : 0);
   return 1;
 }
 

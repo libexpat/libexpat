@@ -149,6 +149,19 @@ typedef void (*XML_NotationDeclHandler)(void *userData,
 					const XML_Char *systemId,
 					const XML_Char *publicId);
 
+/* When namespace processing is enabled, these are called once for
+each namespace declaration. The call to the start and end element
+handlers occur between the calls to the start and end namespace
+declaration handlers. For an xmlns attribute, prefix will be null.
+For an xmlns="" attribute, uri will be null. */
+
+typedef void (*XML_StartNamespaceDeclHandler)(void *userData,
+					      const XML_Char *prefix,
+					      const XML_Char *uri);
+
+typedef void (*XML_EndNamespaceDeclHandler)(void *userData,
+					    const XML_Char *prefix);
+
 /* This is called for a reference to an external parsed general entity.
 The referenced entity is not automatically parsed.
 The application can parse it immediately or later using
@@ -284,6 +297,11 @@ XML_SetUnparsedEntityDeclHandler(XML_Parser parser,
 void XMLPARSEAPI
 XML_SetNotationDeclHandler(XML_Parser parser,
 			   XML_NotationDeclHandler handler);
+
+void XMLPARSEAPI
+XML_SetNamespaceDeclHandler(XML_Parser parser,
+			    XML_StartNamespaceDeclHandler start,
+			    XML_EndNamespaceDeclHandler end);
 
 void XMLPARSEAPI
 XML_SetExternalEntityRefHandler(XML_Parser parser,

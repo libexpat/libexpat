@@ -32,7 +32,7 @@ Contributor(s):
 #include <crtdbg.h>
 #endif
 
-#define NSSEP T('\001')
+#define NSSEP T('#')
 
 static void characterData(void *userData, const XML_Char *s, int len)
 {
@@ -372,6 +372,33 @@ void metaNotationDecl(XML_Parser parser,
   fputts(T("/>\n"), fp);
 }
 
+static
+void metaStartNamespaceDecl(XML_Parser parser,
+			    const XML_Char *prefix,
+			    const XML_Char *uri)
+{
+  FILE *fp = XML_GetUserData(parser);
+  fputts(T("<startns"), fp);
+  if (prefix)
+    ftprintf(fp, T(" prefix=\"%s\""), prefix);
+  if (uri) {
+    fputts(T(" ns=\""), fp);
+    characterData(fp, uri, tcslen(uri));
+    fputts(T("\"/>\n"), fp);
+  }
+  else
+    fputts(T("/>\n"), fp);
+}
+
+static
+void metaEndNamespaceDecl(XML_Parser parser, const XML_Char *prefix)
+{
+  FILE *fp = XML_GetUserData(parser);
+  if (!prefix)
+    fputts(T("<endns/>\n"), fp);
+  else
+    ftprintf(fp, T("<endns prefix=\"%s\"/>\n"), prefix);
+}
 
 static
 int unknownEncodingConvert(void *data, const char *p)
@@ -452,7 +479,6 @@ int tmain(int argc, XML_Char **argv)
     }
     if (argv[i][j] == T('n')) {
       useNamespaces = 1;
-      outputType = 0;
       j++;
     }
     if (argv[i][j] == T('x')) {
@@ -465,7 +491,6 @@ int tmain(int argc, XML_Char **argv)
     }
     if (argv[i][j] == T('m')) {
       outputType = 'm';
-      useNamespaces = 0;
       j++;
     }
     if (argv[i][j] == T('c')) {
@@ -545,6 +570,7 @@ int tmain(int argc, XML_Char **argv)
 	XML_SetCharacterDataHandler(parser, metaCharacterData);
 	XML_SetUnparsedEntityDeclHandler(parser, metaUnparsedEntityDecl);
 	XML_SetNotationDeclHandler(parser, metaNotationDecl);
+	XML_SetNamespaceDeclHandler(parser, metaStartNamespaceDecl, metaEndNamespaceDecl);
 	metaStartDocument(parser);
 	break;
       case 'c':
