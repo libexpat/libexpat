@@ -44,6 +44,11 @@ _xml_failure(const char *file, int line)
 
 #define xml_failure() _xml_failure(__FILE__, __LINE__)
 
+
+/*
+ * Character & encoding tests.
+ */
+
 START_TEST(test_nul_byte)
 {
     char text[] = "<doc>\0</doc>";
@@ -66,24 +71,6 @@ START_TEST(test_u0000_char)
         fail("Parser did not report error on NUL-byte.");
     if (XML_GetErrorCode(parser) != XML_ERROR_BAD_CHAR_REF)
         xml_failure();
-}
-END_TEST
-
-
-START_TEST(test_xmldecl_misplaced)
-{
-    char *text =
-        "\n"
-        "<?xml version='1.0'?>\n"
-        "<a>&eee;</a>";
-
-    if (!XML_Parse(parser, text, strlen(text), 1)) {
-        if (XML_GetErrorCode(parser) != XML_ERROR_MISPLACED_XML_PI)
-            xml_failure();
-    }
-    else {
-        fail("expected XML_ERROR_MISPLACED_XML_PI with misplaced XML decl");
-    }
 }
 END_TEST
 
@@ -311,6 +298,10 @@ START_TEST(test_latin1_umlauts)
 END_TEST
 
 
+/*
+ * Attribute tests.
+ */
+
 /* Helpers used by the following test; this checks any "attr" and "refs"
  * attributes to make sure whitespace has been normalized.
  */
@@ -416,6 +407,28 @@ START_TEST(test_attr_whitespace_normalization)
                                check_attr_contains_normalized_whitespace);
     if (!XML_Parse(parser, text, strlen(text), 1))
         xml_failure();
+}
+END_TEST
+
+
+/*
+ * XML declaration tests.
+ */
+
+START_TEST(test_xmldecl_misplaced)
+{
+    char *text =
+        "\n"
+        "<?xml version='1.0'?>\n"
+        "<a>&eee;</a>";
+
+    if (!XML_Parse(parser, text, strlen(text), 1)) {
+        if (XML_GetErrorCode(parser) != XML_ERROR_MISPLACED_XML_PI)
+            xml_failure();
+    }
+    else {
+        fail("expected XML_ERROR_MISPLACED_XML_PI with misplaced XML decl");
+    }
 }
 END_TEST
 
