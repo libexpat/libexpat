@@ -10,7 +10,7 @@ dnl   under the terms of the License (based on the MIT/X license) contained
 dnl   in the file COPYING that comes with this distribution.
 dnl
 
-dnl Ensure that subversion is configured with autoconf 2.52 or newer
+dnl Ensure that Expat is configured with autoconf 2.52 or newer
 AC_PREREQ(2.52)
 
 dnl Get the version number of Expat, using m4's esyscmd() command to run
