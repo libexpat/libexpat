@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-O2 -I. -Ixmlparse
+CFLAGS=-O2 -Ixmltok -Ixmlparse
 # Use one of the next two lines; unixfilemap is better if it works.
 FILEMAP_OBJ=xmlwf/unixfilemap.o
 #FILEMAP_OBJ=xmlwf/readfilemap.o
