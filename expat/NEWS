@@ -1,0 +1,22 @@
+Changes for Expat 1.95.3
+Release date:  2002-Apr-XX
+--------------------------
+
+ * Added XML_ParserReset(), a new function which resets a parser
+   without freeing memory pools.  When parsing many small documents,
+   this can make a performance improvement due to the avoided malloc()
+   calls.  Contributed by David Crowley as SF patch #450608.
+
+ * Many changes to the build process to improve cross-platform
+   support.
+
+ * Fixed XML_SetReturnNSTriplet() to work for element names.
+
+ * Fixed support for XML_UNICODE, allowing UTF-16 output to be
+   usable.
+
+ * Added several regression tests.
+
+ * Added a Unix man page for xmlwf.
+
+ * Allow xmlwf to read from standard input.
