@@ -34,6 +34,7 @@ NULL=nul
 !ENDIF 
 ################################################################################
 # Begin Project
+# PROP Target_Last_Scanned "xmlec - Win32 Debug"
 
 !IF  "$(CFG)" == "xmltok - Win32 Release"
 
@@ -378,26 +379,12 @@ LINK32_OBJS= \
 # Begin Source File
 
 SOURCE=.\xmltok.c
-
-!IF  "$(CFG)" == "xmltok - Win32 Release"
-
 DEP_CPP_XMLTO=\
-	".\XmlTok.h"\
+	".\xmltok.h"\
 	
 
 "$(INTDIR)\xmltok.obj" : $(SOURCE) $(DEP_CPP_XMLTO) "$(INTDIR)"
 
-
-!ELSEIF  "$(CFG)" == "xmltok - Win32 Debug"
-
-DEP_CPP_XMLTO=\
-	".\XmlTok.h"\
-	
-
-"$(INTDIR)\xmltok.obj" : $(SOURCE) $(DEP_CPP_XMLTO) "$(INTDIR)"
-
-
-!ENDIF 
 
 # End Source File
 ################################################################################
@@ -409,7 +396,7 @@ SOURCE=.\wxmltok.c
 
 DEP_CPP_WXMLT=\
 	".\xmltok.c"\
-	".\XmlTok.h"\
+	".\xmltok.h"\
 	
 
 "$(INTDIR)\wxmltok.obj" : $(SOURCE) $(DEP_CPP_WXMLT) "$(INTDIR)" ".\xmltok.c"
@@ -419,7 +406,7 @@ DEP_CPP_WXMLT=\
 
 DEP_CPP_WXMLT=\
 	".\xmltok.c"\
-	".\XmlTok.h"\
+	".\xmltok.h"\
 	
 
 "$(INTDIR)\wxmltok.obj" : $(SOURCE) $(DEP_CPP_WXMLT) "$(INTDIR)" ".\xmltok.c"
@@ -464,7 +451,7 @@ DEP_CPP_WXMLT=\
 
 SOURCE=.\xmlec\xmlec.c
 DEP_CPP_XMLEC=\
-	".\XmlTok.h"\
+	".\xmltok.h"\
 	
 
 "$(INTDIR)\xmlec.obj" : $(SOURCE) $(DEP_CPP_XMLEC) "$(INTDIR)"
