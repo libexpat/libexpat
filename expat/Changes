@@ -5,6 +5,12 @@ Release 1.95.4 Fri Jul 12 2002
 	  contributed by Thomas Wegner and Daryle Walker.
 	- Fixed a variety of bugs: see SF bug reports 441449, 563184,
 	  564342, 566334, 575168, 579196.
+	- Made skippedEntityHandler conform to SAX2 (see source comment)
+	- Re-implemented WFC: Entity Declared from XML 1.0 spec and
+	  added a new error "entity declared in parameter entity":
+	  see SF bug report 569461 and SF patch 578161
+	- Re-implemented section 5.1 from XML 1.0 spec:
+	  see SF bug report 570263 and SF patch 578161
 
 Release 1.95.3 Mon Jun 3 2002
 	- Added a project to the MSVC workspace to create a wchar_t
