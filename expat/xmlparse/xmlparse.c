@@ -585,6 +585,10 @@ XML_Parser XML_ExternalEntityParserCreate(XML_Parser oldParser,
   XML_StartCdataSectionHandler oldStartCdataSectionHandler = startCdataSectionHandler;
   XML_EndCdataSectionHandler oldEndCdataSectionHandler = endCdataSectionHandler;
   XML_DefaultHandler oldDefaultHandler = defaultHandler;
+  XML_UnparsedEntityDeclHandler oldUnparsedEntityDeclHandler = unparsedEntityDeclHandler;
+  XML_NotationDeclHandler oldNotationDeclHandler = notationDeclHandler;
+  XML_ExternalParsedEntityDeclHandler oldExternalParsedEntityDeclHandler = externalParsedEntityDeclHandler;
+  XML_InternalParsedEntityDeclHandler oldInternalParsedEntityDeclHandler = internalParsedEntityDeclHandler;
   XML_StartNamespaceDeclHandler oldStartNamespaceDeclHandler = startNamespaceDeclHandler;
   XML_EndNamespaceDeclHandler oldEndNamespaceDeclHandler = endNamespaceDeclHandler;
   XML_NotStandaloneHandler oldNotStandaloneHandler = notStandaloneHandler;
@@ -610,6 +614,10 @@ XML_Parser XML_ExternalEntityParserCreate(XML_Parser oldParser,
   startCdataSectionHandler = oldStartCdataSectionHandler;
   endCdataSectionHandler = oldEndCdataSectionHandler;
   defaultHandler = oldDefaultHandler;
+  unparsedEntityDeclHandler = oldUnparsedEntityDeclHandler;
+  notationDeclHandler = oldNotationDeclHandler;
+  externalParsedEntityDeclHandler = oldExternalParsedEntityDeclHandler;
+  internalParsedEntityDeclHandler = oldInternalParsedEntityDeclHandler;
   startNamespaceDeclHandler = oldStartNamespaceDeclHandler;
   endNamespaceDeclHandler = oldEndNamespaceDeclHandler;
   notStandaloneHandler = oldNotStandaloneHandler;
