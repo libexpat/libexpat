@@ -591,8 +591,8 @@ this expanded form is a concatenation of the namespace URI, the
 separator character (which is the 2nd argument to <code><a href=
 "#XML_ParserCreateNS" >XML_ParserCreateNS</a></code>), and the local
 name (i.e. the part after the colon). Names with undeclared prefixes
-are passed through to the handlers unchanged, with the prefix and
-colon still attached. Unprefixed attribute names are never expanded,
+are not well-formed when namespace processing is enabled, and will
+trigger an error. Unprefixed attribute names are never expanded,
 and unprefixed element names are only expanded when they are in the
 scope of a default namespace.</p>
 
@@ -908,7 +908,11 @@ Constructs a new parser that has namespace processing in effect. Namespace
 expanded element names and attribute names are returned as a concatenation
 of the namespace URI, <em>sep</em>, and the local part of the name. This
 means that you should pick a character for <em>sep</em> that can't be
-part of a legal URI.</div>
+part of a legal URI. There is a special case when <em>sep</em> is the null
+character <code>'\0'</code>: the namespace URI and the local part will be
+concatenated without any separator - this is intended to support RDF processors.
+It is a programming error to use the null separator with 
+<a href= "#XML_SetReturnNSTriplet">namespace triplets</a>.</div>
 
 <pre class="fcndec" id="XML_ParserCreate_MM">
 XML_Parser XMLCALL
