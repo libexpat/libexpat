@@ -56,10 +56,10 @@ static const char KW_SYSTEM[] = { ASCII_S, ASCII_Y, ASCII_S, ASCII_T, ASCII_E, A
 #endif /* not XML_DTD */
 
 typedef int PROLOG_HANDLER(PROLOG_STATE *state,
-			   int tok,
-			   const char *ptr,
-			   const char *end,
-			   const ENCODING *enc);
+                           int tok,
+                           const char *ptr,
+                           const char *end,
+                           const ENCODING *enc);
 
 static PROLOG_HANDLER
   prolog0, prolog1, prolog2,
@@ -79,15 +79,14 @@ static PROLOG_HANDLER
   declClose,
   error;
 
-static
-int common(PROLOG_STATE *state, int tok);
+static int common(PROLOG_STATE *state, int tok);
 
-static
-int prolog0(PROLOG_STATE *state,
-	    int tok,
-	    const char *ptr,
-	    const char *end,
-	    const ENCODING *enc)
+static int
+prolog0(PROLOG_STATE *state,
+        int tok,
+        const char *ptr,
+        const char *end,
+        const ENCODING *enc)
 {
   switch (tok) {
   case XML_TOK_PROLOG_S:
@@ -105,9 +104,9 @@ int prolog0(PROLOG_STATE *state,
     return XML_ROLE_NONE;
   case XML_TOK_DECL_OPEN:
     if (!XmlNameMatchesAscii(enc,
-			     ptr + 2 * MIN_BYTES_PER_CHAR(enc),
-			     end,
-			     KW_DOCTYPE))
+                             ptr + 2 * MIN_BYTES_PER_CHAR(enc),
+                             end,
+                             KW_DOCTYPE))
       break;
     state->handler = doctype0;
     return XML_ROLE_NONE;
@@ -118,12 +117,12 @@ int prolog0(PROLOG_STATE *state,
   return common(state, tok);
 }
 
-static
-int prolog1(PROLOG_STATE *state,
-	    int tok,
-	    const char *ptr,
-	    const char *end,
-	    const ENCODING *enc)
+static int
+prolog1(PROLOG_STATE *state,
+        int tok,
+        const char *ptr,
+        const char *end,
+        const ENCODING *enc)
 {
   switch (tok) {
   case XML_TOK_PROLOG_S:
@@ -134,9 +133,9 @@ int prolog1(PROLOG_STATE *state,
     return XML_ROLE_NONE;
   case XML_TOK_DECL_OPEN:
     if (!XmlNameMatchesAscii(enc,
-			     ptr + 2 * MIN_BYTES_PER_CHAR(enc),
-			     end,
-			     KW_DOCTYPE))
+                             ptr + 2 * MIN_BYTES_PER_CHAR(enc),
+                             end,
+                             KW_DOCTYPE))
       break;
     state->handler = doctype0;
     return XML_ROLE_NONE;
@@ -147,12 +146,12 @@ int prolog1(PROLOG_STATE *state,
   return common(state, tok);
 }
 
-static
-int prolog2(PROLOG_STATE *state,
-	    int tok,
-	    const char *ptr,
-	    const char *end,
-	    const ENCODING *enc)
+static int
+prolog2(PROLOG_STATE *state,
+        int tok,
+        const char *ptr,
+        const char *end,
+        const ENCODING *enc)
 {
   switch (tok) {
   case XML_TOK_PROLOG_S:
@@ -167,12 +166,12 @@ int prolog2(PROLOG_STATE *state,
   return common(state, tok);
 }
 
-static
-int doctype0(PROLOG_STATE *state,
-	     int tok,
-	     const char *ptr,
-	     const char *end,
-	     const ENCODING *enc)
+static int
+doctype0(PROLOG_STATE *state,
+         int tok,
+         const char *ptr,
+         const char *end,
+         const ENCODING *enc)
 {
   switch (tok) {
   case XML_TOK_PROLOG_S:
@@ -185,12 +184,12 @@ int doctype0(PROLOG_STATE *state,
   return common(state, tok);
 }
 
-static
-int doctype1(PROLOG_STATE *state,
-	     int tok,
-	     const char *ptr,
-	     const char *end,
-	     const ENCODING *enc)
+static int
+doctype1(PROLOG_STATE *state,
+         int tok,
+         const char *ptr,
+         const char *end,
+         const ENCODING *enc)
 {
   switch (tok) {
   case XML_TOK_PROLOG_S:
@@ -215,12 +214,12 @@ int doctype1(PROLOG_STATE *state,
   return common(state, tok);
 }
 
-static
-int doctype2(PROLOG_STATE *state,
-	     int tok,
-	     const char *ptr,
-	     const char *end,
-	     const ENCODING *enc)
+static int
+doctype2(PROLOG_STATE *state,
+         int tok,
+         const char *ptr,
+         const char *end,
+         const ENCODING *enc)
 {
   switch (tok) {
   case XML_TOK_PROLOG_S:
@@ -232,12 +231,12 @@ int doctype2(PROLOG_STATE *state,
   return common(state, tok);
 }
 
-static
-int doctype3(PROLOG_STATE *state,
-	     int tok,
-	     const char *ptr,
-	     const char *end,
-	     const ENCODING *enc)
+static int
+doctype3(PROLOG_STATE *state,
+         int tok,
+         const char *ptr,
+         const char *end,
+         const ENCODING *enc)
 {
   switch (tok) {
   case XML_TOK_PROLOG_S:
@@ -249,12 +248,12 @@ int doctype3(PROLOG_STATE *state,
   return common(state, tok);
 }
 
-static
-int doctype4(PROLOG_STATE *state,
-	     int tok,
-	     const char *ptr,
-	     const char *end,
-	     const ENCODING *enc)
+static int
+doctype4(PROLOG_STATE *state,
+         int tok,
+         const char *ptr,
+         const char *end,
+         const ENCODING *enc)
 {
   switch (tok) {
   case XML_TOK_PROLOG_S:
@@ -269,12 +268,12 @@ int doctype4(PROLOG_STATE *state,
   return common(state, tok);
 }
 
-static
-int doctype5(PROLOG_STATE *state,
-	     int tok,
-	     const char *ptr,
-	     const char *end,
-	     const ENCODING *enc)
+static int
+doctype5(PROLOG_STATE *state,
+         int tok,
+         const char *ptr,
+         const char *end,
+         const ENCODING *enc)
 {
   switch (tok) {
   case XML_TOK_PROLOG_S:
@@ -286,42 +285,42 @@ int doctype5(PROLOG_STATE *state,
   return common(state, tok);
 }
 
-static
-int internalSubset(PROLOG_STATE *state,
-		   int tok,
-		   const char *ptr,
-		   const char *end,
-		   const ENCODING *enc)
+static int
+internalSubset(PROLOG_STATE *state,
+               int tok,
+               const char *ptr,
+               const char *end,
+               const ENCODING *enc)
 {
   switch (tok) {
   case XML_TOK_PROLOG_S:
     return XML_ROLE_NONE;
   case XML_TOK_DECL_OPEN:
     if (XmlNameMatchesAscii(enc,
-			    ptr + 2 * MIN_BYTES_PER_CHAR(enc),
-			    end,
-			    KW_ENTITY)) {
+                            ptr + 2 * MIN_BYTES_PER_CHAR(enc),
+                            end,
+                            KW_ENTITY)) {
       state->handler = entity0;
       return XML_ROLE_NONE;
     }
     if (XmlNameMatchesAscii(enc,
-			    ptr + 2 * MIN_BYTES_PER_CHAR(enc),
-			    end,
-			    KW_ATTLIST)) {
+                            ptr + 2 * MIN_BYTES_PER_CHAR(enc),
+                            end,
+                            KW_ATTLIST)) {
       state->handler = attlist0;
       return XML_ROLE_NONE;
     }
     if (XmlNameMatchesAscii(enc,
-			    ptr + 2 * MIN_BYTES_PER_CHAR(enc),
-			    end,
-			    KW_ELEMENT)) {
+                            ptr + 2 * MIN_BYTES_PER_CHAR(enc),
+                            end,
+                            KW_ELEMENT)) {
       state->handler = element0;
       return XML_ROLE_NONE;
     }
     if (XmlNameMatchesAscii(enc,
-			    ptr + 2 * MIN_BYTES_PER_CHAR(enc),
-			    end,
-			    KW_NOTATION)) {
+                            ptr + 2 * MIN_BYTES_PER_CHAR(enc),
+                            end,
+                            KW_NOTATION)) {
       state->handler = notation0;
       return XML_ROLE_NONE;
     }
@@ -340,12 +339,12 @@ int internalSubset(PROLOG_STATE *state,
 
 #ifdef XML_DTD
 
-static
-int externalSubset0(PROLOG_STATE *state,
-		    int tok,
-		    const char *ptr,
-		    const char *end,
-		    const ENCODING *enc)
+static int
+externalSubset0(PROLOG_STATE *state,
+                int tok,
+                const char *ptr,
+                const char *end,
+                const ENCODING *enc)
 {
   state->handler = externalSubset1;
   if (tok == XML_TOK_XML_DECL)
@@ -353,12 +352,12 @@ int externalSubset0(PROLOG_STATE *state,
   return externalSubset1(state, tok, ptr, end, enc);
 }
 
-static
-int externalSubset1(PROLOG_STATE *state,
-		    int tok,
-		    const char *ptr,
-		    const char *end,
-		    const ENCODING *enc)
+static int
+externalSubset1(PROLOG_STATE *state,
+                int tok,
+                const char *ptr,
+                const char *end,
+                const ENCODING *enc)
 {
   switch (tok) {
   case XML_TOK_COND_SECT_OPEN:
@@ -385,12 +384,12 @@ int externalSubset1(PROLOG_STATE *state,
 
 #endif /* XML_DTD */
 
-static
-int entity0(PROLOG_STATE *state,
-	    int tok,
-	    const char *ptr,
-	    const char *end,
-	    const ENCODING *enc)
+static int
+entity0(PROLOG_STATE *state,
+        int tok,
+        const char *ptr,
+        const char *end,
+        const ENCODING *enc)
 {
   switch (tok) {
   case XML_TOK_PROLOG_S:
@@ -405,12 +404,12 @@ int entity0(PROLOG_STATE *state,
   return common(state, tok);
 }
 
-static
-int entity1(PROLOG_STATE *state,
-	    int tok,
-	    const char *ptr,
-	    const char *end,
-	    const ENCODING *enc)
+static int
+entity1(PROLOG_STATE *state,
+        int tok,
+        const char *ptr,
+        const char *end,
+        const ENCODING *enc)
 {
   switch (tok) {
   case XML_TOK_PROLOG_S:
@@ -422,12 +421,12 @@ int entity1(PROLOG_STATE *state,
   return common(state, tok);
 }
 
-static
-int entity2(PROLOG_STATE *state,
-	    int tok,
-	    const char *ptr,
-	    const char *end,
-	    const ENCODING *enc)
+static int
+entity2(PROLOG_STATE *state,
+        int tok,
+        const char *ptr,
+        const char *end,
+        const ENCODING *enc)
 {
   switch (tok) {
   case XML_TOK_PROLOG_S:
@@ -449,12 +448,12 @@ int entity2(PROLOG_STATE *state,
   return common(state, tok);
 }
 
-static
-int entity3(PROLOG_STATE *state,
-	    int tok,
-	    const char *ptr,
-	    const char *end,
-	    const ENCODING *enc)
+static int
+entity3(PROLOG_STATE *state,
+        int tok,
+        const char *ptr,
+        const char *end,
+        const ENCODING *enc)
 {
   switch (tok) {
   case XML_TOK_PROLOG_S:
@@ -466,13 +465,12 @@ int entity3(PROLOG_STATE *state,
   return common(state, tok);
 }
 
-
-static
-int entity4(PROLOG_STATE *state,
-	    int tok,
-	    const char *ptr,
-	    const char *end,
-	    const ENCODING *enc)
+static int
+entity4(PROLOG_STATE *state,
+        int tok,
+        const char *ptr,
+        const char *end,
+        const ENCODING *enc)
 {
   switch (tok) {
   case XML_TOK_PROLOG_S:
@@ -484,12 +482,12 @@ int entity4(PROLOG_STATE *state,
   return common(state, tok);
 }
 
-static
-int entity5(PROLOG_STATE *state,
-	    int tok,
-	    const char *ptr,
-	    const char *end,
-	    const ENCODING *enc)
+static int
+entity5(PROLOG_STATE *state,
+        int tok,
+        const char *ptr,
+        const char *end,
+        const ENCODING *enc)
 {
   switch (tok) {
   case XML_TOK_PROLOG_S:
@@ -507,12 +505,12 @@ int entity5(PROLOG_STATE *state,
   return common(state, tok);
 }
 
-static
-int entity6(PROLOG_STATE *state,
-	    int tok,
-	    const char *ptr,
-	    const char *end,
-	    const ENCODING *enc)
+static int
+entity6(PROLOG_STATE *state,
+        int tok,
+        const char *ptr,
+        const char *end,
+        const ENCODING *enc)
 {
   switch (tok) {
   case XML_TOK_PROLOG_S:
@@ -524,12 +522,12 @@ int entity6(PROLOG_STATE *state,
   return common(state, tok);
 }
 
-static
-int entity7(PROLOG_STATE *state,
-	    int tok,
-	    const char *ptr,
-	    const char *end,
-	    const ENCODING *enc)
+static int
+entity7(PROLOG_STATE *state,
+        int tok,
+        const char *ptr,
+        const char *end,
+        const ENCODING *enc)
 {
   switch (tok) {
   case XML_TOK_PROLOG_S:
@@ -551,12 +549,12 @@ int entity7(PROLOG_STATE *state,
   return common(state, tok);
 }
 
-static
-int entity8(PROLOG_STATE *state,
-	    int tok,
-	    const char *ptr,
-	    const char *end,
-	    const ENCODING *enc)
+static int
+entity8(PROLOG_STATE *state,
+        int tok,
+        const char *ptr,
+        const char *end,
+        const ENCODING *enc)
 {
   switch (tok) {
   case XML_TOK_PROLOG_S:
@@ -568,12 +566,12 @@ int entity8(PROLOG_STATE *state,
   return common(state, tok);
 }
 
-static
-int entity9(PROLOG_STATE *state,
-	    int tok,
-	    const char *ptr,
-	    const char *end,
-	    const ENCODING *enc)
+static int
+entity9(PROLOG_STATE *state,
+        int tok,
+        const char *ptr,
+        const char *end,
+        const ENCODING *enc)
 {
   switch (tok) {
   case XML_TOK_PROLOG_S:
@@ -585,12 +583,12 @@ int entity9(PROLOG_STATE *state,
   return common(state, tok);
 }
 
-static
-int entity10(PROLOG_STATE *state,
-	    int tok,
-	    const char *ptr,
-	    const char *end,
-	    const ENCODING *enc)
+static int
+entity10(PROLOG_STATE *state,
+         int tok,
+         const char *ptr,
+         const char *end,
+         const ENCODING *enc)
 {
   switch (tok) {
   case XML_TOK_PROLOG_S:
@@ -602,12 +600,12 @@ int entity10(PROLOG_STATE *state,
   return common(state, tok);
 }
 
-static
-int notation0(PROLOG_STATE *state,
-	      int tok,
-	      const char *ptr,
-	      const char *end,
-	      const ENCODING *enc)
+static int
+notation0(PROLOG_STATE *state,
+          int tok,
+          const char *ptr,
+          const char *end,
+          const ENCODING *enc)
 {
   switch (tok) {
   case XML_TOK_PROLOG_S:
@@ -619,12 +617,12 @@ int notation0(PROLOG_STATE *state,
   return common(state, tok);
 }
 
-static
-int notation1(PROLOG_STATE *state,
-	      int tok,
-	      const char *ptr,
-	      const char *end,
-	      const ENCODING *enc)
+static int
+notation1(PROLOG_STATE *state,
+          int tok,
+          const char *ptr,
+          const char *end,
+          const ENCODING *enc)
 {
   switch (tok) {
   case XML_TOK_PROLOG_S:
@@ -643,12 +641,12 @@ int notation1(PROLOG_STATE *state,
   return common(state, tok);
 }
 
-static
-int notation2(PROLOG_STATE *state,
-	      int tok,
-	      const char *ptr,
-	      const char *end,
-	      const ENCODING *enc)
+static int
+notation2(PROLOG_STATE *state,
+          int tok,
+          const char *ptr,
+          const char *end,
+          const ENCODING *enc)
 {
   switch (tok) {
   case XML_TOK_PROLOG_S:
@@ -660,12 +658,12 @@ int notation2(PROLOG_STATE *state,
   return common(state, tok);
 }
 
-static
-int notation3(PROLOG_STATE *state,
-	      int tok,
-	      const char *ptr,
-	      const char *end,
-	      const ENCODING *enc)
+static int
+notation3(PROLOG_STATE *state,
+          int tok,
+          const char *ptr,
+          const char *end,
+          const ENCODING *enc)
 {
   switch (tok) {
   case XML_TOK_PROLOG_S:
@@ -677,12 +675,12 @@ int notation3(PROLOG_STATE *state,
   return common(state, tok);
 }
 
-static
-int notation4(PROLOG_STATE *state,
-	      int tok,
-	      const char *ptr,
-	      const char *end,
-	      const ENCODING *enc)
+static int
+notation4(PROLOG_STATE *state,
+          int tok,
+          const char *ptr,
+          const char *end,
+          const ENCODING *enc)
 {
   switch (tok) {
   case XML_TOK_PROLOG_S:
@@ -697,12 +695,12 @@ int notation4(PROLOG_STATE *state,
   return common(state, tok);
 }
 
-static
-int attlist0(PROLOG_STATE *state,
-	     int tok,
-	     const char *ptr,
-	     const char *end,
-	     const ENCODING *enc)
+static int
+attlist0(PROLOG_STATE *state,
+         int tok,
+         const char *ptr,
+         const char *end,
+         const ENCODING *enc)
 {
   switch (tok) {
   case XML_TOK_PROLOG_S:
@@ -715,12 +713,12 @@ int attlist0(PROLOG_STATE *state,
   return common(state, tok);
 }
 
-static
-int attlist1(PROLOG_STATE *state,
-	     int tok,
-	     const char *ptr,
-	     const char *end,
-	     const ENCODING *enc)
+static int
+attlist1(PROLOG_STATE *state,
+         int tok,
+         const char *ptr,
+         const char *end,
+         const ENCODING *enc)
 {
   switch (tok) {
   case XML_TOK_PROLOG_S:
@@ -736,12 +734,12 @@ int attlist1(PROLOG_STATE *state,
   return common(state, tok);
 }
 
-static
-int attlist2(PROLOG_STATE *state,
-	     int tok,
-	     const char *ptr,
-	     const char *end,
-	     const ENCODING *enc)
+static int
+attlist2(PROLOG_STATE *state,
+         int tok,
+         const char *ptr,
+         const char *end,
+         const ENCODING *enc)
 {
   switch (tok) {
   case XML_TOK_PROLOG_S:
@@ -749,7 +747,7 @@ int attlist2(PROLOG_STATE *state,
   case XML_TOK_NAME:
     {
       static const char *types[] = {
-	KW_CDATA,
+        KW_CDATA,
         KW_ID,
         KW_IDREF,
         KW_IDREFS,
@@ -760,10 +758,10 @@ int attlist2(PROLOG_STATE *state,
       };
       int i;
       for (i = 0; i < (int)(sizeof(types)/sizeof(types[0])); i++)
-	if (XmlNameMatchesAscii(enc, ptr, end, types[i])) {
-	  state->handler = attlist8;
-	  return XML_ROLE_ATTRIBUTE_TYPE_CDATA + i;
-	}
+        if (XmlNameMatchesAscii(enc, ptr, end, types[i])) {
+          state->handler = attlist8;
+          return XML_ROLE_ATTRIBUTE_TYPE_CDATA + i;
+        }
     }
     if (XmlNameMatchesAscii(enc, ptr, end, KW_NOTATION)) {
       state->handler = attlist5;
@@ -777,12 +775,12 @@ int attlist2(PROLOG_STATE *state,
   return common(state, tok);
 }
 
-static
-int attlist3(PROLOG_STATE *state,
-	     int tok,
-	     const char *ptr,
-	     const char *end,
-	     const ENCODING *enc)
+static int
+attlist3(PROLOG_STATE *state,
+         int tok,
+         const char *ptr,
+         const char *end,
+         const ENCODING *enc)
 {
   switch (tok) {
   case XML_TOK_PROLOG_S:
@@ -796,12 +794,12 @@ int attlist3(PROLOG_STATE *state,
   return common(state, tok);
 }
 
-static
-int attlist4(PROLOG_STATE *state,
-	     int tok,
-	     const char *ptr,
-	     const char *end,
-	     const ENCODING *enc)
+static int
+attlist4(PROLOG_STATE *state,
+         int tok,
+         const char *ptr,
+         const char *end,
+         const ENCODING *enc)
 {
   switch (tok) {
   case XML_TOK_PROLOG_S:
@@ -816,12 +814,12 @@ int attlist4(PROLOG_STATE *state,
   return common(state, tok);
 }
 
-static
-int attlist5(PROLOG_STATE *state,
-	     int tok,
-	     const char *ptr,
-	     const char *end,
-	     const ENCODING *enc)
+static int
+attlist5(PROLOG_STATE *state,
+         int tok,
+         const char *ptr,
+         const char *end,
+         const ENCODING *enc)
 {
   switch (tok) {
   case XML_TOK_PROLOG_S:
@@ -833,13 +831,12 @@ int attlist5(PROLOG_STATE *state,
   return common(state, tok);
 }
 
-
-static
-int attlist6(PROLOG_STATE *state,
-	     int tok,
-	     const char *ptr,
-	     const char *end,
-	     const ENCODING *enc)
+static int
+attlist6(PROLOG_STATE *state,
+         int tok,
+         const char *ptr,
+         const char *end,
+         const ENCODING *enc)
 {
   switch (tok) {
   case XML_TOK_PROLOG_S:
@@ -851,12 +848,12 @@ int attlist6(PROLOG_STATE *state,
   return common(state, tok);
 }
 
-static
-int attlist7(PROLOG_STATE *state,
-	     int tok,
-	     const char *ptr,
-	     const char *end,
-	     const ENCODING *enc)
+static int
+attlist7(PROLOG_STATE *state,
+         int tok,
+         const char *ptr,
+         const char *end,
+         const ENCODING *enc)
 {
   switch (tok) {
   case XML_TOK_PROLOG_S:
@@ -872,35 +869,35 @@ int attlist7(PROLOG_STATE *state,
 }
 
 /* default value */
-static
-int attlist8(PROLOG_STATE *state,
-	     int tok,
-	     const char *ptr,
-	     const char *end,
-	     const ENCODING *enc)
+static int
+attlist8(PROLOG_STATE *state,
+         int tok,
+         const char *ptr,
+         const char *end,
+         const ENCODING *enc)
 {
   switch (tok) {
   case XML_TOK_PROLOG_S:
     return XML_ROLE_NONE;
   case XML_TOK_POUND_NAME:
     if (XmlNameMatchesAscii(enc,
-			    ptr + MIN_BYTES_PER_CHAR(enc),
-			    end,
-			    KW_IMPLIED)) {
+                            ptr + MIN_BYTES_PER_CHAR(enc),
+                            end,
+                            KW_IMPLIED)) {
       state->handler = attlist1;
       return XML_ROLE_IMPLIED_ATTRIBUTE_VALUE;
     }
     if (XmlNameMatchesAscii(enc,
-			    ptr + MIN_BYTES_PER_CHAR(enc),
-			    end,
-			    KW_REQUIRED)) {
+                            ptr + MIN_BYTES_PER_CHAR(enc),
+                            end,
+                            KW_REQUIRED)) {
       state->handler = attlist1;
       return XML_ROLE_REQUIRED_ATTRIBUTE_VALUE;
     }
     if (XmlNameMatchesAscii(enc,
-			    ptr + MIN_BYTES_PER_CHAR(enc),
-			    end,
-			    KW_FIXED)) {
+                            ptr + MIN_BYTES_PER_CHAR(enc),
+                            end,
+                            KW_FIXED)) {
       state->handler = attlist9;
       return XML_ROLE_NONE;
     }
@@ -912,12 +909,12 @@ int attlist8(PROLOG_STATE *state,
   return common(state, tok);
 }
 
-static
-int attlist9(PROLOG_STATE *state,
-	     int tok,
-	     const char *ptr,
-	     const char *end,
-	     const ENCODING *enc)
+static int
+attlist9(PROLOG_STATE *state,
+         int tok,
+         const char *ptr,
+         const char *end,
+         const ENCODING *enc)
 {
   switch (tok) {
   case XML_TOK_PROLOG_S:
@@ -929,12 +926,12 @@ int attlist9(PROLOG_STATE *state,
   return common(state, tok);
 }
 
-static
-int element0(PROLOG_STATE *state,
-	     int tok,
-	     const char *ptr,
-	     const char *end,
-	     const ENCODING *enc)
+static int
+element0(PROLOG_STATE *state,
+         int tok,
+         const char *ptr,
+         const char *end,
+         const ENCODING *enc)
 {
   switch (tok) {
   case XML_TOK_PROLOG_S:
@@ -947,12 +944,12 @@ int element0(PROLOG_STATE *state,
   return common(state, tok);
 }
 
-static
-int element1(PROLOG_STATE *state,
-	     int tok,
-	     const char *ptr,
-	     const char *end,
-	     const ENCODING *enc)
+static int
+element1(PROLOG_STATE *state,
+         int tok,
+         const char *ptr,
+         const char *end,
+         const ENCODING *enc)
 {
   switch (tok) {
   case XML_TOK_PROLOG_S:
@@ -975,21 +972,21 @@ int element1(PROLOG_STATE *state,
   return common(state, tok);
 }
 
-static
-int element2(PROLOG_STATE *state,
-	     int tok,
-	     const char *ptr,
-	     const char *end,
-	     const ENCODING *enc)
+static int
+element2(PROLOG_STATE *state,
+         int tok,
+         const char *ptr,
+         const char *end,
+         const ENCODING *enc)
 {
   switch (tok) {
   case XML_TOK_PROLOG_S:
     return XML_ROLE_NONE;
   case XML_TOK_POUND_NAME:
     if (XmlNameMatchesAscii(enc,
-			    ptr + MIN_BYTES_PER_CHAR(enc),
-			    end,
-			    KW_PCDATA)) {
+                            ptr + MIN_BYTES_PER_CHAR(enc),
+                            end,
+                            KW_PCDATA)) {
       state->handler = element3;
       return XML_ROLE_CONTENT_PCDATA;
     }
@@ -1015,12 +1012,12 @@ int element2(PROLOG_STATE *state,
   return common(state, tok);
 }
 
-static
-int element3(PROLOG_STATE *state,
-	     int tok,
-	     const char *ptr,
-	     const char *end,
-	     const ENCODING *enc)
+static int
+element3(PROLOG_STATE *state,
+         int tok,
+         const char *ptr,
+         const char *end,
+         const ENCODING *enc)
 {
   switch (tok) {
   case XML_TOK_PROLOG_S:
@@ -1038,12 +1035,12 @@ int element3(PROLOG_STATE *state,
   return common(state, tok);
 }
 
-static
-int element4(PROLOG_STATE *state,
-	     int tok,
-	     const char *ptr,
-	     const char *end,
-	     const ENCODING *enc)
+static int
+element4(PROLOG_STATE *state,
+         int tok,
+         const char *ptr,
+         const char *end,
+         const ENCODING *enc)
 {
   switch (tok) {
   case XML_TOK_PROLOG_S:
@@ -1056,12 +1053,12 @@ int element4(PROLOG_STATE *state,
   return common(state, tok);
 }
 
-static
-int element5(PROLOG_STATE *state,
-	     int tok,
-	     const char *ptr,
-	     const char *end,
-	     const ENCODING *enc)
+static int
+element5(PROLOG_STATE *state,
+         int tok,
+         const char *ptr,
+         const char *end,
+         const ENCODING *enc)
 {
   switch (tok) {
   case XML_TOK_PROLOG_S:
@@ -1076,12 +1073,12 @@ int element5(PROLOG_STATE *state,
   return common(state, tok);
 }
 
-static
-int element6(PROLOG_STATE *state,
-	     int tok,
-	     const char *ptr,
-	     const char *end,
-	     const ENCODING *enc)
+static int
+element6(PROLOG_STATE *state,
+         int tok,
+         const char *ptr,
+         const char *end,
+         const ENCODING *enc)
 {
   switch (tok) {
   case XML_TOK_PROLOG_S:
@@ -1106,12 +1103,12 @@ int element6(PROLOG_STATE *state,
   return common(state, tok);
 }
 
-static
-int element7(PROLOG_STATE *state,
-	     int tok,
-	     const char *ptr,
-	     const char *end,
-	     const ENCODING *enc)
+static int
+element7(PROLOG_STATE *state,
+         int tok,
+         const char *ptr,
+         const char *end,
+         const ENCODING *enc)
 {
   switch (tok) {
   case XML_TOK_PROLOG_S:
@@ -1148,12 +1145,12 @@ int element7(PROLOG_STATE *state,
 
 #ifdef XML_DTD
 
-static
-int condSect0(PROLOG_STATE *state,
-	      int tok,
-	      const char *ptr,
-	      const char *end,
-	      const ENCODING *enc)
+static int
+condSect0(PROLOG_STATE *state,
+          int tok,
+          const char *ptr,
+          const char *end,
+          const ENCODING *enc)
 {
   switch (tok) {
   case XML_TOK_PROLOG_S:
@@ -1172,12 +1169,12 @@ int condSect0(PROLOG_STATE *state,
   return common(state, tok);
 }
 
-static
-int condSect1(PROLOG_STATE *state,
-	      int tok,
-	      const char *ptr,
-	      const char *end,
-	      const ENCODING *enc)
+static int
+condSect1(PROLOG_STATE *state,
+          int tok,
+          const char *ptr,
+          const char *end,
+          const ENCODING *enc)
 {
   switch (tok) {
   case XML_TOK_PROLOG_S:
@@ -1190,12 +1187,12 @@ int condSect1(PROLOG_STATE *state,
   return common(state, tok);
 }
 
-static
-int condSect2(PROLOG_STATE *state,
-	      int tok,
-	      const char *ptr,
-	      const char *end,
-	      const ENCODING *enc)
+static int
+condSect2(PROLOG_STATE *state,
+          int tok,
+          const char *ptr,
+          const char *end,
+          const ENCODING *enc)
 {
   switch (tok) {
   case XML_TOK_PROLOG_S:
@@ -1209,12 +1206,12 @@ int condSect2(PROLOG_STATE *state,
 
 #endif /* XML_DTD */
 
-static
-int declClose(PROLOG_STATE *state,
-	      int tok,
-	      const char *ptr,
-	      const char *end,
-	      const ENCODING *enc)
+static int
+declClose(PROLOG_STATE *state,
+          int tok,
+          const char *ptr,
+          const char *end,
+          const ENCODING *enc)
 {
   switch (tok) {
   case XML_TOK_PROLOG_S:
@@ -1226,38 +1223,18 @@ int declClose(PROLOG_STATE *state,
   return common(state, tok);
 }
 
-#if 0
-
-static
-int ignore(PROLOG_STATE *state,
-	   int tok,
-	   const char *ptr,
-	   const char *end,
-	   const ENCODING *enc)
-{
-  switch (tok) {
-  case XML_TOK_DECL_CLOSE:
-    state->handler = internalSubset;
-    return 0;
-  default:
-    return XML_ROLE_NONE;
-  }
-  return common(state, tok);
-}
-#endif
-
-static
-int error(PROLOG_STATE *state,
-	  int tok,
-	  const char *ptr,
-	  const char *end,
-	  const ENCODING *enc)
+static int
+error(PROLOG_STATE *state,
+      int tok,
+      const char *ptr,
+      const char *end,
+      const ENCODING *enc)
 {
   return XML_ROLE_NONE;
 }
 
-static
-int common(PROLOG_STATE *state, int tok)
+static int
+common(PROLOG_STATE *state, int tok)
 {
 #ifdef XML_DTD
   if (!state->documentEntity && tok == XML_TOK_PARAM_ENTITY_REF)
@@ -1267,7 +1244,8 @@ int common(PROLOG_STATE *state, int tok)
   return XML_ROLE_ERROR;
 }
 
-void XmlPrologStateInit(PROLOG_STATE *state)
+void
+XmlPrologStateInit(PROLOG_STATE *state)
 {
   state->handler = prolog0;
 #ifdef XML_DTD
@@ -1279,7 +1257,8 @@ void XmlPrologStateInit(PROLOG_STATE *state)
 
 #ifdef XML_DTD
 
-void XmlPrologStateInitExternalEntity(PROLOG_STATE *state)
+void
+XmlPrologStateInitExternalEntity(PROLOG_STATE *state)
 {
   state->handler = externalSubset0;
   state->documentEntity = 0;
