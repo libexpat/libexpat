@@ -1,0 +1,91 @@
+<html>
+  <head>
+    <title>Old Expat News</title>
+    <link rel="STYLESHEET" href="style.css" type="text/css" />
+  </head>
+  <body marginwidth="0" marginheight="0">
+    <table cellspacing="0" cellpadding="0" width="100%">
+      <tr>
+        <td class="corner"><img src="expat.png" /></td>
+        <td class="banner"><h2>Old Expat News</h2></td>
+      </tr>
+      <tr>
+        <td class="navbar">
+        </td>
+        <td class="content">
+
+<p><a href="./index.html#news">Current news</a></p>
+
+<dl>
+  <dt><em>12 July 2002</em>,
+      Expat 1.95.4 released.
+    </dt>
+  <dd>
+    <ul>
+      <li> Added support for VMS, contributed by Craig Berry.  See
+	   vms/README.vms in the distrubution for more information. </li>
+      <li> Added Mac OS (classic) support, with a makefile for MPW,
+	   contributed by Thomas Wegner and Daryle Walker. </li>
+      <li> Added Borland C++ Builder 5 / BCC 5.5 support, contributed
+	   by Patrick McConnell (SF patch #538032). </li>
+      <li> Fixed a variety of bugs: see SF issues 441449, 563184,
+	   564342, 566334, 566901, 569461, 570263, 575168, 579196. </li>
+      <li> Made skippedEntityHandler conform to SAX2 (see source
+	   comment). </li>
+      <li> Re-implemented WFC: Entity Declared from XML 1.0 spec and
+	   added a new error "entity declared in parameter entity":
+	   see SF bug report 569461 and SF patch 578161. </li>
+      <li> Re-implemented section 5.1 from XML 1.0 spec:
+	   see SF bug report 570263 and SF patch 578161. </li>
+    </ul>
+    Expat 1.95.3 is being withdrawn due to <a href=
+    "http://sourceforge.net/tracker/index.php?func=detail&amp;aid=566334&amp;group_id=10127&amp;atid=110127"
+    >bug #566334</a>.  If you are currently using Expat 1.95.3, please
+    update to 1.95.4.
+    <p />
+    </dd>
+  <dt><em>3 June 2002</em>,
+      Expat 1.95.3 released.
+    </dt>
+  <dd>
+    <ul>
+      <li> Changed the name of the Windows DLLs from expat.dll to
+	   libexpat.dll; this fixes SF bug #432456.  This is a problem
+	   only known to affect the Perl XML::Parser::Expat extension,
+	   but is very important for that extension.</li>
+      <li> Added a project to the MSVC workspace to create a wchar_t
+	   version of the library; the DLLs are named libexpatw.dll.
+	   (Note the addition of the "w" character in the file name.)
+	   </li>
+      <li> Added the XML_ParserReset() API function.  This allows a
+           parser to be re-used, reducing the number of memory
+           allocations needed to set up a parser.  This can be a
+           substantial benefit when parsing a large number of small
+           documents. </li>
+      <li> Fixed XML_SetReturnNSTriplet() to work for element names.
+           This is now a usable feature. </li>
+      <li> Made the XML_UNICODE builds usable (thanks, Karl!). </li>
+      <li> Allow xmlwf to read from standard input. </li>
+      <li> Install a man page for xmlwf on Unix systems. </li>
+      <li> Fixed many bugs; see SF bug reports 231864, 461380, 464837,
+	   466885, 469226, 477667, 484419, 487840, 494749, 496505,
+	   547350.  Other bugs which we can't test as easily may also
+	   have been fixed, especially in the area of build support. </li>
+    </ul>
+    </dd>
+</dl>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="corner">
+          <a href="http://sourceforge.net/"> 
+            <img src="http://cvs.sourceforge.net/sourceforge_whitebg.gif"
+                 width="136" height="79" border="0" alt="SourceForge
+                 Logo" />
+          </a>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>
