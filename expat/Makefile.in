@@ -84,6 +84,8 @@ CONFIG_HEADERS = config.h
 DISTDIR = $(PACKAGE)-$(VERSION)
 DISTRIBUTION = $(DISTDIR).tar.gz
 
+default:  lib xmlwf
+
 buildlib: lib
 
 all: $(SUBDIRS)
