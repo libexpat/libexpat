@@ -588,8 +588,10 @@ int PREFIX(contentTok)(const ENCODING *enc, const char *ptr, const char *end,
     ptr += MINBPC;
     if (ptr == end)
       return XML_TOK_PARTIAL;
-    if (!CHAR_MATCHES(enc, ptr, '>'))
+    if (!CHAR_MATCHES(enc, ptr, '>')) {
+      ptr -= MINBPC;
       break;
+    }
     *nextTokPtr = ptr;
     return XML_TOK_INVALID;
   INVALID_CASES(ptr, nextTokPtr)
