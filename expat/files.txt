@@ -16,6 +16,7 @@ xmltok/xmltok.h
 expat.mak
 xmltok/xmltok_impl.c
 xmltok/xmltok_impl.h
+xmltok/xmltok_ns.c
 xmlparse/hashtable.c
 xmlparse/hashtable.h
 xmlparse/xmlparse.c
