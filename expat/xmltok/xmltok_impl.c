@@ -505,7 +505,7 @@ int PREFIX(scanRef)(const ENCODING *enc, const char *ptr, const char *end,
   if (ptr == end)
     return XML_TOK_PARTIAL;
   switch (BYTE_TYPE(enc, ptr)) {
-  CHECK_NMSTRT_CASES(end, ptr, end, nextTokPtr)
+  CHECK_NMSTRT_CASES(enc, ptr, end, nextTokPtr)
   case BT_NUM:
     return PREFIX(scanCharRef)(enc, ptr + MINBPC, end, nextTokPtr);
   default:
@@ -847,7 +847,7 @@ int PREFIX(scanPercent)(const ENCODING *enc, const char *ptr, const char *end,
   if (ptr == end)
     return XML_TOK_PARTIAL;
   switch (BYTE_TYPE(enc, ptr)) {
-  CHECK_NMSTRT_CASES(end, ptr, end, nextTokPtr)
+  CHECK_NMSTRT_CASES(enc, ptr, end, nextTokPtr)
   case BT_S: case BT_LF: case BT_CR: case BT_PERCNT:
     *nextTokPtr = ptr;
     return XML_TOK_PERCENT;
@@ -876,7 +876,7 @@ int PREFIX(scanPoundName)(const ENCODING *enc, const char *ptr, const char *end,
   if (ptr == end)
     return XML_TOK_PARTIAL;
   switch (BYTE_TYPE(enc, ptr)) {
-  CHECK_NMSTRT_CASES(end, ptr, end, nextTokPtr)
+  CHECK_NMSTRT_CASES(enc, ptr, end, nextTokPtr)
   default:
     *nextTokPtr = ptr;
     return XML_TOK_INVALID;
