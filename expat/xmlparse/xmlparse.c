@@ -2590,7 +2590,9 @@ doProlog(XML_Parser parser,
       case XML_TOK_COMMENT:
       case XML_TOK_BOM:
       case XML_TOK_XML_DECL:
+#ifdef XML_DTD
       case XML_TOK_IGNORE_SECT:
+#endif /* XML_DTD */
       case XML_TOK_PARAM_ENTITY_REF:
 	break;
       default:
