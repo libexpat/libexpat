@@ -32,9 +32,9 @@ cp $ltfile conftools/libtool.m4
 rm -f aclocal.m4
 
 #
-# Generate the autoconf header template (config.h.in) and ./configure
+# Generate the autoconf header template (expat_config.h.in) and ./configure
 #
-echo "Creating config.h.in ..."
+echo "Creating expat_config.h.in ..."
 ${AUTOHEADER:-autoheader}
 
 echo "Creating configure ..."
