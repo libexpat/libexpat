@@ -395,6 +395,46 @@ the shared variables. You can then tell expat (with the <code><a href=
 pointer to this structure to the handlers. This is typically the first
 argument received by most handlers.</p>
 
+<h3>XML Version</h3>
+
+<p>Expat is an XML 1.0 parser, and as such never complains based on
+the value of the <code>version</code> psuedo-attribute in the XML
+declaration, if present.</p>
+
+<p>If an application needs to check the version number (to support
+alternate processing), it should use the <code><a href=
+"#XML_SetXmlDeclHandler" >XML_SetXmlDeclHandler</a></code> function to
+set a handler that uses the information in the XML declaration to
+determine what to do.  This example shows how to check that only a
+version number of <code>"1.0"</code> is accepted:</p>
+
+<pre class="eg">
+static int wrong_version;
+static XML_Parser parser;
+
+static void
+xmldecl_handler(void            *userData,
+                const XML_Char  *version,
+                const XML_Char  *encoding,
+                int              standalone)
+{
+  static const XML_Char Version_1_0[] = {'1', '.', '0', 0};
+
+  int i;
+
+  for (i = 0; i < (sizeof(Version_1_0) / sizeof(Version_1_0[0])); ++i) {
+    if (version[i] != Version_1_0[i]) {
+      wrong_version = 1;
+      /* also clear all other handlers: */
+      XML_SetCharacterDataHandler(parser, NULL);
+      ...
+      return;
+    }
+  }
+  ...
+}
+</pre>
+
 <h3>Namespace Processing</h3>
 
 <p>When the parser is created using the <code><a href=
