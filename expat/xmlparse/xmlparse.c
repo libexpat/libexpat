@@ -143,7 +143,7 @@ static Processor externalEntityContentProcessor;
 static enum XML_Error
 handleUnknownEncoding(XML_Parser parser, const XML_Char *encodingName);
 static enum XML_Error
-handleUnknownEncodingDecl(XML_Parser parser, const char *encodingName);
+processXmlDecl(XML_Parser parser, int isGeneralTextEntity, const char *, const char *);
 static enum XML_Error
 initializeEncoding(XML_Parser parser);
 static enum XML_Error
@@ -691,35 +691,12 @@ enum XML_Error externalEntityInitProcessor3(XML_Parser parser,
   switch (tok) {
   case XML_TOK_XML_DECL:
     {
-      const char *encodingName = 0;
-      const ENCODING *newEncoding = 0;
-      const char *version;
-      int standalone;
-      if (!XmlParseXmlDecl(1,
-			   encoding,
-			   start,
-			   next,
-			   &errorPtr,
-			   &version,
-			   &encodingName,
-			   &newEncoding,
-			   &standalone))
-        return XML_ERROR_SYNTAX;
-      if (newEncoding) {
-	if (newEncoding->minBytesPerChar != encoding->minBytesPerChar) {
-	  errorPtr = encodingName;
-	  return XML_ERROR_INCORRECT_ENCODING;
-	}
-	encoding = newEncoding;
-      }
-      else if (encodingName) {
-	enum XML_Error result = handleUnknownEncodingDecl(parser, encodingName);
-	if (result != XML_ERROR_NONE)
-	  return result;
-      }
+      enum XML_Error result = processXmlDecl(parser, 1, start, next);
+      if (result != XML_ERROR_NONE)
+	return result;
       start = next;
-      break;
     }
+    break;
   case XML_TOK_PARTIAL:
     if (endPtr) {
       *endPtr = start;
@@ -1305,21 +1282,50 @@ initializeEncoding(XML_Parser parser)
 }
 
 static enum XML_Error
-handleUnknownEncodingDecl(XML_Parser parser, const char *encodingName)
+processXmlDecl(XML_Parser parser, int isGeneralTextEntity,
+	       const char *s, const char *next)
 {
-  enum XML_Error result;
-  const XML_Char *s = poolStoreString(&tempPool,
-				      encoding,
-				      encodingName,
-				      encodingName
-				      + XmlNameLength(encoding, encodingName));
-  if (!s)
-    return XML_ERROR_NO_MEMORY;
-  result = handleUnknownEncoding(parser, s);
-  poolDiscard(&tempPool);
-  if (result == XML_ERROR_UNKNOWN_ENCODING)
-    errorPtr = encodingName;
-  return result;
+  const char *encodingName = 0;
+  const ENCODING *newEncoding = 0;
+  const char *version;
+  int standalone = -1;
+  if (!XmlParseXmlDecl(isGeneralTextEntity,
+		       encoding,
+		       s,
+		       next,
+		       &errorPtr,
+		       &version,
+		       &encodingName,
+		       &newEncoding,
+		       &standalone))
+    return XML_ERROR_SYNTAX;
+  if (!protocolEncodingName) {
+    if (newEncoding) {
+      if (newEncoding->minBytesPerChar != encoding->minBytesPerChar) {
+	errorPtr = encodingName;
+	return XML_ERROR_INCORRECT_ENCODING;
+      }
+      encoding = newEncoding;
+    }
+    else if (encodingName) {
+      enum XML_Error result;
+      const XML_Char *s = poolStoreString(&tempPool,
+					  encoding,
+					  encodingName,
+					  encodingName
+					  + XmlNameLength(encoding, encodingName));
+      if (!s)
+	return XML_ERROR_NO_MEMORY;
+      result = handleUnknownEncoding(parser, s);
+      poolDiscard(&tempPool);
+      if (result == XML_ERROR_UNKNOWN_ENCODING)
+	errorPtr = encodingName;
+      return result;
+    }
+  }
+  if (!isGeneralTextEntity && standalone == 1)
+    dtd.standalone = 1;
+  return XML_ERROR_NONE;
 }
 
 static enum XML_Error
@@ -1392,36 +1398,11 @@ prologProcessor(XML_Parser parser,
     switch (XmlTokenRole(&prologState, tok, s, next, encoding)) {
     case XML_ROLE_XML_DECL:
       {
-	const char *encodingName = 0;
-	const ENCODING *newEncoding = 0;
-	const char *version;
-	int standalone = -1;
-	if (!XmlParseXmlDecl(0,
-			     encoding,
-			     s,
-			     next,
-			     &errorPtr,
-			     &version,
-			     &encodingName,
-			     &newEncoding,
-			     &standalone))
-	  return XML_ERROR_SYNTAX;
-	if (newEncoding) {
-	  if (newEncoding->minBytesPerChar != encoding->minBytesPerChar) {
-	    errorPtr = encodingName;
-	    return XML_ERROR_INCORRECT_ENCODING;
-	  }
-	  encoding = newEncoding;
-	}
-	else if (encodingName) {
-	  enum XML_Error result = handleUnknownEncodingDecl(parser, encodingName);
-	  if (result != XML_ERROR_NONE)
-	    return result;
-	}
-	if (standalone == 1)
-	  dtd.standalone = 1;
-	break;
+	enum XML_Error result = processXmlDecl(parser, 0, s, next);
+	if (result != XML_ERROR_NONE)
+	  return result;
       }
+      break;
     case XML_ROLE_DOCTYPE_SYSTEM_ID:
       hadExternalDoctype = 1;
       break;
