@@ -58,6 +58,16 @@ typedef void (*XML_ProcessingInstructionHandler)(void *userData,
 						 const char *target,
 						 const char *data);
 
+/* Returns 0 if processing should not continue because of
+a fatal error in the handling of the external entity.
+Note that the first argument is the parser, not userData. */
+
+typedef int (*XML_ExternalEntityRefHandler)(XML_Parser parser,
+					    const char *openEntityNames,
+					    const char *base,
+					    const char *systemId,
+					    const char *publicId);
+
 void XMLPARSEAPI
 XML_SetElementHandler(XML_Parser parser,
 		      XML_StartElementHandler start,
@@ -71,9 +81,21 @@ void XMLPARSEAPI
 XML_SetProcessingInstructionHandler(XML_Parser parser,
 				    XML_ProcessingInstructionHandler handler);
 
+void XMLPARSEAPI
+XML_SetExternalEntityRefHandler(XML_Parser parser,
+				XML_ExternalEntityRefHandler handler);
+
+
 /* This value is passed as the userData argument to callbacks. */
 void XMLPARSEAPI
 XML_SetUserData(XML_Parser parser, void *userData);
+
+/* Returns the last value set by XML_SetUserData or null. */
+void XMLPARSEAPI *
+XML_GetUserData(XML_Parser parser);
+
+int XMLPARSEAPI
+XML_SetBase(XML_Parser parser, const char *base);
 
 /* Parses some input. Returns 0 if a fatal error is detected.
 The last call to XML_Parse must have isFinal true;
@@ -86,6 +108,11 @@ XML_GetBuffer(XML_Parser parser, int len);
 
 int XMLPARSEAPI
 XML_ParseBuffer(XML_Parser parser, int len, int isFinal);
+
+XML_Parser XMLPARSEAPI
+XML_ExternalEntityParserCreate(XML_Parser parser,
+			       const char *openEntityNames,
+			       const char *encoding);
 
 /* If XML_Parser or XML_ParseEnd have returned 0, then XML_GetError*
 returns information about the error. */
@@ -111,7 +138,8 @@ enum XML_Error {
   XML_ERROR_MISPLACED_XML_PI,
   XML_ERROR_UNKNOWN_ENCODING,
   XML_ERROR_INCORRECT_ENCODING,
-  XML_ERROR_UNCLOSED_CDATA_SECTION
+  XML_ERROR_UNCLOSED_CDATA_SECTION,
+  XML_ERROR_EXTERNAL_ENTITY_HANDLING
 };
 
 int XMLPARSEAPI XML_GetErrorCode(XML_Parser parser);

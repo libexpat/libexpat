@@ -165,6 +165,60 @@ void processFile(const void *data, size_t size, const char *filename, void *args
 }
 
 static
+int isAsciiLetter(char c)
+{
+  return ('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z');
+}
+
+static
+const char *resolveSystemId(const char *base, const char *systemId, char **toFree)
+{
+  char *s;
+  *toFree = 0;
+  if (!base
+      || *systemId == '/'
+#ifdef WIN32
+      || *systemId == '\\'
+      || (isAsciiLetter(systemId[0]) && systemId[1] == ':')
+#endif
+     )
+    return systemId;
+  *toFree = (char *)malloc(strlen(base) + strlen(systemId) + 2);
+  if (!*toFree)
+    return systemId;
+  strcpy(*toFree, base);
+  s = *toFree;
+  if (strrchr(s, '/'))
+    s = strrchr(s, '/') + 1;
+#ifdef WIN32
+  if (strrchr(s, '\\'))
+    s = strrchr(s, '\\') + 1;
+#endif
+  strcpy(s, systemId);
+  return *toFree;
+}
+
+static
+int externalEntityRefFilemap(XML_Parser parser,
+			     const char *openEntityNames,
+			     const char *base,
+			     const char *systemId,
+			     const char *publicId)
+{
+  int result;
+  char *s;
+  XML_Parser entParser = XML_ExternalEntityParserCreate(parser, openEntityNames, 0);
+  PROCESS_ARGS args;
+  args.retPtr = &result;
+  args.parser = entParser;
+  if (!filemap(resolveSystemId(base, systemId, &s), processFile, &args))
+    result = 0;
+  free(s);
+  XML_ParserFree(entParser);
+  return result;
+}
+
+static
 int processStream(const char *filename, XML_Parser parser)
 {
   int fd = open(filename, O_BINARY|O_RDONLY);
@@ -200,9 +254,24 @@ int processStream(const char *filename, XML_Parser parser)
 }
 
 static
+int externalEntityRefStream(XML_Parser parser,
+			    const char *openEntityNames,
+			    const char *base,
+			    const char *systemId,
+			    const char *publicId)
+{
+  char *s;
+  XML_Parser entParser = XML_ExternalEntityParserCreate(parser, openEntityNames, 0);
+  int ret = processStream(resolveSystemId(base, systemId, &s), entParser);
+  free(s);
+  XML_ParserFree(entParser);
+  return ret;
+}
+
+static
 void usage(const char *prog)
 {
-  fprintf(stderr, "usage: %s [-r] [-d output-dir] [-e encoding] file ...\n", prog);
+  fprintf(stderr, "usage: %s [-r] [-x] [-d output-dir] [-e encoding] file ...\n", prog);
   exit(1);
 }
 
@@ -212,6 +281,7 @@ int main(int argc, char **argv)
   const char *outputDir = 0;
   const char *encoding = 0;
   int useFilemap = 1;
+  int processExternalEntities = 0;
 
 #ifdef _MSC_VER
   _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF|_CRTDBG_LEAK_CHECK_DF);
@@ -227,6 +297,10 @@ int main(int argc, char **argv)
     j = 1;
     if (argv[i][j] == 'r') {
       useFilemap = 0;
+      j++;
+    }
+    if (argv[i][j] == 'x') {
+      processExternalEntities = 1;
       j++;
     }
     if (argv[i][j] == 'd') {
@@ -282,6 +356,16 @@ int main(int argc, char **argv)
       XML_SetElementHandler(parser, startElement, endElement);
       XML_SetCharacterDataHandler(parser, characterData);
       XML_SetProcessingInstructionHandler(parser, processingInstruction);
+    }
+    if (processExternalEntities) {
+      if (!XML_SetBase(parser, argv[i])) {
+	fprintf(stderr, "%s: out of memory", argv[0]);
+	exit(1);
+      }
+      XML_SetExternalEntityRefHandler(parser,
+	                              useFilemap
+				      ? externalEntityRefFilemap
+				      : externalEntityRefStream);
     }
     if (useFilemap) {
       PROCESS_ARGS args;
