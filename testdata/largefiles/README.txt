@@ -18,14 +18,17 @@ resulting measurements tell us.)
   - purpose: mostly for performance testing with the benchmark utility
 
 * recset.xml (~29.1 MB): 
-  - properties: small portion with namespaces, bulk without, element content, flat 
+  - properties: small portion with namespaces, bulk without, element
+    content, flat
   - source: test data donated by Karl Waclawek
   - purpose: mostly for performance testing with the benchmark utility
 
 * ns_att_test.xml (~34.2 MB): 
-  - properties: lots of prefixed attributes (28 on average), element content, flat 
+  - properties: lots of prefixed attributes (28 on average), element
+    content, flat
   - source: test data donated by Karl Waclawek
-  - purpose: mostly for performance testing with the benchmark utility,
-    specifically for testing the duplicate attribute check in storeAttributes()
+  - purpose: mostly for performance testing with the benchmark
+    utility, specifically for testing the duplicate attribute check in
+    storeAttributes()
 
 
