@@ -366,7 +366,7 @@ long XMLPARSEAPI XML_GetCurrentByteIndex(XML_Parser parser);
 /* For backwards compatibility with previous versions. */
 #define XML_GetErrorLineNumber XML_GetCurrentLineNumber
 #define XML_GetErrorColumnNumber XML_GetCurrentColumnNumber
-#define XML_GetErrorByteIndexNumber XML_GetCurrentByteIndexNumber
+#define XML_GetErrorByteIndex XML_GetCurrentByteIndex
 
 /* Frees memory used by the parser. */
 void XMLPARSEAPI
