@@ -228,8 +228,8 @@ typedef struct {
   XML_Bool keepProcessing;
   /* indicates if external PE has been read */
   XML_Bool paramEntityRead;
-  /* true once an internal or external PE has been read */
-  XML_Bool hasParamEntities;
+  /* true once an internal or external PE reference has been encountered */
+  XML_Bool hasParamEntityRefs;
   XML_Bool standalone;
 #ifdef XML_DTD
   HASH_TABLE paramEntities;
@@ -1770,7 +1770,7 @@ doContent(XML_Parser parser,
            if yes, check that the entity exists, and that it is internal,
            otherwise call the skipped entity or default handler.
         */
-        if (!dtd.hasParamEntities || dtd.standalone) {
+        if (!dtd.hasParamEntityRefs || dtd.standalone) {
           if (!entity)
             return XML_ERROR_UNDEFINED_ENTITY;
           else if (!entity->is_internal)
@@ -2834,8 +2834,7 @@ externalParEntInitProcessor(XML_Parser parser,
     return result;
 
   /* we know now that XML_Parse(Buffer) has been called,
-     so we assume we actually have an external parameter entity */
-  dtd.hasParamEntities = XML_TRUE;
+     so we consider the external parameter entity read */
   dtd.paramEntityRead = XML_TRUE;
 
   if (prologState.inEntityValue) {
@@ -3110,6 +3109,7 @@ doProlog(XML_Parser parser,
       break;
 #endif /* XML_DTD */
     case XML_ROLE_DOCTYPE_PUBLIC_ID:
+      dtd.hasParamEntityRefs = XML_TRUE;
       if (startDoctypeDeclHandler) {
         doctypePubid = poolStoreString(&tempPool, enc,
                                        s + enc->minBytesPerChar,
@@ -3342,6 +3342,7 @@ doProlog(XML_Parser parser,
       }
       break;
     case XML_ROLE_DOCTYPE_SYSTEM_ID:
+      dtd.hasParamEntityRefs = XML_TRUE;
       if (startDoctypeDeclHandler) {
         doctypeSysid = poolStoreString(&tempPool, enc,
                                        s + enc->minBytesPerChar,
@@ -3647,6 +3648,7 @@ doProlog(XML_Parser parser,
       if (prologState.documentEntity &&
           role == XML_ROLE_INNER_PARAM_ENTITY_REF)
         return XML_ERROR_PARAM_ENTITY_REF;
+      dtd.hasParamEntityRefs = XML_TRUE;
       dtd.paramEntityRead = XML_FALSE;
       if (!paramEntityParsing)
         dtd.keepProcessing = dtd.standalone;
@@ -3665,7 +3667,7 @@ doProlog(XML_Parser parser,
            otherwise call the skipped entity handler
         */
         if (prologState.documentEntity &&
-            (dtd.standalone ? !openInternalEntities : !dtd.hasParamEntities)) {
+            (dtd.standalone ? !openInternalEntities : !dtd.hasParamEntityRefs)) {
           if (!entity)
             return XML_ERROR_UNDEFINED_ENTITY;
           else if (!entity->is_internal)
@@ -3952,7 +3954,6 @@ processInternalParamEntity(XML_Parser parser, ENTITY *entity)
   openEntity.internalEventEndPtr = NULL;
   s = (char *)entity->textPtr;
   end = (char *)(entity->textPtr + entity->textLen);
-  dtd.hasParamEntities = XML_TRUE;
   tok = XmlPrologTok(internalEncoding, s, end, &next);
   result = doProlog(parser, internalEncoding, s, end, tok, next, 0);
   entity->open = XML_FALSE;
@@ -4075,9 +4076,9 @@ appendAttributeValue(XML_Parser parser, const ENCODING *enc, XML_Bool isCdata,
 #ifdef XML_DTD
               prologState.documentEntity &&
 #endif /* XML_DTD */
-              (dtd.standalone ? !openInternalEntities : !dtd.hasParamEntities);
+              (dtd.standalone ? !openInternalEntities : !dtd.hasParamEntityRefs);
         else /* if (pool == &tempPool): we are called from content */
-          checkEntityDecl = !dtd.hasParamEntities || dtd.standalone;
+          checkEntityDecl = !dtd.hasParamEntityRefs || dtd.standalone;
         if (checkEntityDecl) {
           if (!entity)
             return XML_ERROR_UNDEFINED_ENTITY;
@@ -4695,7 +4696,7 @@ dtdInit(DTD *p, XML_Parser parser)
   hashTableInit(&(p->prefixes), ms);
   p->keepProcessing = XML_TRUE;
   p->paramEntityRead = XML_FALSE;
-  p->hasParamEntities = XML_FALSE;
+  p->hasParamEntityRefs = XML_FALSE;
   p->standalone = XML_FALSE;
 #ifdef XML_DTD
   hashTableInit(&(p->paramEntities), ms);
@@ -4908,7 +4909,7 @@ dtdCopy(DTD *newDtd, const DTD *oldDtd, XML_Parser parser)
 
   newDtd->keepProcessing = oldDtd->keepProcessing;
   newDtd->paramEntityRead = oldDtd->paramEntityRead;
-  newDtd->hasParamEntities = oldDtd->hasParamEntities;
+  newDtd->hasParamEntityRefs = oldDtd->hasParamEntityRefs;
   newDtd->standalone = oldDtd->standalone;
 
   /* Don't want deep copying for scaffolding */
