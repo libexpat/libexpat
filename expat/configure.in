@@ -87,4 +87,4 @@ fi
 
 AC_CHECK_FUNCS(memmove bcopy)
 
-AC_OUTPUT(Makefile lib/Makefile xmlwf/Makefile examples/Makefile)
+AC_OUTPUT(Makefile lib/Makefile lib/expat.h xmlwf/Makefile examples/Makefile)
