@@ -25,6 +25,7 @@ INCDIR= ../lib
 
 LDFLAGS= @LDFLAGS@ -static
 CFLAGS= @CFLAGS@ -I$(INCDIR)
+CC = @CC@
 
 FILEMAP_OBJ= @FILEMAP_OBJ@
 OBJS= xmlwf.o xmlfile.o codepage.o $(FILEMAP_OBJ)

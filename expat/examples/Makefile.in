@@ -24,6 +24,7 @@ INCDIR = ../lib
 CPPFLAGS = @CPPFLAGS@
 LDFLAGS = @LDFLAGS@ -static
 LIBS = -L$(LIBDIR) -lexpat 
+CC = @CC@
 CFLAGS = @CFLAGS@ -I$(INCDIR)
 
 srcdir = @srcdir@
