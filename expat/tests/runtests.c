@@ -236,6 +236,24 @@ START_TEST(test_illegal_utf8)
 }
 END_TEST
 
+START_TEST(test_utf16)
+{
+    /* <?xml version="1.0" encoding="UTF-16"?>
+     * <doc a='123'>some text</doc>
+     */
+    char text[] =
+        "\000<\000?\000x\000m\000\154\000 \000v\000e\000r\000s\000i\000o"
+        "\000n\000=\000'\0001\000.\000\060\000'\000 \000e\000n\000c\000o"
+        "\000d\000i\000n\000g\000=\000'\000U\000T\000F\000-\0001\000\066"
+        "\000'\000?\000>\000\n"
+        "\000<\000d\000o\000c\000 \000a\000=\000'\0001\0002\0003\000'"
+        "\000>\000s\000o\000m\000e\000 \000t\000e\000x\000t\000<\000/"
+        "\000d\000o\000c\000>";
+    if (!XML_Parse(parser, text, sizeof(text) - 1, 1))
+        xml_failure();
+}
+END_TEST
+
 
 /* Helpers used by the following test; this checks any "attr" and "refs"
  * attributes to make sure whitespace has been normalized.
@@ -435,6 +453,7 @@ make_basic_suite(void)
     tcase_add_test(tc_chars, test_bom_utf16_be);
     tcase_add_test(tc_chars, test_bom_utf16_le);
     tcase_add_test(tc_chars, test_illegal_utf8);
+    tcase_add_test(tc_chars, test_utf16);
     /* Regression test for SF bug #491986. */
     tcase_add_test(tc_chars, test_danish_latin1);
     /* Regression test for SF bug #514281. */
