@@ -5,22 +5,22 @@ body {
 .eg {
   padding-left: 1em;
   padding-top: .5em;
+  padding-bottom: .5em;
   border: solid thin;
   margin: 1em 0;
   background-color: tan;
-  margin-left: 5%;
+  margin-left: 2em;
   margin-right: 10%;
 }
 
 .handler {
   width: 100%;
   border-top-width: thin;  
-  margin-left: 5%;
   margin-bottom: 1em;
 }
 
 .handler p {
-  margin-left: 3%;
+  margin-left: 2em;
 }
 
 .setter {
@@ -38,7 +38,7 @@ body {
 }
 
 .fcndef {
-  margin-left: 5%;
+  margin-left: 2em;
   margin-bottom: 2em;
 }
 
