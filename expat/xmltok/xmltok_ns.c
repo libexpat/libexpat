@@ -30,14 +30,14 @@ static
 int NS(initScanProlog)(const ENCODING *enc, const char *ptr, const char *end,
 		       const char **nextTokPtr)
 {
-  return NS(initScan)(NS(encodings), (const INIT_ENCODING *)enc, XML_PROLOG_STATE, ptr, end, nextTokPtr);
+  return initScan(NS(encodings), (const INIT_ENCODING *)enc, XML_PROLOG_STATE, ptr, end, nextTokPtr);
 }
 
 static
 int NS(initScanContent)(const ENCODING *enc, const char *ptr, const char *end,
 		       const char **nextTokPtr)
 {
-  return NS(initScan)(NS(encodings), (const INIT_ENCODING *)enc, XML_CONTENT_STATE, ptr, end, nextTokPtr);
+  return initScan(NS(encodings), (const INIT_ENCODING *)enc, XML_CONTENT_STATE, ptr, end, nextTokPtr);
 }
 
 int NS(XmlInitEncoding)(INIT_ENCODING *p, const ENCODING **encPtr, const char *name)
