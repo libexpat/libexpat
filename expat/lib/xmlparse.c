@@ -4,7 +4,7 @@ See the file COPYING for copying permission.
 */
 
 static char RCSId[]
-  = "$Header: /cvsroot/expat/expat/lib/xmlparse.c,v 1.8 2000/10/10 18:48:48 coopercc Exp $";
+  = "$Header: /cvsroot/expat/expat/lib/xmlparse.c,v 1.9 2000/10/20 15:14:36 coopercc Exp $";
 
 #include <config.h>
 
@@ -1284,7 +1284,7 @@ const XML_LChar *XML_ErrorString(int code)
     XML_T("out of memory"),
     XML_T("syntax error"),
     XML_T("no element found"),
-    XML_T("not well-formed"),
+    XML_T("not well-formed (invalid token)"),
     XML_T("unclosed token"),
     XML_T("unclosed token"),
     XML_T("mismatched tag"),
@@ -1302,7 +1302,8 @@ const XML_LChar *XML_ErrorString(int code)
     XML_T("encoding specified in XML declaration is incorrect"),
     XML_T("unclosed CDATA section"),
     XML_T("error in processing external entity reference"),
-    XML_T("document is not standalone")
+    XML_T("document is not standalone"),
+    XML_T("unexpected parser state - please send a bug report")
   };
   if (code > 0 && code < sizeof(message)/sizeof(message[0]))
     return message[code];
@@ -2233,7 +2234,8 @@ enum XML_Error doCdataSection(XML_Parser parser,
       }
       return XML_ERROR_UNCLOSED_CDATA_SECTION;
     default:
-      abort();
+      *eventPP = next;
+      return XML_ERROR_UNEXPECTED_STATE;
     }
     *eventPP = s = next;
   }
@@ -2310,7 +2312,8 @@ enum XML_Error doIgnoreSection(XML_Parser parser,
     }
     return XML_ERROR_SYNTAX; /* XML_ERROR_UNCLOSED_IGNORE_SECTION */
   default:
-    abort();
+    *eventPP = next;
+    return XML_ERROR_UNEXPECTED_STATE;
   }
   /* not reached */
 }
@@ -3459,7 +3462,9 @@ appendAttributeValue(XML_Parser parser, const ENCODING *enc, int isCdata,
       }
       break;
     default:
-      abort();
+      if (enc == encoding)
+	eventPtr = ptr;
+      return XML_ERROR_UNEXPECTED_STATE;
     }
     ptr = next;
   }
@@ -3565,7 +3570,9 @@ enum XML_Error storeEntityValue(XML_Parser parser,
 	eventPtr = next;
       return XML_ERROR_INVALID_TOKEN;
     default:
-      abort();
+      if (enc == encoding)
+	eventPtr = entityTextPtr;
+      return XML_ERROR_UNEXPECTED_STATE;
     }
     entityTextPtr = next;
   }

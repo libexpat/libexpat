@@ -1,5 +1,6 @@
-	- Fixed a bug where parameter entities weren't being expanded inside
-	  entity literals.
+	- Removed all aborts and instead return an UNEXPECTED_STATE error.
+	- Fixed a bug where a stray '%' in an entity value would cause an
+	  abort.
 	- Defined XML_SetEndNamespaceDeclHandler. Thanks to Darryl Miles for
 	  finding this oversight.
 	- Changed default patterns in lib/Makefile.in to fit non-GNU makes
