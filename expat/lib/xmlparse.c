@@ -2075,8 +2075,9 @@ doContent(XML_Parser parser,
           result = storeAtts(parser, enc, s, &(tag->name), &(tag->bindings));
           if (result)
             return result;
-          startElementHandler(handlerArg, tag->name.str,
-                              (const XML_Char **)atts);
+          if (startElementHandler)
+            startElementHandler(handlerArg, tag->name.str,
+                                (const XML_Char **)atts);
         }
         else if (defaultHandler)
           reportDefault(parser, enc, s, next);

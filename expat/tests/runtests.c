@@ -790,6 +790,41 @@ START_TEST(test_ns_tagname_overwrite_triplet)
 }
 END_TEST
 
+
+/* Regression test for SF bug #620343. */
+static void
+start_element_fail(void *userData,
+                    const XML_Char *name, const XML_Char **atts)
+{
+    /* We should never get here. */
+    fail("should never reach start_element_fail()");
+}
+
+static void
+start_ns_clearing_start_element(void *userData,
+                                       const XML_Char *prefix,
+                                       const XML_Char *uri)
+{
+    XML_SetStartElementHandler((XML_Parser) userData, NULL);
+}
+
+START_TEST(test_start_ns_clears_start_element)
+{
+    /* This needs to use separate start/end tags; using the empty tag
+       syntax doesn't cause the problematic path through Expat to be
+       taken.
+    */
+    char *text = "<e xmlns='http://xml.libexpat.org/'></e>";
+
+    XML_SetStartElementHandler(parser, start_element_fail);
+    XML_SetStartNamespaceDeclHandler(parser, start_ns_clearing_start_element);
+    XML_UseParserAsHandlerArg(parser);
+    if (XML_Parse(parser, text, strlen(text), 1) == XML_STATUS_ERROR)
+        xml_failure(parser);
+}
+END_TEST
+
+
 static Suite *
 make_basic_suite(void)
 {
@@ -835,6 +870,7 @@ make_basic_suite(void)
     tcase_add_test(tc_namespace, test_return_ns_triplet);
     tcase_add_test(tc_namespace, test_ns_tagname_overwrite);
     tcase_add_test(tc_namespace, test_ns_tagname_overwrite_triplet);
+    tcase_add_test(tc_namespace, test_start_ns_clears_start_element);
 
     return s;
 }
