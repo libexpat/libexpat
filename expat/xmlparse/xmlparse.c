@@ -87,11 +87,17 @@ typedef struct prefix {
   BINDING *binding;
 } PREFIX;
 
+typedef struct {
+  const XML_Char *str;
+  const XML_Char *localPart;
+  int uriLen;
+} TAG_NAME;
+
 typedef struct tag {
   struct tag *parent;
   const char *rawName;
   int rawNameLength;
-  const XML_Char *name;
+  TAG_NAME name;
   char *buf;
   char *bufEnd;
   BINDING *bindings;
@@ -192,7 +198,7 @@ doContent(XML_Parser parser, int startTagLevel, const ENCODING *enc,
 static enum XML_Error
 doCdataSection(XML_Parser parser, const ENCODING *, const char **startPtr, const char *end, const char **nextPtr);
 static enum XML_Error storeAtts(XML_Parser parser, const ENCODING *, const char *s,
-				const XML_Char **tagNamePtr, BINDING **bindingsPtr);
+				TAG_NAME *tagNamePtr, BINDING **bindingsPtr);
 static
 int addBinding(XML_Parser parser, PREFIX *prefix, const ATTRIBUTE_ID *attId, const XML_Char *uri, BINDING **bindingsPtr);
 static int
@@ -1152,6 +1158,7 @@ doContent(XML_Parser parser,
 	tag->bindings = 0;
 	tag->parent = tagStack;
 	tagStack = tag;
+	tag->name.localPart = 0;
 	tag->rawName = s + enc->minBytesPerChar;
 	tag->rawNameLength = XmlNameLength(enc, tag->rawName);
 	if (nextPtr) {
@@ -1180,7 +1187,7 @@ doContent(XML_Parser parser,
 	      toPtr = (XML_Char *)(tag->buf + ROUND_UP(tag->rawNameLength, sizeof(XML_Char)));
 	    else
 	      toPtr = (XML_Char *)tag->buf;
-	    tag->name = toPtr;
+	    tag->name.str = toPtr;
 	    XmlConvert(enc,
 		       &fromPtr, rawNameEnd,
 		       (ICHAR **)&toPtr, (ICHAR *)tag->bufEnd - 1);
@@ -1198,11 +1205,11 @@ doContent(XML_Parser parser,
 	  result = storeAtts(parser, enc, s, &(tag->name), &(tag->bindings));
 	  if (result)
 	    return result;
-	  startElementHandler(handlerArg, tag->name, (const XML_Char **)atts);
+	  startElementHandler(handlerArg, tag->name.str, (const XML_Char **)atts);
 	  poolClear(&tempPool);
 	}
 	else {
-	  tag->name = 0;
+	  tag->name.str = 0;
 	  if (defaultHandler)
 	    reportDefault(parser, enc, s, next);
 	}
@@ -1220,10 +1227,10 @@ doContent(XML_Parser parser,
 	const char *rawName = s + enc->minBytesPerChar;
 	enum XML_Error result;
 	BINDING *bindings = 0;
-	const XML_Char *name = poolStoreString(&tempPool, enc, rawName,
-					       rawName
-					       + XmlNameLength(enc, rawName));
-	if (!name)
+	TAG_NAME name;
+	name.str = poolStoreString(&tempPool, enc, rawName,
+				   rawName + XmlNameLength(enc, rawName));
+	if (!name.str)
 	  return XML_ERROR_NO_MEMORY;
 	poolFinish(&tempPool);
 	result = storeAtts(parser, enc, s, &name, &bindings);
@@ -1231,11 +1238,11 @@ doContent(XML_Parser parser,
 	  return result;
 	poolFinish(&tempPool);
 	if (startElementHandler)
-	  startElementHandler(handlerArg, name, (const XML_Char **)atts);
+	  startElementHandler(handlerArg, name.str, (const XML_Char **)atts);
 	if (endElementHandler) {
 	  if (startElementHandler)
 	    *eventPP = *eventEndPP;
-	  endElementHandler(handlerArg, name);
+	  endElementHandler(handlerArg, name.str);
 	}
 	poolClear(&tempPool);
 	while (bindings) {
@@ -1269,8 +1276,15 @@ doContent(XML_Parser parser,
 	  return XML_ERROR_TAG_MISMATCH;
 	}
 	--tagLevel;
-	if (endElementHandler && tag->name)
-	  endElementHandler(handlerArg, tag->name);
+	if (endElementHandler && tag->name.str) {
+	  if (tag->name.localPart) {
+	    XML_Char *to = (XML_Char *)tag->name.str + tag->name.uriLen;
+	    const XML_Char *from = tag->name.localPart;
+	    while ((*to++ = *from++) != 0)
+	      ;
+	  }
+	  endElementHandler(handlerArg, tag->name.str);
+	}
 	else if (defaultHandler)
 	  reportDefault(parser, enc, s, next);
 	while (tag->bindings) {
@@ -1406,7 +1420,7 @@ doContent(XML_Parser parser,
 otherwise just check the attributes for well-formedness. */
 
 static enum XML_Error storeAtts(XML_Parser parser, const ENCODING *enc,
-				const char *s, const XML_Char **tagNamePtr,
+				const char *s, TAG_NAME *tagNamePtr,
 				BINDING **bindingsPtr)
 {
   ELEMENT_TYPE *elementType = 0;
@@ -1420,12 +1434,12 @@ static enum XML_Error storeAtts(XML_Parser parser, const ENCODING *enc,
   const XML_Char *localPart;
 
   if (tagNamePtr) {
-    elementType = (ELEMENT_TYPE *)lookup(&dtd.elementTypes, *tagNamePtr, 0);
+    elementType = (ELEMENT_TYPE *)lookup(&dtd.elementTypes, tagNamePtr->str, 0);
     if (!elementType) {
-      *tagNamePtr = poolCopyString(&dtd.pool, *tagNamePtr);
-      if (!*tagNamePtr)
+      tagNamePtr->str = poolCopyString(&dtd.pool, tagNamePtr->str);
+      if (!tagNamePtr->str)
 	return XML_ERROR_NO_MEMORY;
-      elementType = (ELEMENT_TYPE *)lookup(&dtd.elementTypes, *tagNamePtr, sizeof(ELEMENT_TYPE));
+      elementType = (ELEMENT_TYPE *)lookup(&dtd.elementTypes, tagNamePtr->str, sizeof(ELEMENT_TYPE));
       if (!elementType)
         return XML_ERROR_NO_MEMORY;
       if (ns && !setElementTypePrefix(parser, elementType))
@@ -1571,16 +1585,18 @@ static enum XML_Error storeAtts(XML_Parser parser, const ENCODING *enc,
     binding = elementType->prefix->binding;
     if (!binding)
       return XML_ERROR_NONE;
-    localPart = *tagNamePtr;
+    localPart = tagNamePtr->str;
     while (*localPart++ != XML_T(':'))
       ;
   }
   else if (dtd.defaultPrefix.binding) {
     binding = dtd.defaultPrefix.binding;
-    localPart = *tagNamePtr;
+    localPart = tagNamePtr->str;
   }
   else
     return XML_ERROR_NONE;
+  tagNamePtr->localPart = localPart;
+  tagNamePtr->uriLen = binding->uriLen;
   i = binding->uriLen;
   do {
     if (i == binding->uriAlloc) {
@@ -1590,7 +1606,7 @@ static enum XML_Error storeAtts(XML_Parser parser, const ENCODING *enc,
     }
     binding->uri[i++] = *localPart;
   } while (*localPart++);
-  *tagNamePtr = binding->uri;
+  tagNamePtr->str = binding->uri;
   return XML_ERROR_NONE;
 }
 
