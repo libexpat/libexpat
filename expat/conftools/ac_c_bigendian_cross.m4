@@ -7,7 +7,7 @@ dnl The implementation will create a binary, and instead of running
 dnl the binary it will be grep'ed for some symbols that will look
 dnl different for different endianess of the binary.
 dnl
-dnl @version $Id: ac_c_bigendian_cross.m4,v 1.2 2001/03/16 09:12:52 simons Exp $
+dnl @version $Id: ac_c_bigendian_cross.m4,v 1.1 2001/07/24 19:51:35 fdrake Exp $
 dnl @author Guido Draheim <guidod@gmx.de>
 dnl
 AC_DEFUN([AC_C_BIGENDIAN_CROSS],
@@ -50,7 +50,7 @@ void _ebcdic() { char* s = (char*) ebcdic_mm; s = (char*) ebcdic_ii; }
 int main() { _ascii (); _ebcdic (); return 0; }
 EOF
 ] if test -f conftest.c ; then
-     if ${CC-cc} conftest.c -o conftest.o && test -f conftest.o ; then
+     if ${CC-cc} -c conftest.c -o conftest.o && test -f conftest.o ; then
         if test `grep -l BIGenDianSyS conftest.o` ; then
            echo $ac_n ' big endian probe OK, ' 1>&AC_FD_MSG
            ac_cv_c_bigendian=yes
