@@ -13,7 +13,10 @@
 */
 
 #if defined(__GNUC__)
-#define FASTCALL __attribute__((stdcall, regparm(3)))
+/* Last minute instability reported with egcs on a RedHat Linux 7.3
+   box; argh!
+*/
+/* #define FASTCALL __attribute__((stdcall, regparm(3))) */
 #elif defined(WIN32)
 /* XXX This seems to have an unexpected negative effect on Windows so
    we'll disable it for now on that platform.  It may be reconsidered

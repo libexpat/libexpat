@@ -49,6 +49,36 @@ of Expat.</p>
 <h3>News</h3>
 
 <dl>
+  <dt><em>6 September 2002</em>,
+      Expat 1.95.5 released.
+    </dt>
+  <dd>
+    <ul>
+      <li> Added <code>XML_UseForeignDTD()</code> for improved SAX2
+           support. </li>
+      <li> Added <code>XML_GetFeatureList()</code>. </li>
+      <li> Defined <code>XML_Bool</code> type and the values
+           <code>XML_TRUE</code> and <code>XML_FALSE</code>. </li>
+      <li> Use an incomplete struct instead of a <code>void*</code>
+           for the parser. </li>
+      <li> Fixed UTF-8 decoding bug that caused legal UTF-8 to be
+           rejected. </li>
+      <li> Finally fixed bug where default handler would report DTD
+           events that were already handled by another handler.
+           Initial patch contributed by Darryl Miller. </li>
+      <li> Removed unnecessary <code>DllMain()</code> function that
+           caused static linking into a DLL to be difficult. </li>
+      <li> Added VC++ projects for building static libraries. </li>
+      <li> Reduced line-length for all source code and headers to be
+           no longer than 80 characters, to help with AS/400
+           support. </li>
+      <li> Reduced memory copying during parsing (SF patch #600964). </li>
+      <li> Fixed a variety of bugs: see SF issues 580793, 434664,
+           483514, 580503, 581069, 584041, 584183, 584832, 585537,
+           596555, 596678, 598352, 598944, 599715, 600479, 600971. </li>
+    </ul>
+    <p />
+    </dd>
   <dt><em>4 September 2002</em>,
       <a href="dev/roadmap.html">Development roadmap</a> published.
     </dt>
