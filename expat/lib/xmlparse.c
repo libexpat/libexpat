@@ -105,7 +105,7 @@ typedef struct {
   (((h) * 0xF4243) ^ (unsigned char)(c))
 #endif
 
-/* For probing (after a collision) we need a step size relative prime 
+/* For probing (after a collision) we need a step size relative prime
    to the hash table size, which is a power of 2. We use double-hashing,
    since we can calculate a second hash value cheaply by taking those bits
    of the first hash value that were discarded (masked out) when the table
@@ -2576,7 +2576,7 @@ storeAtts(XML_Parser parser, const ENCODING *enc,
         ((XML_Char *)s)[-1] = 0;  /* clear flag */
         id = (ATTRIBUTE_ID *)lookup(&dtd->attributeIds, s, 0);
         b = id->prefix->binding;
-        if (!b) 
+        if (!b)
           return XML_ERROR_UNBOUND_PREFIX;
 
         /* as we expand the name we also calculate its hash value */
@@ -2601,9 +2601,9 @@ storeAtts(XML_Parser parser, const ENCODING *enc,
           unsigned char step = 0;
           unsigned long mask = nsAttsSize - 1;
           j = uriHash & mask;  /* index into hash table */
-          while (nsAtts[j].version == version) { 
+          while (nsAtts[j].version == version) {
             /* for speed we compare stored hash values first */
-            if (uriHash == nsAtts[j].hash) {  
+            if (uriHash == nsAtts[j].hash) {
               const XML_Char *s1 = poolStart(&tempPool);
               const XML_Char *s2 = nsAtts[j].uriName;
               /* s1 is null terminated, but not s2 */
@@ -2635,7 +2635,7 @@ storeAtts(XML_Parser parser, const ENCODING *enc,
         nsAtts[j].version = version;
         nsAtts[j].hash = uriHash;
         nsAtts[j].uriName = s;
-        
+
         if (!--nPrefixes)
           break;
       }
@@ -4776,7 +4776,7 @@ defineAttribute(ELEMENT_TYPE *type, ATTRIBUTE_ID *attId, XML_Bool isCdata,
   if (type->nDefaultAtts == type->allocDefaultAtts) {
     if (type->allocDefaultAtts == 0) {
       type->allocDefaultAtts = 8;
-      type->defaultAtts = (DEFAULT_ATTRIBUTE *)MALLOC(type->allocDefaultAtts 
+      type->defaultAtts = (DEFAULT_ATTRIBUTE *)MALLOC(type->allocDefaultAtts
                             * sizeof(DEFAULT_ATTRIBUTE));
       if (!type->defaultAtts)
         return 0;
@@ -5410,7 +5410,7 @@ lookup(HASH_TABLE *table, KEY name, size_t createSize)
 
     /* check for overflow (table is half full) */
     if (table->used >> (table->power - 1)) {
-      unsigned char newPower = table->power + 1; 
+      unsigned char newPower = table->power + 1;
       size_t newSize = (size_t)1 << newPower;
       unsigned long newMask = (unsigned long)newSize - 1;
       size_t tsize = newSize * sizeof(NAMED *);
@@ -5643,8 +5643,8 @@ poolGrow(STRING_POOL *pool)
     int blockSize = (pool->end - pool->start)*2;
     pool->blocks = (BLOCK *)
       pool->mem->realloc_fcn(pool->blocks,
-			     (offsetof(BLOCK, s)
-			      + blockSize * sizeof(XML_Char)));
+                             (offsetof(BLOCK, s)
+                              + blockSize * sizeof(XML_Char)));
     if (pool->blocks == NULL)
       return XML_FALSE;
     pool->blocks->size = blockSize;
@@ -5660,7 +5660,7 @@ poolGrow(STRING_POOL *pool)
     else
       blockSize *= 2;
     tem = (BLOCK *)pool->mem->malloc_fcn(offsetof(BLOCK, s)
-					+ blockSize * sizeof(XML_Char));
+                                        + blockSize * sizeof(XML_Char));
     if (!tem)
       return XML_FALSE;
     tem->size = blockSize;
@@ -5807,5 +5807,3 @@ getElementType(XML_Parser parser,
   }
   return ret;
 }
-
-
