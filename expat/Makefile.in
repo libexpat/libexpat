@@ -78,7 +78,7 @@ VERSION = @VERSION@
 
 SUBDIRS = lib examples sample xmlwf
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
-CONFIG_HEADERS = config.h:config.hin
+CONFIG_HEADERS = config.h
 
 DISTDIR = $(PACKAGE)-$(VERSION)
 DISTRIBUTION = $(DISTDIR).tar.gz
@@ -86,9 +86,6 @@ DISTRIBUTION = $(DISTDIR).tar.gz
 buildlib: lib
 
 all: $(SUBDIRS)
-
-.PHONY: all $(SUBDIRS) clean distclean maintainer-clean dist install \
-        uninstall distdir
 
 Makefile: Makefile.in config.status
 	CONFIG_FILES=$@ CONFIG_HEADERS= $(SHELL) config.status
@@ -103,13 +100,12 @@ config.status: configure
 configure: configure.in
 	$(AUTOCONF)
 
-config.h: config.hin config.status
+config.h: config.h.in config.status
 	CONFIG_FILES= CONFIG_HEADERS=$(CONFIG_HEADERS) \
 	$(SHELL) ./config.status
 
-$(SUBDIRS): config.status
+$(SUBDIRS):
 	cd $@; $(MAKE)
-
 
 clean:
 	@list='$(SUBDIRS)'; for dir in $$list; do \
@@ -121,7 +117,13 @@ distclean:
 	@list='$(SUBDIRS)'; for dir in $$list; do \
 	  cd $$dir; $(MAKE) distclean; cd ..; \
 	done
-	rm -f config.h config.status config.log libtool examples/Makefile xmlwf/Makefile sample/Makefile
+	rm -f config.h config.status config.log config.cache libtool
+	rm -f Makefile examples/Makefile xmlwf/Makefile sample/Makefile
+
+extraclean: distclean
+	rm -f aclocal.m4 config.h.in configure
+	rm -f conftools/config.guess conftools/config.sub
+	rm -f conftools/ltconfig conftools/ltmain.sh
 
 maintainer-clean: distclean
 	rm -f $(DISTRIBUTION)
@@ -148,3 +150,8 @@ uninstall:
 	@list='$(SUBDIRS)'; for dir in $$list; do \
 	  cd $$dir; $(MAKE) uninstall; cd ..; \
 	done
+
+.PHONY: buildlib all $(SUBDIRS) \
+	clean distclean extraclean maintainer-clean \
+	dist distdir \
+	install uninstall

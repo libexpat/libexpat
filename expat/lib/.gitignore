@@ -1,3 +1,5 @@
 Makefile
-.deps
 .libs
+*.lo
+*.la
+expat.h

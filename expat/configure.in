@@ -43,7 +43,7 @@ LIBCURRENT=1
 LIBREVISION=0
 LIBAGE=1
 
-AC_CONFIG_HEADER(config.h:config.hin)
+AC_CONFIG_HEADER(config.h)
 
 AC_LIBTOOL_WIN32_DLL
 AC_PROG_LIBTOOL
@@ -78,12 +78,13 @@ dnl Checks for library functions.
 
 AC_FUNC_MEMCMP
 AC_FUNC_MMAP
-AC_SUBST(FILEMAP_OBJ)
+
 if test -z "$HAVE_MMAP"; then
     FILEMAP_OBJ=unixfilemap.o
 else
     FILEMAP_OBJ=readfilemap.o
 fi
+AC_SUBST(FILEMAP_OBJ)
 
 AC_CHECK_FUNCS(memmove bcopy)
 

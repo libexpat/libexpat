@@ -119,12 +119,12 @@ Makefile: $(srcdir)/Makefile.in  $(top_builddir)/config.status
 $(top_builddir)/config.status: $(top_builddir)/configure
 	cd $(top_builddir) && $(MAKE) config.status
 
-$(top_builddir)/config.h: $(top_builddir)/config.hin
+$(top_builddir)/config.h: $(top_builddir)/config.h.in
 	cd $(top_builddir) && $(MAKE) config.h
 
 clean:
 	rm -f $(LIBRARY) *.o *.lo *~
-	rm -rf .libs _libs .deps
+	rm -rf .libs _libs
 
 distclean: clean
 	rm -f Makefile
