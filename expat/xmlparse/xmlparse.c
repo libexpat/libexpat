@@ -1750,7 +1750,7 @@ static enum XML_Error storeAtts(XML_Parser parser, const ENCODING *enc,
   i = binding->uriLen;
   do {
     if (i == binding->uriAlloc) {
-      binding->uri = realloc(binding->uri, binding->uriAlloc *= 2);
+      binding->uri = realloc(binding->uri, (binding->uriAlloc *= 2) * sizeof(XML_Char));
       if (!binding->uri)
 	return XML_ERROR_NO_MEMORY;
     }
@@ -1772,7 +1772,7 @@ int addBinding(XML_Parser parser, PREFIX *prefix, const ATTRIBUTE_ID *attId, con
   if (freeBindingList) {
     b = freeBindingList;
     if (len > b->uriAlloc) {
-      b->uri = realloc(b->uri, len + EXPAND_SPARE);
+      b->uri = realloc(b->uri, sizeof(XML_Char) * (len + EXPAND_SPARE));
       if (!b->uri)
 	return 0;
       b->uriAlloc = len + EXPAND_SPARE;
@@ -1783,12 +1783,12 @@ int addBinding(XML_Parser parser, PREFIX *prefix, const ATTRIBUTE_ID *attId, con
     b = malloc(sizeof(BINDING));
     if (!b)
       return 0;
-    b->uri = malloc(sizeof(XML_Char) * len + EXPAND_SPARE);
+    b->uri = malloc(sizeof(XML_Char) * (len + EXPAND_SPARE));
     if (!b->uri) {
       free(b);
       return 0;
     }
-    b->uriAlloc = len;
+    b->uriAlloc = len + EXPAND_SPARE;
   }
   b->uriLen = len;
   memcpy(b->uri, uri, len * sizeof(XML_Char));
