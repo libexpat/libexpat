@@ -178,6 +178,17 @@ XML_ParserCreate_MM(const XML_Char *encoding,
 		    const XML_Memory_Handling_Suite *memsuite,
 		    const XML_Char *namespaceSeparator);
 
+/* Prepare a parser object to be re-used.  This is particularly
+   valuable when memory allocation overhead is disproportionatly high,
+   such as when a large number of small documnents need to be parsed.
+   All handlers are cleared from the parser.
+
+   Added in Expat 1.95.3.
+*/
+
+XMLPARSEAPI(void)
+XML_ParserReset(XML_Parser parser, const XML_Char *encodingName);
+
 /* atts is array of name/value pairs, terminated by 0;
    names and values are 0 terminated. */
 

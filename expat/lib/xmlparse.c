@@ -601,8 +601,59 @@ XML_ParserCreate_MM(const XML_Char *encodingName,
 
   if (!parser)
     return parser;
+
+  buffer = 0;
+  bufferLim = 0;
+
+  attsSize = INIT_ATTS_SIZE;
+  atts = MALLOC(attsSize * sizeof(ATTRIBUTE));
+  dataBuf = MALLOC(INIT_DATA_BUF_SIZE * sizeof(XML_Char));
+  dataBufEnd = dataBuf + INIT_DATA_BUF_SIZE;
+  freeBindingList = 0;
+  inheritedBindings = 0;
+  freeTagList = 0;
+
+  namespaceSeparator = '!';
+  ns = 0;
+  ns_triplets = 0;
+  poolInit(&tempPool, &(((Parser *) parser)->m_mem));
+  poolInit(&temp2Pool, &(((Parser *) parser)->m_mem));
+
+  XML_ParserReset(parser, encodingName);
+
+  if (!dtdInit(&dtd, parser) || !atts || !dataBuf
+      || (encodingName && !protocolEncodingName)) {
+    XML_ParserFree(parser);
+    return 0;
+  }
+
+  if (nameSep) {
+    ns = 1;
+    internalEncoding = XmlGetInternalEncodingNS();
+    namespaceSeparator = *nameSep;
+
+    if (! setContext(parser, implicitContext)) {
+      XML_ParserFree(parser);
+      return 0;
+    }
+  }
+  else {
+    internalEncoding = XmlGetInternalEncoding();
+  }
+
+  return parser;
+}
+
+void XML_ParserReset(XML_Parser parser, const XML_Char *encodingName)
+{
+
   processor = prologInitProcessor;
   XmlPrologStateInit(&prologState);
+  protocolEncodingName = (encodingName
+                          ? poolCopyString(&tempPool, encodingName)
+                          : 0);
+  curBase = 0;
+  XmlInitEncoding(&initEncoding, &encoding, 0);
   userData = 0;
   handlerArg = 0;
   startElementHandler = 0;
@@ -627,12 +678,10 @@ XML_ParserCreate_MM(const XML_Char *encodingName,
   attlistDeclHandler = 0;
   entityDeclHandler = 0;
   xmlDeclHandler = 0;
-  buffer = 0;
-  bufferPtr = 0;
-  bufferEnd = 0;
+  bufferPtr = buffer;
+  bufferEnd = buffer;
   parseEndByteIndex = 0;
   parseEndPtr = 0;
-  bufferLim = 0;
   declElementType = 0;
   declAttributeId = 0;
   declEntity = 0;
@@ -642,21 +691,18 @@ XML_ParserCreate_MM(const XML_Char *encodingName,
   declAttributeType = 0;
   declNotationName = 0;
   declNotationPublicId = 0;
+  declAttributeIsCdata = 0;
+  declAttributeIsId = 0;
   memset(&position, 0, sizeof(POSITION));
   errorCode = XML_ERROR_NONE;
   eventPtr = 0;
   eventEndPtr = 0;
   positionPtr = 0;
   openInternalEntities = 0;
+  defaultExpandInternalEntities = 0;
   tagLevel = 0;
   tagStack = 0;
-  freeTagList = 0;
-  freeBindingList = 0;
-  inheritedBindings = 0;
-  attsSize = INIT_ATTS_SIZE;
-  atts = MALLOC(attsSize * sizeof(ATTRIBUTE));
   nSpecifiedAtts = 0;
-  dataBuf = MALLOC(INIT_DATA_BUF_SIZE * sizeof(XML_Char));
   groupSize = 0;
   groupConnector = 0;
   hadExternalDoctype = 0;
@@ -664,44 +710,11 @@ XML_ParserCreate_MM(const XML_Char *encodingName,
   unknownEncodingRelease = 0;
   unknownEncodingData = 0;
   unknownEncodingHandlerData = 0;
-  namespaceSeparator = '!';
 #ifdef XML_DTD
   parentParser = 0;
   paramEntityParsing = XML_PARAM_ENTITY_PARSING_NEVER;
 #endif
-  ns = 0;
-  ns_triplets = 0;
-  poolInit(&tempPool, &(((Parser *) parser)->m_mem));
-  poolInit(&temp2Pool, &(((Parser *) parser)->m_mem));
-  protocolEncodingName = (encodingName
-                          ? poolCopyString(&tempPool, encodingName)
-                          : 0);
-  curBase = 0;
-  if (!dtdInit(&dtd, parser) || !atts || !dataBuf
-      || (encodingName && !protocolEncodingName)) {
-    XML_ParserFree(parser);
-    return 0;
-  }
-  dataBufEnd = dataBuf + INIT_DATA_BUF_SIZE;
-
-  if (nameSep) {
-    XmlInitEncodingNS(&initEncoding, &encoding, 0);
-    ns = 1;
-    internalEncoding = XmlGetInternalEncodingNS();
-    namespaceSeparator = *nameSep;
-
-    if (! setContext(parser, implicitContext)) {
-      XML_ParserFree(parser);
-      return 0;
-    }
-  }
-  else {
-    XmlInitEncoding(&initEncoding, &encoding, 0);
-    internalEncoding = XmlGetInternalEncoding();
-  }
-
-  return parser;
-}  /* End XML_ParserCreate_MM */
+}
 
 int XML_SetEncoding(XML_Parser parser, const XML_Char *encodingName)
 {
