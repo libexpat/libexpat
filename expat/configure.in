@@ -19,6 +19,9 @@ dnl beta/development releases and even number minor version for stable
 dnl releases. Edit is bumped with each release and set to 0 with
 dnl change to major or minor version.
 dnl
+dnl Note that these settings must be matched in lib/expat.h, in the
+dnl XML_*_VERSION constants.
+dnl
 
 EXPAT_MAJOR_VERSION=1
 EXPAT_MINOR_VERSION=96
