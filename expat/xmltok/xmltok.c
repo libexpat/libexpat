@@ -962,7 +962,7 @@ int XmlUtf16Encode(int charNum, unsigned short *buf)
 
 struct unknown_encoding {
   struct normal_encoding normal;
-  unsigned short (*convert)(void *userData, const char *p);
+  int (*convert)(void *userData, const char *p);
   void *userData;
   unsigned short utf16[256];
   unsigned char utf8[256][4];
@@ -976,24 +976,29 @@ int XmlSizeOfUnknownEncoding()
 static
 int unknown_isName(const ENCODING *enc, const char *p)
 {
-  unsigned short c = ((const struct unknown_encoding *)enc)
-		      ->convert(((const struct unknown_encoding *)enc)->userData, p);
+  int c = ((const struct unknown_encoding *)enc)
+	  ->convert(((const struct unknown_encoding *)enc)->userData, p);
+  if (c & ~0xFFFF)
+    return 0;
   return UCS2_GET_NAMING(namePages, c >> 8, c & 0xFF);
 }
 
 static
 int unknown_isNmstrt(const ENCODING *enc, const char *p)
 {
-  unsigned short c = ((const struct unknown_encoding *)enc)
-		      ->convert(((const struct unknown_encoding *)enc)->userData, p);
+  int c = ((const struct unknown_encoding *)enc)
+	  ->convert(((const struct unknown_encoding *)enc)->userData, p);
+  if (c & ~0xFFFF)
+    return 0;
   return UCS2_GET_NAMING(nmstrtPages, c >> 8, c & 0xFF);
 }
 
 static
 int unknown_isInvalid(const ENCODING *enc, const char *p)
 {
-  return ((const struct unknown_encoding *)enc)
-	 ->convert(((const struct unknown_encoding *)enc)->userData, p) == 0;
+  int c = ((const struct unknown_encoding *)enc)
+	   ->convert(((const struct unknown_encoding *)enc)->userData, p);
+  return (c & ~0xFFFF) || checkCharRefNumber(c) < 0;
 }
 
 static
@@ -1010,9 +1015,8 @@ void unknown_toUtf8(const ENCODING *enc,
     utf8 = ((const struct unknown_encoding *)enc)->utf8[(unsigned char)**fromP];
     n = *utf8++;
     if (n == 0) {
-      unsigned short c
-	= ((const struct unknown_encoding *)enc)
-	  ->convert(((const struct unknown_encoding *)enc)->userData, *fromP);
+      int c = ((const struct unknown_encoding *)enc)
+	      ->convert(((const struct unknown_encoding *)enc)->userData, *fromP);
       n = XmlUtf8Encode(c, buf);
       if (n > toLim - *toP)
 	break;
@@ -1040,7 +1044,7 @@ void unknown_toUtf16(const ENCODING *enc,
     unsigned short c
       = ((const struct unknown_encoding *)enc)->utf16[(unsigned char)**fromP];
     if (c == 0) {
-      c = ((const struct unknown_encoding *)enc)
+      c = (unsigned short)((const struct unknown_encoding *)enc)
 	   ->convert(((const struct unknown_encoding *)enc)->userData, *fromP);
       *fromP += ((const struct normal_encoding *)enc)->type[(unsigned char)**fromP]
 	         - (BT_LEAD2 - 2);
@@ -1053,8 +1057,8 @@ void unknown_toUtf16(const ENCODING *enc,
 
 ENCODING *
 XmlInitUnknownEncoding(void *mem,
-		       unsigned short *table,
-		       unsigned short (*convert)(void *userData, const char *p),
+		       int *table,
+		       int (*convert)(void *userData, const char *p),
 		       void *userData)
 {
   int i;
@@ -1067,23 +1071,25 @@ XmlInitUnknownEncoding(void *mem,
 	&& table[i] != i)
       return 0;
   for (i = 0; i < 256; i++) {
-    unsigned short c = table[i];
-    if (c < 0x80) {
+    int c = table[i];
+    if (c == -1)
+      c = 0xFFFF;
+    if (c < 0) {
+      if (c < -4)
+	return 0;
+      e->normal.type[i] = BT_LEAD2 - (c + 2);
+      e->utf8[i][0] = 0;
+      e->utf16[i] = 0;
+    }
+    else if (c < 0x80) {
       if (latin1_encoding.type[c] != BT_OTHER
 	  && latin1_encoding.type[c] != BT_NONXML
 	  && c != i)
-	 return 0;
-      if (c >= 2 && c <= 4) {
-	e->normal.type[i] = BT_LEAD2 + (c - 2);
-	e->utf8[i][0] = 0;
-	e->utf16[i] = 0;
-      }
-      else {
-	e->normal.type[i] = latin1_encoding.type[c];
-	e->utf8[i][0] = 1;
-	e->utf8[i][1] = (char)c;
-	e->utf16[i] = c == 0 ? 0xFFFF : c;
-      }
+	return 0;
+      e->normal.type[i] = latin1_encoding.type[c];
+      e->utf8[i][0] = 1;
+      e->utf8[i][1] = (char)c;
+      e->utf16[i] = c == 0 ? 0xFFFF : c;
     }
     else if (checkCharRefNumber(c) < 0) {
       e->normal.type[i] = BT_NONXML;
@@ -1092,6 +1098,8 @@ XmlInitUnknownEncoding(void *mem,
       e->utf8[i][1] = 0;
     }
     else {
+      if (c > 0xFFFF)
+	return 0;
       if (UCS2_GET_NAMING(nmstrtPages, c >> 8, c & 0xff))
 	e->normal.type[i] = BT_NMSTRT;
       else if (UCS2_GET_NAMING(namePages, c >> 8, c & 0xff))

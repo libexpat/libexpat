@@ -265,8 +265,8 @@ int XMLTOKAPI XmlUtf16Encode(int charNumber, unsigned short *buf);
 int XMLTOKAPI XmlSizeOfUnknownEncoding();
 ENCODING XMLTOKAPI *
 XmlInitUnknownEncoding(void *mem,
-		       unsigned short *table,
-		       unsigned short (*convert)(void *userData, const char *p),
+		       int *table,
+		       int (*convert)(void *userData, const char *p),
 		       void *userData);
 
 #ifdef __cplusplus

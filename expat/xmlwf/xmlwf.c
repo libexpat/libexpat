@@ -405,7 +405,7 @@ int externalEntityRefStream(XML_Parser parser,
 }
 
 static
-unsigned short unknownEncodingConvert(void *data, const char *p)
+int unknownEncodingConvert(void *data, const char *p)
 {
   return codepageConvert(*(int *)data, p);
 }

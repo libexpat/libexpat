@@ -111,9 +111,9 @@ typedef int (*XML_ExternalEntityRefHandler)(XML_Parser parser,
 					    const XML_Char *publicId);
 
 typedef struct {
-  unsigned short map[256];
+  int map[256];
   void *data;
-  unsigned short (*convert)(void *data, const char *s);
+  int (*convert)(void *data, const char *s);
   void (*release)(void *data);
 } XML_Encoding;
 

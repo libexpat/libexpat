@@ -1350,7 +1350,7 @@ handleUnknownEncoding(XML_Parser parser, const XML_Char *encodingName)
     XML_Encoding info;
     int i;
     for (i = 0; i < 256; i++)
-      info.map[i] = 0;
+      info.map[i] = -1;
     info.convert = 0;
     info.data = 0;
     info.release = 0;
