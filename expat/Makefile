@@ -1,28 +1,23 @@
 CC=gcc
-CFLAGS=-O2 -I.
+CFLAGS=-O2 -I. -Ixmlparse
 # Use one of the next two lines; unixfilemap is better if it works.
 FILEMAP_OBJ=xmlwf/unixfilemap.o
 #FILEMAP_OBJ=xmlwf/readfilemap.o
-XMLWF_OBJS=xmltok.o \
+OBJS=xmltok.o \
   xmlrole.o \
   xmlwf/xmlwf.o \
-  xmlwf/wfcheck.o \
-  xmlwf/wfcheckmessage.o \
-  xmlwf/hashtable.o \
+  xmlparse/xmlparse.o \
+  xmlparse/hashtable.o \
   $(FILEMAP_OBJ)
-XMLEC_OBJS=xmltok.o xmlec/xmlec.o
 EXE=
 
-all: xmlwf/xmlwf$(EXE) xmlec/xmlec$(EXE)
+all: xmlwf/xmlwf$(EXE)
 
-xmlwf/xmlwf$(EXE): $(XMLWF_OBJS)
-	$(CC) $(CFLAGS) -o $@ $(XMLWF_OBJS)
-
-xmlec/xmlec$(EXE): $(XMLEC_OBJS)
-	$(CC) $(CFLAGS) -o $@ $(XMLEC_OBJS)
+xmlwf/xmlwf$(EXE): $(OBJS)
+	$(CC) $(CFLAGS) -o $@ $(OBJS)
 
 clean:
-	rm -f $(XMLWF_OBJS) xmlwf/xmlwf$(EXE) $(XMLEC_OBJS) xmlec/xmlec$(EXE)
+	rm -f $(OBJS) xmlwf/xmlwf$(EXE)
 
 nametab.h: gennmtab/gennmtab$(EXE)
 	rm -f $@
