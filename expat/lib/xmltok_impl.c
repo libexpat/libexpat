@@ -87,8 +87,8 @@
 /* ptr points to character following "<!-" */
 
 static int
-PREFIX(scanComment)(const ENCODING *enc, const char *ptr, const char *end,
-                    const char **nextTokPtr)
+PREFIX(scanComment)(const ENCODING *enc, const char *ptr,
+                    const char *end, const char **nextTokPtr)
 {
   if (ptr != end) {
     if (!CHAR_MATCHES(enc, ptr, ASCII_MINUS)) {
@@ -125,8 +125,8 @@ PREFIX(scanComment)(const ENCODING *enc, const char *ptr, const char *end,
 /* ptr points to character following "<!" */
 
 static int
-PREFIX(scanDecl)(const ENCODING *enc, const char *ptr, const char *end,
-                 const char **nextTokPtr)
+PREFIX(scanDecl)(const ENCODING *enc, const char *ptr,
+                 const char *end, const char **nextTokPtr)
 {
   if (ptr == end)
     return XML_TOK_PARTIAL;
@@ -217,8 +217,8 @@ PREFIX(checkPiTarget)(const ENCODING *enc, const char *ptr,
 /* ptr points to character following "<?" */
 
 static int
-PREFIX(scanPi)(const ENCODING *enc, const char *ptr, const char *end,
-               const char **nextTokPtr)
+PREFIX(scanPi)(const ENCODING *enc, const char *ptr,
+               const char *end, const char **nextTokPtr)
 {
   int tok;
   const char *target = ptr;
@@ -279,8 +279,8 @@ PREFIX(scanPi)(const ENCODING *enc, const char *ptr, const char *end,
 }
 
 static int
-PREFIX(scanCdataSection)(const ENCODING *enc, const char *ptr, const char *end,
-                         const char **nextTokPtr)
+PREFIX(scanCdataSection)(const ENCODING *enc, const char *ptr,
+                         const char *end, const char **nextTokPtr)
 {
   static const char CDATA_LSQB[] = { ASCII_C, ASCII_D, ASCII_A,
                                      ASCII_T, ASCII_A, ASCII_LSQB };
@@ -299,8 +299,8 @@ PREFIX(scanCdataSection)(const ENCODING *enc, const char *ptr, const char *end,
 }
 
 static int
-PREFIX(cdataSectionTok)(const ENCODING *enc, const char *ptr, const char *end,
-                        const char **nextTokPtr)
+PREFIX(cdataSectionTok)(const ENCODING *enc, const char *ptr,
+                        const char *end, const char **nextTokPtr)
 {
   if (ptr == end)
     return XML_TOK_NONE;
@@ -377,8 +377,8 @@ PREFIX(cdataSectionTok)(const ENCODING *enc, const char *ptr, const char *end,
 /* ptr points to character following "</" */
 
 static int
-PREFIX(scanEndTag)(const ENCODING *enc, const char *ptr, const char *end,
-                   const char **nextTokPtr)
+PREFIX(scanEndTag)(const ENCODING *enc, const char *ptr,
+                   const char *end, const char **nextTokPtr)
 {
   if (ptr == end)
     return XML_TOK_PARTIAL;
@@ -426,8 +426,8 @@ PREFIX(scanEndTag)(const ENCODING *enc, const char *ptr, const char *end,
 /* ptr points to character following "&#X" */
 
 static int
-PREFIX(scanHexCharRef)(const ENCODING *enc, const char *ptr, const char *end,
-                       const char **nextTokPtr)
+PREFIX(scanHexCharRef)(const ENCODING *enc, const char *ptr,
+                       const char *end, const char **nextTokPtr)
 {
   if (ptr != end) {
     switch (BYTE_TYPE(enc, ptr)) {
@@ -458,8 +458,8 @@ PREFIX(scanHexCharRef)(const ENCODING *enc, const char *ptr, const char *end,
 /* ptr points to character following "&#" */
 
 static int
-PREFIX(scanCharRef)(const ENCODING *enc, const char *ptr, const char *end,
-                    const char **nextTokPtr)
+PREFIX(scanCharRef)(const ENCODING *enc, const char *ptr,
+                    const char *end, const char **nextTokPtr)
 {
   if (ptr != end) {
     if (CHAR_MATCHES(enc, ptr, ASCII_x))
@@ -696,7 +696,8 @@ PREFIX(scanLt)(const ENCODING *enc, const char *ptr, const char *end,
     case BT_MINUS:
       return PREFIX(scanComment)(enc, ptr + MINBPC(enc), end, nextTokPtr);
     case BT_LSQB:
-      return PREFIX(scanCdataSection)(enc, ptr + MINBPC(enc), end, nextTokPtr);
+      return PREFIX(scanCdataSection)(enc, ptr + MINBPC(enc),
+                                      end, nextTokPtr);
     }
     *nextTokPtr = ptr;
     return XML_TOK_INVALID;
@@ -1251,8 +1252,8 @@ PREFIX(attributeValueTok)(const ENCODING *enc, const char *ptr,
 }
 
 static int
-PREFIX(entityValueTok)(const ENCODING *enc, const char *ptr, const char *end,
-                       const char **nextTokPtr)
+PREFIX(entityValueTok)(const ENCODING *enc, const char *ptr,
+                       const char *end, const char **nextTokPtr)
 {
   const char *start;
   if (ptr == end)
@@ -1308,8 +1309,8 @@ PREFIX(entityValueTok)(const ENCODING *enc, const char *ptr, const char *end,
 #ifdef XML_DTD
 
 static int
-PREFIX(ignoreSectionTok)(const ENCODING *enc, const char *ptr, const char *end,
-                         const char **nextTokPtr)
+PREFIX(ignoreSectionTok)(const ENCODING *enc, const char *ptr,
+                         const char *end, const char **nextTokPtr)
 {
   int level = 0;
   if (MINBPC(enc) > 1) {
@@ -1520,7 +1521,9 @@ PREFIX(charRefNumber)(const ENCODING *enc, const char *ptr)
   /* skip &# */
   ptr += 2*MINBPC(enc);
   if (CHAR_MATCHES(enc, ptr, ASCII_x)) {
-    for (ptr += MINBPC(enc); !CHAR_MATCHES(enc, ptr, ASCII_SEMI); ptr += MINBPC(enc)) {
+    for (ptr += MINBPC(enc);
+         !CHAR_MATCHES(enc, ptr, ASCII_SEMI);
+         ptr += MINBPC(enc)) {
       int c = BYTE_TO_ASCII(enc, ptr);
       switch (c) {
       case ASCII_0: case ASCII_1: case ASCII_2: case ASCII_3: case ASCII_4:
@@ -1528,11 +1531,13 @@ PREFIX(charRefNumber)(const ENCODING *enc, const char *ptr)
         result <<= 4;
         result |= (c - ASCII_0);
         break;
-      case ASCII_A: case ASCII_B: case ASCII_C: case ASCII_D: case ASCII_E: case ASCII_F:
+      case ASCII_A: case ASCII_B: case ASCII_C:
+      case ASCII_D: case ASCII_E: case ASCII_F:
         result <<= 4;
         result += 10 + (c - ASCII_A);
         break;
-      case ASCII_a: case ASCII_b: case ASCII_c: case ASCII_d: case ASCII_e: case ASCII_f:
+      case ASCII_a: case ASCII_b: case ASCII_c:
+      case ASCII_d: case ASCII_e: case ASCII_f:
         result <<= 4;
         result += 10 + (c - ASCII_a);
         break;

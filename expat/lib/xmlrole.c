@@ -20,29 +20,56 @@
 
 */
 
-static const char KW_ANY[] = { ASCII_A, ASCII_N, ASCII_Y, '\0' };
-static const char KW_ATTLIST[] = { ASCII_A, ASCII_T, ASCII_T, ASCII_L, ASCII_I, ASCII_S, ASCII_T, '\0' };
-static const char KW_CDATA[] = { ASCII_C, ASCII_D, ASCII_A, ASCII_T, ASCII_A, '\0' };
-static const char KW_DOCTYPE[] = { ASCII_D, ASCII_O, ASCII_C, ASCII_T, ASCII_Y, ASCII_P, ASCII_E, '\0' };
-static const char KW_ELEMENT[] = { ASCII_E, ASCII_L, ASCII_E, ASCII_M, ASCII_E, ASCII_N, ASCII_T, '\0' };
-static const char KW_EMPTY[] = { ASCII_E, ASCII_M, ASCII_P, ASCII_T, ASCII_Y, '\0' };
-static const char KW_ENTITIES[] = { ASCII_E, ASCII_N, ASCII_T, ASCII_I, ASCII_T, ASCII_I, ASCII_E, ASCII_S, '\0' };
-static const char KW_ENTITY[] = { ASCII_E, ASCII_N, ASCII_T, ASCII_I, ASCII_T, ASCII_Y, '\0' };
-static const char KW_FIXED[] = { ASCII_F, ASCII_I, ASCII_X, ASCII_E, ASCII_D, '\0' };
-static const char KW_ID[] = { ASCII_I, ASCII_D, '\0' };
-static const char KW_IDREF[] = { ASCII_I, ASCII_D, ASCII_R, ASCII_E, ASCII_F, '\0' };
-static const char KW_IDREFS[] = { ASCII_I, ASCII_D, ASCII_R, ASCII_E, ASCII_F, ASCII_S, '\0' };
-static const char KW_IGNORE[] = { ASCII_I, ASCII_G, ASCII_N, ASCII_O, ASCII_R, ASCII_E, '\0' };
-static const char KW_IMPLIED[] = { ASCII_I, ASCII_M, ASCII_P, ASCII_L, ASCII_I, ASCII_E, ASCII_D, '\0' };
-static const char KW_INCLUDE[] = { ASCII_I, ASCII_N, ASCII_C, ASCII_L, ASCII_U, ASCII_D, ASCII_E, '\0' };
-static const char KW_NDATA[] = { ASCII_N, ASCII_D, ASCII_A, ASCII_T, ASCII_A, '\0' };
-static const char KW_NMTOKEN[] = { ASCII_N, ASCII_M, ASCII_T, ASCII_O, ASCII_K, ASCII_E, ASCII_N, '\0' };
-static const char KW_NMTOKENS[] = { ASCII_N, ASCII_M, ASCII_T, ASCII_O, ASCII_K, ASCII_E, ASCII_N, ASCII_S, '\0' };
-static const char KW_NOTATION[] = { ASCII_N, ASCII_O, ASCII_T, ASCII_A, ASCII_T, ASCII_I, ASCII_O, ASCII_N, '\0' };
-static const char KW_PCDATA[] = { ASCII_P, ASCII_C, ASCII_D, ASCII_A, ASCII_T, ASCII_A, '\0' };
-static const char KW_PUBLIC[] = { ASCII_P, ASCII_U, ASCII_B, ASCII_L, ASCII_I, ASCII_C, '\0' };
-static const char KW_REQUIRED[] = { ASCII_R, ASCII_E, ASCII_Q, ASCII_U, ASCII_I, ASCII_R, ASCII_E, ASCII_D, '\0' };
-static const char KW_SYSTEM[] = { ASCII_S, ASCII_Y, ASCII_S, ASCII_T, ASCII_E, ASCII_M, '\0' };
+static const char KW_ANY[] = {
+    ASCII_A, ASCII_N, ASCII_Y, '\0' };
+static const char KW_ATTLIST[] = {
+    ASCII_A, ASCII_T, ASCII_T, ASCII_L, ASCII_I, ASCII_S, ASCII_T, '\0' };
+static const char KW_CDATA[] = {
+    ASCII_C, ASCII_D, ASCII_A, ASCII_T, ASCII_A, '\0' };
+static const char KW_DOCTYPE[] = {
+    ASCII_D, ASCII_O, ASCII_C, ASCII_T, ASCII_Y, ASCII_P, ASCII_E, '\0' };
+static const char KW_ELEMENT[] = {
+    ASCII_E, ASCII_L, ASCII_E, ASCII_M, ASCII_E, ASCII_N, ASCII_T, '\0' };
+static const char KW_EMPTY[] = {
+    ASCII_E, ASCII_M, ASCII_P, ASCII_T, ASCII_Y, '\0' };
+static const char KW_ENTITIES[] = {
+    ASCII_E, ASCII_N, ASCII_T, ASCII_I, ASCII_T, ASCII_I, ASCII_E, ASCII_S,
+    '\0' };
+static const char KW_ENTITY[] = {
+    ASCII_E, ASCII_N, ASCII_T, ASCII_I, ASCII_T, ASCII_Y, '\0' };
+static const char KW_FIXED[] = {
+    ASCII_F, ASCII_I, ASCII_X, ASCII_E, ASCII_D, '\0' };
+static const char KW_ID[] = {
+    ASCII_I, ASCII_D, '\0' };
+static const char KW_IDREF[] = {
+    ASCII_I, ASCII_D, ASCII_R, ASCII_E, ASCII_F, '\0' };
+static const char KW_IDREFS[] = {
+    ASCII_I, ASCII_D, ASCII_R, ASCII_E, ASCII_F, ASCII_S, '\0' };
+static const char KW_IGNORE[] = {
+    ASCII_I, ASCII_G, ASCII_N, ASCII_O, ASCII_R, ASCII_E, '\0' };
+static const char KW_IMPLIED[] = {
+    ASCII_I, ASCII_M, ASCII_P, ASCII_L, ASCII_I, ASCII_E, ASCII_D, '\0' };
+static const char KW_INCLUDE[] = {
+    ASCII_I, ASCII_N, ASCII_C, ASCII_L, ASCII_U, ASCII_D, ASCII_E, '\0' };
+static const char KW_NDATA[] = {
+    ASCII_N, ASCII_D, ASCII_A, ASCII_T, ASCII_A, '\0' };
+static const char KW_NMTOKEN[] = {
+    ASCII_N, ASCII_M, ASCII_T, ASCII_O, ASCII_K, ASCII_E, ASCII_N, '\0' };
+static const char KW_NMTOKENS[] = {
+    ASCII_N, ASCII_M, ASCII_T, ASCII_O, ASCII_K, ASCII_E, ASCII_N, ASCII_S,
+    '\0' };
+static const char KW_NOTATION[] =
+    { ASCII_N, ASCII_O, ASCII_T, ASCII_A, ASCII_T, ASCII_I, ASCII_O, ASCII_N,
+      '\0' };
+static const char KW_PCDATA[] = {
+    ASCII_P, ASCII_C, ASCII_D, ASCII_A, ASCII_T, ASCII_A, '\0' };
+static const char KW_PUBLIC[] = {
+    ASCII_P, ASCII_U, ASCII_B, ASCII_L, ASCII_I, ASCII_C, '\0' };
+static const char KW_REQUIRED[] = {
+    ASCII_R, ASCII_E, ASCII_Q, ASCII_U, ASCII_I, ASCII_R, ASCII_E, ASCII_D,
+    '\0' };
+static const char KW_SYSTEM[] = {
+    ASCII_S, ASCII_Y, ASCII_S, ASCII_T, ASCII_E, ASCII_M, '\0' };
 
 #ifndef MIN_BYTES_PER_CHAR
 #define MIN_BYTES_PER_CHAR(enc) ((enc)->minBytesPerChar)
