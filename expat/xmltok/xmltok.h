@@ -1,32 +1,5 @@
-/*
-The contents of this file are subject to the Mozilla Public License
-Version 1.1 (the "License"); you may not use this file except in
-compliance with the License. You may obtain a copy of the License at
-http://www.mozilla.org/MPL/
-
-Software distributed under the License is distributed on an "AS IS"
-basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
-License for the specific language governing rights and limitations
-under the License.
-
-The Original Code is expat.
-
-The Initial Developer of the Original Code is James Clark.
-Portions created by James Clark are Copyright (C) 1998, 1999
-James Clark. All Rights Reserved.
-
-Contributor(s):
-
-Alternatively, the contents of this file may be used under the terms
-of the GNU General Public License (the "GPL"), in which case the
-provisions of the GPL are applicable instead of those above.  If you
-wish to allow use of your version of this file only under the terms of
-the GPL and not to allow others to use your version of this file under
-the MPL, indicate your decision by deleting the provisions above and
-replace them with the notice and other provisions required by the
-GPL. If you do not delete the provisions above, a recipient may use
-your version of this file under either the MPL or the GPL.
-*/
+/* Copyright (c) 1998, 1999 Thai Open Source Software Center Ltd
+See the file copying.txt for copying permission. */
 
 #ifndef XmlTok_INCLUDED
 #define XmlTok_INCLUDED 1
@@ -39,10 +12,8 @@ extern "C" {
 #define XMLTOKAPI /* as nothing */
 #endif
 
-/* The following token may be returned by XmlContentTok */
 #define XML_TOK_TRAILING_RSQB -5 /* ] or ]] at the end of the scan; might be start of
                                     illegal ]]> sequence */
-/* The following tokens may be returned by both XmlPrologTok and XmlContentTok */
 #define XML_TOK_NONE -4    /* The string to be scanned is empty */
 #define XML_TOK_TRAILING_CR -3 /* A CR at the end of the scan;
                                   might be part of CRLF sequence */ 
@@ -50,7 +21,6 @@ extern "C" {
 #define XML_TOK_PARTIAL -1 /* only part of a token */
 #define XML_TOK_INVALID 0
 
-/* The following tokens are returned by XmlContentTok; some are also
   returned by XmlAttributeValueTok, XmlEntityTok, XmlCdataSectionTok */
 
 #define XML_TOK_START_TAG_WITH_ATTS 1
@@ -64,13 +34,11 @@ extern "C" {
 #define XML_TOK_ENTITY_REF 9
 #define XML_TOK_CHAR_REF 10     /* numeric character reference */
 
-/* The following tokens may be returned by both XmlPrologTok and XmlContentTok */
 #define XML_TOK_PI 11      /* processing instruction */
 #define XML_TOK_XML_DECL 12 /* XML decl or text decl */
 #define XML_TOK_COMMENT 13
 #define XML_TOK_BOM 14     /* Byte order mark */
 
-/* The following tokens are returned only by XmlPrologTok */
 #define XML_TOK_PROLOG_S 15
 #define XML_TOK_DECL_OPEN 16 /* <!foo */
 #define XML_TOK_DECL_CLOSE 17 /* > */
@@ -87,7 +55,6 @@ extern "C" {
 #define XML_TOK_PARAM_ENTITY_REF 28
 #define XML_TOK_INSTANCE_START 29
 
-/* The following occur only in element type declarations */
 #define XML_TOK_NAME_QUESTION 30 /* name? */
 #define XML_TOK_NAME_ASTERISK 31 /* name* */
 #define XML_TOK_NAME_PLUS 32 /* name+ */
@@ -98,13 +65,10 @@ extern "C" {
 #define XML_TOK_CLOSE_PAREN_PLUS 37 /* )+ */
 #define XML_TOK_COMMA 38
 
-/* The following token is returned only by XmlAttributeValueTok */
 #define XML_TOK_ATTRIBUTE_VALUE_S 39
 
-/* The following token is returned only by XmlCdataSectionTok */
 #define XML_TOK_CDATA_SECT_CLOSE 40
 
-/* With namespace processing this is returned by XmlPrologTok
    for a name with a colon. */
 #define XML_TOK_PREFIXED_NAME 41
 
@@ -129,9 +93,7 @@ extern "C" {
 #define XML_ATTRIBUTE_VALUE_LITERAL 0
 #define XML_ENTITY_VALUE_LITERAL 1
 
-/* The size of the buffer passed to XmlUtf8Encode must be at least this. */
 #define XML_UTF8_ENCODE_MAX 4
-/* The size of the buffer passed to XmlUtf16Encode must be at least this. */
 #define XML_UTF16_ENCODE_MAX 2
 
 typedef struct position {
@@ -190,7 +152,6 @@ struct encoding {
   char isUtf16;
 };
 
-/*
 Scan the string starting at ptr until the end of the next complete token,
 but do not scan past eptr.  Return an integer giving the type of token.
 
@@ -208,7 +169,6 @@ to the character following the end of that token.
 Each data character counts as a single token, but adjacent data characters
 may be returned together.  Similarly for characters in the prolog outside
 literals, comments and processing instructions.
-*/
 
 
 #define XmlTok(enc, state, ptr, end, nextTokPtr) \
@@ -230,7 +190,6 @@ literals, comments and processing instructions.
 
 #endif /* XML_DTD */
 
-/* This is used for performing a 2nd-level tokenization on
 the content of a literal that has already been returned by XmlTok. */ 
 
 #define XmlLiteralTok(enc, literalType, ptr, end, nextTokPtr) \

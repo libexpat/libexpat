@@ -1,3 +1,5 @@
+/* Copyright (c) 1998, 1999 Thai Open Source Software Center Ltd
+See the file copying.txt for copying permission. */
 #include <string.h>
 #include "xmlmime.h"
 
@@ -71,7 +73,6 @@ const char *getTok(const char **pp)
   /* not reached */
 }
 
-/* key must be lowercase ASCII */
 
 static
 int matchkey(const char *start, const char *end, const char *key)

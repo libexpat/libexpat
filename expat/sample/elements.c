@@ -1,4 +1,5 @@
-/* This is simple demonstration of how to use expat. This program
+/* Copyright (c) 1998, 1999 Thai Open Source Software Center Ltd
+See the file copying.txt for copying permission. */
 reads an XML document from standard input and writes a line with the
 name of each element to standard output indenting child elements by
 one tab stop more than their parent element. */

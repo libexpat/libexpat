@@ -1,32 +1,5 @@
-/*
-The contents of this file are subject to the Mozilla Public License
-Version 1.1 (the "License"); you may not use this file except in
-compliance with the License. You may obtain a copy of the License at
-http://www.mozilla.org/MPL/
-
-Software distributed under the License is distributed on an "AS IS"
-basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
-License for the specific language governing rights and limitations
-under the License.
-
-The Original Code is expat.
-
-The Initial Developer of the Original Code is James Clark.
-Portions created by James Clark are Copyright (C) 1998, 1999
-James Clark. All Rights Reserved.
-
-Contributor(s):
-
-Alternatively, the contents of this file may be used under the terms
-of the GNU General Public License (the "GPL"), in which case the
-provisions of the GPL are applicable instead of those above.  If you
-wish to allow use of your version of this file only under the terms of
-the GPL and not to allow others to use your version of this file under
-the MPL, indicate your decision by deleting the provisions above and
-replace them with the notice and other provisions required by the
-GPL. If you do not delete the provisions above, a recipient may use
-your version of this file under either the MPL or the GPL.
-*/
+/* Copyright (c) 1998, 1999 Thai Open Source Software Center Ltd
+See the file copying.txt for copying permission. */
 
 #include "xmldef.h"
 #include "xmltok.h"
@@ -57,7 +30,6 @@ your version of this file under either the MPL or the GPL.
 #define UCS2_GET_NAMING(pages, hi, lo) \
    (namingBitmap[(pages[hi] << 3) + ((lo) >> 5)] & (1 << ((lo) & 0x1F)))
 
-/* A 2 byte UTF-8 representation splits the characters 11 bits
 between the bottom 5 and 6 bits of the bytes.
 We need 8 bits to index into pages, 3 bits to add to that index and
 5 bits to generate the mask. */
@@ -67,7 +39,6 @@ We need 8 bits to index into pages, 3 bits to add to that index and
                       + ((((byte)[1]) >> 5) & 1)] \
          & (1 << (((byte)[1]) & 0x1F)))
 
-/* A 3 byte UTF-8 representation splits the characters 16 bits
 between the bottom 4, 6 and 6 bits of the bytes.
 We need 8 bits to index into pages, 3 bits to add to that index and
 5 bits to generate the mask. */
@@ -203,7 +174,6 @@ static int checkCharRefNumber(int);
 #ifdef XML_MIN_SIZE
 #define MINBPC(enc) ((enc)->minBytesPerChar)
 #else
-/* minimum bytes per character */
 #define MINBPC(enc) 1
 #endif
 
@@ -260,7 +230,6 @@ int sb_charMatches(const ENCODING *enc, const char *p, int c)
   return *p == c;
 }
 #else
-/* c is an ASCII character */
 #define CHAR_MATCHES(enc, p, c) (*(p) == c)
 #endif
 
@@ -461,7 +430,6 @@ static const struct normal_encoding ascii_encoding_ns = {
   { VTABLE1, ascii_toUtf8, latin1_toUtf16, 1, 1, 0 },
   {
 #include "asciitab.h"
-/* BT_NONXML == 0 */
   },
   STANDARD_VTABLE(sb_)
 };
@@ -474,7 +442,6 @@ static const struct normal_encoding ascii_encoding = {
 #define BT_COLON BT_NMSTRT
 #include "asciitab.h"
 #undef BT_COLON
-/* BT_NONXML == 0 */
   },
   STANDARD_VTABLE(sb_)
 };
@@ -649,7 +616,6 @@ int little2_isNmstrtMin(const ENCODING *enc, const char *p)
 #undef PREFIX
 #define PREFIX(ident) little2_ ## ident
 #define MINBPC(enc) 2
-/* CHAR_MATCHES is guaranteed to have MINBPC bytes available. */
 #define BYTE_TYPE(enc, p) LITTLE2_BYTE_TYPE(enc, p)
 #define BYTE_TO_ASCII(enc, p) LITTLE2_BYTE_TO_ASCII(enc, p) 
 #define CHAR_MATCHES(enc, p, c) LITTLE2_CHAR_MATCHES(enc, p, c)
@@ -788,7 +754,6 @@ int big2_isNmstrtMin(const ENCODING *enc, const char *p)
 #undef PREFIX
 #define PREFIX(ident) big2_ ## ident
 #define MINBPC(enc) 2
-/* CHAR_MATCHES is guaranteed to have MINBPC bytes available. */
 #define BYTE_TYPE(enc, p) BIG2_BYTE_TYPE(enc, p)
 #define BYTE_TO_ASCII(enc, p) BIG2_BYTE_TO_ASCII(enc, p) 
 #define CHAR_MATCHES(enc, p, c) BIG2_CHAR_MATCHES(enc, p, c)
@@ -927,7 +892,6 @@ int isSpace(int c)
   return 0;
 }
 
-/* Return 1 if there's just optional white space
 or there's an S followed by name=val. */
 static
 int parsePseudoAttribute(const ENCODING *enc,
@@ -1367,7 +1331,6 @@ XmlInitUnknownEncoding(void *mem,
   return &(e->normal.enc);
 }
 
-/* If this enumeration is changed, getEncodingIndex and encodings
 must also be changed. */
 enum {
   UNKNOWN_ENC = -1,
@@ -1420,18 +1383,15 @@ int getEncodingIndex(const char *name)
   return UNKNOWN_ENC;
 }
 
-/* For binary compatibility, we store the index of the encoding specified
 at initialization in the isUtf16 member. */
 
 #define INIT_ENC_INDEX(enc) ((int)(enc)->initEnc.isUtf16)
 #define SET_INIT_ENC_INDEX(enc, i) ((enc)->initEnc.isUtf16 = (char)i)
 
-/* This is what detects the encoding.
 encodingTable maps from encoding indices to encodings;
 INIT_ENC_INDEX(enc) is the index of the external (protocol) specified encoding;
 state is XML_CONTENT_STATE if we're parsing an external text entity,
 and XML_PROLOG_STATE otherwise.
-*/
 
 
 static

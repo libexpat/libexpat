@@ -1,32 +1,5 @@
-/*
-The contents of this file are subject to the Mozilla Public License
-Version 1.1 (the "License"); you may not use this file except in
-compliance with the License. You may obtain a copy of the License at
-http://www.mozilla.org/MPL/
-
-Software distributed under the License is distributed on an "AS IS"
-basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
-License for the specific language governing rights and limitations
-under the License.
-
-The Original Code is expat.
-
-The Initial Developer of the Original Code is James Clark.
-Portions created by James Clark are Copyright (C) 1998, 1999
-James Clark. All Rights Reserved.
-
-Contributor(s):
-
-Alternatively, the contents of this file may be used under the terms
-of the GNU General Public License (the "GPL"), in which case the
-provisions of the GPL are applicable instead of those above.  If you
-wish to allow use of your version of this file only under the terms of
-the GPL and not to allow others to use your version of this file under
-the MPL, indicate your decision by deleting the provisions above and
-replace them with the notice and other provisions required by the
-GPL. If you do not delete the provisions above, a recipient may use
-your version of this file under either the MPL or the GPL.
-*/
+/* Copyright (c) 1998, 1999 Thai Open Source Software Center Ltd
+See the file copying.txt for copying permission. */
 
 #include "xmldef.h"
 #include "xmlparse.h"
@@ -67,7 +40,6 @@ typedef char ICHAR;
 #define XML_T(x) x
 #endif
 
-/* Round up n to be a multiple of sz, where sz is a power of 2. */
 #define ROUND_UP(n, sz) (((n) + ((sz) - 1)) & ~((sz) - 1))
 
 #include "xmltok.h"
@@ -155,7 +127,6 @@ typedef struct {
   XML_Char *start;
 } STRING_POOL;
 
-/* The XML_Char before the name is used to determine whether
 an attribute has been specified. */
 typedef struct attribute_id {
   XML_Char *name;
@@ -1598,7 +1569,6 @@ doContent(XML_Parser parser,
   /* not reached */
 }
 
-/* If tagNamePtr is non-null, build a real list of attributes,
 otherwise just check the attributes for well-formedness. */
 
 static enum XML_Error storeAtts(XML_Parser parser, const ENCODING *enc,
@@ -1873,7 +1843,6 @@ int addBinding(XML_Parser parser, PREFIX *prefix, const ATTRIBUTE_ID *attId, con
   return 1;
 }
 
-/* The idea here is to avoid using stack for each CDATA section when
 the whole file is parsed with one call. */
 
 static
@@ -1890,7 +1859,6 @@ enum XML_Error cdataSectionProcessor(XML_Parser parser,
   return result;
 }
 
-/* startPtr gets set to non-null is the section is closed, and to null if
 the section is not yet closed. */
 
 static
@@ -1986,7 +1954,6 @@ enum XML_Error doCdataSection(XML_Parser parser,
 
 #ifdef XML_DTD
 
-/* The idea here is to avoid using stack for each IGNORE section when
 the whole file is parsed with one call. */
 
 static
@@ -2003,7 +1970,6 @@ enum XML_Error ignoreSectionProcessor(XML_Parser parser,
   return result;
 }
 
-/* startPtr gets set to non-null is the section is closed, and to null if
 the section is not yet closed. */
 
 static
@@ -3454,7 +3420,6 @@ static void dtdDestroy(DTD *p)
   poolDestroy(&(p->pool));
 }
 
-/* Do a deep copy of the DTD.  Return 0 for out of memory; non-zero otherwise.
 The new DTD has already been initialized. */
 
 static int dtdCopy(DTD *newDtd, const DTD *oldDtd)
