@@ -303,6 +303,22 @@ START_TEST(test_utf16)
 }
 END_TEST
 
+/* Regression test for SF bug #481609. */
+START_TEST(test_latin1_umlauts)
+{
+    char *text =
+        "<?xml version='1.0' encoding='iso-8859-1'?>\n"
+        "<e a='ä ö ü &#228; &#246; &#252; &#x00E4; &#x0F6; &#xFC;'\n"
+        "  >ä ö ü &#228; &#246; &#252; &#x00E4; &#x0F6; &#xFC;</e>";
+    char *utf8 =
+        "\xC3\xA4 \xC3\xB6 \xC3\xBC "
+        "\xC3\xA4 \xC3\xB6 \xC3\xBC "
+        "\xC3\xA4 \xC3\xB6 \xC3\xBC";
+    run_character_check(text, utf8);
+    run_attribute_check(text, utf8);
+}
+END_TEST
+
 
 /* Helpers used by the following test; this checks any "attr" and "refs"
  * attributes to make sure whitespace has been normalized.
@@ -503,6 +519,7 @@ make_basic_suite(void)
     tcase_add_test(tc_chars, test_bom_utf16_le);
     tcase_add_test(tc_chars, test_illegal_utf8);
     tcase_add_test(tc_chars, test_utf16);
+    tcase_add_test(tc_chars, test_latin1_umlauts);
     /* Regression test for SF bug #491986. */
     tcase_add_test(tc_chars, test_danish_latin1);
     /* Regression test for SF bug #514281. */
