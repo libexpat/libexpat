@@ -2,6 +2,7 @@
 ; information on the free installer builder, see www.jrsoftware.org.
 ;
 ; This script was contributed by Tim Peters.
+; The current version is used with Inno Setup 2.0.19.
 
 [Setup]
 AppName=expat
@@ -17,7 +18,7 @@ AppUpdatesURL=http://expat.sourceforge.net/
 UninstallDisplayName=Expat XML Parser (version 1.95.3)
 UninstallFilesDir={app}\Uninstall
 
-CompressLevel=9
+Compression=bzip/9
 SourceDir=..
 OutputDir=win32
 DisableStartupPrompt=yes
@@ -28,8 +29,8 @@ DisableReadyPage=yes
 [Files]
 CopyMode: alwaysoverwrite; Source: xmlwf\Release\*.exe; DestDir: "{app}"
 CopyMode: alwaysoverwrite; Source: win32\MANIFEST.txt;  DestDir: "{app}"
+CopyMode: alwaysoverwrite; Source: Changes;             DestDir: "{app}"; DestName: Changes.txt
 CopyMode: alwaysoverwrite; Source: COPYING;             DestDir: "{app}"; DestName: COPYING.txt
-CopyMode: alwaysoverwrite; Source: NEWS;                DestDir: "{app}"; DestName: NEWS.txt
 CopyMode: alwaysoverwrite; Source: README;              DestDir: "{app}"; DestName: README.txt
 CopyMode: alwaysoverwrite; Source: doc\*.html;          DestDir: "{app}\Doc"
 CopyMode: alwaysoverwrite; Source: doc\*.css;           DestDir: "{app}\Doc"
