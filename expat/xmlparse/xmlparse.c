@@ -203,6 +203,8 @@ typedef struct {
   XML_EndElementHandler endElementHandler;
   XML_CharacterDataHandler characterDataHandler;
   XML_ProcessingInstructionHandler processingInstructionHandler;
+  XML_UnparsedEntityDeclHandler unparsedEntityDeclHandler;
+  XML_NotationDeclHandler notationDeclHandler;
   XML_ExternalEntityRefHandler externalEntityRefHandler;
   const ENCODING *encoding;
   INIT_ENCODING initEncoding;
@@ -212,6 +214,8 @@ typedef struct {
   const char *errorPtr;
   int tagLevel;
   ENTITY *declEntity;
+  const XML_Char *declNotationName;
+  const XML_Char *declNotationPublicId;
   ELEMENT_TYPE *declElementType;
   ATTRIBUTE_ID *declAttributeId;
   char declAttributeIsCdata;
@@ -234,6 +238,8 @@ typedef struct {
 #define endElementHandler (((Parser *)parser)->endElementHandler)
 #define characterDataHandler (((Parser *)parser)->characterDataHandler)
 #define processingInstructionHandler (((Parser *)parser)->processingInstructionHandler)
+#define unparsedEntityDeclHandler (((Parser *)parser)->unparsedEntityDeclHandler)
+#define notationDeclHandler (((Parser *)parser)->notationDeclHandler)
 #define externalEntityRefHandler (((Parser *)parser)->externalEntityRefHandler)
 #define encoding (((Parser *)parser)->encoding)
 #define initEncoding (((Parser *)parser)->initEncoding)
@@ -253,6 +259,8 @@ typedef struct {
 #define dataBufEnd (((Parser *)parser)->dataBufEnd)
 #define dtd (((Parser *)parser)->dtd)
 #define declEntity (((Parser *)parser)->declEntity)
+#define declNotationName (((Parser *)parser)->declNotationName)
+#define declNotationPublicId (((Parser *)parser)->declNotationPublicId)
 #define declElementType (((Parser *)parser)->declElementType)
 #define declAttributeId (((Parser *)parser)->declAttributeId)
 #define declAttributeIsCdata (((Parser *)parser)->declAttributeIsCdata)
@@ -306,6 +314,8 @@ XML_Parser XML_ParserCreate(const XML_Char *encodingName)
   endElementHandler = 0;
   characterDataHandler = 0;
   processingInstructionHandler = 0;
+  unparsedEntityDeclHandler = 0;
+  notationDeclHandler = 0;
   externalEntityRefHandler = 0;
   buffer = 0;
   bufferPtr = 0;
@@ -315,6 +325,8 @@ XML_Parser XML_ParserCreate(const XML_Char *encodingName)
   declElementType = 0;
   declAttributeId = 0;
   declEntity = 0;
+  declNotationName = 0;
+  declNotationPublicId = 0;
   memset(&position, 0, sizeof(POSITION));
   errorCode = XML_ERROR_NONE;
   errorByteIndex = 0;
@@ -444,6 +456,18 @@ void XML_SetProcessingInstructionHandler(XML_Parser parser,
 					 XML_ProcessingInstructionHandler handler)
 {
   processingInstructionHandler = handler;
+}
+
+void XML_SetUnparsedEntityDeclHandler(XML_Parser parser,
+				      XML_UnparsedEntityDeclHandler handler)
+{
+  unparsedEntityDeclHandler = handler;
+}
+
+void XML_SetNotationDeclHandler(XML_Parser parser,
+				XML_NotationDeclHandler handler)
+{
+  notationDeclHandler = handler;
 }
 
 void XML_SetExternalEntityRefHandler(XML_Parser parser,
@@ -1290,6 +1314,7 @@ prologProcessor(XML_Parser parser,
     case XML_ROLE_DOCTYPE_SYSTEM_ID:
       hadExternalDoctype = 1;
       break;
+    case XML_ROLE_DOCTYPE_PUBLIC_ID:
     case XML_ROLE_ENTITY_PUBLIC_ID:
       if (!XmlIsPublicId(encoding, s, next, &errorPtr))
 	return XML_ERROR_SYNTAX;
@@ -1304,11 +1329,6 @@ prologProcessor(XML_Parser parser,
 	declEntity->publicId = tem;
 	poolFinish(&dtd.pool);
       }
-      break;
-    case XML_ROLE_DOCTYPE_PUBLIC_ID:
-    case XML_ROLE_NOTATION_PUBLIC_ID:
-      if (!XmlIsPublicId(encoding, s, next, &errorPtr))
-	return XML_ERROR_SYNTAX;
       break;
     case XML_ROLE_INSTANCE_START:
       processor = contentProcessor;
@@ -1386,6 +1406,14 @@ prologProcessor(XML_Parser parser,
 	if (!declEntity->notation)
 	  return XML_ERROR_NO_MEMORY;
 	poolFinish(&dtd.pool);
+	if (unparsedEntityDeclHandler)
+	  unparsedEntityDeclHandler(userData,
+				    declEntity->name,
+				    declEntity->base,
+				    declEntity->systemId,
+				    declEntity->publicId,
+				    declEntity->notation);
+
       }
       break;
     case XML_ROLE_GENERAL_ENTITY_NAME:
@@ -1412,6 +1440,56 @@ prologProcessor(XML_Parser parser,
       break;
     case XML_ROLE_PARAM_ENTITY_NAME:
       declEntity = 0;
+      break;
+    case XML_ROLE_NOTATION_NAME:
+      declNotationPublicId = 0;
+      declNotationName = 0;
+      if (notationDeclHandler) {
+	declNotationName = poolStoreString(&tempPool, encoding, s, next);
+	if (!declNotationName)
+	  return XML_ERROR_NO_MEMORY;
+	poolFinish(&tempPool);
+      }
+      break;
+    case XML_ROLE_NOTATION_PUBLIC_ID:
+      if (!XmlIsPublicId(encoding, s, next, &errorPtr))
+	return XML_ERROR_SYNTAX;
+      if (declNotationName) {
+	XML_Char *tem = poolStoreString(&tempPool,
+	                                encoding,
+					s + encoding->minBytesPerChar,
+	  				next - encoding->minBytesPerChar);
+	if (!tem)
+	  return XML_ERROR_NO_MEMORY;
+	normalizePublicId(tem);
+	declNotationPublicId = tem;
+	poolFinish(&tempPool);
+      }
+      break;
+    case XML_ROLE_NOTATION_SYSTEM_ID:
+      if (declNotationName && notationDeclHandler) {
+	const XML_Char *systemId
+	  = poolStoreString(&tempPool, encoding,
+			    s + encoding->minBytesPerChar,
+	  		    next - encoding->minBytesPerChar);
+	if (!systemId)
+	  return XML_ERROR_NO_MEMORY;
+	notationDeclHandler(userData,
+			    declNotationName,
+			    dtd.base,
+			    systemId,
+			    declNotationPublicId);
+      }
+      poolClear(&tempPool);
+      break;
+    case XML_ROLE_NOTATION_NO_SYSTEM_ID:
+      if (declNotationPublicId && notationDeclHandler)
+	notationDeclHandler(userData,
+			    declNotationName,
+			    dtd.base,
+			    0,
+			    declNotationPublicId);
+      poolClear(&tempPool);
       break;
     case XML_ROLE_ERROR:
       errorPtr = s;

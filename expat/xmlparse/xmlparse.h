@@ -66,6 +66,19 @@ typedef void (*XML_ProcessingInstructionHandler)(void *userData,
 						 const XML_Char *target,
 						 const XML_Char *data);
 
+typedef void (*XML_UnparsedEntityDeclHandler)(void *userData,
+					      const XML_Char *entityName,
+					      const XML_Char *base,
+					      const XML_Char *systemId,
+					      const XML_Char *publicId,
+					      const XML_Char *notationName);
+
+typedef void (*XML_NotationDeclHandler)(void *userData,
+					const XML_Char *notationName,
+					const XML_Char *base,
+					const XML_Char *systemId,
+					const XML_Char *publicId);
+
 /* Reports a reference to an external parsed general entity.
 The referenced entity is not automatically parsed.
 The application can parse it immediately or later using
@@ -97,6 +110,7 @@ typedef int (*XML_ExternalEntityRefHandler)(XML_Parser parser,
 					    const XML_Char *systemId,
 					    const XML_Char *publicId);
 
+
 void XMLPARSEAPI
 XML_SetElementHandler(XML_Parser parser,
 		      XML_StartElementHandler start,
@@ -109,6 +123,14 @@ XML_SetCharacterDataHandler(XML_Parser parser,
 void XMLPARSEAPI
 XML_SetProcessingInstructionHandler(XML_Parser parser,
 				    XML_ProcessingInstructionHandler handler);
+
+void XMLPARSEAPI
+XML_SetUnparsedEntityDeclHandler(XML_Parser parser,
+				 XML_UnparsedEntityDeclHandler handler);
+
+void XMLPARSEAPI
+XML_SetNotationDeclHandler(XML_Parser parser,
+			   XML_NotationDeclHandler handler);
 
 void XMLPARSEAPI
 XML_SetExternalEntityRefHandler(XML_Parser parser,
