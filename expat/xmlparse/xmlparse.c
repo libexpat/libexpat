@@ -1160,7 +1160,7 @@ doContent(XML_Parser parser,
 	  startElementHandler(handlerArg, name, (const XML_Char **)atts);
 	if (endElementHandler) {
 	  if (startElementHandler)
-	    *eventEndPP = *eventPP;
+	    *eventPP = *eventEndPP;
 	  endElementHandler(handlerArg, name);
 	}
 	poolClear(&tempPool);
