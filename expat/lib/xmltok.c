@@ -5,7 +5,7 @@
 #ifdef COMPILED_FROM_DSP
 #include "winconfig.h"
 #elif defined(MACOS_CLASSIC)
-#incldue "macconfig.h"
+#include "macconfig.h"
 #else
 #include <expat_config.h>
 #endif /* ndef COMPILED_FROM_DSP */
