@@ -24,14 +24,15 @@
 #include <stdio.h>
 #include <expat.h>
 
-#define BUFFSIZE	8192
+#define BUFFSIZE        8192
 
 char Buff[BUFFSIZE];
 
 int Depth;
 
 static void
-start(void *data, const char *el, const char **attr) {
+start(void *data, const char *el, const char **attr)
+{
   int i;
 
   for (i = 0; i < Depth; i++)
@@ -45,15 +46,17 @@ start(void *data, const char *el, const char **attr) {
 
   printf("\n");
   Depth++;
-}  /* End of start handler */
+}
 
 static void
-end(void *data, const char *el) {
+end(void *data, const char *el)
+{
   Depth--;
-}  /* End of end handler */
+}
 
 int
-main(int argc, char *argv[]) {
+main(int argc, char *argv[])
+{
   XML_Parser p = XML_ParserCreate(NULL);
   if (! p) {
     fprintf(stderr, "Couldn't allocate memory for parser\n");
@@ -75,8 +78,8 @@ main(int argc, char *argv[]) {
 
     if (! XML_Parse(p, Buff, len, done)) {
       fprintf(stderr, "Parse error at line %d:\n%s\n",
-	      XML_GetCurrentLineNumber(p),
-	      XML_ErrorString(XML_GetErrorCode(p)));
+              XML_GetCurrentLineNumber(p),
+              XML_ErrorString(XML_GetErrorCode(p)));
       exit(-1);
     }
 
@@ -84,5 +87,4 @@ main(int argc, char *argv[]) {
       break;
   }
   return 0;
-}  /* End of main */
-
+}
