@@ -3617,7 +3617,7 @@ enum XML_Error epilogProcessor(XML_Parser parser,
   processor = epilogProcessor;
   eventPtr = s;
   for (;;) {
-    const char *next;
+    const char *next = NULL;
     int tok = XmlPrologTok(encoding, s, end, &next);
     eventEndPtr = next;
     switch (tok) {
