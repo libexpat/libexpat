@@ -256,28 +256,36 @@ void PREFIX(toUtf8)(const ENCODING *enc, \
     unsigned char hi = GET_HI(from); \
     switch (hi) { \
     case 0: \
-      if (*toP == toLim) \
+      if (*toP == toLim) { \
+        *fromP = from; \
 	return; \
+      } \
       *(*toP)++ = lo; \
       break; \
     case 0x1: case 0x2: case 0x3: \
     case 0x4: case 0x5: case 0x6: case 0x7: \
-      if (toLim -  *toP < 2) \
+      if (toLim -  *toP < 2) { \
+        *fromP = from; \
 	return; \
+      } \
       *(*toP)++ = ((lo >> 6) | (hi << 2) |  cval2); \
       *(*toP)++ = ((lo & 0x3f) | 0x80); \
       break; \
     default: \
-      if (toLim -  *toP < 3) \
+      if (toLim -  *toP < 3)  { \
+        *fromP = from; \
 	return; \
+      } \
       /* 16 bits divided 4, 6, 6 amongst 3 bytes */ \
       *(*toP)++ = ((hi >> 4) | cval3); \
       *(*toP)++ = (((hi & 0xf) << 2) | (lo >> 6) | 0x80); \
       *(*toP)++ = ((lo & 0x3f) | 0x80); \
       break; \
     case 0xD8: case 0xD9: case 0xDA: case 0xDB: \
-      if (toLim -  *toP < 4) \
+      if (toLim -  *toP < 4) { \
+	*fromP = from; \
 	return; \
+      } \
       plane = (((hi & 0x3) << 2) | ((lo >> 6) & 0x3)) + 1; \
       *(*toP)++ = ((plane >> 2) | cval4); \
       *(*toP)++ = (((lo >> 2) & 0xF) | ((plane & 0x3) << 4) | 0x80); \
@@ -291,6 +299,7 @@ void PREFIX(toUtf8)(const ENCODING *enc, \
       break; \
     } \
   } \
+  *fromP = from; \
 }
 
 #define PREFIX(ident) little2_ ## ident
