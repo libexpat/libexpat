@@ -5,6 +5,7 @@
  * check library being used.
  */
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <setjmp.h>
 #include <assert.h>
@@ -138,7 +139,7 @@ srunner_run_all(SRunner *runner, int verbosity)
 }
 
 void
-_fail_unless(int condition, char *const file, int line, char *msg)
+_fail_unless(int condition, const char *file, int line, char *msg)
 {
     longjmp(env, 1);
 }
@@ -153,11 +154,6 @@ srunner_ntests_failed(SRunner *runner)
 void
 srunner_free(SRunner *runner)
 {
+    free(runner->suite);
     free(runner);
-}
-
-void
-suite_free(Suite *suite)
-{
-    free(suite);
 }

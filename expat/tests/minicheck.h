@@ -54,7 +54,7 @@ struct TCase {
  * Prototypes for the actual implementation.
  */
 
-void _fail_unless(int condition, char *const file, int line, char *msg);
+void _fail_unless(int condition, const char *file, int line, char *msg);
 Suite *suite_create(char *name);
 TCase *tcase_create(char *name);
 void suite_add_tcase(Suite *suite, TCase *tc);
@@ -67,4 +67,3 @@ void srunner_set_fork_status(SRunner *runner, int forking);
 void srunner_run_all(SRunner *runner, int verbosity);
 int srunner_ntests_failed(SRunner *runner);
 void srunner_free(SRunner *runner);
-void suite_free(Suite *suite);

@@ -1428,7 +1428,6 @@ main(int argc, char *argv[])
     srunner_run_all(sr, verbosity);
     nf = srunner_ntests_failed(sr);
     srunner_free(sr);
-    suite_free(s);
 
     return (nf == 0) ? EXIT_SUCCESS : EXIT_FAILURE;
 }
