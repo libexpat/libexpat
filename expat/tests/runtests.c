@@ -906,6 +906,24 @@ START_TEST(test_dtd_default_handling)
 }
 END_TEST
 
+/* See related SF bug #673791.
+   When namespace processing is enabled, setting the namespace URI for
+   a prefix is not allowed; this test ensures that it *is* allowed
+   when namespace processing is not enabled.
+   (See Namespaces in XML, section 2.)
+*/
+START_TEST(test_empty_ns_without_namespaces)
+{
+    char *text =
+        "<doc xmlns:prefix='http://www.example.com/'>\n"
+        "  <e xmlns:prefix=''/>\n"
+        "</doc>";
+
+    if (XML_Parse(parser, text, strlen(text), 1) == XML_STATUS_ERROR)
+        xml_failure(parser);
+}
+END_TEST
+
 
 /*
  * Namespaces tests.
@@ -1189,6 +1207,7 @@ make_basic_suite(void)
     tcase_add_test(tc_basic, test_wfc_no_recursive_entity_refs);
     tcase_add_test(tc_basic, test_ext_entity_set_encoding);
     tcase_add_test(tc_basic, test_dtd_default_handling);
+    tcase_add_test(tc_basic, test_empty_ns_without_namespaces);
 
     suite_add_tcase(s, tc_namespace);
     tcase_add_checked_fixture(tc_namespace,
