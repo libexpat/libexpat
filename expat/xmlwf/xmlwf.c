@@ -264,6 +264,22 @@ static void defaultProcessingInstruction(XML_Parser parser, const XML_Char *targ
   XML_DefaultCurrent(parser);
 }
 
+static void nopCharacterData(XML_Parser parser, const XML_Char *s, int len)
+{
+}
+
+static void nopStartElement(XML_Parser parser, const XML_Char *name, const XML_Char **atts)
+{
+}
+
+static void nopEndElement(XML_Parser parser, const XML_Char *name)
+{
+}
+
+static void nopProcessingInstruction(XML_Parser parser, const XML_Char *target, const XML_Char *data)
+{
+}
+
 static void markup(XML_Parser parser, const XML_Char *s, int len)
 {
   FILE *fp = XML_GetUserData(parser);
@@ -648,6 +664,10 @@ int tmain(int argc, XML_Char **argv)
       useNamespaces = 0;
       j++;
     }
+    if (argv[i][j] == T('t')) {
+      outputType = 't';
+      j++;
+    }
     if (argv[i][j] == T('d')) {
       if (argv[i][j + 1] == T('\0')) {
 	if (++i == argc)
@@ -724,6 +744,13 @@ int tmain(int argc, XML_Char **argv)
 	XML_SetElementHandler(parser, defaultStartElement, defaultEndElement);
 	XML_SetCharacterDataHandler(parser, defaultCharacterData);
 	XML_SetProcessingInstructionHandler(parser, defaultProcessingInstruction);
+	break;
+      case 't':
+	/* This is for doing timings; this gives a more realistic estimate of
+	   the parsing time. */
+	XML_SetElementHandler(parser, nopStartElement, nopEndElement);
+	XML_SetCharacterDataHandler(parser, nopCharacterData);
+	XML_SetProcessingInstructionHandler(parser, nopProcessingInstruction);
 	break;
       default:
 	if (useNamespaces)
