@@ -1134,8 +1134,13 @@ int XML_Parse(XML_Parser parser, const char *s, int len, int isFinal)
   }
 #endif  /* not defined XML_CONTEXT_BYTES */
   else {
-    memcpy(XML_GetBuffer(parser, len), s, len);
-    return XML_ParseBuffer(parser, len, isFinal);
+    void *buff = XML_GetBuffer(parser, len);
+    if (buff == NULL)
+      return 0;
+    else {
+      memcpy(buff, s, len);
+      return XML_ParseBuffer(parser, len, isFinal);
+    }
   }
 }
 
