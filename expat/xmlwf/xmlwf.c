@@ -242,6 +242,18 @@ void metaLocation(XML_Parser parser)
 }
 
 static
+void metaStartDocument(XML_Parser parser)
+{
+  fputts(T("<document>\n"), XML_GetUserData(parser));
+}
+
+static
+void metaEndDocument(XML_Parser parser)
+{
+  fputts(T("</document>\n"), XML_GetUserData(parser));
+}
+
+static
 void metaStartElement(XML_Parser parser, const XML_Char *name, const XML_Char **atts)
 {
   FILE *fp = XML_GetUserData(parser);
@@ -526,7 +538,6 @@ int tmain(int argc, XML_Char **argv)
       switch (outputType) {
       case 'm':
 	XML_UseParserAsHandlerArg(parser);
-	fputts(T("<document>\n"), fp);
 	XML_SetElementHandler(parser, metaStartElement, metaEndElement);
 	XML_SetProcessingInstructionHandler(parser, metaProcessingInstruction);
 	XML_SetCommentHandler(parser, metaComment);
@@ -534,6 +545,7 @@ int tmain(int argc, XML_Char **argv)
 	XML_SetCharacterDataHandler(parser, metaCharacterData);
 	XML_SetUnparsedEntityDeclHandler(parser, metaUnparsedEntityDecl);
 	XML_SetNotationDeclHandler(parser, metaNotationDecl);
+	metaStartDocument(parser);
 	break;
       case 'c':
 	XML_UseParserAsHandlerArg(parser);
@@ -564,7 +576,7 @@ int tmain(int argc, XML_Char **argv)
     result = XML_ProcessFile(parser, argv[i], processFlags);
     if (outputDir) {
       if (outputType == 'm')
-	fputts(T("</document>\n"), fp);
+	metaEndDocument(parser);
       fclose(fp);
       if (!result)
 	tremove(outName);
