@@ -2,8 +2,8 @@
    See the file COPYING for copying permission.
 */
 
-#ifndef XmlParse_INCLUDED
-#define XmlParse_INCLUDED 1
+#ifndef Expat_INCLUDED
+#define Expat_INCLUDED 1
 
 #ifdef __VMS
 /*      0        1         2         3      0        1         2         3
@@ -1005,4 +1005,4 @@ XML_GetFeatureList(void);
 }
 #endif
 
-#endif /* not XmlParse_INCLUDED */
+#endif /* not Expat_INCLUDED */
