@@ -1,7 +1,15 @@
-/*  chardata.c
- *
- *
- */
+/* Copyright (c) 1998-2003 Thai Open Source Software Center Ltd
+   See the file COPYING for copying permission.
+
+   chardata.c
+*/
+
+#include <expat_config.h>
+#ifdef HAVE_CHECK_H
+#include <check.h>
+#else
+#error This test suite requires the 'check' unit test framework (http://check.sf.net/)
+#endif
 
 #include <assert.h>
 #include <check.h>

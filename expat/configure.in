@@ -105,6 +105,7 @@ fi
 AC_SUBST(FILEMAP)
 
 AC_CHECK_FUNCS(memmove bcopy)
+AC_CHECK_HEADERS(check.h)
 
 dnl some basic configuration
 AC_DEFINE([XML_NS], 1,
