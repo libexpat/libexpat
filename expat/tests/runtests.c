@@ -175,10 +175,6 @@ static void
 run_character_check(XML_Char *text, XML_Char *expected)
 {
     CharData storage;
-    XML_Parser parser = XML_ParserCreate(NULL);
-
-    if (parser == NULL)
-        fail("Parser not created.");
 
     storage.count = -1;
     XML_SetUserData(parser, &storage);
@@ -186,17 +182,12 @@ run_character_check(XML_Char *text, XML_Char *expected)
     if (!XML_Parse(parser, text, strlen(text), 1))
         xml_failure();
     check_characters(&storage, expected);
-    XML_ParserFree(parser);
 }
 
 static void
 run_attribute_check(XML_Char *text, XML_Char *expected)
 {
     CharData storage;
-    XML_Parser parser = XML_ParserCreate(NULL);
-
-    if (parser == NULL)
-        fail("Parser not created.");
 
     storage.count = -1; /* magical "not-set" value */
     XML_SetUserData(parser, &storage);
@@ -204,7 +195,6 @@ run_attribute_check(XML_Char *text, XML_Char *expected)
     if (!XML_Parse(parser, text, strlen(text), 1))
         xml_failure();
     check_characters(&storage, expected);
-    XML_ParserFree(parser);
 }
 
 /* Regression test for SF bug #491986. */
@@ -315,6 +305,7 @@ START_TEST(test_latin1_umlauts)
         "\xC3\xA4 \xC3\xB6 \xC3\xBC "
         "\xC3\xA4 \xC3\xB6 \xC3\xBC";
     run_character_check(text, utf8);
+    XML_ParserReset(parser, NULL);
     run_attribute_check(text, utf8);
 }
 END_TEST
