@@ -5,26 +5,17 @@
 #include <stddef.h>
 #include <string.h>                     /* memset(), memcpy() */
 
+#define XML_BUILDING_EXPAT 1
+
 #ifdef COMPILED_FROM_DSP
-
 #include "winconfig.h"
-#define XMLPARSEAPI(type) type __cdecl
-#include "expat.h"
-
 #elif defined(MACOS_CLASSIC)
-
 #include "macconfig.h"
-#include "expat.h"
-
 #else
-
 #include <expat_config.h>
-
-#define XMLIMPORT
+#endif /* ndef COMPILED_FROM_DSP */
 
 #include "expat.h"
-
-#endif /* ndef COMPILED_FROM_DSP */
 
 #ifdef XML_UNICODE
 #define XML_ENCODE_MAX XML_UTF16_ENCODE_MAX

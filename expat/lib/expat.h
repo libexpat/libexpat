@@ -20,7 +20,7 @@
 #define XML_USE_MSC_EXTENSIONS 1
 #endif
 
-/* Expat tries very hard to make the API buondary very specifically
+/* Expat tries very hard to make the API boundary very specifically
    defined.  There are two macros defined to control this boundary;
    each of these can be defined before including this header to
    achieve some different behavior, but doing so it not recommended or
@@ -63,15 +63,35 @@
 #endif  /* not defined XMLCALL */
 
 
-#if !defined(XMLIMPORT) && !defined(XML_STATIC)
-#ifdef XML_USE_MSC_EXTENSIONS
-#define XMLIMPORT __declspec(dllimport)
-#endif
+#if !defined(XML_STATIC) && !defined(XMLIMPORT)
+#ifdef XML_BUILDING_EXPAT
+/* we're actually building Expat itself */
+
+#if defined(__GNUC__)
+/* needed in a very obscure case according the the GCC documentation
+   (Windows NT on PowerPC) */
+#define XMLIMPORT __attribute__((dllexport))
 #endif
 
+#else
+/* using Expat from an application */
+
+#ifdef XML_USE_MSC_EXTENSIONS
+#define XMLIMPORT __declspec(dllimport)
+#elif defined(__GNUC__)
+/* needed in a very obscure case according the the GCC documentation
+   (Windows NT on PowerPC) */
+#define XMLIMPORT __attribute__((dllimport))
+#endif
+
+#endif
+#endif  /* not defined XML_STATIC */
+
+/* If we didn't define it above, define it away: */
 #ifndef XMLIMPORT
 #define XMLIMPORT
 #endif
+
 
 #define XMLPARSEAPI(type) XMLIMPORT type XMLCALL
 
