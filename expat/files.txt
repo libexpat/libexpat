@@ -14,7 +14,6 @@ xmltok/xmlrole.c
 xmltok/xmlrole.h
 xmltok/xmltok.c
 xmltok/xmltok.h
-expat.mak
 xmltok/xmltok_impl.c
 xmltok/xmltok_impl.h
 xmltok/xmltok_ns.c
@@ -33,9 +32,3 @@ xmlwf/xmlfile.h
 xmlwf/xmltchar.h
 xmlwf/xmlwf.c
 sample/elements.c
-sample/build.bat
-expat.dsw
-gennmtab/gennmtab.dsp
-xmlparse/xmlparse.dsp
-xmltok/xmltok.dsp
-xmlwf/xmlwf.dsp
