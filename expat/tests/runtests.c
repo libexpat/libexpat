@@ -550,6 +550,46 @@ START_TEST(test_wfc_undeclared_entity_standalone) {
 }
 END_TEST
 
+static int
+external_entity_loader(XML_Parser parser,
+                       const XML_Char *context,
+                       const XML_Char *base,
+                       const XML_Char *systemId,
+                       const XML_Char *publicId)
+{
+    char *text = (char *)XML_GetUserData(parser);
+    XML_Parser *extparser;
+
+    extparser = XML_ExternalEntityParserCreate(parser, context, NULL);
+    if (extparser == NULL)
+        fail("Could not create external entity parser.");
+    if (XML_Parse(extparser, text, strlen(text), 1) == XML_STATUS_ERROR) {
+        xml_failure(parser);
+        return 0;
+    }
+    return 1;
+}
+
+/* Test that an error is reported for unknown entities if we have read
+   an external subset.
+*/
+START_TEST(test_wfc_undeclared_entity_with_external_subset) {
+    char *text =
+        "<?xml version='1.0' encoding='us-ascii'?>\n"
+        "<!DOCTYPE doc SYSTEM 'foo'>\n"
+        "<doc>&entity;</doc>";
+    char *foo_text =
+        "<!ELEMENT doc (#PCDATA)*>";
+
+    XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+    XML_SetUserData(parser, foo_text);
+    XML_SetExternalEntityRefHandler(parser, external_entity_loader);
+    expect_failure(text,
+                   XML_ERROR_UNDEFINED_ENTITY,
+                   "Parser did not report undefined entity with DTD.");
+}
+END_TEST
+
 
 /*
  * Namespaces tests.
@@ -736,6 +776,7 @@ make_basic_suite(void)
                    test_wfc_undeclared_entity_unread_external_subset);
     tcase_add_test(tc_basic, test_wfc_undeclared_entity_no_external_subset);
     tcase_add_test(tc_basic, test_wfc_undeclared_entity_standalone);
+    tcase_add_test(tc_basic, test_wfc_undeclared_entity_with_external_subset);
 
     suite_add_tcase(s, tc_namespace);
     tcase_add_checked_fixture(tc_namespace,
