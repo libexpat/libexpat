@@ -490,6 +490,85 @@ START_TEST(test_return_ns_triplet)
 }
 END_TEST
 
+static void
+overwrite_start_checker(void *userData, const XML_Char *name,
+                        const XML_Char **atts)
+{
+    CharData *storage = (CharData *) userData;
+    CharData_AppendString(storage, "start ");
+    CharData_AppendXMLChars(storage, name, -1);
+    while (*atts != NULL) {
+        CharData_AppendString(storage, "\nattribute ");
+        CharData_AppendXMLChars(storage, *atts, -1);
+        atts += 2;
+    }
+    CharData_AppendString(storage, "\n");
+}
+
+static void
+overwrite_end_checker(void *userData, const XML_Char *name)
+{
+    CharData *storage = (CharData *) userData;
+    CharData_AppendString(storage, "end ");
+    CharData_AppendXMLChars(storage, name, -1);
+    CharData_AppendString(storage, "\n");
+}
+
+static void
+run_ns_tagname_overwrite_test(char *text, char *result)
+{
+    CharData storage;
+    CharData_Init(&storage);
+    XML_SetUserData(parser, &storage);
+    XML_SetElementHandler(parser,
+                          overwrite_start_checker, overwrite_end_checker);
+    if (!XML_Parse(parser, text, strlen(text), 1))
+        xml_failure(parser);
+    CharData_CheckString(&storage, result);
+}
+
+/* Regression test for SF bug #566334. */
+START_TEST(test_ns_tagname_overwrite)
+{
+    char *text =
+        "<n:e xmlns:n='http://xml.libexpat.org/'>\n"
+        "  <n:f n:attr='foo'/>\n"
+        "  <n:g n:attr2='bar'/>\n"
+        "</n:e>";
+    char *result =
+        "start http://xml.libexpat.org/ e\n"
+        "start http://xml.libexpat.org/ f\n"
+        "attribute http://xml.libexpat.org/ attr\n"
+        "end http://xml.libexpat.org/ f\n"
+        "start http://xml.libexpat.org/ g\n"
+        "attribute http://xml.libexpat.org/ attr2\n"
+        "end http://xml.libexpat.org/ g\n"
+        "end http://xml.libexpat.org/ e\n";
+    run_ns_tagname_overwrite_test(text, result);
+}
+END_TEST
+
+/* Regression test for SF bug #566334. */
+START_TEST(test_ns_tagname_overwrite_triplet)
+{
+    char *text =
+        "<n:e xmlns:n='http://xml.libexpat.org/'>\n"
+        "  <n:f n:attr='foo'/>\n"
+        "  <n:g n:attr2='bar'/>\n"
+        "</n:e>";
+    char *result =
+        "start http://xml.libexpat.org/ e n\n"
+        "start http://xml.libexpat.org/ f n\n"
+        "attribute http://xml.libexpat.org/ attr n\n"
+        "end http://xml.libexpat.org/ f n\n"
+        "start http://xml.libexpat.org/ g n\n"
+        "attribute http://xml.libexpat.org/ attr2 n\n"
+        "end http://xml.libexpat.org/ g n\n"
+        "end http://xml.libexpat.org/ e n\n";
+    XML_SetReturnNSTriplet(parser, 1);
+    run_ns_tagname_overwrite_test(text, result);
+}
+END_TEST
 
 static Suite *
 make_basic_suite(void)
@@ -531,6 +610,8 @@ make_basic_suite(void)
     tcase_add_checked_fixture(tc_namespace,
                               namespace_setup, namespace_teardown);
     tcase_add_test(tc_namespace, test_return_ns_triplet);
+    tcase_add_test(tc_namespace, test_ns_tagname_overwrite);
+    tcase_add_test(tc_namespace, test_ns_tagname_overwrite_triplet);
 
     return s;
 }
