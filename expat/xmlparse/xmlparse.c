@@ -625,8 +625,8 @@ doContent(XML_Parser parser,
 	if (startElementHandler) {
 	  enum XML_Error result;
 	  char *toPtr;
-	  const char *rawNameEnd = tag->rawName + tag->rawNameLength;
 	  for (;;) {
+	    const char *rawNameEnd = tag->rawName + tag->rawNameLength;
 	    const char *fromPtr = tag->rawName;
 	    int bufSize;
 	    toPtr = tag->buf;
@@ -643,6 +643,8 @@ doContent(XML_Parser parser,
 	    if (!tag->buf)
 	      return XML_ERROR_NO_MEMORY;
 	    tag->bufEnd = tag->buf + bufSize;
+	    if (nextPtr)
+	      tag->rawName = tag->buf;
 	  }
 	  *toPtr = 0;
 	  result = storeAtts(parser, enc, tag->name, s);
