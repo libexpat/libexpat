@@ -93,6 +93,13 @@ continue normal processing after a fatal error.</p>
 
 <p>Use <code>XML_SetCharacterDataHandler</code>.</p>
 
+<H4>How can I minimize the size of expat?</H4>
+
+<p>Compile with <code>-DXML_MIN_SIZE</code>. With Visual C++, use the
+<code>Win32 MinSize</code> configuration: this creates an
+<code>xmlparse.dll</code> that does not require
+<code>xmltok.dll</code>.</p>
+
 <ADDRESS>
 
 <A HREF="mailto:jjc@jclark.com">James Clark</A>
