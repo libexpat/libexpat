@@ -2046,14 +2046,9 @@ doContent(XML_Parser parser,
           reportDefault(parser, enc, s, next);
         break;
       }
-    case XML_TOK_START_TAG_WITH_ATTS:
-      if (!startElementHandler) {
-        enum XML_Error result = storeAtts(parser, enc, s, 0, 0);
-        if (result)
-          return result;
-      }
-      /* fall through */
     case XML_TOK_START_TAG_NO_ATTS:
+      /* fall through */
+    case XML_TOK_START_TAG_WITH_ATTS:
       {
         TAG *tag;
         enum XML_Error result;
@@ -2109,30 +2104,33 @@ doContent(XML_Parser parser,
         }
         tag->name.str = (XML_Char *)tag->buf;
         *toPtr = XML_T('\0');
-        if (startElementHandler) {
-          result = storeAtts(parser, enc, s, &(tag->name), &(tag->bindings));
-          if (result)
-            return result;
-          if (startElementHandler)
-            startElementHandler(handlerArg, tag->name.str,
-                                (const XML_Char **)atts);
-          else if (defaultHandler)
+        if (!startElementHandler && (tok == XML_TOK_START_TAG_NO_ATTS)) {
+          if (defaultHandler)
             reportDefault(parser, enc, s, next);
+          break;
         }
+        result = storeAtts(parser, enc, s, &(tag->name), &(tag->bindings));
+        if (result)
+          return result;
+        if (startElementHandler)
+          startElementHandler(handlerArg, tag->name.str,
+                              (const XML_Char **)atts);
         else if (defaultHandler)
           reportDefault(parser, enc, s, next);
         poolClear(&tempPool);
         break;
       }
-    case XML_TOK_EMPTY_ELEMENT_WITH_ATTS:
+    case XML_TOK_EMPTY_ELEMENT_NO_ATTS:
       if (!startElementHandler && !endElementHandler) {
-        enum XML_Error result = storeAtts(parser, enc, s, 0, 0);
-        if (result)
-          return result;
+        if (defaultHandler)
+          reportDefault(parser, enc, s, next);
+        if (tagLevel == 0)
+          return epilogProcessor(parser, next, end, nextPtr);
+        break;
       }
       /* fall through */
-    case XML_TOK_EMPTY_ELEMENT_NO_ATTS:
-      if (startElementHandler || endElementHandler) {
+    case XML_TOK_EMPTY_ELEMENT_WITH_ATTS:
+      {
         const char *rawName = s + enc->minBytesPerChar;
         enum XML_Error result;
         BINDING *bindings = NULL;
@@ -2143,10 +2141,13 @@ doContent(XML_Parser parser,
         if (!name.str)
           return XML_ERROR_NO_MEMORY;
         poolFinish(&tempPool);
-        result = storeAtts(parser, enc, s, &name, &bindings);
-        if (result)
-          return result;
-        poolFinish(&tempPool);
+        if (startElementHandler || 
+            (tok == XML_TOK_EMPTY_ELEMENT_WITH_ATTS)) {
+          result = storeAtts(parser, enc, s, &name, &bindings);
+          if (result)
+            return result;
+          poolFinish(&tempPool);
+        }
         if (startElementHandler) {
           startElementHandler(handlerArg, name.str, (const XML_Char **)atts);
           noElmHandlers = XML_FALSE;
@@ -2170,8 +2171,6 @@ doContent(XML_Parser parser,
           b->prefix->binding = b->prevPrefixBinding;
         }
       }
-      else if (defaultHandler)
-        reportDefault(parser, enc, s, next);
       if (tagLevel == 0)
         return epilogProcessor(parser, next, end, nextPtr);
       break;
