@@ -1158,18 +1158,18 @@ appendAttributeValue(XML_Parser parser, const ENCODING *enc, int isCdata,
       errorPtr = ptr;
       return XML_ERROR_INVALID_TOKEN;
     case XML_TOK_CHAR_REF:
-      if (XmlCharRefNumber(enc, ptr) < 0) {
-	errorPtr = ptr;
-	return XML_ERROR_BAD_CHAR_REF;
-      }
-      else {
+      {
 	char buf[XML_MAX_BYTES_PER_CHAR];
 	int i;
 	int n = XmlCharRefNumber(enc, ptr);
 	if (n < 0) {
 	  errorPtr = ptr;
-	  return XML_ERROR_BAD_CHAR_REF;
+      	  return XML_ERROR_BAD_CHAR_REF;
 	}
+	if (!isCdata
+	    && n == ' '
+	    && (poolLength(pool) == 0 || poolLastByte(pool) == ' '))
+	  break;
 	n = XmlEncode(utf8, n, buf);
 	if (!n) {
 	  errorPtr = ptr;
