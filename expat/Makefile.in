@@ -44,6 +44,9 @@ MANFILE = $(srcdir)/doc/xmlwf.1
 APIHEADER = $(srcdir)/lib/expat.h $(srcdir)/lib/expat_external.h
 LIBRARY = libexpat.la
 
+ifndef INSTALL_ROOT
+INSTALL_ROOT=$(DESTDIR)
+endif
 
 default:  buildlib xmlwf/xmlwf
 
@@ -73,22 +76,22 @@ check: tests/runtests
 	tests/runtests
 
 install: xmlwf/xmlwf installlib
-	$(mkinstalldirs) $(bindir) $(man1dir)
-	$(LIBTOOL) --mode=install $(INSTALL_PROGRAM) xmlwf/xmlwf $(bindir)/xmlwf
-	$(INSTALL_DATA) $(MANFILE) $(man1dir)
+	$(mkinstalldirs) $(INSTALL_ROOT)$(bindir) $(INSTALL_ROOT)$(man1dir)
+	$(LIBTOOL) --mode=install $(INSTALL_PROGRAM) xmlwf/xmlwf $(INSTALL_ROOT)$(bindir)/xmlwf
+	$(INSTALL_DATA) $(MANFILE) $(INSTALL_ROOT)$(man1dir)
 
 installlib: $(LIBRARY) $(APIHEADER)
-	$(mkinstalldirs) $(libdir) $(includedir)
-	$(LIBTOOL) --mode=install $(INSTALL) $(LIBRARY) $(libdir)/$(LIBRARY)
-	for FN in $(APIHEADER) ; do $(INSTALL_DATA) $$FN $(includedir) ; done
+	$(mkinstalldirs) $(INSTALL_ROOT)$(libdir) $(INSTALL_ROOT)$(includedir)
+	$(LIBTOOL) --mode=install $(INSTALL) $(LIBRARY) $(INSTALL_ROOT)$(libdir)/$(LIBRARY)
+	for FN in $(APIHEADER) ; do $(INSTALL_DATA) $$FN $(INSTALL_ROOT)$(includedir) ; done
 
 uninstall: uninstalllib
-	$(LIBTOOL) --mode=uninstall rm -f $(bindir)/xmlwf
-	rm -f $(man1dir)/xmlwf.1
+	$(LIBTOOL) --mode=uninstall rm -f $(INSTALL_ROOT)$(bindir)/xmlwf
+	rm -f $(INSTALL_ROOT)$(man1dir)/xmlwf.1
 
 uninstalllib:
-	$(LIBTOOL) --mode=uninstall rm -f $(libdir)/$(LIBRARY)
-	rm -f $(includedir)/$(APIHEADER)
+	$(LIBTOOL) --mode=uninstall rm -f $(INSTALL_ROOT)$(libdir)/$(LIBRARY)
+	rm -f $(INSTALL_ROOT)$(includedir)/$(APIHEADER)
 
 # for VPATH builds (invoked by configure)
 mkdir-init:
