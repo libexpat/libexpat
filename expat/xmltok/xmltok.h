@@ -270,7 +270,7 @@ int XMLTOKAPI XmlSizeOfUnknownEncoding();
 ENCODING XMLTOKAPI *
 XmlInitUnknownEncoding(void *mem,
 		       int *table,
-		       int (*convert)(void *userData, const char *p),
+		       int (*conv)(void *userData, const char *p),
 		       void *userData);
 
 int XMLTOKAPI XmlParseXmlDeclNS(int isGeneralTextEntity,
@@ -288,7 +288,7 @@ const ENCODING XMLTOKAPI *XmlGetUtf16InternalEncodingNS();
 ENCODING XMLTOKAPI *
 XmlInitUnknownEncodingNS(void *mem,
 		         int *table,
-		         int (*convert)(void *userData, const char *p),
+		         int (*conv)(void *userData, const char *p),
 		         void *userData);
 #ifdef __cplusplus
 }
