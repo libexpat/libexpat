@@ -5400,9 +5400,7 @@ dtdCreate(const XML_Memory_Handling_Suite *ms)
   if (p == NULL)
     return p;
   poolInit(&(p->pool), ms);
-#ifdef XML_DTD
   poolInit(&(p->entityValuePool), ms);
-#endif /* XML_DTD */
   hashTableInit(&(p->generalEntities), ms);
   hashTableInit(&(p->elementTypes), ms);
   hashTableInit(&(p->attributeIds), ms);
@@ -5449,9 +5447,7 @@ dtdReset(DTD *p, const XML_Memory_Handling_Suite *ms)
   hashTableClear(&(p->attributeIds));
   hashTableClear(&(p->prefixes));
   poolClear(&(p->pool));
-#ifdef XML_DTD
   poolClear(&(p->entityValuePool));
-#endif /* XML_DTD */
   p->defaultPrefix.name = NULL;
   p->defaultPrefix.binding = NULL;
 
@@ -5492,9 +5488,7 @@ dtdDestroy(DTD *p, XML_Bool isDocEntity, const XML_Memory_Handling_Suite *ms)
   hashTableDestroy(&(p->attributeIds));
   hashTableDestroy(&(p->prefixes));
   poolDestroy(&(p->pool));
-#ifdef XML_DTD
   poolDestroy(&(p->entityValuePool));
-#endif /* XML_DTD */
   if (isDocEntity) {
     ms->free_fcn(p->scaffIndex);
     ms->free_fcn(p->scaffold);
