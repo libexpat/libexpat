@@ -11,7 +11,7 @@
 #ifdef HAVE_CHECK_H
 #include <check.h>
 #else
-#error This test suite requires the 'check' unit test framework (http://check.sf.net/)
+#include "minicheck.h"
 #endif
 
 #include <assert.h>
