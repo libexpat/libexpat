@@ -5,20 +5,24 @@ See the file COPYING for copying permission.
 
 #ifdef COMPILED_FROM_DSP
 #  include "winconfig.h"
-#  define XMLPARSEAPI __declspec(dllexport)
+#  define XMLPARSEAPI(type) __declspec(dllexport) type __cdecl
+#  define XMLCALLBACK(type) type __cdecl
 #  include "expat.h"
 #  undef XMLPARSEAPI
+#  undef XMLCALLBACK
 #else
 #include <config.h>
 
 #ifdef __declspec
-#  define XMLPARSEAPI __declspec(dllexport)
+#  define XMLPARSEAPI(type) __declspec(dllexport) type __cdecl
+#  define XMLCALLBACK(type) type __cdecl
 #endif
 
 #include "expat.h"
 
 #ifdef __declspec
 #  undef XMLPARSEAPI
+#  undef XMLCALLBACK
 #endif
 #endif /* ndef COMPILED_FROM_DSP */
 
