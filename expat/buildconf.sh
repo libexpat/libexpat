@@ -1,22 +1,61 @@
 #! /bin/sh
 
+#--------------------------------------------------------------------------
+# autoconf 2.52 or newer
 #
-# Create the libtool helper files
+ac_version="`${AUTOCONF:-autoconf} --version 2> /dev/null | head -1 | sed -e 's/^[^0-9]*//' -e 's/[a-z]* *$//'`"
+if test -z "$ac_version"; then
+  echo "ERROR: autoconf not found."
+  echo "       You need autoconf version 2.52 or newer installed."
+  exit 1
+fi
+IFS=.; set $ac_version; IFS=' '
+if test "$1" = "2" -a "$2" -lt "52" || test "$1" -lt "2"; then
+  echo "ERROR: autoconf version $ac_version found."
+  echo "       You need autoconf version 2.52 or newer installed."
+  exit 1
+fi
+
+echo "found: autoconf version $ac_version (ok)"
+
+#--------------------------------------------------------------------------
+# libtool 1.4 or newer
 #
-echo "Copying libtool helper files ..."
 
 #
 # find libtoolize, or glibtoolize on MacOS X
 #
 libtoolize=`conftools/PrintPath glibtoolize libtoolize`
 if [ "x$libtoolize" = "x" ]; then
-    echo "libtoolize not found in path"
-    exit 1
+  echo "ERROR: libtoolize not found."
+  echo "       You need libtool version 1.4 or newer installed"
+  exit 1
 fi
+
+lt_pversion="`$libtoolize --version 2> /dev/null | sed -e 's/^[^0-9]*//'`"
+
+# convert something like 1.4p1 to 1.4.p1
+lt_version="`echo $lt_pversion | sed -e 's/\([a-z]*\)$/.\1/'`"
+
+IFS=.; set $lt_version; IFS=' '
+if test "$1" = "1" -a "$2" -lt "4"; then
+  echo "ERROR: libtool version $lt_pversion found."
+  echo "       You need libtool version 1.4 or newer installed"
+  exit 1
+fi
+
+echo "found: libtool version $lt_pversion (ok)"
+
+#--------------------------------------------------------------------------
 
 # Remove any libtool files so one can switch between libtool 1.3
 # and libtool 1.4 by simply rerunning the buildconf script.
 (cd conftools/; rm -f ltmain.sh ltconfig)
+
+#
+# Create the libtool helper files
+#
+echo "Copying libtool helper files ..."
 
 #
 # Note: we don't use --force (any more) since we have a special
@@ -30,6 +69,8 @@ $libtoolize --copy --automake
 ltpath=`dirname $libtoolize`
 ltfile=`cd $ltpath/../share/aclocal ; pwd`/libtool.m4
 cp $ltfile conftools/libtool.m4
+
+#--------------------------------------------------------------------------
 
 ### for a little while... remove stray aclocal.m4 files from
 ### developers' working copies. we no longer use it. (nothing else
