@@ -46,7 +46,6 @@ top_builddir = .
 INSTALL = @INSTALL@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_DATA = @INSTALL_DATA@
-INSTALL_SCRIPT = @INSTALL_SCRIPT@
 mkinstalldirs = $(SHELL) $(top_srcdir)/conftools/mkinstalldirs
 
 CC = @CC@
@@ -58,10 +57,6 @@ CONFIG_HEADERS = config.h
 
 APIHEADER = expat.h
 LIBRARY = libexpat.la
-
-
-DISTDIR = expat-@EXPAT_MAJOR_VERSION@.@EXPAT_MINOR_VERSION@.@EXPAT_MICRO_VERSION@
-DISTRIBUTION = $(DISTDIR).tar.gz
 
 
 default:  lib xmlwf
@@ -88,24 +83,8 @@ extraclean: distclean
 	rm -f conftools/config.guess conftools/config.sub
 	rm -f conftools/ltconfig conftools/ltmain.sh
 
-maintainer-clean: distclean
-	rm -f $(DISTRIBUTION)
-	rm -rf $(DISTDIR)
-
-distdir: MANIFEST
-	test -d $(DISTDIR) && rm -rf $(DISTDIR); \
-	mkdir $(DISTDIR); \
-	flist=`sed -e "s/[ 	]:.*$$//" MANIFEST`; for file in $$flist; do \
-		cp -P $$file $(DISTDIR); \
-	done
-
 check:	$(SUBDIRS)
 	cd tests && $(MAKE) check
-
-$(DISTRIBUTION): distdir
-	tar cf - $(DISTDIR) | gzip -9 >$(DISTRIBUTION)
-
-dist: $(DISTRIBUTION)
 
 install: xmlwf/xmlwf lib/$(LIBRARY) lib/$(APIHEADER)
 	$(mkinstalldirs) $(bindir) $(libdir) $(includedir)

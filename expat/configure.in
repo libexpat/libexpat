@@ -13,12 +13,6 @@ dnl
 AC_INIT(Makefile.in)
 AC_CONFIG_AUX_DIR(conftools)
 
-changequote({,})
-EXPAT_MAJOR_VERSION="`sed -n '/MAJOR_VERSION/s/[^0-9]*//gp' lib/expat.h`"
-EXPAT_MINOR_VERSION="`sed -n '/MINOR_VERSION/s/[^0-9]*//gp' lib/expat.h`"
-EXPAT_MICRO_VERSION="`sed -n '/MICRO_VERSION/s/[^0-9]*//gp' lib/expat.h`"
-changequote([,])
-
 
 dnl
 dnl Increment LIBREVISION if source code has changed at all
@@ -42,10 +36,6 @@ sinclude(conftools/ac_c_bigendian_cross.m4)
 
 AC_LIBTOOL_WIN32_DLL
 AC_PROG_LIBTOOL
-
-AC_SUBST(EXPAT_MAJOR_VERSION)
-AC_SUBST(EXPAT_MINOR_VERSION)
-AC_SUBST(EXPAT_MICRO_VERSION)
 
 AC_SUBST(LIBCURRENT)
 AC_SUBST(LIBREVISION)
