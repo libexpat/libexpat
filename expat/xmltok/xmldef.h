@@ -18,6 +18,8 @@ James Clark. All Rights Reserved.
 Contributor(s):
 */
 
+#include <string.h>
+
 #ifdef XML_WINLIB
 
 #define WIN32_LEAN_AND_MEAN
@@ -29,14 +31,12 @@ Contributor(s):
 #define free(x) HeapFree(GetProcessHeap(), 0, (x))
 #define realloc(x, y) HeapReAlloc(GetProcessHeap(), 0, x, y)
 #define abort() /* as nothing */
-#define memmove(to, from, n) MoveMemory(to, from, n)
 
 #else /* not XML_WINLIB */
 
 #include <stdlib.h>
-#include <string.h>
 
-#endif /* XML_WINLIB */
+#endif /* not XML_WINLIB */
 
 /* This file can be used for any definitions needed in
 particular environments. */
