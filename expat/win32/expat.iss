@@ -45,6 +45,7 @@ CopyMode: alwaysoverwrite; Source: expat.dsw;                  DestDir: "{app}\S
 CopyMode: alwaysoverwrite; Source: bcb5\*.*;                   DestDir: "{app}\Source\bcb5"
 CopyMode: alwaysoverwrite; Source: lib\*.c;                    DestDir: "{app}\Source\lib"
 CopyMode: alwaysoverwrite; Source: lib\*.h;                    DestDir: "{app}\Source\lib"
+CopyMode: alwaysoverwrite; Source: lib\*.def;                  DestDir: "{app}\Source\lib"
 CopyMode: alwaysoverwrite; Source: lib\*.dsp;                  DestDir: "{app}\Source\lib"
 CopyMode: alwaysoverwrite; Source: examples\*.c;               DestDir: "{app}\Source\examples"
 CopyMode: alwaysoverwrite; Source: examples\*.dsp;             DestDir: "{app}\Source\examples"
