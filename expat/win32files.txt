@@ -1,5 +1,4 @@
 expat.dsw
-expat.mak
 gennmtab/gennmtab.dsp
 sample/build.bat
 xmlparse/xmlparse.dsp
