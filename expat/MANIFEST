@@ -17,6 +17,8 @@ conftools/ltmain.sh
 conftools/mkinstalldirs
 doc/reference.html
 doc/style.css
+doc/xmlwf.1
+doc/xmlwf.sgml
 examples/elements.c
 examples/outline.c
 lib/ascii.h
