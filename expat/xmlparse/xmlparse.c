@@ -1336,8 +1336,9 @@ normalizeLines(char *s)
         s++;
     }
     else
-      *s++ = *p++;
+      *p++ = *s++;
   }
+  *p = '\0';
 }
 
 static int
