@@ -96,11 +96,9 @@ SOURCE=.\xmlparse.c
 
 !IF  "$(CFG)" == "expat - Win32 Release"
 
-# ADD CPP /D VERSION=\"expat_1.95.2\"
-
 !ELSEIF  "$(CFG)" == "expat - Win32 Debug"
 
-# ADD CPP /GX- /Od /D VERSION=\"expat_1.95.2\"
+# ADD CPP /GX- /Od
 
 !ENDIF 
 
@@ -108,12 +106,10 @@ SOURCE=.\xmlparse.c
 # Begin Source File
 
 SOURCE=.\xmlrole.c
-# ADD CPP /D VERSION=\"expat_1.95.2\"
 # End Source File
 # Begin Source File
 
 SOURCE=.\xmltok.c
-# ADD CPP /D VERSION=\"expat_1.95.2\"
 # End Source File
 # End Group
 # Begin Group "Header Files"

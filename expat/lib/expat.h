@@ -724,9 +724,15 @@ typedef struct {
 XMLPARSEAPI(XML_Expat_Version)
 XML_ExpatVersionInfo(void);
 
-#define XML_MAJOR_VERSION @EXPAT_MAJOR_VERSION@
-#define XML_MINOR_VERSION @EXPAT_MINOR_VERSION@
-#define XML_MICRO_VERSION @EXPAT_EDIT@
+
+/* Expat follows the GNU/Linux convention of odd number minor version for
+   beta/development releases and even number minor version for stable
+   releases. Micro is bumped with each release, and set to 0 with each
+   change to major or minor version. */
+
+#define XML_MAJOR_VERSION 1
+#define XML_MINOR_VERSION 95
+#define XML_MICRO_VERSION 2
 
 #ifdef __cplusplus
 }

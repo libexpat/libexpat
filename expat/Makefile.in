@@ -52,7 +52,6 @@ mkinstalldirs = $(SHELL) $(top_srcdir)/conftools/mkinstalldirs
 CC = @CC@
 
 LIBTOOL = @LIBTOOL@
-VERSION = @VERSION@
 
 SUBDIRS = lib examples xmlwf
 CONFIG_HEADERS = config.h
@@ -61,7 +60,7 @@ APIHEADER = expat.h
 LIBRARY = libexpat.la
 
 
-DISTDIR = expat-$(VERSION)
+DISTDIR = expat-@EXPAT_MAJOR_VERSION@.@EXPAT_MINOR_VERSION@.@EXPAT_MICRO_VERSION@
 DISTRIBUTION = $(DISTDIR).tar.gz
 
 
@@ -83,7 +82,6 @@ clean:
 distclean: clean
 	rm -f config.h config.status config.log config.cache libtool
 	rm -f Makefile lib/Makefile examples/Makefile xmlwf/Makefile tests/Makefile
-	rm -f lib/expat.h
 
 extraclean: distclean
 	rm -f config.h.in configure

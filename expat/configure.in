@@ -13,19 +13,12 @@ dnl
 AC_INIT(Makefile.in)
 AC_CONFIG_AUX_DIR(conftools)
 
-dnl
-dnl Follow the GNU/Linux convention of odd number minor version for
-dnl beta/development releases and even number minor version for stable
-dnl releases. Edit is bumped with each release and set to 0 with
-dnl change to major or minor version.
-dnl
+changequote({,})
+EXPAT_MAJOR_VERSION="`sed -n '/MAJOR_VERSION/s/[^0-9]*//gp' lib/expat.h`"
+EXPAT_MINOR_VERSION="`sed -n '/MINOR_VERSION/s/[^0-9]*//gp' lib/expat.h`"
+EXPAT_MICRO_VERSION="`sed -n '/MICRO_VERSION/s/[^0-9]*//gp' lib/expat.h`"
+changequote([,])
 
-EXPAT_MAJOR_VERSION=1
-EXPAT_MINOR_VERSION=95
-EXPAT_EDIT=2
-
-EXPAT_VERSION=$EXPAT_MAJOR_VERSION.$EXPAT_MINOR_VERSION.$EXPAT_EDIT
-VERSION=$EXPAT_VERSION
 
 dnl
 dnl Increment LIBREVISION if source code has changed at all
@@ -50,10 +43,9 @@ sinclude(conftools/ac_c_bigendian_cross.m4)
 AC_LIBTOOL_WIN32_DLL
 AC_PROG_LIBTOOL
 
-AC_SUBST(VERSION)
 AC_SUBST(EXPAT_MAJOR_VERSION)
 AC_SUBST(EXPAT_MINOR_VERSION)
-AC_SUBST(EXPAT_EDIT)
+AC_SUBST(EXPAT_MICRO_VERSION)
 
 AC_SUBST(LIBCURRENT)
 AC_SUBST(LIBREVISION)
@@ -102,7 +94,7 @@ dnl this allows this (and the generated configure script) to work
 dnl in "embedded distributions", where only part of the Expat sources
 dnl are included in the sources for another project.
 
-OUTPUT="Makefile lib/Makefile lib/expat.h"
+OUTPUT="Makefile lib/Makefile"
 if test -d ${srcdir}/xmlwf; then
     OUTPUT="$OUTPUT xmlwf/Makefile"
 fi

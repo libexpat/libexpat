@@ -33,13 +33,12 @@ top_builddir = ..
 
 CC = @CC@
 LIBTOOL = @LIBTOOL@
-VERSION = @VERSION@
 
 LIBRARY = libexpat.la
 LTOBJECTS = xmlparse.lo xmltok.lo xmlrole.lo
 
 INCLUDES = -I$(srcdir) -I. -I..
-DEFS = @DEFS@ -DVERSION='"expat_$(VERSION)"'
+DEFS = @DEFS@
 
 CPPFLAGS = @CPPFLAGS@
 LDFLAGS = @LDFLAGS@
