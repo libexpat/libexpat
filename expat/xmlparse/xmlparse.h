@@ -289,6 +289,12 @@ void XMLPARSEAPI
 XML_SetExternalEntityRefHandler(XML_Parser parser,
 				XML_ExternalEntityRefHandler handler);
 
+/* If a non-null value for arg is specified here, then it will be passed
+as the first argument to the external entity ref handler instead
+of the parser object. */
+void XMLPARSEAPI
+XML_SetExternalEntityRefHandlerArg(XML_Parser, void *arg);
+
 void XMLPARSEAPI
 XML_SetUnknownEncodingHandler(XML_Parser parser,
 			      XML_UnknownEncodingHandler handler,

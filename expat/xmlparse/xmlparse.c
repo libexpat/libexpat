@@ -270,6 +270,7 @@ typedef struct {
   XML_UnparsedEntityDeclHandler unparsedEntityDeclHandler;
   XML_NotationDeclHandler notationDeclHandler;
   XML_ExternalEntityRefHandler externalEntityRefHandler;
+  void *externalEntityRefHandlerArg;
   XML_UnknownEncodingHandler unknownEncodingHandler;
   const ENCODING *encoding;
   INIT_ENCODING initEncoding;
@@ -323,6 +324,7 @@ typedef struct {
 #define unparsedEntityDeclHandler (((Parser *)parser)->unparsedEntityDeclHandler)
 #define notationDeclHandler (((Parser *)parser)->notationDeclHandler)
 #define externalEntityRefHandler (((Parser *)parser)->externalEntityRefHandler)
+#define externalEntityRefHandlerArg (((Parser *)parser)->externalEntityRefHandlerArg)
 #define unknownEncodingHandler (((Parser *)parser)->unknownEncodingHandler)
 #define encoding (((Parser *)parser)->encoding)
 #define initEncoding (((Parser *)parser)->initEncoding)
@@ -391,6 +393,7 @@ XML_Parser XML_ParserCreate(const XML_Char *encodingName)
   unparsedEntityDeclHandler = 0;
   notationDeclHandler = 0;
   externalEntityRefHandler = 0;
+  externalEntityRefHandlerArg = parser;
   unknownEncodingHandler = 0;
   buffer = 0;
   bufferPtr = 0;
@@ -499,6 +502,7 @@ XML_Parser XML_ExternalEntityParserCreate(XML_Parser oldParser,
   void *oldUserData = userData;
   void *oldHandlerArg = handlerArg;
   int oldDefaultExpandInternalEntities = defaultExpandInternalEntities;
+  void *oldExternalEntityRefHandlerArg = externalEntityRefHandlerArg;
  
   parser = (ns
             ? XML_ParserCreateNS(encodingName, namespaceSeparator)
@@ -520,6 +524,8 @@ XML_Parser XML_ExternalEntityParserCreate(XML_Parser oldParser,
     handlerArg = userData;
   else
     handlerArg = parser;
+  if (oldExternalEntityRefHandlerArg != oldParser)
+    externalEntityRefHandlerArg = oldExternalEntityRefHandlerArg;
   defaultExpandInternalEntities = oldDefaultExpandInternalEntities;
   if (!dtdCopy(&dtd, oldDtd) || !setContext(parser, context)) {
     XML_ParserFree(parser);
@@ -668,6 +674,14 @@ void XML_SetExternalEntityRefHandler(XML_Parser parser,
 				     XML_ExternalEntityRefHandler handler)
 {
   externalEntityRefHandler = handler;
+}
+
+void XML_SetExternalEntityRefHandlerArg(XML_Parser parser, void *arg)
+{
+  if (arg)
+    externalEntityRefHandlerArg = arg;
+  else
+    externalEntityRefHandlerArg = parser;
 }
 
 void XML_SetUnknownEncodingHandler(XML_Parser parser,
