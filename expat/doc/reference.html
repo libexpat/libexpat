@@ -1154,12 +1154,6 @@ typedef void
 declarations occur inside start tags. But the namespace declaration start
 handler is called before the start tag handler for each namespace declared
 in that start tag.</p>
-
-<p><strong>Note:</strong>
-Due to limitations of the implementation, the
-StartNamespaceDeclHandler is not called unless the StartElementHandler
-is also set.  The specific value of the StartElementHandler is allowed
-to change freely, so long as it is not NULL.</p>
 </div>
 
 <div class="handler">
@@ -1176,12 +1170,6 @@ typedef void
 declaration. This will be called, for each namespace declaration,
 after the handler for the end tag of the element in which the
 namespace was declared.</p>
-
-<p><strong>Note:</strong>
-Due to limitations of the implementation, the EndNamespaceDeclHandler
-is not called unless the StartElementHandler is also set.  The
-specific value of the StartElementHandler is allowed to change freely,
-so long as it is not NULL.</p>
 </div>
 
 <div class="handler">
@@ -1191,13 +1179,6 @@ XML_SetNamespaceDeclHandler(XML_Parser p,
                             XML_EndNamespaceDeclHandler end)
 </pre>
 <p>Sets both namespace declaration handlers with a single call.</p>
-
-<p><strong>Note:</strong>
-Due to limitations of the implementation, the
-StartNamespaceDeclHandler and EndNamespaceDeclHandler are not called
-unless the StartElementHandler is also set.  The specific value of the
-StartElementHandler is allowed to change freely, so long as it is not
-NULL.</p>
 </div>
 
 <div class="handler">
