@@ -1147,8 +1147,13 @@ int XML_Parse(XML_Parser parser, const char *s, int len, int isFinal)
     if (nLeftOver) {
       if (buffer == 0 || nLeftOver > bufferLim - buffer) {
 	/* FIXME avoid integer overflow */
-	buffer = buffer == 0 ? MALLOC(len * 2) : REALLOC(buffer, len * 2);
-	/* FIXME storage leak if realloc fails */
+	char *temp;
+	temp = buffer == 0 ? MALLOC(len * 2) : REALLOC(buffer, len * 2);
+	if (temp == NULL) {
+	  errorCode = XML_ERROR_NO_MEMORY;
+	  return 0;
+	}
+        buffer = temp;
 	if (!buffer) {
 	  errorCode = XML_ERROR_NO_MEMORY;
 	  eventPtr = eventEndPtr = 0;
@@ -1665,12 +1670,16 @@ doContent(XML_Parser parser,
 	  /* Need to guarantee that:
 	     tag->buf + ROUND_UP(tag->rawNameLength, sizeof(XML_Char))
                 <= tag->bufEnd - sizeof(XML_Char) */
-	  if (tag->rawNameLength + (int)(sizeof(XML_Char) - 1) + (int)sizeof(XML_Char) > tag->bufEnd - tag->buf) {
+	  if (tag->rawNameLength + (int)(sizeof(XML_Char) - 1)
+              + (int)sizeof(XML_Char) > tag->bufEnd - tag->buf) {
 	    int bufSize = tag->rawNameLength * 4;
 	    bufSize = ROUND_UP(bufSize, sizeof(XML_Char));
-	    tag->buf = REALLOC(tag->buf, bufSize);
-	    if (!tag->buf)
-	      return XML_ERROR_NO_MEMORY;
+            {
+              char *temp = REALLOC(tag->buf, bufSize);
+              if (temp == NULL)
+                return XML_ERROR_NO_MEMORY;
+              tag->buf = temp;
+            }
 	    tag->bufEnd = tag->buf + bufSize;
 	  }
 	  memcpy(tag->buf, tag->rawName, tag->rawNameLength);
@@ -1696,9 +1705,12 @@ doContent(XML_Parser parser,
 	    if (fromPtr == rawNameEnd)
 	      break;
 	    bufSize = (tag->bufEnd - tag->buf) << 1;
-	    tag->buf = REALLOC(tag->buf, bufSize);
-	    if (!tag->buf)
-	      return XML_ERROR_NO_MEMORY;
+	    {
+	      char *temp = REALLOC(tag->buf, bufSize);
+	      if (temp == NULL)
+		return XML_ERROR_NO_MEMORY;
+              tag->buf = temp;
+	    }
 	    tag->bufEnd = tag->buf + bufSize;
 	    if (nextPtr)
 	      tag->rawName = tag->buf;
@@ -1959,10 +1971,12 @@ static enum XML_Error storeAtts(XML_Parser parser, const ENCODING *enc,
   n = XmlGetAttributes(enc, attStr, attsSize, atts);
   if (n + nDefaultAtts > attsSize) {
     int oldAttsSize = attsSize;
+    ATTRIBUTE *temp;
     attsSize = n + nDefaultAtts + INIT_ATTS_SIZE;
-    atts = REALLOC((void *)atts, attsSize * sizeof(ATTRIBUTE));
-    if (!atts)
+    temp = REALLOC((void *)atts, attsSize * sizeof(ATTRIBUTE));
+    if (temp == NULL)
       return XML_ERROR_NO_MEMORY;
+    atts = temp;
     if (n > oldAttsSize)
       XmlGetAttributes(enc, attStr, n, atts);
   }
