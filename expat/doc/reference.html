@@ -502,8 +502,31 @@ handler.</p>
 without using globals, you'll need to define a data structure to hold
 the shared variables. You can then tell Expat (with the <code><a href=
 "#XML_SetUserData" >XML_SetUserData</a></code> function) to pass a
-pointer to this structure to the handlers. This is typically the first
-argument received by most handlers.</p>
+pointer to this structure to the handlers.  This is the first
+argument received by most handlers.  In the <a href="#reference"
+>reference section</a>, an argument to a callback function is named
+<code>userData</code> and have type <code>void *</code> if the user
+data is passed; it will have the type <code>XML_Parser</code> if the
+parser itself is passed.  When the parser is passed, the user data may
+be retrieved using <code><a href="#XML_GetUserData"
+>XML_GetUserData</code></a>.</p>
+
+<p>One common case where multiple calls to a single handler may need
+to communicate using an application data structure is the case when
+content passed to the character data handler (set by <code><a href=
+"#XML_SetCharacterDataHandler"
+>XML_SetCharacterDataHandler</a></code>) needs to be accumulated.  A
+common first-time mistake with any of the event-oriented interfaces to
+an XML parser is to expect all the text contained in an element to be
+reported by a single call to the character data handler.  Expat, like
+many other XML parsers, reports such data as a sequence of calls;
+there's no way to know when the end of the sequence is reached until a
+different callback is made.  A buffer referenced by the user data
+structure proves both an effective and convenient place to accumulate
+character data.</p>
+
+<!-- XXX example needed here -->
+
 
 <h3>XML Version</h3>
 
