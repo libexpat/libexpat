@@ -94,8 +94,8 @@ typedef char ICHAR;
 #endif /* HAVE_BCOPY */
 #endif /* HAVE_MEMMOVE */
 
-#include "xmltok.h"
 #include "internal.h"
+#include "xmltok.h"
 #include "xmlrole.h"
 
 typedef const XML_Char *KEY;
@@ -899,7 +899,7 @@ XML_ExternalEntityParserCreate(XML_Parser oldParser,
   int oldParamEntityParsing = paramEntityParsing;
   int oldInEntityValue = prologState.inEntityValue;
 #endif
-  int oldns_triplets = ns_triplets;
+  XML_Bool oldns_triplets = ns_triplets;
 
   /* Note that the magical uses of the pre-processor to make field
      access look more like C++ require that `parser' be overwritten

@@ -86,7 +86,7 @@
 
 /* ptr points to character following "<!-" */
 
-static int
+static int FASTCALL
 PREFIX(scanComment)(const ENCODING *enc, const char *ptr,
                     const char *end, const char **nextTokPtr)
 {
@@ -124,7 +124,7 @@ PREFIX(scanComment)(const ENCODING *enc, const char *ptr,
 
 /* ptr points to character following "<!" */
 
-static int
+static int FASTCALL
 PREFIX(scanDecl)(const ENCODING *enc, const char *ptr,
                  const char *end, const char **nextTokPtr)
 {
@@ -171,7 +171,7 @@ PREFIX(scanDecl)(const ENCODING *enc, const char *ptr,
   return XML_TOK_PARTIAL;
 }
 
-static int
+static int FASTCALL
 PREFIX(checkPiTarget)(const ENCODING *enc, const char *ptr,
                       const char *end, int *tokPtr)
 {
@@ -216,7 +216,7 @@ PREFIX(checkPiTarget)(const ENCODING *enc, const char *ptr,
 
 /* ptr points to character following "<?" */
 
-static int
+static int FASTCALL
 PREFIX(scanPi)(const ENCODING *enc, const char *ptr,
                const char *end, const char **nextTokPtr)
 {
@@ -278,7 +278,7 @@ PREFIX(scanPi)(const ENCODING *enc, const char *ptr,
   return XML_TOK_PARTIAL;
 }
 
-static int
+static int FASTCALL
 PREFIX(scanCdataSection)(const ENCODING *enc, const char *ptr,
                          const char *end, const char **nextTokPtr)
 {
@@ -298,7 +298,7 @@ PREFIX(scanCdataSection)(const ENCODING *enc, const char *ptr,
   return XML_TOK_CDATA_SECT_OPEN;
 }
 
-static int
+static int FASTCALL
 PREFIX(cdataSectionTok)(const ENCODING *enc, const char *ptr,
                         const char *end, const char **nextTokPtr)
 {
@@ -376,7 +376,7 @@ PREFIX(cdataSectionTok)(const ENCODING *enc, const char *ptr,
 
 /* ptr points to character following "</" */
 
-static int
+static int FASTCALL
 PREFIX(scanEndTag)(const ENCODING *enc, const char *ptr,
                    const char *end, const char **nextTokPtr)
 {
@@ -425,7 +425,7 @@ PREFIX(scanEndTag)(const ENCODING *enc, const char *ptr,
 
 /* ptr points to character following "&#X" */
 
-static int
+static int FASTCALL
 PREFIX(scanHexCharRef)(const ENCODING *enc, const char *ptr,
                        const char *end, const char **nextTokPtr)
 {
@@ -457,7 +457,7 @@ PREFIX(scanHexCharRef)(const ENCODING *enc, const char *ptr,
 
 /* ptr points to character following "&#" */
 
-static int
+static int FASTCALL
 PREFIX(scanCharRef)(const ENCODING *enc, const char *ptr,
                     const char *end, const char **nextTokPtr)
 {
@@ -489,7 +489,7 @@ PREFIX(scanCharRef)(const ENCODING *enc, const char *ptr,
 
 /* ptr points to character following "&" */
 
-static int
+static int FASTCALL
 PREFIX(scanRef)(const ENCODING *enc, const char *ptr, const char *end,
                 const char **nextTokPtr)
 {
@@ -519,7 +519,7 @@ PREFIX(scanRef)(const ENCODING *enc, const char *ptr, const char *end,
 
 /* ptr points to character following first character of attribute name */
 
-static int
+static int FASTCALL
 PREFIX(scanAtts)(const ENCODING *enc, const char *ptr, const char *end,
                  const char **nextTokPtr)
 {
@@ -678,7 +678,7 @@ PREFIX(scanAtts)(const ENCODING *enc, const char *ptr, const char *end,
 
 /* ptr points to character following "<" */
 
-static int
+static int FASTCALL
 PREFIX(scanLt)(const ENCODING *enc, const char *ptr, const char *end,
                const char **nextTokPtr)
 {
@@ -778,7 +778,7 @@ PREFIX(scanLt)(const ENCODING *enc, const char *ptr, const char *end,
   return XML_TOK_PARTIAL;
 }
 
-static int
+static int FASTCALL
 PREFIX(contentTok)(const ENCODING *enc, const char *ptr, const char *end,
                    const char **nextTokPtr)
 {
@@ -877,7 +877,7 @@ PREFIX(contentTok)(const ENCODING *enc, const char *ptr, const char *end,
 
 /* ptr points to character following "%" */
 
-static int
+static int FASTCALL
 PREFIX(scanPercent)(const ENCODING *enc, const char *ptr, const char *end,
                     const char **nextTokPtr)
 {
@@ -906,7 +906,7 @@ PREFIX(scanPercent)(const ENCODING *enc, const char *ptr, const char *end,
   return XML_TOK_PARTIAL;
 }
 
-static int
+static int FASTCALL
 PREFIX(scanPoundName)(const ENCODING *enc, const char *ptr, const char *end,
                       const char **nextTokPtr)
 {
@@ -933,7 +933,7 @@ PREFIX(scanPoundName)(const ENCODING *enc, const char *ptr, const char *end,
   return -XML_TOK_POUND_NAME;
 }
 
-static int
+static int FASTCALL
 PREFIX(scanLit)(int open, const ENCODING *enc,
                 const char *ptr, const char *end,
                 const char **nextTokPtr)
@@ -965,7 +965,7 @@ PREFIX(scanLit)(int open, const ENCODING *enc,
   return XML_TOK_PARTIAL;
 }
 
-static int
+static int FASTCALL
 PREFIX(prologTok)(const ENCODING *enc, const char *ptr, const char *end,
                   const char **nextTokPtr)
 {
@@ -1196,7 +1196,7 @@ PREFIX(prologTok)(const ENCODING *enc, const char *ptr, const char *end,
   return -tok;
 }
 
-static int
+static int FASTCALL
 PREFIX(attributeValueTok)(const ENCODING *enc, const char *ptr,
                           const char *end, const char **nextTokPtr)
 {
@@ -1254,7 +1254,7 @@ PREFIX(attributeValueTok)(const ENCODING *enc, const char *ptr,
   return XML_TOK_DATA_CHARS;
 }
 
-static int
+static int FASTCALL
 PREFIX(entityValueTok)(const ENCODING *enc, const char *ptr,
                        const char *end, const char **nextTokPtr)
 {
@@ -1311,7 +1311,7 @@ PREFIX(entityValueTok)(const ENCODING *enc, const char *ptr,
 
 #ifdef XML_DTD
 
-static int
+static int FASTCALL
 PREFIX(ignoreSectionTok)(const ENCODING *enc, const char *ptr,
                          const char *end, const char **nextTokPtr)
 {
@@ -1364,7 +1364,7 @@ PREFIX(ignoreSectionTok)(const ENCODING *enc, const char *ptr,
 
 #endif /* XML_DTD */
 
-static int
+static int FASTCALL
 PREFIX(isPublicId)(const ENCODING *enc, const char *ptr, const char *end,
                    const char **badPtr)
 {
@@ -1424,7 +1424,7 @@ PREFIX(isPublicId)(const ENCODING *enc, const char *ptr, const char *end,
    first attsMax attributes are stored in atts.
 */
 
-static int
+static int FASTCALL
 PREFIX(getAtts)(const ENCODING *enc, const char *ptr,
                 int attsMax, ATTRIBUTE *atts)
 {
@@ -1517,7 +1517,7 @@ PREFIX(getAtts)(const ENCODING *enc, const char *ptr,
   /* not reached */
 }
 
-static int
+static int FASTCALL
 PREFIX(charRefNumber)(const ENCODING *enc, const char *ptr)
 {
   int result = 0;
@@ -1561,7 +1561,7 @@ PREFIX(charRefNumber)(const ENCODING *enc, const char *ptr)
   return checkCharRefNumber(result);
 }
 
-static int
+static int FASTCALL
 PREFIX(predefinedEntityName)(const ENCODING *enc, const char *ptr,
                              const char *end)
 {
@@ -1615,7 +1615,7 @@ PREFIX(predefinedEntityName)(const ENCODING *enc, const char *ptr,
   return 0;
 }
 
-static int
+static int FASTCALL
 PREFIX(sameName)(const ENCODING *enc, const char *ptr1, const char *ptr2)
 {
   for (;;) {
@@ -1679,7 +1679,7 @@ PREFIX(sameName)(const ENCODING *enc, const char *ptr1, const char *ptr2)
   /* not reached */
 }
 
-static int
+static int FASTCALL
 PREFIX(nameMatchesAscii)(const ENCODING *enc, const char *ptr1,
                          const char *end1, const char *ptr2)
 {
@@ -1692,7 +1692,7 @@ PREFIX(nameMatchesAscii)(const ENCODING *enc, const char *ptr1,
   return ptr1 == end1;
 }
 
-static int
+static int FASTCALL
 PREFIX(nameLength)(const ENCODING *enc, const char *ptr)
 {
   const char *start = ptr;
@@ -1719,7 +1719,7 @@ PREFIX(nameLength)(const ENCODING *enc, const char *ptr)
   }
 }
 
-static const char *
+static const char * FASTCALL
 PREFIX(skipS)(const ENCODING *enc, const char *ptr)
 {
   for (;;) {
@@ -1735,7 +1735,7 @@ PREFIX(skipS)(const ENCODING *enc, const char *ptr)
   }
 }
 
-static void
+static void FASTCALL
 PREFIX(updatePosition)(const ENCODING *enc,
                        const char *ptr,
                        const char *end,

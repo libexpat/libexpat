@@ -125,41 +125,49 @@ typedef struct {
 struct encoding;
 typedef struct encoding ENCODING;
 
-struct encoding {
-  int (*scanners[XML_N_STATES])(const ENCODING *,
+typedef int (FASTCALL *SCANNER)(const ENCODING *,
                                 const char *,
                                 const char *,
                                 const char **);
-  int (*literalScanners[XML_N_LITERAL_TYPES])(const ENCODING *,
-                                              const char *,
-                                              const char *,
-                                              const char **);
-  int (*sameName)(const ENCODING *,
-                  const char *, const char *);
-  int (*nameMatchesAscii)(const ENCODING *,
-                          const char *, const char *, const char *);
-  int (*nameLength)(const ENCODING *, const char *);
-  const char *(*skipS)(const ENCODING *, const char *);
-  int (*getAtts)(const ENCODING *enc, const char *ptr,
-                 int attsMax, ATTRIBUTE *atts);
-  int (*charRefNumber)(const ENCODING *enc, const char *ptr);
-  int (*predefinedEntityName)(const ENCODING *, const char *, const char *);
-  void (*updatePosition)(const ENCODING *,
-                         const char *ptr,
-                         const char *end,
-                         POSITION *);
-  int (*isPublicId)(const ENCODING *enc, const char *ptr, const char *end,
-                    const char **badPtr);
-  void (*utf8Convert)(const ENCODING *enc,
-                      const char **fromP,
-                      const char *fromLim,
-                      char **toP,
-                      const char *toLim);
-  void (*utf16Convert)(const ENCODING *enc,
-                       const char **fromP,
-                       const char *fromLim,
-                       unsigned short **toP,
-                       const unsigned short *toLim);
+
+struct encoding {
+  SCANNER scanners[XML_N_STATES];
+  SCANNER literalScanners[XML_N_LITERAL_TYPES];
+  int (FASTCALL *sameName)(const ENCODING *,
+                           const char *,
+                           const char *);
+  int (FASTCALL *nameMatchesAscii)(const ENCODING *,
+                                   const char *,
+                                   const char *,
+                                   const char *);
+  int (FASTCALL *nameLength)(const ENCODING *, const char *);
+  const char *(FASTCALL *skipS)(const ENCODING *, const char *);
+  int (FASTCALL *getAtts)(const ENCODING *enc,
+                          const char *ptr,
+                          int attsMax,
+                          ATTRIBUTE *atts);
+  int (FASTCALL *charRefNumber)(const ENCODING *enc, const char *ptr);
+  int (FASTCALL *predefinedEntityName)(const ENCODING *,
+                                       const char *,
+                                       const char *);
+  void (FASTCALL *updatePosition)(const ENCODING *,
+                                  const char *ptr,
+                                  const char *end,
+                                  POSITION *);
+  int (FASTCALL *isPublicId)(const ENCODING *enc,
+                             const char *ptr,
+                             const char *end,
+                             const char **badPtr);
+  void (FASTCALL *utf8Convert)(const ENCODING *enc,
+                               const char **fromP,
+                               const char *fromLim,
+                               char **toP,
+                               const char *toLim);
+  void (FASTCALL *utf16Convert)(const ENCODING *enc,
+                                const char **fromP,
+                                const char *fromLim,
+                                unsigned short **toP,
+                                const unsigned short *toLim);
   int minBytesPerChar;
   char isUtf8;
   char isUtf16;

@@ -29,7 +29,7 @@ static const ENCODING *NS(encodings)[] = {
   &ns(utf8_encoding).enc /* NO_ENC */
 };
 
-static int
+static int FASTCALL
 NS(initScanProlog)(const ENCODING *enc, const char *ptr, const char *end,
                    const char **nextTokPtr)
 {
@@ -37,7 +37,7 @@ NS(initScanProlog)(const ENCODING *enc, const char *ptr, const char *end,
                   XML_PROLOG_STATE, ptr, end, nextTokPtr);
 }
 
-static int
+static int FASTCALL
 NS(initScanContent)(const ENCODING *enc, const char *ptr, const char *end,
                     const char **nextTokPtr)
 {
