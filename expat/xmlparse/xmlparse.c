@@ -68,7 +68,6 @@ typedef struct {
 
 typedef struct {
   HASH_TABLE generalEntities;
-  HASH_TABLE paramEntities;
   HASH_TABLE elementTypes;
   HASH_TABLE attributeIds;
   STRING_POOL pool;
@@ -983,25 +982,6 @@ prologProcessor(XML_Parser parser,
 	poolFinish(&dtd.pool);
       }
       break;
-    case XML_ROLE_PARAM_ENTITY_REF:
-      {
-	const char *name = poolStoreString(&dtd.pool, encoding,
-					   s + encoding->minBytesPerChar,
-					   next - encoding->minBytesPerChar);
-	ENTITY *entity;
-	if (!name)
-	  return XML_ERROR_NO_MEMORY;
-	entity = (ENTITY *)lookup(&dtd.paramEntities, name, 0);
-	poolDiscard(&dtd.pool);
-	if (!entity) {
-	  if (dtd.complete || dtd.standalone) {
-	    errorPtr = s;
-	    return XML_ERROR_UNDEFINED_ENTITY;
-	  }
-	}
-	dtd.complete = 0;
-      }
-      break;
     case XML_ROLE_ENTITY_NOTATION_NAME:
       if (declEntity) {
 	declEntity->notation = poolStoreString(&dtd.pool, encoding, s, next);
@@ -1033,26 +1013,7 @@ prologProcessor(XML_Parser parser,
       }
       break;
     case XML_ROLE_PARAM_ENTITY_NAME:
-      {
-	const char *name = poolStoreString(&dtd.pool, encoding, s, next);
-	if (!name)
-	  return XML_ERROR_NO_MEMORY;
-	if (dtd.complete) {
-	  declEntity = (ENTITY *)lookup(&dtd.paramEntities, name, sizeof(ENTITY));
-	  if (!declEntity)
-	    return XML_ERROR_NO_MEMORY;
-	  if (declEntity->name != name) {
-	    poolDiscard(&dtd.pool);
-	    declEntity = 0;
-	  }
-	  else
-	    poolFinish(&dtd.pool);
-	}
-	else {
-	  poolDiscard(&dtd.pool);
-	  declEntity = 0;
-	}
-      }
+      declEntity = 0;
       break;
     case XML_ROLE_ERROR:
       errorPtr = s;
@@ -1465,7 +1426,6 @@ static int dtdInit(DTD *p)
     entity->textLen = 1;
     entity->magic = 1;
   }
-  hashTableInit(&(p->paramEntities));
   hashTableInit(&(p->elementTypes));
   hashTableInit(&(p->attributeIds));
   p->complete = 1;
@@ -1483,7 +1443,6 @@ static void dtdDestroy(DTD *p)
     free(e->defaultAtts);
   }
   hashTableDestroy(&(p->generalEntities));
-  hashTableDestroy(&(p->paramEntities));
   hashTableDestroy(&(p->elementTypes));
   hashTableDestroy(&(p->attributeIds));
   poolDestroy(&(p->pool));
