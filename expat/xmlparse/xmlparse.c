@@ -266,8 +266,36 @@ typedef struct {
 #define groupSize (((Parser *)parser)->groupSize)
 #define hadExternalDoctype (((Parser *)parser)->hadExternalDoctype)
 
-XML_Parser XML_ParserCreate(const char *encodingName)
+#ifdef XML_UNICODE
+static
+int translateToAscii(const XML_Char *from, char *to, size_t len, const char **p)
 {
+  if (!from) {
+    *p = 0;
+    return 1;
+  }
+  *p = to;
+  for (;;) {
+    if (len-- == 0)
+      return 0;
+    *to++ = (char)*from;
+    if (*from == 0)
+      break;
+    if (*from >= 0x80)
+      return 0;
+  }
+  return 1;
+}
+#else  /* not XML_UNICODE */
+#define translateToAscii(from, to, len, p) (*(p) = (from), 1)
+#endif /* not XML_UNICODE */
+
+XML_Parser XML_ParserCreate(const XML_Char *encodingName)
+{
+#ifdef XML_UNICODE
+  char encodingBuf[128];
+#endif
+  const char *asciiEncodingName;
   XML_Parser parser = malloc(sizeof(Parser));
   if (!parser)
     return parser;
@@ -307,7 +335,9 @@ XML_Parser XML_ParserCreate(const char *encodingName)
     return 0;
   }
   dataBufEnd = dataBuf + INIT_DATA_BUF_SIZE;
-  if (!XmlInitEncoding(&initEncoding, &encoding, encodingName)) {
+  if (!translateToAscii(encodingName, encodingBuf, sizeof(encodingBuf),
+		        &asciiEncodingName)
+      || !XmlInitEncoding(&initEncoding, &encoding, asciiEncodingName)) {
     errorCode = XML_ERROR_UNKNOWN_ENCODING;
     processor = errorProcessor;
   }
@@ -316,7 +346,7 @@ XML_Parser XML_ParserCreate(const char *encodingName)
 
 XML_Parser XML_ExternalEntityParserCreate(XML_Parser oldParser,
 					  const XML_Char *openEntityNames,
-					  const char *encodingName)
+					  const XML_Char *encodingName)
 {
   XML_Parser parser = oldParser;
   DTD *oldDtd = &dtd;

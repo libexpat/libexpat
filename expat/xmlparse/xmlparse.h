@@ -32,7 +32,7 @@ extern "C" {
 typedef void *XML_Parser;
 
 #ifdef XML_UNICODE
-/* Not supported yet. */
+/* Information is UTF-16 encoded. */
 #include <stddef.h>
 typedef wchar_t XML_Char;
 #else
@@ -44,7 +44,7 @@ typedef char XML_Char;
 or null if there is no externally specified encoding. */
 
 XML_Parser XMLPARSEAPI
-XML_ParserCreate(const char *encoding);
+XML_ParserCreate(const XML_Char *encoding);
 
 
 /* atts is array of name/value pairs, terminated by NULL;
@@ -156,7 +156,7 @@ Returns 0 if out of memory.  Otherwise returns a new XML_Parser object. */
 XML_Parser XMLPARSEAPI
 XML_ExternalEntityParserCreate(XML_Parser parser,
 			       const XML_Char *openEntityNames,
-			       const char *encoding);
+			       const XML_Char *encoding);
 
 /* If XML_Parser or XML_ParseEnd have returned 0, then XML_GetError*
 returns information about the error. */
