@@ -599,7 +599,7 @@ void *XML_GetBuffer(XML_Parser parser, int len)
   return bufferEnd;
 }
 
-int XML_GetErrorCode(XML_Parser parser)
+enum XML_Error XML_GetErrorCode(XML_Parser parser)
 {
   return errorCode;
 }

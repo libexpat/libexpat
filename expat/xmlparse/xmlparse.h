@@ -305,7 +305,7 @@ long XMLPARSEAPI XML_GetCurrentByteIndex(XML_Parser parser);
 /* If XML_Parser or XML_ParseEnd have returned 0, then XML_GetErrorCode
 returns information about the error. */
 
-int XMLPARSEAPI XML_GetErrorCode(XML_Parser parser);
+enum XML_Error XMLPARSEAPI XML_GetErrorCode(XML_Parser parser);
 
 void XMLPARSEAPI
 XML_ParserFree(XML_Parser parser);
