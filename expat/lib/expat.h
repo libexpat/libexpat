@@ -829,8 +829,9 @@ XMLPARSEAPI(enum XML_Status)
 XML_ParseBuffer(XML_Parser parser, int len, int isFinal);
 
 /* Stops parsing, causing XML_Parse() or XML_ParseBuffer() to return.
-   Must be called from within a call-back handler. Some call-backs
-   may still follow because they would otherwise get lost. Examples:
+   Must be called from within a call-back handler, except when aborting
+   (resumable = 0) an already suspended parser. Some call-backs may
+   still follow because they would otherwise get lost. Examples:
    - endElementHandler() for empty elements when stopped in
      startElementHandler(), 
    - endNameSpaceDeclHandler() when stopped in endElementHandler(), 
@@ -840,8 +841,8 @@ XML_ParseBuffer(XML_Parser parser, int len, int isFinal);
    except when parsing an external parameter entity and resumable != 0.
    Returns XML_STATUS_OK when successful, XML_STATUS_ERROR otherwise.
    Possible error codes: 
-   - XML_ERROR_SUSPENDED:  when the parser is already suspended.
-   - XML_ERROR_FINISHED:   when the parser has already finished.
+   - XML_ERROR_SUSPENDED: when suspending an already suspended parser.
+   - XML_ERROR_FINISHED: when the parser has already finished.
    - XML_ERROR_SUSPEND_PE: when suspending while parsing an external PE.
 
    When resumable != 0 (true) then parsing is suspended, that is, 

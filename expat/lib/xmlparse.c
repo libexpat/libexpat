@@ -1668,8 +1668,12 @@ XML_StopParser(XML_Parser parser, XML_Bool resumable)
 {
   switch (parsing) {
   case XML_SUSPENDED:
-    errorCode = XML_ERROR_SUSPENDED;
-    return XML_STATUS_ERROR;
+    if (resumable) {
+      errorCode = XML_ERROR_SUSPENDED;
+      return XML_STATUS_ERROR;
+    }
+    parsing = XML_FINISHED;
+    break;
   case XML_FINISHED:
     errorCode = XML_ERROR_FINISHED;
     return XML_STATUS_ERROR;
