@@ -117,7 +117,7 @@ int utf8_encode(const ENCODING *enc, int c, char *buf)
     buf[1] = (((c >> 12) & 0x3f) | 0x80);
     buf[2] = (((c >> 6) & 0x3f) | 0x80);
     buf[3] = ((c & 0x3f) | 0x80);
-    return 3;
+    return 4;
   }
   return 0;
 }
