@@ -590,6 +590,20 @@ START_TEST(test_wfc_undeclared_entity_with_external_subset) {
 }
 END_TEST
 
+START_TEST(test_wfc_no_recursive_entity_refs)
+{
+    char *text =
+        "<!DOCTYPE doc [\n"
+        "  <!ENTITY entity '&#38;entity;'>\n"
+        "]>\n"
+        "<doc>&entity;</doc>";
+
+    expect_failure(text,
+                   XML_ERROR_RECURSIVE_ENTITY_REF,
+                   "Parser did not report recursive entity reference.");
+}
+END_TEST
+
 
 /*
  * Namespaces tests.
@@ -777,6 +791,7 @@ make_basic_suite(void)
     tcase_add_test(tc_basic, test_wfc_undeclared_entity_no_external_subset);
     tcase_add_test(tc_basic, test_wfc_undeclared_entity_standalone);
     tcase_add_test(tc_basic, test_wfc_undeclared_entity_with_external_subset);
+    tcase_add_test(tc_basic, test_wfc_no_recursive_entity_refs);
 
     suite_add_tcase(s, tc_namespace);
     tcase_add_checked_fixture(tc_namespace,
