@@ -1536,7 +1536,7 @@ XML_DefaultCurrent(XML_Parser parser)
 }
 
 const XML_LChar *
-XML_ErrorString(int code)
+XML_ErrorString(enum XML_Error code)
 {
   static const XML_LChar *message[] = {
     0,
