@@ -22,6 +22,7 @@ Contributor(s):
 #include <string.h>
 #include <stddef.h>
 
+#include "xmlparse.h"
 #include "xmldef.h"
 
 #ifdef XML_UNICODE
@@ -63,7 +64,6 @@ typedef char ICHAR;
 /* Round up n to be a multiple of sz, where sz is a power of 2. */
 #define ROUND_UP(n, sz) (((n) + ((sz) - 1)) & ~((sz) - 1))
 
-#include "xmlparse.h"
 #include "xmltok.h"
 #include "xmlrole.h"
 #include "hashtable.h"
