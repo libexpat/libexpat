@@ -1,5 +1,5 @@
 
-			Expat, Release 1.95.3
+                        Expat, Release 1.95.4
 
 This is expat, a C library for parsing XML, written by James Clark.
 Expat is a stream-oriented XML parser.  This means that you register
@@ -25,7 +25,7 @@ intended to be production grade software.
 To build expat, you first run the configuration shell script in the
 top level distribution directory:
 
-	./configure
+        ./configure
 
 There are many options which you may provide to configure (which you
 can discover by running configure with the --help option).  But the
@@ -36,7 +36,7 @@ xmlwf into /usr/local/bin.  If, for example, you'd prefer to install
 into /home/me/mystuff/lib, /home/me/mystuff/include, and
 /home/me/mystuff/bin, you can tell configure about that with:
 
-	./configure --prefix=/home/me/mystuff
+        ./configure --prefix=/home/me/mystuff
 
 After running the configure script, the "make" command will build
 things and "make install" will install things into their proper
@@ -47,30 +47,30 @@ If you are interested in building Expat to provide document
 information in UTF-16 rather than the default UTF-8, following these
 instructions:
 
-	1. For UTF-16 output as unsigned short (and version/error
-	   strings as char), run:
+        1. For UTF-16 output as unsigned short (and version/error
+           strings as char), run:
 
-	       ./configure CPPFLAGS=-DXML_UNICODE
+               ./configure CPPFLAGS=-DXML_UNICODE
 
-	   For UTF-16 output as wchar_t (incl. version/error strings),
-	   run:
+           For UTF-16 output as wchar_t (incl. version/error strings),
+           run:
 
-	       ./configure CFLAGS="-g -O2 -fshort-wchar" \
-			   CPPFLAGS=-DXML_UNICODE_WCHAR_T
+               ./configure CFLAGS="-g -O2 -fshort-wchar" \
+                           CPPFLAGS=-DXML_UNICODE_WCHAR_T
 
-	2. Edit the MakeFile, changing:
+        2. Edit the MakeFile, changing:
 
-	       LIBRARY = libexpat.la
+               LIBRARY = libexpat.la
 
-	   to:
+           to:
 
-	       LIBRARY = libexpatw.la
+               LIBRARY = libexpatw.la
 
-	   (Note the additional "w" in the library name.)
+           (Note the additional "w" in the library name.)
 
-	3. Run "make buildlib" (which builds the library only).
+        3. Run "make buildlib" (which builds the library only).
 
-	4. Run "make installlib" (which installs the library only).
+        4. Run "make installlib" (which installs the library only).
 
 Note for Solaris users:  The "ar" command is usually located in
 "/usr/ccs/bin", which is not in the default PATH.  You will need to
@@ -79,7 +79,7 @@ to GNU make (the "make" found in /usr/ccs/bin does not seem to work
 properly -- appearantly it does not understand .PHONY directives).  If
 you're using ksh or bash, use this command to build:
 
-	PATH=/usr/ccs/bin:$PATH make
+        PATH=/usr/ccs/bin:$PATH make
 
 When using Expat with a project using autoconf for configuration, you
 can use the probing macro in conftools/expat.m4 to determine how to
@@ -98,4 +98,4 @@ Discussion related to the direction of future expat development takes
 place on expat-discuss@lists.sourceforge.net.  Archives of this list
 may be found at:
 
-	http://sourceforge.net/mailarchive/forum.php?forum_id=6385
+        http://sourceforge.net/mailarchive/forum.php?forum_id=6385
