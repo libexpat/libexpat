@@ -1,8 +1,6 @@
 #ifndef XmlParse_INCLUDED
 #define XmlParse_INCLUDED 1
 
-#include <stddef.h>
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -33,7 +31,7 @@ typedef void (*XML_EndElementHandler)(void *userData,
 
 typedef void (*XML_CharacterDataHandler)(void *userData,
 					 const char *s,
-					 size_t len);
+					 int len);
 
 /* target and data are '\0' terminated */
 typedef void (*XML_ProcessingInstructionHandler)(void *userData,
@@ -61,13 +59,13 @@ XML_SetUserData(XML_Parser parser, void *userData);
 The last call to XML_Parse must have isFinal true;
 len may be zero for this call (or any other). */
 int XMLPARSEAPI
-XML_Parse(XML_Parser parser, const char *s, size_t len, int isFinal);
+XML_Parse(XML_Parser parser, const char *s, int len, int isFinal);
 
 void XMLPARSEAPI *
-XML_GetBuffer(XML_Parser parser, size_t len);
+XML_GetBuffer(XML_Parser parser, int len);
 
 int XMLPARSEAPI
-XML_ParseBuffer(XML_Parser parser, size_t len, int isFinal);
+XML_ParseBuffer(XML_Parser parser, int len, int isFinal);
 
 /* If XML_Parser or XML_ParseEnd have returned 0, then XML_GetError*
 returns information about the error. */

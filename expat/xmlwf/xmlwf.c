@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stddef.h>
 #include <string.h>
 #include <fcntl.h>
 
@@ -28,7 +29,7 @@
 #define READ_SIZE (1024*8)
 #endif
 
-static void characterData(void *userData, const char *s, size_t len)
+static void characterData(void *userData, const char *s, int len)
 {
   FILE *fp = userData;
   for (; len > 0; --len, ++s) {

@@ -15,7 +15,7 @@
 typedef struct tag {
   struct tag *parent;
   const char *rawName;
-  size_t rawNameLength;
+  int rawNameLength;
   const char *name;
   char *buf;
   char *bufEnd;
@@ -24,7 +24,7 @@ typedef struct tag {
 typedef struct {
   const char *name;
   const char *textPtr;
-  size_t textLen;
+  int textLen;
   const char *systemId;
   const char *publicId;
   const char *notation;
@@ -85,19 +85,9 @@ static Processor prologProcessor;
 static Processor contentProcessor;
 static Processor epilogProcessor;
 
-static
-int doContent(XML_Parser parser,
-	      int startTagLevel,
-	      const ENCODING *enc,
-	      const char *start,
-	      const char *end,
-	      const char **endPtr);
-
 static enum XML_Error
-checkGeneralTextEntity(XML_Parser parser,
-		       const char *s, const char *end,
-		       const char **nextPtr,
-		       const ENCODING **enc);
+doContent(XML_Parser parser, int startTagLevel, const ENCODING *enc,
+	  const char *start, const char *end, const char **endPtr);
 static enum XML_Error storeAtts(XML_Parser parser, const ENCODING *, const char *tagName, const char *s);
 static int
 defineAttribute(ELEMENT_TYPE *type, ATTRIBUTE_ID *, int isCdata, const char *dfltValue);
@@ -174,7 +164,7 @@ typedef struct {
   STRING_POOL tempPool;
   STRING_POOL temp2Pool;
   char *groupConnector;
-  size_t groupSize;
+  unsigned groupSize;
 } Parser;
 
 #define userData (((Parser *)parser)->userData)
@@ -305,7 +295,7 @@ void XML_SetProcessingInstructionHandler(XML_Parser parser,
   processingInstructionHandler = handler;
 }
 
-int XML_Parse(XML_Parser parser, const char *s, size_t len, int isFinal)
+int XML_Parse(XML_Parser parser, const char *s, int len, int isFinal)
 {
   bufferEndByteIndex += len;
   if (len == 0) {
@@ -359,7 +349,7 @@ int XML_Parse(XML_Parser parser, const char *s, size_t len, int isFinal)
   }
 }
 
-int XML_ParseBuffer(XML_Parser parser, size_t len, int isFinal)
+int XML_ParseBuffer(XML_Parser parser, int len, int isFinal)
 {
   const char *start = bufferPtr;
   bufferEnd += len;
@@ -379,7 +369,7 @@ int XML_ParseBuffer(XML_Parser parser, size_t len, int isFinal)
   }
 }
 
-void *XML_GetBuffer(XML_Parser parser, size_t len)
+void *XML_GetBuffer(XML_Parser parser, int len)
 {
   if (len > bufferLim - bufferEnd) {
     /* FIXME avoid integer overflow */
@@ -391,7 +381,7 @@ void *XML_GetBuffer(XML_Parser parser, size_t len)
     }
     else {
       char *newBuf;
-      size_t bufferSize = bufferLim - bufferPtr;
+      int bufferSize = bufferLim - bufferPtr;
       if (bufferSize == 0)
 	bufferSize = INIT_BUFFER_SIZE;
       do {
@@ -464,7 +454,7 @@ const char *XML_ErrorString(int code)
 }
 
 static
-enum XML_ERROR contentProcessor(XML_Parser parser,
+enum XML_Error contentProcessor(XML_Parser parser,
 				const char *start,
 				const char *end,
 				const char **endPtr)
@@ -480,7 +470,6 @@ doContent(XML_Parser parser,
 	  const char *end,
 	  const char **nextPtr)
 {
-  static const char *nullPtr = 0;
   const ENCODING *utf8 = XmlGetInternalEncoding(XML_UTF8_ENCODING);
   for (;;) {
     const char *next;
@@ -596,7 +585,7 @@ doContent(XML_Parser parser,
 	tag->rawNameLength = XmlNameLength(enc, tag->rawName);
 	if (nextPtr) {
 	  if (tag->rawNameLength > tag->bufEnd - tag->buf) {
-	    size_t bufSize = tag->rawNameLength * 4;
+	    int bufSize = tag->rawNameLength * 4;
 	    tag->buf = realloc(tag->buf, bufSize);
 	    if (!tag->buf)
 	      return XML_ERROR_NO_MEMORY;
@@ -674,7 +663,7 @@ doContent(XML_Parser parser,
         return XML_ERROR_ASYNC_ENTITY;
       }
       else {
-	size_t len;
+	int len;
 	const char *rawName;
 	TAG *tag = tagStack;
 	tagStack = tag->parent;
@@ -1554,7 +1543,7 @@ int poolGrow(STRING_POOL *pool)
     }
   }
   if (pool->blocks && pool->start == pool->blocks->s) {
-    size_t blockSize = (pool->end - pool->start)*2;
+    int blockSize = (pool->end - pool->start)*2;
     pool->blocks = realloc(pool->blocks, offsetof(BLOCK, s) + blockSize);
     if (!pool->blocks)
       return 0;
@@ -1565,7 +1554,7 @@ int poolGrow(STRING_POOL *pool)
   }
   else {
     BLOCK *tem;
-    size_t blockSize = pool->end - pool->start;
+    int blockSize = pool->end - pool->start;
     if (blockSize < INIT_BLOCK_SIZE)
       blockSize = INIT_BLOCK_SIZE;
     else
