@@ -1674,7 +1674,15 @@ XML_StopParser(XML_Parser parser, XML_Bool resumable)
     errorCode = XML_ERROR_FINISHED;
     return XML_STATUS_ERROR;
   default:
-    parsing = resumable ? XML_SUSPENDED : XML_FINISHED;
+    if (resumable) {
+      if (isParamEntity) {
+        errorCode = XML_ERROR_SUSPEND_PE;
+        return XML_STATUS_ERROR;
+      }
+      parsing = XML_SUSPENDED;
+    }
+    else
+      parsing = XML_FINISHED;
   }
   return XML_STATUS_OK;
 }
@@ -1851,7 +1859,8 @@ XML_ErrorString(enum XML_Error code)
     XML_L("parser suspended"),
     XML_L("parser not suspended"),
     XML_L("parsing aborted"),
-    XML_L("parsing finished")
+    XML_L("parsing finished"),
+    XML_L("cannot suspend in external parameter entity")
   };
   if (code > 0 && code < sizeof(message)/sizeof(message[0]))
     return message[code];

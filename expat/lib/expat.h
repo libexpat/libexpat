@@ -165,7 +165,8 @@ enum XML_Error {
   XML_ERROR_SUSPENDED,
   XML_ERROR_NOT_SUSPENDED,
   XML_ERROR_ABORTED,
-  XML_ERROR_FINISHED
+  XML_ERROR_FINISHED,
+  XML_ERROR_SUSPEND_PE
 };
 
 enum XML_Content_Type {
@@ -835,12 +836,15 @@ XML_ParseBuffer(XML_Parser parser, int len, int isFinal);
    - endNameSpaceDeclHandler() when stopped in endElementHandler(), 
    and possibly others.
 
-   Can be called from most handlers, including DTD related call-backs.
+   Can be called from most handlers, including DTD related call-backs,
+   except when parsing an external parameter entity and resumable != 0.
    Returns XML_STATUS_OK when successful, XML_STATUS_ERROR otherwise.
-   Possible error codes: XML_ERROR_SUSPENDED - when the parser is already
-   suspended, XML_ERROR_FINISHED - when the parser has already finished.
+   Possible error codes: 
+   - XML_ERROR_SUSPENDED:  when the parser is already suspended.
+   - XML_ERROR_FINISHED:   when the parser has already finished.
+   - XML_ERROR_SUSPEND_PE: when suspending while parsing an external PE.
 
-   When resumable = XML_TRUE then parsing is suspended, that is, 
+   When resumable != 0 (true) then parsing is suspended, that is, 
    XML_Parse() and XML_ParseBuffer() return XML_STATUS_SUSPENDED. 
    Otherwise, parsing is aborted, that is, XML_Parse() and XML_ParseBuffer()
    return XML_STATUS_ERROR with error code XML_ERROR_ABORTED.
