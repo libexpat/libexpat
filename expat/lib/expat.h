@@ -190,11 +190,12 @@ XML_ParserCreate_MM(const XML_Char *encoding,
 /* Prepare a parser object to be re-used.  This is particularly
    valuable when memory allocation overhead is disproportionatly high,
    such as when a large number of small documnents need to be parsed.
-   All handlers are cleared from the parser.
+   All handlers are cleared from the parser, except for the 
+   unknownEncodingHandler.
 
    Added in Expat 1.95.3.
 */
-XMLPARSEAPI(int)
+XMLPARSEAPI(XML_Bool)
 XML_ParserReset(XML_Parser parser, const XML_Char *encoding);
 
 /* atts is array of name/value pairs, terminated by 0;

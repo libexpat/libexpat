@@ -339,6 +339,7 @@ static XML_Bool setContext(XML_Parser parser, const XML_Char *context);
 static void normalizePublicId(XML_Char *s);
 static void dtdInit(DTD *, XML_Parser parser);
 
+static void dtdReset(DTD *, XML_Parser parser); /* do not call if parentParser != NULL */
 static void dtdDestroy(DTD *, XML_Parser parser);
 
 static int dtdCopy(DTD *newDtd, const DTD *oldDtd, XML_Parser parser);
@@ -354,6 +355,7 @@ static NAMED *lookup(HASH_TABLE *table, KEY name, size_t createSize);
 
 static void hashTableInit(HASH_TABLE *, XML_Memory_Handling_Suite *ms);
 
+static void hashTableClear(HASH_TABLE *);
 static void hashTableDestroy(HASH_TABLE *);
 static void hashTableIterInit(HASH_TABLE_ITER *, const HASH_TABLE *);
 static NAMED *hashTableIterNext(HASH_TABLE_ITER *);
@@ -379,7 +381,7 @@ static ELEMENT_TYPE * getElementType(XML_Parser Paraser,
                                      const char *ptr,
                                      const char *end);
 
-static XML_Bool parserInit(XML_Parser parser, const XML_Char *encodingName);
+static void parserInit(XML_Parser parser, const XML_Char *encodingName);
 
 #define poolStart(pool) ((pool)->start)
 #define poolEnd(pool) ((pool)->ptr)
@@ -661,18 +663,26 @@ XML_ParserCreate_MM(const XML_Char *encodingName,
     return NULL;
   }
   dataBufEnd = dataBuf + INIT_DATA_BUF_SIZE;
+
   freeBindingList = NULL;
-  inheritedBindings = NULL;
   freeTagList = NULL;
+
+  groupSize = 0;
+  groupConnector = NULL;
+
+  unknownEncodingHandler = NULL;
+  unknownEncodingHandlerData = NULL;
 
   namespaceSeparator = '!';
   ns = XML_FALSE;
   ns_triplets = XML_FALSE;
+
+  parserInit(parser, encodingName);
+  dtdInit(&dtd, parser);
   poolInit(&tempPool, &(((Parser *) parser)->m_mem));
   poolInit(&temp2Pool, &(((Parser *) parser)->m_mem));
 
-  if (!parserInit(parser, encodingName) || !atts
-      || !dataBuf || (encodingName && !protocolEncodingName)) {
+  if (!atts || !dataBuf || (encodingName && !protocolEncodingName)) {
     XML_ParserFree(parser);
     return NULL;
   }
@@ -694,7 +704,7 @@ XML_ParserCreate_MM(const XML_Char *encodingName,
   return parser;
 }
 
-static XML_Bool
+static void
 parserInit(XML_Parser parser, const XML_Char *encodingName)
 {
   processor = prologInitProcessor;
@@ -724,7 +734,6 @@ parserInit(XML_Parser parser, const XML_Char *encodingName)
   externalEntityRefHandler = NULL;
   externalEntityRefHandlerArg = parser;
   skippedEntityHandler = NULL;
-  unknownEncodingHandler = NULL;
   elementDeclHandler = NULL;
   attlistDeclHandler = NULL;
   entityDeclHandler = NULL;
@@ -752,33 +761,56 @@ parserInit(XML_Parser parser, const XML_Char *encodingName)
   openInternalEntities = 0;
   defaultExpandInternalEntities = XML_TRUE;
   tagLevel = 0;
-  tagStack = 0;
+  tagStack = NULL;
+  inheritedBindings = NULL;
   nSpecifiedAtts = 0;
-  groupSize = 0;
-  groupConnector = NULL;
   unknownEncodingMem = NULL;
   unknownEncodingRelease = NULL;
   unknownEncodingData = NULL;
-  unknownEncodingHandlerData = NULL;
   parentParser = NULL;
 #ifdef XML_DTD
   isParamEntity = XML_FALSE;
   paramEntityParsing = XML_PARAM_ENTITY_PARSING_NEVER;
 #endif
-  dtdInit(&dtd, parser);
-  return XML_TRUE;
 }
 
-int
+/* moves list of bindings to freeBindingList */
+void moveToFreeBindingList(XML_Parser parser, BINDING *bindings)
+{
+  while (bindings) {
+    BINDING *b = bindings;
+    bindings = bindings->nextTagBinding;
+    b->nextTagBinding = freeBindingList;
+    freeBindingList = b;
+  }
+}
+
+XML_Bool
 XML_ParserReset(XML_Parser parser, const XML_Char *encodingName)
 {
-  if (parentParser) return 0;
-#ifdef XML_DTD
-  if (dtd.scaffold) dtdDestroy(&dtd, parser);
-#endif
+  TAG *tStk;
+  if (parentParser) 
+    return XML_FALSE;
+  /* move tagStack to freeTagList */
+  tStk = tagStack;
+  while (tStk) {
+    TAG *tag = tStk;
+    tStk = tStk->parent;
+    tag->parent = freeTagList;
+    moveToFreeBindingList(parser, tag->bindings);
+    tag->bindings = NULL;
+    freeTagList = tag;
+  }
+  moveToFreeBindingList(parser, inheritedBindings);
+  if (unknownEncodingMem)
+    FREE(unknownEncodingMem);
+  if (unknownEncodingRelease)
+    unknownEncodingRelease(unknownEncodingData);
+  parserInit(parser, encodingName);
+  dtdReset(&dtd, parser);
   poolClear(&tempPool);
   poolClear(&temp2Pool);
-  return parserInit(parser, encodingName);
+  return XML_TRUE;
 }
 
 int
@@ -1260,10 +1292,10 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal)
     XmlUpdatePosition(encoding, positionPtr, end, &position);
     nLeftOver = s + len - end;
     if (nLeftOver) {
-      if (buffer == 0 || nLeftOver > bufferLim - buffer) {
+      if (buffer == NULL || nLeftOver > bufferLim - buffer) {
         /* FIXME avoid integer overflow */
         char *temp;
-        temp = buffer == 0 ? MALLOC(len * 2) : REALLOC(buffer, len * 2);
+        temp = buffer == NULL ? MALLOC(len * 2) : REALLOC(buffer, len * 2);
         if (temp == NULL) {
           errorCode = XML_ERROR_NO_MEMORY;
           return XML_STATUS_ERROR;
@@ -4618,6 +4650,39 @@ dtdSwap(DTD *p1, DTD *p2)
 #endif /* XML_DTD */
 
 static void
+dtdReset(DTD *p, XML_Parser parser)
+{
+  HASH_TABLE_ITER iter;
+  hashTableIterInit(&iter, &(p->elementTypes));
+  for (;;) {
+    ELEMENT_TYPE *e = (ELEMENT_TYPE *)hashTableIterNext(&iter);
+    if (!e)
+      break;
+    if (e->allocDefaultAtts != 0)
+      FREE(e->defaultAtts);
+  }
+  hashTableClear(&(p->generalEntities));
+#ifdef XML_DTD
+  hashTableClear(&(p->paramEntities));
+#endif /* XML_DTD */
+  hashTableClear(&(p->elementTypes));
+  hashTableClear(&(p->attributeIds));
+  hashTableClear(&(p->prefixes));
+  poolClear(&(p->pool));
+#ifdef XML_DTD
+  poolClear(&(p->entityValuePool));
+#endif /* XML_DTD */
+  if (p->scaffIndex) {
+    FREE(p->scaffIndex);
+    p->scaffIndex = NULL;
+  }
+  if (p->scaffold) {
+    FREE(p->scaffold);
+    p->scaffold = NULL;
+  }
+}
+
+static void
 dtdDestroy(DTD *p, XML_Parser parser)
 {
   HASH_TABLE_ITER iter;
@@ -4933,6 +4998,21 @@ lookup(HASH_TABLE *table, KEY name, size_t createSize)
 }
 
 static void
+hashTableClear(HASH_TABLE *table)
+{
+  size_t i;
+  for (i = 0; i < table->size; i++) {
+    NAMED *p = table->v[i];
+    if (p) {
+      table->mem->free_fcn(p);
+      table->v[i] = NULL;
+    }
+  }
+  table->usedLim = table->size / 2;
+  table->used = 0;
+}
+
+static void
 hashTableDestroy(HASH_TABLE *table)
 {
   size_t i;
@@ -4951,7 +5031,7 @@ hashTableInit(HASH_TABLE *p, XML_Memory_Handling_Suite *ms)
   p->size = 0;
   p->usedLim = 0;
   p->used = 0;
-  p->v = 0;
+  p->v = NULL;
   p->mem = ms;
 }
 
@@ -5013,17 +5093,12 @@ poolDestroy(STRING_POOL *pool)
     pool->mem->free_fcn(p);
     p = tem;
   }
-  pool->blocks = NULL;
   p = pool->freeBlocks;
   while (p) {
     BLOCK *tem = p->next;
     pool->mem->free_fcn(p);
     p = tem;
   }
-  pool->freeBlocks = NULL;
-  pool->ptr = NULL;
-  pool->start = NULL;
-  pool->end = NULL;
 }
 
 static XML_Char *
