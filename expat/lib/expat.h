@@ -366,8 +366,8 @@ typedef void (*XML_EndNamespaceDeclHandler)(void *userData,
 
 /* This is called if the document is not standalone, that is, it has an
    external subset or a reference to a parameter entity, but does not
-   have standalone="yes". If this handler returns 0, then processing
-   will not continue, and the parser will return a
+   have standalone="yes". If this handler returns XML_STATUS_ERROR,
+   then processing will not continue, and the parser will return a
    XML_ERROR_NOT_STANDALONE error.
    If parameter entity parsing is enabled, then in addition to the
    conditions above this handler will only be called if the referenced
@@ -401,9 +401,9 @@ typedef int (*XML_NotStandaloneHandler)(void *userData);
    referenced entity is to be parsed later, it must be copied.
    context is NULL only when the entity is a parameter entity.
 
-   The handler should return 0 if processing should not continue
-   because of a fatal error in the handling of the external entity.
-   In this case the calling parser will return an
+   The handler should return XML_STATUS_ERROR if processing should not
+   continue because of a fatal error in the handling of the external
+   entity.  In this case the calling parser will return an
    XML_ERROR_EXTERNAL_ENTITY_HANDLING error.
 
    Note that unlike other handlers the first argument is the parser,
@@ -497,8 +497,8 @@ typedef struct {
    the encoding declaration.
 
    If the callback can provide information about the encoding, it must
-   fill in the XML_Encoding structure, and return 1.  Otherwise it
-   must return 0.
+   fill in the XML_Encoding structure, and return XML_STATUS_OK.
+   Otherwise it must return XML_STATUS_ERROR.
 
    If info does not describe a suitable encoding, then the parser will
    return an XML_UNKNOWN_ENCODING error.
@@ -761,7 +761,7 @@ XML_ParseBuffer(XML_Parser parser, int len, int isFinal);
    an ExternalEntityRefHandler so longer as the parser has not yet
    been freed.  The new parser is completely independent and may
    safely be used in a separate thread.  The handlers and userData are
-   initialized from the parser argument.  Returns 0 if out of memory.
+   initialized from the parser argument.  Returns NULL if out of memory.
    Otherwise returns a new XML_Parser object.
 */
 XMLPARSEAPI(XML_Parser)
@@ -802,7 +802,7 @@ XMLPARSEAPI(int)
 XML_SetParamEntityParsing(XML_Parser parser,
                           enum XML_ParamEntityParsing parsing);
 
-/* If XML_Parse or XML_ParseBuffer have returned 0, then
+/* If XML_Parse or XML_ParseBuffer have returned XML_STATUS_ERROR, then
    XML_GetErrorCode returns information about the error.
 */
 XMLPARSEAPI(enum XML_Error)
