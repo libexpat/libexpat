@@ -2,6 +2,10 @@ body {
   background-color: white
 }
 
+.noborder {
+  border-width: 0px;
+}
+
 .eg {
   padding-left: 1em;
   padding-top: .5em;
