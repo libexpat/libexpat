@@ -1724,6 +1724,8 @@ doContent(XML_Parser parser,
     case XML_TOK_START_TAG_NO_ATTS:
       {
 	TAG *tag;
+	enum XML_Error result;
+	XML_Char *toPtr;
 	if (freeTagList) {
 	  tag = freeTagList;
 	  freeTagList = freeTagList->parent;
@@ -1743,7 +1745,7 @@ doContent(XML_Parser parser,
 	tag->parent = tagStack;
 	tagStack = tag;
 	tag->name.localPart = NULL;
-  tag->name.prefix = NULL;
+        tag->name.prefix = NULL;
 	tag->rawName = s + enc->minBytesPerChar;
 	tag->rawNameLength = XmlNameLength(enc, tag->rawName);
 	if (nextPtr) {
@@ -1766,49 +1768,43 @@ doContent(XML_Parser parser,
 	  tag->rawName = tag->buf;
 	}
 	++tagLevel;
-	if (startElementHandler || endElementHandler) {
-	  enum XML_Error result;
-	  XML_Char *toPtr;
-	  for (;;) {
-	    const char *rawNameEnd = tag->rawName + tag->rawNameLength;
-	    const char *fromPtr = tag->rawName;
-	    int bufSize;
-	    if (nextPtr)
-	      toPtr = (XML_Char *)(tag->buf + ROUND_UP(tag->rawNameLength,
-                                                       sizeof(XML_Char)));
-	    else
-	      toPtr = (XML_Char *)tag->buf;
-	    tag->name.str = toPtr;
-	    XmlConvert(enc,
-		       &fromPtr, rawNameEnd,
-		       (ICHAR **)&toPtr, (ICHAR *)tag->bufEnd - 1);
-	    if (fromPtr == rawNameEnd)
-	      break;
-	    bufSize = (tag->bufEnd - tag->buf) << 1;
-	    {
-	      char *temp = REALLOC(tag->buf, bufSize);
-	      if (temp == NULL)
-		return XML_ERROR_NO_MEMORY;
-        tag->buf = temp;
-	    }
-	    tag->bufEnd = tag->buf + bufSize;
-	    if (nextPtr)
-	      tag->rawName = tag->buf;
+	for (;;) {
+	  const char *rawNameEnd = tag->rawName + tag->rawNameLength;
+	  const char *fromPtr = tag->rawName;
+	  int bufSize;
+	  if (nextPtr)
+	    toPtr = (XML_Char *)(tag->buf + ROUND_UP(tag->rawNameLength,
+                                                     sizeof(XML_Char)));
+	  else
+	    toPtr = (XML_Char *)tag->buf;
+	  tag->name.str = toPtr;
+	  XmlConvert(enc,
+		     &fromPtr, rawNameEnd,
+		     (ICHAR **)&toPtr, (ICHAR *)tag->bufEnd - 1);
+	  if (fromPtr == rawNameEnd)
+	    break;
+	  bufSize = (tag->bufEnd - tag->buf) << 1;
+	  {
+	    char *temp = REALLOC(tag->buf, bufSize);
+	    if (temp == NULL)
+	      return XML_ERROR_NO_MEMORY;
+            tag->buf = temp;
 	  }
-	  *toPtr = XML_T('\0');
+	  tag->bufEnd = tag->buf + bufSize;
+	  if (nextPtr)
+	    tag->rawName = tag->buf;
+	}
+	*toPtr = XML_T('\0');
+        if (startElementHandler) {
 	  result = storeAtts(parser, enc, s, &(tag->name), &(tag->bindings));
 	  if (result)
 	    return result;
-	  if (startElementHandler)
-	    startElementHandler(handlerArg, tag->name.str,
-	                        (const XML_Char **)atts);
-	  poolClear(&tempPool);
-	}
-	else {
-	  tag->name.str = NULL;
-	  if (defaultHandler)
-	    reportDefault(parser, enc, s, next);
-	}
+	  startElementHandler(handlerArg, tag->name.str,
+	                      (const XML_Char **)atts);
+        }
+        else if (defaultHandler)
+          reportDefault(parser, enc, s, next);
+	poolClear(&tempPool);
 	break;
       }
     case XML_TOK_EMPTY_ELEMENT_WITH_ATTS:
@@ -1874,7 +1870,7 @@ doContent(XML_Parser parser,
 	  return XML_ERROR_TAG_MISMATCH;
 	}
 	--tagLevel;
-  if (endElementHandler && tag->name.str) {
+  if (endElementHandler) {
     const XML_Char *localPart;
     const XML_Char *prefix;
     XML_Char *uri;
