@@ -12,7 +12,7 @@ Package=<5>
 Package=<4>
 {{{
     Begin Project Dependency
-    Project_Dep_Name expat
+    Project_Dep_Name expat_static
     End Project Dependency
 }}}
 
@@ -30,7 +30,31 @@ Package=<4>
 
 ###############################################################################
 
+Project: "expat_static"=.\lib\expat_static.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
 Project: "expatw"=.\lib\expatw.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "expatw_static"=.\lib\expatw_static.dsp - Package Owner=<4>
 
 Package=<5>
 {{{
