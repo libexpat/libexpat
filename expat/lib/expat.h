@@ -827,19 +827,29 @@ XML_GetBuffer(XML_Parser parser, int len);
 XMLPARSEAPI(enum XML_Status)
 XML_ParseBuffer(XML_Parser parser, int len, int isFinal);
 
-/* Stops parsing, causing XML_Parse() or XML_ParseBuffer() to return as
-   soon as possible, but some handler call-backs - which would otherwise
-   get lost - may still follow. Examples: endElementHandler() for empty 
-   elements when stopped in startElementHandler(), endNameSpaceDeclHandler()
-   when stopped in endElementHandler(), and possibly others.
+/* Stops parsing, causing XML_Parse() or XML_ParseBuffer() to return.
+   Must be called from within a call-back handler. Some handler call-backs
+   may still follow, because they would otherwise get lost. Examples:
+   - endElementHandler() for empty elements when stopped in
+     startElementHandler(), 
+   - endNameSpaceDeclHandler() when stopped in endElementHandler(), 
+   and possibly others.
 
    Can be called from most handlers, including DTD related call-backs.
    Returns XML_STATUS_OK when successful, XML_STATUS_ERROR otherwise.
    Possible error codes: XML_ERROR_SUSPENDED, XML_ERROR_FINISHED.
+
    When resumable = XML_TRUE then parsing is suspended, that is, 
    XML_Parse() and XML_ParseBuffer() return XML_STATUS_SUSPENDED. 
    Otherwise, parsing is aborted, that is, XML_Parse() and XML_ParseBuffer()
    return XML_STATUS_ERROR with error code XML_ERROR_ABORTED.
+
+   *Note*:
+   This will be applied to the current parser instance only, that is, if
+   there is a parent parser then it will continue parsing when the
+   externalEntityRefHandler() returns. It is up to the implementation of
+   the externalEntityRefHandler() to call XML_StopParser() on the parent
+   parser (recursively), if one wants to stop parsing altogether.
 
    When suspended, parsing can be resumed by calling XML_ResumeParser(). 
 */
@@ -850,6 +860,13 @@ XML_StopParser(XML_Parser parser, XML_Bool resumable);
    Must not be called from within a handler call-back. Returns same
    status codes as XML_Parse() or XML_ParseBuffer().
    Additional error code XML_ERROR_NOT_SUSPENDED possible.   
+
+   *Note*:
+   This must be applied to the most deeply nested child parser instance
+   first, and to its parent parser only after the child parser has finished,
+   to be applied recursively until the document entity's parser is restarted.
+   That is, the parent parser will not resume by itself and it is up to the
+   application to call XML_ResumeParser() on it at the appropriate moment.
 */
 XMLPARSEAPI(enum XML_Status)
 XML_ResumeParser(XML_Parser parser);
