@@ -452,7 +452,7 @@ struct XML_ParserStruct {
   XML_EndNamespaceDeclHandler m_endNamespaceDeclHandler;
   XML_NotStandaloneHandler m_notStandaloneHandler;
   XML_ExternalEntityRefHandler m_externalEntityRefHandler;
-  void *m_externalEntityRefHandlerArg;
+  XML_Parser m_externalEntityRefHandlerArg;
   XML_SkippedEntityHandler m_skippedEntityHandler;
   XML_UnknownEncodingHandler m_unknownEncodingHandler;
   XML_ElementDeclHandler m_elementDeclHandler;
@@ -673,7 +673,7 @@ parserCreate(const XML_Char *encodingName,
 
   if (memsuite) {
     XML_Memory_Handling_Suite *mtemp;
-    parser = (struct XML_ParserStruct*)
+    parser = (XML_Parser)
       memsuite->malloc_fcn(sizeof(struct XML_ParserStruct));
     if (parser != NULL) {
       mtemp = (XML_Memory_Handling_Suite *)&(parser->m_mem);
@@ -684,7 +684,7 @@ parserCreate(const XML_Char *encodingName,
   }
   else {
     XML_Memory_Handling_Suite *mtemp;
-    parser = (struct XML_ParserStruct*)malloc(sizeof(struct XML_ParserStruct));
+    parser = (XML_Parser)malloc(sizeof(struct XML_ParserStruct));
     if (parser != NULL) {
       mtemp = (XML_Memory_Handling_Suite *)&(parser->m_mem);
       mtemp->malloc_fcn = malloc;
@@ -700,12 +700,12 @@ parserCreate(const XML_Char *encodingName,
   bufferLim = NULL;
 
   attsSize = INIT_ATTS_SIZE;
-  atts = (ATTRIBUTE*)MALLOC(attsSize * sizeof(ATTRIBUTE));
+  atts = (ATTRIBUTE *)MALLOC(attsSize * sizeof(ATTRIBUTE));
   if (atts == NULL) {
     FREE(parser);
     return NULL;
   }
-  dataBuf = (XML_Char*)MALLOC(INIT_DATA_BUF_SIZE * sizeof(XML_Char));
+  dataBuf = (XML_Char *)MALLOC(INIT_DATA_BUF_SIZE * sizeof(XML_Char));
   if (dataBuf == NULL) {
     FREE(atts);
     FREE(parser);
@@ -927,9 +927,9 @@ XML_ExternalEntityParserCreate(XML_Parser oldParser,
   void *oldUserData = userData;
   void *oldHandlerArg = handlerArg;
   XML_Bool oldDefaultExpandInternalEntities = defaultExpandInternalEntities;
-  void *oldExternalEntityRefHandlerArg = externalEntityRefHandlerArg;
+  XML_Parser oldExternalEntityRefHandlerArg = externalEntityRefHandlerArg;
 #ifdef XML_DTD
-  int oldParamEntityParsing = paramEntityParsing;
+  enum XML_ParamEntityParsing oldParamEntityParsing = paramEntityParsing;
   int oldInEntityValue = prologState.inEntityValue;
 #endif
   XML_Bool oldns_triplets = ns_triplets;
@@ -1295,7 +1295,7 @@ void
 XML_SetExternalEntityRefHandlerArg(XML_Parser parser, void *arg)
 {
   if (arg)
-    externalEntityRefHandlerArg = arg;
+    externalEntityRefHandlerArg = (XML_Parser)arg;
   else
     externalEntityRefHandlerArg = parser;
 }
@@ -1399,8 +1399,8 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal)
         /* FIXME avoid integer overflow */
         char *temp;
         temp = (buffer == NULL
-                ? (char*)MALLOC(len * 2)
-                : (char*)REALLOC(buffer, len * 2));
+                ? (char *)MALLOC(len * 2)
+                : (char *)REALLOC(buffer, len * 2));
         if (temp == NULL) {
           errorCode = XML_ERROR_NO_MEMORY;
           return XML_STATUS_ERROR;
@@ -1488,7 +1488,7 @@ XML_GetBuffer(XML_Parser parser, int len)
       do {
         bufferSize *= 2;
       } while (bufferSize < neededSize);
-      newBuf = (char*)MALLOC(bufferSize);
+      newBuf = (char *)MALLOC(bufferSize);
       if (newBuf == 0) {
         errorCode = XML_ERROR_NO_MEMORY;
         return NULL;
@@ -1715,7 +1715,7 @@ storeRawNames(XML_Parser parser)
     */
     bufSize = nameLen + ROUND_UP(tag->rawNameLength, sizeof(XML_Char));
     if (bufSize > tag->bufEnd - tag->buf) {
-      char *temp = (char*)REALLOC(tag->buf, bufSize);
+      char *temp = (char *)REALLOC(tag->buf, bufSize);
       if (temp == NULL)
         return XML_FALSE;
       /* if tag->name.str points to tag->buf (only when namespace
@@ -2033,10 +2033,10 @@ doContent(XML_Parser parser,
           freeTagList = freeTagList->parent;
         }
         else {
-          tag = (TAG*)MALLOC(sizeof(TAG));
+          tag = (TAG *)MALLOC(sizeof(TAG));
           if (!tag)
             return XML_ERROR_NO_MEMORY;
-          tag->buf = (char*)MALLOC(INIT_TAG_BUF_SIZE);
+          tag->buf = (char *)MALLOC(INIT_TAG_BUF_SIZE);
           if (!tag->buf) {
             FREE(tag);
             return XML_ERROR_NO_MEMORY;
@@ -2068,7 +2068,7 @@ doContent(XML_Parser parser,
             }
             bufSize = (tag->bufEnd - tag->buf) << 1;
             {
-              char *temp = (char*)REALLOC(tag->buf, bufSize);
+              char *temp = (char *)REALLOC(tag->buf, bufSize);
               if (temp == NULL)
                 return XML_ERROR_NO_MEMORY;
               tag->buf = temp;
@@ -2587,8 +2587,8 @@ addBinding(XML_Parser parser, PREFIX *prefix, const ATTRIBUTE_ID *attId,
   if (freeBindingList) {
     b = freeBindingList;
     if (len > b->uriAlloc) {
-      XML_Char *temp = (XML_Char*)REALLOC(b->uri,
-                               sizeof(XML_Char) * (len + EXPAND_SPARE));
+      XML_Char *temp = (XML_Char *)REALLOC(b->uri,
+                          sizeof(XML_Char) * (len + EXPAND_SPARE));
       if (temp == NULL)
         return 0;
       b->uri = temp;
@@ -2597,10 +2597,10 @@ addBinding(XML_Parser parser, PREFIX *prefix, const ATTRIBUTE_ID *attId,
     freeBindingList = b->nextTagBinding;
   }
   else {
-    b = (BINDING*)MALLOC(sizeof(BINDING));
+    b = (BINDING *)MALLOC(sizeof(BINDING));
     if (!b)
       return 0;
-    b->uri = (XML_Char*)MALLOC(sizeof(XML_Char) * (len + EXPAND_SPARE));
+    b->uri = (XML_Char *)MALLOC(sizeof(XML_Char) * (len + EXPAND_SPARE));
     if (!b->uri) {
       FREE(b);
       return 0;
@@ -3798,20 +3798,20 @@ doProlog(XML_Parser parser,
     case XML_ROLE_GROUP_OPEN:
       if (prologState.level >= groupSize) {
         if (groupSize) {
-          char *temp = (char*)REALLOC(groupConnector, groupSize *= 2);
+          char *temp = (char *)REALLOC(groupConnector, groupSize *= 2);
           if (temp == NULL)
             return XML_ERROR_NO_MEMORY;
           groupConnector = temp;
           if (dtd->scaffIndex) {
-            int *temp = (int*)REALLOC(dtd->scaffIndex, 
-                                      groupSize * sizeof(int));
+            int *temp = (int *)REALLOC(dtd->scaffIndex,
+                          groupSize * sizeof(int));
             if (temp == NULL)
               return XML_ERROR_NO_MEMORY;
             dtd->scaffIndex = temp;
           }
         }
         else {
-          groupConnector = (char*)MALLOC(groupSize = 32);
+          groupConnector = (char *)MALLOC(groupSize = 32);
           if (!groupConnector)
             return XML_ERROR_NO_MEMORY;
         }
@@ -4640,16 +4640,16 @@ defineAttribute(ELEMENT_TYPE *type, ATTRIBUTE_ID *attId, XML_Bool isCdata,
   if (type->nDefaultAtts == type->allocDefaultAtts) {
     if (type->allocDefaultAtts == 0) {
       type->allocDefaultAtts = 8;
-      type->defaultAtts = (DEFAULT_ATTRIBUTE*)MALLOC(type->allocDefaultAtts 
-                                 * sizeof(DEFAULT_ATTRIBUTE));
+      type->defaultAtts = (DEFAULT_ATTRIBUTE *)MALLOC(type->allocDefaultAtts 
+                            * sizeof(DEFAULT_ATTRIBUTE));
       if (!type->defaultAtts)
         return 0;
     }
     else {
       DEFAULT_ATTRIBUTE *temp;
       int count = type->allocDefaultAtts * 2;
-      temp = (DEFAULT_ATTRIBUTE*)
-	REALLOC(type->defaultAtts, (count * sizeof(DEFAULT_ATTRIBUTE)));
+      temp = (DEFAULT_ATTRIBUTE *)
+        REALLOC(type->defaultAtts, (count * sizeof(DEFAULT_ATTRIBUTE)));
       if (temp == NULL)
         return 0;
       type->allocDefaultAtts = count;
@@ -4912,7 +4912,7 @@ normalizePublicId(XML_Char *publicId)
 static DTD *
 dtdCreate(const XML_Memory_Handling_Suite *ms)
 {
-  DTD *p = ms->malloc_fcn(sizeof(DTD));
+  DTD *p = (DTD *)ms->malloc_fcn(sizeof(DTD));
   if (p == NULL)
     return p;
   poolInit(&(p->pool), ms);
@@ -5251,7 +5251,7 @@ lookup(HASH_TABLE *table, KEY name, size_t createSize)
     if (!createSize)
       return NULL;
     tsize = INIT_SIZE * sizeof(NAMED *);
-    table->v = (NAMED**)table->mem->malloc_fcn(tsize);
+    table->v = (NAMED **)table->mem->malloc_fcn(tsize);
     if (!table->v)
       return NULL;
     memset(table->v, 0, tsize);
@@ -5273,7 +5273,7 @@ lookup(HASH_TABLE *table, KEY name, size_t createSize)
       /* check for overflow */
       size_t newSize = table->size * 2;
       size_t tsize = newSize * sizeof(NAMED *);
-      NAMED **newV = (NAMED**)table->mem->malloc_fcn(tsize);
+      NAMED **newV = (NAMED **)table->mem->malloc_fcn(tsize);
       if (!newV)
         return NULL;
       memset(newV, 0, tsize);
@@ -5296,7 +5296,7 @@ lookup(HASH_TABLE *table, KEY name, size_t createSize)
         ;
     }
   }
-  table->v[i] = (NAMED*)table->mem->malloc_fcn(createSize);
+  table->v[i] = (NAMED *)table->mem->malloc_fcn(createSize);
   if (!table->v[i])
     return NULL;
   memset(table->v[i], 0, createSize);
@@ -5502,7 +5502,7 @@ poolGrow(STRING_POOL *pool)
   }
   if (pool->blocks && pool->start == pool->blocks->s) {
     int blockSize = (pool->end - pool->start)*2;
-    pool->blocks = (BLOCK*)
+    pool->blocks = (BLOCK *)
       pool->mem->realloc_fcn(pool->blocks,
 			     (offsetof(BLOCK, s)
 			      + blockSize * sizeof(XML_Char)));
@@ -5520,7 +5520,7 @@ poolGrow(STRING_POOL *pool)
       blockSize = INIT_BLOCK_SIZE;
     else
       blockSize *= 2;
-    tem = (BLOCK*)pool->mem->malloc_fcn(offsetof(BLOCK, s)
+    tem = (BLOCK *)pool->mem->malloc_fcn(offsetof(BLOCK, s)
 					+ blockSize * sizeof(XML_Char));
     if (!tem)
       return XML_FALSE;
@@ -5545,7 +5545,7 @@ nextScaffoldPart(XML_Parser parser)
   int next;
 
   if (!dtd->scaffIndex) {
-    dtd->scaffIndex = (int*)MALLOC(groupSize * sizeof(int));
+    dtd->scaffIndex = (int *)MALLOC(groupSize * sizeof(int));
     if (!dtd->scaffIndex)
       return -1;
     dtd->scaffIndex[0] = 0;
