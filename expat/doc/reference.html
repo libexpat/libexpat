@@ -1326,8 +1326,11 @@ int
 XML_GetCurrentByteCount(XML_Parser p);
 </pre></a></div>
 <div class="fcndef">
-Return the number of bytes in the current event. Returns 0 if the event is
-inside a reference to an internal entity.
+Return the number of bytes in the current event. Returns
+<code>0</code> if the event is inside a reference to an internal
+entity and for the end-tag event for empty element tags (the later can
+be used to distinguish empty-element tags from empty elements using
+separate start and end tags).
 </div>
 
 <div class="fcndec"><a name="XML_GetInputContext"><pre>
