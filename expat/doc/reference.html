@@ -719,7 +719,7 @@ created by <code><a href= "#XML_ExternalEntityParserCreate"
 >XML_ExternalEntityParserCreate</a></code>.</p>
 
 <pre class="fcndec" id="XML_Parse">
-XML_Status
+enum XML_Status
 XML_Parse(XML_Parser p,
           const char *s,
           int len,
@@ -746,7 +746,7 @@ Otherwise it returns <code>XML_STATUS_OK</code> value.
 </div>
 
 <pre class="fcndec" id="XML_ParseBuffer">
-XML_Status
+enum XML_Status
 XML_ParseBuffer(XML_Parser p,
                 int len,
                 int isFinal);
