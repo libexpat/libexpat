@@ -1168,7 +1168,7 @@ struct unknown_encoding {
   char utf8[256][4];
 };
 
-int XmlSizeOfUnknownEncoding()
+int XmlSizeOfUnknownEncoding(void)
 {
   return sizeof(struct unknown_encoding);
 }
