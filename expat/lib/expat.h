@@ -208,7 +208,7 @@ XMLPARSEAPI(XML_Parser)
 XML_ParserCreateNS(const XML_Char *encoding, XML_Char namespaceSeparator);
 
 
-/* Constructs a new parser using the memory management suit referred to
+/* Constructs a new parser using the memory management suite referred to
    by memsuite. If memsuite is NULL, then use the standard library memory
    suite. If namespaceSeparator is non-NULL it creates a parser with
    namespace processing as described above. The character pointed at
@@ -848,6 +848,20 @@ XML_GetInputContext(XML_Parser parser,
 #define XML_GetErrorLineNumber   XML_GetCurrentLineNumber
 #define XML_GetErrorColumnNumber XML_GetCurrentColumnNumber
 #define XML_GetErrorByteIndex    XML_GetCurrentByteIndex
+
+/* Frees the content model passed to the element declaration handler */
+XMLPARSEAPI(void)
+XML_FreeContentModel(XML_Parser parser, XML_Content *model);
+
+/* Exposing the memory handling functions used in Expat */
+XMLPARSEAPI(void *)
+XML_MemMalloc(XML_Parser parser, size_t size);
+
+XMLPARSEAPI(void *)
+XML_MemRealloc(XML_Parser parser, void *ptr, size_t size);
+
+XMLPARSEAPI(void)
+XML_MemFree(XML_Parser parser, void *ptr);
 
 /* Frees memory used by the parser. */
 XMLPARSEAPI(void)

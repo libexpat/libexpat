@@ -1584,6 +1584,30 @@ XML_GetCurrentColumnNumber(XML_Parser parser)
 }
 
 void
+XML_FreeContentModel(XML_Parser parser, XML_Content *model)
+{
+  FREE(model);
+}
+
+void *
+XML_MemMalloc(XML_Parser parser, size_t size)
+{
+  return MALLOC(size);
+}
+
+void *
+XML_MemRealloc(XML_Parser parser, void *ptr, size_t size)
+{
+  return REALLOC(ptr, size);
+}
+
+void
+XML_MemFree(XML_Parser parser, void *ptr)
+{
+  FREE(ptr);
+}
+
+void
 XML_DefaultCurrent(XML_Parser parser)
 {
   if (defaultHandler) {
