@@ -24,4 +24,7 @@
 /* we will assume all Windows platforms are little endian */
 #define BYTEORDER 1234
 
+/* Windows has memmove() available. */
+#define HAVE_MEMMOVE
+
 #endif /* ndef WINCONFIG_H */
