@@ -20,11 +20,24 @@ See the file COPYING for copying permission.
 extern "C" {
 #endif
 
+#ifdef XML_UNICODE_WCHAR_T 
+#  define XML_UNICODE
+#endif
+
 typedef void *XML_Parser;
 
-/* Information is UTF-8 encoded. */
+#ifdef XML_UNICODE     /* Information is UTF-16 encoded. */
+#  ifdef XML_UNICODE_WCHAR_T
+typedef wchar_t XML_Char;
+typedef wchar_t XML_LChar;
+#  else
+typedef unsigned short XML_Char;
+typedef char XML_LChar;
+#  endif
+#else                  /* Information is UTF-8 encoded. */
 typedef char XML_Char;
 typedef char XML_LChar;
+#endif
 
 enum XML_Content_Type {
   XML_CTYPE_EMPTY = 1,
