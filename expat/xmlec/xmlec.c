@@ -1,10 +1,6 @@
 #include <stdio.h>
 
 #ifdef _MSC_VER
-#define FILEMAP
-#endif
-
-#ifdef _MSC_VER
 #define XMLTOKAPI __declspec(dllimport)
 #endif
 #include "xmltok.h"
