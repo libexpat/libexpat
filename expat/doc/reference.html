@@ -42,84 +42,85 @@ Clark Cooper to retain copyright and to distribute it with expat.</p>
   <li><a href="#building">Building and Installing</a></li>
   <li><a href="#using">Using expat</a></li>
   <li><a href="#reference">Reference</a>
-      <ul>
-          <li><a href="#creation">Parser Creation Functions</a>
-              <ul>
-                  <li><a href="#XML_ParserCreate">XML_ParserCreate</a></li>
-		  <li><a href="#XML_ParserCreateNS">XML_ParserCreateNS</a></li>
-		  <li><a href="#XML_ParserCreate_MM">XML_ParserCreate_MM</a></li>
-		  <li><a href="#XML_ExternalEntityParserCreate">XML_ExternalEntityParserCreate</a></li>
-		  <li><a href="#XML_ParserFree">XML_ParserFree</a></li>
-              </ul>
-          </li>
-	  <li><a href="#parsing">Parsing Functions</a>
-	      <ul>
-	          <li><a href="#XML_Parse">XML_Parse</a></li>
-		  <li><a href="#XML_ParseBuffer">XML_ParseBuffer</a></li>
-		  <li><a href="#XML_GetBuffer">XML_GetBuffer</a></li>
-              </ul>
-	  </li>
-	  <li><a href="#setting">Handler Setting Functions</a>
-	      <ul>
-	      <li><a href="#XML_SetStartElementHandler">XML_SetStartElementHandler</a></li>
-		  <li><a href="#XML_SetEndElementHandler">XML_SetEndElementHandler</a></li>
-	      <li><a href="#XML_SetElementHandler">XML_SetElementHandler</a></li>
-		  <li><a href="#XML_SetCharacterDataHandler">XML_SetCharacterDataHandler</a></li>
-		  <li><a href="#XML_SetProcessingInstructionHandler">XML_SetProcessingInstructionHandler</a></li>
-		  <li><a href="#XML_SetCommentHandler">XML_SetCommentHandler</a></li>
-		  <li><a href="#XML_SetStartCdataSectionHandler">XML_SetStartCdataSectionHandler</a></li>
-		  <li><a href="#XML_SetEndCdataSectionHandler">XML_SetEndCdataSectionHandler</a></li>
-		  <li><a href="#XML_SetCdataSectionHandler">XML_SetCdataSectionHandler</a></li>
-		  <li><a href="#XML_SetDefaultHandler">XML_SetDefaultHandler</a></li>
-		  <li><a href="#XML_SetDefaultHandlerExpand">XML_SetDefaultHandlerExpand</a></li>
-		  <li><a href="#XML_SetExternalEntityRefHandler">XML_SetExternalEntityRefHandler</a></li>
-		  <li><a href="#XML_SetSkippedEntityHandler">XML_SetSkippedEntityHandler</a></li>
-		  <li><a href="#XML_SetUnknownEncodingHandler">XML_SetUnknownEncodingHandler</a></li>
-		  <li><a href="#XML_SetStartNamespaceDeclHandler">XML_SetStartNamespaceDeclHandler</a></li>
-		  <li><a href="#XML_SetEndNamespaceDeclHandler">XML_SetEndNamespaceDeclHandler</a></li>
-		  <li><a href="#XML_SetNamespaceDeclHandler">XML_SetNamespaceDeclHandler</a></li>
-		  <li><a href="#XML_SetXmlDeclHandler">XML_SetXmlDeclHandler</a></li>		  
-		  <li><a href="#XML_SetStartDoctypeDeclHandler">XML_SetStartDoctypeDeclHandler</a></li>
-		  <li><a href="#XML_SetEndDoctypeDeclHandler">XML_SetEndDoctypeDeclHandler</a></li>
-		  <li><a href="#XML_SetDoctypeDeclHandler">XML_SetDoctypeDeclHandler</a></li>
-		  <li><a href="#XML_SetElementDeclHandler">XML_SetElementDeclHandler</a></li>
-		  <li><a href="#XML_SetAttlistDeclHandler">XML_SetAttlistDeclHandler</a></li>
-		  <li><a href="#XML_SetEntityDeclHandler">XML_SetEntityDeclHandler</a></li>
-		  <li><a href="#XML_SetUnparsedEntityDeclHandler">XML_SetUnparsedEntityDeclHandler</a></li>
-		  <li><a href="#XML_SetNotationDeclHandler">XML_SetNotationDeclHandler</a></li>
-		  <li><a href="#XML_SetNotStandaloneHandler">XML_SetNotStandaloneHandler</a></li>
-	      </ul>
-	  </li>
-	  <li><a href="#position">Parse Position and Error Reporting Functions</a>
-	      <ul>
-	      <li><a href="#XML_GetErrorCode">XML_GetErrorCode</a></li>
-		  <li><a href="#XML_ErrorString">XML_ErrorString</a></li>
-		  <li><a href="#XML_GetCurrentByteIndex">XML_GetCurrentByteIndex</a></li>
-		  <li><a href="#XML_GetCurrentLineNumber">XML_GetCurrentLineNumber</a></li>
-		  <li><a href="#XML_GetCurrentColumnNumber">XML_GetCurrentColumnNumber</a></li>
-		  <li><a href="#XML_GetCurrentByteCount">XML_GetCurrentByteCount</a></li>
-		  <li><a href="#XML_GetInputContext">XML_GetInputContext</a></li>
-	      </ul>
-	  </li>
-	  <li><a href="#miscellaneous">Miscellaneous Functions</a>
-	      <ul>
-	      <li><a href="#XML_SetUserData">XML_SetUserData</a></li>
-		  <li><a href="#XML_GetUserData">XML_GetUserData</a></li>
-		  <li><a href="#XML_UseParserAsHandlerArg">XML_UseParserAsHandlerArg</a></li>
-		  <li><a href="#XML_SetBase">XML_SetBase</a></li>
-		  <li><a href="#XML_GetBase">XML_GetBase</a></li>
-		  <li><a href="#XML_GetSpecifiedAttributeCount">XML_GetSpecifiedAttributeCount</a></li>
-		  <li><a href="#XML_GetIdAttributeIndex">XML_GetIdAttributeIndex</a></li>
-		  <li><a href="#XML_SetEncoding">XML_SetEncoding</a></li>
-		  <li><a href="#XML_SetParamEntityParsing">XML_SetParamEntityParsing</a></li>
-		  <li><a href="#XML_SetReturnNSTriplet">XML_SetReturnNSTriplet</a></li>
-		  <li><a href="#XML_DefaultCurrent">XML_DefaultCurrent</a></li>
-		  <li><a href="#XML_ExpatVersion">XML_ExpatVersion</a></li>
-		  <li><a href="#XML_ExpatVersionInfo">XML_ExpatVersionInfo</a></li>
-		  <li><a href="#XML_GetFeatureList">XML_GetFeatureList</a></li>
-	      </ul>
-	  </li>
-      </ul>  
+  <ul>
+    <li><a href="#creation">Parser Creation Functions</a>
+    <ul>
+      <li><a href="#XML_ParserCreate">XML_ParserCreate</a></li>
+      <li><a href="#XML_ParserCreateNS">XML_ParserCreateNS</a></li>
+      <li><a href="#XML_ParserCreate_MM">XML_ParserCreate_MM</a></li>
+      <li><a href="#XML_ExternalEntityParserCreate">XML_ExternalEntityParserCreate</a></li>
+      <li><a href="#XML_ParserFree">XML_ParserFree</a></li>
+    </ul>
+    </li>
+    <li><a href="#parsing">Parsing Functions</a>
+    <ul>
+      <li><a href="#XML_Parse">XML_Parse</a></li>
+      <li><a href="#XML_ParseBuffer">XML_ParseBuffer</a></li>
+      <li><a href="#XML_GetBuffer">XML_GetBuffer</a></li>
+    </ul>
+    </li>
+    <li><a href="#setting">Handler Setting Functions</a>
+    <ul>
+      <li><a href="#XML_SetStartElementHandler">XML_SetStartElementHandler</a></li>
+      <li><a href="#XML_SetEndElementHandler">XML_SetEndElementHandler</a></li>
+      <li><a href="#XML_SetElementHandler">XML_SetElementHandler</a></li>
+      <li><a href="#XML_SetCharacterDataHandler">XML_SetCharacterDataHandler</a></li>
+      <li><a href="#XML_SetProcessingInstructionHandler">XML_SetProcessingInstructionHandler</a></li>
+      <li><a href="#XML_SetCommentHandler">XML_SetCommentHandler</a></li>
+      <li><a href="#XML_SetStartCdataSectionHandler">XML_SetStartCdataSectionHandler</a></li>
+      <li><a href="#XML_SetEndCdataSectionHandler">XML_SetEndCdataSectionHandler</a></li>
+      <li><a href="#XML_SetCdataSectionHandler">XML_SetCdataSectionHandler</a></li>
+      <li><a href="#XML_SetDefaultHandler">XML_SetDefaultHandler</a></li>
+      <li><a href="#XML_SetDefaultHandlerExpand">XML_SetDefaultHandlerExpand</a></li>
+      <li><a href="#XML_SetExternalEntityRefHandler">XML_SetExternalEntityRefHandler</a></li>
+      <li><a href="#XML_SetSkippedEntityHandler">XML_SetSkippedEntityHandler</a></li>
+      <li><a href="#XML_SetUnknownEncodingHandler">XML_SetUnknownEncodingHandler</a></li>
+      <li><a href="#XML_SetStartNamespaceDeclHandler">XML_SetStartNamespaceDeclHandler</a></li>
+      <li><a href="#XML_SetEndNamespaceDeclHandler">XML_SetEndNamespaceDeclHandler</a></li>
+      <li><a href="#XML_SetNamespaceDeclHandler">XML_SetNamespaceDeclHandler</a></li>
+      <li><a href="#XML_SetXmlDeclHandler">XML_SetXmlDeclHandler</a></li>		  
+      <li><a href="#XML_SetStartDoctypeDeclHandler">XML_SetStartDoctypeDeclHandler</a></li>
+      <li><a href="#XML_SetEndDoctypeDeclHandler">XML_SetEndDoctypeDeclHandler</a></li>
+      <li><a href="#XML_SetDoctypeDeclHandler">XML_SetDoctypeDeclHandler</a></li>
+      <li><a href="#XML_SetElementDeclHandler">XML_SetElementDeclHandler</a></li>
+      <li><a href="#XML_SetAttlistDeclHandler">XML_SetAttlistDeclHandler</a></li>
+      <li><a href="#XML_SetEntityDeclHandler">XML_SetEntityDeclHandler</a></li>
+      <li><a href="#XML_SetUnparsedEntityDeclHandler">XML_SetUnparsedEntityDeclHandler</a></li>
+      <li><a href="#XML_SetNotationDeclHandler">XML_SetNotationDeclHandler</a></li>
+      <li><a href="#XML_SetNotStandaloneHandler">XML_SetNotStandaloneHandler</a></li>
+    </ul>
+    </li>
+    <li><a href="#position">Parse Position and Error Reporting Functions</a>
+    <ul>
+      <li><a href="#XML_GetErrorCode">XML_GetErrorCode</a></li>
+      <li><a href="#XML_ErrorString">XML_ErrorString</a></li>
+      <li><a href="#XML_GetCurrentByteIndex">XML_GetCurrentByteIndex</a></li>
+      <li><a href="#XML_GetCurrentLineNumber">XML_GetCurrentLineNumber</a></li>
+      <li><a href="#XML_GetCurrentColumnNumber">XML_GetCurrentColumnNumber</a></li>
+      <li><a href="#XML_GetCurrentByteCount">XML_GetCurrentByteCount</a></li>
+      <li><a href="#XML_GetInputContext">XML_GetInputContext</a></li>
+    </ul>
+    </li>
+    <li><a href="#miscellaneous">Miscellaneous Functions</a>
+    <ul>
+      <li><a href="#XML_SetUserData">XML_SetUserData</a></li>
+      <li><a href="#XML_GetUserData">XML_GetUserData</a></li>
+      <li><a href="#XML_UseParserAsHandlerArg">XML_UseParserAsHandlerArg</a></li>
+      <li><a href="#XML_SetBase">XML_SetBase</a></li>
+      <li><a href="#XML_GetBase">XML_GetBase</a></li>
+      <li><a href="#XML_GetSpecifiedAttributeCount">XML_GetSpecifiedAttributeCount</a></li>
+      <li><a href="#XML_GetIdAttributeIndex">XML_GetIdAttributeIndex</a></li>
+      <li><a href="#XML_SetEncoding">XML_SetEncoding</a></li>
+      <li><a href="#XML_SetParamEntityParsing">XML_SetParamEntityParsing</a></li>
+      <li><a href="#XML_UseForeignDTD">XML_UseForeignDTD</a></li>
+      <li><a href="#XML_SetReturnNSTriplet">XML_SetReturnNSTriplet</a></li>
+      <li><a href="#XML_DefaultCurrent">XML_DefaultCurrent</a></li>
+      <li><a href="#XML_ExpatVersion">XML_ExpatVersion</a></li>
+      <li><a href="#XML_ExpatVersionInfo">XML_ExpatVersionInfo</a></li>
+      <li><a href="#XML_GetFeatureList">XML_GetFeatureList</a></li>
+    </ul>
+    </li>
+  </ul>  
   </li>
 </ul>
 
@@ -1583,6 +1584,38 @@ The choices for <code>code</code> are:
 <li><code>XML_PARAM_ENTITY_PARSING_UNLESS_STANDALONE</code></li>
 <li><code>XML_PARAM_ENTITY_PARSING_ALWAYS</code></li>
 </ul>
+</div>
+
+<pre class="fcndec" id="XML_UseForeignDTD">
+enum XML_Error
+XML_UseForeignDTD(XML_Parser parser, XML_Bool useDTD)
+</pre>
+<div class="fcndef">
+<p>This function allows an application to provide an external subset
+for the document type declaration for documents which do not specify
+an external subset of their own.  For documents which specify an
+external subset in their DOCTYPE declaration, the application-provided
+subset will be ignored.  If the document does not contain a DOCTYPE
+declaration at all and <code>useDTD</code> is true, the
+application-provided subset will be parsed, but the
+<code>startDoctypeDeclHandler</code> and
+<code>endDoctypeDeclHandler</code> functions, if set, will not be
+called.  The setting of parameter entity parsing, controlled using
+<code><a href= "#XML_SetParamEntityParsing"
+>XML_SetParamEntityParsing</a></code>, will be honored.</p>
+
+<p>The application-provided external subset is read by calling the
+external entity reference handler set via <code><a href=
+"#XML_SetExternalEntityRefHandler"
+>XML_SetExternalEntityRefHandler</a></code> with both
+<code>publicId</code> and <code>systemId</code> set to NULL.</p>
+
+<p>If this function is called after parsing has begun, it returns
+<code>XML_ERROR_CANT_CHANGE_FEATURE_ONCE_PARSING</code> and ignores
+<code>useDTD</code>.  If called when Expat has been compiled without
+DTD support, it returns
+<code>XML_ERROR_FEATURE_REQUIRES_XML_DTD</code>.  Otherwise, it
+returns <code>XML_ERROR_NONE</code>.</p>
 </div>
 
 <pre class="fcndec" id="XML_SetReturnNSTriplet">
