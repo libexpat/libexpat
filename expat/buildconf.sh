@@ -66,9 +66,17 @@ echo "Copying libtool helper files ..."
 #
 $libtoolize --copy --automake
 
+#
+# Find the libtool.m4 file. The developer/packager can set the LIBTOOL_M4
+# environment variable to specify its location. If that variable is not
+# set, then we'll assume a "standard" libtool installation and try to
+# derive its location.
+#
 ltpath=`dirname $libtoolize`
-ltfile=`cd $ltpath/../share/aclocal ; pwd`/libtool.m4
+ltfile=${LIBTOOL_M4-`cd $ltpath/../share/aclocal ; pwd`/libtool.m4}
 cp $ltfile conftools/libtool.m4
+
+echo "Using libtool.m4 from ${ltfile}."
 
 #--------------------------------------------------------------------------
 
