@@ -658,7 +658,7 @@ int little2_isNmstrtMin(const ENCODING *enc, const char *p)
 
 static const struct normal_encoding little2_encoding_ns = { 
   { VTABLE, 2, 0,
-#if BYTE_ORDER == 12
+#if XML_BYTE_ORDER == 12
     1
 #else
     0
@@ -675,7 +675,7 @@ static const struct normal_encoding little2_encoding_ns = {
 
 static const struct normal_encoding little2_encoding = { 
   { VTABLE, 2, 0,
-#if BYTE_ORDER == 12
+#if XML_BYTE_ORDER == 12
     1
 #else
     0
@@ -690,7 +690,7 @@ static const struct normal_encoding little2_encoding = {
   STANDARD_VTABLE(little2_)
 };
 
-#if BYTE_ORDER != 21
+#if XML_BYTE_ORDER != 21
 
 #ifdef XML_NS
 
@@ -797,7 +797,7 @@ int big2_isNmstrtMin(const ENCODING *enc, const char *p)
 
 static const struct normal_encoding big2_encoding_ns = {
   { VTABLE, 2, 0,
-#if BYTE_ORDER == 21
+#if XML_BYTE_ORDER == 21
   1
 #else
   0
@@ -814,7 +814,7 @@ static const struct normal_encoding big2_encoding_ns = {
 
 static const struct normal_encoding big2_encoding = {
   { VTABLE, 2, 0,
-#if BYTE_ORDER == 21
+#if XML_BYTE_ORDER == 21
   1
 #else
   0
@@ -829,7 +829,7 @@ static const struct normal_encoding big2_encoding = {
   STANDARD_VTABLE(big2_)
 };
 
-#if BYTE_ORDER != 12
+#if XML_BYTE_ORDER != 12
 
 #ifdef XML_NS
 
