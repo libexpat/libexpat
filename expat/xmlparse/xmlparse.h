@@ -367,7 +367,7 @@ XML_SetUserData(XML_Parser parser, void *userData);
 #define XML_GetUserData(parser) (*(void **)(parser))
 
 /* This is equivalent to supplying an encoding argument
-to XML_CreateParser. It must not be called after XML_Parse
+to XML_ParserCreate. It must not be called after XML_Parse
 or XML_ParseBuffer. */
 
 int XMLPARSEAPI
