@@ -42,8 +42,6 @@ oldincludedir = /usr/include
 
 subdir = lib
 
-DESTDIR =
-
 top_builddir = ..
 
 INSTALL = @INSTALL@
@@ -137,13 +135,13 @@ check:	$(SUBDIRS)
 	@echo
 
 install: $(LIBRARY) $(APIHEADER)
-	$(mkinstalldirs) $(DESTDIR)$(libdir) $(DESTDIR)$(includedir)
-	$(LIBTOOL)  --mode=install $(INSTALL) $(LIBRARY) $(DESTDIR)$(libdir)/$(LIBRARY)
-	$(INSTALL_DATA) $(APIHEADER) $(DESTDIR)$(includedir)
+	$(mkinstalldirs) $(libdir) $(includedir)
+	$(LIBTOOL) --mode=install $(INSTALL) $(LIBRARY) $(libdir)/$(LIBRARY)
+	$(INSTALL_DATA) $(APIHEADER) $(includedir)
 
 uninstall:
-	$(LIBTOOL)  --mode=uninstall rm -f $(DESTDIR)$(libdir)/$(LIBRARY);
-	rm -f $(DESTDIR)$(libdir)/$(APIHEADER)
+	$(LIBTOOL) --mode=uninstall rm -f $(libdir)/$(LIBRARY);
+	rm -f $(libdir)/$(APIHEADER)
 
 $(LIBRARY): $(LTOBJECTS)
 	$(LINK) -rpath $(libdir) $(LDFLAGS) $(LTOBJECTS)
