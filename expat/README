@@ -56,7 +56,7 @@ instructions:
 	   run:
 
 	       ./configure CFLAGS="-g -O2 -fshort-wchar" \
-			   PPFLAGS=-DXML_UNICODE_WCHAR_T
+			   CPPFLAGS=-DXML_UNICODE_WCHAR_T
 
 	2. Edit the MakeFile, changing:
 
