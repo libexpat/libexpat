@@ -212,6 +212,30 @@ START_TEST(test_french_utf8)
 END_TEST
 /* End regression test for SF bug #514281. */
 
+/* Regression test for SF bug #477667.
+ * This test assures that any 8-bit character followed by a 7-bit
+ * character will not be mistakenly interpreted as a valid UTF-8
+ * sequence.
+ */
+START_TEST(test_illegal_utf8)
+{
+    char text[100];
+    int i;
+
+    for (i = 128; i <= 255; ++i) {
+        sprintf(text, "<e>%ccd</e>", i);
+        if (XML_Parse(parser, text, strlen(text), 1)) {
+            sprintf(text,
+                    "expected token error for '%c'(ordinal %d) in UTF-8 text",
+                    i, i);
+            fail(text);
+        }
+        else if (XML_GetErrorCode(parser) != XML_ERROR_INVALID_TOKEN)
+            xml_failure();
+    }
+}
+END_TEST
+
 
 /* Helpers used by the following test; this checks any "attr" and "refs"
  * attributes to make sure whitespace has been normalized.
@@ -337,6 +361,7 @@ make_basic_suite(void)
     tcase_add_test(tc_chars, test_bom_utf8);
     tcase_add_test(tc_chars, test_bom_utf16_be);
     tcase_add_test(tc_chars, test_bom_utf16_le);
+    tcase_add_test(tc_chars, test_illegal_utf8);
     /* Regression test for SF bug #491986. */
     tcase_add_test(tc_chars, test_danish_latin1);
     /* Regression test for SF bug #514281. */
