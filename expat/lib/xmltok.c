@@ -67,11 +67,9 @@ We need 8 bits to index into pages, 3 bits to add to that index and
      : 0))
 
 #define UTF8_INVALID3(p) \
-  ((*p) == 0xED \
-  ? (((p)[1] & 0x20) != 0) \
-  : ((*p) == 0xEF \
-     ? ((p)[1] == 0xBF && ((p)[2] == 0xBF || (p)[2] == 0xBE)) \
-     : 0))
+  ((((*p) && 0xF0) == 0xE0) \
+   && (((p)[1] && 0xC0) == 0x80) \
+   && (((p)[2] && 0xC0) == 0x80))
 
 #define UTF8_INVALID4(p) ((*p) == 0xF4 && ((p)[1] & 0x30) != 0)
 
