@@ -113,10 +113,9 @@ for which no handler has been supplied. The characters are passed
 exactly as they were in the XML document except that
 they will be encoded in UTF-8.  Line boundaries are not normalized.
 Note that a byte order mark character is not passed to the default handler.
-If a default handler is set, internal entity references
-are not expanded. There are no guarantees about
-how characters are divided between calls to the default handler:
-for example, a comment might be split between multiple calls. */
+There are no guarantees about how characters are divided between calls
+to the default handler: for example, a comment might be split between
+multiple calls. */
 
 typedef void (*XML_DefaultHandler)(void *userData,
 				   const XML_Char *s,
@@ -250,9 +249,19 @@ void XMLPARSEAPI
 XML_SetProcessingInstructionHandler(XML_Parser parser,
 				    XML_ProcessingInstructionHandler handler);
 
+/* This sets the default handler and also inhibits expansion of internal entities.
+The entity reference will be passed to the default handler. */
+
 void XMLPARSEAPI
 XML_SetDefaultHandler(XML_Parser parser,
 		      XML_DefaultHandler handler);
+
+/* This sets the default handler but does not inhibit expansion of internal entities.
+The entity reference will not be passed to the default handler. */
+
+void XMLPARSEAPI
+XML_SetDefaultHandlerExpand(XML_Parser parser,
+		            XML_DefaultHandler handler);
 
 void XMLPARSEAPI
 XML_SetUnparsedEntityDeclHandler(XML_Parser parser,
@@ -273,10 +282,7 @@ XML_SetUnknownEncodingHandler(XML_Parser parser,
 
 /* This can be called within a handler for a start element, end element,
 processing instruction or character data.  It causes the corresponding
-markup to be passed to the default handler.
-Within the expansion of an internal entity, nothing will be passed
-to the default handler, although this usually will not happen since
-setting a default handler inhibits expansion of internal entities. */
+markup to be passed to the default handler. */
 void XMLPARSEAPI XML_DefaultCurrent(XML_Parser parser);
 
 /* This value is passed as the userData argument to callbacks. */

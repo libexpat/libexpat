@@ -161,6 +161,13 @@ typedef struct {
   PREFIX defaultPrefix;
 } DTD;
 
+typedef struct open_internal_entity {
+  const char *internalEventPtr;
+  const char *internalEventEndPtr;
+  struct open_internal_entity *next;
+  ENTITY *entity;
+} OPEN_INTERNAL_ENTITY;
+
 typedef enum XML_Error Processor(XML_Parser parser,
 				 const char *start,
 				 const char *end,
@@ -277,6 +284,8 @@ typedef struct {
   const char *eventPtr;
   const char *eventEndPtr;
   const char *positionPtr;
+  OPEN_INTERNAL_ENTITY *openInternalEntities;
+  int defaultExpandInternalEntities;
   int tagLevel;
   ENTITY *declEntity;
   const XML_Char *declNotationName;
@@ -327,6 +336,8 @@ typedef struct {
 #define eventEndPtr (((Parser *)parser)->eventEndPtr)
 #define positionPtr (((Parser *)parser)->positionPtr)
 #define position (((Parser *)parser)->position)
+#define openInternalEntities (((Parser *)parser)->openInternalEntities)
+#define defaultExpandInternalEntities (((Parser *)parser)->defaultExpandInternalEntities)
 #define tagLevel (((Parser *)parser)->tagLevel)
 #define buffer (((Parser *)parser)->buffer)
 #define bufferPtr (((Parser *)parser)->bufferPtr)
@@ -390,6 +401,7 @@ XML_Parser XML_ParserCreate(const XML_Char *encodingName)
   eventPtr = 0;
   eventEndPtr = 0;
   positionPtr = 0;
+  openInternalEntities = 0;
   tagLevel = 0;
   tagStack = 0;
   freeTagList = 0;
@@ -571,6 +583,14 @@ void XML_SetDefaultHandler(XML_Parser parser,
 			   XML_DefaultHandler handler)
 {
   defaultHandler = handler;
+  defaultExpandInternalEntities = 0;
+}
+
+void XML_SetDefaultHandlerExpand(XML_Parser parser,
+				 XML_DefaultHandler handler)
+{
+  defaultHandler = handler;
+  defaultExpandInternalEntities = 1;
 }
 
 void XML_SetUnparsedEntityDeclHandler(XML_Parser parser,
@@ -738,8 +758,15 @@ int XML_GetCurrentColumnNumber(XML_Parser parser)
 
 void XML_DefaultCurrent(XML_Parser parser)
 {
-  if (defaultHandler)
-    reportDefault(parser, encoding, eventPtr, eventEndPtr);
+  if (defaultHandler) {
+    if (openInternalEntities)
+      reportDefault(parser,
+	            ns ? XmlGetInternalEncodingNS() : XmlGetInternalEncoding(),
+		    openInternalEntities->internalEventPtr,
+		    openInternalEntities->internalEventEndPtr);
+    else
+      reportDefault(parser, encoding, eventPtr, eventEndPtr);
+  }
 }
 
 const XML_LChar *XML_ErrorString(int code)
@@ -881,16 +908,17 @@ doContent(XML_Parser parser,
 	  const char **nextPtr)
 {
   const ENCODING *internalEnc = ns ? XmlGetInternalEncodingNS() : XmlGetInternalEncoding();
-  const char *dummy;
   const char **eventPP;
   const char **eventEndPP;
   if (enc == encoding) {
     eventPP = &eventPtr;
-    *eventPP = s;
     eventEndPP = &eventEndPtr;
   }
-  else
-    eventPP = eventEndPP = &dummy;
+  else {
+    eventPP = &(openInternalEntities->internalEventPtr);
+    eventEndPP = &(openInternalEntities->internalEventEndPtr);
+  }
+  *eventPP = s;
   for (;;) {
     const char *next;
     int tok = XmlContentTok(enc, s, end, &next);
@@ -974,14 +1002,17 @@ doContent(XML_Parser parser,
 	if (entity) {
 	  if (entity->textPtr) {
 	    enum XML_Error result;
-	    if (defaultHandler) {
+	    OPEN_INTERNAL_ENTITY openEntity;
+	    if (defaultHandler && !defaultExpandInternalEntities) {
 	      reportDefault(parser, enc, s, next);
 	      break;
 	    }
-	    /* Protect against the possibility that somebody sets
-	       the defaultHandler from inside another handler. */
-	    *eventEndPP = *eventPP;
 	    entity->open = 1;
+	    openEntity.next = openInternalEntities;
+	    openInternalEntities = &openEntity;
+	    openEntity.entity = entity;
+	    openEntity.internalEventPtr = 0;
+	    openEntity.internalEventEndPtr = 0;
 	    result = doContent(parser,
 			       tagLevel,
 			       internalEnc,
@@ -989,6 +1020,7 @@ doContent(XML_Parser parser,
 			       (char *)(entity->textPtr + entity->textLen),
 			       0);
 	    entity->open = 0;
+	    openInternalEntities = openEntity.next;
 	    if (result)
 	      return result;
 	  }
@@ -1525,7 +1557,6 @@ enum XML_Error doCdataSection(XML_Parser parser,
 			      const char **nextPtr)
 {
   const char *s = *startPtr;
-  const char *dummy;
   const char **eventPP;
   const char **eventEndPP;
   if (enc == encoding) {
@@ -1533,8 +1564,11 @@ enum XML_Error doCdataSection(XML_Parser parser,
     *eventPP = s;
     eventEndPP = &eventEndPtr;
   }
-  else
-    eventPP = eventEndPP = &dummy;
+  else {
+    eventPP = &(openInternalEntities->internalEventPtr);
+    eventEndPP = &(openInternalEntities->internalEventEndPtr);
+  }
+  *eventPP = s;
   *startPtr = 0;
   for (;;) {
     const char *next;
@@ -2358,21 +2392,23 @@ static void
 reportDefault(XML_Parser parser, const ENCODING *enc, const char *s, const char *end)
 {
   if (MUST_CONVERT(enc, s)) {
-    for (;;) {
+    const char **eventPP;
+    const char **eventEndPP;
+    if (enc == encoding) {
+      eventPP = &eventPtr;
+      eventEndPP = &eventEndPtr;
+    }
+    else {
+      eventPP = &(openInternalEntities->internalEventPtr);
+      eventEndPP = &(openInternalEntities->internalEventEndPtr);
+    }
+    do {
       ICHAR *dataPtr = (ICHAR *)dataBuf;
       XmlConvert(enc, &s, end, &dataPtr, (ICHAR *)dataBufEnd);
-      if (s == end) {
-	defaultHandler(handlerArg, dataBuf, dataPtr - (ICHAR *)dataBuf);
-	break;
-      }
-      if (enc == encoding) {
-	eventEndPtr = s;
-	defaultHandler(handlerArg, dataBuf, dataPtr - (ICHAR *)dataBuf);
-	eventPtr = s;
-      }
-      else
-	defaultHandler(handlerArg, dataBuf, dataPtr - (ICHAR *)dataBuf);
-    }
+      *eventEndPP = s;
+      defaultHandler(handlerArg, dataBuf, dataPtr - (ICHAR *)dataBuf);
+      *eventPP = s;
+    } while (s != end);
   }
   else
     defaultHandler(handlerArg, (XML_Char *)s, (XML_Char *)end - (XML_Char *)s);
