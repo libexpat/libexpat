@@ -33,6 +33,7 @@ typedef void *XML_Parser;
 
 #ifdef XML_UNICODE
 /* Information is UTF-16 encoded. */
+/* XML_UNICODE will work only if sizeof(wchar_t) == 2. */
 #include <stddef.h>
 typedef wchar_t XML_Char;
 #else
@@ -47,8 +48,8 @@ XML_Parser XMLPARSEAPI
 XML_ParserCreate(const XML_Char *encoding);
 
 
-/* atts is array of name/value pairs, terminated by NULL;
-   names and values are '\0' terminated. */
+/* atts is array of name/value pairs, terminated by 0;
+   names and values are 0 terminated. */
 
 typedef void (*XML_StartElementHandler)(void *userData,
 					const XML_Char *name,
@@ -57,14 +58,20 @@ typedef void (*XML_StartElementHandler)(void *userData,
 typedef void (*XML_EndElementHandler)(void *userData,
 				      const XML_Char *name);
 
+/* s is not 0 terminated. */
 typedef void (*XML_CharacterDataHandler)(void *userData,
 					 const XML_Char *s,
 					 int len);
 
-/* target and data are '\0' terminated */
+/* target and data are 0 terminated */
 typedef void (*XML_ProcessingInstructionHandler)(void *userData,
 						 const XML_Char *target,
 						 const XML_Char *data);
+
+/* This is called for a declaration of an unparsed (NDATA)
+entity.  The base argument is whatever was set by XML_SetBase.
+The entityName, systemId and notationName arguments will never be null.
+The other arguments may be. */
 
 typedef void (*XML_UnparsedEntityDeclHandler)(void *userData,
 					      const XML_Char *entityName,
@@ -73,13 +80,17 @@ typedef void (*XML_UnparsedEntityDeclHandler)(void *userData,
 					      const XML_Char *publicId,
 					      const XML_Char *notationName);
 
+/* This is called for a declaration of notation.
+The base argument is whatever was set by XML_SetBase.
+The notationName will never be null.  The other arguments can be. */
+
 typedef void (*XML_NotationDeclHandler)(void *userData,
 					const XML_Char *notationName,
 					const XML_Char *base,
 					const XML_Char *systemId,
 					const XML_Char *publicId);
 
-/* Reports a reference to an external parsed general entity.
+/* This is called for a reference to an external parsed general entity.
 The referenced entity is not automatically parsed.
 The application can parse it immediately or later using
 XML_ExternalEntityParserCreate.
@@ -110,6 +121,47 @@ typedef int (*XML_ExternalEntityRefHandler)(XML_Parser parser,
 					    const XML_Char *systemId,
 					    const XML_Char *publicId);
 
+/* This structure is filled in by the XML_UnknownEncodingHandler
+to provide information to the parser about encodings that are unknown
+to the parser.
+The map[b] member gives information about byte sequences
+whose first byte is b.
+If map[b] is c where c is >= 0, then b by itself encodes the Unicode scalar value c.
+If map[b] is -1, then the byte sequence is malformed.
+If map[b] is -n, where n >= 2, then b is the first byte of an n-byte
+sequence that encodes a single Unicode scalar value.
+The data member will be passed as the first argument to the convert function.
+The convert function is used to convert multibyte sequences;
+s will point to a n-byte sequence where map[(unsigned char)*s] == -n.
+The convert function must return the Unicode scalar value
+represented by this byte sequence or -1 if the byte sequence is malformed.
+The convert function may be null if the encoding is a single-byte encoding,
+that is if map[b] >= -1 for all bytes b.
+When the parser is finished with the encoding, then if release is not null,
+it will call release passing it the data member;
+once release has been called, the convert function will not be called again.
+
+Expat places certain restrictions on the encodings that are supported
+using this mechanism.
+
+1. Every ASCII character that can appear in a well-formed XML document,
+other than the characters
+
+  $@\^`{}~
+
+must be represented by a single byte, and that byte must be the
+same byte that represents that character in ASCII.
+
+2. No character may require more than 4 bytes to encode.
+
+3. All characters encoded must have Unicode scalar values <= 0xFFFF,
+(ie characters that would be encoded by surrogates in UTF-16
+are  not allowed).  Note that this restriction doesn't apply to
+the built-in support for UTF-8 and UTF-16.
+
+4. No Unicode character may be encoded by more than one distinct sequence
+of bytes. */
+
 typedef struct {
   int map[256];
   void *data;
@@ -117,8 +169,16 @@ typedef struct {
   void (*release)(void *data);
 } XML_Encoding;
 
-/* The encodingHandlerData passed to this call is that which was passed as the
-second argument to XML_SetUnknownEncodingHandler. */
+/* This is called for an encoding that is unknown to the parser.
+The encodingHandlerData argument is that which was passed as the
+second argument to XML_SetUnknownEncodingHandler.
+The name argument gives the name of the encoding as specified in
+the encoding declaration.
+If the callback can provide information about the encoding,
+it must fill in the XML_Encoding structure, and return 1.
+Otherwise it must return 0.
+If info does not describe a suitable encoding,
+then the parser will return an XML_UNKNOWN_ENCODING error. */
 
 typedef int (*XML_UnknownEncodingHandler)(void *encodingHandlerData,
 					  const XML_Char *name,
@@ -170,8 +230,10 @@ XML_UseParserAsHandlerArg(XML_Parser parser);
 
 /* Sets the base to be used for resolving relative URIs in system identifiers in
 declarations.  Resolving relative identifiers is left to the application:
-this value will be passed through as the base argumentto the ExternalEntityRefHandler.
-The base argument will be copied. Returns zero if out of memory, non-zero otherwise. */
+this value will be passed through as the base argument to the
+XML_ExternalEntityRefHandler, XML_NotationDeclHandler
+and XML_UnparsedEntityDeclHandler. The base argument will be copied.
+Returns zero if out of memory, non-zero otherwise. */
 
 int XMLPARSEAPI
 XML_SetBase(XML_Parser parser, const XML_Char *base);
@@ -206,9 +268,6 @@ XML_ExternalEntityParserCreate(XML_Parser parser,
 			       const XML_Char *openEntityNames,
 			       const XML_Char *encoding);
 
-/* If XML_Parser or XML_ParseEnd have returned 0, then XML_GetErrorCode
-returns information about the error. */
-
 enum XML_Error {
   XML_ERROR_NONE,
   XML_ERROR_NO_MEMORY,
@@ -242,6 +301,9 @@ long XMLPARSEAPI XML_GetCurrentByteIndex(XML_Parser parser);
 #define XML_GetErrorLineNumber XML_GetCurrentLineNumber
 #define XML_GetErrorColumnNumber XML_GetCurrentColumnNumber
 #define XML_GetErrorByteIndexNumber XML_GetCurrentByteIndexNumber
+
+/* If XML_Parser or XML_ParseEnd have returned 0, then XML_GetErrorCode
+returns information about the error. */
 
 int XMLPARSEAPI XML_GetErrorCode(XML_Parser parser);
 
