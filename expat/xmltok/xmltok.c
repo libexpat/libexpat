@@ -99,9 +99,28 @@ int scanStartTag(const TCHAR *ptr, const TCHAR *end, const TCHAR **nextTokPtr)
 {
   for (; ptr != end; ++ptr) {
     switch (*ptr) {
+    case '<':
+      *nextTokPtr = ptr;
+      return XML_TOK_INVALID;
     case '>':
       *nextTokPtr = ptr + 1;
       return XML_TOK_START_TAG;
+    case '"':
+      for (++ptr;; ++ptr) {
+	if (ptr == end)
+	  return XML_TOK_PARTIAL;
+	if (*ptr == '"')
+	  break;
+      }
+      break;
+    case '\'':
+      for (++ptr;; ++ptr) {
+	if (ptr == end)
+	  return XML_TOK_PARTIAL;
+	if (*ptr == '\'')
+	  break;
+      }
+      break;
     case '/':
       if (++ptr == end)
 	return XML_TOK_PARTIAL;
@@ -123,6 +142,10 @@ int scanEndTag(const TCHAR *ptr, const TCHAR *end, const TCHAR **nextTokPtr)
 {
   for (; ptr != end; ++ptr) {
     switch (*ptr) {
+    case '<':
+    case '&':
+      *nextTokPtr = ptr;
+      return XML_TOK_INVALID;
     case '>':
       *nextTokPtr = ptr + 1;
       return XML_TOK_END_TAG;
@@ -197,6 +220,12 @@ int scanEntityRef(const TCHAR *ptr, const TCHAR *end, const TCHAR **nextTokPtr)
 {
   for (; ptr != end; ++ptr) {
     switch (*ptr) {
+    case '<':
+    case '>':
+    case '&':
+    S_CASES
+      *nextTokPtr = ptr;
+      return XML_TOK_INVALID;
     case ';':
       *nextTokPtr = ptr + 1;
       return XML_TOK_ENTITY_REF;
