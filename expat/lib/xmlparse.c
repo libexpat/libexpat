@@ -2651,6 +2651,9 @@ storeAtts(XML_Parser parser, const ENCODING *enc,
   for (binding = *bindingsPtr; binding; binding = binding->nextTagBinding)
     binding->attId->name[-1] = 0;
 
+  if (!ns)
+    return XML_ERROR_NONE;
+
   /* expand the element type name */
   if (elementType->prefix) {
     binding = elementType->prefix->binding;
@@ -2667,7 +2670,7 @@ storeAtts(XML_Parser parser, const ENCODING *enc,
   else
     return XML_ERROR_NONE;
   prefixLen = 0;
-  if (ns && ns_triplets && binding->prefix->name) {
+  if (ns_triplets && binding->prefix->name) {
     for (; binding->prefix->name[prefixLen++];)
       ;
   }
