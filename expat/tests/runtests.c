@@ -481,6 +481,35 @@ START_TEST(test_xmldecl_misplaced)
 }
 END_TEST
 
+/* Regression test for SF bug #584832. */
+static int
+UnknownEncodingHandler(void *data,const XML_Char *encoding,XML_Encoding *info)
+{
+    if (strcmp(encoding,"unsupported-encoding") == 0) {
+        int i;
+        for (i = 0; i < 256; ++i)
+            info->map[i] = i;
+        info->data=NULL;
+        info->convert=NULL;
+        info->release=NULL;
+        return 1;
+    }
+    return 0;
+}
+
+START_TEST(test_xmldecl_unknown_encoding_internal_entity)
+{
+    char *text =
+        "<?xml version='1.0' encoding='unsupported-encoding'?>\n"
+        "<!DOCTYPE test [<!ENTITY foo 'bar'>]>\n"
+        "<test a='&foo;'/>";
+
+    XML_SetUnknownEncodingHandler(parser, UnknownEncodingHandler, NULL);
+    if (!XML_Parse(parser, text, strlen(text), 1))
+        xml_failure(parser);
+}
+END_TEST
+
 
 /*
  * Namespaces tests.
@@ -674,6 +703,7 @@ make_basic_suite(void)
     suite_add_tcase(s, tc_xmldecl);
     tcase_add_checked_fixture(tc_xmldecl, basic_setup, basic_teardown);
     tcase_add_test(tc_xmldecl, test_xmldecl_misplaced);
+    tcase_add_test(tc_xmldecl, test_xmldecl_unknown_encoding_internal_entity);
 
     suite_add_tcase(s, tc_namespace);
     tcase_add_checked_fixture(tc_namespace,
