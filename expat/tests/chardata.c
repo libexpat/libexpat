@@ -3,6 +3,7 @@
  *
  */
 
+#include <assert.h>
 #include <check.h>
 #include <stdio.h>
 #include <string.h>
@@ -13,6 +14,7 @@
 static int
 xmlstrlen(const XML_Char *s)
 {
+    assert(s != NULL);
     int len = 0;
     while (s[len] != 0)
         ++len;
@@ -23,6 +25,7 @@ xmlstrlen(const XML_Char *s)
 void
 CharData_Init(CharData *storage)
 {
+    assert(storage != NULL);
     storage->count = -1;
 }
 
@@ -30,8 +33,10 @@ void
 CharData_AppendString(CharData *storage, const char *s)
 {
     int maxchars = sizeof(storage->data) / sizeof(storage->data[0]);
-    int len = strlen(s);
+    int len;
 
+    assert(s != NULL);
+    len = strlen(s);
     if (storage->count < 0)
         storage->count = 0;
     if ((len + storage->count) > maxchars) {
@@ -46,8 +51,11 @@ CharData_AppendString(CharData *storage, const char *s)
 void
 CharData_AppendXMLChars(CharData *storage, const XML_Char *s, int len)
 {
-    int maxchars = sizeof(storage->data) / sizeof(storage->data[0]);
+    int maxchars;
 
+    assert(storage != NULL);
+    assert(s != NULL);
+    maxchars = sizeof(storage->data) / sizeof(storage->data[0]);
     if (storage->count < 0)
         storage->count = 0;
     if (len < 0)
@@ -65,13 +73,22 @@ CharData_AppendXMLChars(CharData *storage, const XML_Char *s, int len)
 bool
 CharData_CheckString(CharData *storage, const char *expected)
 {
-    char buffer[1024];
-    int len = strlen(expected);
-    int count = (storage->count < 0) ? 0 : storage->count;
+    char buffer[1280];
+    int len;
+    int count;
 
+    assert(storage != NULL);
+    assert(expected != NULL);
+    count = (storage->count < 0) ? 0 : storage->count;
+    len = strlen(expected);
     if (len != count) {
-        sprintf(buffer, "wrong number of data characters: got %d, expected %d",
-                count, len);
+        if (sizeof(XML_Char) == 1)
+            sprintf(buffer, "wrong number of data characters:"
+                    " got %d, expected %d:\n%s", count, len, storage->data);
+        else
+            sprintf(buffer,
+                    "wrong number of data characters: got %d, expected %d",
+                    count, len);
         fail(buffer);
         return false;
     }
@@ -86,9 +103,11 @@ bool
 CharData_CheckXMLChars(CharData *storage, const XML_Char *expected)
 {
     char buffer[1024];
-    int len = strlen(expected);
-    int count = (storage->count < 0) ? 0 : storage->count;
+    int len = xmlstrlen(expected);
+    int count;
 
+    assert(storage != NULL);
+    count = (storage->count < 0) ? 0 : storage->count;
     if (len != count) {
         sprintf(buffer, "wrong number of data characters: got %d, expected %d",
                 count, len);
