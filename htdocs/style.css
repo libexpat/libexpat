@@ -1,3 +1,8 @@
+html       { border: 0px;
+             margin: 0px;
+             padding: 0px;
+             }
+
 .corner    { width: 200px;
              height: 80px;
              text-align: center;
