@@ -30,7 +30,7 @@ exec_prefix = @exec_prefix@
 bindir = @bindir@
 libdir = @libdir@
 includedir = @includedir@
-mandir = ${prefix}/man/man1
+man1dir = @mandir@/man1
 
 top_builddir = .
 
@@ -73,9 +73,9 @@ check: tests/runtests
 	tests/runtests
 
 install: xmlwf/xmlwf installlib
-	$(mkinstalldirs) $(bindir) $(mandir)
+	$(mkinstalldirs) $(bindir) $(man1dir)
 	$(LIBTOOL) --mode=install $(INSTALL_PROGRAM) xmlwf/xmlwf $(bindir)/xmlwf
-	$(INSTALL_DATA) $(MANFILE) $(mandir)
+	$(INSTALL_DATA) $(MANFILE) $(man1dir)
 
 installlib: $(LIBRARY) $(APIHEADER)
 	$(mkinstalldirs) $(libdir) $(includedir)
@@ -84,7 +84,7 @@ installlib: $(LIBRARY) $(APIHEADER)
 
 uninstall: uninstalllib
 	$(LIBTOOL) --mode=uninstall rm -f $(bindir)/xmlwf
-	rm -f $(mandir)/xmlwf.1
+	rm -f $(man1dir)/xmlwf.1
 
 uninstalllib:
 	$(LIBTOOL) --mode=uninstall rm -f $(libdir)/$(LIBRARY)
