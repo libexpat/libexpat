@@ -50,6 +50,7 @@ Clark Cooper to retain copyright and to distribute it with expat.</p>
       <li><a href="#XML_ParserCreate_MM">XML_ParserCreate_MM</a></li>
       <li><a href="#XML_ExternalEntityParserCreate">XML_ExternalEntityParserCreate</a></li>
       <li><a href="#XML_ParserFree">XML_ParserFree</a></li>
+      <li><a href="#XML_ParserReset">XML_ParserReset</a></li>
     </ul>
     </li>
     <li><a href="#parsing">Parsing Functions</a>
@@ -608,7 +609,7 @@ entity reference handler as described above.</p>
 
 <pre class="fcndec" id="XML_ParserCreate">
 XML_Parser
-XML_ParserCreate(const XML_Char *encoding)
+XML_ParserCreate(const XML_Char *encoding);
 </pre>
 <div class="fcndef">
 Construct a new parser. If encoding is non-null, it specifies a
@@ -626,7 +627,7 @@ Any other value will invoke a call to the UnknownEncodingHandler.
 <pre class="fcndec" id="XML_ParserCreateNS">
 XML_Parser
 XML_ParserCreateNS(const XML_Char *encoding,
-                   XML_Char sep)
+                   XML_Char sep);
 </pre>
 <div class="fcndef">
 Constructs a new parser that has namespace processing in effect. Namespace
@@ -639,7 +640,7 @@ part of a legal URI.</div>
 XML_Parser
 XML_ParserCreate_MM(const XML_Char *encoding,
                     const XML_Memory_Handling_Suite *ms,
-		    const XML_Char *sep)
+		    const XML_Char *sep);
 </pre>
 <pre class="signature">
 typedef struct {
@@ -661,7 +662,7 @@ the namespace URI and the local part of the name.</p>
 XML_Parser
 XML_ExternalEntityParserCreate(XML_Parser p,
                                const XML_Char *context,
-                               const XML_Char *encoding)
+                               const XML_Char *encoding);
 </pre>
 <div class="fcndef">
 Construct a new <code>XML_Parser</code> object for parsing an external
@@ -675,11 +676,26 @@ differently than the parent parser).
 
 <pre class="fcndec" id="XML_ParserFree">
 void
-XML_ParserFree(XML_Parser p)
+XML_ParserFree(XML_Parser p);
 </pre>
 <div class="fcndef">
 Free memory used by the parser. Your application is responsible for
 freeing any memory associated with <a href="#userdata">user data</a>.
+</div>
+
+<pre class="fcndec" id="XML_ParserReset">
+XML_Bool
+XML_ParserReset(XML_Parser p);
+</pre>
+<div class="fcndef">
+Clean up the memory structures maintained by the parser so that it may
+be used again.  After this has been called, <code>parser</code> is
+ready to start parsing a new document.  This function may not be used
+on a parser created using <code><a href=
+"#XML_ExternalEntityParserCreate" >XML_ExternalEntityParserCreate</a
+></code>; it will return <code>XML_FALSE</code> in that case.  Returns
+<code>XML_TRUE</code> on success.  Your application is responsible for
+dealing with any memory associated with <a href="#userdata">user data</a>.
 </div>
 
 <h3><a name="parsing">Parsing</a></h3>
@@ -700,7 +716,7 @@ XML_Status
 XML_Parse(XML_Parser p,
           const char *s,
           int len,
-          int isFinal)
+          int isFinal);
 </pre>
 <pre class="signature">
 enum XML_Status {
@@ -726,7 +742,7 @@ Otherwise it returns <code>XML_STATUS_OK</code> value.
 XML_Status
 XML_ParseBuffer(XML_Parser p,
                 int len,
-                int isFinal)
+                int isFinal);
 </pre>
 <div class="fcndef">
 This is just like <code><a href= "#XML_Parse" >XML_Parse</a></code>,
@@ -739,7 +755,7 @@ copying of the input.
 <pre class="fcndec" id="XML_GetBuffer">
 void *
 XML_GetBuffer(XML_Parser p,
-              int len)
+              int len);
 </pre>
 <div class="fcndef">
 Obtain a buffer of size <code>len</code> to read a piece of the document
@@ -1393,7 +1409,7 @@ called from within a DTD declaration handler.</p>
 
 <pre class="fcndec" id="XML_GetErrorCode">
 enum XML_Error
-XML_GetErrorCode(XML_Parser p)
+XML_GetErrorCode(XML_Parser p);
 </pre>
 <div class="fcndef">
 Return what type of error has occurred.
@@ -1401,7 +1417,7 @@ Return what type of error has occurred.
 
 <pre class="fcndec" id="XML_ErrorString">
 const XML_LChar *
-XML_ErrorString(int code)
+XML_ErrorString(int code);
 </pre>
 <div class="fcndef">
 Return a string describing the error corresponding to code.
@@ -1411,7 +1427,7 @@ The code should be one of the enums that can be returned from
 
 <pre class="fcndec" id="XML_GetCurrentByteIndex">
 long
-XML_GetCurrentByteIndex(XML_Parser p)
+XML_GetCurrentByteIndex(XML_Parser p);
 </pre>
 <div class="fcndef">
 Return the byte offset of the position.
@@ -1419,7 +1435,7 @@ Return the byte offset of the position.
 
 <pre class="fcndec" id="XML_GetCurrentLineNumber">
 int
-XML_GetCurrentLineNumber(XML_Parser p)
+XML_GetCurrentLineNumber(XML_Parser p);
 </pre>
 <div class="fcndef">
 Return the line number of the position.
@@ -1427,7 +1443,7 @@ Return the line number of the position.
 
 <pre class="fcndec" id="XML_GetCurrentColumnNumber">
 int
-XML_GetCurrentColumnNumber(XML_Parser p)
+XML_GetCurrentColumnNumber(XML_Parser p);
 </pre>
 <div class="fcndef">
 Return the offset, from the beginning of the current line, of
@@ -1477,7 +1493,7 @@ the parser or can be used to dynamicly set parser options.</p>
 <pre class="fcndec" id="XML_SetUserData">
 void
 XML_SetUserData(XML_Parser p,
-                void *userData)
+                void *userData);
 </pre>
 <div class="fcndef">
 This sets the user data pointer that gets passed to handlers.  It
@@ -1491,7 +1507,7 @@ memory.
 
 <pre class="fcndec" id="XML_GetUserData">
 void *
-XML_GetUserData(XML_Parser p)
+XML_GetUserData(XML_Parser p);
 </pre>
 <div class="fcndef">
 This returns the user data pointer that gets passed to handlers.
@@ -1500,7 +1516,7 @@ It is actually implemented as a macro.
 
 <pre class="fcndec" id="XML_UseParserAsHandlerArg">
 void
-XML_UseParserAsHandlerArg(XML_Parser p)
+XML_UseParserAsHandlerArg(XML_Parser p);
 </pre>
 <div class="fcndef">
 After this is called, handlers receive the parser in the userData
@@ -1512,7 +1528,7 @@ function.
 <pre class="fcndec" id="XML_SetBase">
 int
 XML_SetBase(XML_Parser p,
-            const XML_Char *base)
+            const XML_Char *base);
 </pre>
 <div class="fcndef">
 Set the base to be used for resolving relative URIs in system
@@ -1522,7 +1538,7 @@ base, otherwise it's non-zero.
 
 <pre class="fcndec" id="XML_GetBase">
 const XML_Char *
-XML_GetBase(XML_Parser p)
+XML_GetBase(XML_Parser p);
 </pre>
 <div class="fcndef">
 Return the base for resolving relative URIs.
@@ -1530,7 +1546,7 @@ Return the base for resolving relative URIs.
 
 <pre class="fcndec" id="XML_GetSpecifiedAttributeCount">
 int
-XML_GetSpecifiedAttributeCount(XML_Parser p)
+XML_GetSpecifiedAttributeCount(XML_Parser p);
 </pre>
 <div class="fcndef">
 When attributes are reported to the start handler in the atts vector,
@@ -1559,7 +1575,7 @@ current call.
 <pre class="fcndec" id="XML_SetEncoding">
 int
 XML_SetEncoding(XML_Parser p,
-                const XML_Char *encoding)
+                const XML_Char *encoding);
 </pre>
 <div class="fcndef">
 Set the encoding to be used by the parser. It is equivalent to
@@ -1572,7 +1588,7 @@ It must not be called after <code><a href= "#XML_Parse"
 <pre class="fcndec" id="XML_SetParamEntityParsing">
 int
 XML_SetParamEntityParsing(XML_Parser p,
-                          enum XML_ParamEntityParsing code)
+                          enum XML_ParamEntityParsing code);
 </pre>
 <div class="fcndef">
 This enables parsing of parameter entities, including the external
@@ -1588,7 +1604,7 @@ The choices for <code>code</code> are:
 
 <pre class="fcndec" id="XML_UseForeignDTD">
 enum XML_Error
-XML_UseForeignDTD(XML_Parser parser, XML_Bool useDTD)
+XML_UseForeignDTD(XML_Parser parser, XML_Bool useDTD);
 </pre>
 <div class="fcndef">
 <p>This function allows an application to provide an external subset
