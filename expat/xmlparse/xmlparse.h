@@ -68,6 +68,24 @@ typedef void (*XML_ProcessingInstructionHandler)(void *userData,
 						 const XML_Char *target,
 						 const XML_Char *data);
 
+/* This is called for any characters in the XML document for
+which there is no applicable handler.  This includes both
+characters that are part of markup which is of a kind that is
+not reported (comments, markup declarations), or characters
+that are part of a construct which could be reported but
+for which no handler has been supplied. The characters are passed
+exactly as they were in the XML document except that
+they will be encoded in UTF-8.  Line boundaries are not normalized.
+Note that a byte order mark character is not passed to the default handler.
+If a default handler is set, internal entity references
+are not expanded. There are no guarantees about
+how characters are divided between calls to the default handler:
+for example, a comment might be split between multiple calls. */
+
+typedef void (*XML_DefaultHandler)(void *userData,
+				   const XML_Char *s,
+				   int len);
+
 /* This is called for a declaration of an unparsed (NDATA)
 entity.  The base argument is whatever was set by XML_SetBase.
 The entityName, systemId and notationName arguments will never be null.
@@ -196,6 +214,10 @@ XML_SetCharacterDataHandler(XML_Parser parser,
 void XMLPARSEAPI
 XML_SetProcessingInstructionHandler(XML_Parser parser,
 				    XML_ProcessingInstructionHandler handler);
+
+void XMLPARSEAPI
+XML_SetDefaultHandler(XML_Parser parser,
+		      XML_DefaultHandler handler);
 
 void XMLPARSEAPI
 XML_SetUnparsedEntityDeclHandler(XML_Parser parser,

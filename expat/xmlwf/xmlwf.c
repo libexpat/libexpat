@@ -172,6 +172,11 @@ static void processingInstruction(void *userData, const XML_Char *target, const 
   puttc(T('>'), fp);
 }
 
+static void markup(void *userData, const XML_Char *s, int len)
+{
+  for (; len > 0; --len, ++s)
+    puttc(*s, (FILE *)userData);
+}
 
 static
 void metaLocation(XML_Parser parser)
@@ -479,7 +484,7 @@ int tmain(int argc, XML_Char **argv)
   int useFilemap = 1;
   int processExternalEntities = 0;
   int windowsCodePages = 0;
-  int metaOutput = 0;
+  int outputType = 0;
 
 #ifdef _MSC_VER
   _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF|_CRTDBG_LEAK_CHECK_DF);
@@ -506,7 +511,11 @@ int tmain(int argc, XML_Char **argv)
       j++;
     }
     if (argv[i][j] == T('m')) {
-      metaOutput = 1;
+      outputType = 'm';
+      j++;
+    }
+    if (argv[i][j] == T('c')) {
+      outputType = 'c';
       j++;
     }
     if (argv[i][j] == T('d')) {
@@ -562,7 +571,8 @@ int tmain(int argc, XML_Char **argv)
       puttc(0xFEFF, fp);
 #endif
       XML_SetUserData(parser, fp);
-      if (metaOutput) {
+      switch (outputType) {
+      case 'm':
 	XML_UseParserAsHandlerArg(parser);
 	fputts(T("<document>\n"), fp);
 	XML_SetElementHandler(parser, metaStartElement, metaEndElement);
@@ -570,11 +580,15 @@ int tmain(int argc, XML_Char **argv)
 	XML_SetCharacterDataHandler(parser, metaCharacterData);
 	XML_SetUnparsedEntityDeclHandler(parser, metaUnparsedEntityDecl);
 	XML_SetNotationDeclHandler(parser, metaNotationDecl);
-      }
-      else {
+	break;
+      case 'c':
+	XML_SetDefaultHandler(parser, markup);
+	break;
+      default:
 	XML_SetElementHandler(parser, startElement, endElement);
 	XML_SetCharacterDataHandler(parser, characterData);
 	XML_SetProcessingInstructionHandler(parser, processingInstruction);
+	break;
       }
     }
     if (windowsCodePages)
@@ -598,7 +612,7 @@ int tmain(int argc, XML_Char **argv)
     else
       result = processStream(argv[i], parser);
     if (outputDir) {
-      if (metaOutput)
+      if (outputType == 'm')
 	fputts(T("</document>\n"), fp);
       fclose(fp);
       if (!result)

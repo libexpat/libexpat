@@ -166,6 +166,8 @@ static enum XML_Error
 storeEntityValue(XML_Parser parser, const char *start, const char *end);
 static int
 reportProcessingInstruction(XML_Parser parser, const ENCODING *enc, const char *start, const char *end);
+static void
+reportDefault(XML_Parser parser, const ENCODING *enc, const char *start, const char *end);
 
 static const XML_Char *getOpenEntityNames(XML_Parser parser);
 static int setOpenEntityNames(XML_Parser parser, const XML_Char *openEntityNames);
@@ -215,6 +217,7 @@ typedef struct {
   XML_EndElementHandler endElementHandler;
   XML_CharacterDataHandler characterDataHandler;
   XML_ProcessingInstructionHandler processingInstructionHandler;
+  XML_DefaultHandler defaultHandler;
   XML_UnparsedEntityDeclHandler unparsedEntityDeclHandler;
   XML_NotationDeclHandler notationDeclHandler;
   XML_ExternalEntityRefHandler externalEntityRefHandler;
@@ -257,6 +260,7 @@ typedef struct {
 #define endElementHandler (((Parser *)parser)->endElementHandler)
 #define characterDataHandler (((Parser *)parser)->characterDataHandler)
 #define processingInstructionHandler (((Parser *)parser)->processingInstructionHandler)
+#define defaultHandler (((Parser *)parser)->defaultHandler)
 #define unparsedEntityDeclHandler (((Parser *)parser)->unparsedEntityDeclHandler)
 #define notationDeclHandler (((Parser *)parser)->notationDeclHandler)
 #define externalEntityRefHandler (((Parser *)parser)->externalEntityRefHandler)
@@ -314,6 +318,7 @@ XML_Parser XML_ParserCreate(const XML_Char *encodingName)
   endElementHandler = 0;
   characterDataHandler = 0;
   processingInstructionHandler = 0;
+  defaultHandler = 0;
   unparsedEntityDeclHandler = 0;
   notationDeclHandler = 0;
   externalEntityRefHandler = 0;
@@ -369,6 +374,7 @@ XML_Parser XML_ExternalEntityParserCreate(XML_Parser oldParser,
   XML_EndElementHandler oldEndElementHandler = endElementHandler;
   XML_CharacterDataHandler oldCharacterDataHandler = characterDataHandler;
   XML_ProcessingInstructionHandler oldProcessingInstructionHandler = processingInstructionHandler;
+  XML_DefaultHandler oldDefaultHandler = defaultHandler;
   XML_ExternalEntityRefHandler oldExternalEntityRefHandler = externalEntityRefHandler;
   XML_UnknownEncodingHandler oldUnknownEncodingHandler = unknownEncodingHandler;
   void *oldUserData = userData;
@@ -381,6 +387,7 @@ XML_Parser XML_ExternalEntityParserCreate(XML_Parser oldParser,
   endElementHandler = oldEndElementHandler;
   characterDataHandler = oldCharacterDataHandler;
   processingInstructionHandler = oldProcessingInstructionHandler;
+  defaultHandler = oldDefaultHandler;
   externalEntityRefHandler = oldExternalEntityRefHandler;
   unknownEncodingHandler = oldUnknownEncodingHandler;
   userData = oldUserData;
@@ -473,6 +480,12 @@ void XML_SetProcessingInstructionHandler(XML_Parser parser,
 					 XML_ProcessingInstructionHandler handler)
 {
   processingInstructionHandler = handler;
+}
+
+void XML_SetDefaultHandler(XML_Parser parser,
+			   XML_DefaultHandler handler)
+{
+  defaultHandler = handler;
 }
 
 void XML_SetUnparsedEntityDeclHandler(XML_Parser parser,
@@ -784,6 +797,8 @@ doContent(XML_Parser parser,
 	XML_Char c = XML_T('\n');
 	characterDataHandler(handlerArg, &c, 1);
       }
+      else if (defaultHandler)
+	reportDefault(parser, enc, s, end);
       if (startTagLevel == 0)
 	return XML_ERROR_NO_ELEMENTS;
       if (tagLevel != startTagLevel)
@@ -825,6 +840,8 @@ doContent(XML_Parser parser,
 	if (ch) {
 	  if (characterDataHandler)
 	    characterDataHandler(handlerArg, &ch, 1);
+	  else if (defaultHandler)
+	    reportDefault(parser, enc, s, next);
 	  break;
 	}
 	name = poolStoreString(&dtd.pool, enc,
@@ -837,6 +854,8 @@ doContent(XML_Parser parser,
 	if (!entity) {
 	  if (dtd.complete || dtd.standalone)
 	    return XML_ERROR_UNDEFINED_ENTITY;
+	  if (defaultHandler)
+	    reportDefault(parser, enc, s, next);
 	  break;
 	}
 	if (entity->open)
@@ -846,6 +865,10 @@ doContent(XML_Parser parser,
 	if (entity) {
 	  if (entity->textPtr) {
 	    enum XML_Error result;
+	    if (defaultHandler) {
+	      reportDefault(parser, enc, s, next);
+	      break;
+	    }
 	    entity->open = 1;
 	    result = doContent(parser,
 			       tagLevel,
@@ -867,6 +890,8 @@ doContent(XML_Parser parser,
 	    if (!externalEntityRefHandler(parser, openEntityNames, dtd.base, entity->systemId, entity->publicId))
 	      return XML_ERROR_EXTERNAL_ENTITY_HANDLING;
 	  }
+	  else if (defaultHandler)
+	    reportDefault(parser, enc, s, next);
 	}
 	break;
       }
@@ -942,8 +967,11 @@ doContent(XML_Parser parser,
 	  startElementHandler(handlerArg, tag->name, (const XML_Char **)atts);
 	  poolClear(&tempPool);
 	}
-	else
+	else {
 	  tag->name = 0;
+	  if (defaultHandler)
+	    reportDefault(parser, enc, s, next);
+	}
 	break;
       }
     case XML_TOK_EMPTY_ELEMENT_WITH_ATTS:
@@ -972,6 +1000,8 @@ doContent(XML_Parser parser,
 	  endElementHandler(handlerArg, name);
 	poolClear(&tempPool);
       }
+      else if (defaultHandler)
+	reportDefault(parser, enc, s, next);
       if (tagLevel == 0)
 	return epilogProcessor(parser, next, end, nextPtr);
       break;
@@ -1005,6 +1035,8 @@ doContent(XML_Parser parser,
 	    poolClear(&tempPool);
 	  }
 	}
+	else if (defaultHandler)
+	  reportDefault(parser, enc, s, next);
 	if (tagLevel == 0)
 	  return epilogProcessor(parser, next, end, nextPtr);
       }
@@ -1018,6 +1050,8 @@ doContent(XML_Parser parser,
 	  XML_Char buf[XML_ENCODE_MAX];
 	  characterDataHandler(handlerArg, buf, XmlEncode(n, (ICHAR *)buf));
 	}
+	else if (defaultHandler)
+	  reportDefault(parser, enc, s, next);
       }
       break;
     case XML_TOK_XML_DECL:
@@ -1027,10 +1061,15 @@ doContent(XML_Parser parser,
 	XML_Char c = XML_T('\n');
 	characterDataHandler(handlerArg, &c, 1);
       }
+      else if (defaultHandler)
+	reportDefault(parser, enc, s, next);
       break;
     case XML_TOK_CDATA_SECT_OPEN:
       {
-	enum XML_Error result = doCdataSection(parser, enc, &next, end, nextPtr);
+	enum XML_Error result;
+	if (defaultHandler && !characterDataHandler)
+	  reportDefault(parser, enc, s, next);
+	result = doCdataSection(parser, enc, &next, end, nextPtr);
 	if (!next) {
 	  processor = cdataSectionProcessor;
 	  return result;
@@ -1053,6 +1092,8 @@ doContent(XML_Parser parser,
 		  	       (XML_Char *)s,
 			       (XML_Char *)end - (XML_Char *)s);
       }
+      else if (defaultHandler)
+	reportDefault(parser, enc, s, end);
       if (startTagLevel == 0) {
         *eventPP = end;
 	return XML_ERROR_NO_ELEMENTS;
@@ -1076,10 +1117,16 @@ doContent(XML_Parser parser,
 			       (XML_Char *)s,
 			       (XML_Char *)next - (XML_Char *)s);
       }
+      else if (defaultHandler)
+	reportDefault(parser, enc, s, next);
       break;
     case XML_TOK_PI:
       if (!reportProcessingInstruction(parser, enc, s, next))
 	return XML_ERROR_NO_MEMORY;
+      break;
+    default:
+      if (defaultHandler)
+	reportDefault(parser, enc, s, next);
       break;
     }
     *eventPP = s = next;
@@ -1217,6 +1264,8 @@ enum XML_Error doCdataSection(XML_Parser parser,
     int tok = XmlCdataSectionTok(enc, s, end, &next);
     switch (tok) {
     case XML_TOK_CDATA_SECT_CLOSE:
+      if (defaultHandler && !characterDataHandler)
+	reportDefault(parser, enc, s, next);
       *startPtr = next;
       return XML_ERROR_NONE;
     case XML_TOK_DATA_NEWLINE:
@@ -1224,6 +1273,8 @@ enum XML_Error doCdataSection(XML_Parser parser,
 	XML_Char c = XML_T('\n');
 	characterDataHandler(handlerArg, &c, 1);
       }
+      else if (defaultHandler)
+	reportDefault(parser, enc, s, next);
       break;
     case XML_TOK_DATA_CHARS:
       if (characterDataHandler) {
@@ -1239,6 +1290,8 @@ enum XML_Error doCdataSection(XML_Parser parser,
 		  	       (XML_Char *)s,
 			       (XML_Char *)next - (XML_Char *)s);
       }
+      else if (defaultHandler)
+	reportDefault(parser, enc, s, next);
       break;
     case XML_TOK_INVALID:
       *eventPP = next;
@@ -1312,6 +1365,8 @@ processXmlDecl(XML_Parser parser, int isGeneralTextEntity,
 		       &newEncoding,
 		       &standalone))
     return XML_ERROR_SYNTAX;
+  if (defaultHandler)
+    reportDefault(parser, encoding, s, next);
   if (!protocolEncodingName) {
     if (newEncoding) {
       if (newEncoding->minBytesPerChar != encoding->minBytesPerChar) {
@@ -1667,6 +1722,16 @@ prologProcessor(XML_Parser parser,
       }
       break;
     }
+    if (defaultHandler) {
+      switch (tok) {
+      case XML_TOK_PI:
+      case XML_TOK_BOM:
+      case XML_TOK_XML_DECL:
+	break;
+      default:
+	reportDefault(parser, encoding, s, next);
+      }
+    }
     s = next;
   }
   /* not reached */
@@ -1685,12 +1750,17 @@ enum XML_Error epilogProcessor(XML_Parser parser,
     int tok = XmlPrologTok(encoding, s, end, &next);
     switch (tok) {
     case XML_TOK_TRAILING_CR:
+      if (defaultHandler)
+	reportDefault(parser, encoding, s, end);
+      /* fall through */
     case XML_TOK_NONE:
       if (nextPtr)
 	*nextPtr = end;
       return XML_ERROR_NONE;
     case XML_TOK_PROLOG_S:
     case XML_TOK_COMMENT:
+      if (defaultHandler)
+	reportDefault(parser, encoding, s, next);
       break;
     case XML_TOK_PI:
       if (!reportProcessingInstruction(parser, encoding, s, next))
@@ -1962,8 +2032,11 @@ reportProcessingInstruction(XML_Parser parser, const ENCODING *enc, const char *
   const XML_Char *target;
   XML_Char *data;
   const char *tem;
-  if (!processingInstructionHandler)
+  if (!processingInstructionHandler) {
+    if (defaultHandler)
+      reportDefault(parser, enc, start, end);
     return 1;
+  }
   start += enc->minBytesPerChar * 2;
   tem = start + XmlNameLength(enc, start);
   target = poolStoreString(&tempPool, enc, start, tem);
@@ -1980,6 +2053,19 @@ reportProcessingInstruction(XML_Parser parser, const ENCODING *enc, const char *
   poolClear(&tempPool);
   return 1;
 }
+
+static void
+reportDefault(XML_Parser parser, const ENCODING *enc, const char *s, const char *end)
+{
+  if (MUST_CONVERT(enc, s)) {
+    ICHAR *dataPtr = (ICHAR *)dataBuf;
+    XmlConvert(enc, &s, end, &dataPtr, (ICHAR *)dataBufEnd);
+    defaultHandler(handlerArg, dataBuf, dataPtr - (ICHAR *)dataBuf);
+  }
+  else
+    defaultHandler(handlerArg, (XML_Char *)s, (XML_Char *)end - (XML_Char *)s);
+}
+
 
 static int
 defineAttribute(ELEMENT_TYPE *type, ATTRIBUTE_ID *attId, int isCdata, const XML_Char *value)
