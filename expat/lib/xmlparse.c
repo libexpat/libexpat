@@ -764,10 +764,8 @@ parserInit(XML_Parser parser, const XML_Char *encodingName)
 #ifdef XML_DTD
   isParamEntity = 0;
   paramEntityParsing = XML_PARAM_ENTITY_PARSING_NEVER;
-  return dtdInit(&dtd, parser);
-#else
-  return 1;
 #endif
+  return dtdInit(&dtd, parser);
 }
 
 int
