@@ -12,6 +12,7 @@
 #endif
 #endif /* ndef COMPILED_FROM_DSP */
 
+#include "external.h"
 #include "internal.h"
 #include "xmlrole.h"
 #include "ascii.h"
