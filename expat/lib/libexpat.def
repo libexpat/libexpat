@@ -1,3 +1,4 @@
+; DEF file for MS VC++
 LIBRARY   LIBEXPAT
 DESCRIPTION "Implements an XML parser."
 EXPORTS
@@ -55,6 +56,7 @@ EXPORTS
   XML_SetUserData @52
   XML_SetXmlDeclHandler @53
   XML_UseParserAsHandlerArg @54
+; added with version 1.95.4
   XML_ParserReset @55
   XML_SetSkippedEntityHandler @56
   XML_GetFeatureList @57
