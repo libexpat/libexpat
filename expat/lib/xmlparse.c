@@ -2127,7 +2127,7 @@ static enum XML_Error storeAtts(XML_Parser parser, const ENCODING *enc,
     return XML_ERROR_NONE;
   prefixLen = 0;
   if (ns && ns_triplets && binding->prefix->name) {
-    for (prefixLen; binding->prefix->name[prefixLen++];)
+    for (; binding->prefix->name[prefixLen++];)
       ;
   }
   tagNamePtr->localPart = localPart;
