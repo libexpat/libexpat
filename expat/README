@@ -1,7 +1,7 @@
 
                         Expat, Release 1.95.4
 
-This is expat, a C library for parsing XML, written by James Clark.
+This is Expat, a C library for parsing XML, written by James Clark.
 Expat is a stream-oriented XML parser.  This means that you register
 handlers with the parser before starting the parse.  These handlers
 are called when the parser discovers the associated structures in the
@@ -17,12 +17,12 @@ the terms of the License contained in the file COPYING distributed
 with this package.  This license is the same as the MIT/X Consortium
 license.
 
-Versions of expat that have an odd minor version (the middle number in
+Versions of Expat that have an odd minor version (the middle number in
 the release above), are development releases and should be considered
 as beta software.  Releases with even minor version numbers are
 intended to be production grade software.
 
-To build expat, you first run the configuration shell script in the
+To build Expat, you first run the configuration shell script in the
 top level distribution directory:
 
         ./configure
