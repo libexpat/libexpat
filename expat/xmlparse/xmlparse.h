@@ -31,32 +31,40 @@ extern "C" {
 
 typedef void *XML_Parser;
 
+#ifdef XML_UNICODE
+/* Not supported yet. */
+#include <stddef.h>
+typedef wchar_t XML_Char;
+#else
+/* Information is UTF-8 encoded. */
+typedef char XML_Char;
+#endif
+
 /* Constructs a new parser; encoding is the externally specified encoding,
 or null if there is no externally specified encoding. */
 
 XML_Parser XMLPARSEAPI
 XML_ParserCreate(const char *encoding);
 
-/* Information is UTF-8 encoded. */
 
 /* atts is array of name/value pairs, terminated by NULL;
    names and values are '\0' terminated. */
 
 typedef void (*XML_StartElementHandler)(void *userData,
-					const char *name,
-					const char **atts);
+					const XML_Char *name,
+					const XML_Char **atts);
 
 typedef void (*XML_EndElementHandler)(void *userData,
-				      const char *name);
+				      const XML_Char *name);
 
 typedef void (*XML_CharacterDataHandler)(void *userData,
-					 const char *s,
+					 const XML_Char *s,
 					 int len);
 
 /* target and data are '\0' terminated */
 typedef void (*XML_ProcessingInstructionHandler)(void *userData,
-						 const char *target,
-						 const char *data);
+						 const XML_Char *target,
+						 const XML_Char *data);
 
 /* Reports a reference to an external parsed general entity.
 The referenced entity is not automatically parsed.
@@ -84,10 +92,10 @@ error.
 Note that unlike other handlers the first argument is the parser, not userData. */
 
 typedef int (*XML_ExternalEntityRefHandler)(XML_Parser parser,
-					    const char *openEntityNames,
-					    const char *base,
-					    const char *systemId,
-					    const char *publicId);
+					    const XML_Char *openEntityNames,
+					    const XML_Char *base,
+					    const XML_Char *systemId,
+					    const XML_Char *publicId);
 
 void XMLPARSEAPI
 XML_SetElementHandler(XML_Parser parser,
@@ -121,7 +129,7 @@ this value will be passed through as the base argumentto the ExternalEntityRefHa
 The base argument will be copied. Returns zero if out of memory, non-zero otherwise. */
 
 int XMLPARSEAPI
-XML_SetBase(XML_Parser parser, const char *base);
+XML_SetBase(XML_Parser parser, const XML_Char *base);
 
 /* Parses some input. Returns 0 if a fatal error is detected.
 The last call to XML_Parse must have isFinal true;
@@ -147,7 +155,7 @@ The handlers and userData are initialized from the parser argument.
 Returns 0 if out of memory.  Otherwise returns a new XML_Parser object. */
 XML_Parser XMLPARSEAPI
 XML_ExternalEntityParserCreate(XML_Parser parser,
-			       const char *openEntityNames,
+			       const XML_Char *openEntityNames,
 			       const char *encoding);
 
 /* If XML_Parser or XML_ParseEnd have returned 0, then XML_GetError*
