@@ -34,8 +34,8 @@ install -D xmlwf/xmlwf $RPM_BUILD_ROOT/usr/bin/xmlwf
 %doc COPYING Changes MANIFEST README doc/reference.html doc/style.css
 /usr/bin/xmlwf
 /usr/lib
-/usr/include
-/usr/man/man1/xmlwf.1
+/usr/include/expat.h
+/usr/man/man1/xmlwf.1.gz
 
 %changelog
 * Fri May 17 2002 Fred L. Drake, Jr. <fdrake@acm.org>
