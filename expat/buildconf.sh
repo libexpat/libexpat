@@ -14,13 +14,18 @@ if [ "x$libtoolize" = "x" ]; then
     exit 1
 fi
 
+# Remove any libtool files so one can switch between libtool 1.3
+# and libtool 1.4 by simply rerunning the buildconf script.
+(cd conftools/; rm -f ltmain.sh ltconfig)
+
 #
-# --force to ensure that we replace with current files
+# Note: we don't use --force (any more) since we have a special
+# config.guess/config.sub that we want to ensure is used.
+#
 # --copy to avoid symlinks; we want originals for the distro
 # --automake to make it shut up about "things to do"
 #
-(cd conftools/; rm -f ltmain.sh ltconfig)
-$libtoolize --force --copy --automake
+$libtoolize --copy --automake
 
 ltpath=`dirname $libtoolize`
 ltfile=`cd $ltpath/../share/aclocal ; pwd`/libtool.m4
