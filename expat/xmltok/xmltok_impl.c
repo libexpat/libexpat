@@ -1213,7 +1213,7 @@ int PREFIX(getAtts)(const ENCODING *enc, const char *ptr,
       break;
     case BT_APOS:
       if (state != inValue) {
-	atts[nAtts].valuePtr = ptr;
+	atts[nAtts].valuePtr = ptr + MINBPC;
         state = inValue;
         open = BT_APOS;
       }
