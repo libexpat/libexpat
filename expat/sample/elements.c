@@ -6,7 +6,8 @@ one tab stop more than their parent element. */
 #include <stdio.h>
 #include "expat.h"
 
-void startElement(void *userData, const char *name, const char **atts)
+static void
+startElement(void *userData, const char *name, const char **atts)
 {
   int i;
   int *depthPtr = userData;
@@ -16,13 +17,15 @@ void startElement(void *userData, const char *name, const char **atts)
   *depthPtr += 1;
 }
 
-void endElement(void *userData, const char *name)
+static void
+endElement(void *userData, const char *name)
 {
   int *depthPtr = userData;
   *depthPtr -= 1;
 }
 
-int main()
+int
+main(int argc, char *argv[])
 {
   char buf[BUFSIZ];
   XML_Parser parser = XML_ParserCreate(NULL);
