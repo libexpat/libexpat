@@ -357,6 +357,12 @@ XML_SetBase(XML_Parser parser, const XML_Char *base);
 const XML_Char XMLPARSEAPI *
 XML_GetBase(XML_Parser parser);
 
+/* Returns the number of the attributes passed in last call to the
+XML_StartElementHandler that were specified in the start-tag rather
+than defaulted. */
+
+int XMLPARSEAPI XML_GetSpecifiedAttributeCount(XML_Parser parser);
+
 /* Parses some input. Returns 0 if a fatal error is detected.
 The last call to XML_Parse must have isFinal true;
 len may be zero for this call (or any other). */

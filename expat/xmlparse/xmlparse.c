@@ -309,6 +309,7 @@ typedef struct {
   BINDING *inheritedBindings;
   BINDING *freeBindingList;
   int attsSize;
+  int nSpecifiedAtts;
   ATTRIBUTE *atts;
   POSITION position;
   STRING_POOL tempPool;
@@ -376,6 +377,7 @@ typedef struct {
 #define tagStack (((Parser *)parser)->tagStack)
 #define atts (((Parser *)parser)->atts)
 #define attsSize (((Parser *)parser)->attsSize)
+#define nSpecifiedAtts (((Parser *)parser)->nSpecifiedAtts)
 #define tempPool (((Parser *)parser)->tempPool)
 #define temp2Pool (((Parser *)parser)->temp2Pool)
 #define groupConnector (((Parser *)parser)->groupConnector)
@@ -440,6 +442,7 @@ XML_Parser XML_ParserCreate(const XML_Char *encodingName)
   inheritedBindings = 0;
   attsSize = INIT_ATTS_SIZE;
   atts = malloc(attsSize * sizeof(ATTRIBUTE));
+  nSpecifiedAtts = 0;
   dataBuf = malloc(INIT_DATA_BUF_SIZE * sizeof(XML_Char));
   groupSize = 0;
   groupConnector = 0;
@@ -633,6 +636,11 @@ int XML_SetBase(XML_Parser parser, const XML_Char *p)
 const XML_Char *XML_GetBase(XML_Parser parser)
 {
   return dtd.base;
+}
+
+int XML_GetSpecifiedAttributeCount(XML_Parser parser)
+{
+  return nSpecifiedAtts;
 }
 
 void XML_SetElementHandler(XML_Parser parser,
@@ -1541,6 +1549,7 @@ static enum XML_Error storeAtts(XML_Parser parser, const ENCODING *enc,
     else
       attIndex++;
   }
+  nSpecifiedAtts = attIndex;
   if (tagNamePtr) {
     int j;
     for (j = 0; j < nDefaultAtts; j++) {
