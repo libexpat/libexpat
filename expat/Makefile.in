@@ -40,6 +40,7 @@ exec_prefix = @exec_prefix@
 bindir = @bindir@
 libdir = @libdir@
 includedir = @includedir@
+mandir = @prefix@/man/man1
 
 top_builddir = .
 
@@ -78,17 +79,17 @@ check: tests/runtests
 	tests/runtests
 
 install: xmlwf/xmlwf lib/$(LIBRARY) lib/$(APIHEADER)
-	$(mkinstalldirs) $(bindir) $(libdir) $(includedir)
+	$(mkinstalldirs) $(bindir) $(libdir) $(includedir) $(mandir)
 	$(LIBTOOL) --mode=install $(INSTALL_PROGRAM) xmlwf/xmlwf $(bindir)/xmlwf
 	$(LIBTOOL) --mode=install $(INSTALL) lib/$(LIBRARY) $(libdir)/$(LIBRARY)
 	$(INSTALL_DATA) lib/$(APIHEADER) $(includedir)
-	$(INSTALL_DATA) doc/xmlwf.1 $(prefix)/man/man1
+	$(INSTALL_DATA) doc/xmlwf.1 $(mandir)
 
 uninstall:
 	$(LIBTOOL) --mode=uninstall rm -f $(bindir)/xmlwf
 	$(LIBTOOL) --mode=uninstall rm -f $(libdir)/$(LIBRARY)
 	rm -f $(includedir)/$(APIHEADER)
-	rm -f $(prefix)/man/man1/xmlwf.1
+	rm -f $(mandir)/xmlwf.1
 
 # for VPATH builds (invoked by configure)
 mkdir-init:
