@@ -14,7 +14,6 @@ const char *wfCheckMessage(enum WfCheckResult result)
     "duplicate attribute",
     "junk after document element",
     "parameter entity reference not allowed within declaration in internal subset",
-    "conditional section not allowed in internal subset",
     "undefined entity",
     "recursive entity reference",
     "asynchronous entity",

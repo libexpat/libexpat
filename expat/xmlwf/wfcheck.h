@@ -13,7 +13,6 @@ enum WfCheckResult {
   duplicateAttribute,
   junkAfterDocElement,
   paramEntityRef,
-  condSect,
   undefinedEntity,
   recursiveEntityRef,
   asyncEntity,
