@@ -30,7 +30,7 @@ char Buff[BUFFSIZE];
 
 int Depth;
 
-static void
+static void XMLCALL
 start(void *data, const char *el, const char **attr)
 {
   int i;
@@ -48,7 +48,7 @@ start(void *data, const char *el, const char **attr)
   Depth++;
 }
 
-static void
+static void XMLCALL
 end(void *data, const char *el)
 {
   Depth--;

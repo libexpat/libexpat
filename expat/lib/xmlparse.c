@@ -10,7 +10,6 @@
 #include "winconfig.h"
 #define XMLPARSEAPI(type) type __cdecl
 #include "expat.h"
-#undef XMLPARSEAPI
 
 #elif defined(MACOS_CLASSIC)
 
@@ -21,15 +20,10 @@
 
 #include <expat_config.h>
 
-#ifdef __declspec
-#define XMLPARSEAPI(type) type __cdecl
-#endif
+#define XMLIMPORT
 
 #include "expat.h"
 
-#ifdef __declspec
-#undef XMLPARSEAPI
-#endif
 #endif /* ndef COMPILED_FROM_DSP */
 
 #ifdef XML_UNICODE
@@ -671,13 +665,13 @@ struct XML_ParserStruct {
     (processor != prologInitProcessor))
 #endif /* XML_DTD */
 
-XML_Parser
+XML_Parser XMLCALL
 XML_ParserCreate(const XML_Char *encodingName)
 {
   return XML_ParserCreate_MM(encodingName, NULL, NULL);
 }
 
-XML_Parser
+XML_Parser XMLCALL
 XML_ParserCreateNS(const XML_Char *encodingName, XML_Char nsSep)
 {
   XML_Char tmp[2];
@@ -692,7 +686,7 @@ static const XML_Char implicitContext[] = {
   'n', 'a', 'm', 'e', 's', 'p', 'a', 'c', 'e', '\0'
 };
 
-XML_Parser
+XML_Parser XMLCALL
 XML_ParserCreate_MM(const XML_Char *encodingName,
                     const XML_Memory_Handling_Suite *memsuite,
                     const XML_Char *nameSep)
@@ -893,7 +887,7 @@ moveToFreeBindingList(XML_Parser parser, BINDING *bindings)
   }
 }
 
-XML_Bool
+XML_Bool XMLCALL
 XML_ParserReset(XML_Parser parser, const XML_Char *encodingName)
 {
   TAG *tStk;
@@ -920,7 +914,7 @@ XML_ParserReset(XML_Parser parser, const XML_Char *encodingName)
   return setContext(parser, implicitContext);
 }
 
-enum XML_Status
+enum XML_Status XMLCALL
 XML_SetEncoding(XML_Parser parser, const XML_Char *encodingName)
 {
   /* Block after XML_Parse()/XML_ParseBuffer() has been called.
@@ -939,7 +933,7 @@ XML_SetEncoding(XML_Parser parser, const XML_Char *encodingName)
   return XML_STATUS_OK;
 }
 
-XML_Parser
+XML_Parser XMLCALL
 XML_ExternalEntityParserCreate(XML_Parser oldParser,
                                const XML_Char *context,
                                const XML_Char *encodingName)
@@ -1082,7 +1076,7 @@ destroyBindings(BINDING *bindings, XML_Parser parser)
   }
 }
 
-void
+void XMLCALL
 XML_ParserFree(XML_Parser parser)
 {
   for (;;) {
@@ -1123,13 +1117,13 @@ XML_ParserFree(XML_Parser parser)
   FREE(parser);
 }
 
-void
+void XMLCALL
 XML_UseParserAsHandlerArg(XML_Parser parser)
 {
   handlerArg = parser;
 }
 
-enum XML_Error
+enum XML_Error XMLCALL
 XML_UseForeignDTD(XML_Parser parser, XML_Bool useDTD)
 {
 #ifdef XML_DTD
@@ -1143,7 +1137,7 @@ XML_UseForeignDTD(XML_Parser parser, XML_Bool useDTD)
 #endif
 }
 
-void
+void XMLCALL
 XML_SetReturnNSTriplet(XML_Parser parser, int do_nst)
 {
   /* block after XML_Parse()/XML_ParseBuffer() has been called */
@@ -1152,7 +1146,7 @@ XML_SetReturnNSTriplet(XML_Parser parser, int do_nst)
   ns_triplets = do_nst ? XML_TRUE : XML_FALSE;
 }
 
-void
+void XMLCALL
 XML_SetUserData(XML_Parser parser, void *p)
 {
   if (handlerArg == userData)
@@ -1161,7 +1155,7 @@ XML_SetUserData(XML_Parser parser, void *p)
     userData = p;
 }
 
-enum XML_Status
+enum XML_Status XMLCALL
 XML_SetBase(XML_Parser parser, const XML_Char *p)
 {
   if (p) {
@@ -1175,25 +1169,25 @@ XML_SetBase(XML_Parser parser, const XML_Char *p)
   return XML_STATUS_OK;
 }
 
-const XML_Char *
+const XML_Char * XMLCALL
 XML_GetBase(XML_Parser parser)
 {
   return curBase;
 }
 
-int
+int XMLCALL
 XML_GetSpecifiedAttributeCount(XML_Parser parser)
 {
   return nSpecifiedAtts;
 }
 
-int
+int XMLCALL
 XML_GetIdAttributeIndex(XML_Parser parser)
 {
   return idAttIndex;
 }
 
-void
+void XMLCALL
 XML_SetElementHandler(XML_Parser parser,
                       XML_StartElementHandler start,
                       XML_EndElementHandler end)
@@ -1202,40 +1196,40 @@ XML_SetElementHandler(XML_Parser parser,
   endElementHandler = end;
 }
 
-void
+void XMLCALL
 XML_SetStartElementHandler(XML_Parser parser,
                            XML_StartElementHandler start) {
   startElementHandler = start;
 }
 
-void
+void XMLCALL
 XML_SetEndElementHandler(XML_Parser parser,
                          XML_EndElementHandler end) {
   endElementHandler = end;
 }
 
-void
+void XMLCALL
 XML_SetCharacterDataHandler(XML_Parser parser,
                             XML_CharacterDataHandler handler)
 {
   characterDataHandler = handler;
 }
 
-void
+void XMLCALL
 XML_SetProcessingInstructionHandler(XML_Parser parser,
                                     XML_ProcessingInstructionHandler handler)
 {
   processingInstructionHandler = handler;
 }
 
-void
+void XMLCALL
 XML_SetCommentHandler(XML_Parser parser,
                       XML_CommentHandler handler)
 {
   commentHandler = handler;
 }
 
-void
+void XMLCALL
 XML_SetCdataSectionHandler(XML_Parser parser,
                            XML_StartCdataSectionHandler start,
                            XML_EndCdataSectionHandler end)
@@ -1244,19 +1238,19 @@ XML_SetCdataSectionHandler(XML_Parser parser,
   endCdataSectionHandler = end;
 }
 
-void
+void XMLCALL
 XML_SetStartCdataSectionHandler(XML_Parser parser,
                                 XML_StartCdataSectionHandler start) {
   startCdataSectionHandler = start;
 }
 
-void
+void XMLCALL
 XML_SetEndCdataSectionHandler(XML_Parser parser,
                               XML_EndCdataSectionHandler end) {
   endCdataSectionHandler = end;
 }
 
-void
+void XMLCALL
 XML_SetDefaultHandler(XML_Parser parser,
                       XML_DefaultHandler handler)
 {
@@ -1264,7 +1258,7 @@ XML_SetDefaultHandler(XML_Parser parser,
   defaultExpandInternalEntities = XML_FALSE;
 }
 
-void
+void XMLCALL
 XML_SetDefaultHandlerExpand(XML_Parser parser,
                             XML_DefaultHandler handler)
 {
@@ -1272,7 +1266,7 @@ XML_SetDefaultHandlerExpand(XML_Parser parser,
   defaultExpandInternalEntities = XML_TRUE;
 }
 
-void
+void XMLCALL
 XML_SetDoctypeDeclHandler(XML_Parser parser,
                           XML_StartDoctypeDeclHandler start,
                           XML_EndDoctypeDeclHandler end)
@@ -1281,33 +1275,33 @@ XML_SetDoctypeDeclHandler(XML_Parser parser,
   endDoctypeDeclHandler = end;
 }
 
-void
+void XMLCALL
 XML_SetStartDoctypeDeclHandler(XML_Parser parser,
                                XML_StartDoctypeDeclHandler start) {
   startDoctypeDeclHandler = start;
 }
 
-void
+void XMLCALL
 XML_SetEndDoctypeDeclHandler(XML_Parser parser,
                              XML_EndDoctypeDeclHandler end) {
   endDoctypeDeclHandler = end;
 }
 
-void
+void XMLCALL
 XML_SetUnparsedEntityDeclHandler(XML_Parser parser,
                                  XML_UnparsedEntityDeclHandler handler)
 {
   unparsedEntityDeclHandler = handler;
 }
 
-void
+void XMLCALL
 XML_SetNotationDeclHandler(XML_Parser parser,
                            XML_NotationDeclHandler handler)
 {
   notationDeclHandler = handler;
 }
 
-void
+void XMLCALL
 XML_SetNamespaceDeclHandler(XML_Parser parser,
                             XML_StartNamespaceDeclHandler start,
                             XML_EndNamespaceDeclHandler end)
@@ -1316,33 +1310,33 @@ XML_SetNamespaceDeclHandler(XML_Parser parser,
   endNamespaceDeclHandler = end;
 }
 
-void
+void XMLCALL
 XML_SetStartNamespaceDeclHandler(XML_Parser parser,
                                  XML_StartNamespaceDeclHandler start) {
   startNamespaceDeclHandler = start;
 }
 
-void
+void XMLCALL
 XML_SetEndNamespaceDeclHandler(XML_Parser parser,
                                XML_EndNamespaceDeclHandler end) {
   endNamespaceDeclHandler = end;
 }
 
-void
+void XMLCALL
 XML_SetNotStandaloneHandler(XML_Parser parser,
                             XML_NotStandaloneHandler handler)
 {
   notStandaloneHandler = handler;
 }
 
-void
+void XMLCALL
 XML_SetExternalEntityRefHandler(XML_Parser parser,
                                 XML_ExternalEntityRefHandler handler)
 {
   externalEntityRefHandler = handler;
 }
 
-void
+void XMLCALL
 XML_SetExternalEntityRefHandlerArg(XML_Parser parser, void *arg)
 {
   if (arg)
@@ -1351,14 +1345,14 @@ XML_SetExternalEntityRefHandlerArg(XML_Parser parser, void *arg)
     externalEntityRefHandlerArg = parser;
 }
 
-void
+void XMLCALL
 XML_SetSkippedEntityHandler(XML_Parser parser,
                             XML_SkippedEntityHandler handler)
 {
   skippedEntityHandler = handler;
 }
 
-void
+void XMLCALL
 XML_SetUnknownEncodingHandler(XML_Parser parser,
                               XML_UnknownEncodingHandler handler,
                               void *data)
@@ -1367,34 +1361,34 @@ XML_SetUnknownEncodingHandler(XML_Parser parser,
   unknownEncodingHandlerData = data;
 }
 
-void
+void XMLCALL
 XML_SetElementDeclHandler(XML_Parser parser,
                           XML_ElementDeclHandler eldecl)
 {
   elementDeclHandler = eldecl;
 }
 
-void
+void XMLCALL
 XML_SetAttlistDeclHandler(XML_Parser parser,
                           XML_AttlistDeclHandler attdecl)
 {
   attlistDeclHandler = attdecl;
 }
 
-void
+void XMLCALL
 XML_SetEntityDeclHandler(XML_Parser parser,
                          XML_EntityDeclHandler handler)
 {
   entityDeclHandler = handler;
 }
 
-void
+void XMLCALL
 XML_SetXmlDeclHandler(XML_Parser parser,
                       XML_XmlDeclHandler handler) {
   xmlDeclHandler = handler;
 }
 
-int
+int XMLCALL
 XML_SetParamEntityParsing(XML_Parser parser,
                           enum XML_ParamEntityParsing peParsing)
 {
@@ -1409,7 +1403,7 @@ XML_SetParamEntityParsing(XML_Parser parser,
 #endif
 }
 
-enum XML_Status
+enum XML_Status XMLCALL
 XML_Parse(XML_Parser parser, const char *s, int len, int isFinal)
 {
   if (len == 0) {
@@ -1484,7 +1478,7 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal)
   }
 }
 
-enum XML_Status
+enum XML_Status XMLCALL
 XML_ParseBuffer(XML_Parser parser, int len, int isFinal)
 {
   const char *start = bufferPtr;
@@ -1507,7 +1501,7 @@ XML_ParseBuffer(XML_Parser parser, int len, int isFinal)
   }
 }
 
-void *
+void * XMLCALL
 XML_GetBuffer(XML_Parser parser, int len)
 {
   if (len > bufferLim - bufferEnd) {
@@ -1576,13 +1570,13 @@ XML_GetBuffer(XML_Parser parser, int len)
   return bufferEnd;
 }
 
-enum XML_Error
+enum XML_Error XMLCALL
 XML_GetErrorCode(XML_Parser parser)
 {
   return errorCode;
 }
 
-long
+long XMLCALL
 XML_GetCurrentByteIndex(XML_Parser parser)
 {
   if (eventPtr)
@@ -1590,7 +1584,7 @@ XML_GetCurrentByteIndex(XML_Parser parser)
   return -1;
 }
 
-int
+int XMLCALL
 XML_GetCurrentByteCount(XML_Parser parser)
 {
   if (eventEndPtr && eventPtr)
@@ -1598,7 +1592,7 @@ XML_GetCurrentByteCount(XML_Parser parser)
   return 0;
 }
 
-const char *
+const char * XMLCALL
 XML_GetInputContext(XML_Parser parser, int *offset, int *size)
 {
 #ifdef XML_CONTEXT_BYTES
@@ -1611,7 +1605,7 @@ XML_GetInputContext(XML_Parser parser, int *offset, int *size)
   return (char *) 0;
 }
 
-int
+int XMLCALL
 XML_GetCurrentLineNumber(XML_Parser parser)
 {
   if (eventPtr) {
@@ -1621,7 +1615,7 @@ XML_GetCurrentLineNumber(XML_Parser parser)
   return position.lineNumber + 1;
 }
 
-int
+int XMLCALL
 XML_GetCurrentColumnNumber(XML_Parser parser)
 {
   if (eventPtr) {
@@ -1631,31 +1625,31 @@ XML_GetCurrentColumnNumber(XML_Parser parser)
   return position.columnNumber;
 }
 
-void
+void XMLCALL
 XML_FreeContentModel(XML_Parser parser, XML_Content *model)
 {
   FREE(model);
 }
 
-void *
+void * XMLCALL
 XML_MemMalloc(XML_Parser parser, size_t size)
 {
   return MALLOC(size);
 }
 
-void *
+void * XMLCALL
 XML_MemRealloc(XML_Parser parser, void *ptr, size_t size)
 {
   return REALLOC(ptr, size);
 }
 
-void
+void XMLCALL
 XML_MemFree(XML_Parser parser, void *ptr)
 {
   FREE(ptr);
 }
 
-void
+void XMLCALL
 XML_DefaultCurrent(XML_Parser parser)
 {
   if (defaultHandler) {
@@ -1669,7 +1663,7 @@ XML_DefaultCurrent(XML_Parser parser)
   }
 }
 
-const XML_LChar *
+const XML_LChar * XMLCALL
 XML_ErrorString(enum XML_Error code)
 {
   static const XML_LChar *message[] = {
@@ -1707,7 +1701,7 @@ XML_ErrorString(enum XML_Error code)
   return NULL;
 }
 
-const XML_LChar *
+const XML_LChar * XMLCALL
 XML_ExpatVersion(void) {
 
   /* V1 is used to string-ize the version number. However, it would
@@ -1727,7 +1721,7 @@ XML_ExpatVersion(void) {
 #undef V2
 }
 
-XML_Expat_Version
+XML_Expat_Version XMLCALL
 XML_ExpatVersionInfo(void)
 {
   XML_Expat_Version version;
@@ -1739,7 +1733,7 @@ XML_ExpatVersionInfo(void)
   return version;
 }
 
-const XML_Feature *
+const XML_Feature * XMLCALL
 XML_GetFeatureList(void)
 {
   static XML_Feature features[] = {

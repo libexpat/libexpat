@@ -182,7 +182,7 @@ variable.</p>
 <pre class="eg">
 int Depth;
 
-void
+void XMLCALL
 start(void *data, const char *el, const char **attr) {
   int i;
 
@@ -203,11 +203,27 @@ start(void *data, const char *el, const char **attr) {
 <p>The end tag simply does the bookkeeping work of decrementing
 <code>Depth</code>.</p>
 <pre class="eg">
-void
+void XMLCALL
 end(void *data, const char *el) {
   Depth--;
 }  /* End of end handler */
 </pre>
+
+<p>Note the <code>XMLCALL</code> annotation used for the callbacks.
+This is used to ensure that the Expat and the callbacks are using the
+same calling convention in case the compiler options used for Expat
+itself and the client code are different.  Expat tries not to care
+what the default calling convention is, though it may require that it
+be compiled with a default convention of "cdecl" on some platforms.
+For code which uses Expat, however, the calling convention is
+specified by the <code>XMLCALL</code> annotation on most platforms;
+callbacks should be defined using this annotation.</p>
+
+<p>The <code>XMLCALL</code> annotation was added in Expat 1.95.7, but
+existing working Expat applications don't need to add it (since they
+are already using the "cdecl" calling convention, or they wouldn't be
+working).  The annotation is only needed if the default calling
+convention may be something other than "cdecl".</p>
 
 <p>After creating the parser, the main program just has the job of
 shoveling the document to the parser so that it can do its work.</p>
@@ -360,7 +376,7 @@ init_info(Parseinfo *info) {
   /* Other initializations here */
 }  /* End of init_info */
 
-void
+void XMLCALL
 rawstart(void *data, const char *el, const char **attr) {
   Parseinfo *inf = (Parseinfo *) data;
 
@@ -375,7 +391,7 @@ rawstart(void *data, const char *el, const char **attr) {
   inf->depth++;
 }  /* End of rawstart */
 
-void
+void XMLCALL
 rawend(void *data, const char *el) {
   Parseinfo *inf = (Parseinfo *) data;
 
@@ -425,7 +441,7 @@ version number of <code>"1.0"</code> is accepted:</p>
 static int wrong_version;
 static XML_Parser parser;
 
-static void
+static void XMLCALL
 xmldecl_handler(void            *userData,
                 const XML_Char  *version,
                 const XML_Char  *encoding,
@@ -702,9 +718,9 @@ XML_ParserCreate_MM(const XML_Char *encoding,
 </pre>
 <pre class="signature">
 typedef struct {
-  void *(*malloc_fcn)(size_t size);
-  void *(*realloc_fcn)(void *ptr, size_t size);
-  void (*free_fcn)(void *ptr);
+  void *(XMLCALL *malloc_fcn)(size_t size);
+  void *(XMLCALL *realloc_fcn)(void *ptr, size_t size);
+  void (XMLCALL *free_fcn)(void *ptr);
 } XML_Memory_Handling_Suite;
 </pre>
 <div class="fcndef">
@@ -872,9 +888,9 @@ XML_SetStartElementHandler(XML_Parser p,
 </pre>
 <pre class="signature">
 typedef void
-(*XML_StartElementHandler)(void *userData,
-                           const XML_Char *name,
-                           const XML_Char **atts);
+(XMLCALL *XML_StartElementHandler)(void *userData,
+                                   const XML_Char *name,
+                                   const XML_Char **atts);
 </pre>
 <p>Set handler for start (and empty) tags. Attributes are passed to the start
 handler as a pointer to a vector of char pointers. Each attribute seen in
@@ -892,8 +908,8 @@ XML_SetEndElementHandler(XML_Parser p,
 </pre>
 <pre class="signature">
 typedef void
-(*XML_EndElementHandler)(void *userData,
-                         const XML_Char *name);
+(XMLCALL *XML_EndElementHandler)(void *userData,
+                                 const XML_Char *name);
 </pre>
 <p>Set handler for end (and empty) tags. As noted above, an empty tag
 generates a call to both start and end handlers.</p>
@@ -915,9 +931,9 @@ XML_SetCharacterDataHandler(XML_Parser p,
 </pre>
 <pre class="signature">
 typedef void
-(*XML_CharacterDataHandler)(void *userData,
-                            const XML_Char *s,
-                            int len);
+(XMLCALL *XML_CharacterDataHandler)(void *userData,
+                                    const XML_Char *s,
+                                    int len);
 </pre>
 <p>Set a text handler. The string your handler receives
 is <em>NOT nul-terminated</em>. You have to use the length argument
@@ -934,9 +950,9 @@ XML_SetProcessingInstructionHandler(XML_Parser p,
 </pre>
 <pre class="signature">
 typedef void
-(*XML_ProcessingInstructionHandler)(void *userData,
-                                    const XML_Char *target,
-                                    const XML_Char *data);
+(XMLCALL *XML_ProcessingInstructionHandler)(void *userData,
+                                            const XML_Char *target,
+                                            const XML_Char *data);
 
 </pre>
 <p>Set a handler for processing instructions. The target is the first word
@@ -951,8 +967,8 @@ XML_SetCommentHandler(XML_Parser p,
 </pre>
 <pre class="signature">
 typedef void
-(*XML_CommentHandler)(void *userData,
-                      const XML_Char *data);
+(XMLCALL *XML_CommentHandler)(void *userData,
+                              const XML_Char *data);
 </pre>
 <p>Set a handler for comments. The data is all text inside the comment
 delimiters.</p>
@@ -965,7 +981,7 @@ XML_SetStartCdataSectionHandler(XML_Parser p,
 </pre>
 <pre class="signature">
 typedef void
-(*XML_StartCdataSectionHandler)(void *userData);
+(XMLCALL *XML_StartCdataSectionHandler)(void *userData);
 </pre>
 <p>Set a handler that gets called at the beginning of a CDATA section.</p>
 </div>
@@ -977,7 +993,7 @@ XML_SetEndCdataSectionHandler(XML_Parser p,
 </pre>
 <pre class="signature">
 typedef void
-(*XML_EndCdataSectionHandler)(void *userData);
+(XMLCALL *XML_EndCdataSectionHandler)(void *userData);
 </pre>
 <p>Set a handler that gets called at the end of a CDATA section.</p>
 </div>
@@ -998,9 +1014,9 @@ XML_SetDefaultHandler(XML_Parser p,
 </pre>
 <pre class="signature">
 typedef void
-(*XML_DefaultHandler)(void *userData,
-                      const XML_Char *s,
-                      int len);
+(XMLCALL *XML_DefaultHandler)(void *userData,
+                              const XML_Char *s,
+                              int len);
 </pre>
 
 <p>Sets a handler for any characters in the document which wouldn't
@@ -1028,9 +1044,9 @@ XML_SetDefaultHandlerExpand(XML_Parser p,
 </pre>
 <pre class="signature">
 typedef void
-(*XML_DefaultHandler)(void *userData,
-                      const XML_Char *s,
-                      int len);
+(XMLCALL *XML_DefaultHandler)(void *userData,
+                              const XML_Char *s,
+                              int len);
 </pre>
 <p>This sets a default handler, but doesn't inhibit the expansion of
 internal entity references.  The entity reference will not be passed
@@ -1047,11 +1063,11 @@ XML_SetExternalEntityRefHandler(XML_Parser p,
 </pre>
 <pre class="signature">
 typedef int
-(*XML_ExternalEntityRefHandler)(XML_Parser p,
-                                const XML_Char *context,
-                                const XML_Char *base,
-                                const XML_Char *systemId,
-                                const XML_Char *publicId);
+(XMLCALL *XML_ExternalEntityRefHandler)(XML_Parser p,
+                                        const XML_Char *context,
+                                        const XML_Char *base,
+                                        const XML_Char *systemId,
+                                        const XML_Char *publicId);
 </pre>
 <p>Set an external entity reference handler. This handler is also
 called for processing an external DTD subset if parameter entity parsing
@@ -1124,9 +1140,9 @@ XML_SetSkippedEntityHandler(XML_Parser p,
 </pre>
 <pre class="signature">
 typedef void
-(*XML_SkippedEntityHandler)(void *userData,
-                            const XML_Char *entityName,
-                            int is_parameter_entity);
+(XMLCALL *XML_SkippedEntityHandler)(void *userData,
+                                    const XML_Char *entityName,
+                                    int is_parameter_entity);
 </pre>
 <p>Set a skipped entity handler. This is called in two situations:</p>
 <ol>
@@ -1151,15 +1167,15 @@ XML_SetUnknownEncodingHandler(XML_Parser p,
 </pre>
 <pre class="signature">
 typedef int
-(*XML_UnknownEncodingHandler)(void *encodingHandlerData,
-                              const XML_Char *name,
-                              XML_Encoding *info);
+(XMLCALL *XML_UnknownEncodingHandler)(void *encodingHandlerData,
+                                      const XML_Char *name,
+                                      XML_Encoding *info);
 
 typedef struct {
   int map[256];
   void *data;
-  int (*convert)(void *data, const char *s);
-  void (*release)(void *data);
+  int (XMLCALL *convert)(void *data, const char *s);
+  void (XMLCALL *release)(void *data);
 } XML_Encoding;
 </pre>
 <p>Set a handler to deal with encodings other than the <a
@@ -1198,9 +1214,9 @@ XML_SetStartNamespaceDeclHandler(XML_Parser p,
 </pre>
 <pre class="signature">
 typedef void
-(*XML_StartNamespaceDeclHandler)(void *userData,
-                                 const XML_Char *prefix,
-                                 const XML_Char *uri);
+(XMLCALL *XML_StartNamespaceDeclHandler)(void *userData,
+                                         const XML_Char *prefix,
+                                         const XML_Char *uri);
 </pre>
 <p>Set a handler to be called when a namespace is declared. Namespace
 declarations occur inside start tags. But the namespace declaration start
@@ -1215,8 +1231,8 @@ XML_SetEndNamespaceDeclHandler(XML_Parser p,
 </pre>
 <pre class="signature">
 typedef void
-(*XML_EndNamespaceDeclHandler)(void *userData,
-                               const XML_Char *prefix);
+(XMLCALL *XML_EndNamespaceDeclHandler)(void *userData,
+                                       const XML_Char *prefix);
 </pre>
 <p>Set a handler to be called when leaving the scope of a namespace
 declaration. This will be called, for each namespace declaration,
@@ -1240,10 +1256,10 @@ XML_SetXmlDeclHandler(XML_Parser p,
 </pre>
 <pre class="signature">
 typedef void
-(*XML_XmlDeclHandler) (void            *userData,
-                       const XML_Char  *version,
-                       const XML_Char  *encoding,
-                       int             standalone);
+(XMLCALL *XML_XmlDeclHandler)(void            *userData,
+                              const XML_Char  *version,
+                              const XML_Char  *encoding,
+                              int             standalone);
 </pre>
 <p>Sets a handler that is called for XML declarations and also for
 text declarations discovered in external entities. The way to
@@ -1262,11 +1278,11 @@ XML_SetStartDoctypeDeclHandler(XML_Parser p,
 </pre>
 <pre class="signature">
 typedef void
-(*XML_StartDoctypeDeclHandler)(void           *userData,
-                               const XML_Char *doctypeName,
-                               const XML_Char *sysid,
-                               const XML_Char *pubid,
-                               int            has_internal_subset);
+(XMLCALL *XML_StartDoctypeDeclHandler)(void           *userData,
+                                       const XML_Char *doctypeName,
+                                       const XML_Char *sysid,
+                                       const XML_Char *pubid,
+                                       int            has_internal_subset);
 </pre>
 <p>Set a handler that is called at the start of a DOCTYPE declaration,
 before any external or internal subset is parsed. Both <code>sysid</code>
@@ -1281,7 +1297,7 @@ XML_SetEndDoctypeDeclHandler(XML_Parser p,
 </pre>
 <pre class="signature">
 typedef void
-(*XML_EndDoctypeDeclHandler)(void *userData);
+(XMLCALL *XML_EndDoctypeDeclHandler)(void *userData);
 </pre>
 <p>Set a handler that is called at the end of a DOCTYPE declaration,
 after parsing any external subset.</p>
@@ -1303,9 +1319,9 @@ XML_SetElementDeclHandler(XML_Parser p,
 </pre>
 <pre class="signature">
 typedef void
-(*XML_ElementDeclHandler)(void *userData,
-                          const XML_Char *name,
-                          XML_Content *model);
+(XMLCALL *XML_ElementDeclHandler)(void *userData,
+                                  const XML_Char *name,
+                                  XML_Content *model);
 </pre>
 <pre class="signature">
 enum XML_Content_Type {
@@ -1374,12 +1390,12 @@ XML_SetAttlistDeclHandler(XML_Parser p,
 </pre>
 <pre class="signature">
 typedef void
-(*XML_AttlistDeclHandler) (void           *userData,
-                           const XML_Char *elname,
-                           const XML_Char *attname,
-                           const XML_Char *att_type,
-                           const XML_Char *dflt,
-                           int            isrequired);
+(XMLCALL *XML_AttlistDeclHandler)(void           *userData,
+                                  const XML_Char *elname,
+                                  const XML_Char *attname,
+                                  const XML_Char *att_type,
+                                  const XML_Char *dflt,
+                                  int            isrequired);
 </pre>
 <p>Set a handler for attlist declarations in the DTD. This handler is
 called for <em>each</em> attribute. So a single attlist declaration
@@ -1406,15 +1422,15 @@ XML_SetEntityDeclHandler(XML_Parser p,
 </pre>
 <pre class="signature">
 typedef void
-(*XML_EntityDeclHandler) (void           *userData,
-                          const XML_Char *entityName,
-                          int            is_parameter_entity,
-                          const XML_Char *value,
-                          int            value_length,
-                          const XML_Char *base,
-                          const XML_Char *systemId,
-                          const XML_Char *publicId,
-                          const XML_Char *notationName);
+(XMLCALL *XML_EntityDeclHandler)(void           *userData,
+                                 const XML_Char *entityName,
+                                 int            is_parameter_entity,
+                                 const XML_Char *value,
+                                 int            value_length, 
+                                 const XML_Char *base,
+                                 const XML_Char *systemId,
+                                 const XML_Char *publicId,
+                                 const XML_Char *notationName);
 </pre>
 <p>Sets a handler that will be called for all entity declarations.
 The <code>is_parameter_entity</code> argument will be non-zero in the
@@ -1439,12 +1455,12 @@ XML_SetUnparsedEntityDeclHandler(XML_Parser p,
 </pre>
 <pre class="signature">
 typedef void
-(*XML_UnparsedEntityDeclHandler)(void *userData,
-                                 const XML_Char *entityName,
-                                 const XML_Char *base,
-                                 const XML_Char *systemId,
-                                 const XML_Char *publicId,
-                                 const XML_Char *notationName);
+(XMLCALL *XML_UnparsedEntityDeclHandler)(void *userData,
+                                         const XML_Char *entityName, 
+                                         const XML_Char *base,
+                                         const XML_Char *systemId,
+                                         const XML_Char *publicId,
+                                         const XML_Char *notationName);
 </pre>
 <p>Set a handler that receives declarations of unparsed entities. These
 are entity declarations that have a notation (NDATA) field:</p>
@@ -1464,11 +1480,11 @@ XML_SetNotationDeclHandler(XML_Parser p,
 </pre>
 <pre class="signature">
 typedef void
-(*XML_NotationDeclHandler)(void *userData,
-                           const XML_Char *notationName,
-                           const XML_Char *base,
-                           const XML_Char *systemId,
-                           const XML_Char *publicId);
+(XMLCALL *XML_NotationDeclHandler)(void *userData, 
+                                   const XML_Char *notationName,
+                                   const XML_Char *base,
+                                   const XML_Char *systemId,
+                                   const XML_Char *publicId);
 </pre>
 <p>Set a handler that receives notation declarations.</p>
 </div>
@@ -1480,7 +1496,7 @@ XML_SetNotStandaloneHandler(XML_Parser p,
 </pre>
 <pre class="signature">
 typedef int 
-(*XML_NotStandaloneHandler)(void *userData);
+(XMLCALL *XML_NotStandaloneHandler)(void *userData);
 </pre>
 <p>Set a handler that is called if the document is not "standalone".
 This happens when there is an external subset or a reference to a

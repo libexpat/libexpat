@@ -20,7 +20,7 @@
 
 #define NSSEP T('\001')
 
-static void
+static void XMLCALL
 characterData(void *userData, const XML_Char *s, int len)
 {
   FILE *fp = userData;
@@ -113,7 +113,7 @@ attcmp(const void *att1, const void *att2)
   return tcscmp(*(const XML_Char **)att1, *(const XML_Char **)att2);
 }
 
-static void
+static void XMLCALL
 startElement(void *userData, const XML_Char *name, const XML_Char **atts)
 {
   int nAtts;
@@ -137,7 +137,7 @@ startElement(void *userData, const XML_Char *name, const XML_Char **atts)
   puttc(T('>'), fp);
 }
 
-static void
+static void XMLCALL
 endElement(void *userData, const XML_Char *name)
 {
   FILE *fp = userData;
@@ -159,7 +159,7 @@ nsattcmp(const void *p1, const void *p2)
   return tcscmp(att1, att2);
 }
 
-static void
+static void XMLCALL
 startElementNS(void *userData, const XML_Char *name, const XML_Char **atts)
 {
   int nAtts;
@@ -208,7 +208,7 @@ startElementNS(void *userData, const XML_Char *name, const XML_Char **atts)
   puttc(T('>'), fp);
 }
 
-static void
+static void XMLCALL
 endElementNS(void *userData, const XML_Char *name)
 {
   FILE *fp = userData;
@@ -227,7 +227,7 @@ endElementNS(void *userData, const XML_Char *name)
 
 #ifndef W3C14N
 
-static void
+static void XMLCALL
 processingInstruction(void *userData, const XML_Char *target,
                       const XML_Char *data)
 {
@@ -243,54 +243,54 @@ processingInstruction(void *userData, const XML_Char *target,
 
 #endif /* not W3C14N */
 
-static void
+static void XMLCALL
 defaultCharacterData(void *userData, const XML_Char *s, int len)
 {
   XML_DefaultCurrent((XML_Parser) userData);
 }
 
-static void
+static void XMLCALL
 defaultStartElement(void *userData, const XML_Char *name,
                     const XML_Char **atts)
 {
   XML_DefaultCurrent((XML_Parser) userData);
 }
 
-static void
+static void XMLCALL
 defaultEndElement(void *userData, const XML_Char *name)
 {
   XML_DefaultCurrent((XML_Parser) userData);
 }
 
-static void
+static void XMLCALL
 defaultProcessingInstruction(void *userData, const XML_Char *target,
                              const XML_Char *data)
 {
   XML_DefaultCurrent((XML_Parser) userData);
 }
 
-static void
+static void XMLCALL
 nopCharacterData(void *userData, const XML_Char *s, int len)
 {
 }
 
-static void
+static void XMLCALL
 nopStartElement(void *userData, const XML_Char *name, const XML_Char **atts)
 {
 }
 
-static void
+static void XMLCALL
 nopEndElement(void *userData, const XML_Char *name)
 {
 }
 
-static void
+static void XMLCALL
 nopProcessingInstruction(void *userData, const XML_Char *target,
                          const XML_Char *data)
 {
 }
 
-static void
+static void XMLCALL
 markup(void *userData, const XML_Char *s, int len)
 {
   FILE *fp = XML_GetUserData((XML_Parser) userData);
@@ -324,7 +324,7 @@ metaEndDocument(void *userData)
   fputts(T("</document>\n"), XML_GetUserData((XML_Parser) userData));
 }
 
-static void
+static void XMLCALL
 metaStartElement(void *userData, const XML_Char *name,
                  const XML_Char **atts)
 {
@@ -359,7 +359,7 @@ metaStartElement(void *userData, const XML_Char *name,
     fputts(T("/>\n"), fp);
 }
 
-static void
+static void XMLCALL
 metaEndElement(void *userData, const XML_Char *name)
 {
   XML_Parser parser = (XML_Parser) userData;
@@ -369,7 +369,7 @@ metaEndElement(void *userData, const XML_Char *name)
   fputts(T("/>\n"), fp);
 }
 
-static void
+static void XMLCALL
 metaProcessingInstruction(void *userData, const XML_Char *target,
                           const XML_Char *data)
 {
@@ -382,7 +382,7 @@ metaProcessingInstruction(void *userData, const XML_Char *target,
   fputts(T("/>\n"), fp);
 }
 
-static void
+static void XMLCALL
 metaComment(void *userData, const XML_Char *data)
 {
   XML_Parser parser = (XML_Parser) userData;
@@ -394,7 +394,7 @@ metaComment(void *userData, const XML_Char *data)
   fputts(T("/>\n"), fp);
 }
 
-static void
+static void XMLCALL
 metaStartCdataSection(void *userData)
 {
   XML_Parser parser = (XML_Parser) userData;
@@ -404,7 +404,7 @@ metaStartCdataSection(void *userData)
   fputts(T("/>\n"), fp);
 }
 
-static void
+static void XMLCALL
 metaEndCdataSection(void *userData)
 {
   XML_Parser parser = (XML_Parser) userData;
@@ -414,7 +414,7 @@ metaEndCdataSection(void *userData)
   fputts(T("/>\n"), fp);
 }
 
-static void
+static void XMLCALL
 metaCharacterData(void *userData, const XML_Char *s, int len)
 {
   XML_Parser parser = (XML_Parser) userData;
@@ -426,7 +426,7 @@ metaCharacterData(void *userData, const XML_Char *s, int len)
   fputts(T("/>\n"), fp);
 }
 
-static void
+static void XMLCALL
 metaStartDoctypeDecl(void *userData,
                      const XML_Char *doctypeName,
                      const XML_Char *sysid,
@@ -440,7 +440,7 @@ metaStartDoctypeDecl(void *userData,
   fputts(T("/>\n"), fp);
 }
 
-static void
+static void XMLCALL
 metaEndDoctypeDecl(void *userData)
 {
   XML_Parser parser = (XML_Parser) userData;
@@ -450,7 +450,7 @@ metaEndDoctypeDecl(void *userData)
   fputts(T("/>\n"), fp);
 }
 
-static void
+static void XMLCALL
 metaNotationDecl(void *userData,
                  const XML_Char *notationName,
                  const XML_Char *base,
@@ -472,7 +472,7 @@ metaNotationDecl(void *userData,
 }
 
 
-static void
+static void XMLCALL
 metaEntityDecl(void *userData,
                const XML_Char *entityName,
                int  is_param,
@@ -516,7 +516,7 @@ metaEntityDecl(void *userData,
   }
 }
 
-static void
+static void XMLCALL
 metaStartNamespaceDecl(void *userData,
                        const XML_Char *prefix,
                        const XML_Char *uri)
@@ -535,7 +535,7 @@ metaStartNamespaceDecl(void *userData,
     fputts(T("/>\n"), fp);
 }
 
-static void
+static void XMLCALL
 metaEndNamespaceDecl(void *userData, const XML_Char *prefix)
 {
   XML_Parser parser = (XML_Parser) userData;
@@ -546,13 +546,13 @@ metaEndNamespaceDecl(void *userData, const XML_Char *prefix)
     ftprintf(fp, T("<endns prefix=\"%s\"/>\n"), prefix);
 }
 
-static int
+static int XMLCALL
 unknownEncodingConvert(void *data, const char *p)
 {
   return codepageConvert(*(int *)data, p);
 }
 
-static int
+static int XMLCALL
 unknownEncoding(void *userData, const XML_Char *name, XML_Encoding *info)
 {
   int cp;
@@ -588,7 +588,7 @@ unknownEncoding(void *userData, const XML_Char *name, XML_Encoding *info)
   return 1;
 }
 
-static int
+static int XMLCALL
 notStandalone(void *userData)
 {
   return 0;

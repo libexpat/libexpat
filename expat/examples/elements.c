@@ -7,7 +7,7 @@
 #include <stdio.h>
 #include "expat.h"
 
-static void
+static void XMLCALL
 startElement(void *userData, const char *name, const char **atts)
 {
   int i;
@@ -18,7 +18,7 @@ startElement(void *userData, const char *name, const char **atts)
   *depthPtr += 1;
 }
 
-static void
+static void XMLCALL
 endElement(void *userData, const char *name)
 {
   int *depthPtr = userData;

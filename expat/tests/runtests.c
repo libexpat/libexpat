@@ -77,7 +77,7 @@ _expect_failure(char *text, enum XML_Error errorCode, char *errorMessage,
    but it doesn't need to do anything.
 */
 
-static void
+static void XMLCALL
 dummy_start_doctype_handler(void           *userData,
                             const XML_Char *doctypeName,
                             const XML_Char *sysid,
@@ -85,11 +85,11 @@ dummy_start_doctype_handler(void           *userData,
                             int            has_internal_subset)
 {}
 
-static void
+static void XMLCALL
 dummy_end_doctype_handler(void *userData)
 {}
 
-static void
+static void XMLCALL
 dummy_entity_decl_handler(void           *userData,
                           const XML_Char *entityName,
                           int            is_parameter_entity,
@@ -101,7 +101,7 @@ dummy_entity_decl_handler(void           *userData,
                           const XML_Char *notationName)
 {}
 
-static void
+static void XMLCALL
 dummy_notation_decl_handler(void *userData,
                             const XML_Char *notationName,
                             const XML_Char *base,
@@ -109,13 +109,13 @@ dummy_notation_decl_handler(void *userData,
                             const XML_Char *publicId)
 {}
 
-static void
+static void XMLCALL
 dummy_element_decl_handler(void *userData,
                            const XML_Char *name,
                            XML_Content *model)
 {}
 
-static void
+static void XMLCALL
 dummy_attlist_decl_handler(void           *userData,
                            const XML_Char *elname,
                            const XML_Char *attname,
@@ -124,15 +124,15 @@ dummy_attlist_decl_handler(void           *userData,
                            int            isrequired)
 {}
 
-static void
+static void XMLCALL
 dummy_comment_handler(void *userData, const XML_Char *data)
 {}
 
-static void
+static void XMLCALL
 dummy_pi_handler(void *userData, const XML_Char *target, const XML_Char *data)
 {}
 
-static void
+static void XMLCALL
 dummy_start_element(void *userData,
                     const XML_Char *name, const XML_Char **atts)
 {}
@@ -192,13 +192,13 @@ START_TEST(test_bom_utf16_le)
 }
 END_TEST
 
-static void
+static void XMLCALL
 accumulate_characters(void *userData, const XML_Char *s, int len)
 {
     CharData_AppendXMLChars((CharData *)userData, s, len);
 }
 
-static void
+static void XMLCALL
 accumulate_attribute(void *userData, const XML_Char *name,
                      const XML_Char **atts)
 {
@@ -429,7 +429,7 @@ START_TEST(test_column_number_after_parse)
 }
 END_TEST
 
-static void
+static void XMLCALL
 start_element_event_handler2(void *userData, const XML_Char *name,
 			     const XML_Char **attr)
 {
@@ -442,7 +442,7 @@ start_element_event_handler2(void *userData, const XML_Char *name,
     CharData_AppendString(storage, buffer);
 }
 
-static void
+static void XMLCALL
 end_element_event_handler2(void *userData, const XML_Char *name)
 {
     CharData *storage = (CharData *) userData;
@@ -570,7 +570,7 @@ END_TEST
  * Element event tests.
  */
 
-static void
+static void XMLCALL
 end_element_event_handler(void *userData, const XML_Char *name)
 {
     CharData *storage = (CharData *) userData;
@@ -660,7 +660,7 @@ testhelper_is_whitespace_normalized(void)
     assert(!is_whitespace_normalized("abc\t def", 1));
 }
 
-static void
+static void XMLCALL
 check_attr_contains_normalized_whitespace(void *userData,
                                           const XML_Char *name,
                                           const XML_Char **atts)
@@ -721,7 +721,7 @@ START_TEST(test_xmldecl_misplaced)
 END_TEST
 
 /* Regression test for SF bug #584832. */
-static int
+static int XMLCALL
 UnknownEncodingHandler(void *data,const XML_Char *encoding,XML_Encoding *info)
 {
     if (strcmp(encoding,"unsupported-encoding") == 0) {
@@ -750,7 +750,7 @@ START_TEST(test_unknown_encoding_internal_entity)
 END_TEST
 
 /* Regression test for SF bug #620106. */
-static int
+static int XMLCALL
 external_entity_loader_set_encoding(XML_Parser parser,
                                     const XML_Char *context,
                                     const XML_Char *base,
@@ -830,7 +830,7 @@ START_TEST(test_wfc_undeclared_entity_standalone) {
 }
 END_TEST
 
-static int
+static int XMLCALL
 external_entity_loader(XML_Parser parser,
                        const XML_Char *context,
                        const XML_Char *base,
@@ -973,7 +973,7 @@ namespace_teardown(void)
    provided as the userData argument; the first is the expected
    element name, and the second is the expected attribute name.
 */
-static void
+static void XMLCALL
 triplet_start_checker(void *userData, const XML_Char *name,
                       const XML_Char **atts)
 {
@@ -993,7 +993,7 @@ triplet_start_checker(void *userData, const XML_Char *name,
    the expected value.  The expected value is passed as the first element
    in an array of strings passed as the userData argument.
 */
-static void
+static void XMLCALL
 triplet_end_checker(void *userData, const XML_Char *name)
 {
     char **elemstr = (char **)userData;
@@ -1021,7 +1021,7 @@ START_TEST(test_return_ns_triplet)
 }
 END_TEST
 
-static void
+static void XMLCALL
 overwrite_start_checker(void *userData, const XML_Char *name,
                         const XML_Char **atts)
 {
@@ -1036,7 +1036,7 @@ overwrite_start_checker(void *userData, const XML_Char *name,
     CharData_AppendString(storage, "\n");
 }
 
-static void
+static void XMLCALL
 overwrite_end_checker(void *userData, const XML_Char *name)
 {
     CharData *storage = (CharData *) userData;
@@ -1103,7 +1103,7 @@ END_TEST
 
 
 /* Regression test for SF bug #620343. */
-static void
+static void XMLCALL
 start_element_fail(void *userData,
                    const XML_Char *name, const XML_Char **atts)
 {
@@ -1111,7 +1111,7 @@ start_element_fail(void *userData,
     fail("should never reach start_element_fail()");
 }
 
-static void
+static void XMLCALL
 start_ns_clearing_start_element(void *userData,
                                 const XML_Char *prefix,
                                 const XML_Char *uri)
@@ -1136,7 +1136,7 @@ START_TEST(test_start_ns_clears_start_element)
 END_TEST
 
 /* Regression test for SF bug #616863. */
-static int
+static int XMLCALL
 external_entity_handler(XML_Parser parser,
                         const XML_Char *context,
                         const XML_Char *base,
