@@ -318,7 +318,7 @@ doIgnoreSection(XML_Parser parser, const ENCODING *, const char **startPtr,
 static enum XML_Error
 storeAtts(XML_Parser parser, const ENCODING *,
           const char *s, TAG_NAME *tagNamePtr, BINDING **bindingsPtr);
-static int
+static enum XML_Error
 addBinding(XML_Parser parser, PREFIX *prefix, const ATTRIBUTE_ID *attId,
            const XML_Char *uri, BINDING **bindingsPtr);
 static int
@@ -2457,9 +2457,10 @@ storeAtts(XML_Parser parser, const ENCODING *enc,
     if (attId->prefix && tagNamePtr) {
       if (attId->xmlns) {
         /* deal with namespace declarations here */
-        if (!addBinding(parser, attId->prefix, attId, appAtts[attIndex],
-                        bindingsPtr))
-          return XML_ERROR_NO_MEMORY;
+        enum XML_Error result = addBinding(parser, attId->prefix, attId,
+                                           appAtts[attIndex], bindingsPtr);
+        if (result)
+          return result;
         --attIndex;
       }
       else {
@@ -2490,9 +2491,10 @@ storeAtts(XML_Parser parser, const ENCODING *enc,
       if (!(da->id->name)[-1] && da->value) {
         if (da->id->prefix) {
           if (da->id->xmlns) {
-            if (!addBinding(parser, da->id->prefix, da->id, da->value,
-                            bindingsPtr))
-              return XML_ERROR_NO_MEMORY;
+            enum XML_Error result = addBinding(parser, da->id->prefix, da->id,
+                                               da->value, bindingsPtr);
+            if (result)
+              return result;
           }
           else {
             (da->id->name)[-1] = 2;
@@ -2612,12 +2614,17 @@ storeAtts(XML_Parser parser, const ENCODING *enc,
 /* addBinding() overwrites the value of prefix->binding without checking.
    Therefore one must keep track of the old value outside of addBinding().
 */
-static int
+static enum XML_Error
 addBinding(XML_Parser parser, PREFIX *prefix, const ATTRIBUTE_ID *attId,
            const XML_Char *uri, BINDING **bindingsPtr)
 {
   BINDING *b;
   int len;
+
+  /* empty string is only valid when there is no prefix per XML NS 1.0 */
+  if (*uri == XML_T('\0') && prefix->name)
+    return XML_ERROR_SYNTAX;
+
   for (len = 0; uri[len]; len++)
     ;
   if (namespaceSeparator)
@@ -2628,7 +2635,7 @@ addBinding(XML_Parser parser, PREFIX *prefix, const ATTRIBUTE_ID *attId,
       XML_Char *temp = (XML_Char *)REALLOC(b->uri,
                           sizeof(XML_Char) * (len + EXPAND_SPARE));
       if (temp == NULL)
-        return 0;
+        return XML_ERROR_NO_MEMORY;
       b->uri = temp;
       b->uriAlloc = len + EXPAND_SPARE;
     }
@@ -2637,11 +2644,11 @@ addBinding(XML_Parser parser, PREFIX *prefix, const ATTRIBUTE_ID *attId,
   else {
     b = (BINDING *)MALLOC(sizeof(BINDING));
     if (!b)
-      return 0;
+      return XML_ERROR_NO_MEMORY;
     b->uri = (XML_Char *)MALLOC(sizeof(XML_Char) * (len + EXPAND_SPARE));
     if (!b->uri) {
       FREE(b);
-      return 0;
+      return XML_ERROR_NO_MEMORY;
     }
     b->uriAlloc = len + EXPAND_SPARE;
   }
@@ -2661,7 +2668,7 @@ addBinding(XML_Parser parser, PREFIX *prefix, const ATTRIBUTE_ID *attId,
   if (startNamespaceDeclHandler)
     startNamespaceDeclHandler(handlerArg, prefix->name,
                               prefix->binding ? uri : 0);
-  return 1;
+  return XML_ERROR_NONE;
 }
 
 /* The idea here is to avoid using stack for each CDATA section when
@@ -4908,8 +4915,8 @@ setContext(XML_Parser parser, const XML_Char *context)
           return XML_FALSE;
       if (!poolAppendChar(&tempPool, XML_T('\0')))
         return XML_FALSE;
-      if (!addBinding(parser, prefix, 0, poolStart(&tempPool),
-                      &inheritedBindings))
+      if (addBinding(parser, prefix, 0, poolStart(&tempPool),
+                     &inheritedBindings) != XML_ERROR_NONE)
         return XML_FALSE;
       poolDiscard(&tempPool);
       if (*context != XML_T('\0'))
