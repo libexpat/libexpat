@@ -27,11 +27,7 @@ echo "Preparing $tmpdir for release (running buildconf.sh)"
 (cd $tmpdir && ./buildconf.sh) || exit 1
 
 # figure out the release version
-hdr="$tmpdir/lib/expat.h"
-MAJOR_VERSION="`sed -n -e '/MAJOR_VERSION/s/[^0-9]*//gp' $hdr`"
-MINOR_VERSION="`sed -n -e '/MINOR_VERSION/s/[^0-9]*//gp' $hdr`"
-MICRO_VERSION="`sed -n -e '/MICRO_VERSION/s/[^0-9]*//gp' $hdr`"
-vsn=$MAJOR_VERSION.$MINOR_VERSION.$MICRO_VERSION
+vsn="`$tmpdir/conftools/get-version.sh $tmpdir/lib/expat.h`"
 
 echo ""
 echo "Release version: $vsn"

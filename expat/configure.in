@@ -10,10 +10,26 @@ dnl   under the terms of the License (based on the MIT/X license) contained
 dnl   in the file COPYING that comes with this distribution.
 dnl
 
-dnl Ensure that subversion is configured with autoconf 2.50 or newer
-AC_PREREQ(2.50)
+dnl Ensure that subversion is configured with autoconf 2.52 or newer
+AC_PREREQ(2.52)
 
-AC_INIT(Makefile.in)
+dnl Get the version number of Expat, using m4's esyscmd() command to run
+dnl the command at m4-generation time. This allows us to create an m4
+dnl symbol holding the correct version number. AC_INIT() requires the
+dnl version number at m4-time, rather than when ./configure is run, so
+dnl all this must happen as part of m4, not as part of the shell code
+dnl contained in ./configure.
+dnl
+dnl NOTE: esyscmd() is a GNU M4 extension. Thus, we wrap it in an appropriate
+dnl test. I believe this test will work, but I don't have a place with non-
+dnl GNU M4 to test it right now.
+define([expat_version], ifdef([__gnu__],
+                              [esyscmd(conftools/get-version.sh lib/expat.h)],
+                              [1.95.x]))
+AC_INIT(expat, expat_version, expat-bugs@lists.sourceforge.net)
+undefine([expat_version])
+
+AC_CONFIG_SRCDIR(Makefile.in)
 AC_CONFIG_AUX_DIR(conftools)
 
 
@@ -98,7 +114,8 @@ AC_DEFINE([XML_DTD], 1,
 AC_DEFINE([XML_CONTEXT_BYTES], 1024,
           [Define to specify how much context to retain around the current parse point.])
 
-AC_OUTPUT(Makefile)
+AC_CONFIG_FILES(Makefile)
+AC_OUTPUT
 
 abs_srcdir="`cd $srcdir && pwd`"
 abs_builddir="`pwd`"
