@@ -965,7 +965,7 @@ struct unknown_encoding {
   int (*convert)(void *userData, const char *p);
   void *userData;
   unsigned short utf16[256];
-  unsigned char utf8[256][4];
+  char utf8[256][4];
 };
 
 int XmlSizeOfUnknownEncoding()
@@ -1008,7 +1008,7 @@ void unknown_toUtf8(const ENCODING *enc,
 {
   char buf[XML_UTF8_ENCODE_MAX];
   for (;;) {
-    const unsigned char *utf8;
+    const char *utf8;
     int n;
     if (*fromP == fromLim)
       break;
