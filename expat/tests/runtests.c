@@ -546,6 +546,48 @@ START_TEST(test_unknown_encoding_internal_entity)
 }
 END_TEST
 
+/* Regression test for SF bug #620106. */
+static int
+external_entity_loader_set_encoding(XML_Parser parser,
+                                    const XML_Char *context,
+                                    const XML_Char *base,
+                                    const XML_Char *systemId,
+                                    const XML_Char *publicId)
+{
+    /* This text says it's an unsupported encoding, but it's really
+       UTF-8, which we tell Expat using XML_SetEncoding().
+    */
+    char *text =
+        "<?xml encoding='iso-8859-3'?>"
+        "\xC3\xA9";
+    XML_Parser extparser;
+
+    extparser = XML_ExternalEntityParserCreate(parser, context, NULL);
+    if (extparser == NULL)
+        fail("Could not create external entity parser.");
+    if (!XML_SetEncoding(extparser, "utf-8"))
+        fail("XML_SetEncoding() ignored for external entity");
+    if (XML_Parse(extparser, text, strlen(text), 1) == XML_STATUS_ERROR) {
+        xml_failure(parser);
+        return 0;
+    }
+    return 1;
+}
+
+START_TEST(test_ext_entity_set_encoding)
+{
+    char *text =
+        "<!DOCTYPE doc [\n"
+        "  <!ENTITY en SYSTEM 'http://xml.libexpat.org/dummy.ent'>\n"
+        "]>\n"
+        "<doc>&en;</doc>";
+
+    XML_SetExternalEntityRefHandler(parser,
+                                    external_entity_loader_set_encoding);
+    run_character_check(text, "\xC3\xA9");
+}
+END_TEST
+
 /* Test that no error is reported for unknown entities if we don't
    read an external subset.  This was fixed in Expat 1.95.5.
 */
@@ -920,6 +962,7 @@ make_basic_suite(void)
     tcase_add_test(tc_basic, test_wfc_undeclared_entity_standalone);
     tcase_add_test(tc_basic, test_wfc_undeclared_entity_with_external_subset);
     tcase_add_test(tc_basic, test_wfc_no_recursive_entity_refs);
+    tcase_add_test(tc_basic, test_ext_entity_set_encoding);
 
     suite_add_tcase(s, tc_namespace);
     tcase_add_checked_fixture(tc_namespace,
