@@ -343,7 +343,7 @@ utf8_toUtf16(const ENCODING *enc,
       {
         unsigned long n;
         if (to + 1 == toLim)
-          break;
+          goto after;
         n = ((from[0] & 0x7) << 18) | ((from[1] & 0x3f) << 12)
             | ((from[2] & 0x3f) << 6) | (from[3] & 0x3f);
         n -= 0x10000;
@@ -358,6 +358,7 @@ utf8_toUtf16(const ENCODING *enc,
       break;
     }
   }
+after:
   *fromP = from;
   *toP = to;
 }
