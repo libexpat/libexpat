@@ -2072,7 +2072,7 @@ doContent(XML_Parser parser,
           entity->open = XML_FALSE;
           if (!context)
             return XML_ERROR_NO_MEMORY;
-          if (!externalEntityRefHandler((XML_Parser)externalEntityRefHandlerArg,
+          if (!externalEntityRefHandler(externalEntityRefHandlerArg,
                                         context,
                                         entity->base,
                                         entity->systemId,
