@@ -8,10 +8,10 @@
 #ifdef __VMS
 /*      0        1         2         3      0        1         2         3
         1234567890123456789012345678901     1234567890123456789012345678901 */
-#define XML_SetProcessingInstructionHandler XML_SetProcessingInstrHandler   
-#define XML_SetUnparsedEntityDeclHandler    XML_SetUnparsedEntDeclHandler   
-#define XML_SetStartNamespaceDeclHandler    XML_SetStartNamespcDeclHandler  
-#define XML_SetExternalEntityRefHandlerArg  XML_SetExternalEntRefHandlerArg 
+#define XML_SetProcessingInstructionHandler XML_SetProcessingInstrHandler
+#define XML_SetUnparsedEntityDeclHandler    XML_SetUnparsedEntDeclHandler
+#define XML_SetStartNamespaceDeclHandler    XML_SetStartNamespcDeclHandler
+#define XML_SetExternalEntityRefHandlerArg  XML_SetExternalEntRefHandlerArg
 #endif
 
 #include <stdlib.h>
@@ -32,7 +32,7 @@
 extern "C" {
 #endif
 
-#ifdef XML_UNICODE_WCHAR_T 
+#ifdef XML_UNICODE_WCHAR_T
 #define XML_UNICODE
 #endif
 
@@ -225,7 +225,7 @@ XML_ParserCreate_MM(const XML_Char *encoding,
 /* Prepare a parser object to be re-used.  This is particularly
    valuable when memory allocation overhead is disproportionatly high,
    such as when a large number of small documnents need to be parsed.
-   All handlers are cleared from the parser, except for the 
+   All handlers are cleared from the parser, except for the
    unknownEncodingHandler. The parser's external state is re-initialized
    except for the values of ns and ns_triplets.
 
@@ -267,7 +267,7 @@ typedef void (*XML_EndCdataSectionHandler)(void *userData);
    (comments, markup declarations), or characters that are part of a
    construct which could be reported but for which no handler has been
    supplied. The characters are passed exactly as they were in the XML
-   document except that they will be encoded in UTF-8 or UTF-16. 
+   document except that they will be encoded in UTF-8 or UTF-16.
    Line boundaries are not normalized. Note that a byte order mark
    character is not passed to the default handler. There are no
    guarantees about how characters are divided between calls to the
@@ -320,7 +320,7 @@ typedef void (*XML_EntityDeclHandler) (void *userData,
                                        const XML_Char *systemId,
                                        const XML_Char *publicId,
                                        const XML_Char *notationName);
-                                       
+
 XMLPARSEAPI(void)
 XML_SetEntityDeclHandler(XML_Parser parser,
                          XML_EntityDeclHandler handler);

@@ -358,24 +358,24 @@ static void FASTCALL normalizePublicId(XML_Char *s);
 static DTD * dtdCreate(const XML_Memory_Handling_Suite *ms);
 /* do not call if parentParser != NULL */
 static void dtdReset(DTD *p, const XML_Memory_Handling_Suite *ms);
-static void 
+static void
 dtdDestroy(DTD *p, XML_Bool isDocEntity, const XML_Memory_Handling_Suite *ms);
-static int 
+static int
 dtdCopy(DTD *newDtd, const DTD *oldDtd, const XML_Memory_Handling_Suite *ms);
-static int 
+static int
 copyEntityTable(HASH_TABLE *, STRING_POOL *, const HASH_TABLE *);
 
-static NAMED * 
+static NAMED *
 lookup(HASH_TABLE *table, KEY name, size_t createSize);
 static void FASTCALL
 hashTableInit(HASH_TABLE *, const XML_Memory_Handling_Suite *ms);
 static void FASTCALL hashTableClear(HASH_TABLE *);
 static void FASTCALL hashTableDestroy(HASH_TABLE *);
-static void FASTCALL 
+static void FASTCALL
 hashTableIterInit(HASH_TABLE_ITER *, const HASH_TABLE *);
 static NAMED * FASTCALL hashTableIterNext(HASH_TABLE_ITER *);
 
-static void FASTCALL 
+static void FASTCALL
 poolInit(STRING_POOL *, const XML_Memory_Handling_Suite *ms);
 static void FASTCALL poolClear(STRING_POOL *);
 static void FASTCALL poolDestroy(STRING_POOL *);
@@ -845,7 +845,7 @@ XML_Bool
 XML_ParserReset(XML_Parser parser, const XML_Char *encodingName)
 {
   TAG *tStk;
-  if (parentParser) 
+  if (parentParser)
     return XML_FALSE;
   /* move tagStack to freeTagList */
   tStk = tagStack;
@@ -934,7 +934,7 @@ XML_ExternalEntityParserCreate(XML_Parser oldParser,
   XML_Bool oldns_triplets = ns_triplets;
 
 #ifdef XML_DTD
-  if (!context) 
+  if (!context)
     newDtd = oldDtd;
 #endif /* XML_DTD */
 
@@ -1050,10 +1050,10 @@ XML_ParserFree(XML_Parser parser)
   poolDestroy(&tempPool);
   poolDestroy(&temp2Pool);
 #ifdef XML_DTD
-  /* external parameter entity parsers share the DTD structure 
-     parser->m_dtd with the root parser, so we must not destroy it 
+  /* external parameter entity parsers share the DTD structure
+     parser->m_dtd with the root parser, so we must not destroy it
   */
-  if (!isParamEntity && _dtd) 
+  if (!isParamEntity && _dtd)
 #else
   if (_dtd)
 #endif /* XML_DTD */
@@ -1347,7 +1347,7 @@ XML_SetParamEntityParsing(XML_Parser parser,
                           enum XML_ParamEntityParsing peParsing)
 {
   /* block after XML_Parse()/XML_ParseBuffer() has been called */
-  if (parsing) 
+  if (parsing)
     return 0;
 #ifdef XML_DTD
   paramEntityParsing = peParsing;
@@ -1705,7 +1705,7 @@ storeRawNames(XML_Parser parser)
        below it in the stack is already been accounted for in a
        previous call to this function.
     */
-    if (tag->rawName == rawNameBuf) 
+    if (tag->rawName == rawNameBuf)
       break;
     /* For re-use purposes we need to ensure that the
        size of tag->buf is a multiple of sizeof(XML_Char).
@@ -1716,7 +1716,7 @@ storeRawNames(XML_Parser parser)
       if (temp == NULL)
         return XML_FALSE;
       /* if tag->name.str points to tag->buf (only when namespace
-         processing is off) then we have to update it 
+         processing is off) then we have to update it
       */
       if (tag->name.str == (XML_Char *)tag->buf)
         tag->name.str = (XML_Char *)temp;
@@ -1743,9 +1743,9 @@ contentProcessor(XML_Parser parser,
                  const char *end,
                  const char **endPtr)
 {
-  enum XML_Error result = 
+  enum XML_Error result =
     doContent(parser, 0, encoding, start, end, endPtr);
-  if (result != XML_ERROR_NONE) 
+  if (result != XML_ERROR_NONE)
     return result;
   if (!storeRawNames(parser))
     return XML_ERROR_NO_MEMORY;
@@ -1848,9 +1848,9 @@ externalEntityContentProcessor(XML_Parser parser,
                                const char *end,
                                const char **endPtr)
 {
-  enum XML_Error result = 
+  enum XML_Error result =
     doContent(parser, 1, encoding, start, end, endPtr);
-  if (result != XML_ERROR_NONE) 
+  if (result != XML_ERROR_NONE)
     return result;
   if (!storeRawNames(parser))
     return XML_ERROR_NO_MEMORY;
@@ -3327,7 +3327,7 @@ doProlog(XML_Parser parser,
          XML_ROLE_DOCTYPE_SYSTEM_ID, even if startDoctypeDeclHandler
          was not set, indicating an external subset
       */
-#ifdef XML_DTD 
+#ifdef XML_DTD
       if (doctypeSysid || useForeignDTD) {
         dtd->hasParamEntityRefs = XML_TRUE; /* when docTypeSysid == NULL */
         if (paramEntityParsing && externalEntityRefHandler) {
@@ -3336,7 +3336,7 @@ doProlog(XML_Parser parser,
                                             sizeof(ENTITY));
           if (!entity)
             return XML_ERROR_NO_MEMORY;
-          if (useForeignDTD) 
+          if (useForeignDTD)
             entity->base = curBase;
           dtd->paramEntityRead = XML_FALSE;
           if (!externalEntityRefHandler(externalEntityRefHandlerArg,
@@ -3362,10 +3362,10 @@ doProlog(XML_Parser parser,
       break;
     case XML_ROLE_INSTANCE_START:
 #ifdef XML_DTD
-      /* if there is no DOCTYPE declaration then now is the 
+      /* if there is no DOCTYPE declaration then now is the
          last chance to read the foreign DTD
       */
-      if (useForeignDTD) { 
+      if (useForeignDTD) {
         dtd->hasParamEntityRefs = XML_TRUE;
         if (paramEntityParsing && externalEntityRefHandler) {
           ENTITY *entity = (ENTITY *)lookup(&dtd->paramEntities,
@@ -3388,7 +3388,7 @@ doProlog(XML_Parser parser,
             return XML_ERROR_NOT_STANDALONE;
           /* end of DTD - no need to update dtd->keepProcessing */
         }
-      }  
+      }
 #endif /* XML_DTD */
       processor = contentProcessor;
       return contentProcessor(parser, s, end, nextPtr);
@@ -4082,7 +4082,7 @@ doProlog(XML_Parser parser,
       break;
     } /* end of big switch */
 
-    if (handleDefault && defaultHandler) 
+    if (handleDefault && defaultHandler)
       reportDefault(parser, enc, s, next);
 
     s = next;
@@ -4105,7 +4105,7 @@ epilogProcessor(XML_Parser parser,
     eventEndPtr = next;
     switch (tok) {
     /* report partial linebreak - it might be the last token */
-    case -XML_TOK_PROLOG_S: 
+    case -XML_TOK_PROLOG_S:
       if (defaultHandler) {
         eventEndPtr = next;
         reportDefault(parser, encoding, s, next);
@@ -5578,7 +5578,7 @@ nextScaffoldPart(XML_Parser parser)
   return next;
 }
 
-static void 
+static void
 build_node(XML_Parser parser,
            int src_node,
            XML_Content *dest,
