@@ -297,7 +297,8 @@ void utf8_toUtf16(const ENCODING *enc,
       from += 2;
       break;
     case BT_LEAD3:
-      *to++ = (unsigned short)(((from[0] & 0xf) << 12) | ((from[1] & 0x3f) << 6) | (from[2] & 0x3f));
+      *to++ = (unsigned short)(((from[0] & 0xf) << 12)
+                               | ((from[1] & 0x3f) << 6) | (from[2] & 0x3f));
       from += 3;
       break;
     case BT_LEAD4:
@@ -305,7 +306,8 @@ void utf8_toUtf16(const ENCODING *enc,
 	unsigned long n;
 	if (to + 1 == toLim)
 	  break;
-	n = ((from[0] & 0x7) << 18) | ((from[1] & 0x3f) << 12) | ((from[2] & 0x3f) << 6) | (from[3] & 0x3f);
+	n = ((from[0] & 0x7) << 18) | ((from[1] & 0x3f) << 12)
+            | ((from[2] & 0x3f) << 6) | (from[3] & 0x3f);
 	n -= 0x10000;
 	to[0] = (unsigned short)((n >> 10) | 0xD800);
 	to[1] = (unsigned short)((n & 0x3FF) | 0xDC00);
@@ -1003,7 +1005,8 @@ static const char KW_encoding[] = {
 };
 
 static const char KW_standalone[] = {
-  ASCII_s, ASCII_t, ASCII_a, ASCII_n, ASCII_d, ASCII_a, ASCII_l, ASCII_o, ASCII_n, ASCII_e, '\0'
+  ASCII_s, ASCII_t, ASCII_a, ASCII_n, ASCII_d, ASCII_a, ASCII_l, ASCII_o,
+  ASCII_n, ASCII_e, '\0'
 };
 
 static const char KW_yes[] = {
@@ -1034,7 +1037,8 @@ int doParseXmlDecl(const ENCODING *(*encodingFinder)(const ENCODING *,
   const char *nameEnd = 0;
   ptr += 5 * enc->minBytesPerChar;
   end -= 2 * enc->minBytesPerChar;
-  if (!parsePseudoAttribute(enc, ptr, end, &name, &nameEnd, &val, &ptr) || !name) {
+  if (!parsePseudoAttribute(enc, ptr, end, &name, &nameEnd, &val, &ptr)
+      || !name) {
     *badPtr = ptr;
     return 0;
   }
@@ -1079,7 +1083,8 @@ int doParseXmlDecl(const ENCODING *(*encodingFinder)(const ENCODING *,
     if (!name)
       return 1;
   }
-  if (!XmlNameMatchesAscii(enc, name, nameEnd, KW_standalone) || isGeneralTextEntity) {
+  if (!XmlNameMatchesAscii(enc, name, nameEnd, KW_standalone)
+      || isGeneralTextEntity) {
     *badPtr = name;
     return 0;
   }
@@ -1232,7 +1237,8 @@ void unknown_toUtf8(const ENCODING *enc,
     n = *utf8++;
     if (n == 0) {
       int c = ((const struct unknown_encoding *)enc)
-	      ->convert(((const struct unknown_encoding *)enc)->userData, *fromP);
+	      ->convert(((const struct unknown_encoding *)enc)->userData,
+                        *fromP);
       n = XmlUtf8Encode(c, buf);
       if (n > toLim - *toP)
 	break;
@@ -1365,10 +1371,12 @@ enum {
 };
 
 static const char KW_ISO_8859_1[] = {
-  ASCII_I, ASCII_S, ASCII_O, ASCII_MINUS, ASCII_8, ASCII_8, ASCII_5, ASCII_9, ASCII_MINUS, ASCII_1, '\0'
+  ASCII_I, ASCII_S, ASCII_O, ASCII_MINUS, ASCII_8, ASCII_8, ASCII_5, ASCII_9,
+  ASCII_MINUS, ASCII_1, '\0'
 };
 static const char KW_US_ASCII[] = {
-  ASCII_U, ASCII_S, ASCII_MINUS, ASCII_A, ASCII_S, ASCII_C, ASCII_I, ASCII_I, '\0'
+  ASCII_U, ASCII_S, ASCII_MINUS, ASCII_A, ASCII_S, ASCII_C, ASCII_I, ASCII_I,
+  '\0'
 };
 static const char KW_UTF_8[] =	{
   ASCII_U, ASCII_T, ASCII_F, ASCII_MINUS, ASCII_8, '\0'
@@ -1377,10 +1385,12 @@ static const char KW_UTF_16[] =	{
   ASCII_U, ASCII_T, ASCII_F, ASCII_MINUS, ASCII_1, ASCII_6, '\0'
 };
 static const char KW_UTF_16BE[] = {
-  ASCII_U, ASCII_T, ASCII_F, ASCII_MINUS, ASCII_1, ASCII_6, ASCII_B, ASCII_E, '\0'
+  ASCII_U, ASCII_T, ASCII_F, ASCII_MINUS, ASCII_1, ASCII_6, ASCII_B, ASCII_E,
+  '\0'
 };
 static const char KW_UTF_16LE[] = {
-  ASCII_U, ASCII_T, ASCII_F, ASCII_MINUS, ASCII_1, ASCII_6, ASCII_L, ASCII_E, '\0'
+  ASCII_U, ASCII_T, ASCII_F, ASCII_MINUS, ASCII_1, ASCII_6, ASCII_L, ASCII_E,
+  '\0'
 };
 
 static
@@ -1403,17 +1413,18 @@ int getEncodingIndex(const char *name)
   return UNKNOWN_ENC;
 }
 
-/* For binary compatibility, we store the index of the encoding specified
-at initialization in the isUtf16 member. */
+/* For binary compatibility, we store the index of the encoding
+   specified at initialization in the isUtf16 member.
+*/
 
 #define INIT_ENC_INDEX(enc) ((int)(enc)->initEnc.isUtf16)
 #define SET_INIT_ENC_INDEX(enc, i) ((enc)->initEnc.isUtf16 = (char)i)
 
-/* This is what detects the encoding.
-encodingTable maps from encoding indices to encodings;
-INIT_ENC_INDEX(enc) is the index of the external (protocol) specified encoding;
-state is XML_CONTENT_STATE if we're parsing an external text entity,
-and XML_PROLOG_STATE otherwise.
+/* This is what detects the encoding.  encodingTable maps from
+   encoding indices to encodings; INIT_ENC_INDEX(enc) is the index of
+   the external (protocol) specified encoding; state is
+   XML_CONTENT_STATE if we're parsing an external text entity, and
+   XML_PROLOG_STATE otherwise.
 */
 
 
@@ -1491,7 +1502,8 @@ int initScan(const ENCODING **encodingTable,
          because it might be a legal data. */
       if (state == XML_CONTENT_STATE) {
 	int e = INIT_ENC_INDEX(enc);
-	if (e == ISO_8859_1_ENC || e == UTF_16BE_ENC || e == UTF_16LE_ENC || e == UTF_16_ENC)
+	if (e == ISO_8859_1_ENC || e == UTF_16BE_ENC
+            || e == UTF_16LE_ENC || e == UTF_16_ENC)
 	  break;
       }
       if (ptr + 2 == end)
@@ -1504,10 +1516,12 @@ int initScan(const ENCODING **encodingTable,
       break;
     default:
       if (ptr[0] == '\0') {
-	/* 0 isn't a legal data character. Furthermore a document entity can only
-	   start with ASCII characters.  So the only way this can fail to be big-endian
-	   UTF-16 if it it's an external parsed general entity that's labelled as
-	   UTF-16LE. */
+	/* 0 isn't a legal data character. Furthermore a document
+	   entity can only start with ASCII characters.  So the only
+	   way this can fail to be big-endian UTF-16 if it it's an
+	   external parsed general entity that's labelled as
+	   UTF-16LE.
+        */
 	if (state == XML_CONTENT_STATE && INIT_ENC_INDEX(enc) == UTF_16LE_ENC)
 	  break;
 	*encPtr = encodingTable[UTF_16BE_ENC];
