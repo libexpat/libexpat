@@ -1,6 +1,5 @@
-/*
-Copyright (c) 1998, 1999 Thai Open Source Software Center Ltd
-See the file COPYING for copying permission.
+/* Copyright (c) 1998, 1999 Thai Open Source Software Center Ltd
+   See the file COPYING for copying permission.
 */
 
 #ifndef XmlTok_INCLUDED
@@ -11,19 +10,21 @@ extern "C" {
 #endif
 
 /* The following token may be returned by XmlContentTok */
-#define XML_TOK_TRAILING_RSQB -5 /* ] or ]] at the end of the scan; might be start of
-                                    illegal ]]> sequence */
-/* The following tokens may be returned by both XmlPrologTok and XmlContentTok */
-#define XML_TOK_NONE -4    /* The string to be scanned is empty */
-#define XML_TOK_TRAILING_CR -3 /* A CR at the end of the scan;
-                                  might be part of CRLF sequence */ 
-#define XML_TOK_PARTIAL_CHAR -2 /* only part of a multibyte sequence */
-#define XML_TOK_PARTIAL -1 /* only part of a token */
+#define XML_TOK_TRAILING_RSQB -5 /* ] or ]] at the end of the scan; might be
+                                    start of illegal ]]> sequence */
+/* The following tokens may be returned by both XmlPrologTok and
+   XmlContentTok.
+*/
+#define XML_TOK_NONE -4          /* The string to be scanned is empty */
+#define XML_TOK_TRAILING_CR -3   /* A CR at the end of the scan;
+                                    might be part of CRLF sequence */ 
+#define XML_TOK_PARTIAL_CHAR -2  /* only part of a multibyte sequence */
+#define XML_TOK_PARTIAL -1       /* only part of a token */
 #define XML_TOK_INVALID 0
 
 /* The following tokens are returned by XmlContentTok; some are also
-  returned by XmlAttributeValueTok, XmlEntityTok, XmlCdataSectionTok */
-
+   returned by XmlAttributeValueTok, XmlEntityTok, XmlCdataSectionTok.
+*/
 #define XML_TOK_START_TAG_WITH_ATTS 1
 #define XML_TOK_START_TAG_NO_ATTS 2
 #define XML_TOK_EMPTY_ELEMENT_WITH_ATTS 3 /* empty element tag <e/> */
@@ -33,22 +34,24 @@ extern "C" {
 #define XML_TOK_DATA_NEWLINE 7
 #define XML_TOK_CDATA_SECT_OPEN 8
 #define XML_TOK_ENTITY_REF 9
-#define XML_TOK_CHAR_REF 10     /* numeric character reference */
+#define XML_TOK_CHAR_REF 10               /* numeric character reference */
 
-/* The following tokens may be returned by both XmlPrologTok and XmlContentTok */
-#define XML_TOK_PI 11      /* processing instruction */
-#define XML_TOK_XML_DECL 12 /* XML decl or text decl */
+/* The following tokens may be returned by both XmlPrologTok and
+   XmlContentTok.
+*/
+#define XML_TOK_PI 11                     /* processing instruction */
+#define XML_TOK_XML_DECL 12               /* XML decl or text decl */
 #define XML_TOK_COMMENT 13
-#define XML_TOK_BOM 14     /* Byte order mark */
+#define XML_TOK_BOM 14                    /* Byte order mark */
 
 /* The following tokens are returned only by XmlPrologTok */
 #define XML_TOK_PROLOG_S 15
-#define XML_TOK_DECL_OPEN 16 /* <!foo */
-#define XML_TOK_DECL_CLOSE 17 /* > */
+#define XML_TOK_DECL_OPEN 16              /* <!foo */
+#define XML_TOK_DECL_CLOSE 17             /* > */
 #define XML_TOK_NAME 18
 #define XML_TOK_NMTOKEN 19
-#define XML_TOK_POUND_NAME 20 /* #name */
-#define XML_TOK_OR 21 /* | */
+#define XML_TOK_POUND_NAME 20             /* #name */
+#define XML_TOK_OR 21                     /* | */
 #define XML_TOK_PERCENT 22
 #define XML_TOK_OPEN_PAREN 23
 #define XML_TOK_CLOSE_PAREN 24
@@ -59,14 +62,14 @@ extern "C" {
 #define XML_TOK_INSTANCE_START 29
 
 /* The following occur only in element type declarations */
-#define XML_TOK_NAME_QUESTION 30 /* name? */
-#define XML_TOK_NAME_ASTERISK 31 /* name* */
-#define XML_TOK_NAME_PLUS 32 /* name+ */
-#define XML_TOK_COND_SECT_OPEN 33 /* <![ */
-#define XML_TOK_COND_SECT_CLOSE 34 /* ]]> */
-#define XML_TOK_CLOSE_PAREN_QUESTION 35 /* )? */
-#define XML_TOK_CLOSE_PAREN_ASTERISK 36 /* )* */
-#define XML_TOK_CLOSE_PAREN_PLUS 37 /* )+ */
+#define XML_TOK_NAME_QUESTION 30          /* name? */
+#define XML_TOK_NAME_ASTERISK 31          /* name* */
+#define XML_TOK_NAME_PLUS 32              /* name+ */
+#define XML_TOK_COND_SECT_OPEN 33         /* <![ */
+#define XML_TOK_COND_SECT_CLOSE 34        /* ]]> */
+#define XML_TOK_CLOSE_PAREN_QUESTION 35   /* )? */
+#define XML_TOK_CLOSE_PAREN_ASTERISK 36   /* )* */
+#define XML_TOK_CLOSE_PAREN_PLUS 37       /* )+ */
 #define XML_TOK_COMMA 38
 
 /* The following token is returned only by XmlAttributeValueTok */
@@ -75,8 +78,9 @@ extern "C" {
 /* The following token is returned only by XmlCdataSectionTok */
 #define XML_TOK_CDATA_SECT_CLOSE 40
 
-/* With namespace processing this is returned by XmlPrologTok
-   for a name with a colon. */
+/* With namespace processing this is returned by XmlPrologTok for a
+   name with a colon.
+*/
 #define XML_TOK_PREFIXED_NAME 41
 
 #ifdef XML_DTD
@@ -161,24 +165,25 @@ struct encoding {
   char isUtf16;
 };
 
-/*
-Scan the string starting at ptr until the end of the next complete token,
-but do not scan past eptr.  Return an integer giving the type of token.
+/* Scan the string starting at ptr until the end of the next complete
+   token, but do not scan past eptr.  Return an integer giving the
+   type of token.
 
-Return XML_TOK_NONE when ptr == eptr; nextTokPtr will not be set.
+   Return XML_TOK_NONE when ptr == eptr; nextTokPtr will not be set.
 
-Return XML_TOK_PARTIAL when the string does not contain a complete token;
-nextTokPtr will not be set.
+   Return XML_TOK_PARTIAL when the string does not contain a complete
+   token; nextTokPtr will not be set.
 
-Return XML_TOK_INVALID when the string does not start a valid token; nextTokPtr
-will be set to point to the character which made the token invalid.
+   Return XML_TOK_INVALID when the string does not start a valid
+   token; nextTokPtr will be set to point to the character which made
+   the token invalid.
 
-Otherwise the string starts with a valid token; nextTokPtr will be set to point
-to the character following the end of that token.
+   Otherwise the string starts with a valid token; nextTokPtr will be
+   set to point to the character following the end of that token.
 
-Each data character counts as a single token, but adjacent data characters
-may be returned together.  Similarly for characters in the prolog outside
-literals, comments and processing instructions.
+   Each data character counts as a single token, but adjacent data
+   characters may be returned together.  Similarly for characters in
+   the prolog outside literals, comments and processing instructions.
 */
 
 
@@ -201,9 +206,9 @@ literals, comments and processing instructions.
 
 #endif /* XML_DTD */
 
-/* This is used for performing a 2nd-level tokenization on
-the content of a literal that has already been returned by XmlTok. */ 
-
+/* This is used for performing a 2nd-level tokenization on the content
+   of a literal that has already been returned by XmlTok.
+*/
 #define XmlLiteralTok(enc, literalType, ptr, end, nextTokPtr) \
   (((enc)->literalScanners[literalType])(enc, ptr, end, nextTokPtr))
 
