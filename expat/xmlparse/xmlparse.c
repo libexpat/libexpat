@@ -1013,7 +1013,7 @@ doContent(XML_Parser parser,
       }
       *eventEndPP = end;
       if (characterDataHandler) {
-	XML_Char c = XML_T('\n');
+	XML_Char c = 0xA;
 	characterDataHandler(handlerArg, &c, 1);
       }
       else if (defaultHandler)
@@ -1301,7 +1301,7 @@ doContent(XML_Parser parser,
       return XML_ERROR_MISPLACED_XML_PI;
     case XML_TOK_DATA_NEWLINE:
       if (characterDataHandler) {
-	XML_Char c = XML_T('\n');
+	XML_Char c = 0xA;
 	characterDataHandler(handlerArg, &c, 1);
       }
       else if (defaultHandler)
@@ -1697,7 +1697,7 @@ enum XML_Error doCdataSection(XML_Parser parser,
       return XML_ERROR_NONE;
     case XML_TOK_DATA_NEWLINE:
       if (characterDataHandler) {
-	XML_Char c = XML_T('\n');
+	XML_Char c = 0xA;
 	characterDataHandler(handlerArg, &c, 1);
       }
       else if (defaultHandler)
@@ -2259,7 +2259,7 @@ storeAttributeValue(XML_Parser parser, const ENCODING *enc, int isCdata,
   enum XML_Error result = appendAttributeValue(parser, enc, isCdata, ptr, end, pool);
   if (result)
     return result;
-  if (!isCdata && poolLength(pool) && poolLastChar(pool) == XML_T(' '))
+  if (!isCdata && poolLength(pool) && poolLastChar(pool) == 0x20)
     poolChop(pool);
   if (!poolAppendChar(pool, XML_T('\0')))
     return XML_ERROR_NO_MEMORY;
@@ -2298,7 +2298,7 @@ appendAttributeValue(XML_Parser parser, const ENCODING *enc, int isCdata,
 	}
 	if (!isCdata
 	    && n == 0x20 /* space */
-	    && (poolLength(pool) == 0 || poolLastChar(pool) == XML_T(' ')))
+	    && (poolLength(pool) == 0 || poolLastChar(pool) == 0x20))
 	  break;
 	n = XmlEncode(n, (ICHAR *)buf);
 	if (!n) {
@@ -2322,9 +2322,9 @@ appendAttributeValue(XML_Parser parser, const ENCODING *enc, int isCdata,
       /* fall through */
     case XML_TOK_ATTRIBUTE_VALUE_S:
     case XML_TOK_DATA_NEWLINE:
-      if (!isCdata && (poolLength(pool) == 0 || poolLastChar(pool) == XML_T(' ')))
+      if (!isCdata && (poolLength(pool) == 0 || poolLastChar(pool) == 0x20))
 	break;
-      if (!poolAppendChar(pool, XML_T(' ')))
+      if (!poolAppendChar(pool, 0x20))
 	return XML_ERROR_NO_MEMORY;
       break;
     case XML_TOK_ENTITY_REF:
@@ -2423,7 +2423,7 @@ enum XML_Error storeEntityValue(XML_Parser parser,
     case XML_TOK_DATA_NEWLINE:
       if (pool->end == pool->ptr && !poolGrow(pool))
 	return XML_ERROR_NO_MEMORY;
-      *(pool->ptr)++ = XML_T('\n');
+      *(pool->ptr)++ = 0xA;
       break;
     case XML_TOK_CHAR_REF:
       {
@@ -2467,14 +2467,14 @@ normalizeLines(XML_Char *s)
   for (;; s++) {
     if (*s == XML_T('\0'))
       return;
-    if (*s == XML_T('\r'))
+    if (*s == 0xD)
       break;
   }
   p = s;
   do {
-    if (*s == XML_T('\r')) {
-      *p++ = XML_T('\n');
-      if (*++s == XML_T('\n'))
+    if (*s == 0xD) {
+      *p++ = 0xA;
+      if (*++s == 0xA)
         s++;
     }
     else
@@ -2801,17 +2801,17 @@ void normalizePublicId(XML_Char *publicId)
   XML_Char *s;
   for (s = publicId; *s; s++) {
     switch (*s) {
-    case XML_T(' '):
-    case XML_T('\r'):
-    case XML_T('\n'):
-      if (p != publicId && p[-1] != XML_T(' '))
-	*p++ = XML_T(' ');
+    case 0x20:
+    case 0xD:
+    case 0xA:
+      if (p != publicId && p[-1] != 0x20)
+	*p++ = 0x20;
       break;
     default:
       *p++ = *s;
     }
   }
-  if (p != publicId && p[-1] == XML_T(' '))
+  if (p != publicId && p[-1] == 0x20)
     --p;
   *p = XML_T('\0');
 }
