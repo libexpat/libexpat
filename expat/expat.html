@@ -45,7 +45,12 @@ href="http://www.jclark.com/xml/canonxml.html">canonical XML</A> will
 be written to <SAMP>dir/<VAR>f</VAR></SAMP>, where
 <SAMP><VAR>f</VAR></SAMP> is the filename (without any path) of the
 input file.  A <CODE>-x</CODE> option will cause references to
-external general entities to be processed.</P>
+external general entities to be processed.  A <CODE>-s</CODE> option
+will make documents that are not standalone cause an error (a document
+is considered standalone if either it is intrinsically standalone
+because it has no external subset and no references to parameter
+entities in the internal subset or it is declared as standalone in the
+XML declaration).</P>
 
 <P>The <SAMP>bin</SAMP> directory contains Win32 executables.  The
 <SAMP>lib</SAMP> directory contains Win32 import libraries.</P>
