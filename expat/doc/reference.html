@@ -74,6 +74,7 @@ Clark Cooper to retain copyright and to distribute it with Expat.</p>
       <li><a href="#XML_SetDefaultHandler">XML_SetDefaultHandler</a></li>
       <li><a href="#XML_SetDefaultHandlerExpand">XML_SetDefaultHandlerExpand</a></li>
       <li><a href="#XML_SetExternalEntityRefHandler">XML_SetExternalEntityRefHandler</a></li>
+      <li><a href="#XML_SetExternalEntityRefHandlerArg">XML_SetExternalEntityRefHandlerArg</a></li>
       <li><a href="#XML_SetSkippedEntityHandler">XML_SetSkippedEntityHandler</a></li>
       <li><a href="#XML_SetUnknownEncodingHandler">XML_SetUnknownEncodingHandler</a></li>
       <li><a href="#XML_SetStartNamespaceDeclHandler">XML_SetStartNamespaceDeclHandler</a></li>
@@ -1038,6 +1039,30 @@ parser, the body of the external entity can be recursively parsed.</p>
 
 <p>Since this handler may be called recursively, it should not be saving
 information into global or static variables.</p>
+</div>
+
+<pre class="fcndec" id="XML_SetExternalEntityRefHandlerArg">
+XML_SetExternalEntityRefHandlerArg(XML_Parser p,
+                                   void *arg)
+</pre>
+<div class="fcndef">
+<p>Set the argument passed to the ExternalEntityRefHandler.  If
+<code>arg</code> is not NULL, it is the new value passed to the
+handler set using <code><a href="#XML_SetExternalEntityRefHandler"
+>XML_SetExternalEntityRefHandler</a></code>; if <code>arg</code> is
+NULL, the argument passed to the handler function will be the parser
+object itself.</p>
+
+<p><strong>Note:</strong>
+The type of <code>arg</code> and the type of the first argument to the
+ExternalEntityRefHandler do not match.  This function takes a
+<code>void *</code> to be passed to the handler, while the handler
+accepts an <code>XML_Parser</code>.  This is a historical accident,
+but will not be corrected before Expat 2.0 (at the earliest) to avoid
+causing compiler warnings for code that's known to work with this
+API.  It is the responsibility of the application code to know the
+actual type of the argument passed to the handler and to manage it
+properly.</p>
 </div>
 
 <div class="handler">
