@@ -93,7 +93,8 @@ uninstall: uninstalllib
 
 uninstalllib:
 	$(LIBTOOL) --mode=uninstall rm -f $(INSTALL_ROOT)$(libdir)/$(LIBRARY)
-	rm -f $(INSTALL_ROOT)$(includedir)/$(APIHEADER)
+	rm -f $(INSTALL_ROOT)$(includedir)/expat.h
+	rm -f $(INSTALL_ROOT)$(includedir)/expat_external.h
 
 # for VPATH builds (invoked by configure)
 mkdir-init:
