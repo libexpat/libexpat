@@ -2598,7 +2598,8 @@ doProlog(XML_Parser parser,
       case XML_TOK_PARAM_ENTITY_REF:
 	break;
       default:
-	reportDefault(parser, enc, s, next);
+	if (role != XML_ROLE_IGNORE_SECT)
+	  reportDefault(parser, enc, s, next);
       }
     }
     s = next;
