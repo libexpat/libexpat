@@ -1,6 +1,5 @@
-/*
-Copyright (c) 1998, 1999, 2000 Thai Open Source Software Center Ltd
-See the file COPYING for copying permission.
+/* Copyright (c) 1998, 1999, 2000 Thai Open Source Software Center Ltd
+   See the file COPYING for copying permission.
 */
 
 #ifdef COMPILED_FROM_DSP
@@ -9,7 +8,7 @@ See the file COPYING for copying permission.
 #  include "expat.h"
 #  undef XMLPARSEAPI
 #else
-#include <config.h>
+#include <expat_config.h>
 
 #ifdef __declspec
 #  define XMLPARSEAPI(type) __declspec(dllexport) type __cdecl
@@ -73,6 +72,15 @@ typedef char ICHAR;
 
 /* Round up n to be a multiple of sz, where sz is a power of 2. */
 #define ROUND_UP(n, sz) (((n) + ((sz) - 1)) & ~((sz) - 1))
+
+/* Handle the case where memmove() doesn't exist. */
+#ifndef HAVE_MEMMOVE
+#ifdef HAVE_BCOPY
+#define memmove(d,s,l) bcopy((s),(d),(l))
+#else
+#error memmove does not exist on this platform, nor is a substitute available
+#endif /* HAVE_BCOPY */
+#endif /* HAVE_MEMMOVE */
 
 #include "xmltok.h"
 #include "xmlrole.h"

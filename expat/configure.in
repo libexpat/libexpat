@@ -10,6 +10,9 @@ dnl   under the terms of the License (based on the MIT/X license) contained
 dnl   in the file COPYING that comes with this distribution.
 dnl
 
+dnl Ensure that subversion is configured with autoconf 2.50 or newer
+AC_PREREQ(2.50)
+
 AC_INIT(Makefile.in)
 AC_CONFIG_AUX_DIR(conftools)
 
@@ -29,7 +32,7 @@ LIBCURRENT=1
 LIBREVISION=0
 LIBAGE=1
 
-AC_CONFIG_HEADER(config.h)
+AC_CONFIG_HEADER(expat_config.h)
 
 sinclude(conftools/libtool.m4)
 sinclude(conftools/ac_c_bigendian_cross.m4)
@@ -86,6 +89,14 @@ fi
 AC_SUBST(FILEMAP)
 
 AC_CHECK_FUNCS(memmove bcopy)
+
+dnl some basic configuration
+AC_DEFINE([XML_NS], 1,
+          [Define to make XML Namespaces functionality available.])
+AC_DEFINE([XML_DTD], 1,
+          [Define to make parameter entity parsing functionality available.])
+AC_DEFINE([XML_CONTEXT_BYTES], 1024,
+          [Define to specify how much context to retain around the current parse point.])
 
 AC_OUTPUT(Makefile)
 

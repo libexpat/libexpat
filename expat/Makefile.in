@@ -66,11 +66,11 @@ clean:
 	find . -name core | xargs rm -f
 
 distclean: clean
-	rm -f config.h config.status config.log config.cache libtool
+	rm -f expat_config.h config.status config.log config.cache libtool
 	rm -f Makefile
 
 extraclean: distclean
-	rm -f config.h.in configure
+	rm -f expat_config.h.in configure
 	rm -f conftools/config.guess conftools/config.sub
 	rm -f conftools/ltconfig conftools/ltmain.sh
 

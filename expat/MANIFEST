@@ -3,9 +3,9 @@ COPYING
 MANIFEST
 Makefile.in
 README
-config.h.in
 configure
 configure.in
+expat_config.h.in
 conftools/PrintPath
 conftools/ac_c_bigendian_cross.m4
 conftools/config.guess
