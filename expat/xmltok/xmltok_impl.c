@@ -162,12 +162,55 @@ int PREFIX(scanDecl)(const ENCODING *enc, const char *ptr, const char *end,
   return XML_TOK_PARTIAL;
 }
 
+static
+int PREFIX(checkPiTarget)(const ENCODING *enc, const char *ptr, const char *end, int *tokPtr)
+{
+  int upper = 0;
+  if (end - ptr != MINBPC*3)
+    return 1;
+  switch (BYTE_TO_ASCII(enc, ptr)) {
+  case 'x':
+    break;
+  case 'X':
+    upper = 1;
+    break;
+  default:
+    return 1;
+  }
+  ptr += MINBPC;
+  switch (BYTE_TO_ASCII(enc, ptr)) {
+  case 'm':
+    break;
+  case 'M':
+    upper = 1;
+    break;
+  default:
+    return 1;
+  }
+  ptr += MINBPC;
+  switch (BYTE_TO_ASCII(enc, ptr)) {
+  case 'l':
+    break;
+  case 'L':
+    upper = 1;
+    break;
+  default:
+    return 1;
+  }
+  if (upper)
+    return 0;
+  *tokPtr = XML_TOK_XML_DECL;
+  return 1;
+}
+
 /* ptr points to character following "<?" */
 
 static
 int PREFIX(scanPi)(const ENCODING *enc, const char *ptr, const char *end,
 		   const char **nextTokPtr)
 {
+  int tok;
+  const char *target = ptr;
   if (ptr == end)
     return XML_TOK_PARTIAL;
   switch (BYTE_TYPE(enc, ptr)) {
@@ -180,6 +223,10 @@ int PREFIX(scanPi)(const ENCODING *enc, const char *ptr, const char *end,
     switch (BYTE_TYPE(enc, ptr)) {
     CHECK_NAME_CASES(enc, ptr, end, nextTokPtr)
     case BT_S: case BT_CR: case BT_LF:
+      if (!PREFIX(checkPiTarget)(enc, target, ptr, &tok)) {
+	*nextTokPtr = ptr;
+	return XML_TOK_INVALID;
+      }
       ptr += MINBPC;
       while (ptr != end) {
         switch (BYTE_TYPE(enc, ptr)) {
@@ -191,7 +238,7 @@ int PREFIX(scanPi)(const ENCODING *enc, const char *ptr, const char *end,
 	    return XML_TOK_PARTIAL;
 	  if (CHAR_MATCHES(enc, ptr, '>')) {
 	    *nextTokPtr = ptr + MINBPC;
-	    return XML_TOK_PI;
+	    return tok;
 	  }
 	  break;
 	default:
@@ -201,12 +248,16 @@ int PREFIX(scanPi)(const ENCODING *enc, const char *ptr, const char *end,
       }
       return XML_TOK_PARTIAL;
     case BT_QUEST:
+      if (!PREFIX(checkPiTarget)(enc, target, ptr, &tok)) {
+	*nextTokPtr = ptr;
+	return XML_TOK_INVALID;
+      }
       ptr += MINBPC;
       if (ptr == end)
 	return XML_TOK_PARTIAL;
       if (CHAR_MATCHES(enc, ptr, '>')) {
 	*nextTokPtr = ptr + MINBPC;
-	return XML_TOK_PI;
+	return tok;
       }
       /* fall through */
     default:

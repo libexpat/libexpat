@@ -293,12 +293,9 @@ checkContent(size_t level, CONTEXT *context, const ENCODING *enc,
 	return badCharRef;
       }
       break;
-    case XML_TOK_PI:
-      if (XmlNameMatchesAscii(enc, s + 2 * enc->minBytesPerChar, "xml")) {
-	*badPtr = s;
-	return misplacedXmlPi;
-      }
-      break;
+    case XML_TOK_XML_DECL:
+      *badPtr = s;
+      return misplacedXmlPi;
     }
     s = next;
     if (level == 0) {
@@ -411,166 +408,163 @@ checkProlog(DTD *dtd, const char *s, const char *end,
   for (;;) {
     const char *next;
     int tok = XmlPrologTok(*enc, s, end, &next);
-    if (tok != XML_TOK_PROLOG_S) {
-      switch (XmlTokenRole(&state, tok, s, next, *enc)) {
-      case XML_ROLE_XML_DECL:
-	{
-	  const char *encodingName = 0;
-	  const ENCODING *encoding = 0;
-	  const char *version;
-	  int standalone = -1;
-	  if (!XmlParseXmlDecl(0,
-			       *enc,
-			       s,
-			       next,
-			       nextPtr,
-			       &version,
-			       &encodingName,
-			       &encoding,
-			       &standalone))
-	    return syntaxError;
-	  if (encoding) {
-	    if (encoding->minBytesPerChar != (*enc)->minBytesPerChar) {
-	      *nextPtr = encodingName;
-	      return incorrectEncoding;
-	    }
-	    *enc = encoding;
-	  }
-	  else if (encodingName) {
+    switch (XmlTokenRole(&state, tok, s, next, *enc)) {
+    case XML_ROLE_XML_DECL:
+      {
+	const char *encodingName = 0;
+	const ENCODING *encoding = 0;
+	const char *version;
+	int standalone = -1;
+	if (!XmlParseXmlDecl(0,
+			     *enc,
+			     s,
+			     next,
+			     nextPtr,
+			     &version,
+			     &encodingName,
+			     &encoding,
+			     &standalone))
+	  return syntaxError;
+	if (encoding) {
+	  if (encoding->minBytesPerChar != (*enc)->minBytesPerChar) {
 	    *nextPtr = encodingName;
-	    return unknownEncoding;
+	    return incorrectEncoding;
 	  }
-	  if (standalone == 1)
-	    dtd->standalone = 1;
-	  break;
+	  *enc = encoding;
 	}
-      case XML_ROLE_DOCTYPE_SYSTEM_ID:
-	dtd->containsRef = 1;
-	break;
-      case XML_ROLE_DOCTYPE_PUBLIC_ID:
-      case XML_ROLE_ENTITY_PUBLIC_ID:
-      case XML_ROLE_NOTATION_PUBLIC_ID:
-        if (!XmlIsPublicId(*enc, s, next, nextPtr))
-	  return syntaxError;
-	break;
-      case XML_ROLE_INSTANCE_START:
-        *nextPtr = s;
-        return wellFormed;
-      case XML_ROLE_DEFAULT_ATTRIBUTE_VALUE:
-      case XML_ROLE_FIXED_ATTRIBUTE_VALUE:
-	{
-	  const char *tem = 0;
-	  enum WfCheckResult result
-	    = checkAttributeValue(dtd, *enc, s + (*enc)->minBytesPerChar,
-				  next - (*enc)->minBytesPerChar,
-				  &tem);
-	  if (result) {
-	    if (tem)
-	      *nextPtr = tem;
-	    return result;
-	  }
-	  break;
+	else if (encodingName) {
+	  *nextPtr = encodingName;
+	  return unknownEncoding;
 	}
-      case XML_ROLE_ENTITY_VALUE:
-	{
-	  enum WfCheckResult result
-	    = storeEntity(dtd,
-			  *enc,
-			  entityNamePtr,
-			  entityNameEnd,
-			  s,
-			  next,
-			  nextPtr);
-	  if (result != wellFormed)
-	    return result;
-	}
-	break;
-      case XML_ROLE_ENTITY_SYSTEM_ID:
-	if (entityNamePtr) {
-	  const char *name = poolStoreString(&dtd->pool, *enc, entityNamePtr, entityNameEnd);
-	  entity = (ENTITY *)lookup(&dtd->generalEntities, name, sizeof(ENTITY));
-	  if (entity->name != name) {
-	    poolDiscard(&dtd->pool);
-	    entity = 0;
-	  }
-	  else {
-	    poolFinish(&dtd->pool);
-	    entity->systemId = poolStoreString(&dtd->pool, *enc,
-				  	       s + (*enc)->minBytesPerChar,
-					       next - (*enc)->minBytesPerChar);
-	    poolFinish(&dtd->pool);
-	  }
-	}
-	break;
-      case XML_ROLE_ENTITY_NOTATION_NAME:
-	if (entity) {
-	  entity->notation = poolStoreString(&dtd->pool, *enc, s, next);
-	  poolFinish(&dtd->pool);
-	}
-	break;
-      case XML_ROLE_GENERAL_ENTITY_NAME:
-	entityNamePtr = s;
-	entityNameEnd = next;
-	break;
-      case XML_ROLE_PARAM_ENTITY_NAME:
-	entityNamePtr = 0;
-	entityNameEnd = 0;
-	break;
-      case XML_ROLE_ERROR:
-	*nextPtr = s;
-	switch (tok) {
-	case XML_TOK_COND_SECT_OPEN:
-	  return condSect;
-	case XML_TOK_PARAM_ENTITY_REF:
-	  return paramEntityRef;
-	case XML_TOK_INVALID:
-	  *nextPtr = next;
-	  return invalidToken;
-        case XML_TOK_NONE:
-	  return noElements;
-	case XML_TOK_PARTIAL:
-	  return unclosedToken;
-	case XML_TOK_PARTIAL_CHAR:
-	  return partialChar;
-	case XML_TOK_TRAILING_CR:
-	  *nextPtr = s + (*enc)->minBytesPerChar;
-	  return noElements;
-	case XML_TOK_PI:
-	  if (XmlNameMatchesAscii(*enc, s + 2 * (*enc)->minBytesPerChar, "xml"))
-	    return misplacedXmlPi;
-	default:
-	  return syntaxError;
-	}
-      case XML_ROLE_GROUP_OPEN:
-	if (state.level >= dtd->groupSize) {
-	  if (dtd->groupSize)
-	    dtd->groupConnector = realloc(dtd->groupConnector, dtd->groupSize *= 2);
-	  else
-	    dtd->groupConnector = malloc(dtd->groupSize = 32);
-	  if (!dtd->groupConnector)
-	    return noMemory;
-	}
-	dtd->groupConnector[state.level] = 0;
-	break;
-      case XML_ROLE_GROUP_SEQUENCE:
-	if (dtd->groupConnector[state.level] == '|') {
-	  *nextPtr = s;
-	  return syntaxError;
-	}
-	dtd->groupConnector[state.level] = ',';
-	break;
-      case XML_ROLE_GROUP_CHOICE:
-	if (dtd->groupConnector[state.level] == ',') {
-	  *nextPtr = s;
-	  return syntaxError;
-	}
-	dtd->groupConnector[state.level] = '|';
-	break;
-      case XML_ROLE_NONE:
-	if (tok == XML_TOK_PARAM_ENTITY_REF)
-	  dtd->containsRef = 1;
+	if (standalone == 1)
+	  dtd->standalone = 1;
 	break;
       }
+    case XML_ROLE_DOCTYPE_SYSTEM_ID:
+      dtd->containsRef = 1;
+      break;
+    case XML_ROLE_DOCTYPE_PUBLIC_ID:
+    case XML_ROLE_ENTITY_PUBLIC_ID:
+    case XML_ROLE_NOTATION_PUBLIC_ID:
+      if (!XmlIsPublicId(*enc, s, next, nextPtr))
+	return syntaxError;
+      break;
+    case XML_ROLE_INSTANCE_START:
+      *nextPtr = s;
+      return wellFormed;
+    case XML_ROLE_DEFAULT_ATTRIBUTE_VALUE:
+    case XML_ROLE_FIXED_ATTRIBUTE_VALUE:
+      {
+	const char *tem = 0;
+	enum WfCheckResult result
+	  = checkAttributeValue(dtd, *enc, s + (*enc)->minBytesPerChar,
+				next - (*enc)->minBytesPerChar,
+				&tem);
+	if (result) {
+	  if (tem)
+	    *nextPtr = tem;
+	  return result;
+	}
+	break;
+      }
+    case XML_ROLE_ENTITY_VALUE:
+      {
+	enum WfCheckResult result
+	  = storeEntity(dtd,
+			*enc,
+			entityNamePtr,
+			entityNameEnd,
+			s,
+			next,
+			nextPtr);
+	if (result != wellFormed)
+	  return result;
+      }
+    break;
+    case XML_ROLE_ENTITY_SYSTEM_ID:
+      if (entityNamePtr) {
+	const char *name = poolStoreString(&dtd->pool, *enc, entityNamePtr, entityNameEnd);
+	entity = (ENTITY *)lookup(&dtd->generalEntities, name, sizeof(ENTITY));
+	if (entity->name != name) {
+	  poolDiscard(&dtd->pool);
+	  entity = 0;
+	}
+	else {
+	  poolFinish(&dtd->pool);
+	  entity->systemId = poolStoreString(&dtd->pool, *enc,
+					     s + (*enc)->minBytesPerChar,
+					     next - (*enc)->minBytesPerChar);
+	  poolFinish(&dtd->pool);
+	}
+      }
+      break;
+    case XML_ROLE_ENTITY_NOTATION_NAME:
+      if (entity) {
+	entity->notation = poolStoreString(&dtd->pool, *enc, s, next);
+	poolFinish(&dtd->pool);
+      }
+      break;
+    case XML_ROLE_GENERAL_ENTITY_NAME:
+      entityNamePtr = s;
+      entityNameEnd = next;
+      break;
+    case XML_ROLE_PARAM_ENTITY_NAME:
+      entityNamePtr = 0;
+      entityNameEnd = 0;
+      break;
+    case XML_ROLE_ERROR:
+      *nextPtr = s;
+      switch (tok) {
+      case XML_TOK_COND_SECT_OPEN:
+	return condSect;
+      case XML_TOK_PARAM_ENTITY_REF:
+	return paramEntityRef;
+      case XML_TOK_INVALID:
+	*nextPtr = next;
+	return invalidToken;
+      case XML_TOK_NONE:
+	return noElements;
+      case XML_TOK_PARTIAL:
+	return unclosedToken;
+      case XML_TOK_PARTIAL_CHAR:
+	return partialChar;
+      case XML_TOK_TRAILING_CR:
+	*nextPtr = s + (*enc)->minBytesPerChar;
+	return noElements;
+      case XML_TOK_XML_DECL:
+	return misplacedXmlPi;
+      default:
+	return syntaxError;
+      }
+    case XML_ROLE_GROUP_OPEN:
+      if (state.level >= dtd->groupSize) {
+	if (dtd->groupSize)
+	  dtd->groupConnector = realloc(dtd->groupConnector, dtd->groupSize *= 2);
+	else
+	  dtd->groupConnector = malloc(dtd->groupSize = 32);
+	if (!dtd->groupConnector)
+	  return noMemory;
+      }
+      dtd->groupConnector[state.level] = 0;
+      break;
+    case XML_ROLE_GROUP_SEQUENCE:
+      if (dtd->groupConnector[state.level] == '|') {
+	*nextPtr = s;
+	return syntaxError;
+      }
+      dtd->groupConnector[state.level] = ',';
+      break;
+    case XML_ROLE_GROUP_CHOICE:
+      if (dtd->groupConnector[state.level] == ',') {
+	*nextPtr = s;
+	return syntaxError;
+      }
+      dtd->groupConnector[state.level] = '|';
+      break;
+    case XML_ROLE_NONE:
+      if (tok == XML_TOK_PARAM_ENTITY_REF)
+	dtd->containsRef = 1;
+      break;
     }
     s = next;
   }
@@ -621,8 +615,7 @@ checkGeneralTextEntity(CONTEXT *context,
     s = next;
     tok = XmlContentTok(*enc, s, end, &next);
   }
-  if (tok == XML_TOK_PI
-      && XmlNameMatchesAscii(*enc, s + 2 * (*enc)->minBytesPerChar, "xml")) {
+  if (tok == XML_TOK_XML_DECL) {
     const char *encodingName = 0;
     const ENCODING *encoding = 0;
     const char *version;

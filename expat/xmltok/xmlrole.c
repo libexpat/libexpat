@@ -38,10 +38,14 @@ int prolog0(PROLOG_STATE *state,
 	    const ENCODING *enc)
 {
   switch (tok) {
+  case XML_TOK_PROLOG_S:
+    state->handler = prolog1;
+    return XML_ROLE_NONE;
+  case XML_TOK_XML_DECL:
+    state->handler = prolog1;
+    return XML_ROLE_XML_DECL;
   case XML_TOK_PI:
     state->handler = prolog1;
-    if (XmlNameMatchesAscii(enc, ptr + 2 * enc->minBytesPerChar, "xml"))
-      return XML_ROLE_XML_DECL;
     return XML_ROLE_NONE;
   case XML_TOK_COMMENT:
     state->handler = prolog1;
@@ -69,9 +73,9 @@ int prolog1(PROLOG_STATE *state,
 	    const ENCODING *enc)
 {
   switch (tok) {
+  case XML_TOK_PROLOG_S:
+    return XML_ROLE_NONE;
   case XML_TOK_PI:
-    if (XmlNameMatchesAscii(enc, ptr + 2 * enc->minBytesPerChar, "xml"))
-      return syntaxError(state);
   case XML_TOK_COMMENT:
   case XML_TOK_BOM:
     return XML_ROLE_NONE;
@@ -97,9 +101,9 @@ int prolog2(PROLOG_STATE *state,
 	    const ENCODING *enc)
 {
   switch (tok) {
+  case XML_TOK_PROLOG_S:
+    return XML_ROLE_NONE;
   case XML_TOK_PI:
-    if (XmlNameMatchesAscii(enc, ptr + 2 * enc->minBytesPerChar, "xml"))
-      return syntaxError(state);
   case XML_TOK_COMMENT:
     return XML_ROLE_NONE;
   case XML_TOK_INSTANCE_START:
@@ -117,6 +121,8 @@ int doctype0(PROLOG_STATE *state,
 	     const ENCODING *enc)
 {
   switch (tok) {
+  case XML_TOK_PROLOG_S:
+    return XML_ROLE_NONE;
   case XML_TOK_NAME:
     state->handler = doctype1;
     return XML_ROLE_DOCTYPE_NAME;
@@ -132,6 +138,8 @@ int doctype1(PROLOG_STATE *state,
 	     const ENCODING *enc)
 {
   switch (tok) {
+  case XML_TOK_PROLOG_S:
+    return XML_ROLE_NONE;
   case XML_TOK_OPEN_BRACKET:
     state->handler = internalSubset;
     return XML_ROLE_NONE;
@@ -160,6 +168,8 @@ int doctype2(PROLOG_STATE *state,
 	     const ENCODING *enc)
 {
   switch (tok) {
+  case XML_TOK_PROLOG_S:
+    return XML_ROLE_NONE;
   case XML_TOK_LITERAL:
     state->handler = doctype3;
     return XML_ROLE_DOCTYPE_PUBLIC_ID;
@@ -175,6 +185,8 @@ int doctype3(PROLOG_STATE *state,
 	     const ENCODING *enc)
 {
   switch (tok) {
+  case XML_TOK_PROLOG_S:
+    return XML_ROLE_NONE;
   case XML_TOK_LITERAL:
     state->handler = doctype4;
     return XML_ROLE_DOCTYPE_SYSTEM_ID;
@@ -190,6 +202,8 @@ int doctype4(PROLOG_STATE *state,
 	     const ENCODING *enc)
 {
   switch (tok) {
+  case XML_TOK_PROLOG_S:
+    return XML_ROLE_NONE;
   case XML_TOK_OPEN_BRACKET:
     state->handler = internalSubset;
     return XML_ROLE_NONE;
@@ -208,6 +222,8 @@ int doctype5(PROLOG_STATE *state,
 	     const ENCODING *enc)
 {
   switch (tok) {
+  case XML_TOK_PROLOG_S:
+    return XML_ROLE_NONE;
   case XML_TOK_DECL_CLOSE:
     state->handler = prolog2;
     return XML_ROLE_DOCTYPE_CLOSE;
@@ -223,6 +239,8 @@ int internalSubset(PROLOG_STATE *state,
 		   const ENCODING *enc)
 {
   switch (tok) {
+  case XML_TOK_PROLOG_S:
+    return XML_ROLE_NONE;
   case XML_TOK_DECL_OPEN:
     if (XmlNameMatchesAscii(enc,
 			    ptr + 2 * enc->minBytesPerChar,
@@ -250,8 +268,6 @@ int internalSubset(PROLOG_STATE *state,
     }
     break;
   case XML_TOK_PI:
-    if (XmlNameMatchesAscii(enc, ptr + 2 * enc->minBytesPerChar, "xml"))
-      return syntaxError(state);
   case XML_TOK_COMMENT:
   case XML_TOK_PARAM_ENTITY_REF:
     return XML_ROLE_NONE;
@@ -270,6 +286,8 @@ int entity0(PROLOG_STATE *state,
 	    const ENCODING *enc)
 {
   switch (tok) {
+  case XML_TOK_PROLOG_S:
+    return XML_ROLE_NONE;
   case XML_TOK_PERCENT:
     state->handler = entity1;
     return XML_ROLE_NONE;
@@ -288,6 +306,8 @@ int entity1(PROLOG_STATE *state,
 	    const ENCODING *enc)
 {
   switch (tok) {
+  case XML_TOK_PROLOG_S:
+    return XML_ROLE_NONE;
   case XML_TOK_NAME:
     state->handler = entity7;
     return XML_ROLE_PARAM_ENTITY_NAME;
@@ -303,6 +323,8 @@ int entity2(PROLOG_STATE *state,
 	    const ENCODING *enc)
 {
   switch (tok) {
+  case XML_TOK_PROLOG_S:
+    return XML_ROLE_NONE;
   case XML_TOK_NAME:
     if (XmlNameMatchesAscii(enc, ptr, "SYSTEM")) {
       state->handler = entity4;
@@ -328,6 +350,8 @@ int entity3(PROLOG_STATE *state,
 	    const ENCODING *enc)
 {
   switch (tok) {
+  case XML_TOK_PROLOG_S:
+    return XML_ROLE_NONE;
   case XML_TOK_LITERAL:
     state->handler = entity4;
     return XML_ROLE_ENTITY_PUBLIC_ID;
@@ -344,6 +368,8 @@ int entity4(PROLOG_STATE *state,
 	    const ENCODING *enc)
 {
   switch (tok) {
+  case XML_TOK_PROLOG_S:
+    return XML_ROLE_NONE;
   case XML_TOK_LITERAL:
     state->handler = entity5;
     return XML_ROLE_ENTITY_SYSTEM_ID;
@@ -359,6 +385,8 @@ int entity5(PROLOG_STATE *state,
 	    const ENCODING *enc)
 {
   switch (tok) {
+  case XML_TOK_PROLOG_S:
+    return XML_ROLE_NONE;
   case XML_TOK_DECL_CLOSE:
     state->handler = internalSubset;
     return XML_ROLE_NONE;
@@ -380,6 +408,8 @@ int entity6(PROLOG_STATE *state,
 	    const ENCODING *enc)
 {
   switch (tok) {
+  case XML_TOK_PROLOG_S:
+    return XML_ROLE_NONE;
   case XML_TOK_NAME:
     state->handler = declClose;
     return XML_ROLE_ENTITY_NOTATION_NAME;
@@ -395,6 +425,8 @@ int entity7(PROLOG_STATE *state,
 	    const ENCODING *enc)
 {
   switch (tok) {
+  case XML_TOK_PROLOG_S:
+    return XML_ROLE_NONE;
   case XML_TOK_NAME:
     if (XmlNameMatchesAscii(enc, ptr, "SYSTEM")) {
       state->handler = entity9;
@@ -420,6 +452,8 @@ int entity8(PROLOG_STATE *state,
 	    const ENCODING *enc)
 {
   switch (tok) {
+  case XML_TOK_PROLOG_S:
+    return XML_ROLE_NONE;
   case XML_TOK_LITERAL:
     state->handler = entity9;
     return XML_ROLE_ENTITY_PUBLIC_ID;
@@ -435,6 +469,8 @@ int entity9(PROLOG_STATE *state,
 	    const ENCODING *enc)
 {
   switch (tok) {
+  case XML_TOK_PROLOG_S:
+    return XML_ROLE_NONE;
   case XML_TOK_LITERAL:
     state->handler = declClose;
     return XML_ROLE_ENTITY_SYSTEM_ID;
@@ -450,6 +486,8 @@ int notation0(PROLOG_STATE *state,
 	      const ENCODING *enc)
 {
   switch (tok) {
+  case XML_TOK_PROLOG_S:
+    return XML_ROLE_NONE;
   case XML_TOK_NAME:
     state->handler = notation1;
     return XML_ROLE_NOTATION_NAME;
@@ -465,6 +503,8 @@ int notation1(PROLOG_STATE *state,
 	      const ENCODING *enc)
 {
   switch (tok) {
+  case XML_TOK_PROLOG_S:
+    return XML_ROLE_NONE;
   case XML_TOK_NAME:
     if (XmlNameMatchesAscii(enc, ptr, "SYSTEM")) {
       state->handler = notation3;
@@ -487,6 +527,8 @@ int notation2(PROLOG_STATE *state,
 	      const ENCODING *enc)
 {
   switch (tok) {
+  case XML_TOK_PROLOG_S:
+    return XML_ROLE_NONE;
   case XML_TOK_LITERAL:
     state->handler = notation4;
     return XML_ROLE_NOTATION_PUBLIC_ID;
@@ -502,6 +544,8 @@ int notation3(PROLOG_STATE *state,
 	      const ENCODING *enc)
 {
   switch (tok) {
+  case XML_TOK_PROLOG_S:
+    return XML_ROLE_NONE;
   case XML_TOK_LITERAL:
     state->handler = declClose;
     return XML_ROLE_NOTATION_SYSTEM_ID;
@@ -517,6 +561,8 @@ int notation4(PROLOG_STATE *state,
 	      const ENCODING *enc)
 {
   switch (tok) {
+  case XML_TOK_PROLOG_S:
+    return XML_ROLE_NONE;
   case XML_TOK_LITERAL:
     state->handler = declClose;
     return XML_ROLE_NOTATION_SYSTEM_ID;
@@ -535,6 +581,8 @@ int attlist0(PROLOG_STATE *state,
 	     const ENCODING *enc)
 {
   switch (tok) {
+  case XML_TOK_PROLOG_S:
+    return XML_ROLE_NONE;
   case XML_TOK_NAME:
     state->handler = attlist1;
     return XML_ROLE_ATTLIST_ELEMENT_NAME;
@@ -550,6 +598,8 @@ int attlist1(PROLOG_STATE *state,
 	     const ENCODING *enc)
 {
   switch (tok) {
+  case XML_TOK_PROLOG_S:
+    return XML_ROLE_NONE;
   case XML_TOK_DECL_CLOSE:
     state->handler = internalSubset;
     return XML_ROLE_NONE;
@@ -568,6 +618,8 @@ int attlist2(PROLOG_STATE *state,
 	     const ENCODING *enc)
 {
   switch (tok) {
+  case XML_TOK_PROLOG_S:
+    return XML_ROLE_NONE;
   case XML_TOK_NAME:
     {
       static const char *types[] = {
@@ -607,6 +659,8 @@ int attlist3(PROLOG_STATE *state,
 	     const ENCODING *enc)
 {
   switch (tok) {
+  case XML_TOK_PROLOG_S:
+    return XML_ROLE_NONE;
   case XML_TOK_NMTOKEN:
   case XML_TOK_NAME:
     state->handler = attlist4;
@@ -623,6 +677,8 @@ int attlist4(PROLOG_STATE *state,
 	     const ENCODING *enc)
 {
   switch (tok) {
+  case XML_TOK_PROLOG_S:
+    return XML_ROLE_NONE;
   case XML_TOK_CLOSE_PAREN:
     state->handler = attlist8;
     return XML_ROLE_NONE;
@@ -641,6 +697,8 @@ int attlist5(PROLOG_STATE *state,
 	     const ENCODING *enc)
 {
   switch (tok) {
+  case XML_TOK_PROLOG_S:
+    return XML_ROLE_NONE;
   case XML_TOK_OPEN_PAREN:
     state->handler = attlist6;
     return XML_ROLE_NONE;
@@ -657,6 +715,8 @@ int attlist6(PROLOG_STATE *state,
 	     const ENCODING *enc)
 {
   switch (tok) {
+  case XML_TOK_PROLOG_S:
+    return XML_ROLE_NONE;
   case XML_TOK_NAME:
     state->handler = attlist7;
     return XML_ROLE_ATTRIBUTE_NOTATION_VALUE;
@@ -672,6 +732,8 @@ int attlist7(PROLOG_STATE *state,
 	     const ENCODING *enc)
 {
   switch (tok) {
+  case XML_TOK_PROLOG_S:
+    return XML_ROLE_NONE;
   case XML_TOK_CLOSE_PAREN:
     state->handler = attlist8;
     return XML_ROLE_NONE;
@@ -691,6 +753,8 @@ int attlist8(PROLOG_STATE *state,
 	     const ENCODING *enc)
 {
   switch (tok) {
+  case XML_TOK_PROLOG_S:
+    return XML_ROLE_NONE;
   case XML_TOK_POUND_NAME:
     if (XmlNameMatchesAscii(enc,
 			    ptr + enc->minBytesPerChar,
@@ -726,6 +790,8 @@ int attlist9(PROLOG_STATE *state,
 	     const ENCODING *enc)
 {
   switch (tok) {
+  case XML_TOK_PROLOG_S:
+    return XML_ROLE_NONE;
   case XML_TOK_LITERAL:
     state->handler = attlist1;
     return XML_ROLE_FIXED_ATTRIBUTE_VALUE;
@@ -741,6 +807,8 @@ int element0(PROLOG_STATE *state,
 	     const ENCODING *enc)
 {
   switch (tok) {
+  case XML_TOK_PROLOG_S:
+    return XML_ROLE_NONE;
   case XML_TOK_NAME:
     state->handler = element1;
     return XML_ROLE_ELEMENT_NAME;
@@ -756,6 +824,8 @@ int element1(PROLOG_STATE *state,
 	     const ENCODING *enc)
 {
   switch (tok) {
+  case XML_TOK_PROLOG_S:
+    return XML_ROLE_NONE;
   case XML_TOK_NAME:
     if (XmlNameMatchesAscii(enc, ptr, "EMPTY")) {
       state->handler = declClose;
@@ -782,6 +852,8 @@ int element2(PROLOG_STATE *state,
 	     const ENCODING *enc)
 {
   switch (tok) {
+  case XML_TOK_PROLOG_S:
+    return XML_ROLE_NONE;
   case XML_TOK_POUND_NAME:
     if (XmlNameMatchesAscii(enc,
 			    ptr + enc->minBytesPerChar,
@@ -818,6 +890,8 @@ int element3(PROLOG_STATE *state,
 	     const ENCODING *enc)
 {
   switch (tok) {
+  case XML_TOK_PROLOG_S:
+    return XML_ROLE_NONE;
   case XML_TOK_CLOSE_PAREN:
   case XML_TOK_CLOSE_PAREN_ASTERISK:
     state->handler = declClose;
@@ -837,6 +911,8 @@ int element4(PROLOG_STATE *state,
 	     const ENCODING *enc)
 {
   switch (tok) {
+  case XML_TOK_PROLOG_S:
+    return XML_ROLE_NONE;
   case XML_TOK_NAME:
     state->handler = element5;
     return XML_ROLE_CONTENT_ELEMENT;
@@ -852,6 +928,8 @@ int element5(PROLOG_STATE *state,
 	     const ENCODING *enc)
 {
   switch (tok) {
+  case XML_TOK_PROLOG_S:
+    return XML_ROLE_NONE;
   case XML_TOK_CLOSE_PAREN_ASTERISK:
     state->handler = declClose;
     return XML_ROLE_GROUP_CLOSE_REP;
@@ -870,6 +948,8 @@ int element6(PROLOG_STATE *state,
 	     const ENCODING *enc)
 {
   switch (tok) {
+  case XML_TOK_PROLOG_S:
+    return XML_ROLE_NONE;
   case XML_TOK_OPEN_PAREN:
     state->level += 1;
     return XML_ROLE_GROUP_OPEN;
@@ -897,6 +977,8 @@ int element7(PROLOG_STATE *state,
 	     const ENCODING *enc)
 {
   switch (tok) {
+  case XML_TOK_PROLOG_S:
+    return XML_ROLE_NONE;
   case XML_TOK_CLOSE_PAREN:
     state->level -= 1;
     if (state->level == 0)
@@ -935,6 +1017,8 @@ int declClose(PROLOG_STATE *state,
 	      const ENCODING *enc)
 {
   switch (tok) {
+  case XML_TOK_PROLOG_S:
+    return XML_ROLE_NONE;
   case XML_TOK_DECL_CLOSE:
     state->handler = internalSubset;
     return XML_ROLE_NONE;

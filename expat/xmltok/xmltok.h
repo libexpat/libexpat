@@ -33,11 +33,11 @@ extern "C" {
 
 /* The following tokens may be returned by both XmlPrologTok and XmlContentTok */
 #define XML_TOK_PI 11      /* processing instruction */
-#define XML_TOK_COMMENT 12
-#define XML_TOK_BOM 13     /* Byte order mark */
+#define XML_TOK_XML_DECL 12 /* XML decl or text decl */
+#define XML_TOK_COMMENT 13
+#define XML_TOK_BOM 14     /* Byte order mark */
 
 /* The following tokens are returned only by XmlPrologTok */
-#define XML_TOK_INSTANCE_START 14
 #define XML_TOK_PROLOG_S 15
 #define XML_TOK_DECL_OPEN 16 /* <!foo */
 #define XML_TOK_DECL_CLOSE 17 /* > */
@@ -52,9 +52,9 @@ extern "C" {
 #define XML_TOK_CLOSE_BRACKET 26
 #define XML_TOK_LITERAL 27
 #define XML_TOK_PARAM_ENTITY_REF 28
+#define XML_TOK_INSTANCE_START 29
 
 /* The following occur only in element type declarations */
-#define XML_TOK_COMMA 29
 #define XML_TOK_NAME_QUESTION 30 /* name? */
 #define XML_TOK_NAME_ASTERISK 31 /* name* */
 #define XML_TOK_NAME_PLUS 32 /* name+ */
@@ -63,7 +63,7 @@ extern "C" {
 #define XML_TOK_CLOSE_PAREN_QUESTION 35 /* )? */
 #define XML_TOK_CLOSE_PAREN_ASTERISK 36 /* )* */
 #define XML_TOK_CLOSE_PAREN_PLUS 37 /* )+ */
-
+#define XML_TOK_COMMA 38
 
 #define XML_N_STATES 2
 #define XML_PROLOG_STATE 0
