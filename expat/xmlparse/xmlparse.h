@@ -41,8 +41,8 @@ typedef wchar_t XML_Char;
 typedef char XML_Char;
 #endif
 
-/* Constructs a new parser; encoding is the externally specified encoding,
-or null if there is no externally specified encoding. */
+/* Constructs a new parser; encoding is the encoding specified by the external
+protocol or null if there is none specified. */
 
 XML_Parser XMLPARSEAPI
 XML_ParserCreate(const XML_Char *encoding);
