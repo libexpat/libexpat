@@ -29,3 +29,8 @@ xmlwf/win32filemap.c
 xmlwf/xmlwf.c
 sample/elements.c
 sample/build.bat
+expat.dsw
+gennmtab/gennmtab.dsp
+xmlparse/xmlparse.dsp
+xmltok/xmltok.dsp
+xmlwf/xmlwf.dsp
