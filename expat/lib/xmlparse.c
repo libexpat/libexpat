@@ -617,7 +617,16 @@ struct XML_ParserStruct {
 #define paramEntityParsing (parser->m_paramEntityParsing)
 #endif /* XML_DTD */
 
-#define parsing (processor != prologInitProcessor)
+#define parsing \
+  (parentParser \
+    ? \
+    (isParamEntity \
+      ? \
+      (processor != externalParEntInitProcessor) \
+      : \
+      (processor != externalEntityInitProcessor)) \
+    : \
+    (processor != prologInitProcessor))
 
 XML_Parser
 XML_ParserCreate(const XML_Char *encodingName)
