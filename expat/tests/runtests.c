@@ -952,6 +952,24 @@ START_TEST(test_empty_ns_without_namespaces)
 }
 END_TEST
 
+/* Regression test for SF bug #824420.
+   Checks that an xmlns:prefix attribute set in an attribute's default
+   value isn't misinterpreted.
+*/
+START_TEST(test_ns_in_attribute_default_without_namespaces)
+{
+    char *text =
+        "<!DOCTYPE e:element [\n"
+        "  <!ATTLIST e:element\n"
+        "    xmlns:e CDATA 'http://example.com/'>\n"
+        "      ]>\n"
+        "<e:element/>";
+
+    if (XML_Parse(parser, text, strlen(text), XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+}
+END_TEST
+
 
 /*
  * Namespaces tests.
@@ -1349,6 +1367,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_ext_entity_set_encoding);
     tcase_add_test(tc_basic, test_dtd_default_handling);
     tcase_add_test(tc_basic, test_empty_ns_without_namespaces);
+    tcase_add_test(tc_basic, test_ns_in_attribute_default_without_namespaces);
 
     suite_add_tcase(s, tc_namespace);
     tcase_add_checked_fixture(tc_namespace,
