@@ -40,9 +40,6 @@ xmlwf/ct.c
 xmlwf/filemap.h
 xmlwf/readfilemap.c
 xmlwf/unixfilemap.c
-xmlwf/wfcheck.c
-xmlwf/wfcheck.h
-xmlwf/wfcheckmessage.c
 xmlwf/win32filemap.c
 xmlwf/xmlfile.c
 xmlwf/xmlfile.h
