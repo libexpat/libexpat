@@ -1326,6 +1326,61 @@ int PREFIX(entityValueTok)(const ENCODING *enc, const char *ptr, const char *end
   return XML_TOK_DATA_CHARS;
 }
 
+#ifdef XML_DTD
+
+static
+int PREFIX(ignoreSectionTok)(const ENCODING *enc, const char *ptr, const char *end,
+			     const char **nextTokPtr)
+{
+  int level = 0;
+  if (MINBPC(enc) > 1) {
+    size_t n = end - ptr;
+    if (n & (MINBPC(enc) - 1)) {
+      n &= ~(MINBPC(enc) - 1);
+      end = ptr + n;
+    }
+  }
+  while (ptr != end) {
+    switch (BYTE_TYPE(enc, ptr)) {
+    INVALID_CASES(ptr, nextTokPtr)
+    case BT_LT:
+      if ((ptr += MINBPC(enc)) == end)
+	return XML_TOK_PARTIAL;
+      if (CHAR_MATCHES(enc, ptr, '!')) {
+	if ((ptr += MINBPC(enc)) == end)
+	  return XML_TOK_PARTIAL;
+	if (CHAR_MATCHES(enc, ptr, '[')) {
+	  ++level;
+	  ptr += MINBPC(enc);
+	}
+      }
+      break;
+    case BT_RSQB:
+      if ((ptr += MINBPC(enc)) == end)
+	return XML_TOK_PARTIAL;
+      if (CHAR_MATCHES(enc, ptr, ']')) {
+	if ((ptr += MINBPC(enc)) == end)
+	  return XML_TOK_PARTIAL;
+	if (CHAR_MATCHES(enc, ptr, '>')) {
+	  ptr += MINBPC(enc);
+	  if (level == 0) {
+	    *nextTokPtr = ptr;
+	    return XML_TOK_IGNORE_SECT;
+	  }
+	  --level;
+	}
+      }
+      break;
+    default:
+      ptr += MINBPC(enc);
+      break;
+    }
+  }
+  return XML_TOK_PARTIAL;
+}
+
+#endif /* XML_DTD */
+
 static
 int PREFIX(isPublicId)(const ENCODING *enc, const char *ptr, const char *end,
 		       const char **badPtr)

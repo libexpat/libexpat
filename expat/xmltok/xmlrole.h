@@ -87,6 +87,11 @@ enum {
   XML_ROLE_CONTENT_ELEMENT_REP,
   XML_ROLE_CONTENT_ELEMENT_OPT,
   XML_ROLE_CONTENT_ELEMENT_PLUS,
+#ifdef XML_DTD
+  XML_ROLE_TEXT_DECL,
+  XML_ROLE_IGNORE_SECT,
+  XML_ROLE_INNER_PARAM_ENTITY_REF,
+#endif /* XML_DTD */
   XML_ROLE_PARAM_ENTITY_REF
 };
 
@@ -97,9 +102,17 @@ typedef struct prolog_state {
 		 const char *end,
 		 const ENCODING *enc);
   unsigned level;
+#ifdef XML_DTD
+  unsigned includeLevel;
+  int documentEntity;
+#endif /* XML_DTD */
 } PROLOG_STATE;
 
 void XMLTOKAPI XmlPrologStateInit(PROLOG_STATE *);
+#ifdef XML_DTD
+void XMLTOKAPI XmlPrologStateInitInternalEntity(PROLOG_STATE *);
+void XMLTOKAPI XmlPrologStateInitExternalEntity(PROLOG_STATE *);
+#endif /* XML_DTD */
 
 #define XmlTokenRole(state, tok, ptr, end, enc) \
  (((state)->handler)(state, tok, ptr, end, enc))

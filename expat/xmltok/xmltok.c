@@ -32,8 +32,15 @@ your version of this file under either the MPL or the GPL.
 #include "xmltok.h"
 #include "nametab.h"
 
+#ifdef XML_DTD
+#define IGNORE_SECTION_TOK_VTABLE , PREFIX(ignoreSectionTok)
+#else
+#define IGNORE_SECTION_TOK_VTABLE /* as nothing */
+#endif
+
 #define VTABLE1 \
-  { PREFIX(prologTok), PREFIX(contentTok), PREFIX(cdataSectionTok) }, \
+  { PREFIX(prologTok), PREFIX(contentTok), \
+    PREFIX(cdataSectionTok) IGNORE_SECTION_TOK_VTABLE }, \
   { PREFIX(attributeValueTok), PREFIX(entityValueTok) }, \
   PREFIX(sameName), \
   PREFIX(nameMatchesAscii), \
@@ -1397,9 +1404,11 @@ int initScan(const ENCODING **encodingTable,
   encPtr = enc->encPtr;
   if (ptr + 1 == end) {
     /* only a single byte available for auto-detection */
+#ifndef XML_DTD /* FIXME */
     /* a well-formed document entity must have more than one byte */
     if (state != XML_CONTENT_STATE)
       return XML_TOK_PARTIAL;
+#endif
     /* so we're parsing an external text entity... */
     /* if UTF-16 was externally specified, then we need at least 2 bytes */
     switch (INIT_ENC_INDEX(enc)) {
