@@ -16,91 +16,36 @@ const ENCODING *NS(XmlGetUtf16InternalEncoding)()
 }
 
 static
-int NS(initScan)(const ENCODING *enc, int state, const char *ptr, const char *end,
-		 const char **nextTokPtr)
-{
-  const ENCODING **encPtr;
-
-  if (ptr == end)
-    return XML_TOK_NONE;
-  encPtr = ((const INIT_ENCODING *)enc)->encPtr;
-  if (ptr + 1 == end) {
-    switch ((unsigned char)*ptr) {
-    case 0xFE:
-    case 0xFF:
-    case 0x00:
-    case 0x3C:
-      return XML_TOK_PARTIAL;
-    }
-  }
-  else {
-    switch (((unsigned char)ptr[0] << 8) | (unsigned char)ptr[1]) {
-    case 0x003C:
-      *encPtr = &ns(big2_encoding).enc;
-      return XmlTok(*encPtr, state, ptr, end, nextTokPtr);
-    case 0xFEFF:
-      *nextTokPtr = ptr + 2;
-      *encPtr = &ns(big2_encoding).enc;
-      return XML_TOK_BOM;
-    case 0x3C00:
-      *encPtr = &ns(little2_encoding).enc;
-      return XmlTok(*encPtr, state, ptr, end, nextTokPtr);
-    case 0xFFFE:
-      *nextTokPtr = ptr + 2;
-      *encPtr = &ns(little2_encoding).enc;
-      return XML_TOK_BOM;
-    }
-  }
-  *encPtr = (enc->minBytesPerChar == 2
-	     ? &ns(big2_encoding).enc
-	     : &ns(utf8_encoding).enc); 
-  return XmlTok(*encPtr, state, ptr, end, nextTokPtr);
-}
-
+const ENCODING *NS(encodings)[] = {
+  &ns(latin1_encoding).enc,
+  &ns(ascii_encoding).enc,
+  &ns(utf8_encoding).enc,
+  &ns(big2_encoding).enc,
+  &ns(big2_encoding).enc,
+  &ns(little2_encoding).enc,
+  &ns(utf8_encoding).enc /* NO_ENC */
+};
 
 static
 int NS(initScanProlog)(const ENCODING *enc, const char *ptr, const char *end,
 		       const char **nextTokPtr)
 {
-  return NS(initScan)(enc, XML_PROLOG_STATE, ptr, end, nextTokPtr);
+  return NS(initScan)(NS(encodings), (const INIT_ENCODING *)enc, XML_PROLOG_STATE, ptr, end, nextTokPtr);
 }
 
 static
 int NS(initScanContent)(const ENCODING *enc, const char *ptr, const char *end,
-		      const char **nextTokPtr)
+		       const char **nextTokPtr)
 {
-  return NS(initScan)(enc, XML_CONTENT_STATE, ptr, end, nextTokPtr);
+  return NS(initScan)(NS(encodings), (const INIT_ENCODING *)enc, XML_CONTENT_STATE, ptr, end, nextTokPtr);
 }
 
 int NS(XmlInitEncoding)(INIT_ENCODING *p, const ENCODING **encPtr, const char *name)
 {
-  if (name) {
-    if (streqci(name, "ISO-8859-1")) {
-      *encPtr = &ns(latin1_encoding).enc;
-      return 1;
-    }
-    if (streqci(name, "UTF-8")) {
-      *encPtr = &ns(utf8_encoding).enc;
-      return 1;
-    }
-    if (streqci(name, "US-ASCII")) {
-      *encPtr = &ns(ascii_encoding).enc;
-      return 1;
-    }
-    if (streqci(name, "UTF-16BE")) {
-      *encPtr = &ns(big2_encoding).enc;
-      return 1;
-    }
-    if (streqci(name, "UTF-16LE")) {
-      *encPtr = &ns(little2_encoding).enc;
-      return 1;
-    }
-    if (!streqci(name, "UTF-16"))
-      return 0;
-    p->initEnc.minBytesPerChar = 2;
-  }
-  else
-    p->initEnc.minBytesPerChar = 1;
+  int i = getEncodingIndex(name);
+  if (i == UNKNOWN_ENC)
+    return 0;
+  INIT_ENC_INDEX(p) = (char)i;
   p->initEnc.scanners[XML_PROLOG_STATE] = NS(initScanProlog);
   p->initEnc.scanners[XML_CONTENT_STATE] = NS(initScanContent);
   p->initEnc.updatePosition = initUpdatePosition;
@@ -108,7 +53,6 @@ int NS(XmlInitEncoding)(INIT_ENCODING *p, const ENCODING **encPtr, const char *n
   *encPtr = &(p->initEnc);
   return 1;
 }
-
 
 static
 const ENCODING *NS(findEncoding)(const ENCODING *enc, const char *ptr, const char *end)
@@ -121,23 +65,12 @@ const ENCODING *NS(findEncoding)(const ENCODING *enc, const char *ptr, const cha
   if (ptr != end)
     return 0;
   *p = 0;
-  for (i = 0; buf[i]; i++) {
-    if ('a' <= buf[i] && buf[i] <= 'z')
-      buf[i] +=  'A' - 'a';
-  }
-  if (streqci(buf, "UTF-8"))
-    return &ns(utf8_encoding).enc;
-  if (streqci(buf, "ISO-8859-1"))
-    return &ns(latin1_encoding).enc;
-  if (streqci(buf, "US-ASCII"))
-    return &ns(ascii_encoding).enc;
-  if (streqci(buf, "UTF-16")) {
-    static const unsigned short n = 1;
-    if (enc->minBytesPerChar == 2)
-      return enc;
-    return &ns(big2_encoding).enc;
-  }
-  return 0;  
+  if (streqci(buf, "UTF-16") && enc->minBytesPerChar == 2)
+    return enc;
+  i = getEncodingIndex(buf);
+  if (i == UNKNOWN_ENC)
+    return 0;
+  return NS(encodings)[i];
 }
 
 int NS(XmlParseXmlDecl)(int isGeneralTextEntity,

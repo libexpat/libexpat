@@ -1142,6 +1142,127 @@ XmlInitUnknownEncoding(void *mem,
   return &(e->normal.enc);
 }
 
+/* If this enumeration is changed, getEncodingIndex and encodings
+must also be changed. */
+enum {
+  UNKNOWN_ENC = -1,
+  ISO_8859_1_ENC = 0,
+  US_ASCII_ENC,
+  UTF_8_ENC,
+  UTF_16_ENC,
+  UTF_16BE_ENC,
+  UTF_16LE_ENC,
+  /* must match encodingNames up to here */
+  NO_ENC
+};
+
+static
+int getEncodingIndex(const char *name)
+{
+  static const char *encodingNames[] = {
+    "ISO-8859-1",
+    "US-ASCII",
+    "UTF-8",
+    "UTF-16",
+    "UTF-16BE"
+    "UTF-16LE",
+  };
+  int i;
+  if (name == 0)
+    return NO_ENC;
+  for (i = 0; i < sizeof(encodingNames)/sizeof(encodingNames[0]); i++)
+    if (streqci(name, encodingNames[i]))
+      return i;
+  return UNKNOWN_ENC;
+}
+
+/* For binary compatibility, we store the index of the encoding specified
+at initialization in the isUtf16 member. */
+
+#define INIT_ENC_INDEX(enc) ((enc)->initEnc.isUtf16)
+
+/* This is what detects the encoding.
+encodingTable maps from encoding indices to encodings;
+INIT_ENC_INDEX(enc) is the index of the external (protocol) specified encoding;
+state is XML_CONTENT_STATE if we're parsing an external text entity,
+and XML_PROLOG_STATE otherwise.
+*/
+
+
+static
+int initScan(const ENCODING **encodingTable,
+	     const INIT_ENCODING *enc,
+	     int state,
+	     const char *ptr,
+	     const char *end,
+	     const char **nextTokPtr)
+{
+  const ENCODING **encPtr;
+
+  if (ptr == end)
+    return XML_TOK_NONE;
+  encPtr = enc->encPtr;
+  if (ptr + 1 == end) {
+    switch ((unsigned char)*ptr) {
+    case 0xFE:
+    case 0xFF:
+    case 0xEF: /* possibly first byte of UTF-8 BOM */
+      if (INIT_ENC_INDEX(enc) == ISO_8859_1_ENC
+	  && state == XML_CONTENT_STATE)
+	break;
+      /* fall through */
+    case 0x00:
+    case 0x3C:
+      return XML_TOK_PARTIAL;
+    }
+  }
+  else {
+    switch (((unsigned char)ptr[0] << 8) | (unsigned char)ptr[1]) {
+    case 0x003C:
+      if (INIT_ENC_INDEX(enc) == UTF_16LE_ENC
+	  && state == XML_CONTENT_STATE)
+	break;
+      *encPtr = encodingTable[UTF_16BE_ENC];
+      return XmlTok(*encPtr, state, ptr, end, nextTokPtr);
+    case 0xFEFF:
+      *nextTokPtr = ptr + 2;
+      *encPtr = encodingTable[UTF_16BE_ENC];
+      return XML_TOK_BOM;
+    case 0x3C00:
+      if (INIT_ENC_INDEX(enc) == UTF_16BE_ENC
+	  && state == XML_CONTENT_STATE)
+	break;
+      *encPtr = encodingTable[UTF_16LE_ENC];
+      return XmlTok(*encPtr, state, ptr, end, nextTokPtr);
+    case 0xFFFE:
+      *nextTokPtr = ptr + 2;
+      *encPtr = encodingTable[UTF_16LE_ENC];
+      return XML_TOK_BOM;
+    case 0xEFBB:
+      /* Maybe a UTF-8 BOM (EF BB BF) */
+      /* If there's an explicitly specified (external) encoding
+         of ISO-8859-1 or some flavour of UTF-16
+         and this is an external text entity,
+	 don't look for the BOM,
+         because it might be a legal data. */
+      if (state == XML_CONTENT_STATE) {
+	int e = INIT_ENC_INDEX(enc);
+	if (e == ISO_8859_1_ENC || e == UTF_16BE_ENC || e == UTF_16LE_ENC || e == UTF_16_ENC)
+	  break;
+      }
+      if (ptr + 2 == end)
+	return XML_TOK_PARTIAL;
+      if ((unsigned char)ptr[2] == 0xBF) {
+	*encPtr = encodingTable[UTF_8_ENC];
+	return XML_TOK_BOM;
+      }
+    }
+  }
+  *encPtr = encodingTable[INIT_ENC_INDEX(enc)];
+  return XmlTok(*encPtr, state, ptr, end, nextTokPtr);
+}
+
+
 #define NS(x) x
 #define ns(x) x
 #include "xmltok_ns.c"
