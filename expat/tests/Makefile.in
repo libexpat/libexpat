@@ -1,0 +1,21 @@
+SHELL = @SHELL@
+
+srcdir = @srcdir@
+top_srcdir = @top_srcdir@
+VPATH = @srcdir@
+
+CC=@CC@
+CPPFLAGS = @CPPFLAGS@ -I../lib
+LDFLAGS = @LDFLAGS@ -L../lib
+LIBS = @LIBS@ -lexpat -lcheck
+CFLAGS = @CFLAGS@
+
+
+check:	runtests
+	@./runtests
+
+runtests.o:  runtests.c
+	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
+
+runtests:  runtests.o
+	$(CC) $(LDFLAGS) $< -o $@ $(LIBS)
