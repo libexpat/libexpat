@@ -764,6 +764,7 @@ int XML_Parse(XML_Parser parser, const char *s, int len, int isFinal)
     if (errorCode == XML_ERROR_NONE)
       return 1;
     eventEndPtr = eventPtr;
+    processor = errorProcessor;
     return 0;
   }
   else if (bufferPtr == bufferEnd) {
@@ -776,11 +777,13 @@ int XML_Parse(XML_Parser parser, const char *s, int len, int isFinal)
       if (errorCode == XML_ERROR_NONE)
 	return 1;
       eventEndPtr = eventPtr;
+      processor = errorProcessor;
       return 0;
     }
     errorCode = processor(parser, s, parseEndPtr = s + len, &end);
     if (errorCode != XML_ERROR_NONE) {
       eventEndPtr = eventPtr;
+      processor = errorProcessor;
       return 0;
     }
     XmlUpdatePosition(encoding, positionPtr, end, &position);
@@ -789,9 +792,11 @@ int XML_Parse(XML_Parser parser, const char *s, int len, int isFinal)
       if (buffer == 0 || nLeftOver > bufferLim - buffer) {
 	/* FIXME avoid integer overflow */
 	buffer = buffer == 0 ? malloc(len * 2) : realloc(buffer, len * 2);
+	/* FIXME storage leak if realloc fails */
 	if (!buffer) {
 	  errorCode = XML_ERROR_NO_MEMORY;
 	  eventPtr = eventEndPtr = 0;
+	  processor = errorProcessor;
 	  return 0;
 	}
 	bufferLim = buffer + len * 2;
@@ -823,6 +828,7 @@ int XML_ParseBuffer(XML_Parser parser, int len, int isFinal)
   }
   else {
     eventEndPtr = eventPtr;
+    processor = errorProcessor;
     return 0;
   }
 }
@@ -1480,7 +1486,7 @@ doContent(XML_Parser parser,
 otherwise just check the attributes for well-formedness. */
 
 static enum XML_Error storeAtts(XML_Parser parser, const ENCODING *enc,
-				const char *s, TAG_NAME *tagNamePtr,
+				const char *attStr, TAG_NAME *tagNamePtr,
 				BINDING **bindingsPtr)
 {
   ELEMENT_TYPE *elementType = 0;
@@ -1507,7 +1513,7 @@ static enum XML_Error storeAtts(XML_Parser parser, const ENCODING *enc,
     }
     nDefaultAtts = elementType->nDefaultAtts;
   }
-  n = XmlGetAttributes(enc, s, attsSize, atts);
+  n = XmlGetAttributes(enc, attStr, attsSize, atts);
   if (n + nDefaultAtts > attsSize) {
     int oldAttsSize = attsSize;
     attsSize = n + nDefaultAtts + INIT_ATTS_SIZE;
@@ -1515,7 +1521,7 @@ static enum XML_Error storeAtts(XML_Parser parser, const ENCODING *enc,
     if (!atts)
       return XML_ERROR_NO_MEMORY;
     if (n > oldAttsSize)
-      XmlGetAttributes(enc, s, n, atts);
+      XmlGetAttributes(enc, attStr, n, atts);
   }
   appAtts = (const XML_Char **)atts;
   for (i = 0; i < n; i++) {
@@ -2483,7 +2489,6 @@ enum XML_Error storeEntityValue(XML_Parser parser,
 				const char *entityTextPtr,
 				const char *entityTextEnd)
 {
-  const ENCODING *internalEnc = ns ? XmlGetInternalEncodingNS() : XmlGetInternalEncoding();
   STRING_POOL *pool = &(dtd.pool);
   entityTextPtr += encoding->minBytesPerChar;
   entityTextEnd -= encoding->minBytesPerChar;
