@@ -42,6 +42,7 @@ CopyMode: alwaysoverwrite; Source: lib\Release-w\*.lib;        DestDir: "{app}\L
 CopyMode: alwaysoverwrite; Source: lib\Release_static\*.lib;   DestDir: "{app}\StaticLibs"
 CopyMode: alwaysoverwrite; Source: lib\Release-w_static\*.lib; DestDir: "{app}\StaticLibs"
 CopyMode: alwaysoverwrite; Source: expat.dsw;                  DestDir: "{app}\Source"
+CopyMode: alwaysoverwrite; Source: win32\README.txt;           DestDir: "{app}\Source"
 CopyMode: alwaysoverwrite; Source: bcb5\*.*;                   DestDir: "{app}\Source\bcb5"
 CopyMode: alwaysoverwrite; Source: lib\*.c;                    DestDir: "{app}\Source\lib"
 CopyMode: alwaysoverwrite; Source: lib\*.h;                    DestDir: "{app}\Source\lib"
