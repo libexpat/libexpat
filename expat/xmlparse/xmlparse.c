@@ -938,6 +938,13 @@ enum XML_Error doCdataSection(XML_Parser parser,
     case XML_TOK_INVALID:
       errorPtr = next;
       return XML_ERROR_INVALID_TOKEN;
+    case XML_TOK_PARTIAL_CHAR:
+      if (nextPtr) {
+	*nextPtr = s;
+	return XML_ERROR_NONE;
+      }
+      errorPtr = s;
+      return XML_ERROR_PARTIAL_CHAR;
     case XML_TOK_PARTIAL:
     case XML_TOK_NONE:
       if (nextPtr) {
