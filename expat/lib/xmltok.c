@@ -678,7 +678,7 @@ little2_isNmstrtMin(const ENCODING *enc, const char *p)
 #define MINBPC(enc) 2
 /* CHAR_MATCHES is guaranteed to have MINBPC bytes available. */
 #define BYTE_TYPE(enc, p) LITTLE2_BYTE_TYPE(enc, p)
-#define BYTE_TO_ASCII(enc, p) LITTLE2_BYTE_TO_ASCII(enc, p) 
+#define BYTE_TO_ASCII(enc, p) LITTLE2_BYTE_TO_ASCII(enc, p)
 #define CHAR_MATCHES(enc, p, c) LITTLE2_CHAR_MATCHES(enc, p, c)
 #define IS_NAME_CHAR(enc, p, n) 0
 #define IS_NAME_CHAR_MINBPC(enc, p) LITTLE2_IS_NAME_CHAR_MINBPC(enc, p)
@@ -701,7 +701,7 @@ little2_isNmstrtMin(const ENCODING *enc, const char *p)
 
 #ifdef XML_NS
 
-static const struct normal_encoding little2_encoding_ns = { 
+static const struct normal_encoding little2_encoding_ns = {
   { VTABLE, 2, 0,
 #if BYTEORDER == 1234
     1
@@ -718,7 +718,7 @@ static const struct normal_encoding little2_encoding_ns = {
 
 #endif
 
-static const struct normal_encoding little2_encoding = { 
+static const struct normal_encoding little2_encoding = {
   { VTABLE, 2, 0,
 #if BYTEORDER == 1234
     1
@@ -739,7 +739,7 @@ static const struct normal_encoding little2_encoding = {
 
 #ifdef XML_NS
 
-static const struct normal_encoding internal_little2_encoding_ns = { 
+static const struct normal_encoding internal_little2_encoding_ns = {
   { VTABLE, 2, 0, 1 },
   {
 #include "iasciitab.h"
@@ -750,7 +750,7 @@ static const struct normal_encoding internal_little2_encoding_ns = {
 
 #endif
 
-static const struct normal_encoding internal_little2_encoding = { 
+static const struct normal_encoding internal_little2_encoding = {
   { VTABLE, 2, 0, 1 },
   {
 #define BT_COLON BT_NMSTRT
@@ -817,7 +817,7 @@ big2_isNmstrtMin(const ENCODING *enc, const char *p)
 #define MINBPC(enc) 2
 /* CHAR_MATCHES is guaranteed to have MINBPC bytes available. */
 #define BYTE_TYPE(enc, p) BIG2_BYTE_TYPE(enc, p)
-#define BYTE_TO_ASCII(enc, p) BIG2_BYTE_TO_ASCII(enc, p) 
+#define BYTE_TO_ASCII(enc, p) BIG2_BYTE_TO_ASCII(enc, p)
 #define CHAR_MATCHES(enc, p, c) BIG2_CHAR_MATCHES(enc, p, c)
 #define IS_NAME_CHAR(enc, p, n) 0
 #define IS_NAME_CHAR_MINBPC(enc, p) BIG2_IS_NAME_CHAR_MINBPC(enc, p)
@@ -948,7 +948,7 @@ isSpace(int c)
   case 0x20:
   case 0xD:
   case 0xA:
-  case 0x9:     
+  case 0x9:
     return 1;
   }
   return 0;
