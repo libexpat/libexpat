@@ -139,16 +139,20 @@ order to do 90% of what you'll want to do with it:</p>
 
 <dl>
 
-<dt><code>XML_ParserCreate</code></dt>
+<dt><code><a href= "#XML_ParserCreate"
+             >XML_ParserCreate</a></code></dt>
   <dd>Create a new parser object.</dd>
 
-<dt><code>XML_SetElementHandler</code></dt>
+<dt><code><a href= "#XML_SetElementHandler"
+             >XML_SetElementHandler</a></code></dt>
   <dd>Set handlers for start and end tags.</dd>
 
-<dt><code>XML_SetCharacterDataHandler</code></dt>
+<dt><code><a href= "#XML_SetCharacterDataHandler"
+             >XML_SetCharacterDataHandler</a></code></dt>
   <dd>Set handler for text.</dd>
 
-<dt><code>XML_Parse</code></dt>
+<dt><code><a href= "#XML_Parse"
+             >XML_Parse</a></code></dt>
   <dd>Pass a buffer full of document to the parser</dd>
 </dl>
 
@@ -723,9 +727,10 @@ XML_ParseBuffer(XML_Parser p,
                 int isFinal)
 </pre>
 <div class="fcndef">
-This is just like <code>XML_Parse</code>, except in this case expat
-provides the buffer.  By obtaining the buffer from expat with the
-<code>XML_GetBuffer</code> function, the application can avoid double
+This is just like <code><a href= "#XML_Parse" >XML_Parse</a></code>,
+except in this case Expat provides the buffer.  By obtaining the
+buffer from Expat with the <code><a href= "#XML_GetBuffer"
+>XML_GetBuffer</a></code> function, the application can avoid double
 copying of the input.
 </div>
 
@@ -738,7 +743,8 @@ XML_GetBuffer(XML_Parser p,
 Obtain a buffer of size <code>len</code> to read a piece of the document
 into. A NULL value is returned if expat can't allocate enough memory for
 this buffer. This has to be called prior to every call to
-<code>XML_ParseBuffer</code>. A typical use would look like this:
+<code><a href= "#XML_ParseBuffer" >XML_ParseBuffer</a></code>. A
+typical use would look like this:
 
 <pre class="eg">
 for (;;) {
@@ -837,7 +843,7 @@ typedef void
                             int len);
 </pre>
 <p>Set a text handler. The string your handler receives
-is <em>NOT zero terminated</em>. You have to use the length argument
+is <em>NOT nul-terminated</em>. You have to use the length argument
 to deal with the end of the string. A single block of contiguous text
 free of markup may still result in a sequence of calls to this handler.
 In other words, if you're searching for a pattern in the text, it may
@@ -1039,14 +1045,17 @@ typedef int
 </pre>
 <p>Set a handler to deal with encodings other than the
 <a href="#builtin_encodings">built in set</a>. This should  be done before
-XML_Parse or XML_ParseBuffer have been called on the given parser.</p>
-<p>If the handler knows how to deal with an encoding with the given name,
-it should fill in the info data structure and return 1. Otherwise it should
-return 0. The handler will be called at most once per parsed (external) entity.
-The optional application data pointer <code>encodingHandlerData</code>
-will be passed back to the handler.</p>
+<code><a href= "#XML_Parse" >XML_Parse</a></code> or <code><a href=
+"#XML_ParseBuffer" >XML_ParseBuffer</a></code> have been called on the
+given parser.</p>
+<p>If the handler knows how to deal with an encoding with the given
+name, it should fill in the info data structure and return
+1. Otherwise it should return 0. The handler will be called at most
+once per parsed (external) entity. The optional application data
+pointer <code>encodingHandlerData</code> will be passed back to the
+handler.</p>
 
-<pre>
+<pre class="signature">
     typedef struct {
       int map[256];
       void *data;
@@ -1064,11 +1073,12 @@ bytes in the sequence and the actual conversion is accomplished by a
 call to the function pointed at by convert. This function may return -1
 if the sequence itself is invalid. The convert pointer may be null if
 there are only single byte codes. The data parameter passed to the convert
-function is the data pointer from XML_Encoding. The string s is <em>NOT</em>
-null terminated and points at the sequence of bytes to be converted.</p>
+function is the data pointer from <code>XML_Encoding</code>. The
+string s is <em>NOT</em> nul-terminated and points at the sequence of
+bytes to be converted.</p>
 
-<p>The function pointed at by release is called by the parser when it is
-finished with the encoding. It may be null.</p>
+<p>The function pointed at by <code>release</code> is called by the
+parser when it is finished with the encoding. It may be NULL.</p>
 </div>
 
 <div class="handler">
@@ -1187,7 +1197,7 @@ typedef void
                           const XML_Char *name,
                           XML_Content *model);
 </pre>
-<div class="signature"><pre>
+<pre class="signature">
 enum XML_Content_Type {
   XML_CTYPE_EMPTY = 1,
   XML_CTYPE_ANY,
@@ -1213,7 +1223,7 @@ struct XML_cp {
   unsigned int			numchildren;
   XML_Content *			children;
 };
-</pre></div>
+</pre>
 <p>Sets a handler for element declarations in a DTD. The handler gets
 called with the name of the element in the declaration and a pointer
 to a structure that contains the element model. It is the
@@ -1396,7 +1406,7 @@ XML_ErrorString(int code)
 <div class="fcndef">
 Return a string describing the error corresponding to code.
 The code should be one of the enums that can be returned from
-XML_GetErrorCode.
+<code><a href= "#XML_GetErrorCode" >XML_GetErrorCode</a></code>.
 </div>
 
 <pre class="fcndec" id="XML_GetCurrentByteIndex">
@@ -1540,7 +1550,8 @@ XML_GetIdAttributeIndex(XML_Parser p);
 </pre>
 <div class="fcndef">
 Returns the index of the ID attribute passed in the atts array in the
-last call to XML_StartElementHandler, or -1 if there is no ID
+last call to <code><a href= "#XML_StartElementHandler"
+>XML_StartElementHandler</a></code>, or -1 if there is no ID
 attribute. If called inside a start handler, then that means the
 current call.
 </div>
