@@ -1,16 +1,22 @@
-#define DO_LEAD_CASE(n, ptr, end, ret) \
+#ifndef IS_INVALID_CHAR
+#define IS_INVALID_CHAR(enc, ptr, n) (0)
+#endif
+
+#define INVALID_LEAD_CASE(n, ptr, nextTokPtr) \
     case BT_LEAD ## n: \
       if (end - ptr < n) \
-	return ret; \
+	return XML_TOK_PARTIAL_CHAR; \
+      if (IS_INVALID_CHAR(enc, ptr, n)) { \
+        *(nextTokPtr) = (ptr); \
+        return XML_TOK_INVALID; \
+      } \
       ptr += n; \
       break;
-#define MULTIBYTE_CASES(ptr, end, ret) \
-  DO_LEAD_CASE(2, ptr, end, ret) \
-  DO_LEAD_CASE(3, ptr, end, ret) \
-  DO_LEAD_CASE(4, ptr, end, ret)
-
 
 #define INVALID_CASES(ptr, nextTokPtr) \
+  INVALID_LEAD_CASE(2, ptr, nextTokPtr) \
+  INVALID_LEAD_CASE(3, ptr, nextTokPtr) \
+  INVALID_LEAD_CASE(4, ptr, nextTokPtr) \
   case BT_NONXML: \
   case BT_MALFORM: \
   case BT_TRAIL: \
@@ -88,7 +94,6 @@ int PREFIX(scanComment)(const ENCODING *enc, const char *ptr, const char *end,
     ptr += MINBPC;
     while (ptr != end) {
       switch (BYTE_TYPE(enc, ptr)) {
-      MULTIBYTE_CASES(ptr, end, XML_TOK_PARTIAL_CHAR)
       INVALID_CASES(ptr, nextTokPtr)
       case BT_MINUS:
 	if ((ptr += MINBPC) == end)
@@ -231,7 +236,6 @@ int PREFIX(scanPi)(const ENCODING *enc, const char *ptr, const char *end,
       ptr += MINBPC;
       while (ptr != end) {
         switch (BYTE_TYPE(enc, ptr)) {
-        MULTIBYTE_CASES(ptr, end, XML_TOK_PARTIAL_CHAR)
         INVALID_CASES(ptr, nextTokPtr)
 	case BT_QUEST:
 	  ptr += MINBPC;
@@ -288,7 +292,6 @@ int PREFIX(scanCdataSection)(const ENCODING *enc, const char *ptr, const char *e
   end -= 2 * MINBPC;
   while (ptr != end) {
     switch (BYTE_TYPE(enc, ptr)) {
-    MULTIBYTE_CASES(ptr, end, XML_TOK_PARTIAL_CHAR)
     INVALID_CASES(ptr, nextTokPtr)
     case BT_RSQB:
       if (CHAR_MATCHES(enc, ptr + MINBPC, ']')
@@ -502,7 +505,6 @@ int PREFIX(scanAtts)(const ENCODING *enc, const char *ptr, const char *end,
 	    break;
 	  switch (t) {
 	  INVALID_CASES(ptr, nextTokPtr)
-          MULTIBYTE_CASES(ptr, end, XML_TOK_PARTIAL_CHAR)
 	  case BT_AMP:
 	    {
 	      int tok = PREFIX(scanRef)(enc, ptr + MINBPC, end, &ptr);
@@ -685,14 +687,22 @@ int PREFIX(contentTok)(const ENCODING *enc, const char *ptr, const char *end,
     *nextTokPtr = ptr;
     return XML_TOK_INVALID;
   INVALID_CASES(ptr, nextTokPtr)
-  MULTIBYTE_CASES(ptr, end, XML_TOK_PARTIAL_CHAR)
   default:
     ptr += MINBPC;
     break;
   }
   while (ptr != end) {
     switch (BYTE_TYPE(enc, ptr)) {
-    MULTIBYTE_CASES(ptr, end, (*nextTokPtr = ptr, XML_TOK_DATA_CHARS))
+#define LEAD_CASE(n) \
+    case BT_LEAD ## n: \
+      if (end - ptr < n || IS_INVALID_CHAR(enc, ptr, n)) { \
+	*nextTokPtr = ptr; \
+	return XML_TOK_DATA_CHARS; \
+      } \
+      ptr += n; \
+      break;
+    LEAD_CASE(2) LEAD_CASE(3) LEAD_CASE(4)
+#undef LEAD_CASE
     case BT_RSQB:
       if (ptr + MINBPC != end) {
 	 if (!CHAR_MATCHES(enc, ptr + MINBPC, ']')) {
@@ -793,7 +803,6 @@ int PREFIX(scanLit)(int open, const ENCODING *enc,
   while (ptr != end) {
     int t = BYTE_TYPE(enc, ptr);
     switch (t) {
-    MULTIBYTE_CASES(ptr, end, XML_TOK_PARTIAL)
     INVALID_CASES(ptr, nextTokPtr)
     case BT_QUOT:
     case BT_APOS:
@@ -1434,7 +1443,12 @@ void PREFIX(updatePosition)(const ENCODING *enc,
 {
   while (ptr != end) {
     switch (BYTE_TYPE(enc, ptr)) {
-    MULTIBYTE_CASES(ptr, end, ;/* hack! */)
+#define LEAD_CASE(n) \
+    case BT_LEAD ## n: \
+      ptr += n; \
+      break;
+    LEAD_CASE(2) LEAD_CASE(3) LEAD_CASE(4)
+#undef LEAD_CASE
     case BT_LF:
       pos->columnNumber = (unsigned)-1;
       pos->lineNumber++;

@@ -51,6 +51,15 @@ We need 8 bits to index into pages, 3 bits to add to that index and
      ? UTF8_GET_NAMING3(pages, (const unsigned char *)(p)) \
      : 0))
 
+#define UTF8_INVALID3(p) \
+  ((*p) == 0xED \
+  ? (((p)[1] & 0x20) != 0) \
+  : ((*p) == 0xEF \
+     ? ((p)[1] == 0xBF && ((p)[2] == 0xBF || (p)[2] == 0xBE)) \
+     : 0))
+
+#define UTF8_INVALID4(p) ((*p) == 0xF4 && ((p)[1] & 0x30) != 0)
+
 struct normal_encoding {
   ENCODING enc;
   unsigned char type[256];
@@ -67,6 +76,10 @@ static int checkCharRefNumber(int);
 #define BYTE_TO_ASCII(enc, p) (*p)
 #define IS_NAME_CHAR(enc, p, n) UTF8_GET_NAMING(namePages, p, n)
 #define IS_NMSTRT_CHAR(enc, p, n) UTF8_GET_NAMING(nmstrtPages, p, n)
+#define IS_INVALID_CHAR(enc, p, n) \
+((n) == 3 \
+  ? UTF8_INVALID3((const unsigned char *)(p)) \
+  : ((n) == 4 ? UTF8_INVALID4((const unsigned char *)(p)) : 0))
 
 /* c is an ASCII character */
 #define CHAR_MATCHES(enc, p, c) (*(p) == c)
@@ -80,6 +93,7 @@ static int checkCharRefNumber(int);
 #undef CHAR_MATCHES
 #undef IS_NAME_CHAR
 #undef IS_NMSTRT_CHAR
+#undef IS_INVALID_CHAR
 
 enum {
   // cvalN is value of masked first byte of N byte sequence
@@ -336,6 +350,7 @@ DEFINE_UTF16_TO_UTF8
 #undef CHAR_MATCHES
 #undef IS_NAME_CHAR
 #undef IS_NMSTRT_CHAR
+#undef IS_INVALID_CHAR
 
 static const struct encoding little2_encoding = { VTABLE, 2 };
 
@@ -372,6 +387,7 @@ DEFINE_UTF16_TO_UTF8
 #undef CHAR_MATCHES
 #undef IS_NAME_CHAR
 #undef IS_NMSTRT_CHAR
+#undef IS_INVALID_CHAR
 
 static const struct encoding big2_encoding = { VTABLE, 2 };
 
