@@ -26,12 +26,12 @@ xmlwf:
 
 clean:
 # works on Win98/ME
- deltree /y release\obj
+# deltree /y release\obj
 # works on WinNT/2000
-# del /s/f/q release\obj
+ del /s/f/q release\obj
 
 distclean:
 # works on Win98/ME
- deltree /y release\*.*
+# deltree /y release\*.*
 # works on WinNT/2000
-# del /s/f/q release\*
+ del /s/f/q release\*
