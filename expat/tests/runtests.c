@@ -215,12 +215,14 @@ START_TEST(test_illegal_utf8)
         sprintf(text, "<e>%ccd</e>", i);
         if (XML_Parse(parser, text, strlen(text), 1)) {
             sprintf(text,
-                    "expected token error for '%c'(ordinal %d) in UTF-8 text",
+                    "expected token error for '%c' (ordinal %d) in UTF-8 text",
                     i, i);
             fail(text);
         }
         else if (XML_GetErrorCode(parser) != XML_ERROR_INVALID_TOKEN)
             xml_failure(parser);
+        /* Reset the parser since we use the same parser repeatedly. */
+        XML_ParserReset(parser, NULL);
     }
 }
 END_TEST
