@@ -140,9 +140,7 @@ distdir: MANIFEST
 	done
 
 check:	$(SUBDIRS)
-	@echo
-	@echo This package does not yet have a regression test.
-	@echo
+	(cd tests && $(MAKE) check)
 
 $(DISTRIBUTION): distdir
 	tar cf - $(DISTDIR) | gzip -9 >$(DISTRIBUTION)

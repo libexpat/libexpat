@@ -108,4 +108,7 @@ fi
 if test -d ${srcdir}/examples; then
     OUTPUT="$OUTPUT examples/Makefile"
 fi
+if test -d ${srcdir}/tests; then
+    OUTPUT="$OUTPUT tests/Makefile"
+fi
 AC_OUTPUT($OUTPUT)
