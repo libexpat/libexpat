@@ -6,7 +6,7 @@ examples/ directory for that.
 The Expat tests use the "Check" unit testing framework for C.  More
 information on Check can be found at:
 
-	http://check.sourceforge.net/
+        http://check.sourceforge.net/
 
 Check 0.8 must be installed before the unit tests can be compiled & run.
 
