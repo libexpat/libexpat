@@ -46,8 +46,10 @@ static void characterData(void *userData, const char *s, int len)
     case '"':
       fputs("&quot;", fp);
       break;
-    case '\r':
-      fputs("&#13;", fp);
+    case 9:
+    case 10:
+    case 13:
+      fprintf(fp, "&#%d;", *s);
       break;
     default:
       putc(*s, fp);
