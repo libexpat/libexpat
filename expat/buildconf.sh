@@ -35,14 +35,14 @@ rm -f aclocal.m4
 # Generate the autoconf header template (config.h.in) and ./configure
 #
 echo "Creating config.h.in ..."
-autoheader
+${AUTOHEADER:-autoheader}
 
 echo "Creating configure ..."
 ### do some work to toss config.cache?
-autoconf
+${AUTOCONF:-autoconf}
 
 # toss this; it gets created by autoconf on some systems
-rm -rf autom4te.cache
+rm -rf autom4te*.cache
 
 # exit with the right value, so any calling script can continue
 exit 0
