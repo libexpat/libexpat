@@ -7,7 +7,7 @@ Release 1.95.5 Fri Sep 6 2002
         - Fixed UTF-8 decoding bug that caused legal UTF-8 to be rejected.
         - Finally fixed bug where default handler would report DTD
           events that were already handled by another handler.
-          Initial patch contributed by Darryl Miller.
+          Initial patch contributed by Darryl Miles.
         - Removed unnecessary DllMain() function that caused static
           linking into a DLL to be difficult.
         - Added VC++ projects for building static libraries.
