@@ -14,8 +14,10 @@ AppPublisher=The Expat Developers
 AppPublisherURL=http://expat.sourceforge.net/
 AppSupportURL=http://expat.sourceforge.net/
 AppUpdatesURL=http://expat.sourceforge.net/
-SourceDir=..
 
+CompressLevel=9
+SourceDir=..
+OutputDir=win32
 DisableStartupPrompt=yes
 AllowNoIcons=yes
 DisableProgramGroupPage=yes
