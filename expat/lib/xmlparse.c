@@ -168,6 +168,8 @@ typedef struct {
   int				nextsib;
 } CONTENT_SCAFFOLD;
 
+#define INIT_SCAFFOLD_ELEMENTS 32
+
 typedef struct block {
   struct block *next;
   int size;
@@ -4944,13 +4946,10 @@ nextScaffoldPart(XML_Parser parser)
       dtd.scaffSize *= 2;
     }
     else {
-      /* 32 is the new value of dtd.scaffSize;
-         these two occurances must be kept in sync:
-      */
-      temp = MALLOC(32 * sizeof(CONTENT_SCAFFOLD));
+      temp = MALLOC(INIT_SCAFFOLD_ELEMENTS * sizeof(CONTENT_SCAFFOLD));
       if (temp == NULL)
         return -1;
-      dtd.scaffSize = 32;
+      dtd.scaffSize = INIT_SCAFFOLD_ELEMENTS;
     }
     dtd.scaffold = temp;
   }
