@@ -62,6 +62,10 @@ dnl Checks for programs.
 AC_PROG_CC
 AC_PROG_INSTALL
 
+if test "$GCC" = yes ; then
+    CFLAGS="$CFLAGS -Wall -Wstrict-prototypes"
+fi
+
 dnl Checks for libraries.
 
 dnl Checks for header files.
