@@ -148,6 +148,11 @@ SOURCE=.\xmltok_impl.c
 
 SOURCE=.\xmltok_impl.h
 # End Source File
+# Begin Source File
+
+SOURCE=.\xmltok_ns.c
+# PROP Exclude_From_Build 1
+# End Source File
 # End Group
 # Begin Group "Resource Files"
 
