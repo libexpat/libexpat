@@ -58,7 +58,8 @@ clean:
 	cd lib && rm -f $(LIBRARY) *.o *.lo && rm -rf .libs _libs
 	cd xmlwf && rm -f xmlwf *.o *.lo && rm -rf .libs _libs
 	cd examples && rm -f elements outline *.o *.lo && rm -rf .libs _libs
-	cd tests && rm -rf .libs runtests runtests.o chardata.o
+	cd tests && rm -rf .libs runtests runtests.o runtestspp runtestspp.o
+	cd tests && rm -f chardata.o minicheck.o
 	rm -rf .libs libexpat.la
 	rm -f examples/core tests/core xmlwf/core
 
@@ -72,8 +73,9 @@ extraclean: distclean
 	rm -f expat_config.h.in configure
 	rm -f conftools/ltconfig conftools/ltmain.sh conftools/libtool.m4
 
-check: tests/runtests
+check: tests/runtests tests/runtestspp
 	tests/runtests
+	tests/runtestspp
 
 install: xmlwf/xmlwf installlib
 	$(mkinstalldirs) $(INSTALL_ROOT)$(bindir) $(INSTALL_ROOT)$(man1dir)
@@ -112,9 +114,11 @@ VSNFLAG = -version-info @LIBCURRENT@:@LIBREVISION@:@LIBAGE@
 LTFLAGS = --silent
 
 COMPILE = $(CC) $(INCLUDES) $(CFLAGS) $(DEFS) $(CPPFLAGS)
+CXXCOMPILE = $(CXX) $(INCLUDES) $(CFLAGS) $(DEFS) $(CPPFLAGS)
 LTCOMPILE = $(LIBTOOL) $(LTFLAGS) --mode=compile $(COMPILE)
 LINK_LIB = $(LIBTOOL) $(LTFLAGS) --mode=link $(COMPILE) -no-undefined $(VSNFLAG) -rpath $(libdir) $(LDFLAGS) -o $@
 LINK_EXE = $(LIBTOOL) $(LTFLAGS) --mode=link $(COMPILE) $(LDFLAGS) -o $@
+LINK_CXX_EXE = $(LIBTOOL) $(LTFLAGS) --mode=link $(CXXCOMPILE) $(LDFLAGS) -o $@
 
 LIB_OBJS = lib/xmlparse.lo lib/xmltok.lo lib/xmlrole.lo
 $(LIBRARY): $(LIB_OBJS)
@@ -153,6 +157,9 @@ tests/minicheck.o: tests/minicheck.c tests/minicheck.h
 tests/runtests.o: tests/runtests.c tests/chardata.h
 tests/runtests: tests/runtests.o tests/chardata.o tests/minicheck.o $(LIBRARY)
 	$(LINK_EXE) $^
+tests/runtestspp.o: tests/runtestspp.cpp tests/chardata.h
+tests/runtestspp: tests/runtestspp.o tests/chardata.o tests/minicheck.o $(LIBRARY)
+	$(LINK_CXX_EXE) $^
 
 tests/xmlts.zip:
 	wget --output-document=tests/xmlts.zip \
