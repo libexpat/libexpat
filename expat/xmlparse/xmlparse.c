@@ -2653,7 +2653,7 @@ enum XML_Error epilogProcessor(XML_Parser parser,
     int tok = XmlPrologTok(encoding, s, end, &next);
     eventEndPtr = next;
     switch (tok) {
-    case XML_TOK_TRAILING_CR:
+    case -XML_TOK_PROLOG_S:
       if (defaultHandler) {
 	eventEndPtr = end;
 	reportDefault(parser, encoding, s, end);
@@ -3047,7 +3047,11 @@ reportDefault(XML_Parser parser, const ENCODING *enc, const char *s, const char 
 static int
 defineAttribute(ELEMENT_TYPE *type, ATTRIBUTE_ID *attId, int isCdata, const XML_Char *value)
 {
+  int i;
   DEFAULT_ATTRIBUTE *att;
+  for (i = 0; i < type->nDefaultAtts; i++)
+    if (attId == type->defaultAtts[i].id)
+      return 1;
   if (type->nDefaultAtts == type->allocDefaultAtts) {
     if (type->allocDefaultAtts == 0) {
       type->allocDefaultAtts = 8;
