@@ -58,4 +58,4 @@ EXPORTS
   XML_ParserReset @55
   XML_SetSkippedEntityHandler @56
   XML_GetFeatureList @57
-  XML_UseForeignDTD @58@
+  XML_UseForeignDTD @58
