@@ -43,7 +43,7 @@ NULL=nul
 !ENDIF 
 ################################################################################
 # Begin Project
-# PROP Target_Last_Scanned "xmlparse - Win32 Debug"
+# PROP Target_Last_Scanned "xmltok - Win32 Debug"
 
 !IF  "$(CFG)" == "xmlwf - Win32 Release"
 
@@ -555,6 +555,7 @@ INTDIR=.\xmltok\Release
 ALL : ".\bin\xmltok.dll"
 
 CLEAN : 
+	-@erase "$(INTDIR)\dllmain.obj"
 	-@erase "$(INTDIR)\xmlrole.obj"
 	-@erase "$(INTDIR)\xmltok.obj"
 	-@erase "$(OUTDIR)\xmltok.exp"
@@ -606,13 +607,14 @@ BSC32_SBRS= \
 	
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /dll /machine:I386
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /dll /machine:I386 /out:"bin/xmltok.dll"
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /entry:"DllMain" /subsystem:windows /dll /machine:I386 /out:"bin/xmltok.dll"
 LINK32_FLAGS=kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib\
  advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib\
- odbccp32.lib /nologo /subsystem:windows /dll /incremental:no\
+ odbccp32.lib /nologo /entry:"DllMain" /subsystem:windows /dll /incremental:no\
  /pdb:"$(OUTDIR)/xmltok.pdb" /machine:I386 /out:"bin/xmltok.dll"\
  /implib:"$(OUTDIR)/xmltok.lib" 
 LINK32_OBJS= \
+	"$(INTDIR)\dllmain.obj" \
 	"$(INTDIR)\xmlrole.obj" \
 	"$(INTDIR)\xmltok.obj"
 
@@ -639,6 +641,7 @@ INTDIR=.\xmltok\Debug
 ALL : ".\dbgbin\xmltok.dll"
 
 CLEAN : 
+	-@erase "$(INTDIR)\dllmain.obj"
 	-@erase "$(INTDIR)\vc40.idb"
 	-@erase "$(INTDIR)\vc40.pdb"
 	-@erase "$(INTDIR)\xmlrole.obj"
@@ -701,6 +704,7 @@ LINK32_FLAGS=kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib\
  /pdb:"$(OUTDIR)/xmltok.pdb" /debug /machine:I386 /out:"dbgbin/xmltok.dll"\
  /implib:"$(OUTDIR)/xmltok.lib" 
 LINK32_OBJS= \
+	"$(INTDIR)\dllmain.obj" \
 	"$(INTDIR)\xmlrole.obj" \
 	"$(INTDIR)\xmltok.obj"
 
@@ -727,9 +731,6 @@ LINK32_OBJS= \
 # Begin Source File
 
 SOURCE=.\xmlwf\xmlwf.c
-
-!IF  "$(CFG)" == "xmlwf - Win32 Release"
-
 DEP_CPP_XMLWF=\
 	".\xmlparse\xmlparse.h"\
 	".\xmlwf\filemap.h"\
@@ -738,28 +739,12 @@ DEP_CPP_XMLWF=\
 "$(INTDIR)\xmlwf.obj" : $(SOURCE) $(DEP_CPP_XMLWF) "$(INTDIR)"
    $(CPP) $(CPP_PROJ) $(SOURCE)
 
-
-!ELSEIF  "$(CFG)" == "xmlwf - Win32 Debug"
-
-DEP_CPP_XMLWF=\
-	".\xmlparse\xmlparse.h"\
-	".\xmlwf\filemap.h"\
-	
-
-"$(INTDIR)\xmlwf.obj" : $(SOURCE) $(DEP_CPP_XMLWF) "$(INTDIR)"
-   $(CPP) $(CPP_PROJ) $(SOURCE)
-
-
-!ENDIF 
 
 # End Source File
 ################################################################################
 # Begin Source File
 
 SOURCE=.\xmlwf\win32filemap.c
-
-!IF  "$(CFG)" == "xmlwf - Win32 Release"
-
 DEP_CPP_WIN32=\
 	".\xmlwf\filemap.h"\
 	
@@ -767,18 +752,6 @@ DEP_CPP_WIN32=\
 "$(INTDIR)\win32filemap.obj" : $(SOURCE) $(DEP_CPP_WIN32) "$(INTDIR)"
    $(CPP) $(CPP_PROJ) $(SOURCE)
 
-
-!ELSEIF  "$(CFG)" == "xmlwf - Win32 Debug"
-
-DEP_CPP_WIN32=\
-	".\xmlwf\filemap.h"\
-	
-
-"$(INTDIR)\win32filemap.obj" : $(SOURCE) $(DEP_CPP_WIN32) "$(INTDIR)"
-   $(CPP) $(CPP_PROJ) $(SOURCE)
-
-
-!ENDIF 
 
 # End Source File
 ################################################################################
@@ -790,17 +763,7 @@ DEP_CPP_UNIXF=\
 	{$(INCLUDE)}"\sys\stat.h"\
 	{$(INCLUDE)}"\sys\TYPES.H"\
 	
-
-!IF  "$(CFG)" == "xmlwf - Win32 Release"
-
 # PROP Exclude_From_Build 1
-
-!ELSEIF  "$(CFG)" == "xmlwf - Win32 Debug"
-
-# PROP Exclude_From_Build 1
-
-!ENDIF 
-
 # End Source File
 ################################################################################
 # Begin Source File
@@ -810,17 +773,7 @@ DEP_CPP_READF=\
 	{$(INCLUDE)}"\sys\stat.h"\
 	{$(INCLUDE)}"\sys\TYPES.H"\
 	
-
-!IF  "$(CFG)" == "xmlwf - Win32 Release"
-
 # PROP Exclude_From_Build 1
-
-!ELSEIF  "$(CFG)" == "xmlwf - Win32 Debug"
-
-# PROP Exclude_From_Build 1
-
-!ENDIF 
-
 # End Source File
 ################################################################################
 # Begin Project Dependency
@@ -858,21 +811,9 @@ DEP_CPP_READF=\
 
 SOURCE=.\gennmtab\gennmtab.c
 
-!IF  "$(CFG)" == "gennmtab - Win32 Release"
-
-
 "$(INTDIR)\gennmtab.obj" : $(SOURCE) "$(INTDIR)"
    $(CPP) $(CPP_PROJ) $(SOURCE)
 
-
-!ELSEIF  "$(CFG)" == "gennmtab - Win32 Debug"
-
-
-"$(INTDIR)\gennmtab.obj" : $(SOURCE) "$(INTDIR)"
-   $(CPP) $(CPP_PROJ) $(SOURCE)
-
-
-!ENDIF 
 
 # End Source File
 # End Target
@@ -892,9 +833,6 @@ SOURCE=.\gennmtab\gennmtab.c
 # Begin Source File
 
 SOURCE=.\xmlparse\xmlparse.c
-
-!IF  "$(CFG)" == "xmlparse - Win32 Release"
-
 DEP_CPP_XMLPA=\
 	".\xmlparse\hashtable.h"\
 	".\xmlparse\xmlparse.h"\
@@ -909,34 +847,12 @@ NODEP_CPP_XMLPA=\
 "$(INTDIR)\xmlparse.obj" : $(SOURCE) $(DEP_CPP_XMLPA) "$(INTDIR)"
    $(CPP) $(CPP_PROJ) $(SOURCE)
 
-
-!ELSEIF  "$(CFG)" == "xmlparse - Win32 Debug"
-
-DEP_CPP_XMLPA=\
-	".\xmlparse\hashtable.h"\
-	".\xmlparse\xmlparse.h"\
-	".\xmltok\xmldef.h"\
-	".\xmltok\xmlrole.h"\
-	".\xmltok\xmltok.h"\
-	
-NODEP_CPP_XMLPA=\
-	".\xmltok\nspr.h"\
-	
-
-"$(INTDIR)\xmlparse.obj" : $(SOURCE) $(DEP_CPP_XMLPA) "$(INTDIR)"
-   $(CPP) $(CPP_PROJ) $(SOURCE)
-
-
-!ENDIF 
 
 # End Source File
 ################################################################################
 # Begin Source File
 
 SOURCE=.\xmlparse\hashtable.c
-
-!IF  "$(CFG)" == "xmlparse - Win32 Release"
-
 DEP_CPP_HASHT=\
 	".\xmlparse\hashtable.h"\
 	".\xmltok\xmldef.h"\
@@ -948,22 +864,6 @@ NODEP_CPP_HASHT=\
 "$(INTDIR)\hashtable.obj" : $(SOURCE) $(DEP_CPP_HASHT) "$(INTDIR)"
    $(CPP) $(CPP_PROJ) $(SOURCE)
 
-
-!ELSEIF  "$(CFG)" == "xmlparse - Win32 Debug"
-
-DEP_CPP_HASHT=\
-	".\xmlparse\hashtable.h"\
-	".\xmltok\xmldef.h"\
-	
-NODEP_CPP_HASHT=\
-	".\xmltok\nspr.h"\
-	
-
-"$(INTDIR)\hashtable.obj" : $(SOURCE) $(DEP_CPP_HASHT) "$(INTDIR)"
-   $(CPP) $(CPP_PROJ) $(SOURCE)
-
-
-!ENDIF 
 
 # End Source File
 ################################################################################
@@ -1001,9 +901,6 @@ NODEP_CPP_HASHT=\
 # Begin Source File
 
 SOURCE=.\xmltok\xmlrole.c
-
-!IF  "$(CFG)" == "xmltok - Win32 Release"
-
 DEP_CPP_XMLRO=\
 	".\xmltok\xmldef.h"\
 	".\xmltok\xmlrole.h"\
@@ -1016,32 +913,12 @@ NODEP_CPP_XMLRO=\
 "$(INTDIR)\xmlrole.obj" : $(SOURCE) $(DEP_CPP_XMLRO) "$(INTDIR)"
    $(CPP) $(CPP_PROJ) $(SOURCE)
 
-
-!ELSEIF  "$(CFG)" == "xmltok - Win32 Debug"
-
-DEP_CPP_XMLRO=\
-	".\xmltok\xmldef.h"\
-	".\xmltok\xmlrole.h"\
-	".\xmltok\xmltok.h"\
-	
-NODEP_CPP_XMLRO=\
-	".\xmltok\nspr.h"\
-	
-
-"$(INTDIR)\xmlrole.obj" : $(SOURCE) $(DEP_CPP_XMLRO) "$(INTDIR)"
-   $(CPP) $(CPP_PROJ) $(SOURCE)
-
-
-!ENDIF 
 
 # End Source File
 ################################################################################
 # Begin Source File
 
 SOURCE=.\xmltok\xmltok.c
-
-!IF  "$(CFG)" == "xmltok - Win32 Release"
-
 DEP_CPP_XMLTO=\
 	".\xmltok\asciitab.h"\
 	".\xmltok\iasciitab.h"\
@@ -1061,28 +938,15 @@ NODEP_CPP_XMLTO=\
    $(CPP) $(CPP_PROJ) $(SOURCE)
 
 
-!ELSEIF  "$(CFG)" == "xmltok - Win32 Debug"
+# End Source File
+################################################################################
+# Begin Source File
 
-DEP_CPP_XMLTO=\
-	".\xmltok\asciitab.h"\
-	".\xmltok\iasciitab.h"\
-	".\xmltok\latin1tab.h"\
-	".\xmltok\nametab.h"\
-	".\xmltok\utf8tab.h"\
-	".\xmltok\xmldef.h"\
-	".\xmltok\xmltok.h"\
-	".\xmltok\xmltok_impl.c"\
-	".\xmltok\xmltok_impl.h"\
-	
-NODEP_CPP_XMLTO=\
-	".\xmltok\nspr.h"\
-	
+SOURCE=.\xmltok\dllmain.c
 
-"$(INTDIR)\xmltok.obj" : $(SOURCE) $(DEP_CPP_XMLTO) "$(INTDIR)"
+"$(INTDIR)\dllmain.obj" : $(SOURCE) "$(INTDIR)"
    $(CPP) $(CPP_PROJ) $(SOURCE)
 
-
-!ENDIF 
 
 # End Source File
 # End Target
