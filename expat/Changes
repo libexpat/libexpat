@@ -4,7 +4,7 @@ Release 1.95.4 Fri Jul 12 2002
 	- Added Mac OS (classic) support, with a makefile for MPW,
 	  contributed by Thomas Wegner and Daryle Walker.
 	- Fixed a variety of bugs: see SF bug reports 441449, 563184,
-	  564342, 566334, 575168, 579196.
+	  564342, 566334, 569461, 570263, 575168, 579196.
 	- Made skippedEntityHandler conform to SAX2 (see source comment)
 	- Re-implemented WFC: Entity Declared from XML 1.0 spec and
 	  added a new error "entity declared in parameter entity":
