@@ -284,6 +284,41 @@ START_TEST(test_line_count)
 }
 END_TEST
 
+/* Regression test for SF bug #478332. */
+START_TEST(test_really_long_lines)
+{
+    /* This parses an input line longer than INIT_DATA_BUF_SIZE
+       characters long (defined to be 1024 in xmlparse.c).  We take a
+       really cheesy approach to building the input buffer, because
+       this avoids writing bugs in buffer-filling code.
+    */
+    char *text =
+        "<e>"
+        /* 64 chars */
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-+"
+        /* until we have at least 1024 characters on the line: */
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-+"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-+"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-+"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-+"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-+"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-+"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-+"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-+"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-+"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-+"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-+"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-+"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-+"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-+"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-+"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-+"
+        "</e>";
+    if (!XML_Parse(parser, text, strlen(text), 1))
+        xml_failure(parser);
+}
+END_TEST
+
 
 /*
  * Element event tests.
@@ -626,6 +661,7 @@ make_basic_suite(void)
     tcase_add_test(tc_chars, test_french_latin1);
     tcase_add_test(tc_chars, test_french_utf8);
     tcase_add_test(tc_chars, test_line_count);
+    tcase_add_test(tc_chars, test_really_long_lines);
 
     suite_add_tcase(s, tc_elements);
     tcase_add_checked_fixture(tc_elements, basic_setup, basic_teardown);
