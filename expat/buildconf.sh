@@ -19,6 +19,7 @@ fi
 # --copy to avoid symlinks; we want originals for the distro
 # --automake to make it shut up about "things to do"
 #
+(cd conftools/; rm -f ltmain.sh ltconfig)
 $libtoolize --force --copy --automake
 
 ltpath=`dirname $libtoolize`
