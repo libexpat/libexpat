@@ -31,6 +31,10 @@ Contributor(s):
 #include <io.h>
 #endif
 
+#ifdef _POSIX_SOURCE
+#include <unistd.h>
+#endif
+
 #ifndef O_BINARY
 #ifdef _O_BINARY
 #define O_BINARY _O_BINARY
