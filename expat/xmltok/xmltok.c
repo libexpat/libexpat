@@ -55,9 +55,7 @@ struct normal_encoding {
   unsigned char type[256];
 };
 
-static const struct normal_encoding latin1_encoding;
-
-#define latin1tab (latin1_encoding.type)
+static int checkCharRefNumber(int);
 
 #include "xmltok_impl.h"
 
@@ -669,3 +667,15 @@ int XmlParseXmlDecl(int isGeneralTextEntity,
   }
   return 1;
 }
+
+static
+int checkCharRefNumber(int result)
+{
+  /* FIXME maybe exclude surrogates as well */
+  if ((result < 0x80 && latin1_encoding.type[result] == BT_NONXML)
+      || result == 0xFFFE
+      || result == 0xFFFF)
+    return -1;
+  return result;
+}
+

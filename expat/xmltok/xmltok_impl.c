@@ -1228,12 +1228,7 @@ int PREFIX(charRefNumber)(const ENCODING *enc, const char *ptr)
 	return -1;
     }
   }
-  /* FIXME maybe exclude surrogates as well */
-  if ((result < 0x80 && latin1tab[result] == BT_NONXML)
-      || result == 0xFFFE
-      || result == 0xFFFF)
-    return -1;
-  return result;
+  return checkCharRefNumber(result);
 }
 
 static
