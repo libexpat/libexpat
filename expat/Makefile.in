@@ -111,7 +111,7 @@ VSNFLAG = -version-info @LIBCURRENT@:@LIBREVISION@:@LIBAGE@
 ### autoconf this?
 LTFLAGS = --silent
 
-COMPILE = $(CC) $(CFLAGS) $(DEFS) $(CPPFLAGS) $(INCLUDES)
+COMPILE = $(CC) $(INCLUDES) $(CFLAGS) $(DEFS) $(CPPFLAGS)
 LTCOMPILE = $(LIBTOOL) $(LTFLAGS) --mode=compile $(COMPILE)
 LINK_LIB = $(LIBTOOL) $(LTFLAGS) --mode=link $(COMPILE) -no-undefined $(VSNFLAG) -rpath $(libdir) $(LDFLAGS) -o $@
 LINK_EXE = $(LIBTOOL) $(LTFLAGS) --mode=link $(COMPILE) $(LDFLAGS) -o $@
