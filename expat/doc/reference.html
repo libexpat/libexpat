@@ -232,7 +232,8 @@ respectively.
 <h3>Compiling and Linking against expat</h3>
 <p>Unless you installed expat in a location not expected by your compiler
 and linker, all you have to do to use expat in your programs is to include
-the expat header in your files that make calls to it and to tell the linker
+the expat header (<code>#include &lt;expat.h&gt;</code>) in your files that
+make calls to it and to tell the linker
 that it needs to link against the expat library. On Unix systems, this would
 be the <code>-lexpat</code> argument.
 Otherwise, you'll need to tell the compiler where to look for the expat header
