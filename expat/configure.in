@@ -48,7 +48,7 @@ AC_PROG_INSTALL
 if test "$GCC" = yes ; then
     dnl
     dnl Be careful about adding the -fexceptions option; some versions of
-    dnl don't support it and it causes extra warnings that are only
+    dnl GCC don't support it and it causes extra warnings that are only
     dnl distracting; avoid.
     dnl
     OLDCFLAGS="$CFLAGS -Wall -Wmissing-prototypes -Wstrict-prototypes"
