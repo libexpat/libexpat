@@ -1035,13 +1035,20 @@ sync with the reporting of the declarations or attribute values</p>
 <pre class="setter" id="XML_SetUnknownEncodingHandler">
 XML_SetUnknownEncodingHandler(XML_Parser p,
                               XML_UnknownEncodingHandler enchandler,
-			                  void *encodingHandlerData)
+			      void *encodingHandlerData)
 </pre>
 <pre class="signature">
 typedef int
 (*XML_UnknownEncodingHandler)(void *encodingHandlerData,
                               const XML_Char *name,
                               XML_Encoding *info);
+
+typedef struct {
+  int map[256];
+  void *data;
+  int (*convert)(void *data, const char *s);
+  void (*release)(void *data);
+} XML_Encoding;
 </pre>
 <p>Set a handler to deal with encodings other than the
 <a href="#builtin_encodings">built in set</a>. This should  be done before
@@ -1049,20 +1056,11 @@ typedef int
 "#XML_ParseBuffer" >XML_ParseBuffer</a></code> have been called on the
 given parser.</p>
 <p>If the handler knows how to deal with an encoding with the given
-name, it should fill in the info data structure and return
+name, it should fill in the <code>info</code> data structure and return
 1. Otherwise it should return 0. The handler will be called at most
 once per parsed (external) entity. The optional application data
 pointer <code>encodingHandlerData</code> will be passed back to the
 handler.</p>
-
-<pre class="signature">
-    typedef struct {
-      int map[256];
-      void *data;
-      int (*convert)(void *data, const char *s);
-      void (*release)(void *data);
-    } XML_Encoding;
-</pre>
 
 <p>The map array contains information for every possible possible leading
 byte in a byte sequence. If the corresponding value is &gt;= 0, then it's
