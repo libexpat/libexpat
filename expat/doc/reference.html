@@ -61,9 +61,9 @@ copyright and to distribute it with expat.
 	  </li>
 	  <li><a href="#setting">Handler Setting Functions</a>
 	      <ul>
-	          <li><a href="#XML_SetStartElementHandler">XML_SetStartElementHandler</a></li>
+	      <li><a href="#XML_SetStartElementHandler">XML_SetStartElementHandler</a></li>
 		  <li><a href="#XML_SetEndElementHandler">XML_SetEndElementHandler</a></li>
-	          <li><a href="#XML_SetElementHandler">XML_SetElementHandler</a></li>
+	      <li><a href="#XML_SetElementHandler">XML_SetElementHandler</a></li>
 		  <li><a href="#XML_SetCharacterDataHandler">XML_SetCharacterDataHandler</a></li>
 		  <li><a href="#XML_SetProcessingInstructionHandler">XML_SetProcessingInstructionHandler</a></li>
 		  <li><a href="#XML_SetCommentHandler">XML_SetCommentHandler</a></li>
@@ -73,6 +73,7 @@ copyright and to distribute it with expat.
 		  <li><a href="#XML_SetDefaultHandler">XML_SetDefaultHandler</a></li>
 		  <li><a href="#XML_SetDefaultHandlerExpand">XML_SetDefaultHandlerExpand</a></li>
 		  <li><a href="#XML_SetExternalEntityRefHandler">XML_SetExternalEntityRefHandler</a></li>
+		  <li><a href="#XML_SetSkippedEntityHandler">XML_SetSkippedEntityHandler</a></li>
 		  <li><a href="#XML_SetUnknownEncodingHandler">XML_SetUnknownEncodingHandler</a></li>
 		  <li><a href="#XML_SetStartNamespaceDeclHandler">XML_SetStartNamespaceDeclHandler</a></li>
 		  <li><a href="#XML_SetEndNamespaceDeclHandler">XML_SetEndNamespaceDeclHandler</a></li>
@@ -91,7 +92,7 @@ copyright and to distribute it with expat.
 	  </li>
 	  <li><a href="#position">Parse Position and Error Reporting Functions</a>
 	      <ul>
-	          <li><a href="#XML_GetErrorCode">XML_GetErrorCode</a></li>
+	      <li><a href="#XML_GetErrorCode">XML_GetErrorCode</a></li>
 		  <li><a href="#XML_ErrorString">XML_ErrorString</a></li>
 		  <li><a href="#XML_GetCurrentByteIndex">XML_GetCurrentByteIndex</a></li>
 		  <li><a href="#XML_GetCurrentLineNumber">XML_GetCurrentLineNumber</a></li>
@@ -102,7 +103,7 @@ copyright and to distribute it with expat.
 	  </li>
 	  <li><a href="#miscellaneous">Miscellaneous Functions</a>
 	      <ul>
-	          <li><a href="#XML_SetUserData">XML_SetUserData</a></li>
+	      <li><a href="#XML_SetUserData">XML_SetUserData</a></li>
 		  <li><a href="#XML_GetUserData">XML_GetUserData</a></li>
 		  <li><a href="#XML_UseParserAsHandlerArg">XML_UseParserAsHandlerArg</a></li>
 		  <li><a href="#XML_SetBase">XML_SetBase</a></li>
@@ -932,10 +933,36 @@ information into global or static variables.</p>
 </div>
 
 <div class="handler">
+<div class="setter"><a name="XML_SetSkippedEntityHandler"><pre>
+XML_SetSkippedEntityHandler(XML_Parser p,
+                            XML_SkippedEntityHandler handler)
+</pre></a></div>
+<div class="signature"><pre>
+typedef void
+(*XML_SkippedEntityHandler)(void *userData,
+                            const XML_Char *entityName,
+                            int is_parameter_entity);
+</pre></div>
+<p>Set a skipped entity handler. This is called in two situations:</p>
+<ol>
+   <li>An entity reference is encountered for which no declaration
+       has been read *and* this is not an error.</li>
+   <li>An internal entity reference is read, but not expanded, because
+       <a href="#XML_SetDefaultHandler"><code>XML_SetDefaultHandler</code></a>
+	   has been called.</li>
+</ol>
+<p>The <code>is_parameter_entity</code> argument will be non-zero for
+a parameter entity and zero for a general entity.</p>
+<p>Note: skipped parameter entities in declarations and skipped general
+entities in attribute values cannot be reported, because the event would
+be out of sync with the reporting of the declarations or attribute values</p>
+</div>
+
+<div class="handler">
 <div class="setter"><a name="XML_SetUnknownEncodingHandler"><pre>
 XML_SetUnknownEncodingHandler(XML_Parser p,
                               XML_UnknownEncodingHandler enchandler,
-			      void *encodingHandlerData)
+			                  void *encodingHandlerData)
 </pre></a></div>
 <div class="signature"><pre>
 typedef int
