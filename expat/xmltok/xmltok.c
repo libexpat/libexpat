@@ -252,7 +252,8 @@ void utf8_toUtf16(const ENCODING *enc,
   *toP = to;
 }
 
-static const struct normal_encoding utf8_encoding = {
+#ifdef XMLNS
+static const struct normal_encoding utf8_encoding_ns = {
   { VTABLE1, utf8_toUtf8, utf8_toUtf16, 1, 1, 0 },
   {
 #include "asciitab.h"
@@ -260,11 +261,38 @@ static const struct normal_encoding utf8_encoding = {
   },
   NORMAL_VTABLE(utf8_)
 };
+#endif
+
+static const struct normal_encoding utf8_encoding = {
+  { VTABLE1, utf8_toUtf8, utf8_toUtf16, 1, 1, 0 },
+  {
+#define BT_COLON BT_NMSTRT
+#include "asciitab.h"
+#undef BT_COLON
+#include "utf8tab.h"
+  },
+  NORMAL_VTABLE(utf8_)
+};
+
+#ifdef XMLNS
+
+static const struct normal_encoding internal_utf8_encoding_ns = {
+  { VTABLE1, utf8_toUtf8, utf8_toUtf16, 1, 1, 0 },
+  {
+#include "iasciitab.h"
+#include "utf8tab.h"
+  },
+  NORMAL_VTABLE(utf8_)
+};
+
+#endif
 
 static const struct normal_encoding internal_utf8_encoding = {
   { VTABLE1, utf8_toUtf8, utf8_toUtf16, 1, 1, 0 },
   {
+#define BT_COLON BT_NMSTRT
 #include "iasciitab.h"
+#undef BT_COLON
 #include "utf8tab.h"
   },
   NORMAL_VTABLE(utf8_)
@@ -304,10 +332,24 @@ void latin1_toUtf16(const ENCODING *enc,
     *(*toP)++ = (unsigned char)*(*fromP)++;
 }
 
-static const struct normal_encoding latin1_encoding = {
+#ifdef XMLNS
+
+static const struct normal_encoding latin1_encoding_ns = {
   { VTABLE1, latin1_toUtf8, latin1_toUtf16, 1, 0, 0 },
   {
 #include "asciitab.h"
+#include "latin1tab.h"
+  }
+};
+
+#endif
+
+static const struct normal_encoding latin1_encoding = {
+  { VTABLE1, latin1_toUtf8, latin1_toUtf16, 1, 0, 0 },
+  {
+#define BT_COLON BT_NMSTRT
+#include "asciitab.h"
+#undef BT_COLON
 #include "latin1tab.h"
   }
 };
@@ -321,10 +363,24 @@ void ascii_toUtf8(const ENCODING *enc,
     *(*toP)++ = *(*fromP)++;
 }
 
-static const struct normal_encoding ascii_encoding = {
+#ifdef XMLNS
+
+static const struct normal_encoding ascii_encoding_ns = {
   { VTABLE1, ascii_toUtf8, latin1_toUtf16, 1, 1, 0 },
   {
 #include "asciitab.h"
+/* BT_NONXML == 0 */
+  }
+};
+
+#endif
+
+static const struct normal_encoding ascii_encoding = {
+  { VTABLE1, ascii_toUtf8, latin1_toUtf16, 1, 1, 0 },
+  {
+#define BT_COLON BT_NMSTRT
+#include "asciitab.h"
+#undef BT_COLON
 /* BT_NONXML == 0 */
   }
 };
@@ -464,6 +520,24 @@ DEFINE_UTF16_TO_UTF16
 #undef IS_NMSTRT_CHAR_MINBPC
 #undef IS_INVALID_CHAR
 
+#ifdef XMLNS
+
+static const struct normal_encoding little2_encoding_ns = { 
+  { VTABLE, 2, 0,
+#if BYTE_ORDER == 12
+    1
+#else
+    0
+#endif
+  },
+  {
+#include "asciitab.h"
+#include "latin1tab.h"
+  }
+};
+
+#endif
+
 static const struct normal_encoding little2_encoding = { 
   { VTABLE, 2, 0,
 #if BYTE_ORDER == 12
@@ -472,16 +546,36 @@ static const struct normal_encoding little2_encoding = {
     0
 #endif
   },
+  {
+#define BT_COLON BT_NMSTRT
 #include "asciitab.h"
+#undef BT_COLON
 #include "latin1tab.h"
+  }
 };
 
 #if BYTE_ORDER != 21
 
-static const struct normal_encoding internal_little2_encoding = { 
+#ifdef XMLNS
+
+static const struct normal_encoding internal_little2_encoding_ns = { 
   { VTABLE, 2, 0, 1 },
+  {
 #include "iasciitab.h"
 #include "latin1tab.h"
+  }
+};
+
+#endif
+
+static const struct normal_encoding internal_little2_encoding = { 
+  { VTABLE, 2, 0, 1 },
+  {
+#define BT_COLON BT_NMSTRT
+#include "iasciitab.h"
+#undef BT_COLON
+#include "latin1tab.h"
+  }
 };
 
 #endif
@@ -527,6 +621,24 @@ DEFINE_UTF16_TO_UTF16
 #undef IS_NMSTRT_CHAR_MINBPC
 #undef IS_INVALID_CHAR
 
+#ifdef XMLNS
+
+static const struct normal_encoding big2_encoding_ns = {
+  { VTABLE, 2, 0,
+#if BYTE_ORDER == 21
+  1
+#else
+  0
+#endif
+  },
+  {
+#include "asciitab.h"
+#include "latin1tab.h"
+  }
+};
+
+#endif
+
 static const struct normal_encoding big2_encoding = {
   { VTABLE, 2, 0,
 #if BYTE_ORDER == 21
@@ -535,16 +647,36 @@ static const struct normal_encoding big2_encoding = {
   0
 #endif
   },
+  {
+#define BT_COLON BT_NMSTRT
 #include "asciitab.h"
+#undef BT_COLON
 #include "latin1tab.h"
+  }
 };
 
 #if BYTE_ORDER != 12
 
-static const struct normal_encoding internal_big2_encoding = {
+#ifdef XMLNS
+
+static const struct normal_encoding internal_big2_encoding_ns = {
   { VTABLE, 2, 0, 1 },
+  {
 #include "iasciitab.h"
 #include "latin1tab.h"
+  }
+};
+
+#endif
+
+static const struct normal_encoding internal_big2_encoding = {
+  { VTABLE, 2, 0, 1 },
+  {
+#define BT_COLON BT_NMSTRT
+#include "iasciitab.h"
+#undef BT_COLON
+#include "latin1tab.h"
+  }
 };
 
 #endif
@@ -812,15 +944,19 @@ const ENCODING *findEncoding(const ENCODING *enc, const char *ptr, const char *e
   return 0;  
 }
 
-int XmlParseXmlDecl(int isGeneralTextEntity,
-		    const ENCODING *enc,
-		    const char *ptr,
-		    const char *end,
-		    const char **badPtr,
-		    const char **versionPtr,
-		    const char **encodingName,
-		    const ENCODING **encoding,
-		    int *standalone)
+static
+int doParseXmlDecl(const ENCODING *(*encodingFinder)(const ENCODING *,
+		                                     const char *,
+						     const char *),
+		   int isGeneralTextEntity,
+		   const ENCODING *enc,
+		   const char *ptr,
+		   const char *end,
+		   const char **badPtr,
+		   const char **versionPtr,
+		   const char **encodingName,
+		   const ENCODING **encoding,
+		   int *standalone)
 {
   const char *val = 0;
   const char *name = 0;
@@ -855,7 +991,7 @@ int XmlParseXmlDecl(int isGeneralTextEntity,
     if (encodingName)
       *encodingName = val;
     if (encoding)
-      *encoding = findEncoding(enc, val, ptr - enc->minBytesPerChar);
+      *encoding = encodingFinder(enc, val, ptr - enc->minBytesPerChar);
     if (!parsePseudoAttribute(enc, ptr, end, &name, &val, &ptr)) {
       *badPtr = ptr;
       return 0;
@@ -886,6 +1022,19 @@ int XmlParseXmlDecl(int isGeneralTextEntity,
     return 0;
   }
   return 1;
+}
+
+int XmlParseXmlDecl(int isGeneralTextEntity,
+		    const ENCODING *enc,
+		    const char *ptr,
+		    const char *end,
+		    const char **badPtr,
+		    const char **versionPtr,
+		    const char **encodingName,
+		    const ENCODING **encoding,
+		    int *standalone)
+{
+  return doParseXmlDecl(findEncoding, isGeneralTextEntity, enc, ptr, end, badPtr, versionPtr, encodingName, encoding, standalone);
 }
 
 static
@@ -1133,3 +1282,163 @@ XmlInitUnknownEncoding(void *mem,
   e->normal.enc.utf16Convert = unknown_toUtf16;
   return &(e->normal.enc);
 }
+
+#ifdef XMLNS
+
+const ENCODING *XmlGetUtf8InternalEncodingNS()
+{
+  return &internal_utf8_encoding_ns.enc;
+}
+
+const ENCODING *XmlGetUtf16InternalEncodingNS()
+{
+#if BYTE_ORDER == 12
+  return &internal_little2_encoding_ns.enc;
+#elif BYTE_ORDER == 21
+  return &internal_big2_encoding_ns.enc;
+#else
+  const short n = 1;
+  return *(const char *)&n ? &internal_little2_encoding_ns.enc : &internal_big2_encoding_ns.enc;
+#endif
+}
+
+static
+int initScanNS(const ENCODING *enc, int state, const char *ptr, const char *end,
+	       const char **nextTokPtr)
+{
+  const ENCODING **encPtr;
+
+  if (ptr == end)
+    return XML_TOK_NONE;
+  encPtr = ((const INIT_ENCODING *)enc)->encPtr;
+  if (ptr + 1 == end) {
+    switch ((unsigned char)*ptr) {
+    case 0xFE:
+    case 0xFF:
+    case 0x00:
+    case 0x3C:
+      return XML_TOK_PARTIAL;
+    }
+  }
+  else {
+    switch (((unsigned char)ptr[0] << 8) | (unsigned char)ptr[1]) {
+    case 0x003C:
+      *encPtr = &big2_encoding_ns.enc;
+      return XmlTok(*encPtr, state, ptr, end, nextTokPtr);
+    case 0xFEFF:
+      *nextTokPtr = ptr + 2;
+      *encPtr = &big2_encoding_ns.enc;
+      return XML_TOK_BOM;
+    case 0x3C00:
+      *encPtr = &little2_encoding_ns.enc;
+      return XmlTok(*encPtr, state, ptr, end, nextTokPtr);
+    case 0xFFFE:
+      *nextTokPtr = ptr + 2;
+      *encPtr = &little2_encoding_ns.enc;
+      return XML_TOK_BOM;
+    }
+  }
+  *encPtr = &utf8_encoding_ns.enc;
+  return XmlTok(*encPtr, state, ptr, end, nextTokPtr);
+}
+
+
+static
+int initScanPrologNS(const ENCODING *enc, const char *ptr, const char *end,
+		     const char **nextTokPtr)
+{
+  return initScanNS(enc, XML_PROLOG_STATE, ptr, end, nextTokPtr);
+}
+
+static
+int initScanContentNS(const ENCODING *enc, const char *ptr, const char *end,
+		      const char **nextTokPtr)
+{
+  return initScanNS(enc, XML_CONTENT_STATE, ptr, end, nextTokPtr);
+}
+
+int XmlInitEncodingNS(INIT_ENCODING *p, const ENCODING **encPtr, const char *name)
+{
+  if (name) {
+    if (streqci(name, "ISO-8859-1")) {
+      *encPtr = &latin1_encoding_ns.enc;
+      return 1;
+    }
+    if (streqci(name, "UTF-8")) {
+      *encPtr = &utf8_encoding_ns.enc;
+      return 1;
+    }
+    if (streqci(name, "US-ASCII")) {
+      *encPtr = &ascii_encoding_ns.enc;
+      return 1;
+    }
+    if (!streqci(name, "UTF-16"))
+      return 0;
+  }
+  p->initEnc.scanners[XML_PROLOG_STATE] = initScanPrologNS;
+  p->initEnc.scanners[XML_CONTENT_STATE] = initScanContentNS;
+  p->initEnc.updatePosition = initUpdatePosition;
+  p->initEnc.minBytesPerChar = 1;
+  p->encPtr = encPtr;
+  *encPtr = &(p->initEnc);
+  return 1;
+}
+
+
+static
+const ENCODING *findEncodingNS(const ENCODING *enc, const char *ptr, const char *end)
+{
+#define ENCODING_MAX 128
+  char buf[ENCODING_MAX];
+  char *p = buf;
+  int i;
+  XmlUtf8Convert(enc, &ptr, end, &p, p + ENCODING_MAX - 1);
+  if (ptr != end)
+    return 0;
+  *p = 0;
+  for (i = 0; buf[i]; i++) {
+    if ('a' <= buf[i] && buf[i] <= 'z')
+      buf[i] +=  'A' - 'a';
+  }
+  if (streqci(buf, "UTF-8"))
+    return &utf8_encoding_ns.enc;
+  if (streqci(buf, "ISO-8859-1"))
+    return &latin1_encoding_ns.enc;
+  if (streqci(buf, "US-ASCII"))
+    return &ascii_encoding_ns.enc;
+  if (streqci(buf, "UTF-16")) {
+    static const unsigned short n = 1;
+    if (enc->minBytesPerChar == 2)
+      return enc;
+    return &big2_encoding_ns.enc;
+  }
+  return 0;  
+}
+
+
+int XmlParseXmlDeclNS(int isGeneralTextEntity,
+		      const ENCODING *enc,
+		      const char *ptr,
+		      const char *end,
+		      const char **badPtr,
+		      const char **versionPtr,
+		      const char **encodingName,
+		      const ENCODING **encoding,
+		      int *standalone)
+{
+  return doParseXmlDecl(findEncodingNS, isGeneralTextEntity, enc, ptr, end, badPtr, versionPtr, encodingName, encoding, standalone);
+}
+
+ENCODING *
+XmlInitUnknownEncodingNS(void *mem,
+		         int *table,
+		         int (*convert)(void *userData, const char *p),
+		         void *userData)
+{
+  ENCODING *enc = XmlInitUnknownEncoding(mem, table, convert, userData);
+  if (enc)
+    ((struct normal_encoding *)enc)->type[':'] = BT_COLON;
+  return enc;
+}
+
+#endif /* XMLNS */

@@ -509,6 +509,9 @@ int tmain(int argc, XML_Char **argv)
   int processExternalEntities = 0;
   int windowsCodePages = 0;
   int outputType = 0;
+#ifdef XMLNS
+  int enforceNamespaceSyntax = 0;
+#endif
 
 #ifdef _MSC_VER
   _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF|_CRTDBG_LEAK_CHECK_DF);
@@ -526,6 +529,12 @@ int tmain(int argc, XML_Char **argv)
       useFilemap = 0;
       j++;
     }
+#ifdef XMLNS
+    if (argv[i][j] == T('n')) {
+      enforceNamespaceSyntax = 1;
+      j++;
+    }
+#endif
     if (argv[i][j] == T('x')) {
       processExternalEntities = 1;
       j++;
@@ -573,7 +582,13 @@ int tmain(int argc, XML_Char **argv)
     FILE *fp = 0;
     XML_Char *outName = 0;
     int result;
+#ifdef XMLNS
+    XML_Parser parser = (enforceNamespaceSyntax
+                         ? XML_ParserCreateNS
+			 : XML_ParserCreate)(encoding);
+#else
     XML_Parser parser = XML_ParserCreate(encoding);
+#endif
     if (outputDir) {
       const XML_Char *file = argv[i];
       if (tcsrchr(file, T('/')))

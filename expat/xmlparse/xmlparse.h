@@ -70,6 +70,9 @@ protocol or null if there is none specified. */
 XML_Parser XMLPARSEAPI
 XML_ParserCreate(const XML_Char *encoding);
 
+XML_Parser XMLPARSEAPI
+XML_ParserCreateNS(const XML_Char *encoding);
+
 
 /* atts is array of name/value pairs, terminated by 0;
    names and values are 0 terminated. */

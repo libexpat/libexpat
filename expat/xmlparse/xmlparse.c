@@ -28,6 +28,7 @@ Contributor(s):
 #define XML_ENCODE_MAX XML_UTF16_ENCODE_MAX
 #define XmlConvert XmlUtf16Convert
 #define XmlGetInternalEncoding XmlGetUtf16InternalEncoding
+#define XmlGetInternalEncodingNS XmlGetUtf16InternalEncodingNS
 #define XmlEncode XmlUtf16Encode
 #define MUST_CONVERT(enc, s) (!(enc)->isUtf16 || (((unsigned long)s) & 1))
 typedef unsigned short ICHAR;
@@ -35,10 +36,22 @@ typedef unsigned short ICHAR;
 #define XML_ENCODE_MAX XML_UTF8_ENCODE_MAX
 #define XmlConvert XmlUtf8Convert
 #define XmlGetInternalEncoding XmlGetUtf8InternalEncoding
+#define XmlGetInternalEncodingNS XmlGetUtf8InternalEncodingNS
 #define XmlEncode XmlUtf8Encode
 #define MUST_CONVERT(enc, s) (!(enc)->isUtf8)
 typedef char ICHAR;
 #endif
+
+
+#ifndef XMLNS
+
+#define XmlInitEncodingNS XmlInitEncoding
+#define XmlInitUnknownEncodingNS XmlInitUnknownEncoding
+#undef XmlGetInternalEncodingNS
+#define XmlGetInternalEncodingNS XmlGetInternalEncoding
+
+#endif
+
 
 #ifdef XML_UNICODE_WCHAR_T
 #define XML_T(x) L ## x
@@ -225,6 +238,9 @@ typedef struct {
   const ENCODING *encoding;
   INIT_ENCODING initEncoding;
   const XML_Char *protocolEncodingName;
+#ifdef XMLNS
+  int ns;
+#endif
   void *unknownEncodingMem;
   void *unknownEncodingData;
   void *unknownEncodingHandlerData;
@@ -274,6 +290,11 @@ typedef struct {
   (((Parser *)parser)->unknownEncodingHandlerData)
 #define unknownEncodingRelease (((Parser *)parser)->unknownEncodingRelease)
 #define protocolEncodingName (((Parser *)parser)->protocolEncodingName)
+#ifdef XMLNS
+#define ns (((Parser *)parser)->ns)
+#else
+#define ns (0)
+#endif
 #define prologState (((Parser *)parser)->prologState)
 #define processor (((Parser *)parser)->processor)
 #define errorCode (((Parser *)parser)->errorCode)
@@ -354,6 +375,9 @@ XML_Parser XML_ParserCreate(const XML_Char *encodingName)
   unknownEncodingRelease = 0;
   unknownEncodingData = 0;
   unknownEncodingHandlerData = 0;
+#ifdef XMLNS
+  ns = 0;
+#endif
   poolInit(&tempPool);
   poolInit(&temp2Pool);
   protocolEncodingName = encodingName ? poolCopyString(&tempPool, encodingName) : 0;
@@ -366,6 +390,20 @@ XML_Parser XML_ParserCreate(const XML_Char *encodingName)
   XmlInitEncoding(&initEncoding, &encoding, 0);
   return parser;
 }
+
+#ifdef XMLNS
+
+XML_Parser XML_ParserCreateNS(const XML_Char *encodingName)
+{
+  XML_Parser parser = XML_ParserCreate(encodingName);
+  if (parser) {
+    XmlInitEncodingNS(&initEncoding, &encoding, 0);
+    ns = 1;
+  }
+  return parser;
+}
+
+#endif
 
 XML_Parser XML_ExternalEntityParserCreate(XML_Parser oldParser,
 					  const XML_Char *openEntityNames,
@@ -383,7 +421,7 @@ XML_Parser XML_ExternalEntityParserCreate(XML_Parser oldParser,
   void *oldUserData = userData;
   void *oldHandlerArg = handlerArg;
  
-  parser = XML_ParserCreate(encodingName);
+  parser = (ns ? XML_ParserCreateNS : XML_ParserCreate)(encodingName);
   if (!parser)
     return 0;
   startElementHandler = oldStartElementHandler;
@@ -798,7 +836,7 @@ doContent(XML_Parser parser,
 	  const char *end,
 	  const char **nextPtr)
 {
-  const ENCODING *internalEnc = XmlGetInternalEncoding();
+  const ENCODING *internalEnc = ns ? XmlGetInternalEncodingNS() : XmlGetInternalEncoding();
   const char *dummy;
   const char **eventPP;
   const char **eventEndPP;
@@ -1395,7 +1433,7 @@ initializeEncoding(XML_Parser parser)
 #else
   s = protocolEncodingName;
 #endif
-  if (XmlInitEncoding(&initEncoding, &encoding, s))
+  if ((ns ? XmlInitEncodingNS : XmlInitEncoding)(&initEncoding, &encoding, s))
     return XML_ERROR_NONE;
   return handleUnknownEncoding(parser, protocolEncodingName);
 }
@@ -1408,15 +1446,17 @@ processXmlDecl(XML_Parser parser, int isGeneralTextEntity,
   const ENCODING *newEncoding = 0;
   const char *version;
   int standalone = -1;
-  if (!XmlParseXmlDecl(isGeneralTextEntity,
-		       encoding,
-		       s,
-		       next,
-		       &eventPtr,
-		       &version,
-		       &encodingName,
-		       &newEncoding,
-		       &standalone))
+  if (!(ns
+        ? XmlParseXmlDeclNS
+	: XmlParseXmlDecl)(isGeneralTextEntity,
+		           encoding,
+		           s,
+		           next,
+		           &eventPtr,
+		           &version,
+		           &encodingName,
+		           &newEncoding,
+		           &standalone))
     return XML_ERROR_SYNTAX;
   if (defaultHandler)
     reportDefault(parser, encoding, s, next);
@@ -1468,10 +1508,12 @@ handleUnknownEncoding(XML_Parser parser, const XML_Char *encodingName)
 	  info.release(info.data);
 	return XML_ERROR_NO_MEMORY;
       }
-      enc = XmlInitUnknownEncoding(unknownEncodingMem,
-				   info.map,
-				   info.convert,
-				   info.data);
+      enc = (ns
+	     ? XmlInitUnknownEncodingNS
+	     : XmlInitUnknownEncoding)(unknownEncodingMem,
+				       info.map,
+				       info.convert,
+				       info.data);
       if (enc) {
 	unknownEncodingData = info.data;
 	unknownEncodingRelease = info.release;
@@ -1876,7 +1918,7 @@ appendAttributeValue(XML_Parser parser, const ENCODING *enc, int isCdata,
 		     const char *ptr, const char *end,
 		     STRING_POOL *pool)
 {
-  const ENCODING *internalEnc = XmlGetInternalEncoding();
+  const ENCODING *internalEnc = ns ? XmlGetInternalEncodingNS() : XmlGetInternalEncoding();
   for (;;) {
     const char *next;
     int tok = XmlAttributeValueTok(enc, ptr, end, &next);
@@ -1997,7 +2039,7 @@ enum XML_Error storeEntityValue(XML_Parser parser,
 				const char *entityTextPtr,
 				const char *entityTextEnd)
 {
-  const ENCODING *internalEnc = XmlGetInternalEncoding();
+  const ENCODING *internalEnc = ns ? XmlGetInternalEncodingNS() : XmlGetInternalEncoding();
   STRING_POOL *pool = &(dtd.pool);
   entityTextPtr += encoding->minBytesPerChar;
   entityTextEnd -= encoding->minBytesPerChar;
