@@ -3404,11 +3404,11 @@ doProlog(XML_Parser parser,
           return XML_ERROR_NO_MEMORY;
         if (declEntity->name != name) {
           poolDiscard(&dtd.pool);
-          declEntity = 0;
+          declEntity = NULL;
         }
         else {
           poolFinish(&dtd.pool);
-          declEntity->publicId = 0;
+          declEntity->publicId = NULL;
           declEntity->is_param = XML_TRUE;
           /* if we have a parent parser or are reading an internal parameter
              entity, then the entity declaration is not considered "internal"
@@ -4426,7 +4426,7 @@ static const XML_Char *
 getContext(XML_Parser parser)
 {
   HASH_TABLE_ITER iter;
-  int needSep = 0;
+  XML_Bool needSep = XML_FALSE;
 
   if (dtd.defaultPrefix.binding) {
     int i;
@@ -4439,7 +4439,7 @@ getContext(XML_Parser parser)
     for (i = 0; i < len; i++)
       if (!poolAppendChar(&tempPool, dtd.defaultPrefix.binding->uri[i]))
         return NULL;
-    needSep = 1;
+    needSep = XML_TRUE;
   }
 
   hashTableIterInit(&iter, &(dtd.prefixes));
@@ -4465,7 +4465,7 @@ getContext(XML_Parser parser)
     for (i = 0; i < len; i++)
       if (!poolAppendChar(&tempPool, prefix->binding->uri[i]))
         return NULL;
-    needSep = 1;
+    needSep = XML_TRUE;
   }
 
 
@@ -4482,7 +4482,7 @@ getContext(XML_Parser parser)
     for (s = e->name; *s; s++)
       if (!poolAppendChar(&tempPool, *s))
         return 0;
-    needSep = 1;
+    needSep = XML_TRUE;
   }
 
   if (!poolAppendChar(&tempPool, XML_T('\0')))
