@@ -18,7 +18,7 @@
 
 #ifndef XMLPARSEAPI
 #if defined(_MSC_EXTENSIONS) && !defined(__BEOS__) && !defined(__CYGWIN__)
-#ifdef _STATIC
+#ifdef XML_STATIC
 #define XMLPARSEAPI(type) type __cdecl
 #else
 #define XMLPARSEAPI(type) __declspec(dllimport) type __cdecl

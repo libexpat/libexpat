@@ -92,6 +92,10 @@ LINK32=link.exe
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 # Begin Source File
 
+SOURCE=.\libexpat.def
+# End Source File
+# Begin Source File
+
 SOURCE=.\xmlparse.c
 
 !IF  "$(CFG)" == "expat - Win32 Release"

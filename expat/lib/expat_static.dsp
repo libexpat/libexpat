@@ -50,7 +50,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LIB32=link.exe -lib
 # ADD BASE LIB32 /nologo
-# ADD LIB32 /nologo /out:"Release_static\libexpat.lib"
+# ADD LIB32 /nologo /out:"Release_static\libexpatMT.lib"
 
 !ELSEIF  "$(CFG)" == "expat_static - Win32 Debug"
 
@@ -74,7 +74,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LIB32=link.exe -lib
 # ADD BASE LIB32 /nologo
-# ADD LIB32 /nologo /out:"Debug_static\libexpat.lib"
+# ADD LIB32 /nologo /out:"Debug_static\libexpatMT.lib"
 
 !ENDIF 
 
