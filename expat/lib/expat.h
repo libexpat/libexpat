@@ -651,9 +651,9 @@ XML_SetUserData(XML_Parser parser, void *userData);
    XML_ParserCreate. On success XML_SetEncoding returns non-zero,
    zero otherwise.
    Note: Calling XML_SetEncoding after XML_Parse or XML_ParseBuffer
-     has no effect and returns zero.
+     has no effect and returns XML_STATUS_ERROR.
 */
-XMLPARSEAPI(int)
+XMLPARSEAPI(enum XML_Status)
 XML_SetEncoding(XML_Parser parser, const XML_Char *encoding);
 
 /* If this function is called, then the parser will be passed as the
@@ -687,10 +687,10 @@ XML_UseForeignDTD(XML_Parser parser, XML_Bool useDTD);
    left to the application: this value will be passed through as the
    base argument to the XML_ExternalEntityRefHandler,
    XML_NotationDeclHandler and XML_UnparsedEntityDeclHandler. The base
-   argument will be copied.  Returns zero if out of memory, non-zero
-   otherwise.
+   argument will be copied.  Returns XML_STATUS_ERROR if out of memory,
+   XML_STATUS_OK otherwise.
 */
-XMLPARSEAPI(int)
+XMLPARSEAPI(enum XML_Status)
 XML_SetBase(XML_Parser parser, const XML_Char *base);
 
 XMLPARSEAPI(const XML_Char *)

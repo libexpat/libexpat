@@ -1540,7 +1540,7 @@ using the <code><a href= "#XML_GetUserData"
 </div>
 
 <pre class="fcndec" id="XML_SetBase">
-int
+enum XML_Status
 XML_SetBase(XML_Parser p,
             const XML_Char *base);
 </pre>
@@ -1588,7 +1588,7 @@ current call.
 </div>
 
 <pre class="fcndec" id="XML_SetEncoding">
-int
+enum XML_Status
 XML_SetEncoding(XML_Parser p,
                 const XML_Char *encoding);
 </pre>
@@ -1598,6 +1598,8 @@ passing a non-null encoding argument to the parser creation functions.
 It must not be called after <code><a href= "#XML_Parse"
 >XML_Parse</a></code> or <code><a href= "#XML_ParseBuffer"
 >XML_ParseBuffer</a></code> have been called on the given parser.
+Returns <code>XML_STATUS_OK</code> on success or
+<code>XML_STATUS_ERROR</code> on error.
 </div>
 
 <pre class="fcndec" id="XML_SetParamEntityParsing">

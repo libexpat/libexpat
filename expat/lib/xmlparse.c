@@ -870,7 +870,7 @@ XML_ParserReset(XML_Parser parser, const XML_Char *encodingName)
   return setContext(parser, implicitContext);
 }
 
-int
+enum XML_Status
 XML_SetEncoding(XML_Parser parser, const XML_Char *encodingName)
 {
   /* Block after XML_Parse()/XML_ParseBuffer() has been called.
@@ -1113,7 +1113,7 @@ XML_SetUserData(XML_Parser parser, void *p)
     userData = p;
 }
 
-int
+enum XML_Status
 XML_SetBase(XML_Parser parser, const XML_Char *p)
 {
   if (p) {
