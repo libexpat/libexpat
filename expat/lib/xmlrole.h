@@ -85,7 +85,7 @@ enum {
 };
 
 typedef struct prolog_state {
-  int FASTCALL (*handler)(struct prolog_state *state,
+  int (FASTCALL *handler) (struct prolog_state *state,
                           int tok,
                           const char *ptr,
                           const char *end,
