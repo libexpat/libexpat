@@ -157,7 +157,6 @@ START_TEST(test_danish_latin1)
              "J\xC3\xB8rgen \xC3\xA6\xC3\xB8\xC3\xA5\xC3\x86\xC3\x98\xC3\x85");
 }
 END_TEST
-/* End regression test for SF bug #491986. */
 
 
 /* Regression test for SF bug #514281. */
@@ -199,7 +198,6 @@ START_TEST(test_french_utf8)
     run_character_check(text, "\xC3\xA9");
 }
 END_TEST
-/* End regression test for SF bug #514281. */
 
 /* Regression test for SF bug #477667.
    This test assures that any 8-bit character followed by a 7-bit
