@@ -19,7 +19,7 @@ if test -e $tmpdir; then
 fi
 
 echo "Checking out into temporary area: $tmpdir"
-cvs -d :pserver:anonymous@cvs.expat.sourceforge.net:/cvsroot/expat export -r "$1" -d $tmpdir expat || exit 1
+cvs -d :pserver:anonymous@cvs.libexpat.org:/cvsroot/expat export -r "$1" -d $tmpdir expat || exit 1
 
 echo ""
 echo "----------------------------------------------------------------------"

@@ -12,9 +12,9 @@ AppVerName=expat 1.95.3
 AppCopyright=Copyright © 1998-2002 Thai Open Source Software Center, Clark Cooper, and the Expat maintainers
 DefaultDirName={sd}\Expat-1.95.3
 AppPublisher=The Expat Developers
-AppPublisherURL=http://expat.sourceforge.net/
-AppSupportURL=http://expat.sourceforge.net/
-AppUpdatesURL=http://expat.sourceforge.net/
+AppPublisherURL=http://www.libexpat.org/
+AppSupportURL=http://www.libexpat.org/
+AppUpdatesURL=http://www.libexpat.org/
 UninstallDisplayName=Expat XML Parser (version 1.95.3)
 UninstallFilesDir={app}\Uninstall
 
