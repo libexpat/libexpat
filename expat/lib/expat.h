@@ -45,7 +45,7 @@
 #ifndef XMLCALL
 #if defined(XML_USE_MSC_EXTENSIONS)
 #define XMLCALL __cdecl
-#elif defined(__GNUC__)
+#elif defined(__GNUC__) && defined(__i386)
 #define XMLCALL __attribute__((cdecl))
 #else
 /* For any platform which uses this definition and supports more than
