@@ -1,6 +1,5 @@
-/*
-Copyright (c) 1998, 1999 Thai Open Source Software Center Ltd
-See the file COPYING for copying permission.
+/* Copyright (c) 1998, 1999 Thai Open Source Software Center Ltd
+   See the file COPYING for copying permission.
 */
 
 #ifdef COMPILED_FROM_DSP
@@ -37,20 +36,21 @@ See the file COPYING for copying permission.
 #define UCS2_GET_NAMING(pages, hi, lo) \
    (namingBitmap[(pages[hi] << 3) + ((lo) >> 5)] & (1 << ((lo) & 0x1F)))
 
-/* A 2 byte UTF-8 representation splits the characters 11 bits
-between the bottom 5 and 6 bits of the bytes.
-We need 8 bits to index into pages, 3 bits to add to that index and
-5 bits to generate the mask. */
+/* A 2 byte UTF-8 representation splits the characters 11 bits between
+   the bottom 5 and 6 bits of the bytes.  We need 8 bits to index into
+   pages, 3 bits to add to that index and 5 bits to generate the mask.
+*/
 #define UTF8_GET_NAMING2(pages, byte) \
     (namingBitmap[((pages)[(((byte)[0]) >> 2) & 7] << 3) \
                       + ((((byte)[0]) & 3) << 1) \
                       + ((((byte)[1]) >> 5) & 1)] \
          & (1 << (((byte)[1]) & 0x1F)))
 
-/* A 3 byte UTF-8 representation splits the characters 16 bits
-between the bottom 4, 6 and 6 bits of the bytes.
-We need 8 bits to index into pages, 3 bits to add to that index and
-5 bits to generate the mask. */
+/* A 3 byte UTF-8 representation splits the characters 16 bits between
+   the bottom 4, 6 and 6 bits of the bytes.  We need 8 bits to index
+   into pages, 3 bits to add to that index and 5 bits to generate the
+   mask.
+*/
 #define UTF8_GET_NAMING3(pages, byte) \
   (namingBitmap[((pages)[((((byte)[0]) & 0xF) << 4) \
                              + ((((byte)[1]) >> 2) & 0xF)] \
@@ -481,8 +481,8 @@ unicode_byte_type(char hi, char lo)
 #define DEFINE_UTF16_TO_UTF8(E) \
 static void \
 E ## toUtf8(const ENCODING *enc, \
-		 const char **fromP, const char *fromLim, \
-		 char **toP, const char *toLim) \
+	    const char **fromP, const char *fromLim, \
+	    char **toP, const char *toLim) \
 { \
   const char *from; \
   for (from = *fromP; from != fromLim; from += 2) { \
@@ -544,8 +544,8 @@ E ## toUtf8(const ENCODING *enc, \
 #define DEFINE_UTF16_TO_UTF16(E) \
 static void \
 E ## toUtf16(const ENCODING *enc, \
-		  const char **fromP, const char *fromLim, \
-		  unsigned short **toP, const unsigned short *toLim) \
+	     const char **fromP, const char *fromLim, \
+	     unsigned short **toP, const unsigned short *toLim) \
 { \
   /* Avoid copying first half only of surrogate */ \
   if (fromLim - *fromP > ((toLim - *toP) << 1) \
@@ -908,8 +908,9 @@ isSpace(int c)
   return 0;
 }
 
-/* Return 1 if there's just optional white space
-or there's an S followed by name=val. */
+/* Return 1 if there's just optional white space or there's an S
+   followed by name=val.
+*/
 static int
 parsePseudoAttribute(const ENCODING *enc,
 		     const char *ptr,
@@ -922,7 +923,7 @@ parsePseudoAttribute(const ENCODING *enc,
   int c;
   char open;
   if (ptr == end) {
-    *namePtr = 0;
+    *namePtr = NULL;
     return 1;
   }
   if (!isSpace(toAscii(enc, ptr, end))) {
@@ -933,7 +934,7 @@ parsePseudoAttribute(const ENCODING *enc,
     ptr += enc->minBytesPerChar;
   } while (isSpace(toAscii(enc, ptr, end)));
   if (ptr == end) {
-    *namePtr = 0;
+    *namePtr = NULL;
     return 1;
   }
   *namePtr = ptr;
@@ -1031,9 +1032,9 @@ doParseXmlDecl(const ENCODING *(*encodingFinder)(const ENCODING *,
 	       const ENCODING **encoding,
 	       int *standalone)
 {
-  const char *val = 0;
-  const char *name = 0;
-  const char *nameEnd = 0;
+  const char *val = NULL;
+  const char *name = NULL;
+  const char *nameEnd = NULL;
   ptr += 5 * enc->minBytesPerChar;
   end -= 2 * enc->minBytesPerChar;
   if (!parsePseudoAttribute(enc, ptr, end, &name, &nameEnd, &val, &ptr)
@@ -1407,7 +1408,7 @@ getEncodingIndex(const char *name)
     KW_UTF_16LE,
   };
   int i;
-  if (name == 0)
+  if (name == NULL)
     return NO_ENC;
   for (i = 0; i < (int)(sizeof(encodingNames)/sizeof(encodingNames[0])); i++)
     if (streqci(name, encodingNames[i]))
@@ -1501,7 +1502,8 @@ initScan(const ENCODING **encodingTable,
          of ISO-8859-1 or some flavour of UTF-16
          and this is an external text entity,
 	 don't look for the BOM,
-         because it might be a legal data. */
+         because it might be a legal data.
+      */
       if (state == XML_CONTENT_STATE) {
 	int e = INIT_ENC_INDEX(enc);
 	if (e == ISO_8859_1_ENC || e == UTF_16BE_ENC
@@ -1537,7 +1539,8 @@ initScan(const ENCODING **encodingTable,
 	    - no encoding declaration
 	   by assuming UTF-16LE.  But we don't, because this would mean when
 	   presented just with a single byte, we couldn't reliably determine
-	   whether we needed further bytes. */
+	   whether we needed further bytes.
+        */
 	if (state == XML_CONTENT_STATE)
 	  break;
 	*encPtr = encodingTable[UTF_16LE_ENC];
