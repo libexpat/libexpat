@@ -266,6 +266,28 @@ START_TEST(test_utf16)
 }
 END_TEST
 
+START_TEST(test_utf16_le_epilog_newline)
+{
+    int first_chunk_bytes = 17;
+    char text[] = 
+        "\xFF\xFE"                      /* BOM */
+        "<\000e\000/\000>\000"          /* document element */
+        "\r\000\n\000\r\000\n\000";     /* epilog */
+
+    if (first_chunk_bytes >= sizeof(text) - 1)
+        fail("bad value of first_chunk_bytes");
+    if (XML_Parse(parser, text, first_chunk_bytes, 0) == XML_STATUS_ERROR)
+        xml_failure(parser);
+    else {
+        enum XML_Status rc;
+        rc = XML_Parse(parser, text + first_chunk_bytes,
+                       sizeof(text) - first_chunk_bytes - 1, 1);
+        if (rc == XML_STATUS_ERROR)
+            xml_failure(parser);
+    }
+}
+END_TEST
+
 /* Regression test for SF bug #481609. */
 START_TEST(test_latin1_umlauts)
 {
@@ -784,6 +806,7 @@ make_basic_suite(void)
     tcase_add_test(tc_basic, test_bom_utf16_le);
     tcase_add_test(tc_basic, test_illegal_utf8);
     tcase_add_test(tc_basic, test_utf16);
+    tcase_add_test(tc_basic, test_utf16_le_epilog_newline);
     tcase_add_test(tc_basic, test_latin1_umlauts);
     /* Regression test for SF bug #491986. */
     tcase_add_test(tc_basic, test_danish_latin1);
