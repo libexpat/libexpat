@@ -4,7 +4,7 @@ See the file COPYING for copying permission.
 */
 
 static char RCSId[]
-  = "$Header: /cvsroot/expat/expat/lib/xmltok.c,v 1.4 2000/09/29 14:57:45 coopercc Exp $";
+  = "$Header: /cvsroot/expat/expat/lib/xmltok.c,v 1.5 2000/10/22 19:20:23 coopercc Exp $";
 
 #ifdef COMPILED_FROM_DSP
 #  include "winconfig.h"
@@ -1500,6 +1500,7 @@ int initScan(const ENCODING **encodingTable,
       if (ptr + 2 == end)
 	return XML_TOK_PARTIAL;
       if ((unsigned char)ptr[2] == 0xBF) {
+	*nextTokPtr = ptr + 3;
 	*encPtr = encodingTable[UTF_8_ENC];
 	return XML_TOK_BOM;
       }
