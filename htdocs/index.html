@@ -51,12 +51,21 @@ of Expat.</p>
       <strong>Expat 1.95.3 released.</strong><br />
   <dd>
     <ul>
-      <li> Added a project to the MSVC workspace to create a wchar_t
-	   version of the library; the DLLs are named libexpatw.dll. </li>
       <li> Changed the name of the Windows DLLs from expat.dll to
-	   libexpat.dll; this fixes SF bug #432456. </li>
-      <li> Added the XML_ParserReset() API function. </li>
-      <li> Fixed XML_SetReturnNSTriplet() to work for element names. </li>
+	   libexpat.dll; this fixes SF bug #432456.  This is a problem
+	   only known to affect the Perl XML::Parser::Expat extension,
+	   but is very important for that extension.</li>
+      <li> Added a project to the MSVC workspace to create a wchar_t
+	   version of the library; the DLLs are named libexpatw.dll.
+	   (Note the addition of the "w" character in the file name.)
+	   </li>
+      <li> Added the XML_ParserReset() API function.  This allows a
+           parser to be re-used, reducing the number of memory
+           allocations needed to set up a parser.  This can be a
+           substantial benefit when parsing a large number of small
+           documents. </li>
+      <li> Fixed XML_SetReturnNSTriplet() to work for element names.
+           This is now a usable feature. </li>
       <li> Made the XML_UNICODE builds usable (thanks, Karl!). </li>
       <li> Allow xmlwf to read from standard input. </li>
       <li> Install a man page for xmlwf on Unix systems. </li>
