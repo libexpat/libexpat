@@ -1171,6 +1171,34 @@ START_TEST(test_default_ns_from_ext_subset_and_ext_ge)
 }
 END_TEST
 
+/* Regression test #1 for SF bug #673791. */
+START_TEST(test_ns_prefix_with_empty_uri_1)
+{
+    char *text =
+        "<doc xmlns:prefix='http://xml.libexpat.org/'>\n"
+        "  <e xmlns:prefix=''/>\n"
+        "</doc>";
+
+    expect_failure(text,
+                   XML_ERROR_SYNTAX,
+                   "Did not report re-setting namespace"
+                   " URI with prefix to ''.");
+}
+END_TEST
+
+/* Regression test #2 for SF bug #673791. */
+START_TEST(test_ns_prefix_with_empty_uri_2)
+{
+    char *text =
+        "<?xml version='1.0'?>\n"
+        "<docelem xmlns:pre=''/>";
+
+    expect_failure(text,
+                   XML_ERROR_SYNTAX,
+                   "Did not report setting namespace URI with prefix to ''.");
+}
+END_TEST
+
 START_TEST(test_ns_default_with_empty_uri)
 {
     char *text =
@@ -1238,6 +1266,8 @@ make_basic_suite(void)
     tcase_add_test(tc_namespace, test_ns_tagname_overwrite_triplet);
     tcase_add_test(tc_namespace, test_start_ns_clears_start_element);
     tcase_add_test(tc_namespace, test_default_ns_from_ext_subset_and_ext_ge);
+    tcase_add_test(tc_namespace, test_ns_prefix_with_empty_uri_1);
+    tcase_add_test(tc_namespace, test_ns_prefix_with_empty_uri_2);
     tcase_add_test(tc_namespace, test_ns_default_with_empty_uri);
 
     return s;
