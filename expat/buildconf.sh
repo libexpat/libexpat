@@ -41,5 +41,8 @@ echo "Creating configure ..."
 ### do some work to toss config.cache?
 autoconf
 
+# toss this; it gets created by autoconf on some systems
+rm -rf autom4te.cache
+
 # exit with the right value, so any calling script can continue
 exit 0

@@ -79,27 +79,18 @@ AC_FUNC_MEMCMP
 AC_FUNC_MMAP
 
 if test "$ac_cv_func_mmap_fixed_mapped" = "yes"; then
-    FILEMAP_OBJ=unixfilemap.o
+    FILEMAP=unixfilemap
 else
-    FILEMAP_OBJ=readfilemap.o
+    FILEMAP=readfilemap
 fi
-AC_SUBST(FILEMAP_OBJ)
+AC_SUBST(FILEMAP)
 
 AC_CHECK_FUNCS(memmove bcopy)
 
-dnl Generate makefiles only for the directories that are present;
-dnl this allows this (and the generated configure script) to work
-dnl in "embedded distributions", where only part of the Expat sources
-dnl are included in the sources for another project.
+AC_OUTPUT(Makefile)
 
-OUTPUT="Makefile lib/Makefile"
-if test -d ${srcdir}/xmlwf; then
-    OUTPUT="$OUTPUT xmlwf/Makefile"
+abs_srcdir="`cd $srcdir && pwd`"
+abs_builddir="`pwd`"
+if test "$abs_srcdir" != "$abs_builddir"; then
+  make mkdir-init
 fi
-if test -d ${srcdir}/examples; then
-    OUTPUT="$OUTPUT examples/Makefile"
-fi
-if test -d ${srcdir}/tests; then
-    OUTPUT="$OUTPUT tests/Makefile"
-fi
-AC_OUTPUT($OUTPUT)

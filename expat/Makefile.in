@@ -33,6 +33,7 @@ SHELL = @SHELL@
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
 VPATH = @srcdir@
+
 prefix = @prefix@
 exec_prefix = @exec_prefix@
 
@@ -48,43 +49,33 @@ INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_DATA = @INSTALL_DATA@
 mkinstalldirs = $(SHELL) $(top_srcdir)/conftools/mkinstalldirs
 
-CC = @CC@
-
-LIBTOOL = @LIBTOOL@
-
-SUBDIRS = lib examples xmlwf
-CONFIG_HEADERS = config.h
-
 APIHEADER = expat.h
 LIBRARY = libexpat.la
 
 
-default:  lib xmlwf
+default:  buildlib xmlwf/xmlwf
 
-buildlib: lib
+buildlib: lib/$(LIBRARY)
 
-all: $(SUBDIRS)
-
-$(SUBDIRS)::
-	cd $@ && $(MAKE)
+all: lib/$(LIBRARY) xmlwf/xmlwf examples/elements examples/outline
 
 clean:
 	cd lib && rm -f $(LIBRARY) *.o *.lo && rm -rf .libs _libs
-	cd xmlwf && rm -f xmlwf *.o
-	cd examples && rm -f elements outline *.o
+	cd xmlwf && rm -f xmlwf *.o *.lo && rm -rf .libs _libs
+	cd examples && rm -f elements outline *.o *.lo && rm -rf .libs _libs
 	find . -name core | xargs rm -f
 
 distclean: clean
 	rm -f config.h config.status config.log config.cache libtool
-	rm -f Makefile lib/Makefile examples/Makefile xmlwf/Makefile tests/Makefile
+	rm -f Makefile
 
 extraclean: distclean
 	rm -f config.h.in configure
 	rm -f conftools/config.guess conftools/config.sub
 	rm -f conftools/ltconfig conftools/ltmain.sh
 
-check:	$(SUBDIRS)
-	cd tests && $(MAKE) check
+check: tests/runtests
+	@cd tests && ./runtests
 
 install: xmlwf/xmlwf lib/$(LIBRARY) lib/$(APIHEADER)
 	$(mkinstalldirs) $(bindir) $(libdir) $(includedir)
@@ -97,7 +88,73 @@ uninstall:
 	$(LIBTOOL) --mode=uninstall rm -f $(libdir)/$(LIBRARY)
 	rm -f $(libdir)/$(APIHEADER)
 
-.PHONY: buildlib all $(SUBDIRS) \
+# for VPATH builds (invoked by configure)
+mkdir-init:
+	@for d in lib xmlwf examples tests ; do \
+		(mkdir $$d 2> /dev/null || test 1) ; \
+	done
+
+CC = @CC@
+LIBTOOL = @LIBTOOL@
+
+INCLUDES = -Ilib -I.
+LDFLAGS = @LDFLAGS@
+CPPFLAGS = @CPPFLAGS@
+CFLAGS = @CFLAGS@
+VSNFLAG = -version-info @LIBCURRENT@:@LIBREVISION@:@LIBAGE@
+
+### autoconf this?
+LTFLAGS = --silent
+
+COMPILE = $(CC) $(CFLAGS) $(DEFS) $(CPPFLAGS) $(INCLUDES)
+LTCOMPILE = $(LIBTOOL) $(LTFLAGS) --mode=compile $(COMPILE)
+LINK_LIB = $(LIBTOOL) $(LTFLAGS) --mode=link $(COMPILE) $(VSNFLAG) -rpath $(libdir) $(LDFLAGS) -o $@
+LINK_EXE = $(LIBTOOL) $(LTFLAGS) --mode=link $(COMPILE) $(LDFLAGS) -o $@
+
+LIB_OBJS = lib/xmlparse.lo lib/xmltok.lo lib/xmlrole.lo
+lib/$(LIBRARY): $(LIB_OBJS)
+	$(LINK_LIB) $(LIB_OBJS)
+
+lib/xmlparse.lo: lib/xmlparse.c lib/expat.h lib/xmlrole.h lib/xmltok.h \
+	$(top_builddir)/config.h
+
+lib/xmlrole.lo: lib/xmlrole.c lib/ascii.h lib/xmlrole.h \
+	$(top_builddir)/config.h
+
+lib/xmltok.lo: lib/xmltok.c lib/xmltok_impl.c lib/xmltok_ns.c \
+	lib/ascii.h lib/asciitab.h lib/iasciitab.h lib/latin1tab.h \
+	lib/nametab.h lib/utf8tab.h lib/xmltok.h lib/xmltok_impl.h \
+	$(top_builddir)/config.h
+
+
+XMLWF_OBJS = xmlwf/xmlwf.o xmlwf/xmlfile.o xmlwf/codepage.o xmlwf/@FILEMAP@.o
+xmlwf/xmlwf.o: xmlwf/xmlwf.c
+xmlwf/xmlfile.o: xmlwf/xmlfile.c
+xmlwf/codepage.o: xmlwf/codepage.c
+xmlwf/@FILEMAP@.o: xmlwf/@FILEMAP@.c
+xmlwf/xmlwf: $(XMLWF_OBJS)
+	$(LINK_EXE) $(XMLWF_OBJS) lib/$(LIBRARY)
+
+examples/elements.o: examples/elements.c
+examples/elements: examples/elements.o
+	$(LINK_EXE) $< lib/$(LIBRARY)
+
+examples/outline.o: examples/outline.c
+examples/outline: examples/outline.o
+	$(LINK_EXE) $< lib/$(LIBRARY)
+
+tests/runtests.o: tests/runtests.c
+tests/runtests: tests/runtests.o
+	$(LINK_EXE) $< lib/$(LIBRARY)
+
+.SUFFIXES: .c .lo .o
+
+.c.o:
+	$(COMPILE) -o $@ -c $<
+.c.lo:
+	$(LTCOMPILE) -o $@ -c $<
+
+.PHONY: buildlib all \
 	clean distclean extraclean maintainer-clean \
 	dist distdir \
 	install uninstall
