@@ -92,7 +92,7 @@ typedef struct {
   const char *name;
   const char *valuePtr;
   const char *valueEnd;
-  char containsRef;
+  char normalized;
 } ATTRIBUTE;
 
 struct encoding;

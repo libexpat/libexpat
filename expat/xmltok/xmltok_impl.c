@@ -1186,7 +1186,7 @@ int PREFIX(getAtts)(const ENCODING *enc, const char *ptr,
       if (state == other) { \
 	if (nAtts < attsMax) { \
 	  atts[nAtts].name = ptr; \
-	  atts[nAtts].containsRef = 0; \
+	  atts[nAtts].normalized = 1; \
 	} \
 	state = inName; \
       }
@@ -1223,13 +1223,15 @@ int PREFIX(getAtts)(const ENCODING *enc, const char *ptr,
       }
       break;
     case BT_AMP:
-      atts[nAtts].containsRef = 1;
+      atts[nAtts].normalized = 0;
       break;
     case BT_S: case BT_CR: case BT_LF:
       /* This case ensures that the first attribute name is counted
          Apart from that we could just change state on the quote. */
       if (state == inName)
         state = other;
+      if (state == inValue)
+	atts[nAtts].normalized = 0;
       break;
     case BT_GT:
     case BT_SOL:
