@@ -627,14 +627,14 @@ compiler."
       # we shouldn't force the makefile maintainer to figure out
       # which system we are compiling for in order to pass an extra
       # flag for every libtool invokation.
-      # allow_undefined=no
+      allow_undefined=no
 
       # FIXME: Unfortunately, there are problems with the above when trying
       # to make a dll which has undefined symbols, in which case not
       # even a static library is built.  For now, we need to specify
       # -no-undefined on the libtool link line when we can be certain
       # that all symbols are satisfied, otherwise we get a static library.
-      allow_undefined=yes
+      # allow_undefined=yes
 
       # This is a source program that is used to create dlls on Windows
       # Don't remove nor modify the starting and closing comments
@@ -650,18 +650,18 @@ compiler."
 # #  endif
 # #endif
 #
-# #ifdef __cplusplus
-# extern "C" {
-# #endif
-# BOOL APIENTRY DllMain (HINSTANCE hInst, DWORD reason, LPVOID reserved);
-# #ifdef __cplusplus
-# }
-# #endif
-#
 # #ifdef __CYGWIN__
 # #include <cygwin/cygwin_dll.h>
 # DECLARE_CYGWIN_DLL( DllMain );
-# #endif
+# #else
+# #  ifdef __cplusplus
+# extern "C" {
+# #  endif
+# BOOL APIENTRY DllMain (HINSTANCE hInst, DWORD reason, LPVOID reserved);
+# #  ifdef __cplusplus
+# }
+# #  endif
+#
 # HINSTANCE __hDllInstance_base;
 #
 # BOOL APIENTRY
@@ -670,6 +670,7 @@ compiler."
 #   __hDllInstance_base = hInst;
 #   return TRUE;
 # }
+# #endif
 # /* ltdll.c ends here */
       # This is a source program that is used to create import libraries
       # on Windows for dlls which lack them. Don't remove nor modify the

@@ -105,7 +105,7 @@ GZIP_ENV = --best
 all: $(LIBRARY)
 
 .SUFFIXES: .c .lo .o
-.PHONY: all clean distclean maintainer-clean distdir
+.PHONY: all clean distclean maintainer-clean
 
 %.o: %.c
 	@echo '$(COMPILE) -c $<'; \
@@ -142,6 +142,7 @@ clean:
 	rm -rf .libs _libs .deps
 
 distclean: clean
+	rm -f Makefile
 
 maintainer-clean: distclean
 
@@ -157,30 +158,13 @@ uninstall:
 $(LIBRARY): $(LTOBJECTS)
 	$(LINK) -rpath $(libdir) $(LDFLAGS) $(LTOBJECTS)
 
-distdir = $(top_builddir)/$(PACKAGE)-$(VERSION)/$(subdir)
-
-distdir: $(DISTFILES)
-	@here=`cd $(top_builddir) && pwd`; \
-	top_distdir=`cd $(top_distdir) && pwd`; \
-	distdir=`cd $(distdir) && pwd`; \
-	for file in $(DISTFILES); do \
-	  d=$(srcdir); \
-	  if test -d $$d/$$file; then \
-	    cp -pr $$d/$$file $(distdir)/$$file; \
-	  else \
-	    test -f $(distdir)/$$file \
-	    || ln $$d/$$file $(distdir)/$$file 2> /dev/null \
-	    || cp -p $$d/$$file $(distdir)/$$file || :; \
-	  fi; \
-	done
-
 xmlparse.o \
 xmlparse.lo: xmlparse.c expat.h xmlrole.h xmltok.h $(top_builddir)/config.h
 
 xmlrole.o \
-xmlrole.lo: xmlrole.c ascii.h xmldef.h xmlrole.h $(top_builddir)/config.h
+xmlrole.lo: xmlrole.c ascii.h xmlrole.h $(top_builddir)/config.h
 
 xmltok.o \
 xmltok.lo: xmltok.c xmltok_impl.c xmltok_ns.c \
           ascii.h asciitab.h iasciitab.h latin1tab.h nametab.h utf8tab.h \
-          xmldef.h xmltok.h xmltok_impl.h $(top_builddir)/config.h
+          xmltok.h xmltok_impl.h $(top_builddir)/config.h

@@ -397,7 +397,11 @@ void metaCharacterData(XML_Parser parser, const XML_Char *s, int len)
 }
 
 static
-void metaStartDoctypeDecl(XML_Parser parser, const XML_Char *doctypeName)
+void metaStartDoctypeDecl(XML_Parser parser,
+			  const XML_Char *doctypeName,
+			  const XML_Char *sysid,
+			  const XML_Char *pubid,
+			  int has_internal_subset)
 {
   FILE *fp = XML_GetUserData(parser);
   ftprintf(fp, T("<startdoctype name=\"%s\""), doctypeName);
@@ -410,26 +414,6 @@ void metaEndDoctypeDecl(XML_Parser parser)
 {
   FILE *fp = XML_GetUserData(parser);
   fputts(T("<enddoctype"), fp);
-  metaLocation(parser);
-  fputts(T("/>\n"), fp);
-}
-
-static
-void metaUnparsedEntityDecl(XML_Parser parser,
-			    const XML_Char *entityName,
-			    const XML_Char *base,
-			    const XML_Char *systemId,
-			    const XML_Char *publicId,
-			    const XML_Char *notationName)
-{
-  FILE *fp = XML_GetUserData(parser);
-  ftprintf(fp, T("<entity name=\"%s\""), entityName);
-  if (publicId)
-    ftprintf(fp, T(" public=\"%s\""), publicId);
-  fputts(T(" system=\""), fp);
-  characterData(fp, systemId, tcslen(systemId));
-  puttc(T('"'), fp);
-  ftprintf(fp, T(" notation=\"%s\""), notationName);
   metaLocation(parser);
   fputts(T("/>\n"), fp);
 }
@@ -456,35 +440,46 @@ void metaNotationDecl(XML_Parser parser,
 
 
 static
-void metaExternalParsedEntityDecl(XML_Parser parser,
-				  const XML_Char *entityName,
-				  const XML_Char *base,
-				  const XML_Char *systemId,
-				  const XML_Char *publicId)
+void metaEntityDecl(XML_Parser parser,
+		    const XML_Char *entityName,
+		    int  is_param,
+		    const XML_Char *value,
+		    int  value_length,
+		    const XML_Char *base,
+		    const XML_Char *systemId,
+		    const XML_Char *publicId,
+		    const XML_Char *notationName)
 {
   FILE *fp = XML_GetUserData(parser);
-  ftprintf(fp, T("<entity name=\"%s\""), entityName);
-  if (publicId)
-    ftprintf(fp, T(" public=\"%s\""), publicId);
-  fputts(T(" system=\""), fp);
-  characterData(fp, systemId, tcslen(systemId));
-  puttc(T('"'), fp);
-  metaLocation(parser);
-  fputts(T("/>\n"), fp);
-}
 
-static
-void metaInternalParsedEntityDecl(XML_Parser parser,
-				  const XML_Char *entityName,
-				  const XML_Char *text,
-				  int textLen)
-{
-  FILE *fp = XML_GetUserData(parser);
-  ftprintf(fp, T("<entity name=\"%s\""), entityName);
-  metaLocation(parser);
-  puttc(T('>'), fp);
-  characterData(fp, text, textLen);
-  fputts(T("</entity/>\n"), fp);
+  if (value) {
+    ftprintf(fp, T("<entity name=\"%s\""), entityName);
+    metaLocation(parser);
+    puttc(T('>'), fp);
+    characterData(fp, value, value_length);
+    fputts(T("</entity/>\n"), fp);
+  }
+  else if (notationName) {
+    ftprintf(fp, T("<entity name=\"%s\""), entityName);
+    if (publicId)
+      ftprintf(fp, T(" public=\"%s\""), publicId);
+    fputts(T(" system=\""), fp);
+    characterData(fp, systemId, tcslen(systemId));
+    puttc(T('"'), fp);
+    ftprintf(fp, T(" notation=\"%s\""), notationName);
+    metaLocation(parser);
+    fputts(T("/>\n"), fp);
+  }
+  else {
+    ftprintf(fp, T("<entity name=\"%s\""), entityName);
+    if (publicId)
+      ftprintf(fp, T(" public=\"%s\""), publicId);
+    fputts(T(" system=\""), fp);
+    characterData(fp, systemId, tcslen(systemId));
+    puttc(T('"'), fp);
+    metaLocation(parser);
+    fputts(T("/>\n"), fp);
+  }
 }
 
 static
@@ -723,10 +718,8 @@ int tmain(int argc, XML_Char **argv)
 	XML_SetCdataSectionHandler(parser, metaStartCdataSection, metaEndCdataSection);
 	XML_SetCharacterDataHandler(parser, metaCharacterData);
 	XML_SetDoctypeDeclHandler(parser, metaStartDoctypeDecl, metaEndDoctypeDecl);
-	XML_SetUnparsedEntityDeclHandler(parser, metaUnparsedEntityDecl);
+	XML_SetEntityDeclHandler(parser, metaEntityDecl);
 	XML_SetNotationDeclHandler(parser, metaNotationDecl);
-	XML_SetExternalParsedEntityDeclHandler(parser, metaExternalParsedEntityDecl);
-	XML_SetInternalParsedEntityDeclHandler(parser, metaInternalParsedEntityDecl);
 	XML_SetNamespaceDeclHandler(parser, metaStartNamespaceDecl, metaEndNamespaceDecl);
 	metaStartDocument(parser);
 	break;

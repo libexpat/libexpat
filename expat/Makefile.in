@@ -79,7 +79,7 @@ VERSION = @VERSION@
 SUBDIRS = lib
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 CONFIG_HEADERS = config.h:config.hin
-DIST_COMMON =  ChangeLog COPYING README Makefile.in aclocal.m4 config.hin \
+DIST_COMMON =  Changes COPYING README Makefile.in aclocal.m4 config.hin \
                configure configure.in conftools doc examples xmlwf
 
 DISTDIR = $(PACKAGE)-$(VERSION)
@@ -121,27 +121,18 @@ distclean:
 	@list='$(SUBDIRS)'; for dir in $$list; do \
 	  cd $$dir; $(MAKE) distclean; cd ..; \
 	done
-	rm -f config.h config.status libtool
+	rm -f config.h config.status config.log libtool examples/Makefile xmlwf/Makefile
 
 maintainer-clean: distclean
 	rm -f $(DISTRIBUTION)
 	rm -rf $(DISTDIR)
 
-distdir: $(DIST_COMMON) clean
-	test -d $(DISTDIR) || mkdir $(DISTDIR)
-	@list='$(SUBDIRS)'; for dir in $$list; do \
-	  test -d $(DISTDIR)/$$dir || mkdir $(DISTDIR)/$$dir; \
-	  cd $$dir; $(MAKE) distdir; cd ..; \
+distdir: MANIFEST
+	test -d $(DISTDIR) && rm -rf $(DISTDIR); \
+	mkdir $(DISTDIR); \
+	flist=`sed -e "s/[ 	]:.*$$//" MANIFEST`; for file in $$flist; do \
+	  cp -P $$file $(DISTDIR); \
 	done
-	@for file in $(DIST_COMMON); do \
-	  if test -d $$file; then \
-	    cp -prf $$file $(DISTDIR)/$$file; \
-	  else \
-	    test -f $(DISTDIR)/$$file \
-	    || ln $$file $(DISTDIR)/$$file 2> /dev/null \
-	    || cp -p $$file $(DISTDIR)/$$file || :; \
-	  fi; \
-	done    
 
 $(DISTRIBUTION): distdir
 	tar cfz $(DISTRIBUTION) $(DISTDIR)	
