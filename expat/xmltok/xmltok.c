@@ -1379,6 +1379,18 @@ int initScan(const ENCODING **encodingTable,
     return XML_TOK_NONE;
   encPtr = enc->encPtr;
   if (ptr + 1 == end) {
+    /* only a single byte available for auto-detection */
+    /* a well-formed document entity must have more than one byte */
+    if (state != XML_CONTENT_STATE)
+      return XML_TOK_PARTIAL;
+    /* so we're parsing an external text entity... */
+    /* if UTF-16 was externally specified, then we need at least 2 bytes */
+    switch (INIT_ENC_INDEX(enc)) {
+    case UTF_16_ENC:
+    case UTF_16LE_ENC:
+    case UTF_16BE_ENC:
+      return XML_TOK_PARTIAL;
+    }
     switch ((unsigned char)*ptr) {
     case 0xFE:
     case 0xFF:
@@ -1394,12 +1406,6 @@ int initScan(const ENCODING **encodingTable,
   }
   else {
     switch (((unsigned char)ptr[0] << 8) | (unsigned char)ptr[1]) {
-    case 0x003C:
-      if (INIT_ENC_INDEX(enc) == UTF_16LE_ENC
-	  && state == XML_CONTENT_STATE)
-	break;
-      *encPtr = encodingTable[UTF_16BE_ENC];
-      return XmlTok(*encPtr, state, ptr, end, nextTokPtr);
     case 0xFEFF:
       if (INIT_ENC_INDEX(enc) == ISO_8859_1_ENC
 	  && state == XML_CONTENT_STATE)
@@ -1407,8 +1413,10 @@ int initScan(const ENCODING **encodingTable,
       *nextTokPtr = ptr + 2;
       *encPtr = encodingTable[UTF_16BE_ENC];
       return XML_TOK_BOM;
+    /* 00 3C is handled in the default case */
     case 0x3C00:
-      if (INIT_ENC_INDEX(enc) == UTF_16BE_ENC
+      if ((INIT_ENC_INDEX(enc) == UTF_16BE_ENC
+	   || INIT_ENC_INDEX(enc) == UTF_16_ENC)
 	  && state == XML_CONTENT_STATE)
 	break;
       *encPtr = encodingTable[UTF_16LE_ENC];
@@ -1438,6 +1446,33 @@ int initScan(const ENCODING **encodingTable,
 	*encPtr = encodingTable[UTF_8_ENC];
 	return XML_TOK_BOM;
       }
+      break;
+    default:
+      if (ptr[0] == '\0') {
+	/* 0 isn't a legal data character. Furthermore a document entity can only
+	   start with ASCII characters.  So the only way this can fail to be big-endian
+	   UTF-16 if it it's an external parsed general entity that's labelled as
+	   UTF-16LE. */
+	if (state == XML_CONTENT_STATE && INIT_ENC_INDEX(enc) == UTF_16LE_ENC)
+	  break;
+	*encPtr = encodingTable[UTF_16BE_ENC];
+	return XmlTok(*encPtr, state, ptr, end, nextTokPtr);
+      }
+      else if (ptr[1] == '\0') {
+	/* We could recover here in the case:
+	    - parsing an external entity
+	    - second byte is 0
+	    - no externally specified encoding
+	    - no encoding declaration
+	   by assuming UTF-16LE.  But we don't, because this would mean when
+	   presented just with a single byte, we couldn't reliably determine
+	   whether we needed further bytes. */
+	if (state == XML_CONTENT_STATE)
+	  break;
+	*encPtr = encodingTable[UTF_16LE_ENC];
+	return XmlTok(*encPtr, state, ptr, end, nextTokPtr);
+      }
+      break;
     }
   }
   *encPtr = encodingTable[INIT_ENC_INDEX(enc)];
