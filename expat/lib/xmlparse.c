@@ -4,7 +4,7 @@ See the file COPYING for copying permission.
 */
 
 static char RCSId[]
-  = "$Header: /cvsroot/expat/expat/lib/xmlparse.c,v 1.14 2001/01/24 19:38:54 fdrake Exp $";
+  = "$Header: /cvsroot/expat/expat/lib/xmlparse.c,v 1.15 2001/07/25 03:05:22 fdrake Exp $";
 
 #ifdef COMPILED_FROM_DSP
 #  include "winconfig.h"
@@ -371,7 +371,6 @@ typedef struct {
   XML_EndNamespaceDeclHandler m_endNamespaceDeclHandler;
   XML_NotStandaloneHandler m_notStandaloneHandler;
   XML_ExternalEntityRefHandler m_externalEntityRefHandler;
-  XML_InternalEntityRefHandler m_internalEntityRefHandler;
   void *m_externalEntityRefHandlerArg;
   XML_UnknownEncodingHandler m_unknownEncodingHandler;
   XML_ElementDeclHandler m_elementDeclHandler;
@@ -721,7 +720,6 @@ XML_Parser XML_ExternalEntityParserCreate(XML_Parser oldParser,
   XML_EndNamespaceDeclHandler oldEndNamespaceDeclHandler = endNamespaceDeclHandler;
   XML_NotStandaloneHandler oldNotStandaloneHandler = notStandaloneHandler;
   XML_ExternalEntityRefHandler oldExternalEntityRefHandler = externalEntityRefHandler;
-  XML_InternalEntityRefHandler oldInternalEntityRefHandler = internalEntityRefHandler;
   XML_UnknownEncodingHandler oldUnknownEncodingHandler = unknownEncodingHandler;
   XML_ElementDeclHandler oldElementDeclHandler = elementDeclHandler;
   XML_AttlistDeclHandler oldAttlistDeclHandler = attlistDeclHandler;
@@ -1039,12 +1037,6 @@ void XML_SetExternalEntityRefHandlerArg(XML_Parser parser, void *arg)
     externalEntityRefHandlerArg = arg;
   else
     externalEntityRefHandlerArg = parser;
-}
-
-void XML_SetInternalEntityRefHandler(XML_Parser parser,
-				     XML_InternalEntityRefHandler handler)
-{
-  internalEntityRefHandler = handler;
 }
 
 void XML_SetUnknownEncodingHandler(XML_Parser parser,
