@@ -137,7 +137,7 @@ distdir: MANIFEST
 	done
 
 $(DISTRIBUTION): distdir
-	tar cfz $(DISTRIBUTION) $(DISTDIR)	
+	tar cf - $(DISTDIR) | gzip -9 >$(DISTRIBUTION)
 
 dist: $(DISTRIBUTION)
 
