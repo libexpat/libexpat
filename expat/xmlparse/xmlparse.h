@@ -306,6 +306,13 @@ XML_SetUserData(XML_Parser parser, void *userData);
 /* Returns the last value set by XML_SetUserData or null. */
 #define XML_GetUserData(parser) (*(void **)(parser))
 
+/* This is equivalent to supplying an encoding argument
+to XML_CreateParser. It must not be called before XML_Parse
+or XML_ParseBuffer. */
+
+int XMLPARSEAPI
+XML_SetEncoding(XML_Parser parser, const XML_Char *encoding);
+
 /* If this function is called, then the parser will be passed
 as the first argument to callbacks instead of userData.
 The userData will still be accessible using XML_GetUserData. */

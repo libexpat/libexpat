@@ -468,6 +468,18 @@ XML_Parser XML_ParserCreateNS(const XML_Char *encodingName, XML_Char nsSep)
   return parser;
 }
 
+int XML_SetEncoding(XML_Parser parser, const XML_Char *encodingName)
+{
+  if (encodingName)
+    protocolEncodingName = 0;
+  else {
+    protocolEncodingName = poolCopyString(&tempPool, encodingName);
+    if (!protocolEncodingName)
+      return 0;
+  }
+  return 1;
+}
+
 XML_Parser XML_ExternalEntityParserCreate(XML_Parser oldParser,
 					  const XML_Char *context,
 					  const XML_Char *encodingName)
