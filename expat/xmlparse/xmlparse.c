@@ -22,8 +22,8 @@ Contributor(s):
 #include <string.h>
 #include <stddef.h>
 
-#include "xmlparse.h"
 #include "xmldef.h"
+#include "xmlparse.h"
 
 #ifdef XML_UNICODE
 #define XML_ENCODE_MAX XML_UTF16_ENCODE_MAX
