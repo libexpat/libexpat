@@ -1943,6 +1943,9 @@ XML_GetFeatureList(void)
 #ifdef XML_MIN_SIZE
     {XML_FEATURE_MIN_SIZE,         XML_L("XML_MIN_SIZE"), 0},
 #endif
+#ifdef XML_NS
+    {XML_FEATURE_NS,               XML_L("XML_NS"), 0},
+#endif
     {XML_FEATURE_END,              NULL, 0}
   };
 
