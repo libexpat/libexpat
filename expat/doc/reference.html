@@ -1712,12 +1712,17 @@ enum XML_FeatureEnum {
   XML_FEATURE_END = 0,
   XML_FEATURE_UNICODE,
   XML_FEATURE_UNICODE_WCHAR_T,
-  XML_FEATURE_DTD
+  XML_FEATURE_DTD,
+  XML_FEATURE_CONTEXT_BYTES,
+  XML_FEATURE_MIN_SIZE,
+  XML_FEATURE_SIZEOF_XML_CHAR,
+  XML_FEATURE_SIZEOF_XML_LCHAR
 };
 
 typedef struct {
   enum XML_FeatureEnum  feature;
   XML_LChar            *name;
+  long int              value;
 } XML_Feature;
 </pre>
 <div class="fcndef">
@@ -1730,12 +1735,31 @@ check these features to do so at runtime.</p>
 <p>The return value is an array of <code>XML_Feature</code>,
 terminated by a record with a <code>feature</code> of
 <code>XML_FEATURE_END</code> and <code>name</code> of NULL,
-identifying the feature-test macros Expat was compiled with.  Since
-an application that requires this kind of information needs to
-determine the type of character the <code>name</code> points to,
-records for the <code>XML_UNICODE</code> and
-<code>XML_UNICODE_WCHAR_T</code> features will be located at the
-beginning of the list, if they are present at all.</p>
+identifying the feature-test macros Expat was compiled with.  Since an
+application that requires this kind of information needs to determine
+the type of character the <code>name</code> points to, records for the
+<code>XML_FEATURE_SIZEOF_XML_CHAR</code> and
+<code>XML_FEATURE_SIZEOF_XML_LCHAR</code> will be located at the
+beginning of the list, followed by <code>XML_FEATURE_UNICODE</code>
+and <code>XML_FEATURE_UNICODE_WCHAR_T</code>, if they are present at
+all.</p>
+
+<p>Some features have an associated value.  If there isn't an
+associated value, the <code>value</code> field is set to 0.  At this
+time, the following features have been defined to have values:</p>
+
+<dl>
+  <dt><code>XML_FEATURE_SIZEOF_XML_CHAR</code></dt>
+  <dd>The number of bytes occupied by one <code>XML_Char</code>
+  character.</dd>
+  <dt><code>XML_FEATURE_SIZEOF_XML_LCHAR</code></dt>
+  <dd>The number of bytes occupied by one <code>XML_LChar</code>
+  character.</dd>
+  <dt><code>XML_FEATURE_CONTEXT_BYTES</code></dt>
+  <dd>The maximum number of characters of context which can be
+  reported by <code><a href= "#XML_GetInputContext"
+  >XML_GetInputContext</a></code>.</dd>
+</dl>
 </div>
 
 <hr />

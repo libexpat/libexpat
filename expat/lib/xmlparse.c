@@ -1607,19 +1607,30 @@ XML_ExpatVersionInfo(void)
 const XML_Feature *
 XML_GetFeatureList(void)
 {
-  static const XML_Feature features[] = {
+  static XML_Feature features[] = {
+    {XML_FEATURE_SIZEOF_XML_CHAR,  XML_L("sizeof(XML_Char)")},
+    {XML_FEATURE_SIZEOF_XML_LCHAR, XML_L("sizeof(XML_LChar)")},
 #ifdef XML_UNICODE
-    {XML_FEATURE_UNICODE,         XML_L("XML_UNICODE")},
+    {XML_FEATURE_UNICODE,          XML_L("XML_UNICODE")},
 #endif
 #ifdef XML_UNICODE_WCHAR_T
-    {XML_FEATURE_UNICODE_WCHAR_T, XML_L("XML_UNICODE_WCHAR_T")},
+    {XML_FEATURE_UNICODE_WCHAR_T,  XML_L("XML_UNICODE_WCHAR_T")},
 #endif
 #ifdef XML_DTD
-    {XML_FEATURE_DTD,             XML_L("XML_DTD")},
+    {XML_FEATURE_DTD,              XML_L("XML_DTD")},
 #endif
-    {XML_FEATURE_END,             NULL}
+#ifdef XML_CONTEXT_BYTES
+    {XML_FEATURE_CONTEXT_BYTES,    XML_L("XML_CONTEXT_BYTES"),
+     XML_CONTEXT_BYTES},
+#endif
+#ifdef XML_MIN_SIZE
+    {XML_FEATURE_MIN_SIZE,         XML_L("XML_MIN_SIZE")},
+#endif
+    {XML_FEATURE_END,              NULL}
   };
 
+  features[0].value = sizeof(XML_Char);
+  features[1].value = sizeof(XML_LChar);
   return features;
 }
 

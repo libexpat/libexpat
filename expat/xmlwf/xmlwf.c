@@ -609,17 +609,19 @@ showVersion(XML_Char *prog)
       prog = s + 1;
     ++s;
   }
-  ftprintf(stdout, T("%s using %s"), prog, XML_ExpatVersion());
-  if (features == NULL || features[0].feature == XML_FEATURE_END)
-    ftprintf(stdout, T("\n"));
-  else {
+  ftprintf(stdout, T("%s using %s\n"), prog, XML_ExpatVersion());
+  if (features != NULL && features[0].feature != XML_FEATURE_END) {
     int i = 1;
-    ftprintf(stdout, T(" (%s"), features[0].name);
+    ftprintf(stdout, T("%s"), features[0].name);
+    if (features[0].value)
+      ftprintf(stdout, T("=%ld"), features[0].value);
     while (features[i].feature != XML_FEATURE_END) {
       ftprintf(stdout, T(", %s"), features[i].name);
+      if (features[i].value)
+        ftprintf(stdout, T("=%ld"), features[i].value);
       ++i;
     }
-    ftprintf(stdout, T(")\n"));
+    ftprintf(stdout, T("\n"));
   }
 }
 

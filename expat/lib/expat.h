@@ -875,13 +875,18 @@ enum XML_FeatureEnum {
   XML_FEATURE_END = 0,
   XML_FEATURE_UNICODE,
   XML_FEATURE_UNICODE_WCHAR_T,
-  XML_FEATURE_DTD
+  XML_FEATURE_DTD,
+  XML_FEATURE_CONTEXT_BYTES,
+  XML_FEATURE_MIN_SIZE,
+  XML_FEATURE_SIZEOF_XML_CHAR,
+  XML_FEATURE_SIZEOF_XML_LCHAR
   /* Additional features must be added to the end of this enum. */
 };
 
 typedef struct {
   enum XML_FeatureEnum  feature;
   XML_LChar            *name;
+  long int              value;
 } XML_Feature;
 
 XMLPARSEAPI(const XML_Feature *)
