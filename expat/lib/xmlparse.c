@@ -54,10 +54,21 @@ typedef char ICHAR;
 
 #endif
 
-#ifdef XML_UNICODE_WCHAR_T
-#define XML_T(x) L ## x
-#else
+#ifdef XML_UNICODE 
+
+#  ifdef XML_UNICODE_WCHAR_T
+#  define XML_T(x) (const wchar_t)x
+#  define XML_L(x) L ## x
+#  else
+#  define XML_T(x) (const unsigned short)x
+#  define XML_L(x) x
+#  endif
+ 
+#else 
+                
 #define XML_T(x) x
+#define XML_L(x) x    
+
 #endif
 
 /* Round up n to be a multiple of sz, where sz is a power of 2. */
@@ -430,7 +441,7 @@ typedef struct {
   POSITION m_position;
   STRING_POOL m_tempPool;
   STRING_POOL m_temp2Pool;
-  char *m_groupConnector;
+  char *m_groupConnector; 
   unsigned m_groupSize;
   int m_hadExternalDoctype;
   XML_Char m_namespaceSeparator;
@@ -563,18 +574,11 @@ XML_ParserCreate_MM(const XML_Char *encodingName,
 		    const XML_Char *nameSep) {
   
   XML_Parser parser;
-  static
-  const XML_Char implicitContext[] = {
-    XML_T('x'), XML_T('m'), XML_T('l'), XML_T('='),
-    XML_T('h'), XML_T('t'), XML_T('t'), XML_T('p'), XML_T(':'),
-    XML_T('/'), XML_T('/'), XML_T('w'), XML_T('w'), XML_T('w'),
-    XML_T('.'), XML_T('w'), XML_T('3'),
-    XML_T('.'), XML_T('o'), XML_T('r'), XML_T('g'),
-    XML_T('/'), XML_T('X'), XML_T('M'), XML_T('L'),
-    XML_T('/'), XML_T('1'), XML_T('9'), XML_T('9'), XML_T('8'),
-    XML_T('/'), XML_T('n'), XML_T('a'), XML_T('m'), XML_T('e'),
-    XML_T('s'), XML_T('p'), XML_T('a'), XML_T('c'), XML_T('e'),
-    XML_T('\0')
+  static const XML_Char implicitContext[] = {
+    'x', 'm', 'l', '=', 'h', 't', 't', 'p', ':', '/', '/',
+    'w', 'w', 'w', '.', 'w', '3', '.', 'o', 'r', 'g', '/',
+    'X', 'M', 'L', '/', '1', '9', '9', '8', '/',
+    'n', 'a', 'm', 'e', 's', 'p', 'a', 'c', 'e', '\0'
   };
 
 
@@ -1312,29 +1316,29 @@ const XML_LChar *XML_ErrorString(int code)
 {
   static const XML_LChar *message[] = {
     0,
-    XML_T("out of memory"),
-    XML_T("syntax error"),
-    XML_T("no element found"),
-    XML_T("not well-formed (invalid token)"),
-    XML_T("unclosed token"),
-    XML_T("partial character"),
-    XML_T("mismatched tag"),
-    XML_T("duplicate attribute"),
-    XML_T("junk after document element"),
-    XML_T("illegal parameter entity reference"),
-    XML_T("undefined entity"),
-    XML_T("recursive entity reference"),
-    XML_T("asynchronous entity"),
-    XML_T("reference to invalid character number"),
-    XML_T("reference to binary entity"),
-    XML_T("reference to external entity in attribute"),
-    XML_T("xml processing instruction not at start of external entity"),
-    XML_T("unknown encoding"),
-    XML_T("encoding specified in XML declaration is incorrect"),
-    XML_T("unclosed CDATA section"),
-    XML_T("error in processing external entity reference"),
-    XML_T("document is not standalone"),
-    XML_T("unexpected parser state - please send a bug report")
+    XML_L("out of memory"),
+    XML_L("syntax error"),
+    XML_L("no element found"),
+    XML_L("not well-formed (invalid token)"),
+    XML_L("unclosed token"),
+    XML_L("partial character"),
+    XML_L("mismatched tag"),
+    XML_L("duplicate attribute"),
+    XML_L("junk after document element"),
+    XML_L("illegal parameter entity reference"),
+    XML_L("undefined entity"),
+    XML_L("recursive entity reference"),
+    XML_L("asynchronous entity"),
+    XML_L("reference to invalid character number"),
+    XML_L("reference to binary entity"),
+    XML_L("reference to external entity in attribute"),
+    XML_L("xml processing instruction not at start of external entity"),
+    XML_L("unknown encoding"),
+    XML_L("encoding specified in XML declaration is incorrect"),
+    XML_L("unclosed CDATA section"),
+    XML_L("error in processing external entity reference"),
+    XML_L("document is not standalone"),
+    XML_L("unexpected parser state - please send a bug report")
   };
   if (code > 0 && code < sizeof(message)/sizeof(message[0]))
     return message[code];
@@ -1352,7 +1356,7 @@ XML_ExpatVersion(void) {
      with the correct numerals. */
   /* ### I'm assuming cpp is portable in this respect... */
 
-#define V1(a,b,c) "expat_"#a"."#b"."#c
+#define V1(a,b,c) XML_L("expat_")XML_L(#a)XML_L(".")XML_L(#b)XML_L(".")XML_L(#c)
 #define V2(a,b,c) V1(a,b,c)
 
   return V2(XML_MAJOR_VERSION, XML_MINOR_VERSION, XML_MICRO_VERSION);
@@ -1914,7 +1918,7 @@ static enum XML_Error storeAtts(XML_Parser parser, const ENCODING *enc,
   int nDefaultAtts = 0;
   const XML_Char **appAtts;   /* the attribute list for the application */
   int attIndex = 0;
-  int prefixLen = 0;   
+  int prefixLen; 
   int i;
   int n;
   XML_Char *uri;       
@@ -2074,7 +2078,7 @@ static enum XML_Error storeAtts(XML_Parser parser, const ENCODING *enc,
 	    if (!poolAppendChar(&tempPool, b->uri[j]))
 	      return XML_ERROR_NO_MEMORY;
 	  }
-	  while (*s++ != ':')
+	  while (*s++ != XML_T(':'))
 	    ;
 	  do {
 	    if (!poolAppendChar(&tempPool, *s))
@@ -2120,19 +2124,17 @@ static enum XML_Error storeAtts(XML_Parser parser, const ENCODING *enc,
     localPart = tagNamePtr->str;
   }
   else
-    localPart = NULL;
-  if (ns && ns_triplets && binding->prefix->name) {
-    for (prefixLen = 0; binding->prefix->name[prefixLen++];)
-      ;
-    n += prefixLen;
-  }
-  else
     return XML_ERROR_NONE;
+  prefixLen = 0;
+  if (ns && ns_triplets && binding->prefix->name) {
+    for (prefixLen; binding->prefix->name[prefixLen++];)
+      ;
+  }
   tagNamePtr->localPart = localPart;
   tagNamePtr->uriLen = binding->uriLen;
   for (i = 0; localPart[i++];)
     ;
-  n = i + binding->uriLen;
+  n = i + binding->uriLen + prefixLen;
   if (n > binding->uriAlloc) {
     TAG *p;
     uri = MALLOC((n + EXPAND_SPARE) * sizeof(XML_Char)); 
@@ -2434,11 +2436,11 @@ processXmlDecl(XML_Parser parser, int isGeneralTextEntity,
 	       const char *s, const char *next)
 {
   const char *encodingName = 0;
-  const char *storedEncName = 0;
+  const XML_Char *storedEncName = 0;
   const ENCODING *newEncoding = 0;
   const char *version = 0;
   const char *versionend;
-  const char *storedversion = 0;
+  const XML_Char *storedversion = 0; 
   int standalone = -1;
   if (!(ns
         ? XmlParseXmlDeclNS
@@ -2589,7 +2591,19 @@ doProlog(XML_Parser parser,
 #ifdef XML_DTD
   static const XML_Char externalSubsetName[] = { '#' , '\0' };
 #endif /* XML_DTD */
+  static const XML_Char atypeCDATA[] = { 'C', 'D', 'A', 'T', 'A' };
+  static const XML_Char atypeID[] = { 'I', 'D' };
+  static const XML_Char atypeIDREF[] = { 'I', 'D', 'R', 'E', 'F' };
+  static const XML_Char atypeIDREFS[] = { 'I', 'D', 'R', 'E', 'F', 'S' };
+  static const XML_Char atypeENTITY[] = { 'E', 'N', 'T', 'I', 'T', 'Y' };
+  static const XML_Char atypeENTITIES[] = { 'E', 'N', 'T', 'I', 'T', 'I', 'E', 'S' };
+  static const XML_Char atypeNMTOKEN[] = { 'N', 'M', 'T', 'O', 'K', 'E', 'N' };
+  static const XML_Char atypeNMTOKENS[] = { 'N', 'M', 'T', 'O', 'K', 'E', 'N', 'S' };
+  static const XML_Char notationPrefix[] = { 'N', 'O', 'T', 'A', 'T', 'I', 'O', 'N', '(' };
+  static const XML_Char enumValueSep[] = { '|' };
+  static const XML_Char enumValueStart[] = { '(' };
 
+  
   const char **eventPP;
   const char **eventEndPP;
   enum XML_Content_Quant quant;
@@ -2678,7 +2692,7 @@ doProlog(XML_Parser parser,
 #endif /* XML_DTD */
     case XML_ROLE_DOCTYPE_PUBLIC_ID:
       if (startDoctypeDeclHandler) {
-	doctypePubid = poolStoreString(&tempPool, enc, s + 1, next - 1);
+	doctypePubid = poolStoreString(&tempPool, enc, s + enc->minBytesPerChar, next - enc->minBytesPerChar);
 	if (! doctypePubid)
 	  return XML_ERROR_NO_MEMORY;
 	poolFinish(&tempPool);
@@ -2754,43 +2768,43 @@ doProlog(XML_Parser parser,
       break;
     case XML_ROLE_ATTRIBUTE_TYPE_CDATA:
       declAttributeIsCdata = 1;
-      declAttributeType = "CDATA";
+      declAttributeType = atypeCDATA;
       break;
     case XML_ROLE_ATTRIBUTE_TYPE_ID:
       declAttributeIsId = 1;
-      declAttributeType = "ID";
+      declAttributeType = atypeID; 
       break;
     case XML_ROLE_ATTRIBUTE_TYPE_IDREF:
-      declAttributeType = "IDREF";
+      declAttributeType = atypeIDREF; 
       break;
     case XML_ROLE_ATTRIBUTE_TYPE_IDREFS:
-      declAttributeType = "IDREFS";
+      declAttributeType = atypeIDREFS;
       break;
     case XML_ROLE_ATTRIBUTE_TYPE_ENTITY:
-      declAttributeType = "ENTITY";
+      declAttributeType = atypeENTITY;
       break;
     case XML_ROLE_ATTRIBUTE_TYPE_ENTITIES:
-      declAttributeType = "ENTITIES";
+      declAttributeType = atypeENTITIES;
       break;
     case XML_ROLE_ATTRIBUTE_TYPE_NMTOKEN:
-      declAttributeType = "NMTOKEN";
+      declAttributeType = atypeNMTOKEN;
       break;
     case XML_ROLE_ATTRIBUTE_TYPE_NMTOKENS:
-      declAttributeType = "NMTOKENS";
+      declAttributeType = atypeNMTOKENS;
       break;
 
     case XML_ROLE_ATTRIBUTE_ENUM_VALUE:
     case XML_ROLE_ATTRIBUTE_NOTATION_VALUE:
       if (attlistDeclHandler)
       {
-	char *prefix;
+	const XML_Char *prefix;              
 	if (declAttributeType) {
-	  prefix = "|";
+	  prefix = enumValueSep;           
 	}
 	else {
 	  prefix = (role == XML_ROLE_ATTRIBUTE_NOTATION_VALUE
-		    ? "NOTATION("
-		    : "(");
+		    ? notationPrefix             
+		    : enumValueStart);          
 	}
 	if (! poolAppendString(&tempPool, prefix))
 	  return XML_ERROR_NO_MEMORY;
@@ -2807,11 +2821,12 @@ doProlog(XML_Parser parser,
 			      parser))
 	return XML_ERROR_NO_MEMORY;
       if (attlistDeclHandler && declAttributeType) {
-	if (*declAttributeType == '('
-	    || (*declAttributeType == 'N' && declAttributeType[1] == 'O')) {
+	if (*declAttributeType == XML_T('(')  
+	    || (*declAttributeType == XML_T('N')
+		&& declAttributeType[1] == XML_T('O'))) {
 	  /* Enumerated or Notation type */
-	  if (! poolAppendChar(&tempPool, ')')
-	      || ! poolAppendChar(&tempPool, '\0'))
+	  if (! poolAppendChar(&tempPool, XML_T(')'))
+	      || ! poolAppendChar(&tempPool, XML_T('\0')))
 	    return XML_ERROR_NO_MEMORY;
 	  declAttributeType = tempPool.start;
 	  poolFinish(&tempPool);
@@ -2842,11 +2857,12 @@ doProlog(XML_Parser parser,
                                 declAttributeIsCdata, 0, attVal, parser))
 	  return XML_ERROR_NO_MEMORY;
 	if (attlistDeclHandler && declAttributeType) {
-	  if (*declAttributeType == '('
-	      || (*declAttributeType == 'N' && declAttributeType[1] == 'O')) {
+	  if (*declAttributeType == XML_T('(')
+	      || (*declAttributeType == XML_T('N')
+		  && declAttributeType[1] == XML_T('O'))) {
 	    /* Enumerated or Notation type */
-	    if (! poolAppendChar(&tempPool, ')')
-		|| ! poolAppendChar(&tempPool, '\0'))
+	    if (! poolAppendChar(&tempPool, XML_T(')'))
+		|| ! poolAppendChar(&tempPool, XML_T('\0')))
 	      return XML_ERROR_NO_MEMORY;
 	    declAttributeType = tempPool.start;
 	    poolFinish(&tempPool);
@@ -2887,7 +2903,9 @@ doProlog(XML_Parser parser,
       break;
     case XML_ROLE_DOCTYPE_SYSTEM_ID:
       if (startDoctypeDeclHandler) {
-	doctypeSysid = poolStoreString(&tempPool, enc, s + 1, next - 1);
+	doctypeSysid = poolStoreString(&tempPool, enc,
+						s + enc->minBytesPerChar,
+						next - enc->minBytesPerChar);
 	if (! doctypeSysid)
 	  return XML_ERROR_NO_MEMORY;
 	poolFinish(&tempPool);
@@ -3245,7 +3263,7 @@ doProlog(XML_Parser parser,
       if (dtd.in_eldecl)
 	{
 	  ELEMENT_TYPE *el;
-	  const char *nxt = quant == XML_CQUANT_NONE ? next : next - 1;
+	  const char *nxt = quant == XML_CQUANT_NONE ? next : next - enc->minBytesPerChar;
 	  int myindex = nextScaffoldPart(parser);
 	  if (myindex < 0)
 	    return XML_ERROR_NO_MEMORY;
@@ -3981,7 +3999,7 @@ int setContext(XML_Parser parser, const XML_Char *context)
       context = s;
       poolDiscard(&tempPool);
     }
-    else if (*s == '=') {
+    else if (*s == XML_T('=')) {
       PREFIX *prefix;
       if (poolLength(&tempPool) == 0)
 	prefix = &dtd.defaultPrefix;
@@ -4650,12 +4668,12 @@ build_node (XML_Parser parser,
 	    int src_node,
 	    XML_Content *dest,
 	    XML_Content **contpos,
-	    char **strpos)
+	    XML_Char **strpos)     
 {
   dest->type = dtd.scaffold[src_node].type;
   dest->quant = dtd.scaffold[src_node].quant;
   if (dest->type == XML_CTYPE_NAME) {
-    const char *src;
+    const XML_Char *src;         
     dest->name = *strpos;
     src = dtd.scaffold[src_node].name;
     for (;;) {
@@ -4687,14 +4705,14 @@ build_model (XML_Parser parser)
 {
   XML_Content *ret;
   XML_Content *cpos;
-  char * str;
-  int allocsize = dtd.scaffCount * sizeof(XML_Content) + dtd.contentStringLen;
+  XML_Char * str;                             
+  int allocsize = dtd.scaffCount * sizeof(XML_Content) + (dtd.contentStringLen * sizeof(XML_Char)); 
   
   ret = MALLOC(allocsize);
   if (! ret)
     return 0;
 
-  str =  (char *) (&ret[dtd.scaffCount]);
+  str =  (XML_Char *) (&ret[dtd.scaffCount]);  
   cpos = &ret[1];
 
   build_node(parser, 0, ret, &cpos, &str);
