@@ -1837,6 +1837,11 @@ external entity reference handler set via <code><a href=
 DTD support, it returns
 <code>XML_ERROR_FEATURE_REQUIRES_XML_DTD</code>.  Otherwise, it
 returns <code>XML_ERROR_NONE</code>.</p>
+
+<p><b>Note:</b> For the purpose of checking WFC: Entity Declared, passing
+<code>useDTD == XML_TRUE</code> will make the parser behave as if
+the document had a DTD with an external subset. This holds true even if
+the external entity reference handler returns without action.</p>
 </div>
 
 <pre class="fcndec" id="XML_SetReturnNSTriplet">
