@@ -31,7 +31,6 @@ your version of this file under either the MPL or the GPL.
 /* FIXME
 need current base rather than dtd.base
 check parse state at end of outer param entity
-implied default att must prevent later non-implied att
 default handler
 eventPtr incorrectly set within internal entities
  */
@@ -3047,11 +3046,15 @@ reportDefault(XML_Parser parser, const ENCODING *enc, const char *s, const char 
 static int
 defineAttribute(ELEMENT_TYPE *type, ATTRIBUTE_ID *attId, int isCdata, const XML_Char *value)
 {
-  int i;
   DEFAULT_ATTRIBUTE *att;
-  for (i = 0; i < type->nDefaultAtts; i++)
-    if (attId == type->defaultAtts[i].id)
-      return 1;
+  if (value) {
+    /* The handling of default attributes gets messed up if we have
+       a default which duplicates a non-default. */
+    int i;
+    for (i = 0; i < type->nDefaultAtts; i++)
+      if (attId == type->defaultAtts[i].id)
+	return 1;
+  }
   if (type->nDefaultAtts == type->allocDefaultAtts) {
     if (type->allocDefaultAtts == 0) {
       type->allocDefaultAtts = 8;
