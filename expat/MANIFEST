@@ -40,6 +40,7 @@ lib/winconfig.h
 sample/Makefile.in
 sample/build.bat
 sample/elements.c
+win32/expat.dsw
 xmlwf/Makefile.in
 xmlwf/codepage.c
 xmlwf/codepage.h
