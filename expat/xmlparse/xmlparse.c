@@ -61,8 +61,6 @@ typedef struct {
   STRING_POOL pool;
   int containsRef;
   int standalone;
-  char *groupConnector;
-  size_t groupSize;
 } DTD;
 
 typedef enum XML_Error Processor(XML_Parser parser,
@@ -157,6 +155,8 @@ typedef struct {
   POSITION position;
   long errorByteIndex;
   STRING_POOL tempPool;
+  char *groupConnector;
+  size_t groupSize;
 } Parser;
 
 #define userData (((Parser *)parser)->userData)
@@ -188,6 +188,8 @@ typedef struct {
 #define atts (((Parser *)parser)->atts)
 #define attsSize (((Parser *)parser)->attsSize)
 #define tempPool (((Parser *)parser)->tempPool)
+#define groupConnector (((Parser *)parser)->groupConnector)
+#define groupSize (((Parser *)parser)->groupSize)
 
 XML_Parser XML_ParserCreate(const char *encodingName)
 {
@@ -219,6 +221,8 @@ XML_Parser XML_ParserCreate(const char *encodingName)
   tagStackPtr = tagStack;
   attsSize = 1024;
   atts = malloc(attsSize * sizeof(ATTRIBUTE));
+  groupSize = 0;
+  groupConnector = 0;
   poolInit(&tempPool);
   if (!dtdInit(&dtd) || !atts || !tagStack) {
     XML_ParserFree(parser);
@@ -235,6 +239,7 @@ void XML_ParserFree(XML_Parser parser)
   dtdDestroy(&dtd);
   free((void *)tagStack);
   free((void *)atts);
+  free(groupConnector);
   free(buffer);
   free(parser);
 }
@@ -975,29 +980,29 @@ prologProcessor(XML_Parser parser,
 	return XML_ERROR_SYNTAX;
       }
     case XML_ROLE_GROUP_OPEN:
-      if (prologState.level >= dtd.groupSize) {
-	if (dtd.groupSize)
-	  dtd.groupConnector = realloc(dtd.groupConnector, dtd.groupSize *= 2);
+      if (prologState.level >= groupSize) {
+	if (groupSize)
+	  groupConnector = realloc(groupConnector, groupSize *= 2);
 	else
-	  dtd.groupConnector = malloc(dtd.groupSize = 32);
-	if (!dtd.groupConnector)
+	  groupConnector = malloc(groupSize = 32);
+	if (!groupConnector)
 	  return XML_ERROR_NO_MEMORY;
       }
-      dtd.groupConnector[prologState.level] = 0;
+      groupConnector[prologState.level] = 0;
       break;
     case XML_ROLE_GROUP_SEQUENCE:
-      if (dtd.groupConnector[prologState.level] == '|') {
+      if (groupConnector[prologState.level] == '|') {
 	*nextPtr = s;
 	return XML_ERROR_SYNTAX;
       }
-      dtd.groupConnector[prologState.level] = ',';
+      groupConnector[prologState.level] = ',';
       break;
     case XML_ROLE_GROUP_CHOICE:
-      if (dtd.groupConnector[prologState.level] == ',') {
+      if (groupConnector[prologState.level] == ',') {
 	*nextPtr = s;
 	return XML_ERROR_SYNTAX;
       }
-      dtd.groupConnector[prologState.level] = '|';
+      groupConnector[prologState.level] = '|';
       break;
     case XML_ROLE_NONE:
       switch (tok) {
@@ -1330,8 +1335,6 @@ static int dtdInit(DTD *p)
   hashTableInit(&(p->elementTypes));
   hashTableInit(&(p->attributeIds));
   p->containsRef = 0;
-  p->groupSize = 0;
-  p->groupConnector = 0;
   return 1;
 }
 
@@ -1342,7 +1345,6 @@ static void dtdDestroy(DTD *p)
   hashTableDestroy(&(p->paramEntities));
   hashTableDestroy(&(p->elementTypes));
   hashTableDestroy(&(p->attributeIds));
-  free(p->groupConnector);
 }
 
 static
