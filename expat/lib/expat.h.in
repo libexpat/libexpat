@@ -9,7 +9,7 @@ See the file COPYING for copying permission.
 #include <stdlib.h>
 
 #ifndef XMLPARSEAPI
-#  ifdef __declspec
+#  if defined(__declspec) && !defined(__BEOS__)
 #    define XMLPARSEAPI __declspec(dllimport)
 #  else
 #    define XMLPARSEAPI /* nothing */
