@@ -587,7 +587,11 @@ showVersion(XML_Char *prog)
   XML_Char *s = prog;
   XML_Char ch;
   while ((ch = *s) != 0) {
-    if (ch == '/' || ch == '\\')
+    if (ch == '/'
+#ifdef WIN32
+        || ch == '\\'
+#endif
+        )
       prog = s + 1;
     ++s;
   }
