@@ -34,7 +34,7 @@ Contributor(s):
 #define INIT_SIZE 64
 
 static
-int keyeq(const XML_Char *s1, const XML_Char *s2)
+int keyeq(KEY s1, KEY s2)
 {
   for (; *s1 == *s2; s1++, s2++)
     if (*s1 == 0)
