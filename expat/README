@@ -1,5 +1,5 @@
 
-                        Expat, Release 1.95.4
+                        Expat, Release 1.95.5
 
 This is Expat, a C library for parsing XML, written by James Clark.
 Expat is a stream-oriented XML parser.  This means that you register
@@ -103,10 +103,10 @@ distribution.
 The homepage for this project is http://www.libexpat.org/.  There
 are links there to connect you to the bug reports page.  If you need
 to report a bug when you don't have access to a browser, you may also
-send a bug report by email to expat-bugs@lists.sourceforge.net.
+send a bug report by email to expat-bugs@mail.libexpat.org.
 
 Discussion related to the direction of future expat development takes
-place on expat-discuss@lists.sourceforge.net.  Archives of this list
-may be found at:
+place on expat-discuss@mail.libexpat.org.  Archives of this list and
+other Expat-related lists may be found at:
 
-        http://sourceforge.net/mailarchive/forum.php?forum_id=6385
+        http://mail.libexpat.org/mailman-21/listinfo/
