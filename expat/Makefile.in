@@ -151,8 +151,8 @@ examples/outline: examples/outline.o $(LIBRARY)
 tests/chardata.o: tests/chardata.c tests/chardata.h
 tests/minicheck.o: tests/minicheck.c tests/minicheck.h
 tests/runtests.o: tests/runtests.c tests/chardata.h
-tests/runtests: tests/runtests.o tests/chardata.o @MINICHECK_OBJECT@ $(LIBRARY)
-	$(LINK_EXE) $^ @CHECK_LIBRARY@
+tests/runtests: tests/runtests.o tests/chardata.o tests/minicheck.o $(LIBRARY)
+	$(LINK_EXE) $^
 
 tests/xmlts.zip:
 	wget --output-document=tests/xmlts.zip \

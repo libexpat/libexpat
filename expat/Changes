@@ -1,3 +1,7 @@
+Release 1.95.9 TBD
+        - We no longer use the "check" library for C unit testing; we
+          always use the (partial) internal implementation of the API.
+
 Release 1.95.8 Fri Jul 23 2004
         - Major new feature: suspend/resume.  Handlers can now request
           that a parse be suspended for later resumption or aborted

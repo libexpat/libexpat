@@ -8,12 +8,6 @@
 #include <expat_config.h>
 #endif
 
-#ifdef HAVE_CHECK_H
-#include <check.h>
-#else
-#include "minicheck.h"
-#endif
-
 #include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -21,6 +15,7 @@
 
 #include "expat.h"
 #include "chardata.h"
+#include "minicheck.h"
 
 
 static XML_Parser parser;

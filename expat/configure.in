@@ -103,14 +103,6 @@ else
 fi
 AC_SUBST(FILEMAP)
 
-dnl Only needed for regression tests:
-AC_SUBST(MINICHECK_OBJECT)
-AC_SUBST(CHECK_LIBRARY)
-AC_CHECK_HEADERS(check.h)
-AC_CHECK_HEADER(check.h,
-                CHECK_LIBRARY=-lcheck,
-                MINICHECK_OBJECT=tests/minicheck.o)
-
 dnl Some basic configuration:
 AC_DEFINE([XML_NS], 1,
           [Define to make XML Namespaces functionality available.])
