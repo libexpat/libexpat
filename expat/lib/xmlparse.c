@@ -230,13 +230,13 @@ typedef struct {
   STRING_POOL entityValuePool;
   /* false once a parameter entity reference has been skipped */
   XML_Bool keepProcessing;
-  /* indicates if external PE has been read */
-  XML_Bool paramEntityRead;
   /* true once an internal or external PE reference has been encountered;
      any external subset is considered an external PE reference */
   XML_Bool hasParamEntityRefs;
   XML_Bool standalone;
 #ifdef XML_DTD
+  /* indicates if external PE has been read */
+  XML_Bool paramEntityRead;
   HASH_TABLE paramEntities;
 #endif /* XML_DTD */
   PREFIX defaultPrefix;
@@ -490,6 +490,7 @@ typedef struct {
   XML_Parser m_parentParser;
 #ifdef XML_DTD
   XML_Bool m_isParamEntity;
+  XML_Bool m_useForeignDTD;
   enum XML_ParamEntityParsing m_paramEntityParsing;
 #endif
 } Parser;
@@ -590,8 +591,11 @@ typedef struct {
 #define parentParser (((Parser *)parser)->m_parentParser)
 #ifdef XML_DTD
 #define isParamEntity (((Parser *)parser)->m_isParamEntity)
+#define useForeignDTD (((Parser *)parser)->m_useForeignDTD)
 #define paramEntityParsing (((Parser *)parser)->m_paramEntityParsing)
 #endif /* XML_DTD */
+
+#define parsing (processor != prologInitProcessor)
 
 #ifdef _MSC_VER
 #ifdef _DEBUG
@@ -777,6 +781,7 @@ parserInit(XML_Parser parser, const XML_Char *encodingName)
   parentParser = NULL;
 #ifdef XML_DTD
   isParamEntity = XML_FALSE;
+  useForeignDTD = XML_FALSE;
   paramEntityParsing = XML_PARAM_ENTITY_PARSING_NEVER;
 #endif
 }
@@ -824,6 +829,9 @@ XML_ParserReset(XML_Parser parser, const XML_Char *encodingName)
 int
 XML_SetEncoding(XML_Parser parser, const XML_Char *encodingName)
 {
+  /* block after XML_Parse()/XML_ParseBuffer() has been called */
+  if (parsing)
+    return 0;
   if (encodingName == NULL)
     protocolEncodingName = NULL;
   else {
@@ -1013,7 +1021,22 @@ XML_UseParserAsHandlerArg(XML_Parser parser)
 }
 
 void
-XML_SetReturnNSTriplet(XML_Parser parser, int do_nst) {
+XML_UseForeignDTD(XML_Parser parser, XML_Bool useDTD)
+{
+#ifdef XML_DTD
+  /* block after XML_Parse()/XML_ParseBuffer() has been called */
+  if (parsing)
+    return;
+  useForeignDTD = useDTD;
+#endif
+}
+
+void
+XML_SetReturnNSTriplet(XML_Parser parser, int do_nst)
+{
+  /* block after XML_Parse()/XML_ParseBuffer() has been called */
+  if (parsing)
+    return;
   ns_triplets = do_nst ? XML_TRUE : XML_FALSE;
 }
 
@@ -1261,13 +1284,16 @@ XML_SetXmlDeclHandler(XML_Parser parser,
 
 int
 XML_SetParamEntityParsing(XML_Parser parser,
-                          enum XML_ParamEntityParsing parsing)
+                          enum XML_ParamEntityParsing peParsing)
 {
+  /* block after XML_Parse()/XML_ParseBuffer() has been called */
+  if (parsing) 
+    return 0;
 #ifdef XML_DTD
-  paramEntityParsing = parsing;
+  paramEntityParsing = peParsing;
   return 1;
 #else
-  return parsing == XML_PARAM_ENTITY_PARSING_NEVER;
+  return peParsing == XML_PARAM_ENTITY_PARSING_NEVER;
 #endif
 }
 
@@ -3107,6 +3133,9 @@ doProlog(XML_Parser parser,
       break;
 #endif /* XML_DTD */
     case XML_ROLE_DOCTYPE_PUBLIC_ID:
+#ifdef XML_DTD
+      useForeignDTD = XML_FALSE;
+#endif /* XML_DTD */
       dtd.hasParamEntityRefs = XML_TRUE;
       if (startDoctypeDeclHandler) {
         doctypePubid = poolStoreString(&tempPool, enc,
@@ -3149,41 +3178,73 @@ doProlog(XML_Parser parser,
         poolClear(&tempPool);
         handleDefault = XML_FALSE;
       }
-      /* doctypeSysid will be non-NULL in the case of
+      /* doctypeSysid will be non-NULL in the case of a previous
          XML_ROLE_DOCTYPE_SYSTEM_ID, even if startDoctypeDeclHandler
          was not set, indicating an external subset
       */
-      if (doctypeSysid) {
-        dtd.paramEntityRead = XML_FALSE;
-#ifdef XML_DTD
+#ifdef XML_DTD 
+      if (doctypeSysid || useForeignDTD) {
+        dtd.hasParamEntityRefs = XML_TRUE; /* when docTypeSysid == NULL */
         if (paramEntityParsing && externalEntityRefHandler) {
           ENTITY *entity = (ENTITY *)lookup(&dtd.paramEntities,
                                             externalSubsetName,
-                                            0);
+                                            sizeof(ENTITY));
+          if (!entity)
+            return XML_ERROR_NO_MEMORY;
+          if (useForeignDTD) 
+            entity->base = curBase;
+          dtd.paramEntityRead = XML_FALSE;
           if (!externalEntityRefHandler(externalEntityRefHandlerArg,
                                         0,
                                         entity->base,
                                         entity->systemId,
                                         entity->publicId))
             return XML_ERROR_EXTERNAL_ENTITY_HANDLING;
-          if (!dtd.paramEntityRead)
-            dtd.keepProcessing = dtd.standalone;
+          if (dtd.paramEntityRead &&
+              !dtd.standalone &&
+              notStandaloneHandler &&
+              !notStandaloneHandler(handlerArg))
+            return XML_ERROR_NOT_STANDALONE;
+          /* end of DTD - no need to update dtd.keepProcessing */
         }
-        else
-          dtd.keepProcessing = dtd.standalone;
-#endif /* XML_DTD */
-        if (dtd.paramEntityRead
-            && !dtd.standalone
-            && notStandaloneHandler
-            && !notStandaloneHandler(handlerArg))
-          return XML_ERROR_NOT_STANDALONE;
+        useForeignDTD = XML_FALSE;
       }
+#endif /* XML_DTD */
       if (endDoctypeDeclHandler) {
         endDoctypeDeclHandler(handlerArg);
         handleDefault = XML_FALSE;
       }
       break;
     case XML_ROLE_INSTANCE_START:
+#ifdef XML_DTD
+      /* if there is no DOCTYPE declaration then now is the 
+         last chance to read the foreign DTD
+      */
+      if (useForeignDTD) { 
+        dtd.hasParamEntityRefs = XML_TRUE;
+        if (paramEntityParsing && externalEntityRefHandler) {
+          ENTITY *entity = (ENTITY *)lookup(&dtd.paramEntities,
+                                            externalSubsetName,
+                                            sizeof(ENTITY));
+          if (!entity)
+            return XML_ERROR_NO_MEMORY;
+          entity->base = curBase;
+          dtd.paramEntityRead = XML_FALSE;
+          if (!externalEntityRefHandler(externalEntityRefHandlerArg,
+                                        0,
+                                        entity->base,
+                                        entity->systemId,
+                                        entity->publicId))
+            return XML_ERROR_EXTERNAL_ENTITY_HANDLING;
+          if (dtd.paramEntityRead &&
+              !dtd.standalone &&
+              notStandaloneHandler &&
+              !notStandaloneHandler(handlerArg))
+            return XML_ERROR_NOT_STANDALONE;
+          /* end of DTD - no need to update dtd.keepProcessing */
+        }
+      }  
+#endif /* XML_DTD */
       processor = contentProcessor;
       return contentProcessor(parser, s, end, nextPtr);
     case XML_ROLE_ATTLIST_ELEMENT_NAME:
@@ -3340,6 +3401,9 @@ doProlog(XML_Parser parser,
       }
       break;
     case XML_ROLE_DOCTYPE_SYSTEM_ID:
+#ifdef XML_DTD
+      useForeignDTD = XML_FALSE;
+#endif /* XML_DTD */
       dtd.hasParamEntityRefs = XML_TRUE;
       if (startDoctypeDeclHandler) {
         doctypeSysid = poolStoreString(&tempPool, enc,
@@ -3350,8 +3414,8 @@ doProlog(XML_Parser parser,
         poolFinish(&tempPool);
         handleDefault = XML_FALSE;
       }
-      else
 #ifdef XML_DTD
+      else
         /* use externalSubsetName to make doctypeSysid non-NULL
            for the case where no startDoctypeDeclHandler is set */
         doctypeSysid = externalSubsetName;
@@ -3647,7 +3711,6 @@ doProlog(XML_Parser parser,
           role == XML_ROLE_INNER_PARAM_ENTITY_REF)
         return XML_ERROR_PARAM_ENTITY_REF;
       dtd.hasParamEntityRefs = XML_TRUE;
-      dtd.paramEntityRead = XML_FALSE;
       if (!paramEntityParsing)
         dtd.keepProcessing = dtd.standalone;
       else {
@@ -3693,6 +3756,7 @@ doProlog(XML_Parser parser,
           break;
         }
         if (externalEntityRefHandler) {
+          dtd.paramEntityRead = XML_FALSE;
           entity->open = XML_TRUE;
           if (!externalEntityRefHandler(externalEntityRefHandlerArg,
                                         0,
@@ -3704,17 +3768,20 @@ doProlog(XML_Parser parser,
           }
           entity->open = XML_FALSE;
           handleDefault = XML_FALSE;
-          if (!dtd.paramEntityRead)
+          if (!dtd.paramEntityRead) {
             dtd.keepProcessing = dtd.standalone;
+            break;
+          }
         }
-        else
+        else {
           dtd.keepProcessing = dtd.standalone;
+          break;
+        }
       }
 #endif /* XML_DTD */
-      if (dtd.paramEntityRead
-          && !dtd.standalone
-          && notStandaloneHandler
-          && !notStandaloneHandler(handlerArg))
+      if (!dtd.standalone &&
+          notStandaloneHandler &&
+          !notStandaloneHandler(handlerArg))
         return XML_ERROR_NOT_STANDALONE;
       break;
 
@@ -4696,23 +4763,24 @@ dtdInit(DTD *p, XML_Parser parser)
   hashTableInit(&(p->elementTypes), ms);
   hashTableInit(&(p->attributeIds), ms);
   hashTableInit(&(p->prefixes), ms);
-  p->keepProcessing = XML_TRUE;
-  p->paramEntityRead = XML_FALSE;
-  p->hasParamEntityRefs = XML_FALSE;
-  p->standalone = XML_FALSE;
 #ifdef XML_DTD
+  p->paramEntityRead = XML_FALSE;
   hashTableInit(&(p->paramEntities), ms);
 #endif /* XML_DTD */
   p->defaultPrefix.name = NULL;
   p->defaultPrefix.binding = NULL;
 
   p->in_eldecl = XML_FALSE;
-  p->scaffIndex = 0;
-  p->scaffLevel = 0;
+  p->scaffIndex = NULL;
   p->scaffold = NULL;
-  p->contentStringLen = 0;
+  p->scaffLevel = 0;
   p->scaffSize = 0;
   p->scaffCount = 0;
+  p->contentStringLen = 0;
+
+  p->keepProcessing = XML_TRUE;
+  p->hasParamEntityRefs = XML_FALSE;
+  p->standalone = XML_FALSE;
 }
 
 #ifdef XML_DTD
@@ -4742,6 +4810,7 @@ dtdReset(DTD *p, XML_Parser parser)
   }
   hashTableClear(&(p->generalEntities));
 #ifdef XML_DTD
+  p->paramEntityRead = XML_FALSE;
   hashTableClear(&(p->paramEntities));
 #endif /* XML_DTD */
   hashTableClear(&(p->elementTypes));
@@ -4751,6 +4820,10 @@ dtdReset(DTD *p, XML_Parser parser)
 #ifdef XML_DTD
   poolClear(&(p->entityValuePool));
 #endif /* XML_DTD */
+  p->defaultPrefix.name = NULL;
+  p->defaultPrefix.binding = NULL;
+
+  p->in_eldecl = XML_FALSE;
   if (p->scaffIndex) {
     FREE(p->scaffIndex);
     p->scaffIndex = NULL;
@@ -4759,6 +4832,14 @@ dtdReset(DTD *p, XML_Parser parser)
     FREE(p->scaffold);
     p->scaffold = NULL;
   }
+  p->scaffLevel = 0;
+  p->scaffSize = 0;
+  p->scaffCount = 0;
+  p->contentStringLen = 0;
+
+  p->keepProcessing = XML_TRUE;
+  p->hasParamEntityRefs = XML_FALSE;
+  p->standalone = XML_FALSE;
 }
 
 static void
@@ -4907,10 +4988,10 @@ dtdCopy(DTD *newDtd, const DTD *oldDtd, XML_Parser parser)
                        &(newDtd->pool),
                        &(oldDtd->paramEntities), parser))
       return 0;
+  newDtd->paramEntityRead = oldDtd->paramEntityRead;
 #endif /* XML_DTD */
 
   newDtd->keepProcessing = oldDtd->keepProcessing;
-  newDtd->paramEntityRead = oldDtd->paramEntityRead;
   newDtd->hasParamEntityRefs = oldDtd->hasParamEntityRefs;
   newDtd->standalone = oldDtd->standalone;
 

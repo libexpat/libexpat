@@ -195,7 +195,8 @@ XML_ParserCreate_MM(const XML_Char *encoding,
    valuable when memory allocation overhead is disproportionatly high,
    such as when a large number of small documnents need to be parsed.
    All handlers are cleared from the parser, except for the 
-   unknownEncodingHandler.
+   unknownEncodingHandler. The parser's external state is re-initialized
+   except for the values of ns and ns_triplets.
 
    Added in Expat 1.95.3.
 */
@@ -332,11 +333,14 @@ typedef void (*XML_StartNamespaceDeclHandler)(void *userData,
 typedef void (*XML_EndNamespaceDeclHandler)(void *userData,
                                             const XML_Char *prefix);
 
-/* This is called if the document is not standalone (it has an
+/* This is called if the document is not standalone, that is, it has an
    external subset or a reference to a parameter entity, but does not
-   have standalone="yes"). If this handler returns 0, then processing
+   have standalone="yes". If this handler returns 0, then processing
    will not continue, and the parser will return a
    XML_ERROR_NOT_STANDALONE error.
+   If parameter entity parsing is enabled, then in addition to the
+   conditions above this handler will only be called if the referenced
+   entity was actually read.
 */
 typedef int (*XML_NotStandaloneHandler)(void *userData);
 
@@ -594,8 +598,11 @@ XML_DefaultCurrent(XML_Parser parser);
    + sep + local_name + sep + prefix.
 
    If do_nst is zero, then namespace information is returned in the
-   default manner (URI + sep + local_name) whether or not the names
+   default manner (URI + sep + local_name) whether or not the name
    has a prefix.
+
+   Note: Calling XML_SetReturnNSTriplet after XML_Parse or
+     XML_ParseBuffer has no effect.
 */
 
 XMLPARSEAPI(void)
@@ -609,8 +616,10 @@ XML_SetUserData(XML_Parser parser, void *userData);
 #define XML_GetUserData(parser) (*(void **)(parser))
 
 /* This is equivalent to supplying an encoding argument to
-   XML_ParserCreate. It must not be called after XML_Parse or
-   XML_ParseBuffer.
+   XML_ParserCreate. On success XML_SetEncoding returns non-zero,
+   zero otherwise.
+   Note: Calling XML_SetEncoding after XML_Parse or XML_ParseBuffer
+     has no effect and returns zero.
 */
 XMLPARSEAPI(int)
 XML_SetEncoding(XML_Parser parser, const XML_Char *encoding);
@@ -621,6 +630,22 @@ XML_SetEncoding(XML_Parser parser, const XML_Char *encoding);
 */
 XMLPARSEAPI(void)
 XML_UseParserAsHandlerArg(XML_Parser parser);
+
+/* If useDTD == XML_TRUE is passed to this function, then the parser
+   will assume that there is an external subset, even if none is
+   specified in the document. In such a case the parser will call the
+   externalEntityRefHandler with a value of NULL for the systemId
+   argument (the publicId and context arguments will be NULL as well).
+   Note: If this function is called, then this must be done before
+     the first call to XML_Parse or XML_ParseBuffer, since it will
+     have no effect after that.
+   Note: If the document does not have a DOCTYPE declaration at all,
+     then startDoctypeDeclHandler and endDoctypeDeclHandler will not
+     be called, despite an external subset being parsed.
+*/
+XMLPARSEAPI(void)
+XML_UseForeignDTD(XML_Parser parser, XML_Bool useDTD);
+
 
 /* Sets the base to be used for resolving relative URIs in system
    identifiers in declarations.  Resolving relative identifiers is
@@ -730,11 +755,13 @@ enum XML_ParamEntityParsing {
    XML_ExternalEntityParserCreate has been called to create the parser
    for the external parameter entity (context must be 0 for this
    call), it is illegal to make any calls on the old parser until
-   XML_ParserFree has been called on the newly created parser.  If the
-   library has been compiled without support for parameter entity
-   parsing (ie without XML_DTD being defined), then
+   XML_ParserFree has been called on the newly created parser.
+   If the library has been compiled without support for parameter
+   entity parsing (ie without XML_DTD being defined), then
    XML_SetParamEntityParsing will return 0 if parsing of parameter
    entities is requested; otherwise it will return non-zero.
+   Note: If XML_SetParamEntityParsing is called after XML_Parse or
+      XML_ParseBuffer, then it has no effect and will always return 0.
 */
 XMLPARSEAPI(int)
 XML_SetParamEntityParsing(XML_Parser parser,
