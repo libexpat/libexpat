@@ -69,7 +69,11 @@ AC_HEADER_STDC
 AC_CHECK_HEADERS(fcntl.h unistd.h)
 
 dnl Checks for typedefs, structures, and compiler characteristics.
-AC_C_BIGENDIAN
+
+dnl Note: Avoid using AC_C_BIGENDIAN because it does not
+dnl work in a cross compile.
+AC_C_BIGENDIAN_CROSS
+
 AC_C_CONST
 AC_TYPE_OFF_T
 AC_TYPE_SIZE_T
