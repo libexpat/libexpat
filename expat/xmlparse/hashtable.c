@@ -87,3 +87,20 @@ void hashTableInit(HASH_TABLE *p)
   p->used = 0;
   p->v = 0;
 }
+
+void hashTableIterInit(HASH_TABLE_ITER *iter, const HASH_TABLE *table)
+{
+  iter->p = table->v;
+  iter->end = iter->p + table->size;
+}
+
+NAMED *hashTableIterNext(HASH_TABLE_ITER *iter)
+{
+  while (iter->p != iter->end) {
+    NAMED *tem = *(iter->p)++;
+    if (tem)
+      return tem;
+  }
+  return 0;
+}
+
