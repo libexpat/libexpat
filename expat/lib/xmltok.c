@@ -1,6 +1,6 @@
 /*
 Copyright (c) 1998, 1999 Thai Open Source Software Center Ltd
-See the file copying.txt for copying permission.
+See the file COPYING for copying permission.
 */
 
 #include <config.h>
@@ -1020,6 +1020,7 @@ int doParseXmlDecl(const ENCODING *(*encodingFinder)(const ENCODING *,
 		   const char *end,
 		   const char **badPtr,
 		   const char **versionPtr,
+		   const char **versionEndPtr,
 		   const char **encodingName,
 		   const ENCODING **encoding,
 		   int *standalone)
@@ -1042,6 +1043,8 @@ int doParseXmlDecl(const ENCODING *(*encodingFinder)(const ENCODING *,
   else {
     if (versionPtr)
       *versionPtr = val;
+    if (versionEndPtr)
+      *versionEndPtr = ptr;
     if (!parsePseudoAttribute(enc, ptr, end, &name, &nameEnd, &val, &ptr)) {
       *badPtr = ptr;
       return 0;

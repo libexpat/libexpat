@@ -78,7 +78,7 @@ VERSION = @VERSION@
 
 SUBDIRS = lib
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
-CONFIG_HEADERS = @CONFIG_HEADERS@
+CONFIG_HEADERS = config.h:config.hin
 DIST_COMMON =  ChangeLog COPYING README Makefile.in aclocal.m4 config.hin \
                configure configure.in conftools doc examples xmlwf
 
@@ -108,17 +108,18 @@ config.h: config.hin config.status
 	$(SHELL) ./config.status
 
 $(SUBDIRS): config.status
-	$(MAKE) -C $@
+	cd $@; $(MAKE)
 
 
 clean:
 	@list='$(SUBDIRS)'; for dir in $$list; do \
-	  $(MAKE) -C $$dir clean; \
+	  cd $$dir; $(MAKE) clean; cd ..; \
 	done
+	rm -f core *~
 
 distclean:
 	@list='$(SUBDIRS)'; for dir in $$list; do \
-	  $(MAKE) -C $$dir distclean; \
+	  cd $$dir; $(MAKE) distclean; cd ..; \
 	done
 	rm -f config.h config.status libtool
 
@@ -130,7 +131,7 @@ distdir: $(DIST_COMMON) clean
 	test -d $(DISTDIR) || mkdir $(DISTDIR)
 	@list='$(SUBDIRS)'; for dir in $$list; do \
 	  test -d $(DISTDIR)/$$dir || mkdir $(DISTDIR)/$$dir; \
-	  $(MAKE) -C $$dir distdir; \
+	  cd $$dir; $(MAKE) distdir; cd ..; \
 	done
 	@for file in $(DIST_COMMON); do \
 	  if test -d $$file; then \
@@ -149,10 +150,10 @@ dist: $(DISTRIBUTION)
 
 install:
 	@list='$(SUBDIRS)'; for dir in $$list; do \
-	  $(MAKE) -C $$dir install; \
+	  cd $$dir; $(MAKE) install; cd ..; \
 	done
 
 uninstall:
 	@list='$(SUBDIRS)'; for dir in $$list; do \
-	  $(MAKE) -C $$dir uninstall; \
+	  cd $$dir; $(MAKE) uninstall; cd ..; \
 	done

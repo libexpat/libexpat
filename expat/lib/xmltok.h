@@ -1,6 +1,6 @@
 /*
 Copyright (c) 1998, 1999 Thai Open Source Software Center Ltd
-See the file copying.txt for copying permission.
+See the file COPYING for copying permission.
 */
 
 #ifndef XmlTok_INCLUDED
@@ -260,6 +260,7 @@ int XMLTOKAPI XmlParseXmlDecl(int isGeneralTextEntity,
 	  		      const char *end,
 			      const char **badPtr,
 			      const char **versionPtr,
+			      const char **versionEndPtr,
 			      const char **encodingNamePtr,
 			      const ENCODING **namedEncodingPtr,
 			      int *standalonePtr);
@@ -283,6 +284,7 @@ int XMLTOKAPI XmlParseXmlDeclNS(int isGeneralTextEntity,
 	  		        const char *end,
 			        const char **badPtr,
 			        const char **versionPtr,
+				const char **versionEndPtr,
 			        const char **encodingNamePtr,
 			        const ENCODING **namedEncodingPtr,
 			        int *standalonePtr);

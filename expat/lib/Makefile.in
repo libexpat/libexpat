@@ -133,8 +133,8 @@ $(top_builddir)/config.h: $(top_builddir)/config.hin
 	cd $(top_builddir) && $(MAKE) config.h
 
 clean:
-	rm -f $(LIBRARY) *.o *.lo
-	rm -rf .libs _libs
+	rm -f $(LIBRARY) *.o *.lo *~
+	rm -rf .libs _libs .deps
 
 distclean: clean
 
