@@ -75,7 +75,7 @@ extraclean: distclean
 	rm -f conftools/ltconfig conftools/ltmain.sh
 
 check: tests/runtests
-	@cd tests && ./runtests
+	tests/runtests
 
 install: xmlwf/xmlwf lib/$(LIBRARY) lib/$(APIHEADER)
 	$(mkinstalldirs) $(bindir) $(libdir) $(includedir)
