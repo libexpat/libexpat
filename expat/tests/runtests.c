@@ -369,23 +369,36 @@ START_TEST(test_latin1_umlauts)
 }
 END_TEST
 
-/* Regression test for SF bug #422239 (maybe).
-   It's not clear that this reproduces enough of the context
-   of the reported bug.
-*/
-START_TEST(test_line_count)
-{
+/* Regression test #1 for SF bug #653180. */
+START_TEST(test_line_number_after_parse)
+{  
     char *text =
-        "<e>\n"
-        "  <e/>\n"
-        "</e>";
+        "<tag>\n"
+        "\n"
+        "\n</tag>";
     int lineno;
-    if (XML_Parse(parser, text, strlen(text), 1) == XML_STATUS_ERROR)
+    if (XML_Parse(parser, text, strlen(text), 0) == XML_STATUS_ERROR)
         xml_failure(parser);
     lineno = XML_GetCurrentLineNumber(parser);
-    if (lineno != 3) {
+    if (lineno != 4) {
         char buffer[100];
-        sprintf(buffer, "expected 3 lines, saw %d", lineno);
+        sprintf(buffer, "expected 4 lines, saw %d", lineno);
+        fail(buffer);
+    }
+}
+END_TEST
+
+/* Regression test #2 for SF bug #653180. */
+START_TEST(test_column_number_after_parse)
+{
+    char *text = "<tag></tag>";
+    int colno;
+    if (XML_Parse(parser, text, strlen(text), 0) == XML_STATUS_ERROR)
+        xml_failure(parser);
+    colno = XML_GetCurrentColumnNumber(parser);
+    if (colno != 11) {
+        char buffer[100];
+        sprintf(buffer, "expected 11 columns, saw %d", colno);
         fail(buffer);
     }
 }
@@ -1034,7 +1047,8 @@ make_basic_suite(void)
     tcase_add_test(tc_basic, test_french_latin1);
     tcase_add_test(tc_basic, test_french_utf8);
     tcase_add_test(tc_basic, test_utf8_false_rejection);
-    tcase_add_test(tc_basic, test_line_count);
+    tcase_add_test(tc_basic, test_line_number_after_parse);
+    tcase_add_test(tc_basic, test_column_number_after_parse);
     tcase_add_test(tc_basic, test_really_long_lines);
     tcase_add_test(tc_basic, test_end_element_events);
     tcase_add_test(tc_basic, test_attr_whitespace_normalization);
