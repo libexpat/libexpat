@@ -1050,6 +1050,9 @@ prologProcessor(XML_Parser parser,
       }
       groupConnector[prologState.level] = '|';
       break;
+    case XML_ROLE_PARAM_ENTITY_REF:
+      dtd.complete = 0;
+      break;
     case XML_ROLE_NONE:
       switch (tok) {
       case XML_TOK_PI:
