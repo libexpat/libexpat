@@ -854,10 +854,8 @@ doContent(XML_Parser parser,
 			       (char *)(entity->textPtr + entity->textLen),
 			       0);
 	    entity->open = 0;
-	    if (result) {
-	      *eventPP = s;
+	    if (result)
 	      return result;
-	    }
 	  }
 	  else if (externalEntityRefHandler) {
 	    const XML_Char *openEntityNames;
@@ -866,10 +864,8 @@ doContent(XML_Parser parser,
 	    entity->open = 0;
 	    if (!openEntityNames)
 	      return XML_ERROR_NO_MEMORY;
-	    if (!externalEntityRefHandler(parser, openEntityNames, dtd.base, entity->systemId, entity->publicId)) {
-	      *eventPP = s;
+	    if (!externalEntityRefHandler(parser, openEntityNames, dtd.base, entity->systemId, entity->publicId))
 	      return XML_ERROR_EXTERNAL_ENTITY_HANDLING;
-	    }
 	  }
 	}
 	break;
@@ -1127,7 +1123,8 @@ static enum XML_Error storeAtts(XML_Parser parser, const ENCODING *enc,
     if (!attId)
       return XML_ERROR_NO_MEMORY;
     if ((attId->name)[-1]) {
-      eventPtr = atts[i].name;
+      if (enc == encoding)
+	eventPtr = atts[i].name;
       return XML_ERROR_DUPLICATE_ATTRIBUTE;
     }
     (attId->name)[-1] = 1;
@@ -1758,10 +1755,12 @@ appendAttributeValue(XML_Parser parser, const ENCODING *enc, int isCdata,
     case XML_TOK_NONE:
       return XML_ERROR_NONE;
     case XML_TOK_INVALID:
-      eventPtr = next;
+      if (enc == encoding)
+	eventPtr = next;
       return XML_ERROR_INVALID_TOKEN;
     case XML_TOK_PARTIAL:
-      eventPtr = ptr;
+      if (enc == encoding)
+	eventPtr = ptr;
       return XML_ERROR_INVALID_TOKEN;
     case XML_TOK_CHAR_REF:
       {
@@ -1769,7 +1768,8 @@ appendAttributeValue(XML_Parser parser, const ENCODING *enc, int isCdata,
 	int i;
 	int n = XmlCharRefNumber(enc, ptr);
 	if (n < 0) {
-	  eventPtr = ptr;
+	  if (enc == encoding)
+	    eventPtr = ptr;
       	  return XML_ERROR_BAD_CHAR_REF;
 	}
 	if (!isCdata
@@ -1778,7 +1778,8 @@ appendAttributeValue(XML_Parser parser, const ENCODING *enc, int isCdata,
 	  break;
 	n = XmlEncode(n, (ICHAR *)buf);
 	if (!n) {
-	  eventPtr = ptr;
+	  if (enc == encoding)
+	    eventPtr = ptr;
 	  return XML_ERROR_BAD_CHAR_REF;
 	}
 	for (i = 0; i < n; i++) {
@@ -1823,20 +1824,24 @@ appendAttributeValue(XML_Parser parser, const ENCODING *enc, int isCdata,
 	poolDiscard(&temp2Pool);
 	if (!entity) {
 	  if (dtd.complete) {
-	    eventPtr = ptr;
+	    if (enc == encoding)
+	      eventPtr = ptr;
 	    return XML_ERROR_UNDEFINED_ENTITY;
 	  }
 	}
 	else if (entity->open) {
-	  eventPtr = ptr;
+	  if (enc == encoding)
+	    eventPtr = ptr;
 	  return XML_ERROR_RECURSIVE_ENTITY_REF;
 	}
 	else if (entity->notation) {
-	  eventPtr = ptr;
+	  if (enc == encoding)
+	    eventPtr = ptr;
 	  return XML_ERROR_BINARY_ENTITY_REF;
 	}
 	else if (!entity->textPtr) {
-	  eventPtr = ptr;
+	  if (enc == encoding)
+	    eventPtr = ptr;
   	  return XML_ERROR_ATTRIBUTE_EXTERNAL_ENTITY_REF;
 	}
 	else {
@@ -1845,10 +1850,8 @@ appendAttributeValue(XML_Parser parser, const ENCODING *enc, int isCdata,
 	  entity->open = 1;
 	  result = appendAttributeValue(parser, internalEnc, isCdata, (char *)entity->textPtr, (char *)textEnd, pool);
 	  entity->open = 0;
-	  if (result) {
-	    eventPtr = ptr;
+	  if (result)
 	    return result;
-	  }
 	}
       }
       break;
