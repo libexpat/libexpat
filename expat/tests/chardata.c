@@ -14,8 +14,8 @@
 static int
 xmlstrlen(const XML_Char *s)
 {
-    assert(s != NULL);
     int len = 0;
+    assert(s != NULL);
     while (s[len] != 0)
         ++len;
     return len;
