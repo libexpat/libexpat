@@ -1543,7 +1543,6 @@ prologProcessor(XML_Parser parser,
 	  declEntity = 0;
 	  break;
 	}
-	eventPtr = s;
 	name = poolStoreString(&dtd.pool, encoding, s, next);
 	if (!name)
 	  return XML_ERROR_NO_MEMORY;
@@ -1571,7 +1570,6 @@ prologProcessor(XML_Parser parser,
       declNotationPublicId = 0;
       declNotationName = 0;
       if (notationDeclHandler) {
-	eventPtr = s;
 	declNotationName = poolStoreString(&tempPool, encoding, s, next);
 	if (!declNotationName)
 	  return XML_ERROR_NO_MEMORY;
@@ -1659,8 +1657,14 @@ prologProcessor(XML_Parser parser,
     case XML_ROLE_NONE:
       switch (tok) {
       case XML_TOK_PI:
+	eventPtr = s;
 	if (!reportProcessingInstruction(parser, encoding, s, next))
 	  return XML_ERROR_NO_MEMORY;
+	break;
+      case XML_TOK_DECL_OPEN:
+	/* Do this so that locations for unparsed entity decls and notation decls
+	   are correct. */
+	eventPtr = s;
 	break;
       }
       break;
