@@ -22,10 +22,18 @@ Contributor(s):
 #include <stddef.h>
 
 #ifdef XML_UNICODE
+
+#ifdef XML_UNICODE_WCHAR_T
 typedef const wchar_t *KEY;
-#else
+#else /* not XML_UNICODE_WCHAR_T */
+typedef const unsigned short *KEY;
+#endif /* not XML_UNICODE_WCHAR_T */
+
+#else /* not XML_UNICODE */
+
 typedef const char *KEY;
-#endif
+
+#endif /* not XML_UNICODE */
 
 typedef struct {
   KEY name;
