@@ -119,6 +119,10 @@ Clark Cooper to retain copyright and to distribute it with Expat.</p>
       <li><a href="#XML_ExpatVersion">XML_ExpatVersion</a></li>
       <li><a href="#XML_ExpatVersionInfo">XML_ExpatVersionInfo</a></li>
       <li><a href="#XML_GetFeatureList">XML_GetFeatureList</a></li>
+      <li><a href="#XML_FreeContentModel">XML_FreeContentModel</a></li>
+      <li><a href="#XML_MemMalloc">XML_MemMalloc</a></li>
+      <li><a href="#XML_MemRealloc">XML_MemRealloc</a></li>
+      <li><a href="#XML_MemFree">XML_MemFree</a></li>
     </ul>
     </li>
   </ul>  
@@ -1256,7 +1260,9 @@ struct XML_cp {
 <p>Sets a handler for element declarations in a DTD. The handler gets
 called with the name of the element in the declaration and a pointer
 to a structure that contains the element model. It is the
-application's responsibility to free this data structure.</p>
+application's responsibility to free this data structure using
+<code><a href="#XML_FreeContentModel"
+>XML_FreeContentModel</a></code>.</p>
 
 <p>The <code>model</code> argument is the root of a tree of
 <code>XML_Content</code> nodes. If <code>type</code> equals
@@ -1776,6 +1782,66 @@ time, the following features have been defined to have values:</p>
   reported by <code><a href= "#XML_GetInputContext"
   >XML_GetInputContext</a></code>.</dd>
 </dl>
+</div>
+
+<pre class="fcndec" id="XML_FreeContentModel">
+void
+XML_FreeContentModel(XML_Parser parser, XML_Content *model);
+</pre>
+<div class="fcndef">
+Function to deallocate the <code>model</code> argument passed to the
+<code>XML_ElementDeclHandler</code> callback set using <code><a
+href="#XML_SetElementDeclHandler" >XML_ElementDeclHandler</a></code>.
+This function should not be used for any other purpose.
+</div>
+
+<p>The following functions allow external code to share the memory
+allocator an <code>XML_Parser</code> has been configured to use.  This
+is especially useful for third-party libraries that interact with a
+parser object created by application code, or heavily layered
+applications.  This can be essential when using dynamically loaded
+libraries which use different C standard libraries (this can happen on
+Windows, at least).</p>
+
+<pre class="fcndec" id="XML_MemMalloc">
+void *
+XML_MemMalloc(XML_Parser parser, size_t size);
+</pre>
+<div class="fcndef">
+Allocate <code>size</code> bytes of memory using the allocator the
+<code>parser</code> object has been configured to use.  Returns a
+pointer to the memory or NULL on failure.  Memory allocated in this
+way must be freed using <code><a href="#XML_MemFree"
+>XML_MemFree</a></code>.
+</div>
+
+<pre class="fcndec" id="XML_MemRealloc">
+void *
+XML_MemRealloc(XML_Parser parser, void *ptr, size_t size);
+</pre>
+<div class="fcndef">
+Allocate <code>size</code> bytes of memory using the allocator the
+<code>parser</code> object has been configured to use.
+<code>ptr</code> must point to a block of memory allocated by <code><a
+href="#XML_MemMalloc" >XML_MemMalloc</a></code> or
+<code>XML_MemRealloc</code>, or be NULL.  This function tries to
+expand the block pointed to by <code>ptr</code> if possible.  Returns
+a pointer to the memory or NULL on failure.  On success, the original
+block has either been expanded or freed.  On failure, the original
+block has not been freed; the caller is responsible for freeing the
+original block.  Memory allocated in this way must be freed using
+<code><a href="#XML_MemFree"
+>XML_MemFree</a></code>.
+</div>
+
+<pre class="fcndec" id="XML_MemFree">
+void
+XML_MemFree(XML_Parser parser, void *ptr);
+</pre>
+<div class="fcndef">
+Free a block of memory pointed to by <code>ptr</code>.  The block must
+have been allocated by <code><a href="#XML_MemMalloc"
+>XML_MemMalloc</a></code> or <code>XML_MemRealloc</code>, or be NULL.
 </div>
 
 <hr />
