@@ -864,6 +864,9 @@ typedef struct {
 XMLPARSEAPI(XML_Expat_Version)
 XML_ExpatVersionInfo(void);
 
+XMLPARSEAPI(const char **)
+XML_GetFeatureList(void);
+
 
 /* Expat follows the GNU/Linux convention of odd number minor version for
    beta/development releases and even number minor version for stable

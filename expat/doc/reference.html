@@ -116,6 +116,7 @@ Clark Cooper to retain copyright and to distribute it with expat.</p>
 		  <li><a href="#XML_DefaultCurrent">XML_DefaultCurrent</a></li>
 		  <li><a href="#XML_ExpatVersion">XML_ExpatVersion</a></li>
 		  <li><a href="#XML_ExpatVersionInfo">XML_ExpatVersionInfo</a></li>
+		  <li><a href="#XML_GetFeatureList">XML_GetFeatureList</a></li>
 	      </ul>
 	  </li>
       </ul>  
@@ -1650,6 +1651,23 @@ library version:
 </ul>
 Testing these constants is currently the best way to determine if
 particular parts of the Expat API are available.
+</div>
+
+<pre class="fcndec" id="XML_GetFeatureList">
+const char **
+XML_GetFeatureList();
+</pre>
+<div class="fcndef">
+<p>Returns a list of "feature" identifiers that provide details on how
+Expat was configured at compile time.  Most applications should not
+need to worry about this, but this information is otherwise not
+available from Expat.  This function allows code that does need to
+check these features to do so at runtime.</p>
+
+<p>The return value is an array of strings, terminated by NULL,
+identifying the feature-test macros Expat was compiled with.  Common
+features which may be found in this list include
+<code>"XML_DTD"</code> and <code>"XML_UNICODE"</code>.
 </div>
 
 <hr />

@@ -1584,7 +1584,8 @@ XML_ExpatVersion(void) {
 }
 
 XML_Expat_Version
-XML_ExpatVersionInfo(void) {
+XML_ExpatVersionInfo(void)
+{
   XML_Expat_Version version;
 
   version.major = XML_MAJOR_VERSION;
@@ -1592,6 +1593,24 @@ XML_ExpatVersionInfo(void) {
   version.micro = XML_MICRO_VERSION;
 
   return version;
+}
+
+const char **
+XML_GetFeatureList(void)
+{
+  static const char *features[] = {
+#ifdef XML_DTD
+    "XML_DTD",
+#endif
+#ifdef XML_UNICODE
+    "XML_UNICODE",
+#endif
+#ifdef XML_UNICODE_WCHAR_T
+    "XML_UNICODE_WCHAR_T",
+#endif
+    NULL
+  };
+  return features;
 }
 
 static
