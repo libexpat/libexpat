@@ -1,0 +1,13 @@
+.corner    { width: 200px;
+             height: 80px;
+             text-align: center;
+             }
+.navbar    { background-color: rgb(110,139,61);
+             padding-top: 2em;
+             }
+.banner    { background-color: rgb(110,139,61);
+             color: rgb(255,236,176);
+             padding-left: 2em;
+             }
+.banner h2 { font-size: 200%; }
+.content   { padding: 2em; }
