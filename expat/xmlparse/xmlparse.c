@@ -673,7 +673,7 @@ doContent(XML_Parser parser,
 	  const char *end,
 	  const char **nextPtr)
 {
-  const ENCODING *utf8 = XmlGetInternalEncoding(XML_UTF8_ENCODING);
+  const ENCODING *utf8 = XmlGetUtf8InternalEncoding();
   for (;;) {
     const char *next;
     int tok = XmlContentTok(enc, s, end, &next);
@@ -839,9 +839,9 @@ doContent(XML_Parser parser,
 	    if (nextPtr)
 	      toPtr += tag->rawNameLength;
 	    tag->name = toPtr;
-	    XmlConvert(enc, XML_UTF8_ENCODING,
-		       &fromPtr, rawNameEnd,
-	               &toPtr, tag->bufEnd - 1);
+	    XmlUtf8Convert(enc,
+			   &fromPtr, rawNameEnd,
+			   &toPtr, tag->bufEnd - 1);
 	    if (fromPtr == rawNameEnd)
 	      break;
 	    bufSize = (tag->bufEnd - tag->buf) << 1;
@@ -937,7 +937,7 @@ doContent(XML_Parser parser,
 	}
 	if (characterDataHandler) {
 	  char buf[XML_MAX_BYTES_PER_CHAR];
-	  characterDataHandler(userData, buf, XmlEncode(utf8, n, buf));
+	  characterDataHandler(userData, buf, XmlUtf8Encode(n, buf));
 	}
       }
       break;
@@ -966,7 +966,7 @@ doContent(XML_Parser parser,
       }
       if (characterDataHandler) {
 	char *dataPtr = dataBuf;
-	XmlConvert(enc, XML_UTF8_ENCODING, &s, end, &dataPtr, dataBufEnd);
+	XmlUtf8Convert(enc, &s, end, &dataPtr, dataBufEnd);
 	characterDataHandler(userData, dataBuf, dataPtr - dataBuf);
       }
       if (startTagLevel == 0) {
@@ -982,7 +982,7 @@ doContent(XML_Parser parser,
       if (characterDataHandler) {
 	do {
 	  char *dataPtr = dataBuf;
-	  XmlConvert(enc, XML_UTF8_ENCODING, &s, next, &dataPtr, dataBufEnd);
+	  XmlUtf8Convert(enc, &s, next, &dataPtr, dataBufEnd);
 	  characterDataHandler(userData, dataBuf, dataPtr - dataBuf);
 	} while (s != next);
       }
@@ -1134,7 +1134,7 @@ enum XML_Error doCdataSection(XML_Parser parser,
       if (characterDataHandler) {
 	do {
 	  char *dataPtr = dataBuf;
-	  XmlConvert(encoding, XML_UTF8_ENCODING, &s, next, &dataPtr, dataBufEnd);
+	  XmlUtf8Convert(encoding, &s, next, &dataPtr, dataBufEnd);
 	  characterDataHandler(userData, dataBuf, dataPtr - dataBuf);
 	} while (s != next);
       }
@@ -1484,7 +1484,7 @@ appendAttributeValue(XML_Parser parser, const ENCODING *enc, int isCdata,
 		     const char *ptr, const char *end,
 		     STRING_POOL *pool)
 {
-  const ENCODING *utf8 = XmlGetInternalEncoding(XML_UTF8_ENCODING);
+  const ENCODING *utf8 = XmlGetUtf8InternalEncoding();
   for (;;) {
     const char *next;
     int tok = XmlAttributeValueTok(enc, ptr, end, &next);
@@ -1510,7 +1510,7 @@ appendAttributeValue(XML_Parser parser, const ENCODING *enc, int isCdata,
 	    && n == ' '
 	    && (poolLength(pool) == 0 || poolLastByte(pool) == ' '))
 	  break;
-	n = XmlEncode(utf8, n, buf);
+	n = XmlUtf8Encode(n, buf);
 	if (!n) {
 	  errorPtr = ptr;
 	  return XML_ERROR_BAD_CHAR_REF;
@@ -1596,7 +1596,7 @@ enum XML_Error storeEntityValue(XML_Parser parser,
 				const char *entityTextPtr,
 				const char *entityTextEnd)
 {
-  const ENCODING *utf8 = XmlGetInternalEncoding(XML_UTF8_ENCODING);
+  const ENCODING *utf8 = XmlGetUtf8InternalEncoding();
   STRING_POOL *pool = &(dtd.pool);
   entityTextPtr += encoding->minBytesPerChar;
   entityTextEnd -= encoding->minBytesPerChar;
@@ -1638,7 +1638,7 @@ enum XML_Error storeEntityValue(XML_Parser parser,
 	  errorPtr = entityTextPtr;
 	  return XML_ERROR_BAD_CHAR_REF;
 	}
-	n = XmlEncode(utf8, n, buf);
+	n = XmlUtf8Encode(n, buf);
 	if (!n) {
 	  errorPtr = entityTextPtr;
 	  return XML_ERROR_BAD_CHAR_REF;
@@ -2046,7 +2046,7 @@ char *poolAppend(STRING_POOL *pool, const ENCODING *enc,
   if (!pool->ptr && !poolGrow(pool))
     return 0;
   for (;;) {
-    XmlConvert(enc, XML_UTF8_ENCODING, &ptr, end, &(pool->ptr), pool->end);
+    XmlUtf8Convert(enc, &ptr, end, &(pool->ptr), pool->end);
     if (ptr == end)
       break;
     if (!poolGrow(pool))

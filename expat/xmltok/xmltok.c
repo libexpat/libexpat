@@ -34,11 +34,7 @@ Contributor(s):
   PREFIX(updatePosition), \
   PREFIX(isPublicId)
 
-#define VTABLE2 \
-  PREFIX(encode), \
-  { PREFIX(toUtf8) }
-
-#define VTABLE VTABLE1, VTABLE2
+#define VTABLE VTABLE1, PREFIX(toUtf8), PREFIX(toUtf16)
 
 #define UCS2_GET_NAMING(pages, hi, lo) \
    (namingBitmap[(pages[hi] << 3) + ((lo) >> 5)] & (1 << ((lo) & 0x1F)))
@@ -116,47 +112,12 @@ static int checkCharRefNumber(int);
 #undef IS_NMSTRT_CHAR
 #undef IS_INVALID_CHAR
 
-enum {
-  /* cvalN is value of masked first byte of N byte sequence */
-  cval1 = 0x00,
-  cval2 = 0xc0,
-  cval3 = 0xe0,
-  cval4 = 0xf0,
-  /* minN is minimum legal resulting value for N byte sequence */
-  min2 = 0x80,
-  min3 = 0x800,
-  min4 = 0x10000
+enum {  /* UTF8_cvalN is value of masked first byte of N byte sequence */
+  UTF8_cval1 = 0x00,
+  UTF8_cval2 = 0xc0,
+  UTF8_cval3 = 0xe0,
+  UTF8_cval4 = 0xf0
 };
-
-static
-int utf8_encode(const ENCODING *enc, int c, char *buf)
-{
-  if (c < 0)
-    return 0;
-  if (c < min2) {
-    buf[0] = (c | cval1);
-    return 1;
-  }
-  if (c < min3) {
-    buf[0] = ((c >> 6) | cval2);
-    buf[1] = ((c & 0x3f) | 0x80);
-    return 2;
-  }
-  if (c < min4) {
-    buf[0] = ((c >> 12) | cval3);
-    buf[1] = (((c >> 6) & 0x3f) | 0x80);
-    buf[2] = ((c & 0x3f) | 0x80);
-    return 3;
-  }
-  if (c < 0x110000) {
-    buf[0] = ((c >> 18) | cval4);
-    buf[1] = (((c >> 12) & 0x3f) | 0x80);
-    buf[2] = (((c >> 6) & 0x3f) | 0x80);
-    buf[3] = ((c & 0x3f) | 0x80);
-    return 4;
-  }
-  return 0;
-}
 
 static
 void utf8_toUtf8(const ENCODING *enc,
@@ -177,8 +138,16 @@ void utf8_toUtf8(const ENCODING *enc,
   *toP = to;
 }
 
+static
+void utf8_toUtf16(const ENCODING *enc,
+		  const char **fromP, const char *fromLim,
+		  UTF16_CHAR **toP, const UTF16_CHAR *toLim)
+{
+  /* FIXME */
+}
+
 static const struct normal_encoding utf8_encoding = {
-  { VTABLE1, utf8_encode, { utf8_toUtf8 }, 1 },
+  { VTABLE1, utf8_toUtf8, utf8_toUtf16, 1 },
   {
 #include "asciitab.h"
 #include "utf8tab.h"
@@ -186,24 +155,12 @@ static const struct normal_encoding utf8_encoding = {
 };
 
 static const struct normal_encoding internal_utf8_encoding = {
-  { VTABLE1, utf8_encode, { utf8_toUtf8 }, 1 },
+  { VTABLE1, utf8_toUtf8, utf8_toUtf16, 1 },
   {
 #include "iasciitab.h"
 #include "utf8tab.h"
   }
 };
-
-static
-int latin1_encode(const ENCODING *enc, int c, char *buf)
-{
-  if (c < 0)
-    return 0;
-  if (c <= 0xFF) {
-    buf[0] = (char)c;
-    return 1;
-  }
-  return 0;
-}
 
 static
 void latin1_toUtf8(const ENCODING *enc,
@@ -218,7 +175,7 @@ void latin1_toUtf8(const ENCODING *enc,
     if (c & 0x80) {
       if (toLim - *toP < 2)
 	break;
-      *(*toP)++ = ((c >> 6) | cval2);
+      *(*toP)++ = ((c >> 6) | UTF8_cval2);
       *(*toP)++ = ((c & 0x3f) | 0x80);
       (*fromP)++;
     }
@@ -230,8 +187,15 @@ void latin1_toUtf8(const ENCODING *enc,
   }
 }
 
+static
+void latin1_toUtf16(const ENCODING *enc,
+		    const char **fromP, const char *fromLim,
+		    UTF16_CHAR **toP, const UTF16_CHAR *toLim)
+{
+}
+
 static const struct normal_encoding latin1_encoding = {
-  { VTABLE1, latin1_encode, { latin1_toUtf8 }, 1 },
+  { VTABLE1, latin1_toUtf8, latin1_toUtf16, 1 },
   {
 #include "asciitab.h"
 #include "latin1tab.h"
@@ -239,18 +203,6 @@ static const struct normal_encoding latin1_encoding = {
 };
 
 #define latin1tab (latin1_encoding.type)
-
-static
-int ascii_encode(const ENCODING *enc, int c, char *buf)
-{
-  if (c < 0)
-    return 0;
-  if (c <= 0x7F) {
-    buf[0] = (char)c;
-    return 1;
-  }
-  return 0;
-}
 
 static
 void ascii_toUtf8(const ENCODING *enc,
@@ -261,8 +213,16 @@ void ascii_toUtf8(const ENCODING *enc,
     *(*toP)++ = *(*fromP)++;
 }
 
+static
+void ascii_toUtf16(const ENCODING *enc,
+		   const char **fromP, const char *fromLim,
+		   UTF16_CHAR **toP, const UTF16_CHAR *toLim)
+{
+  /* FIXME */
+}
+
 static const struct normal_encoding ascii_encoding = {
-  { VTABLE1, ascii_encode, { ascii_toUtf8 }, 1 },
+  { VTABLE1, ascii_toUtf8, ascii_toUtf16, 1 },
   {
 #include "asciitab.h"
 /* BT_NONXML == 0 */
@@ -287,25 +247,6 @@ static int unicode_byte_type(char hi, char lo)
     break;
   }
   return BT_NONASCII;
-}
-
-#define DEFINE_UTF16_ENCODE \
-static \
-int PREFIX(encode)(const ENCODING *enc, int charNum, char *buf) \
-{ \
-  if (charNum < 0) \
-    return 0; \
-  if (charNum < 0x10000) { \
-    SET2(buf, charNum); \
-    return 2; \
-  } \
-  if (charNum < 0x110000) { \
-    charNum -= 0x10000; \
-    SET2(buf, (charNum >> 10) + 0xD800); \
-    SET2(buf + 2, (charNum & 0x3FF) + 0xDC00); \
-    return 4; \
-  } \
-  return 0; \
 }
 
 #define DEFINE_UTF16_TO_UTF8 \
@@ -337,7 +278,7 @@ void PREFIX(toUtf8)(const ENCODING *enc, \
         *fromP = from; \
 	return; \
       } \
-      *(*toP)++ = ((lo >> 6) | (hi << 2) |  cval2); \
+      *(*toP)++ = ((lo >> 6) | (hi << 2) |  UTF8_cval2); \
       *(*toP)++ = ((lo & 0x3f) | 0x80); \
       break; \
     default: \
@@ -346,7 +287,7 @@ void PREFIX(toUtf8)(const ENCODING *enc, \
 	return; \
       } \
       /* 16 bits divided 4, 6, 6 amongst 3 bytes */ \
-      *(*toP)++ = ((hi >> 4) | cval3); \
+      *(*toP)++ = ((hi >> 4) | UTF8_cval3); \
       *(*toP)++ = (((hi & 0xf) << 2) | (lo >> 6) | 0x80); \
       *(*toP)++ = ((lo & 0x3f) | 0x80); \
       break; \
@@ -356,7 +297,7 @@ void PREFIX(toUtf8)(const ENCODING *enc, \
 	return; \
       } \
       plane = (((hi & 0x3) << 2) | ((lo >> 6) & 0x3)) + 1; \
-      *(*toP)++ = ((plane >> 2) | cval4); \
+      *(*toP)++ = ((plane >> 2) | UTF8_cval4); \
       *(*toP)++ = (((lo >> 2) & 0xF) | ((plane & 0x3) << 4) | 0x80); \
       from += 2; \
       lo2 = GET_LO(from); \
@@ -369,6 +310,15 @@ void PREFIX(toUtf8)(const ENCODING *enc, \
     } \
   } \
   *fromP = from; \
+}
+
+#define DEFINE_UTF16_TO_UTF16 \
+static \
+void PREFIX(toUtf16)(const ENCODING *enc, \
+		     const char **fromP, const char *fromLim, \
+		     UTF16_CHAR **toP, const UTF16_CHAR *toLim) \
+{ \
+  /* FIXME */ \
 }
 
 #define PREFIX(ident) little2_ ## ident
@@ -389,8 +339,8 @@ void PREFIX(toUtf8)(const ENCODING *enc, \
 #define GET_LO(ptr) ((unsigned char)(ptr)[0])
 #define GET_HI(ptr) ((unsigned char)(ptr)[1])
 
-DEFINE_UTF16_ENCODE
 DEFINE_UTF16_TO_UTF8
+DEFINE_UTF16_TO_UTF16
 
 #undef SET2
 #undef GET_LO
@@ -426,8 +376,8 @@ static const struct encoding little2_encoding = { VTABLE, 2 };
 #define GET_LO(ptr) ((unsigned char)(ptr)[1])
 #define GET_HI(ptr) ((unsigned char)(ptr)[0])
 
-DEFINE_UTF16_ENCODE
 DEFINE_UTF16_TO_UTF8
+DEFINE_UTF16_TO_UTF16
 
 #undef SET2
 #undef GET_LO
@@ -523,12 +473,14 @@ void initUpdatePosition(const ENCODING *enc, const char *ptr,
   normal_updatePosition(&utf8_encoding.enc, ptr, end, pos);
 }
 
-const ENCODING *XmlGetInternalEncoding(int e)
+const ENCODING *XmlGetUtf8InternalEncoding()
 {
-  switch (e) {
-  case XML_UTF8_ENCODING:
-    return &internal_utf8_encoding.enc;
-  }
+  return &internal_utf8_encoding.enc;
+}
+
+const ENCODING *XmlGetUtf16InternalEncoding()
+{
+  /* FIXME */
   return 0;
 }
 
@@ -564,7 +516,7 @@ int toAscii(const ENCODING *enc, const char *ptr, const char *end)
 {
   char buf[1];
   char *p = buf;
-  XmlConvert(enc, XML_UTF8_ENCODING, &ptr, end, &p, p + 1);
+  XmlUtf8Convert(enc, &ptr, end, &p, p + 1);
   if (p == buf)
     return -1;
   else
@@ -674,7 +626,7 @@ const ENCODING *findEncoding(const ENCODING *enc, const char *ptr, const char *e
   char buf[ENCODING_MAX];
   char *p = buf;
   int i;
-  XmlConvert(enc, XML_UTF8_ENCODING, &ptr, end, &p, p + ENCODING_MAX - 1);
+  XmlUtf8Convert(enc, &ptr, end, &p, p + ENCODING_MAX - 1);
   if (ptr != end)
     return 0;
   *p = 0;
@@ -792,3 +744,55 @@ int checkCharRefNumber(int result)
   return result;
 }
 
+int XmlUtf8Encode(int c, char *buf)
+{
+  enum {
+    /* minN is minimum legal resulting value for N byte sequence */
+    min2 = 0x80,
+    min3 = 0x800,
+    min4 = 0x10000
+  };
+
+  if (c < 0)
+    return 0;
+  if (c < min2) {
+    buf[0] = (c | UTF8_cval1);
+    return 1;
+  }
+  if (c < min3) {
+    buf[0] = ((c >> 6) | UTF8_cval2);
+    buf[1] = ((c & 0x3f) | 0x80);
+    return 2;
+  }
+  if (c < min4) {
+    buf[0] = ((c >> 12) | UTF8_cval3);
+    buf[1] = (((c >> 6) & 0x3f) | 0x80);
+    buf[2] = ((c & 0x3f) | 0x80);
+    return 3;
+  }
+  if (c < 0x110000) {
+    buf[0] = ((c >> 18) | UTF8_cval4);
+    buf[1] = (((c >> 12) & 0x3f) | 0x80);
+    buf[2] = (((c >> 6) & 0x3f) | 0x80);
+    buf[3] = ((c & 0x3f) | 0x80);
+    return 4;
+  }
+  return 0;
+}
+
+int XmlUtf16Encode(int charNum, UTF16_CHAR *buf)
+{
+  if (charNum < 0)
+    return 0;
+  if (charNum < 0x10000) {
+    buf[0] = charNum;
+    return 1;
+  }
+  if (charNum < 0x110000) {
+    charNum -= 0x10000;
+    buf[0] = (charNum >> 10) + 0xD800;
+    buf[1] = (charNum & 0x3FF) + 0xDC00;
+    return 2;
+  }
+  return 0;
+}

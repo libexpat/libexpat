@@ -103,13 +103,6 @@ extern "C" {
 #define XML_ATTRIBUTE_VALUE_LITERAL 0
 #define XML_ENTITY_VALUE_LITERAL 1
 
-#define XML_N_INTERNAL_ENCODINGS 1
-#define XML_UTF8_ENCODING 0
-#if 0
-#define XML_UTF16_ENCODING 1
-#define XML_UCS4_ENCODING 2
-#endif
-
 #define XML_MAX_BYTES_PER_CHAR 4
 
 typedef struct position {
@@ -127,6 +120,8 @@ typedef struct {
 
 struct encoding;
 typedef struct encoding ENCODING;
+
+typedef unsigned short UTF16_CHAR;
 
 struct encoding {
   int (*scanners[XML_N_STATES])(const ENCODING *,
@@ -152,14 +147,16 @@ struct encoding {
 			 POSITION *);
   int (*isPublicId)(const ENCODING *enc, const char *ptr, const char *end,
 		    const char **badPtr);
-  int (*encode)(const ENCODING *enc,
-		int charNum,
-		char *buf);
-  void (*convert[XML_N_INTERNAL_ENCODINGS])(const ENCODING *enc,
-					    const char **fromP,
-					    const char *fromLim,
-					    char **toP,
-					    const char *toLim);
+  void (*utf8Convert)(const ENCODING *enc,
+		      const char **fromP,
+		      const char *fromLim,
+		      char **toP,
+		      const char *toLim);
+  void (*utf16Convert)(const ENCODING *enc,
+		       const char **fromP,
+		       const char *fromLim,
+		       UTF16_CHAR **toP,
+		       const UTF16_CHAR *toLim);
   int minBytesPerChar;
 };
 
@@ -231,11 +228,11 @@ the content of a literal that has already been returned by XmlTok. */
 #define XmlIsPublicId(enc, ptr, end, badPtr) \
   (((enc)->isPublicId)(enc, ptr, end, badPtr))
 
-#define XmlEncode(enc, ch, buf) \
-  (((enc)->encode)(enc, ch, buf))
+#define XmlUtf8Convert(enc, fromP, fromLim, toP, toLim) \
+  (((enc)->utf8Convert)(enc, fromP, fromLim, toP, toLim))
 
-#define XmlConvert(enc, targetEnc, fromP, fromLim, toP, toLim) \
-  (((enc)->convert[targetEnc])(enc, fromP, fromLim, toP, toLim))
+#define XmlUtf16Convert(enc, fromP, fromLim, toP, toLim) \
+  (((enc)->utf16Convert)(enc, fromP, fromLim, toP, toLim))
 
 typedef struct {
   ENCODING initEnc;
@@ -253,7 +250,10 @@ int XMLTOKAPI XmlParseXmlDecl(int isGeneralTextEntity,
 			      int *standalonePtr);
 
 int XMLTOKAPI XmlInitEncoding(INIT_ENCODING *, const ENCODING **, const char *name);
-const ENCODING XMLTOKAPI *XmlGetInternalEncoding(int);
+const ENCODING XMLTOKAPI *XmlGetUtf8InternalEncoding();
+const ENCODING XMLTOKAPI *XmlGetUtf16InternalEncoding();
+int XMLTOKAPI XmlUtf8Encode(int charNumber, char *buf);
+int XMLTOKAPI XmlUtf16Encode(int charNumber, UTF16_CHAR *buf);
 
 #ifdef __cplusplus
 }
