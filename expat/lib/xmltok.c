@@ -67,7 +67,9 @@
      : 0))
 
 /* Detection of invalid UTF-8 sequences is based on Table 3.1B
-   of Unicode 3.2: http://www.unicode.org/unicode/reports/tr28/.
+   of Unicode 3.2: http://www.unicode.org/unicode/reports/tr28/
+   with the additional restriction of not allowing the Unicode
+   code points 0xFFFF and 0xFFFE (sequences EF,BF,BF and EF,BF,BE).
    Implementation details:
      (A & 0x80) == 0     means A < 0x80
    and
@@ -78,7 +80,9 @@
   ((*p) < 0xC2 || ((p)[1] & 0x80) == 0 || ((p)[1] & 0xC0) == 0xC0)
 
 #define UTF8_INVALID3(p) \
-  (((p)[2] & 0x80) == 0 || ((p)[2] & 0xC0) == 0xC0 \
+  (((p)[2] & 0x80) == 0 \
+  || \
+  ((*p) == 0xEF ? (p)[2] > 0xBD : ((p)[2] & 0xC0) == 0xC0) \
   || \
   ((*p) == 0xE0 \
     ? \
