@@ -450,64 +450,80 @@ int unknownEncoding(void *userData,
 }
 
 static
+int notStandalone(void *userData)
+{
+  return 0;
+}
+
+static
 void usage(const XML_Char *prog)
 {
-  ftprintf(stderr, T("usage: %s [-n] [-r] [-w] [-x] [-d output-dir] [-e encoding] file ...\n"), prog);
+  ftprintf(stderr, T("usage: %s [-n] [-r] [-s] [-w] [-x] [-d output-dir] [-e encoding] file ...\n"), prog);
   exit(1);
 }
 
 int tmain(int argc, XML_Char **argv)
 {
-  int i;
+  int i, j;
   const XML_Char *outputDir = 0;
   const XML_Char *encoding = 0;
   unsigned processFlags = XML_MAP_FILE;
   int windowsCodePages = 0;
   int outputType = 0;
   int useNamespaces = 0;
+  int requireStandalone = 0;
 
 #ifdef _MSC_VER
   _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF|_CRTDBG_LEAK_CHECK_DF);
 #endif
 
   i = 1;
-  while (i < argc && argv[i][0] == T('-')) {
-    int j;
-    if (argv[i][1] == T('-') && argv[i][2] == T('\0')) {
-      i++;
-      break;
+  j = 0;
+  while (i < argc) {
+    if (j == 0) {
+      if (argv[i][0] != T('-'))
+	break;
+      if (argv[i][1] == T('-') && argv[i][2] == T('\0')) {
+	i++;
+	break;
+      }
+      j++;
     }
-    j = 1;
-    if (argv[i][j] == T('r')) {
+    switch (argv[i][j]) {
+    case T('r'):
       processFlags &= ~XML_MAP_FILE;
       j++;
-    }
-    if (argv[i][j] == T('n')) {
+      break;
+    case T('s'):
+      requireStandalone = 1;
+      j++;
+      break;
+    case T('n'):
       useNamespaces = 1;
       j++;
-    }
-    if (argv[i][j] == T('x')) {
+      break;
+    case T('x'):
       processFlags |= XML_EXTERNAL_ENTITIES;
       j++;
-    }
-    if (argv[i][j] == T('w')) {
+      break;
+    case T('w'):
       windowsCodePages = 1;
       j++;
-    }
-    if (argv[i][j] == T('m')) {
+      break;
+    case T('m'):
       outputType = 'm';
       j++;
-    }
-    if (argv[i][j] == T('c')) {
+      break;
+    case T('c'):
       outputType = 'c';
       useNamespaces = 0;
       j++;
-    }
-    if (argv[i][j] == T('t')) {
+      break;
+    case T('t'):
       outputType = 't';
       j++;
-    }
-    if (argv[i][j] == T('d')) {
+      break;
+    case T('d'):
       if (argv[i][j + 1] == T('\0')) {
 	if (++i == argc)
 	  usage(argv[0]);
@@ -516,8 +532,9 @@ int tmain(int argc, XML_Char **argv)
       else
 	outputDir = argv[i] + j + 1;
       i++;
-    }
-    else if (argv[i][j] == T('e')) {
+      j = 0;
+      break;
+    case T('e'):
       if (argv[i][j + 1] == T('\0')) {
 	if (++i == argc)
 	  usage(argv[0]);
@@ -526,11 +543,18 @@ int tmain(int argc, XML_Char **argv)
       else
 	encoding = argv[i] + j + 1;
       i++;
-    }
-    else if (argv[i][j] == T('\0') && j > 1)
-      i++;
-    else
+      j = 0;
+      break;
+    case T('\0'):
+      if (j > 1) {
+	i++;
+	j = 0;
+	break;
+      }
+      /* fall through */
+    default:
       usage(argv[0]);
+    }
   }
   if (i == argc)
     usage(argv[0]);
@@ -543,6 +567,8 @@ int tmain(int argc, XML_Char **argv)
       parser = XML_ParserCreateNS(encoding, NSSEP);
     else
       parser = XML_ParserCreate(encoding);
+    if (requireStandalone)
+      XML_SetNotStandaloneHandler(parser, notStandalone);
     if (outputType == 't') {
       /* This is for doing timings; this gives a more realistic estimate of
 	 the parsing time. */
