@@ -80,7 +80,6 @@ fi
 
 dnl Checks for header files.
 AC_HEADER_STDC
-AC_CHECK_HEADERS(fcntl.h unistd.h)
 
 dnl Checks for typedefs, structures, and compiler characteristics.
 
@@ -89,12 +88,12 @@ dnl work in a cross compile.
 AC_C_BIGENDIAN_CROSS
 
 AC_C_CONST
-AC_TYPE_OFF_T
 AC_TYPE_SIZE_T
+AC_CHECK_FUNCS(memmove bcopy)
 
-dnl Checks for library functions.
-
-AC_FUNC_MEMCMP
+dnl Only needed for xmlwf:
+AC_CHECK_HEADERS(fcntl.h unistd.h)
+AC_TYPE_OFF_T
 AC_FUNC_MMAP
 
 if test "$ac_cv_func_mmap_fixed_mapped" = "yes"; then
@@ -104,10 +103,10 @@ else
 fi
 AC_SUBST(FILEMAP)
 
-AC_CHECK_FUNCS(memmove bcopy)
+dnl Only needed for regression tests:
 AC_CHECK_HEADERS(check.h)
 
-dnl some basic configuration
+dnl Some basic configuration:
 AC_DEFINE([XML_NS], 1,
           [Define to make XML Namespaces functionality available.])
 AC_DEFINE([XML_DTD], 1,
