@@ -107,6 +107,9 @@ typedef void (*XML_ProcessingInstructionHandler)(void *userData,
 /* data is 0 terminated */
 typedef void (*XML_CommentHandler)(void *userData, const XML_Char *data);
 
+typedef void (*XML_StartCdataSectionHandler)(void *userData);
+typedef void (*XML_EndCdataSectionHandler)(void *userData);
+
 /* This is called for any characters in the XML document for
 which there is no applicable handler.  This includes both
 characters that are part of markup which is of a kind that is
@@ -254,6 +257,11 @@ XML_SetProcessingInstructionHandler(XML_Parser parser,
 void XMLPARSEAPI
 XML_SetCommentHandler(XML_Parser parser,
                       XML_CommentHandler handler);
+
+void XMLPARSEAPI
+XML_SetCdataSectionHandler(XML_Parser parser,
+			   XML_StartCdataSectionHandler start,
+			   XML_EndCdataSectionHandler end);
 
 /* This sets the default handler and also inhibits expansion of internal entities.
 The entity reference will be passed to the default handler. */

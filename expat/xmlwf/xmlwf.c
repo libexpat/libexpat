@@ -335,6 +335,24 @@ void metaComment(XML_Parser parser, const XML_Char *data)
 }
 
 static
+void metaStartCdataSection(XML_Parser parser)
+{
+  FILE *fp = XML_GetUserData(parser);
+  fputts(T("<startcdata"), fp);
+  metaLocation(parser);
+  fputts(T("/>\n"), fp);
+}
+
+static
+void metaEndCdataSection(XML_Parser parser)
+{
+  FILE *fp = XML_GetUserData(parser);
+  fputts(T("<endcdata"), fp);
+  metaLocation(parser);
+  fputts(T("/>\n"), fp);
+}
+
+static
 void metaCharacterData(XML_Parser parser, const XML_Char *s, int len)
 {
   FILE *fp = XML_GetUserData(parser);
@@ -695,6 +713,7 @@ int tmain(int argc, XML_Char **argv)
 	XML_SetElementHandler(parser, metaStartElement, metaEndElement);
 	XML_SetProcessingInstructionHandler(parser, metaProcessingInstruction);
 	XML_SetCommentHandler(parser, metaComment);
+	XML_SetCdataSectionHandler(parser, metaStartCdataSection, metaEndCdataSection);
 	XML_SetCharacterDataHandler(parser, metaCharacterData);
 	XML_SetUnparsedEntityDeclHandler(parser, metaUnparsedEntityDecl);
 	XML_SetNotationDeclHandler(parser, metaNotationDecl);
