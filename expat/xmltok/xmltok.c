@@ -200,6 +200,7 @@ void latin1_toUtf8(const ENCODING *enc,
 	break;
       *(*toP)++ = ((c >> 6) | cval2);
       *(*toP)++ = ((c & 0x3f) | 0x80);
+      (*fromP)++;
     }
     else {
       if (*toP == toLim)
