@@ -87,7 +87,7 @@ install: xmlwf/xmlwf lib/$(LIBRARY) lib/$(APIHEADER)
 uninstall:
 	$(LIBTOOL) --mode=uninstall rm -f $(bindir)/xmlwf
 	$(LIBTOOL) --mode=uninstall rm -f $(libdir)/$(LIBRARY)
-	rm -f $(libdir)/$(APIHEADER)
+	rm -f $(includedir)/$(APIHEADER)
 	rm -f $(prefix)/man/man1/xmlwf.1
 
 # for VPATH builds (invoked by configure)
