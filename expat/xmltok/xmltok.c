@@ -250,6 +250,7 @@ void PREFIX(toUtf8)(const ENCODING *enc, \
 { \
   const char *from; \
   for (from = *fromP; from != fromLim; from += 2) { \
+    int plane; \
     unsigned char lo2; \
     unsigned char lo = GET_LO(from); \
     unsigned char hi = GET_HI(from); \
@@ -277,10 +278,9 @@ void PREFIX(toUtf8)(const ENCODING *enc, \
     case 0xD8: case 0xD9: case 0xDA: case 0xDB: \
       if (toLim -  *toP < 4) \
 	return; \
-      /* IIIIIIWW XXXXXXYY IIIIIIYY YYZZZZZ => */ \
-      /* JJJJJJWW JJXXXXXX JJYYYYYY JJZZZZZ */ \
-      *(*toP)++ = ((hi & 0x3) | cval4); \
-      *(*toP)++ = ((lo >> 2) | 0x80); \
+      plane = (((hi & 0x3) << 2) | ((lo >> 6) & 0x3)) + 1; \
+      *(*toP)++ = ((plane >> 2) | cval4); \
+      *(*toP)++ = (((lo >> 2) & 0xF) | ((plane & 0x3) << 4) | 0x80); \
       from += 2; \
       lo2 = GET_LO(from); \
       *(*toP)++ = (((lo & 0x3) << 4) \
