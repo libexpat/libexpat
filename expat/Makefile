@@ -3,6 +3,7 @@ CC=gcc
 # use -DBYTE_ORDER=12 for little-endian byte order;
 # use -DBYTE_ORDER=21 for big-endian (network) byte order.
 # -DXML_NS adds support for checking of lexical aspects of XML namespaces spec
+# -DXML_MIN_SIZE makes a smaller but slower parser
 CFLAGS=-O2 -Ixmltok -Ixmlparse -DXML_NS
 # Use one of the next two lines; unixfilemap is better if it works.
 FILEMAP_OBJ=xmlwf/unixfilemap.o
