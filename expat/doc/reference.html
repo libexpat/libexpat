@@ -419,7 +419,7 @@ by these functions is an opaque pointer (i.e. "expat.h" declares it as
 void *) to data with further internal structure. In order to free the
 memory associated with this object you must call <code><a href=
 "#XML_ParserFree" >XML_ParserFree</a></code>. Note that if you have
-provided any <a href="userdata">user data</a> that gets stored in the
+provided any <a href="#userdata">user data</a> that gets stored in the
 parser, then your application is responsible for freeing it prior to
 calling <code>XML_ParserFree</code>.</p>
 
@@ -596,7 +596,7 @@ colon still attached. Unprefixed attribute names are never expanded,
 and unprefixed element names are only expanded when they are in the
 scope of a default namespace.</p>
 
-<p>However if <code><a href= "XML_SetReturnNSTriplet"
+<p>However if <code><a href= "#XML_SetReturnNSTriplet"
 >XML_SetReturnNSTriplet</a></code> has been called with a non-zero
 <code>do_nst</code> parameter, then the expanded form for names with
 an explicit prefix is a concatenation of: URI, separator, local name,
