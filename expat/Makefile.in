@@ -136,15 +136,15 @@ xmlwf/xmlwf: $(XMLWF_OBJS)
 	$(LINK_EXE) $(XMLWF_OBJS) lib/$(LIBRARY)
 
 examples/elements.o: examples/elements.c
-examples/elements: examples/elements.o
+examples/elements: examples/elements.o lib/$(LIBRARY)
 	$(LINK_EXE) $< lib/$(LIBRARY)
 
 examples/outline.o: examples/outline.c
-examples/outline: examples/outline.o
+examples/outline: examples/outline.o lib/$(LIBRARY)
 	$(LINK_EXE) $< lib/$(LIBRARY)
 
 tests/runtests.o: tests/runtests.c
-tests/runtests: tests/runtests.o
+tests/runtests: tests/runtests.o lib/$(LIBRARY)
 	$(LINK_EXE) $< lib/$(LIBRARY)
 
 .SUFFIXES: .c .lo .o
