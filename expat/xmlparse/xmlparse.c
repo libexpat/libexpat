@@ -2624,7 +2624,9 @@ doProlog(XML_Parser parser,
       case XML_TOK_PARAM_ENTITY_REF:
 	break;
       default:
+#ifdef XML_DTD
 	if (role != XML_ROLE_IGNORE_SECT)
+#endif /* XML_DTD */
 	  reportDefault(parser, enc, s, next);
       }
     }
