@@ -97,12 +97,12 @@ static int checkCharRefNumber(int);
 #undef IS_INVALID_CHAR
 
 enum {
-  // cvalN is value of masked first byte of N byte sequence
+  /* cvalN is value of masked first byte of N byte sequence */
   cval1 = 0x00,
   cval2 = 0xc0,
   cval3 = 0xe0,
   cval4 = 0xf0,
-  // minN is minimum legal resulting value for N byte sequence
+  /* minN is minimum legal resulting value for N byte sequence */
   min2 = 0x80,
   min3 = 0x800,
   min4 = 0x10000
