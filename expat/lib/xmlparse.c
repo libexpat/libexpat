@@ -148,13 +148,26 @@ typedef struct {
   int prefixLen;
 } TAG_NAME;
 
+/* TAG represents an open element.
+   The name of the element is stored in both the document and API
+   encodings.  The memory buffer 'buf' is a separately-allocated
+   memory area which stores the name.  During the XML_Parse()/
+   XMLParseBuffer() when the element is open, the memory for the 'raw'
+   version of the name (in the document encoding) is shared with the
+   document buffer.  If the element is open across calls to
+   XML_Parse()/XML_ParseBuffer(), the buffer is re-allocated to
+   contain the 'raw' name as well.
+
+   A parser re-uses these structures, maintaining a list of allocated
+   TAG objects in a free list.
+*/
 typedef struct tag {
-  struct tag *parent;
-  const char *rawName;
+  struct tag *parent;           /* parent of this element */
+  const char *rawName;          /* tagName in the original encoding */
   int rawNameLength;
-  TAG_NAME name;
-  char *buf;
-  char *bufEnd;
+  TAG_NAME name;                /* tagName in the API encoding */
+  char *buf;                    /* buffer for name components */
+  char *bufEnd;                 /* end of the buffer */
   BINDING *bindings;
 } TAG;
 
@@ -1622,7 +1635,11 @@ storeRawNames(XML_Parser parser)
     int bufSize;
     int nameLen = sizeof(XML_Char) * (tag->name.strLen + 1);
     char *rawNameBuf = tag->buf + nameLen;
-    /* Stop if already stored. */
+    /* Stop if already stored.  Since tagStack is a stack, we can stop
+       at the first entry that has already been copied; everything
+       below it in the stack is already been accounted for in a
+       previous call to this function.
+    */
     if (tag->rawName == rawNameBuf) 
       break;
     /* For re-use purposes we need to ensure that the
