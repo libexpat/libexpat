@@ -6,5 +6,5 @@
 #define XML_EXTERNAL_ENTITIES 02
 
 extern int XML_ProcessFile(XML_Parser parser,
-			   const XML_Char *filename,
-			   unsigned flags);
+                           const XML_Char *filename,
+                           unsigned flags);
