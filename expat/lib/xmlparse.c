@@ -2,9 +2,8 @@
    See the file COPYING for copying permission.
 */
 
-#ifdef __VMS
-#include <string.h> /* memset(), memcpy() */
-#endif
+#include <stddef.h>
+#include <string.h>                     /* memset(), memcpy() */
 
 #ifdef COMPILED_FROM_DSP
 
@@ -12,6 +11,11 @@
 #define XMLPARSEAPI(type) __declspec(dllexport) type __cdecl
 #include "expat.h"
 #undef XMLPARSEAPI
+
+#elif defined(MACOS_CLASSIC)
+
+#include "macconfig.h"
+#include "expat.h"
 
 #else
 
@@ -27,9 +31,6 @@
 #undef XMLPARSEAPI
 #endif
 #endif /* ndef COMPILED_FROM_DSP */
-
-#include <stddef.h>
-#include <string.h>
 
 #ifdef XML_UNICODE
 #define XML_ENCODE_MAX XML_UTF16_ENCODE_MAX
