@@ -197,6 +197,9 @@ static const XML_Char *poolCopyStringN(STRING_POOL *pool, const XML_Char *s, int
    : ((*((pool)->ptr)++ = c), 1))
 
 typedef struct {
+  /* The first member must be userData so that the XML_GetUserData macro works. */
+  void *userData;
+  void *handlerArg;
   char *buffer;
   /* first character to be parsed */
   const char *bufferPtr;
@@ -204,10 +207,10 @@ typedef struct {
   char *bufferEnd;
   /* allocated end of buffer */
   const char *bufferLim;
-  long bufferEndByteIndex;
+  long parseEndByteIndex;
+  const char *parseEndPtr;
   XML_Char *dataBuf;
   XML_Char *dataBufEnd;
-  void *userData;
   XML_StartElementHandler startElementHandler;
   XML_EndElementHandler endElementHandler;
   XML_CharacterDataHandler characterDataHandler;
@@ -226,7 +229,8 @@ typedef struct {
   PROLOG_STATE prologState;
   Processor *processor;
   enum XML_Error errorCode;
-  const char *errorPtr;
+  const char *eventPtr;
+  const char *positionPtr;
   int tagLevel;
   ENTITY *declEntity;
   const XML_Char *declNotationName;
@@ -240,7 +244,6 @@ typedef struct {
   int attsSize;
   ATTRIBUTE *atts;
   POSITION position;
-  long errorByteIndex;
   STRING_POOL tempPool;
   STRING_POOL temp2Pool;
   char *groupConnector;
@@ -249,6 +252,7 @@ typedef struct {
 } Parser;
 
 #define userData (((Parser *)parser)->userData)
+#define handlerArg (((Parser *)parser)->handlerArg)
 #define startElementHandler (((Parser *)parser)->startElementHandler)
 #define endElementHandler (((Parser *)parser)->endElementHandler)
 #define characterDataHandler (((Parser *)parser)->characterDataHandler)
@@ -268,14 +272,15 @@ typedef struct {
 #define prologState (((Parser *)parser)->prologState)
 #define processor (((Parser *)parser)->processor)
 #define errorCode (((Parser *)parser)->errorCode)
-#define errorPtr (((Parser *)parser)->errorPtr)
-#define errorByteIndex (((Parser *)parser)->errorByteIndex)
+#define eventPtr (((Parser *)parser)->eventPtr)
+#define positionPtr (((Parser *)parser)->positionPtr)
 #define position (((Parser *)parser)->position)
 #define tagLevel (((Parser *)parser)->tagLevel)
 #define buffer (((Parser *)parser)->buffer)
 #define bufferPtr (((Parser *)parser)->bufferPtr)
 #define bufferEnd (((Parser *)parser)->bufferEnd)
-#define bufferEndByteIndex (((Parser *)parser)->bufferEndByteIndex)
+#define parseEndByteIndex (((Parser *)parser)->parseEndByteIndex)
+#define parseEndPtr (((Parser *)parser)->parseEndPtr)
 #define bufferLim (((Parser *)parser)->bufferLim)
 #define dataBuf (((Parser *)parser)->dataBuf)
 #define dataBufEnd (((Parser *)parser)->dataBufEnd)
@@ -304,6 +309,7 @@ XML_Parser XML_ParserCreate(const XML_Char *encodingName)
   processor = prologInitProcessor;
   XmlPrologStateInit(&prologState);
   userData = 0;
+  handlerArg = 0;
   startElementHandler = 0;
   endElementHandler = 0;
   characterDataHandler = 0;
@@ -315,7 +321,8 @@ XML_Parser XML_ParserCreate(const XML_Char *encodingName)
   buffer = 0;
   bufferPtr = 0;
   bufferEnd = 0;
-  bufferEndByteIndex = 0;
+  parseEndByteIndex = 0;
+  parseEndPtr = 0;
   bufferLim = 0;
   declElementType = 0;
   declAttributeId = 0;
@@ -324,8 +331,8 @@ XML_Parser XML_ParserCreate(const XML_Char *encodingName)
   declNotationPublicId = 0;
   memset(&position, 0, sizeof(POSITION));
   errorCode = XML_ERROR_NONE;
-  errorByteIndex = 0;
-  errorPtr = 0;
+  eventPtr = 0;
+  positionPtr = 0;
   tagLevel = 0;
   tagStack = 0;
   freeTagList = 0;
@@ -365,6 +372,7 @@ XML_Parser XML_ExternalEntityParserCreate(XML_Parser oldParser,
   XML_ExternalEntityRefHandler oldExternalEntityRefHandler = externalEntityRefHandler;
   XML_UnknownEncodingHandler oldUnknownEncodingHandler = unknownEncodingHandler;
   void *oldUserData = userData;
+  void *oldHandlerArg = handlerArg;
  
   parser = XML_ParserCreate(encodingName);
   if (!parser)
@@ -376,6 +384,10 @@ XML_Parser XML_ExternalEntityParserCreate(XML_Parser oldParser,
   externalEntityRefHandler = oldExternalEntityRefHandler;
   unknownEncodingHandler = oldUnknownEncodingHandler;
   userData = oldUserData;
+  if (oldUserData == oldHandlerArg)
+    handlerArg = userData;
+  else
+    handlerArg = parser;
   if (!dtdCopy(&dtd, oldDtd) || !setOpenEntityNames(parser, openEntityNames)) {
     XML_ParserFree(parser);
     return 0;
@@ -412,14 +424,17 @@ void XML_ParserFree(XML_Parser parser)
   free(parser);
 }
 
-void XML_SetUserData(XML_Parser parser, void *p)
+void XML_UseParserAsHandlerArg(XML_Parser parser)
 {
-  userData = p;
+  handlerArg = parser;
 }
 
-void *XML_GetUserData(XML_Parser parser)
+void XML_SetUserData(XML_Parser parser, void *p)
 {
-  return userData;
+  if (handlerArg == userData)
+    handlerArg = userData = p;
+  else
+    userData = p;
 }
 
 int XML_SetBase(XML_Parser parser, const XML_Char *p)
@@ -433,6 +448,11 @@ int XML_SetBase(XML_Parser parser, const XML_Char *p)
   else
     dtd.base = 0;
   return 1;
+}
+
+const XML_Char *XML_GetBase(XML_Parser parser)
+{
+  return dtd.base;
 }
 
 void XML_SetElementHandler(XML_Parser parser,
@@ -483,35 +503,27 @@ void XML_SetUnknownEncodingHandler(XML_Parser parser,
 
 int XML_Parse(XML_Parser parser, const char *s, int len, int isFinal)
 {
-  bufferEndByteIndex += len;
   if (len == 0) {
     if (!isFinal)
       return 1;
-    errorCode = processor(parser, bufferPtr, bufferEnd, 0);
+    errorCode = processor(parser, bufferPtr, parseEndPtr = bufferEnd, 0);
     return errorCode == XML_ERROR_NONE;
   }
   else if (bufferPtr == bufferEnd) {
     const char *end;
     int nLeftOver;
+    parseEndByteIndex += len;
+    positionPtr = s;
     if (isFinal) {
-      errorCode = processor(parser, s, s + len, 0);
+      errorCode = processor(parser, s, parseEndPtr = s + len, 0);
       if (errorCode == XML_ERROR_NONE)
 	return 1;
-      if (errorPtr) {
-	errorByteIndex = bufferEndByteIndex - (s + len - errorPtr);
-	XmlUpdatePosition(encoding, s, errorPtr, &position);
-      }
       return 0;
     }
-    errorCode = processor(parser, s, s + len, &end);
-    if (errorCode != XML_ERROR_NONE) {
-      if (errorPtr) {
-	errorByteIndex = bufferEndByteIndex - (s + len - errorPtr);
-	XmlUpdatePosition(encoding, s, errorPtr, &position);
-      }
+    errorCode = processor(parser, s, parseEndPtr = s + len, &end);
+    if (errorCode != XML_ERROR_NONE)
       return 0;
-    }
-    XmlUpdatePosition(encoding, s, end, &position);
+    XmlUpdatePosition(encoding, positionPtr, end, &position);
     nLeftOver = s + len - end;
     if (nLeftOver) {
       if (buffer == 0 || nLeftOver > bufferLim - buffer) {
@@ -538,21 +550,18 @@ int XML_Parse(XML_Parser parser, const char *s, int len, int isFinal)
 int XML_ParseBuffer(XML_Parser parser, int len, int isFinal)
 {
   const char *start = bufferPtr;
+  positionPtr = start;
   bufferEnd += len;
-  errorCode = processor(parser, bufferPtr, bufferEnd,
+  parseEndByteIndex += len;
+  errorCode = processor(parser, start, parseEndPtr = bufferEnd,
 			isFinal ? (const char **)0 : &bufferPtr);
   if (errorCode == XML_ERROR_NONE) {
     if (!isFinal)
-      XmlUpdatePosition(encoding, start, bufferPtr, &position);
+      XmlUpdatePosition(encoding, positionPtr, bufferPtr, &position);
     return 1;
   }
-  else {
-    if (errorPtr) {
-      errorByteIndex = bufferEndByteIndex - (bufferEnd - errorPtr);
-      XmlUpdatePosition(encoding, start, errorPtr, &position);
-    }
+  else
     return 0;
-  }
 }
 
 void *XML_GetBuffer(XML_Parser parser, int len)
@@ -595,19 +604,29 @@ int XML_GetErrorCode(XML_Parser parser)
   return errorCode;
 }
 
-int XML_GetErrorLineNumber(XML_Parser parser)
+long XML_GetCurrentByteIndex(XML_Parser parser)
 {
+  if (eventPtr)
+    return parseEndByteIndex - (parseEndPtr - eventPtr);
+  return -1;
+}
+
+int XML_GetCurrentLineNumber(XML_Parser parser)
+{
+  if (eventPtr) {
+    XmlUpdatePosition(encoding, positionPtr, eventPtr, &position);
+    positionPtr = eventPtr;
+  }
   return position.lineNumber + 1;
 }
 
-int XML_GetErrorColumnNumber(XML_Parser parser)
+int XML_GetCurrentColumnNumber(XML_Parser parser)
 {
+  if (eventPtr) {
+    XmlUpdatePosition(encoding, positionPtr, eventPtr, &position);
+    positionPtr = eventPtr;
+  }
   return position.columnNumber;
-}
-
-long XML_GetErrorByteIndex(XML_Parser parser)
-{
-  return errorByteIndex;
 }
 
 const XML_Char *XML_ErrorString(int code)
@@ -680,14 +699,14 @@ enum XML_Error externalEntityInitProcessor2(XML_Parser parser,
       *endPtr = start;
       return XML_ERROR_NONE;
     }
-    errorPtr = start;
+    eventPtr = start;
     return XML_ERROR_UNCLOSED_TOKEN;
   case XML_TOK_PARTIAL_CHAR:
     if (endPtr) {
       *endPtr = start;
       return XML_ERROR_NONE;
     }
-    errorPtr = start;
+    eventPtr = start;
     return XML_ERROR_PARTIAL_CHAR;
   }
   processor = externalEntityInitProcessor3;
@@ -716,14 +735,14 @@ enum XML_Error externalEntityInitProcessor3(XML_Parser parser,
       *endPtr = start;
       return XML_ERROR_NONE;
     }
-    errorPtr = start;
+    eventPtr = start;
     return XML_ERROR_UNCLOSED_TOKEN;
   case XML_TOK_PARTIAL_CHAR:
     if (endPtr) {
       *endPtr = start;
       return XML_ERROR_NONE;
     }
-    errorPtr = start;
+    eventPtr = start;
     return XML_ERROR_PARTIAL_CHAR;
   }
   processor = externalEntityContentProcessor;
@@ -749,6 +768,9 @@ doContent(XML_Parser parser,
 	  const char **nextPtr)
 {
   const ENCODING *internalEnc = XmlGetInternalEncoding();
+  const char *dummy;
+  const char **eventPP = enc == internalEnc ? &dummy : &eventPtr;
+  *eventPP = s;
   for (;;) {
     const char *next;
     int tok = XmlContentTok(enc, s, end, &next);
@@ -760,17 +782,12 @@ doContent(XML_Parser parser,
       }
       if (characterDataHandler) {
 	XML_Char c = XML_T('\n');
-	characterDataHandler(userData, &c, 1);
+	characterDataHandler(handlerArg, &c, 1);
       }
-      if (startTagLevel == 0) {
-	errorPtr = s;
+      if (startTagLevel == 0)
 	return XML_ERROR_NO_ELEMENTS;
-
-      }
-      if (tagLevel != startTagLevel) {
-	errorPtr = s;
+      if (tagLevel != startTagLevel)
 	return XML_ERROR_ASYNC_ENTITY;
-      }
       return XML_ERROR_NONE;
     case XML_TOK_NONE:
       if (nextPtr) {
@@ -778,30 +795,25 @@ doContent(XML_Parser parser,
 	return XML_ERROR_NONE;
       }
       if (startTagLevel > 0) {
-	if (tagLevel != startTagLevel) {
-	  errorPtr = s;
+	if (tagLevel != startTagLevel)
 	  return XML_ERROR_ASYNC_ENTITY;
-        }
 	return XML_ERROR_NONE;
       }
-      errorPtr = s;
       return XML_ERROR_NO_ELEMENTS;
     case XML_TOK_INVALID:
-      errorPtr = next;
+      *eventPP = next;
       return XML_ERROR_INVALID_TOKEN;
     case XML_TOK_PARTIAL:
       if (nextPtr) {
 	*nextPtr = s;
 	return XML_ERROR_NONE;
       }
-      errorPtr = s;
       return XML_ERROR_UNCLOSED_TOKEN;
     case XML_TOK_PARTIAL_CHAR:
       if (nextPtr) {
 	*nextPtr = s;
 	return XML_ERROR_NONE;
       }
-      errorPtr = s;
       return XML_ERROR_PARTIAL_CHAR;
     case XML_TOK_ENTITY_REF:
       {
@@ -812,7 +824,7 @@ doContent(XML_Parser parser,
 					      next - enc->minBytesPerChar);
 	if (ch) {
 	  if (characterDataHandler)
-	    characterDataHandler(userData, &ch, 1);
+	    characterDataHandler(handlerArg, &ch, 1);
 	  break;
 	}
 	name = poolStoreString(&dtd.pool, enc,
@@ -823,20 +835,14 @@ doContent(XML_Parser parser,
 	entity = (ENTITY *)lookup(&dtd.generalEntities, name, 0);
 	poolDiscard(&dtd.pool);
 	if (!entity) {
-	  if (dtd.complete || dtd.standalone) {
-	    errorPtr = s;
+	  if (dtd.complete || dtd.standalone)
 	    return XML_ERROR_UNDEFINED_ENTITY;
-	  }
 	  break;
 	}
-	if (entity->open) {
-	  errorPtr = s;
+	if (entity->open)
 	  return XML_ERROR_RECURSIVE_ENTITY_REF;
-	}
-	if (entity->notation) {
-	  errorPtr = s;
+	if (entity->notation)
 	  return XML_ERROR_BINARY_ENTITY_REF;
-	}
 	if (entity) {
 	  if (entity->textPtr) {
 	    enum XML_Error result;
@@ -849,7 +855,7 @@ doContent(XML_Parser parser,
 			       0);
 	    entity->open = 0;
 	    if (result) {
-	      errorPtr = s;
+	      *eventPP = s;
 	      return result;
 	    }
 	  }
@@ -861,7 +867,7 @@ doContent(XML_Parser parser,
 	    if (!openEntityNames)
 	      return XML_ERROR_NO_MEMORY;
 	    if (!externalEntityRefHandler(parser, openEntityNames, dtd.base, entity->systemId, entity->publicId)) {
-	      errorPtr = s;
+	      *eventPP = s;
 	      return XML_ERROR_EXTERNAL_ENTITY_HANDLING;
 	    }
 	  }
@@ -937,7 +943,7 @@ doContent(XML_Parser parser,
 	  result = storeAtts(parser, enc, tag->name, s);
 	  if (result)
 	    return result;
-	  startElementHandler(userData, tag->name, (const XML_Char **)atts);
+	  startElementHandler(handlerArg, tag->name, (const XML_Char **)atts);
 	  poolClear(&tempPool);
 	}
 	else
@@ -964,20 +970,18 @@ doContent(XML_Parser parser,
 	  enum XML_Error result = storeAtts(parser, enc, name, s);
 	  if (result)
 	    return result;
-	  startElementHandler(userData, name, (const XML_Char **)atts);
+	  startElementHandler(handlerArg, name, (const XML_Char **)atts);
 	}
 	if (endElementHandler)
-	  endElementHandler(userData, name);
+	  endElementHandler(handlerArg, name);
 	poolClear(&tempPool);
       }
       if (tagLevel == 0)
 	return epilogProcessor(parser, next, end, nextPtr);
       break;
     case XML_TOK_END_TAG:
-      if (tagLevel == startTagLevel) {
-        errorPtr = s;
+      if (tagLevel == startTagLevel)
         return XML_ERROR_ASYNC_ENTITY;
-      }
       else {
 	int len;
 	const char *rawName;
@@ -989,19 +993,19 @@ doContent(XML_Parser parser,
 	len = XmlNameLength(enc, rawName);
 	if (len != tag->rawNameLength
 	    || memcmp(tag->rawName, rawName, len) != 0) {
-	  errorPtr = rawName;
+	  *eventPP = rawName;
 	  return XML_ERROR_TAG_MISMATCH;
 	}
 	--tagLevel;
 	if (endElementHandler) {
 	  if (tag->name)
-	    endElementHandler(userData, tag->name);
+	    endElementHandler(handlerArg, tag->name);
 	  else {
 	    const XML_Char *name = poolStoreString(&tempPool, enc, rawName,
 	                                           rawName + len);
 	    if (!name)
 	      return XML_ERROR_NO_MEMORY;
-	    endElementHandler(userData, name);
+	    endElementHandler(handlerArg, name);
 	    poolClear(&tempPool);
 	  }
 	}
@@ -1012,23 +1016,20 @@ doContent(XML_Parser parser,
     case XML_TOK_CHAR_REF:
       {
 	int n = XmlCharRefNumber(enc, s);
-	if (n < 0) {
-	  errorPtr = s;
+	if (n < 0)
 	  return XML_ERROR_BAD_CHAR_REF;
-	}
 	if (characterDataHandler) {
 	  XML_Char buf[XML_ENCODE_MAX];
-	  characterDataHandler(userData, buf, XmlEncode(n, (ICHAR *)buf));
+	  characterDataHandler(handlerArg, buf, XmlEncode(n, (ICHAR *)buf));
 	}
       }
       break;
     case XML_TOK_XML_DECL:
-      errorPtr = s;
       return XML_ERROR_MISPLACED_XML_PI;
     case XML_TOK_DATA_NEWLINE:
       if (characterDataHandler) {
 	XML_Char c = XML_T('\n');
-	characterDataHandler(userData, &c, 1);
+	characterDataHandler(handlerArg, &c, 1);
       }
       break;
     case XML_TOK_CDATA_SECT_OPEN:
@@ -1049,19 +1050,19 @@ doContent(XML_Parser parser,
 	if (MUST_CONVERT(enc, s)) {
 	  ICHAR *dataPtr = (ICHAR *)dataBuf;
 	  XmlConvert(enc, &s, end, &dataPtr, (ICHAR *)dataBufEnd);
-	  characterDataHandler(userData, dataBuf, dataPtr - (ICHAR *)dataBuf);
+	  characterDataHandler(handlerArg, dataBuf, dataPtr - (ICHAR *)dataBuf);
 	}
 	else
-	  characterDataHandler(userData,
+	  characterDataHandler(handlerArg,
 		  	       (XML_Char *)s,
 			       (XML_Char *)end - (XML_Char *)s);
       }
       if (startTagLevel == 0) {
-        errorPtr = end;
+        *eventPP = end;
 	return XML_ERROR_NO_ELEMENTS;
       }
       if (tagLevel != startTagLevel) {
-	errorPtr = end;
+	*eventPP = end;
 	return XML_ERROR_ASYNC_ENTITY;
       }
       return XML_ERROR_NONE;
@@ -1071,11 +1072,11 @@ doContent(XML_Parser parser,
 	  do {
 	    ICHAR *dataPtr = (ICHAR *)dataBuf;
 	    XmlConvert(enc, &s, next, &dataPtr, (ICHAR *)dataBufEnd);
-	    characterDataHandler(userData, dataBuf, dataPtr - (ICHAR *)dataBuf);
+	    characterDataHandler(handlerArg, dataBuf, dataPtr - (ICHAR *)dataBuf);
 	  } while (s != next);
 	}
 	else
-	  characterDataHandler(userData,
+	  characterDataHandler(handlerArg,
 			       (XML_Char *)s,
 			       (XML_Char *)next - (XML_Char *)s);
       }
@@ -1085,7 +1086,7 @@ doContent(XML_Parser parser,
 	return XML_ERROR_NO_MEMORY;
       break;
     }
-    s = next;
+    *eventPP = s = next;
   }
   /* not reached */
 }
@@ -1126,7 +1127,7 @@ static enum XML_Error storeAtts(XML_Parser parser, const ENCODING *enc,
     if (!attId)
       return XML_ERROR_NO_MEMORY;
     if ((attId->name)[-1]) {
-      errorPtr = atts[i].name;
+      eventPtr = atts[i].name;
       return XML_ERROR_DUPLICATE_ATTRIBUTE;
     }
     (attId->name)[-1] = 1;
@@ -1221,7 +1222,7 @@ enum XML_Error doCdataSection(XML_Parser parser,
     case XML_TOK_DATA_NEWLINE:
       if (characterDataHandler) {
 	XML_Char c = XML_T('\n');
-	characterDataHandler(userData, &c, 1);
+	characterDataHandler(handlerArg, &c, 1);
       }
       break;
     case XML_TOK_DATA_CHARS:
@@ -1230,24 +1231,24 @@ enum XML_Error doCdataSection(XML_Parser parser,
 	  do {
   	    ICHAR *dataPtr = (ICHAR *)dataBuf;
 	    XmlConvert(enc, &s, next, &dataPtr, (ICHAR *)dataBufEnd);
-	    characterDataHandler(userData, dataBuf, dataPtr - (ICHAR *)dataBuf);
+	    characterDataHandler(handlerArg, dataBuf, dataPtr - (ICHAR *)dataBuf);
 	  } while (s != next);
 	}
 	else
-	  characterDataHandler(userData,
+	  characterDataHandler(handlerArg,
 		  	       (XML_Char *)s,
 			       (XML_Char *)next - (XML_Char *)s);
       }
       break;
     case XML_TOK_INVALID:
-      errorPtr = next;
+      eventPtr = next;
       return XML_ERROR_INVALID_TOKEN;
     case XML_TOK_PARTIAL_CHAR:
       if (nextPtr) {
 	*nextPtr = s;
 	return XML_ERROR_NONE;
       }
-      errorPtr = s;
+      eventPtr = s;
       return XML_ERROR_PARTIAL_CHAR;
     case XML_TOK_PARTIAL:
     case XML_TOK_NONE:
@@ -1255,7 +1256,7 @@ enum XML_Error doCdataSection(XML_Parser parser,
 	*nextPtr = s;
 	return XML_ERROR_NONE;
       }
-      errorPtr = s;
+      eventPtr = s;
       return XML_ERROR_UNCLOSED_CDATA_SECTION;
     default:
       abort();
@@ -1307,7 +1308,7 @@ processXmlDecl(XML_Parser parser, int isGeneralTextEntity,
 		       encoding,
 		       s,
 		       next,
-		       &errorPtr,
+		       &eventPtr,
 		       &version,
 		       &encodingName,
 		       &newEncoding,
@@ -1316,7 +1317,7 @@ processXmlDecl(XML_Parser parser, int isGeneralTextEntity,
   if (!protocolEncodingName) {
     if (newEncoding) {
       if (newEncoding->minBytesPerChar != encoding->minBytesPerChar) {
-	errorPtr = encodingName;
+	eventPtr = encodingName;
 	return XML_ERROR_INCORRECT_ENCODING;
       }
       encoding = newEncoding;
@@ -1333,7 +1334,7 @@ processXmlDecl(XML_Parser parser, int isGeneralTextEntity,
       result = handleUnknownEncoding(parser, s);
       poolDiscard(&tempPool);
       if (result == XML_ERROR_UNKNOWN_ENCODING)
-	errorPtr = encodingName;
+	eventPtr = encodingName;
       return result;
     }
   }
@@ -1407,7 +1408,7 @@ prologProcessor(XML_Parser parser,
       }
       switch (tok) {
       case XML_TOK_INVALID:
-	errorPtr = next;
+	eventPtr = next;
 	return XML_ERROR_INVALID_TOKEN;
       case XML_TOK_NONE:
 	return XML_ERROR_NO_ELEMENTS;
@@ -1416,7 +1417,7 @@ prologProcessor(XML_Parser parser,
       case XML_TOK_PARTIAL_CHAR:
 	return XML_ERROR_PARTIAL_CHAR;
       case XML_TOK_TRAILING_CR:
-	errorPtr = s + encoding->minBytesPerChar;
+	eventPtr = s + encoding->minBytesPerChar;
 	return XML_ERROR_NO_ELEMENTS;
       default:
 	abort();
@@ -1435,7 +1436,7 @@ prologProcessor(XML_Parser parser,
       break;
     case XML_ROLE_DOCTYPE_PUBLIC_ID:
     case XML_ROLE_ENTITY_PUBLIC_ID:
-      if (!XmlIsPublicId(encoding, s, next, &errorPtr))
+      if (!XmlIsPublicId(encoding, s, next, &eventPtr))
 	return XML_ERROR_SYNTAX;
       if (declEntity) {
 	XML_Char *tem = poolStoreString(&dtd.pool,
@@ -1526,7 +1527,7 @@ prologProcessor(XML_Parser parser,
 	  return XML_ERROR_NO_MEMORY;
 	poolFinish(&dtd.pool);
 	if (unparsedEntityDeclHandler)
-	  unparsedEntityDeclHandler(userData,
+	  unparsedEntityDeclHandler(handlerArg,
 				    declEntity->name,
 				    declEntity->base,
 				    declEntity->systemId,
@@ -1542,6 +1543,7 @@ prologProcessor(XML_Parser parser,
 	  declEntity = 0;
 	  break;
 	}
+	eventPtr = s;
 	name = poolStoreString(&dtd.pool, encoding, s, next);
 	if (!name)
 	  return XML_ERROR_NO_MEMORY;
@@ -1569,6 +1571,7 @@ prologProcessor(XML_Parser parser,
       declNotationPublicId = 0;
       declNotationName = 0;
       if (notationDeclHandler) {
+	eventPtr = s;
 	declNotationName = poolStoreString(&tempPool, encoding, s, next);
 	if (!declNotationName)
 	  return XML_ERROR_NO_MEMORY;
@@ -1576,7 +1579,7 @@ prologProcessor(XML_Parser parser,
       }
       break;
     case XML_ROLE_NOTATION_PUBLIC_ID:
-      if (!XmlIsPublicId(encoding, s, next, &errorPtr))
+      if (!XmlIsPublicId(encoding, s, next, &eventPtr))
 	return XML_ERROR_SYNTAX;
       if (declNotationName) {
 	XML_Char *tem = poolStoreString(&tempPool,
@@ -1598,7 +1601,7 @@ prologProcessor(XML_Parser parser,
 	  		    next - encoding->minBytesPerChar);
 	if (!systemId)
 	  return XML_ERROR_NO_MEMORY;
-	notationDeclHandler(userData,
+	notationDeclHandler(handlerArg,
 			    declNotationName,
 			    dtd.base,
 			    systemId,
@@ -1608,7 +1611,7 @@ prologProcessor(XML_Parser parser,
       break;
     case XML_ROLE_NOTATION_NO_SYSTEM_ID:
       if (declNotationPublicId && notationDeclHandler)
-	notationDeclHandler(userData,
+	notationDeclHandler(handlerArg,
 			    declNotationName,
 			    dtd.base,
 			    0,
@@ -1616,7 +1619,7 @@ prologProcessor(XML_Parser parser,
       poolClear(&tempPool);
       break;
     case XML_ROLE_ERROR:
-      errorPtr = s;
+      eventPtr = s;
       switch (tok) {
       case XML_TOK_PARAM_ENTITY_REF:
 	return XML_ERROR_PARAM_ENTITY_REF;
@@ -1638,14 +1641,14 @@ prologProcessor(XML_Parser parser,
       break;
     case XML_ROLE_GROUP_SEQUENCE:
       if (groupConnector[prologState.level] == '|') {
-	errorPtr = s;
+	eventPtr = s;
 	return XML_ERROR_SYNTAX;
       }
       groupConnector[prologState.level] = ',';
       break;
     case XML_ROLE_GROUP_CHOICE:
       if (groupConnector[prologState.level] == ',') {
-	errorPtr = s;
+	eventPtr = s;
 	return XML_ERROR_SYNTAX;
       }
       groupConnector[prologState.level] = '|';
@@ -1674,6 +1677,7 @@ enum XML_Error epilogProcessor(XML_Parser parser,
 			       const char **nextPtr)
 {
   processor = epilogProcessor;
+  eventPtr = s;
   for (;;) {
     const char *next;
     int tok = XmlPrologTok(encoding, s, end, &next);
@@ -1691,27 +1695,24 @@ enum XML_Error epilogProcessor(XML_Parser parser,
 	return XML_ERROR_NO_MEMORY;
       break;
     case XML_TOK_INVALID:
-      errorPtr = next;
+      eventPtr = next;
       return XML_ERROR_INVALID_TOKEN;
     case XML_TOK_PARTIAL:
       if (nextPtr) {
 	*nextPtr = s;
 	return XML_ERROR_NONE;
       }
-      errorPtr = s;
       return XML_ERROR_UNCLOSED_TOKEN;
     case XML_TOK_PARTIAL_CHAR:
       if (nextPtr) {
 	*nextPtr = s;
 	return XML_ERROR_NONE;
       }
-      errorPtr = s;
       return XML_ERROR_PARTIAL_CHAR;
     default:
-      errorPtr = s;
       return XML_ERROR_JUNK_AFTER_DOC_ELEMENT;
     }
-    s = next;
+    eventPtr = s = next;
   }
 }
 
@@ -1752,10 +1753,10 @@ appendAttributeValue(XML_Parser parser, const ENCODING *enc, int isCdata,
     case XML_TOK_NONE:
       return XML_ERROR_NONE;
     case XML_TOK_INVALID:
-      errorPtr = next;
+      eventPtr = next;
       return XML_ERROR_INVALID_TOKEN;
     case XML_TOK_PARTIAL:
-      errorPtr = ptr;
+      eventPtr = ptr;
       return XML_ERROR_INVALID_TOKEN;
     case XML_TOK_CHAR_REF:
       {
@@ -1763,7 +1764,7 @@ appendAttributeValue(XML_Parser parser, const ENCODING *enc, int isCdata,
 	int i;
 	int n = XmlCharRefNumber(enc, ptr);
 	if (n < 0) {
-	  errorPtr = ptr;
+	  eventPtr = ptr;
       	  return XML_ERROR_BAD_CHAR_REF;
 	}
 	if (!isCdata
@@ -1772,7 +1773,7 @@ appendAttributeValue(XML_Parser parser, const ENCODING *enc, int isCdata,
 	  break;
 	n = XmlEncode(n, (ICHAR *)buf);
 	if (!n) {
-	  errorPtr = ptr;
+	  eventPtr = ptr;
 	  return XML_ERROR_BAD_CHAR_REF;
 	}
 	for (i = 0; i < n; i++) {
@@ -1817,20 +1818,20 @@ appendAttributeValue(XML_Parser parser, const ENCODING *enc, int isCdata,
 	poolDiscard(&temp2Pool);
 	if (!entity) {
 	  if (dtd.complete) {
-	    errorPtr = ptr;
+	    eventPtr = ptr;
 	    return XML_ERROR_UNDEFINED_ENTITY;
 	  }
 	}
 	else if (entity->open) {
-	  errorPtr = ptr;
+	  eventPtr = ptr;
 	  return XML_ERROR_RECURSIVE_ENTITY_REF;
 	}
 	else if (entity->notation) {
-	  errorPtr = ptr;
+	  eventPtr = ptr;
 	  return XML_ERROR_BINARY_ENTITY_REF;
 	}
 	else if (!entity->textPtr) {
-	  errorPtr = ptr;
+	  eventPtr = ptr;
   	  return XML_ERROR_ATTRIBUTE_EXTERNAL_ENTITY_REF;
 	}
 	else {
@@ -1840,7 +1841,7 @@ appendAttributeValue(XML_Parser parser, const ENCODING *enc, int isCdata,
 	  result = appendAttributeValue(parser, internalEnc, isCdata, (char *)entity->textPtr, (char *)textEnd, pool);
 	  entity->open = 0;
 	  if (result) {
-	    errorPtr = ptr;
+	    eventPtr = ptr;
 	    return result;
 	  }
 	}
@@ -1868,7 +1869,7 @@ enum XML_Error storeEntityValue(XML_Parser parser,
     int tok = XmlEntityValueTok(encoding, entityTextPtr, entityTextEnd, &next);
     switch (tok) {
     case XML_TOK_PARAM_ENTITY_REF:
-      errorPtr = entityTextPtr;
+      eventPtr = entityTextPtr;
       return XML_ERROR_SYNTAX;
     case XML_TOK_NONE:
       if (declEntity) {
@@ -1898,12 +1899,12 @@ enum XML_Error storeEntityValue(XML_Parser parser,
 	int i;
 	int n = XmlCharRefNumber(encoding, entityTextPtr);
 	if (n < 0) {
-	  errorPtr = entityTextPtr;
+	  eventPtr = entityTextPtr;
 	  return XML_ERROR_BAD_CHAR_REF;
 	}
 	n = XmlEncode(n, (ICHAR *)buf);
 	if (!n) {
-	  errorPtr = entityTextPtr;
+	  eventPtr = entityTextPtr;
 	  return XML_ERROR_BAD_CHAR_REF;
 	}
 	for (i = 0; i < n; i++) {
@@ -1914,10 +1915,10 @@ enum XML_Error storeEntityValue(XML_Parser parser,
       }
       break;
     case XML_TOK_PARTIAL:
-      errorPtr = entityTextPtr;
+      eventPtr = entityTextPtr;
       return XML_ERROR_INVALID_TOKEN;
     case XML_TOK_INVALID:
-      errorPtr = next;
+      eventPtr = next;
       return XML_ERROR_INVALID_TOKEN;
     default:
       abort();
@@ -1967,7 +1968,7 @@ reportProcessingInstruction(XML_Parser parser, const ENCODING *enc, const char *
   if (!data)
     return 0;
   normalizeLines(data);
-  processingInstructionHandler(userData, target, data);
+  processingInstructionHandler(handlerArg, target, data);
   poolClear(&tempPool);
   return 1;
 }

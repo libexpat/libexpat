@@ -159,8 +159,14 @@ void XMLPARSEAPI
 XML_SetUserData(XML_Parser parser, void *userData);
 
 /* Returns the last value set by XML_SetUserData or null. */
-void XMLPARSEAPI *
-XML_GetUserData(XML_Parser parser);
+#define XML_GetUserData(parser) (*(void **)(parser))
+
+/* If this function is called, then the parser will be passed
+as the first argument to callbacks instead of userData.
+The userData will still be accessible using XML_GetUserData. */
+
+void XMLPARSEAPI
+XML_UseParserAsHandlerArg(XML_Parser parser);
 
 /* Sets the base to be used for resolving relative URIs in system identifiers in
 declarations.  Resolving relative identifiers is left to the application:
@@ -169,6 +175,9 @@ The base argument will be copied. Returns zero if out of memory, non-zero otherw
 
 int XMLPARSEAPI
 XML_SetBase(XML_Parser parser, const XML_Char *base);
+
+const XML_Char XMLPARSEAPI *
+XML_GetBase(XML_Parser parser);
 
 /* Parses some input. Returns 0 if a fatal error is detected.
 The last call to XML_Parse must have isFinal true;
@@ -197,7 +206,7 @@ XML_ExternalEntityParserCreate(XML_Parser parser,
 			       const XML_Char *openEntityNames,
 			       const XML_Char *encoding);
 
-/* If XML_Parser or XML_ParseEnd have returned 0, then XML_GetError*
+/* If XML_Parser or XML_ParseEnd have returned 0, then XML_GetErrorCode
 returns information about the error. */
 
 enum XML_Error {
@@ -225,10 +234,16 @@ enum XML_Error {
   XML_ERROR_EXTERNAL_ENTITY_HANDLING
 };
 
+int XMLPARSEAPI XML_GetCurrentLineNumber(XML_Parser parser);
+int XMLPARSEAPI XML_GetCurrentColumnNumber(XML_Parser parser);
+long XMLPARSEAPI XML_GetCurrentByteIndex(XML_Parser parser);
+
+/* For backwards compatibility with previous versions. */
+#define XML_GetErrorLineNumber XML_GetCurrentLineNumber
+#define XML_GetErrorColumnNumber XML_GetCurrentColumnNumber
+#define XML_GetErrorByteIndexNumber XML_GetCurrentByteIndexNumber
+
 int XMLPARSEAPI XML_GetErrorCode(XML_Parser parser);
-int XMLPARSEAPI XML_GetErrorLineNumber(XML_Parser parser);
-int XMLPARSEAPI XML_GetErrorColumnNumber(XML_Parser parser);
-long XMLPARSEAPI XML_GetErrorByteIndex(XML_Parser parser);
 
 void XMLPARSEAPI
 XML_ParserFree(XML_Parser parser);
