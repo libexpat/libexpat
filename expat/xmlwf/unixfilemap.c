@@ -10,6 +10,7 @@ See the file COPYING for copying permission.
 #include <errno.h>
 #include <string.h>
 #include <stdio.h>
+#include <unistd.h>
 
 #ifndef MAP_FILE
 #define MAP_FILE 0
