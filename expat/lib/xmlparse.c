@@ -597,16 +597,6 @@ struct XML_ParserStruct {
 
 #define parsing (processor != prologInitProcessor)
 
-#ifdef _MSC_VER
-#ifdef _DEBUG
-Parser *
-asParser(XML_Parser parser)
-{
-  return parser;
-}
-#endif
-#endif
-
 XML_Parser
 XML_ParserCreate(const XML_Char *encodingName)
 {
@@ -3506,7 +3496,6 @@ doProlog(XML_Parser parser,
                                     declEntity->publicId,
                                     declEntity->notation);
           handleDefault = XML_FALSE;
-
         }
         else if (entityDeclHandler) {
           *eventEndPP = s;
