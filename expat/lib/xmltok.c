@@ -14,7 +14,7 @@
 #endif
 #endif /* ndef COMPILED_FROM_DSP */
 
-#include "external.h"
+#include "expat_external.h"
 #include "internal.h"
 #include "xmltok.h"
 #include "nametab.h"

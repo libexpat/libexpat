@@ -133,7 +133,7 @@ SOURCE=.\expat.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\external.h
+SOURCE=.\expat_external.h
 # End Source File
 # Begin Source File
 

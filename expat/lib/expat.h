@@ -15,7 +15,7 @@
 #endif
 
 #include <stdlib.h>
-#include "external.h"
+#include "expat_external.h"
 
 struct XML_ParserStruct;
 typedef struct XML_ParserStruct *XML_Parser;
