@@ -44,8 +44,8 @@ dnl
 dnl If the API changes incompatibly set LIBAGE back to 0
 dnl
 
-LIBCURRENT=4
-LIBREVISION=1
+LIBCURRENT=5
+LIBREVISION=0
 LIBAGE=5
 
 AC_CONFIG_HEADER(expat_config.h)
