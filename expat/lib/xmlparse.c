@@ -2700,7 +2700,7 @@ processXmlDecl(XML_Parser parser, int isGeneralTextEntity,
           return XML_ERROR_NO_MEMORY;
       }
       result = handleUnknownEncoding(parser, storedEncName);
-      poolClear(&tempPool);
+      poolClear(&temp2Pool);
       if (result == XML_ERROR_UNKNOWN_ENCODING)
         eventPtr = encodingName;
       return result;
