@@ -11,6 +11,7 @@ typedef struct {
   const char *name;
   const char *textPtr;
   size_t textLen;
+  const char *docTextPtr;
   const char *systemId;
   const char *publicId;
   const char *notation;
@@ -82,6 +83,8 @@ checkAttributeValue(DTD *, const ENCODING *, const char *, const char *, const c
 static enum WfCheckResult
 checkAttributeUniqueness(CONTEXT *context, const ENCODING *enc, int nAtts,
 			 const char **badPtr);
+static enum WfCheckResult
+checkParsedEntities(CONTEXT *context, const char **badPtr);
 
 static
 enum WfCheckResult storeEntity(DTD *dtd,
@@ -112,8 +115,12 @@ wfCheck(enum EntityType entityType, const char *s, size_t n,
     result = checkProlog(&context.dtd, s, end, &next, &enc);
     s = next;
     if (!result) {
-      result = checkContent(0, &context, enc, s, end, &next);
+      result = checkParsedEntities(&context, &next);
       s = next;
+      if (!result) {
+	result = checkContent(0, &context, enc, s, end, &next);
+	s = next;
+      }
     }
   }
   else {
@@ -571,6 +578,33 @@ checkProlog(DTD *dtd, const char *s, const char *end,
 }
 
 static enum WfCheckResult
+checkParsedEntities(CONTEXT *context, const char **badPtr)
+{
+  HASH_TABLE_ITER iter;
+  hashTableIterInit(&iter, &context->dtd.generalEntities);
+  for (;;) {
+    ENTITY *entity = (ENTITY *)hashTableIterNext(&iter);
+    if (!entity)
+      break;
+    if (entity->textPtr && !entity->wfInContent && !entity->magic) {
+      enum WfCheckResult result;
+      const ENCODING *internalEnc = XmlGetInternalEncoding(XML_UTF8_ENCODING);
+      entity->open = 1;
+      result = checkContent(1, context, internalEnc,
+			    entity->textPtr, entity->textPtr + entity->textLen,
+			    badPtr);
+      entity->open = 0;
+      if (result && *badPtr) {
+	*badPtr = entity->docTextPtr;
+	return result;
+      }
+      entity->wfInContent = 1;
+    }
+  }
+  return wellFormed;
+}
+
+static enum WfCheckResult
 checkGeneralTextEntity(CONTEXT *context,
 		       const char *s, const char *end,
 		       const char **nextPtr,
@@ -837,6 +871,8 @@ enum WfCheckResult storeEntity(DTD *dtd,
   }
   entityTextPtr += enc->minBytesPerChar;
   entityTextEnd -= enc->minBytesPerChar;
+  if (entityNamePtr)
+    entity->docTextPtr = entityTextPtr;
   for (;;) {
     const char *next;
     int tok = XmlEntityValueTok(enc, entityTextPtr, entityTextEnd, &next);
