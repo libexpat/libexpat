@@ -228,7 +228,8 @@ typedef struct {
   XML_Bool keepProcessing;
   /* indicates if external PE has been read */
   XML_Bool paramEntityRead;
-  /* true once an internal or external PE reference has been encountered */
+  /* true once an internal or external PE reference has been encountered;
+     any external subset is considered an external PE reference */
   XML_Bool hasParamEntityRefs;
   XML_Bool standalone;
 #ifdef XML_DTD
