@@ -5,7 +5,7 @@ Summary: Expat is an XML 1.0 parser written in C.
 Name: expat
 Version: %{version}
 Release: %{release}
-Copyright: Mozilla or GPL
+Copyright: MIT/X
 Group: Utilities/parsers
 URL: http://expat.sourceforge.net/
 Source: http://download.sourceforge.net/expat/expat-%{version}.tar.gz
