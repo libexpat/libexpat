@@ -1784,15 +1784,23 @@ static enum XML_Error storeAtts(XML_Parser parser, const ENCODING *enc,
     return XML_ERROR_NONE;
   tagNamePtr->localPart = localPart;
   tagNamePtr->uriLen = binding->uriLen;
-  i = binding->uriLen;
-  do {
-    if (i == binding->uriAlloc) {
-      binding->uri = realloc(binding->uri, (binding->uriAlloc *= 2) * sizeof(XML_Char));
-      if (!binding->uri)
-	return XML_ERROR_NO_MEMORY;
-    }
-    binding->uri[i++] = *localPart;
-  } while (*localPart++);
+  for (i = 0; localPart[i++];)
+    ;
+  n = i + binding->uriLen;
+  if (n > binding->uriAlloc) {
+    TAG *p;
+    XML_Char *uri = malloc((n + EXPAND_SPARE) * sizeof(XML_Char));
+    if (!uri)
+      return XML_ERROR_NO_MEMORY;
+    binding->uriAlloc = n + EXPAND_SPARE;
+    memcpy(uri, binding->uri, binding->uriLen * sizeof(XML_Char));
+    for (p = tagStack; p; p = p->parent)
+      if (p->name.str == binding->uri)
+	p->name.str = uri;
+    free(binding->uri);
+    binding->uri = uri;
+  }
+  memcpy(binding->uri + binding->uriLen, localPart, i * sizeof(XML_Char));
   tagNamePtr->str = binding->uri;
   return XML_ERROR_NONE;
 }
