@@ -77,6 +77,7 @@ RANLIB = @RANLIB@
 VERSION = @VERSION@
 
 SUBDIRS = lib examples sample xmlwf
+INSTALLSUBDIRS = lib xmlwf
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 CONFIG_HEADERS = config.h
 
@@ -105,17 +106,17 @@ config.h: config.h.in config.status
 	$(SHELL) ./config.status
 
 $(SUBDIRS):
-	cd $@; $(MAKE)
+	cd $@ && $(MAKE)
 
 clean:
-	@list='$(SUBDIRS)'; for dir in $$list; do \
-	  cd $$dir; $(MAKE) clean; cd ..; \
+	for dir in $(SUBDIRS); do \
+		(cd $$dir && $(MAKE) clean); \
 	done
 	rm -f core *~
 
 distclean:
-	@list='$(SUBDIRS)'; for dir in $$list; do \
-	  cd $$dir; $(MAKE) distclean; cd ..; \
+	for dir in $(SUBDIRS); do \
+		(cd $$dir && $(MAKE) distclean); \
 	done
 	rm -f config.h config.status config.log config.cache libtool
 	rm -f Makefile examples/Makefile xmlwf/Makefile sample/Makefile
@@ -133,7 +134,7 @@ distdir: MANIFEST
 	test -d $(DISTDIR) && rm -rf $(DISTDIR); \
 	mkdir $(DISTDIR); \
 	flist=`sed -e "s/[ 	]:.*$$//" MANIFEST`; for file in $$flist; do \
-	  cp -P $$file $(DISTDIR); \
+		cp -P $$file $(DISTDIR); \
 	done
 
 check:	$(SUBDIRS)
@@ -147,13 +148,13 @@ $(DISTRIBUTION): distdir
 dist: $(DISTRIBUTION)
 
 install:
-	@list='$(SUBDIRS)'; for dir in $$list; do \
-	  cd $$dir; $(MAKE) install; cd ..; \
+	for dir in $(INSTALLSUBDIRS); do \
+		(cd $$dir && $(MAKE) install); \
 	done
 
 uninstall:
-	@list='$(SUBDIRS)'; for dir in $$list; do \
-	  cd $$dir; $(MAKE) uninstall; cd ..; \
+	for dir in $(INSTALLSUBDIRS); do \
+		(cd $$dir && $(MAKE) uninstall); \
 	done
 
 .PHONY: buildlib all $(SUBDIRS) \
