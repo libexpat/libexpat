@@ -80,7 +80,7 @@ install: xmlwf/xmlwf installlib
 installlib: $(LIBRARY) $(APIHEADER)
 	$(mkinstalldirs) $(libdir) $(includedir)
 	$(LIBTOOL) --mode=install $(INSTALL) $(LIBRARY) $(libdir)/$(LIBRARY)
-	$(INSTALL_DATA) $(APIHEADER) $(includedir)
+	for FN in $(APIHEADER) ; do $(INSTALL_DATA) $$FN $(includedir) ; done
 
 uninstall: uninstalllib
 	$(LIBTOOL) --mode=uninstall rm -f $(bindir)/xmlwf
