@@ -324,7 +324,7 @@ void utf8_toUtf16(const ENCODING *enc,
   *toP = to;
 }
 
-#ifdef XMLNS
+#ifdef XML_NS
 static const struct normal_encoding utf8_encoding_ns = {
   { VTABLE1, utf8_toUtf8, utf8_toUtf16, 1, 1, 0 },
   {
@@ -346,7 +346,7 @@ static const struct normal_encoding utf8_encoding = {
   STANDARD_VTABLE(sb_) NORMAL_VTABLE(utf8_)
 };
 
-#ifdef XMLNS
+#ifdef XML_NS
 
 static const struct normal_encoding internal_utf8_encoding_ns = {
   { VTABLE1, utf8_toUtf8, utf8_toUtf16, 1, 1, 0 },
@@ -404,7 +404,7 @@ void latin1_toUtf16(const ENCODING *enc,
     *(*toP)++ = (unsigned char)*(*fromP)++;
 }
 
-#ifdef XMLNS
+#ifdef XML_NS
 
 static const struct normal_encoding latin1_encoding_ns = {
   { VTABLE1, latin1_toUtf8, latin1_toUtf16, 1, 0, 0 },
@@ -437,7 +437,7 @@ void ascii_toUtf8(const ENCODING *enc,
     *(*toP)++ = *(*fromP)++;
 }
 
-#ifdef XMLNS
+#ifdef XML_NS
 
 static const struct normal_encoding ascii_encoding_ns = {
   { VTABLE1, ascii_toUtf8, latin1_toUtf16, 1, 1, 0 },
@@ -654,7 +654,7 @@ int little2_isNmstrtMin(const ENCODING *enc, const char *p)
 
 #endif /* not XMLSMALL */
 
-#ifdef XMLNS
+#ifdef XML_NS
 
 static const struct normal_encoding little2_encoding_ns = { 
   { VTABLE, 2, 0,
@@ -692,7 +692,7 @@ static const struct normal_encoding little2_encoding = {
 
 #if BYTE_ORDER != 21
 
-#ifdef XMLNS
+#ifdef XML_NS
 
 static const struct normal_encoding internal_little2_encoding_ns = { 
   { VTABLE, 2, 0, 1 },
@@ -793,7 +793,7 @@ int big2_isNmstrtMin(const ENCODING *enc, const char *p)
 
 #endif /* not XMLSMALL */
 
-#ifdef XMLNS
+#ifdef XML_NS
 
 static const struct normal_encoding big2_encoding_ns = {
   { VTABLE, 2, 0,
@@ -831,7 +831,7 @@ static const struct normal_encoding big2_encoding = {
 
 #if BYTE_ORDER != 12
 
-#ifdef XMLNS
+#ifdef XML_NS
 
 static const struct normal_encoding internal_big2_encoding_ns = {
   { VTABLE, 2, 0, 1 },
@@ -1451,7 +1451,7 @@ int initScan(const ENCODING **encodingTable,
 #undef NS
 #undef ns
 
-#ifdef XMLNS
+#ifdef XML_NS
 
 #define NS(x) x ## NS
 #define ns(x) x ## _ns
@@ -1473,4 +1473,4 @@ XmlInitUnknownEncodingNS(void *mem,
   return enc;
 }
 
-#endif /* XMLNS */
+#endif /* XML_NS */

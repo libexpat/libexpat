@@ -419,7 +419,7 @@ int PREFIX(scanEndTag)(const ENCODING *enc, const char *ptr, const char *end,
 	}
       }
       return XML_TOK_PARTIAL;
-#ifdef XMLNS
+#ifdef XML_NS
     case BT_COLON:
       /* no need to check qname syntax here, since end-tag must match exactly */
       ptr += MINBPC(enc);
@@ -536,13 +536,13 @@ static
 int PREFIX(scanAtts)(const ENCODING *enc, const char *ptr, const char *end,
 		     const char **nextTokPtr)
 {
-#ifdef XMLNS
+#ifdef XML_NS
   int hadColon = 0;
 #endif
   while (ptr != end) {
     switch (BYTE_TYPE(enc, ptr)) {
     CHECK_NAME_CASES(enc, ptr, end, nextTokPtr)
-#ifdef XMLNS
+#ifdef XML_NS
     case BT_COLON:
       if (hadColon) {
 	*nextTokPtr = ptr;
@@ -584,7 +584,7 @@ int PREFIX(scanAtts)(const ENCODING *enc, const char *ptr, const char *end,
     case BT_EQUALS:
       {
 	int open;
-#ifdef XMLNS
+#ifdef XML_NS
 	hadColon = 0;
 #endif
 	for (;;) {
@@ -696,7 +696,7 @@ static
 int PREFIX(scanLt)(const ENCODING *enc, const char *ptr, const char *end,
 		   const char **nextTokPtr)
 {
-#ifdef XMLNS
+#ifdef XML_NS
   int hadColon;
 #endif
   if (ptr == end)
@@ -722,14 +722,14 @@ int PREFIX(scanLt)(const ENCODING *enc, const char *ptr, const char *end,
     *nextTokPtr = ptr;
     return XML_TOK_INVALID;
   }
-#ifdef XMLNS
+#ifdef XML_NS
   hadColon = 0;
 #endif
   /* we have a start-tag */
   while (ptr != end) {
     switch (BYTE_TYPE(enc, ptr)) {
     CHECK_NAME_CASES(enc, ptr, end, nextTokPtr)
-#ifdef XMLNS
+#ifdef XML_NS
     case BT_COLON:
       if (hadColon) {
 	*nextTokPtr = ptr;
@@ -1126,7 +1126,7 @@ int PREFIX(prologTok)(const ENCODING *enc, const char *ptr, const char *end,
   case BT_DIGIT:
   case BT_NAME:
   case BT_MINUS:
-#ifdef XMLNS
+#ifdef XML_NS
   case BT_COLON:
 #endif
     tok = XML_TOK_NMTOKEN;
@@ -1156,7 +1156,7 @@ int PREFIX(prologTok)(const ENCODING *enc, const char *ptr, const char *end,
     case BT_S: case BT_CR: case BT_LF:
       *nextTokPtr = ptr;
       return tok;
-#ifdef XMLNS
+#ifdef XML_NS
     case BT_COLON:
       ptr += MINBPC(enc);
       switch (tok) {
@@ -1342,7 +1342,7 @@ int PREFIX(isPublicId)(const ENCODING *enc, const char *ptr, const char *end,
     case BT_AST:
     case BT_PERCNT:
     case BT_NUM:
-#ifdef XMLNS
+#ifdef XML_NS
     case BT_COLON:
 #endif
       break;
@@ -1575,7 +1575,7 @@ int PREFIX(sameName)(const ENCODING *enc, const char *ptr1, const char *ptr2)
       break;
     case BT_NONASCII:
     case BT_NMSTRT:
-#ifdef XMLNS
+#ifdef XML_NS
     case BT_COLON:
 #endif
     case BT_HEX:
@@ -1606,7 +1606,7 @@ int PREFIX(sameName)(const ENCODING *enc, const char *ptr1, const char *ptr2)
       case BT_LEAD4:
       case BT_NONASCII:
       case BT_NMSTRT:
-#ifdef XMLNS
+#ifdef XML_NS
       case BT_COLON:
 #endif
       case BT_HEX:
@@ -1635,7 +1635,7 @@ int PREFIX(nameMatchesAscii)(const ENCODING *enc, const char *ptr1, const char *
   case BT_LEAD4:
   case BT_NONASCII:
   case BT_NMSTRT:
-#ifdef XMLNS
+#ifdef XML_NS
   case BT_COLON:
 #endif
   case BT_HEX:
@@ -1660,7 +1660,7 @@ int PREFIX(nameLength)(const ENCODING *enc, const char *ptr)
 #undef LEAD_CASE
     case BT_NONASCII:
     case BT_NMSTRT:
-#ifdef XMLNS
+#ifdef XML_NS
     case BT_COLON:
 #endif
     case BT_HEX:

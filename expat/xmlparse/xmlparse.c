@@ -44,7 +44,7 @@ typedef char ICHAR;
 #endif
 
 
-#ifndef XMLNS
+#ifndef XML_NS
 
 #define XmlInitEncodingNS XmlInitEncoding
 #define XmlInitUnknownEncodingNS XmlInitUnknownEncoding
