@@ -166,6 +166,7 @@ static
 int PREFIX(checkPiTarget)(const ENCODING *enc, const char *ptr, const char *end, int *tokPtr)
 {
   int upper = 0;
+  *tokPtr = XML_TOK_PI;
   if (end - ptr != MINBPC*3)
     return 1;
   switch (BYTE_TO_ASCII(enc, ptr)) {
