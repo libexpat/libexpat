@@ -284,6 +284,7 @@ typedef struct open_internal_entity {
   const char *internalEventEndPtr;
   struct open_internal_entity *next;
   ENTITY *entity;
+  int startTagLevel;
   XML_Bool betweenDecl; /* WFC: PE Between Declarations */
 } OPEN_INTERNAL_ENTITY;
 
@@ -4568,6 +4569,7 @@ processInternalEntity(XML_Parser parser, ENTITY *entity,
   openEntity->next = openInternalEntities;
   openInternalEntities = openEntity;
   openEntity->entity = entity;
+  openEntity->startTagLevel = tagLevel;
   openEntity->betweenDecl = betweenDecl;
   openEntity->internalEventPtr = NULL;
   openEntity->internalEventEndPtr = NULL;
@@ -4610,7 +4612,6 @@ internalEntityProcessor(XML_Parser parser,
   ENTITY *entity;
   const char *textStart, *textEnd;
   const char *next;
-  int processorTagLevel;
   enum XML_Error result;
   OPEN_INTERNAL_ENTITY *openEntity = openInternalEntities;
   if (!openEntity)
@@ -4619,11 +4620,6 @@ internalEntityProcessor(XML_Parser parser,
   entity = openEntity->entity;
   textStart = ((char *)entity->textPtr) + entity->processed;
   textEnd = (char *)(entity->textPtr + entity->textLen);
-  /* compare with cdataSectionProcessor */
-  if (parentParser)
-    processorTagLevel = 1;
-  else
-    processorTagLevel = 0;
 
 #ifdef XML_DTD
   if (entity->is_param) {
@@ -4633,7 +4629,7 @@ internalEntityProcessor(XML_Parser parser,
   }
   else
 #endif /* XML_DTD */
-    result = doContent(parser, processorTagLevel, internalEncoding, 
+    result = doContent(parser, openEntity->startTagLevel, internalEncoding, 
                        textStart, textEnd, &next, XML_FALSE);  
 
   if (result != XML_ERROR_NONE)
@@ -4662,8 +4658,9 @@ internalEntityProcessor(XML_Parser parser,
 #endif /* XML_DTD */
   {
     processor = contentProcessor;
-    return doContent(parser, processorTagLevel, encoding, s, end, nextPtr,
-                     (XML_Bool)!finalBuffer); 
+    /* see externalEntityContentProcessor vs contentProcessor */
+    return doContent(parser, parentParser ? 1 : 0, encoding, s, end,
+                     nextPtr, (XML_Bool)!finalBuffer); 
   }  
 }
 
