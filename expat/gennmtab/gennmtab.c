@@ -1,6 +1,5 @@
-/*
-Copyright (c) 1998, 1999 Thai Open Source Software Center Ltd
-See the file COPYING for copying permission.
+/* Copyright (c) 1998, 1999 Thai Open Source Software Center Ltd
+   See the file COPYING for copying permission.
 */
 
 #include <string.h>
@@ -354,21 +353,23 @@ struct range name[] = {
   { 0x30fc, 0x30fe },
 };
 
-void setTab(char *tab, struct range *ranges, size_t nRanges)
+static void
+setTab(char *tab, struct range *ranges, size_t nRanges)
 {
   size_t i;
   int j;
   for (i = 0; i < nRanges; i++) {
     if (ranges[i].end) {
       for (j = ranges[i].start; j <= ranges[i].end; j++)
-	tab[j] = 1;
+        tab[j] = 1;
     }
     else
       tab[ranges[i].start] = 1;
   }
 }
 
-void printTabs(char *tab)
+static void
+printTabs(char *tab)
 { 
   int nBitmaps = 2;
   int i, j, k;
@@ -384,21 +385,21 @@ void printTabs(char *tab)
     int kind = tab[i*256];
     for (j = 1; j < 256; j++)
       if (tab[i*256 +j] != kind) {
-	kind = -1;
-	break;
+        kind = -1;
+        break;
       }
     if (i >= 256 &&  memcmp(tab + (i - 256)*256, tab + i*256, 256) == 0)
       pageIndex[i] = pageIndex[i - 256];
     else if (kind == -1) { 
       pageIndex[i] = nBitmaps++;
       for (j = 0; j < 8; j++) {
-	unsigned val = 0;
-	for (k = 0; k < 32; k++) {
-	  if (tab[i*256 + j*32 +k])
-	    val |= (1 << k);
-	}
-	printf("0x%08X,", val);
-	putchar((((j + 1) & 3) == 0) ? '\n' : ' ');
+        unsigned val = 0;
+        for (k = 0; k < 32; k++) {
+          if (tab[i*256 + j*32 +k])
+            val |= (1 << k);
+        }
+        printf("0x%08X,", val);
+        putchar((((j + 1) & 3) == 0) ? '\n' : ' ');
       }
     }
     else
@@ -415,7 +416,8 @@ void printTabs(char *tab)
   printf("};\n");
 }
 
-int main()
+int
+main()
 { 
   char tab[2*65536];
   memset(tab, 0, 65536);
