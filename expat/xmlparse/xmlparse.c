@@ -470,7 +470,7 @@ XML_Parser XML_ParserCreateNS(const XML_Char *encodingName, XML_Char nsSep)
 
 int XML_SetEncoding(XML_Parser parser, const XML_Char *encodingName)
 {
-  if (encodingName)
+  if (!encodingName)
     protocolEncodingName = 0;
   else {
     protocolEncodingName = poolCopyString(&tempPool, encodingName);
