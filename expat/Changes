@@ -1,6 +1,6 @@
 Release 1.95.2 Fri Jul 27 2001
-	- Nore changes to make MSVC happy with the build; add a single
-	  workspace to support both the library and xmlwf applicatiion.
+	- More changes to make MSVC happy with the build; add a single
+	  workspace to support both the library and xmlwf application.
 	- Added a Windows installer for Windows users; includes
 	  xmlwf.exe.
 	- Added compile-time constants that can be used to determine the
