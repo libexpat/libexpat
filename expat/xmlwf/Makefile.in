@@ -18,8 +18,10 @@
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN EXPAT.
 #
 
+srcdir=@srcdir@
+
 LIBDIR= ../lib/.libs
-INCDIR= ../lib
+INCDIR= $(srcdir)/../lib
 
 LDFLAGS= @LDFLAGS@ -static
 CFLAGS= @CFLAGS@ -I$(INCDIR)
