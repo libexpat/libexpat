@@ -61,11 +61,13 @@ filemap(const char *name,
   n = read(fd, p, nbytes);
   if (n < 0) {
     perror(name);
+    free(p);
     close(fd);
     return 0;
   }
   if (n != nbytes) {
     fprintf(stderr, "%s: read unexpected number of bytes\n", name);
+    free(p);
     close(fd);
     return 0;
   }
