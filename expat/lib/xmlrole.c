@@ -793,7 +793,7 @@ attlist2(PROLOG_STATE *state,
     return XML_ROLE_ATTLIST_NONE;
   case XML_TOK_NAME:
     {
-      static const char *types[] = {
+      static const char * const types[] = {
         KW_CDATA,
         KW_ID,
         KW_IDREF,
