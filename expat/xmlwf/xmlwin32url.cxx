@@ -1,4 +1,4 @@
-#include "xmlparse.h"
+#include "expat.h"
 #ifdef XML_UNICODE
 #define UNICODE
 #endif
@@ -10,8 +10,8 @@
 #include "xmlurl.h"
 #include "xmlmime.h"
 
-static
-int processURL(XML_Parser parser, IMoniker *baseMoniker, const XML_Char *url);
+static int
+processURL(XML_Parser parser, IMoniker *baseMoniker, const XML_Char *url);
 
 typedef void (*StopHandler)(void *, HRESULT);
 
@@ -32,7 +32,8 @@ public:
   STDMETHODIMP OnObjectAvailable(REFIID, IUnknown *);
   Callback(XML_Parser, IMoniker *, StopHandler, void *);
   ~Callback();
-  int externalEntityRef(const XML_Char *context, const XML_Char *systemId, const XML_Char *publicId);
+  int externalEntityRef(const XML_Char *context,
+                        const XML_Char *systemId, const XML_Char *publicId);
 private:
   XML_Parser parser_;
   IMoniker *baseMoniker_;
@@ -43,12 +44,14 @@ private:
   void *stopArg_;
 };
 
-STDMETHODIMP_(ULONG) Callback::AddRef()
+STDMETHODIMP_(ULONG)
+Callback::AddRef()
 { 
   return ref_++;
 }
 
-STDMETHODIMP_(ULONG) Callback::Release()
+STDMETHODIMP_(ULONG)
+Callback::Release()
 { 
   if (--ref_ == 0) {
     delete this;
@@ -57,7 +60,8 @@ STDMETHODIMP_(ULONG) Callback::Release()
   return ref_;
 }
 
-STDMETHODIMP Callback::QueryInterface(REFIID riid, void** ppv)
+STDMETHODIMP
+Callback::QueryInterface(REFIID riid, void** ppv)
 { 
   if (IsEqualGUID(riid, IID_IUnknown))
     *ppv = (IUnknown *)this;
@@ -69,29 +73,34 @@ STDMETHODIMP Callback::QueryInterface(REFIID riid, void** ppv)
   return S_OK;
 }
 
-STDMETHODIMP Callback::OnStartBinding(DWORD, IBinding* pBinding)
+STDMETHODIMP
+Callback::OnStartBinding(DWORD, IBinding* pBinding)
 {
   pBinding_ = pBinding;
   pBinding->AddRef();
   return S_OK;
 }
 
-STDMETHODIMP Callback::GetPriority(LONG *)
+STDMETHODIMP
+Callback::GetPriority(LONG *)
 {
   return E_NOTIMPL;
 }
 
-STDMETHODIMP Callback::OnLowResource(DWORD)
+STDMETHODIMP
+Callback::OnLowResource(DWORD)
 {
   return E_NOTIMPL;
 }
 
-STDMETHODIMP Callback::OnProgress(ULONG, ULONG, ULONG, LPCWSTR)
+STDMETHODIMP
+Callback::OnProgress(ULONG, ULONG, ULONG, LPCWSTR)
 {
   return S_OK;
 }
 
-STDMETHODIMP Callback::OnStopBinding(HRESULT hr, LPCWSTR szError)
+STDMETHODIMP
+Callback::OnStopBinding(HRESULT hr, LPCWSTR szError)
 {
   if (pBinding_) {
     pBinding_->Release();
@@ -105,14 +114,15 @@ STDMETHODIMP Callback::OnStopBinding(HRESULT hr, LPCWSTR szError)
   return S_OK;
 }
 
-STDMETHODIMP Callback::GetBindInfo(DWORD* pgrfBINDF, BINDINFO* pbindinfo)
+STDMETHODIMP
+Callback::GetBindInfo(DWORD* pgrfBINDF, BINDINFO* pbindinfo)
 {
   *pgrfBINDF = BINDF_ASYNCHRONOUS;
   return S_OK;
 }
 
-static
-void reportError(XML_Parser parser)
+static void
+reportError(XML_Parser parser)
 {
   int code = XML_GetErrorCode(parser);
   const XML_Char *message = XML_ErrorString(code);
@@ -123,23 +133,27 @@ void reportError(XML_Parser parser)
 	     XML_GetErrorColumnNumber(parser),
 	     message);
   else
-    _ftprintf(stderr, _T("%s: (unknown message %d)\n"), XML_GetBase(parser), code);
+    _ftprintf(stderr, _T("%s: (unknown message %d)\n"),
+              XML_GetBase(parser), code);
 }
 
-STDMETHODIMP Callback::OnDataAvailable(DWORD grfBSCF,
-				       DWORD dwSize,
-				       FORMATETC *pfmtetc,
-				       STGMEDIUM* pstgmed)
+STDMETHODIMP
+Callback::OnDataAvailable(DWORD grfBSCF,
+                          DWORD dwSize,
+                          FORMATETC *pfmtetc,
+                          STGMEDIUM* pstgmed)
 {
   if (grfBSCF & BSCF_FIRSTDATANOTIFICATION) {
     IWinInetHttpInfo *hp;
-    HRESULT hr = pBinding_->QueryInterface(IID_IWinInetHttpInfo, (void **)&hp);
+    HRESULT hr = pBinding_->QueryInterface(IID_IWinInetHttpInfo,
+                                           (void **)&hp);
     if (SUCCEEDED(hr)) {
       char contentType[1024];
       DWORD bufSize = sizeof(contentType);
       DWORD flags = 0;
       contentType[0] = 0;
-      hr = hp->QueryInfo(HTTP_QUERY_CONTENT_TYPE, contentType, &bufSize, 0, NULL);
+      hr = hp->QueryInfo(HTTP_QUERY_CONTENT_TYPE, contentType,
+                         &bufSize, 0, NULL);
       if (SUCCEEDED(hr)) {
 	char charset[CHARSET_MAX];
 	getXMLCharset(contentType, charset);
@@ -189,12 +203,16 @@ STDMETHODIMP Callback::OnDataAvailable(DWORD grfBSCF,
   return S_OK;
 }
 
-STDMETHODIMP Callback::OnObjectAvailable(REFIID, IUnknown *)
+STDMETHODIMP
+Callback::OnObjectAvailable(REFIID, IUnknown *)
 {
   return S_OK;
 }
 
-int Callback::externalEntityRef(const XML_Char *context, const XML_Char *systemId, const XML_Char *publicId)
+int
+Callback::externalEntityRef(const XML_Char *context,
+                            const XML_Char *systemId,
+                            const XML_Char *publicId)
 {
   XML_Parser entParser = XML_ExternalEntityParserCreate(parser_, context, 0);
   XML_SetBase(entParser, systemId);
@@ -203,7 +221,8 @@ int Callback::externalEntityRef(const XML_Char *context, const XML_Char *systemI
   return ret;
 }
 
-Callback::Callback(XML_Parser parser, IMoniker *baseMoniker, StopHandler stopHandler, void *stopArg)
+Callback::Callback(XML_Parser parser, IMoniker *baseMoniker,
+                   StopHandler stopHandler, void *stopArg)
 : parser_(parser),
   baseMoniker_(baseMoniker),
   ref_(0),
@@ -224,22 +243,22 @@ Callback::~Callback()
     baseMoniker_->Release();
 }
 
-static
-int externalEntityRef(void *arg,
-		      const XML_Char *context,
-		      const XML_Char *base,
-		      const XML_Char *systemId,
-		      const XML_Char *publicId)
+static int
+externalEntityRef(void *arg,
+                  const XML_Char *context,
+                  const XML_Char *base,
+                  const XML_Char *systemId,
+                  const XML_Char *publicId)
 {
   return ((Callback *)arg)->externalEntityRef(context, systemId, publicId);
 }
 
 
-static
-HRESULT openStream(XML_Parser parser,
-		   IMoniker *baseMoniker,
-		   const XML_Char *uri,
-		   StopHandler stopHandler, void *stopArg)
+static HRESULT
+openStream(XML_Parser parser,
+           IMoniker *baseMoniker,
+           const XML_Char *uri,
+           StopHandler stopHandler, void *stopArg)
 {
   if (!XML_SetBase(parser, uri))
     return E_OUTOFMEMORY;
@@ -289,8 +308,8 @@ struct QuitInfo {
   int stop;
 };
 
-static
-void winPerror(const XML_Char *url, HRESULT hr)
+static void
+winPerror(const XML_Char *url, HRESULT hr)
 {
   LPVOID buf;
   if (FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER
@@ -318,7 +337,8 @@ void winPerror(const XML_Char *url, HRESULT hr)
     _ftprintf(stderr, _T("%s: error %x\n"), url, hr);
 }
 
-static void threadQuit(void *p, HRESULT hr)
+static void
+threadQuit(void *p, HRESULT hr)
 {
   QuitInfo *qi = (QuitInfo *)p;
   qi->hr = hr;
@@ -326,19 +346,22 @@ static void threadQuit(void *p, HRESULT hr)
 }
 
 extern "C"
-int XML_URLInit()
+int
+XML_URLInit(void)
 {
   return SUCCEEDED(CoInitialize(0));
 }
 
 extern "C"
-void XML_URLUninit()
+void
+XML_URLUninit(void)
 {
   CoUninitialize();
 }
 
-static
-int processURL(XML_Parser parser, IMoniker *baseMoniker, const XML_Char *url)
+static int
+processURL(XML_Parser parser, IMoniker *baseMoniker,
+           const XML_Char *url)
 {
   QuitInfo qi;
   qi.stop = 0;
@@ -363,9 +386,10 @@ int processURL(XML_Parser parser, IMoniker *baseMoniker, const XML_Char *url)
 }
 
 extern "C"
-int XML_ProcessURL(XML_Parser parser,
-		   const XML_Char *url,
-		   unsigned flags)
+int
+XML_ProcessURL(XML_Parser parser,
+               const XML_Char *url,
+               unsigned flags)
 {
   return processURL(parser, 0, url);
 }
