@@ -3,7 +3,7 @@
 <PROJECT>
   <MACROS>
     <VERSION value="BCB.05.03"/>
-    <PROJECT value="debug\expat.dll"/>
+    <PROJECT value="debug\libexpat.dll"/>
     <OBJFILES value="debug\obj\xmltok.obj debug\obj\xmlrole.obj debug\obj\xmlparse.obj"/>
     <RESFILES value=""/>
     <IDLFILES value=""/>
@@ -140,4 +140,4 @@ ActiveLang=
 ProjectLang=
 RootDir=
   </IDEOPTIONS>
-</PROJECT>@
+</PROJECT>

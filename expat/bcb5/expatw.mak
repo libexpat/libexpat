@@ -13,7 +13,7 @@ BCB = $(MAKEDIR)\..
 
 VERSION = BCB.05.03
 # ---------------------------------------------------------------------------
-PROJECT = debug\expatw.dll
+PROJECT = debug\libexpatw.dll
 OBJFILES = debug\obj\xmltok.obj debug\obj\xmlrole.obj debug\obj\xmlparse.obj
 RESFILES = 
 MAINSOURCE = expatw.bpf

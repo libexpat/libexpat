@@ -50,7 +50,7 @@ LFLAGS = -Idebug\obj -D"" -ap -Tpe -x -Gn -v -q -L..\LIB\RELEASE
 # ---------------------------------------------------------------------------
 ALLOBJ = c0x32.obj $(OBJFILES)
 ALLRES = $(RESFILES)
-ALLLIB = $(LIBFILES) $(LIBRARIES) EXPAT.LIB import32.lib cw32i.lib
+ALLLIB = $(LIBFILES) $(LIBRARIES) libexpat.lib import32.lib cw32i.lib
 # ---------------------------------------------------------------------------
 !ifdef IDEOPTIONS
 

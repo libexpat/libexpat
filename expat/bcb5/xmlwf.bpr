@@ -43,7 +43,7 @@
   <LINKER>
     <ALLOBJ value="c0x32.obj $(OBJFILES)"/>
     <ALLRES value="$(RESFILES)"/>
-    <ALLLIB value="$(LIBFILES) $(LIBRARIES) EXPAT.lib import32.lib cw32i.lib"/>
+    <ALLLIB value="$(LIBFILES) $(LIBRARIES) libexpat.lib import32.lib cw32i.lib"/>
   </LINKER>
   <IDEOPTIONS>
 [Version Info]
@@ -141,4 +141,4 @@ ActiveLang=
 ProjectLang=
 RootDir=
   </IDEOPTIONS>
-</PROJECT>@
+</PROJECT>
