@@ -214,6 +214,8 @@ static enum XML_Error
 storeEntityValue(XML_Parser parser, const char *start, const char *end);
 static int
 reportProcessingInstruction(XML_Parser parser, const ENCODING *enc, const char *start, const char *end);
+static int
+reportComment(XML_Parser parser, const ENCODING *enc, const char *start, const char *end);
 static void
 reportDefault(XML_Parser parser, const ENCODING *enc, const char *start, const char *end);
 
@@ -265,6 +267,7 @@ typedef struct {
   XML_EndElementHandler endElementHandler;
   XML_CharacterDataHandler characterDataHandler;
   XML_ProcessingInstructionHandler processingInstructionHandler;
+  XML_CommentHandler commentHandler;
   XML_DefaultHandler defaultHandler;
   XML_UnparsedEntityDeclHandler unparsedEntityDeclHandler;
   XML_NotationDeclHandler notationDeclHandler;
@@ -315,6 +318,7 @@ typedef struct {
 #define endElementHandler (((Parser *)parser)->endElementHandler)
 #define characterDataHandler (((Parser *)parser)->characterDataHandler)
 #define processingInstructionHandler (((Parser *)parser)->processingInstructionHandler)
+#define commentHandler (((Parser *)parser)->commentHandler)
 #define defaultHandler (((Parser *)parser)->defaultHandler)
 #define unparsedEntityDeclHandler (((Parser *)parser)->unparsedEntityDeclHandler)
 #define notationDeclHandler (((Parser *)parser)->notationDeclHandler)
@@ -380,6 +384,7 @@ XML_Parser XML_ParserCreate(const XML_Char *encodingName)
   endElementHandler = 0;
   characterDataHandler = 0;
   processingInstructionHandler = 0;
+  commentHandler = 0;
   defaultHandler = 0;
   unparsedEntityDeclHandler = 0;
   notationDeclHandler = 0;
@@ -453,6 +458,7 @@ XML_Parser XML_ExternalEntityParserCreate(XML_Parser oldParser,
   XML_EndElementHandler oldEndElementHandler = endElementHandler;
   XML_CharacterDataHandler oldCharacterDataHandler = characterDataHandler;
   XML_ProcessingInstructionHandler oldProcessingInstructionHandler = processingInstructionHandler;
+  XML_CommentHandler oldCommentHandler = commentHandler;
   XML_DefaultHandler oldDefaultHandler = defaultHandler;
   XML_ExternalEntityRefHandler oldExternalEntityRefHandler = externalEntityRefHandler;
   XML_UnknownEncodingHandler oldUnknownEncodingHandler = unknownEncodingHandler;
@@ -468,6 +474,7 @@ XML_Parser XML_ExternalEntityParserCreate(XML_Parser oldParser,
   endElementHandler = oldEndElementHandler;
   characterDataHandler = oldCharacterDataHandler;
   processingInstructionHandler = oldProcessingInstructionHandler;
+  commentHandler = oldCommentHandler;
   defaultHandler = oldDefaultHandler;
   externalEntityRefHandler = oldExternalEntityRefHandler;
   unknownEncodingHandler = oldUnknownEncodingHandler;
@@ -577,6 +584,12 @@ void XML_SetProcessingInstructionHandler(XML_Parser parser,
 					 XML_ProcessingInstructionHandler handler)
 {
   processingInstructionHandler = handler;
+}
+
+void XML_SetCommentHandler(XML_Parser parser,
+			   XML_CommentHandler handler)
+{
+  commentHandler = handler;
 }
 
 void XML_SetDefaultHandler(XML_Parser parser,
@@ -1282,6 +1295,10 @@ doContent(XML_Parser parser,
       break;
     case XML_TOK_PI:
       if (!reportProcessingInstruction(parser, enc, s, next))
+	return XML_ERROR_NO_MEMORY;
+      break;
+    case XML_TOK_COMMENT:
+      if (!reportComment(parser, enc, s, next))
 	return XML_ERROR_NO_MEMORY;
       break;
     default:
@@ -2045,12 +2062,19 @@ prologProcessor(XML_Parser parser,
 	if (!reportProcessingInstruction(parser, encoding, s, next))
 	  return XML_ERROR_NO_MEMORY;
 	break;
+      case XML_TOK_COMMENT:
+	eventPtr = s;
+	eventEndPtr = next;
+	if (!reportComment(parser, encoding, s, next))
+	  return XML_ERROR_NO_MEMORY;
+	break;
       }
       break;
     }
     if (defaultHandler) {
       switch (tok) {
       case XML_TOK_PI:
+      case XML_TOK_COMMENT:
       case XML_TOK_BOM:
       case XML_TOK_XML_DECL:
 	break;
@@ -2089,12 +2113,15 @@ enum XML_Error epilogProcessor(XML_Parser parser,
 	*nextPtr = end;
       return XML_ERROR_NONE;
     case XML_TOK_PROLOG_S:
-    case XML_TOK_COMMENT:
       if (defaultHandler)
 	reportDefault(parser, encoding, s, next);
       break;
     case XML_TOK_PI:
       if (!reportProcessingInstruction(parser, encoding, s, next))
+	return XML_ERROR_NO_MEMORY;
+      break;
+    case XML_TOK_COMMENT:
+      if (!reportComment(parser, encoding, s, next))
 	return XML_ERROR_NO_MEMORY;
       break;
     case XML_TOK_INVALID:
@@ -2384,6 +2411,27 @@ reportProcessingInstruction(XML_Parser parser, const ENCODING *enc, const char *
     return 0;
   normalizeLines(data);
   processingInstructionHandler(handlerArg, target, data);
+  poolClear(&tempPool);
+  return 1;
+}
+
+static int
+reportComment(XML_Parser parser, const ENCODING *enc, const char *start, const char *end)
+{
+  XML_Char *data;
+  if (!commentHandler) {
+    if (defaultHandler)
+      reportDefault(parser, enc, start, end);
+    return 1;
+  }
+  data = poolStoreString(&tempPool,
+                         enc,
+                         start + enc->minBytesPerChar * 4, 
+			 end - enc->minBytesPerChar * 3);
+  if (!data)
+    return 0;
+  normalizeLines(data);
+  commentHandler(handlerArg, data);
   poolClear(&tempPool);
   return 1;
 }
@@ -2792,9 +2840,13 @@ static int dtdCopy(DTD *newDtd, const DTD *oldDtd)
     for (i = 0; i < newE->nDefaultAtts; i++) {
       newE->defaultAtts[i].id = (ATTRIBUTE_ID *)lookup(&(newDtd->attributeIds), oldE->defaultAtts[i].id->name, 0);
       newE->defaultAtts[i].isCdata = oldE->defaultAtts[i].isCdata;
-      newE->defaultAtts[i].value = poolCopyString(&(newDtd->pool), oldE->defaultAtts[i].value);
-      if (!newE->defaultAtts[i].value)
-	return 0;
+      if (oldE->defaultAtts[i].value) {
+	newE->defaultAtts[i].value = poolCopyString(&(newDtd->pool), oldE->defaultAtts[i].value);
+	if (!newE->defaultAtts[i].value)
+  	  return 0;
+      }
+      else
+	newE->defaultAtts[i].value = 0;
     }
   }
 

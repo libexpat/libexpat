@@ -324,6 +324,17 @@ void metaProcessingInstruction(XML_Parser parser, const XML_Char *target, const 
 }
 
 static
+void metaComment(XML_Parser parser, const XML_Char *data)
+{
+  FILE *fp = XML_GetUserData(parser);
+  fputts(T("<comment data=\""), fp);
+  characterData(fp, data, tcslen(data));
+  puttc(T('"'), fp);
+  metaLocation(parser);
+  fputts(T("/>\n"), fp);
+}
+
+static
 void metaCharacterData(XML_Parser parser, const XML_Char *s, int len)
 {
   FILE *fp = XML_GetUserData(parser);
@@ -683,6 +694,7 @@ int tmain(int argc, XML_Char **argv)
 	fputts(T("<document>\n"), fp);
 	XML_SetElementHandler(parser, metaStartElement, metaEndElement);
 	XML_SetProcessingInstructionHandler(parser, metaProcessingInstruction);
+	XML_SetCommentHandler(parser, metaComment);
 	XML_SetCharacterDataHandler(parser, metaCharacterData);
 	XML_SetUnparsedEntityDeclHandler(parser, metaUnparsedEntityDecl);
 	XML_SetNotationDeclHandler(parser, metaNotationDecl);
