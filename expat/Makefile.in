@@ -145,9 +145,10 @@ examples/outline.o: examples/outline.c
 examples/outline: examples/outline.o lib/$(LIBRARY)
 	$(LINK_EXE) $< lib/$(LIBRARY)
 
-tests/runtests.o: tests/runtests.c
-tests/runtests: tests/runtests.o lib/$(LIBRARY)
-	$(LINK_EXE) $< lib/$(LIBRARY) -lcheck
+tests/chardata.o: tests/chardata.c tests/chardata.h
+tests/runtests.o: tests/runtests.c tests/chardata.h
+tests/runtests: tests/runtests.o tests/chardata.o lib/$(LIBRARY)
+	$(LINK_EXE) $^ -lcheck
 
 .SUFFIXES: .c .lo .o
 

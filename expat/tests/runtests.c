@@ -5,6 +5,7 @@
 #include <string.h>
 
 #include "expat.h"
+#include "chardata.h"
 
 
 static XML_Parser parser;
@@ -102,24 +103,10 @@ START_TEST(test_bom_utf16_le)
 }
 END_TEST
 
-
-typedef struct 
-{
-    int count;                          /* # of chars, < 0 if not set */
-    XML_Char data[1024];
-} CharData;
-
 static void
 accumulate_characters(void *userData, const XML_Char *s, int len)
 {
-    CharData *storage = (CharData *)userData;
-    if (storage->count < 0)
-        storage->count = 0;
-    if (len + storage->count < sizeof(storage->data)) {
-        memcpy(storage->data + storage->count, s,
-               len * sizeof(storage->data[0]));
-        storage->count += len;
-    }
+    CharData_AppendXMLChars((CharData *)userData, s, len);
 }
 
 static void
@@ -129,46 +116,22 @@ accumulate_attribute(void *userData, const XML_Char *name,
     CharData *storage = (CharData *)userData;
     if (storage->count < 0 && atts != NULL && atts[0] != NULL) {
         /* "accumulate" the value of the first attribute we see */
-        int maxchars = sizeof(storage->data) / sizeof(storage->data[0]);
-        int i;
-        for (i = 0; i < maxchars; ++i) {
-            XML_Char ch = atts[1][i];
-            if (ch == 0)
-                break;
-            storage->data[i] = ch;
-        }
-        storage->count = i;
+        CharData_AppendXMLChars(storage, atts[1], -1);
     }
 }
 
-static void
-check_characters(CharData *storage, XML_Char *expected)
-{
-    char buffer[1024];
-    int len = strlen(expected);
-    if (storage->count < 0)
-        storage->count = 0;
-    if (len != storage->count) {
-        sprintf(buffer, "wrong number of data characters: got %d, expected %d",
-                storage->count, len);
-        fail(buffer);
-        return;
-    }
-    if (memcmp(expected, storage->data, len * sizeof(storage->data[0])) != 0)
-        fail("got bad data bytes");
-}
 
 static void
 run_character_check(XML_Char *text, XML_Char *expected)
 {
     CharData storage;
 
-    storage.count = -1;
+    CharData_Init(&storage);
     XML_SetUserData(parser, &storage);
     XML_SetCharacterDataHandler(parser, accumulate_characters);
     if (!XML_Parse(parser, text, strlen(text), 1))
         xml_failure();
-    check_characters(&storage, expected);
+    CharData_CheckXMLChars(&storage, expected);
 }
 
 static void
@@ -176,12 +139,12 @@ run_attribute_check(XML_Char *text, XML_Char *expected)
 {
     CharData storage;
 
-    storage.count = -1; /* magical "not-set" value */
+    CharData_Init(&storage);
     XML_SetUserData(parser, &storage);
     XML_SetStartElementHandler(parser, accumulate_attribute);
     if (!XML_Parse(parser, text, strlen(text), 1))
         xml_failure();
-    check_characters(&storage, expected);
+    CharData_CheckXMLChars(&storage, expected);
 }
 
 /* Regression test for SF bug #491986. */
