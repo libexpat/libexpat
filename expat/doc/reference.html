@@ -1000,18 +1000,21 @@ called for processing an external DTD subset if parameter entity parsing
 is in effect. (See <a href="#XML_SetParamEntityParsing">
 <code>XML_SetParamEntityParsing</code></a>.)</p>
 
-<p>The context parameter specifies the parsing context in the format
-expected by the context argument to XML_ExternalEntityParserCreate.
-context is valid only until the handler returns, so if the
-referenced entity is to be parsed later, it must be copied.
-context is NULL only when the entity is a parameter entity, which
-is how one can differentiate between general and parameter entities.</p>
+<p>The <code>context</code> parameter specifies the parsing context in
+the format expected by the <code>context</code> argument to <code><a
+href="#XML_ExternalEntityParserCreate"
+>XML_ExternalEntityParserCreate</a></code>.  <code>code</code> is
+valid only until the handler returns, so if the referenced entity is
+to be parsed later, it must be copied.  <code>context</code> is NULL
+only when the entity is a parameter entity, which is how one can
+differentiate between general and parameter entities.</p>
 
-<p>The base parameter is the base to use for relative system identifiers.
-It is set by <a href="#XML_SetBase">XML_SetBase</a> and may be null. The
-public id parameter is the public id given in the entity declaration and
-may be null. The system id is the system identifier specified in the entity
-declaration and is never null.</p>
+<p>The <code>base</code> parameter is the base to use for relative
+system identifiers.  It is set by <code><a
+href="#XML_SetBase">XML_SetBase</a></code> and may be NULL. The
+<code>publicId</code> parameter is the public id given in the entity
+declaration and may be NULL.  <code>systemId</code> is the system
+identifier specified in the entity declaration and is never NULL.</p>
 
 <p>There are a couple of ways in which this handler differs from others.
 First, this handler returns an integer. A non-zero value should be returned
@@ -1021,8 +1024,8 @@ an <code>XML_ERROR_EXTERNAL_ENTITY_HANDLING</code> error.</p>
 
 <p>Second, instead of having userData as its first argument, it receives the
 parser that encountered the entity reference. This, along with the context
-parameter, may be used as arguments to a call to
-<a href="#XML_ExternalEntityParserCreate">XML_ExternalEntityParserCreate</a>.
+parameter, may be used as arguments to a call to <code><a href=
+"#XML_ExternalEntityParserCreate">XML_ExternalEntityParserCreate</a></code>.
 Using the returned parser, the body of the external entity can be recursively
 parsed.</p>
 
