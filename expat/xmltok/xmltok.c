@@ -1371,7 +1371,8 @@ int getEncodingIndex(const char *name)
 /* For binary compatibility, we store the index of the encoding specified
 at initialization in the isUtf16 member. */
 
-#define INIT_ENC_INDEX(enc) ((enc)->initEnc.isUtf16)
+#define INIT_ENC_INDEX(enc) ((int)(enc)->initEnc.isUtf16)
+#define SET_INIT_ENC_INDEX(enc, i) ((enc)->initEnc.isUtf16 = (char)i)
 
 /* This is what detects the encoding.
 encodingTable maps from encoding indices to encodings;
