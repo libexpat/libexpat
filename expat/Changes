@@ -1,4 +1,4 @@
-Release 1.95.5 someday
+Release 1.95.5 Fri Sep 6 2002
         - Added XML_UseForeignDTD() for improved SAX2 support.
         - Added XML_GetFeatureList().
         - Defined XML_Bool type and the values XML_TRUE and XML_FALSE.
@@ -14,6 +14,8 @@ Release 1.95.5 someday
         - Reduced line-length for all source code and headers to be
           no longer than 80 characters, to help with AS/400 support.
         - Reduced memory copying during parsing (SF patch #600964).
+        - Modified the calling convention used internally where the
+          compiler supports a faster convention.
         - Fixed a variety of bugs: see SF issues 580793, 434664,
           483514, 580503, 581069, 584041, 584183, 584832, 585537,
           596555, 596678, 598352, 598944, 599715, 600479, 600971.
