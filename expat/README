@@ -59,6 +59,11 @@ you're using ksh or bash, use this command to build:
 
 	PATH=/usr/ccs/bin:$PATH make
 
+When using Expat with a project using autoconf for configuration, you
+can use the probing macro in conftools/expat.m4 to determine how to
+include Expat.  See the comments at the top of that file for more
+information.
+
 A reference manual is available in the file doc/reference.html in this
 distribution.
 
