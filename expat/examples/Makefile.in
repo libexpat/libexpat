@@ -27,8 +27,6 @@ LIBS = -L$(LIBDIR) -lexpat
 CC = @CC@
 CFLAGS = @CFLAGS@ -I$(INCDIR)
 
-srcdir = @srcdir@
-top_srcdir = @top_srcdir@
 VPATH = @srcdir@
 
 
@@ -39,16 +37,3 @@ elements: elements.o
 
 outline: outline.o
 	$(CC) -o $@ $< $(LDFLAGS) $(LIBS)
-
-check:	$(SUBDIRS)
-	@echo
-	@echo This package does not yet have a regression test.
-	@echo
-
-clean:
-	rm -f elements outline core *.o
-
-distclean: clean
-	rm -f Makefile
-
-maintainer-clean: distclean

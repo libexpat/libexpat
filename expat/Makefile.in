@@ -37,52 +37,33 @@ prefix = @prefix@
 exec_prefix = @exec_prefix@
 
 bindir = @bindir@
-sbindir = @sbindir@
-libexecdir = @libexecdir@
-datadir = @datadir@
-sysconfdir = @sysconfdir@
-sharedstatedir = @sharedstatedir@
-localstatedir = @localstatedir@
 libdir = @libdir@
-infodir = @infodir@
-mandir = @mandir@
 includedir = @includedir@
-oldincludedir = /usr/include
 
 top_builddir = .
 
-
-AUTOCONF = autoconf
 
 INSTALL = @INSTALL@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
-
-NORMAL_INSTALL = :
-PRE_INSTALL = :
-POST_INSTALL = :
-NORMAL_UNINSTALL = :
-PRE_UNINSTALL = :
-POST_UNINSTALL = :
-host_alias = @host_alias@
-host_triplet = @host@
+mkinstalldirs = $(SHELL) $(top_srcdir)/conftools/mkinstalldirs
 
 CC = @CC@
 
 LIBTOOL = @LIBTOOL@
-LN_S = @LN_S@
-PACKAGE = @PACKAGE@
-RANLIB = @RANLIB@
 VERSION = @VERSION@
 
 SUBDIRS = lib examples xmlwf
-INSTALLSUBDIRS = lib xmlwf
-ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 CONFIG_HEADERS = config.h
 
-DISTDIR = $(PACKAGE)-$(VERSION)
+APIHEADER = expat.h
+LIBRARY = libexpat.la
+
+
+DISTDIR = expat-$(VERSION)
 DISTRIBUTION = $(DISTDIR).tar.gz
+
 
 default:  lib xmlwf
 
@@ -90,38 +71,23 @@ buildlib: lib
 
 all: $(SUBDIRS)
 
-Makefile: Makefile.in config.status
-	CONFIG_FILES=$@ CONFIG_HEADERS= $(SHELL) config.status
-
-config.status: configure
-	@if test -f $@; then \
-		$(SHELL) config.status --recheck ; \
-	else \
-		$(SHELL) configure ; \
-	fi
-
-configure: configure.in
-	$(AUTOCONF)
-
-config.h: config.h.in config.status
-	CONFIG_FILES= CONFIG_HEADERS=$(CONFIG_HEADERS) \
-	$(SHELL) ./config.status
-
 $(SUBDIRS):
 	cd $@ && $(MAKE)
 
 clean:
-	for dir in $(SUBDIRS); do \
-		(cd $$dir && $(MAKE) clean); \
-	done
-	rm -f core *~
+	# clean up the lib dir
+	cd lib && rm -f $(LIBRARY) *.o *.lo && rm -rf .libs _libs
+	# clean up the xmlwf dir
+	cd xmlwf && rm -f xmlwf *.o
+	# clean up the examples dir
+	cd examples && rm -f elements outline *.o
+	# other random cleanup
+	find . -name core | xargs rm -f
 
-distclean:
-	for dir in $(SUBDIRS); do \
-		(cd $$dir && $(MAKE) distclean); \
-	done
+distclean: clean
 	rm -f config.h config.status config.log config.cache libtool
-	rm -f Makefile examples/Makefile xmlwf/Makefile
+	rm -f Makefile lib/Makefile examples/Makefile xmlwf/Makefile tests/Makefile
+	rm -f lib/expat.h
 
 extraclean: distclean
 	rm -f aclocal.m4 config.h.in configure
@@ -140,22 +106,23 @@ distdir: MANIFEST
 	done
 
 check:	$(SUBDIRS)
-	(cd tests && $(MAKE) check)
+	cd tests && $(MAKE) check
 
 $(DISTRIBUTION): distdir
 	tar cf - $(DISTDIR) | gzip -9 >$(DISTRIBUTION)
 
 dist: $(DISTRIBUTION)
 
-install:
-	for dir in $(INSTALLSUBDIRS); do \
-		(cd $$dir && $(MAKE) install); \
-	done
+install: xmlwf/xmlwf lib/$(LIBRARY) lib/$(APIHEADER)
+	$(mkinstalldirs) $(bindir) $(libdir) $(includedir)
+	$(LIBTOOL) --mode=install $(INSTALL_PROGRAM) xmlwf/xmlwf $(bindir)/xmlwf
+	$(LIBTOOL) --mode=install $(INSTALL) lib/$(LIBRARY) $(libdir)/$(LIBRARY)
+	$(INSTALL_DATA) lib/$(APIHEADER) $(includedir)
 
 uninstall:
-	for dir in $(INSTALLSUBDIRS); do \
-		(cd $$dir && $(MAKE) uninstall); \
-	done
+	$(LIBTOOL) --mode=uninstall rm -f $(bindir)/xmlwf
+	$(LIBTOOL) --mode=uninstall rm -f $(libdir)/$(LIBRARY)
+	rm -f $(libdir)/$(APIHEADER)
 
 .PHONY: buildlib all $(SUBDIRS) \
 	clean distclean extraclean maintainer-clean \
