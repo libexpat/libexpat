@@ -37,6 +37,13 @@ After running the configure script, the "make" command will build things and
 you need to have write permission into the directories into which things
 will be installed.
 
+Note for Solaris users:  The "ar" command is usually located in
+"/usr/ccs/bin", which is not in the default PATH.  You will need to
+add this to your path for the "make" command.  If you're using ksh or
+bash, use this command to build:
+
+	PATH=/usr/ccs/bin:$PATH make
+
 Alternatively, on Win32 systems with Microsoft's Developer's Studio installed,
 you can simply double-click on lib/expat.dsp from Windows Explorer and build
 and install in the usual way from with DevStudio.
