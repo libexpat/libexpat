@@ -1,3 +1,13 @@
+Release 1.95.2
+	- Nore changes to make MSVC happy with the build; add a single
+	  workspace to support both the library and xmlwf applicatiion.
+	- Added compile-time constants that can be used to determine the
+	  Expat version
+	- Removed a lot of GNU-specific dependencies to aide portability
+	  among the various Unix flavors.
+	- Fix the UTF-8 BOM bug.
+	- Cleaned up warning messages for several compilers.
+	- Added the -Wall, -Wstrict-prototypes options for GCC.
 Release 1.95.1 Sun Oct 22 15:11:36 EDT 2000
 	- Changes to get expat to build under Microsoft compiler
 	- Removed all aborts and instead return an UNEXPECTED_STATE error.
@@ -31,4 +41,4 @@ Release 1.95.0 Fri Sep 29 2000
 		o XML_GetInputContext for getting the input context of
 		  the current parse position.
 	- Added reference material
-	- Packaged into a distribution that builds a sharable library@
+	- Packaged into a distribution that builds a sharable library
