@@ -63,6 +63,7 @@ INTDIR=.\xmlwf\Release
 ALL : "xmlparse - Win32 Release" ".\bin\xmlwf.exe"
 
 CLEAN : 
+	-@erase "$(INTDIR)\codepage.obj"
 	-@erase "$(INTDIR)\win32filemap.obj"
 	-@erase "$(INTDIR)\xmlwf.obj"
 	-@erase ".\bin\xmlwf.exe"
@@ -115,6 +116,7 @@ LINK32_FLAGS=setargv.obj kernel32.lib user32.lib gdi32.lib winspool.lib\
  odbc32.lib odbccp32.lib /nologo /subsystem:console /incremental:no\
  /pdb:"$(OUTDIR)/xmlwf.pdb" /machine:I386 /out:"bin/xmlwf.exe" 
 LINK32_OBJS= \
+	"$(INTDIR)\codepage.obj" \
 	"$(INTDIR)\win32filemap.obj" \
 	"$(INTDIR)\xmlwf.obj" \
 	".\xmlparse\Release\xmlparse.lib"
@@ -142,6 +144,7 @@ INTDIR=.\xmlwf\Debug
 ALL : "xmlparse - Win32 Debug" ".\dbgbin\xmlwf.exe"
 
 CLEAN : 
+	-@erase "$(INTDIR)\codepage.obj"
 	-@erase "$(INTDIR)\vc40.idb"
 	-@erase "$(INTDIR)\vc40.pdb"
 	-@erase "$(INTDIR)\win32filemap.obj"
@@ -198,6 +201,7 @@ LINK32_FLAGS=setargv.obj kernel32.lib user32.lib gdi32.lib winspool.lib\
  odbc32.lib odbccp32.lib /nologo /subsystem:console /incremental:yes\
  /pdb:"$(OUTDIR)/xmlwf.pdb" /debug /machine:I386 /out:"dbgbin/xmlwf.exe" 
 LINK32_OBJS= \
+	"$(INTDIR)\codepage.obj" \
 	"$(INTDIR)\win32filemap.obj" \
 	"$(INTDIR)\xmlwf.obj" \
 	".\xmlparse\Debug\xmlparse.lib"
@@ -733,6 +737,7 @@ LINK32_OBJS= \
 SOURCE=.\xmlwf\xmlwf.c
 DEP_CPP_XMLWF=\
 	".\xmlparse\xmlparse.h"\
+	".\xmlwf\codepage.h"\
 	".\xmlwf\filemap.h"\
 	
 
@@ -793,6 +798,34 @@ DEP_CPP_READF=\
 !ENDIF 
 
 # End Project Dependency
+################################################################################
+# Begin Source File
+
+SOURCE=.\xmlwf\codepage.c
+
+!IF  "$(CFG)" == "xmlwf - Win32 Release"
+
+DEP_CPP_CODEP=\
+	".\xmlwf\codepage.h"\
+	
+
+"$(INTDIR)\codepage.obj" : $(SOURCE) $(DEP_CPP_CODEP) "$(INTDIR)"
+   $(CPP) $(CPP_PROJ) $(SOURCE)
+
+
+!ELSEIF  "$(CFG)" == "xmlwf - Win32 Debug"
+
+DEP_CPP_CODEP=\
+	".\xmlwf\codepage.h"\
+	
+
+"$(INTDIR)\codepage.obj" : $(SOURCE) $(DEP_CPP_CODEP) "$(INTDIR)"
+   $(CPP) $(CPP_PROJ) $(SOURCE)
+
+
+!ENDIF 
+
+# End Source File
 # End Target
 ################################################################################
 # Begin Target
