@@ -1,10 +1,10 @@
 # Bare bones description file (Makefile) for OpenVMS
 
 PACKAGE = expat
-VERSION = 1.95.3
+VERSION = 1.95.8
 EXPAT_MAJOR_VERSION=1
 EXPAT_MINOR_VERSION=95
-EXPAT_EDIT=3
+EXPAT_EDIT=8
 
 O = .obj
 OLB = .olb
