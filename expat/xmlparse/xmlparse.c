@@ -72,7 +72,7 @@ typedef struct {
   HASH_TABLE elementTypes;
   HASH_TABLE attributeIds;
   STRING_POOL pool;
-  int containsRef;
+  int complete;
   int standalone;
 } DTD;
 
@@ -165,6 +165,7 @@ typedef struct {
   STRING_POOL temp2Pool;
   char *groupConnector;
   unsigned groupSize;
+  int hadExternalDoctype;
 } Parser;
 
 #define userData (((Parser *)parser)->userData)
@@ -201,6 +202,7 @@ typedef struct {
 #define temp2Pool (((Parser *)parser)->temp2Pool)
 #define groupConnector (((Parser *)parser)->groupConnector)
 #define groupSize (((Parser *)parser)->groupSize)
+#define hadExternalDoctype (((Parser *)parser)->hadExternalDoctype)
 
 XML_Parser XML_ParserCreate(const char *encodingName)
 {
@@ -235,6 +237,7 @@ XML_Parser XML_ParserCreate(const char *encodingName)
   dataBuf = malloc(INIT_DATA_BUF_SIZE);
   groupSize = 0;
   groupConnector = 0;
+  hadExternalDoctype = 0;
   poolInit(&tempPool);
   poolInit(&temp2Pool);
   if (!dtdInit(&dtd) || !atts || !dataBuf) {
@@ -518,7 +521,7 @@ doContent(XML_Parser parser,
 	entity = (ENTITY *)lookup(&dtd.generalEntities, name, 0);
 	poolDiscard(&dtd.pool);
 	if (!entity) {
-	  if (!dtd.containsRef || dtd.standalone) {
+	  if (dtd.complete || dtd.standalone) {
 	    errorPtr = s;
 	    return XML_ERROR_UNDEFINED_ENTITY;
 	  }
@@ -899,7 +902,7 @@ prologProcessor(XML_Parser parser,
 	break;
       }
     case XML_ROLE_DOCTYPE_SYSTEM_ID:
-      dtd.containsRef = 1;
+      hadExternalDoctype = 1;
       break;
     case XML_ROLE_DOCTYPE_PUBLIC_ID:
     case XML_ROLE_ENTITY_PUBLIC_ID:
@@ -909,6 +912,8 @@ prologProcessor(XML_Parser parser,
       break;
     case XML_ROLE_INSTANCE_START:
       processor = contentProcessor;
+      if (hadExternalDoctype)
+	dtd.complete = 0;
       return contentProcessor(parser, s, end, nextPtr);
     case XML_ROLE_ATTLIST_ELEMENT_NAME:
       {
@@ -935,7 +940,8 @@ prologProcessor(XML_Parser parser,
       break;
     case XML_ROLE_IMPLIED_ATTRIBUTE_VALUE:
     case XML_ROLE_REQUIRED_ATTRIBUTE_VALUE:
-      if (!defineAttribute(declElementType, declAttributeId, declAttributeIsCdata, 0))
+      if (dtd.complete
+	  && !defineAttribute(declElementType, declAttributeId, declAttributeIsCdata, 0))
 	return XML_ERROR_NO_MEMORY;
       break;
     case XML_ROLE_DEFAULT_ATTRIBUTE_VALUE:
@@ -951,7 +957,8 @@ prologProcessor(XML_Parser parser,
 	  return result;
 	attVal = poolStart(&dtd.pool);
 	poolFinish(&dtd.pool);
-	if (!defineAttribute(declElementType, declAttributeId, declAttributeIsCdata, attVal))
+	if (dtd.complete
+	    && !defineAttribute(declElementType, declAttributeId, declAttributeIsCdata, attVal))
 	  return XML_ERROR_NO_MEMORY;
 	break;
       }
@@ -983,11 +990,12 @@ prologProcessor(XML_Parser parser,
 	entity = (ENTITY *)lookup(&dtd.paramEntities, name, 0);
 	poolDiscard(&dtd.pool);
 	if (!entity) {
-	  if (!dtd.containsRef || dtd.standalone) {
+	  if (dtd.complete || dtd.standalone) {
 	    errorPtr = s;
 	    return XML_ERROR_UNDEFINED_ENTITY;
 	  }
 	}
+	dtd.complete = 0;
       }
       break;
     case XML_ROLE_ENTITY_NOTATION_NAME:
@@ -1003,15 +1011,21 @@ prologProcessor(XML_Parser parser,
 	const char *name = poolStoreString(&dtd.pool, encoding, s, next);
 	if (!name)
 	  return XML_ERROR_NO_MEMORY;
-	declEntity = (ENTITY *)lookup(&dtd.generalEntities, name, sizeof(ENTITY));
-	if (!declEntity)
-	  return XML_ERROR_NO_MEMORY;
-	if (declEntity->name != name) {
+	if (dtd.complete) {
+	  declEntity = (ENTITY *)lookup(&dtd.generalEntities, name, sizeof(ENTITY));
+	  if (!declEntity)
+	    return XML_ERROR_NO_MEMORY;
+	  if (declEntity->name != name) {
+	    poolDiscard(&dtd.pool);
+	    declEntity = 0;
+	  }
+	  else
+	    poolFinish(&dtd.pool);
+	}
+	else {
 	  poolDiscard(&dtd.pool);
 	  declEntity = 0;
 	}
-	else
-	  poolFinish(&dtd.pool);
       }
       break;
     case XML_ROLE_PARAM_ENTITY_NAME:
@@ -1019,15 +1033,21 @@ prologProcessor(XML_Parser parser,
 	const char *name = poolStoreString(&dtd.pool, encoding, s, next);
 	if (!name)
 	  return XML_ERROR_NO_MEMORY;
-	declEntity = (ENTITY *)lookup(&dtd.paramEntities, name, sizeof(ENTITY));
-	if (!declEntity)
-	  return XML_ERROR_NO_MEMORY;
-	if (declEntity->name != name) {
+	if (dtd.complete) {
+	  declEntity = (ENTITY *)lookup(&dtd.paramEntities, name, sizeof(ENTITY));
+	  if (!declEntity)
+	    return XML_ERROR_NO_MEMORY;
+	  if (declEntity->name != name) {
+	    poolDiscard(&dtd.pool);
+	    declEntity = 0;
+	  }
+	  else
+	    poolFinish(&dtd.pool);
+	}
+	else {
 	  poolDiscard(&dtd.pool);
 	  declEntity = 0;
 	}
-	else
-	  poolFinish(&dtd.pool);
       }
       break;
     case XML_ROLE_ERROR:
@@ -1067,9 +1087,6 @@ prologProcessor(XML_Parser parser,
       break;
     case XML_ROLE_NONE:
       switch (tok) {
-      case XML_TOK_PARAM_ENTITY_REF:
-	dtd.containsRef = 1;
-	break;
       case XML_TOK_PI:
 	if (!reportProcessingInstruction(parser, encoding, s, next))
 	  return XML_ERROR_NO_MEMORY;
@@ -1213,7 +1230,7 @@ appendAttributeValue(XML_Parser parser, const ENCODING *enc, int isCdata,
 	entity = (ENTITY *)lookup(&dtd.generalEntities, name, 0);
 	poolDiscard(&temp2Pool);
 	if (!entity) {
-	  if (!dtd.containsRef) {
+	  if (dtd.complete) {
 	    errorPtr = ptr;
 	    return XML_ERROR_UNDEFINED_ENTITY;
 	  }
@@ -1417,7 +1434,7 @@ static int dtdInit(DTD *p)
   hashTableInit(&(p->paramEntities));
   hashTableInit(&(p->elementTypes));
   hashTableInit(&(p->attributeIds));
-  p->containsRef = 0;
+  p->complete = 1;
   return 1;
 }
 
