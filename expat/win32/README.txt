@@ -23,8 +23,9 @@ Expat can be built on Windows in three ways:
 
   Dynamic Linking:
 
-  By default the Expat Dlls are built to link with the
-  multi-threaded run-time Dll. The libraries are named
+  By default the Expat Dlls are built to link statically
+  with the multi-threaded run-time library. 
+  The libraries are named
   - libexpat(w).dll 
   - libexpat(w).lib (import library)
   The "w" indicates the UTF-16 version of the library.
@@ -43,7 +44,7 @@ Expat can be built on Windows in three ways:
   /ML, /MT and /MD for MS VC++.
 
   By default, the expat-static and expatw-static projects are set up
-  to link dynamically against the multithreaded run-time library,
+  to link statically against the multithreaded run-time library,
   so they will build libexpatMT.lib or libexpatwMT.lib files.
 
   To build the other versions of the static library, 
