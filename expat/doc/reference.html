@@ -638,7 +638,12 @@ freeing any memory associated with <a href="#userdata">UserData</a>.
 </div>
 
 <h3><a name="parsing">Parsing</a></h3>
-
+<p>To state the obvious: the three parsing functions <code>XML_Parse</code>,
+<code>XML_ParseBuffer</code> and <code>XML_GetBuffer</code> must not be called
+from within a handler unless they operate on a separate parser instance, that is,
+one that did not call the handler. For example, it is OK to call the parsing
+functions from within an <code>XML_ExternalEntityRefHandler</code>, if they
+apply to the parser created by <code>XML_ExternalEntityParserCreate</code>.</p>
 
 <div class="fcndec"><a name="XML_Parse"><pre>
 int
