@@ -371,6 +371,10 @@ typedef int (*XML_ExternalEntityRefHandler)(XML_Parser parser,
       has been read *and* this is not an error.
    2) An internal entity reference is read, but not expanded, because
       XML_SetDefaultHandler has been called.
+   Note: skipped parameter entities in declarations and skipped general
+         entities in attribute values cannot be reported, because
+         the event would be out of sync with the reporting of the
+         declarations or attribute values
 */
 typedef void (*XML_SkippedEntityHandler)(void *userData,
                                          const XML_Char *entityName,
@@ -725,7 +729,8 @@ enum XML_Error {
   XML_ERROR_UNCLOSED_CDATA_SECTION,
   XML_ERROR_EXTERNAL_ENTITY_HANDLING,
   XML_ERROR_NOT_STANDALONE,
-  XML_ERROR_UNEXPECTED_STATE
+  XML_ERROR_UNEXPECTED_STATE,
+  XML_ERROR_ENTITY_DECLARED_IN_PE
 };
 
 /* If XML_Parse or XML_ParseBuffer have returned 0, then
