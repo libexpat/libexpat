@@ -8,6 +8,11 @@ See the file COPYING for copying permission.
 #include <stddef.h>
 #include <string.h>
 #include <fcntl.h>
+#ifdef COMPILED_FROM_DSP
+#include "winconfig.h"
+#else
+#include "expat_config.h"
+#endif
 #include "expat.h"
 #include "xmlfile.h"
 #include "xmltchar.h"
@@ -17,7 +22,7 @@ See the file COPYING for copying permission.
 #include <io.h>
 #endif
 
-#ifdef _POSIX_SOURCE
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
 
