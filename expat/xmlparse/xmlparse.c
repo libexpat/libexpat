@@ -233,6 +233,7 @@ typedef struct {
   Processor *processor;
   enum XML_Error errorCode;
   const char *eventPtr;
+  const char *eventEndPtr;
   const char *positionPtr;
   int tagLevel;
   ENTITY *declEntity;
@@ -277,6 +278,7 @@ typedef struct {
 #define processor (((Parser *)parser)->processor)
 #define errorCode (((Parser *)parser)->errorCode)
 #define eventPtr (((Parser *)parser)->eventPtr)
+#define eventEndPtr (((Parser *)parser)->eventEndPtr)
 #define positionPtr (((Parser *)parser)->positionPtr)
 #define position (((Parser *)parser)->position)
 #define tagLevel (((Parser *)parser)->tagLevel)
@@ -337,6 +339,7 @@ XML_Parser XML_ParserCreate(const XML_Char *encodingName)
   memset(&position, 0, sizeof(POSITION));
   errorCode = XML_ERROR_NONE;
   eventPtr = 0;
+  eventEndPtr = 0;
   positionPtr = 0;
   tagLevel = 0;
   tagStack = 0;
@@ -520,7 +523,10 @@ int XML_Parse(XML_Parser parser, const char *s, int len, int isFinal)
     if (!isFinal)
       return 1;
     errorCode = processor(parser, bufferPtr, parseEndPtr = bufferEnd, 0);
-    return errorCode == XML_ERROR_NONE;
+    if (errorCode == XML_ERROR_NONE)
+      return 1;
+    eventEndPtr = eventPtr;
+    return 0;
   }
   else if (bufferPtr == bufferEnd) {
     const char *end;
@@ -531,11 +537,14 @@ int XML_Parse(XML_Parser parser, const char *s, int len, int isFinal)
       errorCode = processor(parser, s, parseEndPtr = s + len, 0);
       if (errorCode == XML_ERROR_NONE)
 	return 1;
+      eventEndPtr = eventPtr;
       return 0;
     }
     errorCode = processor(parser, s, parseEndPtr = s + len, &end);
-    if (errorCode != XML_ERROR_NONE)
+    if (errorCode != XML_ERROR_NONE) {
+      eventEndPtr = eventPtr;
       return 0;
+    }
     XmlUpdatePosition(encoding, positionPtr, end, &position);
     nLeftOver = s + len - end;
     if (nLeftOver) {
@@ -544,6 +553,7 @@ int XML_Parse(XML_Parser parser, const char *s, int len, int isFinal)
 	buffer = realloc(buffer, len * 2);
 	if (!buffer) {
 	  errorCode = XML_ERROR_NO_MEMORY;
+	  eventPtr = eventEndPtr = 0;
 	  return 0;
 	}
 	bufferLim = buffer + len * 2;
@@ -573,8 +583,10 @@ int XML_ParseBuffer(XML_Parser parser, int len, int isFinal)
       XmlUpdatePosition(encoding, positionPtr, bufferPtr, &position);
     return 1;
   }
-  else
+  else {
+    eventEndPtr = eventPtr;
     return 0;
+  }
 }
 
 void *XML_GetBuffer(XML_Parser parser, int len)
@@ -640,6 +652,12 @@ int XML_GetCurrentColumnNumber(XML_Parser parser)
     positionPtr = eventPtr;
   }
   return position.columnNumber;
+}
+
+void XML_DefaultCurrent(XML_Parser parser)
+{
+  if (defaultHandler)
+    reportDefault(parser, encoding, eventPtr, eventEndPtr);
 }
 
 const XML_LChar *XML_ErrorString(int code)
@@ -782,17 +800,26 @@ doContent(XML_Parser parser,
 {
   const ENCODING *internalEnc = XmlGetInternalEncoding();
   const char *dummy;
-  const char **eventPP = enc == encoding ? &eventPtr : &dummy;
-  *eventPP = s;
+  const char **eventPP;
+  const char **eventEndPP;
+  if (enc == encoding) {
+    eventPP = &eventPtr;
+    *eventPP = s;
+    eventEndPP = &eventEndPtr;
+  }
+  else
+    eventPP = eventEndPP = &dummy;
   for (;;) {
     const char *next;
     int tok = XmlContentTok(enc, s, end, &next);
+    *eventEndPP = next;
     switch (tok) {
     case XML_TOK_TRAILING_CR:
       if (nextPtr) {
 	*nextPtr = s;
 	return XML_ERROR_NONE;
       }
+      *eventEndPP = end;
       if (characterDataHandler) {
 	XML_Char c = XML_T('\n');
 	characterDataHandler(handlerArg, &c, 1);
@@ -869,6 +896,9 @@ doContent(XML_Parser parser,
 	      reportDefault(parser, enc, s, next);
 	      break;
 	    }
+	    /* Protect against the possibility that somebody sets
+	       the defaultHandler from inside another handler. */
+	    *eventEndPP = *eventPP;
 	    entity->open = 1;
 	    result = doContent(parser,
 			       tagLevel,
@@ -996,8 +1026,11 @@ doContent(XML_Parser parser,
 	    return result;
 	  startElementHandler(handlerArg, name, (const XML_Char **)atts);
 	}
-	if (endElementHandler)
+	if (endElementHandler) {
+	  if (startElementHandler)
+	    *eventEndPP = *eventPP;
 	  endElementHandler(handlerArg, name);
+	}
 	poolClear(&tempPool);
       }
       else if (defaultHandler)
@@ -1067,7 +1100,9 @@ doContent(XML_Parser parser,
     case XML_TOK_CDATA_SECT_OPEN:
       {
 	enum XML_Error result;
-	if (defaultHandler && !characterDataHandler)
+	if (characterDataHandler)
+  	  characterDataHandler(handlerArg, dataBuf, 0);
+	else if (defaultHandler)
 	  reportDefault(parser, enc, s, next);
 	result = doCdataSection(parser, enc, &next, end, nextPtr);
 	if (!next) {
@@ -1109,6 +1144,7 @@ doContent(XML_Parser parser,
 	  for (;;) {
 	    ICHAR *dataPtr = (ICHAR *)dataBuf;
 	    XmlConvert(enc, &s, next, &dataPtr, (ICHAR *)dataBufEnd);
+	    *eventEndPP = s;
 	    characterDataHandler(handlerArg, dataBuf, dataPtr - (ICHAR *)dataBuf);
 	    if (s == next)
 	      break;
@@ -1257,17 +1293,27 @@ enum XML_Error doCdataSection(XML_Parser parser,
 			      const char *end,
 			      const char **nextPtr)
 {
-  const char *dummy;
-  const char **eventPP = enc == encoding ? &eventPtr : &dummy;
   const char *s = *startPtr;
-  *eventPP = s;
+  const char *dummy;
+  const char **eventPP;
+  const char **eventEndPP;
+  if (enc == encoding) {
+    eventPP = &eventPtr;
+    *eventPP = s;
+    eventEndPP = &eventEndPtr;
+  }
+  else
+    eventPP = eventEndPP = &dummy;
   *startPtr = 0;
   for (;;) {
     const char *next;
     int tok = XmlCdataSectionTok(enc, s, end, &next);
+    *eventEndPP = next;
     switch (tok) {
     case XML_TOK_CDATA_SECT_CLOSE:
-      if (defaultHandler && !characterDataHandler)
+      if (characterDataHandler)
+	characterDataHandler(handlerArg, dataBuf, 0);
+      else if (defaultHandler)
 	reportDefault(parser, enc, s, next);
       *startPtr = next;
       return XML_ERROR_NONE;
@@ -1285,6 +1331,7 @@ enum XML_Error doCdataSection(XML_Parser parser,
 	  for (;;) {
   	    ICHAR *dataPtr = (ICHAR *)dataBuf;
 	    XmlConvert(enc, &s, next, &dataPtr, (ICHAR *)dataBufEnd);
+	    *eventEndPP = next;
 	    characterDataHandler(handlerArg, dataBuf, dataPtr - (ICHAR *)dataBuf);
 	    if (s == next)
 	      break;
@@ -1586,7 +1633,7 @@ prologProcessor(XML_Parser parser,
 	  return XML_ERROR_NO_MEMORY;
 	poolFinish(&dtd.pool);
 	if (unparsedEntityDeclHandler) {
-	  eventPtr = s;
+	  eventPtr = eventEndPtr = s;
 	  unparsedEntityDeclHandler(handlerArg,
 				    declEntity->name,
 				    declEntity->base,
@@ -1660,7 +1707,7 @@ prologProcessor(XML_Parser parser,
 	  		    next - encoding->minBytesPerChar);
 	if (!systemId)
 	  return XML_ERROR_NO_MEMORY;
-	eventPtr = s;
+	eventPtr = eventEndPtr = s;
 	notationDeclHandler(handlerArg,
 			    declNotationName,
 			    dtd.base,
@@ -1671,7 +1718,7 @@ prologProcessor(XML_Parser parser,
       break;
     case XML_ROLE_NOTATION_NO_SYSTEM_ID:
       if (declNotationPublicId && notationDeclHandler) {
-	eventPtr = s;
+	eventPtr = eventEndPtr = s;
 	notationDeclHandler(handlerArg,
 			    declNotationName,
 			    dtd.base,
@@ -1722,6 +1769,7 @@ prologProcessor(XML_Parser parser,
       switch (tok) {
       case XML_TOK_PI:
 	eventPtr = s;
+	eventEndPtr = next;
 	if (!reportProcessingInstruction(parser, encoding, s, next))
 	  return XML_ERROR_NO_MEMORY;
 	break;
@@ -1736,6 +1784,7 @@ prologProcessor(XML_Parser parser,
 	break;
       default:
 	eventPtr = s;
+	eventEndPtr = next;
 	reportDefault(parser, encoding, s, next);
       }
     }
@@ -1755,10 +1804,13 @@ enum XML_Error epilogProcessor(XML_Parser parser,
   for (;;) {
     const char *next;
     int tok = XmlPrologTok(encoding, s, end, &next);
+    eventEndPtr = next;
     switch (tok) {
     case XML_TOK_TRAILING_CR:
-      if (defaultHandler)
+      if (defaultHandler) {
+	eventEndPtr = end;
 	reportDefault(parser, encoding, s, end);
+      }
       /* fall through */
     case XML_TOK_NONE:
       if (nextPtr)
@@ -2071,11 +2123,17 @@ reportDefault(XML_Parser parser, const ENCODING *enc, const char *s, const char 
     for (;;) {
       ICHAR *dataPtr = (ICHAR *)dataBuf;
       XmlConvert(enc, &s, end, &dataPtr, (ICHAR *)dataBufEnd);
-      defaultHandler(handlerArg, dataBuf, dataPtr - (ICHAR *)dataBuf);
-      if (s == end)
+      if (s == end) {
+	defaultHandler(handlerArg, dataBuf, dataPtr - (ICHAR *)dataBuf);
 	break;
-      if (enc == encoding)
+      }
+      if (enc == encoding) {
+	eventEndPtr = s;
+	defaultHandler(handlerArg, dataBuf, dataPtr - (ICHAR *)dataBuf);
 	eventPtr = s;
+      }
+      else
+	defaultHandler(handlerArg, dataBuf, dataPtr - (ICHAR *)dataBuf);
     }
   }
   else

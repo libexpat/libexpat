@@ -175,10 +175,31 @@ static void processingInstruction(void *userData, const XML_Char *target, const 
   puttc(T('>'), fp);
 }
 
-static void markup(void *userData, const XML_Char *s, int len)
+static void defaultCharacterData(XML_Parser parser, const XML_Char *s, int len)
 {
+  XML_DefaultCurrent(parser);
+}
+
+static void defaultStartElement(XML_Parser parser, const XML_Char *name, const XML_Char **atts)
+{
+  XML_DefaultCurrent(parser);
+}
+
+static void defaultEndElement(XML_Parser parser, const XML_Char *name)
+{
+  XML_DefaultCurrent(parser);
+}
+
+static void defaultProcessingInstruction(XML_Parser parser, const XML_Char *target, const XML_Char *data)
+{
+  XML_DefaultCurrent(parser);
+}
+
+static void markup(XML_Parser parser, const XML_Char *s, int len)
+{
+  FILE *fp = XML_GetUserData(parser);
   for (; len > 0; --len, ++s)
-    puttc(*s, (FILE *)userData);
+    puttc(*s, fp);
 }
 
 static
@@ -585,7 +606,11 @@ int tmain(int argc, XML_Char **argv)
 	XML_SetNotationDeclHandler(parser, metaNotationDecl);
 	break;
       case 'c':
+	XML_UseParserAsHandlerArg(parser);
 	XML_SetDefaultHandler(parser, markup);
+	XML_SetElementHandler(parser, defaultStartElement, defaultEndElement);
+	XML_SetCharacterDataHandler(parser, defaultCharacterData);
+	XML_SetProcessingInstructionHandler(parser, defaultProcessingInstruction);
 	break;
       default:
 	XML_SetElementHandler(parser, startElement, endElement);

@@ -259,6 +259,14 @@ XML_SetUnknownEncodingHandler(XML_Parser parser,
 			      XML_UnknownEncodingHandler handler,
 			      void *encodingHandlerData);
 
+/* This can be called within a handler for a start element, end element,
+processing instruction or character data.  It causes the corresponding
+markup to be passed to the default handler.
+Within the expansion of an internal entity, nothing will be passed
+to the default handler, although this usually will not happen since
+setting a default handler inhibits expansion of internal entities. */
+void XMLPARSEAPI XML_DefaultCurrent(XML_Parser parser);
+
 /* This value is passed as the userData argument to callbacks. */
 void XMLPARSEAPI
 XML_SetUserData(XML_Parser parser, void *userData);
