@@ -64,12 +64,12 @@ int codepageConvert(int cp, const char *p)
 
 #else /* not WIN32 */
 
-int codepageMap(int cp, unsigned short *map)
+int codepageMap(int cp, int *map)
 {
   return 0;
 }
 
-unsigned short codepageConvert(int cp, const char *p)
+int codepageConvert(int cp, const char *p)
 {
   return -1;
 }
