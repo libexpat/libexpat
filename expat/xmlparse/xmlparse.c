@@ -252,138 +252,138 @@ static const XML_Char *poolCopyStringN(STRING_POOL *pool, const XML_Char *s, int
 
 typedef struct {
   /* The first member must be userData so that the XML_GetUserData macro works. */
-  void *userData;
-  void *handlerArg;
-  char *buffer;
+  void *m_userData;
+  void *m_handlerArg;
+  char *m_buffer;
   /* first character to be parsed */
-  const char *bufferPtr;
+  const char *m_bufferPtr;
   /* past last character to be parsed */
-  char *bufferEnd;
+  char *m_bufferEnd;
   /* allocated end of buffer */
-  const char *bufferLim;
-  long parseEndByteIndex;
-  const char *parseEndPtr;
-  XML_Char *dataBuf;
-  XML_Char *dataBufEnd;
-  XML_StartElementHandler startElementHandler;
-  XML_EndElementHandler endElementHandler;
-  XML_CharacterDataHandler characterDataHandler;
-  XML_ProcessingInstructionHandler processingInstructionHandler;
-  XML_CommentHandler commentHandler;
-  XML_StartCdataSectionHandler startCdataSectionHandler;
-  XML_EndCdataSectionHandler endCdataSectionHandler;
-  XML_DefaultHandler defaultHandler;
-  XML_UnparsedEntityDeclHandler unparsedEntityDeclHandler;
-  XML_NotationDeclHandler notationDeclHandler;
-  XML_StartNamespaceDeclHandler startNamespaceDeclHandler;
-  XML_EndNamespaceDeclHandler endNamespaceDeclHandler;
-  XML_ExternalEntityRefHandler externalEntityRefHandler;
-  void *externalEntityRefHandlerArg;
-  XML_UnknownEncodingHandler unknownEncodingHandler;
-  const ENCODING *encoding;
-  INIT_ENCODING initEncoding;
-  const XML_Char *protocolEncodingName;
-  int ns;
-  void *unknownEncodingMem;
-  void *unknownEncodingData;
-  void *unknownEncodingHandlerData;
-  void (*unknownEncodingRelease)(void *);
-  PROLOG_STATE prologState;
-  Processor *processor;
-  enum XML_Error errorCode;
-  const char *eventPtr;
-  const char *eventEndPtr;
-  const char *positionPtr;
-  OPEN_INTERNAL_ENTITY *openInternalEntities;
-  int defaultExpandInternalEntities;
-  int tagLevel;
-  ENTITY *declEntity;
-  const XML_Char *declNotationName;
-  const XML_Char *declNotationPublicId;
-  ELEMENT_TYPE *declElementType;
-  ATTRIBUTE_ID *declAttributeId;
-  char declAttributeIsCdata;
-  DTD dtd;
-  TAG *tagStack;
-  TAG *freeTagList;
-  BINDING *inheritedBindings;
-  BINDING *freeBindingList;
-  int attsSize;
-  int nSpecifiedAtts;
-  ATTRIBUTE *atts;
-  POSITION position;
-  STRING_POOL tempPool;
-  STRING_POOL temp2Pool;
-  char *groupConnector;
-  unsigned groupSize;
-  int hadExternalDoctype;
-  XML_Char namespaceSeparator;
+  const char *m_bufferLim;
+  long m_parseEndByteIndex;
+  const char *m_parseEndPtr;
+  XML_Char *m_dataBuf;
+  XML_Char *m_dataBufEnd;
+  XML_StartElementHandler m_startElementHandler;
+  XML_EndElementHandler m_endElementHandler;
+  XML_CharacterDataHandler m_characterDataHandler;
+  XML_ProcessingInstructionHandler m_processingInstructionHandler;
+  XML_CommentHandler m_commentHandler;
+  XML_StartCdataSectionHandler m_startCdataSectionHandler;
+  XML_EndCdataSectionHandler m_endCdataSectionHandler;
+  XML_DefaultHandler m_defaultHandler;
+  XML_UnparsedEntityDeclHandler m_unparsedEntityDeclHandler;
+  XML_NotationDeclHandler m_notationDeclHandler;
+  XML_StartNamespaceDeclHandler m_startNamespaceDeclHandler;
+  XML_EndNamespaceDeclHandler m_endNamespaceDeclHandler;
+  XML_ExternalEntityRefHandler m_externalEntityRefHandler;
+  void *m_externalEntityRefHandlerArg;
+  XML_UnknownEncodingHandler m_unknownEncodingHandler;
+  const ENCODING *m_encoding;
+  INIT_ENCODING m_initEncoding;
+  const XML_Char *m_protocolEncodingName;
+  int m_ns;
+  void *m_unknownEncodingMem;
+  void *m_unknownEncodingData;
+  void *m_unknownEncodingHandlerData;
+  void (*m_unknownEncodingRelease)(void *);
+  PROLOG_STATE m_prologState;
+  Processor *m_processor;
+  enum XML_Error m_errorCode;
+  const char *m_eventPtr;
+  const char *m_eventEndPtr;
+  const char *m_positionPtr;
+  OPEN_INTERNAL_ENTITY *m_openInternalEntities;
+  int m_defaultExpandInternalEntities;
+  int m_tagLevel;
+  ENTITY *m_declEntity;
+  const XML_Char *m_declNotationName;
+  const XML_Char *m_declNotationPublicId;
+  ELEMENT_TYPE *m_declElementType;
+  ATTRIBUTE_ID *m_declAttributeId;
+  char m_declAttributeIsCdata;
+  DTD m_dtd;
+  TAG *m_tagStack;
+  TAG *m_freeTagList;
+  BINDING *m_inheritedBindings;
+  BINDING *m_freeBindingList;
+  int m_attsSize;
+  int m_nSpecifiedAtts;
+  ATTRIBUTE *m_atts;
+  POSITION m_position;
+  STRING_POOL m_tempPool;
+  STRING_POOL m_temp2Pool;
+  char *m_groupConnector;
+  unsigned m_groupSize;
+  int m_hadExternalDoctype;
+  XML_Char m_namespaceSeparator;
 } Parser;
 
-#define userData (((Parser *)parser)->userData)
-#define handlerArg (((Parser *)parser)->handlerArg)
-#define startElementHandler (((Parser *)parser)->startElementHandler)
-#define endElementHandler (((Parser *)parser)->endElementHandler)
-#define characterDataHandler (((Parser *)parser)->characterDataHandler)
-#define processingInstructionHandler (((Parser *)parser)->processingInstructionHandler)
-#define commentHandler (((Parser *)parser)->commentHandler)
-#define startCdataSectionHandler (((Parser *)parser)->startCdataSectionHandler)
-#define endCdataSectionHandler (((Parser *)parser)->endCdataSectionHandler)
-#define defaultHandler (((Parser *)parser)->defaultHandler)
-#define unparsedEntityDeclHandler (((Parser *)parser)->unparsedEntityDeclHandler)
-#define notationDeclHandler (((Parser *)parser)->notationDeclHandler)
-#define startNamespaceDeclHandler (((Parser *)parser)->startNamespaceDeclHandler)
-#define endNamespaceDeclHandler (((Parser *)parser)->endNamespaceDeclHandler)
-#define externalEntityRefHandler (((Parser *)parser)->externalEntityRefHandler)
-#define externalEntityRefHandlerArg (((Parser *)parser)->externalEntityRefHandlerArg)
-#define unknownEncodingHandler (((Parser *)parser)->unknownEncodingHandler)
-#define encoding (((Parser *)parser)->encoding)
-#define initEncoding (((Parser *)parser)->initEncoding)
-#define unknownEncodingMem (((Parser *)parser)->unknownEncodingMem)
-#define unknownEncodingData (((Parser *)parser)->unknownEncodingData)
+#define userData (((Parser *)parser)->m_userData)
+#define handlerArg (((Parser *)parser)->m_handlerArg)
+#define startElementHandler (((Parser *)parser)->m_startElementHandler)
+#define endElementHandler (((Parser *)parser)->m_endElementHandler)
+#define characterDataHandler (((Parser *)parser)->m_characterDataHandler)
+#define processingInstructionHandler (((Parser *)parser)->m_processingInstructionHandler)
+#define commentHandler (((Parser *)parser)->m_commentHandler)
+#define startCdataSectionHandler (((Parser *)parser)->m_startCdataSectionHandler)
+#define endCdataSectionHandler (((Parser *)parser)->m_endCdataSectionHandler)
+#define defaultHandler (((Parser *)parser)->m_defaultHandler)
+#define unparsedEntityDeclHandler (((Parser *)parser)->m_unparsedEntityDeclHandler)
+#define notationDeclHandler (((Parser *)parser)->m_notationDeclHandler)
+#define startNamespaceDeclHandler (((Parser *)parser)->m_startNamespaceDeclHandler)
+#define endNamespaceDeclHandler (((Parser *)parser)->m_endNamespaceDeclHandler)
+#define externalEntityRefHandler (((Parser *)parser)->m_externalEntityRefHandler)
+#define externalEntityRefHandlerArg (((Parser *)parser)->m_externalEntityRefHandlerArg)
+#define unknownEncodingHandler (((Parser *)parser)->m_unknownEncodingHandler)
+#define encoding (((Parser *)parser)->m_encoding)
+#define initEncoding (((Parser *)parser)->m_initEncoding)
+#define unknownEncodingMem (((Parser *)parser)->m_unknownEncodingMem)
+#define unknownEncodingData (((Parser *)parser)->m_unknownEncodingData)
 #define unknownEncodingHandlerData \
-  (((Parser *)parser)->unknownEncodingHandlerData)
-#define unknownEncodingRelease (((Parser *)parser)->unknownEncodingRelease)
-#define protocolEncodingName (((Parser *)parser)->protocolEncodingName)
-#define ns (((Parser *)parser)->ns)
-#define prologState (((Parser *)parser)->prologState)
-#define processor (((Parser *)parser)->processor)
-#define errorCode (((Parser *)parser)->errorCode)
-#define eventPtr (((Parser *)parser)->eventPtr)
-#define eventEndPtr (((Parser *)parser)->eventEndPtr)
-#define positionPtr (((Parser *)parser)->positionPtr)
-#define position (((Parser *)parser)->position)
-#define openInternalEntities (((Parser *)parser)->openInternalEntities)
-#define defaultExpandInternalEntities (((Parser *)parser)->defaultExpandInternalEntities)
-#define tagLevel (((Parser *)parser)->tagLevel)
-#define buffer (((Parser *)parser)->buffer)
-#define bufferPtr (((Parser *)parser)->bufferPtr)
-#define bufferEnd (((Parser *)parser)->bufferEnd)
-#define parseEndByteIndex (((Parser *)parser)->parseEndByteIndex)
-#define parseEndPtr (((Parser *)parser)->parseEndPtr)
-#define bufferLim (((Parser *)parser)->bufferLim)
-#define dataBuf (((Parser *)parser)->dataBuf)
-#define dataBufEnd (((Parser *)parser)->dataBufEnd)
-#define dtd (((Parser *)parser)->dtd)
-#define declEntity (((Parser *)parser)->declEntity)
-#define declNotationName (((Parser *)parser)->declNotationName)
-#define declNotationPublicId (((Parser *)parser)->declNotationPublicId)
-#define declElementType (((Parser *)parser)->declElementType)
-#define declAttributeId (((Parser *)parser)->declAttributeId)
-#define declAttributeIsCdata (((Parser *)parser)->declAttributeIsCdata)
-#define freeTagList (((Parser *)parser)->freeTagList)
-#define freeBindingList (((Parser *)parser)->freeBindingList)
-#define inheritedBindings (((Parser *)parser)->inheritedBindings)
-#define tagStack (((Parser *)parser)->tagStack)
-#define atts (((Parser *)parser)->atts)
-#define attsSize (((Parser *)parser)->attsSize)
-#define nSpecifiedAtts (((Parser *)parser)->nSpecifiedAtts)
-#define tempPool (((Parser *)parser)->tempPool)
-#define temp2Pool (((Parser *)parser)->temp2Pool)
-#define groupConnector (((Parser *)parser)->groupConnector)
-#define groupSize (((Parser *)parser)->groupSize)
-#define hadExternalDoctype (((Parser *)parser)->hadExternalDoctype)
-#define namespaceSeparator (((Parser *)parser)->namespaceSeparator)
+  (((Parser *)parser)->m_unknownEncodingHandlerData)
+#define unknownEncodingRelease (((Parser *)parser)->m_unknownEncodingRelease)
+#define protocolEncodingName (((Parser *)parser)->m_protocolEncodingName)
+#define ns (((Parser *)parser)->m_ns)
+#define prologState (((Parser *)parser)->m_prologState)
+#define processor (((Parser *)parser)->m_processor)
+#define errorCode (((Parser *)parser)->m_errorCode)
+#define eventPtr (((Parser *)parser)->m_eventPtr)
+#define eventEndPtr (((Parser *)parser)->m_eventEndPtr)
+#define positionPtr (((Parser *)parser)->m_positionPtr)
+#define position (((Parser *)parser)->m_position)
+#define openInternalEntities (((Parser *)parser)->m_openInternalEntities)
+#define defaultExpandInternalEntities (((Parser *)parser)->m_defaultExpandInternalEntities)
+#define tagLevel (((Parser *)parser)->m_tagLevel)
+#define buffer (((Parser *)parser)->m_buffer)
+#define bufferPtr (((Parser *)parser)->m_bufferPtr)
+#define bufferEnd (((Parser *)parser)->m_bufferEnd)
+#define parseEndByteIndex (((Parser *)parser)->m_parseEndByteIndex)
+#define parseEndPtr (((Parser *)parser)->m_parseEndPtr)
+#define bufferLim (((Parser *)parser)->m_bufferLim)
+#define dataBuf (((Parser *)parser)->m_dataBuf)
+#define dataBufEnd (((Parser *)parser)->m_dataBufEnd)
+#define dtd (((Parser *)parser)->m_dtd)
+#define declEntity (((Parser *)parser)->m_declEntity)
+#define declNotationName (((Parser *)parser)->m_declNotationName)
+#define declNotationPublicId (((Parser *)parser)->m_declNotationPublicId)
+#define declElementType (((Parser *)parser)->m_declElementType)
+#define declAttributeId (((Parser *)parser)->m_declAttributeId)
+#define declAttributeIsCdata (((Parser *)parser)->m_declAttributeIsCdata)
+#define freeTagList (((Parser *)parser)->m_freeTagList)
+#define freeBindingList (((Parser *)parser)->m_freeBindingList)
+#define inheritedBindings (((Parser *)parser)->m_inheritedBindings)
+#define tagStack (((Parser *)parser)->m_tagStack)
+#define atts (((Parser *)parser)->m_atts)
+#define attsSize (((Parser *)parser)->m_attsSize)
+#define nSpecifiedAtts (((Parser *)parser)->m_nSpecifiedAtts)
+#define tempPool (((Parser *)parser)->m_tempPool)
+#define temp2Pool (((Parser *)parser)->m_temp2Pool)
+#define groupConnector (((Parser *)parser)->m_groupConnector)
+#define groupSize (((Parser *)parser)->m_groupSize)
+#define hadExternalDoctype (((Parser *)parser)->m_hadExternalDoctype)
+#define namespaceSeparator (((Parser *)parser)->m_namespaceSeparator)
 
 #ifdef _MSC_VER
 #ifdef _DEBUG
