@@ -109,10 +109,10 @@ static void dtdDestroy(DTD *);
 static void poolInit(STRING_POOL *);
 static void poolClear(STRING_POOL *);
 static void poolDestroy(STRING_POOL *);
-static const char *poolAppend(STRING_POOL *pool, const ENCODING *enc,
-			      const char *ptr, const char *end);
-static const char *poolStoreString(STRING_POOL *pool, const ENCODING *enc,
-			    const char *ptr, const char *end);
+static char *poolAppend(STRING_POOL *pool, const ENCODING *enc,
+			const char *ptr, const char *end);
+static char *poolStoreString(STRING_POOL *pool, const ENCODING *enc,
+			     const char *ptr, const char *end);
 static int poolGrow(STRING_POOL *pool);
 
 #define poolStart(pool) ((pool)->start)
@@ -1347,24 +1347,45 @@ enum XML_Error storeEntityValue(XML_Parser parser,
   /* not reached */
 }
 
+static void
+normalizeLines(char *s)
+{
+  char *p;
+  s = strchr(s, '\r');
+  if (!s)
+    return;
+  p = s;
+  while (*s) {
+    if (*s == '\r') {
+      *p++ = '\n';
+      if (*++s == '\n')
+        s++;
+    }
+    else
+      *s++ = *p++;
+  }
+}
+
 static int
 reportProcessingInstruction(XML_Parser parser, const ENCODING *enc, const char *start, const char *end)
 {
   const char *target;
-  const char *data;
+  char *data;
+  const char *tem;
   if (!processingInstructionHandler)
     return 1;
   target = start + enc->minBytesPerChar * 2;
-  data = target + XmlNameLength(enc, target);
-  target = poolStoreString(&tempPool, enc, target, data);
+  tem = target + XmlNameLength(enc, target);
+  target = poolStoreString(&tempPool, enc, target, tem);
   if (!target)
     return 0;
   poolFinish(&tempPool);
   data = poolStoreString(&tempPool, enc,
-			 XmlSkipS(enc, data),
-			 end - enc->minBytesPerChar*2);
+			XmlSkipS(enc, tem),
+			end - enc->minBytesPerChar*2);
   if (!data)
     return 0;
+  normalizeLines(data);
   processingInstructionHandler(userData, target, data);
   poolClear(&tempPool);
   return 1;
@@ -1508,8 +1529,8 @@ void poolDestroy(STRING_POOL *pool)
 }
 
 static
-const char *poolAppend(STRING_POOL *pool, const ENCODING *enc,
-		       const char *ptr, const char *end)
+char *poolAppend(STRING_POOL *pool, const ENCODING *enc,
+		 const char *ptr, const char *end)
 {
   for (;;) {
     XmlConvert(enc, XML_UTF8_ENCODING, &ptr, end, &(pool->ptr), pool->end);
@@ -1523,8 +1544,8 @@ const char *poolAppend(STRING_POOL *pool, const ENCODING *enc,
 
 
 static
-const char *poolStoreString(STRING_POOL *pool, const ENCODING *enc,
-			    const char *ptr, const char *end)
+char *poolStoreString(STRING_POOL *pool, const ENCODING *enc,
+		      const char *ptr, const char *end)
 {
   if (!poolAppend(pool, enc, ptr, end))
     return 0;
