@@ -44,6 +44,29 @@ from "scripting" languages such as Python and Perl.  We invite the
 community to participate on the mailing lists to help shape the future
 of Expat.</p>
 
+<h3>News</h3>
+
+<dl>
+  <dt><em>3 June 2002</em><br />
+      <strong>Expat 1.95.3 released.</strong><br />
+  <dd>
+    <ul>
+      <li> Added a project to the MSVC workspace to create a wchar_t
+	   version of the library; the DLLs are named libexpatw.dll. </li>
+      <li> Changed the name of the Windows DLLs from expat.dll to
+	   libexpat.dll; this fixes SF bug #432456. </li>
+      <li> Added the XML_ParserReset() API function. </li>
+      <li> Fixed XML_SetReturnNSTriplet() to work for element names. </li>
+      <li> Made the XML_UNICODE builds usable (thanks, Karl!). </li>
+      <li> Allow xmlwf to read from standard input. </li>
+      <li> Install a man page for xmlwf on Unix systems. </li>
+      <li> Fixed many bugs; see SF bug reports 231864, 461380, 464837,
+	   466885, 469226, 477667, 484419, 487840, 494749, 496505,
+	   547350.  Other bugs which we can't test as easily may also
+	   have been fixed, especially in the area of build support. </li>
+    </ul>
+</dl>
+
 <h3>References</h3>
 
 <p>If you know of any additional articles or resources which should be
