@@ -172,71 +172,15 @@ static void processingInstruction(void *userData, const XML_Char *target, const 
   puttc(T('>'), fp);
 }
 
-#ifdef DEBUG_UNPARSED_ENTITIES
-
-static void unparsedEntityDecl(void *userData,
-			       const XML_Char *entityName,
-			       const XML_Char *base,
-			       const XML_Char *systemId,
-			       const XML_Char *publicId,
-			       const XML_Char *notationName)
-{
-  FILE *fp = userData;
-  XML_Char lit = tcschr(systemId, T('"')) ? '\'' : '"';
-  fputts(T("<!ENTITY "), fp);
-  fputts(entityName, fp);
-  if (publicId) {
-    fputts(T(" PUBLIC \""), fp);
-    fputts(publicId, fp);
-    puttc(T('"'), fp);
-    puttc(T(' '), fp);
-  }
-  else
-    fputts(T(" SYSTEM "), fp);
-  puttc(lit, fp);
-  fputts(systemId, fp);
-  puttc(lit, fp);
-  fputts(T(" NDATA "), fp);
-  fputts(notationName, fp);
-  puttc(T('>'), fp);
-}
-
-static void notationDecl(void *userData,
-			 const XML_Char *notationName,
-			 const XML_Char *base,
-			 const XML_Char *systemId,
-			 const XML_Char *publicId)
-{
-  FILE *fp = userData;
-  fputts(T("<!NOTATION "), fp);
-  fputts(notationName, fp);
-  if (publicId) {
-    fputts(T(" PUBLIC \""), fp);
-    fputts(publicId, fp);
-    puttc(T('"'), fp);
-  }
-  else
-    fputts(T(" SYSTEM"), fp);
-  if (systemId) {
-    XML_Char lit = tcschr(systemId, T('"')) ? '\'' : '"';
-    puttc(T(' '), fp);
-    puttc(lit, fp);
-    fputts(systemId, fp);
-    puttc(lit, fp);
-  }
-  puttc(T('>'), fp);
-}
-
-#endif /* DEBUG_UNPARSED_ENTITIES */
 
 static
 void metaLocation(XML_Parser parser)
 {
   const XML_Char *uri = XML_GetBase(parser);
   if (uri)
-    ftprintf(XML_GetUserData(parser), T(" uri='%s'"), uri);
+    ftprintf(XML_GetUserData(parser), T(" uri=\"%s\""), uri);
   ftprintf(XML_GetUserData(parser),
-           T(" byte='%ld' line='%d' col='%d'"),
+           T(" byte=\"%ld\" line=\"%d\" col=\"%d\""),
 	   XML_GetCurrentByteIndex(parser),
 	   XML_GetCurrentLineNumber(parser),
 	   XML_GetCurrentColumnNumber(parser));
@@ -246,16 +190,88 @@ static
 void metaStartElement(XML_Parser parser, const XML_Char *name, const XML_Char **atts)
 {
   FILE *fp = XML_GetUserData(parser);
-  ftprintf(fp, T("<starttag name='%s'"), name);
+  ftprintf(fp, T("<starttag name=\"%s\""), name);
   metaLocation(parser);
-  fputts(T("/>\n"), fp);
+  if (*atts) {
+    fputts(T(">\n"), fp);
+    do {
+      ftprintf(fp, T("<starttag name=\"%s\" value=\""), atts[0]);
+      characterData(fp, atts[1], tcslen(atts[1]));
+      fputts(T("\"/>\n"), fp);
+    } while (*(atts += 2));
+    fputts(T("</starttag>\n"), fp);
+  }
+  else
+    fputts(T("/>\n"), fp);
 }
 
 static
 void metaEndElement(XML_Parser parser, const XML_Char *name)
 {
   FILE *fp = XML_GetUserData(parser);
-  ftprintf(fp, T("<endtag name='%s'"), name);
+  ftprintf(fp, T("<endtag name=\"%s\""), name);
+  metaLocation(parser);
+  fputts(T("/>\n"), fp);
+}
+
+static
+void metaProcessingInstruction(XML_Parser parser, const XML_Char *target, const XML_Char *data)
+{
+  FILE *fp = XML_GetUserData(parser);
+  ftprintf(fp, T("<pi target=\"%s\" data=\""), target);
+  characterData(fp, data, tcslen(data));
+  puttc(T('"'), fp);
+  metaLocation(parser);
+  fputts(T("/>\n"), fp);
+}
+
+static
+void metaCharacterData(XML_Parser parser, const XML_Char *s, int len)
+{
+  FILE *fp = XML_GetUserData(parser);
+  fputts(T("<chars str=\""), fp);
+  characterData(fp, s, len);
+  puttc(T('"'), fp);
+  metaLocation(parser);
+  fputts(T("/>\n"), fp);
+}
+
+static
+void metaUnparsedEntityDecl(XML_Parser parser,
+			       const XML_Char *entityName,
+			       const XML_Char *base,
+			       const XML_Char *systemId,
+			       const XML_Char *publicId,
+			       const XML_Char *notationName)
+{
+  FILE *fp = XML_GetUserData(parser);
+  ftprintf(fp, T("<entity name=\"%s\""), entityName);
+  if (publicId)
+    ftprintf(fp, T(" public=\"%s\""), publicId);
+  fputts(T(" system=\""), fp);
+  characterData(fp, systemId, tcslen(systemId));
+  puttc(T('"'), fp);
+  ftprintf(fp, T(" notation=\"%s\""), notationName);
+  metaLocation(parser);
+  fputts(T("/>\n"), fp);
+}
+
+static
+void metaNotationDecl(XML_Parser parser,
+		      const XML_Char *notationName,
+		      const XML_Char *base,
+		      const XML_Char *systemId,
+		      const XML_Char *publicId)
+{
+  FILE *fp = XML_GetUserData(parser);
+  ftprintf(fp, T("<notation name=\"%s\""), notationName);
+  if (publicId)
+    ftprintf(fp, T(" public=\"%s\""), publicId);
+  if (systemId) {
+    fputts(T(" system=\""), fp);
+    characterData(fp, systemId, tcslen(systemId));
+    puttc(T('"'), fp);
+  }
   metaLocation(parser);
   fputts(T("/>\n"), fp);
 }
@@ -548,16 +564,17 @@ int tmain(int argc, XML_Char **argv)
       XML_SetUserData(parser, fp);
       if (metaOutput) {
 	XML_UseParserAsHandlerArg(parser);
+	fputts(T("<document>\n"), fp);
 	XML_SetElementHandler(parser, metaStartElement, metaEndElement);
+	XML_SetProcessingInstructionHandler(parser, metaProcessingInstruction);
+	XML_SetCharacterDataHandler(parser, metaCharacterData);
+	XML_SetUnparsedEntityDeclHandler(parser, metaUnparsedEntityDecl);
+	XML_SetNotationDeclHandler(parser, metaNotationDecl);
       }
       else {
 	XML_SetElementHandler(parser, startElement, endElement);
 	XML_SetCharacterDataHandler(parser, characterData);
 	XML_SetProcessingInstructionHandler(parser, processingInstruction);
-#ifdef DEBUG_UNPARSED_ENTITIES
-	XML_SetUnparsedEntityDeclHandler(parser, unparsedEntityDecl);
-	XML_SetNotationDeclHandler(parser, notationDecl);
-#endif
       }
     }
     if (windowsCodePages)
@@ -582,6 +599,8 @@ int tmain(int argc, XML_Char **argv)
     else
       result = processStream(argv[i], parser);
     if (outputDir) {
+      if (metaOutput)
+	fputts(T("</document>\n"), fp);
       fclose(fp);
       if (!result)
 	tremove(outName);
