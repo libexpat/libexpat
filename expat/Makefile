@@ -10,6 +10,7 @@ FILEMAP_OBJ=xmlwf/unixfilemap.o
 OBJS=xmltok/xmltok.o \
   xmltok/xmlrole.o \
   xmlwf/xmlwf.o \
+  xmlwf/xmlfile.o \
   xmlwf/codepage.o \
   xmlparse/xmlparse.o \
   xmlparse/hashtable.o \

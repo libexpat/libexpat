@@ -105,6 +105,10 @@ SOURCE=.\win32filemap.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\xmlfile.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\xmlwf.c
 # End Source File
 # End Group
@@ -114,6 +118,14 @@ SOURCE=.\xmlwf.c
 # Begin Source File
 
 SOURCE=.\codepage.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\xmlfile.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\xmltchar.h
 # End Source File
 # End Group
 # Begin Group "Resource Files"
