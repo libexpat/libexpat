@@ -128,9 +128,12 @@ int PREFIX(scanDecl)(const ENCODING *enc, const char *ptr, const char *end,
   if (ptr == end)
     return XML_TOK_PARTIAL;
   if (CHAR_MATCHES(enc, ptr, '-'))
-    return PREFIX(scanComment)(enc, ptr + MINBPC, end, nextTokPtr);
-  /* FIXME check for <![ */
   switch (BYTE_TYPE(enc, ptr)) {
+  case BT_MINUS:
+    return PREFIX(scanComment)(enc, ptr + MINBPC, end, nextTokPtr);
+  case BT_LSQB:
+    *nextTokPtr = ptr + MINBPC;
+    return XML_TOK_COND_SECT_OPEN;
   case BT_NMSTRT:
   case BT_HEX:
     ptr += MINBPC;
@@ -724,6 +727,38 @@ int PREFIX(scanPoundName)(const ENCODING *enc, const char *ptr, const char *end,
   return XML_TOK_PARTIAL;
 }
 
+static
+int PREFIX(scanLit)(int open, const ENCODING *enc,
+		    const char *ptr, const char *end,
+		    const char **nextTokPtr)
+{
+  while (ptr != end) {
+    int t = BYTE_TYPE(enc, ptr);
+    switch (t) {
+    MULTIBYTE_CASES(ptr, end, XML_TOK_PARTIAL)
+    INVALID_CASES(ptr, nextTokPtr)
+    case BT_QUOT:
+    case BT_APOS:
+      ptr += MINBPC;
+      if (t != open)
+	break;
+      if (ptr == end)
+	return XML_TOK_PARTIAL;
+      *nextTokPtr = ptr;
+      switch (BYTE_TYPE(enc, ptr)) {
+      case BT_S: case BT_CR: case BT_LF:
+      case BT_GT: case BT_PERCNT: case BT_LSQB:
+	return XML_TOK_LITERAL;
+      default:
+	return XML_TOK_INVALID;
+      }
+    default:
+      ptr += MINBPC;
+      break;
+    }
+  }
+  return XML_TOK_PARTIAL;
+}
 
 static
 int PREFIX(prologTok)(const ENCODING *enc, const char *ptr, const char *end,
@@ -745,27 +780,9 @@ int PREFIX(prologTok)(const ENCODING *enc, const char *ptr, const char *end,
 #endif
   switch (BYTE_TYPE(enc, ptr)) {
   case BT_QUOT:
-    {
-      /* FIXME multibyte, plus require S, > or % afterwards */
-      for (ptr += MINBPC; ptr != end; ptr += MINBPC) {
-	if (BYTE_TYPE(enc, ptr) == BT_QUOT) {
-	  *nextTokPtr = ptr + MINBPC;
-	  return XML_TOK_LITERAL;
-	}
-      }
-      return XML_TOK_PARTIAL;
-    }
+    return PREFIX(scanLit)(BT_QUOT, enc, ptr + MINBPC, end, nextTokPtr);
   case BT_APOS:
-    {
-      /* FIXME multibyte, plus require S, > or % afterwards */
-      for (ptr += MINBPC; ptr != end; ptr += MINBPC) {
-	if (BYTE_TYPE(enc, ptr) == BT_APOS) {
-	  *nextTokPtr = ptr + MINBPC;
-	  return XML_TOK_LITERAL;
-	}
-      }
-      return XML_TOK_PARTIAL;
-    }
+    return PREFIX(scanLit)(BT_APOS, enc, ptr + MINBPC, end, nextTokPtr);
   case BT_LT:
     {
       ptr += MINBPC;
@@ -812,8 +829,18 @@ int PREFIX(prologTok)(const ENCODING *enc, const char *ptr, const char *end,
     *nextTokPtr = ptr + MINBPC;
     return XML_TOK_OPEN_BRACKET;
   case BT_RSQB:
-    /* FIXME check for ]]> */
-    *nextTokPtr = ptr + MINBPC;
+    ptr += MINBPC;
+    if (ptr == end)
+      return XML_TOK_PARTIAL;
+    if (CHAR_MATCHES(enc, ptr, ']')) {
+      if (ptr + MINBPC == end)
+	return XML_TOK_PARTIAL;
+      if (CHAR_MATCHES(enc, ptr + MINBPC, '>')) {
+	*nextTokPtr = ptr + 2*MINBPC;
+	return XML_TOK_COND_SECT_CLOSE;
+      }
+    }
+    *nextTokPtr = ptr;
     return XML_TOK_CLOSE_BRACKET;
   case BT_LPAR:
     *nextTokPtr = ptr + MINBPC;
