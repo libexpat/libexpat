@@ -1405,33 +1405,39 @@ int PREFIX(getAtts)(const ENCODING *enc, const char *ptr,
 #undef START_NAME
     case BT_QUOT:
       if (state != inValue) {
-	atts[nAtts].valuePtr = ptr + MINBPC(enc);
+	if (nAtts < attsMax)
+	  atts[nAtts].valuePtr = ptr + MINBPC(enc);
         state = inValue;
         open = BT_QUOT;
       }
       else if (open == BT_QUOT) {
         state = other;
-	atts[nAtts++].valueEnd = ptr;
+	if (nAtts < attsMax)
+	  atts[nAtts++].valueEnd = ptr;
       }
       break;
     case BT_APOS:
       if (state != inValue) {
-	atts[nAtts].valuePtr = ptr + MINBPC(enc);
+	if (nAtts < attsMax)
+	  atts[nAtts].valuePtr = ptr + MINBPC(enc);
         state = inValue;
         open = BT_APOS;
       }
       else if (open == BT_APOS) {
         state = other;
-	atts[nAtts++].valueEnd = ptr;
+	if (nAtts < attsMax)
+	  atts[nAtts++].valueEnd = ptr;
       }
       break;
     case BT_AMP:
-      atts[nAtts].normalized = 0;
+      if (nAtts < attsMax)
+	atts[nAtts].normalized = 0;
       break;
     case BT_S:
       if (state == inName)
         state = other;
       else if (state == inValue
+	       && nAtts < attsMax
 	       && atts[nAtts].normalized
 	       && (ptr == atts[nAtts].valuePtr
 		   || BYTE_TO_ASCII(enc, ptr) != ' '
@@ -1444,7 +1450,7 @@ int PREFIX(getAtts)(const ENCODING *enc, const char *ptr,
          Apart from that we could just change state on the quote. */
       if (state == inName)
         state = other;
-      else if (state == inValue)
+      else if (state == inValue && nAtts < attsMax)
 	atts[nAtts].normalized = 0;
       break;
     case BT_GT:
