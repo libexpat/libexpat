@@ -128,7 +128,7 @@ int PREFIX(scanComment)(const ENCODING *enc, const char *ptr, const char *end,
 	  *nextTokPtr = ptr + MINBPC;
 	  return XML_TOK_COMMENT;
 	}
-	/* fall through */
+	break;
       default:
 	ptr += MINBPC;
 	break;
