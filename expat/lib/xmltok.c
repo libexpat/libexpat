@@ -3,9 +3,9 @@
 */
 
 #ifdef COMPILED_FROM_DSP
-#  include "winconfig.h"
+#include "winconfig.h"
 #else
-#  include <expat_config.h>
+#include <expat_config.h>
 #endif /* ndef COMPILED_FROM_DSP */
 
 #include "xmltok.h"

@@ -8,11 +8,11 @@
 #include <stdlib.h>
 
 #ifndef XMLPARSEAPI
-#  if defined(_MSC_EXTENSIONS) && !defined(__BEOS__) && !defined(__CYGWIN__)
-#    define XMLPARSEAPI(type) __declspec(dllimport) type __cdecl
-#  else
-#    define XMLPARSEAPI(type) type
-#  endif
+#if defined(_MSC_EXTENSIONS) && !defined(__BEOS__) && !defined(__CYGWIN__)
+#define XMLPARSEAPI(type) __declspec(dllimport) type __cdecl
+#else
+#define XMLPARSEAPI(type) type
+#endif
 #endif  /* not defined XMLPARSEAPI */
 
 #ifdef __cplusplus
@@ -20,23 +20,23 @@ extern "C" {
 #endif
 
 #ifdef XML_UNICODE_WCHAR_T 
-#  define XML_UNICODE
+#define XML_UNICODE
 #endif
 
 typedef void *XML_Parser;
 
 #ifdef XML_UNICODE     /* Information is UTF-16 encoded. */
-#  ifdef XML_UNICODE_WCHAR_T
+#ifdef XML_UNICODE_WCHAR_T
 typedef wchar_t XML_Char;
 typedef wchar_t XML_LChar;
-#  else
+#else
 typedef unsigned short XML_Char;
 typedef char XML_LChar;
-#  endif
+#endif /* XML_UNICODE_WCHAR_T */
 #else                  /* Information is UTF-8 encoded. */
 typedef char XML_Char;
 typedef char XML_LChar;
-#endif
+#endif /* XML_UNICODE */
 
 enum XML_Content_Type {
   XML_CTYPE_EMPTY = 1,

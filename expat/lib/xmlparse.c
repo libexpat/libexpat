@@ -3,21 +3,24 @@
 */
 
 #ifdef COMPILED_FROM_DSP
-#  include "winconfig.h"
-#  define XMLPARSEAPI(type) __declspec(dllexport) type __cdecl
-#  include "expat.h"
-#  undef XMLPARSEAPI
+
+#include "winconfig.h"
+#define XMLPARSEAPI(type) __declspec(dllexport) type __cdecl
+#include "expat.h"
+#undef XMLPARSEAPI
+
 #else
+
 #include <expat_config.h>
 
 #ifdef __declspec
-#  define XMLPARSEAPI(type) __declspec(dllexport) type __cdecl
+#define XMLPARSEAPI(type) __declspec(dllexport) type __cdecl
 #endif
 
 #include "expat.h"
 
 #ifdef __declspec
-#  undef XMLPARSEAPI
+#undef XMLPARSEAPI
 #endif
 #endif /* ndef COMPILED_FROM_DSP */
 
@@ -55,13 +58,13 @@ typedef char ICHAR;
 
 #ifdef XML_UNICODE 
 
-#  ifdef XML_UNICODE_WCHAR_T
-#  define XML_T(x) (const wchar_t)x
-#  define XML_L(x) L ## x
-#  else
-#  define XML_T(x) (const unsigned short)x
-#  define XML_L(x) x
-#  endif
+#ifdef XML_UNICODE_WCHAR_T
+#define XML_T(x) (const wchar_t)x
+#define XML_L(x) L ## x
+#else
+#define XML_T(x) (const unsigned short)x
+#define XML_L(x) x
+#endif
  
 #else 
                 
