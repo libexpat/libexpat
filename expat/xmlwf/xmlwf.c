@@ -2,6 +2,9 @@
 #include <string.h>
 #include "wfcheck.h"
 #include "filemap.h"
+#ifdef _MSC_VER
+#include <crtdbg.h>
+#endif
 
 struct ProcessFileArg {
   enum EntityType entityType;
@@ -37,6 +40,9 @@ int main(int argc, char **argv)
   int ret = 0;
   struct ProcessFileArg arg;
 
+#ifdef _MSC_VER
+  _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF|_CRTDBG_LEAK_CHECK_DF);
+#endif
   arg.entityType = documentEntity;
 
   if (i < argc && strcmp(argv[i], "-g") == 0) {
