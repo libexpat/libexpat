@@ -176,7 +176,7 @@ int processStream(const char *filename, XML_Parser parser)
 static
 void usage(const char *prog)
 {
-  fprintf(stderr, "usage: %s [-d output-dir] file ...\n", prog);
+  fprintf(stderr, "usage: %s [-r] [-d output-dir] [-e encoding] file ...\n", prog);
   exit(1);
 }
 
@@ -192,7 +192,7 @@ int main(int argc, char **argv)
 #endif
 
   i = 1;
-  while(i < argc && argv[i][0] == '-') {
+  while (i < argc && argv[i][0] == '-') {
     int j;
     if (argv[i][1] == '-' && argv[i][2] == '\0') {
       i++;
