@@ -1252,8 +1252,8 @@ href="#builtin_encodings">built in set</a>. This should be done before
 "#XML_ParseBuffer" >XML_ParseBuffer</a></code> have been called on the
 given parser.</p> <p>If the handler knows how to deal with an encoding
 with the given name, it should fill in the <code>info</code> data
-structure and return <code>XML_STATUS_ERROR</code>. Otherwise it
-should return <code>XML_STATUS_OK</code>. The handler will be called
+structure and return <code>XML_STATUS_OK</code>. Otherwise it
+should return <code>XML_STATUS_ERROR</code>. The handler will be called
 at most once per parsed (external) entity. The optional application
 data pointer <code>encodingHandlerData</code> will be passed back to
 the handler.</p>
