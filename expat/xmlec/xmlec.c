@@ -1,128 +1,15 @@
 #include <stdio.h>
-
-#ifdef _MSC_VER
-#define XMLTOKAPI __declspec(dllimport)
-#endif
-#include "xmltok.h"
-
-#ifdef FILEMAP
-
-#define STRICT 1
-#include <windows.h>
-
-static
-int XmlSkipProlog(const char **s, const char *end, const char **nextTokP,
-		  const ENCODING **enc);
-
-int XmlParse(const char *s, size_t n, const char *filename)
-{
-  unsigned nElements = 0;
-  const char *start = s;
-  const char *end = s + n;
-  const char *next;
-  const ENCODING *enc;
-  int tok = XmlSkipProlog(&s, end, &next, &enc);
-  for (;;) {
-    switch (tok) {
-    case XML_TOK_NONE:
-      if (nElements == 0) {
-	fprintf(stderr, "%s: no instance\n", filename);
-	return 0;
-      }
-      printf("%8u %s\n", nElements, filename);
-      return 1;
-    case XML_TOK_INVALID:
-      fprintf(stderr, "%s: well-formedness error at byte %lu\n",
-	      filename, (unsigned long)(next - start));
-      return 0;
-    case XML_TOK_PARTIAL:
-      fprintf(stderr, "%s: unclosed token started at byte %lu\n",
-	      filename, (unsigned long)(s - start));
-      return 0;
-    case XML_TOK_PARTIAL_CHAR:
-      fprintf(stderr, "%s: malformed input\n", filename);
-      return 0;
-    case XML_TOK_COMMENT:
-      break;
-    case XML_TOK_START_TAG:
-      nElements++;
-      break;
-    default:
-      break;
-    }
-    s = next;
-    tok = XmlContentTok(enc, s, end, &next);
-  }
-  /* not reached */
-}
-
-static
-int XmlSkipProlog(const char **startp, const char *end,
-		  const char **nextTokP, const ENCODING **enc)
-{
-  const char *s = *startp;
-  INIT_ENCODING initEnc;
-  XmlInitEncoding(&initEnc, enc);
-  for (;;) {
-    int tok = XmlPrologTok(*enc, s, end, nextTokP);
-    switch (tok) {
-    case XML_TOK_START_TAG:
-    case XML_TOK_INVALID:
-    case XML_TOK_NONE:
-    case XML_TOK_PARTIAL:
-      *startp = s;
-      return tok;
-    default:
-      break;
-    }
-    s = *nextTokP;
-  }
-  /* not reached */
-}
-
-static
-int doFile(const char *name)
-{
-  HANDLE f;
-  HANDLE m;
-  DWORD size;
-  const char *p;
-  int ret;
-
-  f = CreateFile(name, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING,
-			  FILE_FLAG_SEQUENTIAL_SCAN, NULL);
-  if (f == INVALID_HANDLE_VALUE) {
-    fprintf(stderr, "%s: CreateFile failed\n", name);
-    return 0;
-  }
-  size = GetFileSize(f, NULL);
-  m = CreateFileMapping(f, NULL, PAGE_READONLY, 0, 0, NULL);
-  if (m == NULL) {
-    fprintf(stderr, "%s: CreateFileMapping failed\n", name);
-    CloseHandle(f);
-    return 0;
-  }
-  p = (const char *)MapViewOfFile(m, FILE_MAP_READ, 0, 0, 0);
-  if (p == NULL) {
-    CloseHandle(m);
-    CloseHandle(f);
-    fprintf(stderr, "%s: MapViewOfFile failed\n", name);
-    return 0;
-  }
-  ret = XmlParse(p, size, name);
-  UnmapViewOfFile(p);
-  CloseHandle(m);
-  CloseHandle(f);
-  return ret;
-}
-
-#else /* not FILEMAP */
-
 #include <stdlib.h>
 #include <memory.h>
 #include <string.h>
 #include <io.h>
 #include <fcntl.h>
+#ifdef _MSC_VER
+#define XMLTOKAPI __declspec(dllimport)
+#endif
+#include "xmltok.h"
+
+static void outOfMemory();
 
 struct XmlTokBuffer {
   char *buf;
@@ -139,12 +26,6 @@ struct XmlTokBuffer {
 
 #define XmlTokBufferOffset(tb) ((tb)->endOffset - ((tb)->end - (tb)->ptr))
 #define READSIZE 1024
-
-void outOfMemory()
-{
-  fprintf(stderr, "out of memory\n");
-  exit(1);
-}
 
 void XmlTokBufferInit(struct XmlTokBuffer *tb, int fd)
 {
@@ -174,8 +55,16 @@ int XmlGetToken(struct XmlTokBuffer *tb, const char **tokStart, size_t *tokLengt
     const char *start = tb->ptr;
     tok = XmlTok(tb->enc, tb->state, start, tb->end, &tb->ptr);
     if (tok >= 0) {
-      if (tok == XML_TOK_START_TAG)
-	tb->state = XML_CONTENT_STATE;
+      if (tb->state == XML_PROLOG_STATE) {
+	switch (tok) {
+	case XML_TOK_START_TAG_NO_ATTS:
+	case XML_TOK_START_TAG_WITH_ATTS:
+	case XML_TOK_EMPTY_ELEMENT_NO_ATTS:
+	case XML_TOK_EMPTY_ELEMENT_WITH_ATTS:
+	  tb->state = XML_CONTENT_STATE;
+	  break;
+	}
+      }
       *tokStart = start;
       *tokLength = tb->ptr - start;
       break;
@@ -254,15 +143,22 @@ int doFile(const char *filename)
       close(fd);
       XmlTokBufferFree(&buf);
       return 0;
+    case XML_TOK_PARTIAL_CHAR:
+      fprintf(stderr, "%s: unclosed token with partial character started at byte %lu\n",
+	      filename, XmlTokBufferOffset(&buf));
+      close(fd);
+      XmlTokBufferFree(&buf);
+      return 0;
     case XML_TOK_PARTIAL:
       fprintf(stderr, "%s: unclosed token started at byte %lu\n",
 	      filename, XmlTokBufferOffset(&buf));
       close(fd);
       XmlTokBufferFree(&buf);
       return 0;
-    case XML_TOK_COMMENT:
-      break;
-    case XML_TOK_START_TAG:
+    case XML_TOK_START_TAG_WITH_ATTS:
+    case XML_TOK_EMPTY_ELEMENT_WITH_ATTS:
+    case XML_TOK_START_TAG_NO_ATTS:
+    case XML_TOK_EMPTY_ELEMENT_NO_ATTS:
       nElements++;
       break;
     default:
@@ -272,8 +168,6 @@ int doFile(const char *filename)
 
 }
 
-#endif /* not FILEMAP */
-
 int main(int argc, char **argv)
 {
   int i;
@@ -282,9 +176,16 @@ int main(int argc, char **argv)
     fprintf(stderr, "usage: %s filename ...\n", argv[0]);
     return 1;
   }
-  fprintf(stderr, "version 0.1\n");
   for (i = 1; i < argc; i++)
     if (!doFile(argv[i]))
       ret = 1;
   return ret;
 }
+
+static
+void outOfMemory()
+{
+  fprintf(stderr, "out of memory\n");
+  exit(1);
+}
+
