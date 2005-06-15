@@ -2856,8 +2856,10 @@ storeAtts(XML_Parser parser, const ENCODING *enc,
         nsAtts[j].hash = uriHash;
         nsAtts[j].uriName = s;
 
-        if (!--nPrefixes)
+        if (!--nPrefixes) {
+          i += 2;
           break;
+        }
       }
       else  /* not prefixed */
         ((XML_Char *)s)[-1] = 0;  /* clear flag */
