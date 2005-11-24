@@ -4879,9 +4879,8 @@ appendAttributeValue(XML_Parser parser, const ENCODING *enc, XML_Bool isCdata,
           return XML_ERROR_NO_MEMORY;
         entity = (ENTITY *)lookup(&dtd->generalEntities, name, 0);
         poolDiscard(&temp2Pool);
-        /* first, determine if a check for an existing declaration is needed;
-           if yes, check that the entity exists, and that it is internal,
-           otherwise call the default handler (if called from content)
+        /* First, determine if a check for an existing declaration is needed;
+           if yes, check that the entity exists, and that it is internal.
         */
         if (pool == &dtd->pool)  /* are we called from prolog? */
           checkEntityDecl =
@@ -4900,13 +4899,16 @@ appendAttributeValue(XML_Parser parser, const ENCODING *enc, XML_Bool isCdata,
             return XML_ERROR_ENTITY_DECLARED_IN_PE;
         }
         else if (!entity) {
-          /* cannot report skipped entity here - see comments on
-             skippedEntityHandler
+          /* Cannot report skipped entity here - see comments on
+             skippedEntityHandler.
           if (skippedEntityHandler)
             skippedEntityHandler(handlerArg, name, 0);
           */
+          /* Cannot call the default handler because this would be
+             out of sync with the call to the startElementHandler.
           if ((pool == &tempPool) && defaultHandler)
             reportDefault(parser, enc, ptr, next);
+          */
           break;
         }
         if (entity->open) {
