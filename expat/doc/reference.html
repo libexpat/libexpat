@@ -984,13 +984,21 @@ dealing with any memory associated with <a href="#userdata">user data</a>.
 <p>To state the obvious: the three parsing functions <code><a href=
 "#XML_Parse" >XML_Parse</a></code>, <code><a href= "#XML_ParseBuffer">
 XML_ParseBuffer</a></code> and <code><a href= "#XML_GetBuffer">
-XML_GetBuffer</a></code> must not be
-called from within a handler unless they operate on a separate parser
-instance, that is, one that did not call the handler. For example, it
-is OK to call the parsing functions from within an
-<code>XML_ExternalEntityRefHandler</code>, if they apply to the parser
-created by <code><a href= "#XML_ExternalEntityParserCreate"
+XML_GetBuffer</a></code> must not be called from within a handler
+unless they operate on a separate parser instance, that is, one that
+did not call the handler. For example, it is OK to call the parsing
+functions from within an <code>XML_ExternalEntityRefHandler</code>,
+if they apply to the parser created by
+<code><a href= "#XML_ExternalEntityParserCreate"
 >XML_ExternalEntityParserCreate</a></code>.</p>
+
+<p>Note: the <code>len</code> argument passed to these functions
+should be considerably less than the maximum value for an integer,
+as it could create an integer overflow situation if the added
+lengths of a buffer and the unprocessed portion of the previous buffer
+exceed the maximum integer value. Input data at the end of a buffer
+will remain unprocessed if it is part of an XML token for which the
+end is not part of that buffer.</p>
 
 <pre class="fcndec" id="XML_Parse">
 enum XML_Status XMLCALL
