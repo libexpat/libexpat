@@ -16,6 +16,16 @@ Expat can be built on Windows in three ways:
 * MS Visual Studio .NET 2002, 2003:
   The VC++ 6 workspace file (expat.dsw) and project files (.dsp)
   can be opened and imported in VS.NET without problems.
+  
+* Creating MinGW dynamic libraries from MS VC++ DLLs:
+  
+  On the command line, execute these steps:
+  pexports libexpat.dll > expat.def
+  pexports libexpatw.dll > expatw.def
+  dlltool -d expat.def -l libexpat.a
+  dlltool -d expatw.def -l libexpatw.a
+  
+  The *.a files are mingw libraries.
 
 * Special note about MS VC++ and runtime libraries:
 
@@ -60,4 +70,3 @@ Expat can be built on Windows in three ways:
 
   An application linking to the static libraries must
   have the global macro XML_STATIC defined.
-   @
