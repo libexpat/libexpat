@@ -1606,9 +1606,9 @@ XML_GetBuffer(XML_Parser parser, int len)
 
   if (len > bufferLim - bufferEnd) {
     /* FIXME avoid integer overflow */
-    int neededSize = len + (bufferEnd - bufferPtr);
+    int neededSize = len + (int)(bufferEnd - bufferPtr);
 #ifdef XML_CONTEXT_BYTES
-    int keep = bufferPtr - buffer;
+    int keep = (int)(bufferPtr - buffer);
 
     if (keep > XML_CONTEXT_BYTES)
       keep = XML_CONTEXT_BYTES;
@@ -1617,7 +1617,7 @@ XML_GetBuffer(XML_Parser parser, int len)
     if (neededSize  <= bufferLim - buffer) {
 #ifdef XML_CONTEXT_BYTES
       if (keep < bufferPtr - buffer) {
-        int offset = (bufferPtr - buffer) - keep;
+        int offset = (int)(bufferPtr - buffer) - keep;
         memmove(buffer, &buffer[offset], bufferEnd - bufferPtr + keep);
         bufferEnd -= offset;
         bufferPtr -= offset;
@@ -1630,7 +1630,7 @@ XML_GetBuffer(XML_Parser parser, int len)
     }
     else {
       char *newBuf;
-      int bufferSize = bufferLim - bufferPtr;
+      int bufferSize = (int)(bufferLim - bufferPtr);
       if (bufferSize == 0)
         bufferSize = INIT_BUFFER_SIZE;
       do {
@@ -1644,7 +1644,7 @@ XML_GetBuffer(XML_Parser parser, int len)
       bufferLim = newBuf + bufferSize;
 #ifdef XML_CONTEXT_BYTES
       if (bufferPtr) {
-        int keep = bufferPtr - buffer;
+        int keep = (int)(bufferPtr - buffer);
         if (keep > XML_CONTEXT_BYTES)
           keep = XML_CONTEXT_BYTES;
         memcpy(newBuf, &bufferPtr[-keep], bufferEnd - bufferPtr + keep);
@@ -1763,7 +1763,7 @@ int XMLCALL
 XML_GetCurrentByteCount(XML_Parser parser)
 {
   if (eventEndPtr && eventPtr)
-    return eventEndPtr - eventPtr;
+    return (int)(eventEndPtr - eventPtr);
   return 0;
 }
 
@@ -1772,8 +1772,8 @@ XML_GetInputContext(XML_Parser parser, int *offset, int *size)
 {
 #ifdef XML_CONTEXT_BYTES
   if (eventPtr && buffer) {
-    *offset = eventPtr - buffer;
-    *size   = bufferEnd - buffer;
+    *offset = (int)(eventPtr - buffer);
+    *size   = (int)(bufferEnd - buffer);
     return buffer;
   }
 #endif /* defined XML_CONTEXT_BYTES */
@@ -2326,12 +2326,12 @@ doContent(XML_Parser parser,
             XmlConvert(enc,
                        &fromPtr, rawNameEnd,
                        (ICHAR **)&toPtr, (ICHAR *)tag->bufEnd - 1);
-            convLen = toPtr - (XML_Char *)tag->buf;
+            convLen = (int)(toPtr - (XML_Char *)tag->buf);
             if (fromPtr == rawNameEnd) {
               tag->name.strLen = convLen;
               break;
             }
-            bufSize = (tag->bufEnd - tag->buf) << 1;
+            bufSize = (int)(tag->bufEnd - tag->buf) << 1;
             {
               char *temp = (char *)REALLOC(tag->buf, bufSize);
               if (temp == NULL)
@@ -2519,12 +2519,12 @@ doContent(XML_Parser parser,
           ICHAR *dataPtr = (ICHAR *)dataBuf;
           XmlConvert(enc, &s, end, &dataPtr, (ICHAR *)dataBufEnd);
           characterDataHandler(handlerArg, dataBuf,
-                               dataPtr - (ICHAR *)dataBuf);
+                               (int)(dataPtr - (ICHAR *)dataBuf));
         }
         else
           characterDataHandler(handlerArg,
                                (XML_Char *)s,
-                               (XML_Char *)end - (XML_Char *)s);
+                               (int)((XML_Char *)end - (XML_Char *)s));
       }
       else if (defaultHandler)
         reportDefault(parser, enc, s, end);
@@ -2549,7 +2549,7 @@ doContent(XML_Parser parser,
             XmlConvert(enc, &s, next, &dataPtr, (ICHAR *)dataBufEnd);
             *eventEndPP = s;
             characterDataHandler(handlerArg, dataBuf,
-                                 dataPtr - (ICHAR *)dataBuf);
+                                 (int)(dataPtr - (ICHAR *)dataBuf));
             if (s == next)
               break;
             *eventPP = s;
@@ -2558,7 +2558,7 @@ doContent(XML_Parser parser,
         else
           characterDataHandler(handlerArg,
                                (XML_Char *)s,
-                               (XML_Char *)next - (XML_Char *)s);
+                               (int)((XML_Char *)next - (XML_Char *)s));
       }
       else if (defaultHandler)
         reportDefault(parser, enc, s, next);
@@ -3129,7 +3129,7 @@ doCdataSection(XML_Parser parser,
             XmlConvert(enc, &s, next, &dataPtr, (ICHAR *)dataBufEnd);
             *eventEndPP = next;
             characterDataHandler(handlerArg, dataBuf,
-                                 dataPtr - (ICHAR *)dataBuf);
+                                 (int)(dataPtr - (ICHAR *)dataBuf));
             if (s == next)
               break;
             *eventPP = s;
@@ -3138,7 +3138,7 @@ doCdataSection(XML_Parser parser,
         else
           characterDataHandler(handlerArg,
                                (XML_Char *)s,
-                               (XML_Char *)next - (XML_Char *)s);
+                               (int)((XML_Char *)next - (XML_Char *)s));
       }
       else if (defaultHandler)
         reportDefault(parser, enc, s, next);
@@ -4014,7 +4014,7 @@ doProlog(XML_Parser parser,
                                             next - enc->minBytesPerChar);
         if (declEntity) {
           declEntity->textPtr = poolStart(&dtd->entityValuePool);
-          declEntity->textLen = poolLength(&dtd->entityValuePool);
+          declEntity->textLen = (int)(poolLength(&dtd->entityValuePool));
           poolFinish(&dtd->entityValuePool);
           if (entityDeclHandler) {
             *eventEndPP = s;
@@ -4699,7 +4699,7 @@ processInternalEntity(XML_Parser parser, ENTITY *entity,
 
   if (result == XML_ERROR_NONE) {
     if (textEnd != next && ps_parsing == XML_SUSPENDED) {
-      entity->processed = next - textStart;
+      entity->processed = (int)(next - textStart);
       processor = internalEntityProcessor;
     }
     else {
@@ -4745,7 +4745,7 @@ internalEntityProcessor(XML_Parser parser,
   if (result != XML_ERROR_NONE)
     return result;
   else if (textEnd != next && ps_parsing == XML_SUSPENDED) {
-    entity->processed = next - (char *)entity->textPtr;
+    entity->processed = (int)(next - (char *)entity->textPtr);
     return result;
   }
   else {
@@ -5208,12 +5208,12 @@ reportDefault(XML_Parser parser, const ENCODING *enc,
       ICHAR *dataPtr = (ICHAR *)dataBuf;
       XmlConvert(enc, &s, end, &dataPtr, (ICHAR *)dataBufEnd);
       *eventEndPP = s;
-      defaultHandler(handlerArg, dataBuf, dataPtr - (ICHAR *)dataBuf);
+      defaultHandler(handlerArg, dataBuf, (int)(dataPtr - (ICHAR *)dataBuf));
       *eventPP = s;
     } while (s != end);
   }
   else
-    defaultHandler(handlerArg, (XML_Char *)s, (XML_Char *)end - (XML_Char *)s);
+    defaultHandler(handlerArg, (XML_Char *)s, (int)((XML_Char *)end - (XML_Char *)s));
 }
 
 
@@ -6095,7 +6095,7 @@ poolGrow(STRING_POOL *pool)
     }
   }
   if (pool->blocks && pool->start == pool->blocks->s) {
-    int blockSize = (pool->end - pool->start)*2;
+    int blockSize = (int)(pool->end - pool->start)*2;
     pool->blocks = (BLOCK *)
       pool->mem->realloc_fcn(pool->blocks,
                              (offsetof(BLOCK, s)
@@ -6109,7 +6109,7 @@ poolGrow(STRING_POOL *pool)
   }
   else {
     BLOCK *tem;
-    int blockSize = pool->end - pool->start;
+    int blockSize = (int)(pool->end - pool->start);
     if (blockSize < INIT_BLOCK_SIZE)
       blockSize = INIT_BLOCK_SIZE;
     else
