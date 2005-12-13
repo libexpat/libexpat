@@ -1209,10 +1209,11 @@ appropriate handler setter. None of the handler setting functions have
 a return value.</p>
 
 <p>Your handlers will be receiving strings in arrays of type
-<code>XML_Char</code>. This type is defined in expat.h as <code>char
-*</code> and contains bytes encoding UTF-8.  Note that you'll receive
-them in this form independent of the original encoding of the
-document.</p>
+<code>XML_Char</code>. This type is conditionally defined in expat.h as
+either <code>char</code>, <code>wchar_t</code> or <code>unsigned short</code>.
+The former implies UTF-8 encoding, the latter two imply UTF-16 encoding.
+Note that you'll receive them in this form independent of the original
+encoding of the document.</p>
 
 <div class="handler">
 <pre class="setter" id="XML_SetStartElementHandler">
