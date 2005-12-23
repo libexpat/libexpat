@@ -94,6 +94,14 @@ typedef char XML_Char;
 typedef char XML_LChar;
 #endif /* XML_UNICODE */
 
+#ifdef XML_LARGE_SIZE  /* Use large integers for counts and positions. */
+typedef long long XML_Index;
+typedef unsigned long long XML_Size;
+#else
+typedef long XML_Index;
+typedef unsigned long XML_Size;
+#endif /* XML_LARGE_SIZE */
+
 #ifdef __cplusplus
 }
 #endif

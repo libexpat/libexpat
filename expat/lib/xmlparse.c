@@ -458,7 +458,7 @@ struct XML_ParserStruct {
   char *m_bufferEnd;
   /* allocated end of buffer */
   const char *m_bufferLim;
-  long m_parseEndByteIndex;
+  XML_Index m_parseEndByteIndex;
   const char *m_parseEndPtr;
   XML_Char *m_dataBuf;
   XML_Char *m_dataBufEnd;
@@ -1751,7 +1751,7 @@ XML_GetErrorCode(XML_Parser parser)
   return errorCode;
 }
 
-long XMLCALL
+XML_Index XMLCALL
 XML_GetCurrentByteIndex(XML_Parser parser)
 {
   if (eventPtr)
@@ -1780,7 +1780,7 @@ XML_GetInputContext(XML_Parser parser, int *offset, int *size)
   return (char *) 0;
 }
 
-int XMLCALL
+XML_Size XMLCALL
 XML_GetCurrentLineNumber(XML_Parser parser)
 {
   if (eventPtr && eventPtr >= positionPtr) {
@@ -1790,7 +1790,7 @@ XML_GetCurrentLineNumber(XML_Parser parser)
   return position.lineNumber + 1;
 }
 
-int XMLCALL
+XML_Size XMLCALL
 XML_GetCurrentColumnNumber(XML_Parser parser)
 {
   if (eventPtr && eventPtr >= positionPtr) {

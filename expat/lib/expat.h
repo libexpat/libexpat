@@ -905,9 +905,9 @@ XML_GetErrorCode(XML_Parser parser);
    was detected; otherwise the location is the location of the last
    parse event, as described above.
 */
-XMLPARSEAPI(int) XML_GetCurrentLineNumber(XML_Parser parser);
-XMLPARSEAPI(int) XML_GetCurrentColumnNumber(XML_Parser parser);
-XMLPARSEAPI(long) XML_GetCurrentByteIndex(XML_Parser parser);
+XMLPARSEAPI(XML_Size) XML_GetCurrentLineNumber(XML_Parser parser);
+XMLPARSEAPI(XML_Size) XML_GetCurrentColumnNumber(XML_Parser parser);
+XMLPARSEAPI(XML_Index) XML_GetCurrentByteIndex(XML_Parser parser);
 
 /* Return the number of bytes in the current event.
    Returns 0 if the event is in an internal entity.

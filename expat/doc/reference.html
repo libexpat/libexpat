@@ -344,6 +344,16 @@ defined using the <code>wchar_t</code> type; otherwise, <code>unsigned
 short</code> is used.  Defining this implies
 <code>XML_UNICODE</code>.</dd>
 
+<dt>XML_LARGE_SIZE</dt>
+<dd>If defined, causes the <code>XML_Size</code> and <code>XML_Index</code>
+integer types to be at least 64 bits in size. This is intended to support
+processing of very large input streams, where the return values of
+<code><a href="#XML_GetCurrentByteIndex" >XML_GetCurrentByteIndex</a></code>,
+<code><a href="#XML_GetCurrentLineNumber" >XML_GetCurrentLineNumber</a></code> and
+<code><a href="#XML_GetCurrentColumnNumber" >XML_GetCurrentColumnNumber</a></code>
+could overflow. It may not be supported by all compilers, and is turned
+off by default.</dd>
+
 <dt>XML_CONTEXT_BYTES</dt>
 <dd>The number of input bytes of markup context which the parser will
 ensure are available for reporting via <code><a href=
@@ -1905,7 +1915,7 @@ The code should be one of the enums that can be returned from
 </div>
 
 <pre class="fcndec" id="XML_GetCurrentByteIndex">
-long XMLCALL
+XML_Index XMLCALL
 XML_GetCurrentByteIndex(XML_Parser p);
 </pre>
 <div class="fcndef">
@@ -1916,7 +1926,7 @@ the values returned by <code><a href= "#XML_GetCurrentLineNumber"
 </div>
 
 <pre class="fcndec" id="XML_GetCurrentLineNumber">
-int XMLCALL
+XML_Size XMLCALL
 XML_GetCurrentLineNumber(XML_Parser p);
 </pre>
 <div class="fcndef">
@@ -1925,7 +1935,7 @@ Return the line number of the position.  The first line is reported as
 </div>
 
 <pre class="fcndec" id="XML_GetCurrentColumnNumber">
-int XMLCALL
+XML_Size XMLCALL
 XML_GetCurrentColumnNumber(XML_Parser p);
 </pre>
 <div class="fcndef">
