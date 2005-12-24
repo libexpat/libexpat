@@ -25,8 +25,14 @@ endElement(void *userData, const char *name)
   *depthPtr -= 1;
 }
 
+#ifdef AMIGA_SHARED_LIB
+#include <proto/expat.h>
+int
+amiga_main(int argc, char *argv[])
+#else
 int
 main(int argc, char *argv[])
+#endif
 {
   char buf[BUFSIZ];
   XML_Parser parser = XML_ParserCreate(NULL);

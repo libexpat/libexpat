@@ -54,8 +54,14 @@ end(void *data, const char *el)
   Depth--;
 }
 
+#ifdef AMIGA_SHARED_LIB
+#include <proto/expat.h>
+int
+amiga_main(int argc, char *argv[])
+#else
 int
 main(int argc, char *argv[])
+#endif
 {
   XML_Parser p = XML_ParserCreate(NULL);
   if (! p) {
