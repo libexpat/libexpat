@@ -17,6 +17,10 @@
 #include "chardata.h"
 #include "minicheck.h"
 
+#ifdef AMIGA_SHARED_LIB
+#include <proto/expat.h>
+#endif
+
 
 static XML_Parser parser;
 
@@ -1385,8 +1389,13 @@ make_suite(void)
 }
 
 
+#ifdef AMIGA_SHARED_LIB
+int
+amiga_main(int argc, char *argv[])
+#else
 int
 main(int argc, char *argv[])
+#endif
 {
     int i, nf;
     int forking = 0, forking_set = 0;

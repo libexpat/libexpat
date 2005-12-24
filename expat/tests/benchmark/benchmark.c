@@ -12,7 +12,13 @@ usage(const char *prog, int rc)
   exit(rc);
 }
 
+#ifdef AMIGA_SHARED_LIB
+#include <proto/expat.h>
+int
+amiga_main(int argc, char *argv[])
+#else
 int main (int argc, char *argv[]) 
+#endif
 {
   XML_Parser  parser;
   char        *XMLBuf, *XMLBufEnd, *XMLBufPtr;
