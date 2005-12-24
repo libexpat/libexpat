@@ -1,36 +1,53 @@
-Short:    Expat XML parsing library
-Author:   James Clark
-Uploader: ssolie@telus.net (Steven Solie)
-Type:     dev/misc
-Version:  1.95.8
-Requires: AmigaOS 4.0, SDK 51.5, clib2 1.188
+SUMMARY
+=======
+This is a port of expat for AmigaOS 4.0 which includes the
+SDK, some XML tools and the libraries.
 
-This is a port of expat for AmigaOS 4.0 PPC.
+Both static and shared library versions are supported.
 
-Currently clib2 is supported although it should be possible to use
-the library with newlib (e.g. add the -newlib option to GCC).
+The static library version is limited to clib2 although it should
+be possible to use newlib with the appopriate compile options.
 
-
-Building:
----------
-To build expat library, xmlwf tool, examples and run the test suite,
-simply type 'make all'.
-
-To install expat into the AmigaOS SDK type 'make install'.
-
-To uninstall expat, type 'make uninstall'.
-
-To run the test suite, type 'make check'.
+The shared library version is based on the work of Fredrik Wikstrom
+and is currently limited to PPC only.
 
 
-Configuration:
---------------
-You may want to edit the lib/amigaconfig.h file to remove DTD and/or
-XML namespace support if they are not required by your application
-for a slightly smaller and faster implementation.
+HISTORY
+=======
+3.1  - removed obsolete sfd file
+     - added library description xml file
+     - refactored Makefile
+     - removed extraneous VARARGS68K keywords
+     - reworked default memory handling functions in shared lib
+     - updated amigaconfig.h
+
+3.0  - initial release
+     - based on expat 1.95.8
 
 
-To Do:
-------
+BUILDING
+========
+To build expat.library, xmlwf tool, examples and run the test suite,
+simply type 'make all' in the amiga subdirectory.
+
+The test suite will compile and run for both the static and shared
+library versions.
+
+
+INSTALLATION
+============
+To install both static and shared versions of expat into the
+AmigaOS SDK type 'make install' in the amiga subdirectory.
+
+
+CONFIGURATION
+=============
+You may want to edit the lib/amigaconfig.h file to remove
+DTD and/or XML namespace support if they are not required by your
+specific application for a smaller and faster implementation.
+
+
+TO DO
+=====
 - wide character support (UTF-16)
-- create a shared library option
+- provide 68k backwards compatibility

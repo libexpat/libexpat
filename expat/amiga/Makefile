@@ -2,117 +2,182 @@
 # Makefile for AmigaOS
 #
 
-.PHONY: help all check clean install uninstall
+.PHONY: help all staticlib sharedlib check clean install
 
-tooldir = SDK:C
-includedir = SDK:Local/clib2/include
-libdir = SDK:Local/clib2/lib
+vpath %.c ../lib ../examples ../xmlwf ../tests
+vpath %.h ../lib ../tests
 
-LIBRARY = libexpat.a
+
+#
+# Set these for SDK installation.
+#
+tooldir = SDK:Local/C
+staticlibdir = SDK:Local/clib2/lib
+staticincludedir = SDK:Local/clib2/include
+sharedlibdir = LIBS:
+sharedincludedir = SDK:Local/common/include
+
+
+ifeq ($(MAKECMDGOALS), staticlib)
+ DESTDIR = lib
+else
+ DESTDIR = libs
+endif
+
+STATICLIB = $(DESTDIR)/libexpat.a
+SHAREDLIB = $(DESTDIR)/expat.library
+
+XMLWF = $(DESTDIR)/xmlwf
+ELEMENTS = $(DESTDIR)/elements
+OUTLINE = $(DESTDIR)/outline
+RUNTESTS = $(DESTDIR)/runtests
+BENCHMARK = $(DESTDIR)/benchmark
+
 
 help:
-	@echo "Expat XML Parser"
-	@echo ""
-	@echo "Requirements:"
-	@echo "- AmigaOS 4.0"
-	@echo "- SDK 51.5"
-	@echo "- clib2 1.188"
+	@echo "Requires:"
+	@echo " AmigaOS 4.0"
+	@echo " SDK 51.15"
+	@echo " clib2 1.198"
 	@echo ""
 	@echo "Targets:"
-	@echo "all - build expat lib, all tools, test suite and run tests"
-	@echo "check - run test suite"
-	@echo "clean - clean all product files"
-	@echo "install - install expat lib and headers in SDK"
-	@echo "uninstall - uninstall expat lib and headers"
+	@echo " all     - make expat libraries, xmlwf, examples and run test suite"
+	@echo " install - install expat libraries and tools into SDK"
 
-all: $(LIBRARY) xmlwf elements outline check benchmark
+all:
+	$(MAKE) staticlib
+	$(MAKE) sharedlib
 
-check: runtests
-	runtests
+staticlib: $(STATICLIB) $(XMLWF) $(ELEMENTS) $(OUTLINE) $(RUNTESTS) $(BENCHMARK) check
+	@echo done
+
+sharedlib: $(SHAREDLIB) $(XMLWF) $(ELEMENTS) $(OUTLINE) $(RUNTESTS) $(BENCHMARK) check
+	@echo done
+
+check:
+	$(RUNTESTS)
 
 clean:
-	-delete /lib/#?.o quiet
-	-delete /xmlwf/#?.o quiet
-	-delete /examples/#?.o quiet
-	-delete /tests/#?.o quiet
-	-delete $(LIBRARY) xmlwf runtests elements outline benchmark quiet
+	-delete lib/#?.o quiet
+	-delete libs/#?.o quiet
 
-install: xmlwf $(LIBRARY)
-	copy xmlwf $(tooldir) quiet
-	copy /lib/expat.h /lib/expat_external.h $(includedir) quiet
-	copy $(LIBRARY) $(libdir) quiet
+install:
+	copy lib/xmlwf $(tooldir) quiet
+	copy /lib/expat.h /lib/expat_external.h $(staticincludedir) quiet
+	copy lib/libexpat.a $(staticlibdir) quiet
+	copy libs/expat.library $(sharedlibdir) quiet
+	copy include $(sharedincludedir) quiet all
 
-uninstall:
-	-delete $(tooldir)/xmlwf quiet
-	-delete $(includedir)/expat.h $(includedir)/expat_external.h quiet
-	-delete $(libdir)/$(LIBRARY) quiet
 
 CC = gcc
 LIBTOOL = ar
 STRIP = strip
-LIBDIR = /lib
 
-INCLUDES = -I../lib
 LDFLAGS =
+LIBS =
 CFLAGS = -DNDEBUG -O2
 LTFLAGS = -crs
 STRIPFLAGS = -R.comment
+LAUNCH =
 
-COMPILE = $(CC) $(CFLAGS) $(INCLUDES)
+ifeq ($(MAKECMDGOALS), staticlib)
+ LIBS += $(STATICLIB)
+ INCLUDES = -I../lib
+endif
 
-LINK_LIB = $(LIBTOOL) $(LTFLAGS)
+ifeq ($(MAKECMDGOALS), sharedlib)
+ CFLAGS += -DAMIGA_SHARED_LIB -D__USE_INLINE__
+ INCLUDES = -I. -Iinclude -Iinclude/libraries
+ LAUNCH = $(DESTDIR)/launch.o
+endif
 
-LINK_EXE = $(COMPILE) $(LDFLAGS) -o $@
 
-LIB_OBJS = $(LIBDIR)/xmlparse.o $(LIBDIR)/xmltok.o $(LIBDIR)/xmlrole.o
-LIB_LINK_OBJS = $(subst $(LIBDIR),..$(LIBDIR),$(LIB_OBJS))
-$(LIBRARY): $(LIB_OBJS)
-	$(LINK_LIB) $@ $(LIB_LINK_OBJS)
+COMPILE = $(CC) $(CFLAGS) $(INCLUDES) -c
 
-$(LIBDIR)/xmlparse.o: $(LIBDIR)/xmlparse.c $(LIBDIR)/expat.h \
-	$(LIBDIR)/xmlrole.h $(LIBDIR)/xmltok.h $(LIBDIR)/expat_external.h \
-	$(LIBDIR)/internal.h $(LIBDIR)/amigaconfig.h
+LINK = $(CC) $(LDFLAGS) -o $@
 
-$(LIBDIR)/xmlrole.o: $(LIBDIR)/xmlrole.c $(LIBDIR)/ascii.h \
-	$(LIBDIR)/xmlrole.h $(LIBDIR)/expat_external.h $(LIBDIR)/internal.h \
-	$(LIBDIR)/amigaconfig.h
 
-$(LIBDIR)/xmltok.o: $(LIBDIR)/xmltok.c $(LIBDIR)/xmltok_impl.c \
-	$(LIBDIR)/xmltok_ns.c $(LIBDIR)/ascii.h $(LIBDIR)/asciitab.h \
-	$(LIBDIR)/iasciitab.h $(LIBDIR)/latin1tab.h $(LIBDIR)/nametab.h \
-	$(LIBDIR)/utf8tab.h $(LIBDIR)/xmltok.h $(LIBDIR)/xmltok_impl.h \
-	$(LIBDIR)/expat_external.h $(LIBDIR)/internal.h $(LIBDIR)/amigaconfig.h
+$(STATICLIB): $(DESTDIR)/xmlparse.o $(DESTDIR)/xmltok.o $(DESTDIR)/xmlrole.o
+	$(LIBTOOL) $(LTFLAGS) $@ $^
 
-XMLWF_OBJS = /xmlwf/xmlwf.o /xmlwf/xmlfile.o /xmlwf/codepage.o /xmlwf/readfilemap.o
-XMLWF_LINK_OBJS = $(subst /xmlwf/,../xmlwf/,$(XMLWF_OBJS))
-/xmlwf/xmlwf.o: /xmlwf/xmlwf.c
-/xmlwf/xmlfile.o: /xmlwf/xmlfile.c
-/xmlwf/codepage.o: /xmlwf/codepage.c
-/xmlwf/readfilemap.o: /xmlwf/readfilemap.c
-xmlwf: $(XMLWF_OBJS) $(LIBRARY)
-	$(LINK_EXE) $(XMLWF_LINK_OBJS) $(LIBRARY) -lm
+$(DESTDIR)/xmlparse.o: xmlparse.c expat.h xmlrole.h xmltok.h \
+	expat_external.h internal.h amigaconfig.h
+	$(COMPILE) $< -o $@
+
+$(DESTDIR)/xmlrole.o: xmlrole.c ascii.h xmlrole.h expat_external.h \
+	internal.h amigaconfig.h
+	$(COMPILE) $< -o $@
+
+$(DESTDIR)/xmltok.o: xmltok.c xmltok_impl.c xmltok_ns.c ascii.h asciitab.h \
+	iasciitab.h latin1tab.h nametab.h utf8tab.h xmltok.h xmltok_impl.h \
+	expat_external.h internal.h amigaconfig.h
+	$(COMPILE) $< -o $@
+
+
+$(SHAREDLIB): $(DESTDIR)/expat_lib.o $(DESTDIR)/expat_vectors.o $(DESTDIR)/stdlib.o lib/libexpat.a
+	$(LINK) -nostartfiles -nostdlib -o $@ $^
+
+$(DESTDIR)/expat_lib.o: expat_lib.c
+	$(COMPILE) $< -o $@
+
+$(DESTDIR)/expat_vectors.o: expat_vectors.c
+	$(COMPILE) $< -o $@
+
+$(DESTDIR)/stdlib.o: stdlib.c
+	$(COMPILE) $< -o $@
+
+$(LAUNCH): launch.c
+	$(COMPILE) $< -o $@
+
+
+$(XMLWF): $(DESTDIR)/xmlwf.o $(DESTDIR)/xmlfile.o $(DESTDIR)/codepage.o $(DESTDIR)/readfilemap.o $(LAUNCH)
+	$(LINK) $^ $(LIBS)
 	$(STRIP) $(STRIPFLAGS) $@
 
-/examples/elements.o: /examples/elements.c
-elements: /examples/elements.o $(LIBRARY)
-	$(LINK_EXE) ../examples/elements.o $(LIBRARY) -lm
+$(DESTDIR)/xmlwf.o: xmlwf.c
+	$(COMPILE) $< -o $@
+
+$(DESTDIR)/xmlfile.o: xmlfile.c
+	$(COMPILE) $< -o $@
+
+$(DESTDIR)/codepage.o: codepage.c
+	$(COMPILE) $< -o $@
+
+$(DESTDIR)/readfilemap.o: readfilemap.c
+	$(COMPILE) $< -o $@
+
+
+$(ELEMENTS): $(DESTDIR)/elements.o $(LAUNCH)
+	$(LINK) $^ $(LIBS)
 	$(STRIP) $(STRIPFLAGS) $@
 
-/examples/outline.o: /examples/outline.c
-outline: /examples/outline.o $(LIBRARY)
-	$(LINK_EXE) ../examples/outline.o $(LIBRARY) -lm
+$(DESTDIR)/elements.o: elements.c
+	$(COMPILE) $< -o $@
+
+
+$(OUTLINE): $(DESTDIR)/outline.o $(LAUNCH)
+	$(LINK) $^ $(LIBS)
 	$(STRIP) $(STRIPFLAGS) $@
 
-/tests/benchmark/benchmark.o: /tests/benchmark/benchmark.c
-benchmark: /tests/benchmark/benchmark.o $(LIBRARY)
-	$(LINK_EXE) ../tests/benchmark/benchmark.o $(LIBRARY) -lm
-	$(STRIP) $(STRIPFLAGS) $@
+$(DESTDIR)/outline.o: outline.c
+	$(COMPILE) $< -o $@
 
-/tests/chardata.o: /tests/chardata.c /tests/chardata.h
-/tests/minicheck.o: /tests/minicheck.c /tests/minicheck.h
-/tests/runtests.o: /tests/runtests.c /tests/chardata.h
-runtests: /tests/runtests.o /tests/chardata.o /tests/minicheck.o $(LIBRARY)
-	$(LINK_EXE) ../tests/runtests.o ../tests/chardata.o ../tests/minicheck.o $(LIBRARY) -lm
 
-%.o: %.c
-	$(COMPILE) -o ..$@ -c ..$<
+$(RUNTESTS): $(DESTDIR)/runtests.o $(DESTDIR)/chardata.o $(DESTDIR)/minicheck.o $(LAUNCH)
+	$(LINK) $^ $(LIBS)
+
+$(DESTDIR)/chardata.o: chardata.c chardata.h
+	$(COMPILE) $< -o $@
+
+$(DESTDIR)/minicheck.o: minicheck.c minicheck.h
+	$(COMPILE) $< -o $@
+
+$(DESTDIR)/runtests.o: runtests.c chardata.h
+	$(COMPILE) $< -o $@
+
+
+$(BENCHMARK): $(DESTDIR)/benchmark.o $(LAUNCH)
+	$(LINK) $^ $(LIBS) -lm
+
+$(DESTDIR)/benchmark.o: benchmark/benchmark.c
+	$(COMPILE) $< -o $@

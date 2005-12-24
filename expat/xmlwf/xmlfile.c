@@ -23,6 +23,10 @@
 #include <io.h>
 #endif
 
+#ifdef AMIGA_SHARED_LIB
+#include <proto/expat.h>
+#endif
+
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
