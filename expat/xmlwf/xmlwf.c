@@ -7,6 +7,16 @@
 #include <stddef.h>
 #include <string.h>
 
+#ifdef COMPILED_FROM_DSP
+#include "winconfig.h"
+#elif defined(MACOS_CLASSIC)
+#include "macconfig.h"
+#elif defined(__amigaos4__)
+#include "amigaconfig.h"
+#elif defined(HAVE_EXPAT_CONFIG_H)
+#include <expat_config.h>
+#endif /* ndef COMPILED_FROM_DSP */
+
 #include "expat.h"
 #include "codepage.h"
 #include "xmlfile.h"
@@ -309,7 +319,8 @@ metaLocation(XML_Parser parser)
   if (uri)
     ftprintf((FILE *)XML_GetUserData(parser), T(" uri=\"%s\""), uri);
   ftprintf((FILE *)XML_GetUserData(parser),
-           T(" byte=\"%ld\" nbytes=\"%d\" line=\"%d\" col=\"%d\""),
+           T(" byte=\"%" XML_FMT_INT_MOD "d\" nbytes=\"%d\" \
+			 line=\"%" XML_FMT_INT_MOD "u\" col=\"%" XML_FMT_INT_MOD "u\""),
            XML_GetCurrentByteIndex(parser),
            XML_GetCurrentByteCount(parser),
            XML_GetCurrentLineNumber(parser),
