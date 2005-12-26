@@ -13,7 +13,7 @@ Expat can be built on Windows in three ways:
   Based on the workspace file expat.dsw. The related project
   files (.dsp) are located in the lib subdirectory.
 
-* MS Visual Studio .NET 2002, 2003:
+* MS Visual Studio .NET 2002, 2003, 2005:
   The VC++ 6 workspace file (expat.dsw) and project files (.dsp)
   can be opened and imported in VS.NET without problems.
   
@@ -56,6 +56,9 @@ Expat can be built on Windows in three ways:
   Multi-threaded Dll: libexpat(w)MD.lib
   The suffixes conform to the compiler switch settings
   /ML, /MT and /MD for MS VC++.
+  
+  Note: In Visual Studio 2005 (Visual C++ 8.0) and later, the
+  single-threaded runtime library is not supported anymore.
 
   By default, the expat-static and expatw-static projects are set up
   to link statically against the multithreaded run-time library,
