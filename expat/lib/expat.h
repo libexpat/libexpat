@@ -1002,9 +1002,9 @@ XML_GetFeatureList(void);
    releases. Micro is bumped with each release, and set to 0 with each
    change to major or minor version.
 */
-#define XML_MAJOR_VERSION 1
-#define XML_MINOR_VERSION 95
-#define XML_MICRO_VERSION 8
+#define XML_MAJOR_VERSION 2
+#define XML_MINOR_VERSION 0
+#define XML_MICRO_VERSION 0
 
 #ifdef __cplusplus
 }
