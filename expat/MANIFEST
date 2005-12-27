@@ -5,10 +5,6 @@ amiga/expat_lib.c
 amiga/expat.xml
 amiga/README.txt
 amiga/Makefile
-amiga/include/proto
-amiga/include/libraries
-amiga/include/interfaces
-amiga/include/inline4
 amiga/include/proto/expat.h
 amiga/include/libraries/expat.h
 amiga/include/interfaces/expat.h
