@@ -1,5 +1,3 @@
-amiga/libs
-amiga/lib
 amiga/include
 amiga/stdlib.c
 amiga/launch.c
