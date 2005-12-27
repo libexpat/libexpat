@@ -14,6 +14,9 @@ and is currently limited to PPC only.
 
 HISTORY
 =======
+4.0  - updated for corresponding Expat 2.0 release
+     - some minor CVS related changes
+
 3.1  - removed obsolete sfd file
      - added library description xml file
      - refactored Makefile
