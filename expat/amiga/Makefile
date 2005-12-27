@@ -41,10 +41,11 @@ help:
 	@echo " clib2 1.198"
 	@echo ""
 	@echo "Targets:"
-	@echo " all     - make expat libraries, xmlwf, examples and run test suite"
+	@echo " all - make expat libraries, xmlwf, examples and run test suite"
 	@echo " install - install expat libraries and tools into SDK"
 
 all:
+	-makedir lib libs
 	$(MAKE) staticlib
 	$(MAKE) sharedlib
 
