@@ -26,9 +26,9 @@
 
 #define LIBNAME		"expat.library"
 #define LIBPRI		0
-#define VERSION		3
-#define REVISION	1
-#define VSTRING		"expat.library 3.1 (6.11.2005)"  /* dd.mm.yyyy */
+#define VERSION		4
+#define REVISION	0
+#define VSTRING		"expat.library 4.0 (27.12.2005)"  /* dd.mm.yyyy */
 
 
 static const char* __attribute__((used)) verstag = "\0$VER: " VSTRING;
