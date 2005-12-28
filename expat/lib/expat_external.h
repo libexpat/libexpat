@@ -65,6 +65,7 @@
 #endif
 #endif  /* not defined XML_STATIC */
 
+
 /* If we didn't define it above, define it away: */
 #ifndef XMLIMPORT
 #define XMLIMPORT
