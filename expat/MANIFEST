@@ -66,6 +66,7 @@ examples/elements.dsp
 examples/outline.c
 examples/outline.dsp
 lib/Makefile.MPW
+lib/amigaconfig.h
 lib/ascii.h
 lib/asciitab.h
 lib/expat.dsp
