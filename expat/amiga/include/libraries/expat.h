@@ -50,6 +50,8 @@ extern "C" {
 
 typedef char XML_Char;
 typedef char XML_LChar;
+typedef long XML_Index;
+typedef unsigned long XML_Size;
 
 struct XML_ParserStruct;
 typedef struct XML_ParserStruct *XML_Parser;
@@ -105,7 +107,10 @@ enum XML_Error {
   XML_ERROR_NOT_SUSPENDED,
   XML_ERROR_ABORTED,
   XML_ERROR_FINISHED,
-  XML_ERROR_SUSPEND_PE
+  XML_ERROR_SUSPEND_PE,
+  XML_ERROR_RESERVED_PREFIX_XML,
+  XML_ERROR_RESERVED_PREFIX_XMLNS,
+  XML_ERROR_RESERVED_NAMESPACE_URI
 };
 
 enum XML_Content_Type {
@@ -535,9 +540,9 @@ const XML_Feature *
 XML_GetFeatureList(void);
 
 
-#define XML_MAJOR_VERSION 1
-#define XML_MINOR_VERSION 95
-#define XML_MICRO_VERSION 8
+#define XML_MAJOR_VERSION 2
+#define XML_MINOR_VERSION 0
+#define XML_MICRO_VERSION 0
 
 
 /****************************************************************************/
