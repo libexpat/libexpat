@@ -88,7 +88,7 @@ endif
 
 ifeq ($(MAKECMDGOALS), sharedlib)
  CFLAGS += -DAMIGA_SHARED_LIB -D__USE_INLINE__
- INCLUDES = -I. -Iinclude -Iinclude/libraries
+ INCLUDES = -I. -Iinclude -Iinclude/libraries -I../lib
  LAUNCH = $(DESTDIR)/launch.o
 endif
 
