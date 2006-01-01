@@ -4,6 +4,12 @@
 #include <time.h>
 #include "expat.h"
 
+#ifdef XML_LARGE_SIZE
+#define XML_FMT_INT_MOD "ll"
+#else
+#define XML_FMT_INT_MOD "l"
+#endif
+
 static void
 usage(const char *prog, int rc)
 {
@@ -83,7 +89,8 @@ int main (int argc, char *argv[])
       else
         parseBufferSize = bufferSize;
       if (!XML_Parse (parser, XMLBufPtr, parseBufferSize, isFinal)) {
-        fprintf (stderr, "error '%s' at line %d character %d\n",
+        fprintf (stderr, "error '%s' at line %" XML_FMT_INT_MOD \
+                     "u character %" XML_FMT_INT_MOD "u\n",
                  XML_ErrorString (XML_GetErrorCode (parser)),
                  XML_GetCurrentLineNumber (parser),
                  XML_GetCurrentColumnNumber (parser));
