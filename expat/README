@@ -1,5 +1,5 @@
 
-                        Expat, Release 2.0
+                        Expat, Release 2.0.0
 
 This is Expat, a C library for parsing XML, written by James Clark.
 Expat is a stream-oriented XML parser.  This means that you register
@@ -9,7 +9,7 @@ document being parsed.  A start tag is an example of the kind of
 structures for which you may register handlers.
 
 Windows users should use the expat_win32bin package, which includes
-both precompiled libraries and executalbes, and source code for
+both precompiled libraries and executables, and source code for
 developers.
 
 Expat is free software.  You may copy, distribute, and modify it under
@@ -50,7 +50,7 @@ into /home/me/mystuff/lib, /home/me/mystuff/include, and
         ./configure --prefix=/home/me/mystuff
         
 Another interesting option is to enable 64-bit integer support for
-line- and column numbers and the over-all byte index:
+line and column numbers and the over-all byte index:
 
         ./configure CPPFLAGS=-DXML_LARGE_SIZE
 
