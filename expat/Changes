@@ -1,11 +1,11 @@
-Release 2.0 TBD
+Release 2.0.0 Sat Jan 7 2006
         - We no longer use the "check" library for C unit testing; we
           always use the (partial) internal implementation of the API.
         - Report XML_NS setting via XML_GetFeatureList().
         - Fixed headers for use from C++.
         - Added XML_LARGE_SIZE switch to enable 64bit values for
           byte indexes and line/column numbers.
-        - Updated to use libtool 1.5.10 (the most recent).
+        - Updated to use libtool 1.5.22 (the most recent).
         - Added support for AmigaOS.
         - Some mostly minor bug fixes. SF issues include: 1006708,
           1021776, 1023646, 1114960, 1156398, 1221160, 1271642.
