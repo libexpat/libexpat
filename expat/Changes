@@ -1,4 +1,4 @@
-Release 2.0.0 Sat Jan 7 2006
+Release 2.0.0 Wed Jan 11 2006
         - We no longer use the "check" library for C unit testing; we
           always use the (partial) internal implementation of the API.
         - Report XML_NS setting via XML_GetFeatureList().
