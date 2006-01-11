@@ -3,7 +3,9 @@ Release 2.0.0 Wed Jan 11 2006
           always use the (partial) internal implementation of the API.
         - Report XML_NS setting via XML_GetFeatureList().
         - Fixed headers for use from C++.
-        - Added XML_LARGE_SIZE switch to enable 64bit values for
+        - XML_GetCurrentLineNumber() and  XML_GetCurrentColumnNumber()
+          now return unsigned integers.
+        - Added XML_LARGE_SIZE switch to enable 64-bit integers for
           byte indexes and line/column numbers.
         - Updated to use libtool 1.5.22 (the most recent).
         - Added support for AmigaOS.
