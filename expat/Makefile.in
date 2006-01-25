@@ -107,15 +107,16 @@ LIBTOOL = @LIBTOOL@
 
 INCLUDES = -I$(srcdir)/lib -I.
 LDFLAGS = @LDFLAGS@
-CPPFLAGS = @CPPFLAGS@
-CFLAGS = @CFLAGS@ -DHAVE_EXPAT_CONFIG_H
+CPPFLAGS = @CPPFLAGS@ -DHAVE_EXPAT_CONFIG_H
+CFLAGS = @CFLAGS@
+CXXFLAGS = @CXXFLAGS@
 VSNFLAG = -version-info @LIBCURRENT@:@LIBREVISION@:@LIBAGE@
 
 ### autoconf this?
 LTFLAGS = --silent
 
 COMPILE = $(CC) $(INCLUDES) $(CFLAGS) $(DEFS) $(CPPFLAGS)
-CXXCOMPILE = $(CXX) $(INCLUDES) $(CFLAGS) $(DEFS) $(CPPFLAGS)
+CXXCOMPILE = $(CXX) $(INCLUDES) $(CXXFLAGS) $(DEFS) $(CPPFLAGS)
 LTCOMPILE = $(LIBTOOL) $(LTFLAGS) --mode=compile $(COMPILE)
 LINK_LIB = $(LIBTOOL) $(LTFLAGS) --mode=link $(COMPILE) -no-undefined $(VSNFLAG) -rpath $(libdir) $(LDFLAGS) -o $@
 LINK_EXE = $(LIBTOOL) $(LTFLAGS) --mode=link $(COMPILE) $(LDFLAGS) -o $@
@@ -174,6 +175,8 @@ run-xmltest: xmlwf/xmlwf tests/XML-Test-Suite
 
 .SUFFIXES: .c .lo .o
 
+.cpp.o:
+	$(CXXCOMPILE) -o $@ -c $<
 .c.o:
 	$(COMPILE) -o $@ -c $<
 .c.lo:
