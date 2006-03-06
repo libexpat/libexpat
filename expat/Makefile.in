@@ -44,9 +44,7 @@ MANFILE = $(srcdir)/doc/xmlwf.1
 APIHEADER = $(srcdir)/lib/expat.h $(srcdir)/lib/expat_external.h
 LIBRARY = libexpat.la
 
-ifndef INSTALL_ROOT
 INSTALL_ROOT=$(DESTDIR)
-endif
 
 default:  buildlib xmlwf/xmlwf
 
@@ -103,6 +101,7 @@ mkdir-init:
 	done
 
 CC = @CC@
+CXX = @CXX@
 LIBTOOL = @LIBTOOL@
 
 INCLUDES = -I$(srcdir)/lib -I.
@@ -158,10 +157,10 @@ tests/chardata.o: tests/chardata.c tests/chardata.h
 tests/minicheck.o: tests/minicheck.c tests/minicheck.h
 tests/runtests.o: tests/runtests.c tests/chardata.h
 tests/runtests: tests/runtests.o tests/chardata.o tests/minicheck.o $(LIBRARY)
-	$(LINK_EXE) $^
+	$(LINK_EXE) tests/runtests.o tests/chardata.o tests/minicheck.o $(LIBRARY)
 tests/runtestspp.o: tests/runtestspp.cpp tests/runtests.c tests/chardata.h
 tests/runtestspp: tests/runtestspp.o tests/chardata.o tests/minicheck.o $(LIBRARY)
-	$(LINK_CXX_EXE) $^
+	$(LINK_CXX_EXE) tests/runtestspp.o tests/chardata.o tests/minicheck.o $(LIBRARY)
 
 tests/xmlts.zip:
 	wget --output-document=tests/xmlts.zip \
@@ -173,7 +172,7 @@ tests/XML-Test-Suite: tests/xmlts.zip
 run-xmltest: xmlwf/xmlwf tests/XML-Test-Suite
 	tests/xmltest.sh
 
-.SUFFIXES: .c .lo .o
+.SUFFIXES: .c .cpp .lo .o
 
 .cpp.o:
 	$(CXXCOMPILE) -o $@ -c $<

@@ -18,6 +18,13 @@ extern "C" {
 #define CK_NORMAL  1
 #define CK_VERBOSE 2
 
+/* Workaround for Tru64 Unix systems where the C compiler has a working
+   __func__, but the C++ compiler only has a working __FUNCTION__.  This
+   could be fixed in configure.in, but it's not worth it right now. */
+#if defined(__osf__) && defined(__cplusplus)
+#define __func__ __FUNCTION__
+#endif
+
 #define START_TEST(testname) static void testname(void) { \
     _check_set_test_info(__func__, __FILE__, __LINE__);   \
     {

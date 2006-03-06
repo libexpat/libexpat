@@ -1176,7 +1176,7 @@ external_entity_handler(XML_Parser parser,
                         const XML_Char *systemId,
                         const XML_Char *publicId) 
 {
-    int callno = 1 + (int)XML_GetUserData(parser);
+    long callno = 1 + (long)XML_GetUserData(parser);
     char *text;
     XML_Parser p2;
 
