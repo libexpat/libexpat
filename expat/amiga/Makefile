@@ -14,7 +14,7 @@ vpath %.h ../lib ../tests
 tooldir = SDK:Local/C
 staticlibdir = SDK:Local/clib2/lib
 staticincludedir = SDK:Local/clib2/include
-sharedlibdir = LIBS:
+sharedlibdir = SDK:Local/Libs
 sharedincludedir = SDK:Local/common/include
 
 
