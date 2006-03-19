@@ -14,6 +14,9 @@ and is currently limited to PPC only.
 
 HISTORY
 =======
+4.1  - fixed memory freeing bug in shared library version
+     - now allocates shared memory
+
 4.0  - updated for corresponding Expat 2.0 release
      - some minor CVS related changes
 
