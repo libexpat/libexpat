@@ -384,7 +384,7 @@ needs to link against the Expat library.  On Unix systems, this would
 usually be done with the <code>-lexpat</code> argument.  Otherwise,
 you'll need to tell the compiler where to look for the Expat header
 and the linker where to find the Expat library.  You may also need to
-take steps to tell the operating system where to find this libary at
+take steps to tell the operating system where to find this library at
 run time.</p>
 
 <p>On a Unix-based system, here's what a Makefile might look like when
@@ -2219,7 +2219,9 @@ enum XML_FeatureEnum {
   XML_FEATURE_CONTEXT_BYTES,
   XML_FEATURE_MIN_SIZE,
   XML_FEATURE_SIZEOF_XML_CHAR,
-  XML_FEATURE_SIZEOF_XML_LCHAR
+  XML_FEATURE_SIZEOF_XML_LCHAR,
+  XML_FEATURE_NS,
+  XML_FEATURE_LARGE_SIZE
 };
 
 typedef struct {
