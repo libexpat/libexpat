@@ -72,15 +72,16 @@ int main (int argc, char *argv[])
   fileSize = fread (XMLBuf, sizeof (char), fileAttr.st_size, fd);
   fclose (fd);
   
+  if (ns)
+    parser = XML_ParserCreateNS(NULL, '!');
+  else
+    parser = XML_ParserCreate(NULL);
+
   i = 0;
   XMLBufEnd = XMLBuf + fileSize;
   while (i < nrOfLoops) {
     XMLBufPtr = XMLBuf;
     isFinal = 0;
-    if (ns)
-      parser = XML_ParserCreateNS(NULL, '!');
-    else
-      parser = XML_ParserCreate(NULL);
     tstart = clock();
     do {
       int parseBufferSize = XMLBufEnd - XMLBufPtr;
@@ -102,10 +103,11 @@ int main (int argc, char *argv[])
     } while (!isFinal);
     tend = clock();
     cpuTime += ((double) (tend - tstart)) / CLOCKS_PER_SEC;
-    XML_ParserFree (parser);
+    XML_ParserReset(parser, NULL);
     i++;
   }
 
+  XML_ParserFree (parser);
   free (XMLBuf);
       
   printf ("%d loops, with buffer size %d. Average time per loop: %f\n", 
