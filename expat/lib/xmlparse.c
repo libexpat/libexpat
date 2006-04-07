@@ -1948,6 +1948,9 @@ XML_GetFeatureList(void)
 #ifdef XML_NS
     {XML_FEATURE_NS,               XML_L("XML_NS"), 0},
 #endif
+#ifdef XML_LARGE_SIZE
+    {XML_FEATURE_LARGE_SIZE,       XML_L("XML_LARGE_SIZE"), 0},
+#endif    
     {XML_FEATURE_END,              NULL, 0}
   };
 
