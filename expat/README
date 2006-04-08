@@ -53,6 +53,10 @@ Another interesting option is to enable 64-bit integer support for
 line and column numbers and the over-all byte index:
 
         ./configure CPPFLAGS=-DXML_LARGE_SIZE
+        
+However, such a modification would be a breaking change to the ABI
+and is therefore not recommended for general use - e.g. as part of
+a Linux distribution - but rather for builds with special requirements.
 
 After running the configure script, the "make" command will build
 things and "make install" will install things into their proper
