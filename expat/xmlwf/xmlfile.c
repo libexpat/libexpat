@@ -69,14 +69,15 @@ reportError(XML_Parser parser, const XML_Char *filename)
   else
     ftprintf(stderr, T("%s: (unknown message %d)\n"), filename, code);
 }
-
+ 
+/* This implementation will give problems on files larger than INT_MAX. */
 static void
 processFile(const void *data, size_t size,
             const XML_Char *filename, void *args)
 {
   XML_Parser parser = ((PROCESS_ARGS *)args)->parser;
   int *retPtr = ((PROCESS_ARGS *)args)->retPtr;
-  if (XML_Parse(parser, (const char *)data, size, 1) == XML_STATUS_ERROR) {
+  if (XML_Parse(parser, (const char *)data, (int)size, 1) == XML_STATUS_ERROR) {
     reportError(parser, filename);
     *retPtr = 0;
   }
