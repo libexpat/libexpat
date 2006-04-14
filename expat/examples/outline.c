@@ -86,7 +86,7 @@ main(int argc, char *argv[])
     int done;
     int len;
 
-    len = fread(Buff, 1, BUFFSIZE, stdin);
+    len = (int)fread(Buff, 1, BUFFSIZE, stdin);
     if (ferror(stdin)) {
       fprintf(stderr, "Read error\n");
       exit(-1);
