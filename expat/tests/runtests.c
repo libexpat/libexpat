@@ -53,10 +53,12 @@ static void
 _xml_failure(XML_Parser parser, const char *file, int line)
 {
     char buffer[1024];
+    enum XML_Error err = XML_GetErrorCode(parser);
     sprintf(buffer,
-            "\n    %s (line %" XML_FMT_INT_MOD "u, offset %"\
-                XML_FMT_INT_MOD "u)\n    reported from %s, line %d",
-            XML_ErrorString(XML_GetErrorCode(parser)),
+            "    %d: %s (line %" XML_FMT_INT_MOD "u, offset %"\
+                XML_FMT_INT_MOD "u)\n    reported from %s, line %d\n",
+            err,
+            XML_ErrorString(err),
             XML_GetCurrentLineNumber(parser),
             XML_GetCurrentColumnNumber(parser),
             file, line);
@@ -982,13 +984,37 @@ START_TEST(test_ns_in_attribute_default_without_namespaces)
 }
 END_TEST
 
+static char *long_character_data_text =
+    "<?xml version='1.0' encoding='iso-8859-1'?><s>"
+    "012345678901234567890123456789012345678901234567890123456789"
+    "012345678901234567890123456789012345678901234567890123456789"
+    "012345678901234567890123456789012345678901234567890123456789"
+    "012345678901234567890123456789012345678901234567890123456789"
+    "012345678901234567890123456789012345678901234567890123456789"
+    "012345678901234567890123456789012345678901234567890123456789"
+    "012345678901234567890123456789012345678901234567890123456789"
+    "012345678901234567890123456789012345678901234567890123456789"
+    "012345678901234567890123456789012345678901234567890123456789"
+    "012345678901234567890123456789012345678901234567890123456789"
+    "012345678901234567890123456789012345678901234567890123456789"
+    "012345678901234567890123456789012345678901234567890123456789"
+    "012345678901234567890123456789012345678901234567890123456789"
+    "012345678901234567890123456789012345678901234567890123456789"
+    "012345678901234567890123456789012345678901234567890123456789"
+    "012345678901234567890123456789012345678901234567890123456789"
+    "012345678901234567890123456789012345678901234567890123456789"
+    "012345678901234567890123456789012345678901234567890123456789"
+    "012345678901234567890123456789012345678901234567890123456789"
+    "012345678901234567890123456789012345678901234567890123456789"
+    "</s>";
+
+static XML_Bool resumable = XML_FALSE;
 
 static void
-self_clearing_aborting_character_handler(void *userData,
-                                         const XML_Char *s,
-                                         int len)
+clearing_aborting_character_handler(void *userData,
+                                    const XML_Char *s, int len)
 {
-    XML_StopParser(parser, XML_FALSE);
+    XML_StopParser(parser, resumable);
     XML_SetCharacterDataHandler(parser, NULL);
 }
 
@@ -1002,35 +1028,34 @@ START_TEST(test_stop_parser_between_char_data_calls)
        handler must stop the parser and clear the character data
        handler.
     */
-    char *text =
-        "<?xml version='1.0' encoding='iso-8859-1'?><s>"
-        "012345678901234567890123456789012345678901234567890123456789"
-        "012345678901234567890123456789012345678901234567890123456789"
-        "012345678901234567890123456789012345678901234567890123456789"
-        "012345678901234567890123456789012345678901234567890123456789"
-        "012345678901234567890123456789012345678901234567890123456789"
-        "012345678901234567890123456789012345678901234567890123456789"
-        "012345678901234567890123456789012345678901234567890123456789"
-        "012345678901234567890123456789012345678901234567890123456789"
-        "012345678901234567890123456789012345678901234567890123456789"
-        "012345678901234567890123456789012345678901234567890123456789"
-        "012345678901234567890123456789012345678901234567890123456789"
-        "012345678901234567890123456789012345678901234567890123456789"
-        "012345678901234567890123456789012345678901234567890123456789"
-        "012345678901234567890123456789012345678901234567890123456789"
-        "012345678901234567890123456789012345678901234567890123456789"
-        "012345678901234567890123456789012345678901234567890123456789"
-        "012345678901234567890123456789012345678901234567890123456789"
-        "012345678901234567890123456789012345678901234567890123456789"
-        "012345678901234567890123456789012345678901234567890123456789"
-        "012345678901234567890123456789012345678901234567890123456789"
-        "</s>";
+    char *text = long_character_data_text;
 
-    XML_SetCharacterDataHandler(parser,
-                                self_clearing_aborting_character_handler);
+    XML_SetCharacterDataHandler(parser, clearing_aborting_character_handler);
+    resumable = XML_FALSE;
     if (XML_Parse(parser, text, strlen(text), XML_TRUE) != XML_STATUS_ERROR)
         xml_failure(parser);
     if (XML_GetErrorCode(parser) != XML_ERROR_ABORTED)
+        xml_failure(parser);
+}
+END_TEST
+
+/* Regression test for SF bug #1515266: missing check of stopped
+   parser in doContext() 'for' loop. */
+START_TEST(test_suspend_parser_between_char_data_calls)
+{
+    /* The sample data must be big enough that there are two calls to
+       the character data handler from within the inner "for" loop of
+       the XML_TOK_DATA_CHARS case in doContent(), and the character
+       handler must stop the parser and clear the character data
+       handler.
+    */
+    char *text = long_character_data_text;
+
+    XML_SetCharacterDataHandler(parser, clearing_aborting_character_handler);
+    resumable = XML_TRUE;
+    if (XML_Parse(parser, text, strlen(text), XML_TRUE) != XML_STATUS_SUSPENDED)
+        xml_failure(parser);
+    if (XML_GetErrorCode(parser) != XML_ERROR_NONE)
         xml_failure(parser);
 }
 END_TEST
@@ -1434,6 +1459,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_empty_ns_without_namespaces);
     tcase_add_test(tc_basic, test_ns_in_attribute_default_without_namespaces);
     tcase_add_test(tc_basic, test_stop_parser_between_char_data_calls);
+    tcase_add_test(tc_basic, test_suspend_parser_between_char_data_calls);
 
     suite_add_tcase(s, tc_namespace);
     tcase_add_checked_fixture(tc_namespace,

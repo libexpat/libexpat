@@ -2555,7 +2555,7 @@ doContent(XML_Parser parser,
                                  (int)(dataPtr - (ICHAR *)dataBuf));
             if (s == next)
               break;
-            if (ps_parsing == XML_FINISHED)
+            if (ps_parsing == XML_FINISHED || ps_parsing == XML_SUSPENDED)
               break;
             *eventPP = s;
           }
