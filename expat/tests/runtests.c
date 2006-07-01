@@ -362,7 +362,7 @@ END_TEST
 
 START_TEST(test_utf16_le_epilog_newline)
 {
-    int first_chunk_bytes = 17;
+    unsigned int first_chunk_bytes = 17;
     char text[] = 
         "\xFF\xFE"                      /* BOM */
         "<\000e\000/\000>\000"          /* document element */
@@ -1411,7 +1411,6 @@ main(int argc, char *argv[])
 #endif
 {
     int i, nf;
-    int forking = 0, forking_set = 0;
     int verbosity = CK_NORMAL;
     Suite *s = make_suite();
     SRunner *sr = srunner_create(s);
@@ -1425,21 +1424,11 @@ main(int argc, char *argv[])
             verbosity = CK_VERBOSE;
         else if (strcmp(opt, "-q") == 0 || strcmp(opt, "--quiet") == 0)
             verbosity = CK_SILENT;
-        else if (strcmp(opt, "-f") == 0 || strcmp(opt, "--fork") == 0) {
-            forking = 1;
-            forking_set = 1;
-        }
-        else if (strcmp(opt, "-n") == 0 || strcmp(opt, "--no-fork") == 0) {
-            forking = 0;
-            forking_set = 1;
-        }
         else {
             fprintf(stderr, "runtests: unknown option '%s'\n", opt);
             return 2;
         }
     }
-    if (forking_set)
-        srunner_set_fork_status(sr, forking ? CK_FORK : CK_NOFORK);
     if (verbosity != CK_SILENT)
         printf("Expat version: %s\n", XML_ExpatVersion());
     srunner_run_all(sr, verbosity);

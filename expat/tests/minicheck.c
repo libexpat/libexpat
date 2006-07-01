@@ -82,12 +82,6 @@ srunner_create(Suite *suite)
     return runner;
 }
 
-void
-srunner_set_fork_status(SRunner *runner, int status)
-{
-    /* We ignore this. */
-}
-
 static jmp_buf env;
 
 static char const *_check_current_function = NULL;

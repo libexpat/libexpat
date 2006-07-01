@@ -42,7 +42,6 @@ typedef struct TCase TCase;
 
 struct SRunner {
     Suite *suite;
-    int forking;
     int nchecks;
     int nfailures;
 };
@@ -81,7 +80,6 @@ void tcase_add_checked_fixture(TCase *,
                                tcase_teardown_function);
 void tcase_add_test(TCase *tc, tcase_test_function test);
 SRunner *srunner_create(Suite *suite);
-void srunner_set_fork_status(SRunner *runner, int forking);
 void srunner_run_all(SRunner *runner, int verbosity);
 int srunner_ntests_failed(SRunner *runner);
 void srunner_free(SRunner *runner);
