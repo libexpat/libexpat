@@ -1,3 +1,10 @@
+Unrelease version
+        - SF bug #1515266: The character data handler's calling of
+          XML_StopParser() was not handled properly; if the parser was
+          stopped and the handler set to NULL, the parser would
+          segfault.  Fixed.
+        - Minor cleanups of the test harness.
+
 Release 2.0.0 Wed Jan 11 2006
         - We no longer use the "check" library for C unit testing; we
           always use the (partial) internal implementation of the API.
