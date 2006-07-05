@@ -1103,8 +1103,10 @@ lost, including
 <ul>
   <li> the end element handler for empty elements when stopped in the
        start element handler,</li>
-  <li> end namespace declaration handler when stopped in the end
+  <li> the end namespace declaration handler when stopped in the end
        element handler,</li>
+  <li> the character data handler when stopped in the character data handler
+       while making multiple call-backs on a contiguous chunk of characters,</li>
 </ul>
 and possibly others.</p>
 

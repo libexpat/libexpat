@@ -2545,9 +2545,9 @@ doContent(XML_Parser parser,
       *nextPtr = end;
       return XML_ERROR_NONE;
     case XML_TOK_DATA_CHARS:
-      if (characterDataHandler) {
-        if (MUST_CONVERT(enc, s)) {
-          for (;;) {
+      if (MUST_CONVERT(enc, s)) {
+        for (;;) {
+          if (characterDataHandler) {
             ICHAR *dataPtr = (ICHAR *)dataBuf;
             XmlConvert(enc, &s, next, &dataPtr, (ICHAR *)dataBufEnd);
             *eventEndPP = s;
@@ -2555,16 +2555,14 @@ doContent(XML_Parser parser,
                                  (int)(dataPtr - (ICHAR *)dataBuf));
             if (s == next)
               break;
-            if (ps_parsing == XML_FINISHED || ps_parsing == XML_SUSPENDED)
-              break;
             *eventPP = s;
           }
         }
-        else
-          characterDataHandler(handlerArg,
-                               (XML_Char *)s,
-                               (int)((XML_Char *)next - (XML_Char *)s));
       }
+      else if (characterDataHandler)
+        characterDataHandler(handlerArg,
+                             (XML_Char *)s,
+                             (int)((XML_Char *)next - (XML_Char *)s));
       else if (defaultHandler)
         reportDefault(parser, enc, s, next);
       break;
@@ -3127,9 +3125,9 @@ doCdataSection(XML_Parser parser,
         reportDefault(parser, enc, s, next);
       break;
     case XML_TOK_DATA_CHARS:
-      if (characterDataHandler) {
-        if (MUST_CONVERT(enc, s)) {
-          for (;;) {
+      if (MUST_CONVERT(enc, s)) {
+        for (;;) {
+          if (characterDataHandler) {
             ICHAR *dataPtr = (ICHAR *)dataBuf;
             XmlConvert(enc, &s, next, &dataPtr, (ICHAR *)dataBufEnd);
             *eventEndPP = next;
@@ -3140,11 +3138,11 @@ doCdataSection(XML_Parser parser,
             *eventPP = s;
           }
         }
-        else
-          characterDataHandler(handlerArg,
-                               (XML_Char *)s,
-                               (int)((XML_Char *)next - (XML_Char *)s));
       }
+      else if (characterDataHandler)
+        characterDataHandler(handlerArg,
+                             (XML_Char *)s,
+                             (int)((XML_Char *)next - (XML_Char *)s));
       else if (defaultHandler)
         reportDefault(parser, enc, s, next);
       break;
