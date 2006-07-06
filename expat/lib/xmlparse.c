@@ -2557,6 +2557,8 @@ doContent(XML_Parser parser,
               break;
             *eventPP = s;
           }
+          else
+            break;
         }
       }
       else if (characterDataHandler)
@@ -3137,6 +3139,8 @@ doCdataSection(XML_Parser parser,
               break;
             *eventPP = s;
           }
+          else
+            break;
         }
       }
       else if (characterDataHandler)
