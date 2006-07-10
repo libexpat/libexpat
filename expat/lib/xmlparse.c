@@ -2544,29 +2544,30 @@ doContent(XML_Parser parser,
       }
       *nextPtr = end;
       return XML_ERROR_NONE;
-    case XML_TOK_DATA_CHARS:
-      if (MUST_CONVERT(enc, s)) {
-        for (;;) {
-          if (characterDataHandler) {
-            ICHAR *dataPtr = (ICHAR *)dataBuf;
-            XmlConvert(enc, &s, next, &dataPtr, (ICHAR *)dataBufEnd);
-            *eventEndPP = s;
-            characterDataHandler(handlerArg, dataBuf,
-                                 (int)(dataPtr - (ICHAR *)dataBuf));
-            if (s == next)
-              break;
-            *eventPP = s;
+    case XML_TOK_DATA_CHARS: 
+      {
+        XML_CharacterDataHandler charDataHandler = characterDataHandler;
+        if (charDataHandler) {
+          if (MUST_CONVERT(enc, s)) {
+            for (;;) {
+              ICHAR *dataPtr = (ICHAR *)dataBuf;
+              XmlConvert(enc, &s, next, &dataPtr, (ICHAR *)dataBufEnd);
+              *eventEndPP = s;
+              charDataHandler(handlerArg, dataBuf,
+                              (int)(dataPtr - (ICHAR *)dataBuf));
+              if (s == next)
+                break;
+              *eventPP = s;
+            }
           }
           else
-            break;
+            charDataHandler(handlerArg,
+                            (XML_Char *)s,
+                            (int)((XML_Char *)next - (XML_Char *)s));
         }
+        else if (defaultHandler)
+          reportDefault(parser, enc, s, next);
       }
-      else if (characterDataHandler)
-        characterDataHandler(handlerArg,
-                             (XML_Char *)s,
-                             (int)((XML_Char *)next - (XML_Char *)s));
-      else if (defaultHandler)
-        reportDefault(parser, enc, s, next);
       break;
     case XML_TOK_PI:
       if (!reportProcessingInstruction(parser, enc, s, next))
@@ -3127,28 +3128,29 @@ doCdataSection(XML_Parser parser,
         reportDefault(parser, enc, s, next);
       break;
     case XML_TOK_DATA_CHARS:
-      if (MUST_CONVERT(enc, s)) {
-        for (;;) {
-          if (characterDataHandler) {
-            ICHAR *dataPtr = (ICHAR *)dataBuf;
-            XmlConvert(enc, &s, next, &dataPtr, (ICHAR *)dataBufEnd);
-            *eventEndPP = next;
-            characterDataHandler(handlerArg, dataBuf,
-                                 (int)(dataPtr - (ICHAR *)dataBuf));
-            if (s == next)
-              break;
-            *eventPP = s;
+      {
+        XML_CharacterDataHandler charDataHandler = characterDataHandler;
+        if (charDataHandler) {
+          if (MUST_CONVERT(enc, s)) {
+            for (;;) {
+              ICHAR *dataPtr = (ICHAR *)dataBuf;
+              XmlConvert(enc, &s, next, &dataPtr, (ICHAR *)dataBufEnd);
+              *eventEndPP = next;
+              charDataHandler(handlerArg, dataBuf,
+                              (int)(dataPtr - (ICHAR *)dataBuf));
+              if (s == next)
+                break;
+              *eventPP = s;
+            }
           }
           else
-            break;
+            charDataHandler(handlerArg,
+                            (XML_Char *)s,
+                            (int)((XML_Char *)next - (XML_Char *)s));
         }
+        else if (defaultHandler)
+          reportDefault(parser, enc, s, next);
       }
-      else if (characterDataHandler)
-        characterDataHandler(handlerArg,
-                             (XML_Char *)s,
-                             (int)((XML_Char *)next - (XML_Char *)s));
-      else if (defaultHandler)
-        reportDefault(parser, enc, s, next);
       break;
     case XML_TOK_INVALID:
       *eventPP = next;

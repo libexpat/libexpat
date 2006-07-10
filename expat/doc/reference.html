@@ -1290,7 +1290,10 @@ is <em>NOT nul-terminated</em>. You have to use the length argument
 to deal with the end of the string. A single block of contiguous text
 free of markup may still result in a sequence of calls to this handler.
 In other words, if you're searching for a pattern in the text, it may
-be split across calls to this handler.</p>
+be split across calls to this handler. Note: Setting this handler to NULL
+may <em>NOT immediately</em> terminate call-backs if the parser is currently
+processing such a single block of contiguous markup-free text, as the parser
+will continue calling back until the end of the block is reached.</p>
 </div>
 
 <div class="handler">
