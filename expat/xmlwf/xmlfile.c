@@ -14,6 +14,8 @@
 #include "macconfig.h"
 #elif defined(__amigaos4__)
 #include "amigaconfig.h"
+#elif defined(__WATCOMC__)
+#include "watcomconfig.h"
 #elif defined(HAVE_EXPAT_CONFIG_H)
 #include <expat_config.h>
 #endif /* ndef COMPILED_FROM_DSP */
@@ -23,8 +25,10 @@
 #include "xmltchar.h"
 #include "filemap.h"
 
-#ifdef _MSC_VER
+#if (defined(_MSC_VER) || defined(__WATCOMC__))
+#ifndef __linux__
 #include <io.h>
+#endif
 #endif
 
 #ifdef AMIGA_SHARED_LIB
@@ -85,7 +89,7 @@ processFile(const void *data, size_t size,
     *retPtr = 1;
 }
 
-#ifdef WIN32
+#if (defined(WIN32) || defined(__WATCOMC__))
 
 static int
 isAsciiLetter(XML_Char c)
@@ -103,7 +107,7 @@ resolveSystemId(const XML_Char *base, const XML_Char *systemId,
   *toFree = 0;
   if (!base
       || *systemId == T('/')
-#ifdef WIN32
+#if (defined(WIN32) || defined(__WATCOMC__))
       || *systemId == T('\\')
       || (isAsciiLetter(systemId[0]) && systemId[1] == T(':'))
 #endif
@@ -117,7 +121,7 @@ resolveSystemId(const XML_Char *base, const XML_Char *systemId,
   s = *toFree;
   if (tcsrchr(s, T('/')))
     s = tcsrchr(s, T('/')) + 1;
-#ifdef WIN32
+#if (defined(WIN32) || defined(__WATCOMC__))
   if (tcsrchr(s, T('\\')))
     s = tcsrchr(s, T('\\')) + 1;
 #endif

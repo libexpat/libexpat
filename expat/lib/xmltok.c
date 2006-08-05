@@ -10,6 +10,8 @@
 #include "macconfig.h"
 #elif defined(__amigaos4__)
 #include "amigaconfig.h"
+#elif defined(__WATCOMC__)
+#include "watcomconfig.h"
 #else
 #ifdef HAVE_EXPAT_CONFIG_H
 #include <expat_config.h>

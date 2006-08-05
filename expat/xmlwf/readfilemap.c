@@ -8,6 +8,14 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#ifdef __WATCOMC__
+#ifndef __linux__
+#include <io.h>
+#else
+#include <unistd.h>
+#endif
+#endif
+
 #ifdef __BEOS__
 #include <unistd.h>
 #endif

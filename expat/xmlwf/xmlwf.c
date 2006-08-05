@@ -607,7 +607,7 @@ showVersion(XML_Char *prog)
   const XML_Feature *features = XML_GetFeatureList();
   while ((ch = *s) != 0) {
     if (ch == '/'
-#ifdef WIN32
+#if (defined(WIN32) || defined(__WATCOMC__))
         || ch == '\\'
 #endif
         )
@@ -780,7 +780,7 @@ tmain(int argc, XML_Char **argv)
       const XML_Char *file = useStdin ? T("STDIN") : argv[i];
       if (tcsrchr(file, T('/')))
         file = tcsrchr(file, T('/')) + 1;
-#ifdef WIN32
+#if (defined(WIN32) || defined(__WATCOMC__))
       if (tcsrchr(file, T('\\')))
         file = tcsrchr(file, T('\\')) + 1;
 #endif
