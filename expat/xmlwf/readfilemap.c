@@ -9,7 +9,7 @@
 #include <stdio.h>
 
 #ifdef __WATCOMC__
-#ifndef __linux__
+#ifndef __LINUX__
 #include <io.h>
 #else
 #include <unistd.h>

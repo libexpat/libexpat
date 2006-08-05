@@ -25,10 +25,8 @@
 #include "xmltchar.h"
 #include "filemap.h"
 
-#if (defined(_MSC_VER) || defined(__WATCOMC__))
-#ifndef __linux__
+#if (defined(_MSC_VER) || (defined(__WATCOMC__) && !defined(__LINUX__)))
 #include <io.h>
-#endif
 #endif
 
 #ifdef AMIGA_SHARED_LIB
