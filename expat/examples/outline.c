@@ -103,5 +103,6 @@ main(int argc, char *argv[])
     if (done)
       break;
   }
+  XML_ParserFree(p);
   return 0;
 }
