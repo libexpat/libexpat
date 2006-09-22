@@ -90,6 +90,7 @@ instructions:
            (Note the additional "w" in the library name.)
 
         3. Run "make buildlib" (which builds the library only).
+           Or, to save step 2, run "make buildlib LIBRARY=libexpatw.la".
 
         4. Run "make installlib" (which installs the library only).
 
