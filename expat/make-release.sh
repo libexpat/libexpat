@@ -8,7 +8,7 @@
 #
 
 #CVSROOT=':ext:cvs.libexpat.org:/cvsroot/expat'
-CVSROOT=':pserver:anonymous@cvs.libexpat.org:/cvsroot/expat'
+CVSROOT=':pserver:anonymous@expat.cvs.sourceforge.net:/cvsroot/expat'
 
 if test $# != 1; then
   echo "USAGE: $0 tagname"
