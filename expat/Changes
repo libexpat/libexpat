@@ -1,20 +1,18 @@
 Release 2.0.1
-        - SF bug #1515266: The character data handler's calling of
+        - Fixed bug #1515266: The character data handler's calling of
           XML_StopParser() was not handled properly; if the parser was
-          stopped and the handler set to NULL, the parser would
-          segfault.  Fixed.
+          stopped and the handler set to NULL, the parser would segfault.
         - Minor cleanups of the test harness.
-        - Example outline.c missed a final XML_ParserFree() call:
-          bug #1543233.
+        - Fixed xmlwf bug #1513566: "out of memory" error on file size zero.
+        - Fixed outline.c bug #1543233: missing a final XML_ParserFree() call.
         - Fixes and improvements for Windows platform:
           bugs #1409451, #1476160, 1548182, 1602769.
         - Build fixes for various platforms:
           HP-UX, Tru64, Solaris 9: patch #1437840, bug #1196180.
           All Unix: #1554618 (refreshed config.sub/config.guess).
-        - Added Open Watcom support: patch #1523242.
-        - Fixes to Makefile.in to have make check work correctly
+        - Fixes to Makefile.in to have make check work correctly:
           bugs #1408143, #1535603, #1536684.
-        
+        - Added Open Watcom support: patch #1523242.        
 
 Release 2.0.0 Wed Jan 11 2006
         - We no longer use the "check" library for C unit testing; we
