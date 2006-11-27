@@ -1,5 +1,5 @@
 
-                        Expat, Release 2.0.0
+                        Expat, Release 2.0.1
 
 This is Expat, a C library for parsing XML, written by James Clark.
 Expat is a stream-oriented XML parser.  This means that you register
@@ -25,8 +25,8 @@ intended to be production grade software.
 If you are building Expat from a check-out from the CVS repository,
 you need to run a script that generates the configure script using the
 GNU autoconf and libtool tools.  To do this, you need to have
-autoconf 2.52 or newer and libtool 1.4 or newer.  Run the script like
-this:
+autoconf 2.52 or newer and libtool 1.4 or newer (1.5 or newer preferred).
+Run the script like this:
 
         ./buildconf.sh
 
