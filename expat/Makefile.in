@@ -44,7 +44,7 @@ MANFILE = $(srcdir)/doc/xmlwf.1
 APIHEADER = $(srcdir)/lib/expat.h $(srcdir)/lib/expat_external.h
 LIBRARY = libexpat.la
 
-INSTALL_ROOT=$(DESTDIR)
+INSTALL_ROOT ?= $(DESTDIR)
 
 default:  buildlib xmlwf/xmlwf
 
