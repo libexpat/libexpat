@@ -777,17 +777,28 @@ tmain(int argc, XML_Char **argv)
       XML_SetProcessingInstructionHandler(parser, nopProcessingInstruction);
     }
     else if (outputDir) {
+      const XML_Char * delim = T("/");
       const XML_Char *file = useStdin ? T("STDIN") : argv[i];
-      if (tcsrchr(file, T('/')))
-        file = tcsrchr(file, T('/')) + 1;
+      if (!useStdin) {
+        /* Jump after last (back)slash */
+        const XML_Char * lastDelim = tcsrchr(file, delim[0]);
+        if (lastDelim)
+          file = lastDelim + 1;
 #if (defined(WIN32) || defined(__WATCOMC__))
-      if (tcsrchr(file, T('\\')))
-        file = tcsrchr(file, T('\\')) + 1;
+        else {
+          const XML_Char * winDelim = T("\\");
+          lastDelim = tcsrchr(file, winDelim[0]);
+          if (lastDelim) {
+            file = lastDelim + 1;
+            delim = winDelim;
+          }
+        }
 #endif
+      }
       outName = (XML_Char *)malloc((tcslen(outputDir) + tcslen(file) + 2)
                        * sizeof(XML_Char));
       tcscpy(outName, outputDir);
-      tcscat(outName, T("/"));
+      tcscat(outName, delim);
       tcscat(outName, file);
       fp = tfopen(outName, T("wb"));
       if (!fp) {
