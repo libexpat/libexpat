@@ -5,17 +5,17 @@
 ; The current version is used with Inno Setup 2.0.19.
 
 [Setup]
-AppName=expat
+AppName=Expat
 AppId=expat
-AppVersion=2.0.0
-AppVerName=expat 2.0.0
+AppVersion=2.0.1
+AppVerName=expat 2.0.1
 AppCopyright=Copyright © 1998-2006 Thai Open Source Software Center, Clark Cooper, and the Expat maintainers
-DefaultDirName={sd}\Expat-2.0.0
+DefaultDirName={pf}\Expat 2.0.1
 AppPublisher=The Expat Developers
 AppPublisherURL=http://www.libexpat.org/
 AppSupportURL=http://www.libexpat.org/
 AppUpdatesURL=http://www.libexpat.org/
-UninstallDisplayName=Expat XML Parser (version 2.0.0)
+UninstallDisplayName=Expat XML Parser 2.0.1
 UninstallFilesDir={app}\Uninstall
 
 Compression=bzip/9
