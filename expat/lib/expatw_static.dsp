@@ -37,8 +37,8 @@ RSC=rc.exe
 # PROP BASE Target_Dir ""
 # PROP Use_MFC 0
 # PROP Use_Debug_Libraries 0
-# PROP Output_Dir "Release-w_static"
-# PROP Intermediate_Dir "Release-w_static"
+# PROP Output_Dir "..\win32\bin\Release"
+# PROP Intermediate_Dir "..\win32\tmp\Release-w_static"
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_MBCS" /D "_LIB" /YX /FD /c
 # ADD CPP /nologo /MT /W3 /GX /O2 /D "WIN32" /D "_WINDOWS" /D "NDEBUG" /D "_MBCS" /D "_LIB" /D "COMPILED_FROM_DSP" /D "XML_UNICODE_WCHAR_T" /FD /c
@@ -50,7 +50,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LIB32=link.exe -lib
 # ADD BASE LIB32 /nologo
-# ADD LIB32 /nologo /out:"Release-w_static\libexpatwMT.lib"
+# ADD LIB32 /nologo /out:"..\win32\bin\Release\libexpatwMT.lib"
 
 !ELSEIF  "$(CFG)" == "expatw_static - Win32 Debug"
 
@@ -61,8 +61,8 @@ LIB32=link.exe -lib
 # PROP BASE Target_Dir ""
 # PROP Use_MFC 0
 # PROP Use_Debug_Libraries 1
-# PROP Output_Dir "Debug-w_static"
-# PROP Intermediate_Dir "Debug-w_static"
+# PROP Output_Dir "..\win32\bin\Debug"
+# PROP Intermediate_Dir "..\win32\tmp\Debug-w_static"
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_MBCS" /D "_LIB" /YX /FD /GZ /c
 # ADD CPP /nologo /MTd /W3 /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D "_LIB" /D "COMPILED_FROM_DSP" /D "XML_UNICODE_WCHAR_T" /FR /FD /GZ /c
@@ -74,7 +74,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LIB32=link.exe -lib
 # ADD BASE LIB32 /nologo
-# ADD LIB32 /nologo /out:"Debug-w_static\libexpatwMT.lib"
+# ADD LIB32 /nologo /out:"..\win32\bin\Debug\libexpatwMT.lib"
 
 !ENDIF 
 
