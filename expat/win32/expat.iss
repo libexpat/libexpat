@@ -20,7 +20,7 @@ VersionInfoVersion=2.0.1
 DefaultDirName={pf}\Expat 2.0.1
 UninstallFilesDir={app}\Uninstall
 
-Compression=lzma/max
+Compression=lzma
 SolidCompression=yes
 SourceDir=..
 OutputDir=win32
