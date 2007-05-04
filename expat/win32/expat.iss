@@ -21,6 +21,7 @@ DefaultDirName={pf}\Expat 2.0.1
 UninstallFilesDir={app}\Uninstall
 
 Compression=lzma/max
+SolidCompression=yes
 SourceDir=..
 OutputDir=win32
 DisableStartupPrompt=yes
