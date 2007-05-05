@@ -66,7 +66,7 @@ the directories into which things will be installed.
 
 If you are interested in building Expat to provide document
 information in UTF-16 rather than the default UTF-8, follow these
-instructions:
+instructions (after having run "make distclean"):
 
         1. For UTF-16 output as unsigned short (and version/error
            strings as char), run:
@@ -93,6 +93,7 @@ instructions:
            Or, to save step 2, run "make buildlib LIBRARY=libexpatw.la".
 
         4. Run "make installlib" (which installs the library only).
+           Or, if step 2 was omitted, run "make installlib LIBRARY=libexpatw.la".
 
 Note for Solaris users:  The "ar" command is usually located in
 "/usr/ccs/bin", which is not in the default PATH.  You will need to
