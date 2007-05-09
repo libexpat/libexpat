@@ -72,8 +72,8 @@ if test "$GCC" = yes ; then
     dnl
     OLDCFLAGS="$CFLAGS -Wall -Wmissing-prototypes -Wstrict-prototypes"
     CFLAGS="$OLDCFLAGS -fexceptions"
-    AC_MSG_CHECKING(whether gcc accepts -fexceptions)
-    AC_TRY_COMPILE(,(void)1,
+    AC_MSG_CHECKING(whether $CC accepts -fexceptions)
+    AC_TRY_LINK( , ,
                    AC_MSG_RESULT(yes),
                    AC_MSG_RESULT(no); CFLAGS="$OLDCFLAGS")
     CXXFLAGS=`echo "$CFLAGS" | sed 's/ -Wmissing-prototypes -Wstrict-prototypes//'`
