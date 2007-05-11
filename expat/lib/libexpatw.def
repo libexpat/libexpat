@@ -1,3 +1,5 @@
+; DEF file for MS VC++
+
 LIBRARY
 EXPORTS
   XML_DefaultCurrent @1
