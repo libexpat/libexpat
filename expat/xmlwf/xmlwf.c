@@ -16,7 +16,7 @@
 #include <crtdbg.h>
 #endif
 
-#ifdef AMIGA_SHARED_LIB
+#if defined(__amigaos__) && defined(__USE_INLINE__)
 #include <proto/expat.h>
 #endif
 
@@ -639,13 +639,8 @@ usage(const XML_Char *prog, int rc)
   exit(rc);
 }
 
-#ifdef AMIGA_SHARED_LIB
-int
-amiga_main(int argc, char *argv[])
-#else
 int
 tmain(int argc, XML_Char **argv)
-#endif
 {
   int i, j;
   const XML_Char *outputDir = NULL;

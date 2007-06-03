@@ -4,6 +4,10 @@
 #include <time.h>
 #include "expat.h"
 
+#if defined(__amigaos__) && defined(__USE_INLINE__)
+#include <proto/expat.h>
+#endif
+
 #ifdef XML_LARGE_SIZE
 #define XML_FMT_INT_MOD "ll"
 #else
@@ -18,13 +22,7 @@ usage(const char *prog, int rc)
   exit(rc);
 }
 
-#ifdef AMIGA_SHARED_LIB
-#include <proto/expat.h>
-int
-amiga_main(int argc, char *argv[])
-#else
 int main (int argc, char *argv[]) 
-#endif
 {
   XML_Parser  parser;
   char        *XMLBuf, *XMLBufEnd, *XMLBufPtr;

@@ -17,7 +17,7 @@
 #include "chardata.h"
 #include "minicheck.h"
 
-#ifdef AMIGA_SHARED_LIB
+#if defined(__amigaos__) && defined(__USE_INLINE__)
 #include <proto/expat.h>
 #endif
 
@@ -1482,13 +1482,8 @@ make_suite(void)
 }
 
 
-#ifdef AMIGA_SHARED_LIB
-int
-amiga_main(int argc, char *argv[])
-#else
 int
 main(int argc, char *argv[])
-#endif
 {
     int i, nf;
     int verbosity = CK_NORMAL;

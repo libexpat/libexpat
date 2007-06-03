@@ -12,7 +12,7 @@
 #include "winconfig.h"
 #elif defined(MACOS_CLASSIC)
 #include "macconfig.h"
-#elif defined(__amigaos4__)
+#elif defined(__amigaos__)
 #include "amigaconfig.h"
 #elif defined(__WATCOMC__)
 #include "watcomconfig.h"
@@ -29,7 +29,7 @@
 #include <io.h>
 #endif
 
-#ifdef AMIGA_SHARED_LIB
+#if defined(__amigaos__) && defined(__USE_INLINE__)
 #include <proto/expat.h>
 #endif
 

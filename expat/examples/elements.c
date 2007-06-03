@@ -8,6 +8,10 @@
 #include <stdio.h>
 #include "expat.h"
 
+#if defined(__amigaos__) && defined(__USE_INLINE__)
+#include <proto/expat.h>
+#endif
+
 #ifdef XML_LARGE_SIZE
 #if defined(XML_USE_MSC_EXTENSIONS) && _MSC_VER < 1400
 #define XML_FMT_INT_MOD "I64"
@@ -36,14 +40,8 @@ endElement(void *userData, const char *name)
   *depthPtr -= 1;
 }
 
-#ifdef AMIGA_SHARED_LIB
-#include <proto/expat.h>
-int
-amiga_main(int argc, char *argv[])
-#else
 int
 main(int argc, char *argv[])
-#endif
 {
   char buf[BUFSIZ];
   XML_Parser parser = XML_ParserCreate(NULL);
