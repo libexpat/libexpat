@@ -1,16 +1,6 @@
 #ifndef PROTO_EXPAT_H
 #define PROTO_EXPAT_H
 
-/*
-**	$Id$
-**	Includes Release 50.1
-**
-**	Prototype/inline/pragma header file combo
-**
-**	(C) Copyright 2003-2005 Amiga, Inc.
-**	    All Rights Reserved
-*/
-
 #ifndef LIBRARIES_EXPAT_H
 #include <libraries/expat.h>
 #endif
