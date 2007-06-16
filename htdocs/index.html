@@ -51,6 +51,32 @@ of Expat.</p>
 <h3 id="news">News</h3>
 
 <dl>
+  <dt><em>5 June 2007</em>,
+      Expat 2.0.1 released.
+    </dt>
+  <dd><p>Release 2.0.1 of the Expat XML parser is a bugfix release
+    resolving both code and build related issues. Changes include:
+    <ul>
+      <li>Fixed: The character data handler's calling of XML_StopParser()
+        was not handled properly; if the parser was stopped and the handler
+        set to NULL, the parser would segfault.</li>
+      <li>Fixed: Expat failed on EBCDIC systems as it assumed some character
+        constants to be ASCII encoded.</li>
+      <li>Minor cleanups of the test harness.</li>
+      <li>Minor fixes for xmlwf and example programs.</li>
+      <li>Fixes and improvements for the Windows platform.
+        New Windows directory structure.</li>
+      <li>Build fixes for various platforms: HP-UX, Tru64, Solaris 9.</li>
+      <li>Build fixes for Unix:<br/>
+        - Refreshed config.sub/config.guess.<br/>
+        - Support both, DESTDIR and INSTALL_ROOT, without relying on GNU-Make specific features.<br/>
+        - Patched configure.in to work better with Intel compiler.<br/>
+        - Fixes to Makefile.in to have make check work correctly.</li>
+      <li>Added Open Watcom support.</li>
+    </ul>
+  </p></dd>
+</dl>
+<dl>
   <dt><em>11 January 2006</em>,
       Expat 2.0.0 released.
     </dt>
@@ -66,9 +92,9 @@ of Expat.</p>
         byte indexes and line/column numbers.</li>
       <li>Added support for AmigaOS.</li>
       <li>Some mostly minor bug fixes. SF issues include: 1006708,
-        1021776, 1023646, 1114960, 1156398, 1221160, 1271642.</li></ul>
-      </p>
-      </dd>
+        1021776, 1023646, 1114960, 1156398, 1221160, 1271642.</li>
+    </ul>
+  </p></dd>
 </dl>
 
 <p><a href="oldnews.html">Old news archive</a></p>
