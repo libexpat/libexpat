@@ -144,7 +144,7 @@ AC_DEFINE([XML_DTD], 1,
 AC_DEFINE([XML_CONTEXT_BYTES], 1024,
           [Define to specify how much context to retain around the current parse point.])
 
-AC_CONFIG_FILES(Makefile)
+AC_CONFIG_FILES([Makefile expat.pc])
 AC_OUTPUT
 
 abs_srcdir="`cd $srcdir && pwd`"

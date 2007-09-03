@@ -31,6 +31,7 @@ bindir = @bindir@
 libdir = @libdir@
 includedir = @includedir@
 man1dir = @mandir@/man1
+pkgconfigdir = $(libdir)/pkgconfig
 
 top_builddir = .
 
@@ -48,9 +49,9 @@ DESTDIR = $(INSTALL_ROOT)
 
 default:  buildlib xmlwf/xmlwf
 
-buildlib: $(LIBRARY)
+buildlib: $(LIBRARY) expat.pc
 
-all: $(LIBRARY) xmlwf/xmlwf examples/elements examples/outline
+all: $(LIBRARY) expat.pc xmlwf/xmlwf examples/elements examples/outline
 
 clean:
 	cd lib && rm -f $(LIBRARY) *.o *.lo && rm -rf .libs _libs
@@ -65,7 +66,7 @@ clobber: clean
 
 distclean: clean
 	rm -f expat_config.h config.status config.log config.cache libtool
-	rm -f Makefile
+	rm -f Makefile expat.pc
 
 extraclean: distclean
 	rm -f expat_config.h.in configure
@@ -80,10 +81,11 @@ install: xmlwf/xmlwf installlib
 	$(LIBTOOL) --mode=install $(INSTALL_PROGRAM) xmlwf/xmlwf $(DESTDIR)$(bindir)/xmlwf
 	$(INSTALL_DATA) $(MANFILE) $(DESTDIR)$(man1dir)
 
-installlib: $(LIBRARY) $(APIHEADER)
-	$(mkinstalldirs) $(DESTDIR)$(libdir) $(DESTDIR)$(includedir)
+installlib: $(LIBRARY) $(APIHEADER) expat.pc
+	$(mkinstalldirs) $(DESTDIR)$(libdir) $(DESTDIR)$(includedir) $(DESTDIR)$(pkgconfigdir)
 	$(LIBTOOL) --mode=install $(INSTALL) $(LIBRARY) $(DESTDIR)$(libdir)/$(LIBRARY)
 	for FN in $(APIHEADER) ; do $(INSTALL_DATA) $$FN $(DESTDIR)$(includedir) ; done
+	$(INSTALL_DATA) expat.pc $(DESTDIR)$(pkgconfigdir)/expat.pc
 
 uninstall: uninstalllib
 	$(LIBTOOL) --mode=uninstall rm -f $(DESTDIR)$(bindir)/xmlwf
@@ -93,6 +95,7 @@ uninstalllib:
 	$(LIBTOOL) --mode=uninstall rm -f $(DESTDIR)$(libdir)/$(LIBRARY)
 	rm -f $(DESTDIR)$(includedir)/expat.h
 	rm -f $(DESTDIR)$(includedir)/expat_external.h
+	rm -f $(DESTDIR)$(pkgconfigdir)/expat.pc
 
 # for VPATH builds (invoked by configure)
 mkdir-init:
@@ -124,6 +127,9 @@ LINK_CXX_EXE = $(LIBTOOL) $(LTFLAGS) --mode=link $(CXXCOMPILE) $(LDFLAGS) -o $@
 LIB_OBJS = lib/xmlparse.lo lib/xmltok.lo lib/xmlrole.lo
 $(LIBRARY): $(LIB_OBJS)
 	$(LINK_LIB) $(LIB_OBJS)
+
+expat.pc: $(top_builddir)/config.status
+	cd $(top_builddir) && $(SHELL) ./config.status $@
 
 lib/xmlparse.lo: lib/xmlparse.c lib/expat.h lib/xmlrole.h lib/xmltok.h \
 	$(top_builddir)/expat_config.h lib/expat_external.h lib/internal.h
