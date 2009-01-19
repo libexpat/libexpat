@@ -6,5 +6,6 @@ includedir=@includedir@
 Name: expat
 Version: @PACKAGE_VERSION@
 Description: expat XML parser
+URL: http://www.libexpat.org
 Libs: -L${libdir} -lexpat
 Cflags: -I${includedir}
