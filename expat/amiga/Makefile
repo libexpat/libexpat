@@ -19,6 +19,7 @@ help:
 	@echo " all     - make libraries, xmlwf, examples and runs tests"
 	@echo " install - install expat libraries and tools into SDK"
 	@echo " clean   - clean object files"
+	@echo " check   - run all the tests"
 	@echo " package - prepare distribution archive"
 
 all: clib2 newlib library so check
@@ -48,6 +49,8 @@ package:
 	-delete T:expat all force quiet
 	makedir all T:expat/Workbench/Libs
 	copy clone libs/expat.library T:expat/Workbench/Libs
+	makedir all T:expat/Workbench/SObjs
+	copy clone so/libexpat.so T:expat/Workbench/SObjs
 	makedir all T:expat/SDK/Local/C
 	copy clone libs/xmlwf T:expat/SDK/Local/C
 	makedir all T:expat/SDK/Local/clib2/lib
@@ -85,6 +88,7 @@ STRIPFLAGS := -R.comment
 
 clib2/libexpat.a: clib2/xmlparse.o clib2/xmltok.o clib2/xmlrole.o
 	$(LIBTOOL) $(LTFLAGS) $@ $^
+	protect $@ -e
 
 clib2/xmlparse.o: xmlparse.c expat.h xmlrole.h xmltok.h \
 	expat_external.h internal.h amigaconfig.h
@@ -148,6 +152,7 @@ clib2/benchmark.o: benchmark.c
 
 newlib/libexpat.a: newlib/xmlparse.o newlib/xmltok.o newlib/xmlrole.o
 	$(LIBTOOL) $(LTFLAGS) $@ $^
+	protect $@ -e
 
 newlib/xmlparse.o: xmlparse.c expat.h xmlrole.h xmltok.h \
 	expat_external.h internal.h amigaconfig.h
@@ -211,6 +216,7 @@ newlib/benchmark.o: benchmark.c
 
 libs/expat.library: libs/expat_lib.o libs/expat_68k.o libs/expat_68k_handler_stubs.o libs/expat_vectors.o libs/stdlib.o newlib/libexpat.a
 	$(CC) -mcrt=newlib -nostartfiles -nostdlib $^ -o $@ newlib/libexpat.a
+	protect $@ -e
 
 libs/expat_lib.o: expat_lib.c
 
@@ -276,6 +282,7 @@ libs/benchmark.o: benchmark.c
 
 so/libexpat.so: so/xmlparse.o so/xmltok.o so/xmlrole.o
 	$(CC) -mcrt=newlib -shared -o $@ $^
+	protect $@ -e
 
 so/xmlparse.o: xmlparse.c expat.h xmlrole.h xmltok.h \
 	expat_external.h internal.h amigaconfig.h

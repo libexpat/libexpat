@@ -39,6 +39,10 @@ Expat repository available at http://expat.sourceforge.net/
 
 HISTORY
 =======
+5.1  - fixed package archive which was missing libexpat.so
+     - fixed library protection bits
+     - fixed up copyright notices
+
 5.0  - integrated 68k patches from Fredrik Wikstrom which means
        expat.library is now callable from 68k code
      - bumped version for the addition of the 68k interface so
