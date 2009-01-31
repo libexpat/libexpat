@@ -1,5 +1,5 @@
 /*
-** Copyright (c) 2001-2007 Expat maintainers.
+** Copyright (c) 2001-2009 Expat maintainers.
 **
 ** Permission is hereby granted, free of charge, to any person obtaining
 ** a copy of this software and associated documentation files (the
@@ -8,10 +8,10 @@
 ** distribute, sublicense, and/or sell copies of the Software, and to
 ** permit persons to whom the Software is furnished to do so, subject to
 ** the following conditions:
-** 
+**
 ** The above copyright notice and this permission notice shall be included
 ** in all copies or substantial portions of the Software.
-** 
+**
 ** THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 ** EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 ** MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -26,9 +26,9 @@
 
 #define LIBNAME		"expat.library"
 #define LIBPRI		0
-#define VERSION		4
-#define REVISION	2
-#define VSTRING		"expat.library 4.2 (2.6.2007)"  /* dd.mm.yyyy */
+#define VERSION		5
+#define REVISION	0
+#define VSTRING		"expat.library 5.0 (30.1.2009)"  /* dd.mm.yyyy */
 
 
 static const char* __attribute__((used)) verstag = "\0$VER: " VSTRING;
@@ -87,10 +87,13 @@ static APTR libInterfaces[] = {
 };
 
 
+extern void *VecTable68K[];
+
 static struct TagItem libCreateTags[] = {
 	{ CLT_DataSize, sizeof(struct ExpatBase) },
 	{ CLT_InitFunc, (uint32)libInit },
 	{ CLT_Interfaces, (uint32)libInterfaces },
+	{ CLT_Vector68K, (uint32)VecTable68K },
 	{ TAG_END, 0 }
 };
 

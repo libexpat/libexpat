@@ -1,5 +1,8 @@
 amiga/stdlib.c
 amiga/launch.c
+amiga/expat_68k.c
+amiga/expat_68k.h
+amiga/expat_68k_handler_stubs.c
 amiga/expat_vectors.c
 amiga/expat_lib.c
 amiga/expat.xml
