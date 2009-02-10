@@ -39,6 +39,12 @@ Expat repository available at http://expat.sourceforge.net/
 
 HISTORY
 =======
+5.2  - fixed XML_Parse 68k stub which enables xmlviewer to work
+       without crashing
+     - added some new functions to the 68k jump table available
+       in the latest expat.library for AmigaOS 3.x
+     - patches provided by Fredrik Wikstrom
+
 5.1  - fixed package archive which was missing libexpat.so
      - fixed library protection bits
      - fixed up copyright notices
