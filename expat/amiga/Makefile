@@ -214,19 +214,18 @@ newlib/benchmark.o: benchmark.c
 
 #############################################################################
 
-libs/expat.library: libs/expat_lib.o libs/expat_68k.o libs/expat_68k_handler_stubs.o libs/expat_vectors.o libs/stdlib.o newlib/libexpat.a
-	$(CC) -mcrt=newlib -nostartfiles -nostdlib $^ -o $@ newlib/libexpat.a
+libs/expat.library: libs/expat_lib.o libs/expat_68k.o libs/expat_68k_handler_stubs.o libs/expat_vectors.o newlib/libexpat.a
+	$(CC) -mcrt=newlib -nostartfiles $^ -o $@ newlib/libexpat.a -Wl,--cref,-M,-Map=$@.map
 	protect $@ -e
+	$(STRIP) $(STRIPFLAGS) $@
 
-libs/expat_lib.o: expat_lib.c
+libs/expat_lib.o: expat_lib.c expat_base.h
 
-libs/expat_68k.o: expat_68k.c expat_68k.h
+libs/expat_68k.o: expat_68k.c expat_68k.h expat_base.h
 
 libs/expat_68k_handler_stubs.o: expat_68k_handler_stubs.c expat_68k.h
 
 libs/expat_vectors.o: expat_vectors.c
-
-libs/stdlib.o: stdlib.c
 
 libs/launch.o: launch.c
 

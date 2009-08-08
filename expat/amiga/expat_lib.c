@@ -21,24 +21,30 @@
 ** SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+#ifdef __USE_INLINE__
+#undef __USE_INLINE__
+#endif
+
+#define __NOLIBBASE__
+#define __NOGLOBALIFACE__
+
 #include <dos/dos.h>
 #include <proto/exec.h>
 
+#include "expat_base.h"
+
+
 #define LIBNAME		"expat.library"
 #define LIBPRI		0
-#define VERSION		5
-#define REVISION	2
-#define VSTRING		"expat.library 5.2 (9.2.2009)"  /* dd.mm.yyyy */
+#define VERSION		53
+#define REVISION	1
+#define VSTRING		"expat.library 53.1 (7.8.2009)"  /* dd.mm.yyyy */
 
 
 static const char* __attribute__((used)) verstag = "\0$VER: " VSTRING;
 
 
-struct ExpatBase {
-	struct Library libNode;
-	uint16 pad;
-	BPTR SegList;
-};
+struct Interface *INewlib = 0;
 
 
 struct ExpatBase * libInit(struct ExpatBase *libBase, BPTR seglist, struct ExecIFace *ISys);
@@ -47,6 +53,8 @@ uint32 libRelease (struct LibraryManagerInterface *Self);
 struct ExpatBase *libOpen (struct LibraryManagerInterface *Self, uint32 version);
 BPTR libClose (struct LibraryManagerInterface *Self);
 BPTR libExpunge (struct LibraryManagerInterface *Self);
+struct Interface *openInterface(struct ExecIFace *IExec, CONST_STRPTR libName, uint32 libVer);
+void closeInterface(struct ExecIFace *IExec, struct Interface *iface);
 
 
 static APTR lib_manager_vectors[] = {
@@ -112,20 +120,13 @@ static struct Resident __attribute__((used)) lib_res = {
 };
 
 
-struct Library *DOSLib = 0;
-struct Library *UtilityBase = 0;
-
-struct ExecIFace *IExec = 0;
-struct DOSIFace *IDOS = 0;
-struct UtilityIFace *IUtility = 0;
-
-
-void _start()
+int32 _start()
 {
+	return RETURN_FAIL;
 }
 
 
-struct ExpatBase *libInit(struct ExpatBase *libBase, BPTR seglist, struct ExecIFace *ISys)
+struct ExpatBase *libInit(struct ExpatBase *libBase, BPTR seglist, struct ExecIFace *iexec)
 {
 	libBase->libNode.lib_Node.ln_Type = NT_LIBRARY;
 	libBase->libNode.lib_Node.ln_Pri = LIBPRI;
@@ -134,29 +135,20 @@ struct ExpatBase *libInit(struct ExpatBase *libBase, BPTR seglist, struct ExecIF
 	libBase->libNode.lib_Version = VERSION;
 	libBase->libNode.lib_Revision = REVISION;
 	libBase->libNode.lib_IdString = VSTRING;
+
 	libBase->SegList = seglist;
 
-	IExec = ISys;
+	libBase->IExec = iexec;
+	INewlib        = openInterface(iexec, "newlib.library", 0);
 
-	DOSLib = OpenLibrary("dos.library", 51);
-	if ( DOSLib != 0 )  {
-		IDOS = (struct DOSIFace *)GetInterface(DOSLib, "main", 1, NULL);
-		if ( IDOS != 0 )  {
-			UtilityBase = OpenLibrary("utility.library", 51);
-			if ( UtilityBase != 0 )  {
-				IUtility = (struct UtilityIFace*)GetInterface(UtilityBase, "main", 1, NULL);
-				if ( IUtility != 0 )  {
-					return libBase;
-				}
-
-				CloseLibrary(UtilityBase);
-			}
-
-			DropInterface((struct Interface *)IDOS);
-		}
-
-		CloseLibrary(DOSLib);
+	if ( INewlib != 0 )  {
+		return libBase;
 	}
+
+	closeInterface(iexec, INewlib);
+	INewlib = 0;
+
+	iexec->DeleteLibrary(&libBase->libNode);
 
 	return NULL;
 }
@@ -204,33 +196,52 @@ BPTR libClose( struct LibraryManagerInterface *Self )
 		return (BPTR)Self->LibExpunge();
 	}
 	else {
-		return 0;
+		return ZERO;
 	}
 }
 
 
 BPTR libExpunge( struct LibraryManagerInterface *Self )
 {
-	struct ExpatBase *libBase;
-	BPTR result = 0;
-
-	libBase = (struct ExpatBase *)Self->Data.LibBase;
+	struct ExpatBase *libBase = (struct ExpatBase *)Self->Data.LibBase;
+	BPTR result = ZERO;
 
 	if (libBase->libNode.lib_OpenCnt == 0) {
-		Remove(&libBase->libNode.lib_Node);
+		libBase->IExec->Remove(&libBase->libNode.lib_Node);
 
 		result = libBase->SegList;
 
-		DropInterface((struct Interface *)IUtility);
-		CloseLibrary(UtilityBase);
-		DropInterface((struct Interface *)IDOS);
-		CloseLibrary(DOSLib);
+		closeInterface(libBase->IExec, INewlib);
+		INewlib = 0;
 
-		DeleteLibrary(&libBase->libNode);
+		libBase->IExec->DeleteLibrary(&libBase->libNode);
 	}
 	else {
 		libBase->libNode.lib_Flags |= LIBF_DELEXP;
 	}
 
 	return result;
+}
+
+
+struct Interface *openInterface(struct ExecIFace *IExec, CONST_STRPTR libName, uint32 libVer)
+{
+	struct Library *base = IExec->OpenLibrary(libName, libVer);
+	struct Interface *iface = IExec->GetInterface(base, "main", 1, 0);
+	if (iface == 0) {
+		IExec->CloseLibrary(base);
+	}
+
+	return iface;
+}
+
+
+void closeInterface(struct ExecIFace *IExec, struct Interface *iface)
+{
+	if (iface != 0)
+	{
+		struct Library *base = iface->Data.LibBase;
+		IExec->DropInterface(iface);
+		IExec->CloseLibrary(base);
+	}
 }

@@ -39,6 +39,14 @@ Expat repository available at http://expat.sourceforge.net/
 
 HISTORY
 =======
+53.1 - bumped version to match AmigaOS streaming
+     - modified to remove all global variables (except INewLib)
+     - removed replacements for malloc(), etc. which are now
+       handled by the respective C library
+     - compiled with the latest binutils which bumps the
+       AMIGAOS_DYNVERSION to 2 for the libexpat.so target
+     - now strips the expat.library binary
+
 5.2  - fixed XML_Parse 68k stub which enables xmlviewer to work
        without crashing
      - added some new functions to the 68k jump table available
