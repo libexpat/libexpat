@@ -1513,15 +1513,11 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal)
                 : (char *)REALLOC(buffer, len * 2));
         if (temp == NULL) {
           errorCode = XML_ERROR_NO_MEMORY;
-          return XML_STATUS_ERROR;
-        }
-        buffer = temp;
-        if (!buffer) {
-          errorCode = XML_ERROR_NO_MEMORY;
           eventPtr = eventEndPtr = NULL;
           processor = errorProcessor;
           return XML_STATUS_ERROR;
         }
+        buffer = temp;
         bufferLim = buffer + len * 2;
       }
       memcpy(buffer, end, nLeftOver);
@@ -1672,6 +1668,8 @@ XML_GetBuffer(XML_Parser parser, int len)
       bufferPtr = buffer = newBuf;
 #endif  /* not defined XML_CONTEXT_BYTES */
     }
+    eventPtr = eventEndPtr = NULL;
+    positionPtr = NULL;
   }
   return bufferEnd;
 }
@@ -4949,7 +4947,7 @@ appendAttributeValue(XML_Parser parser, const ENCODING *enc, XML_Bool isCdata,
         if (!entity->textPtr) {
           if (enc == encoding)
             eventPtr = ptr;
-              return XML_ERROR_ATTRIBUTE_EXTERNAL_ENTITY_REF;
+          return XML_ERROR_ATTRIBUTE_EXTERNAL_ENTITY_REF;
         }
         else {
           enum XML_Error result;
