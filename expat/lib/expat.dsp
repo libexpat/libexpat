@@ -54,7 +54,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 /nologo /dll /machine:I386
-# ADD LINK32 /nologo /dll /pdb:none /machine:I386 /out:"..\win32\bin\Release/libexpat.dll"
+# ADD LINK32 /nologo /dll /pdb:none /machine:I386 /out:"..\win32\bin\Release\libexpat.dll"
 
 !ELSEIF  "$(CFG)" == "expat - Win32 Debug"
 
@@ -80,7 +80,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 /nologo /dll /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 /nologo /dll /pdb:none /debug /machine:I386 /out:"..\win32\bin\Debug/libexpat.dll"
+# ADD LINK32 /nologo /dll /pdb:none /debug /machine:I386 /out:"..\win32\bin\Debug\libexpat.dll"
 
 !ENDIF 
 

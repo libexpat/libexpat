@@ -51,7 +51,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 /nologo /subsystem:console /machine:I386
-# ADD LINK32 /nologo /subsystem:console /pdb:none /machine:I386
+# ADD LINK32 libexpat.lib /nologo /subsystem:console /pdb:none /machine:I386 /libpath:"..\win32\bin\Release" /out:"..\win32\bin\Release\outline.exe"
 
 !ELSEIF  "$(CFG)" == "outline - Win32 Debug"
 
@@ -75,7 +75,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 /nologo /subsystem:console /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 /nologo /subsystem:console /pdb:none /debug /machine:I386
+# ADD LINK32 libexpat.lib /nologo /subsystem:console /pdb:none /debug /machine:I386 /libpath:"..\win32\bin\Debug" /out:"..\win32\bin\Debug\outline.exe"
 
 !ENDIF 
 
