@@ -51,7 +51,6 @@ LIBAGE=6
 
 AC_CONFIG_HEADER(expat_config.h)
 
-sinclude(conftools/libtool.m4)
 sinclude(conftools/ac_c_bigendian_cross.m4)
 
 AC_LIBTOOL_WIN32_DLL
@@ -63,6 +62,7 @@ AC_SUBST(LIBAGE)
 
 dnl Checks for programs.
 AC_PROG_CC
+AC_PROG_CXX
 AC_PROG_INSTALL
 
 if test "$GCC" = yes ; then
