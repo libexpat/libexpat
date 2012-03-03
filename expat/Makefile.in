@@ -70,7 +70,8 @@ distclean: clean
 
 extraclean: distclean
 	rm -f expat_config.h.in configure
-	rm -f conftools/ltconfig conftools/ltmain.sh conftools/libtool.m4
+	rm -f aclocal.m4 m4/*
+	rm -f conftools/ltmain.sh conftools/install-sh conftools/config.guess conftools/config.sub
 
 check: tests/runtests tests/runtestspp
 	tests/runtests
