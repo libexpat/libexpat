@@ -62,7 +62,7 @@ conftools/get-version.sh
 conftools/mkinstalldirs
 conftools/config.guess
 conftools/config.sub
-conftools/install.sh
+conftools/install-sh
 conftools/ltmain.sh
 m4/libtool.m4
 m4/ltversion.m4
