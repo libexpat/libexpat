@@ -53,6 +53,7 @@ README
 configure
 configure.in
 expat_config.h.in
+expat.pc.in
 expat.dsw
 aclocal.m4
 conftools/PrintPath
