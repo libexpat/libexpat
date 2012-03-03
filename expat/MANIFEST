@@ -56,13 +56,8 @@ expat_config.h.in
 expat.dsw
 conftools/PrintPath
 conftools/ac_c_bigendian_cross.m4
-conftools/config.guess
-conftools/config.sub
 conftools/expat.m4
 conftools/get-version.sh
-conftools/install-sh
-conftools/libtool.m4
-conftools/ltmain.sh
 conftools/mkinstalldirs
 examples/elements.c
 examples/elements.dsp
