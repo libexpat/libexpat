@@ -432,6 +432,9 @@ static ELEMENT_TYPE *
 getElementType(XML_Parser parser, const ENCODING *enc,
                const char *ptr, const char *end);
 
+static unsigned long generate_hash_secret_salt(void);
+static XML_Bool parsingSetup(XML_Parser parser);
+
 static XML_Parser
 parserCreate(const XML_Char *encodingName,
              const XML_Memory_Handling_Suite *memsuite,
@@ -695,22 +698,27 @@ generate_hash_secret_salt(void)
   return rand();
 }
 
+static XML_Bool
+parsingSetup(XML_Parser parser)
+{
+    /* hash functions must be initialized before setContext() is called */
+    if (hash_secret_salt == 0)
+      hash_secret_salt = generate_hash_secret_salt();
+    if (parser != NULL && ns) {
+      /* implicit context only set for root parser, since child
+         parsers (i.e. external entity parsers) will inherit it
+      */
+      return setContext(parser, implicitContext);
+    }
+    return XML_TRUE;
+}
+
 XML_Parser XMLCALL
 XML_ParserCreate_MM(const XML_Char *encodingName,
                     const XML_Memory_Handling_Suite *memsuite,
                     const XML_Char *nameSep)
 {
-  XML_Parser parser = parserCreate(encodingName, memsuite, nameSep, NULL);
-  if (parser != NULL && ns) {
-    /* implicit context only set for root parser, since child
-       parsers (i.e. external entity parsers) will inherit it
-    */
-    if (!setContext(parser, implicitContext)) {
-      XML_ParserFree(parser);
-      return NULL;
-    }
-  }
-  return parser;
+  return parserCreate(encodingName, memsuite, nameSep, NULL);
 }
 
 static XML_Parser
@@ -946,7 +954,7 @@ XML_ParserReset(XML_Parser parser, const XML_Char *encodingName)
   poolClear(&temp2Pool);
   parserInit(parser, encodingName);
   dtdReset(_dtd, &parser->m_mem);
-  return setContext(parser, implicitContext);
+  return XML_TRUE;
 }
 
 enum XML_Status XMLCALL
@@ -1499,8 +1507,10 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal)
     errorCode = XML_ERROR_FINISHED;
     return XML_STATUS_ERROR;
   case XML_INITIALIZED:
-    if (hash_secret_salt == 0)
-      hash_secret_salt = generate_hash_secret_salt();
+    if (!parsingSetup(parser)) {
+      errorCode = XML_ERROR_NO_MEMORY;
+      return XML_STATUS_ERROR;
+    }
   default:
     ps_parsing = XML_PARSING;
   }
@@ -1623,8 +1633,10 @@ XML_ParseBuffer(XML_Parser parser, int len, int isFinal)
     errorCode = XML_ERROR_FINISHED;
     return XML_STATUS_ERROR;
   case XML_INITIALIZED:
-    if (hash_secret_salt == 0)
-      hash_secret_salt = generate_hash_secret_salt();
+    if (!parsingSetup(parser)) {
+      errorCode = XML_ERROR_NO_MEMORY;
+      return XML_STATUS_ERROR;
+    }
   default:
     ps_parsing = XML_PARSING;
   }
