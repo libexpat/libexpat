@@ -433,7 +433,7 @@ getElementType(XML_Parser parser, const ENCODING *enc,
                const char *ptr, const char *end);
 
 static unsigned long generate_hash_secret_salt(void);
-static XML_Bool parsingSetup(XML_Parser parser);
+static XML_Bool startParsing(XML_Parser parser);
 
 static XML_Parser
 parserCreate(const XML_Char *encodingName,
@@ -698,13 +698,13 @@ generate_hash_secret_salt(void)
   return rand();
 }
 
-static XML_Bool
-parsingSetup(XML_Parser parser)
+static XML_Bool  /* only valid for root parser */
+startParsing(XML_Parser parser)
 {
     /* hash functions must be initialized before setContext() is called */
     if (hash_secret_salt == 0)
       hash_secret_salt = generate_hash_secret_salt();
-    if (parser != NULL && ns) {
+    if (ns) {
       /* implicit context only set for root parser, since child
          parsers (i.e. external entity parsers) will inherit it
       */
@@ -1507,7 +1507,7 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal)
     errorCode = XML_ERROR_FINISHED;
     return XML_STATUS_ERROR;
   case XML_INITIALIZED:
-    if (!parsingSetup(parser)) {
+    if (parentParser == NULL && !startParsing(parser)) {
       errorCode = XML_ERROR_NO_MEMORY;
       return XML_STATUS_ERROR;
     }
@@ -1633,7 +1633,7 @@ XML_ParseBuffer(XML_Parser parser, int len, int isFinal)
     errorCode = XML_ERROR_FINISHED;
     return XML_STATUS_ERROR;
   case XML_INITIALIZED:
-    if (!parsingSetup(parser)) {
+    if (parentParser == NULL && !startParsing(parser)) {
       errorCode = XML_ERROR_NO_MEMORY;
       return XML_STATUS_ERROR;
     }

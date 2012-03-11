@@ -169,6 +169,13 @@ tests/runtestspp.@OBJEXT@: tests/runtestspp.cpp tests/runtests.c tests/chardata.
 tests/runtestspp: tests/runtestspp.@OBJEXT@ tests/chardata.@OBJEXT@ tests/minicheck.@OBJEXT@ $(LIBRARY)
 	$(LINK_CXX_EXE) tests/runtestspp.@OBJEXT@ tests/chardata.@OBJEXT@ tests/minicheck.@OBJEXT@ $(LIBRARY)
 
+tests/benchmark/benchmark.@OBJEXT@: tests/benchmark/benchmark.c
+tests/benchmark/benchmark: tests/benchmark/benchmark.@OBJEXT@ $(LIBRARY)
+	$(LINK_EXE) tests/benchmark/benchmark.@OBJEXT@ $(LIBRARY)
+
+run-benchmark: tests/benchmark/benchmark
+	tests/benchmark/benchmark@EXEEXT@ -n $(top_srcdir)/../testdata/largefiles/recset.xml 65535 3
+
 tests/xmlts.zip:
 	wget --output-document=tests/xmlts.zip \
 		http://www.w3.org/XML/Test/xmlts20020606.zip
