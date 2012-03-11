@@ -29,7 +29,10 @@ Release 2.1.0 XXX March XX 2012
 		  When compiled with XML_ATTR_INFO defined, adds new API member
 				XML_GetAttributeInfo() that allows retrieving the byte
 				offsets for attribute names and values (patch #3446384).
-		  Added CMake build system. See bug #2990652 and patch #3312568.
+		  Added CMake build system.
+				See bug #2990652 and patch #3312568.
+		  Added run-benchmark target to Makefile.in - relies on testdata module
+				being present in the same location as in the repository.
 		  
 Release 2.0.1 Tue June 5 2007
         - Fixed bugs #1515266, #1515600: The character data handler's calling
