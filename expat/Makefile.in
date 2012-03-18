@@ -178,7 +178,7 @@ run-benchmark: tests/benchmark/benchmark
 
 tests/xmlts.zip:
 	wget --output-document=tests/xmlts.zip \
-		http://www.w3.org/XML/Test/xmlts20020606.zip
+		http://www.w3.org/XML/Test/xmlts20080827.zip
 
 tests/XML-Test-Suite: tests/xmlts.zip
 	cd tests && unzip -q xmlts.zip
