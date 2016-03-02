@@ -1,4 +1,4 @@
-%define version 2.1.0
+%define version 2.1.1
 %define release 1
 
 Summary: Expat is an XML 1.0 parser written in C.
@@ -40,6 +40,10 @@ install -D xmlwf/xmlwf $RPM_BUILD_ROOT/usr/bin/xmlwf
 /usr/share/man/man1/xmlwf.1.gz
 
 %changelog
+* Wed Mar 2 2016 Sebastian Pipping <sebastian@pipping.org>
+[Release 2.1.1-1]
+- Update for the 2.1.1 release.
+
 * Sat Mar 3 2012 Karl Waclawek <karl@waclawek.net>
 [Release 2.1.0-1]
 - Update for the 2.1.0 release.
