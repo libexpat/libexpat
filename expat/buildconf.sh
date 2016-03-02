@@ -19,6 +19,10 @@ fi
 echo "Creating configure ..."
 ${AUTORECONF:-autoreconf} -fvi
 
+echo "Creating conftools/install-sh ..."
+# .. for configure, despite not using automake
+automake --add-missing 2>/dev/null || true
+
 # toss this; it gets created by autoconf on some systems
 rm -rf autom4te*.cache
 
