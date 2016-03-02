@@ -1,5 +1,11 @@
 m4/
+CMakeFiles/
+Testing/
 aclocal.m4
+CMakeCache.txt
+cmake_install.cmake
+CTestTestfile.cmake
+install_manifest.txt
 Makefile
 .libs
 *.la
