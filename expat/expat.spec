@@ -5,7 +5,7 @@ Summary: Expat is an XML 1.0 parser written in C.
 Name: expat
 Version: %{version}
 Release: %{release}
-Copyright: MIT/X
+License: MIT/X
 Group: Utilities/parsers
 URL: http://www.libexpat.org/
 Source: http://download.sourceforge.net/expat/expat-%{version}.tar.gz
@@ -27,7 +27,7 @@ rm -rf $RPM_BUILD_ROOT
 mkdir -p $RPM_BUILD_ROOT/usr/bin
 mkdir -p $RPM_BUILD_ROOT/usr/lib
 mkdir -p $RPM_BUILD_ROOT/usr/include
-make install prefix=$RPM_BUILD_ROOT/usr
+make install DESTDIR=$RPM_BUILD_ROOT prefix=/usr
 install -D xmlwf/xmlwf $RPM_BUILD_ROOT/usr/bin/xmlwf
 
 %files
@@ -35,8 +35,9 @@ install -D xmlwf/xmlwf $RPM_BUILD_ROOT/usr/bin/xmlwf
 /usr/bin/xmlwf
 /usr/lib
 /usr/include/expat.h
+/usr/include/expat_config.h
 /usr/include/expat_external.h
-/usr/man/man1/xmlwf.1.gz
+/usr/share/man/man1/xmlwf.1.gz
 
 %changelog
 * Sat Mar 3 2012 Karl Waclawek <karl@waclawek.net>
