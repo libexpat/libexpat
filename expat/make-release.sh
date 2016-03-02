@@ -7,9 +7,6 @@
 # Note: tagname may be HEAD to just grab the head revision (e.g. for testing)
 #
 
-#CVSROOT=':ext:cvs.libexpat.org:/cvsroot/expat'
-CVSROOT=':pserver:anonymous@expat.cvs.sourceforge.net:/cvsroot/expat'
-
 if test $# != 1; then
   echo "USAGE: $0 tagname"
   exit 1
@@ -22,7 +19,8 @@ if test -e $tmpdir; then
 fi
 
 echo "Checking out into temporary area: $tmpdir"
-cvs -fq -d "$CVSROOT" export -r "$1" -d $tmpdir expat || exit 1
+mkdir -p "${tmpdir}" || exit 1
+git archive --format=tar -o /dev/stdout "$1" | ( cd $tmpdir && tar xf -) || exit 1
 
 echo ""
 echo "----------------------------------------------------------------------"
