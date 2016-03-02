@@ -1,3 +1,17 @@
+Release 2.1.1 TODO_FILL_DATE
+        Security fixes:
+            #582: CVE-2015-1283 - Multiple integer overflows in XML_GetBuffer
+
+        Bug fixes:
+            #520: Symbol XML_SetHashSalt was not exported
+            Output of "xmlwf -h" was incomplete
+
+        Other changes
+            #503: Document behavior of calling XML_SetHashSalt with salt 0
+            Minor improvements to man page xmlwf(1)
+            Improvements to the experimental CMake build system
+            libtool now invoked with --verbose
+
 Release 2.1.0 Sat March 24 2012
         - Bug Fixes:
           #1742315: Harmful XML_ParserCreateNS suggestion.

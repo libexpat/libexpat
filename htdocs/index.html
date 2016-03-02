@@ -51,6 +51,32 @@ of Expat.</p>
 <h3 id="news">News</h3>
 
 <dl>
+  <dt><em>TODO_FILL_DATE</em>,
+      Expat 2.1.1 released.
+    </dt>
+  <dd><p>Release 2.1.1 includes security &amp; other bug fixes.</p>
+    <h4>Security fixes</h4>
+    <ul>
+      <li><a href="https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2015-1283">CVE-2015-1283</a>
+      &mdash;
+      Multiple integer overflows in the <code>XML_GetBuffer</code> function
+      (<a href="https://sourceforge.net/p/expat/bugs/528/">bug 528</a>)</li>
+    </ul>
+    <h4>Bug fixes</h4>
+    <ul>
+      <li>Symbol <code>XML_SetHashSalt</code> was not exported
+      (<a href="https://sourceforge.net/p/expat/bugs/520/">bug 520</a>)</li>
+      <li>Output of <code>xmlwf -h</code> was incomplete</li>
+    </ul>
+    <h4>Other changes</h4>
+    <ul>
+      <li>Document behavior of calling <code>XML_SetHashSalt</code> with salt <code>0</code>
+      (<a href="https://sourceforge.net/p/expat/bugs/503/">bug 503</a>)</li>
+      <li>Minor improvements to man page <code>xmlwf(1)</code></li>
+      <li>Improvements to the <em>experimental</em> CMake build system</li>
+      <li>libtool now invoked with <code>--verbose</code></li>
+    </ul>
+  </dd>
   <dt><em>24 March 2012</em>,
       Expat 2.1.0 released.
     </dt>
