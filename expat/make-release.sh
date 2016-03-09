@@ -24,8 +24,9 @@ git archive --format=tar -o /dev/stdout "$1" | ( cd $tmpdir && tar xf -) || exit
 
 echo ""
 echo "----------------------------------------------------------------------"
-echo "Preparing $tmpdir for release (running buildconf.sh)"
+echo "Preparing $tmpdir for release"
 (cd $tmpdir && ./buildconf.sh) || exit 1
+(make -C $tmpdir/doc xmlwf.1) || exit 1
 
 # figure out the release version
 vsn="`$tmpdir/conftools/get-version.sh $tmpdir/lib/expat.h`"
