@@ -286,8 +286,7 @@ supports both.
   This gives a fairly accurate idea of the raw speed of Expat itself
   without client overhead.
   <option>-t</option> turns off most of the output options
-  (<option>-d</option>, <option>-m</option>, <option>-c</option>,
-  ...).
+  (<option>-d</option>, <option>-m</option>, <option>-c</option>, ...).
 	   </para>
         </listitem>
       </varlistentry>
