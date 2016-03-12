@@ -67,9 +67,9 @@ echo "----------------------------------------------------------------------"
 echo "Removing (temporary) checkout directory..."
 rm -rf $tmpdir
 
-tarball=$distdir.tar.gz
+tarball=$distdir.tar.bz2
 echo "Constructing $tarball..."
-tar cf - $distdir | gzip -9 > $tarball || exit $?
+tar cf - $distdir | bzip2 -9 > $tarball || exit $?
 rm -r $distdir
 
 echo "Done."
