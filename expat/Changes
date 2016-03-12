@@ -1,4 +1,4 @@
-Release 2.1.1 TODO_FILL_DATE
+Release 2.1.1 Sat March 12 2016
         Security fixes:
             #582: CVE-2015-1283 - Multiple integer overflows in XML_GetBuffer
 
