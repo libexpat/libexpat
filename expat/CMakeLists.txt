@@ -50,14 +50,16 @@ set(expat_SRCS
     lib/xmltok_ns.c
 )
 
-if(WIN32 AND BUILD_shared)
-    set(expat_SRCS ${expat_SRCS} lib/libexpat.def)
-endif(WIN32 AND BUILD_shared)
-
 if(BUILD_shared)
     set(_SHARED SHARED)
+    if(WIN32)
+        set(expat_SRCS ${expat_SRCS} lib/libexpat.def)
+    endif(WIN32)
 else(BUILD_shared)
     set(_SHARED STATIC)
+    if(WIN32)
+        add_definitions(-DXML_STATIC)
+    endif(WIN32)
 endif(BUILD_shared)
 
 add_library(expat ${_SHARED} ${expat_SRCS})
