@@ -6,7 +6,9 @@
 #include <string.h>                     /* memset(), memcpy() */
 #include <assert.h>
 #include <limits.h>                     /* UINT_MAX */
-#include <time.h>                       /* time() */
+#include <sys/time.h>                   /* gettimeofday() */
+#include <sys/types.h>                  /* getpid() */
+#include <unistd.h>                     /* getpid() */
 
 #define XML_BUILDING_EXPAT 1
 
@@ -693,9 +695,16 @@ static const XML_Char implicitContext[] = {
 static unsigned long
 generate_hash_secret_salt(void)
 {
-  unsigned int seed = time(NULL) % UINT_MAX;
-  srand(seed);
-  return rand();
+  struct timeval tv;
+  int gettimeofday_res;
+
+  gettimeofday_res = gettimeofday(&tv, NULL);
+  assert (gettimeofday_res == 0);
+
+  /* Microseconds time is <20 bits entropy
+   * Process ID is 0 bits entropy if attacker has local access
+   * Factor is 2^61-1 (Mersenne prime M61) */
+  return (tv.tv_usec ^ getpid()) * 2305843009213693951;
 }
 
 static XML_Bool  /* only valid for root parser */
