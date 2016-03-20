@@ -693,7 +693,7 @@ static const XML_Char implicitContext[] = {
 };
 
 static unsigned long
-generate_hash_secret_salt(void)
+gather_time_entropy(void)
 {
   struct timeval tv;
   int gettimeofday_res;
@@ -701,10 +701,16 @@ generate_hash_secret_salt(void)
   gettimeofday_res = gettimeofday(&tv, NULL);
   assert (gettimeofday_res == 0);
 
-  /* Microseconds time is <20 bits entropy
-   * Process ID is 0 bits entropy if attacker has local access
+  /* Microseconds time is <20 bits entropy */
+  return tv.tv_usec;
+}
+
+static unsigned long
+generate_hash_secret_salt(void)
+{
+  /* Process ID is 0 bits entropy if attacker has local access
    * Factor is 2^61-1 (Mersenne prime M61) */
-  return (tv.tv_usec ^ getpid()) * 2305843009213693951;
+  return (gather_time_entropy() ^ getpid()) * 2305843009213693951;
 }
 
 static XML_Bool  /* only valid for root parser */
