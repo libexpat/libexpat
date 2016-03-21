@@ -434,7 +434,7 @@ static ELEMENT_TYPE *
 getElementType(XML_Parser parser, const ENCODING *enc,
                const char *ptr, const char *end);
 
-static unsigned long generate_hash_secret_salt(void);
+static unsigned long generate_hash_secret_salt(XML_Parser parser);
 static XML_Bool startParsing(XML_Parser parser);
 
 static XML_Parser
@@ -706,11 +706,12 @@ gather_time_entropy(void)
 }
 
 static unsigned long
-generate_hash_secret_salt(void)
+generate_hash_secret_salt(XML_Parser parser)
 {
   /* Process ID is 0 bits entropy if attacker has local access
+   * XML_Parser address is few bits of entropy if attacker has local access
    * Factor is 2^61-1 (Mersenne prime M61) */
-  return (gather_time_entropy() ^ getpid()) * 2305843009213693951;
+  return (gather_time_entropy() ^ getpid() ^ (unsigned long)parser) * 2305843009213693951;
 }
 
 static XML_Bool  /* only valid for root parser */
@@ -718,7 +719,7 @@ startParsing(XML_Parser parser)
 {
     /* hash functions must be initialized before setContext() is called */
     if (hash_secret_salt == 0)
-      hash_secret_salt = generate_hash_secret_salt();
+      hash_secret_salt = generate_hash_secret_salt(parser);
     if (ns) {
       /* implicit context only set for root parser, since child
          parsers (i.e. external entity parsers) will inherit it
