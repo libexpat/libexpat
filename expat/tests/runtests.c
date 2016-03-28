@@ -69,8 +69,8 @@ _xml_failure(XML_Parser parser, const char *file, int line)
 #define xml_failure(parser) _xml_failure((parser), __FILE__, __LINE__)
 
 static void
-_expect_failure(char *text, enum XML_Error errorCode, char *errorMessage,
-                char *file, int lineno)
+_expect_failure(const char *text, enum XML_Error errorCode, const char *errorMessage,
+                const char *file, int lineno)
 {
     if (XML_Parse(parser, text, strlen(text), XML_TRUE) == XML_STATUS_OK)
         /* Hackish use of _fail_unless() macro, but let's us report
@@ -178,7 +178,7 @@ END_TEST
 START_TEST(test_bom_utf8)
 {
     /* This test is really just making sure we don't core on a UTF-8 BOM. */
-    char *text = "\357\273\277<e/>";
+    const char *text = "\357\273\277<e/>";
 
     if (XML_Parse(parser, text, strlen(text), XML_TRUE) == XML_STATUS_ERROR)
         xml_failure(parser);
@@ -222,7 +222,7 @@ accumulate_attribute(void *userData, const XML_Char *name,
 
 
 static void
-_run_character_check(XML_Char *text, XML_Char *expected,
+_run_character_check(const XML_Char *text, const XML_Char *expected,
                      const char *file, int line)
 {
     CharData storage;
@@ -239,7 +239,7 @@ _run_character_check(XML_Char *text, XML_Char *expected,
         _run_character_check(text, expected, __FILE__, __LINE__)
 
 static void
-_run_attribute_check(XML_Char *text, XML_Char *expected,
+_run_attribute_check(const XML_Char *text, const XML_Char *expected,
                      const char *file, int line)
 {
     CharData storage;
@@ -258,7 +258,7 @@ _run_attribute_check(XML_Char *text, XML_Char *expected,
 /* Regression test for SF bug #491986. */
 START_TEST(test_danish_latin1)
 {
-    char *text =
+    const char *text =
         "<?xml version='1.0' encoding='iso-8859-1'?>\n"
         "<e>J\xF8rgen \xE6\xF8\xE5\xC6\xD8\xC5</e>";
     run_character_check(text,
@@ -270,7 +270,7 @@ END_TEST
 /* Regression test for SF bug #514281. */
 START_TEST(test_french_charref_hexidecimal)
 {
-    char *text =
+    const char *text =
         "<?xml version='1.0' encoding='iso-8859-1'?>\n"
         "<doc>&#xE9;&#xE8;&#xE0;&#xE7;&#xEA;&#xC8;</doc>";
     run_character_check(text,
@@ -280,7 +280,7 @@ END_TEST
 
 START_TEST(test_french_charref_decimal)
 {
-    char *text =
+    const char *text =
         "<?xml version='1.0' encoding='iso-8859-1'?>\n"
         "<doc>&#233;&#232;&#224;&#231;&#234;&#200;</doc>";
     run_character_check(text,
@@ -290,7 +290,7 @@ END_TEST
 
 START_TEST(test_french_latin1)
 {
-    char *text =
+    const char *text =
         "<?xml version='1.0' encoding='iso-8859-1'?>\n"
         "<doc>\xE9\xE8\xE0\xE7\xEa\xC8</doc>";
     run_character_check(text,
@@ -300,7 +300,7 @@ END_TEST
 
 START_TEST(test_french_utf8)
 {
-    char *text =
+    const char *text =
         "<?xml version='1.0' encoding='utf-8'?>\n"
         "<doc>\xC3\xA9</doc>";
     run_character_check(text, "\xC3\xA9");
@@ -314,7 +314,7 @@ END_TEST
 */
 START_TEST(test_utf8_false_rejection)
 {
-    char *text = "<doc>\xEF\xBA\xBF</doc>";
+    const char *text = "<doc>\xEF\xBA\xBF</doc>";
     run_character_check(text, "\xEF\xBA\xBF");
 }
 END_TEST
@@ -389,11 +389,11 @@ END_TEST
 /* Regression test for SF bug #481609, #774028. */
 START_TEST(test_latin1_umlauts)
 {
-    char *text =
+    const char *text =
         "<?xml version='1.0' encoding='iso-8859-1'?>\n"
         "<e a='\xE4 \xF6 \xFC &#228; &#246; &#252; &#x00E4; &#x0F6; &#xFC; >'\n"
         "  >\xE4 \xF6 \xFC &#228; &#246; &#252; &#x00E4; &#x0F6; &#xFC; ></e>";
-    char *utf8 =
+    const char *utf8 =
         "\xC3\xA4 \xC3\xB6 \xC3\xBC "
         "\xC3\xA4 \xC3\xB6 \xC3\xBC "
         "\xC3\xA4 \xC3\xB6 \xC3\xBC >";
@@ -406,7 +406,7 @@ END_TEST
 /* Regression test #1 for SF bug #653180. */
 START_TEST(test_line_number_after_parse)
 {  
-    char *text =
+    const char *text =
         "<tag>\n"
         "\n"
         "\n</tag>";
@@ -427,7 +427,7 @@ END_TEST
 /* Regression test #2 for SF bug #653180. */
 START_TEST(test_column_number_after_parse)
 {
-    char *text = "<tag></tag>";
+    const char *text = "<tag></tag>";
     XML_Size colno;
 
     if (XML_Parse(parser, text, strlen(text), XML_FALSE) == XML_STATUS_ERROR)
@@ -474,7 +474,7 @@ end_element_event_handler2(void *userData, const XML_Char *name)
 /* Regression test #3 for SF bug #653180. */
 START_TEST(test_line_and_column_numbers_inside_handlers)
 {
-    char *text =
+    const char *text =
         "<a>\n"        /* Unix end-of-line */
         "  <b>\r\n"    /* Windows end-of-line */
         "    <c/>\r"   /* Mac OS end-of-line */
@@ -483,7 +483,7 @@ START_TEST(test_line_and_column_numbers_inside_handlers)
         "    <f/>\n"
         "  </d>\n"
         "</a>";
-    char *expected =
+    const char *expected =
         "<a> at col:0 line:1\n"
         "<b> at col:2 line:2\n"
         "<c> at col:4 line:3\n"
@@ -510,7 +510,7 @@ END_TEST
 /* Regression test #4 for SF bug #653180. */
 START_TEST(test_line_number_after_error)
 {
-    char *text =
+    const char *text =
         "<a>\n"
         "  <b>\n"
         "  </a>";  /* missing </b> */
@@ -530,7 +530,7 @@ END_TEST
 /* Regression test #5 for SF bug #653180. */
 START_TEST(test_column_number_after_error)
 {
-    char *text =
+    const char *text =
         "<a>\n"
         "  <b>\n"
         "  </a>";  /* missing </b> */
@@ -556,7 +556,7 @@ START_TEST(test_really_long_lines)
        really cheesy approach to building the input buffer, because
        this avoids writing bugs in buffer-filling code.
     */
-    char *text =
+    const char *text =
         "<e>"
         /* 64 chars */
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-+"
@@ -598,8 +598,8 @@ end_element_event_handler(void *userData, const XML_Char *name)
 
 START_TEST(test_end_element_events)
 {
-    char *text = "<a><b><c/></b><d><f/></d></a>";
-    char *expected = "/c/b/f/d/a";
+    const char *text = "<a><b><c/></b><d><f/></d></a>";
+    const char *expected = "/c/b/f/d/a";
     CharData storage;
 
     CharData_Init(&storage);
@@ -702,7 +702,7 @@ check_attr_contains_normalized_whitespace(void *userData,
 
 START_TEST(test_attr_whitespace_normalization)
 {
-    char *text =
+    const char *text =
         "<!DOCTYPE doc [\n"
         "  <!ATTLIST doc\n"
         "            attr NMTOKENS #REQUIRED\n"
@@ -756,7 +756,7 @@ UnknownEncodingHandler(void *data,const XML_Char *encoding,XML_Encoding *info)
 
 START_TEST(test_unknown_encoding_internal_entity)
 {
-    char *text =
+    const char *text =
         "<?xml version='1.0' encoding='unsupported-encoding'?>\n"
         "<!DOCTYPE test [<!ENTITY foo 'bar'>]>\n"
         "<test a='&foo;'/>";
@@ -778,7 +778,7 @@ external_entity_loader_set_encoding(XML_Parser parser,
     /* This text says it's an unsupported encoding, but it's really
        UTF-8, which we tell Expat using XML_SetEncoding().
     */
-    char *text =
+    const char *text =
         "<?xml encoding='iso-8859-3'?>"
         "\xC3\xA9";
     XML_Parser extparser;
@@ -798,7 +798,7 @@ external_entity_loader_set_encoding(XML_Parser parser,
 
 START_TEST(test_ext_entity_set_encoding)
 {
-    char *text =
+    const char *text =
         "<!DOCTYPE doc [\n"
         "  <!ENTITY en SYSTEM 'http://xml.libexpat.org/dummy.ent'>\n"
         "]>\n"
@@ -814,7 +814,7 @@ END_TEST
    read an external subset.  This was fixed in Expat 1.95.5.
 */
 START_TEST(test_wfc_undeclared_entity_unread_external_subset) {
-    char *text =
+    const char *text =
         "<!DOCTYPE doc SYSTEM 'foo'>\n"
         "<doc>&entity;</doc>";
 
@@ -837,7 +837,7 @@ END_TEST
    read an external subset, but have been declared standalone.
 */
 START_TEST(test_wfc_undeclared_entity_standalone) {
-    char *text =
+    const char *text =
         "<?xml version='1.0' encoding='us-ascii' standalone='yes'?>\n"
         "<!DOCTYPE doc SYSTEM 'foo'>\n"
         "<doc>&entity;</doc>";
@@ -873,11 +873,11 @@ external_entity_loader(XML_Parser parser,
    an external subset, and standalone is true.
 */
 START_TEST(test_wfc_undeclared_entity_with_external_subset_standalone) {
-    char *text =
+    const char *text =
         "<?xml version='1.0' encoding='us-ascii' standalone='yes'?>\n"
         "<!DOCTYPE doc SYSTEM 'foo'>\n"
         "<doc>&entity;</doc>";
-    char *foo_text =
+    char foo_text[] =
         "<!ELEMENT doc (#PCDATA)*>";
 
     XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
@@ -893,11 +893,11 @@ END_TEST
    an external subset, and standalone is false.
 */
 START_TEST(test_wfc_undeclared_entity_with_external_subset) {
-    char *text =
+    const char *text =
         "<?xml version='1.0' encoding='us-ascii'?>\n"
         "<!DOCTYPE doc SYSTEM 'foo'>\n"
         "<doc>&entity;</doc>";
-    char *foo_text =
+    char foo_text[] =
         "<!ELEMENT doc (#PCDATA)*>";
 
     XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
@@ -910,7 +910,7 @@ END_TEST
 
 START_TEST(test_wfc_no_recursive_entity_refs)
 {
-    char *text =
+    const char *text =
         "<!DOCTYPE doc [\n"
         "  <!ENTITY entity '&#38;entity;'>\n"
         "]>\n"
@@ -925,7 +925,7 @@ END_TEST
 /* Regression test for SF bug #483514. */
 START_TEST(test_dtd_default_handling)
 {
-    char *text =
+    const char *text =
         "<!DOCTYPE doc [\n"
         "<!ENTITY e SYSTEM 'http://xml.libexpat.org/e'>\n"
         "<!NOTATION n SYSTEM 'http://xml.libexpat.org/n'>\n"
@@ -957,7 +957,7 @@ END_TEST
 */
 START_TEST(test_empty_ns_without_namespaces)
 {
-    char *text =
+    const char *text =
         "<doc xmlns:prefix='http://www.example.com/'>\n"
         "  <e xmlns:prefix=''/>\n"
         "</doc>";
@@ -973,7 +973,7 @@ END_TEST
 */
 START_TEST(test_ns_in_attribute_default_without_namespaces)
 {
-    char *text =
+    const char *text =
         "<!DOCTYPE e:element [\n"
         "  <!ATTLIST e:element\n"
         "    xmlns:e CDATA 'http://example.com/'>\n"
@@ -985,7 +985,7 @@ START_TEST(test_ns_in_attribute_default_without_namespaces)
 }
 END_TEST
 
-static char *long_character_data_text =
+static const char *long_character_data_text =
     "<?xml version='1.0' encoding='iso-8859-1'?><s>"
     "012345678901234567890123456789012345678901234567890123456789"
     "012345678901234567890123456789012345678901234567890123456789"
@@ -1029,7 +1029,7 @@ START_TEST(test_stop_parser_between_char_data_calls)
        handler must stop the parser and clear the character data
        handler.
     */
-    char *text = long_character_data_text;
+    const char *text = long_character_data_text;
 
     XML_SetCharacterDataHandler(parser, clearing_aborting_character_handler);
     resumable = XML_FALSE;
@@ -1050,7 +1050,7 @@ START_TEST(test_suspend_parser_between_char_data_calls)
        handler must stop the parser and clear the character data
        handler.
     */
-    char *text = long_character_data_text;
+    const char *text = long_character_data_text;
 
     XML_SetCharacterDataHandler(parser, clearing_aborting_character_handler);
     resumable = XML_TRUE;
@@ -1118,10 +1118,10 @@ triplet_end_checker(void *userData, const XML_Char *name)
 
 START_TEST(test_return_ns_triplet)
 {
-    char *text =
+    const char *text =
         "<foo:e xmlns:foo='http://expat.sf.net/' bar:a='12'\n"
         "       xmlns:bar='http://expat.sf.net/'></foo:e>";
-    char *elemstr[] = {
+    const char *elemstr[] = {
         "http://expat.sf.net/ e foo",
         "http://expat.sf.net/ a bar"
     };
@@ -1158,7 +1158,7 @@ overwrite_end_checker(void *userData, const XML_Char *name)
 }
 
 static void
-run_ns_tagname_overwrite_test(char *text, char *result)
+run_ns_tagname_overwrite_test(const char *text, const char *result)
 {
     CharData storage;
     CharData_Init(&storage);
@@ -1173,12 +1173,12 @@ run_ns_tagname_overwrite_test(char *text, char *result)
 /* Regression test for SF bug #566334. */
 START_TEST(test_ns_tagname_overwrite)
 {
-    char *text =
+    const char *text =
         "<n:e xmlns:n='http://xml.libexpat.org/'>\n"
         "  <n:f n:attr='foo'/>\n"
         "  <n:g n:attr2='bar'/>\n"
         "</n:e>";
-    char *result =
+    const char *result =
         "start http://xml.libexpat.org/ e\n"
         "start http://xml.libexpat.org/ f\n"
         "attribute http://xml.libexpat.org/ attr\n"
@@ -1194,12 +1194,12 @@ END_TEST
 /* Regression test for SF bug #566334. */
 START_TEST(test_ns_tagname_overwrite_triplet)
 {
-    char *text =
+    const char *text =
         "<n:e xmlns:n='http://xml.libexpat.org/'>\n"
         "  <n:f n:attr='foo'/>\n"
         "  <n:g n:attr2='bar'/>\n"
         "</n:e>";
-    char *result =
+    const char *result =
         "start http://xml.libexpat.org/ e n\n"
         "start http://xml.libexpat.org/ f n\n"
         "attribute http://xml.libexpat.org/ attr n\n"
@@ -1237,7 +1237,7 @@ START_TEST(test_start_ns_clears_start_element)
        syntax doesn't cause the problematic path through Expat to be
        taken.
     */
-    char *text = "<e xmlns='http://xml.libexpat.org/'></e>";
+    const char *text = "<e xmlns='http://xml.libexpat.org/'></e>";
 
     XML_SetStartElementHandler(parser, start_element_fail);
     XML_SetStartNamespaceDeclHandler(parser, start_ns_clearing_start_element);
@@ -1256,7 +1256,7 @@ external_entity_handler(XML_Parser parser,
                         const XML_Char *publicId) 
 {
     intptr_t callno = 1 + (intptr_t)XML_GetUserData(parser);
-    char *text;
+    const char *text;
     XML_Parser p2;
 
     if (callno == 1)
@@ -1279,7 +1279,7 @@ external_entity_handler(XML_Parser parser,
 
 START_TEST(test_default_ns_from_ext_subset_and_ext_ge)
 {
-    char *text =
+    const char *text =
         "<?xml version='1.0'?>\n"
         "<!DOCTYPE doc SYSTEM 'http://xml.libexpat.org/doc.dtd' [\n"
         "  <!ENTITY en SYSTEM 'http://xml.libexpat.org/entity.ent'>\n"
@@ -1301,7 +1301,7 @@ END_TEST
 /* Regression test #1 for SF bug #673791. */
 START_TEST(test_ns_prefix_with_empty_uri_1)
 {
-    char *text =
+    const char *text =
         "<doc xmlns:prefix='http://xml.libexpat.org/'>\n"
         "  <e xmlns:prefix=''/>\n"
         "</doc>";
@@ -1316,7 +1316,7 @@ END_TEST
 /* Regression test #2 for SF bug #673791. */
 START_TEST(test_ns_prefix_with_empty_uri_2)
 {
-    char *text =
+    const char *text =
         "<?xml version='1.0'?>\n"
         "<docelem xmlns:pre=''/>";
 
@@ -1329,7 +1329,7 @@ END_TEST
 /* Regression test #3 for SF bug #673791. */
 START_TEST(test_ns_prefix_with_empty_uri_3)
 {
-    char *text =
+    const char *text =
         "<!DOCTYPE doc [\n"
         "  <!ELEMENT doc EMPTY>\n"
         "  <!ATTLIST doc\n"
@@ -1346,7 +1346,7 @@ END_TEST
 /* Regression test #4 for SF bug #673791. */
 START_TEST(test_ns_prefix_with_empty_uri_4)
 {
-    char *text =
+    const char *text =
         "<!DOCTYPE doc [\n"
         "  <!ELEMENT prefix:doc EMPTY>\n"
         "  <!ATTLIST prefix:doc\n"
@@ -1356,7 +1356,7 @@ START_TEST(test_ns_prefix_with_empty_uri_4)
     /* Packaged info expected by the end element handler;
        the weird structuring lets us re-use the triplet_end_checker()
        function also used for another test. */
-    char *elemstr[] = {
+    const char *elemstr[] = {
         "http://xml.libexpat.org/ doc prefix"
     };
     XML_SetReturnNSTriplet(parser, XML_TRUE);
@@ -1369,7 +1369,7 @@ END_TEST
 
 START_TEST(test_ns_default_with_empty_uri)
 {
-    char *text =
+    const char *text =
         "<doc xmlns='http://xml.libexpat.org/'>\n"
         "  <e xmlns=''/>\n"
         "</doc>";
@@ -1381,7 +1381,7 @@ END_TEST
 /* Regression test for SF bug #692964: two prefixes for one namespace. */
 START_TEST(test_ns_duplicate_attrs_diff_prefixes)
 {
-    char *text =
+    const char *text =
         "<doc xmlns:a='http://xml.libexpat.org/a'\n"
         "     xmlns:b='http://xml.libexpat.org/a'\n"
         "     a:a='v' b:a='v' />";
@@ -1394,7 +1394,7 @@ END_TEST
 /* Regression test for SF bug #695401: unbound prefix. */
 START_TEST(test_ns_unbound_prefix_on_attribute)
 {
-    char *text = "<doc a:attr=''/>";
+    const char *text = "<doc a:attr=''/>";
     expect_failure(text,
                    XML_ERROR_UNBOUND_PREFIX,
                    "did not report unbound prefix on attribute");
@@ -1404,7 +1404,7 @@ END_TEST
 /* Regression test for SF bug #695401: unbound prefix. */
 START_TEST(test_ns_unbound_prefix_on_element)
 {
-    char *text = "<a:doc/>";
+    const char *text = "<a:doc/>";
     expect_failure(text,
                    XML_ERROR_UNBOUND_PREFIX,
                    "did not report unbound prefix on element");

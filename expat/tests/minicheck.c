@@ -13,7 +13,7 @@
 #include "minicheck.h"
 
 Suite *
-suite_create(char *name)
+suite_create(const char *name)
 {
     Suite *suite = (Suite *) calloc(1, sizeof(Suite));
     if (suite != NULL) {
@@ -23,7 +23,7 @@ suite_create(char *name)
 }
 
 TCase *
-tcase_create(char *name)
+tcase_create(const char *name)
 {
     TCase *tc = (TCase *) calloc(1, sizeof(TCase));
     if (tc != NULL) {
@@ -156,7 +156,7 @@ srunner_run_all(SRunner *runner, int verbosity)
 }
 
 void
-_fail_unless(int condition, const char *file, int line, char *msg)
+_fail_unless(int condition, const char *file, int line, const char *msg)
 {
     /* Always print the error message so it isn't lost.  In this case,
        we have a failure, so there's no reason to be quiet about what
