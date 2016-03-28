@@ -695,6 +695,11 @@ static const XML_Char implicitContext[] = {
 static unsigned long
 gather_time_entropy(void)
 {
+#ifdef COMPILING_FOR_WINDOWS
+  FILETIME ft;
+  GetSystemTimeAsFileTime(&ft); /* never fails */
+  return ft.dwHighDateTime ^ ft.dwLowDateTime;
+#else
   struct timeval tv;
   int gettimeofday_res;
 
@@ -703,6 +708,7 @@ gather_time_entropy(void)
 
   /* Microseconds time is <20 bits entropy */
   return tv.tv_usec;
+#endif
 }
 
 static unsigned long
