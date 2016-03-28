@@ -12,7 +12,7 @@
 
 #define XML_BUILDING_EXPAT 1
 
-#ifdef COMPILED_FROM_DSP
+#ifdef COMPILING_FOR_WINDOWS
 #include "winconfig.h"
 #elif defined(MACOS_CLASSIC)
 #include "macconfig.h"
@@ -22,7 +22,7 @@
 #include "watcomconfig.h"
 #elif defined(HAVE_EXPAT_CONFIG_H)
 #include <expat_config.h>
-#endif /* ndef COMPILED_FROM_DSP */
+#endif /* ndef COMPILING_FOR_WINDOWS */
 
 #include "ascii.h"
 #include "expat.h"
