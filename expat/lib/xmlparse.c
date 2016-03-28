@@ -6,11 +6,18 @@
 #include <string.h>                     /* memset(), memcpy() */
 #include <assert.h>
 #include <limits.h>                     /* UINT_MAX */
-#include <time.h>                       /* time() */
+
+#ifdef COMPILING_FOR_WINDOWS
+#define getpid GetCurrentProcessId
+#else
+#include <sys/time.h>                   /* gettimeofday() */
+#include <sys/types.h>                  /* getpid() */
+#include <unistd.h>                     /* getpid() */
+#endif
 
 #define XML_BUILDING_EXPAT 1
 
-#ifdef COMPILED_FROM_DSP
+#ifdef COMPILING_FOR_WINDOWS
 #include "winconfig.h"
 #elif defined(MACOS_CLASSIC)
 #include "macconfig.h"
@@ -20,7 +27,7 @@
 #include "watcomconfig.h"
 #elif defined(HAVE_EXPAT_CONFIG_H)
 #include <expat_config.h>
-#endif /* ndef COMPILED_FROM_DSP */
+#endif /* ndef COMPILING_FOR_WINDOWS */
 
 #include "ascii.h"
 #include "expat.h"
@@ -432,7 +439,7 @@ static ELEMENT_TYPE *
 getElementType(XML_Parser parser, const ENCODING *enc,
                const char *ptr, const char *end);
 
-static unsigned long generate_hash_secret_salt(void);
+static unsigned long generate_hash_secret_salt(XML_Parser parser);
 static XML_Bool startParsing(XML_Parser parser);
 
 static XML_Parser
@@ -691,11 +698,38 @@ static const XML_Char implicitContext[] = {
 };
 
 static unsigned long
-generate_hash_secret_salt(void)
+gather_time_entropy(void)
 {
-  unsigned int seed = time(NULL) % UINT_MAX;
-  srand(seed);
-  return rand();
+#ifdef COMPILING_FOR_WINDOWS
+  FILETIME ft;
+  GetSystemTimeAsFileTime(&ft); /* never fails */
+  return ft.dwHighDateTime ^ ft.dwLowDateTime;
+#else
+  struct timeval tv;
+  int gettimeofday_res;
+
+  gettimeofday_res = gettimeofday(&tv, NULL);
+  assert (gettimeofday_res == 0);
+
+  /* Microseconds time is <20 bits entropy */
+  return tv.tv_usec;
+#endif
+}
+
+static unsigned long
+generate_hash_secret_salt(XML_Parser parser)
+{
+  /* Process ID is 0 bits entropy if attacker has local access
+   * XML_Parser address is few bits of entropy if attacker has local access */
+  const unsigned long entropy =
+      gather_time_entropy() ^ getpid() ^ (unsigned long)parser;
+
+  /* Factors are 2^31-1 and 2^61-1 (Mersenne primes M31 and M61) */
+  if (sizeof(unsigned long) == 4) {
+    return entropy * 2147483647;
+  } else {
+    return entropy * 2305843009213693951;
+  }
 }
 
 static XML_Bool  /* only valid for root parser */
@@ -703,7 +737,7 @@ startParsing(XML_Parser parser)
 {
     /* hash functions must be initialized before setContext() is called */
     if (hash_secret_salt == 0)
-      hash_secret_salt = generate_hash_secret_salt();
+      hash_secret_salt = generate_hash_secret_salt(parser);
     if (ns) {
       /* implicit context only set for root parser, since child
          parsers (i.e. external entity parsers) will inherit it
