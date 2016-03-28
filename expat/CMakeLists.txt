@@ -41,6 +41,9 @@ include_directories(${CMAKE_BINARY_DIR} ${CMAKE_SOURCE_DIR}/lib)
 if(MSVC)
     add_definitions(-D_CRT_SECURE_NO_WARNINGS -wd4996)
 endif(MSVC)
+if(WIN32)
+    add_definitions(-DCOMPILING_FOR_WINDOWS)
+endif(WIN32)
 
 set(expat_SRCS
     lib/xmlparse.c
