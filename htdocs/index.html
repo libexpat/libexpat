@@ -55,6 +55,27 @@ of Expat.</p>
 <h3 id="news">News</h3>
 
 <dl>
+  <dt><em>???</em>,
+      Expat ??? released.
+    </dt>
+  <dd><p>Release ??? includes security &amp; other bug fixes.</p>
+    <h4>Security fixes</h4>
+    <ul>
+      <li>Use more entropy for hash initialization
+        (<a href="https://sourceforge.net/p/expat/bugs/499/">bug 499</a>)</li>
+      <li>Resolve troublesome internal call to srand
+        (<a href="https://sourceforge.net/p/expat/bugs/519/">bug 519</a>)</li>
+    </ul>
+    <h4>Other changes</h4>
+    <ul>
+      <li>Fix compilation for Visual Studio 2010
+        (<a href="https://sourceforge.net/p/expat/bugs/532/">bug 532</a>)</li>
+      <li>Fix static build (<code>BUILD_shared=OFF</code>) with CMake on Windows
+        (<a href="https://sourceforge.net/p/expat/patches/90/">patch 90</a>)</li>
+      <li>Remove executable flag from source files</li>
+      <li>Address some compile warnings</li>
+    <ul>
+  </dd>
   <dt><em>12 March 2016</em>,
       Expat 2.1.1 released.
     </dt>

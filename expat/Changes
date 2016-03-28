@@ -1,3 +1,14 @@
+Release ??? ???
+        Security fixes:
+            #499: Use more entropy for hash initialization
+            #519: Resolve troublesome internal call to srand
+
+        Other changes:
+            #532: Fix compilation for Visual Studio 2010
+            p90: Fix static build (BUILD_shared=OFF) with CMake on Windows
+            Remove executable flag from source files
+            Address some compile warnings
+
 Release 2.1.1 Sat March 12 2016
         Security fixes:
             #582: CVE-2015-1283 - Multiple integer overflows in XML_GetBuffer
@@ -7,7 +18,7 @@ Release 2.1.1 Sat March 12 2016
             #520: Symbol XML_SetHashSalt was not exported
             Output of "xmlwf -h" was incomplete
 
-        Other changes
+        Other changes:
             #503: Document behavior of calling XML_SetHashSalt with salt 0
             Minor improvements to man page xmlwf(1)
             Improvements to the experimental CMake build system
