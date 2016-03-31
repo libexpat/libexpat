@@ -1082,6 +1082,101 @@ START_TEST(test_suspend_parser_between_char_data_calls)
 }
 END_TEST
 
+START_TEST(test_good_cdata_ascii)
+{
+    const char *text = "<a><![CDATA[<greeting>Hello, world!</greeting>]]></a>";
+    const char *expected = "<greeting>Hello, world!</greeting>";
+
+    CharData storage;
+    CharData_Init(&storage);
+    XML_SetUserData(parser, &storage);
+    XML_SetCharacterDataHandler(parser, accumulate_characters);
+
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text), XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+    CharData_CheckXMLChars(&storage, expected);
+}
+END_TEST
+
+START_TEST(test_good_cdata_utf16)
+{
+    /* Test data is:
+     *   <?xml version='1.0' encoding='utf-16'?>
+     *   <a><![CDATA[hello]]></a>
+     */
+    const char text[] =
+            "\0<\0?\0x\0m\0l\0"
+                " \0v\0e\0r\0s\0i\0o\0n\0=\0'\0\x31\0.\0\x30\0'\0"
+                " \0e\0n\0c\0o\0d\0i\0n\0g\0=\0'\0u\0t\0f\0-\0""1\0""6\0'"
+                "\0?\0>\0\n"
+            "\0<\0a\0>\0<\0!\0[\0C\0D\0A\0T\0A\0[\0h\0e\0l\0l\0o\0]\0]\0>\0<\0/\0a\0>";
+    const char *expected = "hello";
+
+    CharData storage;
+    CharData_Init(&storage);
+    XML_SetUserData(parser, &storage);
+    XML_SetCharacterDataHandler(parser, accumulate_characters);
+
+    if (_XML_Parse_SINGLE_BYTES(parser, text, sizeof(text) - 1, XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+    CharData_CheckXMLChars(&storage, expected);
+}
+END_TEST
+
+START_TEST(test_bad_cdata)
+{
+    struct CaseData {
+        const char *text;
+        enum XML_Error expectedError;
+    };
+
+    struct CaseData cases[] = {
+        {"<a><", XML_ERROR_UNCLOSED_TOKEN},
+        {"<a><!", XML_ERROR_UNCLOSED_TOKEN},
+        {"<a><![", XML_ERROR_UNCLOSED_TOKEN},
+        {"<a><![C", XML_ERROR_UNCLOSED_TOKEN},
+        {"<a><![CD", XML_ERROR_UNCLOSED_TOKEN},
+        {"<a><![CDA", XML_ERROR_UNCLOSED_TOKEN},
+        {"<a><![CDAT", XML_ERROR_UNCLOSED_TOKEN},
+        {"<a><![CDATA", XML_ERROR_UNCLOSED_TOKEN},
+
+        {"<a><![CDATA[", XML_ERROR_UNCLOSED_CDATA_SECTION},
+        {"<a><![CDATA[]", XML_ERROR_UNCLOSED_CDATA_SECTION},
+        {"<a><![CDATA[]]", XML_ERROR_UNCLOSED_CDATA_SECTION},
+
+        {"<a><!<a/>", XML_ERROR_INVALID_TOKEN},
+        {"<a><![<a/>", XML_ERROR_UNCLOSED_TOKEN}, /* ?! */
+        {"<a><![C<a/>", XML_ERROR_UNCLOSED_TOKEN}, /* ?! */
+        {"<a><![CD<a/>", XML_ERROR_INVALID_TOKEN},
+        {"<a><![CDA<a/>", XML_ERROR_INVALID_TOKEN},
+        {"<a><![CDAT<a/>", XML_ERROR_INVALID_TOKEN},
+        {"<a><![CDATA<a/>", XML_ERROR_INVALID_TOKEN},
+
+        {"<a><![CDATA[<a/>", XML_ERROR_UNCLOSED_CDATA_SECTION},
+        {"<a><![CDATA[]<a/>", XML_ERROR_UNCLOSED_CDATA_SECTION},
+        {"<a><![CDATA[]]<a/>", XML_ERROR_UNCLOSED_CDATA_SECTION}
+    };
+
+    size_t i = 0;
+    for (; i < sizeof(cases) / sizeof(struct CaseData); i++) {
+        const enum XML_Status actualStatus = _XML_Parse_SINGLE_BYTES(
+                parser, cases[i].text, strlen(cases[i].text), XML_TRUE);
+        const enum XML_Error actualError = XML_GetErrorCode(parser);
+
+        assert(actualStatus == XML_STATUS_ERROR);
+
+        if (actualError != cases[i].expectedError) {
+            char message[100];
+            sprintf(message, "Expected error %d but got error %d for case %u: \"%s\"\n",
+                    cases[i].expectedError, actualError, (unsigned int)i + 1, cases[i].text);
+            fail(message);
+        }
+
+        XML_ParserReset(parser, NULL);
+    }
+}
+END_TEST
+
 
 /*
  * Namespaces tests.
@@ -1482,6 +1577,9 @@ make_suite(void)
     tcase_add_test(tc_basic, test_ns_in_attribute_default_without_namespaces);
     tcase_add_test(tc_basic, test_stop_parser_between_char_data_calls);
     tcase_add_test(tc_basic, test_suspend_parser_between_char_data_calls);
+    tcase_add_test(tc_basic, test_good_cdata_ascii);
+    tcase_add_test(tc_basic, test_good_cdata_utf16);
+    tcase_add_test(tc_basic, test_bad_cdata);
 
     suite_add_tcase(s, tc_namespace);
     tcase_add_checked_fixture(tc_namespace,
