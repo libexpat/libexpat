@@ -180,10 +180,10 @@ tests/xmlts.zip:
 	wget --output-document=tests/xmlts.zip \
 		http://www.w3.org/XML/Test/xmlts20080827.zip
 
-tests/XML-Test-Suite: tests/xmlts.zip
+tests/xmlconf: tests/xmlts.zip
 	cd tests && unzip -q xmlts.zip
 
-run-xmltest: xmlwf/xmlwf@EXEEXT@ tests/XML-Test-Suite
+run-xmltest: xmlwf/xmlwf@EXEEXT@ tests/xmlconf
 	tests/xmltest.sh
 
 .SUFFIXES: .c .cpp .lo .@OBJEXT@
