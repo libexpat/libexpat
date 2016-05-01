@@ -184,7 +184,8 @@ tests/xmlconf: tests/xmlts.zip
 	cd tests && unzip -q xmlts.zip
 
 run-xmltest: xmlwf/xmlwf@EXEEXT@ tests/xmlconf
-	tests/xmltest.sh
+	tests/xmltest.sh 2>&1 | tee tests/xmltest.log
+	diff -u tests/xmltest.log.expected tests/xmltest.log
 
 .SUFFIXES: .c .cpp .lo .@OBJEXT@
 
