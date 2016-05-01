@@ -6287,8 +6287,13 @@ poolGrow(STRING_POOL *pool)
     }
   }
   if (pool->blocks && pool->start == pool->blocks->s) {
+    BLOCK *temp;
     int blockSize = (int)(pool->end - pool->start)*2;
-    BLOCK *temp = (BLOCK *)
+
+    if (blockSize < 0)
+      return XML_FALSE;
+
+    temp = (BLOCK *)
       pool->mem->realloc_fcn(pool->blocks,
                              (offsetof(BLOCK, s)
                               + blockSize * sizeof(XML_Char)));
@@ -6303,6 +6308,10 @@ poolGrow(STRING_POOL *pool)
   else {
     BLOCK *tem;
     int blockSize = (int)(pool->end - pool->start);
+
+    if (blockSize < 0)
+      return XML_FALSE;
+
     if (blockSize < INIT_BLOCK_SIZE)
       blockSize = INIT_BLOCK_SIZE;
     else
