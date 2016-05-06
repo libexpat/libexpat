@@ -12,11 +12,11 @@ xmlwf.1: XMLWF.1
 
 XMLWF.1: xmlwf.xml
 	which $(DOCBOOK_TO_MAN)
-	$(DOCBOOK_TO_MAN) $< > $@
+	$(DOCBOOK_TO_MAN) xmlwf.xml > $@
 
 xmlwf.xml: xmlwf.sgml
 	which $(SGML_TO_XML)
-	$(SGML_TO_XML) $< > $@ || true
+	$(SGML_TO_XML) xmlwf.sgml > $@ || true
 	grep -q '^<?xml' $@
 
 .PHONY: clean
