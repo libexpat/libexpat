@@ -157,11 +157,11 @@ xmlwf/xmlwf@EXEEXT@: $(XMLWF_OBJS) $(LIBRARY)
 
 examples/elements.@OBJEXT@: examples/elements.c
 examples/elements: examples/elements.@OBJEXT@ $(LIBRARY)
-	$(LINK_EXE) $< $(LIBRARY)
+	$(LINK_EXE) examples/elements.@OBJEXT@ $(LIBRARY)
 
 examples/outline.@OBJEXT@: examples/outline.c
 examples/outline: examples/outline.@OBJEXT@ $(LIBRARY)
-	$(LINK_EXE) $< $(LIBRARY)
+	$(LINK_EXE) examples/outline.@OBJEXT@ $(LIBRARY)
 
 tests/chardata.@OBJEXT@: tests/chardata.c tests/chardata.h
 tests/minicheck.@OBJEXT@: tests/minicheck.c tests/minicheck.h
