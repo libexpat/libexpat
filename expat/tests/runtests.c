@@ -16,6 +16,7 @@
 
 #include "expat.h"
 #include "chardata.h"
+#include "internal.h"  /* for UNUSED_P only */
 #include "minicheck.h"
 
 #if defined(__amigaos__) && defined(__USE_INLINE__)
@@ -110,63 +111,63 @@ _expect_failure(const char *text, enum XML_Error errorCode, const char *errorMes
 */
 
 static void XMLCALL
-dummy_start_doctype_handler(void           *userData,
-                            const XML_Char *doctypeName,
-                            const XML_Char *sysid,
-                            const XML_Char *pubid,
-                            int            has_internal_subset)
+dummy_start_doctype_handler(void           *UNUSED_P(userData),
+                            const XML_Char *UNUSED_P(doctypeName),
+                            const XML_Char *UNUSED_P(sysid),
+                            const XML_Char *UNUSED_P(pubid),
+                            int            UNUSED_P(has_internal_subset))
 {}
 
 static void XMLCALL
-dummy_end_doctype_handler(void *userData)
+dummy_end_doctype_handler(void *UNUSED_P(userData))
 {}
 
 static void XMLCALL
-dummy_entity_decl_handler(void           *userData,
-                          const XML_Char *entityName,
-                          int            is_parameter_entity,
-                          const XML_Char *value,
-                          int            value_length,
-                          const XML_Char *base,
-                          const XML_Char *systemId,
-                          const XML_Char *publicId,
-                          const XML_Char *notationName)
+dummy_entity_decl_handler(void           *UNUSED_P(userData),
+                          const XML_Char *UNUSED_P(entityName),
+                          int            UNUSED_P(is_parameter_entity),
+                          const XML_Char *UNUSED_P(value),
+                          int            UNUSED_P(value_length),
+                          const XML_Char *UNUSED_P(base),
+                          const XML_Char *UNUSED_P(systemId),
+                          const XML_Char *UNUSED_P(publicId),
+                          const XML_Char *UNUSED_P(notationName))
 {}
 
 static void XMLCALL
-dummy_notation_decl_handler(void *userData,
-                            const XML_Char *notationName,
-                            const XML_Char *base,
-                            const XML_Char *systemId,
-                            const XML_Char *publicId)
+dummy_notation_decl_handler(void *UNUSED_P(userData),
+                            const XML_Char *UNUSED_P(notationName),
+                            const XML_Char *UNUSED_P(base),
+                            const XML_Char *UNUSED_P(systemId),
+                            const XML_Char *UNUSED_P(publicId))
 {}
 
 static void XMLCALL
-dummy_element_decl_handler(void *userData,
-                           const XML_Char *name,
-                           XML_Content *model)
+dummy_element_decl_handler(void *UNUSED_P(userData),
+                           const XML_Char *UNUSED_P(name),
+                           XML_Content *UNUSED_P(model))
 {}
 
 static void XMLCALL
-dummy_attlist_decl_handler(void           *userData,
-                           const XML_Char *elname,
-                           const XML_Char *attname,
-                           const XML_Char *att_type,
-                           const XML_Char *dflt,
-                           int            isrequired)
+dummy_attlist_decl_handler(void           *UNUSED_P(userData),
+                           const XML_Char *UNUSED_P(elname),
+                           const XML_Char *UNUSED_P(attname),
+                           const XML_Char *UNUSED_P(att_type),
+                           const XML_Char *UNUSED_P(dflt),
+                           int            UNUSED_P(isrequired))
 {}
 
 static void XMLCALL
-dummy_comment_handler(void *userData, const XML_Char *data)
+dummy_comment_handler(void *UNUSED_P(userData), const XML_Char *UNUSED_P(data))
 {}
 
 static void XMLCALL
-dummy_pi_handler(void *userData, const XML_Char *target, const XML_Char *data)
+dummy_pi_handler(void *UNUSED_P(userData), const XML_Char *UNUSED_P(target), const XML_Char *UNUSED_P(data))
 {}
 
 static void XMLCALL
-dummy_start_element(void *userData,
-                    const XML_Char *name, const XML_Char **atts)
+dummy_start_element(void *UNUSED_P(userData),
+                    const XML_Char *UNUSED_P(name), const XML_Char **UNUSED_P(atts))
 {}
 
 
@@ -231,7 +232,7 @@ accumulate_characters(void *userData, const XML_Char *s, int len)
 }
 
 static void XMLCALL
-accumulate_attribute(void *userData, const XML_Char *name,
+accumulate_attribute(void *userData, const XML_Char *UNUSED_P(name),
                      const XML_Char **atts)
 {
     CharData *storage = (CharData *)userData;
@@ -465,7 +466,7 @@ END_TEST
 
 static void XMLCALL
 start_element_event_handler2(void *userData, const XML_Char *name,
-			     const XML_Char **attr)
+			     const XML_Char **UNUSED_P(attr))
 {
     CharData *storage = (CharData *) userData;
     char buffer[100];
@@ -700,8 +701,8 @@ testhelper_is_whitespace_normalized(void)
 }
 
 static void XMLCALL
-check_attr_contains_normalized_whitespace(void *userData,
-                                          const XML_Char *name,
+check_attr_contains_normalized_whitespace(void *UNUSED_P(userData),
+                                          const XML_Char *UNUSED_P(name),
                                           const XML_Char **atts)
 {
     int i;
@@ -761,7 +762,7 @@ END_TEST
 
 /* Regression test for SF bug #584832. */
 static int XMLCALL
-UnknownEncodingHandler(void *data,const XML_Char *encoding,XML_Encoding *info)
+UnknownEncodingHandler(void *UNUSED_P(data),const XML_Char *encoding,XML_Encoding *info)
 {
     if (strcmp(encoding,"unsupported-encoding") == 0) {
         int i;
@@ -792,9 +793,9 @@ END_TEST
 static int XMLCALL
 external_entity_loader_set_encoding(XML_Parser parser,
                                     const XML_Char *context,
-                                    const XML_Char *base,
-                                    const XML_Char *systemId,
-                                    const XML_Char *publicId)
+                                    const XML_Char *UNUSED_P(base),
+                                    const XML_Char *UNUSED_P(systemId),
+                                    const XML_Char *UNUSED_P(publicId))
 {
     /* This text says it's an unsupported encoding, but it's really
        UTF-8, which we tell Expat using XML_SetEncoding().
@@ -872,9 +873,9 @@ END_TEST
 static int XMLCALL
 external_entity_loader(XML_Parser parser,
                        const XML_Char *context,
-                       const XML_Char *base,
-                       const XML_Char *systemId,
-                       const XML_Char *publicId)
+                       const XML_Char *UNUSED_P(base),
+                       const XML_Char *UNUSED_P(systemId),
+                       const XML_Char *UNUSED_P(publicId))
 {
     char *text = (char *)XML_GetUserData(parser);
     XML_Parser extparser;
@@ -1033,8 +1034,8 @@ static const char *long_character_data_text =
 static XML_Bool resumable = XML_FALSE;
 
 static void
-clearing_aborting_character_handler(void *userData,
-                                    const XML_Char *s, int len)
+clearing_aborting_character_handler(void *UNUSED_P(userData),
+                                    const XML_Char *UNUSED_P(s), int UNUSED_P(len))
 {
     XML_StopParser(parser, resumable);
     XML_SetCharacterDataHandler(parser, NULL);
@@ -1332,8 +1333,8 @@ END_TEST
 
 /* Regression test for SF bug #620343. */
 static void XMLCALL
-start_element_fail(void *userData,
-                   const XML_Char *name, const XML_Char **atts)
+start_element_fail(void *UNUSED_P(userData),
+                   const XML_Char *UNUSED_P(name), const XML_Char **UNUSED_P(atts))
 {
     /* We should never get here. */
     fail("should never reach start_element_fail()");
@@ -1341,8 +1342,8 @@ start_element_fail(void *userData,
 
 static void XMLCALL
 start_ns_clearing_start_element(void *userData,
-                                const XML_Char *prefix,
-                                const XML_Char *uri)
+                                const XML_Char *UNUSED_P(prefix),
+                                const XML_Char *UNUSED_P(uri))
 {
     XML_SetStartElementHandler((XML_Parser) userData, NULL);
 }
@@ -1367,9 +1368,9 @@ END_TEST
 static int XMLCALL
 external_entity_handler(XML_Parser parser,
                         const XML_Char *context,
-                        const XML_Char *base,
-                        const XML_Char *systemId,
-                        const XML_Char *publicId) 
+                        const XML_Char *UNUSED_P(base),
+                        const XML_Char *UNUSED_P(systemId),
+                        const XML_Char *UNUSED_P(publicId))
 {
     intptr_t callno = 1 + (intptr_t)XML_GetUserData(parser);
     const char *text;

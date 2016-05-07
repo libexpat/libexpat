@@ -175,7 +175,7 @@ PREFIX(scanDecl)(const ENCODING *enc, const char *ptr,
 }
 
 static int PTRCALL
-PREFIX(checkPiTarget)(const ENCODING *enc, const char *ptr,
+PREFIX(checkPiTarget)(const ENCODING *UNUSED_P(enc), const char *ptr,
                       const char *end, int *tokPtr)
 {
   int upper = 0;
@@ -282,7 +282,7 @@ PREFIX(scanPi)(const ENCODING *enc, const char *ptr,
 }
 
 static int PTRCALL
-PREFIX(scanCdataSection)(const ENCODING *enc, const char *ptr,
+PREFIX(scanCdataSection)(const ENCODING *UNUSED_P(enc), const char *ptr,
                          const char *end, const char **nextTokPtr)
 {
   static const char CDATA_LSQB[] = { ASCII_C, ASCII_D, ASCII_A,
@@ -1521,7 +1521,7 @@ PREFIX(getAtts)(const ENCODING *enc, const char *ptr,
 }
 
 static int PTRFASTCALL
-PREFIX(charRefNumber)(const ENCODING *enc, const char *ptr)
+PREFIX(charRefNumber)(const ENCODING *UNUSED_P(enc), const char *ptr)
 {
   int result = 0;
   /* skip &# */
@@ -1565,7 +1565,7 @@ PREFIX(charRefNumber)(const ENCODING *enc, const char *ptr)
 }
 
 static int PTRCALL
-PREFIX(predefinedEntityName)(const ENCODING *enc, const char *ptr,
+PREFIX(predefinedEntityName)(const ENCODING *UNUSED_P(enc), const char *ptr,
                              const char *end)
 {
   switch ((end - ptr)/MINBPC(enc)) {
@@ -1683,7 +1683,7 @@ PREFIX(sameName)(const ENCODING *enc, const char *ptr1, const char *ptr2)
 }
 
 static int PTRCALL
-PREFIX(nameMatchesAscii)(const ENCODING *enc, const char *ptr1,
+PREFIX(nameMatchesAscii)(const ENCODING *UNUSED_P(enc), const char *ptr1,
                          const char *end1, const char *ptr2)
 {
   for (; *ptr2; ptr1 += MINBPC(enc), ptr2++) {

@@ -21,6 +21,7 @@
 #endif /* ndef COMPILING_FOR_WINDOWS */
 
 #include "expat.h"
+#include "internal.h"  /* for UNUSED_P only */
 #include "xmlfile.h"
 #include "xmltchar.h"
 #include "filemap.h"
@@ -132,7 +133,7 @@ externalEntityRefFilemap(XML_Parser parser,
                          const XML_Char *context,
                          const XML_Char *base,
                          const XML_Char *systemId,
-                         const XML_Char *publicId)
+                         const XML_Char *UNUSED_P(publicId))
 {
   int result;
   XML_Char *s;
@@ -200,7 +201,7 @@ externalEntityRefStream(XML_Parser parser,
                         const XML_Char *context,
                         const XML_Char *base,
                         const XML_Char *systemId,
-                        const XML_Char *publicId)
+                        const XML_Char *UNUSED_P(publicId))
 {
   XML_Char *s;
   const XML_Char *filename;

@@ -10,6 +10,7 @@
 #include <setjmp.h>
 #include <assert.h>
 
+#include "internal.h"  /* for UNUSED_P only */
 #include "minicheck.h"
 
 Suite *
@@ -156,7 +157,7 @@ srunner_run_all(SRunner *runner, int verbosity)
 }
 
 void
-_fail_unless(int condition, const char *file, int line, const char *msg)
+_fail_unless(int UNUSED_P(condition), const char *UNUSED_P(file), int UNUSED_P(line), const char *msg)
 {
     /* Always print the error message so it isn't lost.  In this case,
        we have a failure, so there's no reason to be quiet about what
