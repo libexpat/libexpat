@@ -65,6 +65,9 @@
 #endif
 #endif  /* not defined XML_STATIC */
 
+#if !defined(XMLIMPORT) && defined(__GNUC__) && (__GNUC__ >= 4)
+#define XMLIMPORT __attribute__ ((visibility ("default")))
+#endif
 
 /* If we didn't define it above, define it away: */
 #ifndef XMLIMPORT
