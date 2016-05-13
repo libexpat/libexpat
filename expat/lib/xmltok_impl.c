@@ -1744,7 +1744,7 @@ PREFIX(updatePosition)(const ENCODING *enc,
                        const char *end,
                        POSITION *pos)
 {
-  while (ptr < end) {
+  while (end - ptr >= MINBPC(enc)) {
     switch (BYTE_TYPE(enc, ptr)) {
 #define LEAD_CASE(n) \
     case BT_LEAD ## n: \
