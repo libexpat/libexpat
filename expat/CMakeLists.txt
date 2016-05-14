@@ -43,6 +43,7 @@ if(MSVC)
 endif(MSVC)
 if(WIN32)
     add_definitions(-DCOMPILING_FOR_WINDOWS)
+    set(CMAKE_DEBUG_POSTFIX "d" CACHE STRING "Add a suffix, usually d on Windows")
 endif(WIN32)
 
 set(expat_SRCS
