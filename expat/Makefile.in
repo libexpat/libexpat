@@ -190,17 +190,12 @@ run-xmltest: xmlwf/xmlwf@EXEEXT@ tests/xmlconf
 	tests/xmltest.sh 2>&1 | tee tests/xmltest.log
 	diff -u tests/xmltest.log.expected tests/xmltest.log
 
-QA_CFLAGS := \
-	-fsanitize=address -g \
-	--coverage --no-inline \
-	-Wall -Wextra -std=c89 -pedantic \
-	-Wno-overlength-strings \
-
 .PHONY: qa
 qa:
-	CFLAGS="$(QA_CFLAGS)" ./configure
-	$(MAKE) clean all check run-xmltest
-	find -name '*.gcda' | sort | xargs gcov
+	./qa.sh address
+	./qa.sh memory
+	./qa.sh undefined
+	./qa.sh coverage
 
 .SUFFIXES: .c .cpp .lo .@OBJEXT@
 
