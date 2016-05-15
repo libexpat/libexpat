@@ -366,7 +366,7 @@ utf8_toUtf16(const ENCODING *enc,
   while (from < fromLim && to < toLim) {
     switch (((struct normal_encoding *)enc)->type[(unsigned char)*from]) {
     case BT_LEAD2:
-      if (from + 2 > fromLim) {
+      if (fromLim - from < 2) {
         res = XML_CONVERT_INPUT_INCOMPLETE;
         break;
       }
@@ -374,7 +374,7 @@ utf8_toUtf16(const ENCODING *enc,
       from += 2;
       break;
     case BT_LEAD3:
-      if (from + 3 > fromLim) {
+      if (fromLim - from < 3) {
         res = XML_CONVERT_INPUT_INCOMPLETE;
         break;
       }
@@ -385,11 +385,11 @@ utf8_toUtf16(const ENCODING *enc,
     case BT_LEAD4:
       {
         unsigned long n;
-        if (to + 2 > toLim) {
+        if (toLim - to < 2) {
           res = XML_CONVERT_OUTPUT_EXHAUSTED;
           goto after;
         }
-        if (from + 4 > fromLim) {
+        if (fromLim - from < 4) {
           res = XML_CONVERT_INPUT_INCOMPLETE;
           goto after;
         }
@@ -627,7 +627,7 @@ E ## toUtf8(const ENCODING *enc, \
         *fromP = from; \
         return XML_CONVERT_OUTPUT_EXHAUSTED; \
       } \
-      if (from + 4 > fromLim) { \
+      if (fromLim - from < 4) { \
         *fromP = from; \
         return XML_CONVERT_INPUT_INCOMPLETE; \
       } \
