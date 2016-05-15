@@ -1730,7 +1730,8 @@ XML_GetBuffer(XML_Parser parser, int len)
 #ifdef XML_CONTEXT_BYTES
     int keep;
 #endif  /* defined XML_CONTEXT_BYTES */
-    int neededSize = len + (int)(bufferEnd - bufferPtr);
+    /* Do not invoke signed arithmetic overflow: */
+    int neededSize = (int) ((unsigned)len + (unsigned)(bufferEnd - bufferPtr));
     if (neededSize < 0) {
       errorCode = XML_ERROR_NO_MEMORY;
       return NULL;
@@ -1761,7 +1762,8 @@ XML_GetBuffer(XML_Parser parser, int len)
       if (bufferSize == 0)
         bufferSize = INIT_BUFFER_SIZE;
       do {
-        bufferSize *= 2;
+        /* Do not invoke signed arithmetic overflow: */
+        bufferSize = (int) (2U * (unsigned) bufferSize);
       } while (bufferSize < neededSize && bufferSize > 0);
       if (bufferSize <= 0) {
         errorCode = XML_ERROR_NO_MEMORY;
