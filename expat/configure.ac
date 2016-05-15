@@ -77,7 +77,9 @@ if test "$GCC" = yes ; then
     AC_TRY_LINK( , ,
                    AC_MSG_RESULT(yes),
                    AC_MSG_RESULT(no); CFLAGS="$OLDCFLAGS")
+    if test "x$CXXFLAGS" = x ; then
     CXXFLAGS=`echo "$CFLAGS" | sed 's/ -Wmissing-prototypes -Wstrict-prototypes//'`
+    fi
 fi
 
 dnl Checks for header files.
