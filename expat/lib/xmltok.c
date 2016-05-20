@@ -329,6 +329,41 @@ enum {  /* UTF8_cvalN is value of masked first byte of N byte sequence */
   UTF8_cval4 = 0xf0
 };
 
+void
+align_limit_to_full_utf8_characters(const char * from, const char ** fromLimRef)
+{
+  const char * fromLim = *fromLimRef;
+  size_t walked = 0;
+  for (; fromLim > from; fromLim--, walked++) {
+    const unsigned char prev = (unsigned char)fromLim[-1];
+    if ((prev & 0xf8u) == 0xf0u) { /* 4-byte character, lead by 0b11110xxx byte */
+      if (walked + 1 >= 4) {
+        fromLim += 4 - 1;
+        break;
+      } else {
+        walked = 0;
+      }
+    } else if ((prev & 0xf0u) == 0xe0u) { /* 3-byte character, lead by 0b1110xxxx byte */
+      if (walked + 1 >= 3) {
+        fromLim += 3 - 1;
+        break;
+      } else {
+        walked = 0;
+      }
+    } else if ((prev & 0xe0u) == 0xc0u) { /* 2-byte character, lead by 0b110xxxxx byte */
+      if (walked + 1 >= 2) {
+        fromLim += 2 - 1;
+        break;
+      } else {
+        walked = 0;
+      }
+    } else if ((prev & 0x80u) == 0x00u) { /* 1-byte character, matching 0b0xxxxxxx */
+      break;
+    }
+  }
+  *fromLimRef = fromLim;
+}
+
 static enum XML_Convert_Result PTRCALL
 utf8_toUtf8(const ENCODING *UNUSED_P(enc),
             const char **fromP, const char *fromLim,
@@ -340,9 +375,8 @@ utf8_toUtf8(const ENCODING *UNUSED_P(enc),
   if (fromLim - *fromP > toLim - *toP) {
     /* Avoid copying partial characters. */
     res = XML_CONVERT_OUTPUT_EXHAUSTED;
-    for (fromLim = *fromP + (toLim - *toP); fromLim > *fromP; fromLim--)
-      if (((unsigned char)fromLim[-1] & 0xc0) != 0x80)
-        break;
+    fromLim = *fromP + (toLim - *toP);
+    align_limit_to_full_utf8_characters(*fromP, &fromLim);
   }
   for (to = *toP, from = *fromP; (from < fromLim) && (to < toLim); from++, to++)
     *to = *from;

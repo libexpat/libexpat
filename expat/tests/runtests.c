@@ -13,6 +13,10 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdint.h>
+#include <stddef.h>  /* ptrdiff_t */
+#ifndef __cplusplus
+# include <stdbool.h>
+#endif
 
 #include "expat.h"
 #include "chardata.h"
@@ -363,6 +367,68 @@ START_TEST(test_illegal_utf8)
             xml_failure(parser);
         /* Reset the parser since we use the same parser repeatedly. */
         XML_ParserReset(parser, NULL);
+    }
+}
+END_TEST
+
+
+/* Examples, not masks: */
+#define UTF8_LEAD_1  "\x7f"  /* 0b01111111 */
+#define UTF8_LEAD_2  "\xdf"  /* 0b11011111 */
+#define UTF8_LEAD_3  "\xef"  /* 0b11101111 */
+#define UTF8_LEAD_4  "\xf7"  /* 0b11110111 */
+#define UTF8_FOLLOW  "\xbf"  /* 0b10111111 */
+
+START_TEST(test_utf8_auto_align)
+{
+    struct TestCase {
+        ptrdiff_t expectedMovementInChars;
+        const char * input;
+    };
+
+    struct TestCase cases[] = {
+        {00, ""},
+
+        {00, UTF8_LEAD_1},
+
+        {-1, UTF8_LEAD_2},
+        {00, UTF8_LEAD_2 UTF8_FOLLOW},
+
+        {-1, UTF8_LEAD_3},
+        {-2, UTF8_LEAD_3 UTF8_FOLLOW},
+        {00, UTF8_LEAD_3 UTF8_FOLLOW UTF8_FOLLOW},
+
+        {-1, UTF8_LEAD_4},
+        {-2, UTF8_LEAD_4 UTF8_FOLLOW},
+        {-3, UTF8_LEAD_4 UTF8_FOLLOW UTF8_FOLLOW},
+        {00, UTF8_LEAD_4 UTF8_FOLLOW UTF8_FOLLOW UTF8_FOLLOW},
+    };
+
+    size_t i = 0;
+    bool success = true;
+    for (; i < sizeof(cases) / sizeof(*cases); i++) {
+        const char * fromLim = cases[i].input + strlen(cases[i].input);
+        const char * const fromLimInitially = fromLim;
+        ptrdiff_t actualMovementInChars;
+
+        align_limit_to_full_utf8_characters(cases[i].input, &fromLim);
+
+        actualMovementInChars = (fromLim - fromLimInitially);
+        if (actualMovementInChars != cases[i].expectedMovementInChars) {
+            size_t j = 0;
+            success = false;
+            printf("[-] UTF-8 case %2lu: Expected movement by %2ld chars"
+                    ", actually moved by %2ld chars: \"",
+                    i + 1, cases[i].expectedMovementInChars, actualMovementInChars);
+            for (; j < strlen(cases[i].input); j++) {
+                printf("\\x%02x", (unsigned char)cases[i].input[j]);
+            }
+            printf("\"\n");
+        }
+    }
+
+    if (! success) {
+        fail("UTF-8 auto-alignment is not bullet-proof\n");
     }
 }
 END_TEST
@@ -1543,6 +1609,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_bom_utf16_be);
     tcase_add_test(tc_basic, test_bom_utf16_le);
     tcase_add_test(tc_basic, test_illegal_utf8);
+    tcase_add_test(tc_basic, test_utf8_auto_align);
     tcase_add_test(tc_basic, test_utf16);
     tcase_add_test(tc_basic, test_utf16_le_epilog_newline);
     tcase_add_test(tc_basic, test_latin1_umlauts);
