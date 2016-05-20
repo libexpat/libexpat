@@ -329,7 +329,7 @@ enum {  /* UTF8_cvalN is value of masked first byte of N byte sequence */
   UTF8_cval4 = 0xf0
 };
 
-static void
+void
 align_limit_to_full_utf8_characters(const char * from, const char ** fromLimRef)
 {
   const char * fromLim = *fromLimRef;
