@@ -329,6 +329,16 @@ enum {  /* UTF8_cvalN is value of masked first byte of N byte sequence */
   UTF8_cval4 = 0xf0
 };
 
+static void
+align_limit_to_full_utf8_characters(const char * from, const char ** fromLimRef)
+{
+  const char * fromLim = *fromLimRef;
+  for (; fromLim > from; fromLim--)
+    if (((unsigned char)fromLim[-1] & 0xc0) != 0x80)
+      break;
+  *fromLimRef = fromLim;
+}
+
 static enum XML_Convert_Result PTRCALL
 utf8_toUtf8(const ENCODING *UNUSED_P(enc),
             const char **fromP, const char *fromLim,
@@ -340,9 +350,8 @@ utf8_toUtf8(const ENCODING *UNUSED_P(enc),
   if (fromLim - *fromP > toLim - *toP) {
     /* Avoid copying partial characters. */
     res = XML_CONVERT_OUTPUT_EXHAUSTED;
-    for (fromLim = *fromP + (toLim - *toP); fromLim > *fromP; fromLim--)
-      if (((unsigned char)fromLim[-1] & 0xc0) != 0x80)
-        break;
+    fromLim = *fromP + (toLim - *toP);
+    align_limit_to_full_utf8_characters(*fromP, &fromLim);
   }
   for (to = *toP, from = *fromP; (from < fromLim) && (to < toLim); from++, to++)
     *to = *from;
