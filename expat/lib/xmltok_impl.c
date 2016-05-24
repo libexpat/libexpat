@@ -93,7 +93,7 @@ static int PTRCALL
 PREFIX(scanComment)(const ENCODING *enc, const char *ptr,
                     const char *end, const char **nextTokPtr)
 {
-  if (ptr < end) {
+  if (end - ptr >= MINBPC(enc)) {
     if (!CHAR_MATCHES(enc, ptr, ASCII_MINUS)) {
       *nextTokPtr = ptr;
       return XML_TOK_INVALID;
@@ -103,10 +103,12 @@ PREFIX(scanComment)(const ENCODING *enc, const char *ptr,
       switch (BYTE_TYPE(enc, ptr)) {
       INVALID_CASES(ptr, nextTokPtr)
       case BT_MINUS:
-        if ((ptr += MINBPC(enc)) == end)
+        ptr += MINBPC(enc);
+        if (end - ptr < MINBPC(enc))
           return XML_TOK_PARTIAL;
         if (CHAR_MATCHES(enc, ptr, ASCII_MINUS)) {
-          if ((ptr += MINBPC(enc)) == end)
+          ptr += MINBPC(enc);
+          if (end - ptr < MINBPC(enc))
             return XML_TOK_PARTIAL;
           if (!CHAR_MATCHES(enc, ptr, ASCII_GT)) {
             *nextTokPtr = ptr;
@@ -247,7 +249,7 @@ PREFIX(scanPi)(const ENCODING *enc, const char *ptr,
         INVALID_CASES(ptr, nextTokPtr)
         case BT_QUEST:
           ptr += MINBPC(enc);
-          if (ptr == end)
+          if (end - ptr < MINBPC(enc))
             return XML_TOK_PARTIAL;
           if (CHAR_MATCHES(enc, ptr, ASCII_GT)) {
             *nextTokPtr = ptr + MINBPC(enc);
@@ -266,7 +268,7 @@ PREFIX(scanPi)(const ENCODING *enc, const char *ptr,
         return XML_TOK_INVALID;
       }
       ptr += MINBPC(enc);
-      if (ptr == end)
+      if (end - ptr < MINBPC(enc))
         return XML_TOK_PARTIAL;
       if (CHAR_MATCHES(enc, ptr, ASCII_GT)) {
         *nextTokPtr = ptr + MINBPC(enc);
@@ -319,12 +321,12 @@ PREFIX(cdataSectionTok)(const ENCODING *enc, const char *ptr,
   switch (BYTE_TYPE(enc, ptr)) {
   case BT_RSQB:
     ptr += MINBPC(enc);
-    if (ptr == end)
+    if (end - ptr < MINBPC(enc))
       return XML_TOK_PARTIAL;
     if (!CHAR_MATCHES(enc, ptr, ASCII_RSQB))
       break;
     ptr += MINBPC(enc);
-    if (ptr == end)
+    if (end - ptr < MINBPC(enc))
       return XML_TOK_PARTIAL;
     if (!CHAR_MATCHES(enc, ptr, ASCII_GT)) {
       ptr -= MINBPC(enc);
@@ -655,7 +657,7 @@ PREFIX(scanAtts)(const ENCODING *enc, const char *ptr, const char *end,
           case BT_SOL:
           sol:
             ptr += MINBPC(enc);
-            if (ptr == end)
+            if (end - ptr < MINBPC(enc))
               return XML_TOK_PARTIAL;
             if (!CHAR_MATCHES(enc, ptr, ASCII_GT)) {
               *nextTokPtr = ptr;
@@ -766,7 +768,7 @@ PREFIX(scanLt)(const ENCODING *enc, const char *ptr, const char *end,
     case BT_SOL:
     sol:
       ptr += MINBPC(enc);
-      if (ptr == end)
+      if (end - ptr < MINBPC(enc))
         return XML_TOK_PARTIAL;
       if (!CHAR_MATCHES(enc, ptr, ASCII_GT)) {
         *nextTokPtr = ptr;
@@ -815,12 +817,12 @@ PREFIX(contentTok)(const ENCODING *enc, const char *ptr, const char *end,
     return XML_TOK_DATA_NEWLINE;
   case BT_RSQB:
     ptr += MINBPC(enc);
-    if (ptr == end)
+    if (end - ptr < MINBPC(enc))
       return XML_TOK_TRAILING_RSQB;
     if (!CHAR_MATCHES(enc, ptr, ASCII_RSQB))
       break;
     ptr += MINBPC(enc);
-    if (ptr == end)
+    if (end - ptr < MINBPC(enc))
       return XML_TOK_TRAILING_RSQB;
     if (!CHAR_MATCHES(enc, ptr, ASCII_GT)) {
       ptr -= MINBPC(enc);
@@ -846,12 +848,12 @@ PREFIX(contentTok)(const ENCODING *enc, const char *ptr, const char *end,
     LEAD_CASE(2) LEAD_CASE(3) LEAD_CASE(4)
 #undef LEAD_CASE
     case BT_RSQB:
-      if (ptr + MINBPC(enc) != end) {
+      if (end - ptr >= 2*MINBPC(enc)) {
          if (!CHAR_MATCHES(enc, ptr + MINBPC(enc), ASCII_RSQB)) {
            ptr += MINBPC(enc);
            break;
          }
-         if (ptr + 2*MINBPC(enc) != end) {
+         if (end - ptr >= 3*MINBPC(enc)) {
            if (!CHAR_MATCHES(enc, ptr + 2*MINBPC(enc), ASCII_GT)) {
              ptr += MINBPC(enc);
              break;
@@ -1049,10 +1051,10 @@ PREFIX(prologTok)(const ENCODING *enc, const char *ptr, const char *end,
     return XML_TOK_OPEN_BRACKET;
   case BT_RSQB:
     ptr += MINBPC(enc);
-    if (ptr == end)
+    if (end - ptr < MINBPC(enc))
       return -XML_TOK_CLOSE_BRACKET;
     if (CHAR_MATCHES(enc, ptr, ASCII_RSQB)) {
-      if (ptr + MINBPC(enc) == end)
+      if (end - ptr < 2*MINBPC(enc))
         return XML_TOK_PARTIAL;
       if (CHAR_MATCHES(enc, ptr + MINBPC(enc), ASCII_GT)) {
         *nextTokPtr = ptr + 2*MINBPC(enc);
@@ -1331,10 +1333,12 @@ PREFIX(ignoreSectionTok)(const ENCODING *enc, const char *ptr,
     switch (BYTE_TYPE(enc, ptr)) {
     INVALID_CASES(ptr, nextTokPtr)
     case BT_LT:
-      if ((ptr += MINBPC(enc)) == end)
+      ptr += MINBPC(enc);
+      if (end - ptr < MINBPC(enc))
         return XML_TOK_PARTIAL;
       if (CHAR_MATCHES(enc, ptr, ASCII_EXCL)) {
-        if ((ptr += MINBPC(enc)) == end)
+        ptr += MINBPC(enc);
+        if (end - ptr < MINBPC(enc))
           return XML_TOK_PARTIAL;
         if (CHAR_MATCHES(enc, ptr, ASCII_LSQB)) {
           ++level;
@@ -1343,10 +1347,12 @@ PREFIX(ignoreSectionTok)(const ENCODING *enc, const char *ptr,
       }
       break;
     case BT_RSQB:
-      if ((ptr += MINBPC(enc)) == end)
+      ptr += MINBPC(enc);
+      if (end - ptr < MINBPC(enc))
         return XML_TOK_PARTIAL;
       if (CHAR_MATCHES(enc, ptr, ASCII_RSQB)) {
-        if ((ptr += MINBPC(enc)) == end)
+        ptr += MINBPC(enc);
+        if (end - ptr < MINBPC(enc))
           return XML_TOK_PARTIAL;
         if (CHAR_MATCHES(enc, ptr, ASCII_GT)) {
           ptr += MINBPC(enc);
@@ -1688,7 +1694,7 @@ PREFIX(nameMatchesAscii)(const ENCODING *UNUSED_P(enc), const char *ptr1,
                          const char *end1, const char *ptr2)
 {
   for (; *ptr2; ptr1 += MINBPC(enc), ptr2++) {
-    if (ptr1 == end1)
+    if (end1 - ptr1 < MINBPC(enc))
       return 0;
     if (!CHAR_MATCHES(enc, ptr1, *ptr2))
       return 0;
