@@ -15,8 +15,21 @@ set -o nounset
 
 : ${BASE_FLAGS:="-pipe -Wall -Wextra -pedantic -Wno-overlength-strings"}
 
+RUN() {
+    local open='\e[1m'
+    local close='\e[0m'
+
+    echo -e -n "${open}"
+    echo -n "# $*"
+    echo -e "${close}"
+
+    env "$@"
+}
+
 main() {
     local mode="${1:-}"
+    shift
+
     local RUNENV
     local BASE_FLAGS="${BASE_FLAGS}"
 
@@ -48,25 +61,25 @@ main() {
         ;;
     esac
 
-    CFLAGS="-std=c89 ${BASE_FLAGS}"
-    CXXFLAGS="-std=c++98 ${BASE_FLAGS}"
+    local CFLAGS="-std=c89 ${BASE_FLAGS} ${CFLAGS:-}"
+    local CXXFLAGS="-std=c++98 ${BASE_FLAGS} ${CXXFLAGS:-}"
 
     (
-        PS4='# '
         set -e
-        set -x
 
-        CC="${CC}" CFLAGS="${CFLAGS}" \
-            CXX="${CXX}" CXXFLAGS="${CXXFLAGS}" \
-            ./configure
+        RUN CC="${CC}" CFLAGS="${CFLAGS}" \
+                CXX="${CXX}" CXXFLAGS="${CXXFLAGS}" \
+                ./configure "$@"
 
-        "${MAKE}" clean all
-        "${MAKE}" check run-xmltest
+        RUN "${MAKE}" clean all
+        RUN "${MAKE}" check run-xmltest
     ) || exit 1
 
-    if [[ "${mode}" = coverage ]]; then
+    case "${mode}" in
+    coverage)
         find -name '*.gcda' | sort | xargs gcov
-    fi
+        ;;
+    esac
 }
 
 main "$@"
