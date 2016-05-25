@@ -9,14 +9,29 @@ set -o nounset
 : ${CLANG_CC:=clang}
 : ${CLANG_CXX:=clang++}
 
+: ${AR:=ar}
 : ${CC:="${CLANG_CC}"}
 : ${CXX:="${CLANG_CXX}"}
+: ${LD:=ld}
 : ${MAKE:=make}
 
 : ${BASE_FLAGS:="-pipe -Wall -Wextra -pedantic -Wno-overlength-strings"}
 
+RUN() {
+    local open='\e[1m'
+    local close='\e[0m'
+
+    echo -e -n "${open}"
+    echo -n "# $*"
+    echo -e "${close}"
+
+    env "$@"
+}
+
 main() {
     local mode="${1:-}"
+    shift
+
     local RUNENV
     local BASE_FLAGS="${BASE_FLAGS}"
 
@@ -36,6 +51,13 @@ main() {
         # http://clang.llvm.org/docs/MemorySanitizer.html
         BASE_FLAGS+=" -fsanitize=memory -fno-omit-frame-pointer -g -O2"
         ;;
+    ncc)
+        # http://students.ceid.upatras.gr/~sxanth/ncc/
+        local CC="ncc -ncgcc -ncld -ncfabs"
+        local AR=nccar
+        local LD=nccld
+        BASE_FLAGS+=" -fPIC"
+        ;;
     undefined)
         # http://clang.llvm.org/docs/UndefinedBehaviorSanitizer.html
         BASE_FLAGS+=" -fsanitize=undefined"
@@ -43,30 +65,42 @@ main() {
         ;;
     *)
         echo "Usage:" 1>&2
-        echo "  ${0##*/} (address|coverage|memory|undefined)" 1>&2
+        echo "  ${0##*/} (address|coverage|memory|ncc|undefined)" 1>&2
         exit 1
         ;;
     esac
 
-    CFLAGS="-std=c89 ${BASE_FLAGS}"
-    CXXFLAGS="-std=c++98 ${BASE_FLAGS}"
+    local CFLAGS="-std=c89 ${BASE_FLAGS} ${CFLAGS:-}"
+    local CXXFLAGS="-std=c++98 ${BASE_FLAGS} ${CXXFLAGS:-}"
 
     (
-        PS4='# '
         set -e
-        set -x
 
-        CC="${CC}" CFLAGS="${CFLAGS}" \
-            CXX="${CXX}" CXXFLAGS="${CXXFLAGS}" \
-            ./configure
+        RUN CC="${CC}" CFLAGS="${CFLAGS}" \
+                CXX="${CXX}" CXXFLAGS="${CXXFLAGS}" \
+                AR="${AR}" \
+                LD="${LD}" \
+                ./configure "$@"
 
-        "${MAKE}" clean all
-        "${MAKE}" check run-xmltest
+        RUN "${MAKE}" clean all
+
+        case "${mode}" in
+        ncc)
+            ;;
+        *)
+            RUN "${MAKE}" check run-xmltest
+            ;;
+        esac
     ) || exit 1
 
-    if [[ "${mode}" = coverage ]]; then
+    case "${mode}" in
+    coverage)
         find -name '*.gcda' | sort | xargs gcov
-    fi
+        ;;
+    ncc)
+        RUN nccnav ./.libs/libexpat.a.nccout
+        ;;
+    esac
 }
 
 main "$@"
