@@ -67,6 +67,8 @@ else(BUILD_shared)
 endif(BUILD_shared)
 
 add_library(expat ${_SHARED} ${expat_SRCS})
+set_property(TARGET expat PROPERTY SOVERSION 1.6.0)  # sync with configure.ac!
+set_property(TARGET expat PROPERTY NO_SONAME ${NO_SONAME})
 
 install(TARGETS expat RUNTIME DESTINATION bin
                       LIBRARY DESTINATION lib
