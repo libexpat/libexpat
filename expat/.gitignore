@@ -20,3 +20,7 @@ expat.ncb
 expat.opt
 .project
 expat.pc
+*.gcda
+*.gcno
+*.gcov
+*.nccout

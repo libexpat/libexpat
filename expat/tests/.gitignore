@@ -1,3 +1,6 @@
+/out
+/xmlconf
+/xmltest.log
 Makefile
 runtests
 runtestspp
