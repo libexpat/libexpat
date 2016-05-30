@@ -17,14 +17,17 @@ set -o nounset
 
 : ${BASE_FLAGS:="-pipe -Wall -Wextra -pedantic -Wno-overlength-strings"}
 
-RUN() {
+ANNOUNCE() {
     local open='\e[1m'
     local close='\e[0m'
 
     echo -e -n "${open}"
     echo -n "# $*"
     echo -e "${close}"
+}
 
+RUN() {
+    ANNOUNCE "$@"
     env "$@"
 }
 
@@ -102,14 +105,14 @@ main() {
         ;;
     egypt)
         local DOT_FORMAT="${DOT_FORMAT:-svg}"
-        local i=, o=
-        while read i ; do
-            o="${i##./}";
-            o="callgraph--${o//\//--}"
-            o="${o%.c.*.expand}";
-            o="${o//./_}.${DOT_FORMAT}"
-            egypt "${i}" | dot -Grankdir=LR "-T${DOT_FORMAT}" > "${o}"
-        done < <(find -name '*.expand')
+        local o="callgraph.${DOT_FORMAT}"
+        ANNOUNCE "egypt ...... | dot ...... > ${o}"
+        find -name '*.expand' \
+                | sort \
+                | xargs -r egypt \
+                | unflatten -c 20 \
+                | dot -T${DOT_FORMAT} -Grankdir=LR \
+                > "${o}"
         ;;
     ncc)
         RUN nccnav ./.libs/libexpat.a.nccout
