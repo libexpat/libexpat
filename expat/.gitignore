@@ -24,3 +24,5 @@ expat.pc
 *.gcno
 *.gcov
 *.nccout
+*.expand
+/callgraph--*

@@ -47,6 +47,9 @@ main() {
         local CXX="${GCC_CXX}"
         BASE_FLAGS+=" --coverage --no-inline"
         ;;
+    egypt)
+        BASE_FLAGS+=" -fdump-rtl-expand"
+        ;;
     memory)
         # http://clang.llvm.org/docs/MemorySanitizer.html
         BASE_FLAGS+=" -fsanitize=memory -fno-omit-frame-pointer -g -O2"
@@ -65,7 +68,7 @@ main() {
         ;;
     *)
         echo "Usage:" 1>&2
-        echo "  ${0##*/} (address|coverage|memory|ncc|undefined)" 1>&2
+        echo "  ${0##*/} (address|coverage|egypt|memory|ncc|undefined)" 1>&2
         exit 1
         ;;
     esac
@@ -85,7 +88,7 @@ main() {
         RUN "${MAKE}" clean all
 
         case "${mode}" in
-        ncc)
+        egypt|ncc)
             ;;
         *)
             RUN "${MAKE}" check run-xmltest
@@ -96,6 +99,17 @@ main() {
     case "${mode}" in
     coverage)
         find -name '*.gcda' | sort | xargs gcov
+        ;;
+    egypt)
+        local DOT_FORMAT="${DOT_FORMAT:-svg}"
+        local i=, o=
+        while read i ; do
+            o="${i##./}";
+            o="callgraph--${o//\//--}"
+            o="${o%.c.*.expand}";
+            o="${o//./_}.${DOT_FORMAT}"
+            egypt "${i}" | dot -Grankdir=LR "-T${DOT_FORMAT}" > "${o}"
+        done < <(find -name '*.expand')
         ;;
     ncc)
         RUN nccnav ./.libs/libexpat.a.nccout
