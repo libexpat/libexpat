@@ -16,15 +16,15 @@ Release ??? ???
 
         Other changes:
             #532  Fix compilation for Visual Studio 2010 (keyword "C99")
+                  Autotools: Resolve use of "$<" to better support bmake
+                  Autotools: Add QA script "qa.sh" (and make target "qa")
+                  Autotools: Respect CXXFLAGS if given
+                  Autotools: Fix "make run-xmltest"
+                  Autotools: Have "make run-xmltest" check for expected output
              p90  CMake: Fix static build (BUILD_shared=OFF) on Windows
             #536  CMake: Add soversion, support -DNO_SONAME=yes to bypass
             #323  CMake: Add suffix "d" to differentiate debug from release
                   CMake: Define COMPILING_FOR_WINDOWS with CMake on Windows
-                  Makefiles: Resolve use of "$<" to better support bmake
-                  Makefiles: Add QA script "qa.sh" (and make target "qa")
-                  Makefiles: Respect CXXFLAGS if given
-                  Makefiles: Have "make run-xmltest" check for expected output
-                  Makefiles: Fix "make run-xmltest"
                   Annotate memory allocators for GCC
                   Address all currently known compile warnings
                   Make sure that API symbols remain visible despite
