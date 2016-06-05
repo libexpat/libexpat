@@ -12,7 +12,7 @@ xmlwf.1: XMLWF.1
 
 XMLWF.1: xmlwf.xml
 	which $(DOCBOOK_TO_MAN)
-	$(DOCBOOK_TO_MAN) xmlwf.xml > $@
+	$(DOCBOOK_TO_MAN) xmlwf.xml > $@ || { rm $@ ; exit 1; }
 
 xmlwf.xml: xmlwf.sgml
 	which $(SGML_TO_XML)
