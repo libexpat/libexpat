@@ -67,7 +67,14 @@ else(BUILD_shared)
 endif(BUILD_shared)
 
 add_library(expat ${_SHARED} ${expat_SRCS})
-set_property(TARGET expat PROPERTY SOVERSION 1.6.0)  # sync with configure.ac!
+
+set(LIBCURRENT 7)   # sync
+set(LIBREVISION 0)  # with
+set(LIBAGE 6)       # configure.ac!
+math(EXPR LIBCURRENT_MINUS_AGE "${LIBCURRENT} - ${LIBAGE}")
+
+set_property(TARGET expat PROPERTY VERSION ${LIBCURRENT_MINUS_AGE}.${LIBAGE}.${LIBREVISION})
+set_property(TARGET expat PROPERTY SOVERSION ${LIBCURRENT_MINUS_AGE})
 set_property(TARGET expat PROPERTY NO_SONAME ${NO_SONAME})
 
 install(TARGETS expat RUNTIME DESTINATION bin
