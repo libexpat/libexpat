@@ -84,6 +84,7 @@ install(FILES lib/expat.h lib/expat_external.h DESTINATION include)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/expat.pc DESTINATION lib/pkgconfig)
 
 
+add_custom_command(TARGET expat PRE_BUILD COMMAND $(MAKE) -C doc xmlwf.1)
 
 if(BUILD_tools AND NOT WINCE)
     set(xmlwf_SRCS
