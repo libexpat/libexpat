@@ -97,7 +97,8 @@ main() {
             RUN "${MAKE}" check run-xmltest
             ;;
         esac
-    ) || exit 1
+    )
+    [[ $? -ne 0 ]] && exit 1
 
     case "${mode}" in
     coverage)
