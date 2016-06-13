@@ -42,7 +42,7 @@ if(MSVC)
     add_definitions(-D_CRT_SECURE_NO_WARNINGS -wd4996)
 endif(MSVC)
 if(WIN32)
-    add_definitions(-DCOMPILING_FOR_WINDOWS)
+    add_definitions(-DWIN32)
     set(CMAKE_DEBUG_POSTFIX "d" CACHE STRING "Add a suffix, usually d on Windows")
 endif(WIN32)
 

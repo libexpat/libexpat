@@ -8,7 +8,7 @@
 #include <string.h>
 #include <fcntl.h>
 
-#ifdef COMPILING_FOR_WINDOWS
+#ifdef WIN32
 #include "winconfig.h"
 #elif defined(MACOS_CLASSIC)
 #include "macconfig.h"
@@ -18,7 +18,7 @@
 #include "watcomconfig.h"
 #elif defined(HAVE_EXPAT_CONFIG_H)
 #include <expat_config.h>
-#endif /* ndef COMPILING_FOR_WINDOWS */
+#endif /* ndef WIN32 */
 
 #include "expat.h"
 #include "internal.h"  /* for UNUSED_P only */

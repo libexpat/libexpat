@@ -24,13 +24,13 @@ Release ??? ???
              p90  CMake: Fix static build (BUILD_shared=OFF) on Windows
             #536  CMake: Add soversion, support -DNO_SONAME=yes to bypass
             #323  CMake: Add suffix "d" to differentiate debug from release
-                  CMake: Define COMPILING_FOR_WINDOWS with CMake on Windows
+                  CMake: Define WIN32 with CMake on Windows
                   Annotate memory allocators for GCC
                   Address all currently known compile warnings
                   Make sure that API symbols remain visible despite
                     -fvisibility=hidden
                   Remove executable flag from source files
-                  Turn COMPILED_FROM_DSP into COMPILING_FOR_WINDOWS
+                  Resolve COMPILED_FROM_DSP in favor of WIN32
 
         Special thanks to:
             Björn Lindahl

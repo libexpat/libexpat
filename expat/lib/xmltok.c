@@ -4,7 +4,7 @@
 
 #include <stddef.h>
 
-#ifdef COMPILING_FOR_WINDOWS
+#ifdef WIN32
 #include "winconfig.h"
 #elif defined(MACOS_CLASSIC)
 #include "macconfig.h"
@@ -16,7 +16,7 @@
 #ifdef HAVE_EXPAT_CONFIG_H
 #include <expat_config.h>
 #endif
-#endif /* ndef COMPILING_FOR_WINDOWS */
+#endif /* ndef WIN32 */
 
 #include "expat_external.h"
 #include "internal.h"
