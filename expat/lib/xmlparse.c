@@ -1890,7 +1890,7 @@ XML_Index XMLCALL
 XML_GetCurrentByteIndex(XML_Parser parser)
 {
   if (eventPtr)
-    return parseEndByteIndex - (parseEndPtr - eventPtr);
+    return (XML_Index)(parseEndByteIndex - (parseEndPtr - eventPtr));
   return -1;
 }
 
