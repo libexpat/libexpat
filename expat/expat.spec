@@ -40,6 +40,10 @@ install -D xmlwf/xmlwf $RPM_BUILD_ROOT/usr/bin/xmlwf
 /usr/share/man/man1/xmlwf.1.gz
 
 %changelog
+* Sat Jun 18 2016 Sebastian Pipping <sebastian@pipping.org>
+[Release 2.2.0-1]
+- Update for the 2.2.0 release.
+
 * Wed Mar 2 2016 Sebastian Pipping <sebastian@pipping.org>
 [Release 2.1.1-1]
 - Update for the 2.1.1 release.

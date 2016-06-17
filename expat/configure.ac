@@ -25,7 +25,7 @@ dnl test. I believe this test will work, but I don't have a place with non-
 dnl GNU M4 to test it right now.
 define([expat_version], ifdef([__gnu__],
                               [esyscmd(conftools/get-version.sh lib/expat.h)],
-                              [2.1.x]))
+                              [2.2.x]))
 AC_INIT(expat, expat_version, expat-bugs@libexpat.org)
 undefine([expat_version])
 
