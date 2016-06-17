@@ -26,3 +26,4 @@ expat.pc
 *.nccout
 *.expand
 /callgraph.svg
+/libexpat.so.*
