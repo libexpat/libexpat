@@ -1,7 +1,7 @@
 Release ??? ???
         Security fixes:
-            #537  CVE-2016-0718 -- fix crash on malformed input
-                  CVE-2016-4472 -- improve insufficient fix to CVE-2015-1283 /
+            #537  CVE-2016-0718 -- Fix crash on malformed input
+                  CVE-2016-4472 -- Improve insufficient fix to CVE-2015-1283 /
                                    CVE-2015-2716 introduced with Expat 2.1.1
             #499  CVE-2016-5300 -- Use more entropy for hash initialization
                                    than the original fix to CVE-2012-0876
