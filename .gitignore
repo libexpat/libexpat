@@ -26,3 +26,12 @@ _$*
 *.ln
 core
 # CVS default ignores end
+expat/win32/bin/
+expat/win32/tmp/
+expat/.vs/
+expat/**/*.vcxproj.user
+expat/**/*.suo
+expat/**/*.sdf
+expat/**/*.VC.db
+expat/tests/**/Debug/
+expat/tests/**/Release/
