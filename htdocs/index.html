@@ -1,10 +1,14 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <html>
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>The Expat XML Parser</title>
     <link rel="STYLESHEET" href="style.css" type="text/css" />
+    <style type="text/css">
+      body { margin: 0px; }
+    </style>
   </head>
-  <body marginwidth="0" marginheight="0">
+  <body>
     <table cellspacing="0" cellpadding="0" width="100%">
       <tr>
         <td class="corner"><img src="expat.png" alt="(Expat logo)" /></td>
@@ -178,17 +182,17 @@ of Expat.</p>
     <ul>
       <li>Added function XML_SetHashSalt that allows setting an initial
         value (salt) for hash calculations (part of the fix for bug <a
-        href="https://sourceforge.net/tracker/?func=detail&aid=3496608&group_id=10127&atid=110127"
+        href="https://sourceforge.net/tracker/?func=detail&amp;aid=3496608&amp;group_id=10127&amp;atid=110127"
         >3496608</a>).
       <li>When compiled with XML_ATTR_INFO defined, adds new API member
         XML_GetAttributeInfo() that allows retrieving the byte offsets
         for attribute names and values (patch <a
-        href="https://sourceforge.net/tracker/?func=detail&aid=3446384&group_id=10127&atid=310127"
+        href="https://sourceforge.net/tracker/?func=detail&amp;aid=3446384&amp;group_id=10127&amp;atid=310127"
         >3446384</a>).</li>
       <li>Added CMake build system (bug <a
-        href="https://sourceforge.net/tracker/?func=detail&aid=2990652&group_id=10127&atid=110127"
+        href="https://sourceforge.net/tracker/?func=detail&amp;aid=2990652&amp;group_id=10127&amp;atid=110127"
         >2990652</a>, patch <a
-        href="https://sourceforge.net/tracker/?func=detail&aid=3312568&group_id=10127&atid=310127"
+        href="https://sourceforge.net/tracker/?func=detail&amp;aid=3312568&amp;group_id=10127&amp;atid=310127"
         >3312568</a>).</li>
       <li>Added run-benchmark target to Makefile.in - relies on testdata
         module present in the same relative location as in the repository.
@@ -197,54 +201,54 @@ of Expat.</p>
     <h4>Bug fixes</h4>
     <ul>
       <li>Harmful XML_ParserCreateNS suggestion (<a
-        href="https://sourceforge.net/tracker/?func=detail&aid=1742315&group_id=10127&atid=110127"
+        href="https://sourceforge.net/tracker/?func=detail&amp;aid=1742315&amp;group_id=10127&amp;atid=110127"
         >1742315</a>)</li>
       <li>CVE-2012-1147 - Resource leak in readfilemap.c (<a
-        href="https://sourceforge.net/tracker/?func=detail&aid=2895533&group_id=10127&atid=110127"
+        href="https://sourceforge.net/tracker/?func=detail&amp;aid=2895533&amp;group_id=10127&amp;atid=110127"
         >2895533</a>)</li>
       <li>Expat build fails on linux-amd64 with gcc version&gt;=4.1 -O3 (<a
-        href="https://sourceforge.net/tracker/?func=detail&aid=1785430&group_id=10127&atid=110127"
+        href="https://sourceforge.net/tracker/?func=detail&amp;aid=1785430&amp;group_id=10127&amp;atid=110127"
         >1785430</a>)</li>
       <li>Build modifications using autoreconf instead of buildconf.sh (<a
-        href="https://sourceforge.net/tracker/?func=detail&aid=1983953&group_id=10127&atid=110127"
+        href="https://sourceforge.net/tracker/?func=detail&amp;aid=1983953&amp;group_id=10127&amp;atid=110127"
         >1983953</a>, <a
-        href="https://sourceforge.net/tracker/?func=detail&aid=2517952&group_id=10127&atid=110127"
+        href="https://sourceforge.net/tracker/?func=detail&amp;aid=2517952&amp;group_id=10127&amp;atid=110127"
         >2517952</a>, <a
-        href="https://sourceforge.net/tracker/?func=detail&aid=2517962&group_id=10127&atid=110127"
+        href="https://sourceforge.net/tracker/?func=detail&amp;aid=2517962&amp;group_id=10127&amp;atid=110127"
         >2517962</a>, <a
-        href="https://sourceforge.net/tracker/?func=detail&aid=2649838&group_id=10127&atid=110127"
+        href="https://sourceforge.net/tracker/?func=detail&amp;aid=2649838&amp;group_id=10127&amp;atid=110127"
         >2649838</a>)</li>
       <li>OBJEXT and EXEEXT support while building (<a
-        href="https://sourceforge.net/tracker/?func=detail&aid=2815947&group_id=10127&atid=110127"
+        href="https://sourceforge.net/tracker/?func=detail&amp;aid=2815947&amp;group_id=10127&amp;atid=110127"
         >2815947</a>, <a
-        href="https://sourceforge.net/tracker/?func=detail&aid=2884086&group_id=10127&atid=110127"
+        href="https://sourceforge.net/tracker/?func=detail&amp;aid=2884086&amp;group_id=10127&amp;atid=110127"
         >2884086</a>)</li>
       <li>CVE-2009-3720 - Parser crash with special UTF-8 sequences (<a
-        href="https://sourceforge.net/tracker/?func=detail&aid=1990430&group_id=10127&atid=110127"
+        href="https://sourceforge.net/tracker/?func=detail&amp;aid=1990430&amp;group_id=10127&amp;atid=110127"
         >1990430</a>)</li>
       <li>xmlwf should return non-zero exit status if not well-formed (<a
-        href="https://sourceforge.net/tracker/?func=detail&aid=2517938&group_id=10127&atid=110127"
+        href="https://sourceforge.net/tracker/?func=detail&amp;aid=2517938&amp;group_id=10127&amp;atid=110127"
         >2517938</a>)</li>
       <li>Wrong statement about XMLDecl in xmlwf.1 and xmlwf.sgml (<a
-        href="https://sourceforge.net/tracker/?func=detail&aid=2517946&group_id=10127&atid=110127"
+        href="https://sourceforge.net/tracker/?func=detail&amp;aid=2517946&amp;group_id=10127&amp;atid=110127"
         >2517946</a>)</li>
       <li>Dangling positionPtr after error (<a
-        href="https://sourceforge.net/tracker/?func=detail&aid=2855609&group_id=10127&atid=110127"
+        href="https://sourceforge.net/tracker/?func=detail&amp;aid=2855609&amp;group_id=10127&amp;atid=110127"
         >2855609</a>)</li>
       <li>CVE-2009-3560 - Buffer over-read and crash in big2_toUtf8() (<a
-        href="https://sourceforge.net/tracker/?func=detail&aid=2894085&group_id=10127&atid=110127"
+        href="https://sourceforge.net/tracker/?func=detail&amp;aid=2894085&amp;group_id=10127&amp;atid=110127"
         >2894085</a>)</li>
       <li>CVE-2012-1148 - Memory leak in poolGrow (<a
-        href="https://sourceforge.net/tracker/?func=detail&aid=2958794&group_id=10127&atid=110127"
+        href="https://sourceforge.net/tracker/?func=detail&amp;aid=2958794&amp;group_id=10127&amp;atid=110127"
         >2958794</a>)</li>
       <li>UNEXPECTED_STATE with a trailing "%" in entity value (<a
-        href="https://sourceforge.net/tracker/?func=detail&aid=3010819&group_id=10127&atid=110127"
+        href="https://sourceforge.net/tracker/?func=detail&amp;aid=3010819&amp;group_id=10127&amp;atid=110127"
         >3010819</a>)</li>
       <li>Unitialized memory returned from XML_Parse (<a
-        href="https://sourceforge.net/tracker/?func=detail&aid=3206497&group_id=10127&atid=110127"
+        href="https://sourceforge.net/tracker/?func=detail&amp;aid=3206497&amp;group_id=10127&amp;atid=110127"
         >3206497</a>)</li>
       <li>make check fails on mingw-w64 (<a
-        href="https://sourceforge.net/tracker/?func=detail&aid=87849&group_id=10127&atid=110127"
+        href="https://sourceforge.net/tracker/?func=detail&amp;aid=87849&amp;group_id=10127&amp;atid=110127"
         >87849</a>)</li>
     </ul>
   </dd>
@@ -273,7 +277,7 @@ of Expat.</p>
         - Fixes to Makefile.in to have make check work correctly.</li>
       <li>Added Open Watcom support.</li>
     </ul>
-  </p></dd>
+  </dd>
 </dl>
 <dl>
   <dt><em>11 January 2006</em>,
@@ -293,7 +297,7 @@ of Expat.</p>
       <li>Some mostly minor bug fixes. SF issues include: 1006708,
         1021776, 1023646, 1114960, 1156398, 1221160, 1271642.</li>
     </ul>
-  </p></dd>
+  </dd>
 </dl>
 
 <p><a href="oldnews.html">Old news archive</a></p>
