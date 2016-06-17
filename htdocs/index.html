@@ -1,5 +1,6 @@
 <html>
   <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>The Expat XML Parser</title>
     <link rel="STYLESHEET" href="style.css" type="text/css" />
   </head>
@@ -60,21 +61,67 @@ of Expat.</p>
     </dt>
   <dd><p>Release ??? includes security &amp; other bug fixes.</p>
     <h4>Security fixes</h4>
+    <dl>
+      <dt><a href="https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2016-0718">CVE-2016-0718</a>
+          (<a href="https://sourceforge.net/p/expat/bugs/537/">issue 537</a>)</dt>
+        <dd>Fix crash on malformed input</dd>
+      <dt><a href="https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2016-4472">CVE-2016-4472</a></dt>
+        <dd>Improve insufficient fix to
+          <a href="https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2015-1283">CVE-2015-1283</a> /
+          <a href="https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2015-2716">CVE-2015-2716</a>
+          introduced with Expat 2.1.1</dd>
+      <dt><a href="https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2016-5300">CVE-2016-5300</a>
+          (<a href="https://sourceforge.net/p/expat/bugs/499/">issue 499</a>)</dt>
+        <dd>Use more entropy for hash initialization than the original fix to
+          <a href="https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2012-0876">CVE-2012-0876</a></dd>
+      <dt><a href="https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2012-6702">CVE-2012-6702</a>
+          (<a href="https://sourceforge.net/p/expat/bugs/519/">issue 519</a>)</dt>
+        <dd>Resolve troublesome internal call to srand that was introduced
+          with Expat 2.1.0 when addressing <a href="https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2012-0876">CVE-2012-0876</a>
+          (<a href="https://sourceforge.net/p/expat/bugs/496/">issue 496</a>)</dd>
+    </dl>
+    <h4>Bug fixes</h4>
     <ul>
-      <li>Use more entropy for hash initialization
-        (<a href="https://sourceforge.net/p/expat/bugs/499/">bug 499</a>)</li>
-      <li>Resolve troublesome internal call to srand
-        (<a href="https://sourceforge.net/p/expat/bugs/519/">bug 519</a>)</li>
+      <li>Fix uninitialized reads of size 1 (e.g. in <code>little2_updatePosition</code>)</li>
+      <li>Fix detection of UTF-8 character boundaries</li>
     </ul>
     <h4>Other changes</h4>
     <ul>
       <li>Fix compilation for Visual Studio 2010
         (<a href="https://sourceforge.net/p/expat/bugs/532/">bug 532</a>)</li>
-      <li>Fix static build (<code>BUILD_shared=OFF</code>) with CMake on Windows
+      <li>Autotools: Resolve use of &quot;$&lt;&quot; to better support bmake</li>
+      <li>Autotools: Add QA script &quot;qa.sh&quot; (and make target &quot;qa&quot;)</li>
+      <li>Autotools: Respect <code>CXXFLAGS</code> if given</li>
+      <li>Autotools: Fix &quot;make run-xmltest&quot;</li>
+      <li>Autotools: Have &quot;make run-xmltest&quot; check for expected output</li>
+      <li>CMake: Fix static build (<code>BUILD_shared=OFF</code>) on Windows
         (<a href="https://sourceforge.net/p/expat/patches/90/">patch 90</a>)</li>
+      <li>CMake: Add soversion, support <code>-DNO_SONAME=yes</code> to bypass
+        (<a href="https://sourceforge.net/p/expat/bugs/536/">bug 536</a>)</li>
+      <li>CMake: Add suffix &quot;d&quot; to differentiate debug from release
+        (<a href="https://sourceforge.net/p/expat/bugs/323/">bug 323</a>)</li>
+      <li>CMake: Define <code>WIN32</code> with CMake on Windows</li>
+      <li>Annotate memory allocators for GCC</li>
+      <li>Address all currently known compile warnings</li>
+      <li>Make sure that API symbols remain visible despite <code>-fvisibility=hidden</code></li>
       <li>Remove executable flag from source files</li>
-      <li>Address some compile warnings</li>
+      <li>Resolve <code>COMPILED_FROM_DSP</code> in favor of <code>WIN32</code></li>
+    </ul>
+    <h4>Special thanks to</h4>
     <ul>
+      <li>Björn Lindahl</li>
+      <li>Christian Heimes</li>
+      <li>Cristian Rodríguez</li>
+      <li>Daniel Krügler</li>
+      <li>Gustavo Grieco</li>
+      <li>Karl Waclawek</li>
+      <li>László Böszörményi</li>
+      <li>Pascal Cuoq</li>
+      <li>Sergei Nikulov</li>
+      <li>Thomas Beutlich</li>
+      <li>Warren Young</li>
+      <li>Yann Droneaud</li>
+    </ul>
   </dd>
   <dt><em>12 March 2016</em>,
       Expat 2.1.1 released.
