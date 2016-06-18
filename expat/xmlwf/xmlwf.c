@@ -760,6 +760,12 @@ tmain(int argc, XML_Char **argv)
       parser = XML_ParserCreateNS(encoding, NSSEP);
     else
       parser = XML_ParserCreate(encoding);
+
+    if (! parser) {
+      tperror("Could not instantiate parser");
+      exit(1);
+    }
+
     if (requireStandalone)
       XML_SetNotStandaloneHandler(parser, notStandalone);
     XML_SetParamEntityParsing(parser, paramEntityParsing);
