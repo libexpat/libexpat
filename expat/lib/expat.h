@@ -1034,10 +1034,8 @@ XMLPARSEAPI(const XML_Feature *)
 XML_GetFeatureList(void);
 
 
-/* Expat follows the GNU/Linux convention of odd number minor version for
-   beta/development releases and even number minor version for stable
-   releases. Micro is bumped with each release, and set to 0 with each
-   change to major or minor version.
+/* Expat follows the semantic versioning convention.
+   See http://semver.org.
 */
 #define XML_MAJOR_VERSION 2
 #define XML_MINOR_VERSION 2
