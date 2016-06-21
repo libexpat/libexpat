@@ -1,4 +1,4 @@
-Release 2.2.0 Sat June 18 2016
+Release 2.2.0 Tue June 21 2016
         Security fixes:
             #537  CVE-2016-0718 -- Fix crash on malformed input
                   CVE-2016-4472 -- Improve insufficient fix to CVE-2015-1283 /
