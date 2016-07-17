@@ -1,3 +1,13 @@
+Release ??????????
+
+        Bug fixes:
+            #539  Fix regression from fix to CVE-2016-0718 cutting off
+                    longer tag names from non-UTF-16 input with -DXML_UNICODE
+
+        Special thanks to:
+            Andy Wang
+            Karl Waclawek
+
 Release 2.2.0 Tue June 21 2016
         Security fixes:
             #537  CVE-2016-0718 -- Fix crash on malformed input
