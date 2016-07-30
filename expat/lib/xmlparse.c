@@ -721,6 +721,8 @@ generate_hash_secret_salt(XML_Parser parser)
 {
 #ifdef __CloudABI__
   unsigned long entropy;
+  (void)parser;
+  (void)gather_time_entropy;
   arc4random_buf(&entropy, sizeof(entropy));
   return entropy;
 #else
