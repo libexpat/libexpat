@@ -4,8 +4,12 @@ Release ??????????
             #539  Fix regression from fix to CVE-2016-0718 cutting off
                     longer tag names
 
+        Other changes:
+            #540  Support compilation against cloudlibc of CloudABI
+
         Special thanks to:
             Andy Wang
+            Ed Schouten
             Karl Waclawek
 
 Release 2.2.0 Tue June 21 2016
