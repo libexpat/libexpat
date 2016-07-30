@@ -719,6 +719,11 @@ gather_time_entropy(void)
 static unsigned long
 generate_hash_secret_salt(XML_Parser parser)
 {
+#ifdef __CloudABI__
+  unsigned long entropy;
+  arc4random_buf(&entropy, sizeof(entropy));
+  return entropy;
+#else
   /* Process ID is 0 bits entropy if attacker has local access
    * XML_Parser address is few bits of entropy if attacker has local access */
   const unsigned long entropy =
@@ -730,6 +735,7 @@ generate_hash_secret_salt(XML_Parser parser)
   } else {
     return entropy * (unsigned long)2305843009213693951;
   }
+#endif
 }
 
 static XML_Bool  /* only valid for root parser */
