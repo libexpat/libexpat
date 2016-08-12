@@ -5,12 +5,14 @@ Release ??????????
                     longer tag names
 
         Other changes:
+            #538  Start using -fno-strict-aliasing
             #540  Support compilation against cloudlibc of CloudABI
 
         Special thanks to:
             Andy Wang
             Ed Schouten
             Karl Waclawek
+            Pascal Cuoq
 
 Release 2.2.0 Tue June 21 2016
         Security fixes:

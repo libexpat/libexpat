@@ -80,6 +80,10 @@ if test "$GCC" = yes ; then
     if test "x$CXXFLAGS" = x ; then
     CXXFLAGS=`echo "$CFLAGS" | sed 's/ -Wmissing-prototypes -Wstrict-prototypes//'`
     fi
+
+    CFLAGS="${CFLAGS} -fno-strict-aliasing"
+    CXXFLAGS="${CXXFLAGS} -fno-strict-aliasing"
+    LDFLAGS="${LDFLAGS} -fno-strict-aliasing"
 fi
 
 dnl Checks for header files.
