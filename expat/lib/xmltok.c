@@ -402,7 +402,7 @@ utf8_toUtf16(const ENCODING *enc,
     case BT_LEAD2:
       if (fromLim - from < 2) {
         res = XML_CONVERT_INPUT_INCOMPLETE;
-        break;
+        goto after;
       }
       *to++ = (unsigned short)(((from[0] & 0x1f) << 6) | (from[1] & 0x3f));
       from += 2;
@@ -410,7 +410,7 @@ utf8_toUtf16(const ENCODING *enc,
     case BT_LEAD3:
       if (fromLim - from < 3) {
         res = XML_CONVERT_INPUT_INCOMPLETE;
-        break;
+        goto after;
       }
       *to++ = (unsigned short)(((from[0] & 0xf) << 12)
                                | ((from[1] & 0x3f) << 6) | (from[2] & 0x3f));
@@ -441,6 +441,8 @@ utf8_toUtf16(const ENCODING *enc,
       break;
     }
   }
+  if (from < fromLim)
+    res = XML_CONVERT_OUTPUT_EXHAUSTED;
 after:
   *fromP = from;
   *toP = to;
