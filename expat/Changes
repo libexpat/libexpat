@@ -7,6 +7,8 @@ Release ??????????
         Other changes:
             #538  Start using -fno-strict-aliasing
             #540  Support compilation against cloudlibc of CloudABI
+            #534  CMake: Introduce option "BUILD_doc" (enabled by default)
+                    to bypass compilation of the xmlwf.1 man page
 
         Special thanks to:
             Andy Wang
@@ -14,6 +16,7 @@ Release ??????????
             Ed Schouten
             Karl Waclawek
             Pascal Cuoq
+            Sergei Nikulov
 
 Release 2.2.0 Tue June 21 2016
         Security fixes:
