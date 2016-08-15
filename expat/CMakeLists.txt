@@ -14,6 +14,7 @@ option(BUILD_tools "build the xmlwf tool for expat library" ON)
 option(BUILD_examples "build the examples for expat library" ON)
 option(BUILD_tests "build the tests for expat library" ON)
 option(BUILD_shared "build a shared expat library" ON)
+option(BUILD_doc "build man page for xmlwf" ON)
 
 # configuration options
 set(XML_CONTEXT_BYTES 1024 CACHE STRING "Define to specify how much context to retain around the current parse point")
@@ -98,9 +99,6 @@ configure_file(expat.pc.in ${CMAKE_CURRENT_BINARY_DIR}/expat.pc)
 install(FILES lib/expat.h lib/expat_external.h DESTINATION include)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/expat.pc DESTINATION lib/pkgconfig)
 
-
-add_custom_command(TARGET expat PRE_BUILD COMMAND $(MAKE) -C doc xmlwf.1)
-
 if(BUILD_tools AND NOT WINCE)
     set(xmlwf_SRCS
         xmlwf/xmlwf.c
@@ -113,7 +111,10 @@ if(BUILD_tools AND NOT WINCE)
     set_property(TARGET xmlwf PROPERTY RUNTIME_OUTPUT_DIRECTORY xmlwf)
     target_link_libraries(xmlwf expat)
     install(TARGETS xmlwf DESTINATION bin)
-    install(FILES doc/xmlwf.1 DESTINATION share/man/man1)
+    if(BUILD_doc)
+        add_custom_command(TARGET expat PRE_BUILD COMMAND $(MAKE) -C doc xmlwf.1)
+        install(FILES doc/xmlwf.1 DESTINATION share/man/man1)
+    endif()
 endif(BUILD_tools AND NOT WINCE)
 
 if(BUILD_examples)
