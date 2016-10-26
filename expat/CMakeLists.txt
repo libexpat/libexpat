@@ -37,7 +37,7 @@ if(BUILD_tests)
     enable_testing()
 endif(BUILD_tests)
 
-include(ConfigureChecks.cmake)
+include(${CMAKE_CURRENT_LIST_DIR}/ConfigureChecks.cmake)
 
 set(EXTRA_LINK_AND_COMPILE_FLAGS "-fno-strict-aliasing")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${EXTRA_LINK_AND_COMPILE_FLAGS}")
