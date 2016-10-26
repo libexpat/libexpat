@@ -15,6 +15,7 @@ option(BUILD_examples "build the examples for expat library" ON)
 option(BUILD_tests "build the tests for expat library" ON)
 option(BUILD_shared "build a shared expat library" ON)
 option(BUILD_doc "build man page for xmlwf" ON)
+option(BUILD_install "install expat files in cmake install target" ON)
 
 # configuration options
 set(XML_CONTEXT_BYTES 1024 CACHE STRING "Define to specify how much context to retain around the current parse point")
@@ -86,7 +87,13 @@ if(NOT WIN32)
     set_property(TARGET expat PROPERTY NO_SONAME ${NO_SONAME})
 endif(NOT WIN32)
 
-install(TARGETS expat RUNTIME DESTINATION bin
+macro(expat_install)
+    if(BUILD_install)
+        install(${ARGN})
+    endif()
+endmacro()
+
+expat_install(TARGETS expat RUNTIME DESTINATION bin
                       LIBRARY DESTINATION lib
                       ARCHIVE DESTINATION lib)
 
@@ -96,8 +103,8 @@ set(libdir "\${prefix}/lib")
 set(includedir "\${prefix}/include")
 configure_file(expat.pc.in ${CMAKE_CURRENT_BINARY_DIR}/expat.pc)
 
-install(FILES lib/expat.h lib/expat_external.h DESTINATION include)
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/expat.pc DESTINATION lib/pkgconfig)
+expat_install(FILES lib/expat.h lib/expat_external.h DESTINATION include)
+expat_install(FILES ${CMAKE_CURRENT_BINARY_DIR}/expat.pc DESTINATION lib/pkgconfig)
 
 if(BUILD_tools AND NOT WINCE)
     set(xmlwf_SRCS
@@ -110,7 +117,7 @@ if(BUILD_tools AND NOT WINCE)
     add_executable(xmlwf ${xmlwf_SRCS})
     set_property(TARGET xmlwf PROPERTY RUNTIME_OUTPUT_DIRECTORY xmlwf)
     target_link_libraries(xmlwf expat)
-    install(TARGETS xmlwf DESTINATION bin)
+    expat_install(TARGETS xmlwf DESTINATION bin)
     if(BUILD_doc AND NOT MSVC)
         if(CMAKE_GENERATOR STREQUAL "Unix Makefiles")
             set(make_command "$(MAKE)")
@@ -119,7 +126,7 @@ if(BUILD_tools AND NOT WINCE)
         endif()
 
         add_custom_command(TARGET expat PRE_BUILD COMMAND "${make_command}" -C "${PROJECT_SOURCE_DIR}/doc" xmlwf.1)
-        install(FILES "${PROJECT_SOURCE_DIR}/doc/xmlwf.1" DESTINATION share/man/man1)
+        expat_install(FILES "${PROJECT_SOURCE_DIR}/doc/xmlwf.1" DESTINATION share/man/man1)
     endif()
 endif(BUILD_tools AND NOT WINCE)
 
