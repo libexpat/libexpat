@@ -9,6 +9,8 @@ Release ??????????
             #540  Support compilation against cloudlibc of CloudABI
             #534  CMake: Introduce option "BUILD_doc" (enabled by default)
                     to bypass compilation of the xmlwf.1 man page
+            pr2   CMake: Introduce option "INSTALL" (enabled by default)
+                    to bypass installation of expat files
 
         Special thanks to:
             Andy Wang
