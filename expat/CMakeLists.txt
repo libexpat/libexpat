@@ -57,8 +57,8 @@ endif(WIN32)
 set(expat_SRCS
     lib/xmlparse.c
     lib/xmlrole.c
-    lib/xmltok.c 
-    lib/xmltok_impl.c 
+    lib/xmltok.c
+    lib/xmltok_impl.c
     lib/xmltok_ns.c
 )
 
