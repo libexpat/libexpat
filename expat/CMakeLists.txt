@@ -15,7 +15,7 @@ option(BUILD_examples "build the examples for expat library" ON)
 option(BUILD_tests "build the tests for expat library" ON)
 option(BUILD_shared "build a shared expat library" ON)
 option(BUILD_doc "build man page for xmlwf" ON)
-option(BUILD_install "install expat files in cmake install target" ON)
+option(INSTALL "install expat files in cmake install target" ON)
 
 # configuration options
 set(XML_CONTEXT_BYTES 1024 CACHE STRING "Define to specify how much context to retain around the current parse point")
@@ -88,7 +88,7 @@ if(NOT WIN32)
 endif(NOT WIN32)
 
 macro(expat_install)
-    if(BUILD_install)
+    if(INSTALL)
         install(${ARGN})
     endif()
 endmacro()
