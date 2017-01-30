@@ -45,7 +45,7 @@ main() {
         local CXX="${GCC_CXX}"
         BASE_FLAGS+=" -g -fsanitize=address -fno-omit-frame-pointer"
         ;;
-    coverage)
+    coverage | lib-coverage | app-coverage)
         local CC="${GCC_CC}"
         local CXX="${GCC_CXX}"
         BASE_FLAGS+=" --coverage --no-inline"
@@ -71,7 +71,7 @@ main() {
         ;;
     *)
         echo "Usage:" 1>&2
-        echo "  ${0##*/} (address|coverage|egypt|memory|ncc|undefined)" 1>&2
+        echo "  ${0##*/} (address|coverage|lib-coverage|app-coverage|egypt|memory|ncc|undefined)" 1>&2
         exit 1
         ;;
     esac
@@ -103,6 +103,12 @@ main() {
     case "${mode}" in
     coverage)
         find -name '*.gcda' | sort | xargs gcov
+        ;;
+    lib-coverage)
+        find lib -name '*.gcda' | sort | xargs gcov
+        ;;
+    app-coverage)
+        find lib xmlwf -name '*.gcda' | sort | xargs gcov
         ;;
     egypt)
         local DOT_FORMAT="${DOT_FORMAT:-svg}"
