@@ -1594,12 +1594,46 @@ START_TEST(test_ns_unbound_prefix_on_element)
 }
 END_TEST
 
+/* Control variable; the number of times duff_allocator() will successfully allocate */
+static unsigned int allocation_count = 0;
+
+/* Crocked allocator for allocation failure tests */
+static void *duff_allocator(size_t size)
+{
+    if (allocation_count == 0)
+        return NULL;
+    allocation_count--;
+    return malloc(size);
+}
+
+/* Test that a failure to allocate the parser structure fails gracefully */
+START_TEST(test_alloc_create_parser)
+{
+    XML_Memory_Handling_Suite memsuite = { duff_allocator, realloc, free };
+    unsigned int i;
+
+    /* Something this simple shouldn't need more than 10 allocations */
+    for (i = 0; i < 10; i++)
+    {
+        allocation_count = i;
+        parser = XML_ParserCreate_MM(NULL, &memsuite, NULL);
+        if (parser != NULL)
+            break;
+    }
+    if (i == 0)
+        fail("Parser unexpectedly ignored failing allocator");
+    else if (i == 10)
+        fail("Parser not created with allocation count 10");
+}
+END_TEST
+
 static Suite *
 make_suite(void)
 {
     Suite *s = suite_create("basic");
     TCase *tc_basic = tcase_create("basic tests");
     TCase *tc_namespace = tcase_create("XML namespaces");
+    TCase *tc_alloc = tcase_create("allocation tests");
 
     suite_add_tcase(s, tc_basic);
     tcase_add_checked_fixture(tc_basic, basic_setup, basic_teardown);
@@ -1665,6 +1699,10 @@ make_suite(void)
     tcase_add_test(tc_namespace, test_ns_duplicate_attrs_diff_prefixes);
     tcase_add_test(tc_namespace, test_ns_unbound_prefix_on_attribute);
     tcase_add_test(tc_namespace, test_ns_unbound_prefix_on_element);
+
+    suite_add_tcase(s, tc_alloc);
+    tcase_add_checked_fixture(tc_alloc, NULL, basic_teardown);
+    tcase_add_test(tc_alloc, test_alloc_create_parser);
 
     return s;
 }
