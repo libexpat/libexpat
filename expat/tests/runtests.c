@@ -1627,6 +1627,71 @@ START_TEST(test_alloc_create_parser)
 }
 END_TEST
 
+static int XMLCALL
+external_entity_duff_loader(XML_Parser parser,
+                            const XML_Char *context,
+                            const XML_Char *UNUSED_P(base),
+                            const XML_Char *UNUSED_P(systemId),
+                            const XML_Char *UNUSED_P(publicId))
+{
+    char *text = (char *)XML_GetUserData(parser);
+    XML_Parser new_parser;
+    unsigned int i;
+
+    /* Try a few different allocation levels */
+    for (i = 0; i < 10; i++)
+    {
+        allocation_count = i;
+        new_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
+        if (new_parser != NULL)
+        {
+            XML_ParserFree(new_parser);
+            break;
+        }
+    }
+    if (i == 0)
+        fail("External parser creation ignored failing allocator");
+    else if (i == 10)
+        fail("Extern parser not created with allocation count 10");
+
+    /* Make sure other random allocation doesn't now fail */
+    allocation_count = 10000;
+
+    /* Make sure the failure code path is executed too */
+    return XML_STATUS_ERROR;
+}
+
+/* Test than external parser creation running out of memory is
+ * correctly reported.  Based on the external entity test cases.
+ */
+START_TEST(test_alloc_create_external_parser)
+{
+    const char *text =
+        "<?xml version='1.0' encoding='us-ascii'?>\n"
+        "<!DOCTYPE doc SYSTEM 'foo'>\n"
+        "<doc>&entity;</doc>";
+    char foo_text[] =
+        "<!ELEMENT doc (#PCDATA)*>";
+    XML_Memory_Handling_Suite memsuite = { duff_allocator, realloc, free };
+
+    /* Ensure the initial memory allocations go through */
+    allocation_count = 10000;
+    parser = XML_ParserCreate_MM(NULL, &memsuite, NULL);
+    if (parser == NULL) {
+        fail("Failed to create parser");
+    } else {
+        XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+        XML_SetUserData(parser, foo_text);
+        XML_SetExternalEntityRefHandler(parser,
+                                        external_entity_duff_loader);
+        if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text), XML_TRUE) != XML_STATUS_ERROR) {
+            fail("External parser allocator returned success incorrectly");
+        }
+    }
+}
+END_TEST
+
+
 static Suite *
 make_suite(void)
 {
@@ -1703,6 +1768,7 @@ make_suite(void)
     suite_add_tcase(s, tc_alloc);
     tcase_add_checked_fixture(tc_alloc, NULL, basic_teardown);
     tcase_add_test(tc_alloc, test_alloc_create_parser);
+    tcase_add_test(tc_alloc, test_alloc_create_external_parser);
 
     return s;
 }
