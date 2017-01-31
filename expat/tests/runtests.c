@@ -1634,7 +1634,6 @@ external_entity_duff_loader(XML_Parser parser,
                             const XML_Char *UNUSED_P(systemId),
                             const XML_Char *UNUSED_P(publicId))
 {
-    char *text = (char *)XML_GetUserData(parser);
     XML_Parser new_parser;
     unsigned int i;
 
@@ -1661,7 +1660,7 @@ external_entity_duff_loader(XML_Parser parser,
     return XML_STATUS_ERROR;
 }
 
-/* Test than external parser creation running out of memory is
+/* Test that external parser creation running out of memory is
  * correctly reported.  Based on the external entity test cases.
  */
 START_TEST(test_alloc_create_external_parser)
