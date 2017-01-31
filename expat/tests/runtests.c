@@ -1691,6 +1691,93 @@ START_TEST(test_alloc_create_external_parser)
 }
 END_TEST
 
+static int XMLCALL
+external_entity_dbl_handler(XML_Parser parser,
+                            const XML_Char *context,
+                            const XML_Char *UNUSED_P(base),
+                            const XML_Char *UNUSED_P(systemId),
+                            const XML_Char *UNUSED_P(publicId))
+{
+    intptr_t callno = (intptr_t)XML_GetUserData(parser);
+    const char *text;
+    XML_Parser new_parser;
+    int i;
+
+    if (callno == 0) {
+        /* First time through, check how many calls to malloc occur */
+        text = ("<!ELEMENT doc (e+)>\n"
+                "<!ATTLIST doc xmlns CDATA #IMPLIED>\n"
+                "<!ELEMENT e EMPTY>\n");
+        allocation_count = 10000;
+        new_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
+        if (new_parser == NULL) {
+            fail("Unable to allocate first external parser");
+            return 0;
+        }
+        /* Stash the number of calls in the user data */
+        XML_SetUserData(parser, (void *)(intptr_t)(10000 - allocation_count));
+    } else {
+        text = ("<?xml version='1.0' encoding='us-ascii'?>"
+                "<e/>");
+        /* Try at varying levels to exercise more code paths */
+        for (i = 0; i < 20; i++) {
+            allocation_count = callno + i;
+            new_parser = XML_ExternalEntityParserCreate(parser,
+                                                        context,
+                                                        NULL);
+            if (new_parser != NULL)
+                break;
+        }
+        if (i == 0) {
+            fail("Second external parser unexpectedly created");
+            XML_ParserFree(new_parser);
+            return 0;
+        }
+        else if (i == 20) {
+            fail("Second external parser not created");
+            return 0;
+        }
+    }
+
+    allocation_count = 10000;
+    if (_XML_Parse_SINGLE_BYTES(new_parser, text, strlen(text), XML_TRUE) == XML_STATUS_ERROR) {
+        xml_failure(new_parser);
+        return 0;
+    }
+    XML_ParserFree(new_parser);
+    return 1;
+}
+
+/* Test that running out of memory in dtdCopy is correctly reported.
+ * Based on test_default_ns_from_ext_subset_and_ext_ge()
+ */
+START_TEST(test_alloc_dtd_copy_default_atts)
+{
+    XML_Memory_Handling_Suite memsuite = { duff_allocator, realloc, free };
+    const char *text =
+        "<?xml version='1.0'?>\n"
+        "<!DOCTYPE doc SYSTEM 'http://xml.libexpat.org/doc.dtd' [\n"
+        "  <!ENTITY en SYSTEM 'http://xml.libexpat.org/entity.ent'>\n"
+        "]>\n"
+        "<doc xmlns='http://xml.libexpat.org/ns1'>\n"
+        "&en;\n"
+        "</doc>";
+
+    /* Ensure initial allocations will be OK */
+    allocation_count = 10000;
+    parser = XML_ParserCreate_MM(NULL, &memsuite, NULL);
+    if (parser == NULL) {
+        fail("Failed to create initial parser");
+    } else {
+        XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+        XML_SetExternalEntityRefHandler(parser,
+                                        external_entity_dbl_handler);
+        XML_SetUserData(parser, NULL);
+        if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text), XML_TRUE) == XML_STATUS_ERROR)
+            xml_failure(parser);
+    }
+}
+END_TEST
 
 static Suite *
 make_suite(void)
@@ -1769,6 +1856,7 @@ make_suite(void)
     tcase_add_checked_fixture(tc_alloc, NULL, basic_teardown);
     tcase_add_test(tc_alloc, test_alloc_create_parser);
     tcase_add_test(tc_alloc, test_alloc_create_external_parser);
+    tcase_add_test(tc_alloc, test_alloc_dtd_copy_default_atts);
 
     return s;
 }
