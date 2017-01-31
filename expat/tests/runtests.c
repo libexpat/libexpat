@@ -1827,6 +1827,38 @@ START_TEST(test_alloc_dtd_copy_default_atts)
 }
 END_TEST
 
+/* Test the effects of allocation failure in simple namespace parsing.
+ * Based on test_ns_default_with_empty_uri()
+ */
+START_TEST(test_alloc_ns)
+{
+    XML_Memory_Handling_Suite memsuite = { duff_allocator, realloc, free };
+    const char *text =
+        "<doc xmlns='http://xml.libexpat.org/'>\n"
+        "  <e xmlns=''/>\n"
+        "</doc>";
+    unsigned int i;
+    XML_Char ns_sep[2] = { ' ', '\0' };
+
+    allocation_count = 10000;
+    parser = XML_ParserCreate_MM(NULL, &memsuite, ns_sep);
+    if (parser == NULL) {
+        fail("Parser not created");
+    } else {
+        for (i = 0; i < 10; i++) {
+            allocation_count = i;
+            if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text), XML_TRUE) != XML_STATUS_ERROR)
+                break;
+            XML_ParserReset(parser, NULL);
+        }
+        if (i == 0)
+            fail("Parsing worked despite failing allocations");
+        else if (i == 10)
+            fail("Parsing failed even at allocation count 10");
+    }
+}
+END_TEST
+
 static Suite *
 make_suite(void)
 {
@@ -1906,6 +1938,7 @@ make_suite(void)
     tcase_add_test(tc_alloc, test_alloc_create_external_parser);
     tcase_add_test(tc_alloc, test_alloc_run_external_parser);
     tcase_add_test(tc_alloc, test_alloc_dtd_copy_default_atts);
+    tcase_add_test(tc_alloc, test_alloc_ns);
 
     return s;
 }
