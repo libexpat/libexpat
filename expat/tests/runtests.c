@@ -1275,6 +1275,41 @@ START_TEST(test_bad_cdata)
 }
 END_TEST
 
+/* Test memory allocation functions */
+START_TEST(test_memory_allocation)
+{
+    char *buffer = (char *)XML_MemMalloc(parser, 256);
+    char *p;
+
+    if (buffer == NULL) {
+        fail("Allocation failed");
+    } else {
+        /* Try writing to memory; some OSes try to cheat! */
+        buffer[0] = 'T';
+        buffer[1] = 'E';
+        buffer[2] = 'S';
+        buffer[3] = 'T';
+        buffer[4] = '\0';
+        if (strcmp(buffer, "TEST") != 0) {
+            fail("Memory not writable");
+        } else {
+            p = (char *)XML_MemRealloc(parser, buffer, 512);
+            if (p == NULL) {
+                fail("Reallocation failed");
+            } else {
+                /* Write again, just to be sure */
+                buffer = p;
+                buffer[0] = 'V';
+                if (strcmp(buffer, "VEST") != 0) {
+                    fail("Reallocated memory not writable");
+                }
+            }
+        }
+        XML_MemFree(parser, buffer);
+    }
+}
+END_TEST
+
 
 /*
  * Namespaces tests.
@@ -2149,6 +2184,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_good_cdata_ascii);
     tcase_add_test(tc_basic, test_good_cdata_utf16);
     tcase_add_test(tc_basic, test_bad_cdata);
+    tcase_add_test(tc_basic, test_memory_allocation);
 
     suite_add_tcase(s, tc_namespace);
     tcase_add_checked_fixture(tc_namespace,
