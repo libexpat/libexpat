@@ -1871,6 +1871,68 @@ START_TEST(test_alloc_ns)
 }
 END_TEST
 
+static void dummy_release(void *UNUSED_P(data))
+{
+}
+
+static int XMLCALL
+unknown_released_encoding_handler(void *UNUSED_P(data),
+                                  const XML_Char *encoding,
+                                  XML_Encoding *info)
+{
+    if (!strcmp(encoding, "unsupported-encoding")) {
+        int i;
+
+        for (i = 0; i < 256; i++)
+            info->map[i] = i;
+        info->data = NULL;
+        info->convert = NULL;
+        info->release = dummy_release;
+        return XML_STATUS_OK;
+    }
+    return XML_STATUS_ERROR;
+}
+
+/* Test the effects of allocation failure in internal entities.
+ * Based on test_unknown_encoding_internal_entity
+ */
+START_TEST(test_alloc_internal_entity)
+{
+    XML_Memory_Handling_Suite memsuite = { duff_allocator, realloc, free };
+    const char *text =
+        "<?xml version='1.0' encoding='unsupported-encoding'?>\n"
+        "<!DOCTYPE test [<!ENTITY foo 'bar'>]>\n"
+        "<test a='&foo;'/>";
+    unsigned int i;
+    int repeated = 0;
+
+    allocation_count = 10000;
+    parser = XML_ParserCreate_MM(NULL, &memsuite, NULL);
+    if (parser == NULL) {
+        fail("Parser not created");
+    } else {
+        for (i = 0; i < 10; i++) {
+            /* Again, repeat some counts to account for caching */
+            if (repeated < 2 && i == 2) {
+                i--;
+                repeated++;
+            }
+            XML_SetUnknownEncodingHandler(parser,
+                                          unknown_released_encoding_handler,
+                                          NULL);
+            allocation_count = i;
+            if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text), XML_TRUE) != XML_STATUS_ERROR)
+                break;
+            XML_ParserReset(parser, NULL);
+        }
+        if (i == 0)
+            fail("Internal entity worked despite failing allocations");
+        else if (i == 10)
+            fail("Internal entity failed at allocation count 10");
+    }
+}
+END_TEST
+
 static Suite *
 make_suite(void)
 {
@@ -1951,6 +2013,7 @@ make_suite(void)
     tcase_add_test(tc_alloc, test_alloc_run_external_parser);
     tcase_add_test(tc_alloc, test_alloc_dtd_copy_default_atts);
     tcase_add_test(tc_alloc, test_alloc_ns);
+    tcase_add_test(tc_alloc, test_alloc_internal_entity);
 
     return s;
 }
