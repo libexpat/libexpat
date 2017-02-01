@@ -1638,7 +1638,7 @@ static void *duff_allocator(size_t size)
 }
 
 /* Test that a failure to allocate the parser structure fails gracefully */
-START_TEST(test_alloc_create_parser)
+START_TEST(test_misc_alloc_create_parser)
 {
     XML_Memory_Handling_Suite memsuite = { duff_allocator, realloc, free };
     unsigned int i;
@@ -1657,6 +1657,69 @@ START_TEST(test_alloc_create_parser)
         fail("Parser not created with allocation count 10");
 }
 END_TEST
+
+/* Test the effects of allocation failure in simple namespace parsing.
+ * Based on test_ns_default_with_empty_uri()
+ */
+START_TEST(test_misc_alloc_ns)
+{
+    XML_Memory_Handling_Suite memsuite = { duff_allocator, realloc, free };
+    const char *text =
+        "<doc xmlns='http://xml.libexpat.org/'>\n"
+        "  <e xmlns=''/>\n"
+        "</doc>";
+    unsigned int i;
+    int repeated = 0;
+    XML_Char ns_sep[2] = { ' ', '\0' };
+
+    allocation_count = 10000;
+    parser = XML_ParserCreate_MM(NULL, &memsuite, ns_sep);
+    if (parser == NULL) {
+        fail("Parser not created");
+    } else {
+        for (i = 0; i < 10; i++) {
+            /* Repeat some tests with the same allocation count to
+             * catch cached allocations not freed by XML_ParserReset()
+             */
+            if (repeated < 2 && i == 3) {
+                i--;
+                repeated++;
+            }
+            if (repeated == 2 && i == 5) {
+                i = 3;
+                repeated++;
+            }
+            allocation_count = i;
+            if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text), XML_TRUE) != XML_STATUS_ERROR)
+                break;
+            XML_ParserReset(parser, NULL);
+        }
+        if (i == 0)
+            fail("Parsing worked despite failing allocations");
+        else if (i == 10)
+            fail("Parsing failed even at allocation count 10");
+    }
+}
+END_TEST
+
+
+static void
+alloc_setup(void)
+{
+    XML_Memory_Handling_Suite memsuite = { duff_allocator, realloc, free };
+
+    /* Ensure the parser creation will go through */
+    allocation_count = 10000;
+    parser = XML_ParserCreate_MM(NULL, &memsuite, NULL);
+    if (parser == NULL)
+        fail("Parser not created");
+}
+
+static void
+alloc_teardown(void)
+{
+    basic_teardown();
+}
 
 static int XMLCALL
 external_entity_duff_loader(XML_Parser parser,
@@ -1702,21 +1765,13 @@ START_TEST(test_alloc_create_external_parser)
         "<doc>&entity;</doc>";
     char foo_text[] =
         "<!ELEMENT doc (#PCDATA)*>";
-    XML_Memory_Handling_Suite memsuite = { duff_allocator, realloc, free };
 
-    /* Ensure the initial memory allocations go through */
-    allocation_count = 10000;
-    parser = XML_ParserCreate_MM(NULL, &memsuite, NULL);
-    if (parser == NULL) {
-        fail("Failed to create parser");
-    } else {
-        XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
-        XML_SetUserData(parser, foo_text);
-        XML_SetExternalEntityRefHandler(parser,
-                                        external_entity_duff_loader);
-        if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text), XML_TRUE) != XML_STATUS_ERROR) {
-            fail("External parser allocator returned success incorrectly");
-        }
+    XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+    XML_SetUserData(parser, foo_text);
+    XML_SetExternalEntityRefHandler(parser,
+                                    external_entity_duff_loader);
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text), XML_TRUE) != XML_STATUS_ERROR) {
+        fail("External parser allocator returned success incorrectly");
     }
 }
 END_TEST
@@ -1740,32 +1795,24 @@ START_TEST(test_alloc_run_external_parser)
         "<doc>&entity;</doc>";
     char foo_text[] =
         "<!ELEMENT doc (#PCDATA)*>";
-    XML_Memory_Handling_Suite memsuite = { duff_allocator, realloc, free };
     unsigned int i;
 
-    /* Ensure the initial memory allocations go through */
-    allocation_count = 10000;
-    parser = XML_ParserCreate_MM(NULL, &memsuite, NULL);
-    if (parser == NULL) {
-        fail("Failed to create parser");
-    } else {
-        for (i = 0; i < 10; i++) {
-            XML_SetParamEntityParsing(parser,
-                                      XML_PARAM_ENTITY_PARSING_ALWAYS);
-            XML_SetUserData(parser, foo_text);
-            XML_SetExternalEntityRefHandler(parser,
-                                            external_entity_null_loader);
-            allocation_count = i;
-            if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text), XML_TRUE) != XML_STATUS_ERROR)
-                break;
-            /* Re-use the parser */
-            XML_ParserReset(parser, NULL);
-        }
-        if (i == 0)
-            fail("Parsing ignored failing allocator");
-        else if (i == 10)
-            fail("Parsing failed with allocation count 10");
+    for (i = 0; i < 10; i++) {
+        XML_SetParamEntityParsing(parser,
+                                  XML_PARAM_ENTITY_PARSING_ALWAYS);
+        XML_SetUserData(parser, foo_text);
+        XML_SetExternalEntityRefHandler(parser,
+                                        external_entity_null_loader);
+        allocation_count = i;
+        if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text), XML_TRUE) != XML_STATUS_ERROR)
+            break;
+        /* Re-use the parser */
+        XML_ParserReset(parser, NULL);
     }
+    if (i == 0)
+        fail("Parsing ignored failing allocator");
+    else if (i == 10)
+        fail("Parsing failed with allocation count 10");
 }
 END_TEST
 
@@ -1832,7 +1879,6 @@ external_entity_dbl_handler(XML_Parser parser,
  */
 START_TEST(test_alloc_dtd_copy_default_atts)
 {
-    XML_Memory_Handling_Suite memsuite = { duff_allocator, realloc, free };
     const char *text =
         "<?xml version='1.0'?>\n"
         "<!DOCTYPE doc SYSTEM 'http://xml.libexpat.org/doc.dtd' [\n"
@@ -1842,19 +1888,12 @@ START_TEST(test_alloc_dtd_copy_default_atts)
         "&en;\n"
         "</doc>";
 
-    /* Ensure initial allocations will be OK */
-    allocation_count = 10000;
-    parser = XML_ParserCreate_MM(NULL, &memsuite, NULL);
-    if (parser == NULL) {
-        fail("Failed to create initial parser");
-    } else {
-        XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
-        XML_SetExternalEntityRefHandler(parser,
-                                        external_entity_dbl_handler);
-        XML_SetUserData(parser, NULL);
-        if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text), XML_TRUE) == XML_STATUS_ERROR)
-            xml_failure(parser);
-    }
+    XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+    XML_SetExternalEntityRefHandler(parser,
+                                    external_entity_dbl_handler);
+    XML_SetUserData(parser, NULL);
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text), XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
 }
 END_TEST
 
@@ -1925,7 +1964,6 @@ external_entity_dbl_handler_2(XML_Parser parser,
 /* Test more external entity allocation failure paths */
 START_TEST(test_alloc_external_entity)
 {
-    XML_Memory_Handling_Suite memsuite = { duff_allocator, realloc, free };
     const char *text =
         "<?xml version='1.0'?>\n"
         "<!DOCTYPE doc SYSTEM 'http://xml.libexpat.org/doc.dtd' [\n"
@@ -1935,67 +1973,16 @@ START_TEST(test_alloc_external_entity)
         "&en;\n"
         "</doc>";
 
-    /* Ensure initial allocations will be OK */
-    allocation_count = 10000;
-    parser = XML_ParserCreate_MM(NULL, &memsuite, NULL);
-    if (parser == NULL) {
-        fail("Failed to create initial parser");
-    } else {
-        XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
-        XML_SetExternalEntityRefHandler(parser,
-                                        external_entity_dbl_handler_2);
-        XML_SetUserData(parser, NULL);
-        if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
-                                    XML_TRUE) == XML_STATUS_ERROR)
-            xml_failure(parser);
-    }
+    XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+    XML_SetExternalEntityRefHandler(parser,
+                                    external_entity_dbl_handler_2);
+    XML_SetUserData(parser, NULL);
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
 }
 END_TEST
 
-
-/* Test the effects of allocation failure in simple namespace parsing.
- * Based on test_ns_default_with_empty_uri()
- */
-START_TEST(test_alloc_ns)
-{
-    XML_Memory_Handling_Suite memsuite = { duff_allocator, realloc, free };
-    const char *text =
-        "<doc xmlns='http://xml.libexpat.org/'>\n"
-        "  <e xmlns=''/>\n"
-        "</doc>";
-    unsigned int i;
-    int repeated = 0;
-    XML_Char ns_sep[2] = { ' ', '\0' };
-
-    allocation_count = 10000;
-    parser = XML_ParserCreate_MM(NULL, &memsuite, ns_sep);
-    if (parser == NULL) {
-        fail("Parser not created");
-    } else {
-        for (i = 0; i < 10; i++) {
-            /* Repeat some tests with the same allocation count to
-             * catch cached allocations not freed by XML_ParserReset()
-             */
-            if (repeated < 2 && i == 3) {
-                i--;
-                repeated++;
-            }
-            if (repeated == 2 && i == 5) {
-                i = 3;
-                repeated++;
-            }
-            allocation_count = i;
-            if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text), XML_TRUE) != XML_STATUS_ERROR)
-                break;
-            XML_ParserReset(parser, NULL);
-        }
-        if (i == 0)
-            fail("Parsing worked despite failing allocations");
-        else if (i == 10)
-            fail("Parsing failed even at allocation count 10");
-    }
-}
-END_TEST
 
 static int XMLCALL
 unknown_released_encoding_handler(void *UNUSED_P(data),
@@ -2020,7 +2007,6 @@ unknown_released_encoding_handler(void *UNUSED_P(data),
  */
 START_TEST(test_alloc_internal_entity)
 {
-    XML_Memory_Handling_Suite memsuite = { duff_allocator, realloc, free };
     const char *text =
         "<?xml version='1.0' encoding='unsupported-encoding'?>\n"
         "<!DOCTYPE test [<!ENTITY foo 'bar'>]>\n"
@@ -2028,30 +2014,24 @@ START_TEST(test_alloc_internal_entity)
     unsigned int i;
     int repeated = 0;
 
-    allocation_count = 10000;
-    parser = XML_ParserCreate_MM(NULL, &memsuite, NULL);
-    if (parser == NULL) {
-        fail("Parser not created");
-    } else {
-        for (i = 0; i < 10; i++) {
-            /* Again, repeat some counts to account for caching */
-            if (repeated < 2 && i == 2) {
-                i--;
-                repeated++;
-            }
-            XML_SetUnknownEncodingHandler(parser,
-                                          unknown_released_encoding_handler,
-                                          NULL);
-            allocation_count = i;
-            if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text), XML_TRUE) != XML_STATUS_ERROR)
-                break;
-            XML_ParserReset(parser, NULL);
+    for (i = 0; i < 10; i++) {
+        /* Again, repeat some counts to account for caching */
+        if (repeated < 2 && i == 2) {
+            i--;
+            repeated++;
         }
-        if (i == 0)
-            fail("Internal entity worked despite failing allocations");
-        else if (i == 10)
-            fail("Internal entity failed at allocation count 10");
+        XML_SetUnknownEncodingHandler(parser,
+                                      unknown_released_encoding_handler,
+                                      NULL);
+        allocation_count = i;
+        if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text), XML_TRUE) != XML_STATUS_ERROR)
+            break;
+        XML_ParserReset(parser, NULL);
     }
+    if (i == 0)
+        fail("Internal entity worked despite failing allocations");
+    else if (i == 10)
+        fail("Internal entity failed at allocation count 10");
 }
 END_TEST
 
@@ -2061,7 +2041,6 @@ END_TEST
  */
 START_TEST(test_alloc_dtd_default_handling)
 {
-    XML_Memory_Handling_Suite memsuite = { duff_allocator, realloc, free };
     const char *text =
         "<!DOCTYPE doc [\n"
         "<!ENTITY e SYSTEM 'http://xml.libexpat.org/e'>\n"
@@ -2076,45 +2055,38 @@ START_TEST(test_alloc_dtd_default_handling)
     int i;
     int repeat = 0;
 
-    allocation_count = 10000;
-    parser = XML_ParserCreate_MM(NULL, &memsuite, NULL);
-    if (parser == NULL)
-    {
-        fail("Failed to create parser");
+    for (i = 0; i < 10; i++) {
+        /* Repeat some counts to catch cached allocations */
+        if ((repeat < 4 && i == 2) ||
+            (repeat == 4 && i == 3)) {
+            i--;
+            repeat++;
+        }
+        allocation_count = i;
+        XML_SetDefaultHandler(parser, accumulate_characters);
+        XML_SetDoctypeDeclHandler(parser,
+                                  dummy_start_doctype_handler,
+                                  dummy_end_doctype_handler);
+        XML_SetEntityDeclHandler(parser, dummy_entity_decl_handler);
+        XML_SetNotationDeclHandler(parser, dummy_notation_decl_handler);
+        XML_SetElementDeclHandler(parser, dummy_element_decl_handler);
+        XML_SetAttlistDeclHandler(parser, dummy_attlist_decl_handler);
+        XML_SetProcessingInstructionHandler(parser, dummy_pi_handler);
+        XML_SetCommentHandler(parser, dummy_comment_handler);
+        CharData_Init(&storage);
+        XML_SetUserData(parser, &storage);
+        XML_SetCharacterDataHandler(parser, accumulate_characters);
+        if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                    XML_TRUE) != XML_STATUS_ERROR)
+            break;
+        XML_ParserReset(parser, NULL);
+    }
+    if (i == 0) {
+        fail("Default DTD parsed despite allocation failures");
+    } else if (i == 10) {
+        fail("Default DTD not parsed with alloc count 10");
     } else {
-        for (i = 0; i < 10; i++) {
-            /* Repeat some counts to catch cached allocations */
-            if ((repeat < 4 && i == 2) ||
-                (repeat == 4 && i == 3)) {
-                i--;
-                repeat++;
-            }
-            allocation_count = i;
-            XML_SetDefaultHandler(parser, accumulate_characters);
-            XML_SetDoctypeDeclHandler(parser,
-                                      dummy_start_doctype_handler,
-                                      dummy_end_doctype_handler);
-            XML_SetEntityDeclHandler(parser, dummy_entity_decl_handler);
-            XML_SetNotationDeclHandler(parser, dummy_notation_decl_handler);
-            XML_SetElementDeclHandler(parser, dummy_element_decl_handler);
-            XML_SetAttlistDeclHandler(parser, dummy_attlist_decl_handler);
-            XML_SetProcessingInstructionHandler(parser, dummy_pi_handler);
-            XML_SetCommentHandler(parser, dummy_comment_handler);
-            CharData_Init(&storage);
-            XML_SetUserData(parser, &storage);
-            XML_SetCharacterDataHandler(parser, accumulate_characters);
-            if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
-                                        XML_TRUE) != XML_STATUS_ERROR)
-                break;
-            XML_ParserReset(parser, NULL);
-        }
-        if (i == 0) {
-            fail("Default DTD parsed despite allocation failures");
-        } else if (i == 10) {
-            fail("Default DTD not parsed with alloc count 10");
-        } else {
-            CharData_CheckXMLChars(&storage, expected);
-        }
+        CharData_CheckXMLChars(&storage, expected);
     }
 }
 END_TEST
@@ -2126,6 +2098,7 @@ make_suite(void)
     Suite *s = suite_create("basic");
     TCase *tc_basic = tcase_create("basic tests");
     TCase *tc_namespace = tcase_create("XML namespaces");
+    TCase *tc_misc = tcase_create("miscellaneous tests");
     TCase *tc_alloc = tcase_create("allocation tests");
 
     suite_add_tcase(s, tc_basic);
@@ -2194,14 +2167,17 @@ make_suite(void)
     tcase_add_test(tc_namespace, test_ns_unbound_prefix_on_attribute);
     tcase_add_test(tc_namespace, test_ns_unbound_prefix_on_element);
 
+    suite_add_tcase(s, tc_misc);
+    tcase_add_checked_fixture(tc_misc, NULL, basic_teardown);
+    tcase_add_test(tc_misc, test_misc_alloc_create_parser);
+    tcase_add_test(tc_misc, test_misc_alloc_ns);
+
     suite_add_tcase(s, tc_alloc);
-    tcase_add_checked_fixture(tc_alloc, NULL, basic_teardown);
-    tcase_add_test(tc_alloc, test_alloc_create_parser);
+    tcase_add_checked_fixture(tc_alloc, alloc_setup, alloc_teardown);
     tcase_add_test(tc_alloc, test_alloc_create_external_parser);
     tcase_add_test(tc_alloc, test_alloc_run_external_parser);
     tcase_add_test(tc_alloc, test_alloc_dtd_copy_default_atts);
     tcase_add_test(tc_alloc, test_alloc_external_entity);
-    tcase_add_test(tc_alloc, test_alloc_ns);
     tcase_add_test(tc_alloc, test_alloc_internal_entity);
     tcase_add_test(tc_alloc, test_alloc_dtd_default_handling);
 
