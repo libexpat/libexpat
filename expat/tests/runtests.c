@@ -1858,6 +1858,101 @@ START_TEST(test_alloc_dtd_copy_default_atts)
 }
 END_TEST
 
+
+static int XMLCALL
+external_entity_dbl_handler_2(XML_Parser parser,
+                              const XML_Char *context,
+                              const XML_Char *UNUSED_P(base),
+                              const XML_Char *UNUSED_P(systemId),
+                              const XML_Char *UNUSED_P(publicId))
+{
+    intptr_t callno = (intptr_t)XML_GetUserData(parser);
+    const char *text;
+    XML_Parser new_parser;
+    int i;
+
+    if (callno == 0) {
+        /* Try different allocation levels for whole exercise */
+        text = ("<!ELEMENT doc (e+)>\n"
+                "<!ATTLIST doc xmlns CDATA #IMPLIED>\n"
+                "<!ELEMENT e EMPTY>\n");
+        XML_SetUserData(parser, (void *)(intptr_t)1);
+        for (i = 0; i < 20; i++) {
+            allocation_count = i;
+            new_parser = XML_ExternalEntityParserCreate(parser,
+                                                        context,
+                                                        NULL);
+            if (new_parser == NULL)
+                continue;
+            if (_XML_Parse_SINGLE_BYTES(new_parser, text, strlen(text),
+                                        XML_TRUE) != XML_STATUS_ERROR)
+                break;
+            XML_ParserFree(new_parser);
+        }
+
+        /* Ensure future allocations will be well */
+        allocation_count = 10000;
+        if (i == 0) {
+            fail("first external parser unexpectedly created");
+            XML_ParserFree(new_parser);
+            return 0;
+        }
+        else if (i == 20) {
+            fail("first external parser not allocated with count 20");
+            return 0;
+        }
+    } else {
+        /* Just run through once */
+        text = ("<?xml version='1.0' encoding='us-ascii'?>"
+                "<e/>");
+        allocation_count = 10000;
+        new_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
+        if (new_parser == NULL) {
+            fail("Unable to create second external parser");
+            return 0;
+        }
+        if (_XML_Parse_SINGLE_BYTES(new_parser, text, strlen(text),
+                                    XML_TRUE) == XML_STATUS_ERROR) {
+            xml_failure(new_parser);
+            XML_ParserFree(new_parser);
+            return 0;
+        }
+    }
+    XML_ParserFree(new_parser);
+    return 1;
+}
+
+/* Test more external entity allocation failure paths */
+START_TEST(test_alloc_external_entity)
+{
+    XML_Memory_Handling_Suite memsuite = { duff_allocator, realloc, free };
+    const char *text =
+        "<?xml version='1.0'?>\n"
+        "<!DOCTYPE doc SYSTEM 'http://xml.libexpat.org/doc.dtd' [\n"
+        "  <!ENTITY en SYSTEM 'http://xml.libexpat.org/entity.ent'>\n"
+        "]>\n"
+        "<doc xmlns='http://xml.libexpat.org/ns1'>\n"
+        "&en;\n"
+        "</doc>";
+
+    /* Ensure initial allocations will be OK */
+    allocation_count = 10000;
+    parser = XML_ParserCreate_MM(NULL, &memsuite, NULL);
+    if (parser == NULL) {
+        fail("Failed to create initial parser");
+    } else {
+        XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+        XML_SetExternalEntityRefHandler(parser,
+                                        external_entity_dbl_handler_2);
+        XML_SetUserData(parser, NULL);
+        if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                    XML_TRUE) == XML_STATUS_ERROR)
+            xml_failure(parser);
+    }
+}
+END_TEST
+
+
 /* Test the effects of allocation failure in simple namespace parsing.
  * Based on test_ns_default_with_empty_uri()
  */
@@ -2040,6 +2135,7 @@ make_suite(void)
     tcase_add_test(tc_alloc, test_alloc_create_external_parser);
     tcase_add_test(tc_alloc, test_alloc_run_external_parser);
     tcase_add_test(tc_alloc, test_alloc_dtd_copy_default_atts);
+    tcase_add_test(tc_alloc, test_alloc_external_entity);
     tcase_add_test(tc_alloc, test_alloc_ns);
     tcase_add_test(tc_alloc, test_alloc_internal_entity);
 
