@@ -1838,6 +1838,7 @@ START_TEST(test_alloc_ns)
         "  <e xmlns=''/>\n"
         "</doc>";
     unsigned int i;
+    int repeated = 0;
     XML_Char ns_sep[2] = { ' ', '\0' };
 
     allocation_count = 10000;
@@ -1846,6 +1847,17 @@ START_TEST(test_alloc_ns)
         fail("Parser not created");
     } else {
         for (i = 0; i < 10; i++) {
+            /* Repeat some tests with the same allocation count to
+             * catch cached allocations not freed by XML_ParserReset()
+             */
+            if (repeated < 2 && i == 3) {
+                i--;
+                repeated++;
+            }
+            if (repeated == 2 && i == 5) {
+                i = 3;
+                repeated++;
+            }
             allocation_count = i;
             if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text), XML_TRUE) != XML_STATUS_ERROR)
                 break;
