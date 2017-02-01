@@ -2055,6 +2055,71 @@ START_TEST(test_alloc_internal_entity)
 }
 END_TEST
 
+
+/* Test the robustness against allocation failure of element handling
+ * Based on test_dtd_default_handling().
+ */
+START_TEST(test_alloc_dtd_default_handling)
+{
+    XML_Memory_Handling_Suite memsuite = { duff_allocator, realloc, free };
+    const char *text =
+        "<!DOCTYPE doc [\n"
+        "<!ENTITY e SYSTEM 'http://xml.libexpat.org/e'>\n"
+        "<!NOTATION n SYSTEM 'http://xml.libexpat.org/n'>\n"
+        "<!ELEMENT doc EMPTY>\n"
+        "<!ATTLIST doc a CDATA #IMPLIED>\n"
+        "<?pi in dtd?>\n"
+        "<!--comment in dtd-->\n"
+        "]><doc/>";
+    const char *expected = "\n\n\n\n\n\n\n<doc/>";
+    CharData storage;
+    int i;
+    int repeat = 0;
+
+    allocation_count = 10000;
+    parser = XML_ParserCreate_MM(NULL, &memsuite, NULL);
+    if (parser == NULL)
+    {
+        fail("Failed to create parser");
+    } else {
+        for (i = 0; i < 10; i++) {
+            /* Repeat some counts to catch cached allocations */
+            if ((repeat < 4 && i == 2) ||
+                (repeat == 4 && i == 3)) {
+                i--;
+                repeat++;
+            }
+            allocation_count = i;
+            XML_SetDefaultHandler(parser, accumulate_characters);
+            XML_SetDoctypeDeclHandler(parser,
+                                      dummy_start_doctype_handler,
+                                      dummy_end_doctype_handler);
+            XML_SetEntityDeclHandler(parser, dummy_entity_decl_handler);
+            XML_SetNotationDeclHandler(parser, dummy_notation_decl_handler);
+            XML_SetElementDeclHandler(parser, dummy_element_decl_handler);
+            XML_SetAttlistDeclHandler(parser, dummy_attlist_decl_handler);
+            XML_SetProcessingInstructionHandler(parser, dummy_pi_handler);
+            XML_SetCommentHandler(parser, dummy_comment_handler);
+            CharData_Init(&storage);
+            XML_SetUserData(parser, &storage);
+            XML_SetCharacterDataHandler(parser, accumulate_characters);
+            if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                        XML_TRUE) != XML_STATUS_ERROR)
+                break;
+            XML_ParserReset(parser, NULL);
+        }
+        if (i == 0) {
+            fail("Default DTD parsed despite allocation failures");
+        } else if (i == 10) {
+            fail("Default DTD not parsed with alloc count 10");
+        } else {
+            CharData_CheckXMLChars(&storage, expected);
+        }
+    }
+}
+END_TEST
+
+
 static Suite *
 make_suite(void)
 {
@@ -2138,6 +2203,7 @@ make_suite(void)
     tcase_add_test(tc_alloc, test_alloc_external_entity);
     tcase_add_test(tc_alloc, test_alloc_ns);
     tcase_add_test(tc_alloc, test_alloc_internal_entity);
+    tcase_add_test(tc_alloc, test_alloc_dtd_default_handling);
 
     return s;
 }
