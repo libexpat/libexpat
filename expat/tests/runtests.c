@@ -1402,6 +1402,23 @@ START_TEST(test_default_current)
 }
 END_TEST
 
+/* Test DTD element parsing code paths */
+START_TEST(test_dtd_elements)
+{
+    const char *text =
+        "<!DOCTYPE doc [\n"
+        "<!ELEMENT doc (chapter)>\n"
+        "<!ELEMENT chapter (#PCDATA)>\n"
+        "]>\n"
+        "<doc><chapter>Wombats are go</chapter></doc>";
+
+    XML_SetElementDeclHandler(parser, dummy_element_decl_handler);
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+}
+END_TEST
+
 
 /*
  * Namespaces tests.
@@ -2278,6 +2295,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_bad_cdata);
     tcase_add_test(tc_basic, test_memory_allocation);
     tcase_add_test(tc_basic, test_default_current);
+    tcase_add_test(tc_basic, test_dtd_elements);
 
     suite_add_tcase(s, tc_namespace);
     tcase_add_checked_fixture(tc_namespace,
