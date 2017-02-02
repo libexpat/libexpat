@@ -1419,6 +1419,37 @@ START_TEST(test_dtd_elements)
 }
 END_TEST
 
+/* Test foreign DTD handling */
+START_TEST(test_set_foreign_dtd)
+{
+    const char *text1 =
+        "<?xml version='1.0' encoding='us-ascii'?>\n";
+    const char *text2 =
+        "<doc>&entity;</doc>";
+    char dtd_text[] = "<!ELEMENT doc (#PCDATA)*>";
+
+    XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+    XML_SetUserData(parser, dtd_text);
+    XML_SetExternalEntityRefHandler(parser, external_entity_loader);
+    if (XML_UseForeignDTD(parser, XML_TRUE) != XML_ERROR_NONE)
+        fail("Could not set foreign DTD");
+    if (_XML_Parse_SINGLE_BYTES(parser, text1, strlen(text1),
+                                XML_FALSE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+
+    /* Ensure that trying to set the DTD after parsing has started
+     * is faulted, even if it's the same setting.
+     */
+    if (XML_UseForeignDTD(parser, XML_TRUE) == XML_ERROR_NONE)
+        fail("Failed to reject late foreign DTD setting");
+
+    /* Now finish the parse */
+    if (_XML_Parse_SINGLE_BYTES(parser, text2, strlen(text2),
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+}
+END_TEST
+
 
 /*
  * Namespaces tests.
@@ -2296,6 +2327,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_memory_allocation);
     tcase_add_test(tc_basic, test_default_current);
     tcase_add_test(tc_basic, test_dtd_elements);
+    tcase_add_test(tc_basic, test_set_foreign_dtd);
 
     suite_add_tcase(s, tc_namespace);
     tcase_add_checked_fixture(tc_namespace,
