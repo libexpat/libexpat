@@ -1310,6 +1310,98 @@ START_TEST(test_memory_allocation)
 }
 END_TEST
 
+static void XMLCALL
+record_default_handler(void *userData,
+                       const XML_Char *UNUSED_P(s),
+                       int UNUSED_P(len))
+{
+    CharData_AppendString((CharData *)userData, "D");
+}
+
+static void XMLCALL
+record_cdata_handler(void *userData,
+                     const XML_Char *UNUSED_P(s),
+                     int UNUSED_P(len))
+{
+    CharData_AppendString((CharData *)userData, "C");
+    XML_DefaultCurrent(parser);
+}
+
+static void XMLCALL
+record_cdata_nodefault_handler(void *userData,
+                     const XML_Char *UNUSED_P(s),
+                     int UNUSED_P(len))
+{
+    CharData_AppendString((CharData *)userData, "c");
+}
+
+/* Test XML_DefaultCurrent() passes handling on correctly */
+START_TEST(test_default_current)
+{
+    const char *text = "<doc>hello</doc>";
+    const char *entity_text =
+        "<!DOCTYPE doc [\n"
+        "<!ENTITY entity '&#37;'>\n"
+        "]>\n"
+        "<doc>&entity;</doc>";
+    CharData storage;
+
+    XML_SetDefaultHandler(parser, record_default_handler);
+    XML_SetCharacterDataHandler(parser, record_cdata_handler);
+    CharData_Init(&storage);
+    XML_SetUserData(parser, &storage);
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+    CharData_CheckString(&storage, "DCDCDCDCDCDD");
+
+    /* Again, without the defaulting */
+    XML_ParserReset(parser, NULL);
+    XML_SetDefaultHandler(parser, record_default_handler);
+    XML_SetCharacterDataHandler(parser, record_cdata_nodefault_handler);
+    CharData_Init(&storage);
+    XML_SetUserData(parser, &storage);
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+    CharData_CheckString(&storage, "DcccccD");
+
+    /* Now with an internal entity to complicate matters */
+    XML_ParserReset(parser, NULL);
+    XML_SetDefaultHandler(parser, record_default_handler);
+    XML_SetCharacterDataHandler(parser, record_cdata_handler);
+    CharData_Init(&storage);
+    XML_SetUserData(parser, &storage);
+    if (_XML_Parse_SINGLE_BYTES(parser, entity_text, strlen(entity_text),
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+    /* The default handler suppresses the entity */
+    CharData_CheckString(&storage, "DDDDDDDDDDDDDDDDDDD");
+
+    /* This time, allow the entity through */
+    XML_ParserReset(parser, NULL);
+    XML_SetDefaultHandlerExpand(parser, record_default_handler);
+    XML_SetCharacterDataHandler(parser, record_cdata_handler);
+    CharData_Init(&storage);
+    XML_SetUserData(parser, &storage);
+    if (_XML_Parse_SINGLE_BYTES(parser, entity_text, strlen(entity_text),
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+    CharData_CheckString(&storage, "DDDDDDDDDDDDDDDDDCDD");
+
+    /* Finally, without passing the cdata to the default handler */
+    XML_ParserReset(parser, NULL);
+    XML_SetDefaultHandlerExpand(parser, record_default_handler);
+    XML_SetCharacterDataHandler(parser, record_cdata_nodefault_handler);
+    CharData_Init(&storage);
+    XML_SetUserData(parser, &storage);
+    if (_XML_Parse_SINGLE_BYTES(parser, entity_text, strlen(entity_text),
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+    CharData_CheckString(&storage, "DDDDDDDDDDDDDDDDDcD");
+}
+END_TEST
+
 
 /*
  * Namespaces tests.
@@ -2185,6 +2277,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_good_cdata_utf16);
     tcase_add_test(tc_basic, test_bad_cdata);
     tcase_add_test(tc_basic, test_memory_allocation);
+    tcase_add_test(tc_basic, test_default_current);
 
     suite_add_tcase(s, tc_namespace);
     tcase_add_checked_fixture(tc_namespace,
