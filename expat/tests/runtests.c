@@ -1679,6 +1679,70 @@ START_TEST(test_explicit_encoding)
 }
 END_TEST
 
+/* Test user parameter settings */
+/* Variable holding the expected handler userData */
+static void *handler_data = NULL;
+/* Count of the number of times the comment handler has been invoked */
+static int comment_count = 0;
+
+static void XMLCALL
+data_check_comment_handler(void *userData, const XML_Char *UNUSED_P(data))
+{
+    /* Check that the userData passed through is what we expect */
+    if (userData != handler_data)
+        fail("User data (parser) not correctly set");
+    /* Check that the user data in the parser is appropriate */
+    if (XML_GetUserData(userData) != (void *)1)
+        fail("User data in parser not correctly set");
+    comment_count++;
+}
+
+static int XMLCALL
+external_entity_param_checker(XML_Parser parser,
+                              const XML_Char *context,
+                              const XML_Char *UNUSED_P(base),
+                              const XML_Char *UNUSED_P(systemId),
+                              const XML_Char *UNUSED_P(publicId))
+{
+    const char *text =
+        "<!-- Subordinate parser -->\n"
+        "<!ELEMENT doc (#PCDATA)*>";
+    XML_Parser ext_parser;
+
+    ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
+    if (ext_parser == NULL)
+        fail("Could not create external entity parser");
+    handler_data = ext_parser;
+    if (_XML_Parse_SINGLE_BYTES(ext_parser, text, strlen(text),
+                                XML_TRUE) == XML_STATUS_ERROR) {
+        xml_failure(parser);
+        return XML_STATUS_ERROR;
+    }
+    handler_data = parser;
+    return XML_STATUS_OK;
+}
+
+START_TEST(test_user_parameters)
+{
+    const char *text =
+        "<?xml version='1.0' encoding='us-ascii'?>\n"
+        "<!-- Primary parse -->\n"
+        "<!DOCTYPE doc SYSTEM 'foo'>\n"
+        "<doc>&entity;</doc>";
+
+    comment_count = 0;
+    XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+    XML_SetExternalEntityRefHandler(parser, external_entity_param_checker);
+    XML_SetCommentHandler(parser, data_check_comment_handler);
+    XML_UseParserAsHandlerArg(parser);
+    XML_SetUserData(parser, (void *)1);
+    handler_data = parser;
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text), XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+    if (comment_count != 2)
+        fail("Comment handler not invoked enough times");
+}
+END_TEST
 
 /*
  * Namespaces tests.
@@ -2656,6 +2720,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_reset_in_entity);
     tcase_add_test(tc_basic, test_subordinate_reset);
     tcase_add_test(tc_basic, test_explicit_encoding);
+    tcase_add_test(tc_basic, test_user_parameters);
 
     suite_add_tcase(s, tc_namespace);
     tcase_add_checked_fixture(tc_namespace,
