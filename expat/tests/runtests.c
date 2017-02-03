@@ -1592,6 +1592,59 @@ START_TEST(test_reset_in_entity)
 }
 END_TEST
 
+/* Test resetting a subordinate parser does exactly nothing */
+static int XMLCALL
+external_entity_resetter(XML_Parser parser,
+                         const XML_Char *context,
+                         const XML_Char *UNUSED_P(base),
+                         const XML_Char *UNUSED_P(systemId),
+                         const XML_Char *UNUSED_P(publicId))
+{
+    const char *text = "<!ELEMENT doc (#PCDATA)*>";
+    XML_Parser ext_parser;
+    XML_ParsingStatus status;
+
+    ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
+    if (ext_parser == NULL)
+        fail("Could not create external entity parser");
+    XML_GetParsingStatus(ext_parser, &status);
+    if (status.parsing != XML_INITIALIZED) {
+        fail("Parsing status is not INITIALIZED");
+        return XML_STATUS_ERROR;
+    }
+    if (_XML_Parse_SINGLE_BYTES(ext_parser, text, strlen(text),
+                                XML_TRUE) == XML_STATUS_ERROR) {
+        xml_failure(parser);
+        return XML_STATUS_ERROR;
+    }
+    XML_GetParsingStatus(ext_parser, &status);
+    if (status.parsing != XML_FINISHED) {
+        fail("Parsing status is not FINISHED");
+        return XML_STATUS_ERROR;
+    }
+    XML_ParserReset(ext_parser, NULL);
+    XML_GetParsingStatus(ext_parser, &status);
+    if (status.parsing != XML_FINISHED) {
+        fail("Parsing status not still FINISHED");
+        return XML_STATUS_ERROR;
+    }
+    return XML_STATUS_OK;
+}
+
+START_TEST(test_subordinate_reset)
+{
+   const char *text =
+        "<?xml version='1.0' encoding='us-ascii'?>\n"
+        "<!DOCTYPE doc SYSTEM 'foo'>\n"
+        "<doc>&entity;</doc>";
+
+    XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+    XML_SetExternalEntityRefHandler(parser, external_entity_resetter);
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text), XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+}
+END_TEST
+
 
 /*
  * Namespaces tests.
@@ -2515,6 +2568,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_set_base);
     tcase_add_test(tc_basic, test_attributes);
     tcase_add_test(tc_basic, test_reset_in_entity);
+    tcase_add_test(tc_basic, test_subordinate_reset);
 
     suite_add_tcase(s, tc_namespace);
     tcase_add_checked_fixture(tc_namespace,
