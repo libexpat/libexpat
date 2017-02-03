@@ -1479,6 +1479,7 @@ typedef struct attrInfo {
 typedef struct elementInfo {
     const char *name;
     int attr_count;
+    const char *id_name;
     AttrInfo *attributes;
 } ElementInfo;
 
@@ -1489,8 +1490,7 @@ counting_start_element_handler(void *userData,
 {
     ElementInfo *info = (ElementInfo *)userData;
     AttrInfo *attr;
-    int count;
-    int i;
+    int count, id, i;
 
     while (info->name != NULL) {
         if (!strcmp(name, info->name))
@@ -1503,6 +1503,15 @@ counting_start_element_handler(void *userData,
     count = XML_GetSpecifiedAttributeCount(parser);
     if (info->attr_count * 2 != count) {
         fail("Not got expected attribute count");
+        return;
+    }
+    id = XML_GetIdAttributeIndex(parser);
+    if (id == -1 && info->id_name != NULL) {
+        fail("ID not present");
+        return;
+    }
+    if (id != -1 && strcmp(atts[id], info->id_name)) {
+        fail("ID does not have the correct name");
         return;
     }
     for (i = 0; i < info->attr_count; i++) {
@@ -1526,20 +1535,28 @@ counting_start_element_handler(void *userData,
 
 START_TEST(test_attributes)
 {
-    const char *text = "<tag1 a='1' b='2'><tag2 c='3'/></tag1>";
-    AttrInfo tag1_info[] = {
-        { "a", "1" },
-        {"b", "2" },
+    const char *text =
+        "<!DOCTYPE doc [\n"
+        "<!ELEMENT doc (tag)>\n"
+        "<!ATTLIST doc id ID #REQUIRED>\n"
+        "]>"
+        "<doc a='1' id='one' b='2'>"
+        "<tag c='3'/>"
+        "</doc>";
+    AttrInfo doc_info[] = {
+        { "a",  "1" },
+        { "b",  "2" },
+        { "id", "one" },
         { NULL, NULL }
     };
-    AttrInfo tag2_info[] = {
-        { "c", "3" },
+    AttrInfo tag_info[] = {
+        { "c",  "3" },
         { NULL, NULL }
     };
     ElementInfo info[] = {
-        { "tag1", 2, tag1_info },
-        { "tag2", 1, tag2_info },
-        { NULL, 0, NULL }
+        { "doc", 3, "id", doc_info },
+        { "tag", 1, NULL, tag_info },
+        { NULL, 0, NULL, NULL }
     };
 
     XML_SetStartElementHandler(parser, counting_start_element_handler);
