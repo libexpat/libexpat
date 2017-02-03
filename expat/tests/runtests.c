@@ -1915,6 +1915,28 @@ START_TEST(test_ns_unbound_prefix_on_element)
 }
 END_TEST
 
+/* Test that the parsing status is correctly reset by XML_ParserReset().
+ * We usE test_return_ns_triplet() for our example parse to improve
+ * coverage of tidying up code executed.
+ */
+START_TEST(test_ns_parser_reset)
+{
+    XML_ParsingStatus status;
+
+    XML_GetParsingStatus(parser, &status);
+    if (status.parsing != XML_INITIALIZED)
+        fail("parsing status doesn't start INITIALIZED");
+    test_return_ns_triplet();
+    XML_GetParsingStatus(parser, &status);
+    if (status.parsing != XML_FINISHED)
+        fail("parsing status doesn't end FINISHED");
+    XML_ParserReset(parser, NULL);
+    XML_GetParsingStatus(parser, &status);
+    if (status.parsing != XML_INITIALIZED)
+        fail("parsing status doesn't reset to INITIALIZED");
+}
+END_TEST
+
 /* Control variable; the number of times duff_allocator() will successfully allocate */
 static unsigned int allocation_count = 0;
 
@@ -2482,6 +2504,7 @@ make_suite(void)
     tcase_add_test(tc_namespace, test_ns_duplicate_attrs_diff_prefixes);
     tcase_add_test(tc_namespace, test_ns_unbound_prefix_on_attribute);
     tcase_add_test(tc_namespace, test_ns_unbound_prefix_on_element);
+    tcase_add_test(tc_namespace, test_ns_parser_reset);
 
     suite_add_tcase(s, tc_misc);
     tcase_add_checked_fixture(tc_misc, NULL, basic_teardown);
