@@ -1469,7 +1469,6 @@ START_TEST(test_set_base)
 }
 END_TEST
 
-
 /* Test attribute counts, indexing, etc */
 typedef struct attrInfo {
     const char *name;
@@ -1565,6 +1564,34 @@ START_TEST(test_attributes)
         xml_failure(parser);
 }
 END_TEST
+
+/* Test reset works correctly in the middle of processing an internal
+ * entity.  Exercises some obscure code in XML_ParserReset().
+ */
+START_TEST(test_reset_in_entity)
+{
+    const char *text =
+        "<!DOCTYPE doc [\n"
+        "<!ENTITY wombat 'wom'>\n"
+        "<!ENTITY entity 'hi &wom; there'>\n"
+        "]>\n"
+        "<doc>&entity;</doc>";
+    XML_ParsingStatus status;
+
+    resumable = XML_TRUE;
+    XML_SetCharacterDataHandler(parser, clearing_aborting_character_handler);
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text), XML_FALSE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+    XML_GetParsingStatus(parser, &status);
+    if (status.parsing != XML_SUSPENDED)
+        fail("Parsing status not SUSPENDED");
+    XML_ParserReset(parser, NULL);
+    XML_GetParsingStatus(parser, &status);
+    if (status.parsing != XML_INITIALIZED)
+        fail("Parsing status doesn't reset to INITIALIZED");
+}
+END_TEST
+
 
 /*
  * Namespaces tests.
@@ -2487,6 +2514,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_set_foreign_dtd);
     tcase_add_test(tc_basic, test_set_base);
     tcase_add_test(tc_basic, test_attributes);
+    tcase_add_test(tc_basic, test_reset_in_entity);
 
     suite_add_tcase(s, tc_namespace);
     tcase_add_checked_fixture(tc_namespace,
