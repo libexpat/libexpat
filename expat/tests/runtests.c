@@ -1470,6 +1470,85 @@ START_TEST(test_set_base)
 END_TEST
 
 
+/* Test attribute counts, indexing, etc */
+typedef struct attrInfo {
+    const char *name;
+    const char *value;
+} AttrInfo;
+
+typedef struct elementInfo {
+    const char *name;
+    int attr_count;
+    AttrInfo *attributes;
+} ElementInfo;
+
+static void XMLCALL
+counting_start_element_handler(void *userData,
+                               const XML_Char *name,
+                               const XML_Char **atts)
+{
+    ElementInfo *info = (ElementInfo *)userData;
+    AttrInfo *attr;
+    int count;
+    int i;
+
+    while (info->name != NULL) {
+        if (!strcmp(name, info->name))
+            break;
+        info++;
+    }
+    if (info->name == NULL)
+        fail("Element not recognised");
+    /* Note attribute count is doubled */
+    count = XML_GetSpecifiedAttributeCount(parser);
+    if (info->attr_count * 2 != count) {
+        fail("Not got expected attribute count");
+        return;
+    }
+    for (i = 0; i < info->attr_count; i++) {
+        attr = info->attributes;
+        while (attr->name != NULL) {
+            if (!strcmp(atts[0], attr->name))
+                break;
+            attr++;
+        }
+        if (attr->name == NULL) {
+            fail("Attribute not recognised");
+            return;
+        }
+        if (strcmp(atts[1], attr->value)) {
+            fail("Attribute has wrong value");
+            return;
+        }
+        atts += 2;
+    }
+}
+
+START_TEST(test_attributes)
+{
+    const char *text = "<tag1 a='1' b='2'><tag2 c='3'/></tag1>";
+    AttrInfo tag1_info[] = {
+        { "a", "1" },
+        {"b", "2" },
+        { NULL, NULL }
+    };
+    AttrInfo tag2_info[] = {
+        { "c", "3" },
+        { NULL, NULL }
+    };
+    ElementInfo info[] = {
+        { "tag1", 2, tag1_info },
+        { "tag2", 1, tag2_info },
+        { NULL, 0, NULL }
+    };
+
+    XML_SetStartElementHandler(parser, counting_start_element_handler);
+    XML_SetUserData(parser, info);
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text), XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+}
+END_TEST
+
 /*
  * Namespaces tests.
  */
@@ -2348,6 +2427,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_dtd_elements);
     tcase_add_test(tc_basic, test_set_foreign_dtd);
     tcase_add_test(tc_basic, test_set_base);
+    tcase_add_test(tc_basic, test_attributes);
 
     suite_add_tcase(s, tc_namespace);
     tcase_add_checked_fixture(tc_namespace,
