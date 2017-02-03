@@ -174,6 +174,14 @@ dummy_start_element(void *UNUSED_P(userData),
                     const XML_Char *UNUSED_P(name), const XML_Char **UNUSED_P(atts))
 {}
 
+static void XMLCALL
+dummy_start_cdata_handler(void *UNUSED_P(userData))
+{}
+
+static void XMLCALL
+dummy_end_cdata_handler(void *UNUSED_P(userData))
+{}
+
 
 /*
  * Character & encoding tests.
@@ -1064,6 +1072,8 @@ START_TEST(test_dtd_default_handling)
     XML_SetAttlistDeclHandler(parser, dummy_attlist_decl_handler);
     XML_SetProcessingInstructionHandler(parser, dummy_pi_handler);
     XML_SetCommentHandler(parser, dummy_comment_handler);
+    XML_SetStartCdataSectionHandler(parser, dummy_start_cdata_handler);
+    XML_SetEndCdataSectionHandler(parser, dummy_end_cdata_handler);
     run_character_check(text, "\n\n\n\n\n\n\n<doc/>");
 }
 END_TEST
@@ -2485,6 +2495,9 @@ START_TEST(test_alloc_dtd_default_handling)
         XML_SetAttlistDeclHandler(parser, dummy_attlist_decl_handler);
         XML_SetProcessingInstructionHandler(parser, dummy_pi_handler);
         XML_SetCommentHandler(parser, dummy_comment_handler);
+        XML_SetCdataSectionHandler(parser,
+                                   dummy_start_cdata_handler,
+                                   dummy_end_cdata_handler);
         CharData_Init(&storage);
         XML_SetUserData(parser, &storage);
         XML_SetCharacterDataHandler(parser, accumulate_characters);
