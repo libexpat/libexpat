@@ -1655,6 +1655,30 @@ START_TEST(test_subordinate_reset)
 }
 END_TEST
 
+/* Test setting an explicit encoding */
+START_TEST(test_explicit_encoding)
+{
+    const char *text1 = "<doc>Hello ";
+    const char *text2 = " World</doc>";
+
+    /* First say we are UTF-8 */
+    if (XML_SetEncoding(parser, "utf-8") != XML_STATUS_OK)
+        fail("Failed to set explicit encoding");
+    if (_XML_Parse_SINGLE_BYTES(parser, text1, strlen(text1),
+                                XML_FALSE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+    /* Try to switch encodings mid-parse */
+    if (XML_SetEncoding(parser, "us-ascii") != XML_STATUS_ERROR)
+        fail("Allowed encoding change");
+    if (_XML_Parse_SINGLE_BYTES(parser, text2, strlen(text2),
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+    /* Try now the parse is over */
+    if (XML_SetEncoding(parser, NULL) != XML_STATUS_OK)
+        fail("Failed to unset encoding");
+}
+END_TEST
+
 
 /*
  * Namespaces tests.
@@ -2596,6 +2620,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_attributes);
     tcase_add_test(tc_basic, test_reset_in_entity);
     tcase_add_test(tc_basic, test_subordinate_reset);
+    tcase_add_test(tc_basic, test_explicit_encoding);
 
     suite_add_tcase(s, tc_namespace);
     tcase_add_checked_fixture(tc_namespace,
