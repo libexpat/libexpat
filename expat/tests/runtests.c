@@ -2124,6 +2124,20 @@ START_TEST(test_misc_alloc_ns)
 }
 END_TEST
 
+/* Test that freeing a NULL parser doesn't cause an explosion.
+ * (Not actually tested anywhere else)
+ */
+START_TEST(test_misc_null_parser)
+{
+    /* NULL the variable, otherwise the teardown code will attempt
+     * to free the previous parser again, and things will go downhill
+     * rapidly.
+     */
+    parser = NULL;
+    XML_ParserFree(NULL);
+}
+END_TEST
+
 
 static void
 alloc_setup(void)
@@ -2606,6 +2620,7 @@ make_suite(void)
     tcase_add_test(tc_misc, test_misc_alloc_create_parser);
     tcase_add_test(tc_misc, test_misc_alloc_create_parser_with_encoding);
     tcase_add_test(tc_misc, test_misc_alloc_ns);
+    tcase_add_test(tc_misc, test_misc_null_parser);
 
     suite_add_tcase(s, tc_alloc);
     tcase_add_checked_fixture(tc_alloc, alloc_setup, alloc_teardown);
