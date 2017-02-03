@@ -1948,6 +1948,26 @@ START_TEST(test_misc_alloc_create_parser)
 }
 END_TEST
 
+/* Test memory allocation failures for a parser with an encoding */
+START_TEST(test_misc_alloc_create_parser_with_encoding)
+{
+    XML_Memory_Handling_Suite memsuite = { duff_allocator, realloc, free };
+    unsigned int i;
+
+    /* Try several levels of allocation */
+    for (i = 0; i < 10; i++) {
+        allocation_count = i;
+        parser = XML_ParserCreate_MM("us-ascii", &memsuite, NULL);
+        if (parser != NULL)
+            break;
+    }
+    if (i == 0)
+        fail("Parser ignored failing allocator");
+    else if (i == 10)
+        fail("Parser not created with allocation count 10");
+}
+END_TEST
+
 /* Test the effects of allocation failure in simple namespace parsing.
  * Based on test_ns_default_with_empty_uri()
  */
@@ -2466,6 +2486,7 @@ make_suite(void)
     suite_add_tcase(s, tc_misc);
     tcase_add_checked_fixture(tc_misc, NULL, basic_teardown);
     tcase_add_test(tc_misc, test_misc_alloc_create_parser);
+    tcase_add_test(tc_misc, test_misc_alloc_create_parser_with_encoding);
     tcase_add_test(tc_misc, test_misc_alloc_ns);
 
     suite_add_tcase(s, tc_alloc);
