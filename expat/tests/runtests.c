@@ -2571,6 +2571,24 @@ START_TEST(test_alloc_explicit_encoding)
 }
 END_TEST
 
+/* Test robustness of XML_SetBase against a failing allocator */
+START_TEST(test_alloc_set_base)
+{
+    const XML_Char *new_base = "/local/file/name.xml";
+    int i;
+
+    for (i = 0; i < 5; i++) {
+        allocation_count = i;
+        if (XML_SetBase(parser, new_base) == XML_STATUS_OK)
+            break;
+    }
+    if (i == 0)
+        fail("Base set despite failing allocator");
+    else if (i == 5)
+        fail("Base not set with allocation count 5");
+}
+END_TEST
+
 
 static Suite *
 make_suite(void)
@@ -2673,6 +2691,7 @@ make_suite(void)
     tcase_add_test(tc_alloc, test_alloc_internal_entity);
     tcase_add_test(tc_alloc, test_alloc_dtd_default_handling);
     tcase_add_test(tc_alloc, test_alloc_explicit_encoding);
+    tcase_add_test(tc_alloc, test_alloc_set_base);
 
     return s;
 }
