@@ -1058,6 +1058,56 @@ START_TEST(test_wfc_undeclared_entity_with_external_subset) {
 }
 END_TEST
 
+/* Test that an error is reported if our NotStandalone handler fails */
+static int XMLCALL
+reject_not_standalone_handler(void *UNUSED_P(userData))
+{
+    return XML_STATUS_ERROR;
+}
+
+START_TEST(test_not_standalone_handler_reject)
+{
+    const char *text =
+        "<?xml version='1.0' encoding='us-ascii'?>\n"
+        "<!DOCTYPE doc SYSTEM 'foo'>\n"
+        "<doc>&entity;</doc>";
+    char foo_text[] =
+        "<!ELEMENT doc (#PCDATA)*>";
+
+    XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+    XML_SetUserData(parser, foo_text);
+    XML_SetExternalEntityRefHandler(parser, external_entity_loader);
+    XML_SetNotStandaloneHandler(parser, reject_not_standalone_handler);
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text), XML_TRUE) != XML_STATUS_ERROR)
+        fail("NotStandalone handler failed to reject");
+}
+END_TEST
+
+/* Test that no error is reported if our NotStandalone handler succeeds */
+static int XMLCALL
+accept_not_standalone_handler(void *UNUSED_P(userData))
+{
+    return XML_STATUS_OK;
+}
+
+START_TEST(test_not_standalone_handler_accept)
+{
+    const char *text =
+        "<?xml version='1.0' encoding='us-ascii'?>\n"
+        "<!DOCTYPE doc SYSTEM 'foo'>\n"
+        "<doc>&entity;</doc>";
+    char foo_text[] =
+        "<!ELEMENT doc (#PCDATA)*>";
+
+    XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+    XML_SetUserData(parser, foo_text);
+    XML_SetExternalEntityRefHandler(parser, external_entity_loader);
+    XML_SetNotStandaloneHandler(parser, accept_not_standalone_handler);
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text), XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+}
+END_TEST
+
 START_TEST(test_wfc_no_recursive_entity_refs)
 {
     const char *text =
@@ -2791,6 +2841,8 @@ make_suite(void)
     tcase_add_test(tc_basic, test_wfc_undeclared_entity_no_external_subset);
     tcase_add_test(tc_basic, test_wfc_undeclared_entity_standalone);
     tcase_add_test(tc_basic, test_wfc_undeclared_entity_with_external_subset);
+    tcase_add_test(tc_basic, test_not_standalone_handler_reject);
+    tcase_add_test(tc_basic, test_not_standalone_handler_accept);
     tcase_add_test(tc_basic,
                    test_wfc_undeclared_entity_with_external_subset_standalone);
     tcase_add_test(tc_basic, test_wfc_no_recursive_entity_refs);
