@@ -1063,9 +1063,8 @@ START_TEST(test_dtd_default_handling)
         "]><doc/>";
 
     XML_SetDefaultHandler(parser, accumulate_characters);
-    XML_SetDoctypeDeclHandler(parser,
-                              dummy_start_doctype_handler,
-                              dummy_end_doctype_handler);
+    XML_SetStartDoctypeDeclHandler(parser, dummy_start_doctype_handler);
+    XML_SetEndDoctypeDeclHandler(parser, dummy_end_doctype_handler);
     XML_SetEntityDeclHandler(parser, dummy_entity_decl_handler);
     XML_SetNotationDeclHandler(parser, dummy_notation_decl_handler);
     XML_SetElementDeclHandler(parser, dummy_element_decl_handler);
