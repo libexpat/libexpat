@@ -182,6 +182,18 @@ static void XMLCALL
 dummy_end_cdata_handler(void *UNUSED_P(userData))
 {}
 
+/* This handler is obsolete, but while the code exists we should
+ * ensure that dealing with the handler is covered by tests.
+ */
+static void XMLCALL
+dummy_unparsed_entity_decl_handler(void *UNUSED_P(userData),
+                                   const XML_Char *UNUSED_P(entityName),
+                                   const XML_Char *UNUSED_P(base),
+                                   const XML_Char *UNUSED_P(systemId),
+                                   const XML_Char *UNUSED_P(publicId),
+                                   const XML_Char *UNUSED_P(notationName))
+{}
+
 
 /*
  * Character & encoding tests.
@@ -2662,6 +2674,9 @@ START_TEST(test_alloc_dtd_default_handling)
         XML_SetCdataSectionHandler(parser,
                                    dummy_start_cdata_handler,
                                    dummy_end_cdata_handler);
+        XML_SetUnparsedEntityDeclHandler(
+            parser,
+            dummy_unparsed_entity_decl_handler);
         CharData_Init(&storage);
         XML_SetUserData(parser, &storage);
         XML_SetCharacterDataHandler(parser, accumulate_characters);
