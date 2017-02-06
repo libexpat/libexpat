@@ -1813,6 +1813,8 @@ namespace_teardown(void)
    provided as the userData argument; the first is the expected
    element name, and the second is the expected attribute name.
 */
+static int triplet_count = 0;
+
 static void XMLCALL
 triplet_start_checker(void *userData, const XML_Char *name,
                       const XML_Char **atts)
@@ -1827,6 +1829,7 @@ triplet_start_checker(void *userData, const XML_Char *name,
         sprintf(buffer, "unexpected attribute string: '%s'", atts[0]);
         fail(buffer);
     }
+    triplet_count++;
 }
 
 /* Check that the element name passed to the end-element handler matches
@@ -1842,22 +1845,36 @@ triplet_end_checker(void *userData, const XML_Char *name)
         sprintf(buffer, "unexpected end string: '%s'", name);
         fail(buffer);
     }
+    triplet_count++;
 }
 
 START_TEST(test_return_ns_triplet)
 {
     const char *text =
         "<foo:e xmlns:foo='http://expat.sf.net/' bar:a='12'\n"
-        "       xmlns:bar='http://expat.sf.net/'></foo:e>";
+        "       xmlns:bar='http://expat.sf.net/'>";
+    const char *epilog = "</foo:e>";
     const char *elemstr[] = {
         "http://expat.sf.net/ e foo",
         "http://expat.sf.net/ a bar"
     };
     XML_SetReturnNSTriplet(parser, XML_TRUE);
     XML_SetUserData(parser, elemstr);
-    XML_SetElementHandler(parser, triplet_start_checker, triplet_end_checker);
-    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text), XML_TRUE) == XML_STATUS_ERROR)
+    XML_SetElementHandler(parser, triplet_start_checker,
+                          triplet_end_checker);
+    triplet_count = 0;
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                XML_FALSE) == XML_STATUS_ERROR)
         xml_failure(parser);
+    if (triplet_count != 1)
+        fail("triplet_start_checker not invoked");
+    /* Check that unsetting "return triplets" fails while still parsing */
+    XML_SetReturnNSTriplet(parser, XML_FALSE);
+    if (_XML_Parse_SINGLE_BYTES(parser, epilog, strlen(epilog),
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+    if (triplet_count != 2)
+        fail("triplet_end_checker not invoked");
 }
 END_TEST
 
