@@ -1510,6 +1510,8 @@ START_TEST(test_set_foreign_dtd)
         "<doc>&entity;</doc>";
     char dtd_text[] = "<!ELEMENT doc (#PCDATA)*>";
 
+    /* Check hash salt is passed through too */
+    XML_SetHashSalt(parser, 0x12345678);
     XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
     XML_SetUserData(parser, dtd_text);
     XML_SetExternalEntityRefHandler(parser, external_entity_loader);
@@ -1524,6 +1526,9 @@ START_TEST(test_set_foreign_dtd)
      */
     if (XML_UseForeignDTD(parser, XML_TRUE) == XML_ERROR_NONE)
         fail("Failed to reject late foreign DTD setting");
+    /* Ditto for the hash salt */
+    if (XML_SetHashSalt(parser, 0x23456789))
+        fail("Failed to reject late hash salt change");
 
     /* Now finish the parse */
     if (_XML_Parse_SINGLE_BYTES(parser, text2, strlen(text2),
