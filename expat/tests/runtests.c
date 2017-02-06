@@ -182,6 +182,17 @@ static void XMLCALL
 dummy_end_cdata_handler(void *UNUSED_P(userData))
 {}
 
+static void XMLCALL
+dummy_start_namespace_decl_handler(void *UNUSED_P(userData),
+                                   const XML_Char *UNUSED_P(prefix),
+                                   const XML_Char *UNUSED_P(uri))
+{}
+
+static void XMLCALL
+dummy_end_namespace_decl_handler(void *UNUSED_P(userData),
+                                 const XML_Char *UNUSED_P(prefix))
+{}
+
 /* This handler is obsolete, but while the code exists we should
  * ensure that dealing with the handler is covered by tests.
  */
@@ -1873,6 +1884,9 @@ START_TEST(test_return_ns_triplet)
     XML_SetUserData(parser, elemstr);
     XML_SetElementHandler(parser, triplet_start_checker,
                           triplet_end_checker);
+    XML_SetNamespaceDeclHandler(parser,
+                                dummy_start_namespace_decl_handler,
+                                dummy_end_namespace_decl_handler);
     triplet_count = 0;
     if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
                                 XML_FALSE) == XML_STATUS_ERROR)
@@ -1997,6 +2011,7 @@ START_TEST(test_start_ns_clears_start_element)
 
     XML_SetStartElementHandler(parser, start_element_fail);
     XML_SetStartNamespaceDeclHandler(parser, start_ns_clearing_start_element);
+    XML_SetEndNamespaceDeclHandler(parser, dummy_end_namespace_decl_handler);
     XML_UseParserAsHandlerArg(parser);
     if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text), XML_TRUE) == XML_STATUS_ERROR)
         xml_failure(parser);
