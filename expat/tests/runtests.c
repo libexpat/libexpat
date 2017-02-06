@@ -1259,6 +1259,11 @@ START_TEST(test_suspend_parser_between_char_data_calls)
         xml_failure(parser);
     if (XML_GetErrorCode(parser) != XML_ERROR_NONE)
         xml_failure(parser);
+    /* Try parsing directly */
+    if (XML_Parse(parser, text, strlen(text), XML_TRUE) != XML_STATUS_ERROR)
+        fail("Attempt to continue parse while suspended not faulted");
+    if (XML_GetErrorCode(parser) != XML_ERROR_SUSPENDED)
+        fail("Suspended parse not faulted with correct error");
 }
 END_TEST
 
