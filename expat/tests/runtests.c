@@ -1929,12 +1929,31 @@ END_TEST
 /* Test the parsing of an empty string */
 START_TEST(test_empty_parse)
 {
+    const char *text = "<doc></doc>";
+    const char *partial = "<doc>";
+
     if (XML_Parse(parser, NULL, 0, XML_FALSE) == XML_STATUS_ERROR)
         fail("Parsing empty string faulted");
     if (XML_Parse(parser, NULL, 0, XML_TRUE) != XML_STATUS_ERROR)
         fail("Parsing final empty string not faulted");
     if (XML_GetErrorCode(parser) != XML_ERROR_NO_ELEMENTS)
         fail("Parsing final empty string faulted for wrong reason");
+
+    /* Now try with valid text before the empty end */
+    XML_ParserReset(parser, NULL);
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                XML_FALSE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+    if (XML_Parse(parser, NULL, 0, XML_TRUE) == XML_STATUS_ERROR)
+        fail("Parsing final empty string faulted");
+
+    /* Now try with invalid text before the empty end */
+    XML_ParserReset(parser, NULL);
+    if (_XML_Parse_SINGLE_BYTES(parser, partial, strlen(partial),
+                                XML_FALSE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+    if (XML_Parse(parser, NULL, 0, XML_TRUE) != XML_STATUS_ERROR)
+        fail("Parsing final incomplete empty string not faulted");
 }
 END_TEST
 
