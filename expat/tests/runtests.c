@@ -2473,6 +2473,10 @@ START_TEST(test_misc_alloc_ns_parse_buffer)
     if (XML_ParseBuffer(parser, 0, XML_FALSE) != XML_STATUS_OK)
         xml_failure(parser);
 
+    /* Try silly buffer lengths */
+    if (XML_GetBuffer(parser, -12) != NULL)
+        fail("Negative length buffer not failed");
+
     /* Get the parser into suspended state */
     XML_SetCharacterDataHandler(parser, clearing_aborting_character_handler);
     resumable = XML_TRUE;
@@ -2489,6 +2493,8 @@ START_TEST(test_misc_alloc_ns_parse_buffer)
         fail("Suspended XML_ParseBuffer not faulted");
     if (XML_GetErrorCode(parser) != XML_ERROR_SUSPENDED)
         xml_failure(parser);
+    if (XML_GetBuffer(parser, strlen(text)) != NULL)
+        fail("Suspended XML_GetBuffer not faulted");
 
     /* Get it going again and complete the world */
     XML_SetCharacterDataHandler(parser, NULL);
@@ -2498,6 +2504,8 @@ START_TEST(test_misc_alloc_ns_parse_buffer)
         fail("Post-finishing XML_ParseBuffer not faulted");
     if (XML_GetErrorCode(parser) != XML_ERROR_FINISHED)
         xml_failure(parser);
+    if (XML_GetBuffer(parser, strlen(text)) != NULL)
+        fail("Post-finishing XML_GetBuffer not faulted");
 }
 END_TEST
 
