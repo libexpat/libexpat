@@ -2446,6 +2446,61 @@ START_TEST(test_misc_alloc_ns)
 }
 END_TEST
 
+/* Test XML_ParseBuffer interface with namespace and a dicky allocator */
+START_TEST(test_misc_alloc_ns_parse_buffer)
+{
+    XML_Memory_Handling_Suite memsuite = { duff_allocator, realloc, free };
+    XML_Char ns_sep[2] = { ' ', '\0' };
+    const char *text = "<doc>Hello</doc>";
+    void *buffer;
+
+    /* Make sure the basic parser is allocated */
+    allocation_count = 10000;
+    parser = XML_ParserCreate_MM(NULL, &memsuite, ns_sep);
+    if (parser == NULL)
+        fail("Parser not created");
+
+    /* Try a parse before the start of the world */
+    /* (Exercises new code path) */
+    allocation_count = 0;
+    if (XML_ParseBuffer(parser, 0, XML_FALSE) != XML_STATUS_ERROR)
+        fail("Pre-init XML_ParseBuffer not faulted");
+    if (XML_GetErrorCode(parser) != XML_ERROR_NO_MEMORY)
+        fail("Pre-init XML_ParseBuffer faulted for wrong reason");
+
+    /* Now with actual memory allocation */
+    allocation_count = 10000;
+    if (XML_ParseBuffer(parser, 0, XML_FALSE) != XML_STATUS_OK)
+        xml_failure(parser);
+
+    /* Get the parser into suspended state */
+    XML_SetCharacterDataHandler(parser, clearing_aborting_character_handler);
+    resumable = XML_TRUE;
+    buffer = XML_GetBuffer(parser, strlen(text));
+    if (buffer == NULL)
+        fail("Could not acquire parse buffer");
+    memcpy(buffer, text, strlen(text));
+    if (XML_ParseBuffer(parser, strlen(text),
+                        XML_TRUE) != XML_STATUS_SUSPENDED)
+        xml_failure(parser);
+    if (XML_GetErrorCode(parser) != XML_ERROR_NONE)
+        xml_failure(parser);
+    if (XML_ParseBuffer(parser, strlen(text), XML_TRUE) != XML_STATUS_ERROR)
+        fail("Suspended XML_ParseBuffer not faulted");
+    if (XML_GetErrorCode(parser) != XML_ERROR_SUSPENDED)
+        xml_failure(parser);
+
+    /* Get it going again and complete the world */
+    XML_SetCharacterDataHandler(parser, NULL);
+    if (XML_ResumeParser(parser) != XML_STATUS_OK)
+        xml_failure(parser);
+    if (XML_ParseBuffer(parser, strlen(text), XML_TRUE) != XML_STATUS_ERROR)
+        fail("Post-finishing XML_ParseBuffer not faulted");
+    if (XML_GetErrorCode(parser) != XML_ERROR_FINISHED)
+        xml_failure(parser);
+}
+END_TEST
+
 /* Test that freeing a NULL parser doesn't cause an explosion.
  * (Not actually tested anywhere else)
  */
@@ -2987,6 +3042,7 @@ make_suite(void)
     tcase_add_test(tc_misc, test_misc_alloc_create_parser_with_encoding);
     tcase_add_test(tc_misc, test_misc_alloc_ns);
     tcase_add_test(tc_misc, test_misc_null_parser);
+    tcase_add_test(tc_misc, test_misc_alloc_ns_parse_buffer);
 
     suite_add_tcase(s, tc_alloc);
     tcase_add_checked_fixture(tc_alloc, alloc_setup, alloc_teardown);
