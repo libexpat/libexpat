@@ -1268,6 +1268,66 @@ START_TEST(test_suspend_parser_between_char_data_calls)
 }
 END_TEST
 
+
+static XML_Bool abortable = XML_FALSE;
+
+static void
+parser_stop_character_handler(void *UNUSED_P(userData),
+                              const XML_Char *UNUSED_P(s),
+                              int UNUSED_P(len))
+{
+    XML_StopParser(parser, resumable);
+    XML_SetCharacterDataHandler(parser, NULL);
+    if (!resumable) {
+        /* Check that aborting an aborted parser is faulted */
+        if (XML_StopParser(parser, XML_FALSE) != XML_STATUS_ERROR)
+            fail("Aborting aborted parser not faulted");
+        if (XML_GetErrorCode(parser) != XML_ERROR_FINISHED)
+            xml_failure(parser);
+    } else if (abortable) {
+        /* Check that aborting a suspended parser works */
+        if (XML_StopParser(parser, XML_FALSE) == XML_STATUS_ERROR)
+            xml_failure(parser);
+    } else {
+        /* Check that suspending a suspended parser works */
+        if (XML_StopParser(parser, XML_TRUE) != XML_STATUS_ERROR)
+            fail("Suspending suspended parser not faulted");
+        if (XML_GetErrorCode(parser) != XML_ERROR_SUSPENDED)
+            xml_failure(parser);
+    }
+}
+
+/* Test repeated calls to XML_StopParser are handled correctly */
+START_TEST(test_repeated_stop_parser_between_char_data_calls)
+{
+    const char *text = long_character_data_text;
+
+    XML_SetCharacterDataHandler(parser, parser_stop_character_handler);
+    resumable = XML_FALSE;
+    abortable = XML_FALSE;
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                XML_TRUE) != XML_STATUS_ERROR)
+        fail("Failed to double-stop parser");
+
+    XML_ParserReset(parser, NULL);
+    XML_SetCharacterDataHandler(parser, parser_stop_character_handler);
+    resumable = XML_TRUE;
+    abortable = XML_FALSE;
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                XML_TRUE) != XML_STATUS_SUSPENDED)
+        fail("Failed to double-suspend parser");
+
+    XML_ParserReset(parser, NULL);
+    XML_SetCharacterDataHandler(parser, parser_stop_character_handler);
+    resumable = XML_TRUE;
+    abortable = XML_TRUE;
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                XML_TRUE) != XML_STATUS_ERROR)
+        fail("Failed to suspend-abort parser");
+}
+END_TEST
+
+
 START_TEST(test_good_cdata_ascii)
 {
     const char *text = "<a><![CDATA[<greeting>Hello, world!</greeting>]]></a>";
@@ -2009,7 +2069,6 @@ START_TEST(test_get_buffer_1)
         fail("1000 buffer failed");
 }
 END_TEST
-
 
 /* Test more corners of the XML_GetBuffer interface */
 START_TEST(test_get_buffer_2)
@@ -3103,6 +3162,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_ns_in_attribute_default_without_namespaces);
     tcase_add_test(tc_basic, test_stop_parser_between_char_data_calls);
     tcase_add_test(tc_basic, test_suspend_parser_between_char_data_calls);
+    tcase_add_test(tc_basic, test_repeated_stop_parser_between_char_data_calls);
     tcase_add_test(tc_basic, test_good_cdata_ascii);
     tcase_add_test(tc_basic, test_good_cdata_utf16);
     tcase_add_test(tc_basic, test_bad_cdata);
