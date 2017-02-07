@@ -1714,6 +1714,12 @@ external_entity_resetter(XML_Parser parser,
         fail("Parsing status is not FINISHED");
         return XML_STATUS_ERROR;
     }
+    /* Check we can't parse here */
+    if (XML_Parse(ext_parser, text, strlen(text),
+                  XML_TRUE) != XML_STATUS_ERROR)
+        fail("Parsing when finished not faulted");
+    if (XML_GetErrorCode(ext_parser) != XML_ERROR_FINISHED)
+        fail("Parsing when finished faulted with wrong code");
     XML_ParserReset(ext_parser, NULL);
     XML_GetParsingStatus(ext_parser, &status);
     if (status.parsing != XML_FINISHED) {
