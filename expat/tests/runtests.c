@@ -17,6 +17,7 @@
 #ifndef __cplusplus
 # include <stdbool.h>
 #endif
+#include <limits.h>
 
 #include "expat.h"
 #include "chardata.h"
@@ -1957,6 +1958,55 @@ START_TEST(test_empty_parse)
 }
 END_TEST
 
+/* Test odd corners of the XML_GetBuffer interface */
+START_TEST(test_get_buffer)
+{
+    const char *text =
+        "<documentwitharidiculouslylongelementnametotease" /* 0x030 */
+        "aparticularcorneroftheallocationinXML_GetBuffers" /* 0x060 */
+        "othatwecanimprovethecoverageyetagain012345678901" /* 0x090 */
+        "123456789abcdef0123456789abcdef0123456789abcdef0" /* 0x0c0 */
+        "123456789abcdef0123456789abcdef0123456789abcdef0" /* 0x0f0 */
+        "123456789abcdef0123456789abcdef0123456789abcdef0" /* 0x120 */
+        "123456789abcdef0123456789abcdef0123456789abcdef0" /* 0x150 */
+        "123456789abcdef0123456789abcdef0123456789abcdef0" /* 0x180 */
+        "123456789abcdef0123456789abcdef0123456789abcdef0" /* 0x1b0 */
+        "123456789abcdef0123456789abcdef0123456789abcdef0" /* 0x1e0 */
+        "123456789abcdef0123456789abcdef0123456789abcdef0" /* 0x210 */
+        "123456789abcdef0123456789abcdef0123456789abcdef0" /* 0x240 */
+        "123456789abcdef0123456789abcdef0123456789abcdef0" /* 0x270 */
+        "123456789abcdef0123456789abcdef0123456789abcdef0" /* 0x2a0 */
+        "123456789abcdef0123456789abcdef0123456789abcdef0" /* 0x2d0 */
+        "123456789abcdef0123456789abcdef0123456789abcdef0" /* 0x300 */
+        "123456789abcdef0123456789abcdef0123456789abcdef0" /* 0x330 */
+        "123456789abcdef0123456789abcdef0123456789abcdef0" /* 0x360 */
+        "123456789abcdef0123456789abcdef0123456789abcdef0" /* 0x390 */
+        "123456789abcdef0123456789abcdef0123456789abcdef0" /* 0x3c0 */
+        "123456789abcdef0123456789abcdef0123456789abcdef0" /* 0x3f0 */
+        "123456789abcdef0123456789abcdef0123456789>\n<ef0"; /* 0x420 */
+    void *buffer;
+
+    /* Attempt to allocate a negative length buffer */
+    if (XML_GetBuffer(parser, -12) != NULL)
+        fail("Negative length buffer not failed");
+
+    /* Now get a small buffer and extend it past valid length */
+    buffer = XML_GetBuffer(parser, 1536);
+    if (buffer == NULL)
+        fail("1.5K buffer failed");
+    memcpy(buffer, text, strlen(text));
+    if (XML_ParseBuffer(parser, strlen(text), XML_FALSE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+    if (XML_GetBuffer(parser, INT_MAX) != NULL)
+        fail("INT_MAX buffer not failed");
+
+    /* Now try extending it a more reasonable amount */
+    if (XML_GetBuffer(parser, 1000) == NULL)
+        fail("1000 buffer failed");
+}
+END_TEST
+
+
 /*
  * Namespaces tests.
  */
@@ -2472,10 +2522,6 @@ START_TEST(test_misc_alloc_ns_parse_buffer)
     allocation_count = 10000;
     if (XML_ParseBuffer(parser, 0, XML_FALSE) != XML_STATUS_OK)
         xml_failure(parser);
-
-    /* Try silly buffer lengths */
-    if (XML_GetBuffer(parser, -12) != NULL)
-        fail("Negative length buffer not failed");
 
     /* Get the parser into suspended state */
     XML_SetCharacterDataHandler(parser, clearing_aborting_character_handler);
@@ -3025,6 +3071,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_user_parameters);
     tcase_add_test(tc_basic, test_ext_entity_ref_parameter);
     tcase_add_test(tc_basic, test_empty_parse);
+    tcase_add_test(tc_basic, test_get_buffer);
 
     suite_add_tcase(s, tc_namespace);
     tcase_add_checked_fixture(tc_namespace,
