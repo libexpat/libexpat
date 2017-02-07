@@ -2000,7 +2000,11 @@ START_TEST(test_get_buffer)
     if (XML_GetBuffer(parser, INT_MAX) != NULL)
         fail("INT_MAX buffer not failed");
 
-    /* Now try extending it a more reasonable amount */
+    /* Now try extending it a more reasonable but still too large amount */
+    if (XML_GetBuffer(parser, INT_MAX - 2049) != NULL)
+        fail("INT_MAX- buffer not failed");
+
+    /* Now try extending it a carefully crafted amount */
     if (XML_GetBuffer(parser, 1000) == NULL)
         fail("1000 buffer failed");
 }
