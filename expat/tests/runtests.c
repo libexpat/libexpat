@@ -3199,6 +3199,22 @@ START_TEST(test_empty_parse)
 END_TEST
 
 /* Test odd corners of the XML_GetBuffer interface */
+static enum XML_Status
+get_feature(enum XML_FeatureEnum feature_id, long *presult)
+{
+    const XML_Feature *feature = XML_GetFeatureList();
+
+    if (feature == NULL)
+        return XML_STATUS_ERROR;
+    for (; feature->feature != XML_FEATURE_END; feature++) {
+        if (feature->feature == feature_id) {
+            *presult = feature->value;
+            return XML_STATUS_OK;
+        }
+    }
+    return XML_STATUS_ERROR;
+}
+
 START_TEST(test_get_buffer_1)
 {
     const char *text =
@@ -3225,6 +3241,7 @@ START_TEST(test_get_buffer_1)
         "123456789abcdef0123456789abcdef0123456789abcdef0" /* 0x3f0 */
         "123456789abcdef0123456789abcdef0123456789>\n<ef0"; /* 0x420 */
     void *buffer;
+    long context_bytes;
 
     /* Attempt to allocate a negative length buffer */
     if (XML_GetBuffer(parser, -12) != NULL)
@@ -3240,8 +3257,20 @@ START_TEST(test_get_buffer_1)
     if (XML_GetBuffer(parser, INT_MAX) != NULL)
         fail("INT_MAX buffer not failed");
 
-    /* Now try extending it a more reasonable but still too large amount */
-    if (XML_GetBuffer(parser, INT_MAX - 2049) != NULL)
+    /* Now try extending it a more reasonable but still too large
+     * amount.  The allocator in XML_GetBuffer() doubles the buffer
+     * size until it exceeds the requested amount or INT_MAX.  If it
+     * exceeds INT_MAX, it rejects the request, so we want a request
+     * between INT_MAX and INT_MAX/2.  A gap of 1K seems comfortable,
+     * with an extra byte just to ensure that the request is off any
+     * boundary.  The request will be inflated internally by
+     * XML_CONTEXT_BYTES (if defined), so we subtract that from our
+     * request.
+     */
+    if (get_feature(XML_FEATURE_CONTEXT_BYTES,
+                    &context_bytes) != XML_STATUS_OK)
+        context_bytes = 0;
+    if (XML_GetBuffer(parser, INT_MAX - (context_bytes + 1025)) != NULL)
         fail("INT_MAX- buffer not failed");
 
     /* Now try extending it a carefully crafted amount */
