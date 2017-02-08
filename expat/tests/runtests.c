@@ -14,6 +14,7 @@
 #include <string.h>
 #include <stdint.h>
 #include <stddef.h>  /* ptrdiff_t */
+#include <ctype.h>
 #ifndef __cplusplus
 # include <stdbool.h>
 #endif
@@ -2855,6 +2856,42 @@ START_TEST(test_misc_error_string)
 }
 END_TEST
 
+/* Test the version information is consistent */
+START_TEST(test_misc_version)
+{
+    XML_Expat_Version version_struct = XML_ExpatVersionInfo();
+    const XML_LChar *version_text = XML_ExpatVersion();
+    long value;
+    const char *p;
+    char *endp;
+
+    if (version_text == NULL)
+        fail("Could not obtain version text");
+    for (p = version_text; *p != '\0'; p++)
+        if (isdigit(*p))
+            break;
+    if (*p == '\0')
+        fail("No numbers in version text");
+    value = strtoul(p, &endp, 10);
+    if (*endp != '.')
+        fail("Major version conversion from text failed");
+    if (value != version_struct.major)
+        fail("Major version mismatch");
+    p = endp + 1;
+    value = strtoul(p, &endp, 10);
+    if (*endp != '.')
+        fail("Minor version conversion from text failed");
+    if (value != version_struct.minor)
+        fail("Minor version mismatch");
+    p = endp + 1;
+    value = strtoul(p, &endp, 10);
+    if (*endp != '\0')
+        fail("Micro version conversion from text failed");
+    if (value != version_struct.micro)
+        fail("Micro version mismatch");
+}
+END_TEST
+
 
 static void
 alloc_setup(void)
@@ -3393,6 +3430,7 @@ make_suite(void)
     tcase_add_test(tc_misc, test_misc_null_parser);
     tcase_add_test(tc_misc, test_misc_alloc_ns_parse_buffer);
     tcase_add_test(tc_misc, test_misc_error_string);
+    tcase_add_test(tc_misc, test_misc_version);
 
     suite_add_tcase(s, tc_alloc);
     tcase_add_checked_fixture(tc_alloc, alloc_setup, alloc_teardown);
