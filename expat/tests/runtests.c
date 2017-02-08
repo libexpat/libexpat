@@ -1745,6 +1745,23 @@ START_TEST(test_reset_in_entity)
 }
 END_TEST
 
+/* Test that resume correctly passes through parse errors */
+START_TEST(test_resume_invalid_parse)
+{
+    const char *text = "<doc>Hello</doc"; /* Missing closing wedge */
+
+    resumable = XML_TRUE;
+    XML_SetCharacterDataHandler(parser,
+                                clearing_aborting_character_handler);
+    if (XML_Parse(parser, text, strlen(text), XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+    if (XML_ResumeParser(parser) == XML_STATUS_OK)
+        fail("Resumed invalid parse not faulted");
+    if (XML_GetErrorCode(parser) != XML_ERROR_UNCLOSED_TOKEN)
+        fail("Invalid parse not correctly faulted");
+}
+END_TEST
+
 /* Test resetting a subordinate parser does exactly nothing */
 static int XMLCALL
 external_entity_resetter(XML_Parser parser,
@@ -3234,6 +3251,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_set_base);
     tcase_add_test(tc_basic, test_attributes);
     tcase_add_test(tc_basic, test_reset_in_entity);
+    tcase_add_test(tc_basic, test_resume_invalid_parse);
     tcase_add_test(tc_basic, test_subordinate_reset);
     tcase_add_test(tc_basic, test_subordinate_suspend);
     tcase_add_test(tc_basic, test_explicit_encoding);
