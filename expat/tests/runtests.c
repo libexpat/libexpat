@@ -2845,6 +2845,16 @@ START_TEST(test_misc_null_parser)
 }
 END_TEST
 
+/* Test that XML_ErrorString rejects out-of-range codes */
+START_TEST(test_misc_error_string)
+{
+    if (XML_ErrorString((enum XML_Error)-1) != NULL)
+        fail("Negative error code not rejected");
+    if (XML_ErrorString((enum XML_Error)100) != NULL)
+        fail("Large error code not rejected");
+}
+END_TEST
+
 
 static void
 alloc_setup(void)
@@ -3382,6 +3392,7 @@ make_suite(void)
     tcase_add_test(tc_misc, test_misc_alloc_ns);
     tcase_add_test(tc_misc, test_misc_null_parser);
     tcase_add_test(tc_misc, test_misc_alloc_ns_parse_buffer);
+    tcase_add_test(tc_misc, test_misc_error_string);
 
     suite_add_tcase(s, tc_alloc);
     tcase_add_checked_fixture(tc_alloc, alloc_setup, alloc_teardown);
