@@ -1804,6 +1804,61 @@ START_TEST(test_subordinate_reset)
 }
 END_TEST
 
+
+/* Test suspending a subordinate parser */
+
+static void XMLCALL
+entity_suspending_decl_handler(void *userData,
+                               const XML_Char *UNUSED_P(name),
+                               XML_Content *UNUSED_P(model))
+{
+    XML_Parser ext_parser = (XML_Parser)userData;
+
+    if (XML_StopParser(ext_parser, XML_TRUE) != XML_STATUS_ERROR)
+        fail("Attempting to suspend a subordinate parser not faulted");
+    if (XML_GetErrorCode(ext_parser) != XML_ERROR_SUSPEND_PE)
+        fail("Suspending subordinate parser get wrong code");
+    XML_SetElementDeclHandler(ext_parser, NULL);
+}
+
+static int XMLCALL
+external_entity_suspender(XML_Parser parser,
+                          const XML_Char *context,
+                          const XML_Char *UNUSED_P(base),
+                          const XML_Char *UNUSED_P(systemId),
+                          const XML_Char *UNUSED_P(publicId))
+{
+    const char *text = "<!ELEMENT doc (#PCDATA)*>";
+    XML_Parser ext_parser;
+
+    ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
+    if (ext_parser == NULL)
+        fail("Could not create external entity parser");
+    XML_SetElementDeclHandler(ext_parser, entity_suspending_decl_handler);
+    XML_SetUserData(ext_parser, ext_parser);
+    if (_XML_Parse_SINGLE_BYTES(ext_parser, text, strlen(text),
+                                XML_TRUE) == XML_STATUS_ERROR) {
+        xml_failure(ext_parser);
+        return XML_STATUS_ERROR;
+    }
+    return XML_STATUS_OK;
+}
+
+START_TEST(test_subordinate_suspend)
+{
+    const char *text =
+        "<?xml version='1.0' encoding='us-ascii'?>\n"
+        "<!DOCTYPE doc SYSTEM 'foo'>\n"
+        "<doc>&entity;</doc>";
+
+    XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+    XML_SetExternalEntityRefHandler(parser, external_entity_suspender);
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text), XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+}
+END_TEST
+
+
 /* Test setting an explicit encoding */
 START_TEST(test_explicit_encoding)
 {
@@ -3174,6 +3229,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_attributes);
     tcase_add_test(tc_basic, test_reset_in_entity);
     tcase_add_test(tc_basic, test_subordinate_reset);
+    tcase_add_test(tc_basic, test_subordinate_suspend);
     tcase_add_test(tc_basic, test_explicit_encoding);
     tcase_add_test(tc_basic, test_user_parameters);
     tcase_add_test(tc_basic, test_ext_entity_ref_parameter);
