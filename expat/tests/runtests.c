@@ -2239,6 +2239,28 @@ START_TEST(test_byte_info_at_error)
 }
 END_TEST
 
+/* Test position information in handler */
+static void
+byte_character_handler(void *UNUSED_P(userData),
+                       const XML_Char *UNUSED_P(s),
+                       int len)
+{
+    if (XML_GetCurrentByteIndex(parser) != 5)
+        fail("Character byte index incorrect");
+    if (XML_GetCurrentByteCount(parser) != len)
+        fail("Character byte count incorrect");
+}
+
+START_TEST(test_byte_info_at_cdata)
+{
+    const char *text = "<doc>Hello</doc>";
+
+    XML_SetCharacterDataHandler(parser, byte_character_handler);
+    if (XML_Parse(parser, text, strlen(text), XML_TRUE) != XML_STATUS_OK)
+        xml_failure(parser);
+}
+END_TEST
+
 
 /*
  * Namespaces tests.
@@ -3318,6 +3340,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_get_buffer_2);
     tcase_add_test(tc_basic, test_byte_info_at_end);
     tcase_add_test(tc_basic, test_byte_info_at_error);
+    tcase_add_test(tc_basic, test_byte_info_at_cdata);
 
     suite_add_tcase(s, tc_namespace);
     tcase_add_checked_fixture(tc_namespace,
