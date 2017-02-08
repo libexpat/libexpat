@@ -2241,21 +2241,38 @@ END_TEST
 
 /* Test position information in handler */
 static void
-byte_character_handler(void *UNUSED_P(userData),
-                       const XML_Char *UNUSED_P(s),
+byte_character_handler(void *userData,
+                       const XML_Char *s,
                        int len)
 {
-    if (XML_GetCurrentByteIndex(parser) != 5)
+    int offset, size;
+    const char *buffer;
+    intptr_t buflen = (intptr_t)userData;
+
+    buffer = XML_GetInputContext(parser, &offset, &size);
+    if (buffer == NULL)
+        fail("Failed to get context buffer");
+    if (XML_GetCurrentByteIndex(parser) != offset)
         fail("Character byte index incorrect");
     if (XML_GetCurrentByteCount(parser) != len)
         fail("Character byte count incorrect");
+    if (buflen != size)
+        fail("Buffer length incorrect");
+    if (s != buffer + offset)
+        fail("Buffer position incorrect");
 }
 
 START_TEST(test_byte_info_at_cdata)
 {
     const char *text = "<doc>Hello</doc>";
+    int offset, size;
+
+    /* Check initial context is empty */
+    if (XML_GetInputContext(parser, &offset, &size) != NULL)
+        fail("Unexpected context at start of parse");
 
     XML_SetCharacterDataHandler(parser, byte_character_handler);
+    XML_SetUserData(parser, (void *)strlen(text));
     if (XML_Parse(parser, text, strlen(text), XML_TRUE) != XML_STATUS_OK)
         xml_failure(parser);
 }
