@@ -2684,6 +2684,12 @@ START_TEST(test_misc_alloc_ns_parse_buffer)
     if (XML_ParseBuffer(parser, 0, XML_FALSE) != XML_STATUS_OK)
         xml_failure(parser);
 
+    /* Check that resuming an unsuspended parser is faulted */
+    if (XML_ResumeParser(parser) != XML_STATUS_ERROR)
+        fail("Resuming unsuspended parser not faulted");
+    if (XML_GetErrorCode(parser) != XML_ERROR_NOT_SUSPENDED)
+        xml_failure(parser);
+
     /* Get the parser into suspended state */
     XML_SetCharacterDataHandler(parser, clearing_aborting_character_handler);
     resumable = XML_TRUE;
