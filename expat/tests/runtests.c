@@ -1848,7 +1848,7 @@ END_TEST
 static void XMLCALL
 entity_suspending_decl_handler(void *userData,
                                const XML_Char *UNUSED_P(name),
-                               XML_Content *UNUSED_P(model))
+                               XML_Content *model)
 {
     XML_Parser ext_parser = (XML_Parser)userData;
 
@@ -1857,6 +1857,7 @@ entity_suspending_decl_handler(void *userData,
     if (XML_GetErrorCode(ext_parser) != XML_ERROR_SUSPEND_PE)
         fail("Suspending subordinate parser get wrong code");
     XML_SetElementDeclHandler(ext_parser, NULL);
+    XML_FreeContentModel(parser, model);
 }
 
 static int XMLCALL
