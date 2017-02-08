@@ -2811,6 +2811,32 @@ START_TEST(test_ns_parser_reset)
 }
 END_TEST
 
+/* Test that long element names with namespaces are handled correctly */
+START_TEST(test_ns_long_element)
+{
+    const char *text =
+        "<foo:thisisalongenoughelementnametotriggerareallocation\n"
+        " xmlns:foo='http://expat.sf.net/' bar:a='12'\n"
+        " xmlns:bar='http://expat.sf.net/'>"
+        "</foo:thisisalongenoughelementnametotriggerareallocation>";
+    const char *elemstr[] = {
+        "http://expat.sf.net/"
+        " thisisalongenoughelementnametotriggerareallocation foo",
+        "http://expat.sf.net/ a bar"
+    };
+
+    XML_SetReturnNSTriplet(parser, XML_TRUE);
+    XML_SetUserData(parser, elemstr);
+    XML_SetElementHandler(parser,
+                          triplet_start_checker,
+                          triplet_end_checker);
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+}
+END_TEST
+
+
 /* Control variable; the number of times duff_allocator() will successfully allocate */
 #define ALLOC_ALWAYS_SUCCEED (-1)
 #define REALLOC_ALWAYS_SUCCEED (-1)
@@ -3604,6 +3630,7 @@ make_suite(void)
     tcase_add_test(tc_namespace, test_ns_unbound_prefix_on_attribute);
     tcase_add_test(tc_namespace, test_ns_unbound_prefix_on_element);
     tcase_add_test(tc_namespace, test_ns_parser_reset);
+    tcase_add_test(tc_namespace, test_ns_long_element);
 
     suite_add_tcase(s, tc_misc);
     tcase_add_checked_fixture(tc_misc, NULL, basic_teardown);
