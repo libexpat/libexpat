@@ -4892,6 +4892,37 @@ START_TEST(test_alloc_set_base)
 }
 END_TEST
 
+/* Test buffer extension in the face of a duff reallocator */
+START_TEST(test_alloc_realloc_buffer)
+{
+    const char *text = get_buffer_test_text;
+    void *buffer;
+    int i;
+    int repeat = 0;
+
+    /* Get a smallish buffer */
+    for (i = 0; i < 10; i++) {
+        /* Repeat some indexes for cached allocations */
+        if (repeat < 6 && i == 2) {
+            i--;
+            repeat++;
+        }
+        reallocation_count = i;
+        buffer = XML_GetBuffer(parser, 1536);
+        if (buffer == NULL)
+            fail("1.5K buffer reallocation failed");
+        memcpy(buffer, text, strlen(text));
+        if (XML_ParseBuffer(parser, strlen(text),
+                            XML_FALSE) == XML_STATUS_OK)
+            break;
+        XML_ParserReset(parser, NULL);
+    }
+    if (i == 0)
+        fail("Parse succeeded with no reallocation");
+    else if (i == 10)
+        fail("Parse failed with reallocation count 10");
+}
+END_TEST
 
 static void
 nsalloc_setup(void)
@@ -5630,6 +5661,7 @@ make_suite(void)
     tcase_add_test(tc_alloc, test_alloc_dtd_default_handling);
     tcase_add_test(tc_alloc, test_alloc_explicit_encoding);
     tcase_add_test(tc_alloc, test_alloc_set_base);
+    tcase_add_test(tc_alloc, test_alloc_realloc_buffer);
 
     suite_add_tcase(s, tc_nsalloc);
     tcase_add_checked_fixture(tc_nsalloc, nsalloc_setup, nsalloc_teardown);
