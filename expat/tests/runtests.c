@@ -1022,6 +1022,49 @@ START_TEST(test_ext_entity_set_encoding)
 }
 END_TEST
 
+/* Test that bad encodings are faulted */
+static int XMLCALL
+external_entity_loader_bad_encoding(XML_Parser parser,
+                                    const XML_Char *context,
+                                    const XML_Char *UNUSED_P(base),
+                                    const XML_Char *UNUSED_P(systemId),
+                                    const XML_Char *UNUSED_P(publicId))
+{
+    /* Claim this is an unsupported encoding */
+    const char *text =
+        "<?xml encoding='iso-8859-3'?>"
+        "u";
+    XML_Parser extparser;
+
+    extparser = XML_ExternalEntityParserCreate(parser, context, NULL);
+    if (extparser == NULL)
+        fail("Could not create external entity parser.");
+    if (!XML_SetEncoding(extparser, "unknown"))
+        fail("XML_SetEncoding unknown encoding failed");
+    if (_XML_Parse_SINGLE_BYTES(extparser, text, strlen(text),
+                                XML_TRUE) != XML_STATUS_ERROR)
+        fail("Unsupported encoding not faulted");
+    if (XML_GetErrorCode(extparser) != XML_ERROR_UNKNOWN_ENCODING)
+        xml_failure(extparser);
+    return 0;
+}
+
+START_TEST(test_ext_entity_bad_encoding)
+{
+    const char *text =
+        "<!DOCTYPE doc [\n"
+        "  <!ENTITY en SYSTEM 'http://xml.libexpat.org/dummy.ent'>\n"
+        "]>\n"
+        "<doc>&en;</doc>";
+
+    XML_SetExternalEntityRefHandler(parser,
+                                    external_entity_loader_bad_encoding);
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                XML_TRUE) != XML_STATUS_ERROR)
+        fail("Bad encoding should not have been accepted");
+}
+END_TEST
+
 /* Test that no error is reported for unknown entities if we don't
    read an external subset.  This was fixed in Expat 1.95.5.
 */
@@ -3582,6 +3625,7 @@ make_suite(void)
                    test_wfc_undeclared_entity_with_external_subset_standalone);
     tcase_add_test(tc_basic, test_wfc_no_recursive_entity_refs);
     tcase_add_test(tc_basic, test_ext_entity_set_encoding);
+    tcase_add_test(tc_basic, test_ext_entity_bad_encoding);
     tcase_add_test(tc_basic, test_dtd_default_handling);
     tcase_add_test(tc_basic, test_empty_ns_without_namespaces);
     tcase_add_test(tc_basic, test_ns_in_attribute_default_without_namespaces);
