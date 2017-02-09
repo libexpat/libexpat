@@ -1022,6 +1022,50 @@ START_TEST(test_ext_entity_set_encoding)
 }
 END_TEST
 
+/* Test UTF-8 BOM is accepted */
+static int XMLCALL
+external_entity_loader_set_bom(XML_Parser parser,
+                               const XML_Char *context,
+                               const XML_Char *UNUSED_P(base),
+                               const XML_Char *UNUSED_P(systemId),
+                               const XML_Char *UNUSED_P(publicId))
+{    /* This text says it's an unsupported encoding, but it's really
+       UTF-8, which we tell Expat using XML_SetEncoding().
+    */
+    const char *text =
+        "\xEF\xBB\xBF" /* BOM */
+        "<?xml encoding='iso-8859-3'?>"
+        "\xC3\xA9";
+    XML_Parser extparser;
+
+    extparser = XML_ExternalEntityParserCreate(parser, context, NULL);
+    if (extparser == NULL)
+        fail("Could not create external entity parser.");
+    if (!XML_SetEncoding(extparser, "utf-8"))
+      fail("XML_SetEncoding() ignored for external entity");
+    if (  _XML_Parse_SINGLE_BYTES(extparser, text, strlen(text), XML_TRUE)
+          == XML_STATUS_ERROR) {
+        xml_failure(extparser);
+        return 0;
+    }
+    return 1;
+}
+
+START_TEST(test_ext_entity_set_bom)
+{
+    const char *text =
+        "<!DOCTYPE doc [\n"
+        "  <!ENTITY en SYSTEM 'http://xml.libexpat.org/dummy.ent'>\n"
+        "]>\n"
+        "<doc>&en;</doc>";
+
+    XML_SetExternalEntityRefHandler(parser,
+                                    external_entity_loader_set_bom);
+    run_character_check(text, "\xC3\xA9");
+}
+END_TEST
+
+
 /* Test that bad encodings are faulted */
 static int XMLCALL
 external_entity_loader_bad_encoding(XML_Parser parser,
@@ -3625,6 +3669,7 @@ make_suite(void)
                    test_wfc_undeclared_entity_with_external_subset_standalone);
     tcase_add_test(tc_basic, test_wfc_no_recursive_entity_refs);
     tcase_add_test(tc_basic, test_ext_entity_set_encoding);
+    tcase_add_test(tc_basic, test_ext_entity_set_bom);
     tcase_add_test(tc_basic, test_ext_entity_bad_encoding);
     tcase_add_test(tc_basic, test_dtd_default_handling);
     tcase_add_test(tc_basic, test_empty_ns_without_namespaces);
