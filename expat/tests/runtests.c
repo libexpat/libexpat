@@ -1272,6 +1272,45 @@ START_TEST(test_wfc_no_recursive_entity_refs)
 }
 END_TEST
 
+/* Test incomplete external entities are faulted */
+static int XMLCALL
+external_entity_faulter(XML_Parser parser,
+                        const XML_Char *context,
+                        const XML_Char *UNUSED_P(base),
+                        const XML_Char *UNUSED_P(systemId),
+                        const XML_Char *UNUSED_P(publicId))
+{
+    const char *text = "<";
+    XML_Parser ext_parser;
+
+    ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
+    if (ext_parser == NULL)
+        fail("Could not create external entity parser");
+    if (_XML_Parse_SINGLE_BYTES(ext_parser, text, strlen(text),
+                                XML_TRUE) != XML_STATUS_ERROR)
+        fail("Incomplete element declaration not faulted");
+    if (XML_GetErrorCode(ext_parser) != XML_ERROR_UNCLOSED_TOKEN)
+        xml_failure(ext_parser);
+    return XML_STATUS_ERROR;
+}
+
+START_TEST(test_ext_entity_invalid_parse)
+{
+    const char *text =
+        "<!DOCTYPE doc [\n"
+        "  <!ENTITY en SYSTEM 'http://xml.libexpat.org/dummy.ent'>\n"
+        "]>\n"
+        "<doc>&en;</doc>";
+
+    XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+    XML_SetExternalEntityRefHandler(parser, external_entity_faulter);
+    expect_failure(text,
+                   XML_ERROR_EXTERNAL_ENTITY_HANDLING,
+                   "Parser did not report unclosed token");
+}
+END_TEST
+
+
 /* Regression test for SF bug #483514. */
 START_TEST(test_dtd_default_handling)
 {
@@ -3671,6 +3710,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_ext_entity_set_encoding);
     tcase_add_test(tc_basic, test_ext_entity_set_bom);
     tcase_add_test(tc_basic, test_ext_entity_bad_encoding);
+    tcase_add_test(tc_basic, test_ext_entity_invalid_parse);
     tcase_add_test(tc_basic, test_dtd_default_handling);
     tcase_add_test(tc_basic, test_empty_ns_without_namespaces);
     tcase_add_test(tc_basic, test_ns_in_attribute_default_without_namespaces);
