@@ -1273,6 +1273,13 @@ START_TEST(test_wfc_no_recursive_entity_refs)
 END_TEST
 
 /* Test incomplete external entities are faulted */
+typedef struct ext_faults
+{
+    const char *parse_text;
+    const char *fail_text;
+    enum XML_Error error;
+} ExtFaults;
+
 static int XMLCALL
 external_entity_faulter(XML_Parser parser,
                         const XML_Char *context,
@@ -1280,16 +1287,18 @@ external_entity_faulter(XML_Parser parser,
                         const XML_Char *UNUSED_P(systemId),
                         const XML_Char *UNUSED_P(publicId))
 {
-    const char *text = "<";
     XML_Parser ext_parser;
+    ExtFaults *fault = (ExtFaults *)XML_GetUserData(parser);
 
     ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
     if (ext_parser == NULL)
         fail("Could not create external entity parser");
-    if (_XML_Parse_SINGLE_BYTES(ext_parser, text, strlen(text),
+    if (_XML_Parse_SINGLE_BYTES(ext_parser,
+                                fault->parse_text,
+                                strlen(fault->parse_text),
                                 XML_TRUE) != XML_STATUS_ERROR)
-        fail("Incomplete element declaration not faulted");
-    if (XML_GetErrorCode(ext_parser) != XML_ERROR_UNCLOSED_TOKEN)
+        fail(fault->fail_text);
+    if (XML_GetErrorCode(ext_parser) != fault->error)
         xml_failure(ext_parser);
     return XML_STATUS_ERROR;
 }
@@ -1301,12 +1310,30 @@ START_TEST(test_ext_entity_invalid_parse)
         "  <!ENTITY en SYSTEM 'http://xml.libexpat.org/dummy.ent'>\n"
         "]>\n"
         "<doc>&en;</doc>";
+    ExtFaults faults[] = {
+        {
+            "<",
+            "Incomplete element declaration not faulted",
+            XML_ERROR_UNCLOSED_TOKEN
+        },
+        {
+            "<\xe2\x82", /* First two bytes of a three-byte char */
+            "Incomplete character not faulted",
+            XML_ERROR_PARTIAL_CHAR
+        },
+        { NULL, NULL, XML_ERROR_NONE }
+    };
+    ExtFaults *fault;
 
-    XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
-    XML_SetExternalEntityRefHandler(parser, external_entity_faulter);
-    expect_failure(text,
-                   XML_ERROR_EXTERNAL_ENTITY_HANDLING,
-                   "Parser did not report unclosed token");
+    for (fault = &faults[0]; fault->parse_text != NULL; fault++) {
+        XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+        XML_SetExternalEntityRefHandler(parser, external_entity_faulter);
+        XML_SetUserData(parser, fault);
+        expect_failure(text,
+                       XML_ERROR_EXTERNAL_ENTITY_HANDLING,
+                       "Parser did not report external entity error");
+        XML_ParserReset(parser, NULL);
+    }
 }
 END_TEST
 
