@@ -2308,6 +2308,48 @@ START_TEST(test_explicit_encoding)
 }
 END_TEST
 
+/* Test handling of trailing CR (rather than newline) */
+static void XMLCALL
+cr_cdata_handler(void *userData, const XML_Char *s, int len)
+{
+    int *pfound = (int *)userData;
+
+    /* Internal processing turns the CR into a newline for the
+     * character data handler, but not for the default handler
+     */
+    if (len == 1 && (*s == '\n' || *s == '\r'))
+        *pfound = 1;
+}
+
+START_TEST(test_trailing_cr)
+{
+    const char *text = "<doc>\r";
+    int found_cr;
+
+    /* Try with a character handler, for code coverage */
+    XML_SetCharacterDataHandler(parser, cr_cdata_handler);
+    XML_SetUserData(parser, &found_cr);
+    found_cr = 0;
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                XML_TRUE) == XML_STATUS_OK)
+        fail("Failed to fault unclosed doc");
+    if (found_cr == 0)
+        fail("Did not catch the carriage return");
+    XML_ParserReset(parser, NULL);
+
+    /* Now with a default handler instead */
+    XML_SetDefaultHandler(parser, cr_cdata_handler);
+    XML_SetUserData(parser, &found_cr);
+    found_cr = 0;
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                XML_TRUE) == XML_STATUS_OK)
+        fail("Failed to fault unclosed doc");
+    if (found_cr == 0)
+        fail("Did not catch default carriage return");
+}
+END_TEST
+
+
 /* Test user parameter settings */
 /* Variable holding the expected handler userData */
 static void *handler_data = NULL;
@@ -3929,6 +3971,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_subordinate_xdecl_suspend);
     tcase_add_test(tc_basic, test_subordinate_xdecl_abort);
     tcase_add_test(tc_basic, test_explicit_encoding);
+    tcase_add_test(tc_basic, test_trailing_cr);
     tcase_add_test(tc_basic, test_user_parameters);
     tcase_add_test(tc_basic, test_ext_entity_ref_parameter);
     tcase_add_test(tc_basic, test_empty_parse);
