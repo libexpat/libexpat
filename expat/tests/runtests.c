@@ -4917,6 +4917,7 @@ START_TEST(test_alloc_realloc_buffer)
             break;
         XML_ParserReset(parser, NULL);
     }
+    reallocation_count = -1;
     if (i == 0)
         fail("Parse succeeded with no reallocation");
     else if (i == 10)
