@@ -2349,6 +2349,84 @@ START_TEST(test_trailing_cr)
 }
 END_TEST
 
+/* Test trailing CR in an external entity parse */
+static int XMLCALL
+external_entity_cr_catcher(XML_Parser parser,
+                           const XML_Char *context,
+                           const XML_Char *UNUSED_P(base),
+                           const XML_Char *UNUSED_P(systemId),
+                           const XML_Char *UNUSED_P(publicId))
+{
+    const char *text = "\r";
+    XML_Parser ext_parser;
+
+    ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
+    if (ext_parser == NULL)
+        fail("Could not create external entity parser");
+    XML_SetCharacterDataHandler(ext_parser, cr_cdata_handler);
+    if (_XML_Parse_SINGLE_BYTES(ext_parser, text, strlen(text),
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(ext_parser);
+    XML_ParserFree(ext_parser);
+    return XML_STATUS_OK;
+}
+
+static int XMLCALL
+external_entity_bad_cr_catcher(XML_Parser parser,
+                               const XML_Char *context,
+                               const XML_Char *UNUSED_P(base),
+                               const XML_Char *UNUSED_P(systemId),
+                               const XML_Char *UNUSED_P(publicId))
+{
+    const char *text = "<tag>\r";
+    XML_Parser ext_parser;
+
+    ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
+    if (ext_parser == NULL)
+        fail("Could not create external entity parser");
+    XML_SetCharacterDataHandler(ext_parser, cr_cdata_handler);
+    if (_XML_Parse_SINGLE_BYTES(ext_parser, text, strlen(text),
+                                XML_TRUE) == XML_STATUS_OK)
+        fail("Async entity error not caught");
+    if (XML_GetErrorCode(ext_parser) != XML_ERROR_ASYNC_ENTITY)
+        xml_failure(ext_parser);
+    XML_ParserFree(ext_parser);
+    return XML_STATUS_OK;
+}
+
+START_TEST(test_ext_entity_trailing_cr)
+{
+    const char *text =
+        "<!DOCTYPE doc [\n"
+        "  <!ENTITY en SYSTEM 'http://example.com/dummy.ent'>\n"
+        "]>\n"
+        "<doc>&en;</doc>";
+    int found_cr;
+
+    XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+    XML_SetExternalEntityRefHandler(parser, external_entity_cr_catcher);
+    XML_SetUserData(parser, &found_cr);
+    found_cr = 0;
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                XML_TRUE) != XML_STATUS_OK)
+        xml_failure(parser);
+    if (found_cr == 0)
+        fail("No carriage return found");
+    XML_ParserReset(parser, NULL);
+
+    /* Try again with a different trailing CR */
+    XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+    XML_SetExternalEntityRefHandler(parser, external_entity_bad_cr_catcher);
+    XML_SetUserData(parser, &found_cr);
+    found_cr = 0;
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                XML_TRUE) != XML_STATUS_OK)
+        xml_failure(parser);
+    if (found_cr == 0)
+        fail("No carriage return found");
+}
+END_TEST
+
 
 /* Test user parameter settings */
 /* Variable holding the expected handler userData */
@@ -3972,6 +4050,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_subordinate_xdecl_abort);
     tcase_add_test(tc_basic, test_explicit_encoding);
     tcase_add_test(tc_basic, test_trailing_cr);
+    tcase_add_test(tc_basic, test_ext_entity_trailing_cr);
     tcase_add_test(tc_basic, test_user_parameters);
     tcase_add_test(tc_basic, test_ext_entity_ref_parameter);
     tcase_add_test(tc_basic, test_empty_parse);
