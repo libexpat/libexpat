@@ -3386,6 +3386,31 @@ START_TEST(test_byte_info_at_cdata)
 }
 END_TEST
 
+/* Test predefined entities are correctly recognised */
+START_TEST(test_predefined_entities)
+{
+    const char *text = "<doc>&lt;&gt;&amp;&quot;&apos;</doc>";
+    const char *result = "<>&\"'";
+    CharData storage;
+
+    XML_SetDefaultHandler(parser, accumulate_characters);
+    /* run_character_check uses XML_SetCharacterDataHandler(), which
+     * unfortunately heads off a code path that we need to exercise.
+     */
+    CharData_Init(&storage);
+    XML_SetUserData(parser, &storage);
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+    /* The default handler doesn't translate the entities */
+    CharData_CheckXMLChars(&storage, text);
+
+    /* Now try again and check the translation */
+    XML_ParserReset(parser, NULL);
+    run_character_check(text, result);
+}
+END_TEST
+
 /* Regression test that an invalid tag in an external parameter
  * reference in an external DTD is correctly faulted.
  *
@@ -3531,6 +3556,7 @@ START_TEST(test_bad_ignore_section)
     }
 }
 END_TEST
+
 
 /*
  * Namespaces tests.
@@ -5609,6 +5635,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_byte_info_at_end);
     tcase_add_test(tc_basic, test_byte_info_at_error);
     tcase_add_test(tc_basic, test_byte_info_at_cdata);
+    tcase_add_test(tc_basic, test_predefined_entities);
     tcase_add_test(tc_basic, test_invalid_tag_in_dtd);
     tcase_add_test(tc_basic, test_ignore_section);
     tcase_add_test(tc_basic, test_bad_ignore_section);
