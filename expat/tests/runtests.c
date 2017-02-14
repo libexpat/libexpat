@@ -3824,6 +3824,63 @@ START_TEST(test_alloc_external_entity)
 }
 END_TEST
 
+/* Test more allocation failure paths */
+static int XMLCALL
+external_entity_alloc_set_encoding(XML_Parser parser,
+                                   const XML_Char *context,
+                                   const XML_Char *UNUSED_P(base),
+                                   const XML_Char *UNUSED_P(systemId),
+                                   const XML_Char *UNUSED_P(publicId))
+{
+    /* As for external_entity_loader_set_encoding() */
+    const char *text =
+        "<?xml encoding='iso-8859-3'?>"
+        "\xC3\xA9";
+    XML_Parser ext_parser;
+    enum XML_Status status;
+
+    ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
+    if (ext_parser == NULL)
+        return 0;
+    if (!XML_SetEncoding(ext_parser, "utf-8")) {
+        XML_ParserFree(ext_parser);
+        return 0;
+    }
+    status = _XML_Parse_SINGLE_BYTES(ext_parser, text, strlen(text),
+                                     XML_TRUE);
+    XML_ParserFree(ext_parser);
+    if (status == XML_STATUS_ERROR)
+        return 0;
+    return 1;
+}
+
+START_TEST(test_alloc_ext_entity_set_encoding)
+{
+    const char *text =
+        "<!DOCTYPE doc [\n"
+        "  <!ENTITY en SYSTEM 'http://example.org/dummy.ent'>\n"
+        "]>\n"
+        "<doc>&en;</doc>";
+    int i;
+#define MAX_ALLOCATION_COUNT 20
+
+    for (i = 0; i < MAX_ALLOCATION_COUNT; i++) {
+        XML_SetExternalEntityRefHandler(parser,
+                                        external_entity_alloc_set_encoding);
+        allocation_count = i;
+        if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                    XML_TRUE) == XML_STATUS_OK)
+            break;
+        allocation_count = -1;
+        XML_ParserReset(parser, NULL);
+    }
+    if (i == 0)
+        fail("Encoding check succeeded despite failing allocator");
+    if (i == MAX_ALLOCATION_COUNT)
+        fail("Encoding failed at max allocation count");
+#undef MAX_ALLOCATION_COUNT
+}
+END_TEST
 
 static int XMLCALL
 unknown_released_encoding_handler(void *UNUSED_P(data),
@@ -4102,6 +4159,7 @@ make_suite(void)
     tcase_add_test(tc_alloc, test_alloc_run_external_parser);
     tcase_add_test(tc_alloc, test_alloc_dtd_copy_default_atts);
     tcase_add_test(tc_alloc, test_alloc_external_entity);
+    tcase_add_test(tc_alloc, test_alloc_ext_entity_set_encoding);
     tcase_add_test(tc_alloc, test_alloc_internal_entity);
     tcase_add_test(tc_alloc, test_alloc_dtd_default_handling);
     tcase_add_test(tc_alloc, test_alloc_explicit_encoding);
