@@ -231,6 +231,11 @@ dummy_unparsed_entity_decl_handler(void *UNUSED_P(userData),
                                    const XML_Char *UNUSED_P(notationName))
 {}
 
+static void XMLCALL
+dummy_default_handler(void *UNUSED_P(userData),
+                      const XML_Char *UNUSED_P(s),
+                      int UNUSED_P(len))
+{}
 
 /*
  * Character & encoding tests.
@@ -1892,6 +1897,8 @@ START_TEST(test_set_foreign_dtd)
     XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
     XML_SetUserData(parser, dtd_text);
     XML_SetExternalEntityRefHandler(parser, external_entity_loader);
+    /* Add a default handler to exercise more code paths */
+    XML_SetDefaultHandler(parser, dummy_default_handler);
     if (XML_UseForeignDTD(parser, XML_TRUE) != XML_ERROR_NONE)
         fail("Could not set foreign DTD");
     if (_XML_Parse_SINGLE_BYTES(parser, text1, strlen(text1),
