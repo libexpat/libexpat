@@ -1591,6 +1591,17 @@ START_TEST(test_good_cdata_ascii)
     if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text), XML_TRUE) == XML_STATUS_ERROR)
         xml_failure(parser);
     CharData_CheckXMLChars(&storage, expected);
+
+    /* Try again, this time with a default handler */
+    XML_ParserReset(parser, NULL);
+    CharData_Init(&storage);
+    XML_SetUserData(parser, &storage);
+    XML_SetCharacterDataHandler(parser, accumulate_characters);
+    XML_SetDefaultHandler(parser, dummy_default_handler);
+
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text), XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+    CharData_CheckXMLChars(&storage, expected);
 }
 END_TEST
 
