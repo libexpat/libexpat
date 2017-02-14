@@ -3392,31 +3392,37 @@ START_TEST(test_misc_alloc_ns)
 
     allocation_count = ALLOC_ALWAYS_SUCCEED;
     parser = XML_ParserCreate_MM(NULL, &memsuite, ns_sep);
-    if (parser == NULL) {
+    if (parser == NULL)
         fail("Parser not created");
-    } else {
-        for (i = 0; i < 10; i++) {
-            /* Repeat some tests with the same allocation count to
-             * catch cached allocations not freed by XML_ParserReset()
-             */
-            if (repeated < 2 && i == 3) {
-                i--;
-                repeated++;
-            }
-            if (repeated == 2 && i == 5) {
-                i = 3;
-                repeated++;
-            }
-            allocation_count = i;
-            if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text), XML_TRUE) != XML_STATUS_ERROR)
-                break;
-            XML_ParserReset(parser, NULL);
+
+    for (i = 0; i < 10; i++) {
+        /* Repeat some tests with the same allocation count to
+         * catch cached allocations not freed by XML_ParserReset()
+         */
+        if ((i == 4 && repeated == 3) ||
+            (i == 7 && repeated == 8)) {
+            i -= 2;
+            repeated++;
         }
-        if (i == 0)
-            fail("Parsing worked despite failing allocations");
-        else if (i == 10)
-            fail("Parsing failed even at allocation count 10");
+        else if ((i == 2 && repeated < 2) ||
+                 (i == 3 && repeated < 3) ||
+                 (i == 3 && repeated > 3 && repeated < 7) ||
+                 (i == 5 && repeated < 8)) {
+            i--;
+            repeated++;
+        }
+        allocation_count = i;
+        /* Exercise more code paths with a default handler */
+        XML_SetDefaultHandler(parser, dummy_default_handler);
+        if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                    XML_TRUE) != XML_STATUS_ERROR)
+            break;
+        XML_ParserReset(parser, NULL);
     }
+    if (i == 0)
+        fail("Parsing worked despite failing allocations");
+    else if (i == 10)
+        fail("Parsing failed even at allocation count 10");
 }
 END_TEST
 
