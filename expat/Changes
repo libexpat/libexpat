@@ -3,6 +3,8 @@ Release ??????????
         Bug fixes:
             #539  Fix regression from fix to CVE-2016-0718 cutting off
                     longer tag names
+              #3  Fix double free after malloc failure in DTD code
+                    https://github.com/libexpat/libexpat/issues/3
 
         Other changes:
             #538  Start using -fno-strict-aliasing
