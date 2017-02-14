@@ -580,6 +580,13 @@ START_TEST(test_latin1_umlauts)
     run_character_check(text, utf8);
     XML_ParserReset(parser, NULL);
     run_attribute_check(text, utf8);
+    /* Repeat with a default handler */
+    XML_ParserReset(parser, NULL);
+    XML_SetDefaultHandler(parser, dummy_default_handler);
+    run_character_check(text, utf8);
+    XML_ParserReset(parser, NULL);
+    XML_SetDefaultHandler(parser, dummy_default_handler);
+    run_attribute_check(text, utf8);
 }
 END_TEST
 
