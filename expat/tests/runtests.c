@@ -2094,6 +2094,15 @@ record_cdata_nodefault_handler(void *userData,
     CharData_AppendString((CharData *)userData, "c");
 }
 
+static void XMLCALL
+record_skip_handler(void *userData,
+                    const XML_Char *UNUSED_P(entityName),
+                    int is_parameter_entity)
+{
+    CharData_AppendString((CharData *)userData,
+                          is_parameter_entity ? "E" : "e");
+}
+
 /* Test XML_DefaultCurrent() passes handling on correctly */
 START_TEST(test_default_current)
 {
@@ -2136,6 +2145,19 @@ START_TEST(test_default_current)
         xml_failure(parser);
     /* The default handler suppresses the entity */
     CharData_CheckString(&storage, "DDDDDDDDDDDDDDDDDDD");
+
+    /* Again, with a skip handler */
+    XML_ParserReset(parser, NULL);
+    XML_SetDefaultHandler(parser, record_default_handler);
+    XML_SetCharacterDataHandler(parser, record_cdata_handler);
+    XML_SetSkippedEntityHandler(parser, record_skip_handler);
+    CharData_Init(&storage);
+    XML_SetUserData(parser, &storage);
+    if (_XML_Parse_SINGLE_BYTES(parser, entity_text, strlen(entity_text),
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+    /* The default handler suppresses the entity */
+    CharData_CheckString(&storage, "DDDDDDDDDDDDDDDDDeD");
 
     /* This time, allow the entity through */
     XML_ParserReset(parser, NULL);
