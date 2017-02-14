@@ -3210,6 +3210,11 @@ START_TEST(test_ns_default_with_empty_uri)
         "<doc xmlns='http://xml.libexpat.org/'>\n"
         "  <e xmlns=''/>\n"
         "</doc>";
+    /* Add some handlers to exercise extra code paths */
+    XML_SetStartNamespaceDeclHandler(parser,
+                                     dummy_start_namespace_decl_handler);
+    XML_SetEndNamespaceDeclHandler(parser,
+                                   dummy_end_namespace_decl_handler);
     if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text), XML_TRUE) == XML_STATUS_ERROR)
         xml_failure(parser);
 }
