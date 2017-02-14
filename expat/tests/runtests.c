@@ -1022,6 +1022,20 @@ START_TEST(test_ext_entity_set_encoding)
 }
 END_TEST
 
+/* Test external entities with no handler */
+START_TEST(test_ext_entity_no_handler)
+{
+    const char *text =
+        "<!DOCTYPE doc [\n"
+        "  <!ENTITY en SYSTEM 'http://xml.libexpat.org/dummy.ent'>\n"
+        "]>\n"
+        "<doc>&en;</doc>";
+
+    XML_SetDefaultHandler(parser, dummy_default_handler);
+    run_character_check(text, "");
+}
+END_TEST
+
 /* Test UTF-8 BOM is accepted */
 static int XMLCALL
 external_entity_loader_set_bom(XML_Parser parser,
@@ -4092,6 +4106,7 @@ make_suite(void)
                    test_wfc_undeclared_entity_with_external_subset_standalone);
     tcase_add_test(tc_basic, test_wfc_no_recursive_entity_refs);
     tcase_add_test(tc_basic, test_ext_entity_set_encoding);
+    tcase_add_test(tc_basic, test_ext_entity_no_handler);
     tcase_add_test(tc_basic, test_ext_entity_set_bom);
     tcase_add_test(tc_basic, test_ext_entity_bad_encoding);
     tcase_add_test(tc_basic, test_ext_entity_invalid_parse);
