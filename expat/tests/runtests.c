@@ -1584,6 +1584,9 @@ START_TEST(test_good_cdata_ascii)
     CharData_Init(&storage);
     XML_SetUserData(parser, &storage);
     XML_SetCharacterDataHandler(parser, accumulate_characters);
+    /* Add start and end handlers for coverage */
+    XML_SetStartCdataSectionHandler(parser, dummy_start_cdata_handler);
+    XML_SetEndCdataSectionHandler(parser, dummy_end_cdata_handler);
 
     if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text), XML_TRUE) == XML_STATUS_ERROR)
         xml_failure(parser);
