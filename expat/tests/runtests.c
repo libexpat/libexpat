@@ -2482,11 +2482,12 @@ START_TEST(test_trailing_rsqb)
     const char *text8 = "<doc>]";
     const char text16[] = "\xFF\xFE<\000d\000o\000c\000>\000]\000";
     int found_rsqb;
+    int text8_len = strlen(text8);
 
     XML_SetCharacterDataHandler(parser, rsqb_handler);
     XML_SetUserData(parser, &found_rsqb);
     found_rsqb = 0;
-    if (_XML_Parse_SINGLE_BYTES(parser, text8, strlen(text8),
+    if (_XML_Parse_SINGLE_BYTES(parser, text8, text8_len,
                                 XML_TRUE) == XML_STATUS_OK)
         fail("Failed to fault unclosed doc");
     if (found_rsqb == 0)
@@ -2516,6 +2517,50 @@ START_TEST(test_trailing_rsqb)
 }
 END_TEST
 
+/* Test trailing right square bracket in an external entity parse */
+static int XMLCALL
+external_entity_rsqb_catcher(XML_Parser parser,
+                             const XML_Char *context,
+                             const XML_Char *UNUSED_P(base),
+                             const XML_Char *UNUSED_P(systemId),
+                             const XML_Char *UNUSED_P(publicId))
+{
+    const char *text = "<tag>]";
+    XML_Parser ext_parser;
+
+    ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
+    if (ext_parser == NULL)
+        fail("Could not create external entity parser");
+    XML_SetCharacterDataHandler(ext_parser, rsqb_handler);
+    if (_XML_Parse_SINGLE_BYTES(ext_parser, text, strlen(text),
+                                XML_TRUE) != XML_STATUS_ERROR)
+        fail("Async entity error not caught");
+    if (XML_GetErrorCode(ext_parser) != XML_ERROR_ASYNC_ENTITY)
+        xml_failure(ext_parser);
+    XML_ParserFree(ext_parser);
+    return XML_STATUS_OK;
+}
+
+START_TEST(test_ext_entity_trailing_rsqb)
+{
+    const char *text =
+        "<!DOCTYPE doc [\n"
+        "  <!ENTITY en SYSTEM 'http://example.com/dummy.ent'>\n"
+        "]>\n"
+        "<doc>&en;</doc>";
+    int found_rsqb;
+
+    XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+    XML_SetExternalEntityRefHandler(parser, external_entity_rsqb_catcher);
+    XML_SetUserData(parser, &found_rsqb);
+    found_rsqb = 0;
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                XML_TRUE) != XML_STATUS_OK)
+        xml_failure(parser);
+    if (found_rsqb == 0)
+        fail("No right square bracket found");
+}
+END_TEST
 
 /* Test user parameter settings */
 /* Variable holding the expected handler userData */
@@ -4218,6 +4263,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_trailing_cr);
     tcase_add_test(tc_basic, test_ext_entity_trailing_cr);
     tcase_add_test(tc_basic, test_trailing_rsqb);
+    tcase_add_test(tc_basic, test_ext_entity_trailing_rsqb);
     tcase_add_test(tc_basic, test_user_parameters);
     tcase_add_test(tc_basic, test_ext_entity_ref_parameter);
     tcase_add_test(tc_basic, test_empty_parse);
