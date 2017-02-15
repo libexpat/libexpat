@@ -3828,6 +3828,78 @@ START_TEST(test_alloc_parse_pi_2)
 }
 END_TEST
 
+START_TEST(test_alloc_parse_comment)
+{
+    const char *text =
+        "<?xml version='1.0' encoding='utf-8'?>\n"
+        "<!-- Test parsing this comment -->"
+        "<doc>Hi</doc>";
+    int i;
+    int repeat = 0;
+#define MAX_ALLOC_COUNT 10
+
+    for (i = 0; i < MAX_ALLOC_COUNT; i++) {
+        /* Repeat some counts because of cached memory */
+        if (i == 2 && repeat == 2) {
+            i -= 2;
+            repeat++;
+        } else if ((i == 1 && repeat < 2) ||
+                   (i == 1 && repeat > 2 && repeat < 5)) {
+            i--;
+            repeat++;
+        }
+        allocation_count = i;
+        XML_SetCommentHandler(parser, dummy_comment_handler);
+        if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                    XML_TRUE) != XML_STATUS_ERROR)
+            break;
+        XML_ParserReset(parser, NULL);
+    }
+    if (i == 0)
+        fail("Parse succeeded despite failing allocator");
+    if (i == MAX_ALLOC_COUNT)
+        fail("Parse failed with max allocations");
+#undef MAX_ALLOC_COUNT
+}
+END_TEST
+
+START_TEST(test_alloc_parse_comment_2)
+{
+    const char *text =
+        "<?xml version='1.0' encoding='utf-8'?>\n"
+        "<doc>"
+        "Hello, world"
+        "<!-- Parse this comment too -->"
+        "</doc>";
+    int i;
+    int repeat = 0;
+#define MAX_ALLOC_COUNT 10
+
+    for (i = 0; i < MAX_ALLOC_COUNT; i++) {
+        allocation_count = i;
+        /* Repeat some counts because of cached memory */
+        if (i == 2 && repeat == 1) {
+            i -= 2;
+            repeat++;
+        } else if ((i == 1 && repeat < 1) ||
+                   (i == 1 && repeat > 1 && repeat < 4)) {
+            i--;
+            repeat++;
+        }
+        XML_SetCommentHandler(parser, dummy_comment_handler);
+        if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                    XML_TRUE) != XML_STATUS_ERROR)
+            break;
+        XML_ParserReset(parser, NULL);
+    }
+    if (i == 0)
+        fail("Parse succeeded despite failing allocator");
+    if (i == MAX_ALLOC_COUNT)
+        fail("Parse failed with max allocations");
+#undef MAX_ALLOC_COUNT
+}
+END_TEST
+
 static int XMLCALL
 external_entity_duff_loader(XML_Parser parser,
                             const XML_Char *context,
@@ -4435,6 +4507,8 @@ make_suite(void)
     tcase_add_checked_fixture(tc_alloc, alloc_setup, alloc_teardown);
     tcase_add_test(tc_alloc, test_alloc_parse_pi);
     tcase_add_test(tc_alloc, test_alloc_parse_pi_2);
+    tcase_add_test(tc_alloc, test_alloc_parse_comment);
+    tcase_add_test(tc_alloc, test_alloc_parse_comment_2);
     tcase_add_test(tc_alloc, test_alloc_create_external_parser);
     tcase_add_test(tc_alloc, test_alloc_run_external_parser);
     tcase_add_test(tc_alloc, test_alloc_dtd_copy_default_atts);
