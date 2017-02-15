@@ -2467,6 +2467,55 @@ START_TEST(test_ext_entity_trailing_cr)
 }
 END_TEST
 
+/* Test handling of trailing square bracket */
+static void XMLCALL
+rsqb_handler(void *userData, const XML_Char *s, int len)
+{
+    int *pfound = (int *)userData;
+
+    if (len == 1 && *s == ']')
+        *pfound = 1;
+}
+
+START_TEST(test_trailing_rsqb)
+{
+    const char *text8 = "<doc>]";
+    const char text16[] = "\xFF\xFE<\000d\000o\000c\000>\000]\000";
+    int found_rsqb;
+
+    XML_SetCharacterDataHandler(parser, rsqb_handler);
+    XML_SetUserData(parser, &found_rsqb);
+    found_rsqb = 0;
+    if (_XML_Parse_SINGLE_BYTES(parser, text8, strlen(text8),
+                                XML_TRUE) == XML_STATUS_OK)
+        fail("Failed to fault unclosed doc");
+    if (found_rsqb == 0)
+        fail("Did not catch the right square bracket");
+
+    /* Try again with a different encoding */
+    XML_ParserReset(parser, NULL);
+    XML_SetCharacterDataHandler(parser, rsqb_handler);
+    XML_SetUserData(parser, &found_rsqb);
+    found_rsqb = 0;
+    if (_XML_Parse_SINGLE_BYTES(parser, text16, sizeof(text16)-1,
+                                XML_TRUE) == XML_STATUS_OK)
+        fail("Failed to fault unclosed doc");
+    if (found_rsqb == 0)
+        fail("Did not catch the right square bracket");
+
+    /* And finally with a default handler */
+    XML_ParserReset(parser, NULL);
+    XML_SetDefaultHandler(parser, rsqb_handler);
+    XML_SetUserData(parser, &found_rsqb);
+    found_rsqb = 0;
+    if (_XML_Parse_SINGLE_BYTES(parser, text16, sizeof(text16)-1,
+                                XML_TRUE) == XML_STATUS_OK)
+        fail("Failed to fault unclosed doc");
+    if (found_rsqb == 0)
+        fail("Did not catch the right square bracket");
+}
+END_TEST
+
 
 /* Test user parameter settings */
 /* Variable holding the expected handler userData */
@@ -4168,6 +4217,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_explicit_encoding);
     tcase_add_test(tc_basic, test_trailing_cr);
     tcase_add_test(tc_basic, test_ext_entity_trailing_cr);
+    tcase_add_test(tc_basic, test_trailing_rsqb);
     tcase_add_test(tc_basic, test_user_parameters);
     tcase_add_test(tc_basic, test_ext_entity_ref_parameter);
     tcase_add_test(tc_basic, test_empty_parse);
