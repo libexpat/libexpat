@@ -203,6 +203,12 @@ dummy_end_cdata_handler(void *UNUSED_P(userData))
 {}
 
 static void XMLCALL
+dummy_cdata_handler(void *UNUSED_P(userData),
+                    const XML_Char *UNUSED_P(s),
+                    int UNUSED_P(len))
+{}
+
+static void XMLCALL
 dummy_start_namespace_decl_handler(void *UNUSED_P(userData),
                                    const XML_Char *UNUSED_P(prefix),
                                    const XML_Char *UNUSED_P(uri))
@@ -766,6 +772,50 @@ START_TEST(test_really_long_lines)
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-+"
         "</e>";
     if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text), XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+}
+END_TEST
+
+/* Test cdata processing across a buffer boundary */
+START_TEST(test_really_long_encoded_lines)
+{
+    /* As above, except that we want to provoke an output buffer
+     * overflow with a non-trivial encoding.  For this we need to pass
+     * the whole cdata in one go, not byte-by-byte.
+     */
+    void *buffer;
+    const char *text =
+        "<?xml version='1.0' encoding='iso-8859-1'?>"
+        "<e>"
+        /* 64 chars */
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-+"
+        /* until we have at least 1024 characters on the line: */
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-+"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-+"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-+"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-+"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-+"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-+"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-+"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-+"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-+"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-+"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-+"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-+"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-+"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-+"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-+"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-+"
+        "</e>";
+    int parse_len = strlen(text);
+
+    /* Need a cdata handler to provoke the code path we want to test */
+    XML_SetCharacterDataHandler(parser, dummy_cdata_handler);
+    buffer = XML_GetBuffer(parser, parse_len);
+    if (buffer == NULL)
+        fail("Could not allocate parse buffer");
+    memcpy(buffer, text, parse_len);
+    if (XML_ParseBuffer(parser, parse_len, XML_TRUE) == XML_STATUS_ERROR)
         xml_failure(parser);
 }
 END_TEST
@@ -4216,6 +4266,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_line_number_after_error);
     tcase_add_test(tc_basic, test_column_number_after_error);
     tcase_add_test(tc_basic, test_really_long_lines);
+    tcase_add_test(tc_basic, test_really_long_encoded_lines);
     tcase_add_test(tc_basic, test_end_element_events);
     tcase_add_test(tc_basic, test_attr_whitespace_normalization);
     tcase_add_test(tc_basic, test_xmldecl_misplaced);
