@@ -4229,6 +4229,34 @@ START_TEST(test_misc_version)
 }
 END_TEST
 
+/* Test feature information */
+START_TEST(test_misc_features)
+{
+    const XML_Feature *features = XML_GetFeatureList();
+
+    /* Prevent problems with double-freeing parsers */
+    parser = NULL;
+    if (features == NULL)
+        fail("Failed to get feature information");
+    /* Loop through the features checking what we can */
+    while (features->feature != XML_FEATURE_END) {
+        switch(features->feature) {
+            case XML_FEATURE_SIZEOF_XML_CHAR:
+                if (features->value != sizeof(XML_Char))
+                    fail("Incorrect size of XML_Char");
+                break;
+            case XML_FEATURE_SIZEOF_XML_LCHAR:
+                if (features->value != sizeof(XML_LChar))
+                    fail("Incorrect size of XML_LChar");
+                break;
+            default:
+                break;
+        }
+        features++;
+    }
+}
+END_TEST
+
 /* Regression test for GitHub Issue #17: memory leak parsing attribute
  * values with mixed bound and unbound namespaces.
  */
@@ -4612,7 +4640,7 @@ external_entity_dbl_handler_2(XML_Parser parser,
     intptr_t callno = (intptr_t)XML_GetUserData(parser);
     const char *text;
     XML_Parser new_parser;
-    int i;
+    enum XML_Status rv;
 
     if (callno == 0) {
         /* Try different allocation levels for whole exercise */
@@ -4620,48 +4648,26 @@ external_entity_dbl_handler_2(XML_Parser parser,
                 "<!ATTLIST doc xmlns CDATA #IMPLIED>\n"
                 "<!ELEMENT e EMPTY>\n");
         XML_SetUserData(parser, (void *)(intptr_t)1);
-        for (i = 0; i < 20; i++) {
-            allocation_count = i;
-            new_parser = XML_ExternalEntityParserCreate(parser,
-                                                        context,
-                                                        NULL);
-            if (new_parser == NULL)
-                continue;
-            if (_XML_Parse_SINGLE_BYTES(new_parser, text, strlen(text),
-                                        XML_TRUE) != XML_STATUS_ERROR)
-                break;
-            XML_ParserFree(new_parser);
-        }
-
-        /* Ensure future allocations will be well */
-        allocation_count = ALLOC_ALWAYS_SUCCEED;
-        if (i == 0) {
-            fail("first external parser unexpectedly created");
-            XML_ParserFree(new_parser);
+        new_parser = XML_ExternalEntityParserCreate(parser,
+                                                    context,
+                                                    NULL);
+        if (new_parser == NULL)
             return 0;
-        }
-        else if (i == 20) {
-            fail("first external parser not allocated with count 20");
-            return 0;
-        }
+        rv = _XML_Parse_SINGLE_BYTES(new_parser, text, strlen(text),
+                                     XML_TRUE);
     } else {
         /* Just run through once */
         text = ("<?xml version='1.0' encoding='us-ascii'?>"
                 "<e/>");
-        allocation_count = ALLOC_ALWAYS_SUCCEED;
         new_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
-        if (new_parser == NULL) {
-            fail("Unable to create second external parser");
+        if (new_parser == NULL)
             return 0;
-        }
-        if (_XML_Parse_SINGLE_BYTES(new_parser, text, strlen(text),
-                                    XML_TRUE) == XML_STATUS_ERROR) {
-            xml_failure(new_parser);
-            XML_ParserFree(new_parser);
-            return 0;
-        }
+        rv =_XML_Parse_SINGLE_BYTES(new_parser, text, strlen(text),
+                                    XML_TRUE);
     }
     XML_ParserFree(new_parser);
+    if (rv == XML_STATUS_ERROR)
+        return 0;
     return 1;
 }
 
@@ -4676,14 +4682,27 @@ START_TEST(test_alloc_external_entity)
         "<doc xmlns='http://xml.libexpat.org/ns1'>\n"
         "&en;\n"
         "</doc>";
+    int i;
+#define ALLOC_TEST_MAX_REPEATS 50
 
-    XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
-    XML_SetExternalEntityRefHandler(parser,
-                                    external_entity_dbl_handler_2);
-    XML_SetUserData(parser, NULL);
-    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
-                                XML_TRUE) == XML_STATUS_ERROR)
-        xml_failure(parser);
+    for (i = 0; i < ALLOC_TEST_MAX_REPEATS; i++) {
+        allocation_count = -1;
+        XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+        XML_SetExternalEntityRefHandler(parser,
+                                        external_entity_dbl_handler_2);
+        XML_SetUserData(parser, NULL);
+        allocation_count = i;
+        if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                    XML_TRUE) == XML_STATUS_OK)
+            break;
+        XML_ParserReset(parser, NULL);
+    }
+    allocation_count = -1;
+    if (i == 0)
+        fail("External entity parsed despite duff allocator");
+    if (i == ALLOC_TEST_MAX_REPEATS)
+        fail("External entity not parsed at max allocation count");
+#undef ALLOC_TEST_MAX_REPEATS
 }
 END_TEST
 
@@ -5672,6 +5691,7 @@ make_suite(void)
     tcase_add_test(tc_misc, test_misc_null_parser);
     tcase_add_test(tc_misc, test_misc_error_string);
     tcase_add_test(tc_misc, test_misc_version);
+    tcase_add_test(tc_misc, test_misc_features);
     tcase_add_test(tc_misc, test_misc_attribute_leak);
 
     suite_add_tcase(s, tc_alloc);
