@@ -3754,12 +3754,14 @@ alloc_teardown(void)
 
 
 /* Test the effects of allocation failures on a straightforward parse */
-START_TEST(test_alloc_parse)
+START_TEST(test_alloc_parse_pi)
 {
     const char *text =
         "<?xml version='1.0' encoding='utf-8'?>\n"
         "<?pi unknown?>\n"
-        "<doc>Hello, world</doc>";
+        "<doc>"
+        "Hello, world"
+        "</doc>";
     int i;
     int repeat = 0;
 #define MAX_ALLOC_COUNT 10
@@ -3789,6 +3791,42 @@ START_TEST(test_alloc_parse)
 }
 END_TEST
 
+START_TEST(test_alloc_parse_pi_2)
+{
+    const char *text =
+        "<?xml version='1.0' encoding='utf-8'?>\n"
+        "<doc>"
+        "Hello, world"
+        "<?pi unknown?>\n"
+        "</doc>";
+    int i;
+    int repeat = 0;
+#define MAX_ALLOC_COUNT 10
+
+    for (i = 0; i < MAX_ALLOC_COUNT; i++) {
+        allocation_count = i;
+        /* Repeat some counts because of cached memory */
+        if (i == 2 && repeat == 1) {
+            i -= 2;
+            repeat++;
+        } else if ((i == 1 && repeat < 1) ||
+                   (i == 1 && repeat > 1 && repeat < 4)) {
+            i--;
+            repeat++;
+        }
+        XML_SetProcessingInstructionHandler(parser, dummy_pi_handler);
+        if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                    XML_TRUE) != XML_STATUS_ERROR)
+            break;
+        XML_ParserReset(parser, NULL);
+    }
+    if (i == 0)
+        fail("Parse succeeded despite failing allocator");
+    if (i == MAX_ALLOC_COUNT)
+        fail("Parse failed with max allocations");
+#undef MAX_ALLOC_COUNT
+}
+END_TEST
 
 static int XMLCALL
 external_entity_duff_loader(XML_Parser parser,
@@ -4395,7 +4433,8 @@ make_suite(void)
 
     suite_add_tcase(s, tc_alloc);
     tcase_add_checked_fixture(tc_alloc, alloc_setup, alloc_teardown);
-    tcase_add_test(tc_alloc, test_alloc_parse);
+    tcase_add_test(tc_alloc, test_alloc_parse_pi);
+    tcase_add_test(tc_alloc, test_alloc_parse_pi_2);
     tcase_add_test(tc_alloc, test_alloc_create_external_parser);
     tcase_add_test(tc_alloc, test_alloc_run_external_parser);
     tcase_add_test(tc_alloc, test_alloc_dtd_copy_default_atts);
