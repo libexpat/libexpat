@@ -3541,121 +3541,6 @@ START_TEST(test_misc_alloc_create_parser_with_encoding)
 }
 END_TEST
 
-/* Test the effects of allocation failure in simple namespace parsing.
- * Based on test_ns_default_with_empty_uri()
- */
-START_TEST(test_misc_alloc_ns)
-{
-    XML_Memory_Handling_Suite memsuite = { duff_allocator, realloc, free };
-    const char *text =
-        "<doc xmlns='http://xml.libexpat.org/'>\n"
-        "  <e xmlns=''/>\n"
-        "</doc>";
-    unsigned int i;
-    int repeated = 0;
-    XML_Char ns_sep[2] = { ' ', '\0' };
-
-    allocation_count = ALLOC_ALWAYS_SUCCEED;
-    parser = XML_ParserCreate_MM(NULL, &memsuite, ns_sep);
-    if (parser == NULL)
-        fail("Parser not created");
-
-    for (i = 0; i < 10; i++) {
-        /* Repeat some tests with the same allocation count to
-         * catch cached allocations not freed by XML_ParserReset()
-         */
-        if ((i == 4 && repeated == 3) ||
-            (i == 7 && repeated == 8)) {
-            i -= 2;
-            repeated++;
-        }
-        else if ((i == 2 && repeated < 2) ||
-                 (i == 3 && repeated < 3) ||
-                 (i == 3 && repeated > 3 && repeated < 7) ||
-                 (i == 5 && repeated < 8)) {
-            i--;
-            repeated++;
-        }
-        allocation_count = i;
-        /* Exercise more code paths with a default handler */
-        XML_SetDefaultHandler(parser, dummy_default_handler);
-        if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
-                                    XML_TRUE) != XML_STATUS_ERROR)
-            break;
-        XML_ParserReset(parser, NULL);
-    }
-    if (i == 0)
-        fail("Parsing worked despite failing allocations");
-    else if (i == 10)
-        fail("Parsing failed even at allocation count 10");
-}
-END_TEST
-
-/* Test XML_ParseBuffer interface with namespace and a dicky allocator */
-START_TEST(test_misc_alloc_ns_parse_buffer)
-{
-    XML_Memory_Handling_Suite memsuite = { duff_allocator, realloc, free };
-    XML_Char ns_sep[2] = { ' ', '\0' };
-    const char *text = "<doc>Hello</doc>";
-    void *buffer;
-
-    /* Make sure the basic parser is allocated */
-    allocation_count = ALLOC_ALWAYS_SUCCEED;
-    parser = XML_ParserCreate_MM(NULL, &memsuite, ns_sep);
-    if (parser == NULL)
-        fail("Parser not created");
-
-    /* Try a parse before the start of the world */
-    /* (Exercises new code path) */
-    allocation_count = 0;
-    if (XML_ParseBuffer(parser, 0, XML_FALSE) != XML_STATUS_ERROR)
-        fail("Pre-init XML_ParseBuffer not faulted");
-    if (XML_GetErrorCode(parser) != XML_ERROR_NO_MEMORY)
-        fail("Pre-init XML_ParseBuffer faulted for wrong reason");
-
-    /* Now with actual memory allocation */
-    allocation_count = ALLOC_ALWAYS_SUCCEED;
-    if (XML_ParseBuffer(parser, 0, XML_FALSE) != XML_STATUS_OK)
-        xml_failure(parser);
-
-    /* Check that resuming an unsuspended parser is faulted */
-    if (XML_ResumeParser(parser) != XML_STATUS_ERROR)
-        fail("Resuming unsuspended parser not faulted");
-    if (XML_GetErrorCode(parser) != XML_ERROR_NOT_SUSPENDED)
-        xml_failure(parser);
-
-    /* Get the parser into suspended state */
-    XML_SetCharacterDataHandler(parser, clearing_aborting_character_handler);
-    resumable = XML_TRUE;
-    buffer = XML_GetBuffer(parser, strlen(text));
-    if (buffer == NULL)
-        fail("Could not acquire parse buffer");
-    memcpy(buffer, text, strlen(text));
-    if (XML_ParseBuffer(parser, strlen(text),
-                        XML_TRUE) != XML_STATUS_SUSPENDED)
-        xml_failure(parser);
-    if (XML_GetErrorCode(parser) != XML_ERROR_NONE)
-        xml_failure(parser);
-    if (XML_ParseBuffer(parser, strlen(text), XML_TRUE) != XML_STATUS_ERROR)
-        fail("Suspended XML_ParseBuffer not faulted");
-    if (XML_GetErrorCode(parser) != XML_ERROR_SUSPENDED)
-        xml_failure(parser);
-    if (XML_GetBuffer(parser, strlen(text)) != NULL)
-        fail("Suspended XML_GetBuffer not faulted");
-
-    /* Get it going again and complete the world */
-    XML_SetCharacterDataHandler(parser, NULL);
-    if (XML_ResumeParser(parser) != XML_STATUS_OK)
-        xml_failure(parser);
-    if (XML_ParseBuffer(parser, strlen(text), XML_TRUE) != XML_STATUS_ERROR)
-        fail("Post-finishing XML_ParseBuffer not faulted");
-    if (XML_GetErrorCode(parser) != XML_ERROR_FINISHED)
-        xml_failure(parser);
-    if (XML_GetBuffer(parser, strlen(text)) != NULL)
-        fail("Post-finishing XML_GetBuffer not faulted");
-}
-END_TEST
-
 /* Test that freeing a NULL parser doesn't cause an explosion.
  * (Not actually tested anywhere else)
  */
@@ -4384,6 +4269,132 @@ START_TEST(test_alloc_set_base)
 END_TEST
 
 
+static void
+nsalloc_setup(void)
+{
+    XML_Memory_Handling_Suite memsuite = {
+        duff_allocator,
+        duff_reallocator,
+        free
+    };
+    XML_Char ns_sep[2] = { ' ', '\0' };
+
+    /* Ensure the parser creation will go through */
+    allocation_count = ALLOC_ALWAYS_SUCCEED;
+    reallocation_count = REALLOC_ALWAYS_SUCCEED;
+    parser = XML_ParserCreate_MM(NULL, &memsuite, ns_sep);
+    if (parser == NULL)
+        fail("Parser not created");
+}
+
+static void
+nsalloc_teardown(void)
+{
+    basic_teardown();
+}
+
+
+/* Test the effects of allocation failure in simple namespace parsing.
+ * Based on test_ns_default_with_empty_uri()
+ */
+START_TEST(test_nsalloc_xmlns)
+{
+    const char *text =
+        "<doc xmlns='http://xml.libexpat.org/'>\n"
+        "  <e xmlns=''/>\n"
+        "</doc>";
+    unsigned int i;
+    int repeated = 0;
+
+    for (i = 0; i < 10; i++) {
+        /* Repeat some tests with the same allocation count to
+         * catch cached allocations not freed by XML_ParserReset()
+         */
+        if ((i == 4 && repeated == 3) ||
+            (i == 7 && repeated == 8)) {
+            i -= 2;
+            repeated++;
+        }
+        else if ((i == 2 && repeated < 2) ||
+                 (i == 3 && repeated < 3) ||
+                 (i == 3 && repeated > 3 && repeated < 7) ||
+                 (i == 5 && repeated < 8)) {
+            i--;
+            repeated++;
+        }
+        allocation_count = i;
+        /* Exercise more code paths with a default handler */
+        XML_SetDefaultHandler(parser, dummy_default_handler);
+        if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                    XML_TRUE) != XML_STATUS_ERROR)
+            break;
+        XML_ParserReset(parser, NULL);
+    }
+    if (i == 0)
+        fail("Parsing worked despite failing allocations");
+    else if (i == 10)
+        fail("Parsing failed even at allocation count 10");
+}
+END_TEST
+
+/* Test XML_ParseBuffer interface with namespace and a dicky allocator */
+START_TEST(test_nsalloc_parse_buffer)
+{
+    const char *text = "<doc>Hello</doc>";
+    void *buffer;
+
+    /* Try a parse before the start of the world */
+    /* (Exercises new code path) */
+    allocation_count = 0;
+    if (XML_ParseBuffer(parser, 0, XML_FALSE) != XML_STATUS_ERROR)
+        fail("Pre-init XML_ParseBuffer not faulted");
+    if (XML_GetErrorCode(parser) != XML_ERROR_NO_MEMORY)
+        fail("Pre-init XML_ParseBuffer faulted for wrong reason");
+
+    /* Now with actual memory allocation */
+    allocation_count = ALLOC_ALWAYS_SUCCEED;
+    if (XML_ParseBuffer(parser, 0, XML_FALSE) != XML_STATUS_OK)
+        xml_failure(parser);
+
+    /* Check that resuming an unsuspended parser is faulted */
+    if (XML_ResumeParser(parser) != XML_STATUS_ERROR)
+        fail("Resuming unsuspended parser not faulted");
+    if (XML_GetErrorCode(parser) != XML_ERROR_NOT_SUSPENDED)
+        xml_failure(parser);
+
+    /* Get the parser into suspended state */
+    XML_SetCharacterDataHandler(parser, clearing_aborting_character_handler);
+    resumable = XML_TRUE;
+    buffer = XML_GetBuffer(parser, strlen(text));
+    if (buffer == NULL)
+        fail("Could not acquire parse buffer");
+    memcpy(buffer, text, strlen(text));
+    if (XML_ParseBuffer(parser, strlen(text),
+                        XML_TRUE) != XML_STATUS_SUSPENDED)
+        xml_failure(parser);
+    if (XML_GetErrorCode(parser) != XML_ERROR_NONE)
+        xml_failure(parser);
+    if (XML_ParseBuffer(parser, strlen(text), XML_TRUE) != XML_STATUS_ERROR)
+        fail("Suspended XML_ParseBuffer not faulted");
+    if (XML_GetErrorCode(parser) != XML_ERROR_SUSPENDED)
+        xml_failure(parser);
+    if (XML_GetBuffer(parser, strlen(text)) != NULL)
+        fail("Suspended XML_GetBuffer not faulted");
+
+    /* Get it going again and complete the world */
+    XML_SetCharacterDataHandler(parser, NULL);
+    if (XML_ResumeParser(parser) != XML_STATUS_OK)
+        xml_failure(parser);
+    if (XML_ParseBuffer(parser, strlen(text), XML_TRUE) != XML_STATUS_ERROR)
+        fail("Post-finishing XML_ParseBuffer not faulted");
+    if (XML_GetErrorCode(parser) != XML_ERROR_FINISHED)
+        xml_failure(parser);
+    if (XML_GetBuffer(parser, strlen(text)) != NULL)
+        fail("Post-finishing XML_GetBuffer not faulted");
+}
+END_TEST
+
+
 static Suite *
 make_suite(void)
 {
@@ -4392,6 +4403,7 @@ make_suite(void)
     TCase *tc_namespace = tcase_create("XML namespaces");
     TCase *tc_misc = tcase_create("miscellaneous tests");
     TCase *tc_alloc = tcase_create("allocation tests");
+    TCase *tc_nsalloc = tcase_create("namespace allocattion tests");
 
     suite_add_tcase(s, tc_basic);
     tcase_add_checked_fixture(tc_basic, basic_setup, basic_teardown);
@@ -4503,9 +4515,7 @@ make_suite(void)
     tcase_add_checked_fixture(tc_misc, NULL, basic_teardown);
     tcase_add_test(tc_misc, test_misc_alloc_create_parser);
     tcase_add_test(tc_misc, test_misc_alloc_create_parser_with_encoding);
-    tcase_add_test(tc_misc, test_misc_alloc_ns);
     tcase_add_test(tc_misc, test_misc_null_parser);
-    tcase_add_test(tc_misc, test_misc_alloc_ns_parse_buffer);
     tcase_add_test(tc_misc, test_misc_error_string);
     tcase_add_test(tc_misc, test_misc_version);
     tcase_add_test(tc_misc, test_misc_attribute_leak);
@@ -4525,6 +4535,11 @@ make_suite(void)
     tcase_add_test(tc_alloc, test_alloc_dtd_default_handling);
     tcase_add_test(tc_alloc, test_alloc_explicit_encoding);
     tcase_add_test(tc_alloc, test_alloc_set_base);
+
+    suite_add_tcase(s, tc_nsalloc);
+    tcase_add_checked_fixture(tc_nsalloc, nsalloc_setup, nsalloc_teardown);
+    tcase_add_test(tc_nsalloc, test_nsalloc_xmlns);
+    tcase_add_test(tc_nsalloc, test_nsalloc_parse_buffer);
 
     return s;
 }
