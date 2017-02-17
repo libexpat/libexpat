@@ -5082,7 +5082,10 @@ START_TEST(test_alloc_realloc_many_attributes)
         "     l='12'"
         "     m='13'"
         "     n='14'"
-        "     p='15'>"
+        "     p='15'"
+        "     q='16'"
+        "     r='17'"
+        "     s='18'>"
         "</doc>";
     int i;
 #define MAX_REALLOC_COUNT 10
