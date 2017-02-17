@@ -4505,6 +4505,32 @@ START_TEST(test_nsalloc_long_prefix)
 #undef MAX_ALLOC_COUNT
 END_TEST
 
+/* Test attribute handling in the face of a dodgy reallocator */
+START_TEST(test_nsalloc_realloc_attributes)
+{
+    const char *text =
+        "<foo:e xmlns:foo='http://expat.sf.net/' bar:a='12'\n"
+        "       xmlns:bar='http://expat.sf.net/'>"
+        "</foo:e>";
+    int i;
+#define MAX_REALLOC_COUNT 10
+
+    for (i = 0; i < MAX_REALLOC_COUNT; i++) {
+        reallocation_count = i;
+        if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                    XML_TRUE) != XML_STATUS_ERROR)
+            break;
+        XML_ParserReset(parser, NULL);
+    }
+    if (i == 0)
+        fail("Parsing worked despite failing reallocations");
+    else if (i == MAX_REALLOC_COUNT)
+        fail("Parsing failed at max reallocation count");
+}
+#undef MAX_REALLOC_COUNT
+END_TEST
+
+
 static Suite *
 make_suite(void)
 {
@@ -4652,6 +4678,7 @@ make_suite(void)
     tcase_add_test(tc_nsalloc, test_nsalloc_xmlns);
     tcase_add_test(tc_nsalloc, test_nsalloc_parse_buffer);
     tcase_add_test(tc_nsalloc, test_nsalloc_long_prefix);
+    tcase_add_test(tc_nsalloc, test_nsalloc_realloc_attributes);
 
     return s;
 }
