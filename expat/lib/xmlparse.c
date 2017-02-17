@@ -3117,13 +3117,17 @@ storeAtts(XML_Parser parser, const ENCODING *enc,
 #endif
     attsSize = n + nDefaultAtts + INIT_ATTS_SIZE;
     temp = (ATTRIBUTE *)REALLOC((void *)atts, attsSize * sizeof(ATTRIBUTE));
-    if (temp == NULL)
+    if (temp == NULL) {
+      attsSize = oldAttsSize;
       return XML_ERROR_NO_MEMORY;
+    }
     atts = temp;
 #ifdef XML_ATTR_INFO
     temp2 = (XML_AttrInfo *)REALLOC((void *)attInfo, attsSize * sizeof(XML_AttrInfo));
-    if (temp2 == NULL)
+    if (temp2 == NULL) {
+      attsSize = oldAttsSize;
       return XML_ERROR_NO_MEMORY;
+    }
     attInfo = temp2;
 #endif
     if (n > oldAttsSize)
