@@ -3376,6 +3376,25 @@ START_TEST(test_ns_prefix_with_empty_uri_4)
 }
 END_TEST
 
+/* Test with non-xmlns prefix */
+START_TEST(test_ns_unbound_prefix)
+{
+    const char *text =
+        "<!DOCTYPE doc [\n"
+        "  <!ELEMENT prefix:doc EMPTY>\n"
+        "  <!ATTLIST prefix:doc\n"
+        "    notxmlns:prefix CDATA 'http://example.com/'>\n"
+        "]>\n"
+        "<prefix:doc/>";
+
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                XML_TRUE) != XML_STATUS_ERROR)
+        fail("Unbound prefix incorrectly passed");
+    if (XML_GetErrorCode(parser) != XML_ERROR_UNBOUND_PREFIX)
+        xml_failure(parser);
+}
+END_TEST
+
 START_TEST(test_ns_default_with_empty_uri)
 {
     const char *text =
@@ -4595,6 +4614,7 @@ make_suite(void)
     tcase_add_test(tc_namespace, test_ns_prefix_with_empty_uri_2);
     tcase_add_test(tc_namespace, test_ns_prefix_with_empty_uri_3);
     tcase_add_test(tc_namespace, test_ns_prefix_with_empty_uri_4);
+    tcase_add_test(tc_namespace, test_ns_unbound_prefix);
     tcase_add_test(tc_namespace, test_ns_default_with_empty_uri);
     tcase_add_test(tc_namespace, test_ns_duplicate_attrs_diff_prefixes);
     tcase_add_test(tc_namespace, test_ns_unbound_prefix_on_attribute);
