@@ -4505,6 +4505,81 @@ START_TEST(test_nsalloc_long_prefix)
 #undef MAX_ALLOC_COUNT
 END_TEST
 
+/* Check handling of long uri names (pool growth) */
+START_TEST(test_nsalloc_long_uri)
+{
+    const char *text =
+        "<foo:e xmlns:foo='http://example.com/"
+        /* 64 characters per line */
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789A/"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789A/"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789A/"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789A/"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789A/"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789A/"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789A/"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789A/"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789A/"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789A/"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789A/"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789A/"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789A/"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789A/"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789A/"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789A/"
+        "' bar:a='12'\n"
+        "xmlns:bar='http://example.com/"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789A/"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789A/"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789A/"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789A/"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789A/"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789A/"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789A/"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789A/"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789A/"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789A/"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789A/"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789A/"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789A/"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789A/"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789A/"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789A/"
+        "'>"
+        "</foo:e>";
+    int i;
+#define MAX_ALLOC_COUNT 15
+    int repeated = 0;
+
+    for (i = 0; i < MAX_ALLOC_COUNT; i++) {
+        /* Repeat some tests with the same allocation count to
+         * catch cached allocations not freed by XML_ParserReset()
+         */
+        if ((i == 3 && repeated == 1) ||
+            (i == 6 && repeated == 4)) {
+            i -= 2;
+            repeated++;
+        }
+        else if ((i == 2 && (repeated == 0 || repeated == 2)) ||
+                 (i == 4 && repeated == 3) ||
+                 (i == 8 && repeated == 5)) {
+            i--;
+            repeated++;
+        }
+        allocation_count = i;
+        if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                    XML_TRUE) != XML_STATUS_ERROR)
+            break;
+        XML_ParserReset(parser, NULL);
+    }
+    if (i == 0)
+        fail("Parsing worked despite failing allocations");
+    else if (i == MAX_ALLOC_COUNT)
+        fail("Parsing failed even at max allocation count");
+}
+#undef MAX_ALLOC_COUNT
+END_TEST
+
 /* Test attribute handling in the face of a dodgy reallocator */
 START_TEST(test_nsalloc_realloc_attributes)
 {
@@ -4678,6 +4753,7 @@ make_suite(void)
     tcase_add_test(tc_nsalloc, test_nsalloc_xmlns);
     tcase_add_test(tc_nsalloc, test_nsalloc_parse_buffer);
     tcase_add_test(tc_nsalloc, test_nsalloc_long_prefix);
+    tcase_add_test(tc_nsalloc, test_nsalloc_long_uri);
     tcase_add_test(tc_nsalloc, test_nsalloc_realloc_attributes);
 
     return s;
