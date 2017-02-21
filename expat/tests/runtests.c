@@ -1728,7 +1728,10 @@ START_TEST(test_user_parameters)
         "<?xml version='1.0' encoding='us-ascii'?>\n"
         "<!-- Primary parse -->\n"
         "<!DOCTYPE doc SYSTEM 'foo'>\n"
-        "<doc>&entity;</doc>";
+        "<doc>&entity;";
+    const char *epilog =
+        "<!-- Back to primary parser -->\n"
+        "</doc>";
 
     comment_count = 0;
     XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
@@ -1737,9 +1740,15 @@ START_TEST(test_user_parameters)
     XML_UseParserAsHandlerArg(parser);
     XML_SetUserData(parser, (void *)1);
     handler_data = parser;
-    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text), XML_TRUE) == XML_STATUS_ERROR)
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                XML_FALSE) == XML_STATUS_ERROR)
         xml_failure(parser);
     if (comment_count != 2)
+        fail("Comment handler not invoked enough times");
+    if (_XML_Parse_SINGLE_BYTES(parser, epilog, strlen(epilog),
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+    if (comment_count != 3)
         fail("Comment handler not invoked enough times");
 }
 END_TEST
