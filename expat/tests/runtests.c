@@ -1858,6 +1858,17 @@ START_TEST(test_ext_entity_ref_parameter)
     if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
                                 XML_TRUE) == XML_STATUS_ERROR)
         xml_failure(parser);
+
+    /* Now try again with unset args */
+    XML_ParserReset(parser, NULL);
+    XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+    XML_SetExternalEntityRefHandler(parser,
+                                    external_entity_ref_param_checker);
+    XML_SetExternalEntityRefHandlerArg(parser, NULL);
+    handler_data = (void *)parser;
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
 }
 END_TEST
 
