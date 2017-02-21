@@ -1908,7 +1908,8 @@ START_TEST(test_set_foreign_dtd)
     /* Ensure that trying to set the DTD after parsing has started
      * is faulted, even if it's the same setting.
      */
-    if (XML_UseForeignDTD(parser, XML_TRUE) == XML_ERROR_NONE)
+    if (XML_UseForeignDTD(parser, XML_TRUE) !=
+        XML_ERROR_CANT_CHANGE_FEATURE_ONCE_PARSING)
         fail("Failed to reject late foreign DTD setting");
     /* Ditto for the hash salt */
     if (XML_SetHashSalt(parser, 0x23456789))
