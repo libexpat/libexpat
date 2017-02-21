@@ -2031,6 +2031,12 @@ START_TEST(test_attributes)
     info[0].attributes = doc_info;
     info[1].attributes = tag_info;
 
+    /* Silence some warnings: doc_info and tag_info are not computable
+     * at load time, making the variable initialisation harder.
+     */
+    info[0].attributes = doc_info;
+    info[1].attributes = tag_info;
+
     XML_SetStartElementHandler(parser, counting_start_element_handler);
     XML_SetUserData(parser, info);
     if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text), XML_TRUE) == XML_STATUS_ERROR)
