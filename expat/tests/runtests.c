@@ -4614,6 +4614,67 @@ START_TEST(test_nsalloc_long_uri)
 #undef MAX_ALLOC_COUNT
 END_TEST
 
+/* Test handling of long attribute names with prefixes */
+START_TEST(test_nsalloc_long_attr)
+{
+    const char *text =
+        "<foo:e xmlns:foo='http://example.org/' bar:"
+        /* 64 characters per line */
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "='12'\n"
+        "xmlns:bar='http://example.org/'>"
+        "</foo:e>";
+    int i;
+#define MAX_ALLOC_COUNT 20
+    int repeated = 0;
+
+    for (i = 0; i < MAX_ALLOC_COUNT; i++) {
+        /* Repeat some tests with the same allocation count to
+         * catch cached allocation not freed by XML_ParserReset()
+         */
+        if ((i == 4 && repeated < 6) ||
+            (i == 7 && repeated == 8) ||
+            (i == 10 && repeated == 10)) {
+            i -= 2;
+            repeated++;
+        }
+        else if ((i == 2 && repeated < 2) ||
+                 (i == 3 &&
+                  (repeated == 2 || repeated == 4 || repeated == 6)) ||
+                 (i == 5 && repeated == 7) ||
+                 (i == 6 && repeated == 9)) {
+            i--;
+            repeated++;
+        }
+        allocation_count = i;
+        if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                    XML_TRUE) != XML_STATUS_ERROR)
+            break;
+        XML_ParserReset(parser, NULL);
+    }
+    if (i == 0)
+        fail("Parsing worked despite failing allocations");
+    else if (i == MAX_ALLOC_COUNT)
+        fail("Parsing failed even at max allocation count");
+}
+#undef MAX_ALLOC_COUNT
+END_TEST
+
 /* Test attribute handling in the face of a dodgy reallocator */
 START_TEST(test_nsalloc_realloc_attributes)
 {
@@ -4788,6 +4849,7 @@ make_suite(void)
     tcase_add_test(tc_nsalloc, test_nsalloc_parse_buffer);
     tcase_add_test(tc_nsalloc, test_nsalloc_long_prefix);
     tcase_add_test(tc_nsalloc, test_nsalloc_long_uri);
+    tcase_add_test(tc_nsalloc, test_nsalloc_long_attr);
     tcase_add_test(tc_nsalloc, test_nsalloc_realloc_attributes);
 
     return s;
