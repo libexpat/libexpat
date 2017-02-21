@@ -1112,10 +1112,10 @@ external_entity_loader_set_encoding(XML_Parser parser,
     if (  _XML_Parse_SINGLE_BYTES(extparser, text, strlen(text), XML_TRUE)
           == XML_STATUS_ERROR) {
         xml_failure(parser);
-        return 0;
+        return XML_STATUS_ERROR;
     }
     XML_ParserFree(extparser);
-    return 1;
+    return XML_STATUS_OK;
 }
 
 START_TEST(test_ext_entity_set_encoding)
@@ -1170,11 +1170,11 @@ external_entity_loader_set_bom(XML_Parser parser,
     if (  _XML_Parse_SINGLE_BYTES(extparser, text, strlen(text), XML_TRUE)
           == XML_STATUS_ERROR) {
         xml_failure(extparser);
-        return 0;
+        return XML_STATUS_ERROR;
     }
 
     XML_ParserFree(extparser);
-    return 1;
+    return XML_STATUS_OK;
 }
 
 START_TEST(test_ext_entity_set_bom)
@@ -1218,7 +1218,7 @@ external_entity_loader_bad_encoding(XML_Parser parser,
         xml_failure(extparser);
 
     XML_ParserFree(extparser);
-    return 0;
+    return XML_STATUS_ERROR;
 }
 
 START_TEST(test_ext_entity_bad_encoding)
@@ -3819,10 +3819,10 @@ external_entity_handler(XML_Parser parser,
     p2 = XML_ExternalEntityParserCreate(parser, context, NULL);
     if (_XML_Parse_SINGLE_BYTES(p2, text, strlen(text), XML_TRUE) == XML_STATUS_ERROR) {
         xml_failure(p2);
-        return 0;
+        return XML_STATUS_ERROR;
     }
     XML_ParserFree(p2);
-    return 1;
+    return XML_STATUS_OK;
 }
 
 START_TEST(test_default_ns_from_ext_subset_and_ext_ge)
@@ -4592,7 +4592,7 @@ external_entity_dbl_handler(XML_Parser parser,
         new_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
         if (new_parser == NULL) {
             fail("Unable to allocate first external parser");
-            return 0;
+            return XML_STATUS_ERROR;
         }
         /* Stash the number of calls in the user data */
         XML_SetUserData(parser, (void *)(intptr_t)(10000 - allocation_count));
@@ -4611,21 +4611,21 @@ external_entity_dbl_handler(XML_Parser parser,
         if (i == 0) {
             fail("Second external parser unexpectedly created");
             XML_ParserFree(new_parser);
-            return 0;
+            return XML_STATUS_ERROR;
         }
         else if (i == 20) {
             fail("Second external parser not created");
-            return 0;
+            return XML_STATUS_ERROR;
         }
     }
 
     allocation_count = ALLOC_ALWAYS_SUCCEED;
     if (_XML_Parse_SINGLE_BYTES(new_parser, text, strlen(text), XML_TRUE) == XML_STATUS_ERROR) {
         xml_failure(new_parser);
-        return 0;
+        return XML_STATUS_ERROR;
     }
     XML_ParserFree(new_parser);
-    return 1;
+    return XML_STATUS_OK;
 }
 
 /* Test that running out of memory in dtdCopy is correctly reported.
@@ -4674,7 +4674,7 @@ external_entity_dbl_handler_2(XML_Parser parser,
                                                     context,
                                                     NULL);
         if (new_parser == NULL)
-            return 0;
+            return XML_STATUS_ERROR;
         rv = _XML_Parse_SINGLE_BYTES(new_parser, text, strlen(text),
                                      XML_TRUE);
     } else {
@@ -4683,14 +4683,14 @@ external_entity_dbl_handler_2(XML_Parser parser,
                 "<e/>");
         new_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
         if (new_parser == NULL)
-            return 0;
+            return XML_STATUS_ERROR;
         rv =_XML_Parse_SINGLE_BYTES(new_parser, text, strlen(text),
                                     XML_TRUE);
     }
     XML_ParserFree(new_parser);
     if (rv == XML_STATUS_ERROR)
-        return 0;
-    return 1;
+        return XML_STATUS_ERROR;
+    return XML_STATUS_OK;
 }
 
 /* Test more external entity allocation failure paths */
@@ -4759,17 +4759,17 @@ external_entity_alloc_set_encoding(XML_Parser parser,
 
     ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
     if (ext_parser == NULL)
-        return 0;
+        return XML_STATUS_ERROR;
     if (!XML_SetEncoding(ext_parser, "utf-8")) {
         XML_ParserFree(ext_parser);
-        return 0;
+        return XML_STATUS_ERROR;
     }
     status = _XML_Parse_SINGLE_BYTES(ext_parser, text, strlen(text),
                                      XML_TRUE);
     XML_ParserFree(ext_parser);
     if (status == XML_STATUS_ERROR)
-        return 0;
-    return 1;
+        return XML_STATUS_ERROR;
+    return XML_STATUS_OK;
 }
 
 START_TEST(test_alloc_ext_entity_set_encoding)
@@ -5031,7 +5031,7 @@ external_entity_reallocator(XML_Parser parser,
     status = XML_ParseBuffer(ext_parser, strlen(text), XML_FALSE);
     reallocation_count = -1;
     XML_ParserFree(ext_parser);
-    return (status == XML_STATUS_OK) ? 1 : 0;
+    return (status == XML_STATUS_OK) ? XML_STATUS_OK : XML_STATUS_ERROR;
 }
 
 START_TEST(test_alloc_ext_entity_realloc_buffer)
