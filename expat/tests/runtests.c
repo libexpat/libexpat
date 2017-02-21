@@ -2394,7 +2394,10 @@ START_TEST(test_explicit_encoding)
     const char *text1 = "<doc>Hello ";
     const char *text2 = " World</doc>";
 
-    /* First say we are UTF-8 */
+    /* Just check that we can set the encoding to NULL before starting */
+    if (XML_SetEncoding(parser, NULL) != XML_STATUS_OK)
+        fail("Failed to initialise encoding to NULL");
+    /* Say we are UTF-8 */
     if (XML_SetEncoding(parser, "utf-8") != XML_STATUS_OK)
         fail("Failed to set explicit encoding");
     if (_XML_Parse_SINGLE_BYTES(parser, text1, strlen(text1),
