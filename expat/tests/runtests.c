@@ -1758,6 +1758,21 @@ static void *handler_data = NULL;
 static int comment_count = 0;
 /* Count of the number of skipped entities */
 static int skip_count = 0;
+/* Count of the number of times the XML declaration handler is invoked */
+static int xdecl_count = 0;
+
+static void XMLCALL
+xml_decl_handler(void *userData,
+                 const XML_Char *UNUSED_P(version),
+                 const XML_Char *UNUSED_P(encoding),
+                 int standalone)
+{
+    if (userData != handler_data)
+        fail("User data (xml decl) not correctly set");
+    if (standalone != -1)
+        fail("Standalone not show as not present");
+    xdecl_count++;
+}
 
 static void XMLCALL
 param_check_skip_handler(void *userData,
@@ -1819,7 +1834,9 @@ START_TEST(test_user_parameters)
 
     comment_count = 0;
     skip_count = 0;
+    xdecl_count = 0;
     XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+    XML_SetXmlDeclHandler(parser, xml_decl_handler);
     XML_SetExternalEntityRefHandler(parser, external_entity_param_checker);
     XML_SetCommentHandler(parser, data_check_comment_handler);
     XML_SetSkippedEntityHandler(parser, param_check_skip_handler);
@@ -1838,6 +1855,8 @@ START_TEST(test_user_parameters)
         fail("Comment handler not invoked enough times");
     if (skip_count != 1)
         fail("Skip handler not invoked enough times");
+    if (xdecl_count != 1)
+        fail("XML declaration handler not invoked");
 }
 END_TEST
 
