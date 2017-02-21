@@ -3007,7 +3007,7 @@ xml_decl_handler(void *userData,
     if (userData != handler_data)
         fail("User data (xml decl) not correctly set");
     if (standalone != -1)
-        fail("Standalone not show as not present");
+        fail("Standalone not flagged as not present in XML decl");
     xdecl_count++;
 }
 
