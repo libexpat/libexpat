@@ -1970,7 +1970,12 @@ counting_start_element_handler(void *userData,
     }
     if (info->name == NULL)
         fail("Element not recognised");
-    /* Note attribute count is doubled */
+    /* The attribute count is twice what you might expect.  It is a
+     * count of items in atts, an array which contains alternating
+     * attribute names and attribute values.  For the naive user this
+     * is possibly a little unexpected, but it is what the
+     * documentation in expat.h tells us to expect.
+     */
     count = XML_GetSpecifiedAttributeCount(parser);
     if (info->attr_count * 2 != count) {
         fail("Not got expected attribute count");
@@ -2000,6 +2005,7 @@ counting_start_element_handler(void *userData,
             fail("Attribute has wrong value");
             return;
         }
+        /* Remember, two entries in atts per attribute (see above) */
         atts += 2;
     }
 }
