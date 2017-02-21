@@ -1753,6 +1753,43 @@ START_TEST(test_user_parameters)
 }
 END_TEST
 
+/* Test that an explicit external entity handler argument replaces
+ * the parser as the first argument.
+ */
+static int XMLCALL
+external_entity_ref_param_checker(XML_Parser parser,
+                                  const XML_Char *UNUSED_P(context),
+                                  const XML_Char *UNUSED_P(base),
+                                  const XML_Char *UNUSED_P(systemId),
+                                  const XML_Char *UNUSED_P(publicId))
+{
+    if ((void *)parser != handler_data)
+        fail("External entity ref handler parameter not correct");
+    return XML_STATUS_OK;
+}
+
+START_TEST(test_ext_entity_ref_parameter)
+{
+    const char *text =
+        "<?xml version='1.0' encoding='us-ascii'?>\n"
+        "<!DOCTYPE doc SYSTEM 'foo'>\n"
+        "<doc>&entity;</doc>";
+
+    XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+    XML_SetExternalEntityRefHandler(parser,
+                                    external_entity_ref_param_checker);
+    /* Set a handler arg that is not NULL and not parser (which is
+     * what NULL would cause to be passed.
+     */
+    XML_SetExternalEntityRefHandlerArg(parser, (void *)text);
+    handler_data = (void *)text;
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+}
+END_TEST
+
+
 /*
  * Namespaces tests.
  */
@@ -2730,6 +2767,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_subordinate_reset);
     tcase_add_test(tc_basic, test_explicit_encoding);
     tcase_add_test(tc_basic, test_user_parameters);
+    tcase_add_test(tc_basic, test_ext_entity_ref_parameter);
 
     suite_add_tcase(s, tc_namespace);
     tcase_add_checked_fixture(tc_namespace,
