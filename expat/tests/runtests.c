@@ -1756,6 +1756,18 @@ END_TEST
 static void *handler_data = NULL;
 /* Count of the number of times the comment handler has been invoked */
 static int comment_count = 0;
+/* Count of the number of skipped entities */
+static int skip_count = 0;
+
+static void XMLCALL
+param_check_skip_handler(void *userData,
+                         const XML_Char *UNUSED_P(entityName),
+                         int UNUSED_P(is_parameter_entity))
+{
+    if (userData != handler_data)
+        fail("User data (skip) not correctly set");
+    skip_count++;
+}
 
 static void XMLCALL
 data_check_comment_handler(void *userData, const XML_Char *UNUSED_P(data))
@@ -1806,9 +1818,11 @@ START_TEST(test_user_parameters)
         "</doc>";
 
     comment_count = 0;
+    skip_count = 0;
     XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
     XML_SetExternalEntityRefHandler(parser, external_entity_param_checker);
     XML_SetCommentHandler(parser, data_check_comment_handler);
+    XML_SetSkippedEntityHandler(parser, param_check_skip_handler);
     XML_UseParserAsHandlerArg(parser);
     XML_SetUserData(parser, (void *)1);
     handler_data = parser;
@@ -1822,6 +1836,8 @@ START_TEST(test_user_parameters)
         xml_failure(parser);
     if (comment_count != 3)
         fail("Comment handler not invoked enough times");
+    if (skip_count != 1)
+        fail("Skip handler not invoked enough times");
 }
 END_TEST
 
