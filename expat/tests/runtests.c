@@ -3458,6 +3458,33 @@ START_TEST(test_ns_duplicate_attrs_diff_prefixes)
 }
 END_TEST
 
+START_TEST(test_ns_duplicate_hashes)
+{
+    /* The hash of an attribute is calculated as the hash of its URI
+     * concatenated with a space followed by its name (after the
+     * colon).  We wish to generate attributes with the same hash
+     * value modulo the attribute table size so that we can check that
+     * the attribute hash table works correctly.  The attribute hash
+     * table size will be the smallest power of two greater than the
+     * number of attributes, but at least eight.  There is
+     * unfortunately no programmatic way of getting the hash or the
+     * table size at user level, but the test code coverage percentage
+     * will drop if the hashes cease to point to the same row.
+     *
+     * The cunning plan is to have few enough attributes to have a
+     * reliable table size of 8, and have the single letter attribute
+     * names be 8 characters apart, producing a hash which will be the
+     * same modulo 8.
+     */
+    const char *text =
+        "<doc xmlns:a='http://example.org/a'\n"
+        "     a:a='v' a:i='w' />";
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+}
+END_TEST
+
 /* Regression test for SF bug #695401: unbound prefix. */
 START_TEST(test_ns_unbound_prefix_on_attribute)
 {
@@ -4813,6 +4840,7 @@ make_suite(void)
     tcase_add_test(tc_namespace, test_ns_unbound_prefix);
     tcase_add_test(tc_namespace, test_ns_default_with_empty_uri);
     tcase_add_test(tc_namespace, test_ns_duplicate_attrs_diff_prefixes);
+    tcase_add_test(tc_namespace, test_ns_duplicate_hashes);
     tcase_add_test(tc_namespace, test_ns_unbound_prefix_on_attribute);
     tcase_add_test(tc_namespace, test_ns_unbound_prefix_on_element);
     tcase_add_test(tc_namespace, test_ns_parser_reset);
