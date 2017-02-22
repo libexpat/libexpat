@@ -4848,6 +4848,59 @@ START_TEST(test_nsalloc_realloc_attributes)
 #undef MAX_REALLOC_COUNT
 END_TEST
 
+/* Test long element names with namespaces under a failing allocator */
+START_TEST(test_nsalloc_long_element)
+{
+    const char *text =
+        "<foo:thisisalongenoughelementnametotriggerareallocation\n"
+        " xmlns:foo='http://example.org/' bar:a='12'\n"
+        " xmlns:bar='http://example.org/'>"
+        "</foo:thisisalongenoughelementnametotriggerareallocation>";
+    const char *elemstr[] = {
+        "http://example.org/"
+        " thisisalongenoughelementnametotriggerareallocation foo",
+        "http://example.org/ a bar"
+    };
+    int i;
+#define MAX_ALLOC_COUNT 15
+    int repeated = 0;
+
+    for (i = 0; i < MAX_ALLOC_COUNT; i++) {
+        /* Repeat some allocation counts because some allocations
+         * get cached across XML_ParserReset() called.
+         */
+        if ((i == 4 && (repeated == 3 || repeated == 5)) ||
+            (i == 7 && repeated == 8) ||
+            (i == 10 && repeated == 9)) {
+            i -= 2;
+            repeated++;
+        }
+        else if ((i == 2 && repeated < 2) ||
+                 (i == 3 &&
+                  (repeated == 2 || repeated == 4 || repeated == 6)) ||
+                 (i == 5 && repeated == 7)) {
+            i--;
+            repeated++;
+        }
+        allocation_count = i;
+        XML_SetReturnNSTriplet(parser, XML_TRUE);
+        XML_SetUserData(parser, elemstr);
+        XML_SetElementHandler(parser,
+                              triplet_start_checker,
+                              triplet_end_checker);
+        if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                    XML_TRUE) != XML_STATUS_ERROR)
+            break;
+        XML_ParserReset(parser, NULL);
+    }
+    if (i == 0)
+        fail("Parsing worked despite failing reallocations");
+    else if (i == MAX_ALLOC_COUNT)
+        fail("Parsing failed at max reallocation count");
+}
+#undef MAX_ALLOC_COUNT
+END_TEST
+
 
 static Suite *
 make_suite(void)
@@ -5002,6 +5055,7 @@ make_suite(void)
     tcase_add_test(tc_nsalloc, test_nsalloc_long_attr);
     tcase_add_test(tc_nsalloc, test_nsalloc_long_attr_prefix);
     tcase_add_test(tc_nsalloc, test_nsalloc_realloc_attributes);
+    tcase_add_test(tc_nsalloc, test_nsalloc_long_element);
 
     return s;
 }
