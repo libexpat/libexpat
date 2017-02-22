@@ -3567,6 +3567,23 @@ START_TEST(test_ns_mixed_prefix_atts)
 }
 END_TEST
 
+/* Test having a long namespaced element name inside a short one.
+ * This exercises some internal buffer reallocation that is shared
+ * across elements with the same namespace URI.
+ */
+START_TEST(test_ns_extend_uri_buffer)
+{
+    const char *text =
+        "<foo:e xmlns:foo='http://example.org/'>"
+        " <foo:thisisalongenoughnametotriggerallocationaction"
+        "   foo:a='12' />"
+        "</foo:e>";
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+}
+END_TEST
+
 
 /* Control variable; the number of times duff_allocator() will successfully allocate */
 #define ALLOC_ALWAYS_SUCCEED (-1)
@@ -5020,6 +5037,7 @@ make_suite(void)
     tcase_add_test(tc_namespace, test_ns_parser_reset);
     tcase_add_test(tc_namespace, test_ns_long_element);
     tcase_add_test(tc_namespace, test_ns_mixed_prefix_atts);
+    tcase_add_test(tc_namespace, test_ns_extend_uri_buffer);
 
     suite_add_tcase(s, tc_misc);
     tcase_add_checked_fixture(tc_misc, NULL, basic_teardown);
