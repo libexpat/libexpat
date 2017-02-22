@@ -3553,6 +3553,20 @@ START_TEST(test_ns_long_element)
 }
 END_TEST
 
+/* Test mixed population of prefixed and unprefixed attributes */
+START_TEST(test_ns_mixed_prefix_atts)
+{
+    const char *text =
+        "<e a='12' bar:b='13'\n"
+        " xmlns:bar='http://example.org/'>"
+        "</e>";
+
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+}
+END_TEST
+
 
 /* Control variable; the number of times duff_allocator() will successfully allocate */
 #define ALLOC_ALWAYS_SUCCEED (-1)
@@ -4952,6 +4966,7 @@ make_suite(void)
     tcase_add_test(tc_namespace, test_ns_unbound_prefix_on_element);
     tcase_add_test(tc_namespace, test_ns_parser_reset);
     tcase_add_test(tc_namespace, test_ns_long_element);
+    tcase_add_test(tc_namespace, test_ns_mixed_prefix_atts);
 
     suite_add_tcase(s, tc_misc);
     tcase_add_checked_fixture(tc_misc, NULL, basic_teardown);
