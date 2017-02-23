@@ -3584,6 +3584,23 @@ START_TEST(test_ns_extend_uri_buffer)
 }
 END_TEST
 
+/* Test that xmlns is correctly rejected as an attribute in the xmlns
+ * namespace, but not in other namespaces
+ */
+START_TEST(test_ns_reserved_attributes)
+{
+    const char *text1 =
+        "<foo:e xmlns:foo='http://example.org/' xmlns:xmlns='12' />";
+    const char *text2 =
+        "<foo:e xmlns:foo='http://example.org/' foo:xmlns='12' />";
+    expect_failure(text1, XML_ERROR_RESERVED_PREFIX_XMLNS,
+                   "xmlns not rejected as an attribute");
+    XML_ParserReset(parser, NULL);
+    if (_XML_Parse_SINGLE_BYTES(parser, text2, strlen(text2),
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+}
+END_TEST
 
 /* Control variable; the number of times duff_allocator() will successfully allocate */
 #define ALLOC_ALWAYS_SUCCEED (-1)
@@ -5038,6 +5055,7 @@ make_suite(void)
     tcase_add_test(tc_namespace, test_ns_long_element);
     tcase_add_test(tc_namespace, test_ns_mixed_prefix_atts);
     tcase_add_test(tc_namespace, test_ns_extend_uri_buffer);
+    tcase_add_test(tc_namespace, test_ns_reserved_attributes);
 
     suite_add_tcase(s, tc_misc);
     tcase_add_checked_fixture(tc_misc, NULL, basic_teardown);
