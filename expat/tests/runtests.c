@@ -3602,6 +3602,23 @@ START_TEST(test_ns_reserved_attributes)
 }
 END_TEST
 
+/* Test more reserved attributes */
+START_TEST(test_ns_reserved_attributes_2)
+{
+    const char *text1 =
+        "<foo:e xmlns:foo='http://example.org/'"
+        "  xmlns:xml='http://example.org/' />";
+    const char *text2 =
+        "<foo:e xmlns:foo='http://www.w3.org/XML/1998/namespace' />";
+
+    expect_failure(text1, XML_ERROR_RESERVED_PREFIX_XML,
+                   "xml not rejected as an attribute");
+    XML_ParserReset(parser, NULL);
+    expect_failure(text2, XML_ERROR_RESERVED_NAMESPACE_URI,
+                   "Use of w3.org URL not faulted");
+}
+END_TEST
+
 /* Control variable; the number of times duff_allocator() will successfully allocate */
 #define ALLOC_ALWAYS_SUCCEED (-1)
 #define REALLOC_ALWAYS_SUCCEED (-1)
@@ -5056,6 +5073,7 @@ make_suite(void)
     tcase_add_test(tc_namespace, test_ns_mixed_prefix_atts);
     tcase_add_test(tc_namespace, test_ns_extend_uri_buffer);
     tcase_add_test(tc_namespace, test_ns_reserved_attributes);
+    tcase_add_test(tc_namespace, test_ns_reserved_attributes_2);
 
     suite_add_tcase(s, tc_misc);
     tcase_add_checked_fixture(tc_misc, NULL, basic_teardown);
