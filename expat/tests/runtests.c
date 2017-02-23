@@ -2635,6 +2635,52 @@ START_TEST(test_ext_entity_trailing_rsqb)
 }
 END_TEST
 
+/* Test CDATA handling in an external entity */
+static int XMLCALL
+external_entity_good_cdata_ascii(XML_Parser parser,
+                                 const XML_Char *context,
+                                 const XML_Char *UNUSED_P(base),
+                                 const XML_Char *UNUSED_P(systemId),
+                                 const XML_Char *UNUSED_P(publicId))
+{
+    const char *text =
+        "<a><![CDATA[<greeting>Hello, world!</greeting>]]></a>";
+    const char *expected = "<greeting>Hello, world!</greeting>";
+    CharData storage;
+    XML_Parser ext_parser;
+
+    CharData_Init(&storage);
+    ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
+    if (ext_parser == NULL)
+        fail("Could not create external entity parser");
+    XML_SetUserData(ext_parser, &storage);
+    XML_SetCharacterDataHandler(ext_parser, accumulate_characters);
+
+    if (_XML_Parse_SINGLE_BYTES(ext_parser, text, strlen(text),
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(ext_parser);
+    CharData_CheckXMLChars(&storage, expected);
+
+    return XML_STATUS_OK;
+}
+
+START_TEST(test_ext_entity_good_cdata)
+{
+    const char *text =
+        "<!DOCTYPE doc [\n"
+        "  <!ENTITY en SYSTEM 'http://example.org/dummy.ent'>\n"
+        "]>\n"
+        "<doc>&en;</doc>";
+
+    XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+    XML_SetExternalEntityRefHandler(parser,
+                                    external_entity_good_cdata_ascii);
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                XML_TRUE) != XML_STATUS_OK)
+        xml_failure(parser);
+}
+END_TEST
+
 /* Test user parameter settings */
 /* Variable holding the expected handler userData */
 static void *handler_data = NULL;
@@ -5089,6 +5135,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_ext_entity_trailing_cr);
     tcase_add_test(tc_basic, test_trailing_rsqb);
     tcase_add_test(tc_basic, test_ext_entity_trailing_rsqb);
+    tcase_add_test(tc_basic, test_ext_entity_good_cdata);
     tcase_add_test(tc_basic, test_user_parameters);
     tcase_add_test(tc_basic, test_ext_entity_ref_parameter);
     tcase_add_test(tc_basic, test_empty_parse);
