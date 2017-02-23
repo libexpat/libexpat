@@ -3610,12 +3610,17 @@ START_TEST(test_ns_reserved_attributes_2)
         "  xmlns:xml='http://example.org/' />";
     const char *text2 =
         "<foo:e xmlns:foo='http://www.w3.org/XML/1998/namespace' />";
+    const char *text3 =
+        "<foo:e xmlns:foo='http://www.w3.org/2000/xmlns/' />";
 
     expect_failure(text1, XML_ERROR_RESERVED_PREFIX_XML,
                    "xml not rejected as an attribute");
     XML_ParserReset(parser, NULL);
     expect_failure(text2, XML_ERROR_RESERVED_NAMESPACE_URI,
                    "Use of w3.org URL not faulted");
+    XML_ParserReset(parser, NULL);
+    expect_failure(text3, XML_ERROR_RESERVED_NAMESPACE_URI,
+                   "Use of w3.org xmlns URL not faulted");
 }
 END_TEST
 
