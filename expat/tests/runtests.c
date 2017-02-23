@@ -2116,6 +2116,23 @@ START_TEST(test_resume_resuspended)
 }
 END_TEST
 
+/* Test that CDATA shows up correctly through a default handler */
+START_TEST(test_cdata_default)
+{
+    const char *text = "<doc><![CDATA[Hello\nworld]]></doc>";
+    CharData storage;
+
+    CharData_Init(&storage);
+    XML_SetUserData(parser, &storage);
+    XML_SetDefaultHandler(parser, accumulate_characters);
+
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+    CharData_CheckXMLChars(&storage, text);
+}
+END_TEST
+
 /* Test resetting a subordinate parser does exactly nothing */
 static int XMLCALL
 external_entity_resetter(XML_Parser parser,
@@ -5126,6 +5143,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_reset_in_entity);
     tcase_add_test(tc_basic, test_resume_invalid_parse);
     tcase_add_test(tc_basic, test_resume_resuspended);
+    tcase_add_test(tc_basic, test_cdata_default);
     tcase_add_test(tc_basic, test_subordinate_reset);
     tcase_add_test(tc_basic, test_subordinate_suspend);
     tcase_add_test(tc_basic, test_subordinate_xdecl_suspend);
