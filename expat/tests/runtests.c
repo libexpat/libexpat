@@ -4957,6 +4957,50 @@ START_TEST(test_nsalloc_long_element)
 #undef MAX_ALLOC_COUNT
 END_TEST
 
+/* Test the effects of reallocation failure when reassigning a
+ * binding.
+ *
+ * XML_ParserReset does not free the BINDING structures used by a
+ * parser, but instead adds them to an internal free list to be reused
+ * as necessary.  Likewise the URI buffers allocated for the binding
+ * aren't freed, but kept attached to their existing binding.  If the
+ * new binding has a longer URI, it will need reallocation.  This test
+ * provokes that reallocation, and tests the control path if it fails.
+ */
+START_TEST(test_nsalloc_realloc_binding_uri)
+{
+    const char *first =
+        "<doc xmlns='http://example.org/'>\n"
+        "  <e xmlns='' />\n"
+        "</doc>";
+    const char *second =
+        "<doc xmlns='http://example.org/long/enough/URI/to/reallocate/'>\n"
+        "  <e xmlns='' />\n"
+        "</doc>";
+    unsigned i;
+#define MAX_REALLOC_COUNT 10
+
+    /* First, do a full parse that will leave bindings around */
+    if (_XML_Parse_SINGLE_BYTES(parser, first, strlen(first),
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+
+    /* Now repeat with a longer URI and a duff reallocator */
+    for (i = 0; i < MAX_REALLOC_COUNT; i++) {
+        XML_ParserReset(parser, NULL);
+        reallocation_count = i;
+        if (_XML_Parse_SINGLE_BYTES(parser, second, strlen(second),
+                                    XML_TRUE) != XML_STATUS_ERROR)
+            break;
+    }
+    if (i == 0)
+        fail("Parsing worked despite failing reallocation");
+    else if (i == MAX_REALLOC_COUNT)
+        fail("Parsing failed at max reallocation count");
+}
+#undef MAX_REALLOC_COUNT
+END_TEST
+
 
 static Suite *
 make_suite(void)
@@ -5115,6 +5159,7 @@ make_suite(void)
     tcase_add_test(tc_nsalloc, test_nsalloc_long_attr_prefix);
     tcase_add_test(tc_nsalloc, test_nsalloc_realloc_attributes);
     tcase_add_test(tc_nsalloc, test_nsalloc_long_element);
+    tcase_add_test(tc_nsalloc, test_nsalloc_realloc_binding_uri);
 
     return s;
 }
