@@ -1758,6 +1758,42 @@ START_TEST(test_long_cdata_utf16)
 }
 END_TEST
 
+/* Test handling of multiple unit UTF-16 characters */
+START_TEST(test_multichar_cdata_utf16)
+{
+    /* Test data is:
+     *   <?xml version='1.0' encoding='utf-16'?>
+     *   <a><![CDATA[{MINIM}{CROTCHET}]]></a>
+     *
+     * where {MINIM} is U+1d15e (a minim or half-note)
+     *   UTF-16: 0xd834 0xdd5e
+     *   UTF-8:  0xf0 0x9d 0x85 0x9e
+     * and {CROTCHET} is U+1d15f (a crotchet or quarter-note)
+     *   UTF-16: 0xd834 0xdd5e
+     *   UTF-8:  0xf0 0x9d 0x85 0x9e
+     */
+    const char text[] =
+        "\0<\0?\0x\0m\0l\0"
+        " \0v\0e\0r\0s\0i\0o\0n\0=\0'\0\x31\0.\0\x30\0'\0"
+        " \0e\0n\0c\0o\0d\0i\0n\0g\0=\0'\0u\0t\0f\0-\0""1\0""6\0'"
+        "\0?\0>\0\n"
+        "\0<\0a\0>\0<\0!\0[\0C\0D\0A\0T\0A\0["
+        "\xd8\x34\xdd\x5e\xd8\x34\xdd\x5f"
+        "\0]\0]\0>\0<\0/\0a\0>";
+    const char *expected = "\xf0\x9d\x85\x9e\xf0\x9d\x85\x9f";
+    CharData storage;
+
+    CharData_Init(&storage);
+    XML_SetUserData(parser, &storage);
+    XML_SetCharacterDataHandler(parser, accumulate_characters);
+
+    if (_XML_Parse_SINGLE_BYTES(parser, text, sizeof(text) - 1, XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+    CharData_CheckXMLChars(&storage, expected);
+}
+END_TEST
+
+
 START_TEST(test_bad_cdata)
 {
     struct CaseData {
@@ -5207,6 +5243,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_good_cdata_ascii);
     tcase_add_test(tc_basic, test_good_cdata_utf16);
     tcase_add_test(tc_basic, test_long_cdata_utf16);
+    tcase_add_test(tc_basic, test_multichar_cdata_utf16);
     tcase_add_test(tc_basic, test_bad_cdata);
     tcase_add_test(tc_basic, test_memory_allocation);
     tcase_add_test(tc_basic, test_default_current);
