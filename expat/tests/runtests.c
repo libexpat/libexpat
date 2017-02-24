@@ -1966,6 +1966,26 @@ START_TEST(test_stop_parser_between_cdata_calls)
 }
 END_TEST
 
+/* Test suspending the parser in cdata handler */
+START_TEST(test_suspend_parser_between_cdata_calls)
+{
+    const char *text = long_cdata_text;
+    enum XML_Status result;
+
+    XML_SetCharacterDataHandler(parser,
+                                clearing_aborting_character_handler);
+    resumable = XML_TRUE;
+    result = _XML_Parse_SINGLE_BYTES(parser, text, strlen(text), XML_TRUE);
+    if (result != XML_STATUS_SUSPENDED) {
+        if (result == XML_STATUS_ERROR)
+            xml_failure(parser);
+        fail("Parse not suspended in CDATA handler");
+    }
+    if (XML_GetErrorCode(parser) != XML_ERROR_NONE)
+        xml_failure(parser);
+}
+END_TEST
+
 /* Test memory allocation functions */
 START_TEST(test_memory_allocation)
 {
@@ -5365,6 +5385,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_bad_cdata);
     tcase_add_test(tc_basic, test_bad_cdata_utf16);
     tcase_add_test(tc_basic, test_stop_parser_between_cdata_calls);
+    tcase_add_test(tc_basic, test_suspend_parser_between_cdata_calls);
     tcase_add_test(tc_basic, test_memory_allocation);
     tcase_add_test(tc_basic, test_default_current);
     tcase_add_test(tc_basic, test_dtd_elements);
