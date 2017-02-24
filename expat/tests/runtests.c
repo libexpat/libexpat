@@ -1848,6 +1848,87 @@ START_TEST(test_bad_cdata)
 }
 END_TEST
 
+/* Test failures in UTF-16 CDATA */
+START_TEST(test_bad_cdata_utf16)
+{
+    struct CaseData {
+        size_t text_bytes;
+        const char *text;
+        enum XML_Error expected_error;
+    };
+
+    const char prolog[] =
+        "\0<\0?\0x\0m\0l\0"
+        " \0v\0e\0r\0s\0i\0o\0n\0=\0'\0\x31\0.\0\x30\0'\0"
+        " \0e\0n\0c\0o\0d\0i\0n\0g\0=\0'\0u\0t\0f\0-\0""1\0""6\0'"
+        "\0?\0>\0\n"
+        "\0<\0a\0>";
+    struct CaseData cases[] = {
+        {1, "\0", XML_ERROR_UNCLOSED_TOKEN},
+        {2, "\0<", XML_ERROR_UNCLOSED_TOKEN},
+        {3, "\0<\0", XML_ERROR_UNCLOSED_TOKEN},
+        {4, "\0<\0!", XML_ERROR_UNCLOSED_TOKEN},
+        {5, "\0<\0!\0", XML_ERROR_UNCLOSED_TOKEN},
+        {6, "\0<\0!\0[", XML_ERROR_UNCLOSED_TOKEN},
+        {7, "\0<\0!\0[\0", XML_ERROR_UNCLOSED_TOKEN},
+        {8, "\0<\0!\0[\0C", XML_ERROR_UNCLOSED_TOKEN},
+        {9, "\0<\0!\0[\0C\0", XML_ERROR_UNCLOSED_TOKEN},
+        {10, "\0<\0!\0[\0C\0D", XML_ERROR_UNCLOSED_TOKEN},
+        {11, "\0<\0!\0[\0C\0D\0", XML_ERROR_UNCLOSED_TOKEN},
+        {12, "\0<\0!\0[\0C\0D\0A", XML_ERROR_UNCLOSED_TOKEN},
+        {13, "\0<\0!\0[\0C\0D\0A\0", XML_ERROR_UNCLOSED_TOKEN},
+        {14, "\0<\0!\0[\0C\0D\0A\0T", XML_ERROR_UNCLOSED_TOKEN},
+        {15, "\0<\0!\0[\0C\0D\0A\0T\0", XML_ERROR_UNCLOSED_TOKEN},
+        {16, "\0<\0!\0[\0C\0D\0A\0T\0A", XML_ERROR_UNCLOSED_TOKEN},
+        {17, "\0<\0!\0[\0C\0D\0A\0T\0A\0", XML_ERROR_UNCLOSED_TOKEN},
+        {18, "\0<\0!\0[\0C\0D\0A\0T\0A\0[",
+         XML_ERROR_UNCLOSED_CDATA_SECTION},
+        {19, "\0<\0!\0[\0C\0D\0A\0T\0A\0[\0",
+         XML_ERROR_UNCLOSED_CDATA_SECTION},
+        {20, "\0<\0!\0[\0C\0D\0A\0T\0A\0[\0Z",
+         XML_ERROR_UNCLOSED_CDATA_SECTION},
+        /* Now add a four-byte UTF-16 character */
+        {21, "\0<\0!\0[\0C\0D\0A\0T\0A\0[\0Z\xd8",
+         XML_ERROR_UNCLOSED_CDATA_SECTION},
+        {22, "\0<\0!\0[\0C\0D\0A\0T\0A\0[\0Z\xd8\x34",
+         XML_ERROR_PARTIAL_CHAR},
+        {23, "\0<\0!\0[\0C\0D\0A\0T\0A\0[\0Z\xd8\x34\xdd",
+         XML_ERROR_PARTIAL_CHAR},
+        {24, "\0<\0!\0[\0C\0D\0A\0T\0A\0[\0Z\xd8\x34\xdd\x5e",
+         XML_ERROR_UNCLOSED_CDATA_SECTION}
+    };
+    size_t i;
+
+    for (i = 0; i < sizeof(cases)/sizeof(struct CaseData); i++) {
+        enum XML_Status actual_status;
+        enum XML_Error actual_error;
+
+        if (_XML_Parse_SINGLE_BYTES(parser, prolog, sizeof(prolog)-1,
+                                    XML_FALSE) == XML_STATUS_ERROR)
+            xml_failure(parser);
+        actual_status = _XML_Parse_SINGLE_BYTES(parser,
+                                                cases[i].text,
+                                                cases[i].text_bytes,
+                                                XML_TRUE);
+        assert(actual_status == XML_STATUS_ERROR);
+        actual_error = XML_GetErrorCode(parser);
+        if (actual_error != cases[i].expected_error) {
+            char message[1024];
+
+            sprintf(message,
+                    "Expected error %d (%s), got %d (%s) for case %lu\n",
+                    cases[i].expected_error,
+                    XML_ErrorString(cases[i].expected_error),
+                    actual_error,
+                    XML_ErrorString(actual_error),
+                    i+1);
+            fail(message);
+        }
+        XML_ParserReset(parser, NULL);
+    }
+}
+END_TEST
+
 /* Test memory allocation functions */
 START_TEST(test_memory_allocation)
 {
@@ -5245,6 +5326,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_long_cdata_utf16);
     tcase_add_test(tc_basic, test_multichar_cdata_utf16);
     tcase_add_test(tc_basic, test_bad_cdata);
+    tcase_add_test(tc_basic, test_bad_cdata_utf16);
     tcase_add_test(tc_basic, test_memory_allocation);
     tcase_add_test(tc_basic, test_default_current);
     tcase_add_test(tc_basic, test_dtd_elements);
