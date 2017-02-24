@@ -195,6 +195,10 @@ dummy_start_element(void *UNUSED_P(userData),
 {}
 
 static void XMLCALL
+dummy_end_element(void *UNUSED_P(userData), const XML_Char *UNUSED_P(name))
+{}
+
+static void XMLCALL
 dummy_start_cdata_handler(void *UNUSED_P(userData))
 {}
 
@@ -3394,6 +3398,52 @@ START_TEST(test_invalid_tag_in_dtd)
 }
 END_TEST
 
+/* Test conditional inclusion (IGNORE) */
+static int XMLCALL
+external_entity_load_ignore(XML_Parser parser,
+                            const XML_Char *context,
+                            const XML_Char *UNUSED_P(base),
+                            const XML_Char *UNUSED_P(systemId),
+                            const XML_Char *UNUSED_P(publicId))
+{
+    const char *text = "<![IGNORE[<!ELEMENT e (#PCDATA)*>]]>";
+    XML_Parser ext_parser;
+
+    ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
+    if (ext_parser == NULL)
+        fail("Could not create external entity parser");
+    if (_XML_Parse_SINGLE_BYTES(ext_parser, text, strlen(text),
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+    return XML_STATUS_OK;
+}
+
+START_TEST(test_ignore_section)
+{
+    const char *text =
+        "<!DOCTYPE doc SYSTEM 'foo'>\n"
+        "<doc><e>&entity;</e></doc>";
+    const char *expected =
+        "<![IGNORE[<!ELEMENT e (#PCDATA)*>]]>\n&entity;";
+    CharData storage;
+
+    CharData_Init(&storage);
+    XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+    XML_SetUserData(parser, &storage);
+    XML_SetExternalEntityRefHandler(parser, external_entity_load_ignore);
+    XML_SetDefaultHandler(parser, accumulate_characters);
+    XML_SetStartDoctypeDeclHandler(parser, dummy_start_doctype_handler);
+    XML_SetEndDoctypeDeclHandler(parser, dummy_end_doctype_handler);
+    XML_SetElementDeclHandler(parser, dummy_element_decl_handler);
+    XML_SetStartElementHandler(parser, dummy_start_element);
+    XML_SetEndElementHandler(parser, dummy_end_element);
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+    CharData_CheckXMLChars(&storage, expected);
+}
+END_TEST
+
 
 /*
  * Namespaces tests.
@@ -5415,6 +5465,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_byte_info_at_error);
     tcase_add_test(tc_basic, test_byte_info_at_cdata);
     tcase_add_test(tc_basic, test_invalid_tag_in_dtd);
+    tcase_add_test(tc_basic, test_ignore_section);
 
     suite_add_tcase(s, tc_namespace);
     tcase_add_checked_fixture(tc_namespace,
