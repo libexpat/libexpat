@@ -3444,6 +3444,35 @@ START_TEST(test_ignore_section)
 }
 END_TEST
 
+/* Test mis-formatted conditional exclusion */
+static int XMLCALL
+external_entity_bad_ignore(XML_Parser parser,
+                           const XML_Char *context,
+                           const XML_Char *UNUSED_P(base),
+                           const XML_Char *UNUSED_P(systemId),
+                           const XML_Char *UNUSED_P(publicId))
+{
+    const char *text = "<![IGNORE[<!ELEM";
+    XML_Parser ext_parser;
+
+    ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
+    if (ext_parser == NULL)
+        fail("Could not create external entity parser");
+    return _XML_Parse_SINGLE_BYTES(ext_parser, text, strlen(text), XML_TRUE);
+}
+
+START_TEST(test_bad_ignore_section)
+{
+    const char *text =
+        "<!DOCTYPE doc SYSTEM 'foo'>\n"
+        "<doc><e>&entity;</e></doc>";
+
+    XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+    XML_SetExternalEntityRefHandler(parser, external_entity_bad_ignore);
+    expect_failure(text, XML_ERROR_EXTERNAL_ENTITY_HANDLING,
+                   "Incomplete IGNORE section not failed");
+}
+END_TEST
 
 /*
  * Namespaces tests.
@@ -5466,6 +5495,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_byte_info_at_cdata);
     tcase_add_test(tc_basic, test_invalid_tag_in_dtd);
     tcase_add_test(tc_basic, test_ignore_section);
+    tcase_add_test(tc_basic, test_bad_ignore_section);
 
     suite_add_tcase(s, tc_namespace);
     tcase_add_checked_fixture(tc_namespace,
