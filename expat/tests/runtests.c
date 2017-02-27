@@ -430,6 +430,40 @@ _run_attribute_check(const XML_Char *text, const XML_Char *expected,
 #define run_attribute_check(text, expected) \
         _run_attribute_check(text, expected, __FILE__, __LINE__)
 
+typedef struct ExtTest {
+    const char *parse_text;
+    const char *encoding;
+    CharData   *storage;
+} ExtTest;
+
+static void XMLCALL
+ext_accumulate_characters(void *userData, const XML_Char *s, int len)
+{
+    ExtTest *test_data = (ExtTest *)userData;
+    accumulate_characters(test_data->storage, s, len);
+}
+
+static void
+_run_ext_character_check(const XML_Char *text,
+                         ExtTest *test_data,
+                         const XML_Char *expected,
+                         const char *file, int line)
+{
+    CharData storage;
+
+    CharData_Init(&storage);
+    test_data->storage = &storage;
+    XML_SetUserData(parser, test_data);
+    XML_SetCharacterDataHandler(parser, ext_accumulate_characters);
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                XML_TRUE) == XML_STATUS_ERROR)
+        _xml_failure(parser, file, line);
+    CharData_CheckXMLChars(&storage, expected);
+}
+
+#define run_ext_character_check(text, test_data, expected)               \
+    _run_ext_character_check(text, test_data, expected, __FILE__, __LINE__)
+
 /* Regression test for SF bug #491986. */
 START_TEST(test_danish_latin1)
 {
@@ -1090,26 +1124,26 @@ END_TEST
 
 /* Regression test for SF bug #620106. */
 static int XMLCALL
-external_entity_loader_set_encoding(XML_Parser parser,
-                                    const XML_Char *context,
-                                    const XML_Char *UNUSED_P(base),
-                                    const XML_Char *UNUSED_P(systemId),
-                                    const XML_Char *UNUSED_P(publicId))
+external_entity_loader(XML_Parser parser,
+                       const XML_Char *context,
+                       const XML_Char *UNUSED_P(base),
+                       const XML_Char *UNUSED_P(systemId),
+                       const XML_Char *UNUSED_P(publicId))
 {
-    /* This text says it's an unsupported encoding, but it's really
-       UTF-8, which we tell Expat using XML_SetEncoding().
-    */
-    const char *text =
-        "<?xml encoding='iso-8859-3'?>"
-        "\xC3\xA9";
+    ExtTest *test_data = (ExtTest *)XML_GetUserData(parser);
     XML_Parser extparser;
 
     extparser = XML_ExternalEntityParserCreate(parser, context, NULL);
     if (extparser == NULL)
         fail("Could not create external entity parser.");
-    if (!XML_SetEncoding(extparser, "utf-8"))
-        fail("XML_SetEncoding() ignored for external entity");
-    if (  _XML_Parse_SINGLE_BYTES(extparser, text, strlen(text), XML_TRUE)
+    if (test_data->encoding != NULL) {
+        if (!XML_SetEncoding(extparser, test_data->encoding))
+            fail("XML_SetEncoding() ignored for external entity");
+    }
+    if ( _XML_Parse_SINGLE_BYTES(extparser,
+                                 test_data->parse_text,
+                                 strlen(test_data->parse_text),
+                                 XML_TRUE)
           == XML_STATUS_ERROR) {
         xml_failure(parser);
         return XML_STATUS_ERROR;
@@ -1125,10 +1159,17 @@ START_TEST(test_ext_entity_set_encoding)
         "  <!ENTITY en SYSTEM 'http://example.org/dummy.ent'>\n"
         "]>\n"
         "<doc>&en;</doc>";
+    ExtTest test_data = {
+        /* This text says it's an unsupported encoding, but it's really
+           UTF-8, which we tell Expat using XML_SetEncoding().
+        */
+        "<?xml encoding='iso-8859-3'?>\xC3\xA9",
+        "utf-8",
+        NULL
+    };
 
-    XML_SetExternalEntityRefHandler(parser,
-                                    external_entity_loader_set_encoding);
-    run_character_check(text, "\xC3\xA9");
+    XML_SetExternalEntityRefHandler(parser, external_entity_loader);
+    run_ext_character_check(text, &test_data, "\xC3\xA9");
 }
 END_TEST
 
@@ -1147,36 +1188,6 @@ START_TEST(test_ext_entity_no_handler)
 END_TEST
 
 /* Test UTF-8 BOM is accepted */
-static int XMLCALL
-external_entity_loader_set_bom(XML_Parser parser,
-                               const XML_Char *context,
-                               const XML_Char *UNUSED_P(base),
-                               const XML_Char *UNUSED_P(systemId),
-                               const XML_Char *UNUSED_P(publicId))
-{    /* This text says it's an unsupported encoding, but it's really
-       UTF-8, which we tell Expat using XML_SetEncoding().
-    */
-    const char *text =
-        "\xEF\xBB\xBF" /* BOM */
-        "<?xml encoding='iso-8859-3'?>"
-        "\xC3\xA9";
-    XML_Parser extparser;
-
-    extparser = XML_ExternalEntityParserCreate(parser, context, NULL);
-    if (extparser == NULL)
-        fail("Could not create external entity parser.");
-    if (!XML_SetEncoding(extparser, "utf-8"))
-      fail("XML_SetEncoding() ignored for external entity");
-    if (  _XML_Parse_SINGLE_BYTES(extparser, text, strlen(text), XML_TRUE)
-          == XML_STATUS_ERROR) {
-        xml_failure(extparser);
-        return XML_STATUS_ERROR;
-    }
-
-    XML_ParserFree(extparser);
-    return XML_STATUS_OK;
-}
-
 START_TEST(test_ext_entity_set_bom)
 {
     const char *text =
@@ -1184,40 +1195,55 @@ START_TEST(test_ext_entity_set_bom)
         "  <!ENTITY en SYSTEM 'http://example.org/dummy.ent'>\n"
         "]>\n"
         "<doc>&en;</doc>";
+    ExtTest test_data = {
+        "\xEF\xBB\xBF" /* BOM */
+        "<?xml encoding='iso-8859-3'?>"
+        "\xC3\xA9",
+        "utf-8",
+        NULL
+    };
 
-    XML_SetExternalEntityRefHandler(parser,
-                                    external_entity_loader_set_bom);
-    run_character_check(text, "\xC3\xA9");
+    XML_SetExternalEntityRefHandler(parser, external_entity_loader);
+    run_ext_character_check(text, &test_data, "\xC3\xA9");
 }
 END_TEST
 
 
 /* Test that bad encodings are faulted */
-static int XMLCALL
-external_entity_loader_bad_encoding(XML_Parser parser,
-                                    const XML_Char *context,
-                                    const XML_Char *UNUSED_P(base),
-                                    const XML_Char *UNUSED_P(systemId),
-                                    const XML_Char *UNUSED_P(publicId))
+typedef struct ext_faults
 {
-    /* Claim this is an unsupported encoding */
-    const char *text =
-        "<?xml encoding='iso-8859-3'?>"
-        "u";
-    XML_Parser extparser;
+    const char *parse_text;
+    const char *fail_text;
+    const char *encoding;
+    enum XML_Error error;
+} ExtFaults;
 
-    extparser = XML_ExternalEntityParserCreate(parser, context, NULL);
-    if (extparser == NULL)
-        fail("Could not create external entity parser.");
-    if (!XML_SetEncoding(extparser, "unknown"))
-        fail("XML_SetEncoding unknown encoding failed");
-    if (_XML_Parse_SINGLE_BYTES(extparser, text, strlen(text),
+static int XMLCALL
+external_entity_faulter(XML_Parser parser,
+                        const XML_Char *context,
+                        const XML_Char *UNUSED_P(base),
+                        const XML_Char *UNUSED_P(systemId),
+                        const XML_Char *UNUSED_P(publicId))
+{
+    XML_Parser ext_parser;
+    ExtFaults *fault = (ExtFaults *)XML_GetUserData(parser);
+
+    ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
+    if (ext_parser == NULL)
+        fail("Could not create external entity parser");
+    if (fault->encoding != NULL) {
+        if (!XML_SetEncoding(ext_parser, fault->encoding))
+            fail("XML_SetEncoding failed");
+    }
+    if (_XML_Parse_SINGLE_BYTES(ext_parser,
+                                fault->parse_text,
+                                strlen(fault->parse_text),
                                 XML_TRUE) != XML_STATUS_ERROR)
-        fail("Unsupported encoding not faulted");
-    if (XML_GetErrorCode(extparser) != XML_ERROR_UNKNOWN_ENCODING)
-        xml_failure(extparser);
+        fail(fault->fail_text);
+    if (XML_GetErrorCode(ext_parser) != fault->error)
+        xml_failure(ext_parser);
 
-    XML_ParserFree(extparser);
+    XML_ParserFree(ext_parser);
     return XML_STATUS_ERROR;
 }
 
@@ -1228,12 +1254,18 @@ START_TEST(test_ext_entity_bad_encoding)
         "  <!ENTITY en SYSTEM 'http://example.org/dummy.ent'>\n"
         "]>\n"
         "<doc>&en;</doc>";
+    ExtFaults fault = {
+        "<?xml encoding='iso-8859-3'?>u",
+        "Unsupported encoding not faulted",
+        "unknown",
+        XML_ERROR_UNKNOWN_ENCODING
+    };
 
-    XML_SetExternalEntityRefHandler(parser,
-                                    external_entity_loader_bad_encoding);
-    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
-                                XML_TRUE) != XML_STATUS_ERROR)
-        fail("Bad encoding should not have been accepted");
+    XML_SetExternalEntityRefHandler(parser, external_entity_faulter);
+    XML_SetUserData(parser, &fault);
+    expect_failure(text,
+                   XML_ERROR_EXTERNAL_ENTITY_HANDLING,
+                   "Bad encoding should not have been accepted");
 }
 END_TEST
 
@@ -1275,28 +1307,6 @@ START_TEST(test_wfc_undeclared_entity_standalone) {
 }
 END_TEST
 
-static int XMLCALL
-external_entity_loader(XML_Parser parser,
-                       const XML_Char *context,
-                       const XML_Char *UNUSED_P(base),
-                       const XML_Char *UNUSED_P(systemId),
-                       const XML_Char *UNUSED_P(publicId))
-{
-    char *text = (char *)XML_GetUserData(parser);
-    XML_Parser extparser;
-
-    extparser = XML_ExternalEntityParserCreate(parser, context, NULL);
-    if (extparser == NULL)
-        fail("Could not create external entity parser.");
-    if (  _XML_Parse_SINGLE_BYTES(extparser, text, strlen(text), XML_TRUE)
-          == XML_STATUS_ERROR) {
-        xml_failure(extparser);
-        return XML_STATUS_ERROR;
-    }
-    XML_ParserFree(extparser);
-    return XML_STATUS_OK;
-}
-
 /* Test that an error is reported for unknown entities if we have read
    an external subset, and standalone is true.
 */
@@ -1305,11 +1315,14 @@ START_TEST(test_wfc_undeclared_entity_with_external_subset_standalone) {
         "<?xml version='1.0' encoding='us-ascii' standalone='yes'?>\n"
         "<!DOCTYPE doc SYSTEM 'foo'>\n"
         "<doc>&entity;</doc>";
-    char foo_text[] =
-        "<!ELEMENT doc (#PCDATA)*>";
+    ExtTest test_data = {
+        "<!ELEMENT doc (#PCDATA)*>",
+        NULL,
+        NULL
+    };
 
     XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
-    XML_SetUserData(parser, foo_text);
+    XML_SetUserData(parser, &test_data);
     XML_SetExternalEntityRefHandler(parser, external_entity_loader);
     expect_failure(text,
                    XML_ERROR_UNDEFINED_ENTITY,
@@ -1325,14 +1338,15 @@ START_TEST(test_wfc_undeclared_entity_with_external_subset) {
         "<?xml version='1.0' encoding='us-ascii'?>\n"
         "<!DOCTYPE doc SYSTEM 'foo'>\n"
         "<doc>&entity;</doc>";
-    char foo_text[] =
-        "<!ELEMENT doc (#PCDATA)*>";
+    ExtTest test_data = {
+        "<!ELEMENT doc (#PCDATA)*>",
+        NULL,
+        NULL
+    };
 
     XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
-    XML_SetUserData(parser, foo_text);
     XML_SetExternalEntityRefHandler(parser, external_entity_loader);
-    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text), XML_TRUE) == XML_STATUS_ERROR)
-        xml_failure(parser);
+    run_ext_character_check(text, &test_data, "");
 }
 END_TEST
 
@@ -1349,15 +1363,18 @@ START_TEST(test_not_standalone_handler_reject)
         "<?xml version='1.0' encoding='us-ascii'?>\n"
         "<!DOCTYPE doc SYSTEM 'foo'>\n"
         "<doc>&entity;</doc>";
-    char foo_text[] =
-        "<!ELEMENT doc (#PCDATA)*>";
+    ExtTest test_data = {
+        "<!ELEMENT doc (#PCDATA)*>",
+        NULL,
+        NULL
+    };
 
     XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
-    XML_SetUserData(parser, foo_text);
+    XML_SetUserData(parser, &test_data);
     XML_SetExternalEntityRefHandler(parser, external_entity_loader);
     XML_SetNotStandaloneHandler(parser, reject_not_standalone_handler);
-    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text), XML_TRUE) != XML_STATUS_ERROR)
-        fail("NotStandalone handler failed to reject");
+    expect_failure(text, XML_ERROR_NOT_STANDALONE,
+                   "NotStandalone handler failed to reject");
 }
 END_TEST
 
@@ -1374,15 +1391,16 @@ START_TEST(test_not_standalone_handler_accept)
         "<?xml version='1.0' encoding='us-ascii'?>\n"
         "<!DOCTYPE doc SYSTEM 'foo'>\n"
         "<doc>&entity;</doc>";
-    char foo_text[] =
-        "<!ELEMENT doc (#PCDATA)*>";
+    ExtTest test_data = {
+        "<!ELEMENT doc (#PCDATA)*>",
+        NULL,
+        NULL
+    };
 
     XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
-    XML_SetUserData(parser, foo_text);
     XML_SetExternalEntityRefHandler(parser, external_entity_loader);
     XML_SetNotStandaloneHandler(parser, accept_not_standalone_handler);
-    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text), XML_TRUE) == XML_STATUS_ERROR)
-        xml_failure(parser);
+    run_ext_character_check(text, &test_data, "");
 }
 END_TEST
 
@@ -1401,38 +1419,6 @@ START_TEST(test_wfc_no_recursive_entity_refs)
 END_TEST
 
 /* Test incomplete external entities are faulted */
-typedef struct ext_faults
-{
-    const char *parse_text;
-    const char *fail_text;
-    enum XML_Error error;
-} ExtFaults;
-
-static int XMLCALL
-external_entity_faulter(XML_Parser parser,
-                        const XML_Char *context,
-                        const XML_Char *UNUSED_P(base),
-                        const XML_Char *UNUSED_P(systemId),
-                        const XML_Char *UNUSED_P(publicId))
-{
-    XML_Parser ext_parser;
-    ExtFaults *fault = (ExtFaults *)XML_GetUserData(parser);
-
-    ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
-    if (ext_parser == NULL)
-        fail("Could not create external entity parser");
-    if (_XML_Parse_SINGLE_BYTES(ext_parser,
-                                fault->parse_text,
-                                strlen(fault->parse_text),
-                                XML_TRUE) != XML_STATUS_ERROR)
-        fail(fault->fail_text);
-    if (XML_GetErrorCode(ext_parser) != fault->error)
-        xml_failure(ext_parser);
-
-    XML_ParserFree(ext_parser);
-    return XML_STATUS_ERROR;
-}
-
 START_TEST(test_ext_entity_invalid_parse)
 {
     const char *text =
@@ -1444,19 +1430,22 @@ START_TEST(test_ext_entity_invalid_parse)
         {
             "<",
             "Incomplete element declaration not faulted",
+            NULL,
             XML_ERROR_UNCLOSED_TOKEN
         },
         {
             "<\xe2\x82", /* First two bytes of a three-byte char */
             "Incomplete character not faulted",
+            NULL,
             XML_ERROR_PARTIAL_CHAR
         },
         {
             "<tag>\xe2\x82",
             "Incomplete character in CDATA not faulted",
+            NULL,
             XML_ERROR_PARTIAL_CHAR
         },
-        { NULL, NULL, XML_ERROR_NONE }
+        { NULL, NULL, NULL, XML_ERROR_NONE }
     };
     const ExtFaults *fault = faults;
 
@@ -2207,12 +2196,16 @@ START_TEST(test_set_foreign_dtd)
         "<?xml version='1.0' encoding='us-ascii'?>\n";
     const char *text2 =
         "<doc>&entity;</doc>";
-    char dtd_text[] = "<!ELEMENT doc (#PCDATA)*>";
+    ExtTest test_data = {
+        "<!ELEMENT doc (#PCDATA)*>",
+        NULL,
+        NULL
+    };
 
     /* Check hash salt is passed through too */
     XML_SetHashSalt(parser, 0x12345678);
     XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
-    XML_SetUserData(parser, dtd_text);
+    XML_SetUserData(parser, &test_data);
     XML_SetExternalEntityRefHandler(parser, external_entity_loader);
     /* Add a default handler to exercise more code paths */
     XML_SetDefaultHandler(parser, dummy_default_handler);
@@ -2695,15 +2688,17 @@ START_TEST(test_ext_entity_invalid_suspended_parse)
         {
             "<?xml version='1.0' encoding='us-ascii'?><",
             "Incomplete element declaration not faulted",
+            NULL,
             XML_ERROR_UNCLOSED_TOKEN
         },
         {
             /* First two bytes of a three-byte char */
             "<?xml version='1.0' encoding='utf-8'?>\xe2\x82",
             "Incomplete character not faulted",
+            NULL,
             XML_ERROR_PARTIAL_CHAR
         },
-        { NULL, NULL, XML_ERROR_NONE }
+        { NULL, NULL, NULL, XML_ERROR_NONE }
     };
     ExtFaults *fault;
 
@@ -3557,14 +3552,16 @@ START_TEST(test_bad_ignore_section)
         {
             "<![IGNORE[<!ELEM",
             "Broken-off declaration not faulted",
+            NULL,
             XML_ERROR_SYNTAX
         },
         {
             "<![IGNORE[\x01]]>",
             "Invalid XML character not faulted",
+            NULL,
             XML_ERROR_INVALID_TOKEN
         },
-        { NULL, NULL, XML_ERROR_NONE }
+        { NULL, NULL, NULL, XML_ERROR_NONE }
     };
     ExtFaults *fault;
 
@@ -4750,7 +4747,7 @@ external_entity_alloc_set_encoding(XML_Parser parser,
                                    const XML_Char *UNUSED_P(systemId),
                                    const XML_Char *UNUSED_P(publicId))
 {
-    /* As for external_entity_loader_set_encoding() */
+    /* As for external_entity_loader() */
     const char *text =
         "<?xml encoding='iso-8859-3'?>"
         "\xC3\xA9";
