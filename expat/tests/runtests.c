@@ -3561,6 +3561,13 @@ START_TEST(test_bad_ignore_section)
             NULL,
             XML_ERROR_INVALID_TOKEN
         },
+        {
+            /* FIrst two bytes of a three-byte char */
+            "<![IGNORE[\xe2\x82",
+            "Partial XML character not faulted",
+            NULL,
+            XML_ERROR_PARTIAL_CHAR
+        },
         { NULL, NULL, NULL, XML_ERROR_NONE }
     };
     ExtFaults *fault;
