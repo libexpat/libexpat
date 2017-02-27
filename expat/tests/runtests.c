@@ -3450,17 +3450,29 @@ START_TEST(test_bad_ignore_section)
     const char *text =
         "<!DOCTYPE doc SYSTEM 'foo'>\n"
         "<doc><e>&entity;</e></doc>";
-    ExtFaults fault = {
-        "<![IGNORE[<!ELEM",
-        "Broken-off declaration not faulted",
-        XML_ERROR_SYNTAX
+    ExtFaults faults[] = {
+        {
+            "<![IGNORE[<!ELEM",
+            "Broken-off declaration not faulted",
+            XML_ERROR_SYNTAX
+        },
+        {
+            "<![IGNORE[\x01]]>",
+            "Invalid XML character not faulted",
+            XML_ERROR_INVALID_TOKEN
+        },
+        { NULL, NULL, XML_ERROR_NONE }
     };
+    ExtFaults *fault;
 
-    XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
-    XML_SetExternalEntityRefHandler(parser, external_entity_faulter);
-    XML_SetUserData(parser, &fault);
-    expect_failure(text, XML_ERROR_EXTERNAL_ENTITY_HANDLING,
-                   "Incomplete IGNORE section not failed");
+    for (fault = &faults[0]; fault->parse_text != NULL; fault++) {
+        XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+        XML_SetExternalEntityRefHandler(parser, external_entity_faulter);
+        XML_SetUserData(parser, fault);
+        expect_failure(text, XML_ERROR_EXTERNAL_ENTITY_HANDLING,
+                       "Incomplete IGNORE section not failed");
+        XML_ParserReset(parser, NULL);
+    }
 }
 END_TEST
 
