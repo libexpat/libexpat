@@ -3445,30 +3445,20 @@ START_TEST(test_ignore_section)
 END_TEST
 
 /* Test mis-formatted conditional exclusion */
-static int XMLCALL
-external_entity_bad_ignore(XML_Parser parser,
-                           const XML_Char *context,
-                           const XML_Char *UNUSED_P(base),
-                           const XML_Char *UNUSED_P(systemId),
-                           const XML_Char *UNUSED_P(publicId))
-{
-    const char *text = "<![IGNORE[<!ELEM";
-    XML_Parser ext_parser;
-
-    ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
-    if (ext_parser == NULL)
-        fail("Could not create external entity parser");
-    return _XML_Parse_SINGLE_BYTES(ext_parser, text, strlen(text), XML_TRUE);
-}
-
 START_TEST(test_bad_ignore_section)
 {
     const char *text =
         "<!DOCTYPE doc SYSTEM 'foo'>\n"
         "<doc><e>&entity;</e></doc>";
+    ExtFaults fault = {
+        "<![IGNORE[<!ELEM",
+        "Broken-off declaration not faulted",
+        XML_ERROR_SYNTAX
+    };
 
     XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
-    XML_SetExternalEntityRefHandler(parser, external_entity_bad_ignore);
+    XML_SetExternalEntityRefHandler(parser, external_entity_faulter);
+    XML_SetUserData(parser, &fault);
     expect_failure(text, XML_ERROR_EXTERNAL_ENTITY_HANDLING,
                    "Incomplete IGNORE section not failed");
 }
