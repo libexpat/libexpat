@@ -3661,6 +3661,53 @@ START_TEST(test_bad_ignore_section)
 }
 END_TEST
 
+/* Test entity processing */
+static int XMLCALL
+external_entity_valuer(XML_Parser parser,
+                       const XML_Char *context,
+                       const XML_Char *UNUSED_P(base),
+                       const XML_Char *systemId,
+                       const XML_Char *UNUSED_P(publicId))
+{
+    const char *text1 =
+        "<!ELEMENT doc EMPTY>\n"
+        "<!ENTITY % e1 SYSTEM '004-2.ent'>\n"
+        "<!ENTITY % e2 '%e1;'>\n"
+        "%e1;\n";
+    const char *text2 = "<!ATTLIST doc a1 CDATA 'value'>";
+    XML_Parser ext_parser;
+
+    if (systemId == NULL)
+        return XML_STATUS_OK;
+    ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
+    if (ext_parser == NULL)
+        fail("Could not create external entity parser");
+    if (!strcmp(systemId, "004-1.ent")) {
+        if (_XML_Parse_SINGLE_BYTES(ext_parser, text1, strlen(text1),
+                                    XML_TRUE) == XML_STATUS_ERROR)
+            xml_failure(ext_parser);
+    }
+    else if (!strcmp(systemId, "004-2.ent")) {
+        if (_XML_Parse_SINGLE_BYTES(ext_parser, text2, strlen(text2),
+                                    XML_TRUE) == XML_STATUS_ERROR)
+            xml_failure(ext_parser);
+    }
+    return XML_STATUS_OK;
+}
+
+START_TEST(test_external_entity_values)
+{
+    const char *text =
+        "<!DOCTYPE doc SYSTEM '004-1.ent'>\n"
+        "<doc></doc>\n";
+
+    XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+    XML_SetExternalEntityRefHandler(parser, external_entity_valuer);
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+}
+END_TEST
 
 /*
  * Namespaces tests.
@@ -5988,6 +6035,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_invalid_tag_in_dtd);
     tcase_add_test(tc_basic, test_ignore_section);
     tcase_add_test(tc_basic, test_bad_ignore_section);
+    tcase_add_test(tc_basic, test_external_entity_values);
 
     suite_add_tcase(s, tc_namespace);
     tcase_add_checked_fixture(tc_namespace,
