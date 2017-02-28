@@ -4394,6 +4394,78 @@ START_TEST(test_alloc_parse_xdecl)
 #undef MAX_ALLOC_COUNT
 END_TEST
 
+/* As above, but with an encoding big enough to cause storing the
+ * version information to expand the string pool being used.
+ */
+static int XMLCALL
+long_encoding_handler(void *UNUSED_P(userData),
+                      const XML_Char *UNUSED_P(encoding),
+                      XML_Encoding *info)
+{
+    int i;
+
+    for (i = 0; i < 256; i++)
+        info->map[i] = i;
+    info->data = NULL;
+    info->convert = NULL;
+    info->release = NULL;
+    return XML_STATUS_OK;
+}
+
+START_TEST(test_alloc_parse_xdecl_2)
+{
+    const char *text =
+        "<?xml version='1.0' encoding='"
+        /* Each line is 64 characters */
+        "ThisIsAStupidlyLongEncodingNameIntendedToTriggerPoolGrowth123456"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMN"
+        "'?>"
+        "<doc>Hello, world</doc>";
+    int i;
+    int repeat = 0;
+#define MAX_ALLOC_COUNT 10
+
+    for (i = 0; i < MAX_ALLOC_COUNT; i++) {
+        /* Repeat counts to defeat cached allocations */
+        if (i == 4 && repeat == 3) {
+            i -= 2;
+            repeat++;
+        }
+        else if ((i == 2 && repeat < 3) ||
+                 (i == 3 && repeat > 3)) {
+            i--;
+            repeat++;
+        }
+        allocation_count = i;
+        XML_SetXmlDeclHandler(parser, dummy_xdecl_handler);
+        XML_SetUnknownEncodingHandler(parser, long_encoding_handler, NULL);
+        if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                    XML_TRUE) != XML_STATUS_ERROR)
+            break;
+        XML_ParserReset(parser, NULL);
+    }
+    if (i == 0)
+        fail("Parse succeeded despite failing allocator");
+    if (i == MAX_ALLOC_COUNT)
+        fail("Parse failed with max allocations");
+}
+#undef MAX_ALLOC_COUNT
+END_TEST
+
 /* Test the effects of allocation failures on a straightforward parse */
 START_TEST(test_alloc_parse_pi)
 {
@@ -5901,6 +5973,7 @@ make_suite(void)
     suite_add_tcase(s, tc_alloc);
     tcase_add_checked_fixture(tc_alloc, alloc_setup, alloc_teardown);
     tcase_add_test(tc_alloc, test_alloc_parse_xdecl);
+    tcase_add_test(tc_alloc, test_alloc_parse_xdecl_2);
     tcase_add_test(tc_alloc, test_alloc_parse_pi);
     tcase_add_test(tc_alloc, test_alloc_parse_pi_2);
     tcase_add_test(tc_alloc, test_alloc_parse_comment);
