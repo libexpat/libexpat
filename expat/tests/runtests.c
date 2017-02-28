@@ -1330,6 +1330,26 @@ START_TEST(test_wfc_undeclared_entity_with_external_subset_standalone) {
 }
 END_TEST
 
+/* Test that external entity handling is not done if the parsing flag
+ * is set to UNLESS_STANDALONE
+ */
+START_TEST(test_entity_with_external_subset_unless_standalone) {
+    const char *text =
+        "<?xml version='1.0' encoding='us-ascii' standalone='yes'?>\n"
+        "<!DOCTYPE doc SYSTEM 'foo'>\n"
+        "<doc>&entity;</doc>";
+    ExtTest test_data = { "<!ENTITY entity 'bar'>", NULL, NULL };
+
+    XML_SetParamEntityParsing(parser,
+                              XML_PARAM_ENTITY_PARSING_UNLESS_STANDALONE);
+    XML_SetUserData(parser, &test_data);
+    XML_SetExternalEntityRefHandler(parser, external_entity_loader);
+    expect_failure(text,
+                   XML_ERROR_UNDEFINED_ENTITY,
+                   "Parser did not report undefined entity");
+}
+END_TEST
+
 /* Test that no error is reported for unknown entities if we have read
    an external subset, and standalone is false.
 */
@@ -5745,6 +5765,8 @@ make_suite(void)
     tcase_add_test(tc_basic, test_not_standalone_handler_accept);
     tcase_add_test(tc_basic,
                    test_wfc_undeclared_entity_with_external_subset_standalone);
+    tcase_add_test(tc_basic,
+                   test_entity_with_external_subset_unless_standalone);
     tcase_add_test(tc_basic, test_wfc_no_recursive_entity_refs);
     tcase_add_test(tc_basic, test_ext_entity_set_encoding);
     tcase_add_test(tc_basic, test_ext_entity_no_handler);
