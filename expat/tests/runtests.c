@@ -666,6 +666,21 @@ START_TEST(test_utf16_le_epilog_newline)
 }
 END_TEST
 
+/* Test that an outright lie in the encoding is faulted */
+START_TEST(test_not_utf16)
+{
+    const char *text =
+        "<?xml version='1.0' encoding='utf-16'?>"
+        "<doc>Hi</doc>";
+
+    /* Use a handler to provoke the appropriate code paths */
+    XML_SetXmlDeclHandler(parser, dummy_xdecl_handler);
+    expect_failure(text,
+                   XML_ERROR_INCORRECT_ENCODING,
+                   "UTF-16 declared in UTF-8 not faulted");
+}
+END_TEST
+
 /* Regression test for SF bug #481609, #774028. */
 START_TEST(test_latin1_umlauts)
 {
@@ -5849,6 +5864,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_utf8_auto_align);
     tcase_add_test(tc_basic, test_utf16);
     tcase_add_test(tc_basic, test_utf16_le_epilog_newline);
+    tcase_add_test(tc_basic, test_not_utf16);
     tcase_add_test(tc_basic, test_latin1_umlauts);
     /* Regression test for SF bug #491986. */
     tcase_add_test(tc_basic, test_danish_latin1);
