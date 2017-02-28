@@ -1304,6 +1304,28 @@ START_TEST(test_ext_entity_bad_encoding)
 }
 END_TEST
 
+/* Try handing an invalid encoding to an external entity parser */
+START_TEST(test_ext_entity_bad_encoding_2)
+{
+    const char *text =
+        "<?xml version='1.0' encoding='us-ascii'?>\n"
+        "<!DOCTYPE doc SYSTEM 'foo'>\n"
+        "<doc>&entity;</doc>";
+    ExtFaults fault = {
+        "<!ELEMENT doc (#PCDATA)*>",
+        "Unknown encoding not faulted",
+        "unknown-encoding",
+        XML_ERROR_UNKNOWN_ENCODING
+    };
+
+    XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+    XML_SetExternalEntityRefHandler(parser, external_entity_faulter);
+    XML_SetUserData(parser, &fault);
+    expect_failure(text, XML_ERROR_EXTERNAL_ENTITY_HANDLING,
+                   "Bad encoding not faulted in external entity handler");
+}
+END_TEST
+
 /* Test that no error is reported for unknown entities if we don't
    read an external subset.  This was fixed in Expat 1.95.5.
 */
@@ -2798,6 +2820,7 @@ START_TEST(test_explicit_encoding)
         fail("Failed to unset encoding");
 }
 END_TEST
+
 
 /* Test handling of trailing CR (rather than newline) */
 static void XMLCALL
@@ -5916,6 +5939,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_ext_entity_no_handler);
     tcase_add_test(tc_basic, test_ext_entity_set_bom);
     tcase_add_test(tc_basic, test_ext_entity_bad_encoding);
+    tcase_add_test(tc_basic, test_ext_entity_bad_encoding_2);
     tcase_add_test(tc_basic, test_ext_entity_invalid_parse);
     tcase_add_test(tc_basic, test_ext_entity_invalid_suspended_parse);
     tcase_add_test(tc_basic, test_dtd_default_handling);
