@@ -681,6 +681,19 @@ START_TEST(test_not_utf16)
 }
 END_TEST
 
+/* Test that an unknown encoding is rejected */
+START_TEST(test_bad_encoding)
+{
+    const char *text = "<doc>Hi</doc>";
+
+    if (!XML_SetEncoding(parser, "unknown-encoding"))
+        fail("XML_SetEncoding failed");
+    expect_failure(text,
+                   XML_ERROR_UNKNOWN_ENCODING,
+                   "Unknown encoding not faulted");
+}
+END_TEST
+
 /* Regression test for SF bug #481609, #774028. */
 START_TEST(test_latin1_umlauts)
 {
@@ -5865,6 +5878,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_utf16);
     tcase_add_test(tc_basic, test_utf16_le_epilog_newline);
     tcase_add_test(tc_basic, test_not_utf16);
+    tcase_add_test(tc_basic, test_bad_encoding);
     tcase_add_test(tc_basic, test_latin1_umlauts);
     /* Regression test for SF bug #491986. */
     tcase_add_test(tc_basic, test_danish_latin1);
