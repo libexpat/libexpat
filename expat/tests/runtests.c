@@ -146,6 +146,13 @@ static unsigned long dummy_handler_flags = 0;
 
 
 static void XMLCALL
+dummy_xdecl_handler(void *UNUSED_P(userData),
+                    const XML_Char *UNUSED_P(version),
+                    const XML_Char *UNUSED_P(encoding),
+                    int UNUSED_P(standalone))
+{}
+
+static void XMLCALL
 dummy_start_doctype_handler(void           *UNUSED_P(userData),
                             const XML_Char *UNUSED_P(doctypeName),
                             const XML_Char *UNUSED_P(sysid),
@@ -4352,6 +4359,41 @@ alloc_teardown(void)
 }
 
 
+/* Test the effects of allocation failures on xml declaration processing */
+START_TEST(test_alloc_parse_xdecl)
+{
+    const char *text =
+        "<?xml version='1.0' encoding='utf-8'?>\n"
+        "<doc>Hello, world</doc>";
+    int i;
+    int repeat = 0;
+#define MAX_ALLOC_COUNT 10
+
+    for (i = 0; i < MAX_ALLOC_COUNT; i++) {
+        /* Repeat some (most) counts to defeat cached allocations */
+        if (i == 2 && repeat != 1) {
+            i--;
+            repeat++;
+        }
+        else if (i == 3) {
+            i -= 2;
+            repeat++;
+        }
+        allocation_count = i;
+        XML_SetXmlDeclHandler(parser, dummy_xdecl_handler);
+        if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                    XML_TRUE) != XML_STATUS_ERROR)
+            break;
+        XML_ParserReset(parser, NULL);
+    }
+    if (i == 0)
+        fail("Parse succeeded despite failing allocator");
+    if (i == MAX_ALLOC_COUNT)
+        fail("Parse failed with max allocations");
+}
+#undef MAX_ALLOC_COUNT
+END_TEST
+
 /* Test the effects of allocation failures on a straightforward parse */
 START_TEST(test_alloc_parse_pi)
 {
@@ -5858,6 +5900,7 @@ make_suite(void)
 
     suite_add_tcase(s, tc_alloc);
     tcase_add_checked_fixture(tc_alloc, alloc_setup, alloc_teardown);
+    tcase_add_test(tc_alloc, test_alloc_parse_xdecl);
     tcase_add_test(tc_alloc, test_alloc_parse_pi);
     tcase_add_test(tc_alloc, test_alloc_parse_pi_2);
     tcase_add_test(tc_alloc, test_alloc_parse_comment);
