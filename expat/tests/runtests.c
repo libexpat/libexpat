@@ -3661,7 +3661,7 @@ START_TEST(test_bad_ignore_section)
 }
 END_TEST
 
-/* Test entity processing */
+/* Test recursive parsing */
 static int XMLCALL
 external_entity_valuer(XML_Parser parser,
                        const XML_Char *context,
@@ -3674,7 +3674,6 @@ external_entity_valuer(XML_Parser parser,
         "<!ENTITY % e1 SYSTEM '004-2.ent'>\n"
         "<!ENTITY % e2 '%e1;'>\n"
         "%e1;\n";
-    const char *text2 = "<!ATTLIST doc a1 CDATA 'value'>";
     XML_Parser ext_parser;
 
     if (systemId == NULL)
@@ -3688,9 +3687,22 @@ external_entity_valuer(XML_Parser parser,
             xml_failure(ext_parser);
     }
     else if (!strcmp(systemId, "004-2.ent")) {
-        if (_XML_Parse_SINGLE_BYTES(ext_parser, text2, strlen(text2),
-                                    XML_TRUE) == XML_STATUS_ERROR)
-            xml_failure(ext_parser);
+        ExtFaults *fault = (ExtFaults *)XML_GetUserData(parser);
+        enum XML_Status status;
+
+        status = _XML_Parse_SINGLE_BYTES(ext_parser,
+                                         fault->parse_text,
+                                         strlen(fault->parse_text),
+                                         XML_TRUE);
+        if (fault->error == XML_ERROR_NONE) {
+            if (status == XML_STATUS_ERROR)
+                xml_failure(ext_parser);
+        } else {
+            if (status != XML_STATUS_ERROR)
+                fail(fault->fail_text);
+            if (XML_GetErrorCode(ext_parser) != fault->error)
+                xml_failure(ext_parser);
+        }
     }
 
     XML_ParserFree(ext_parser);
@@ -3702,12 +3714,44 @@ START_TEST(test_external_entity_values)
     const char *text =
         "<!DOCTYPE doc SYSTEM '004-1.ent'>\n"
         "<doc></doc>\n";
+    ExtFaults data_004_2[] = {
+        {
+            "<!ATTLIST doc a1 CDATA 'value'>",
+            NULL,
+            NULL,
+            XML_ERROR_NONE
+        },
+        {
+            "<!ATTLIST $doc a1 CDATA 'value'>",
+            "Invalid token not faulted",
+            NULL,
+            XML_ERROR_INVALID_TOKEN
+        },
+        {
+            "'wombat",
+            "Unterminated string not faulted",
+            NULL,
+            XML_ERROR_UNCLOSED_TOKEN
+        },
+        {
+            "\xe2\x82",
+            "Partial UTF-8 character not faulted",
+            NULL,
+            XML_ERROR_PARTIAL_CHAR
+        },
+        { NULL, NULL, NULL, XML_ERROR_NONE }
+    };
+    int i;
 
-    XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
-    XML_SetExternalEntityRefHandler(parser, external_entity_valuer);
-    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
-                                XML_TRUE) == XML_STATUS_ERROR)
-        xml_failure(parser);
+    for (i = 0; data_004_2[i].parse_text != NULL; i++) {
+        XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+        XML_SetExternalEntityRefHandler(parser, external_entity_valuer);
+        XML_SetUserData(parser, &data_004_2[i]);
+        if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                    XML_TRUE) == XML_STATUS_ERROR)
+            xml_failure(parser);
+        XML_ParserReset(parser, NULL);
+    }
 }
 END_TEST
 
