@@ -2309,6 +2309,29 @@ START_TEST(test_set_foreign_dtd)
 }
 END_TEST
 
+/* Test invalid character in a foreign DTD is faulted */
+START_TEST(test_invalid_foreign_dtd)
+{
+    const char *text =
+        "<?xml version='1.0' encoding='us-ascii'?>\n"
+        "<doc>&entity;</doc>";
+    ExtFaults test_data = {
+        "$",
+        "Dollar not faulted",
+        NULL,
+        XML_ERROR_INVALID_TOKEN
+    };
+
+    XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+    XML_SetUserData(parser, &test_data);
+    XML_SetExternalEntityRefHandler(parser, external_entity_faulter);
+    XML_UseForeignDTD(parser, XML_TRUE);
+    expect_failure(text,
+                   XML_ERROR_EXTERNAL_ENTITY_HANDLING,
+                   "Bad DTD should not have been accepted");
+}
+END_TEST
+
 /* Test XML Base is set and unset appropriately */
 START_TEST(test_set_base)
 {
@@ -6131,6 +6154,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_default_current);
     tcase_add_test(tc_basic, test_dtd_elements);
     tcase_add_test(tc_basic, test_set_foreign_dtd);
+    tcase_add_test(tc_basic, test_invalid_foreign_dtd);
     tcase_add_test(tc_basic, test_set_base);
     tcase_add_test(tc_basic, test_attributes);
     tcase_add_test(tc_basic, test_reset_in_entity);
