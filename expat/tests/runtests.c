@@ -3755,6 +3755,13 @@ START_TEST(test_external_entity_values)
             NULL,
             XML_ERROR_XML_DECL
         },
+        {
+            /* UTF-8 BOM */
+            "\xEF\xBB\xBF<!ATTLIST doc a1 CDATA 'value'>",
+            NULL,
+            NULL,
+            XML_ERROR_NONE
+        },
         { NULL, NULL, NULL, XML_ERROR_NONE }
     };
     int i;
