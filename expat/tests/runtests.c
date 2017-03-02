@@ -1180,7 +1180,7 @@ external_entity_loader(XML_Parser parser,
                                  strlen(test_data->parse_text),
                                  XML_TRUE)
           == XML_STATUS_ERROR) {
-        xml_failure(parser);
+        xml_failure(extparser);
         return XML_STATUS_ERROR;
     }
     XML_ParserFree(extparser);
