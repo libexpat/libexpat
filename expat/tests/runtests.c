@@ -3689,6 +3689,7 @@ external_entity_valuer(XML_Parser parser,
     else if (!strcmp(systemId, "004-2.ent")) {
         ExtFaults *fault = (ExtFaults *)XML_GetUserData(parser);
         enum XML_Status status;
+        enum XML_Error error;
 
         status = _XML_Parse_SINGLE_BYTES(ext_parser,
                                          fault->parse_text,
@@ -3700,7 +3701,10 @@ external_entity_valuer(XML_Parser parser,
         } else {
             if (status != XML_STATUS_ERROR)
                 fail(fault->fail_text);
-            if (XML_GetErrorCode(ext_parser) != fault->error)
+            error = XML_GetErrorCode(ext_parser);
+            if (error != fault->error &&
+                (fault->error != XML_ERROR_XML_DECL ||
+                 error != XML_ERROR_TEXT_DECL))
                 xml_failure(ext_parser);
         }
     }
@@ -3744,6 +3748,12 @@ START_TEST(test_external_entity_values)
             NULL,
             NULL,
             XML_ERROR_NONE
+        },
+        {
+            "<?xml?>",
+            "Malformed XML declaration not faulted",
+            NULL,
+            XML_ERROR_XML_DECL
         },
         { NULL, NULL, NULL, XML_ERROR_NONE }
     };
