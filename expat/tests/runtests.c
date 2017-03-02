@@ -3771,6 +3771,61 @@ START_TEST(test_external_entity_values)
 }
 END_TEST
 
+static int XMLCALL
+external_entity_value_aborter(XML_Parser parser,
+                              const XML_Char *context,
+                              const XML_Char *UNUSED_P(base),
+                              const XML_Char *systemId,
+                              const XML_Char *UNUSED_P(publicId))
+{
+    const char *text1 =
+        "<!ELEMENT doc EMPTY>\n"
+        "<!ENTITY % e1 SYSTEM '004-2.ent'>\n"
+        "<!ENTITY % e2 '%e1;'>\n"
+        "%e1;\n";
+    const char *text2 =
+        "<?xml version='1.0' encoding='utf-8'?>";
+    XML_Parser ext_parser;
+
+    if (systemId == NULL)
+        return XML_STATUS_OK;
+    ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
+    if (ext_parser == NULL)
+        fail("Could not create external entity parser");
+    if (!strcmp(systemId, "004-1.ent")) {
+        if (_XML_Parse_SINGLE_BYTES(ext_parser, text1, strlen(text1),
+                                    XML_TRUE) == XML_STATUS_ERROR)
+            xml_failure(ext_parser);
+    }
+    if (!strcmp(systemId, "004-2.ent")) {
+        XML_SetXmlDeclHandler(ext_parser, entity_suspending_xdecl_handler);
+        XML_SetUserData(ext_parser, ext_parser);
+        if (_XML_Parse_SINGLE_BYTES(ext_parser, text2, strlen(text2),
+                                    XML_TRUE) != XML_STATUS_ERROR)
+            fail("Aborted parse not faulted");
+        if (XML_GetErrorCode(ext_parser) != XML_ERROR_ABORTED)
+            xml_failure(ext_parser);
+    }
+    return XML_STATUS_OK;
+}
+
+START_TEST(test_ext_entity_value_abort)
+{
+    const char *text =
+        "<!DOCTYPE doc SYSTEM '004-1.ent'>\n"
+        "<doc></doc>\n";
+
+    XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+    XML_SetExternalEntityRefHandler(parser,
+                                    external_entity_value_aborter);
+    resumable = XML_FALSE;
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+}
+END_TEST
+
+
 /*
  * Namespaces tests.
  */
@@ -6098,6 +6153,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_ignore_section);
     tcase_add_test(tc_basic, test_bad_ignore_section);
     tcase_add_test(tc_basic, test_external_entity_values);
+    tcase_add_test(tc_basic, test_ext_entity_value_abort);
 
     suite_add_tcase(s, tc_namespace);
     tcase_add_checked_fixture(tc_namespace,
