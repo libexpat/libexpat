@@ -3739,6 +3739,12 @@ START_TEST(test_external_entity_values)
             NULL,
             XML_ERROR_PARTIAL_CHAR
         },
+        {
+            "<?xml version='1.0' encoding='utf-8'?>\n",
+            NULL,
+            NULL,
+            XML_ERROR_NONE
+        },
         { NULL, NULL, NULL, XML_ERROR_NONE }
     };
     int i;
