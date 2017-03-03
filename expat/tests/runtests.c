@@ -3785,6 +3785,24 @@ START_TEST(test_external_entity_values)
             NULL,
             XML_ERROR_NONE
         },
+        {
+            "<?xml version='1.0' encoding='utf-8'?>\n$",
+            "Invalid token after text declaration not faulted",
+            NULL,
+            XML_ERROR_INVALID_TOKEN
+        },
+        {
+            "<?xml version='1.0' encoding='utf-8'?>\n'wombat",
+            "Unterminated string after text decl not faulted",
+            NULL,
+            XML_ERROR_UNCLOSED_TOKEN
+        },
+        {
+            "<?xml version='1.0' encoding='utf-8'?>\n\xe2\x82",
+            "Partial UTF-8 character after text decl not faulted",
+            NULL,
+            XML_ERROR_PARTIAL_CHAR
+        },
         { NULL, NULL, NULL, XML_ERROR_NONE }
     };
     int i;
