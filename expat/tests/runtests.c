@@ -5506,6 +5506,71 @@ START_TEST(test_alloc_realloc_many_attributes)
 }
 END_TEST
 
+/* Test handling of a public entity with failing allocator */
+static int XMLCALL
+external_entity_public(XML_Parser parser,
+                       const XML_Char *context,
+                       const XML_Char *UNUSED_P(base),
+                       const XML_Char *systemId,
+                       const XML_Char *publicId)
+{
+    const char *text1 =
+        "<!ELEMENT doc EMPTY>\n"
+        "<!ENTITY % e1 PUBLIC 'foo' 'bar.ent'>\n"
+        "<!ENTITY % e2 '%e1;'>\n"
+        "%e1;\n";
+    const char *text2 = "<!ATTLIST doc a CDATA 'value'>";
+    const char *text;
+    XML_Parser ext_parser;
+
+    ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
+    if (ext_parser == NULL)
+        return XML_STATUS_ERROR;
+    if (systemId != NULL && !strcmp(systemId, "http://example.org/")) {
+        text = text1;
+    }
+    else if (publicId != NULL && !strcmp(publicId, "foo")) {
+        text = text2;
+    }
+    return _XML_Parse_SINGLE_BYTES(ext_parser, text, strlen(text),
+                                   XML_TRUE);
+}
+
+START_TEST(test_alloc_public_entity_value)
+{
+    const char *text =
+        "<!DOCTYPE doc SYSTEM 'http://example.org/'>\n"
+        "<doc></doc>\n";
+    int i;
+#define MAX_ALLOC_COUNT 25
+    int repeat = 0;
+
+    for (i = 0; i < MAX_ALLOC_COUNT; i++) {
+        /* Repeat certain counts to defeat cached allocations */
+        if ((i == 2 && repeat < 2) ||
+            (i == 3 && repeat == 2) ||
+            (i == 9 && repeat == 3) ||
+            (i == 18 && repeat == 4) ||
+            (i == 19 && repeat == 5)) {
+            i--;
+            repeat++;
+        }
+        allocation_count = i;
+        XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+        XML_SetExternalEntityRefHandler(parser, external_entity_public);
+        if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                    XML_TRUE) != XML_STATUS_ERROR)
+            break;
+        XML_ParserReset(parser, NULL);
+    }
+    if (i == 0)
+        fail("Parsing worked despite failing allocation");
+    else if (i == MAX_ALLOC_COUNT)
+        fail("Parsing failed at max allocation count");
+}
+#undef MAX_ALLOC_COUNT
+END_TEST
+
 
 static void
 nsalloc_setup(void)
@@ -6259,6 +6324,7 @@ make_suite(void)
     tcase_add_test(tc_alloc, test_alloc_realloc_buffer);
     tcase_add_test(tc_alloc, test_alloc_ext_entity_realloc_buffer);
     tcase_add_test(tc_alloc, test_alloc_realloc_many_attributes);
+    tcase_add_test(tc_alloc, test_alloc_public_entity_value);
 
     suite_add_tcase(s, tc_nsalloc);
     tcase_add_checked_fixture(tc_nsalloc, nsalloc_setup, nsalloc_teardown);
