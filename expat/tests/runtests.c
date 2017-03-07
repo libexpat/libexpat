@@ -3891,6 +3891,20 @@ START_TEST(test_ext_entity_value_abort)
 }
 END_TEST
 
+START_TEST(test_bad_public_doctype)
+{
+    const char *text =
+        "<?xml version='1.0' encoding='utf-8'?>\n"
+        "<!DOCTYPE doc PUBLIC '{BadName}' 'test'>\n"
+        "<doc></doc>";
+
+    /* Setting a handler provokes a particular code path */
+    XML_SetDoctypeDeclHandler(parser,
+                              dummy_start_doctype_handler,
+                              dummy_end_doctype_handler);
+    expect_failure(text, XML_ERROR_PUBLICID, "Bad Public ID not failed");
+}
+END_TEST
 
 /*
  * Namespaces tests.
@@ -6328,6 +6342,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_bad_ignore_section);
     tcase_add_test(tc_basic, test_external_entity_values);
     tcase_add_test(tc_basic, test_ext_entity_value_abort);
+    tcase_add_test(tc_basic, test_bad_public_doctype);
 
     suite_add_tcase(s, tc_namespace);
     tcase_add_checked_fixture(tc_namespace,
