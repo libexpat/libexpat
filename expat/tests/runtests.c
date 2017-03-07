@@ -5588,8 +5588,11 @@ START_TEST(test_alloc_public_entity_value)
             repeat++;
         }
         allocation_count = i;
+        dummy_handler_flags = 0;
         XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
         XML_SetExternalEntityRefHandler(parser, external_entity_public);
+        /* Provoke a particular code path */
+        XML_SetEntityDeclHandler(parser, dummy_entity_decl_handler);
         if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
                                     XML_TRUE) != XML_STATUS_ERROR)
             break;
@@ -5597,8 +5600,10 @@ START_TEST(test_alloc_public_entity_value)
     }
     if (i == 0)
         fail("Parsing worked despite failing allocation");
-    else if (i == MAX_ALLOC_COUNT)
+    if (i == MAX_ALLOC_COUNT)
         fail("Parsing failed at max allocation count");
+    if (dummy_handler_flags != DUMMY_ENTITY_DECL_HANDLER_FLAG)
+        fail("Entity declaration handler not called");
 }
 #undef MAX_ALLOC_COUNT
 END_TEST
