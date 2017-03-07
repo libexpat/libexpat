@@ -5571,6 +5571,31 @@ START_TEST(test_alloc_public_entity_value)
 #undef MAX_ALLOC_COUNT
 END_TEST
 
+START_TEST(test_alloc_parse_public_doctype)
+{
+    const char *text =
+        "<?xml version='1.0' encoding='utf-8'?>\n"
+        "<!DOCTYPE doc PUBLIC 'http://example.com/' 'test'>\n"
+        "<doc></doc>";
+    int i;
+#define MAX_ALLOC_COUNT 10
+    /* int repeat = 0 */
+
+    for (i = 0; i < MAX_ALLOC_COUNT; i++) {
+        allocation_count = i;
+        if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                    XML_TRUE) != XML_STATUS_ERROR)
+            break;
+        XML_ParserReset(parser, NULL);
+    }
+    if (i == 0)
+        fail("Parse succeeded despite failing allocator");
+    if (i == MAX_ALLOC_COUNT)
+        fail("Parse failed at maximum allocation count");
+}
+#undef MAX_ALLOC_COUNT
+END_TEST
+
 
 static void
 nsalloc_setup(void)
@@ -6325,6 +6350,7 @@ make_suite(void)
     tcase_add_test(tc_alloc, test_alloc_ext_entity_realloc_buffer);
     tcase_add_test(tc_alloc, test_alloc_realloc_many_attributes);
     tcase_add_test(tc_alloc, test_alloc_public_entity_value);
+    tcase_add_test(tc_alloc, test_alloc_parse_public_doctype);
 
     suite_add_tcase(s, tc_nsalloc);
     tcase_add_checked_fixture(tc_nsalloc, nsalloc_setup, nsalloc_teardown);
