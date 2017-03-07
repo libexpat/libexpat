@@ -5607,7 +5607,25 @@ START_TEST(test_alloc_parse_public_doctype)
 {
     const char *text =
         "<?xml version='1.0' encoding='utf-8'?>\n"
-        "<!DOCTYPE doc PUBLIC 'http://example.com/' 'test'>\n"
+        "<!DOCTYPE doc PUBLIC '"
+        /* 64 characters per line */
+        "http://example.com/a/long/enough/name/to/trigger/pool/growth/zz/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "' 'test'>\n"
         "<doc></doc>";
     int i;
 #define MAX_ALLOC_COUNT 10
@@ -5615,12 +5633,12 @@ START_TEST(test_alloc_parse_public_doctype)
 
     for (i = 0; i < MAX_ALLOC_COUNT; i++) {
         /* Repeat certain counts to defeat cached allocations */
-        if (i == 4 && repeat == 4) {
+        if (i == 4 && repeat == 5) {
             i -= 2;
             repeat++;
         }
         else if ((i == 2 && repeat < 3) ||
-            (i == 3 && repeat == 3)) {
+            (i == 3 && repeat < 5)) {
             i--;
             repeat++;
         }
