@@ -3215,9 +3215,12 @@ get_feature(enum XML_FeatureEnum feature_id, long *presult)
     return XML_STATUS_ERROR;
 }
 
-START_TEST(test_get_buffer_1)
-{
-    const char *text =
+/* Having an element name longer than 1024 characters exercises some
+ * of the pool allocation code in the parser that otherwise does not
+ * get executed.  The count at the end of the line is the number of
+ * characters (bytes) in the element name by that point.x
+ */
+static const char *get_buffer_test_text =
         "<documentwitharidiculouslylongelementnametotease" /* 0x030 */
         "aparticularcorneroftheallocationinXML_GetBuffers" /* 0x060 */
         "othatwecanimprovethecoverageyetagain012345678901" /* 0x090 */
@@ -3240,6 +3243,11 @@ START_TEST(test_get_buffer_1)
         "123456789abcdef0123456789abcdef0123456789abcdef0" /* 0x3c0 */
         "123456789abcdef0123456789abcdef0123456789abcdef0" /* 0x3f0 */
         "123456789abcdef0123456789abcdef0123456789>\n<ef0"; /* 0x420 */
+
+/* Test odd corners of the XML_GetBuffer interface */
+START_TEST(test_get_buffer_1)
+{
+    const char *text = get_buffer_test_text;
     void *buffer;
     long context_bytes;
 
@@ -3282,29 +3290,7 @@ END_TEST
 /* Test more corners of the XML_GetBuffer interface */
 START_TEST(test_get_buffer_2)
 {
-    const char *text =
-        "<documentwitharidiculouslylongelementnametotease" /* 0x030 */
-        "aparticularcorneroftheallocationinXML_GetBuffers" /* 0x060 */
-        "othatwecanimprovethecoverageyetagain012345678901" /* 0x090 */
-        "123456789abcdef0123456789abcdef0123456789abcdef0" /* 0x0c0 */
-        "123456789abcdef0123456789abcdef0123456789abcdef0" /* 0x0f0 */
-        "123456789abcdef0123456789abcdef0123456789abcdef0" /* 0x120 */
-        "123456789abcdef0123456789abcdef0123456789abcdef0" /* 0x150 */
-        "123456789abcdef0123456789abcdef0123456789abcdef0" /* 0x180 */
-        "123456789abcdef0123456789abcdef0123456789abcdef0" /* 0x1b0 */
-        "123456789abcdef0123456789abcdef0123456789abcdef0" /* 0x1e0 */
-        "123456789abcdef0123456789abcdef0123456789abcdef0" /* 0x210 */
-        "123456789abcdef0123456789abcdef0123456789abcdef0" /* 0x240 */
-        "123456789abcdef0123456789abcdef0123456789abcdef0" /* 0x270 */
-        "123456789abcdef0123456789abcdef0123456789abcdef0" /* 0x2a0 */
-        "123456789abcdef0123456789abcdef0123456789abcdef0" /* 0x2d0 */
-        "123456789abcdef0123456789abcdef0123456789abcdef0" /* 0x300 */
-        "123456789abcdef0123456789abcdef0123456789abcdef0" /* 0x330 */
-        "123456789abcdef0123456789abcdef0123456789abcdef0" /* 0x360 */
-        "123456789abcdef0123456789abcdef0123456789abcdef0" /* 0x390 */
-        "123456789abcdef0123456789abcdef0123456789abcdef0" /* 0x3c0 */
-        "123456789abcdef0123456789abcdef0123456789abcdef0" /* 0x3f0 */
-        "123456789abcdef0123456789abcdef0123456789>\n<ef0"; /* 0x420 */
+    const char *text = get_buffer_test_text;
     void *buffer;
 
     /* Now get a decent buffer */
