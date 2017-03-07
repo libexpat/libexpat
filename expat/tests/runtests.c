@@ -143,6 +143,8 @@ static unsigned long dummy_handler_flags = 0;
 #define DUMMY_UNPARSED_ENTITY_DECL_HANDLER_FLAG (1UL << 11)
 #define DUMMY_START_NS_DECL_HANDLER_FLAG        (1UL << 12)
 #define DUMMY_END_NS_DECL_HANDLER_FLAG          (1UL << 13)
+#define DUMMY_START_DOCTYPE_DECL_HANDLER_FLAG   (1UL << 14)
+#define DUMMY_END_DOCTYPE_DECL_HANDLER_FLAG     (1UL << 15)
 
 
 static void XMLCALL
@@ -291,6 +293,22 @@ dummy_default_handler(void *UNUSED_P(userData),
                       const XML_Char *UNUSED_P(s),
                       int UNUSED_P(len))
 {}
+
+static void XMLCALL
+dummy_start_doctype_decl_handler(void *UNUSED_P(userData),
+                                 const XML_Char *UNUSED_P(doctypeName),
+                                 const XML_Char *UNUSED_P(sysid),
+                                 const XML_Char *UNUSED_P(pubid),
+                                 int UNUSED_P(has_internal_subset))
+{
+    dummy_handler_flags |= DUMMY_START_DOCTYPE_DECL_HANDLER_FLAG;
+}
+
+static void XMLCALL
+dummy_end_doctype_decl_handler(void *UNUSED_P(userData))
+{
+    dummy_handler_flags |= DUMMY_END_DOCTYPE_DECL_HANDLER_FLAG;
+}
 
 /*
  * Character & encoding tests.
@@ -5579,10 +5597,24 @@ START_TEST(test_alloc_parse_public_doctype)
         "<doc></doc>";
     int i;
 #define MAX_ALLOC_COUNT 10
-    /* int repeat = 0 */
+    int repeat = 0;
 
     for (i = 0; i < MAX_ALLOC_COUNT; i++) {
+        /* Repeat certain counts to defeat cached allocations */
+        if (i == 4 && repeat == 4) {
+            i -= 2;
+            repeat++;
+        }
+        else if ((i == 2 && repeat < 3) ||
+            (i == 3 && repeat == 3)) {
+            i--;
+            repeat++;
+        }
         allocation_count = i;
+        dummy_handler_flags = 0;
+        XML_SetDoctypeDeclHandler(parser,
+                                  dummy_start_doctype_decl_handler,
+                                  dummy_end_doctype_decl_handler);
         if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
                                     XML_TRUE) != XML_STATUS_ERROR)
             break;
@@ -5592,6 +5624,9 @@ START_TEST(test_alloc_parse_public_doctype)
         fail("Parse succeeded despite failing allocator");
     if (i == MAX_ALLOC_COUNT)
         fail("Parse failed at maximum allocation count");
+    if (dummy_handler_flags != (DUMMY_START_DOCTYPE_DECL_HANDLER_FLAG |
+                                DUMMY_END_DOCTYPE_DECL_HANDLER_FLAG))
+        fail("Doctype handler functions not called");
 }
 #undef MAX_ALLOC_COUNT
 END_TEST
