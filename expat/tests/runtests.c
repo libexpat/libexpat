@@ -1122,7 +1122,7 @@ START_TEST(test_ext_entity_set_encoding)
 {
     const char *text =
         "<!DOCTYPE doc [\n"
-        "  <!ENTITY en SYSTEM 'http://xml.libexpat.org/dummy.ent'>\n"
+        "  <!ENTITY en SYSTEM 'http://example.org/dummy.ent'>\n"
         "]>\n"
         "<doc>&en;</doc>";
 
@@ -1137,7 +1137,7 @@ START_TEST(test_ext_entity_no_handler)
 {
     const char *text =
         "<!DOCTYPE doc [\n"
-        "  <!ENTITY en SYSTEM 'http://xml.libexpat.org/dummy.ent'>\n"
+        "  <!ENTITY en SYSTEM 'http://example.org/dummy.ent'>\n"
         "]>\n"
         "<doc>&en;</doc>";
 
@@ -1181,7 +1181,7 @@ START_TEST(test_ext_entity_set_bom)
 {
     const char *text =
         "<!DOCTYPE doc [\n"
-        "  <!ENTITY en SYSTEM 'http://xml.libexpat.org/dummy.ent'>\n"
+        "  <!ENTITY en SYSTEM 'http://example.org/dummy.ent'>\n"
         "]>\n"
         "<doc>&en;</doc>";
 
@@ -1225,7 +1225,7 @@ START_TEST(test_ext_entity_bad_encoding)
 {
     const char *text =
         "<!DOCTYPE doc [\n"
-        "  <!ENTITY en SYSTEM 'http://xml.libexpat.org/dummy.ent'>\n"
+        "  <!ENTITY en SYSTEM 'http://example.org/dummy.ent'>\n"
         "]>\n"
         "<doc>&en;</doc>";
 
@@ -1437,7 +1437,7 @@ START_TEST(test_ext_entity_invalid_parse)
 {
     const char *text =
         "<!DOCTYPE doc [\n"
-        "  <!ENTITY en SYSTEM 'http://xml.libexpat.org/dummy.ent'>\n"
+        "  <!ENTITY en SYSTEM 'http://example.org/dummy.ent'>\n"
         "]>\n"
         "<doc>&en;</doc>";
     const ExtFaults faults[] = {
@@ -1478,8 +1478,8 @@ START_TEST(test_dtd_default_handling)
 {
     const char *text =
         "<!DOCTYPE doc [\n"
-        "<!ENTITY e SYSTEM 'http://xml.libexpat.org/e'>\n"
-        "<!NOTATION n SYSTEM 'http://xml.libexpat.org/n'>\n"
+        "<!ENTITY e SYSTEM 'http://example.org/e'>\n"
+        "<!NOTATION n SYSTEM 'http://example.org/n'>\n"
         "<!ELEMENT doc EMPTY>\n"
         "<!ATTLIST doc a CDATA #IMPLIED>\n"
         "<?pi in dtd?>\n"
@@ -1510,7 +1510,7 @@ END_TEST
 START_TEST(test_empty_ns_without_namespaces)
 {
     const char *text =
-        "<doc xmlns:prefix='http://www.example.com/'>\n"
+        "<doc xmlns:prefix='http://example.org/'>\n"
         "  <e xmlns:prefix=''/>\n"
         "</doc>";
 
@@ -1528,7 +1528,7 @@ START_TEST(test_ns_in_attribute_default_without_namespaces)
     const char *text =
         "<!DOCTYPE e:element [\n"
         "  <!ATTLIST e:element\n"
-        "    xmlns:e CDATA 'http://example.com/'>\n"
+        "    xmlns:e CDATA 'http://example.org/'>\n"
         "      ]>\n"
         "<e:element/>";
 
@@ -2615,7 +2615,7 @@ START_TEST(test_subordinate_xdecl_suspend)
 {
     const char *text =
         "<!DOCTYPE doc [\n"
-        "  <!ENTITY entity SYSTEM 'http://xml.libexpat.org/dummy.ent'>\n"
+        "  <!ENTITY entity SYSTEM 'http://example.org/dummy.ent'>\n"
         "]>\n"
         "<doc>&entity;</doc>";
 
@@ -2633,7 +2633,7 @@ START_TEST(test_subordinate_xdecl_abort)
 {
     const char *text =
         "<!DOCTYPE doc [\n"
-        "  <!ENTITY entity SYSTEM 'http://xml.libexpat.org/dummy.ent'>\n"
+        "  <!ENTITY entity SYSTEM 'http://example.org/dummy.ent'>\n"
         "]>\n"
         "<doc>&entity;</doc>";
 
@@ -2688,7 +2688,7 @@ START_TEST(test_ext_entity_invalid_suspended_parse)
 {
     const char *text =
         "<!DOCTYPE doc [\n"
-        "  <!ENTITY en SYSTEM 'http://xml.libexpat.org/dummy.ent'>\n"
+        "  <!ENTITY en SYSTEM 'http://example.org/dummy.ent'>\n"
         "]>\n"
         "<doc>&en;</doc>";
     ExtFaults faults[] = {
@@ -2839,7 +2839,7 @@ START_TEST(test_ext_entity_trailing_cr)
 {
     const char *text =
         "<!DOCTYPE doc [\n"
-        "  <!ENTITY en SYSTEM 'http://example.com/dummy.ent'>\n"
+        "  <!ENTITY en SYSTEM 'http://example.org/dummy.ent'>\n"
         "]>\n"
         "<doc>&en;</doc>";
     int found_cr;
@@ -2946,7 +2946,7 @@ START_TEST(test_ext_entity_trailing_rsqb)
 {
     const char *text =
         "<!DOCTYPE doc [\n"
-        "  <!ENTITY en SYSTEM 'http://example.com/dummy.ent'>\n"
+        "  <!ENTITY en SYSTEM 'http://example.org/dummy.ent'>\n"
         "]>\n"
         "<doc>&en;</doc>";
     int found_rsqb;
@@ -3642,12 +3642,12 @@ triplet_end_checker(void *userData, const XML_Char *name)
 START_TEST(test_return_ns_triplet)
 {
     const char *text =
-        "<foo:e xmlns:foo='http://expat.sf.net/' bar:a='12'\n"
-        "       xmlns:bar='http://expat.sf.net/'>";
+        "<foo:e xmlns:foo='http://example.org/' bar:a='12'\n"
+        "       xmlns:bar='http://example.org/'>";
     const char *epilog = "</foo:e>";
     const char *elemstr[] = {
-        "http://expat.sf.net/ e foo",
-        "http://expat.sf.net/ a bar"
+        "http://example.org/ e foo",
+        "http://example.org/ a bar"
     };
     XML_SetReturnNSTriplet(parser, XML_TRUE);
     XML_SetUserData(parser, elemstr);
@@ -3721,19 +3721,19 @@ run_ns_tagname_overwrite_test(const char *text, const char *result)
 START_TEST(test_ns_tagname_overwrite)
 {
     const char *text =
-        "<n:e xmlns:n='http://xml.libexpat.org/'>\n"
+        "<n:e xmlns:n='http://example.org/'>\n"
         "  <n:f n:attr='foo'/>\n"
         "  <n:g n:attr2='bar'/>\n"
         "</n:e>";
     const char *result =
-        "start http://xml.libexpat.org/ e\n"
-        "start http://xml.libexpat.org/ f\n"
-        "attribute http://xml.libexpat.org/ attr\n"
-        "end http://xml.libexpat.org/ f\n"
-        "start http://xml.libexpat.org/ g\n"
-        "attribute http://xml.libexpat.org/ attr2\n"
-        "end http://xml.libexpat.org/ g\n"
-        "end http://xml.libexpat.org/ e\n";
+        "start http://example.org/ e\n"
+        "start http://example.org/ f\n"
+        "attribute http://example.org/ attr\n"
+        "end http://example.org/ f\n"
+        "start http://example.org/ g\n"
+        "attribute http://example.org/ attr2\n"
+        "end http://example.org/ g\n"
+        "end http://example.org/ e\n";
     run_ns_tagname_overwrite_test(text, result);
 }
 END_TEST
@@ -3742,19 +3742,19 @@ END_TEST
 START_TEST(test_ns_tagname_overwrite_triplet)
 {
     const char *text =
-        "<n:e xmlns:n='http://xml.libexpat.org/'>\n"
+        "<n:e xmlns:n='http://example.org/'>\n"
         "  <n:f n:attr='foo'/>\n"
         "  <n:g n:attr2='bar'/>\n"
         "</n:e>";
     const char *result =
-        "start http://xml.libexpat.org/ e n\n"
-        "start http://xml.libexpat.org/ f n\n"
-        "attribute http://xml.libexpat.org/ attr n\n"
-        "end http://xml.libexpat.org/ f n\n"
-        "start http://xml.libexpat.org/ g n\n"
-        "attribute http://xml.libexpat.org/ attr2 n\n"
-        "end http://xml.libexpat.org/ g n\n"
-        "end http://xml.libexpat.org/ e n\n";
+        "start http://example.org/ e n\n"
+        "start http://example.org/ f n\n"
+        "attribute http://example.org/ attr n\n"
+        "end http://example.org/ f n\n"
+        "start http://example.org/ g n\n"
+        "attribute http://example.org/ attr2 n\n"
+        "end http://example.org/ g n\n"
+        "end http://example.org/ e n\n";
     XML_SetReturnNSTriplet(parser, XML_TRUE);
     run_ns_tagname_overwrite_test(text, result);
 }
@@ -3784,7 +3784,7 @@ START_TEST(test_start_ns_clears_start_element)
        syntax doesn't cause the problematic path through Expat to be
        taken.
     */
-    const char *text = "<e xmlns='http://xml.libexpat.org/'></e>";
+    const char *text = "<e xmlns='http://example.org/'></e>";
 
     XML_SetStartElementHandler(parser, start_element_fail);
     XML_SetStartNamespaceDeclHandler(parser, start_ns_clearing_start_element);
@@ -3829,10 +3829,10 @@ START_TEST(test_default_ns_from_ext_subset_and_ext_ge)
 {
     const char *text =
         "<?xml version='1.0'?>\n"
-        "<!DOCTYPE doc SYSTEM 'http://xml.libexpat.org/doc.dtd' [\n"
-        "  <!ENTITY en SYSTEM 'http://xml.libexpat.org/entity.ent'>\n"
+        "<!DOCTYPE doc SYSTEM 'http://example.org/doc.dtd' [\n"
+        "  <!ENTITY en SYSTEM 'http://example.org/entity.ent'>\n"
         "]>\n"
-        "<doc xmlns='http://xml.libexpat.org/ns1'>\n"
+        "<doc xmlns='http://example.org/ns1'>\n"
         "&en;\n"
         "</doc>";
 
@@ -3850,7 +3850,7 @@ END_TEST
 START_TEST(test_ns_prefix_with_empty_uri_1)
 {
     const char *text =
-        "<doc xmlns:prefix='http://xml.libexpat.org/'>\n"
+        "<doc xmlns:prefix='http://example.org/'>\n"
         "  <e xmlns:prefix=''/>\n"
         "</doc>";
 
@@ -3898,14 +3898,14 @@ START_TEST(test_ns_prefix_with_empty_uri_4)
         "<!DOCTYPE doc [\n"
         "  <!ELEMENT prefix:doc EMPTY>\n"
         "  <!ATTLIST prefix:doc\n"
-        "    xmlns:prefix CDATA 'http://xml.libexpat.org/'>\n"
+        "    xmlns:prefix CDATA 'http://example.org/'>\n"
         "]>\n"
         "<prefix:doc/>";
     /* Packaged info expected by the end element handler;
        the weird structuring lets us re-use the triplet_end_checker()
        function also used for another test. */
     const char *elemstr[] = {
-        "http://xml.libexpat.org/ doc prefix"
+        "http://example.org/ doc prefix"
     };
     XML_SetReturnNSTriplet(parser, XML_TRUE);
     XML_SetUserData(parser, elemstr);
@@ -3922,7 +3922,7 @@ START_TEST(test_ns_unbound_prefix)
         "<!DOCTYPE doc [\n"
         "  <!ELEMENT prefix:doc EMPTY>\n"
         "  <!ATTLIST prefix:doc\n"
-        "    notxmlns:prefix CDATA 'http://example.com/'>\n"
+        "    notxmlns:prefix CDATA 'http://example.org/'>\n"
         "]>\n"
         "<prefix:doc/>";
 
@@ -3937,7 +3937,7 @@ END_TEST
 START_TEST(test_ns_default_with_empty_uri)
 {
     const char *text =
-        "<doc xmlns='http://xml.libexpat.org/'>\n"
+        "<doc xmlns='http://example.org/'>\n"
         "  <e xmlns=''/>\n"
         "</doc>";
     /* Add some handlers to exercise extra code paths */
@@ -3954,8 +3954,8 @@ END_TEST
 START_TEST(test_ns_duplicate_attrs_diff_prefixes)
 {
     const char *text =
-        "<doc xmlns:a='http://xml.libexpat.org/a'\n"
-        "     xmlns:b='http://xml.libexpat.org/a'\n"
+        "<doc xmlns:a='http://example.org/a'\n"
+        "     xmlns:b='http://example.org/a'\n"
         "     a:a='v' b:a='v' />";
     expect_failure(text,
                    XML_ERROR_DUPLICATE_ATTRIBUTE,
@@ -4037,13 +4037,13 @@ START_TEST(test_ns_long_element)
 {
     const char *text =
         "<foo:thisisalongenoughelementnametotriggerareallocation\n"
-        " xmlns:foo='http://expat.sf.net/' bar:a='12'\n"
-        " xmlns:bar='http://expat.sf.net/'>"
+        " xmlns:foo='http://example.org/' bar:a='12'\n"
+        " xmlns:bar='http://example.org/'>"
         "</foo:thisisalongenoughelementnametotriggerareallocation>";
     const char *elemstr[] = {
-        "http://expat.sf.net/"
+        "http://example.org/"
         " thisisalongenoughelementnametotriggerareallocation foo",
-        "http://expat.sf.net/ a bar"
+        "http://example.org/ a bar"
     };
 
     XML_SetReturnNSTriplet(parser, XML_TRUE);
@@ -4635,10 +4635,10 @@ START_TEST(test_alloc_dtd_copy_default_atts)
 {
     const char *text =
         "<?xml version='1.0'?>\n"
-        "<!DOCTYPE doc SYSTEM 'http://xml.libexpat.org/doc.dtd' [\n"
-        "  <!ENTITY en SYSTEM 'http://xml.libexpat.org/entity.ent'>\n"
+        "<!DOCTYPE doc SYSTEM 'http://example.org/doc.dtd' [\n"
+        "  <!ENTITY en SYSTEM 'http://example.org/entity.ent'>\n"
         "]>\n"
-        "<doc xmlns='http://xml.libexpat.org/ns1'>\n"
+        "<doc xmlns='http://example.org/ns1'>\n"
         "&en;\n"
         "</doc>";
 
@@ -4698,10 +4698,10 @@ START_TEST(test_alloc_external_entity)
 {
     const char *text =
         "<?xml version='1.0'?>\n"
-        "<!DOCTYPE doc SYSTEM 'http://xml.libexpat.org/doc.dtd' [\n"
-        "  <!ENTITY en SYSTEM 'http://xml.libexpat.org/entity.ent'>\n"
+        "<!DOCTYPE doc SYSTEM 'http://example.org/doc.dtd' [\n"
+        "  <!ENTITY en SYSTEM 'http://example.org/entity.ent'>\n"
         "]>\n"
-        "<doc xmlns='http://xml.libexpat.org/ns1'>\n"
+        "<doc xmlns='http://example.org/ns1'>\n"
         "&en;\n"
         "</doc>";
     int i;
@@ -4867,9 +4867,9 @@ START_TEST(test_alloc_dtd_default_handling)
 {
     const char *text =
         "<!DOCTYPE doc [\n"
-        "<!ENTITY e SYSTEM 'http://xml.libexpat.org/e'>\n"
-        "<!NOTATION n SYSTEM 'http://xml.libexpat.org/n'>\n"
-        "<!ENTITY e1 SYSTEM 'http://xml.libexpat.org/e' NDATA n>\n"
+        "<!ENTITY e SYSTEM 'http://example.org/e'>\n"
+        "<!NOTATION n SYSTEM 'http://example.org/n'>\n"
+        "<!ENTITY e1 SYSTEM 'http://example.org/e' NDATA n>\n"
         "<!ELEMENT doc (#PCDATA)>\n"
         "<!ATTLIST doc a CDATA #IMPLIED>\n"
         "<?pi in dtd?>\n"
@@ -5038,7 +5038,7 @@ START_TEST(test_alloc_ext_entity_realloc_buffer)
 {
     const char *text =
         "<!DOCTYPE doc [\n"
-        "  <!ENTITY en SYSTEM 'http://xml.libexpat.org/dummy.ent'>\n"
+        "  <!ENTITY en SYSTEM 'http://example.org/dummy.ent'>\n"
         "]>\n"
         "<doc>&en;</doc>";
     int i;
@@ -5137,7 +5137,7 @@ nsalloc_teardown(void)
 START_TEST(test_nsalloc_xmlns)
 {
     const char *text =
-        "<doc xmlns='http://xml.libexpat.org/'>\n"
+        "<doc xmlns='http://example.org/'>\n"
         "  <e xmlns=''/>\n"
         "</doc>";
     unsigned int i;
@@ -5270,7 +5270,7 @@ START_TEST(test_nsalloc_long_prefix)
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
-        "='http://example.com/'>"
+        "='http://example.org/'>"
         "</"
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
@@ -5327,7 +5327,7 @@ END_TEST
 START_TEST(test_nsalloc_long_uri)
 {
     const char *text =
-        "<foo:e xmlns:foo='http://example.com/"
+        "<foo:e xmlns:foo='http://example.org/"
         /* 64 characters per line */
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789A/"
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789A/"
@@ -5346,7 +5346,7 @@ START_TEST(test_nsalloc_long_uri)
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789A/"
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789A/"
         "' bar:a='12'\n"
-        "xmlns:bar='http://example.com/"
+        "xmlns:bar='http://example.org/"
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789A/"
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789A/"
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789A/"
@@ -5569,8 +5569,8 @@ END_TEST
 START_TEST(test_nsalloc_realloc_attributes)
 {
     const char *text =
-        "<foo:e xmlns:foo='http://expat.sf.net/' bar:a='12'\n"
-        "       xmlns:bar='http://expat.sf.net/'>"
+        "<foo:e xmlns:foo='http://example.org/' bar:a='12'\n"
+        "       xmlns:bar='http://example.org/'>"
         "</foo:e>";
     int i;
 #define MAX_REALLOC_COUNT 10
