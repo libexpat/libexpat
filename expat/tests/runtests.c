@@ -127,6 +127,23 @@ _expect_failure(const char *text, enum XML_Error errorCode, const char *errorMes
 /* Dummy handlers for when we need to set a handler to tickle a bug,
    but it doesn't need to do anything.
 */
+static unsigned long dummy_handler_flags = 0;
+
+#define DUMMY_START_DOCTYPE_HANDLER_FLAG        (1UL << 0)
+#define DUMMY_END_DOCTYPE_HANDLER_FLAG          (1UL << 1)
+#define DUMMY_ENTITY_DECL_HANDLER_FLAG          (1UL << 2)
+#define DUMMY_NOTATION_DECL_HANDLER_FLAG        (1UL << 3)
+#define DUMMY_ELEMENT_DECL_HANDLER_FLAG         (1UL << 4)
+#define DUMMY_ATTLIST_DECL_HANDLER_FLAG         (1UL << 5)
+#define DUMMY_COMMENT_HANDLER_FLAG              (1UL << 6)
+#define DUMMY_PI_HANDLER_FLAG                   (1UL << 7)
+#define DUMMY_START_ELEMENT_HANDLER_FLAG        (1UL << 8)
+#define DUMMY_START_CDATA_HANDLER_FLAG          (1UL << 9)
+#define DUMMY_END_CDATA_HANDLER_FLAG            (1UL << 10)
+#define DUMMY_UNPARSED_ENTITY_DECL_HANDLER_FLAG (1UL << 11)
+#define DUMMY_START_NS_DECL_HANDLER_FLAG        (1UL << 12)
+#define DUMMY_END_NS_DECL_HANDLER_FLAG          (1UL << 13)
+
 
 static void XMLCALL
 dummy_start_doctype_handler(void           *UNUSED_P(userData),
@@ -134,11 +151,15 @@ dummy_start_doctype_handler(void           *UNUSED_P(userData),
                             const XML_Char *UNUSED_P(sysid),
                             const XML_Char *UNUSED_P(pubid),
                             int            UNUSED_P(has_internal_subset))
-{}
+{
+    dummy_handler_flags |= DUMMY_START_DOCTYPE_HANDLER_FLAG;
+}
 
 static void XMLCALL
 dummy_end_doctype_handler(void *UNUSED_P(userData))
-{}
+{
+    dummy_handler_flags |= DUMMY_END_DOCTYPE_HANDLER_FLAG;
+}
 
 static void XMLCALL
 dummy_entity_decl_handler(void           *UNUSED_P(userData),
@@ -150,7 +171,9 @@ dummy_entity_decl_handler(void           *UNUSED_P(userData),
                           const XML_Char *UNUSED_P(systemId),
                           const XML_Char *UNUSED_P(publicId),
                           const XML_Char *UNUSED_P(notationName))
-{}
+{
+    dummy_handler_flags |= DUMMY_ENTITY_DECL_HANDLER_FLAG;
+}
 
 static void XMLCALL
 dummy_notation_decl_handler(void *UNUSED_P(userData),
@@ -158,7 +181,9 @@ dummy_notation_decl_handler(void *UNUSED_P(userData),
                             const XML_Char *UNUSED_P(base),
                             const XML_Char *UNUSED_P(systemId),
                             const XML_Char *UNUSED_P(publicId))
-{}
+{
+    dummy_handler_flags |= DUMMY_NOTATION_DECL_HANDLER_FLAG;
+}
 
 static void XMLCALL
 dummy_element_decl_handler(void *UNUSED_P(userData),
@@ -170,6 +195,7 @@ dummy_element_decl_handler(void *UNUSED_P(userData),
      * with other handlers that require other userData.
      */
     XML_FreeContentModel(parser, model);
+    dummy_handler_flags |= DUMMY_ELEMENT_DECL_HANDLER_FLAG;
 }
 
 static void XMLCALL
@@ -179,20 +205,28 @@ dummy_attlist_decl_handler(void           *UNUSED_P(userData),
                            const XML_Char *UNUSED_P(att_type),
                            const XML_Char *UNUSED_P(dflt),
                            int            UNUSED_P(isrequired))
-{}
+{
+    dummy_handler_flags |= DUMMY_ATTLIST_DECL_HANDLER_FLAG;
+}
 
 static void XMLCALL
 dummy_comment_handler(void *UNUSED_P(userData), const XML_Char *UNUSED_P(data))
-{}
+{
+    dummy_handler_flags |= DUMMY_COMMENT_HANDLER_FLAG;
+}
 
 static void XMLCALL
 dummy_pi_handler(void *UNUSED_P(userData), const XML_Char *UNUSED_P(target), const XML_Char *UNUSED_P(data))
-{}
+{
+    dummy_handler_flags |= DUMMY_PI_HANDLER_FLAG;
+}
 
 static void XMLCALL
 dummy_start_element(void *UNUSED_P(userData),
                     const XML_Char *UNUSED_P(name), const XML_Char **UNUSED_P(atts))
-{}
+{
+    dummy_handler_flags |= DUMMY_START_ELEMENT_HANDLER_FLAG;
+}
 
 static void XMLCALL
 dummy_end_element(void *UNUSED_P(userData), const XML_Char *UNUSED_P(name))
@@ -200,11 +234,15 @@ dummy_end_element(void *UNUSED_P(userData), const XML_Char *UNUSED_P(name))
 
 static void XMLCALL
 dummy_start_cdata_handler(void *UNUSED_P(userData))
-{}
+{
+    dummy_handler_flags |= DUMMY_START_CDATA_HANDLER_FLAG;
+}
 
 static void XMLCALL
 dummy_end_cdata_handler(void *UNUSED_P(userData))
-{}
+{
+    dummy_handler_flags |= DUMMY_END_CDATA_HANDLER_FLAG;
+}
 
 static void XMLCALL
 dummy_cdata_handler(void *UNUSED_P(userData),
@@ -216,12 +254,16 @@ static void XMLCALL
 dummy_start_namespace_decl_handler(void *UNUSED_P(userData),
                                    const XML_Char *UNUSED_P(prefix),
                                    const XML_Char *UNUSED_P(uri))
-{}
+{
+    dummy_handler_flags |= DUMMY_START_NS_DECL_HANDLER_FLAG;
+}
 
 static void XMLCALL
 dummy_end_namespace_decl_handler(void *UNUSED_P(userData),
                                  const XML_Char *UNUSED_P(prefix))
-{}
+{
+    dummy_handler_flags |= DUMMY_END_NS_DECL_HANDLER_FLAG;
+}
 
 /* This handler is obsolete, but while the code exists we should
  * ensure that dealing with the handler is covered by tests.
@@ -233,7 +275,9 @@ dummy_unparsed_entity_decl_handler(void *UNUSED_P(userData),
                                    const XML_Char *UNUSED_P(systemId),
                                    const XML_Char *UNUSED_P(publicId),
                                    const XML_Char *UNUSED_P(notationName))
-{}
+{
+    dummy_handler_flags |= DUMMY_UNPARSED_ENTITY_DECL_HANDLER_FLAG;
+}
 
 static void XMLCALL
 dummy_default_handler(void *UNUSED_P(userData),
@@ -3551,6 +3595,10 @@ START_TEST(test_return_ns_triplet)
                                 dummy_end_namespace_decl_handler);
     triplet_start_flag = XML_FALSE;
     triplet_end_flag = XML_FALSE;
+    XML_SetNamespaceDeclHandler(parser,
+                                dummy_start_namespace_decl_handler,
+                                dummy_end_namespace_decl_handler);
+    dummy_handler_flags = 0;
     if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
                                 XML_FALSE) == XML_STATUS_ERROR)
         xml_failure(parser);
@@ -3563,6 +3611,9 @@ START_TEST(test_return_ns_triplet)
         xml_failure(parser);
     if (!triplet_end_flag)
         fail("triplet_end_checker not invoked");
+    if (dummy_handler_flags != (DUMMY_START_NS_DECL_HANDLER_FLAG |
+                                DUMMY_END_NS_DECL_HANDLER_FLAG))
+        fail("Namespace handlers not called");
 }
 END_TEST
 
@@ -4722,24 +4773,30 @@ START_TEST(test_alloc_dtd_default_handling)
         "<!DOCTYPE doc [\n"
         "<!ENTITY e SYSTEM 'http://xml.libexpat.org/e'>\n"
         "<!NOTATION n SYSTEM 'http://xml.libexpat.org/n'>\n"
-        "<!ELEMENT doc EMPTY>\n"
+        "<!ENTITY e1 SYSTEM 'http://xml.libexpat.org/e' NDATA n>\n"
+        "<!ELEMENT doc (#PCDATA)>\n"
         "<!ATTLIST doc a CDATA #IMPLIED>\n"
         "<?pi in dtd?>\n"
         "<!--comment in dtd-->\n"
-        "]><doc/>";
-    const char *expected = "\n\n\n\n\n\n\n<doc/>";
+        "]>\n"
+        "<doc><![CDATA[text in doc]]></doc>";
+    const char *expected = "\n\n\n\n\n\n\n\n\n<doc>text in doc</doc>";
     CharData storage;
     int i;
+#define MAX_ALLOC_COUNT 15
     int repeat = 0;
 
-    for (i = 0; i < 10; i++) {
+    for (i = 0; i < MAX_ALLOC_COUNT; i++) {
         /* Repeat some counts to catch cached allocations */
         if ((repeat < 4 && i == 2) ||
-            (repeat == 4 && i == 3)) {
+            (repeat == 4 && i == 4) ||
+            (repeat == 5 && i == 5) ||
+            (repeat == 6 && i == 8)) {
             i--;
             repeat++;
         }
         allocation_count = i;
+        dummy_handler_flags = 0;
         XML_SetDefaultHandler(parser, accumulate_characters);
         XML_SetDoctypeDeclHandler(parser,
                                   dummy_start_doctype_handler,
@@ -4764,14 +4821,25 @@ START_TEST(test_alloc_dtd_default_handling)
             break;
         XML_ParserReset(parser, NULL);
     }
-    if (i == 0) {
+    if (i == 0)
         fail("Default DTD parsed despite allocation failures");
-    } else if (i == 10) {
-        fail("Default DTD not parsed with alloc count 10");
-    } else {
-        CharData_CheckXMLChars(&storage, expected);
-    }
+    if (i == MAX_ALLOC_COUNT)
+        fail("Default DTD not parsed with maximum alloc count");
+    CharData_CheckXMLChars(&storage, expected);
+    if (dummy_handler_flags != (DUMMY_START_DOCTYPE_HANDLER_FLAG |
+                                DUMMY_END_DOCTYPE_HANDLER_FLAG |
+                                DUMMY_ENTITY_DECL_HANDLER_FLAG |
+                                DUMMY_NOTATION_DECL_HANDLER_FLAG |
+                                DUMMY_ELEMENT_DECL_HANDLER_FLAG |
+                                DUMMY_ATTLIST_DECL_HANDLER_FLAG |
+                                DUMMY_COMMENT_HANDLER_FLAG |
+                                DUMMY_PI_HANDLER_FLAG |
+                                DUMMY_START_CDATA_HANDLER_FLAG |
+                                DUMMY_END_CDATA_HANDLER_FLAG |
+                                DUMMY_UNPARSED_ENTITY_DECL_HANDLER_FLAG))
+        fail("Not all handlers were called");
 }
+#undef MAX_ALLOC_COUNT
 END_TEST
 
 /* Test robustness of XML_SetEncoding() with a failing allocator */
