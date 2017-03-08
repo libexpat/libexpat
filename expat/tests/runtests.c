@@ -2394,6 +2394,32 @@ START_TEST(test_foreign_dtd_with_doctype)
 }
 END_TEST
 
+/* Test XML_UseForeignDTD with no external subset present */
+static int XMLCALL
+external_entity_null_loader(XML_Parser UNUSED_P(parser),
+                            const XML_Char *UNUSED_P(context),
+                            const XML_Char *UNUSED_P(base),
+                            const XML_Char *UNUSED_P(systemId),
+                            const XML_Char *UNUSED_P(publicId))
+{
+    return XML_STATUS_OK;
+}
+
+START_TEST(test_foreign_dtd_without_external_subset)
+{
+    const char *text =
+        "<!DOCTYPE doc [<!ENTITY foo 'bar'>]>\n"
+        "<doc>&foo;</doc>";
+
+    XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+    XML_SetUserData(parser, NULL);
+    XML_SetExternalEntityRefHandler(parser, external_entity_null_loader);
+    XML_UseForeignDTD(parser, XML_TRUE);
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+}
+END_TEST
 
 /* Test XML Base is set and unset appropriately */
 START_TEST(test_set_base)
@@ -5008,16 +5034,6 @@ START_TEST(test_alloc_create_external_parser)
 }
 END_TEST
 
-static int XMLCALL
-external_entity_null_loader(XML_Parser UNUSED_P(parser),
-                            const XML_Char *UNUSED_P(context),
-                            const XML_Char *UNUSED_P(base),
-                            const XML_Char *UNUSED_P(systemId),
-                            const XML_Char *UNUSED_P(publicId))
-{
-    return XML_STATUS_OK;
-}
-
 /* More external parser memory allocation testing */
 START_TEST(test_alloc_run_external_parser)
 {
@@ -6381,6 +6397,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_set_foreign_dtd);
     tcase_add_test(tc_basic, test_invalid_foreign_dtd);
     tcase_add_test(tc_basic, test_foreign_dtd_with_doctype);
+    tcase_add_test(tc_basic, test_foreign_dtd_without_external_subset);
     tcase_add_test(tc_basic, test_set_base);
     tcase_add_test(tc_basic, test_attributes);
     tcase_add_test(tc_basic, test_reset_in_entity);
