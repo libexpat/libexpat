@@ -5847,6 +5847,53 @@ START_TEST(test_alloc_set_foreign_dtd)
 #undef MAX_ALLOC_COUNT
 END_TEST
 
+/* Test based on ibm/valid/P32/ibm32v04.xml */
+START_TEST(test_alloc_attribute_enum_value)
+{
+    const char *text =
+        "<?xml version='1.0' standalone='no'?>\n"
+        "<!DOCTYPE animal SYSTEM 'test.dtd'>\n"
+        "<animal>This is a \n    <a/>  \n\nyellow tiger</animal>";
+    char dtd_text[] =
+        "<!ELEMENT animal (#PCDATA|a)*>\n"
+        "<!ELEMENT a EMPTY>\n"
+        "<!ATTLIST animal xml:space (default|preserve) 'preserve'>";
+    int i;
+#define MAX_ALLOC_COUNT 20
+    int repeat = 0;
+
+    for (i = 0; i < MAX_ALLOC_COUNT; i++) {
+        /* Repeat some counts to allow for cached allocations */
+        if (i == 13 && repeat == 5) {
+            i -= 2;
+            repeat++;
+        }
+        else if ((i == 2 && repeat < 2) ||
+                 (i == 3 && repeat == 2) ||
+                 (i == 8 && repeat == 3) ||
+                 (i == 9 && repeat == 4)) {
+            i--;
+            repeat++;
+        }
+        allocation_count = i;
+        XML_SetExternalEntityRefHandler(parser, external_entity_alloc);
+        XML_SetUserData(parser, dtd_text);
+        XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+        /* An attribute list handler provokes a different code path */
+        XML_SetAttlistDeclHandler(parser, dummy_attlist_decl_handler);
+        if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                    XML_TRUE) != XML_STATUS_ERROR)
+            break;
+        XML_ParserReset(parser, NULL);
+    }
+    if (i == 0)
+        fail("Parse succeeded despite failing allocator");
+    if (i == MAX_ALLOC_COUNT)
+        fail("Parse failed at maximum allocation count");
+}
+#undef MAX_ALLOC_COUNT
+END_TEST
+
 static void
 nsalloc_setup(void)
 {
@@ -6608,6 +6655,7 @@ make_suite(void)
     tcase_add_test(tc_alloc, test_alloc_public_entity_value);
     tcase_add_test(tc_alloc, test_alloc_parse_public_doctype);
     tcase_add_test(tc_alloc, test_alloc_set_foreign_dtd);
+    tcase_add_test(tc_alloc, test_alloc_attribute_enum_value);
 
     suite_add_tcase(s, tc_nsalloc);
     tcase_add_checked_fixture(tc_nsalloc, nsalloc_setup, nsalloc_teardown);
