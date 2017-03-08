@@ -2350,6 +2350,51 @@ START_TEST(test_invalid_foreign_dtd)
 }
 END_TEST
 
+/* Test foreign DTD use with a doctype */
+START_TEST(test_foreign_dtd_with_doctype)
+{
+    const char *text1 =
+        "<?xml version='1.0' encoding='us-ascii'?>\n"
+        "<!DOCTYPE doc [<!ENTITY entity 'hello world'>]>\n";
+    const char *text2 =
+        "<doc>&entity;</doc>";
+    ExtTest test_data = {
+        "<!ELEMENT doc (#PCDATA)*>",
+        NULL,
+        NULL
+    };
+
+    /* Check hash salt is passed through too */
+    XML_SetHashSalt(parser, 0x12345678);
+    XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+    XML_SetUserData(parser, &test_data);
+    XML_SetExternalEntityRefHandler(parser, external_entity_loader);
+    /* Add a default handler to exercise more code paths */
+    XML_SetDefaultHandler(parser, dummy_default_handler);
+    if (XML_UseForeignDTD(parser, XML_TRUE) != XML_ERROR_NONE)
+        fail("Could not set foreign DTD");
+    if (_XML_Parse_SINGLE_BYTES(parser, text1, strlen(text1),
+                                XML_FALSE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+
+    /* Ensure that trying to set the DTD after parsing has started
+     * is faulted, even if it's the same setting.
+     */
+    if (XML_UseForeignDTD(parser, XML_TRUE) !=
+        XML_ERROR_CANT_CHANGE_FEATURE_ONCE_PARSING)
+        fail("Failed to reject late foreign DTD setting");
+    /* Ditto for the hash salt */
+    if (XML_SetHashSalt(parser, 0x23456789))
+        fail("Failed to reject late hash salt change");
+
+    /* Now finish the parse */
+    if (_XML_Parse_SINGLE_BYTES(parser, text2, strlen(text2),
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+}
+END_TEST
+
+
 /* Test XML Base is set and unset appropriately */
 START_TEST(test_set_base)
 {
@@ -6335,6 +6380,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_dtd_elements);
     tcase_add_test(tc_basic, test_set_foreign_dtd);
     tcase_add_test(tc_basic, test_invalid_foreign_dtd);
+    tcase_add_test(tc_basic, test_foreign_dtd_with_doctype);
     tcase_add_test(tc_basic, test_set_base);
     tcase_add_test(tc_basic, test_attributes);
     tcase_add_test(tc_basic, test_reset_in_entity);
