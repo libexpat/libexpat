@@ -123,10 +123,10 @@ AC_DEFUN([AC_CPP_FUNC],
 [AC_REQUIRE([AC_PROG_CC_STDC])dnl
 AC_CACHE_CHECK([for an ANSI C99-conforming __func__], ac_cv_cpp_func,
 [AC_COMPILE_IFELSE([AC_LANG_PROGRAM([],
-[[char *foo = __func__;]])],
+[[const char *foo = __func__;]])],
   [ac_cv_cpp_func=yes], 
   [AC_COMPILE_IFELSE([AC_LANG_PROGRAM([],
-[[char *foo = __FUNCTION__;]])],
+[[const char *foo = __FUNCTION__;]])],
   [ac_cv_cpp_func=__FUNCTION__], 
   [ac_cv_cpp_func=no])])])
 if test $ac_cv_cpp_func = __FUNCTION__; then
