@@ -2327,6 +2327,29 @@ START_TEST(test_set_foreign_dtd)
 }
 END_TEST
 
+/* Test foreign DTD handling with a failing NotStandalone handler */
+START_TEST(test_foreign_dtd_not_standalone)
+{
+    const char *text =
+        "<?xml version='1.0' encoding='us-ascii'?>\n"
+        "<doc>&entity;</doc>";
+    ExtTest test_data = {
+        "<!ELEMENT doc (#PCDATA)*>",
+        NULL,
+        NULL
+    };
+
+    XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+    XML_SetUserData(parser, &test_data);
+    XML_SetExternalEntityRefHandler(parser, external_entity_loader);
+    XML_SetNotStandaloneHandler(parser, reject_not_standalone_handler);
+    if (XML_UseForeignDTD(parser, XML_TRUE) != XML_ERROR_NONE)
+        fail("Could not set foreign DTD");
+    expect_failure(text, XML_ERROR_NOT_STANDALONE,
+                   "NotStandalonehandler failed to reject");
+}
+END_TEST
+
 /* Test invalid character in a foreign DTD is faulted */
 START_TEST(test_invalid_foreign_dtd)
 {
@@ -6450,6 +6473,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_default_current);
     tcase_add_test(tc_basic, test_dtd_elements);
     tcase_add_test(tc_basic, test_set_foreign_dtd);
+    tcase_add_test(tc_basic, test_foreign_dtd_not_standalone);
     tcase_add_test(tc_basic, test_invalid_foreign_dtd);
     tcase_add_test(tc_basic, test_foreign_dtd_with_doctype);
     tcase_add_test(tc_basic, test_foreign_dtd_without_external_subset);
