@@ -5894,6 +5894,64 @@ START_TEST(test_alloc_attribute_enum_value)
 #undef MAX_ALLOC_COUNT
 END_TEST
 
+/* Test attribute enums sufficient to overflow the string pool */
+START_TEST(test_alloc_realloc_attribute_enum_value)
+{
+    const char *text =
+        "<?xml version='1.0' standalone='no'?>\n"
+        "<!DOCTYPE animal SYSTEM 'test.dtd'>\n"
+        "<animal>This is a yellow tiger</animal>";
+    /* We wish to define a collection of attribute enums that will
+     * cause the string pool storing them to have to expand.  This
+     * means more than 1024 bytes, including the parentheses and
+     * separator bars.
+     */
+    char dtd_text[] =
+        "<!ELEMENT animal (#PCDATA)*>\n"
+        "<!ATTLIST animal thing "
+        "(default"
+        /* Each line is 64 characters */
+        "|ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNO"
+        "|BBCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNO"
+        "|CBCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNO"
+        "|DBCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNO"
+        "|EBCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNO"
+        "|FBCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNO"
+        "|GBCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNO"
+        "|HBCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNO"
+        "|IBCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNO"
+        "|JBCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNO"
+        "|KBCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNO"
+        "|LBCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNO"
+        "|MBCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNO"
+        "|NBCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNO"
+        "|OBCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNO"
+        "|PBCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNO)"
+        " 'default'>";
+    int i;
+#define MAX_REALLOC_COUNT 10
+
+    for (i = 0; i < MAX_REALLOC_COUNT; i++) {
+        reallocation_count = i;
+        XML_SetExternalEntityRefHandler(parser, external_entity_alloc);
+        XML_SetUserData(parser, dtd_text);
+        XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+        /* An attribute list handler provokes a different code path */
+        XML_SetAttlistDeclHandler(parser, dummy_attlist_decl_handler);
+        if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                    XML_TRUE) != XML_STATUS_ERROR)
+            break;
+        XML_ParserReset(parser, NULL);
+    }
+    if (i == 0)
+        fail("Parse succeeded despite failing reallocator");
+    if (i == MAX_REALLOC_COUNT)
+        fail("Parse failed at maximum reallocation count");
+}
+#undef MAX_REALLOC_COUNT
+END_TEST
+
+
 static void
 nsalloc_setup(void)
 {
@@ -6656,6 +6714,7 @@ make_suite(void)
     tcase_add_test(tc_alloc, test_alloc_parse_public_doctype);
     tcase_add_test(tc_alloc, test_alloc_set_foreign_dtd);
     tcase_add_test(tc_alloc, test_alloc_attribute_enum_value);
+    tcase_add_test(tc_alloc, test_alloc_realloc_attribute_enum_value);
 
     suite_add_tcase(s, tc_nsalloc);
     tcase_add_checked_fixture(tc_nsalloc, nsalloc_setup, nsalloc_teardown);
