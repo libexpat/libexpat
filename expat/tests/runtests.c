@@ -2444,6 +2444,20 @@ START_TEST(test_foreign_dtd_without_external_subset)
 }
 END_TEST
 
+START_TEST(test_empty_foreign_dtd)
+{
+    const char *text =
+        "<?xml version='1.0' encoding='us-ascii'?>\n"
+        "<doc>&entity;</doc>";
+
+    XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+    XML_SetExternalEntityRefHandler(parser, external_entity_null_loader);
+    XML_UseForeignDTD(parser, XML_TRUE);
+    expect_failure(text, XML_ERROR_UNDEFINED_ENTITY,
+                   "Undefined entity not faulted");
+}
+END_TEST
+
 /* Test XML Base is set and unset appropriately */
 START_TEST(test_set_base)
 {
@@ -6477,6 +6491,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_invalid_foreign_dtd);
     tcase_add_test(tc_basic, test_foreign_dtd_with_doctype);
     tcase_add_test(tc_basic, test_foreign_dtd_without_external_subset);
+    tcase_add_test(tc_basic, test_empty_foreign_dtd);
     tcase_add_test(tc_basic, test_set_base);
     tcase_add_test(tc_basic, test_attributes);
     tcase_add_test(tc_basic, test_reset_in_entity);
