@@ -5729,6 +5729,61 @@ START_TEST(test_alloc_parse_public_doctype)
 #undef MAX_ALLOC_COUNT
 END_TEST
 
+static int XMLCALL
+external_entity_alloc(XML_Parser parser,
+                      const XML_Char *context,
+                      const XML_Char *UNUSED_P(base),
+                      const XML_Char *UNUSED_P(systemId),
+                      const XML_Char *UNUSED_P(publicId))
+{
+    const char *text = (const char *)XML_GetUserData(parser);
+    XML_Parser ext_parser;
+
+    ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
+    if (ext_parser == NULL)
+        return XML_STATUS_ERROR;
+    return _XML_Parse_SINGLE_BYTES(ext_parser, text, strlen(text), XML_TRUE);
+}
+
+/* Test foreign DTD handling */
+START_TEST(test_alloc_set_foreign_dtd)
+{
+    const char *text1 =
+        "<?xml version='1.0' encoding='us-ascii'?>\n"
+        "<doc>&entity;</doc>";
+    char text2[] = "<!ELEMENT doc (#PCDATA)*>";
+    int i;
+#define MAX_ALLOC_COUNT 10
+    int repeat = 0;
+
+    for (i = 0; i < MAX_ALLOC_COUNT; i++) {
+        /* Repeat some counts to deal with cached allocations */
+        if (i == 9 && repeat == 2) {
+            i -= 2;
+            repeat++;
+        }
+        else if (i == 2 && repeat < 2) {
+            i--;
+            repeat++;
+        }
+        allocation_count = i;
+        XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+        XML_SetUserData(parser, &text2);
+        XML_SetExternalEntityRefHandler(parser, external_entity_alloc);
+        if (XML_UseForeignDTD(parser, XML_TRUE) != XML_ERROR_NONE)
+            fail("Could not set foreign DTD");
+        if (_XML_Parse_SINGLE_BYTES(parser, text1, strlen(text1),
+                                    XML_TRUE) != XML_STATUS_ERROR)
+            break;
+        XML_ParserReset(parser, NULL);
+    }
+    if (i == 0)
+        fail("Parse succeeded despite failing allocator");
+    if (i == MAX_ALLOC_COUNT)
+        fail("Parse failed at maximum allocation count");
+}
+#undef MAX_ALLOC_COUNT
+END_TEST
 
 static void
 nsalloc_setup(void)
@@ -6487,6 +6542,7 @@ make_suite(void)
     tcase_add_test(tc_alloc, test_alloc_realloc_many_attributes);
     tcase_add_test(tc_alloc, test_alloc_public_entity_value);
     tcase_add_test(tc_alloc, test_alloc_parse_public_doctype);
+    tcase_add_test(tc_alloc, test_alloc_set_foreign_dtd);
 
     suite_add_tcase(s, tc_nsalloc);
     tcase_add_checked_fixture(tc_nsalloc, nsalloc_setup, nsalloc_teardown);
