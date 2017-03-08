@@ -4014,6 +4014,31 @@ START_TEST(test_bad_public_doctype)
 }
 END_TEST
 
+/* Test based on ibm/valid/P32/ibm32v04.xml */
+START_TEST(test_attribute_enum_value)
+{
+    const char *text =
+        "<?xml version='1.0' standalone='no'?>\n"
+        "<!DOCTYPE animal SYSTEM 'test.dtd'>\n"
+        "<animal>This is a \n    <a/>  \n\nyellow tiger</animal>";
+    ExtTest dtd_data = {
+        "<!ELEMENT animal (#PCDATA|a)*>\n"
+        "<!ELEMENT a EMPTY>\n"
+        "<!ATTLIST animal xml:space (default|preserve) 'preserve'>",
+        NULL,
+        NULL
+    };
+
+    XML_SetExternalEntityRefHandler(parser, external_entity_loader);
+    XML_SetUserData(parser, &dtd_data);
+    XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+    /* An attribute list handler provokes a different code path */
+    XML_SetAttlistDeclHandler(parser, dummy_attlist_decl_handler);
+    run_ext_character_check(text, &dtd_data,
+                            "This is a \n      \n\nyellow tiger");
+}
+END_TEST
+
 /*
  * Namespaces tests.
  */
@@ -6523,6 +6548,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_external_entity_values);
     tcase_add_test(tc_basic, test_ext_entity_value_abort);
     tcase_add_test(tc_basic, test_bad_public_doctype);
+    tcase_add_test(tc_basic, test_attribute_enum_value);
 
     suite_add_tcase(s, tc_namespace);
     tcase_add_checked_fixture(tc_namespace,
