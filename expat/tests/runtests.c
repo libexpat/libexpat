@@ -1470,6 +1470,12 @@ START_TEST(test_not_standalone_handler_reject)
     XML_SetNotStandaloneHandler(parser, reject_not_standalone_handler);
     expect_failure(text, XML_ERROR_NOT_STANDALONE,
                    "NotStandalone handler failed to reject");
+
+    /* Try again but without external entity handling */
+    XML_ParserReset(parser, NULL);
+    XML_SetNotStandaloneHandler(parser, reject_not_standalone_handler);
+    expect_failure(text, XML_ERROR_NOT_STANDALONE,
+                   "NotStandalone handler failed to reject");
 }
 END_TEST
 
@@ -1496,6 +1502,11 @@ START_TEST(test_not_standalone_handler_accept)
     XML_SetExternalEntityRefHandler(parser, external_entity_loader);
     XML_SetNotStandaloneHandler(parser, accept_not_standalone_handler);
     run_ext_character_check(text, &test_data, "");
+
+    /* Repeat wtihout the external entity handler */
+    XML_ParserReset(parser, NULL);
+    XML_SetNotStandaloneHandler(parser, accept_not_standalone_handler);
+    run_character_check(text, "");
 }
 END_TEST
 
