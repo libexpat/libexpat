@@ -6038,6 +6038,55 @@ START_TEST(test_alloc_realloc_attribute_enum_value)
 #undef MAX_REALLOC_COUNT
 END_TEST
 
+/* Test attribute enums in a #IMPLIED attribute forcing pool growth */
+START_TEST(test_alloc_realloc_implied_attribute)
+{
+    /* Forcing this particular code path is a balancing act.  The
+     * addition of the closing parenthesis and terminal NUL must be
+     * what pushes the string of enums over the 1024-byte limit,
+     * otherwise a different code path will pick up the realloc.
+     */
+    const char *text =
+        "<!DOCTYPE doc [\n"
+        "<!ELEMENT doc EMPTY>\n"
+        "<!ATTLIST doc a "
+        /* Each line is 64 characters */
+        "(ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNO"
+        "|BBCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNO"
+        "|CBCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNO"
+        "|DBCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNO"
+        "|EBCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNO"
+        "|FBCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNO"
+        "|GBCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNO"
+        "|HBCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNO"
+        "|IBCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNO"
+        "|JBCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNO"
+        "|KBCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNO"
+        "|LBCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNO"
+        "|MBCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNO"
+        "|NBCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNO"
+        "|OBCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNO"
+        "|PBCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMN)"
+        " #IMPLIED>\n"
+        "]><doc/>";
+    int i;
+#define MAX_REALLOC_COUNT 10
+    for (i = 0; i < MAX_REALLOC_COUNT; i++) {
+        reallocation_count = i;
+        XML_SetAttlistDeclHandler(parser, dummy_attlist_decl_handler);
+        if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                    XML_TRUE) != XML_STATUS_ERROR)
+            break;
+        XML_ParserReset(parser, NULL);
+    }
+    if (i == 0)
+        fail("Parse succeeded despite failing reallocator");
+    if (i == MAX_REALLOC_COUNT)
+        fail("Parse failed at maximum reallocation count");
+}
+#undef MAX_REALLOC_COUNT
+END_TEST
+
 
 static void
 nsalloc_setup(void)
@@ -6803,6 +6852,7 @@ make_suite(void)
     tcase_add_test(tc_alloc, test_alloc_set_foreign_dtd);
     tcase_add_test(tc_alloc, test_alloc_attribute_enum_value);
     tcase_add_test(tc_alloc, test_alloc_realloc_attribute_enum_value);
+    tcase_add_test(tc_alloc, test_alloc_realloc_implied_attribute);
 
     suite_add_tcase(s, tc_nsalloc);
     tcase_add_checked_fixture(tc_nsalloc, nsalloc_setup, nsalloc_teardown);
