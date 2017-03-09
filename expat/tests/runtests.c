@@ -1585,6 +1585,69 @@ START_TEST(test_dtd_default_handling)
 }
 END_TEST
 
+/* Test handling of attribute declarations */
+typedef struct AttTest {
+    const XML_Char *definition;
+    const XML_Char *element_name;
+    const XML_Char *attr_name;
+    const XML_Char *attr_type;
+    const XML_Char *default_value;
+    int is_required;
+} AttTest;
+
+static void XMLCALL
+verify_attlist_decl_handler(void *userData,
+                            const XML_Char *element_name,
+                            const XML_Char *attr_name,
+                            const XML_Char *attr_type,
+                            const XML_Char *default_value,
+                            int is_required)
+{
+    AttTest *at = (AttTest *)userData;
+
+    if (strcmp(element_name, at->element_name))
+        fail("Unexpected element name in attribute declaration");
+    if (strcmp(attr_name, at->attr_name))
+        fail("Unexpected attribute name in attribute declaration");
+    if (strcmp(attr_type, at->attr_type))
+        fail("Unexpected attribute type in attribute declaration");
+    if ((default_value == NULL && at->default_value != NULL) ||
+        (default_value != NULL && at->default_value == NULL) ||
+        (default_value != NULL && strcmp(default_value, at->default_value)))
+        fail("Unexpected default value in attribute declaration");
+    if (is_required != at->is_required)
+        fail("Requirement mismatch in attribute declaration");
+}
+
+START_TEST(test_dtd_attr_handling)
+{
+    const char *prolog =
+        "<!DOCTYPE doc [\n"
+        "<!ELEMENT doc EMPTY>\n";
+    AttTest attr_data = {
+        "<!ATTLIST doc a ( one | two | three ) #REQUIRED>\n"
+        "]>"
+        "<doc a='two'/>",
+        "doc",
+        "a",
+        "(one|two|three)", /* Extraneous spaces will be removed */
+        NULL,
+        XML_TRUE
+    };
+
+    XML_SetAttlistDeclHandler(parser, verify_attlist_decl_handler);
+    XML_SetUserData(parser, &attr_data);
+    if (_XML_Parse_SINGLE_BYTES(parser, prolog, strlen(prolog),
+                                XML_FALSE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+    if (_XML_Parse_SINGLE_BYTES(parser,
+                                attr_data.definition,
+                                strlen(attr_data.definition),
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+}
+END_TEST
+
 /* See related SF bug #673791.
    When namespace processing is enabled, setting the namespace URI for
    a prefix is not allowed; this test ensures that it *is* allowed
@@ -6606,6 +6669,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_ext_entity_invalid_parse);
     tcase_add_test(tc_basic, test_ext_entity_invalid_suspended_parse);
     tcase_add_test(tc_basic, test_dtd_default_handling);
+    tcase_add_test(tc_basic, test_dtd_attr_handling);
     tcase_add_test(tc_basic, test_empty_ns_without_namespaces);
     tcase_add_test(tc_basic, test_ns_in_attribute_default_without_namespaces);
     tcase_add_test(tc_basic, test_stop_parser_between_char_data_calls);
