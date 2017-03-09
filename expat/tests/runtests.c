@@ -1624,27 +1624,45 @@ START_TEST(test_dtd_attr_handling)
     const char *prolog =
         "<!DOCTYPE doc [\n"
         "<!ELEMENT doc EMPTY>\n";
-    AttTest attr_data = {
-        "<!ATTLIST doc a ( one | two | three ) #REQUIRED>\n"
-        "]>"
-        "<doc a='two'/>",
-        "doc",
-        "a",
-        "(one|two|three)", /* Extraneous spaces will be removed */
-        NULL,
-        XML_TRUE
+    AttTest attr_data[] = {
+        {
+            "<!ATTLIST doc a ( one | two | three ) #REQUIRED>\n"
+            "]>"
+            "<doc a='two'/>",
+            "doc",
+            "a",
+            "(one|two|three)", /* Extraneous spaces will be removed */
+            NULL,
+            XML_TRUE
+        },
+        {
+            "<!NOTATION foo SYSTEM 'http://example.org/foo'>\n"
+            "<!ATTLIST doc a NOTATION (foo) #IMPLIED>\n"
+            "]>"
+            "<doc/>",
+            "doc",
+            "a",
+            "NOTATION(foo)",
+            NULL,
+            XML_FALSE
+        },
+        { NULL, NULL, NULL, NULL, NULL, XML_FALSE }
     };
+    AttTest *test;
 
-    XML_SetAttlistDeclHandler(parser, verify_attlist_decl_handler);
-    XML_SetUserData(parser, &attr_data);
-    if (_XML_Parse_SINGLE_BYTES(parser, prolog, strlen(prolog),
-                                XML_FALSE) == XML_STATUS_ERROR)
-        xml_failure(parser);
-    if (_XML_Parse_SINGLE_BYTES(parser,
-                                attr_data.definition,
-                                strlen(attr_data.definition),
-                                XML_TRUE) == XML_STATUS_ERROR)
-        xml_failure(parser);
+    for (test = attr_data; test->definition != NULL; test++) {
+        XML_SetAttlistDeclHandler(parser, verify_attlist_decl_handler);
+        XML_SetUserData(parser, test);
+        if (_XML_Parse_SINGLE_BYTES(parser, prolog, strlen(prolog),
+                                    XML_FALSE) == XML_STATUS_ERROR)
+            xml_failure(parser);
+        if (_XML_Parse_SINGLE_BYTES(parser,
+                                    test->definition,
+                                    strlen(test->definition),
+                                    XML_TRUE) == XML_STATUS_ERROR)
+            xml_failure(parser);
+        XML_ParserReset(parser, NULL);
+    }
 }
 END_TEST
 
