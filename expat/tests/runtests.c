@@ -4143,6 +4143,22 @@ START_TEST(test_attribute_enum_value)
 }
 END_TEST
 
+/* Slightly bizarrely, the library seems to silently ignore entity
+ * definitions for predefined entities, even when they are wrong.  The
+ * language of the XML 1.0 spec is somewhat unhelpful as to what ought
+ * to happen, so this is currently treated as acceptable.
+ */
+START_TEST(test_predefined_entity_redefinition)
+{
+    const char *text =
+        "<!DOCTYPE doc [\n"
+        "<!ENTITY apos 'foo'>\n"
+        "]>\n"
+        "<doc>&apos;</doc>";
+    run_character_check(text, "'");
+}
+END_TEST
+
 /*
  * Namespaces tests.
  */
@@ -6990,6 +7006,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_ext_entity_value_abort);
     tcase_add_test(tc_basic, test_bad_public_doctype);
     tcase_add_test(tc_basic, test_attribute_enum_value);
+    tcase_add_test(tc_basic, test_predefined_entity_redefinition);
 
     suite_add_tcase(s, tc_namespace);
     tcase_add_checked_fixture(tc_namespace,
