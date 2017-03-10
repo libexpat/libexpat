@@ -4180,6 +4180,25 @@ START_TEST(test_dtd_stop_processing)
 }
 END_TEST
 
+/* Test public notations with no system ID */
+START_TEST(test_public_notation_no_sysid)
+{
+    const char *text =
+        "<!DOCTYPE doc [\n"
+        "<!NOTATION note PUBLIC 'foo'>\n"
+        "<!ELEMENT doc EMPTY>\n"
+        "]>\n<doc/>";
+
+    dummy_handler_flags = 0;
+    XML_SetNotationDeclHandler(parser, dummy_notation_decl_handler);
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+    if (dummy_handler_flags != DUMMY_NOTATION_DECL_HANDLER_FLAG)
+        fail("Notation declaration handler not called");
+}
+END_TEST
+
 
 /*
  * Namespaces tests.
@@ -7163,6 +7182,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_attribute_enum_value);
     tcase_add_test(tc_basic, test_predefined_entity_redefinition);
     tcase_add_test(tc_basic, test_dtd_stop_processing);
+    tcase_add_test(tc_basic, test_public_notation_no_sysid);
 
     suite_add_tcase(s, tc_namespace);
     tcase_add_checked_fixture(tc_namespace,
