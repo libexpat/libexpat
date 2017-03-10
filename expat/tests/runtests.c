@@ -6401,6 +6401,62 @@ START_TEST(test_alloc_public_notation)
 #undef MAX_ALLOC_COUNT
 END_TEST
 
+/* Test public notation with dodgy allocator */
+START_TEST(test_alloc_system_notation)
+{
+    const char *text =
+        "<!DOCTYPE doc [\n"
+        "<!NOTATION note SYSTEM '"
+        /* 64 characters per line */
+        "http://example.com/a/long/enough/name/to/trigger/pool/growth/zz/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "'>\n"
+        "<!ENTITY e SYSTEM 'http://example.com/e' NDATA note>\n"
+        "<!ELEMENT doc EMPTY>\n"
+        "]>\n<doc/>";
+    int i;
+#define MAX_ALLOC_COUNT 10
+    int repeat = 0;
+
+    for (i = 0; i < MAX_ALLOC_COUNT; i++) {
+        /* Repeat some counts to allow for cached allocations */
+        if ((i == 2 && repeat < 5) ||
+            (i == 3 && repeat == 5)) {
+            i--;
+            repeat++;
+        }
+        allocation_count = i;
+        dummy_handler_flags = 0;
+        XML_SetNotationDeclHandler(parser, dummy_notation_decl_handler);
+        if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                    XML_TRUE) != XML_STATUS_ERROR)
+            break;
+        XML_ParserReset(parser, NULL);
+    }
+    if (i == 0)
+        fail("Parse succeeded despite allocation failures");
+    if (i == MAX_ALLOC_COUNT)
+        fail("Parse failed at maximum allocation count");
+    if (dummy_handler_flags != DUMMY_NOTATION_DECL_HANDLER_FLAG)
+        fail("Notation handler not called");
+}
+#undef MAX_ALLOC_COUNT
+END_TEST
+
 
 static void
 nsalloc_setup(void)
@@ -7173,6 +7229,7 @@ make_suite(void)
     tcase_add_test(tc_alloc, test_alloc_realloc_default_attribute);
     tcase_add_test(tc_alloc, test_alloc_notation);
     tcase_add_test(tc_alloc, test_alloc_public_notation);
+    tcase_add_test(tc_alloc, test_alloc_system_notation);
 
     suite_add_tcase(s, tc_nsalloc);
     tcase_add_checked_fixture(tc_nsalloc, nsalloc_setup, nsalloc_teardown);
