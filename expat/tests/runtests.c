@@ -4199,6 +4199,37 @@ START_TEST(test_public_notation_no_sysid)
 }
 END_TEST
 
+static void XMLCALL
+record_element_start_handler(void *userData,
+                             const XML_Char *name,
+                             const XML_Char **UNUSED_P(atts))
+{
+    CharData_AppendString((CharData *)userData, name);
+}
+
+START_TEST(test_nested_groups)
+{
+    const char *text =
+        "<!DOCTYPE doc [\n"
+        "<!ELEMENT doc "
+        /* Sixteen elements per line */
+        "(e,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,"
+        "(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?"
+        "))))))))))))))))))))))))))))))))>\n"
+        "<!ELEMENT e EMPTY>"
+        "]>\n"
+        "<doc><e/></doc>";
+    CharData storage;
+
+    CharData_Init(&storage);
+    XML_SetStartElementHandler(parser, record_element_start_handler);
+    XML_SetUserData(parser, &storage);
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+    CharData_CheckString(&storage, "doce");
+}
+END_TEST
 
 /*
  * Namespaces tests.
@@ -7183,6 +7214,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_predefined_entity_redefinition);
     tcase_add_test(tc_basic, test_dtd_stop_processing);
     tcase_add_test(tc_basic, test_public_notation_no_sysid);
+    tcase_add_test(tc_basic, test_nested_groups);
 
     suite_add_tcase(s, tc_namespace);
     tcase_add_checked_fixture(tc_namespace,
