@@ -4159,6 +4159,28 @@ START_TEST(test_predefined_entity_redefinition)
 }
 END_TEST
 
+/* Test that the parser stops processing the DTD after an unresolved
+ * parameter entity is encountered.
+ */
+START_TEST(test_dtd_stop_processing)
+{
+    const char *text =
+        "<!DOCTYPE doc [\n"
+        "%foo;\n"
+        "<!ENTITY bar 'bas'>\n"
+        "]><doc/>";
+
+    XML_SetEntityDeclHandler(parser, dummy_entity_decl_handler);
+    dummy_handler_flags = 0;
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+    if (dummy_handler_flags != 0)
+        fail("DTD processing still going after undefined PE");
+}
+END_TEST
+
+
 /*
  * Namespaces tests.
  */
@@ -7007,6 +7029,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_bad_public_doctype);
     tcase_add_test(tc_basic, test_attribute_enum_value);
     tcase_add_test(tc_basic, test_predefined_entity_redefinition);
+    tcase_add_test(tc_basic, test_dtd_stop_processing);
 
     suite_add_tcase(s, tc_namespace);
     tcase_add_checked_fixture(tc_namespace,
