@@ -4222,12 +4222,16 @@ START_TEST(test_nested_groups)
     CharData storage;
 
     CharData_Init(&storage);
+    XML_SetElementDeclHandler(parser, dummy_element_decl_handler);
     XML_SetStartElementHandler(parser, record_element_start_handler);
     XML_SetUserData(parser, &storage);
+    dummy_handler_flags = 0;
     if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
                                 XML_TRUE) == XML_STATUS_ERROR)
         xml_failure(parser);
     CharData_CheckString(&storage, "doce");
+    if (dummy_handler_flags != DUMMY_ELEMENT_DECL_HANDLER_FLAG)
+        fail("Element handler not fired");
 }
 END_TEST
 
