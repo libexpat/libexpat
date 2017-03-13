@@ -6507,6 +6507,42 @@ START_TEST(test_alloc_system_notation)
 #undef MAX_ALLOC_COUNT
 END_TEST
 
+START_TEST(test_alloc_realloc_nested_groups)
+{
+    const char *text =
+        "<!DOCTYPE doc [\n"
+        "<!ELEMENT doc "
+        /* Sixteen elements per line */
+        "(e,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,"
+        "(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?"
+        "))))))))))))))))))))))))))))))))>\n"
+        "<!ELEMENT e EMPTY>"
+        "]>\n"
+        "<doc><e/></doc>";
+    CharData storage;
+    int i;
+#define MAX_REALLOC_COUNT 10
+
+    for (i = 0; i < MAX_REALLOC_COUNT; i++) {
+        reallocation_count = i;
+        CharData_Init(&storage);
+        XML_SetStartElementHandler(parser, record_element_start_handler);
+        XML_SetUserData(parser, &storage);
+        if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                    XML_TRUE) != XML_STATUS_ERROR)
+            break;
+        XML_ParserReset(parser, NULL);
+    }
+
+    if (i == 0)
+        fail("Parse succeeded despite failing reallocator");
+    if (i == MAX_REALLOC_COUNT)
+        fail("Parse failed at maximum reallocation count");
+    CharData_CheckString(&storage, "doce");
+}
+#undef MAX_REALLOC_COUNT
+END_TEST
+
 
 static void
 nsalloc_setup(void)
@@ -7282,6 +7318,7 @@ make_suite(void)
     tcase_add_test(tc_alloc, test_alloc_notation);
     tcase_add_test(tc_alloc, test_alloc_public_notation);
     tcase_add_test(tc_alloc, test_alloc_system_notation);
+    tcase_add_test(tc_alloc, test_alloc_realloc_nested_groups);
 
     suite_add_tcase(s, tc_nsalloc);
     tcase_add_checked_fixture(tc_nsalloc, nsalloc_setup, nsalloc_teardown);
