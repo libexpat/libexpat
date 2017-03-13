@@ -10,7 +10,7 @@ addons:
       - docbook2x
 
 install:
-  - wget -O expat/tests/xmlts.zip https://www.w3.org/XML/Test/xmlts20080827.zip
+  - wget -O xmlts.zip https://www.w3.org/XML/Test/xmlts20080827.zip
 
 script:
   - cd expat
@@ -21,7 +21,8 @@ script:
             address \
             lib-coverage \
             ; do
-        git clean -X -f
+        git clean -X -d -f
+        cp -v ../xmlts.zip tests/xmlts.zip
         ./buildconf.sh
         CFLAGS='-g -pipe' ./qa.sh ${mode} || ret=1
     done
