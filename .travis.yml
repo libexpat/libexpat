@@ -1,4 +1,9 @@
 language: cpp
 dist: trusty
+
+addons:
+  apt:
+    packages:
+      - docbook2x
+
 script: ./.travis.sh
-sudo: required

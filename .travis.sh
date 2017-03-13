@@ -10,11 +10,6 @@ set -x
 ret=0
 
 
-# Install missing build time dependencies
-sudo apt-get --quiet update
-sudo apt-get --quiet install docbook2x
-
-
 # Run test suite
 cd expat
 
