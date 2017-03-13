@@ -98,7 +98,7 @@ for xmldir in ibm/valid/P* \
               sun/invalid ; do
   cd "$TS/xmlconf/$xmldir"
   mkdir -p "$OUTPUT$xmldir"
-  for xmlfile in *.xml ; do
+  for xmlfile in $(echo *.xml | sort -d) ; do
       RunXmlwfWF "$xmlfile" "$xmldir/"
       UpdateStatus $?
   done
