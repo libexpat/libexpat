@@ -6530,8 +6530,10 @@ START_TEST(test_alloc_realloc_nested_groups)
     for (i = 0; i < MAX_REALLOC_COUNT; i++) {
         reallocation_count = i;
         CharData_Init(&storage);
+        XML_SetElementDeclHandler(parser, dummy_element_decl_handler);
         XML_SetStartElementHandler(parser, record_element_start_handler);
         XML_SetUserData(parser, &storage);
+        dummy_handler_flags = 0;
         if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
                                     XML_TRUE) != XML_STATUS_ERROR)
             break;
@@ -6543,6 +6545,8 @@ START_TEST(test_alloc_realloc_nested_groups)
     if (i == MAX_REALLOC_COUNT)
         fail("Parse failed at maximum reallocation count");
     CharData_CheckString(&storage, "doce");
+    if (dummy_handler_flags != DUMMY_ELEMENT_DECL_HANDLER_FLAG)
+        fail("Element handler not fired");
 }
 #undef MAX_REALLOC_COUNT
 END_TEST
