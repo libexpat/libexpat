@@ -1,3 +1,6 @@
+# Copyright (C) 2017 Sebastian Pipping <sebastian@pipping.org>
+# Licensed under the MIT license
+
 language: cpp
 dist: trusty
 
@@ -9,4 +12,17 @@ addons:
 install:
   - wget -O expat/tests/xmlts.zip https://www.w3.org/XML/Test/xmlts20080827.zip
 
-script: ./.travis.sh
+script:
+  - cd expat
+  - |
+    set -e
+    ret=0
+    for mode in \
+            address \
+            lib-coverage \
+            ; do
+        git clean -X -f
+        ./buildconf.sh
+        CFLAGS='-g -pipe' ./qa.sh ${mode} || ret=1
+    done
+    exit ${ret}
