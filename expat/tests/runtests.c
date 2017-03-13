@@ -34,7 +34,7 @@
 #define XML_FMT_INT_MOD "l"
 #endif
 
-static XML_Parser parser;
+static XML_Parser parser = NULL;
 
 
 static void
@@ -48,8 +48,10 @@ basic_setup(void)
 static void
 basic_teardown(void)
 {
-    if (parser != NULL)
+    if (parser != NULL) {
         XML_ParserFree(parser);
+        parser = NULL;
+    }
 }
 
 /* Generate a failure using the parser state to create an error message;
@@ -2839,11 +2841,6 @@ END_TEST
  */
 START_TEST(test_misc_null_parser)
 {
-    /* NULL the variable, otherwise the teardown code will attempt
-     * to free the previous parser again, and things will go downhill
-     * rapidly.
-     */
-    parser = NULL;
     XML_ParserFree(NULL);
 }
 END_TEST
