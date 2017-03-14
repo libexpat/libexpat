@@ -6641,6 +6641,27 @@ START_TEST(test_alloc_realloc_nested_groups)
 #undef MAX_REALLOC_COUNT
 END_TEST
 
+START_TEST(test_standalone_parameter_entity)
+{
+    const char *text =
+        "<?xml version='1.0' standalone='yes'?>\n"
+        "<!DOCTYPE doc SYSTEM 'http://example.org/' [\n"
+        "<!ENTITY % entity '<!ELEMENT doc (#PCDATA)>'>\n"
+        "%entity;\n"
+        "]>\n"
+        "<doc></doc>";
+    char dtd_data[] =
+        "<!ENTITY % e1 'foo'>\n";
+
+    XML_SetUserData(parser, dtd_data);
+    XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+    XML_SetExternalEntityRefHandler(parser, external_entity_public);
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+}
+END_TEST
+
 
 static void
 nsalloc_setup(void)
@@ -7350,6 +7371,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_public_notation_no_sysid);
     tcase_add_test(tc_basic, test_nested_groups);
     tcase_add_test(tc_basic, test_group_choice);
+    tcase_add_test(tc_basic, test_standalone_parameter_entity);
 
     suite_add_tcase(s, tc_namespace);
     tcase_add_checked_fixture(tc_namespace,
