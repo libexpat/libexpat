@@ -5889,7 +5889,7 @@ external_entity_public(XML_Parser parser,
 {
     const char *text1 = (const char *)XML_GetUserData(parser);
     const char *text2 = "<!ATTLIST doc a CDATA 'value'>";
-    const char *text;
+    const char *text = NULL;
     XML_Parser ext_parser;
     int parse_res;
 
@@ -5902,6 +5902,8 @@ external_entity_public(XML_Parser parser,
     else if (publicId != NULL && !strcmp(publicId, "foo")) {
         text = text2;
     }
+    else
+        fail("Unexpected parameters to external entity parser");
     parse_res = _XML_Parse_SINGLE_BYTES(ext_parser, text, strlen(text),
                                    XML_TRUE);
     XML_ParserFree(ext_parser);
