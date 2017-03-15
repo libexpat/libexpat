@@ -146,6 +146,7 @@ static unsigned long dummy_handler_flags = 0;
 #define DUMMY_END_NS_DECL_HANDLER_FLAG          (1UL << 13)
 #define DUMMY_START_DOCTYPE_DECL_HANDLER_FLAG   (1UL << 14)
 #define DUMMY_END_DOCTYPE_DECL_HANDLER_FLAG     (1UL << 15)
+#define DUMMY_SKIP_HANDLER_FLAG                 (1UL << 16)
 
 
 static void XMLCALL
@@ -309,6 +310,14 @@ static void XMLCALL
 dummy_end_doctype_decl_handler(void *UNUSED_P(userData))
 {
     dummy_handler_flags |= DUMMY_END_DOCTYPE_DECL_HANDLER_FLAG;
+}
+
+static void XMLCALL
+dummy_skip_handler(void *UNUSED_P(userData),
+                   const XML_Char *UNUSED_P(entityName),
+                   int UNUSED_P(is_parameter_entity))
+{
+    dummy_handler_flags |= DUMMY_SKIP_HANDLER_FLAG;
 }
 
 /*
@@ -4285,6 +4294,32 @@ START_TEST(test_group_choice)
 }
 END_TEST
 
+/* Test skipping of parameter entity in an external DTD */
+/* Derived from ibm/invalid/P69/ibm69i01.xml */
+START_TEST(test_skipped_parameter_entity)
+{
+    const char *text =
+        "<?xml version='1.0'?>\n"
+        "<!DOCTYPE root SYSTEM 'http://example.org/dtd.ent' [\n"
+        "<!ELEMENT root (#PCDATA|a)* >\n"
+        "]>\n"
+        "<root></root>";
+    ExtTest dtd_data = { "%pe2;", NULL, NULL };
+
+    XML_SetExternalEntityRefHandler(parser, external_entity_loader);
+    XML_SetUserData(parser, &dtd_data);
+    XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+    XML_SetSkippedEntityHandler(parser, dummy_skip_handler);
+    dummy_handler_flags = 0;
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+    if (dummy_handler_flags != DUMMY_SKIP_HANDLER_FLAG)
+        fail("Skip handler not executed");
+}
+END_TEST
+
+
 /*
  * Namespaces tests.
  */
@@ -7434,6 +7469,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_nested_groups);
     tcase_add_test(tc_basic, test_group_choice);
     tcase_add_test(tc_basic, test_standalone_parameter_entity);
+    tcase_add_test(tc_basic, test_skipped_parameter_entity);
 
     suite_add_tcase(s, tc_namespace);
     tcase_add_checked_fixture(tc_namespace,
