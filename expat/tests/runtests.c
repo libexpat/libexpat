@@ -3673,19 +3673,23 @@ START_TEST(test_byte_info_at_end)
 END_TEST
 
 /* Test position information from errors */
+#define PRE_ERROR_STR  "<doc></"
+#define POST_ERROR_STR "wombat></doc>"
 START_TEST(test_byte_info_at_error)
 {
-    const char *text = "<doc></wombat></doc>";
+    const char *text = PRE_ERROR_STR POST_ERROR_STR;
 
     if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
                                 XML_TRUE) == XML_STATUS_OK)
         fail("Syntax error not faulted");
     if (XML_GetCurrentByteCount(parser) != 0)
         fail("Error byte count incorrect");
-    if (XML_GetCurrentByteIndex(parser) != 7)
+    if (XML_GetCurrentByteIndex(parser) != strlen(PRE_ERROR_STR))
         fail("Error byte index incorrect");
 }
 END_TEST
+#undef PRE_ERROR_STR
+#undef POST_ERROR_STR
 
 /* Test position information in handler */
 static void
