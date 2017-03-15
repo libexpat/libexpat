@@ -26,6 +26,7 @@
 #include "minicheck.h"
 #include "memcheck.h"
 #include "siphash.h"
+#include "ascii.h" /* for ASCII_xxx */
 
 #ifdef XML_LARGE_SIZE
 #define XML_FMT_INT_MOD "ll"
@@ -4917,38 +4918,73 @@ START_TEST(test_misc_error_string)
 END_TEST
 
 /* Test the version information is consistent */
+
+/* Since we are working in XML_LChars (potentially 16-bits), we
+ * can't use the standard C library functions for character
+ * manipulation and have to roll our own.
+ */
+static int
+parse_version(const XML_LChar *version_text,
+              XML_Expat_Version *version_struct)
+{
+    while (*version_text != 0x00) {
+        if (*version_text >= ASCII_0 && *version_text <= ASCII_9)
+            break;
+        version_text++;
+    }
+    if (*version_text == 0x00)
+        return XML_FALSE;
+
+    /* version_struct->major = strtoul(version_text, 10, &version_text) */
+    version_struct->major = 0;
+    while (*version_text >= ASCII_0 && *version_text <= ASCII_9) {
+        version_struct->major =
+            10 * version_struct->major + (*version_text++ - ASCII_0);
+    }
+    if (*version_text++ != ASCII_PERIOD)
+        return XML_FALSE;
+
+    /* Now for the minor version number */
+    version_struct->minor = 0;
+    while (*version_text >= ASCII_0 && *version_text <= ASCII_9) {
+        version_struct->minor =
+            10 * version_struct->minor + (*version_text++ - ASCII_0);
+    }
+    if (*version_text++ != ASCII_PERIOD)
+        return XML_FALSE;
+
+    /* Finally the micro version number */
+    version_struct->micro = 0;
+    while (*version_text >= ASCII_0 && *version_text <= ASCII_9) {
+        version_struct->micro =
+            10 * version_struct->micro + (*version_text++ - ASCII_0);
+    }
+    if (*version_text != 0x00)
+        return XML_FALSE;
+    return XML_TRUE;
+}
+
+static int
+versions_equal(const XML_Expat_Version *first,
+               const XML_Expat_Version *second)
+{
+    return (first->major == second->major &&
+            first->minor == second->minor &&
+            first->micro == second->micro);
+}
+
 START_TEST(test_misc_version)
 {
-    XML_Expat_Version version_struct = XML_ExpatVersionInfo();
+    XML_Expat_Version read_version = XML_ExpatVersionInfo();
+    XML_Expat_Version parsed_version;
     const XML_LChar *version_text = XML_ExpatVersion();
-    long value;
-    const char *p;
-    char *endp;
 
     if (version_text == NULL)
         fail("Could not obtain version text");
-    for (p = version_text; *p != '\0'; p++)
-        if (isdigit(*p))
-            break;
-    if (*p == '\0')
-        fail("No numbers in version text");
-    value = strtoul(p, &endp, 10);
-    if (*endp != '.')
-        fail("Major version conversion from text failed");
-    if (value != version_struct.major)
-        fail("Major version mismatch");
-    p = endp + 1;
-    value = strtoul(p, &endp, 10);
-    if (*endp != '.')
-        fail("Minor version conversion from text failed");
-    if (value != version_struct.minor)
-        fail("Minor version mismatch");
-    p = endp + 1;
-    value = strtoul(p, &endp, 10);
-    if (*endp != '\0')
-        fail("Micro version conversion from text failed");
-    if (value != version_struct.micro)
-        fail("Micro version mismatch");
+    if (!parse_version(version_text, &parsed_version))
+        fail("Unable to parse version text");
+    if (!versions_equal(&read_version, &parsed_version))
+        fail("Version mismatch");
 }
 END_TEST
 
