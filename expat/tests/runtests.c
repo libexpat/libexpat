@@ -4357,6 +4357,7 @@ external_entity_devaluer(XML_Parser parser,
         "<!ENTITY % e1 SYSTEM 'bar'>\n"
         "%e1;\n";
     XML_Parser ext_parser;
+    int clear_handler = (intptr_t)XML_GetUserData(parser);
 
     if (systemId == NULL || !strcmp(systemId, "bar"))
         return XML_STATUS_OK;
@@ -4365,6 +4366,8 @@ external_entity_devaluer(XML_Parser parser,
     ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
     if (ext_parser == NULL)
         fail("Could note create external entity parser");
+    if (clear_handler)
+        XML_SetExternalEntityRefHandler(ext_parser, NULL);
     if (_XML_Parse_SINGLE_BYTES(ext_parser, text, strlen(text),
                                 XML_TRUE) == XML_STATUS_ERROR)
         xml_failure(ext_parser);
@@ -4379,6 +4382,18 @@ START_TEST(test_undefined_ext_entity_in_external_dtd)
 
     XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
     XML_SetExternalEntityRefHandler(parser, external_entity_devaluer);
+    XML_SetUserData(parser, (void *)(intptr_t)XML_FALSE);
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+
+    /* Now repeat without the external entity ref handler invoking
+     * another copy of itself.
+     */
+    XML_ParserReset(parser, NULL);
+    XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+    XML_SetExternalEntityRefHandler(parser, external_entity_devaluer);
+    XML_SetUserData(parser, (void *)(intptr_t)XML_TRUE);
     if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
                                 XML_TRUE) == XML_STATUS_ERROR)
         xml_failure(parser);
