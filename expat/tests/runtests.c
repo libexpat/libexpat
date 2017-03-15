@@ -4081,6 +4081,58 @@ START_TEST(test_external_entity_values)
 }
 END_TEST
 
+/* Test the recursive parse interacts with a not standalone handler */
+static int XMLCALL
+external_entity_not_standalone(XML_Parser parser,
+                               const XML_Char *context,
+                               const XML_Char *UNUSED_P(base),
+                               const XML_Char *systemId,
+                               const XML_Char *UNUSED_P(publicId))
+{
+    const char *text1 =
+        "<!ELEMENT doc EMPTY>\n"
+        "<!ENTITY % e1 SYSTEM 'bar'>\n"
+        "%e1;\n";
+    const char *text2 = "<!ATTLIST doc a1 CDATA 'value'>";
+    XML_Parser ext_parser;
+
+    if (systemId == NULL)
+        return XML_STATUS_OK;
+    ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
+    if (ext_parser == NULL)
+        fail("Could not create external entity parser");
+    if (!strcmp(systemId, "foo")) {
+        XML_SetNotStandaloneHandler(ext_parser,
+                                    reject_not_standalone_handler);
+        if (_XML_Parse_SINGLE_BYTES(ext_parser, text1, strlen(text1),
+                                    XML_TRUE) != XML_STATUS_ERROR)
+            fail("Expected not standalone rejection");
+        if (XML_GetErrorCode(ext_parser) != XML_ERROR_NOT_STANDALONE)
+            xml_failure(ext_parser);
+        XML_SetNotStandaloneHandler(ext_parser, NULL);
+        return XML_STATUS_ERROR;
+    }
+    else if (!strcmp(systemId, "bar")) {
+        if (_XML_Parse_SINGLE_BYTES(ext_parser, text2, strlen(text2),
+                                    XML_TRUE) == XML_STATUS_ERROR)
+            xml_failure(ext_parser);
+    }
+    return XML_STATUS_OK;
+}
+
+START_TEST(test_ext_entity_not_standalone)
+{
+    const char *text =
+        "<!DOCTYPE doc SYSTEM 'foo'>\n"
+        "<doc></doc>";
+
+    XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+    XML_SetExternalEntityRefHandler(parser, external_entity_not_standalone);
+    expect_failure(text, XML_ERROR_EXTERNAL_ENTITY_HANDLING,
+                   "Standalone rejection not caught");
+}
+END_TEST
+
 static int XMLCALL
 external_entity_value_aborter(XML_Parser parser,
                               const XML_Char *context,
@@ -7541,6 +7593,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_ignore_section);
     tcase_add_test(tc_basic, test_bad_ignore_section);
     tcase_add_test(tc_basic, test_external_entity_values);
+    tcase_add_test(tc_basic, test_ext_entity_not_standalone);
     tcase_add_test(tc_basic, test_ext_entity_value_abort);
     tcase_add_test(tc_basic, test_bad_public_doctype);
     tcase_add_test(tc_basic, test_attribute_enum_value);
