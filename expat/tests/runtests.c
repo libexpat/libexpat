@@ -4319,6 +4319,31 @@ START_TEST(test_skipped_parameter_entity)
 }
 END_TEST
 
+/* Test recursive parameter entity definition rejected in external DTD */
+START_TEST(test_recursive_external_parameter_entity)
+{
+    const char *text =
+        "<?xml version='1.0'?>\n"
+        "<!DOCTYPE root SYSTEM 'http://example.org/dtd.ent' [\n"
+        "<!ELEMENT root (#PCDATA|a)* >\n"
+        "]>\n"
+        "<root></root>";
+    ExtFaults dtd_data = {
+        "<!ENTITY % pe2 '&#37;pe2;'>\n%pe2;",
+        "Recursive external parameter entity not faulted",
+        NULL,
+        XML_ERROR_RECURSIVE_ENTITY_REF
+    };
+
+    XML_SetExternalEntityRefHandler(parser, external_entity_faulter);
+    XML_SetUserData(parser, &dtd_data);
+    XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+    expect_failure(text,
+                   XML_ERROR_EXTERNAL_ENTITY_HANDLING,
+                   "Recursive external parameter not spotted");
+}
+END_TEST
+
 
 /*
  * Namespaces tests.
@@ -7470,6 +7495,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_group_choice);
     tcase_add_test(tc_basic, test_standalone_parameter_entity);
     tcase_add_test(tc_basic, test_skipped_parameter_entity);
+    tcase_add_test(tc_basic, test_recursive_external_parameter_entity);
 
     suite_add_tcase(s, tc_namespace);
     tcase_add_checked_fixture(tc_namespace,
