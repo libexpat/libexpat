@@ -3692,6 +3692,12 @@ END_TEST
 #undef POST_ERROR_STR
 
 /* Test position information in handler */
+typedef struct ByteTestData {
+    int start_element_len;
+    int cdata_len;
+    int total_string_len;
+} ByteTestData;
+
 static void
 byte_character_handler(void *userData,
                        const XML_Char *s,
@@ -3700,17 +3706,21 @@ byte_character_handler(void *userData,
 #ifdef XML_CONTEXT_BYTES
     int offset, size;
     const char *buffer;
-    intptr_t buflen = (intptr_t)userData;
+    ByteTestData *data = (ByteTestData *)userData;
 
     buffer = XML_GetInputContext(parser, &offset, &size);
     if (buffer == NULL)
         fail("Failed to get context buffer");
+    if (offset != data->start_element_len)
+        fail("Context offset in unexpected position");
+    if (len != data->cdata_len)
+        fail("CDATA length reported incorrectly");
+    if (size != data->total_string_len)
+        fail("Context size is not full buffer");
     if (XML_GetCurrentByteIndex(parser) != offset)
         fail("Character byte index incorrect");
     if (XML_GetCurrentByteCount(parser) != len)
         fail("Character byte count incorrect");
-    if (buflen != size)
-        fail("Buffer length incorrect");
     if (s != buffer + offset)
         fail("Buffer position incorrect");
 #else
@@ -3720,21 +3730,31 @@ byte_character_handler(void *userData,
 #endif
 }
 
+#define START_ELEMENT "<e>"
+#define CDATA_TEXT    "Hello"
+#define END_ELEMENT   "</e>"
 START_TEST(test_byte_info_at_cdata)
 {
-    const char *text = "<doc>Hello</doc>";
+    const char *text = START_ELEMENT CDATA_TEXT END_ELEMENT;
     int offset, size;
+    ByteTestData data;
 
     /* Check initial context is empty */
     if (XML_GetInputContext(parser, &offset, &size) != NULL)
         fail("Unexpected context at start of parse");
 
+    data.start_element_len = strlen(START_ELEMENT);
+    data.cdata_len = strlen(CDATA_TEXT);
+    data.total_string_len = strlen(text);
     XML_SetCharacterDataHandler(parser, byte_character_handler);
-    XML_SetUserData(parser, (void *)strlen(text));
+    XML_SetUserData(parser, &data);
     if (XML_Parse(parser, text, strlen(text), XML_TRUE) != XML_STATUS_OK)
         xml_failure(parser);
 }
 END_TEST
+#undef START_ELEMENT
+#undef CDATA_TEXT
+#undef END_ELEMENT
 
 /* Test predefined entities are correctly recognised */
 START_TEST(test_predefined_entities)
