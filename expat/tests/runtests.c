@@ -6831,6 +6831,52 @@ START_TEST(test_alloc_system_notation)
 #undef MAX_ALLOC_COUNT
 END_TEST
 
+START_TEST(test_alloc_nested_groups)
+{
+    const char *text =
+        "<!DOCTYPE doc [\n"
+        "<!ELEMENT doc "
+        /* Sixteen elements per line */
+        "(e,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,"
+        "(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?"
+        "))))))))))))))))))))))))))))))))>\n"
+        "<!ELEMENT e EMPTY>"
+        "]>\n"
+        "<doc><e/></doc>";
+    CharData storage;
+    int i;
+#define MAX_ALLOC_COUNT 10
+    int repeat = 0;
+
+    for (i = 0; i < MAX_ALLOC_COUNT; i++) {
+        /* Repeat some counts to allow for cached allocations */
+        if ((i == 2 && repeat < 3) || (i == 3 && repeat == 3)) {
+            i--;
+            repeat++;
+        }
+        allocation_count = i;
+        CharData_Init(&storage);
+        XML_SetElementDeclHandler(parser, dummy_element_decl_handler);
+        XML_SetStartElementHandler(parser, record_element_start_handler);
+        XML_SetUserData(parser, &storage);
+        dummy_handler_flags = 0;
+        if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                    XML_TRUE) != XML_STATUS_ERROR)
+            break;
+        XML_ParserReset(parser, NULL);
+    }
+
+    if (i == 0)
+        fail("Parse succeeded despite failing reallocator");
+    if (i == MAX_ALLOC_COUNT)
+        fail("Parse failed at maximum reallocation count");
+    CharData_CheckString(&storage, "doce");
+    if (dummy_handler_flags != DUMMY_ELEMENT_DECL_HANDLER_FLAG)
+        fail("Element handler not fired");
+}
+#undef MAX_ALLOC_COUNT
+END_TEST
+
 START_TEST(test_alloc_realloc_nested_groups)
 {
     const char *text =
@@ -7674,6 +7720,7 @@ make_suite(void)
     tcase_add_test(tc_alloc, test_alloc_notation);
     tcase_add_test(tc_alloc, test_alloc_public_notation);
     tcase_add_test(tc_alloc, test_alloc_system_notation);
+    tcase_add_test(tc_alloc, test_alloc_nested_groups);
     tcase_add_test(tc_alloc, test_alloc_realloc_nested_groups);
 
     suite_add_tcase(s, tc_nsalloc);
