@@ -4346,6 +4346,57 @@ START_TEST(test_group_choice)
 }
 END_TEST
 
+static int XMLCALL
+external_entity_public(XML_Parser parser,
+                       const XML_Char *context,
+                       const XML_Char *UNUSED_P(base),
+                       const XML_Char *systemId,
+                       const XML_Char *publicId)
+{
+    const char *text1 = (const char *)XML_GetUserData(parser);
+    const char *text2 = "<!ATTLIST doc a CDATA 'value'>";
+    const char *text = NULL;
+    XML_Parser ext_parser;
+    int parse_res;
+
+    ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
+    if (ext_parser == NULL)
+        return XML_STATUS_ERROR;
+    if (systemId != NULL && !strcmp(systemId, "http://example.org/")) {
+        text = text1;
+    }
+    else if (publicId != NULL && !strcmp(publicId, "foo")) {
+        text = text2;
+    }
+    else
+        fail("Unexpected parameters to external entity parser");
+    parse_res = _XML_Parse_SINGLE_BYTES(ext_parser, text, strlen(text),
+                                   XML_TRUE);
+    XML_ParserFree(ext_parser);
+    return parse_res;
+}
+
+START_TEST(test_standalone_parameter_entity)
+{
+    const char *text =
+        "<?xml version='1.0' standalone='yes'?>\n"
+        "<!DOCTYPE doc SYSTEM 'http://example.org/' [\n"
+        "<!ENTITY % entity '<!ELEMENT doc (#PCDATA)>'>\n"
+        "%entity;\n"
+        "]>\n"
+        "<doc></doc>";
+    char dtd_data[] =
+        "<!ENTITY % e1 'foo'>\n";
+
+    XML_SetUserData(parser, dtd_data);
+    XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+    XML_SetExternalEntityRefHandler(parser, external_entity_public);
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+}
+END_TEST
+
 /* Test skipping of parameter entity in an external DTD */
 /* Derived from ibm/invalid/P69/ibm69i01.xml */
 START_TEST(test_skipped_parameter_entity)
@@ -6108,36 +6159,6 @@ START_TEST(test_alloc_realloc_many_attributes)
 END_TEST
 
 /* Test handling of a public entity with failing allocator */
-static int XMLCALL
-external_entity_public(XML_Parser parser,
-                       const XML_Char *context,
-                       const XML_Char *UNUSED_P(base),
-                       const XML_Char *systemId,
-                       const XML_Char *publicId)
-{
-    const char *text1 = (const char *)XML_GetUserData(parser);
-    const char *text2 = "<!ATTLIST doc a CDATA 'value'>";
-    const char *text = NULL;
-    XML_Parser ext_parser;
-    int parse_res;
-
-    ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
-    if (ext_parser == NULL)
-        return XML_STATUS_ERROR;
-    if (systemId != NULL && !strcmp(systemId, "http://example.org/")) {
-        text = text1;
-    }
-    else if (publicId != NULL && !strcmp(publicId, "foo")) {
-        text = text2;
-    }
-    else
-        fail("Unexpected parameters to external entity parser");
-    parse_res = _XML_Parse_SINGLE_BYTES(ext_parser, text, strlen(text),
-                                   XML_TRUE);
-    XML_ParserFree(ext_parser);
-    return parse_res;
-}
-
 START_TEST(test_alloc_public_entity_value)
 {
     const char *text =
@@ -6954,27 +6975,6 @@ START_TEST(test_alloc_realloc_group_choice)
         fail("Element handler flag not raised");
 }
 #undef MAX_REALLOC_COUNT
-END_TEST
-
-START_TEST(test_standalone_parameter_entity)
-{
-    const char *text =
-        "<?xml version='1.0' standalone='yes'?>\n"
-        "<!DOCTYPE doc SYSTEM 'http://example.org/' [\n"
-        "<!ENTITY % entity '<!ELEMENT doc (#PCDATA)>'>\n"
-        "%entity;\n"
-        "]>\n"
-        "<doc></doc>";
-    char dtd_data[] =
-        "<!ENTITY % e1 'foo'>\n";
-
-    XML_SetUserData(parser, dtd_data);
-    XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
-    XML_SetExternalEntityRefHandler(parser, external_entity_public);
-    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
-                                XML_TRUE) == XML_STATUS_ERROR)
-        xml_failure(parser);
-}
 END_TEST
 
 
