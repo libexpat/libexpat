@@ -7040,6 +7040,42 @@ START_TEST(test_alloc_realloc_group_choice)
 #undef MAX_REALLOC_COUNT
 END_TEST
 
+START_TEST(test_alloc_pi_in_epilog)
+{
+    const char *text =
+        "<doc></doc>\n"
+        "<?pi in epilog?>";
+    int i;
+#define MAX_ALLOC_COUNT 10
+    int repeat = 0;
+
+    for (i = 0; i < MAX_ALLOC_COUNT; i++) {
+        /* Repeat certain counts to allow for cached allocations */
+        if (i == 3 && repeat == 1) {
+            i -= 2;
+            repeat++;
+        }
+        else if (i == 2 && repeat < 4 && repeat != 1) {
+            i--;
+            repeat++;
+        }
+        allocation_count = i;
+        XML_SetProcessingInstructionHandler(parser, dummy_pi_handler);
+        dummy_handler_flags = 0;
+        if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                    XML_TRUE) != XML_STATUS_ERROR)
+            break;
+        XML_ParserReset(parser, NULL);
+    }
+    if (i == 0)
+        fail("Parse completed despite failing allocator");
+    if (i == MAX_ALLOC_COUNT)
+        fail("Parse failed at maximum allocation count");
+    if (dummy_handler_flags != DUMMY_PI_HANDLER_FLAG)
+        fail("Processing instruction handler not invoked");
+}
+#undef MAX_ALLOC_COUNT
+END_TEST
 
 static void
 nsalloc_setup(void)
@@ -7827,6 +7863,7 @@ make_suite(void)
     tcase_add_test(tc_alloc, test_alloc_nested_groups);
     tcase_add_test(tc_alloc, test_alloc_realloc_nested_groups);
     tcase_add_test(tc_alloc, test_alloc_realloc_group_choice);
+    tcase_add_test(tc_alloc, test_alloc_pi_in_epilog);
 
     suite_add_tcase(s, tc_nsalloc);
     tcase_add_checked_fixture(tc_nsalloc, nsalloc_setup, nsalloc_teardown);
