@@ -4579,6 +4579,21 @@ START_TEST(test_abort_epilog_2)
 }
 END_TEST
 
+/* Test suspension from the epilog */
+START_TEST(test_suspend_epilog)
+{
+    const char *text = "<doc></doc>\n";
+    char match[] = "\n";
+
+    XML_SetDefaultHandler(parser, selective_aborting_default_handler);
+    XML_SetUserData(parser, match);
+    resumable = XML_TRUE;
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                XML_TRUE) != XML_STATUS_SUSPENDED)
+        xml_failure(parser);
+}
+END_TEST
+
 START_TEST(test_unfinished_epilog)
 {
     const char *text = "<doc></doc><";
@@ -7869,6 +7884,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_suspend_xdecl);
     tcase_add_test(tc_basic, test_abort_epilog);
     tcase_add_test(tc_basic, test_abort_epilog_2);
+    tcase_add_test(tc_basic, test_suspend_epilog);
     tcase_add_test(tc_basic, test_unfinished_epilog);
     tcase_add_test(tc_basic, test_partial_char_in_epilog);
 
