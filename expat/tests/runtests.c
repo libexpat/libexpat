@@ -4566,6 +4566,19 @@ START_TEST(test_abort_epilog)
 }
 END_TEST
 
+/* Test a different code path for abort in the epilog */
+START_TEST(test_abort_epilog_2)
+{
+    const char *text = "<doc></doc>\n";
+    char match[] = "\n";
+
+    XML_SetDefaultHandler(parser, selective_aborting_default_handler);
+    XML_SetUserData(parser, match);
+    resumable = XML_FALSE;
+    expect_failure(text, XML_ERROR_ABORTED, "Abort not triggered");
+}
+END_TEST
+
 START_TEST(test_unfinished_epilog)
 {
     const char *text = "<doc></doc><";
@@ -7855,6 +7868,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_undefined_ext_entity_in_external_dtd);
     tcase_add_test(tc_basic, test_suspend_xdecl);
     tcase_add_test(tc_basic, test_abort_epilog);
+    tcase_add_test(tc_basic, test_abort_epilog_2);
     tcase_add_test(tc_basic, test_unfinished_epilog);
     tcase_add_test(tc_basic, test_partial_char_in_epilog);
 
