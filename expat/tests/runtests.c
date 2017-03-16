@@ -6917,6 +6917,45 @@ START_TEST(test_alloc_realloc_nested_groups)
 #undef MAX_REALLOC_COUNT
 END_TEST
 
+START_TEST(test_alloc_realloc_group_choice)
+{
+    const char *text =
+        "<!DOCTYPE doc [\n"
+        "<!ELEMENT doc ("
+        "a1|a2|a3|a4|a5|a6|a7|a8|"
+        "b1|b2|b3|b4|b5|b6|b7|b8|"
+        "c1|c2|c3|c4|c5|c6|c7|c8|"
+        "d1|d2|d3|d4|d5|d6|d7|d8|"
+        "e1"
+        ")+>\n"
+        "]>\n"
+        "<doc>\n"
+        "<a1/>\n"
+        "<b2 attr='foo'>This is a foo</b2>\n"
+        "<c3></c3>\n"
+        "</doc>\n";
+    int i;
+#define MAX_REALLOC_COUNT 10
+
+    for (i = 0; i < MAX_REALLOC_COUNT; i++) {
+        reallocation_count = i;
+        XML_SetElementDeclHandler(parser, dummy_element_decl_handler);
+        dummy_handler_flags = 0;
+        if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                    XML_TRUE) != XML_STATUS_ERROR)
+            break;
+        XML_ParserReset(parser, NULL);
+    }
+    if (i == 0)
+        fail("Parse succeeded despite failing reallocator");
+    if (i == MAX_REALLOC_COUNT)
+        fail("Parse failed at maximum reallocation count");
+    if (dummy_handler_flags != DUMMY_ELEMENT_DECL_HANDLER_FLAG)
+        fail("Element handler flag not raised");
+}
+#undef MAX_REALLOC_COUNT
+END_TEST
+
 START_TEST(test_standalone_parameter_entity)
 {
     const char *text =
@@ -7722,6 +7761,7 @@ make_suite(void)
     tcase_add_test(tc_alloc, test_alloc_system_notation);
     tcase_add_test(tc_alloc, test_alloc_nested_groups);
     tcase_add_test(tc_alloc, test_alloc_realloc_nested_groups);
+    tcase_add_test(tc_alloc, test_alloc_realloc_group_choice);
 
     suite_add_tcase(s, tc_nsalloc);
     tcase_add_checked_fixture(tc_nsalloc, nsalloc_setup, nsalloc_teardown);
