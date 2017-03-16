@@ -4619,6 +4619,35 @@ START_TEST(test_partial_char_in_epilog)
 }
 END_TEST
 
+START_TEST(test_hash_collision)
+{
+    /* For full coverage of the lookup routine, we need to ensure a
+     * hash collision even though we can only tell that we have one
+     * through breakpoint debugging or coverage statistics.  The
+     * following will cause a hash collision on machines with a 64-bit
+     * long type; others will have to experiment.  The full coverage
+     * tests invoked from qa.sh usually provide a hash collision, but
+     * not always.  This is an attempt to provide insurance.
+     */
+#define COLLIDING_HASH_SALT 0xffffffffff99fc90
+    const char * text =
+        "<doc>\n"
+        "<a1/><a2/><a3/><a4/><a5/><a6/><a7/><a8/>\n"
+        "<b1></b1><b2 attr='foo'>This is a foo</b2><b3></b3><b4></b4>\n"
+        "<b5></b5><b6></b6><b7></b7><b8></b8>\n"
+        "<c1/><c2/><c3/><c4/><c5/><c6/><c7/><c8/>\n"
+        "<d1/><d2/><d3/><d4/><d5/><d6/><d7/>\n"
+        "<d8>This triggers the table growth and collides with b2</d8>\n"
+        "</doc>\n";
+
+    XML_SetHashSalt(parser, COLLIDING_HASH_SALT);
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+}
+END_TEST
+#undef COLLIDING_HASH_SALT
+
 
 /*
  * Namespaces tests.
@@ -7887,6 +7916,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_suspend_epilog);
     tcase_add_test(tc_basic, test_unfinished_epilog);
     tcase_add_test(tc_basic, test_partial_char_in_epilog);
+    tcase_add_test(tc_basic, test_hash_collision);
 
     suite_add_tcase(s, tc_namespace);
     tcase_add_checked_fixture(tc_namespace,
