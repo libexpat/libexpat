@@ -4575,6 +4575,22 @@ START_TEST(test_unfinished_epilog)
 }
 END_TEST
 
+START_TEST(test_partial_char_in_epilog)
+{
+    const char *text = "<doc></doc>\xe2\x82";
+
+    /* First check that no fault is raised if the parse is not finished */
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                XML_FALSE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+    /* Now check that it is faulted once we finish */
+    if (XML_ParseBuffer(parser, 0, XML_TRUE) != XML_STATUS_ERROR)
+        fail("Partial character in epilog not faulted");
+    if (XML_GetErrorCode(parser) != XML_ERROR_PARTIAL_CHAR)
+        xml_failure(parser);
+}
+END_TEST
+
 
 /*
  * Namespaces tests.
@@ -7840,6 +7856,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_suspend_xdecl);
     tcase_add_test(tc_basic, test_abort_epilog);
     tcase_add_test(tc_basic, test_unfinished_epilog);
+    tcase_add_test(tc_basic, test_partial_char_in_epilog);
 
     suite_add_tcase(s, tc_namespace);
     tcase_add_checked_fixture(tc_namespace,
