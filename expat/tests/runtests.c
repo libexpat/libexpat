@@ -4552,7 +4552,7 @@ selective_aborting_default_handler(void *userData,
 
 START_TEST(test_abort_epilog)
 {
-    const char *text = "<doc></doc>\r\n";
+    const char *text = "<doc></doc>\n\r\n";
     char match[] = "\r";
 
     XML_SetDefaultHandler(parser, selective_aborting_default_handler);
