@@ -4504,6 +4504,37 @@ START_TEST(test_undefined_ext_entity_in_external_dtd)
 END_TEST
 
 
+static void XMLCALL
+aborting_xdecl_handler(void           *UNUSED_P(userData),
+                       const XML_Char *UNUSED_P(version),
+                       const XML_Char *UNUSED_P(encoding),
+                       int             UNUSED_P(standalone))
+{
+    XML_StopParser(parser, resumable);
+    XML_SetXmlDeclHandler(parser, NULL);
+}
+
+/* Test suspending the parse on receiving an XML declaration works */
+START_TEST(test_suspend_xdecl)
+{
+    const char *text = long_character_data_text;
+
+    XML_SetXmlDeclHandler(parser, aborting_xdecl_handler);
+    resumable = XML_TRUE;
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                XML_TRUE) != XML_STATUS_SUSPENDED)
+        xml_failure(parser);
+    if (XML_GetErrorCode(parser) != XML_ERROR_NONE)
+        xml_failure(parser);
+    /* Attempt to start a new parse while suspended */
+    if (XML_Parse(parser, text, strlen(text), XML_TRUE) != XML_STATUS_ERROR)
+        fail("Attempt to parse while suspended not faulted");
+    if (XML_GetErrorCode(parser) != XML_ERROR_SUSPENDED)
+        fail("Suspended parse not faulted with correct error");
+}
+END_TEST
+
+
 /*
  * Namespaces tests.
  */
@@ -7691,6 +7722,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_skipped_parameter_entity);
     tcase_add_test(tc_basic, test_recursive_external_parameter_entity);
     tcase_add_test(tc_basic, test_undefined_ext_entity_in_external_dtd);
+    tcase_add_test(tc_basic, test_suspend_xdecl);
 
     suite_add_tcase(s, tc_namespace);
     tcase_add_checked_fixture(tc_namespace,
