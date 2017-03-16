@@ -4534,6 +4534,38 @@ START_TEST(test_suspend_xdecl)
 }
 END_TEST
 
+/* Test aborting the parse in an epilog works */
+static void XMLCALL
+selective_aborting_default_handler(void *userData,
+                                   const XML_Char *s,
+                                   int len)
+{
+    const char *match = (const char *)userData;
+
+    if (match == NULL ||
+        (strlen(match) == (unsigned)len &&
+         !strncmp(match, s, len))) {
+        XML_StopParser(parser, resumable);
+        XML_SetDefaultHandler(parser, NULL);
+    }
+}
+
+START_TEST(test_abort_epilog)
+{
+    const char *text = "<doc></doc>\r\n";
+    char match[] = "\r";
+
+    XML_SetDefaultHandler(parser, selective_aborting_default_handler);
+    XML_SetUserData(parser, match);
+    resumable = XML_FALSE;
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                XML_TRUE) != XML_STATUS_ERROR)
+        fail("Abort not triggered");
+    if (XML_GetErrorCode(parser) != XML_ERROR_ABORTED)
+        xml_failure(parser);
+}
+END_TEST
+
 
 /*
  * Namespaces tests.
@@ -7723,6 +7755,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_recursive_external_parameter_entity);
     tcase_add_test(tc_basic, test_undefined_ext_entity_in_external_dtd);
     tcase_add_test(tc_basic, test_suspend_xdecl);
+    tcase_add_test(tc_basic, test_abort_epilog);
 
     suite_add_tcase(s, tc_namespace);
     tcase_add_checked_fixture(tc_namespace,
