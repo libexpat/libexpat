@@ -4770,6 +4770,17 @@ START_TEST(test_reject_lt_in_attribute_value)
 }
 END_TEST
 
+START_TEST(test_reject_unfinished_param_in_att_value)
+{
+    const char *text =
+        "<!DOCTYPE doc [<!ATTLIST doc a CDATA '&foo'>]>\n"
+        "<doc></doc>";
+
+    expect_failure(text, XML_ERROR_INVALID_TOKEN,
+                   "Bad attribute default not faulted");
+}
+END_TEST
+
 
 /*
  * Namespaces tests.
@@ -8084,6 +8095,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_suspend_resume_parameter_entity);
     tcase_add_test(tc_basic, test_restart_on_error);
     tcase_add_test(tc_basic, test_reject_lt_in_attribute_value);
+    tcase_add_test(tc_basic, test_reject_unfinished_param_in_att_value);
 
     suite_add_tcase(s, tc_namespace);
     tcase_add_checked_fixture(tc_namespace,
