@@ -7306,6 +7306,47 @@ START_TEST(test_alloc_comment_in_epilog)
 #undef MAX_ALLOC_COUNT
 END_TEST
 
+START_TEST(test_alloc_realloc_long_attribute_value)
+{
+    const char *text =
+        "<!DOCTYPE doc [<!ENTITY foo '"
+        /* Each line is 64 characters */
+        "This entity will be substituted as an attribute value, and is   "
+        "calculated to be exactly long enough that the terminating NUL   "
+        "that the library adds internally will trigger the string pool to"
+        "grow. GHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "'>]>\n"
+        "<doc a='&foo;'></doc>";
+    int i;
+#define MAX_REALLOC_COUNT 10
+
+    for (i = 0; i < MAX_REALLOC_COUNT; i++) {
+        reallocation_count = i;
+        if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                    XML_TRUE) != XML_STATUS_ERROR)
+            break;
+        XML_ParserReset(parser, NULL);
+    }
+    if (i == 0)
+        fail("Parse succeeded despite failing reallocator");
+    if (i == MAX_REALLOC_COUNT)
+        fail("Parse failed at maximum reallocation count");
+}
+#undef MAX_REALLOC_COUNT
+END_TEST
+
 
 static void
 nsalloc_setup(void)
@@ -8104,6 +8145,7 @@ make_suite(void)
     tcase_add_test(tc_alloc, test_alloc_realloc_group_choice);
     tcase_add_test(tc_alloc, test_alloc_pi_in_epilog);
     tcase_add_test(tc_alloc, test_alloc_comment_in_epilog);
+    tcase_add_test(tc_alloc, test_alloc_realloc_long_attribute_value);
 
     suite_add_tcase(s, tc_nsalloc);
     tcase_add_checked_fixture(tc_nsalloc, nsalloc_setup, nsalloc_teardown);
