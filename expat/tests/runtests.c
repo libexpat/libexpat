@@ -4682,6 +4682,42 @@ START_TEST(test_suspend_resume_internal_entity)
 }
 END_TEST
 
+/* Test suspending and resuming in a parameter entity substitution */
+static void XMLCALL
+element_decl_suspender(void *UNUSED_P(userData),
+                       const XML_Char *UNUSED_P(name),
+                       XML_Content *model)
+{
+    XML_StopParser(parser, XML_TRUE);
+    XML_FreeContentModel(parser, model);
+}
+
+START_TEST(test_suspend_resume_parameter_entity)
+{
+    const char *text =
+        "<!DOCTYPE doc [\n"
+        "<!ENTITY % foo '<!ELEMENT doc (#PCDATA)*>'>\n"
+        "%foo;\n"
+        "]>\n"
+        "<doc>Hello, world</doc>";
+    const char *expected = "Hello, world";
+    CharData storage;
+
+    CharData_Init(&storage);
+    XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+    XML_SetElementDeclHandler(parser, element_decl_suspender);
+    XML_SetCharacterDataHandler(parser, accumulate_characters);
+    XML_SetUserData(parser, &storage);
+    if (XML_Parse(parser, text, strlen(text),
+                  XML_TRUE) != XML_STATUS_SUSPENDED)
+        xml_failure(parser);
+    CharData_CheckXMLChars(&storage, "");
+    if (XML_ResumeParser(parser) != XML_STATUS_OK)
+        xml_failure(parser);
+    CharData_CheckXMLChars(&storage, expected);
+}
+END_TEST
+
 
 /*
  * Namespaces tests.
@@ -7952,6 +7988,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_partial_char_in_epilog);
     tcase_add_test(tc_basic, test_hash_collision);
     tcase_add_test(tc_basic, test_suspend_resume_internal_entity);
+    tcase_add_test(tc_basic, test_suspend_resume_parameter_entity);
 
     suite_add_tcase(s, tc_namespace);
     tcase_add_checked_fixture(tc_namespace,
