@@ -4758,6 +4758,18 @@ START_TEST(test_restart_on_error)
 }
 END_TEST
 
+/* Test that angle brackets in an attribute default value are faulted */
+START_TEST(test_reject_lt_in_attribute_value)
+{
+    const char *text =
+        "<!DOCTYPE doc [<!ATTLIST doc a CDATA '<bar>'>]>\n"
+        "<doc></doc>";
+
+    expect_failure(text, XML_ERROR_INVALID_TOKEN,
+                   "Bad attribute default not faulted");
+}
+END_TEST
+
 
 /*
  * Namespaces tests.
@@ -7347,7 +7359,6 @@ START_TEST(test_alloc_realloc_long_attribute_value)
 #undef MAX_REALLOC_COUNT
 END_TEST
 
-
 static void
 nsalloc_setup(void)
 {
@@ -8072,6 +8083,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_resume_entity_with_syntax_error);
     tcase_add_test(tc_basic, test_suspend_resume_parameter_entity);
     tcase_add_test(tc_basic, test_restart_on_error);
+    tcase_add_test(tc_basic, test_reject_lt_in_attribute_value);
 
     suite_add_tcase(s, tc_namespace);
     tcase_add_checked_fixture(tc_namespace,
