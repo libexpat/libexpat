@@ -4648,6 +4648,40 @@ START_TEST(test_hash_collision)
 END_TEST
 #undef COLLIDING_HASH_SALT
 
+/* Test resuming a parse suspended in entity substitution */
+static void XMLCALL
+start_element_suspender(void *UNUSED_P(userData),
+                        const XML_Char *name,
+                        const XML_Char **UNUSED_P(atts))
+{
+    if (!strcmp(name, "suspend"))
+        XML_StopParser(parser, XML_TRUE);
+}
+
+START_TEST(test_suspend_resume_internal_entity)
+{
+    const char *text =
+        "<!DOCTYPE doc [\n"
+        "<!ENTITY foo '<suspend>Hi</suspend>'>\n"
+        "]>\n"
+        "<doc>&foo;</doc>\n";
+    const char *expected = "Hi";
+    CharData storage;
+
+    CharData_Init(&storage);
+    XML_SetStartElementHandler(parser, start_element_suspender);
+    XML_SetCharacterDataHandler(parser, accumulate_characters);
+    XML_SetUserData(parser, &storage);
+    if (XML_Parse(parser, text, strlen(text),
+                  XML_TRUE) != XML_STATUS_SUSPENDED)
+        xml_failure(parser);
+    CharData_CheckXMLChars(&storage, "");
+    if (XML_ResumeParser(parser) != XML_STATUS_OK)
+        xml_failure(parser);
+    CharData_CheckXMLChars(&storage, expected);
+}
+END_TEST
+
 
 /*
  * Namespaces tests.
@@ -7917,6 +7951,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_unfinished_epilog);
     tcase_add_test(tc_basic, test_partial_char_in_epilog);
     tcase_add_test(tc_basic, test_hash_collision);
+    tcase_add_test(tc_basic, test_suspend_resume_internal_entity);
 
     suite_add_tcase(s, tc_namespace);
     tcase_add_checked_fixture(tc_namespace,
