@@ -4742,6 +4742,22 @@ START_TEST(test_suspend_resume_parameter_entity)
 }
 END_TEST
 
+/* Test attempting to use parser after an error is faulted */
+START_TEST(test_restart_on_error)
+{
+    const char *text = "<$doc><doc></doc>";
+
+    if (XML_Parse(parser, text, strlen(text), XML_TRUE) != XML_STATUS_ERROR)
+        fail("Invalid tag name not faulted");
+    if (XML_GetErrorCode(parser) != XML_ERROR_INVALID_TOKEN)
+        xml_failure(parser);
+    if (XML_Parse(parser, NULL, 0, XML_TRUE) != XML_STATUS_ERROR)
+        fail("Restarting invalid parse not faulted");
+    if (XML_GetErrorCode(parser) != XML_ERROR_INVALID_TOKEN)
+        xml_failure(parser);
+}
+END_TEST
+
 
 /*
  * Namespaces tests.
@@ -8014,6 +8030,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_suspend_resume_internal_entity);
     tcase_add_test(tc_basic, test_resume_entity_with_syntax_error);
     tcase_add_test(tc_basic, test_suspend_resume_parameter_entity);
+    tcase_add_test(tc_basic, test_restart_on_error);
 
     suite_add_tcase(s, tc_namespace);
     tcase_add_checked_fixture(tc_namespace,
