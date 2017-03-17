@@ -4662,10 +4662,11 @@ START_TEST(test_suspend_resume_internal_entity)
 {
     const char *text =
         "<!DOCTYPE doc [\n"
-        "<!ENTITY foo '<suspend>Hi</suspend>'>\n"
+        "<!ENTITY foo '<suspend>Hi<suspend>Ho</suspend></suspend>'>\n"
         "]>\n"
         "<doc>&foo;</doc>\n";
-    const char *expected = "Hi";
+    const char *expected1 = "Hi";
+    const char *expected2 = "HiHo";
     CharData storage;
 
     CharData_Init(&storage);
@@ -4676,9 +4677,12 @@ START_TEST(test_suspend_resume_internal_entity)
                   XML_TRUE) != XML_STATUS_SUSPENDED)
         xml_failure(parser);
     CharData_CheckXMLChars(&storage, "");
+    if (XML_ResumeParser(parser) != XML_STATUS_SUSPENDED)
+        xml_failure(parser);
+    CharData_CheckXMLChars(&storage, expected1);
     if (XML_ResumeParser(parser) != XML_STATUS_OK)
         xml_failure(parser);
-    CharData_CheckXMLChars(&storage, expected);
+    CharData_CheckXMLChars(&storage, expected2);
 }
 END_TEST
 
