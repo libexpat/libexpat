@@ -4682,6 +4682,26 @@ START_TEST(test_suspend_resume_internal_entity)
 }
 END_TEST
 
+/* Test syntax error is caught at parse resumption */
+START_TEST(test_resume_entity_with_syntax_error)
+{
+    const char *text =
+        "<!DOCTYPE doc [\n"
+        "<!ENTITY foo '<suspend>Hi</wombat>'>\n"
+        "]>\n"
+        "<doc>&foo;</doc>\n";
+
+    XML_SetStartElementHandler(parser, start_element_suspender);
+    if (XML_Parse(parser, text, strlen(text),
+                  XML_TRUE) != XML_STATUS_SUSPENDED)
+        xml_failure(parser);
+    if (XML_ResumeParser(parser) != XML_STATUS_ERROR)
+        fail("Syntax error in entity not faulted");
+    if (XML_GetErrorCode(parser) != XML_ERROR_TAG_MISMATCH)
+        xml_failure(parser);
+}
+END_TEST
+
 /* Test suspending and resuming in a parameter entity substitution */
 static void XMLCALL
 element_decl_suspender(void *UNUSED_P(userData),
@@ -7988,6 +8008,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_partial_char_in_epilog);
     tcase_add_test(tc_basic, test_hash_collision);
     tcase_add_test(tc_basic, test_suspend_resume_internal_entity);
+    tcase_add_test(tc_basic, test_resume_entity_with_syntax_error);
     tcase_add_test(tc_basic, test_suspend_resume_parameter_entity);
 
     suite_add_tcase(s, tc_namespace);
