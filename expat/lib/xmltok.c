@@ -369,24 +369,24 @@ utf8_toUtf8(const ENCODING *UNUSED_P(enc),
             const char **fromP, const char *fromLim,
             char **toP, const char *toLim)
 {
-  enum XML_Convert_Result res = XML_CONVERT_COMPLETED;
   char *to;
   const char *from;
-  if (fromLim - *fromP > toLim - *toP) {
-    /* Avoid copying partial characters. */
-    res = XML_CONVERT_OUTPUT_EXHAUSTED;
-    fromLim = *fromP + (toLim - *toP);
-    align_limit_to_full_utf8_characters(*fromP, &fromLim);
-  }
+  const char *fromLimInitial = fromLim;
+
+  /* Avoid copying partial characters. */
+  align_limit_to_full_utf8_characters(*fromP, &fromLim);
+
   for (to = *toP, from = *fromP; (from < fromLim) && (to < toLim); from++, to++)
     *to = *from;
   *fromP = from;
   *toP = to;
 
-  if ((to == toLim) && (from < fromLim))
+  if (fromLim < fromLimInitial)
+    return XML_CONVERT_INPUT_INCOMPLETE;
+  else if ((to == toLim) && (from < fromLim))
     return XML_CONVERT_OUTPUT_EXHAUSTED;
   else
-    return res;
+    return XML_CONVERT_COMPLETED;
 }
 
 static enum XML_Convert_Result PTRCALL
