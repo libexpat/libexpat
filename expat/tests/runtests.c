@@ -7413,6 +7413,39 @@ START_TEST(test_alloc_attribute_whitespace)
 #undef MAX_ALLOC_COUNT
 END_TEST
 
+START_TEST(test_alloc_attribute_predefined_entity)
+{
+    const char *text = "<doc a='&amp;'></doc>";
+    int i;
+#define MAX_ALLOC_COUNT 10
+    int repeat = 0;
+
+    for (i = 0; i < MAX_ALLOC_COUNT; i++) {
+        /* Repeat some counts to defeat cached allocations */
+        if (i == 3 && repeat == 1) {
+            i -= 2;
+            repeat++;
+        }
+        else if ((i == 2 &&
+                  (repeat == 0 || repeat == 2 || repeat == 3)) ||
+                 (i == 3 && repeat == 4)) {
+            i--;
+            repeat++;
+        }
+        allocation_count = i;
+        if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                    XML_TRUE) != XML_STATUS_ERROR)
+            break;
+        XML_ParserReset(parser, NULL);
+    }
+    if (i == 0)
+        fail("Parse succeeded despite failing allocator");
+    if (i == MAX_ALLOC_COUNT)
+        fail("Parse failed at maximum allocation count");
+}
+#undef MAX_ALLOC_COUNT
+END_TEST
+
 /* Test that a character reference at the end of a suitably long
  * default value for an attribute can trigger pool growth, and recovers
  * if the allocator fails on it.
@@ -8322,6 +8355,7 @@ make_suite(void)
     tcase_add_test(tc_alloc, test_alloc_comment_in_epilog);
     tcase_add_test(tc_alloc, test_alloc_realloc_long_attribute_value);
     tcase_add_test(tc_alloc, test_alloc_attribute_whitespace);
+    tcase_add_test(tc_alloc, test_alloc_attribute_predefined_entity);
     tcase_add_test(tc_alloc, test_alloc_long_attr_default_with_char_ref);
     tcase_add_test(tc_alloc, test_alloc_long_attr_value);
 
