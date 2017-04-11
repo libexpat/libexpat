@@ -355,6 +355,8 @@ doIgnoreSection(XML_Parser parser, const ENCODING *, const char **startPtr,
                 const char *end, const char **nextPtr, XML_Bool haveMore);
 #endif /* XML_DTD */
 
+static void
+freeBindings(XML_Parser parser, BINDING *bindings);
 static enum XML_Error
 storeAtts(XML_Parser parser, const ENCODING *, const char *s,
           TAG_NAME *tagNamePtr, BINDING **bindingsPtr);
@@ -2543,15 +2545,7 @@ doContent(XML_Parser parser,
         if (noElmHandlers && defaultHandler)
           reportDefault(parser, enc, s, next);
         poolClear(&tempPool);
-        while (bindings) {
-          BINDING *b = bindings;
-          if (endNamespaceDeclHandler)
-            endNamespaceDeclHandler(handlerArg, b->prefix->name);
-          bindings = bindings->nextTagBinding;
-          b->nextTagBinding = freeBindingList;
-          freeBindingList = b;
-          b->prefix->binding = b->prevPrefixBinding;
-        }
+        freeBindings(parser, bindings);
       }
       if (tagLevel == 0)
         return epilogProcessor(parser, next, end, nextPtr);
@@ -2747,6 +2741,29 @@ doContent(XML_Parser parser,
     }
   }
   /* not reached */
+}
+
+/* This function does not call free() on the allocated memory, merely
+ * moving it to the parser's freeBindingList where it can be freed or
+ * reused as appropriate.
+ */
+static void
+freeBindings(XML_Parser parser, BINDING *bindings)
+{
+  while (bindings) {
+    BINDING *b = bindings;
+
+    /* startNamespaceDeclHandler will have been called for this
+     * binding in addBindings(), so call the end handler now.
+     */
+    if (endNamespaceDeclHandler)
+        endNamespaceDeclHandler(handlerArg, b->prefix->name);
+
+    bindings = bindings->nextTagBinding;
+    b->nextTagBinding = freeBindingList;
+    freeBindingList = b;
+    b->prefix->binding = b->prevPrefixBinding;
+  }
 }
 
 /* Precondition: all arguments must be non-NULL;
