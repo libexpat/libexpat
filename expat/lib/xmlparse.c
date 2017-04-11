@@ -2529,8 +2529,10 @@ doContent(XML_Parser parser,
           return XML_ERROR_NO_MEMORY;
         poolFinish(&tempPool);
         result = storeAtts(parser, enc, s, &name, &bindings);
-        if (result)
+        if (result != XML_ERROR_NONE) {
+          freeBindings(parser, bindings);
           return result;
+        }
         poolFinish(&tempPool);
         if (startElementHandler) {
           startElementHandler(handlerArg, name.str, (const XML_Char **)atts);
