@@ -148,8 +148,22 @@ AC_DEFINE([XML_NS], 1,
           [Define to make XML Namespaces functionality available.])
 AC_DEFINE([XML_DTD], 1,
           [Define to make parameter entity parsing functionality available.])
-AC_DEFINE([XML_CONTEXT_BYTES], 1024,
-          [Define to specify how much context to retain around the current parse point.])
+
+AC_ARG_ENABLE([xml-context],
+  AS_HELP_STRING([--enable-xml-context @<:@COUNT@:>@],
+    [Retain context around the current parse point;
+        default is enabled and a size of 1024 bytes])
+AS_HELP_STRING([--disable-xml-context],
+    [Do not retain context around the current parse point]),
+  [enable_xml_context=${enableval}])
+AS_IF([test "x${enable_xml_context}" != "xno"], [
+  AS_IF([test "x${enable_xml_context}" == "xyes" \
+      -o "x${enable_xml_context}" == "x"], [
+    enable_xml_context=1024
+  ])
+  AC_DEFINE_UNQUOTED([XML_CONTEXT_BYTES], [${enable_xml_context}],
+    [Define to specify how much context to retain around the current parse point.])
+])
 
 AC_CONFIG_FILES([Makefile expat.pc])
 AC_OUTPUT

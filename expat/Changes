@@ -13,6 +13,9 @@ Release ??????????
                     to bypass compilation of the xmlwf.1 man page
             pr2   CMake: Introduce option "INSTALL" (enabled by default)
                     to bypass installation of expat files
+                  Autotools: Add parameters --enable-xml-context [COUNT]
+                    and --disable-xml-context; default of context of 1024
+                    bytes enabled unchanged
 
         Special thanks to:
             Andy Wang
