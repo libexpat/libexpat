@@ -4791,6 +4791,28 @@ START_TEST(test_trailing_cr_in_att_value)
 }
 END_TEST
 
+/* Try parsing a general entity within a parameter entity in a
+ * standalone internal DTD.  Covers a corner case in the parser.
+ */
+START_TEST(test_standalone_internal_entity)
+{
+    const char *text =
+        "<?xml version='1.0' standalone='yes' ?>\n"
+        "<!DOCTYPE doc [\n"
+        "  <!ELEMENT doc (#PCDATA)>\n"
+        "  <!ENTITY % pe '<!ATTLIST doc att2 CDATA \"&ge;\">'>\n"
+        "  <!ENTITY ge 'AttDefaultValue'>\n"
+        "  %pe;\n"
+        "]>\n"
+        "<doc att2='any'/>";
+
+    XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+}
+END_TEST
+
 
 /*
  * Namespaces tests.
@@ -8280,6 +8302,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_reject_lt_in_attribute_value);
     tcase_add_test(tc_basic, test_reject_unfinished_param_in_att_value);
     tcase_add_test(tc_basic, test_trailing_cr_in_att_value);
+    tcase_add_test(tc_basic, test_standalone_internal_entity);
 
     suite_add_tcase(s, tc_namespace);
     tcase_add_checked_fixture(tc_namespace,
