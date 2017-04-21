@@ -4841,6 +4841,58 @@ START_TEST(test_skipped_external_entity)
 }
 END_TEST
 
+/* Test a different form of unknown external entity */
+typedef struct ext_hdlr_data {
+    const char *parse_text;
+    XML_ExternalEntityRefHandler handler;
+} ExtHdlrData;
+
+static int XMLCALL
+external_entity_oneshot_loader(XML_Parser parser,
+                               const XML_Char *context,
+                               const XML_Char *UNUSED_P(base),
+                               const XML_Char *UNUSED_P(systemId),
+                               const XML_Char *UNUSED_P(publicId))
+{
+    ExtHdlrData *test_data = (ExtHdlrData *)XML_GetUserData(parser);
+    XML_Parser ext_parser;
+
+    ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
+    if (ext_parser == NULL)
+        fail("Could not create external entity parser.");
+    /* Use the requested entity parser for further externals */
+    XML_SetExternalEntityRefHandler(ext_parser, test_data->handler);
+    if ( _XML_Parse_SINGLE_BYTES(ext_parser,
+                                 test_data->parse_text,
+                                 strlen(test_data->parse_text),
+                                 XML_TRUE) == XML_STATUS_ERROR) {
+        xml_failure(ext_parser);
+    }
+    return XML_STATUS_OK;
+}
+
+START_TEST(test_skipped_null_loaded_ext_entity)
+{
+    const char *text =
+        "<!DOCTYPE doc SYSTEM 'http://example.org/one.ent'>\n"
+        "<doc />";
+    ExtHdlrData test_data = {
+        "<!ENTITY % pe1 SYSTEM 'http://example.org/two.ent'>\n"
+        "<!ENTITY % pe2 '%pe1;'>\n"
+        "%pe2;\n",
+        external_entity_null_loader
+    };
+
+    XML_SetUserData(parser, &test_data);
+    XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+    XML_SetExternalEntityRefHandler(parser, external_entity_oneshot_loader);
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+}
+END_TEST
+
+
 
 /*
  * Namespaces tests.
@@ -8332,6 +8384,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_trailing_cr_in_att_value);
     tcase_add_test(tc_basic, test_standalone_internal_entity);
     tcase_add_test(tc_basic, test_skipped_external_entity);
+    tcase_add_test(tc_basic, test_skipped_null_loaded_ext_entity);
 
     suite_add_tcase(s, tc_namespace);
     tcase_add_checked_fixture(tc_namespace,
