@@ -4892,6 +4892,27 @@ START_TEST(test_skipped_null_loaded_ext_entity)
 }
 END_TEST
 
+START_TEST(test_skipped_unloaded_ext_entity)
+{
+    const char *text =
+        "<!DOCTYPE doc SYSTEM 'http://example.org/one.ent'>\n"
+        "<doc />";
+    ExtHdlrData test_data = {
+        "<!ENTITY % pe1 SYSTEM 'http://example.org/two.ent'>\n"
+        "<!ENTITY % pe2 '%pe1;'>\n"
+        "%pe2;\n",
+        NULL
+    };
+
+    XML_SetUserData(parser, &test_data);
+    XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+    XML_SetExternalEntityRefHandler(parser, external_entity_oneshot_loader);
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+}
+END_TEST
+
 
 
 /*
@@ -8385,6 +8406,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_standalone_internal_entity);
     tcase_add_test(tc_basic, test_skipped_external_entity);
     tcase_add_test(tc_basic, test_skipped_null_loaded_ext_entity);
+    tcase_add_test(tc_basic, test_skipped_unloaded_ext_entity);
 
     suite_add_tcase(s, tc_namespace);
     tcase_add_checked_fixture(tc_namespace,
