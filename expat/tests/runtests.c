@@ -4065,6 +4065,12 @@ START_TEST(test_external_entity_values)
             NULL,
             XML_ERROR_PARTIAL_CHAR
         },
+        {
+            "%e1;",
+            "Recursive parameter entity not faulted",
+            NULL,
+            XML_ERROR_RECURSIVE_ENTITY_REF
+        },
         { NULL, NULL, NULL, XML_ERROR_NONE }
     };
     int i;
