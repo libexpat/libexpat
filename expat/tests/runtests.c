@@ -4813,6 +4813,28 @@ START_TEST(test_standalone_internal_entity)
 }
 END_TEST
 
+/* Test that a reference to an unknown external entity is skipped */
+START_TEST(test_skipped_external_entity)
+{
+    const char *text =
+        "<!DOCTYPE doc SYSTEM 'http://example.org/'>\n"
+        "<doc></doc>\n";
+    ExtTest test_data = {
+        "<!ELEMENT doc EMPTY>\n"
+        "<!ENTITY % e2 '%e1;'>\n",
+        NULL,
+        NULL
+    };
+
+    XML_SetUserData(parser, &test_data);
+    XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+    XML_SetExternalEntityRefHandler(parser, external_entity_loader);
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+}
+END_TEST
+
 
 /*
  * Namespaces tests.
@@ -8303,6 +8325,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_reject_unfinished_param_in_att_value);
     tcase_add_test(tc_basic, test_trailing_cr_in_att_value);
     tcase_add_test(tc_basic, test_standalone_internal_entity);
+    tcase_add_test(tc_basic, test_skipped_external_entity);
 
     suite_add_tcase(s, tc_namespace);
     tcase_add_checked_fixture(tc_namespace,
