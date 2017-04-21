@@ -4914,7 +4914,6 @@ START_TEST(test_skipped_unloaded_ext_entity)
 END_TEST
 
 
-
 /*
  * Namespaces tests.
  */
@@ -7675,6 +7674,52 @@ START_TEST(test_alloc_long_attr_value)
 #undef MAX_ALLOC_COUNT
 END_TEST
 
+/* Test that an error in a nested parameter entity substitution is
+ * handled correctly.  It seems unlikely that the code path being
+ * exercised can be reached purely by carefully crafted XML, but an
+ * allocation error in the right place will definitely do it.
+ */
+START_TEST(test_alloc_nested_entities)
+{
+    const char *text =
+        "<!DOCTYPE doc SYSTEM 'http://example.org/one.ent'>\n"
+        "<doc />";
+    ExtFaults test_data = {
+        "<!ENTITY % pe1 '"
+        /* 64 characters per line */
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "'>\n"
+        "<!ENTITY % pe2 '%pe1;'>\n"
+        "%pe2;",
+        "Memory Fail not faulted",
+        NULL,
+        XML_ERROR_NO_MEMORY
+    };
+
+    /* Causes an allocation error in a nested storeEntityValue() */
+    allocation_count = 12;
+    XML_SetUserData(parser, &test_data);
+    XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+    XML_SetExternalEntityRefHandler(parser, external_entity_faulter);
+    expect_failure(text, XML_ERROR_EXTERNAL_ENTITY_HANDLING,
+                   "Entity allocation failure not noted");
+}
+END_TEST
 
 static void
 nsalloc_setup(void)
@@ -8485,6 +8530,7 @@ make_suite(void)
     tcase_add_test(tc_alloc, test_alloc_attribute_predefined_entity);
     tcase_add_test(tc_alloc, test_alloc_long_attr_default_with_char_ref);
     tcase_add_test(tc_alloc, test_alloc_long_attr_value);
+    tcase_add_test(tc_alloc, test_alloc_nested_entities);
 
     suite_add_tcase(s, tc_nsalloc);
     tcase_add_checked_fixture(tc_nsalloc, nsalloc_setup, nsalloc_teardown);
