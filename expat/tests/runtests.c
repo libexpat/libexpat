@@ -321,6 +321,47 @@ dummy_skip_handler(void *UNUSED_P(userData),
 }
 
 /*
+ * Parameter entity evaluation support.
+ */
+#define ENTITY_MATCH_FAIL      (-1)
+#define ENTITY_MATCH_NOT_FOUND  (0)
+#define ENTITY_MATCH_SUCCESS    (1)
+static const XML_Char *entity_name_to_match = NULL;
+static const XML_Char *entity_value_to_match = NULL;
+static int entity_match_flag = ENTITY_MATCH_NOT_FOUND;
+
+static void XMLCALL
+param_entity_match_handler(void           *UNUSED_P(userData),
+                           const XML_Char *entityName,
+                           int            is_parameter_entity,
+                           const XML_Char *value,
+                           int            value_length,
+                           const XML_Char *UNUSED_P(base),
+                           const XML_Char *UNUSED_P(systemId),
+                           const XML_Char *UNUSED_P(publicId),
+                           const XML_Char *UNUSED_P(notationName))
+{
+    if (!is_parameter_entity ||
+        entity_name_to_match == NULL ||
+        entity_value_to_match == NULL) {
+        return;
+    }
+    if (!strcmp(entityName, entity_name_to_match)) {
+        /* The cast here is safe because we control the horizontal and
+         * the vertical, and we therefore know our strings are never
+         * going to overflow an int.
+         */
+        if (value_length != (int)strlen(entity_value_to_match) ||
+            strncmp(value, entity_value_to_match, value_length)) {
+            entity_match_flag = ENTITY_MATCH_FAIL;
+        } else {
+            entity_match_flag = ENTITY_MATCH_SUCCESS;
+        }
+    }
+    /* Else leave the match flag alone */
+}
+
+/*
  * Character & encoding tests.
  */
 
@@ -4913,6 +4954,43 @@ START_TEST(test_skipped_unloaded_ext_entity)
 }
 END_TEST
 
+/* Test that a parameter entity value ending with a carriage return
+ * has it translated internally into a newline.
+ */
+START_TEST(test_param_entity_with_trailing_cr)
+{
+#define PARAM_ENTITY_NAME "pe"
+#define PARAM_ENTITY_CORE_VALUE "<!ATTLIST doc att CDATA \"default\">"
+    const char *text =
+        "<!DOCTYPE doc SYSTEM 'http://example.org/'>\n"
+        "<doc/>";
+    ExtTest test_data = {
+        "<!ENTITY % " PARAM_ENTITY_NAME
+        " '" PARAM_ENTITY_CORE_VALUE "\r'>\n"
+        "%" PARAM_ENTITY_NAME ";\n",
+        NULL,
+        NULL
+    };
+
+    XML_SetUserData(parser, &test_data);
+    XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+    XML_SetExternalEntityRefHandler(parser, external_entity_loader);
+    XML_SetEntityDeclHandler(parser, param_entity_match_handler);
+    entity_name_to_match = PARAM_ENTITY_NAME;
+    entity_value_to_match = PARAM_ENTITY_CORE_VALUE "\n";
+    entity_match_flag = ENTITY_MATCH_NOT_FOUND;
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+    if (entity_match_flag == ENTITY_MATCH_FAIL)
+        fail("Parameter entity CR->NEWLINE conversion failed");
+    else if (entity_match_flag == ENTITY_MATCH_NOT_FOUND)
+        fail("Parameter entity not parsed");
+}
+#undef PARAM_ENTITY_NAME
+#undef PARAM_ENTITY_CORE_VALUE
+END_TEST
+
 
 /*
  * Namespaces tests.
@@ -8452,6 +8530,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_skipped_external_entity);
     tcase_add_test(tc_basic, test_skipped_null_loaded_ext_entity);
     tcase_add_test(tc_basic, test_skipped_unloaded_ext_entity);
+    tcase_add_test(tc_basic, test_param_entity_with_trailing_cr);
 
     suite_add_tcase(s, tc_namespace);
     tcase_add_checked_fixture(tc_namespace,
