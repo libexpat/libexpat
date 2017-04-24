@@ -4991,6 +4991,19 @@ START_TEST(test_param_entity_with_trailing_cr)
 #undef PARAM_ENTITY_CORE_VALUE
 END_TEST
 
+START_TEST(test_invalid_character_entity)
+{
+    const char *text =
+        "<!DOCTYPE doc [\n"
+        "  <!ENTITY entity '&#x110000;'>\n"
+        "]>\n"
+        "<doc>&entity;</doc>";
+
+    expect_failure(text, XML_ERROR_BAD_CHAR_REF,
+                   "Out of range character reference not faulted");
+}
+END_TEST
+
 
 /*
  * Namespaces tests.
@@ -8578,6 +8591,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_skipped_null_loaded_ext_entity);
     tcase_add_test(tc_basic, test_skipped_unloaded_ext_entity);
     tcase_add_test(tc_basic, test_param_entity_with_trailing_cr);
+    tcase_add_test(tc_basic, test_invalid_character_entity);
 
     suite_add_tcase(s, tc_namespace);
     tcase_add_checked_fixture(tc_namespace,
