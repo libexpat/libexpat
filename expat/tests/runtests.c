@@ -7799,6 +7799,53 @@ START_TEST(test_alloc_nested_entities)
 }
 END_TEST
 
+START_TEST(test_alloc_realloc_param_entity_newline)
+{
+    const char *text =
+        "<!DOCTYPE doc SYSTEM 'http://example.org/'>\n"
+        "<doc/>";
+    char dtd_text[] =
+        "<!ENTITY % pe '<!ATTLIST doc att CDATA \""
+        /* 64 characters per line */
+        "This default value is carefully crafted so that the carriage    "
+        "return right at the end of the entity string causes an internal "
+        "string pool to have to grow.  This allows us to test the alloc  "
+        "failure path from that point. OPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDE"
+        "\">\n'>"
+        "%pe;\n";
+    int i;
+#define MAX_REALLOC_COUNT 5
+
+    for (i = 0; i < MAX_REALLOC_COUNT; i++) {
+        reallocation_count = i;
+        XML_SetUserData(parser, dtd_text);
+        XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+        XML_SetExternalEntityRefHandler(parser, external_entity_alloc);
+        if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                    XML_TRUE) != XML_STATUS_ERROR)
+            break;
+        XML_ParserReset(parser, NULL);
+    }
+    if (i == 0)
+        fail("Parse succeeded despite failing reallocator");
+    if (i == MAX_REALLOC_COUNT)
+        fail("Parse failed at maximum reallocation count");
+}
+#undef MAX_REALLOC_COUNT
+END_TEST
+
 static void
 nsalloc_setup(void)
 {
@@ -8610,6 +8657,7 @@ make_suite(void)
     tcase_add_test(tc_alloc, test_alloc_long_attr_default_with_char_ref);
     tcase_add_test(tc_alloc, test_alloc_long_attr_value);
     tcase_add_test(tc_alloc, test_alloc_nested_entities);
+    tcase_add_test(tc_alloc, test_alloc_realloc_param_entity_newline);
 
     suite_add_tcase(s, tc_nsalloc);
     tcase_add_checked_fixture(tc_nsalloc, nsalloc_setup, nsalloc_teardown);
