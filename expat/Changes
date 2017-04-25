@@ -16,6 +16,14 @@ Release ??????????
                   Autotools: Add parameters --enable-xml-context [COUNT]
                     and --disable-xml-context; default of context of 1024
                     bytes enabled unchanged
+             #14  Drop AmigaOS 4.x code
+             #14  Drop ancient build systems:
+                    * Borland C++ Builder
+                    * OpenVMS
+                    * Open Watcom
+                    * Visual Studio 6.0
+                  If you happen to rely on some of these, please get in touch
+                  for joining with maintenance.
 
         Special thanks to:
             Andy Wang
