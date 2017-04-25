@@ -1587,7 +1587,8 @@ void XMLCALL
 XML_SetElementDeclHandler(XML_Parser parser,
                           XML_ElementDeclHandler eldecl)
 {
-  elementDeclHandler = eldecl;
+  if (parser != NULL)
+    elementDeclHandler = eldecl;
 }
 
 void XMLCALL
