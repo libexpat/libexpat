@@ -62,6 +62,8 @@ tests/benchmark/benchmark.c
 tests/README.txt
 tests/chardata.c
 tests/chardata.h
+tests/memcheck.c
+tests/memcheck.h
 tests/minicheck.c
 tests/minicheck.h
 tests/runtests.c
