@@ -915,6 +915,7 @@ XML_SetParamEntityParsing(XML_Parser parser,
    Helps in preventing DoS attacks based on predicting hash
    function behavior. This must be called before parsing is started.
    Returns 1 if successful, 0 when called after parsing has started.
+   Note: If parser == NULL, the function will do nothing and return 0.
 */
 XMLPARSEAPI(int)
 XML_SetHashSalt(XML_Parser parser,
