@@ -1371,6 +1371,8 @@ XML_GetIdAttributeIndex(XML_Parser parser)
 const XML_AttrInfo * XMLCALL
 XML_GetAttributeInfo(XML_Parser parser)
 {
+  if (parser == NULL)
+    return NULL;
   return attInfo;
 }
 #endif
