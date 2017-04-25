@@ -1595,7 +1595,8 @@ void XMLCALL
 XML_SetAttlistDeclHandler(XML_Parser parser,
                           XML_AttlistDeclHandler attdecl)
 {
-  attlistDeclHandler = attdecl;
+  if (parser != NULL)
+    attlistDeclHandler = attdecl;
 }
 
 void XMLCALL
