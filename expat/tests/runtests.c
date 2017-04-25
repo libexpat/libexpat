@@ -5696,7 +5696,8 @@ versions_equal(const XML_Expat_Version *first,
 START_TEST(test_misc_version)
 {
     XML_Expat_Version read_version = XML_ExpatVersionInfo();
-    XML_Expat_Version parsed_version;
+     /* Silence compiler warning with the following assignment */
+    XML_Expat_Version parsed_version = { 0, 0, 0 };
     const XML_LChar *version_text = XML_ExpatVersion();
 
     if (version_text == NULL)
