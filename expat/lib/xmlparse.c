@@ -976,6 +976,10 @@ XML_ParserReset(XML_Parser parser, const XML_Char *encodingName)
 {
   TAG *tStk;
   OPEN_INTERNAL_ENTITY *openEntityList;
+
+  if (parser == NULL)
+      return XML_FALSE;
+
   if (parentParser)
     return XML_FALSE;
   /* move tagStack to freeTagList */
