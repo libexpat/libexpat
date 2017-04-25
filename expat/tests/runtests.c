@@ -24,6 +24,7 @@
 #include "chardata.h"
 #include "internal.h"  /* for UNUSED_P only */
 #include "minicheck.h"
+#include "memcheck.h"
 
 #if defined(__amigaos__) && defined(__USE_INLINE__)
 #include <proto/expat.h>
@@ -2892,6 +2893,30 @@ START_TEST(test_misc_version)
 }
 END_TEST
 
+/* Regression test for GitHub Issue #17: memory leak parsing attribute
+ * values with mixed bound and unbound namespaces.
+ */
+START_TEST(test_misc_attribute_leak)
+{
+    const char *text = "<D xmlns:L=\"D\" l:a='' L:a=''/>";
+    XML_Memory_Handling_Suite memsuite = {
+        tracking_malloc,
+        tracking_realloc,
+        tracking_free
+    };
+
+    parser = XML_ParserCreate_MM("UTF-8", &memsuite, "\n");
+    expect_failure(text, XML_ERROR_UNBOUND_PREFIX,
+                   "Unbound prefixes not found");
+    XML_ParserFree(parser);
+    /* Prevent the teardown trying to double free */
+    parser = NULL;
+
+    if (!tracking_report())
+        fail("Memory leak found");
+}
+END_TEST
+
 
 static void
 alloc_setup(void)
@@ -3431,6 +3456,7 @@ make_suite(void)
     tcase_add_test(tc_misc, test_misc_alloc_ns_parse_buffer);
     tcase_add_test(tc_misc, test_misc_error_string);
     tcase_add_test(tc_misc, test_misc_version);
+    tcase_add_test(tc_misc, test_misc_attribute_leak);
 
     suite_add_tcase(s, tc_alloc);
     tcase_add_checked_fixture(tc_alloc, alloc_setup, alloc_teardown);
