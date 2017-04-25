@@ -5044,6 +5044,8 @@ processInternalEntity(XML_Parser parser, ENTITY *entity,
   openEntity->internalEventEndPtr = NULL;
   textStart = (char *)entity->textPtr;
   textEnd = (char *)(entity->textPtr + entity->textLen);
+  /* Set a safe default value in case 'next' does not get set */
+  next = textStart;
 
 #ifdef XML_DTD
   if (entity->is_param) {
@@ -5089,6 +5091,8 @@ internalEntityProcessor(XML_Parser parser,
   entity = openEntity->entity;
   textStart = ((char *)entity->textPtr) + entity->processed;
   textEnd = (char *)(entity->textPtr + entity->textLen);
+  /* Set a safe default value in case 'next' does not get set */
+  next = textStart;
 
 #ifdef XML_DTD
   if (entity->is_param) {
