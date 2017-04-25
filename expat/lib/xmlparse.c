@@ -1406,7 +1406,8 @@ void XMLCALL
 XML_SetCharacterDataHandler(XML_Parser parser,
                             XML_CharacterDataHandler handler)
 {
-  characterDataHandler = handler;
+  if (parser != NULL)
+    characterDataHandler = handler;
 }
 
 void XMLCALL
