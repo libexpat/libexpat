@@ -1398,7 +1398,8 @@ XML_SetStartElementHandler(XML_Parser parser,
 void XMLCALL
 XML_SetEndElementHandler(XML_Parser parser,
                          XML_EndElementHandler end) {
-  endElementHandler = end;
+  if (parser != NULL)
+    endElementHandler = end;
 }
 
 void XMLCALL
