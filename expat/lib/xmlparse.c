@@ -1541,7 +1541,8 @@ void XMLCALL
 XML_SetNotStandaloneHandler(XML_Parser parser,
                             XML_NotStandaloneHandler handler)
 {
-  notStandaloneHandler = handler;
+  if (parser != NULL)
+    notStandaloneHandler = handler;
 }
 
 void XMLCALL
