@@ -1,17 +1,3 @@
-amiga/launch.c
-amiga/expat_68k.c
-amiga/expat_68k.h
-amiga/expat_68k_handler_stubs.c
-amiga/expat_base.h
-amiga/expat_vectors.c
-amiga/expat_lib.c
-amiga/expat.xml
-amiga/README.txt
-amiga/Makefile
-amiga/include/proto/expat.h
-amiga/include/libraries/expat.h
-amiga/include/interfaces/expat.h
-amiga/include/inline4/expat.h
 bcb5/README.txt
 bcb5/all_projects.bpg
 bcb5/elements.bpf
