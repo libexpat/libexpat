@@ -1485,7 +1485,8 @@ XML_SetDoctypeDeclHandler(XML_Parser parser,
 void XMLCALL
 XML_SetStartDoctypeDeclHandler(XML_Parser parser,
                                XML_StartDoctypeDeclHandler start) {
-  startDoctypeDeclHandler = start;
+  if (parser != NULL)
+    startDoctypeDeclHandler = start;
 }
 
 void XMLCALL
