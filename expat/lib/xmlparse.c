@@ -1039,52 +1039,88 @@ XML_ExternalEntityParserCreate(XML_Parser oldParser,
 {
   XML_Parser parser = oldParser;
   DTD *newDtd = NULL;
-  DTD *oldDtd = _dtd;
-  XML_StartElementHandler oldStartElementHandler = startElementHandler;
-  XML_EndElementHandler oldEndElementHandler = endElementHandler;
-  XML_CharacterDataHandler oldCharacterDataHandler = characterDataHandler;
-  XML_ProcessingInstructionHandler oldProcessingInstructionHandler
-      = processingInstructionHandler;
-  XML_CommentHandler oldCommentHandler = commentHandler;
-  XML_StartCdataSectionHandler oldStartCdataSectionHandler
-      = startCdataSectionHandler;
-  XML_EndCdataSectionHandler oldEndCdataSectionHandler
-      = endCdataSectionHandler;
-  XML_DefaultHandler oldDefaultHandler = defaultHandler;
-  XML_UnparsedEntityDeclHandler oldUnparsedEntityDeclHandler
-      = unparsedEntityDeclHandler;
-  XML_NotationDeclHandler oldNotationDeclHandler = notationDeclHandler;
-  XML_StartNamespaceDeclHandler oldStartNamespaceDeclHandler
-      = startNamespaceDeclHandler;
-  XML_EndNamespaceDeclHandler oldEndNamespaceDeclHandler
-      = endNamespaceDeclHandler;
-  XML_NotStandaloneHandler oldNotStandaloneHandler = notStandaloneHandler;
-  XML_ExternalEntityRefHandler oldExternalEntityRefHandler
-      = externalEntityRefHandler;
-  XML_SkippedEntityHandler oldSkippedEntityHandler = skippedEntityHandler;
-  XML_UnknownEncodingHandler oldUnknownEncodingHandler
-      = unknownEncodingHandler;
-  XML_ElementDeclHandler oldElementDeclHandler = elementDeclHandler;
-  XML_AttlistDeclHandler oldAttlistDeclHandler = attlistDeclHandler;
-  XML_EntityDeclHandler oldEntityDeclHandler = entityDeclHandler;
-  XML_XmlDeclHandler oldXmlDeclHandler = xmlDeclHandler;
-  ELEMENT_TYPE * oldDeclElementType = declElementType;
+  DTD *oldDtd;
+  XML_StartElementHandler oldStartElementHandler;
+  XML_EndElementHandler oldEndElementHandler;
+  XML_CharacterDataHandler oldCharacterDataHandler;
+  XML_ProcessingInstructionHandler oldProcessingInstructionHandler;
+  XML_CommentHandler oldCommentHandler;
+  XML_StartCdataSectionHandler oldStartCdataSectionHandler;
+  XML_EndCdataSectionHandler oldEndCdataSectionHandler;
+  XML_DefaultHandler oldDefaultHandler;
+  XML_UnparsedEntityDeclHandler oldUnparsedEntityDeclHandler;
+  XML_NotationDeclHandler oldNotationDeclHandler;
+  XML_StartNamespaceDeclHandler oldStartNamespaceDeclHandler;
+  XML_EndNamespaceDeclHandler oldEndNamespaceDeclHandler;
+  XML_NotStandaloneHandler oldNotStandaloneHandler;
+  XML_ExternalEntityRefHandler oldExternalEntityRefHandler;
+  XML_SkippedEntityHandler oldSkippedEntityHandler;
+  XML_UnknownEncodingHandler oldUnknownEncodingHandler;
+  XML_ElementDeclHandler oldElementDeclHandler;
+  XML_AttlistDeclHandler oldAttlistDeclHandler;
+  XML_EntityDeclHandler oldEntityDeclHandler;
+  XML_XmlDeclHandler oldXmlDeclHandler;
+  ELEMENT_TYPE * oldDeclElementType;
 
-  void *oldUserData = userData;
-  void *oldHandlerArg = handlerArg;
-  XML_Bool oldDefaultExpandInternalEntities = defaultExpandInternalEntities;
-  XML_Parser oldExternalEntityRefHandlerArg = externalEntityRefHandlerArg;
+  void *oldUserData;
+  void *oldHandlerArg;
+  XML_Bool oldDefaultExpandInternalEntities;
+  XML_Parser oldExternalEntityRefHandlerArg;
 #ifdef XML_DTD
-  enum XML_ParamEntityParsing oldParamEntityParsing = paramEntityParsing;
-  int oldInEntityValue = prologState.inEntityValue;
+  enum XML_ParamEntityParsing oldParamEntityParsing;
+  int oldInEntityValue;
 #endif
-  XML_Bool oldns_triplets = ns_triplets;
+  XML_Bool oldns_triplets;
   /* Note that the new parser shares the same hash secret as the old
      parser, so that dtdCopy and copyEntityTable can lookup values
      from hash tables associated with either parser without us having
      to worry which hash secrets each table has.
   */
-  unsigned long oldhash_secret_salt = hash_secret_salt;
+  unsigned long oldhash_secret_salt;
+
+  /* Validate the oldParser parameter before we pull everything out of it */
+  if (oldParser == NULL)
+    return NULL;
+
+  /* Stash the original parser contents on the stack */
+  oldDtd = _dtd;
+  oldStartElementHandler = startElementHandler;
+  oldEndElementHandler = endElementHandler;
+  oldCharacterDataHandler = characterDataHandler;
+  oldProcessingInstructionHandler = processingInstructionHandler;
+  oldCommentHandler = commentHandler;
+  oldStartCdataSectionHandler = startCdataSectionHandler;
+  oldEndCdataSectionHandler = endCdataSectionHandler;
+  oldDefaultHandler = defaultHandler;
+  oldUnparsedEntityDeclHandler = unparsedEntityDeclHandler;
+  oldNotationDeclHandler = notationDeclHandler;
+  oldStartNamespaceDeclHandler = startNamespaceDeclHandler;
+  oldEndNamespaceDeclHandler = endNamespaceDeclHandler;
+  oldNotStandaloneHandler = notStandaloneHandler;
+  oldExternalEntityRefHandler = externalEntityRefHandler;
+  oldSkippedEntityHandler = skippedEntityHandler;
+  oldUnknownEncodingHandler = unknownEncodingHandler;
+  oldElementDeclHandler = elementDeclHandler;
+  oldAttlistDeclHandler = attlistDeclHandler;
+  oldEntityDeclHandler = entityDeclHandler;
+  oldXmlDeclHandler = xmlDeclHandler;
+  oldDeclElementType = declElementType;
+
+  oldUserData = userData;
+  oldHandlerArg = handlerArg;
+  oldDefaultExpandInternalEntities = defaultExpandInternalEntities;
+  oldExternalEntityRefHandlerArg = externalEntityRefHandlerArg;
+#ifdef XML_DTD
+  oldParamEntityParsing = paramEntityParsing;
+  oldInEntityValue = prologState.inEntityValue;
+#endif
+  oldns_triplets = ns_triplets;
+  /* Note that the new parser shares the same hash secret as the old
+     parser, so that dtdCopy and copyEntityTable can lookup values
+     from hash tables associated with either parser without us having
+     to worry which hash secrets each table has.
+  */
+  oldhash_secret_salt = hash_secret_salt;
 
 #ifdef XML_DTD
   if (!context)
