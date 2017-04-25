@@ -76,9 +76,6 @@ tests/minicheck.h
 tests/runtests.c
 tests/runtestspp.cpp
 tests/xmltest.sh
-vms/README.vms
-vms/descrip.mms
-vms/expat_config.h
 win32/MANIFEST.txt
 win32/README.txt
 win32/expat.iss
