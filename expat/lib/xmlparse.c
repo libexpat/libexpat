@@ -1319,6 +1319,8 @@ XML_SetReturnNSTriplet(XML_Parser parser, int do_nst)
 void XMLCALL
 XML_SetUserData(XML_Parser parser, void *p)
 {
+  if (parser == NULL)
+    return;
   if (handlerArg == userData)
     handlerArg = userData = p;
   else
