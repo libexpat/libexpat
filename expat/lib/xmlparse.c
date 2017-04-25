@@ -1330,6 +1330,8 @@ XML_SetUserData(XML_Parser parser, void *p)
 enum XML_Status XMLCALL
 XML_SetBase(XML_Parser parser, const XML_Char *p)
 {
+  if (parser == NULL)
+    return XML_STATUS_ERROR;
   if (p) {
     p = poolCopyString(&_dtd->pool, p);
     if (!p)
