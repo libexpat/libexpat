@@ -1533,7 +1533,8 @@ XML_SetStartNamespaceDeclHandler(XML_Parser parser,
 void XMLCALL
 XML_SetEndNamespaceDeclHandler(XML_Parser parser,
                                XML_EndNamespaceDeclHandler end) {
-  endNamespaceDeclHandler = end;
+  if (parser != NULL)
+    endNamespaceDeclHandler = end;
 }
 
 void XMLCALL
