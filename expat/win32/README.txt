@@ -1,19 +1,10 @@
 
 Expat can be built on Windows in two ways:
-  using MS Visual C++ (6.0 or .NET) or Cygwin.
+  using MS Visual Studio .NET or Cygwin.
 
 * Cygwin:
   This follows the Unix build procedures.
 
-* MS Visual C++ 6:
-  Based on the workspace file expat.dsw. The related project
-  files (.dsp) are located in the lib subdirectory.
-
-* MS Visual Studio .NET 2002, 2003, 2005, 2008, 2010:
-  The VC++ 6 workspace file (expat.dsw) and project files (.dsp)
-  can be opened and imported in VS.NET without problems.
-  Note: Tests have their own *.dsw files.
-  
 * MS Visual Studio 2013 and 2015:
   A solution file for Visual Studio 2013 is provided: expat.sln.
   The associated project files (*.vcxproj) reside in the appropriate

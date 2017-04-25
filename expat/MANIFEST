@@ -17,7 +17,6 @@ configure.ac
 expat_config.h.in
 expat_config.h.cmake
 expat.pc.in
-expat.dsw
 aclocal.m4
 conftools/PrintPath
 conftools/ac_c_bigendian_cross.m4
@@ -34,19 +33,13 @@ m4/ltoptions.m4
 m4/ltsugar.m4
 m4/lt~obsolete.m4
 examples/elements.c
-examples/elements.dsp
 examples/outline.c
-examples/outline.dsp
 lib/Makefile.MPW
 lib/amigaconfig.h
 lib/ascii.h
 lib/asciitab.h
-lib/expat.dsp
 lib/expat.h
 lib/expat_external.h
-lib/expat_static.dsp
-lib/expatw.dsp
-lib/expatw_static.dsp
 lib/iasciitab.h
 lib/internal.h
 lib/latin1tab.h
@@ -66,8 +59,6 @@ lib/xmltok_impl.h
 lib/xmltok_ns.c
 tests/benchmark/README.txt
 tests/benchmark/benchmark.c
-tests/benchmark/benchmark.dsp
-tests/benchmark/benchmark.dsw
 tests/README.txt
 tests/chardata.c
 tests/chardata.h
@@ -93,5 +84,4 @@ xmlwf/xmlmime.h
 xmlwf/xmltchar.h
 xmlwf/xmlurl.h
 xmlwf/xmlwf.c
-xmlwf/xmlwf.dsp
 xmlwf/xmlwin32url.cxx
