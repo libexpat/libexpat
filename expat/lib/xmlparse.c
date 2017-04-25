@@ -1292,6 +1292,8 @@ XML_UseParserAsHandlerArg(XML_Parser parser)
 enum XML_Error XMLCALL
 XML_UseForeignDTD(XML_Parser parser, XML_Bool useDTD)
 {
+  if (parser == NULL)
+    return XML_ERROR_INVALID_ARGUMENT;
 #ifdef XML_DTD
   /* block after XML_Parse()/XML_ParseBuffer() has been called */
   if (ps_parsing == XML_PARSING || ps_parsing == XML_SUSPENDED)

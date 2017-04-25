@@ -95,7 +95,9 @@ enum XML_Error {
   /* Added in 2.0. */
   XML_ERROR_RESERVED_PREFIX_XML,
   XML_ERROR_RESERVED_PREFIX_XMLNS,
-  XML_ERROR_RESERVED_NAMESPACE_URI
+  XML_ERROR_RESERVED_NAMESPACE_URI,
+  /* Added in 2.2 */
+  XML_ERROR_INVALID_ARGUMENT
 };
 
 enum XML_Content_Type {
@@ -706,6 +708,7 @@ XML_UseParserAsHandlerArg(XML_Parser parser);
      be called, despite an external subset being parsed.
    Note: If XML_DTD is not defined when Expat is compiled, returns
      XML_ERROR_FEATURE_REQUIRES_XML_DTD.
+   Note: If parser == NULL, returns XML_ERROR_INVALID_ARGUMENT.
 */
 XMLPARSEAPI(enum XML_Error)
 XML_UseForeignDTD(XML_Parser parser, XML_Bool useDTD);
