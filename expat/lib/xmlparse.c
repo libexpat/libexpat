@@ -2016,6 +2016,8 @@ XML_GetParsingStatus(XML_Parser parser, XML_ParsingStatus *status)
 enum XML_Error XMLCALL
 XML_GetErrorCode(XML_Parser parser)
 {
+  if (parser == NULL)
+    return XML_ERROR_INVALID_ARGUMENT;
   return errorCode;
 }
 
