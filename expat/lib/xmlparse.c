@@ -2083,7 +2083,8 @@ XML_GetCurrentColumnNumber(XML_Parser parser)
 void XMLCALL
 XML_FreeContentModel(XML_Parser parser, XML_Content *model)
 {
-  FREE(model);
+  if (parser != NULL)
+    FREE(model);
 }
 
 void * XMLCALL
