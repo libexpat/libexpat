@@ -1508,7 +1508,8 @@ void XMLCALL
 XML_SetNotationDeclHandler(XML_Parser parser,
                            XML_NotationDeclHandler handler)
 {
-  notationDeclHandler = handler;
+  if (parser != NULL)
+    notationDeclHandler = handler;
 }
 
 void XMLCALL
