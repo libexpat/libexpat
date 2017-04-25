@@ -1969,6 +1969,8 @@ XML_ResumeParser(XML_Parser parser)
 {
   enum XML_Status result = XML_STATUS_OK;
 
+  if (parser == NULL)
+    return XML_STATUS_ERROR;
   if (ps_parsing != XML_SUSPENDED) {
     errorCode = XML_ERROR_NOT_SUSPENDED;
     return XML_STATUS_ERROR;
