@@ -738,9 +738,10 @@ XMLPARSEAPI(int)
 XML_GetSpecifiedAttributeCount(XML_Parser parser);
 
 /* Returns the index of the ID attribute passed in the last call to
-   XML_StartElementHandler, or -1 if there is no ID attribute.  Each
-   attribute/value pair counts as 2; thus this correspondds to an
-   index into the atts array passed to the XML_StartElementHandler.
+   XML_StartElementHandler, or -1 if there is no ID attribute or
+   parser == NULL.  Each attribute/value pair counts as 2; thus this
+   correspondds to an index into the atts array passed to the
+   XML_StartElementHandler.
 */
 XMLPARSEAPI(int)
 XML_GetIdAttributeIndex(XML_Parser parser);

@@ -1362,6 +1362,8 @@ XML_GetSpecifiedAttributeCount(XML_Parser parser)
 int XMLCALL
 XML_GetIdAttributeIndex(XML_Parser parser)
 {
+  if (parser == NULL)
+    return -1;
   return idAttIndex;
 }
 
