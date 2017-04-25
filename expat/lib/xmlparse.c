@@ -2045,6 +2045,8 @@ const char * XMLCALL
 XML_GetInputContext(XML_Parser parser, int *offset, int *size)
 {
 #ifdef XML_CONTEXT_BYTES
+  if (parser == NULL || offset == NULL || size == NULL)
+    return NULL;
   if (eventPtr && buffer) {
     *offset = (int)(eventPtr - buffer);
     *size   = (int)(bufferEnd - buffer);
