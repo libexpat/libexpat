@@ -1549,7 +1549,8 @@ void XMLCALL
 XML_SetExternalEntityRefHandler(XML_Parser parser,
                                 XML_ExternalEntityRefHandler handler)
 {
-  externalEntityRefHandler = handler;
+  if (parser != NULL)
+    externalEntityRefHandler = handler;
 }
 
 void XMLCALL
