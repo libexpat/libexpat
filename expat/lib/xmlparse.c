@@ -1391,7 +1391,8 @@ XML_SetElementHandler(XML_Parser parser,
 void XMLCALL
 XML_SetStartElementHandler(XML_Parser parser,
                            XML_StartElementHandler start) {
-  startElementHandler = start;
+  if (parser != NULL)
+    startElementHandler = start;
 }
 
 void XMLCALL
