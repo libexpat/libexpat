@@ -1618,6 +1618,8 @@ int XMLCALL
 XML_SetParamEntityParsing(XML_Parser parser,
                           enum XML_ParamEntityParsing peParsing)
 {
+  if (parser == NULL)
+    return 0;
   /* block after XML_Parse()/XML_ParseBuffer() has been called */
   if (ps_parsing == XML_PARSING || ps_parsing == XML_SUSPENDED)
     return 0;

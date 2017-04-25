@@ -905,6 +905,7 @@ enum XML_ParamEntityParsing {
    entities is requested; otherwise it will return non-zero.
    Note: If XML_SetParamEntityParsing is called after XML_Parse or
       XML_ParseBuffer, then it has no effect and will always return 0.
+   Note: If parser == NULL, the function will do nothing and return 0.
 */
 XMLPARSEAPI(int)
 XML_SetParamEntityParsing(XML_Parser parser,
