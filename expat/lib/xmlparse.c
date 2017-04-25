@@ -1526,7 +1526,8 @@ XML_SetNamespaceDeclHandler(XML_Parser parser,
 void XMLCALL
 XML_SetStartNamespaceDeclHandler(XML_Parser parser,
                                  XML_StartNamespaceDeclHandler start) {
-  startNamespaceDeclHandler = start;
+  if (parser != NULL)
+    startNamespaceDeclHandler = start;
 }
 
 void XMLCALL
