@@ -2106,7 +2106,8 @@ XML_MemRealloc(XML_Parser parser, void *ptr, size_t size)
 void XMLCALL
 XML_MemFree(XML_Parser parser, void *ptr)
 {
-  FREE(ptr);
+  if (parser != NULL)
+    FREE(ptr);
 }
 
 void XMLCALL
