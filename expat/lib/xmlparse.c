@@ -1354,6 +1354,8 @@ XML_GetBase(XML_Parser parser)
 int XMLCALL
 XML_GetSpecifiedAttributeCount(XML_Parser parser)
 {
+  if (parser == NULL)
+    return -1;
   return nSpecifiedAtts;
 }
 

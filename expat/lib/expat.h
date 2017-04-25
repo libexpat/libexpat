@@ -732,7 +732,7 @@ XML_GetBase(XML_Parser parser);
    to the XML_StartElementHandler that were specified in the start-tag
    rather than defaulted. Each attribute/value pair counts as 2; thus
    this correspondds to an index into the atts array passed to the
-   XML_StartElementHandler.
+   XML_StartElementHandler.  Returns -1 if parser == NULL.
 */
 XMLPARSEAPI(int)
 XML_GetSpecifiedAttributeCount(XML_Parser parser);
