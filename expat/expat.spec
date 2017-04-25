@@ -1,4 +1,4 @@
-%define version 2.1.1
+%define version 2.2.0
 %define release 1
 
 Summary: Expat is an XML 1.0 parser written in C.
