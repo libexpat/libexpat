@@ -1422,7 +1422,8 @@ void XMLCALL
 XML_SetCommentHandler(XML_Parser parser,
                       XML_CommentHandler handler)
 {
-  commentHandler = handler;
+  if (parser != NULL)
+    commentHandler = handler;
 }
 
 void XMLCALL
