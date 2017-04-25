@@ -1782,6 +1782,8 @@ XML_ParseBuffer(XML_Parser parser, int len, int isFinal)
   const char *start;
   enum XML_Status result = XML_STATUS_OK;
 
+  if (parser == NULL)
+    return XML_STATUS_ERROR;
   switch (ps_parsing) {
   case XML_SUSPENDED:
     errorCode = XML_ERROR_SUSPENDED;
