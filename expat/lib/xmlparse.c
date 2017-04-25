@@ -1346,6 +1346,8 @@ XML_SetBase(XML_Parser parser, const XML_Char *p)
 const XML_Char * XMLCALL
 XML_GetBase(XML_Parser parser)
 {
+  if (parser == NULL)
+    return NULL;
   return curBase;
 }
 
