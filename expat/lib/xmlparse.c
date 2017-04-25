@@ -1440,7 +1440,8 @@ XML_SetCdataSectionHandler(XML_Parser parser,
 void XMLCALL
 XML_SetStartCdataSectionHandler(XML_Parser parser,
                                 XML_StartCdataSectionHandler start) {
-  startCdataSectionHandler = start;
+  if (parser != NULL)
+    startCdataSectionHandler = start;
 }
 
 void XMLCALL
