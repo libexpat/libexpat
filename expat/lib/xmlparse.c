@@ -1610,7 +1610,8 @@ XML_SetEntityDeclHandler(XML_Parser parser,
 void XMLCALL
 XML_SetXmlDeclHandler(XML_Parser parser,
                       XML_XmlDeclHandler handler) {
-  xmlDeclHandler = handler;
+  if (parser != NULL)
+    xmlDeclHandler = handler;
 }
 
 int XMLCALL
