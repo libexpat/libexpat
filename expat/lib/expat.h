@@ -943,6 +943,7 @@ XML_GetErrorCode(XML_Parser parser);
    was detected; otherwise the location is the location of the last
    parse event, as described above.
 
+   Note: XML_GetCurrentLineNumber returns 0 to indicate an error
    Note: XML_GetCurrentByteIndex returns -1 to indicate an error.
 */
 XMLPARSEAPI(XML_Size) XML_GetCurrentLineNumber(XML_Parser parser);

@@ -2059,6 +2059,8 @@ XML_GetInputContext(XML_Parser parser, int *offset, int *size)
 XML_Size XMLCALL
 XML_GetCurrentLineNumber(XML_Parser parser)
 {
+  if (parser == NULL)
+    return 0;
   if (eventPtr && eventPtr >= positionPtr) {
     XmlUpdatePosition(encoding, positionPtr, eventPtr, &position);
     positionPtr = eventPtr;
