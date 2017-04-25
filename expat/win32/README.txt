@@ -1,13 +1,9 @@
 
-Expat can be built on Windows in three ways: 
-  using MS Visual C++ (6.0 or .NET), Borland C++ Builder 5 or Cygwin.
+Expat can be built on Windows in two ways:
+  using MS Visual C++ (6.0 or .NET) or Cygwin.
 
 * Cygwin:
   This follows the Unix build procedures.
-
-* C++ Builder 5:
-  Possible with make files in the BCB5 subdirectory.
-  Details can be found in the ReadMe file located there.
 
 * MS Visual C++ 6:
   Based on the workspace file expat.dsw. The related project
