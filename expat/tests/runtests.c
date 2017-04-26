@@ -5999,6 +5999,48 @@ START_TEST(test_alloc_parse_pi_2)
 }
 END_TEST
 
+START_TEST(test_alloc_parse_pi_3)
+{
+    const char *text =
+        "<?"
+        /* 64 characters per line */
+        "This processing instruction should be long enough to ensure that"
+        "it triggers the growth of an internal string pool when the      "
+        "allocator fails at a cruicial moment FGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "Q?><doc/>";
+    int i;
+#define MAX_ALLOC_COUNT 10
+
+    for (i = 0; i < MAX_ALLOC_COUNT; i++) {
+        /* Every allocation bar the last is cached */
+        allocation_count = (i == 0) ? 0 : 1;
+        XML_SetProcessingInstructionHandler(parser, dummy_pi_handler);
+        if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                    XML_TRUE) != XML_STATUS_ERROR)
+            break;
+        XML_ParserReset(parser, NULL);
+    }
+    if (i == 0)
+        fail("Parse succeeded despite failing allocator");
+    if (i == MAX_ALLOC_COUNT)
+        fail("Parse failed with max allocations");
+}
+#undef MAX_ALLOC_COUNT
+END_TEST
+
 START_TEST(test_alloc_parse_comment)
 {
     const char *text =
@@ -7938,7 +7980,6 @@ START_TEST(test_alloc_realloc_ce_extends_pe)
 #undef MAX_REALLOC_COUNT
 END_TEST
 
-
 static void
 nsalloc_setup(void)
 {
@@ -8715,6 +8756,7 @@ make_suite(void)
     tcase_add_test(tc_alloc, test_alloc_parse_xdecl_2);
     tcase_add_test(tc_alloc, test_alloc_parse_pi);
     tcase_add_test(tc_alloc, test_alloc_parse_pi_2);
+    tcase_add_test(tc_alloc, test_alloc_parse_pi_3);
     tcase_add_test(tc_alloc, test_alloc_parse_comment);
     tcase_add_test(tc_alloc, test_alloc_parse_comment_2);
     tcase_add_test(tc_alloc, test_alloc_create_external_parser);
