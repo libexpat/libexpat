@@ -5,6 +5,10 @@ Release ??????????
                     longer tag names
               #3  Fix double free after malloc failure in DTD code
                     https://github.com/libexpat/libexpat/issues/3
+             #17  Fix memory leak on parser error for unbound XML attribute
+                    prefix with new namespaces defined in the same tag;
+                    found by Google's OSS-Fuzz
+                    https://github.com/libexpat/libexpat/issues/17
 
         Other changes:
             #538  Start using -fno-strict-aliasing
