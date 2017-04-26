@@ -7999,6 +7999,43 @@ START_TEST(test_alloc_realloc_ce_extends_pe)
 #undef MAX_REALLOC_COUNT
 END_TEST
 
+START_TEST(test_alloc_realloc_attributes)
+{
+    const char *text =
+        "<!DOCTYPE doc [\n"
+        "  <!ATTLIST doc\n"
+        "    a1  (a|b|c)   'a'\n"
+        "    a2  (foo|bar) #IMPLIED\n"
+        "    a3  NMTOKEN   #IMPLIED\n"
+        "    a4  NMTOKENS  #IMPLIED\n"
+        "    a5  ID        #IMPLIED\n"
+        "    a6  IDREF     #IMPLIED\n"
+        "    a7  IDREFS    #IMPLIED\n"
+        "    a8  ENTITY    #IMPLIED\n"
+        "    a9  ENTITIES  #IMPLIED\n"
+        "    a10 CDATA     #IMPLIED\n"
+        "  >]>\n"
+        "<doc>wombat</doc>\n";
+    int i;
+#define MAX_REALLOC_COUNT 5
+
+    for (i = 0; i < MAX_REALLOC_COUNT; i++) {
+        reallocation_count = i;
+        if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                    XML_TRUE) != XML_STATUS_ERROR)
+            break;
+        XML_ParserReset(parser, NULL);
+    }
+
+    if (i == 0)
+        fail("Parse succeeded despite failing reallocator");
+    if (i == MAX_REALLOC_COUNT)
+        fail("Parse failed at maximum reallocation count");
+}
+#undef MAX_REALLOC_COUNT
+END_TEST
+
+
 static void
 nsalloc_setup(void)
 {
@@ -8816,6 +8853,7 @@ make_suite(void)
     tcase_add_test(tc_alloc, test_alloc_nested_entities);
     tcase_add_test(tc_alloc, test_alloc_realloc_param_entity_newline);
     tcase_add_test(tc_alloc, test_alloc_realloc_ce_extends_pe);
+    tcase_add_test(tc_alloc, test_alloc_realloc_attributes);
 
     suite_add_tcase(s, tc_nsalloc);
     tcase_add_checked_fixture(tc_nsalloc, nsalloc_setup, nsalloc_teardown);
