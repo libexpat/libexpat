@@ -147,6 +147,7 @@ static unsigned long dummy_handler_flags = 0;
 #define DUMMY_START_DOCTYPE_DECL_HANDLER_FLAG   (1UL << 14)
 #define DUMMY_END_DOCTYPE_DECL_HANDLER_FLAG     (1UL << 15)
 #define DUMMY_SKIP_HANDLER_FLAG                 (1UL << 16)
+#define DUMMY_DEFAULT_HANDLER_FLAG              (1UL << 17)
 
 
 static void XMLCALL
@@ -5004,6 +5005,36 @@ START_TEST(test_invalid_character_entity)
 }
 END_TEST
 
+/* Test that processing instructions are picked up by a default handler */
+static void XMLCALL
+default_matching_handler(void *userData,
+                         const XML_Char *s,
+                         int len)
+{
+    const char *target = (const char *)userData;
+
+    if ((int)strlen(target) == len && !strncmp(target, s, len))
+        dummy_handler_flags |= DUMMY_DEFAULT_HANDLER_FLAG;
+}
+
+START_TEST(test_pi_handled_in_default)
+{
+#define PI_TEXT "<?test processing instruction?>"
+    const char *text = PI_TEXT "\n<doc/>";
+    char pi_text[] = PI_TEXT;
+
+    XML_SetDefaultHandler(parser, default_matching_handler);
+    XML_SetUserData(parser, pi_text);
+    dummy_handler_flags = 0;
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                XML_TRUE)== XML_STATUS_ERROR)
+        xml_failure(parser);
+    if (dummy_handler_flags != DUMMY_DEFAULT_HANDLER_FLAG)
+        fail("Processing instruction not picked up by default handler");
+}
+#undef PI_TEXT
+END_TEST
+
 
 /*
  * Namespaces tests.
@@ -8641,6 +8672,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_skipped_unloaded_ext_entity);
     tcase_add_test(tc_basic, test_param_entity_with_trailing_cr);
     tcase_add_test(tc_basic, test_invalid_character_entity);
+    tcase_add_test(tc_basic, test_pi_handled_in_default);
 
     suite_add_tcase(s, tc_namespace);
     tcase_add_checked_fixture(tc_namespace,
