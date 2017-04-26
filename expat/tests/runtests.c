@@ -5035,6 +5035,25 @@ START_TEST(test_pi_handled_in_default)
 #undef PI_TEXT
 END_TEST
 
+/* Test that comments are picked up by a default handler */
+START_TEST(test_comment_handled_in_default)
+{
+#define COMMENT_TEXT "<!-- This is a comment -->"
+    const char *text = COMMENT_TEXT "\n<doc/>";
+    char comment_text[] = COMMENT_TEXT;
+
+    XML_SetDefaultHandler(parser, default_matching_handler);
+    XML_SetUserData(parser, comment_text);
+    dummy_handler_flags = 0;
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+    if (dummy_handler_flags != DUMMY_DEFAULT_HANDLER_FLAG)
+        fail("Comment not picked up by default handler");
+}
+#undef COMMENT_TEXT
+END_TEST
+
 
 /*
  * Namespaces tests.
@@ -8714,6 +8733,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_param_entity_with_trailing_cr);
     tcase_add_test(tc_basic, test_invalid_character_entity);
     tcase_add_test(tc_basic, test_pi_handled_in_default);
+    tcase_add_test(tc_basic, test_comment_handled_in_default);
 
     suite_add_tcase(s, tc_namespace);
     tcase_add_checked_fixture(tc_namespace,
