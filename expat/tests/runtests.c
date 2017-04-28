@@ -9232,6 +9232,38 @@ START_TEST(test_nsalloc_realloc_long_context_4)
 }
 END_TEST
 
+START_TEST(test_nsalloc_realloc_long_context_5)
+{
+    const char *text =
+        "<!DOCTYPE doc SYSTEM 'foo' [\n"
+        "  <!ENTITY en SYSTEM 'bar'>\n"
+        "]>\n"
+        "<doc xmlns='http://example.org/"
+        /* 64 characters per line */
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABC"
+        "'>\n"
+        "&en;"
+        "</doc>";
+
+    context_realloc_test(parser, text);
+}
+END_TEST
+
 
 static Suite *
 make_suite(void)
@@ -9490,6 +9522,7 @@ make_suite(void)
     tcase_add_test(tc_nsalloc, test_nsalloc_realloc_long_context_2);
     tcase_add_test(tc_nsalloc, test_nsalloc_realloc_long_context_3);
     tcase_add_test(tc_nsalloc, test_nsalloc_realloc_long_context_4);
+    tcase_add_test(tc_nsalloc, test_nsalloc_realloc_long_context_5);
 
     return s;
 }
