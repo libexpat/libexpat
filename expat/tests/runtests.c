@@ -9073,6 +9073,37 @@ external_entity_optioner(XML_Parser parser,
     return XML_STATUS_ERROR;
 }
 
+/* This function is void; it will throw a fail() on error, so if it
+ * returns normally it must have succeeded.
+ */
+static void
+context_realloc_test(XML_Parser parser, const char *text)
+{
+    ExtOption options[] = {
+        { "foo", "<!ELEMENT e EMPTY>"},
+        { "bar", "<e/>" },
+        { NULL, NULL }
+    };
+    int i;
+#define MAX_REALLOC_COUNT 5
+
+    for (i = 0; i < MAX_REALLOC_COUNT; i++) {
+        reallocation_count = i;
+        XML_SetUserData(parser, options);
+        XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+        XML_SetExternalEntityRefHandler(parser, external_entity_optioner);
+        if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                    XML_TRUE) != XML_STATUS_ERROR)
+            break;
+        XML_ParserReset(parser, NULL);
+    }
+    if (i == 0)
+        fail("Parsing worked despite failing reallocations");
+    else if (i == MAX_REALLOC_COUNT)
+        fail("Parsing failed even at max reallocation count");
+#undef MAX_REALLOC_COUNT
+}
+
 START_TEST(test_nsalloc_realloc_long_context)
 {
     const char *text =
@@ -9100,30 +9131,9 @@ START_TEST(test_nsalloc_realloc_long_context)
         "'>\n"
         "&en;"
         "</doc>";
-    ExtOption options[] = {
-        { "foo", "<!ELEMENT e EMPTY>"},
-        { "bar", "<e/>" },
-        { NULL, NULL }
-    };
-    int i;
-#define MAX_REALLOC_COUNT 5
 
-    for (i = 0; i < MAX_REALLOC_COUNT; i++) {
-        reallocation_count = i;
-        XML_SetUserData(parser, options);
-        XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
-        XML_SetExternalEntityRefHandler(parser, external_entity_optioner);
-        if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
-                                    XML_TRUE) != XML_STATUS_ERROR)
-            break;
-        XML_ParserReset(parser, NULL);
-    }
-    if (i == 0)
-        fail("Parsing worked despite failing reallocations");
-    else if (i == MAX_REALLOC_COUNT)
-        fail("Parsing failed even at max reallocation count");
+    context_realloc_test(parser, text);
 }
-#undef MAX_REALLOC_COUNT
 END_TEST
 
 START_TEST(test_nsalloc_realloc_long_context_2)
@@ -9153,30 +9163,9 @@ START_TEST(test_nsalloc_realloc_long_context_2)
         "'>\n"
         "&en;"
         "</doc>";
-    ExtOption options[] = {
-        { "foo", "<!ELEMENT e EMPTY>"},
-        { "bar", "<e/>" },
-        { NULL, NULL }
-    };
-    int i;
-#define MAX_REALLOC_COUNT 5
 
-    for (i = 0; i < MAX_REALLOC_COUNT; i++) {
-        reallocation_count = i;
-        XML_SetUserData(parser, options);
-        XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
-        XML_SetExternalEntityRefHandler(parser, external_entity_optioner);
-        if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
-                                    XML_TRUE) != XML_STATUS_ERROR)
-            break;
-        XML_ParserReset(parser, NULL);
-    }
-    if (i == 0)
-        fail("Parsing worked despite failing reallocations");
-    else if (i == MAX_REALLOC_COUNT)
-        fail("Parsing failed even at max reallocation count");
+    context_realloc_test(parser, text);
 }
-#undef MAX_REALLOC_COUNT
 END_TEST
 
 START_TEST(test_nsalloc_realloc_long_context_3)
@@ -9206,30 +9195,9 @@ START_TEST(test_nsalloc_realloc_long_context_3)
         "'>\n"
         "&en;"
         "</doc>";
-    ExtOption options[] = {
-        { "foo", "<!ELEMENT e EMPTY>"},
-        { "bar", "<e/>" },
-        { NULL, NULL }
-    };
-    int i;
-#define MAX_REALLOC_COUNT 5
 
-    for (i = 0; i < MAX_REALLOC_COUNT; i++) {
-        reallocation_count = i;
-        XML_SetUserData(parser, options);
-        XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
-        XML_SetExternalEntityRefHandler(parser, external_entity_optioner);
-        if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
-                                    XML_TRUE) != XML_STATUS_ERROR)
-            break;
-        XML_ParserReset(parser, NULL);
-    }
-    if (i == 0)
-        fail("Parsing worked despite failing reallocations");
-    else if (i == MAX_REALLOC_COUNT)
-        fail("Parsing failed even at max reallocation count");
+    context_realloc_test(parser, text);
 }
-#undef MAX_REALLOC_COUNT
 END_TEST
 
 START_TEST(test_nsalloc_realloc_long_context_4)
@@ -9259,30 +9227,9 @@ START_TEST(test_nsalloc_realloc_long_context_4)
         "'>\n"
         "&en;"
         "</doc>";
-    ExtOption options[] = {
-        { "foo", "<!ELEMENT e EMPTY>"},
-        { "bar", "<e/>" },
-        { NULL, NULL }
-    };
-    int i;
-#define MAX_REALLOC_COUNT 5
 
-    for (i = 0; i < MAX_REALLOC_COUNT; i++) {
-        reallocation_count = i;
-        XML_SetUserData(parser, options);
-        XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
-        XML_SetExternalEntityRefHandler(parser, external_entity_optioner);
-        if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
-                                    XML_TRUE) != XML_STATUS_ERROR)
-            break;
-        XML_ParserReset(parser, NULL);
-    }
-    if (i == 0)
-        fail("Parsing worked despite failing reallocations");
-    else if (i == MAX_REALLOC_COUNT)
-        fail("Parsing failed even at max reallocation count");
+    context_realloc_test(parser, text);
 }
-#undef MAX_REALLOC_COUNT
 END_TEST
 
 
