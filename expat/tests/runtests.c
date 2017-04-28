@@ -9126,6 +9126,59 @@ START_TEST(test_nsalloc_realloc_long_context)
 #undef MAX_REALLOC_COUNT
 END_TEST
 
+START_TEST(test_nsalloc_realloc_long_context_2)
+{
+    const char *text =
+        "<!DOCTYPE doc SYSTEM 'foo' [\n"
+        "  <!ENTITY en SYSTEM 'bar'>\n"
+        "]>\n"
+        "<doc xmlns='http://example.org/"
+        /* 64 characters per line */
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJK"
+        "'>\n"
+        "&en;"
+        "</doc>";
+    ExtOption options[] = {
+        { "foo", "<!ELEMENT e EMPTY>"},
+        { "bar", "<e/>" },
+        { NULL, NULL }
+    };
+    int i;
+#define MAX_REALLOC_COUNT 5
+
+    for (i = 0; i < MAX_REALLOC_COUNT; i++) {
+        reallocation_count = i;
+        XML_SetUserData(parser, options);
+        XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+        XML_SetExternalEntityRefHandler(parser, external_entity_optioner);
+        if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                    XML_TRUE) != XML_STATUS_ERROR)
+            break;
+        XML_ParserReset(parser, NULL);
+    }
+    if (i == 0)
+        fail("Parsing worked despite failing reallocations");
+    else if (i == MAX_REALLOC_COUNT)
+        fail("Parsing failed even at max reallocation count");
+}
+#undef MAX_REALLOC_COUNT
+END_TEST
+
 
 static Suite *
 make_suite(void)
@@ -9381,6 +9434,7 @@ make_suite(void)
     tcase_add_test(tc_nsalloc, test_nsalloc_long_namespace);
     tcase_add_test(tc_nsalloc, test_nsalloc_less_long_namespace);
     tcase_add_test(tc_nsalloc, test_nsalloc_realloc_long_context);
+    tcase_add_test(tc_nsalloc, test_nsalloc_realloc_long_context_2);
 
     return s;
 }
