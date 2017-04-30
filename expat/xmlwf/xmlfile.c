@@ -14,8 +14,6 @@
 #include "macconfig.h"
 #elif defined(__amigaos__)
 #include "amigaconfig.h"
-#elif defined(__WATCOMC__)
-#include "watcomconfig.h"
 #elif defined(HAVE_EXPAT_CONFIG_H)
 #include <expat_config.h>
 #endif /* ndef WIN32 */
@@ -26,7 +24,7 @@
 #include "xmltchar.h"
 #include "filemap.h"
 
-#if (defined(_MSC_VER) || (defined(__WATCOMC__) && !defined(__LINUX__)))
+#if defined(_MSC_VER)
 #include <io.h>
 #endif
 
@@ -88,7 +86,7 @@ processFile(const void *data, size_t size,
     *retPtr = 1;
 }
 
-#if (defined(WIN32) || defined(__WATCOMC__))
+#if defined(WIN32)
 
 static int
 isAsciiLetter(XML_Char c)
@@ -106,7 +104,7 @@ resolveSystemId(const XML_Char *base, const XML_Char *systemId,
   *toFree = 0;
   if (!base
       || *systemId == T('/')
-#if (defined(WIN32) || defined(__WATCOMC__))
+#if defined(WIN32)
       || *systemId == T('\\')
       || (isAsciiLetter(systemId[0]) && systemId[1] == T(':'))
 #endif
@@ -120,7 +118,7 @@ resolveSystemId(const XML_Char *base, const XML_Char *systemId,
   s = *toFree;
   if (tcsrchr(s, T('/')))
     s = tcsrchr(s, T('/')) + 1;
-#if (defined(WIN32) || defined(__WATCOMC__))
+#if defined(WIN32)
   if (tcsrchr(s, T('\\')))
     s = tcsrchr(s, T('\\')) + 1;
 #endif

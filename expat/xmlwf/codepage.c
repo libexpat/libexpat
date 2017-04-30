@@ -5,7 +5,7 @@
 #include "codepage.h"
 #include "internal.h"  /* for UNUSED_P only */
 
-#if (defined(WIN32) || (defined(__WATCOMC__) && defined(__NT__)))
+#if defined(WIN32)
 #define STRICT 1
 #define WIN32_LEAN_AND_MEAN 1
 

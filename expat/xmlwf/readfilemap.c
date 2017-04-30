@@ -9,16 +9,8 @@
 #include <stdio.h>
 
 /* Functions close(2) and read(2) */
-#ifdef __WATCOMC__
-#ifndef __LINUX__
-#include <io.h>
-#else
-#include <unistd.h>
-#endif
-#else
-# if !defined(WIN32) && !defined(_WIN32) && !defined(_WIN64)
-#  include <unistd.h>
-# endif
+#if !defined(WIN32) && !defined(_WIN32) && !defined(_WIN64)
+# include <unistd.h>
 #endif
 
 #ifndef S_ISREG
