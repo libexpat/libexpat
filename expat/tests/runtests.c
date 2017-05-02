@@ -2250,6 +2250,7 @@ byte_character_handler(void *userData,
                        const XML_Char *s,
                        int len)
 {
+#ifdef XML_CONTEXT_BYTES
     int offset, size;
     const char *buffer;
     intptr_t buflen = (intptr_t)userData;
@@ -2265,6 +2266,7 @@ byte_character_handler(void *userData,
         fail("Buffer length incorrect");
     if (s != buffer + offset)
         fail("Buffer position incorrect");
+#endif
 }
 
 START_TEST(test_byte_info_at_cdata)
