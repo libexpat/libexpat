@@ -9366,6 +9366,38 @@ START_TEST(test_nsalloc_realloc_long_context_6)
 }
 END_TEST
 
+START_TEST(test_nsalloc_realloc_long_context_7)
+{
+    const char *text =
+        "<!DOCTYPE doc SYSTEM 'foo' [\n"
+        "  <!ENTITY en SYSTEM 'bar'>\n"
+        "]>\n"
+        "<doc xmlns='http://example.org/"
+        /* 64 characters per line */
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLM"
+        "'>\n"
+        "&en;"
+        "</doc>";
+
+    context_realloc_test(parser, text);
+}
+END_TEST
+
 START_TEST(test_nsalloc_realloc_long_ge_name)
 {
     const char *text =
@@ -9816,6 +9848,7 @@ make_suite(void)
     tcase_add_test(tc_nsalloc, test_nsalloc_realloc_long_context_4);
     tcase_add_test(tc_nsalloc, test_nsalloc_realloc_long_context_5);
     tcase_add_test(tc_nsalloc, test_nsalloc_realloc_long_context_6);
+    tcase_add_test(tc_nsalloc, test_nsalloc_realloc_long_context_7);
     tcase_add_test(tc_nsalloc, test_nsalloc_realloc_long_ge_name);
     tcase_add_test(tc_nsalloc, test_nsalloc_realloc_long_context_in_dtd);
 
