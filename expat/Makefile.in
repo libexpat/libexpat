@@ -58,7 +58,7 @@ clean:
 	cd xmlwf && rm -f xmlwf *.@OBJEXT@ *.lo && rm -rf .libs _libs
 	cd examples && rm -f elements outline *.@OBJEXT@ *.lo && rm -rf .libs _libs
 	cd tests && rm -rf .libs runtests runtests.@OBJEXT@ runtestspp runtestspp.@OBJEXT@
-	cd tests && rm -f chardata.@OBJEXT@ minicheck.@OBJEXT@
+	cd tests && rm -f chardata.@OBJEXT@ memcheck.@OBJEXT@ minicheck.@OBJEXT@
 	rm -rf .libs libexpat.la
 	rm -f examples/core tests/core xmlwf/core
 
