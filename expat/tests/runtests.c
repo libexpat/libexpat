@@ -9073,6 +9073,77 @@ external_entity_optioner(XML_Parser parser,
     return XML_STATUS_ERROR;
 }
 
+START_TEST(test_nsalloc_long_context)
+{
+    const char *text =
+        "<!DOCTYPE doc SYSTEM 'foo' [\n"
+        "  <!ATTLIST doc baz ID #REQUIRED>\n"
+        "  <!ENTITY en SYSTEM 'bar'>\n"
+        "]>\n"
+        "<doc xmlns='http://example.org/"
+        /* 64 characters per line */
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKL"
+        "' baz='2'>\n"
+        "&en;"
+        "</doc>";
+    ExtOption options[] = {
+        { "foo", "<!ELEMENT e EMPTY>"},
+        { "bar", "<e/>" },
+        { NULL, NULL }
+    };
+    int i;
+#define MAX_ALLOC_COUNT 40
+    int repeat = 0;
+
+    for (i = 0; i < MAX_ALLOC_COUNT; i++) {
+        /* Repeat some counts to defeat allocation caching */
+        if ((i == 4 && repeat == 3) ||
+            (i == 13 && repeat == 9) ||
+            (i == 14 && repeat == 10)) {
+            i -= 2;
+            repeat++;
+        }
+        else if ((i == 2 && repeat < 2) ||
+                 (i == 3 && (repeat == 2 || repeat == 4 || repeat == 5)) ||
+                 (i == 4 && repeat == 6) ||
+                 (i == 5 && repeat == 7) ||
+                 (i == 7 && repeat == 8) ||
+                 (i == 13 && repeat == 11)) {
+            i--;
+            repeat++;
+        }
+        allocation_count = i;
+        XML_SetUserData(parser, options);
+        XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+        XML_SetExternalEntityRefHandler(parser, external_entity_optioner);
+        if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                    XML_TRUE) != XML_STATUS_ERROR)
+            break;
+        XML_ParserReset(parser, NULL);
+    }
+    if (i == 0)
+        fail("Parsing worked despite failing allocations");
+    else if (i == MAX_ALLOC_COUNT)
+        fail("Parsing failed even at max allocation count");
+#undef MAX_ALLOC_COUNT
+}
+END_TEST
+
 /* This function is void; it will throw a fail() on error, so if it
  * returns normally it must have succeeded.
  */
@@ -9738,6 +9809,7 @@ make_suite(void)
     tcase_add_test(tc_nsalloc, test_nsalloc_realloc_longer_prefix);
     tcase_add_test(tc_nsalloc, test_nsalloc_long_namespace);
     tcase_add_test(tc_nsalloc, test_nsalloc_less_long_namespace);
+    tcase_add_test(tc_nsalloc, test_nsalloc_long_context);
     tcase_add_test(tc_nsalloc, test_nsalloc_realloc_long_context);
     tcase_add_test(tc_nsalloc, test_nsalloc_realloc_long_context_2);
     tcase_add_test(tc_nsalloc, test_nsalloc_realloc_long_context_3);
