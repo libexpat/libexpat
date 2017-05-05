@@ -321,6 +321,41 @@ dummy_skip_handler(void *UNUSED_P(userData),
     dummy_handler_flags |= DUMMY_SKIP_HANDLER_FLAG;
 }
 
+/* Useful external entity handler */
+typedef struct ExtOption {
+    const char *system_id;
+    const char *parse_text;
+} ExtOption;
+
+static int XMLCALL
+external_entity_optioner(XML_Parser parser,
+                         const XML_Char *context,
+                         const XML_Char *UNUSED_P(base),
+                         const XML_Char *systemId,
+                         const XML_Char *UNUSED_P(publicId))
+{
+    ExtOption *options = (ExtOption *)XML_GetUserData(parser);
+    XML_Parser ext_parser;
+
+    while (options->parse_text != NULL) {
+        if (!strcmp(systemId, options->system_id)) {
+            ext_parser =
+                XML_ExternalEntityParserCreate(parser, context, NULL);
+            if (ext_parser == NULL)
+                return XML_STATUS_ERROR;
+            if (_XML_Parse_SINGLE_BYTES(ext_parser, options->parse_text,
+                                        strlen(options->parse_text),
+                                        XML_TRUE) == XML_STATUS_ERROR)
+                return XML_STATUS_ERROR;
+            XML_ParserFree(ext_parser);
+            return XML_STATUS_OK;
+        }
+        options++;
+    }
+    fail("No suitable option found");
+    return XML_STATUS_ERROR;
+}
+
 /*
  * Parameter entity evaluation support.
  */
@@ -9221,40 +9256,6 @@ START_TEST(test_nsalloc_less_long_namespace)
 }
 #undef MAX_ALLOC_COUNT
 END_TEST
-
-typedef struct ExtOption {
-    const char *system_id;
-    const char *parse_text;
-} ExtOption;
-
-static int XMLCALL
-external_entity_optioner(XML_Parser parser,
-                         const XML_Char *context,
-                         const XML_Char *UNUSED_P(base),
-                         const XML_Char *systemId,
-                         const XML_Char *UNUSED_P(publicId))
-{
-    ExtOption *options = (ExtOption *)XML_GetUserData(parser);
-    XML_Parser ext_parser;
-
-    while (options->parse_text != NULL) {
-        if (!strcmp(systemId, options->system_id)) {
-            ext_parser =
-                XML_ExternalEntityParserCreate(parser, context, NULL);
-            if (ext_parser == NULL)
-                return XML_STATUS_ERROR;
-            if (_XML_Parse_SINGLE_BYTES(ext_parser, options->parse_text,
-                                        strlen(options->parse_text),
-                                        XML_TRUE) == XML_STATUS_ERROR)
-                return XML_STATUS_ERROR;
-            XML_ParserFree(ext_parser);
-            return XML_STATUS_OK;
-        }
-        options++;
-    }
-    fail("No suitable option found");
-    return XML_STATUS_ERROR;
-}
 
 START_TEST(test_nsalloc_long_context)
 {
