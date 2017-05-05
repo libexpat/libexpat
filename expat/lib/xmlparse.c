@@ -6295,6 +6295,35 @@ poolStoreString(STRING_POOL *pool, const ENCODING *enc,
   return pool->start;
 }
 
+static size_t
+poolBytesToAllocateFor(int blockSize)
+{
+  /* Unprotected math would be:
+  ** return offsetof(BLOCK, s) + blockSize * sizeof(XML_Char);
+  **
+  ** Detect overflow, avoiding _signed_ overflow undefined behavior
+  ** For a + b * c we check b * c in isolation first, so that addition of a
+  ** on top has no chance of making us accept a small non-negative number
+  */
+  const size_t stretch = sizeof(XML_Char);  /* can be 4 bytes */
+
+  if (blockSize <= 0)
+    return 0;
+
+  if (blockSize > (int)(INT_MAX / stretch))
+    return 0;
+
+  {
+    const int stretchedBlockSize = blockSize * (int)stretch;
+    const int bytesToAllocate = (int)(
+        offsetof(BLOCK, s) + (unsigned)stretchedBlockSize);
+    if (bytesToAllocate < 0)
+      return 0;
+
+    return (size_t)bytesToAllocate;
+  }
+}
+
 static XML_Bool FASTCALL
 poolGrow(STRING_POOL *pool)
 {
@@ -6324,14 +6353,17 @@ poolGrow(STRING_POOL *pool)
   if (pool->blocks && pool->start == pool->blocks->s) {
     BLOCK *temp;
     int blockSize = (int)((unsigned)(pool->end - pool->start)*2U);
+    size_t bytesToAllocate;
 
     if (blockSize < 0)
       return XML_FALSE;
 
+    bytesToAllocate = poolBytesToAllocateFor(blockSize);
+    if (bytesToAllocate == 0)
+      return XML_FALSE;
+
     temp = (BLOCK *)
-      pool->mem->realloc_fcn(pool->blocks,
-                             (offsetof(BLOCK, s)
-                              + blockSize * sizeof(XML_Char)));
+      pool->mem->realloc_fcn(pool->blocks, (unsigned)bytesToAllocate);
     if (temp == NULL)
       return XML_FALSE;
     pool->blocks = temp;
@@ -6343,16 +6375,26 @@ poolGrow(STRING_POOL *pool)
   else {
     BLOCK *tem;
     int blockSize = (int)(pool->end - pool->start);
+    size_t bytesToAllocate;
 
     if (blockSize < 0)
       return XML_FALSE;
 
     if (blockSize < INIT_BLOCK_SIZE)
       blockSize = INIT_BLOCK_SIZE;
-    else
+    else {
+      /* Detect overflow, avoiding _signed_ overflow undefined behavior */
+      if ((int)((unsigned)blockSize * 2U) < 0) {
+        return XML_FALSE;
+      }
       blockSize *= 2;
-    tem = (BLOCK *)pool->mem->malloc_fcn(offsetof(BLOCK, s)
-                                        + blockSize * sizeof(XML_Char));
+    }
+
+    bytesToAllocate = poolBytesToAllocateFor(blockSize);
+    if (bytesToAllocate == 0)
+      return XML_FALSE;
+
+    tem = (BLOCK *)pool->mem->malloc_fcn(bytesToAllocate);
     if (!tem)
       return XML_FALSE;
     tem->size = blockSize;
