@@ -8144,6 +8144,65 @@ START_TEST(test_alloc_long_base)
 #undef MAX_ALLOC_COUNT
 END_TEST
 
+START_TEST(test_alloc_long_public_id)
+{
+    const char *text =
+        "<!DOCTYPE doc [\n"
+        "  <!ENTITY e PUBLIC '"
+        /* 64 characters per line */
+        "LongPublicIDThatShouldResultInAnInternalStringPoolGrowingAtASpec"
+        "ificMomentKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AB"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AB"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AB"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AB"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AB"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AB"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AB"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AB"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AB"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AB"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AB"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AB"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AB"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AB"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AB"
+        "' 'bar'>\n"
+        "]>\n"
+        "<doc>&e;</doc>";
+    char entity_text[] = "Hello world";
+    int i;
+#define MAX_ALLOC_COUNT 20
+    int repeat = 0;
+
+    for (i = 0; i < MAX_ALLOC_COUNT; i++) {
+        /* Repeat certain counts to defeat allocation caching */
+        if (i == 4 && repeat == 4) {
+            i -= 2;
+            repeat++;
+        }
+        else if ((i == 2 && repeat < 3) ||
+                 (i == 3 && (repeat == 3 || repeat == 5)) ||
+                 (i == 4 && repeat == 6)) {
+            i--;
+            repeat++;
+        }
+        allocation_count = i;
+        XML_SetUserData(parser, entity_text);
+        XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+        XML_SetExternalEntityRefHandler(parser, external_entity_alloc);
+        if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                    XML_TRUE) != XML_STATUS_ERROR)
+            break;
+        XML_ParserReset(parser, NULL);
+    }
+    if (i == 0)
+        fail("Parsing worked despite failing allocations");
+    else if (i == MAX_ALLOC_COUNT)
+        fail("Parsing failed even at max allocation count");
+}
+#undef MAX_ALLOC_COUNT
+END_TEST
+
 
 static void
 nsalloc_setup(void)
@@ -10036,6 +10095,7 @@ make_suite(void)
     tcase_add_test(tc_alloc, test_alloc_realloc_attributes);
     tcase_add_test(tc_alloc, test_alloc_long_doc_name);
     tcase_add_test(tc_alloc, test_alloc_long_base);
+    tcase_add_test(tc_alloc, test_alloc_long_public_id);
 
     suite_add_tcase(s, tc_nsalloc);
     tcase_add_checked_fixture(tc_nsalloc, nsalloc_setup, nsalloc_teardown);
