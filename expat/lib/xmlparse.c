@@ -6382,8 +6382,13 @@ poolGrow(STRING_POOL *pool)
 
     if (blockSize < INIT_BLOCK_SIZE)
       blockSize = INIT_BLOCK_SIZE;
-    else
+    else {
+      /* Detect overflow, avoiding _signed_ overflow undefined behavior */
+      if ((int)((unsigned)blockSize * 2U) < 0) {
+        return XML_FALSE;
+      }
       blockSize *= 2;
+    }
 
     bytesToAllocate = poolBytesToAllocateFor(blockSize);
     if (bytesToAllocate == 0)
