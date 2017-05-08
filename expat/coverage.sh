@@ -34,8 +34,8 @@ _configure() {
 
     (
         set -x
-        ./buildconf.sh
-        ./configure "${configure_args[@]}" "$@"
+        ./buildconf.sh &> configure.log
+        ./configure "${configure_args[@]}" "$@" &>> configure.log
     )
 }
 
@@ -66,8 +66,9 @@ _run() {
 
         _configure \
                 CFLAGS="${BASE_FLAGS}" \
-                CXXFLAGS="${BASE_FLAGS}" &> configure.log
+                CXXFLAGS="${BASE_FLAGS}"
 
+        set -x
         make buildlib &> build.log
 
         lcov -c -d "${capture_dir}" -i -o "${coverage_info}-zero" &> run.log
