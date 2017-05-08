@@ -70,19 +70,20 @@ _run() {
 
         make buildlib &> build.log
 
-        lcov -c -d "${capture_dir}" -i -o "${coverage_info}-zero"
+        lcov -c -d "${capture_dir}" -i -o "${coverage_info}-zero" &> run.log
 
-        make check run-xmltest &> test.log
+        make check run-xmltest
 
-        lcov -c -d "${capture_dir}" -o "${coverage_info}-test"
+        lcov -c -d "${capture_dir}" -o "${coverage_info}-test" &>> run.log
         lcov \
                 -a "${coverage_info}-zero" \
                 -a "${coverage_info}-test" \
-                -o "${coverage_info}-all"
+                -o "${coverage_info}-all" \
+                &>> run.log
 
         # Make sure that files overlap in report despite different build folders
         sed "/SF:/ s,${build_dir}/,${source_dir}/," "${coverage_info}-all" > "${coverage_info}"
-    ) &> "${build_dir}/run.log"
+    )
     res=$?
 
     if [[ ${res} -eq 0 ]]; then
