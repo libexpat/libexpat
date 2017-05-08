@@ -10131,6 +10131,61 @@ START_TEST(test_nsalloc_long_systemid_in_ext)
 }
 END_TEST
 
+/* Test the effects of allocation failure on parsing an element in a
+ * namespace.  Based on test_nsalloc_long_context.
+ */
+START_TEST(test_nsalloc_prefixed_element)
+{
+    const char *text =
+        "<!DOCTYPE pfx:element SYSTEM 'foo' [\n"
+        "  <!ATTLIST pfx:element baz ID #REQUIRED>\n"
+        "  <!ENTITY en SYSTEM 'bar'>\n"
+        "]>\n"
+        "<pfx:element xmlns:pfx='http://example.org/' baz='2'>\n"
+        "&en;"
+        "</pfx:element>";
+    ExtOption options[] = {
+        { "foo", "<!ELEMENT e EMPTY>" },
+        { "bar", "<e/>" },
+        { NULL, NULL }
+    };
+    int i;
+#define MAX_ALLOC_COUNT 40
+    int repeat = 0;
+
+    for (i = 0; i < MAX_ALLOC_COUNT; i++) {
+        /* Repeat some counts to defeat cached allocations */
+        if ((i == 4 && repeat == 3) ||
+            (i == 14 && repeat == 9) ||
+            (i == 15 && repeat == 10)) {
+            i -= 2;
+            repeat++;
+        }
+        else if ((i == 2 && repeat < 2) ||
+                 (i == 3 && (repeat == 2 || repeat == 4 || repeat == 5)) ||
+                 (i == 4 && repeat == 6) ||
+                 (i == 6 && repeat == 7) ||
+                 (i == 8 && repeat == 8)) {
+            i--;
+            repeat++;
+        }
+        allocation_count = i;
+        XML_SetUserData(parser, options);
+        XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+        XML_SetExternalEntityRefHandler(parser, external_entity_optioner);
+        if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                    XML_TRUE) != XML_STATUS_ERROR)
+            break;
+        XML_ParserReset(parser, NULL);
+    }
+    if (i == 0)
+        fail("Success despite failing allocator");
+    else if (i == MAX_ALLOC_COUNT)
+        fail("Failed even at full allocation count");
+}
+#undef MAX_ALLOC_COUNT
+END_TEST
+
 static Suite *
 make_suite(void)
 {
@@ -10402,6 +10457,7 @@ make_suite(void)
     tcase_add_test(tc_nsalloc, test_nsalloc_realloc_long_context_in_dtd);
     tcase_add_test(tc_nsalloc, test_nsalloc_long_default_in_ext);
     tcase_add_test(tc_nsalloc, test_nsalloc_long_systemid_in_ext);
+    tcase_add_test(tc_nsalloc, test_nsalloc_prefixed_element);
 
     return s;
 }
