@@ -1870,9 +1870,22 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal)
     if (errorCode == XML_ERROR_NONE) {
       switch (ps_parsing) {
       case XML_SUSPENDED:
+        /* It is hard to be certain, but it seems that this case
+         * cannot occur.  This code is cleaning up a previous parse
+         * with no new data (since len == 0).  Changing the parsing
+         * state requires getting to execute a handler function, and
+         * there doesn't seem to be an opportunity for that while in
+         * this circumstance.
+         *
+         * Given the uncertainty, we retain the code but exclude it
+         * from coverage tests.
+         *
+         * LCOV_EXCL_START
+         */
         XmlUpdatePosition(encoding, positionPtr, bufferPtr, &position);
         positionPtr = bufferPtr;
         return XML_STATUS_SUSPENDED;
+        /* LCOV_EXCL_END */
       case XML_INITIALIZED:
       case XML_PARSING:
         ps_parsing = XML_FINISHED;
