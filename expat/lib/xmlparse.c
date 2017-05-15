@@ -5788,12 +5788,15 @@ storeEntityValue(XML_Parser parser,
           goto endEntityValue;
         }
         n = XmlEncode(n, (ICHAR *)buf);
-        if (!n) {
-          if (enc == encoding)
-            eventPtr = entityTextPtr;
-          result = XML_ERROR_BAD_CHAR_REF;
-          goto endEntityValue;
-        }
+        /* The XmlEncode() functions can never return 0 here.  That
+         * error return happens if the code point passed in is either
+         * negative or greater than or equal to 0x110000.  The
+         * XmlCharRefNumber() functions will all return a number
+         * strictly less than 0x110000 or a negative value if an error
+         * occurred.  The negative value is intercepted above, so
+         * XmlEncode() is never passed a value it might return an
+         * error for.
+         */
         for (i = 0; i < n; i++) {
           if (pool->end == pool->ptr && !poolGrow(pool)) {
             result = XML_ERROR_NO_MEMORY;
