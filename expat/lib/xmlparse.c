@@ -3871,8 +3871,16 @@ doIgnoreSection(XML_Parser parser,
     }
     return XML_ERROR_SYNTAX; /* XML_ERROR_UNCLOSED_IGNORE_SECTION */
   default:
+    /* All of the tokens that XmlIgnoreSectionTok() returns have
+     * explicit cases to handle them, so this default case is never
+     * executed.  We keep it as a safety net anyway, and remove it
+     * from our test coverage statistics.
+     *
+     * LCOV_EXCL_START
+     */
     *eventPP = next;
     return XML_ERROR_UNEXPECTED_STATE;
+    /* LCOV_EXCL_END */
   }
   /* not reached */
 }
