@@ -4452,8 +4452,14 @@ doProlog(XML_Parser parser,
                                             &dtd->paramEntities,
                                             externalSubsetName,
                                             sizeof(ENTITY));
-          if (!entity)
-            return XML_ERROR_NO_MEMORY;
+          if (!entity) {
+            /* The external subset name "#" will have already been
+             * inserted into the hash table at the start of the
+             * external entity parsing, so no allocation will happen
+             * and lookup() cannot fail.
+             */
+            return XML_ERROR_NO_MEMORY; /* LCOV_EXCL_LINE */
+          }
           if (useForeignDTD)
             entity->base = curBase;
           dtd->paramEntityRead = XML_FALSE;
