@@ -6966,8 +6966,18 @@ poolGrow(STRING_POOL *pool)
     int blockSize = (int)(pool->end - pool->start);
     size_t bytesToAllocate;
 
-    if (blockSize < 0)
-      return XML_FALSE;
+    if (blockSize < 0) {
+      /* This condition traps a situation where either more than
+       * INT_MAX bytes have already been allocated (which is prevented
+       * by various pieces of program logic, not least this one, never
+       * mind the unlikelihood of actually having that much memory) or
+       * the pool control fields have been corrupted (which could
+       * conceivably happen in an extremely buggy user handler
+       * function).  Either way it isn't readily testable, so we
+       * exclude it from the coverage statistics.
+       */
+      return XML_FALSE;  /* LCOV_EXCL_LINE */
+    }
 
     if (blockSize < INIT_BLOCK_SIZE)
       blockSize = INIT_BLOCK_SIZE;
