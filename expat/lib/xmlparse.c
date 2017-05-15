@@ -5641,9 +5641,21 @@ appendAttributeValue(XML_Parser parser, const ENCODING *enc, XML_Bool isCdata,
       }
       break;
     default:
+      /* The only token returned by XmlAttributeValueTok() that does
+       * not have an explicit case here is XML_TOK_PARTIAL_CHAR.
+       * Getting that would require an entity name to contain an
+       * incomplete XML character (e.g. \xE2\x82); however previous
+       * tokenisers will have already recognised and rejected such
+       * names before XmlAttributeValueTok() gets a look-in.  This
+       * default case should be retained as a safety net, but the code
+       * excluded from coverage tests.
+       *
+       * LCOV_EXCL_START
+       */
       if (enc == encoding)
         eventPtr = ptr;
       return XML_ERROR_UNEXPECTED_STATE;
+      /* LCOV_EXCL_STOP */
     }
     ptr = next;
   }
