@@ -5595,8 +5595,26 @@ appendAttributeValue(XML_Parser parser, const ENCODING *enc, XML_Bool isCdata,
           break;
         }
         if (entity->open) {
-          if (enc == encoding)
-            eventPtr = ptr;
+          if (enc == encoding) {
+            /* It does not appear that this line can be executed.
+             *
+             * The "if (entity->open)" check catches recursive entity
+             * definitions.  In order to be called with an open
+             * entity, it must have gone through this code before and
+             * been through the recursive call to
+             * appendAttributeValue() some lines below.  That call
+             * sets the local encoding ("enc") to the parser's
+             * internal encoding (internal_utf8 or internal_utf16),
+             * which can never be the same as the principle encoding.
+             * It doesn't appear there is another code path that gets
+             * here with entity->open being TRUE.
+             *
+             * Since it is not certain that this logic is watertight,
+             * we keep the line and merely exclude it from coverage
+             * tests.
+             */
+            eventPtr = ptr; /* LCOV_EXCL_LINE */
+          }
           return XML_ERROR_RECURSIVE_ENTITY_REF;
         }
         if (entity->notation) {
