@@ -3756,8 +3756,16 @@ doCdataSection(XML_Parser parser,
       }
       return XML_ERROR_UNCLOSED_CDATA_SECTION;
     default:
+      /* Every token returned by XmlCdataSectionTok() has its own
+       * explicit case, so this default case will never be executed.
+       * We retain it as a safety net and exclude it from the coverage
+       * statistics.
+       *
+       * LCOV_EXCL_START
+      */
       *eventPP = next;
       return XML_ERROR_UNEXPECTED_STATE;
+      /* LCOV_EXCL_STOP */
     }
 
     *eventPP = s = next;
