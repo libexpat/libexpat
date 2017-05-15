@@ -5019,8 +5019,29 @@ doProlog(XML_Parser parser,
              : !dtd->hasParamEntityRefs)) {
           if (!entity)
             return XML_ERROR_UNDEFINED_ENTITY;
-          else if (!entity->is_internal)
-            return XML_ERROR_ENTITY_DECLARED_IN_PE;
+          else if (!entity->is_internal) {
+            /* It's hard to exhaustively search the code to be sure,
+             * but there doesn't seem to be a way of executing the
+             * following line.  There are two cases:
+             *
+             * If 'standalone' is false, the DTD must have no
+             * parameter entities or we wouldn't have passed the outer
+             * 'if' statement.  That measn the only entity in the hash
+             * table is the external subset name "#" which cannot be
+             * given as a parameter entity name in XML syntax, so the
+             * lookup must have returned NULL and we don't even reach
+             * the test for an internal entity.
+             *
+             * If 'standalone' is true, it does not seem to be
+             * possible to create entities taking this code path that
+             * are not internal entities, so fail the test above.
+             *
+             * Because this analysis is very uncertain, the code is
+             * being left in place and merely removed from the
+             * coverage test statistics.
+             */
+            return XML_ERROR_ENTITY_DECLARED_IN_PE; /* LCOV_EXCL_LINE */
+          }
         }
         else if (!entity) {
           dtd->keepProcessing = dtd->standalone;
