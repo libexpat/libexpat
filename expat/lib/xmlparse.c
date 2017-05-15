@@ -3825,8 +3825,20 @@ doIgnoreSection(XML_Parser parser,
     eventEndPP = &eventEndPtr;
   }
   else {
+    /* It's not entirely clear, but it seems the following two lines
+     * of code cannot be executed.  The only occasions on which 'enc'
+     * is not 'parser->m_encoding' are when this function is called
+     * from the internal entity processing, and IGNORE sections are an
+     * error in internal entities.
+     *
+     * Since it really isn't clear that this is true, we keep the code
+     * and just remove it from our coverage tests.
+     *
+     * LCOV_EXCL_START
+     */
     eventPP = &(openInternalEntities->internalEventPtr);
     eventEndPP = &(openInternalEntities->internalEventEndPtr);
+    /* LCOV_EXCL_STOP */
   }
   *eventPP = s;
   *startPtr = NULL;
