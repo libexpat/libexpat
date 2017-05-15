@@ -3363,8 +3363,23 @@ storeAtts(XML_Parser parser, const ENCODING *enc,
 
         ((XML_Char *)s)[-1] = 0;  /* clear flag */
         id = (ATTRIBUTE_ID *)lookup(parser, &dtd->attributeIds, s, 0);
-        if (!id || !id->prefix)
-          return XML_ERROR_NO_MEMORY;
+        if (!id || !id->prefix) {
+          /* This code is walking through the appAtts array, dealing
+           * with (in this case) a prefixed attribute name.  To be in
+           * the array, the attribute must have already been bound, so
+           * has to have passed through the hash table lookup once
+           * already.  That implies that an entry for it already
+           * exists, so the lookup above will return a pointer to
+           * already allocated memory.  There is no opportunaity for
+           * the allocator to fail, so the condition above cannot be
+           * fulfilled.
+           *
+           * Since it is difficult to be certain that the above
+           * analysis is complete, we retain the test and merely
+           * remove the code from coverage tests.
+           */
+          return XML_ERROR_NO_MEMORY; /* LCOV_EXCL_LINE */
+        }
         b = id->prefix->binding;
         if (!b)
           return XML_ERROR_UNBOUND_PREFIX;
