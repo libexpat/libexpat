@@ -6113,9 +6113,30 @@ getContext(XML_Parser parser)
     len = dtd->defaultPrefix.binding->uriLen;
     if (namespaceSeparator)
       len--;
-    for (i = 0; i < len; i++)
-      if (!poolAppendChar(&tempPool, dtd->defaultPrefix.binding->uri[i]))
-        return NULL;
+    for (i = 0; i < len; i++) {
+      if (!poolAppendChar(&tempPool, dtd->defaultPrefix.binding->uri[i])) {
+        /* Because of memory caching, I don't believe this line can be
+         * executed.
+         *
+         * This is part of a loop copying the default prefix binding
+         * URI into the parser's temporary string pool.  Previously,
+         * that URI was copied into the same string pool, with a
+         * terminating NUL character, as part of setContext().  When
+         * the pool was cleared, that leaves a block definitely big
+         * enough to hold the URI on the free block list of the pool.
+         * The URI copy in getContext() therefore cannot run out of
+         * memory.
+         *
+         * If the pool is used between the setContext() and
+         * getContext() calls, the worst it can do is leave a bigger
+         * block on the front of the free list.  Given that this is
+         * all somewhat inobvious and program logic can be changed, we
+         * don't delete the line but we do exclude it from the test
+         * coverage statistics.
+         */
+        return NULL; /* LCOV_EXCL_LINE */
+      }
+    }
     needSep = XML_TRUE;
   }
 
