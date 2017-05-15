@@ -6148,8 +6148,15 @@ getContext(XML_Parser parser)
     PREFIX *prefix = (PREFIX *)hashTableIterNext(&iter);
     if (!prefix)
       break;
-    if (!prefix->binding)
-      continue;
+    if (!prefix->binding) {
+      /* This test appears to be (justifiable) paranoia.  There does
+       * not seem to be a way of injecting a prefix without a binding
+       * that doesn't get errored long before this function is called.
+       * The test should remain for safety's sake, so we instead
+       * exclude the following line from the coverage statistics.
+       */
+      continue; /* LCOV_EXCL_LINE */
+    }
     if (needSep && !poolAppendChar(&tempPool, CONTEXT_SEP))
       return NULL;
     for (s = prefix->name; *s; s++)
