@@ -4122,15 +4122,14 @@ entityValueInitProcessor(XML_Parser parser,
       result = processXmlDecl(parser, 0, start, next);
       if (result != XML_ERROR_NONE)
         return result;
-      switch (ps_parsing) {
-      case XML_SUSPENDED:
-        *nextPtr = next;
-        return XML_ERROR_NONE;
-      case XML_FINISHED:
+      /* At this point, ps_parsing cannot be XML_SUSPENDED.  For that
+       * to happen, a parameter entity parsing handler must have
+       * attempted to suspend the parser, which fails and raises an
+       * error.  The parser can be aborted, but can't be suspended.
+       */
+      if (ps_parsing == XML_FINISHED)
         return XML_ERROR_ABORTED;
-      default:
-        *nextPtr = next;
-      }
+      *nextPtr = next;
       /* stop scanning for text declaration - we found one */
       processor = entityValueProcessor;
       return entityValueProcessor(parser, next, end, nextPtr);
