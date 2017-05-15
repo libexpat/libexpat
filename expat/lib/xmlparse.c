@@ -3074,9 +3074,17 @@ doContent(XML_Parser parser,
         return XML_ERROR_NO_MEMORY;
       break;
     default:
+      /* All of the tokens produced by XmlContentTok() have their own
+       * explicit cases, so this default is not strictly necessary.
+       * However it is a useful safety net, so we retain the code and
+       * simply exclude it from the coverage tests.
+       *
+       * LCOV_EXCL_START
+       */
       if (defaultHandler)
         reportDefault(parser, enc, s, next);
       break;
+      /* LCOV_EXCL_STOP */
     }
     *eventPP = s = next;
     switch (ps_parsing) {
