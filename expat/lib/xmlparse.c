@@ -5926,8 +5926,25 @@ reportDefault(XML_Parser parser, const ENCODING *enc,
       eventEndPP = &eventEndPtr;
     }
     else {
+      /* To get here, two things must be true; the parser must be
+       * using a character encoding that is not the same as the
+       * encoding passed in, and the encoding passed in must need
+       * conversion to the internal format (UTF-8 unless XML_UNICODE
+       * is defined).  The only occasions on which the encoding passed
+       * in is not the same as the parser's encoding are when it is
+       * the internal encoding (e.g. a previously defined parameter
+       * entity, already converted to internal format).  This by
+       * definition doesn't need conversion, so the whole branch never
+       * gets executed.
+       *
+       * For safety's sake we don't delete these lines and merely
+       * exclude them from coverage statistics.
+       *
+       * LCOV_EXCL_START
+       */
       eventPP = &(openInternalEntities->internalEventPtr);
       eventEndPP = &(openInternalEntities->internalEventEndPtr);
+      /* LCOV_EXCL_STOP */
     }
     do {
       ICHAR *dataPtr = (ICHAR *)dataBuf;
