@@ -5817,10 +5817,18 @@ storeEntityValue(XML_Parser parser,
       result = XML_ERROR_INVALID_TOKEN;
       goto endEntityValue;
     default:
+      /* This default case should be unnecessary -- all the tokens
+       * that XmlEntityValueTok() can return have their own explicit
+       * cases -- but should be retained for safety.  We do however
+       * exclude it from the coverage statistics.
+       *
+       * LCOV_EXCL_START
+       */
       if (enc == encoding)
         eventPtr = entityTextPtr;
       result = XML_ERROR_UNEXPECTED_STATE;
       goto endEntityValue;
+      /* LCOV_EXCL_STOP */
     }
     entityTextPtr = next;
   }
