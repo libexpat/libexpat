@@ -42,10 +42,12 @@ filemap(const TCHAR *name,
   size = GetFileSize(f, &sizeHi);
   if (size == (DWORD)-1) {
     win32perror(name);
+    CloseHandle(f);
     return 0;
   }
   if (sizeHi) {
     _ftprintf(stderr, _T("%s: bigger than 2Gb\n"), name);
+    CloseHandle(f);
     return 0;
   }
   /* CreateFileMapping barfs on zero length files */
