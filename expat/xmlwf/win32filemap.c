@@ -45,10 +45,9 @@ filemap(const TCHAR *name,
     CloseHandle(f);
     return 0;
   }
-  if (sizeHi) {
-    _ftprintf(stderr, _T("%s: bigger than 2Gb\n"), name);
+  if (sizeHi || (size > XML_MAX_CHUNK_LEN)) {
     CloseHandle(f);
-    return 0;
+    return 2;  /* Cannot be passed to XML_Parse in one go */
   }
   /* CreateFileMapping barfs on zero length files */
   if (size == 0) {

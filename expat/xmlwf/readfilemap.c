@@ -59,6 +59,11 @@ filemap(const char *name,
     close(fd);
     return 0;
   }
+  if (sb.st_size > XML_MAX_CHUNK_LEN) {
+    close(fd);
+    return 2;  /* Cannot be passed to XML_Parse in one go */
+  }
+
   nbytes = sb.st_size;
   /* malloc will return NULL with nbytes == 0, handle files with size 0 */
   if (nbytes == 0) {
