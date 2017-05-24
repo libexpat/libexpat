@@ -1286,7 +1286,8 @@ XML_ParserFree(XML_Parser parser)
 void XMLCALL
 XML_UseParserAsHandlerArg(XML_Parser parser)
 {
-  handlerArg = parser;
+  if (parser != NULL)
+    handlerArg = parser;
 }
 
 enum XML_Error XMLCALL
