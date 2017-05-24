@@ -151,7 +151,7 @@ XMLWF_OBJS = xmlwf/xmlwf.@OBJEXT@ xmlwf/xmlfile.@OBJEXT@ xmlwf/codepage.@OBJEXT@
 xmlwf/xmlwf.@OBJEXT@: xmlwf/xmlwf.c
 xmlwf/xmlfile.@OBJEXT@: xmlwf/xmlfile.c
 xmlwf/codepage.@OBJEXT@: xmlwf/codepage.c
-xmlwf/@FILEMAP@.@OBJEXT@: xmlwf/@FILEMAP@.c
+xmlwf/@FILEMAP@.@OBJEXT@: xmlwf/@FILEMAP@.c xmlwf/filemap.h
 xmlwf/xmlwf@EXEEXT@: $(XMLWF_OBJS) $(LIBRARY)
 	$(LINK_EXE) $(XMLWF_OBJS) $(LIBRARY)
 

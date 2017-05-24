@@ -12,6 +12,9 @@ Release ??????????
                     prefix with new namespaces defined in the same tag;
                     found by Google's OSS-Fuzz
                     https://github.com/libexpat/libexpat/issues/17
+             #28  xmlwf: Auto-disable use of memory-mapping (and parsing
+                    as a single chunk) for files larger than ~1 GB (2^30 bytes)
+                    rather than failing with error "out of memory"
 
         Other changes:
             #538  Start using -fno-strict-aliasing

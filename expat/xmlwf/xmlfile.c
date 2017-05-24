@@ -56,6 +56,9 @@ typedef struct {
   int *retPtr;
 } PROCESS_ARGS;
 
+static int
+processStream(const XML_Char *filename, XML_Parser parser);
+
 static void
 reportError(XML_Parser parser, const XML_Char *filename)
 {
@@ -137,13 +140,23 @@ externalEntityRefFilemap(XML_Parser parser,
   XML_Char *s;
   const XML_Char *filename;
   XML_Parser entParser = XML_ExternalEntityParserCreate(parser, context, 0);
+  int filemapRes;
   PROCESS_ARGS args;
   args.retPtr = &result;
   args.parser = entParser;
   filename = resolveSystemId(base, systemId, &s);
   XML_SetBase(entParser, filename);
-  if (!filemap(filename, processFile, &args))
+  filemapRes = filemap(filename, processFile, &args);
+  switch (filemapRes) {
+  case 0:
     result = 0;
+    break;
+  case 2:
+    ftprintf(stderr, T("%s: file too large for memory-mapping")
+        T(", switching to streaming\n"), filename);
+    result = processStream(filename, entParser);
+    break;
+  }
   free(s);
   XML_ParserFree(entParser);
   return result;
@@ -231,11 +244,21 @@ XML_ProcessFile(XML_Parser parser,
                                       ? externalEntityRefFilemap
                                       : externalEntityRefStream);
   if (flags & XML_MAP_FILE) {
+    int filemapRes;
     PROCESS_ARGS args;
     args.retPtr = &result;
     args.parser = parser;
-    if (!filemap(filename, processFile, &args))
+    filemapRes = filemap(filename, processFile, &args);
+    switch (filemapRes) {
+    case 0:
       result = 0;
+      break;
+    case 2:
+      ftprintf(stderr, T("%s: file too large for memory-mapping")
+          T(", switching to streaming\n"), filename);
+      result = processStream(filename, parser);
+      break;
+    }
   }
   else
     result = processStream(filename, parser);
