@@ -823,6 +823,20 @@ START_TEST(test_latin1_umlauts)
 }
 END_TEST
 
+/* Test that an element name with a 4-byte UTF-8 character is rejected */
+START_TEST(test_long_utf8_character)
+{
+    const char *text =
+        "<?xml version='1.0' encoding='utf-8'?>\n"
+        /* 0xf0 0x90 0x80 0x80 = U+10000, the first Linear B character */
+        "<do\xf0\x90\x80\x80/>";
+    expect_failure(text,
+                   XML_ERROR_INVALID_TOKEN,
+                   "4-byte UTF-8 character in element name not faulted");
+}
+END_TEST
+
+
 /* Regression test #1 for SF bug #653180. */
 START_TEST(test_line_number_after_parse)
 {  
@@ -10212,6 +10226,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_not_utf16);
     tcase_add_test(tc_basic, test_bad_encoding);
     tcase_add_test(tc_basic, test_latin1_umlauts);
+    tcase_add_test(tc_basic, test_long_utf8_character);
     /* Regression test for SF bug #491986. */
     tcase_add_test(tc_basic, test_danish_latin1);
     /* Regression test for SF bug #514281. */
