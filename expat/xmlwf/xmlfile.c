@@ -8,7 +8,7 @@
 #include <string.h>
 #include <fcntl.h>
 
-#ifdef WIN32
+#ifdef _WIN32
 #include "winconfig.h"
 #elif defined(MACOS_CLASSIC)
 #include "macconfig.h"
@@ -16,7 +16,7 @@
 #include "amigaconfig.h"
 #elif defined(HAVE_EXPAT_CONFIG_H)
 #include <expat_config.h>
-#endif /* ndef WIN32 */
+#endif /* ndef _WIN32 */
 
 #include "expat.h"
 #include "internal.h"  /* for UNUSED_P only */
@@ -89,7 +89,7 @@ processFile(const void *data, size_t size,
     *retPtr = 1;
 }
 
-#if defined(WIN32)
+#if defined(_WIN32)
 
 static int
 isAsciiLetter(XML_Char c)
@@ -97,7 +97,7 @@ isAsciiLetter(XML_Char c)
   return (T('a') <= c && c <= T('z')) || (T('A') <= c && c <= T('Z'));
 }
 
-#endif /* WIN32 */
+#endif /* _WIN32 */
 
 static const XML_Char *
 resolveSystemId(const XML_Char *base, const XML_Char *systemId,
@@ -107,7 +107,7 @@ resolveSystemId(const XML_Char *base, const XML_Char *systemId,
   *toFree = 0;
   if (!base
       || *systemId == T('/')
-#if defined(WIN32)
+#if defined(_WIN32)
       || *systemId == T('\\')
       || (isAsciiLetter(systemId[0]) && systemId[1] == T(':'))
 #endif
@@ -121,7 +121,7 @@ resolveSystemId(const XML_Char *base, const XML_Char *systemId,
   s = *toFree;
   if (tcsrchr(s, T('/')))
     s = tcsrchr(s, T('/')) + 1;
-#if defined(WIN32)
+#if defined(_WIN32)
   if (tcsrchr(s, T('\\')))
     s = tcsrchr(s, T('\\')) + 1;
 #endif
