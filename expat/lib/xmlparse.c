@@ -1885,7 +1885,7 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal)
         XmlUpdatePosition(encoding, positionPtr, bufferPtr, &position);
         positionPtr = bufferPtr;
         return XML_STATUS_SUSPENDED;
-        /* LCOV_EXCL_END */
+        /* LCOV_EXCL_STOP */
       case XML_INITIALIZED:
       case XML_PARSING:
         ps_parsing = XML_FINISHED;
@@ -3880,7 +3880,7 @@ doIgnoreSection(XML_Parser parser,
      */
     *eventPP = next;
     return XML_ERROR_UNEXPECTED_STATE;
-    /* LCOV_EXCL_END */
+    /* LCOV_EXCL_STOP */
   }
   /* not reached */
 }
