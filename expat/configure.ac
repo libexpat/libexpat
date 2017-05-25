@@ -100,6 +100,26 @@ AC_TYPE_SIZE_T
 AC_CHECK_FUNCS(memmove bcopy)
 
 
+AC_CHECK_LIB([bsd], [arc4random_buf])
+AC_MSG_CHECKING([for arc4random_buf (BSD or libbsd)])
+AC_LINK_IFELSE([AC_LANG_SOURCE([
+  #include <stdlib.h>  /* for arc4random_buf on BSD, for NULL */
+  #if defined(HAVE_LIBBSD)
+  # include <bsd/stdlib.h>
+  #endif
+  int main() {
+    arc4random_buf(NULL, 0U);
+    return 0;
+  }
+])], [
+    AC_DEFINE([HAVE_ARC4RANDOM_BUF], [1],
+        [Define to 1 if you have the `arc4random_buf' function.])
+    AC_MSG_RESULT([yes])
+], [
+    AC_MSG_RESULT([no])
+])
+
+
 AC_MSG_CHECKING([for getrandom (Linux 3.17+, glibc 2.25+)])
 AC_COMPILE_IFELSE([AC_LANG_SOURCE([
   #include <stdlib.h>  /* for NULL */

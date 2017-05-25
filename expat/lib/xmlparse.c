@@ -779,6 +779,10 @@ gather_time_entropy(void)
 #endif
 }
 
+#if defined(HAVE_ARC4RANDOM_BUF) && defined(HAVE_LIBBSD)
+# include <bsd/stdlib.h>
+#endif
+
 static unsigned long
 generate_hash_secret_salt(XML_Parser parser)
 {
@@ -790,7 +794,7 @@ generate_hash_secret_salt(XML_Parser parser)
 # define PARSER_CAST(p)  (p)
 #endif
 
-#ifdef __CloudABI__
+#if defined(HAVE_ARC4RANDOM_BUF) || defined(__CloudABI__)
   unsigned long entropy;
   (void)parser;
   (void)gather_time_entropy;
