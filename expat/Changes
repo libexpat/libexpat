@@ -7,6 +7,8 @@ Release ??????????
                     * RtlGenRandom on Windows XP / Server 2003 and later
                     * getrandom on glic 2.25+ Linux 3.17+
                   In a way, that's still part of CVE-2016-5300.
+                  For packaging, feel free to configure using
+                  --(with|without)-libbsd to bypass auto-detection.
 
         Bug fixes:
             #539  Fix regression from fix to CVE-2016-0718 cutting off

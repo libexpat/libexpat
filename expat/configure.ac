@@ -100,7 +100,16 @@ AC_TYPE_SIZE_T
 AC_CHECK_FUNCS(memmove bcopy)
 
 
-AC_CHECK_LIB([bsd], [arc4random_buf])
+AC_ARG_WITH([libbsd], [
+AS_HELP_STRING([--with-libbsd], [enforce use of libbsd])
+AS_HELP_STRING([--without-libbsd], [prohibit use of libbsd])])
+AS_IF([test "x${with_libbsd}" != xno], [
+  AC_CHECK_LIB([bsd], [arc4random_buf], [], [
+    AS_IF([test "x${with_libbsd}" = xyes], [
+      AC_MSG_ERROR([Enforced use of libbsd cannot be satisfied.])
+    ])
+  ])
+])
 AC_MSG_CHECKING([for arc4random_buf (BSD or libbsd)])
 AC_LINK_IFELSE([AC_LANG_SOURCE([
   #include <stdlib.h>  /* for arc4random_buf on BSD, for NULL */
