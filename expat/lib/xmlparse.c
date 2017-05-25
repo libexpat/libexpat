@@ -698,6 +698,36 @@ static const XML_Char implicitContext[] = {
 };
 
 
+#if defined(HAVE_GETRANDOM)
+# include <sys/random.h>
+# include <errno.h>
+
+/* Obtain entropy on Linux 3.17+ with glibc 2.25+ */
+static int
+writeRandomBytes_getrandom(void * target, size_t count) {
+  int success = 0;  /* full count bytes written? */
+  size_t bytesWrittenTotal = 0;
+  const unsigned int getrandomFlags = 0;
+
+  do {
+    void * const currentTarget = (void*)((char*)target + bytesWrittenTotal);
+    const size_t bytesToWrite = count - bytesWrittenTotal;
+
+    const int bytesWrittenMore
+        = getrandom(currentTarget, bytesToWrite, getrandomFlags);
+    if (bytesWrittenMore > 0) {
+      bytesWrittenTotal += bytesWrittenMore;
+      if (bytesWrittenTotal >= count)
+        success = 1;
+    }
+  } while (! success && (errno == EINTR || errno == EAGAIN));
+
+  return success;
+}
+
+#endif  /* defined(HAVE_GETRANDOM) */
+
+
 #ifdef _WIN32
 
 typedef BOOLEAN (APIENTRY *RTLGENRANDOM_FUNC)(PVOID, ULONG);
@@ -772,6 +802,10 @@ generate_hash_secret_salt(XML_Parser parser)
   /* Try high quality providers first .. */
 #ifdef _WIN32
   if (writeRandomBytes_RtlGenRandom((void *)&entropy, sizeof(entropy))) {
+    return entropy;
+  }
+#elif defined(HAVE_GETRANDOM)
+  if (writeRandomBytes_getrandom((void *)&entropy, sizeof(entropy))) {
     return entropy;
   }
 #endif

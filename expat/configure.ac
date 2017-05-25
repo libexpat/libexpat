@@ -99,6 +99,23 @@ AC_C_CONST
 AC_TYPE_SIZE_T
 AC_CHECK_FUNCS(memmove bcopy)
 
+
+AC_MSG_CHECKING([for getrandom (Linux 3.17+, glibc 2.25+)])
+AC_COMPILE_IFELSE([AC_LANG_SOURCE([
+  #include <stdlib.h>  /* for NULL */
+  #include <sys/random.h>
+  int main() {
+    return getrandom(NULL, 0U, 0U);
+  }
+])], [
+    AC_DEFINE([HAVE_GETRANDOM], [1],
+        [Define to 1 if you have the `getrandom' function.])
+    AC_MSG_RESULT([yes])
+], [
+    AC_MSG_RESULT([no])
+])
+
+
 dnl Only needed for xmlwf:
 AC_CHECK_HEADERS(fcntl.h unistd.h)
 AC_TYPE_OFF_T
