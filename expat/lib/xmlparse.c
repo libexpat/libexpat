@@ -786,15 +786,13 @@ gather_time_entropy(void)
 static unsigned long
 generate_hash_secret_salt(XML_Parser parser)
 {
-#if defined(HAVE_ARC4RANDOM_BUF) || defined(__CloudABI__)
   unsigned long entropy;
   (void)parser;
+#if defined(HAVE_ARC4RANDOM_BUF) || defined(__CloudABI__)
   (void)gather_time_entropy;
   arc4random_buf(&entropy, sizeof(entropy));
   return entropy;
 #else
-  unsigned long entropy;
-
   /* Try high quality providers first .. */
 #ifdef _WIN32
   if (writeRandomBytes_RtlGenRandom((void *)&entropy, sizeof(entropy))) {
