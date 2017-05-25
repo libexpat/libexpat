@@ -34,6 +34,7 @@ Release ??????????
                     * Visual Studio 6.0
                   If you happen to rely on some of these, please get in touch
                   for joining with maintenance.
+             #10  Move from WIN32 to _WIN32
 
         Special thanks to:
             Andy Wang
