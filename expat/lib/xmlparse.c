@@ -697,6 +697,39 @@ static const XML_Char implicitContext[] = {
   ASCII_s, ASCII_p, ASCII_a, ASCII_c, ASCII_e, '\0'
 };
 
+
+#ifdef _WIN32
+
+typedef BOOLEAN (APIENTRY *RTLGENRANDOM_FUNC)(PVOID, ULONG);
+
+/* Obtain entropy on Windows XP / Windows Server 2003 and later.
+ * Hint on RtlGenRandom and the following article from libsodioum.
+ *
+ * Michael Howard: Cryptographically Secure Random number on Windows without using CryptoAPI
+ * https://blogs.msdn.microsoft.com/michael_howard/2005/01/14/cryptographically-secure-random-number-on-windows-without-using-cryptoapi/
+ */
+static int
+writeRandomBytes_RtlGenRandom(void * target, size_t count) {
+  int success = 0;  /* full count bytes written? */
+  const HMODULE advapi32 = LoadLibrary("ADVAPI32.DLL");
+
+  if (advapi32) {
+    const RTLGENRANDOM_FUNC RtlGenRandom
+        = (RTLGENRANDOM_FUNC)GetProcAddress(advapi32, "SystemFunction036");
+    if (RtlGenRandom) {
+      if (RtlGenRandom((PVOID)target, (ULONG)count) == TRUE) {
+        success = 1;
+      }
+    }
+    FreeLibrary(advapi32);
+  }
+
+  return success;
+}
+
+#endif /* _WIN32 */
+
+
 static unsigned long
 gather_time_entropy(void)
 {
@@ -734,9 +767,19 @@ generate_hash_secret_salt(XML_Parser parser)
   arc4random_buf(&entropy, sizeof(entropy));
   return entropy;
 #else
+  unsigned long entropy;
+
+  /* Try high quality providers first .. */
+#ifdef _WIN32
+  if (writeRandomBytes_RtlGenRandom((void *)&entropy, sizeof(entropy))) {
+    return entropy;
+  }
+#endif
+  /* .. and self-made low quality for backup: */
+
   /* Process ID is 0 bits entropy if attacker has local access
    * XML_Parser address is few bits of entropy if attacker has local access */
-  const unsigned long entropy =
+  entropy =
       gather_time_entropy() ^ getpid() ^ (unsigned long)PARSER_CAST(parser);
 
   /* Factors are 2^31-1 and 2^61-1 (Mersenne primes M31 and M61) */
