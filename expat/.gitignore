@@ -28,3 +28,6 @@ expat.pc
 /callgraph.svg
 /libexpat.so.*
 /run.sh
+build__R*
+coverage__R*
+source__R*
