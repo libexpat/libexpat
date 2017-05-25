@@ -786,14 +786,6 @@ gather_time_entropy(void)
 static unsigned long
 generate_hash_secret_salt(XML_Parser parser)
 {
-#if defined(__UINTPTR_TYPE__)
-# define PARSER_CAST(p)  (__UINTPTR_TYPE__)(p)
-#elif defined(_WIN64) && defined(_MSC_VER)
-# define PARSER_CAST(p)  (unsigned __int64)(p)
-#else
-# define PARSER_CAST(p)  (p)
-#endif
-
 #if defined(HAVE_ARC4RANDOM_BUF) || defined(__CloudABI__)
   unsigned long entropy;
   (void)parser;
@@ -815,10 +807,8 @@ generate_hash_secret_salt(XML_Parser parser)
 #endif
   /* .. and self-made low quality for backup: */
 
-  /* Process ID is 0 bits entropy if attacker has local access
-   * XML_Parser address is few bits of entropy if attacker has local access */
-  entropy =
-      gather_time_entropy() ^ getpid() ^ (unsigned long)PARSER_CAST(parser);
+  /* Process ID is 0 bits entropy if attacker has local access */
+  entropy = gather_time_entropy() ^ getpid();
 
   /* Factors are 2^31-1 and 2^61-1 (Mersenne primes M31 and M61) */
   if (sizeof(unsigned long) == 4) {
