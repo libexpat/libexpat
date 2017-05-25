@@ -9,7 +9,7 @@
 #include <stdio.h>
 
 /* Functions close(2) and read(2) */
-#if !defined(WIN32) && !defined(_WIN32) && !defined(_WIN64)
+#if !defined(_WIN32) && !defined(_WIN64)
 # include <unistd.h>
 #endif
 
