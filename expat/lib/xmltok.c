@@ -1019,7 +1019,11 @@ streqci(const char *s1, const char *s2)
     if (ASCII_a <= c1 && c1 <= ASCII_z)
       c1 += ASCII_A - ASCII_a;
     if (ASCII_a <= c2 && c2 <= ASCII_z)
-      c2 += ASCII_A - ASCII_a;
+      /* The following line will never get executed.  streqci() is
+       * only called from two places, both of which guarantee to put
+       * upper-case strings into s2.
+       */
+      c2 += ASCII_A - ASCII_a; /* LCOV_EXCL_LINE */
     if (c1 != c2)
       return 0;
     if (!c1)
