@@ -733,18 +733,27 @@ END_TEST
 START_TEST(test_utf16)
 {
     /* <?xml version="1.0" encoding="UTF-16"?>
-       <doc a='123'>some text</doc>
-    */
+     *  <doc a='123'>some {A} text</doc>
+     *
+     * where {A} is U+FF21, FULLWIDTH LATIN CAPITAL LETTER A
+     */
     char text[] =
         "\000<\000?\000x\000m\000\154\000 \000v\000e\000r\000s\000i\000o"
         "\000n\000=\000'\0001\000.\000\060\000'\000 \000e\000n\000c\000o"
         "\000d\000i\000n\000g\000=\000'\000U\000T\000F\000-\0001\000\066"
         "\000'\000?\000>\000\n"
-        "\000<\000d\000o\000c\000 \000a\000=\000'\0001\0002\0003\000'"
-        "\000>\000s\000o\000m\000e\000 \000t\000e\000x\000t\000<\000/"
-        "\000d\000o\000c\000>";
+        "\000<\000d\000o\000c\000 \000a\000=\000'\0001\0002\0003\000'\000>"
+        "\000s\000o\000m\000e\000 \xff\x21\000 \000t\000e\000x\000t\000"
+        "<\000/\000d\000o\000c\000>";
+    char expected[] = "some \357\274\241 text";
+    CharData storage;
+
+    CharData_Init(&storage);
+    XML_SetUserData(parser, &storage);
+    XML_SetCharacterDataHandler(parser, accumulate_characters);
     if (_XML_Parse_SINGLE_BYTES(parser, text, sizeof(text)-1, XML_TRUE) == XML_STATUS_ERROR)
         xml_failure(parser);
+    CharData_CheckXMLChars(&storage, expected);
 }
 END_TEST
 
