@@ -2229,6 +2229,34 @@ START_TEST(test_multichar_cdata_utf16)
 }
 END_TEST
 
+/* Test that an element name with a UTF-16 surrogate pair is rejected */
+START_TEST(test_utf16_bad_surrogate_pair)
+{
+    /* Test data is:
+     *   <?xml version='1.0' encoding='utf-16'?>
+     *   <a><![CDATA[{BADLINB}]]></a>
+     *
+     * where {BADLINB} is U+10000 (the first Linear B character)
+     * with the UTF-16 surrogate pair in the wrong order, i.e.
+     *   0xdc00 0xd800
+     */
+    const char text[] =
+        "\0<\0?\0x\0m\0l\0"
+        " \0v\0e\0r\0s\0i\0o\0n\0=\0'\0\x31\0.\0\x30\0'\0"
+        " \0e\0n\0c\0o\0d\0i\0n\0g\0=\0'\0u\0t\0f\0-\0""1\0""6\0'"
+        "\0?\0>\0\n"
+        "\0<\0a\0>\0<\0!\0[\0C\0D\0A\0T\0A\0["
+        "\xdc\x00\xd8\x00"
+        "\0]\0]\0>\0<\0/\0a\0>";
+
+    if (_XML_Parse_SINGLE_BYTES(parser, text, sizeof(text) - 1,
+                                XML_TRUE) != XML_STATUS_ERROR)
+        fail("Reversed UTF-16 surrogate pair not faulted");
+    if (XML_GetErrorCode(parser) != XML_ERROR_INVALID_TOKEN)
+        xml_failure(parser);
+}
+END_TEST
+
 
 START_TEST(test_bad_cdata)
 {
@@ -10380,6 +10408,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_good_cdata_utf16);
     tcase_add_test(tc_basic, test_long_cdata_utf16);
     tcase_add_test(tc_basic, test_multichar_cdata_utf16);
+    tcase_add_test(tc_basic, test_utf16_bad_surrogate_pair);
     tcase_add_test(tc_basic, test_bad_cdata);
     tcase_add_test(tc_basic, test_bad_cdata_utf16);
     tcase_add_test(tc_basic, test_stop_parser_between_cdata_calls);
