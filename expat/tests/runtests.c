@@ -1334,6 +1334,14 @@ START_TEST(test_xmldecl_invalid)
 }
 END_TEST
 
+START_TEST(test_xmldecl_missing_attr)
+{
+    expect_failure("<?xml ='1.0'?>\n<doc/>\n",
+                   XML_ERROR_XML_DECL,
+                   "Failed to report missing XML declaration attribute");
+}
+END_TEST
+
 /* Regression test for SF bug #584832. */
 static int XMLCALL
 UnknownEncodingHandler(void *UNUSED_P(data),const XML_Char *encoding,XML_Encoding *info)
@@ -10394,6 +10402,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_attr_whitespace_normalization);
     tcase_add_test(tc_basic, test_xmldecl_misplaced);
     tcase_add_test(tc_basic, test_xmldecl_invalid);
+    tcase_add_test(tc_basic, test_xmldecl_missing_attr);
     tcase_add_test(tc_basic, test_unknown_encoding_internal_entity);
     tcase_add_test(tc_basic, test_unrecognised_encoding_internal_entity);
     tcase_add_test(tc_basic,
