@@ -2055,6 +2055,10 @@ XML_GetInputContext(XML_Parser parser, int *offset, int *size)
       *size   = (int)(bufferEnd - buffer);
     return buffer;
   }
+#else
+  (void)parser;
+  (void)offset;
+  (void)size;
 #endif /* defined XML_CONTEXT_BYTES */
   return (char *) 0;
 }
