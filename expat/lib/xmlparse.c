@@ -1704,6 +1704,13 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal)
     const char *end;
     int nLeftOver;
     enum XML_Status result;
+    /* Detect overflow (a+b > MAX <==> b > MAX-a) */
+    if (len > (XML_Index)-1 - parseEndByteIndex) {
+       errorCode = XML_ERROR_NO_MEMORY;
+       eventPtr = eventEndPtr = NULL;
+       processor = errorProcessor;
+       return XML_STATUS_ERROR;
+    }
     parseEndByteIndex += len;
     positionPtr = s;
     ps_finalBuffer = (XML_Bool)isFinal;
