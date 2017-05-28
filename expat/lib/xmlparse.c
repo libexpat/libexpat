@@ -1648,9 +1648,7 @@ XML_SetHashSalt(XML_Parser parser,
 enum XML_Status XMLCALL
 XML_Parse(XML_Parser parser, const char *s, int len, int isFinal)
 {
-  if (parser == NULL)
-    return XML_STATUS_ERROR;
-  if (s == NULL && len != 0) {
+  if ((parser == NULL) || ((s == NULL) && (len != 0))) {
     errorCode = XML_ERROR_INVALID_ARGUMENT;
     return XML_STATUS_ERROR;
   }
