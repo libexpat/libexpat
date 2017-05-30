@@ -748,6 +748,13 @@ generate_hash_secret_salt(XML_Parser parser)
 #endif
 }
 
+static unsigned long
+get_hash_secret_salt(XML_Parser parser) {
+  if (parser->m_parentParser != NULL)
+    return get_hash_secret_salt(parser->m_parentParser);
+  return parser->m_hash_secret_salt;
+}
+
 static XML_Bool  /* only valid for root parser */
 startParsing(XML_Parser parser)
 {
@@ -1638,6 +1645,8 @@ XML_SetHashSalt(XML_Parser parser,
 {
   if (parser == NULL)
     return 0;
+  if (parser->m_parentParser)
+    return XML_SetHashSalt(parser->m_parentParser, hash_salt);
   /* block after XML_Parse()/XML_ParseBuffer() has been called */
   if (ps_parsing == XML_PARSING || ps_parsing == XML_SUSPENDED)
     return 0;
@@ -3139,7 +3148,7 @@ storeAtts(XML_Parser parser, const ENCODING *enc,
       if (s[-1] == 2) {  /* prefixed */
         ATTRIBUTE_ID *id;
         const BINDING *b;
-        unsigned long uriHash = hash_secret_salt;
+        unsigned long uriHash = get_hash_secret_salt(parser);
         ((XML_Char *)s)[-1] = 0;  /* clear flag */
         id = (ATTRIBUTE_ID *)lookup(parser, &dtd->attributeIds, s, 0);
         if (!id || !id->prefix)
@@ -6199,7 +6208,7 @@ keyeq(KEY s1, KEY s2)
 static unsigned long FASTCALL
 hash(XML_Parser parser, KEY s)
 {
-  unsigned long h = hash_secret_salt;
+  unsigned long h = get_hash_secret_salt(parser);
   while (*s)
     h = CHAR_HASH(h, *s++);
   return h;
