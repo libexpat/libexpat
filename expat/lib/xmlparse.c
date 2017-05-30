@@ -750,10 +750,9 @@ generate_hash_secret_salt(XML_Parser parser)
 
 static unsigned long
 get_hash_secret_salt(XML_Parser parser) {
-  const XML_Parser source = (parser->m_parentParser == NULL)
-      ? parser
-      : parser->m_parentParser;
-  return source->m_hash_secret_salt;
+  if (parser->m_parentParser != NULL)
+    return get_hash_secret_salt(parser->m_parentParser);
+  return parser->m_hash_secret_salt;
 }
 
 static XML_Bool  /* only valid for root parser */
@@ -1647,9 +1646,7 @@ XML_SetHashSalt(XML_Parser parser,
   if (parser == NULL)
     return 0;
   if (parser->m_parentParser)
-    /* pretend it worked (for backwards compatibility: the return value
-     * may be checked by existing code); salt of parent parser used, still */
-    return 1;
+    return XML_SetHashSalt(parser->m_parentParser, hash_salt);
   /* block after XML_Parse()/XML_ParseBuffer() has been called */
   if (ps_parsing == XML_PARSING || ps_parsing == XML_SUSPENDED)
     return 0;
