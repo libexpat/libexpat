@@ -700,11 +700,17 @@ static const XML_Char implicitContext[] = {
 };
 
 
-#if defined(HAVE_GETRANDOM)
-# include <sys/random.h>
+#if defined(HAVE_GETRANDOM) || defined(HAVE_SYSCALL_GETRANDOM)
 # include <errno.h>
 
-/* Obtain entropy on Linux 3.17+ with glibc 2.25+ */
+# if defined(HAVE_GETRANDOM)
+#  include <sys/random.h>    /* getrandom */
+# else
+#  include <unistd.h>        /* syscall */
+#  include <sys/syscall.h>   /* SYS_getrandom */
+# endif
+
+/* Obtain entropy on Linux 3.17+ */
 static int
 writeRandomBytes_getrandom(void * target, size_t count) {
   int success = 0;  /* full count bytes written? */
@@ -715,8 +721,13 @@ writeRandomBytes_getrandom(void * target, size_t count) {
     void * const currentTarget = (void*)((char*)target + bytesWrittenTotal);
     const size_t bytesToWrite = count - bytesWrittenTotal;
 
-    const int bytesWrittenMore
-        = getrandom(currentTarget, bytesToWrite, getrandomFlags);
+    const int bytesWrittenMore =
+#if defined(HAVE_GETRANDOM)
+        getrandom(currentTarget, bytesToWrite, getrandomFlags);
+#else
+        syscall(SYS_getrandom, currentTarget, bytesToWrite, getrandomFlags);
+#endif
+
     if (bytesWrittenMore > 0) {
       bytesWrittenTotal += bytesWrittenMore;
       if (bytesWrittenTotal >= count)
@@ -727,7 +738,7 @@ writeRandomBytes_getrandom(void * target, size_t count) {
   return success;
 }
 
-#endif  /* defined(HAVE_GETRANDOM) */
+#endif  /* defined(HAVE_GETRANDOM) || defined(HAVE_SYSCALL_GETRANDOM) */
 
 
 #ifdef _WIN32
@@ -812,7 +823,7 @@ generate_hash_secret_salt(XML_Parser parser)
   if (writeRandomBytes_RtlGenRandom((void *)&entropy, sizeof(entropy))) {
     return ENTROPY_DEBUG("RtlGenRandom", entropy);
   }
-#elif defined(HAVE_GETRANDOM)
+#elif defined(HAVE_GETRANDOM) || defined(HAVE_SYSCALL_GETRANDOM)
   if (writeRandomBytes_getrandom((void *)&entropy, sizeof(entropy))) {
     return ENTROPY_DEBUG("getrandom", entropy);
   }

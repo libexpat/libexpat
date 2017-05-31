@@ -142,6 +142,23 @@ AC_COMPILE_IFELSE([AC_LANG_SOURCE([
     AC_MSG_RESULT([yes])
 ], [
     AC_MSG_RESULT([no])
+
+    AC_MSG_CHECKING([for syscall SYS_getrandom (Linux 3.17+)])
+    AC_LINK_IFELSE([AC_LANG_SOURCE([
+      #include <stdlib.h>  /* for NULL */
+      #include <unistd.h>  /* for syscall */
+      #include <sys/syscall.h>  /* for SYS_getrandom */
+      int main() {
+        syscall(SYS_getrandom, NULL, 0, 0);
+        return 0;
+      }
+    ])], [
+        AC_DEFINE([HAVE_SYSCALL_GETRANDOM], [1],
+            [Define to 1 if you have `syscall' and `SYS_getrandom'.])
+        AC_MSG_RESULT([yes])
+    ], [
+        AC_MSG_RESULT([no])
+    ])
 ])
 
 

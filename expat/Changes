@@ -5,7 +5,7 @@ Release ??????????
                   Use high quality entropy for hash initialization:
                     * arc4random_buf on BSD, systems with libbsd, CloudABI
                     * RtlGenRandom on Windows XP / Server 2003 and later
-                    * getrandom on glic 2.25+ Linux 3.17+
+                    * getrandom on Linux 3.17+
                   In a way, that's still part of CVE-2016-5300.
                   For packaging, feel free to configure using
                   --(with|without)-libbsd to bypass auto-detection.
