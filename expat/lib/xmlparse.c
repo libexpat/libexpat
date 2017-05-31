@@ -6,6 +6,8 @@
 #include <string.h>                     /* memset(), memcpy() */
 #include <assert.h>
 #include <limits.h>                     /* UINT_MAX */
+#include <stdio.h>                      /* fprintf */
+#include <stdlib.h>                     /* getenv */
 
 #ifdef _WIN32
 #define getpid GetCurrentProcessId
@@ -784,6 +786,18 @@ gather_time_entropy(void)
 #endif
 
 static unsigned long
+ENTROPY_DEBUG(const char * label, unsigned long entropy) {
+  const char * const EXPAT_ENTROPY_DEBUG = getenv("EXPAT_ENTROPY_DEBUG");
+  if (EXPAT_ENTROPY_DEBUG && ! strcmp(EXPAT_ENTROPY_DEBUG, "1")) {
+    fprintf(stderr, "Entropy: %s --> 0x%0*lx (%lu bytes)\n",
+        label,
+        (int)sizeof(unsigned long) * 2, entropy,
+        sizeof(unsigned long));
+  }
+  return entropy;
+}
+
+static unsigned long
 generate_hash_secret_salt(XML_Parser parser)
 {
   unsigned long entropy;
@@ -791,16 +805,16 @@ generate_hash_secret_salt(XML_Parser parser)
 #if defined(HAVE_ARC4RANDOM_BUF) || defined(__CloudABI__)
   (void)gather_time_entropy;
   arc4random_buf(&entropy, sizeof(entropy));
-  return entropy;
+  return ENTROPY_DEBUG("arc4random_buf", entropy);
 #else
   /* Try high quality providers first .. */
 #ifdef _WIN32
   if (writeRandomBytes_RtlGenRandom((void *)&entropy, sizeof(entropy))) {
-    return entropy;
+    return ENTROPY_DEBUG("RtlGenRandom", entropy);
   }
 #elif defined(HAVE_GETRANDOM)
   if (writeRandomBytes_getrandom((void *)&entropy, sizeof(entropy))) {
-    return entropy;
+    return ENTROPY_DEBUG("getrandom", entropy);
   }
 #endif
   /* .. and self-made low quality for backup: */
@@ -810,9 +824,10 @@ generate_hash_secret_salt(XML_Parser parser)
 
   /* Factors are 2^31-1 and 2^61-1 (Mersenne primes M31 and M61) */
   if (sizeof(unsigned long) == 4) {
-    return entropy * 2147483647;
+    return ENTROPY_DEBUG("fallback(4)", entropy * 2147483647);
   } else {
-    return entropy * (unsigned long)2305843009213693951;
+    return ENTROPY_DEBUG("fallback(8)",
+        entropy * (unsigned long)2305843009213693951);
   }
 #endif
 }

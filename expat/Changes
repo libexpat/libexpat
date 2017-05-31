@@ -9,6 +9,7 @@ Release ??????????
                   In a way, that's still part of CVE-2016-5300.
                   For packaging, feel free to configure using
                   --(with|without)-libbsd to bypass auto-detection.
+                  For run-time debug output, EXPAT_ENTROPY_DEBUG=1 can be used.
 
         Bug fixes:
             #539  Fix regression from fix to CVE-2016-0718 cutting off
