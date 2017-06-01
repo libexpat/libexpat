@@ -3,12 +3,11 @@ Release ??????????
                   CVE-2016-9063 -- Detect integer overflow
              #25  More integer overflow detection (function poolGrow)
                   Use high quality entropy for hash initialization:
-                    * arc4random_buf on BSD, systems with libbsd, CloudABI
+                    * arc4random_buf on BSD, systems with libbsd
+                      (when configured with --with-libbsd), CloudABI
                     * RtlGenRandom on Windows XP / Server 2003 and later
                     * getrandom on Linux 3.17+
                   In a way, that's still part of CVE-2016-5300.
-                  For packaging, feel free to configure using
-                  --(with|without)-libbsd to bypass auto-detection.
                   For run-time debug output, EXPAT_ENTROPY_DEBUG=1 can be used.
 
         Bug fixes:

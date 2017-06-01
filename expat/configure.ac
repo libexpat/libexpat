@@ -101,8 +101,8 @@ AC_CHECK_FUNCS(memmove bcopy)
 
 
 AC_ARG_WITH([libbsd], [
-AS_HELP_STRING([--with-libbsd], [enforce use of libbsd])
-AS_HELP_STRING([--without-libbsd], [prohibit use of libbsd])])
+AS_HELP_STRING([--with-libbsd], [utilize libbsd (for arc4random_buf)])
+], [], [with_libbsd=no])
 AS_IF([test "x${with_libbsd}" != xno], [
   AC_CHECK_LIB([bsd], [arc4random_buf], [], [
     AS_IF([test "x${with_libbsd}" = xyes], [
