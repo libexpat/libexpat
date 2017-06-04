@@ -74,8 +74,8 @@ extraclean: distclean
 	rm -f conftools/ltmain.sh conftools/install-sh conftools/config.guess conftools/config.sub
 
 check: tests/runtests@EXEEXT@ tests/runtestspp@EXEEXT@
-	tests/runtests@EXEEXT@
-	tests/runtestspp@EXEEXT@
+	./run.sh tests/runtests@EXEEXT@
+	./run.sh tests/runtestspp@EXEEXT@
 
 $(MANFILE):
 	$(MAKE) -C doc xmlwf.1

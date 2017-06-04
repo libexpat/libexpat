@@ -27,3 +27,4 @@ expat.pc
 *.expand
 /callgraph.svg
 /libexpat.so.*
+/run.sh
