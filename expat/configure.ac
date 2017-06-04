@@ -166,6 +166,7 @@ AS_IF([test "x${enable_xml_context}" != "xno"], [
 ])
 
 AC_CONFIG_FILES([Makefile expat.pc])
+AC_CONFIG_FILES([run.sh], [chmod +x run.sh])
 AC_OUTPUT
 
 abs_srcdir="`cd $srcdir && pwd`"

@@ -57,7 +57,7 @@ clean:
 	cd lib && rm -f $(LIBRARY) *.@OBJEXT@ *.lo && rm -rf .libs _libs
 	cd xmlwf && rm -f xmlwf *.@OBJEXT@ *.lo && rm -rf .libs _libs
 	cd examples && rm -f elements outline *.@OBJEXT@ *.lo && rm -rf .libs _libs
-	cd tests && rm -rf .libs runtests runtests.@OBJEXT@ runtestspp runtestspp.@OBJEXT@
+	cd tests && rm -rf .libs runtests@EXEEXT@ runtests.@OBJEXT@ runtestspp@EXEEXT@ runtestspp.@OBJEXT@
 	cd tests && rm -f chardata.@OBJEXT@ memcheck.@OBJEXT@ minicheck.@OBJEXT@
 	rm -rf .libs libexpat.la
 	rm -f examples/core tests/core xmlwf/core
@@ -73,9 +73,9 @@ extraclean: distclean
 	rm -f aclocal.m4 m4/*
 	rm -f conftools/ltmain.sh conftools/install-sh conftools/config.guess conftools/config.sub
 
-check: tests/runtests tests/runtestspp
-	tests/runtests
-	tests/runtestspp
+check: tests/runtests@EXEEXT@ tests/runtestspp@EXEEXT@
+	./run.sh tests/runtests@EXEEXT@
+	./run.sh tests/runtestspp@EXEEXT@
 
 $(MANFILE):
 	$(MAKE) -C doc xmlwf.1
@@ -167,10 +167,10 @@ tests/chardata.@OBJEXT@: tests/chardata.c tests/chardata.h
 tests/minicheck.@OBJEXT@: tests/minicheck.c tests/minicheck.h
 tests/memcheck.@OBJEXT@: tests/memcheck.c tests/memcheck.h
 tests/runtests.@OBJEXT@: tests/runtests.c tests/chardata.h tests/memcheck.h
-tests/runtests: tests/runtests.@OBJEXT@ tests/chardata.@OBJEXT@ tests/minicheck.@OBJEXT@ tests/memcheck.@OBJEXT@ $(LIBRARY)
+tests/runtests@EXEEXT@: tests/runtests.@OBJEXT@ tests/chardata.@OBJEXT@ tests/minicheck.@OBJEXT@ tests/memcheck.@OBJEXT@ $(LIBRARY)
 	$(LINK_EXE) tests/runtests.@OBJEXT@ tests/chardata.@OBJEXT@ tests/minicheck.@OBJEXT@ tests/memcheck.@OBJEXT@ $(LIBRARY)
 tests/runtestspp.@OBJEXT@: tests/runtestspp.cpp tests/runtests.c tests/chardata.h tests/memcheck.h
-tests/runtestspp: tests/runtestspp.@OBJEXT@ tests/chardata.@OBJEXT@ tests/minicheck.@OBJEXT@ tests/memcheck.@OBJEXT@ $(LIBRARY)
+tests/runtestspp@EXEEXT@: tests/runtestspp.@OBJEXT@ tests/chardata.@OBJEXT@ tests/minicheck.@OBJEXT@ tests/memcheck.@OBJEXT@ $(LIBRARY)
 	$(LINK_CXX_EXE) tests/runtestspp.@OBJEXT@ tests/chardata.@OBJEXT@ tests/minicheck.@OBJEXT@ tests/memcheck.@OBJEXT@ $(LIBRARY)
 
 tests/benchmark/benchmark.@OBJEXT@: tests/benchmark/benchmark.c
