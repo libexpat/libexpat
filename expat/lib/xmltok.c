@@ -1469,6 +1469,9 @@ XmlInitUnknownEncoding(void *mem,
     else if (c < 0) {
       if (c < -4)
         return 0;
+      /* Multi-byte sequences need a converter function */
+      if (!convert)
+        return 0;
       e->normal.type[i] = (unsigned char)(BT_LEAD2 - (c + 2));
       e->utf8[i][0] = 0;
       e->utf16[i] = 0;
