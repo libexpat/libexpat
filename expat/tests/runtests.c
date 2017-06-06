@@ -5266,6 +5266,44 @@ START_TEST(test_comment_handled_in_default)
 #undef COMMENT_TEXT
 END_TEST
 
+/* Test that the unknown encoding handler with map entries that expect
+ * conversion but no conversion function is faulted
+ */
+static int XMLCALL
+BadEncodingHandler(void *data,
+                   const XML_Char *UNUSED_P(encoding),
+                   XML_Encoding *info)
+{
+    int i;
+
+    for (i = 0; i < 128; ++i)
+        info->map[i] = i;
+    for (; i < 256; ++i)
+        info->map[i] = -2; /* A 2-byte sequence */
+    info->data = NULL;
+    info->convert = (int (XMLCALL *)(void *, const char *))data;
+    info->release = NULL;
+    return XML_STATUS_OK;
+}
+
+START_TEST(test_missing_encoding_conversion_fn)
+{
+    const char *text =
+        "<?xml version='1.0' encoding='experimental'?>\n"
+        "<doc>\x81</doc>";
+
+    XML_SetUnknownEncodingHandler(parser, BadEncodingHandler, NULL);
+    /* BadEncodingHandler sets up an encoding with every top-bit-set
+     * character introducing a two-byte sequence.  For this, it
+     * requires a convert function.  The above function call doesn't
+     * pass one through, so when BadEncodingHandler actually gets
+     * called it should supply an invalid encoding.
+     */
+    expect_failure(text, XML_ERROR_UNKNOWN_ENCODING,
+                   "Encoding with missing convert() not faulted");
+}
+END_TEST
+
 
 /*
  * Namespaces tests.
@@ -10523,6 +10561,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_invalid_character_entity);
     tcase_add_test(tc_basic, test_pi_handled_in_default);
     tcase_add_test(tc_basic, test_comment_handled_in_default);
+    tcase_add_test(tc_basic, test_missing_encoding_conversion_fn);
 
     suite_add_tcase(s, tc_namespace);
     tcase_add_checked_fixture(tc_namespace,
