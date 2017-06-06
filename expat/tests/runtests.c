@@ -5270,6 +5270,13 @@ END_TEST
  * conversion but no conversion function is faulted
  */
 static int XMLCALL
+failing_converter(void *UNUSED_P(data), const char *UNUSED_P(s))
+{
+    /* Always claim to have failed */
+    return -1;
+}
+
+static int XMLCALL
 BadEncodingHandler(void *data,
                    const XML_Char *UNUSED_P(encoding),
                    XML_Encoding *info)
@@ -5281,7 +5288,7 @@ BadEncodingHandler(void *data,
     for (; i < 256; ++i)
         info->map[i] = -2; /* A 2-byte sequence */
     info->data = NULL;
-    info->convert = (int (XMLCALL *)(void *, const char *))data;
+    info->convert = (data == NULL) ? NULL : failing_converter;
     info->release = NULL;
     return XML_STATUS_OK;
 }
@@ -5304,13 +5311,6 @@ START_TEST(test_missing_encoding_conversion_fn)
 }
 END_TEST
 
-static int XMLCALL
-failing_converter(void *UNUSED_P(data), const char *UNUSED_P(s))
-{
-    /* Always claim to have failed */
-    return -1;
-}
-
 START_TEST(test_failing_encoding_conversion_fn)
 {
     const char *text =
@@ -5318,7 +5318,8 @@ START_TEST(test_failing_encoding_conversion_fn)
         "<doc>\x81</doc>";
 
     XML_SetUnknownEncodingHandler(parser, BadEncodingHandler,
-                                  (void *)failing_converter);
+                                  /* Anything non-NULL will do here */
+                                  (void *)(intptr_t)1);
     /* BadEncodingHandler sets up an encoding with every top-bit-set
      * character introducing a two-byte sequence.  For this, it
      * requires a convert function.  The above function call passes
