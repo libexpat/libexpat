@@ -5304,6 +5304,31 @@ START_TEST(test_missing_encoding_conversion_fn)
 }
 END_TEST
 
+static int XMLCALL
+failing_converter(void *UNUSED_P(data), const char *UNUSED_P(s))
+{
+    /* Always claim to have failed */
+    return -1;
+}
+
+START_TEST(test_failing_encoding_conversion_fn)
+{
+    const char *text =
+        "<?xml version='1.0' encoding='experimental'?>\n"
+        "<doc>\x81</doc>";
+
+    XML_SetUnknownEncodingHandler(parser, BadEncodingHandler,
+                                  (void *)failing_converter);
+    /* BadEncodingHandler sets up an encoding with every top-bit-set
+     * character introducing a two-byte sequence.  For this, it
+     * requires a convert function.  The above function call passes
+     * one that insists all possible sequences are invalid anyway.
+     */
+    expect_failure(text, XML_ERROR_INVALID_TOKEN,
+                   "Encoding with failing convert() not faulted");
+}
+END_TEST
+
 
 /*
  * Namespaces tests.
@@ -10562,6 +10587,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_pi_handled_in_default);
     tcase_add_test(tc_basic, test_comment_handled_in_default);
     tcase_add_test(tc_basic, test_missing_encoding_conversion_fn);
+    tcase_add_test(tc_basic, test_failing_encoding_conversion_fn);
 
     suite_add_tcase(s, tc_namespace);
     tcase_add_checked_fixture(tc_namespace,
