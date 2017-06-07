@@ -1,26 +1,35 @@
 Release ??????????
         Security fixes:
-                  CVE-2016-9063 -- Detect integer overflow
+                  CVE-2016-9063 -- Detect integer overflow; commit
+                    d4f735b88d9932bd5039df2335eefdd0723dbe20
+                    (Fixed version of existing downstream patches!)
             #539  Fix regression from fix to CVE-2016-0718 cutting off
-                    longer tag names
-             #25  More integer overflow detection (function poolGrow)
+                    longer tag names; commits
+                    * 896b6c1fd3b842f377d1b62135dccf0a579cf65d
+                    * af507cef2c93cb8d40062a0abe43a4f4e9158fb2
+             #16    * 0dbbf43fdb20f593ddf4fa1ff67288000dd4a7fd
+             #25  More integer overflow detection (function poolGrow); commits
+                    * 810b74e4703dcfdd8f404e3cb177d44684775143
+                    * 44178553f3539ce69d34abee77a05e879a7982ac
              #30  Use high quality entropy for hash initialization:
                     * arc4random_buf on BSD, systems with libbsd
                       (when configured with --with-libbsd), CloudABI
                     * RtlGenRandom on Windows XP / Server 2003 and later
                     * getrandom on Linux 3.17+
                     In a way, that's still part of CVE-2016-5300.
+                    https://github.com/libexpat/libexpat/pull/30/commits
 
         Bug fixes:
              #28  xmlwf: Auto-disable use of memory-mapping (and parsing
                     as a single chunk) for files larger than ~1 GB (2^30 bytes)
                     rather than failing with error "out of memory"
-              #3  Fix double free after malloc failure in DTD code
-                    https://github.com/libexpat/libexpat/issues/3
+              #3  Fix double free after malloc failure in DTD code; commit
+                    7ae9c3d3af433cd4defe95234eae7dc8ed15637f
              #17  Fix memory leak on parser error for unbound XML attribute
                     prefix with new namespaces defined in the same tag;
-                    found by Google's OSS-Fuzz
-                    https://github.com/libexpat/libexpat/issues/17
+                    found by Google's OSS-Fuzz; commits
+                    * 16f87daae5a16132e479e4f71862128c7a915c73
+                    * b47dbc9745932c160893d433220e462bd605f8cd
 
         New features:
              #30  Introduced environment switch EXPAT_ENTROPY_DEBUG=1
