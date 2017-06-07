@@ -2,10 +2,14 @@
    See the file COPYING for copying permission.
 */
 
+#define _GNU_SOURCE                     /* syscall prototype */
+
 #include <stddef.h>
 #include <string.h>                     /* memset(), memcpy() */
 #include <assert.h>
 #include <limits.h>                     /* UINT_MAX */
+#include <stdio.h>                      /* fprintf */
+#include <stdlib.h>                     /* getenv */
 
 #ifdef _WIN32
 #define getpid GetCurrentProcessId
@@ -697,6 +701,80 @@ static const XML_Char implicitContext[] = {
   ASCII_s, ASCII_p, ASCII_a, ASCII_c, ASCII_e, '\0'
 };
 
+
+#if defined(HAVE_GETRANDOM) || defined(HAVE_SYSCALL_GETRANDOM)
+# include <errno.h>
+
+# if defined(HAVE_GETRANDOM)
+#  include <sys/random.h>    /* getrandom */
+# else
+#  include <unistd.h>        /* syscall */
+#  include <sys/syscall.h>   /* SYS_getrandom */
+# endif
+
+/* Obtain entropy on Linux 3.17+ */
+static int
+writeRandomBytes_getrandom(void * target, size_t count) {
+  int success = 0;  /* full count bytes written? */
+  size_t bytesWrittenTotal = 0;
+  const unsigned int getrandomFlags = 0;
+
+  do {
+    void * const currentTarget = (void*)((char*)target + bytesWrittenTotal);
+    const size_t bytesToWrite = count - bytesWrittenTotal;
+
+    const int bytesWrittenMore =
+#if defined(HAVE_GETRANDOM)
+        getrandom(currentTarget, bytesToWrite, getrandomFlags);
+#else
+        syscall(SYS_getrandom, currentTarget, bytesToWrite, getrandomFlags);
+#endif
+
+    if (bytesWrittenMore > 0) {
+      bytesWrittenTotal += bytesWrittenMore;
+      if (bytesWrittenTotal >= count)
+        success = 1;
+    }
+  } while (! success && (errno == EINTR || errno == EAGAIN));
+
+  return success;
+}
+
+#endif  /* defined(HAVE_GETRANDOM) || defined(HAVE_SYSCALL_GETRANDOM) */
+
+
+#ifdef _WIN32
+
+typedef BOOLEAN (APIENTRY *RTLGENRANDOM_FUNC)(PVOID, ULONG);
+
+/* Obtain entropy on Windows XP / Windows Server 2003 and later.
+ * Hint on RtlGenRandom and the following article from libsodioum.
+ *
+ * Michael Howard: Cryptographically Secure Random number on Windows without using CryptoAPI
+ * https://blogs.msdn.microsoft.com/michael_howard/2005/01/14/cryptographically-secure-random-number-on-windows-without-using-cryptoapi/
+ */
+static int
+writeRandomBytes_RtlGenRandom(void * target, size_t count) {
+  int success = 0;  /* full count bytes written? */
+  const HMODULE advapi32 = LoadLibrary("ADVAPI32.DLL");
+
+  if (advapi32) {
+    const RTLGENRANDOM_FUNC RtlGenRandom
+        = (RTLGENRANDOM_FUNC)GetProcAddress(advapi32, "SystemFunction036");
+    if (RtlGenRandom) {
+      if (RtlGenRandom((PVOID)target, (ULONG)count) == TRUE) {
+        success = 1;
+      }
+    }
+    FreeLibrary(advapi32);
+  }
+
+  return success;
+}
+
+#endif /* _WIN32 */
+
+
 static unsigned long
 gather_time_entropy(void)
 {
@@ -716,34 +794,53 @@ gather_time_entropy(void)
 #endif
 }
 
+#if defined(HAVE_ARC4RANDOM_BUF) && defined(HAVE_LIBBSD)
+# include <bsd/stdlib.h>
+#endif
+
+static unsigned long
+ENTROPY_DEBUG(const char * label, unsigned long entropy) {
+  const char * const EXPAT_ENTROPY_DEBUG = getenv("EXPAT_ENTROPY_DEBUG");
+  if (EXPAT_ENTROPY_DEBUG && ! strcmp(EXPAT_ENTROPY_DEBUG, "1")) {
+    fprintf(stderr, "Entropy: %s --> 0x%0*lx (%lu bytes)\n",
+        label,
+        (int)sizeof(unsigned long) * 2, entropy,
+        sizeof(unsigned long));
+  }
+  return entropy;
+}
+
 static unsigned long
 generate_hash_secret_salt(XML_Parser parser)
 {
-#if defined(__UINTPTR_TYPE__)
-# define PARSER_CAST(p)  (__UINTPTR_TYPE__)(p)
-#elif defined(_WIN64) && defined(_MSC_VER)
-# define PARSER_CAST(p)  (unsigned __int64)(p)
-#else
-# define PARSER_CAST(p)  (p)
-#endif
-
-#ifdef __CloudABI__
   unsigned long entropy;
   (void)parser;
+#if defined(HAVE_ARC4RANDOM_BUF) || defined(__CloudABI__)
   (void)gather_time_entropy;
   arc4random_buf(&entropy, sizeof(entropy));
-  return entropy;
+  return ENTROPY_DEBUG("arc4random_buf", entropy);
 #else
-  /* Process ID is 0 bits entropy if attacker has local access
-   * XML_Parser address is few bits of entropy if attacker has local access */
-  const unsigned long entropy =
-      gather_time_entropy() ^ getpid() ^ (unsigned long)PARSER_CAST(parser);
+  /* Try high quality providers first .. */
+#ifdef _WIN32
+  if (writeRandomBytes_RtlGenRandom((void *)&entropy, sizeof(entropy))) {
+    return ENTROPY_DEBUG("RtlGenRandom", entropy);
+  }
+#elif defined(HAVE_GETRANDOM) || defined(HAVE_SYSCALL_GETRANDOM)
+  if (writeRandomBytes_getrandom((void *)&entropy, sizeof(entropy))) {
+    return ENTROPY_DEBUG("getrandom", entropy);
+  }
+#endif
+  /* .. and self-made low quality for backup: */
+
+  /* Process ID is 0 bits entropy if attacker has local access */
+  entropy = gather_time_entropy() ^ getpid();
 
   /* Factors are 2^31-1 and 2^61-1 (Mersenne primes M31 and M61) */
   if (sizeof(unsigned long) == 4) {
-    return entropy * 2147483647;
+    return ENTROPY_DEBUG("fallback(4)", entropy * 2147483647);
   } else {
-    return entropy * (unsigned long)2305843009213693951;
+    return ENTROPY_DEBUG("fallback(8)",
+        entropy * (unsigned long)2305843009213693951);
   }
 #endif
 }
