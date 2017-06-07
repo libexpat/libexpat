@@ -1,27 +1,30 @@
 Release ??????????
         Security fixes:
                   CVE-2016-9063 -- Detect integer overflow
+            #539  Fix regression from fix to CVE-2016-0718 cutting off
+                    longer tag names
              #25  More integer overflow detection (function poolGrow)
-                  Use high quality entropy for hash initialization:
+             #30  Use high quality entropy for hash initialization:
                     * arc4random_buf on BSD, systems with libbsd
                       (when configured with --with-libbsd), CloudABI
                     * RtlGenRandom on Windows XP / Server 2003 and later
                     * getrandom on Linux 3.17+
-                  In a way, that's still part of CVE-2016-5300.
-                  For run-time debug output, EXPAT_ENTROPY_DEBUG=1 can be used.
+                    In a way, that's still part of CVE-2016-5300.
 
         Bug fixes:
-            #539  Fix regression from fix to CVE-2016-0718 cutting off
-                    longer tag names
+             #28  xmlwf: Auto-disable use of memory-mapping (and parsing
+                    as a single chunk) for files larger than ~1 GB (2^30 bytes)
+                    rather than failing with error "out of memory"
               #3  Fix double free after malloc failure in DTD code
                     https://github.com/libexpat/libexpat/issues/3
              #17  Fix memory leak on parser error for unbound XML attribute
                     prefix with new namespaces defined in the same tag;
                     found by Google's OSS-Fuzz
                     https://github.com/libexpat/libexpat/issues/17
-             #28  xmlwf: Auto-disable use of memory-mapping (and parsing
-                    as a single chunk) for files larger than ~1 GB (2^30 bytes)
-                    rather than failing with error "out of memory"
+
+        New features:
+             #30  Introduced environment switch EXPAT_ENTROPY_DEBUG=1
+                    for runtime debugging of entropy extraction
 
         Other changes:
             #538  Start using -fno-strict-aliasing
