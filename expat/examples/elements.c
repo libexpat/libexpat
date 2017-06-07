@@ -6,7 +6,7 @@
 */
 
 #include <stdio.h>
-#include "expat.h"
+#include <expat.h>
 
 #ifdef XML_LARGE_SIZE
 #if defined(XML_USE_MSC_EXTENSIONS) && _MSC_VER < 1400
