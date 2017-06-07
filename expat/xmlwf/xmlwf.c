@@ -17,10 +17,6 @@
 #include <crtdbg.h>
 #endif
 
-#if defined(__amigaos__) && defined(__USE_INLINE__)
-#include <proto/expat.h>
-#endif
-
 /* This ensures proper sorting. */
 
 #define NSSEP T('\001')

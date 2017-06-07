@@ -28,10 +28,6 @@
 #include <io.h>
 #endif
 
-#if defined(__amigaos__) && defined(__USE_INLINE__)
-#include <proto/expat.h>
-#endif
-
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
