@@ -2,6 +2,8 @@
    See the file COPYING for copying permission.
 */
 
+#define _GNU_SOURCE                     /* syscall prototype */
+
 #include <stddef.h>
 #include <string.h>                     /* memset(), memcpy() */
 #include <assert.h>
