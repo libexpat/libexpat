@@ -5384,6 +5384,20 @@ START_TEST(test_unknown_encoding_bad_name)
 }
 END_TEST
 
+/* Test bad mid-name character in unknown encoding */
+START_TEST(test_unknown_encoding_bad_name_2)
+{
+    const char *text =
+        "<?xml version='1.0' encoding='experimental'?>\n"
+        "<d\xffoc>Hello, world</d\xffoc>";
+
+    XML_SetUnknownEncodingHandler(parser, BadEncodingHandler,
+                                  (void *)PREFIX_CONVERTER);
+    expect_failure(text, XML_ERROR_INVALID_TOKEN,
+                   "Bad name in unknown encoding not faulted");
+}
+END_TEST
+
 /* Be tidy */
 #undef NO_CONVERTER
 #undef FAILING_CONVERTER
@@ -10649,6 +10663,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_failing_encoding_conversion_fn);
     tcase_add_test(tc_basic, test_unknown_encoding_success);
     tcase_add_test(tc_basic, test_unknown_encoding_bad_name);
+    tcase_add_test(tc_basic, test_unknown_encoding_bad_name_2);
 
     suite_add_tcase(s, tc_namespace);
     tcase_add_checked_fixture(tc_namespace,
