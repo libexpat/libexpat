@@ -1318,7 +1318,7 @@ XmlUtf8Encode(int c, char *buf)
     buf[3] = (char)((c & 0x3f) | 0x80);
     return 4;
   }
-  return 0;
+  return 0; /* LCOV_EXCL_LINE: this case too is eliminated before calling */
 }
 
 int FASTCALL
