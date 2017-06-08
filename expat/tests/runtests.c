@@ -5269,11 +5269,22 @@ END_TEST
 /* Test that the unknown encoding handler with map entries that expect
  * conversion but no conversion function is faulted
  */
+#define NO_CONVERTER      ((intptr_t)0)
+#define FAILING_CONVERTER ((intptr_t)1)
+#define PREFIX_CONVERTER  ((intptr_t)2)
+
 static int XMLCALL
 failing_converter(void *UNUSED_P(data), const char *UNUSED_P(s))
 {
     /* Always claim to have failed */
     return -1;
+}
+
+static int XMLCALL
+prefix_converter(void *UNUSED_P(data), const char *s)
+{
+    /* Just add the low bits of the first byte to the second */
+    return s[1] + (s[0] & 0x7f);
 }
 
 static int XMLCALL
@@ -5288,8 +5299,20 @@ BadEncodingHandler(void *data,
     for (; i < 256; ++i)
         info->map[i] = -2; /* A 2-byte sequence */
     info->data = NULL;
-    info->convert = (data == NULL) ? NULL : failing_converter;
     info->release = NULL;
+    switch ((intptr_t)data) {
+        case FAILING_CONVERTER:
+            info->convert = failing_converter;
+            break;
+        case PREFIX_CONVERTER:
+            info->convert = prefix_converter;
+            break;
+        case NO_CONVERTER:
+            info->convert = NULL;
+            break;
+        default:
+            return XML_STATUS_ERROR;
+    }
     return XML_STATUS_OK;
 }
 
@@ -5299,7 +5322,8 @@ START_TEST(test_missing_encoding_conversion_fn)
         "<?xml version='1.0' encoding='experimental'?>\n"
         "<doc>\x81</doc>";
 
-    XML_SetUnknownEncodingHandler(parser, BadEncodingHandler, NULL);
+    XML_SetUnknownEncodingHandler(parser, BadEncodingHandler,
+                                  (void *)NO_CONVERTER);
     /* BadEncodingHandler sets up an encoding with every top-bit-set
      * character introducing a two-byte sequence.  For this, it
      * requires a convert function.  The above function call doesn't
@@ -5318,8 +5342,7 @@ START_TEST(test_failing_encoding_conversion_fn)
         "<doc>\x81</doc>";
 
     XML_SetUnknownEncodingHandler(parser, BadEncodingHandler,
-                                  /* Anything non-NULL will do here */
-                                  (void *)(intptr_t)1);
+                                  (void *)FAILING_CONVERTER);
     /* BadEncodingHandler sets up an encoding with every top-bit-set
      * character introducing a two-byte sequence.  For this, it
      * requires a convert function.  The above function call passes
@@ -5330,6 +5353,23 @@ START_TEST(test_failing_encoding_conversion_fn)
 }
 END_TEST
 
+/* Test unknown encoding conversions */
+START_TEST(test_unknown_encoding_success)
+{
+    const char *text =
+        "<?xml version='1.0' encoding='experimental'?>\n"
+        "<d\x80oc>Hello, world</d\x80oc>";
+
+    XML_SetUnknownEncodingHandler(parser, BadEncodingHandler,
+                                  (void *)PREFIX_CONVERTER);
+    run_character_check(text, "Hello, world");
+}
+END_TEST
+
+/* Be tidy */
+#undef NO_CONVERTER
+#undef FAILING_CONVERTER
+#undef PREFIX_CONVERTER
 
 /*
  * Namespaces tests.
@@ -10589,6 +10629,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_comment_handled_in_default);
     tcase_add_test(tc_basic, test_missing_encoding_conversion_fn);
     tcase_add_test(tc_basic, test_failing_encoding_conversion_fn);
+    tcase_add_test(tc_basic, test_unknown_encoding_success);
 
     suite_add_tcase(s, tc_namespace);
     tcase_add_checked_fixture(tc_namespace,
