@@ -5283,8 +5283,11 @@ failing_converter(void *UNUSED_P(data), const char *UNUSED_P(s))
 static int XMLCALL
 prefix_converter(void *UNUSED_P(data), const char *s)
 {
+    /* If the first byte is 0xff, raise an error */
+    if (s[0] == -1)
+        return -1;
     /* Just add the low bits of the first byte to the second */
-    return s[1] + (s[0] & 0x7f);
+    return (s[1] + (s[0] & 0x7f)) & 0x01ff;
 }
 
 static int XMLCALL
@@ -5364,6 +5367,20 @@ START_TEST(test_unknown_encoding_success)
     XML_SetUnknownEncodingHandler(parser, BadEncodingHandler,
                                   (void *)PREFIX_CONVERTER);
     run_character_check(text, "Hello, world");
+}
+END_TEST
+
+/* Test bad name character in unknown encoding */
+START_TEST(test_unknown_encoding_bad_name)
+{
+    const char *text =
+        "<?xml version='1.0' encoding='experimental'?>\n"
+        "<\xff\x64oc>Hello, world</\xff\x64oc>";
+
+    XML_SetUnknownEncodingHandler(parser, BadEncodingHandler,
+                                  (void *)PREFIX_CONVERTER);
+    expect_failure(text, XML_ERROR_INVALID_TOKEN,
+                   "Bad name start in unknown encoding not faulted");
 }
 END_TEST
 
@@ -10631,6 +10648,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_missing_encoding_conversion_fn);
     tcase_add_test(tc_basic, test_failing_encoding_conversion_fn);
     tcase_add_test(tc_basic, test_unknown_encoding_success);
+    tcase_add_test(tc_basic, test_unknown_encoding_bad_name);
 
     suite_add_tcase(s, tc_namespace);
     tcase_add_checked_fixture(tc_namespace,
