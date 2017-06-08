@@ -1295,7 +1295,7 @@ XmlUtf8Encode(int c, char *buf)
   };
 
   if (c < 0)
-    return 0;
+    return 0; /* LCOV_EXCL_LINE: this case is always eliminated beforehand */
   if (c < min2) {
     buf[0] = (char)(c | UTF8_cval1);
     return 1;
