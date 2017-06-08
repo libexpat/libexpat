@@ -5358,7 +5358,8 @@ START_TEST(test_unknown_encoding_success)
 {
     const char *text =
         "<?xml version='1.0' encoding='experimental'?>\n"
-        "<d\x80oc>Hello, world</d\x80oc>";
+        /* Equivalent to <eoc>Hello, world</eoc> */
+        "<\x81\x64\x80oc>Hello, world</\x81\x64\x80oc>";
 
     XML_SetUnknownEncodingHandler(parser, BadEncodingHandler,
                                   (void *)PREFIX_CONVERTER);
