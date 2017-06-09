@@ -5453,6 +5453,36 @@ END_TEST
 #undef FAILING_CONVERTER
 #undef PREFIX_CONVERTER
 
+static int XMLCALL
+InvalidEncodingHandler(void *UNUSED_P(data),
+                       const XML_Char *UNUSED_P(encoding),
+                       XML_Encoding *info)
+{
+    int i;
+
+    for (i = 0; i < 128; ++i)
+        info->map[i] = i;
+    for (; i < 256; ++i)
+        info->map[i] = -1;
+    info->map[9] = 5; /* Not a valid setting: ASCII must map to ASCII */
+    info->data = NULL;
+    info->convert = NULL;
+    info->release = NULL;
+    return XML_STATUS_OK;
+}
+
+START_TEST(test_invalid_unknown_encoding)
+{
+    const char *text =
+        "<?xml version='1.0' encoding='experimental'?>\n"
+        "<doc>Hello world</doc>";
+
+    XML_SetUnknownEncodingHandler(parser, InvalidEncodingHandler, NULL);
+    expect_failure(text, XML_ERROR_UNKNOWN_ENCODING,
+                   "Invalid unknown encoding not faulted");
+}
+END_TEST
+
 /*
  * Namespaces tests.
  */
@@ -10716,6 +10746,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_unknown_encoding_bad_name_2);
     tcase_add_test(tc_basic, test_unknown_encoding_long_name_1);
     tcase_add_test(tc_basic, test_unknown_encoding_long_name_2);
+    tcase_add_test(tc_basic, test_invalid_unknown_encoding);
 
     suite_add_tcase(s, tc_namespace);
     tcase_add_checked_fixture(tc_namespace,
