@@ -5511,6 +5511,18 @@ START_TEST(test_unknown_ascii_encoding_ok)
 }
 END_TEST
 
+START_TEST(test_unknown_ascii_encoding_fail)
+{
+    const char *text =
+        "<?xml version='1.0' encoding='experimental'?>\n"
+        "<doc>Hello, \x80 world</doc>";
+
+    XML_SetUnknownEncodingHandler(parser, AsciiAsUnknownEncodingHandler, NULL);
+    expect_failure(text, XML_ERROR_INVALID_TOKEN,
+                   "Invalid character not faulted");
+}
+END_TEST
+
 
 /*
  * Namespaces tests.
@@ -10777,6 +10789,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_unknown_encoding_long_name_2);
     tcase_add_test(tc_basic, test_invalid_unknown_encoding);
     tcase_add_test(tc_basic, test_unknown_ascii_encoding_ok);
+    tcase_add_test(tc_basic, test_unknown_ascii_encoding_fail);
 
     suite_add_tcase(s, tc_namespace);
     tcase_add_checked_fixture(tc_namespace,
