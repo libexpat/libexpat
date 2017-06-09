@@ -6381,6 +6381,31 @@ START_TEST(test_misc_attribute_leak)
 }
 END_TEST
 
+/* Test parser created for UTF-16LE is successful */
+START_TEST(test_misc_utf16le)
+{
+    const char text[] =
+        /* <?xml version='1.0'?><q>Hi</q> */
+        "<\0?\0x\0m\0l\0 \0"
+        "v\0e\0r\0s\0i\0o\0n\0=\0'\0\x31\0.\0\x30\0'\0?\0>\0"
+        "<\0q\0>\0H\0i\0<\0/\0q\0>\0";
+    const XML_Char *expected = "Hi";
+    CharData storage;
+
+    parser = XML_ParserCreate("UTF-16LE");
+    if (parser == NULL)
+        fail("Parser not created");
+
+    CharData_Init(&storage);
+    XML_SetUserData(parser, &storage);
+    XML_SetCharacterDataHandler(parser, accumulate_characters);
+    if (_XML_Parse_SINGLE_BYTES(parser, text, sizeof(text)-1,
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+    CharData_CheckXMLChars(&storage, expected);
+}
+END_TEST
+
 
 static void
 alloc_setup(void)
@@ -10848,6 +10873,7 @@ make_suite(void)
     tcase_add_test(tc_misc, test_misc_version);
     tcase_add_test(tc_misc, test_misc_features);
     tcase_add_test(tc_misc, test_misc_attribute_leak);
+    tcase_add_test(tc_misc, test_misc_utf16le);
 
     suite_add_tcase(s, tc_alloc);
     tcase_add_checked_fixture(tc_alloc, alloc_setup, alloc_teardown);
