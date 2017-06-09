@@ -5423,6 +5423,31 @@ START_TEST(test_unknown_encoding_long_name_1)
 }
 END_TEST
 
+/* Test element name that is long enough to fill the conversion buffer
+ * in an unknown encoding, finishing with an simple character.
+ */
+START_TEST(test_unknown_encoding_long_name_2)
+{
+    const char *text =
+        "<?xml version='1.0' encoding='experimental'?>\n"
+        "<abcdefghabcdefghabcdefghijklmnop>"
+        "Hi"
+        "</abcdefghabcdefghabcdefghijklmnop>";
+    const XML_Char *expected = "abcdefghabcdefghabcdefghijklmnop";
+    CharData storage;
+
+    CharData_Init(&storage);
+    XML_SetUnknownEncodingHandler(parser, BadEncodingHandler,
+                                  (void *)PREFIX_CONVERTER);
+    XML_SetStartElementHandler(parser, record_element_start_handler);
+    XML_SetUserData(parser, &storage);
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+    CharData_CheckXMLChars(&storage, expected);
+}
+END_TEST
+
 /* Be tidy */
 #undef NO_CONVERTER
 #undef FAILING_CONVERTER
@@ -10690,6 +10715,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_unknown_encoding_bad_name);
     tcase_add_test(tc_basic, test_unknown_encoding_bad_name_2);
     tcase_add_test(tc_basic, test_unknown_encoding_long_name_1);
+    tcase_add_test(tc_basic, test_unknown_encoding_long_name_2);
 
     suite_add_tcase(s, tc_namespace);
     tcase_add_checked_fixture(tc_namespace,
