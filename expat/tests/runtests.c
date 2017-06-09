@@ -5297,7 +5297,8 @@ MiscEncodingHandler(void *data,
     if (!strcmp(encoding, "invalid-9") ||
         !strcmp(encoding, "ascii-like") ||
         !strcmp(encoding, "invalid-len") ||
-        !strcmp(encoding, "invalid-a"))
+        !strcmp(encoding, "invalid-a") ||
+        !strcmp(encoding, "invalid-surrogate"))
         high_map = -1;
 
     for (i = 0; i < 128; ++i)
@@ -5314,6 +5315,11 @@ MiscEncodingHandler(void *data,
     /* If required, make a top-bit set character a valid ASCII character */
     if (!strcmp(encoding, "invalid-a"))
         info->map[0x82] = 'a';
+    /* If required, give a top-bit set character a forbidden value,
+     * what would otherwise be the first of a surrogate pair.
+     */
+    if (!strcmp(encoding, "invalid-surrogate"))
+        info->map[0x83] = 0xd801;
 
     info->data = data;
     info->release = NULL;
@@ -5503,6 +5509,18 @@ START_TEST(test_unknown_encoding_invalid_topbit)
 
     XML_SetUnknownEncodingHandler(parser, MiscEncodingHandler, NULL);
     expect_failure(text, XML_ERROR_UNKNOWN_ENCODING,
+                   "Invalid unknown encoding not faulted");
+}
+END_TEST
+
+START_TEST(test_unknown_encoding_invalid_surrogate)
+{
+    const char *text =
+        "<?xml version='1.0' encoding='invalid-surrogate'?>\n"
+        "<doc>Hello, \x82 world</doc>";
+
+    XML_SetUnknownEncodingHandler(parser, MiscEncodingHandler, NULL);
+    expect_failure(text, XML_ERROR_INVALID_TOKEN,
                    "Invalid unknown encoding not faulted");
 }
 END_TEST
@@ -10776,6 +10794,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_unknown_ascii_encoding_fail);
     tcase_add_test(tc_basic, test_unknown_encoding_invalid_length);
     tcase_add_test(tc_basic, test_unknown_encoding_invalid_topbit);
+    tcase_add_test(tc_basic, test_unknown_encoding_invalid_surrogate);
 
     suite_add_tcase(s, tc_namespace);
     tcase_add_checked_fixture(tc_namespace,
