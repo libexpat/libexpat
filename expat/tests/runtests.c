@@ -5483,6 +5483,35 @@ START_TEST(test_invalid_unknown_encoding)
 }
 END_TEST
 
+static int XMLCALL
+AsciiAsUnknownEncodingHandler(void *UNUSED_P(data),
+                              const XML_Char *UNUSED_P(encoding),
+                              XML_Encoding *info)
+{
+    int i;
+
+    for (i = 0; i < 128; i++)
+        info->map[i] = i;
+    for (; i < 256; i++)
+        info->map[i] = -1; /* Invalid characters */
+    info->data = NULL;
+    info->convert = NULL;
+    info->release = NULL;
+    return XML_STATUS_OK;
+}
+
+START_TEST(test_unknown_ascii_encoding_ok)
+{
+    const char *text =
+        "<?xml version='1.0' encoding='experimental'?>\n"
+        "<doc>Hello, world</doc>";
+
+    XML_SetUnknownEncodingHandler(parser, AsciiAsUnknownEncodingHandler, NULL);
+    run_character_check(text, "Hello, world");
+}
+END_TEST
+
+
 /*
  * Namespaces tests.
  */
@@ -10747,6 +10776,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_unknown_encoding_long_name_1);
     tcase_add_test(tc_basic, test_unknown_encoding_long_name_2);
     tcase_add_test(tc_basic, test_invalid_unknown_encoding);
+    tcase_add_test(tc_basic, test_unknown_ascii_encoding_ok);
 
     suite_add_tcase(s, tc_namespace);
     tcase_add_checked_fixture(tc_namespace,
