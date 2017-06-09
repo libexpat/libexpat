@@ -5292,11 +5292,21 @@ MiscEncodingHandler(void *data,
                     XML_Encoding *info)
 {
     int i;
+    int high_map = -2; /* Assume a 2-byte sequence */
+
+    if (!strcmp(encoding, "invalid-9") ||
+        !strcmp(encoding, "ascii-like"))
+        high_map = -1;
 
     for (i = 0; i < 128; ++i)
         info->map[i] = i;
     for (; i < 256; ++i)
-        info->map[i] = -2; /* A 2-byte sequence */
+        info->map[i] = high_map;
+
+    /* If required, put an invalid value in the ASCII entries */
+    if (!strcmp(encoding, "invalid-9"))
+        info->map[9] = 5;
+
     info->data = data;
     info->release = NULL;
     if (!strcmp(encoding, "failing-conv"))
@@ -5430,60 +5440,25 @@ START_TEST(test_unknown_encoding_long_name_2)
 }
 END_TEST
 
-static int XMLCALL
-InvalidEncodingHandler(void *UNUSED_P(data),
-                       const XML_Char *UNUSED_P(encoding),
-                       XML_Encoding *info)
-{
-    int i;
-
-    for (i = 0; i < 128; ++i)
-        info->map[i] = i;
-    for (; i < 256; ++i)
-        info->map[i] = -1;
-    info->map[9] = 5; /* Not a valid setting: ASCII must map to ASCII */
-    info->data = NULL;
-    info->convert = NULL;
-    info->release = NULL;
-    return XML_STATUS_OK;
-}
-
 START_TEST(test_invalid_unknown_encoding)
 {
     const char *text =
-        "<?xml version='1.0' encoding='experimental'?>\n"
+        "<?xml version='1.0' encoding='invalid-9'?>\n"
         "<doc>Hello world</doc>";
 
-    XML_SetUnknownEncodingHandler(parser, InvalidEncodingHandler, NULL);
+    XML_SetUnknownEncodingHandler(parser, MiscEncodingHandler, NULL);
     expect_failure(text, XML_ERROR_UNKNOWN_ENCODING,
                    "Invalid unknown encoding not faulted");
 }
 END_TEST
 
-static int XMLCALL
-AsciiAsUnknownEncodingHandler(void *UNUSED_P(data),
-                              const XML_Char *UNUSED_P(encoding),
-                              XML_Encoding *info)
-{
-    int i;
-
-    for (i = 0; i < 128; i++)
-        info->map[i] = i;
-    for (; i < 256; i++)
-        info->map[i] = -1; /* Invalid characters */
-    info->data = NULL;
-    info->convert = NULL;
-    info->release = NULL;
-    return XML_STATUS_OK;
-}
-
 START_TEST(test_unknown_ascii_encoding_ok)
 {
     const char *text =
-        "<?xml version='1.0' encoding='experimental'?>\n"
+        "<?xml version='1.0' encoding='ascii-like'?>\n"
         "<doc>Hello, world</doc>";
 
-    XML_SetUnknownEncodingHandler(parser, AsciiAsUnknownEncodingHandler, NULL);
+    XML_SetUnknownEncodingHandler(parser, MiscEncodingHandler, NULL);
     run_character_check(text, "Hello, world");
 }
 END_TEST
@@ -5491,10 +5466,10 @@ END_TEST
 START_TEST(test_unknown_ascii_encoding_fail)
 {
     const char *text =
-        "<?xml version='1.0' encoding='experimental'?>\n"
+        "<?xml version='1.0' encoding='ascii-like'?>\n"
         "<doc>Hello, \x80 world</doc>";
 
-    XML_SetUnknownEncodingHandler(parser, AsciiAsUnknownEncodingHandler, NULL);
+    XML_SetUnknownEncodingHandler(parser, MiscEncodingHandler, NULL);
     expect_failure(text, XML_ERROR_INVALID_TOKEN,
                    "Invalid character not faulted");
 }
