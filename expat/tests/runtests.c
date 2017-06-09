@@ -5295,7 +5295,8 @@ MiscEncodingHandler(void *data,
     int high_map = -2; /* Assume a 2-byte sequence */
 
     if (!strcmp(encoding, "invalid-9") ||
-        !strcmp(encoding, "ascii-like"))
+        !strcmp(encoding, "ascii-like") ||
+        !strcmp(encoding, "invalid-len"))
         high_map = -1;
 
     for (i = 0; i < 128; ++i)
@@ -5306,6 +5307,9 @@ MiscEncodingHandler(void *data,
     /* If required, put an invalid value in the ASCII entries */
     if (!strcmp(encoding, "invalid-9"))
         info->map[9] = 5;
+    /* If required, have a top-bit set character starts a 5-byte sequence */
+    if (!strcmp(encoding, "invalid-len"))
+        info->map[0x81] = -5;
 
     info->data = data;
     info->release = NULL;
@@ -5472,6 +5476,18 @@ START_TEST(test_unknown_ascii_encoding_fail)
     XML_SetUnknownEncodingHandler(parser, MiscEncodingHandler, NULL);
     expect_failure(text, XML_ERROR_INVALID_TOKEN,
                    "Invalid character not faulted");
+}
+END_TEST
+
+START_TEST(test_unknown_encoding_invalid_length)
+{
+    const char *text =
+        "<?xml version='1.0' encoding='invalid-len'?>\n"
+        "<doc>Hello, world</doc>";
+
+    XML_SetUnknownEncodingHandler(parser, MiscEncodingHandler, NULL);
+    expect_failure(text, XML_ERROR_UNKNOWN_ENCODING,
+                   "Invalid unknown encoding not faulted");
 }
 END_TEST
 
@@ -10742,6 +10758,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_invalid_unknown_encoding);
     tcase_add_test(tc_basic, test_unknown_ascii_encoding_ok);
     tcase_add_test(tc_basic, test_unknown_ascii_encoding_fail);
+    tcase_add_test(tc_basic, test_unknown_encoding_invalid_length);
 
     suite_add_tcase(s, tc_namespace);
     tcase_add_checked_fixture(tc_namespace,
