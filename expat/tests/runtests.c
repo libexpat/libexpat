@@ -5298,7 +5298,8 @@ MiscEncodingHandler(void *data,
         !strcmp(encoding, "ascii-like") ||
         !strcmp(encoding, "invalid-len") ||
         !strcmp(encoding, "invalid-a") ||
-        !strcmp(encoding, "invalid-surrogate"))
+        !strcmp(encoding, "invalid-surrogate") ||
+        !strcmp(encoding, "invalid-high"))
         high_map = -1;
 
     for (i = 0; i < 128; ++i)
@@ -5320,6 +5321,9 @@ MiscEncodingHandler(void *data,
      */
     if (!strcmp(encoding, "invalid-surrogate"))
         info->map[0x83] = 0xd801;
+    /* If required, give a top-bit set character too high a value */
+    if (!strcmp(encoding, "invalid-high"))
+        info->map[0x84] = 0x010101;
 
     info->data = data;
     info->release = NULL;
@@ -5521,6 +5525,18 @@ START_TEST(test_unknown_encoding_invalid_surrogate)
 
     XML_SetUnknownEncodingHandler(parser, MiscEncodingHandler, NULL);
     expect_failure(text, XML_ERROR_INVALID_TOKEN,
+                   "Invalid unknown encoding not faulted");
+}
+END_TEST
+
+START_TEST(test_unknown_encoding_invalid_high)
+{
+    const char *text =
+        "<?xml version='1.0' encoding='invalid-high'?>\n"
+        "<doc>Hello, world</doc>";
+
+    XML_SetUnknownEncodingHandler(parser, MiscEncodingHandler, NULL);
+    expect_failure(text, XML_ERROR_UNKNOWN_ENCODING,
                    "Invalid unknown encoding not faulted");
 }
 END_TEST
@@ -10795,6 +10811,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_unknown_encoding_invalid_length);
     tcase_add_test(tc_basic, test_unknown_encoding_invalid_topbit);
     tcase_add_test(tc_basic, test_unknown_encoding_invalid_surrogate);
+    tcase_add_test(tc_basic, test_unknown_encoding_invalid_high);
 
     suite_add_tcase(s, tc_namespace);
     tcase_add_checked_fixture(tc_namespace,
