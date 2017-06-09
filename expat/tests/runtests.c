@@ -5269,10 +5269,6 @@ END_TEST
 /* Test that the unknown encoding handler with map entries that expect
  * conversion but no conversion function is faulted
  */
-#define NO_CONVERTER      ((intptr_t)0)
-#define FAILING_CONVERTER ((intptr_t)1)
-#define PREFIX_CONVERTER  ((intptr_t)2)
-
 static int XMLCALL
 failing_converter(void *UNUSED_P(data), const char *UNUSED_P(s))
 {
@@ -5291,9 +5287,9 @@ prefix_converter(void *UNUSED_P(data), const char *s)
 }
 
 static int XMLCALL
-BadEncodingHandler(void *data,
-                   const XML_Char *UNUSED_P(encoding),
-                   XML_Encoding *info)
+MiscEncodingHandler(void *data,
+                    const XML_Char *encoding,
+                    XML_Encoding *info)
 {
     int i;
 
@@ -5301,33 +5297,25 @@ BadEncodingHandler(void *data,
         info->map[i] = i;
     for (; i < 256; ++i)
         info->map[i] = -2; /* A 2-byte sequence */
-    info->data = NULL;
+    info->data = data;
     info->release = NULL;
-    switch ((intptr_t)data) {
-        case FAILING_CONVERTER:
-            info->convert = failing_converter;
-            break;
-        case PREFIX_CONVERTER:
-            info->convert = prefix_converter;
-            break;
-        case NO_CONVERTER:
-            info->convert = NULL;
-            break;
-        default:
-            return XML_STATUS_ERROR;
-    }
+    if (!strcmp(encoding, "failing-conv"))
+        info->convert = failing_converter;
+    else if (!strcmp(encoding, "prefix-conv"))
+        info->convert = prefix_converter;
+    else
+        info->convert = NULL;
     return XML_STATUS_OK;
 }
 
 START_TEST(test_missing_encoding_conversion_fn)
 {
     const char *text =
-        "<?xml version='1.0' encoding='experimental'?>\n"
+        "<?xml version='1.0' encoding='no-conv'?>\n"
         "<doc>\x81</doc>";
 
-    XML_SetUnknownEncodingHandler(parser, BadEncodingHandler,
-                                  (void *)NO_CONVERTER);
-    /* BadEncodingHandler sets up an encoding with every top-bit-set
+    XML_SetUnknownEncodingHandler(parser, MiscEncodingHandler, NULL);
+    /* MiscEncodingHandler sets up an encoding with every top-bit-set
      * character introducing a two-byte sequence.  For this, it
      * requires a convert function.  The above function call doesn't
      * pass one through, so when BadEncodingHandler actually gets
@@ -5341,11 +5329,10 @@ END_TEST
 START_TEST(test_failing_encoding_conversion_fn)
 {
     const char *text =
-        "<?xml version='1.0' encoding='experimental'?>\n"
+        "<?xml version='1.0' encoding='failing-conv'?>\n"
         "<doc>\x81</doc>";
 
-    XML_SetUnknownEncodingHandler(parser, BadEncodingHandler,
-                                  (void *)FAILING_CONVERTER);
+    XML_SetUnknownEncodingHandler(parser, MiscEncodingHandler, NULL);
     /* BadEncodingHandler sets up an encoding with every top-bit-set
      * character introducing a two-byte sequence.  For this, it
      * requires a convert function.  The above function call passes
@@ -5360,12 +5347,11 @@ END_TEST
 START_TEST(test_unknown_encoding_success)
 {
     const char *text =
-        "<?xml version='1.0' encoding='experimental'?>\n"
+        "<?xml version='1.0' encoding='prefix-conv'?>\n"
         /* Equivalent to <eoc>Hello, world</eoc> */
         "<\x81\x64\x80oc>Hello, world</\x81\x64\x80oc>";
 
-    XML_SetUnknownEncodingHandler(parser, BadEncodingHandler,
-                                  (void *)PREFIX_CONVERTER);
+    XML_SetUnknownEncodingHandler(parser, MiscEncodingHandler, NULL);
     run_character_check(text, "Hello, world");
 }
 END_TEST
@@ -5374,11 +5360,10 @@ END_TEST
 START_TEST(test_unknown_encoding_bad_name)
 {
     const char *text =
-        "<?xml version='1.0' encoding='experimental'?>\n"
+        "<?xml version='1.0' encoding='prefix-conv'?>\n"
         "<\xff\x64oc>Hello, world</\xff\x64oc>";
 
-    XML_SetUnknownEncodingHandler(parser, BadEncodingHandler,
-                                  (void *)PREFIX_CONVERTER);
+    XML_SetUnknownEncodingHandler(parser, MiscEncodingHandler, NULL);
     expect_failure(text, XML_ERROR_INVALID_TOKEN,
                    "Bad name start in unknown encoding not faulted");
 }
@@ -5388,11 +5373,10 @@ END_TEST
 START_TEST(test_unknown_encoding_bad_name_2)
 {
     const char *text =
-        "<?xml version='1.0' encoding='experimental'?>\n"
+        "<?xml version='1.0' encoding='prefix-conv'?>\n"
         "<d\xffoc>Hello, world</d\xffoc>";
 
-    XML_SetUnknownEncodingHandler(parser, BadEncodingHandler,
-                                  (void *)PREFIX_CONVERTER);
+    XML_SetUnknownEncodingHandler(parser, MiscEncodingHandler, NULL);
     expect_failure(text, XML_ERROR_INVALID_TOKEN,
                    "Bad name in unknown encoding not faulted");
 }
@@ -5404,7 +5388,7 @@ END_TEST
 START_TEST(test_unknown_encoding_long_name_1)
 {
     const char *text =
-        "<?xml version='1.0' encoding='experimental'?>\n"
+        "<?xml version='1.0' encoding='prefix-conv'?>\n"
         "<abcdefghabcdefghabcdefghijkl\x80m\x80n\x80o\x80p>"
         "Hi"
         "</abcdefghabcdefghabcdefghijkl\x80m\x80n\x80o\x80p>";
@@ -5412,8 +5396,7 @@ START_TEST(test_unknown_encoding_long_name_1)
     CharData storage;
 
     CharData_Init(&storage);
-    XML_SetUnknownEncodingHandler(parser, BadEncodingHandler,
-                                  (void *)PREFIX_CONVERTER);
+    XML_SetUnknownEncodingHandler(parser, MiscEncodingHandler, NULL);
     XML_SetStartElementHandler(parser, record_element_start_handler);
     XML_SetUserData(parser, &storage);
     if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
@@ -5429,7 +5412,7 @@ END_TEST
 START_TEST(test_unknown_encoding_long_name_2)
 {
     const char *text =
-        "<?xml version='1.0' encoding='experimental'?>\n"
+        "<?xml version='1.0' encoding='prefix-conv'?>\n"
         "<abcdefghabcdefghabcdefghijklmnop>"
         "Hi"
         "</abcdefghabcdefghabcdefghijklmnop>";
@@ -5437,8 +5420,7 @@ START_TEST(test_unknown_encoding_long_name_2)
     CharData storage;
 
     CharData_Init(&storage);
-    XML_SetUnknownEncodingHandler(parser, BadEncodingHandler,
-                                  (void *)PREFIX_CONVERTER);
+    XML_SetUnknownEncodingHandler(parser, MiscEncodingHandler, NULL);
     XML_SetStartElementHandler(parser, record_element_start_handler);
     XML_SetUserData(parser, &storage);
     if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
@@ -5447,11 +5429,6 @@ START_TEST(test_unknown_encoding_long_name_2)
     CharData_CheckXMLChars(&storage, expected);
 }
 END_TEST
-
-/* Be tidy */
-#undef NO_CONVERTER
-#undef FAILING_CONVERTER
-#undef PREFIX_CONVERTER
 
 static int XMLCALL
 InvalidEncodingHandler(void *UNUSED_P(data),
