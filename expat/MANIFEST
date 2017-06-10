@@ -47,6 +47,7 @@ lib/libexpat.def
 lib/libexpatw.def
 lib/macconfig.h
 lib/nametab.h
+lib/siphash.h
 lib/utf8tab.h
 lib/winconfig.h
 lib/xmlparse.c

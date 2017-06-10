@@ -165,6 +165,7 @@
     <ClInclude Include="internal.h" />
     <ClInclude Include="latin1tab.h" />
     <ClInclude Include="nametab.h" />
+    <ClInclude Include="siphash.h" />
     <ClInclude Include="utf8tab.h" />
     <ClInclude Include="xmlrole.h" />
     <ClInclude Include="xmltok.h" />

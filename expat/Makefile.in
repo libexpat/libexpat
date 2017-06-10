@@ -135,7 +135,7 @@ $(LIBRARY): $(LIB_OBJS)
 expat.pc: $(top_builddir)/config.status
 	cd $(top_builddir) && $(SHELL) ./config.status $@
 
-lib/xmlparse.lo: lib/xmlparse.c lib/expat.h lib/xmlrole.h lib/xmltok.h \
+lib/xmlparse.lo: lib/xmlparse.c lib/expat.h lib/siphash.h lib/xmlrole.h lib/xmltok.h \
 	$(top_builddir)/expat_config.h lib/expat_external.h lib/internal.h
 
 lib/xmlrole.lo: lib/xmlrole.c lib/ascii.h lib/xmlrole.h \

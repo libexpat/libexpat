@@ -52,6 +52,9 @@
     <ClInclude Include="nametab.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="siphash.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="utf8tab.h">
       <Filter>Header Files</Filter>
     </ClInclude>
