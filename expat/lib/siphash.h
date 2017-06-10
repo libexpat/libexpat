@@ -3,13 +3,26 @@
  * --------------------------------------------------------------------------
  * Derived by William Ahern from the reference implementation[1] published[2]
  * by Jean-Philippe Aumasson and Daniel J. Berstein. Licensed in kind.
+ * by Jean-Philippe Aumasson and Daniel J. Berstein.
+ * Minimal changes by Sebastian Pipping on top, details below.
+ * Licensed under the CC0 Public Domain Dedication license.
  *
  * 1. https://www.131002.net/siphash/siphash24.c
  * 2. https://www.131002.net/siphash/
  * --------------------------------------------------------------------------
  * HISTORY:
  *
- * 2012-11-04 - Born.
+ * 2017-06-10  (Sebastian Pipping)
+ *   - Clarify license note in the header
+ *   - Address C89 issues:
+ *     - Stop using inline keyword (and let compiler decide)
+ *     - Turn integer suffix ULL to UL
+ *     - Replace _Bool by int
+ *     - Turn macro siphash24 into a function
+ *     - Address invalid conversion (void pointer) by explicit cast
+ *   - Always expose sip24_valid (for self-tests)
+ *
+ * 2012-11-04 - Born.  (William Ahern)
  * --------------------------------------------------------------------------
  * USAGE:
  *
@@ -105,7 +118,7 @@ struct sipkey {
 
 #define sip_keyof(k) sip_tokey(&(struct sipkey){ { 0 } }, (k))
 
-static inline struct sipkey *sip_tokey(struct sipkey *key, const void *src) {
+static struct sipkey *sip_tokey(struct sipkey *key, const void *src) {
 	key->k[0] = SIP_U8TO64_LE((const unsigned char *)src);
 	key->k[1] = SIP_U8TO64_LE((const unsigned char *)src + 8);
 	return key;
@@ -114,13 +127,13 @@ static inline struct sipkey *sip_tokey(struct sipkey *key, const void *src) {
 
 #define sip_binof(v) sip_tobin((unsigned char[8]){ 0 }, (v))
 
-static inline void *sip_tobin(void *dst, uint64_t u64) {
+static void *sip_tobin(void *dst, uint64_t u64) {
 	SIP_U64TO8_LE((unsigned char *)dst, u64);
 	return dst;
 } /* sip_tobin() */
 
 
-static inline void sip_round(struct siphash *H, const int rounds) {
+static void sip_round(struct siphash *H, const int rounds) {
 	int i;
 
 	for (i = 0; i < rounds; i++) {
@@ -145,11 +158,11 @@ static inline void sip_round(struct siphash *H, const int rounds) {
 } /* sip_round() */
 
 
-static inline struct siphash *sip24_init(struct siphash *H, const struct sipkey *key) {
-	H->v0 = 0x736f6d6570736575ULL ^ key->k[0];
-	H->v1 = 0x646f72616e646f6dULL ^ key->k[1];
-	H->v2 = 0x6c7967656e657261ULL ^ key->k[0];
-	H->v3 = 0x7465646279746573ULL ^ key->k[1];
+static struct siphash *sip24_init(struct siphash *H, const struct sipkey *key) {
+	H->v0 = 0x736f6d6570736575UL ^ key->k[0];
+	H->v1 = 0x646f72616e646f6dUL ^ key->k[1];
+	H->v2 = 0x6c7967656e657261UL ^ key->k[0];
+	H->v3 = 0x7465646279746573UL ^ key->k[1];
 
 	H->p = H->buf;
 	H->c = 0;
@@ -160,8 +173,8 @@ static inline struct siphash *sip24_init(struct siphash *H, const struct sipkey 
 
 #define sip_endof(a) (&(a)[sizeof (a) / sizeof *(a)])
 
-static inline struct siphash *sip24_update(struct siphash *H, const void *src, size_t len) {
-	const unsigned char *p = src, *pe = p + len;
+static struct siphash *sip24_update(struct siphash *H, const void *src, size_t len) {
+	const unsigned char *p = (const unsigned char *)src, *pe = p + len;
 	uint64_t m;
 
 	do {
@@ -184,7 +197,7 @@ static inline struct siphash *sip24_update(struct siphash *H, const void *src, s
 } /* sip24_update() */
 
 
-static inline uint64_t sip24_final(struct siphash *H) {
+static uint64_t sip24_final(struct siphash *H) {
 	char left = H->p - H->buf;
 	uint64_t b = (H->c + left) << 56;
 
@@ -209,11 +222,11 @@ static inline uint64_t sip24_final(struct siphash *H) {
 } /* sip24_final() */
 
 
-#define siphash24(src, len, key) \
-	sip24_final(sip24_update(sip24_init(&(struct siphash)SIPHASH_INITIALIZER, (key)), (src), (len)))
+static uint64_t siphash24(const void *src, size_t len, const struct sipkey *key) {
+	struct siphash state = SIPHASH_INITIALIZER;
+	return sip24_final(sip24_update(sip24_init(&state, key), src, len));
+} /* siphash24() */
 
-
-#if SIPHASH_MAIN
 
 /*
  * SipHash-2-4 output with
@@ -226,7 +239,7 @@ static inline uint64_t sip24_final(struct siphash *H) {
  * ...
  * in = 00 01 02 ... 3e (63 bytes)
  */
-static inline _Bool sip24_valid(void) {
+static int sip24_valid(void) {
 	static const unsigned char vectors[64][8] = {
 		{ 0x31, 0x0e, 0x0e, 0xdd, 0x47, 0xdb, 0x6f, 0x72, },
 		{ 0xfd, 0x67, 0xdc, 0x93, 0xc5, 0x39, 0xf8, 0x74, },
@@ -310,10 +323,12 @@ static inline _Bool sip24_valid(void) {
 } /* sip24_valid() */
 
 
+#if SIPHASH_MAIN
+
 #include <stdio.h>
 
 int main(void) {
-	_Bool ok = sip24_valid();
+	int ok = sip24_valid();
 
 	if (ok)
 		puts("OK");
