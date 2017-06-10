@@ -72,6 +72,7 @@ Release 2.2.1 ??????????
                     * OpenVMS
                     * Open Watcom
                     * Visual Studio 6.0
+                    * Pre-X Mac OS (MPW Makefile)
                   If you happen to rely on some of these, please get in touch
                   for joining with maintenance.
              #10  Move from WIN32 to _WIN32
