@@ -34,7 +34,6 @@ m4/ltsugar.m4
 m4/lt~obsolete.m4
 examples/elements.c
 examples/outline.c
-lib/Makefile.MPW
 lib/amigaconfig.h
 lib/ascii.h
 lib/asciitab.h
