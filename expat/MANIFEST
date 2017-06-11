@@ -18,6 +18,7 @@ expat_config.h.in
 expat_config.h.cmake
 expat.pc.in
 aclocal.m4
+run.sh.in
 conftools/PrintPath
 conftools/ac_c_bigendian_cross.m4
 conftools/expat.m4
