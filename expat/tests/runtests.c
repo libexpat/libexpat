@@ -5742,7 +5742,39 @@ START_TEST(test_ext_entity_latin1_utf16be_bom2)
 }
 END_TEST
 
+/* Test little-endian UTF-16 given an explicit big-endian encoding */
+START_TEST(test_ext_entity_utf16_be)
+{
+    const char *text =
+        "<!DOCTYPE doc [\n"
+        "  <!ENTITY en SYSTEM 'http://example.org/dummy.ent'>\n"
+        "]>\n"
+        "<doc>&en;</doc>";
+    ExtTest2 test_data = {
+        "<\0e\0/\0>\0",
+        8,
+        "utf-16be",
+        NULL,
+        EE_PARSE_NONE
+    };
+    const XML_Char *expected =
+        "\xe3\xb0\x80"  /* U+3C00 */
+        "\xe6\x94\x80"  /* U+6A00 */
+        "\xe2\xbc\x80"  /* U+2F00 */
+        "\xe3\xb8\x80"; /* U+3E00 */
+    CharData storage;
 
+    CharData_Init(&storage);
+    test_data.storage = &storage;
+    XML_SetExternalEntityRefHandler(parser, external_entity_loader2);
+    XML_SetUserData(parser, &test_data);
+    XML_SetCharacterDataHandler(parser, ext2_accumulate_characters);
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+    CharData_CheckXMLChars(&storage, expected);
+}
+END_TEST
 
 /*
  * Namespaces tests.
@@ -11043,6 +11075,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_ext_entity_latin1_utf16be_bom);
     tcase_add_test(tc_basic, test_ext_entity_latin1_utf16le_bom2);
     tcase_add_test(tc_basic, test_ext_entity_latin1_utf16be_bom2);
+    tcase_add_test(tc_basic, test_ext_entity_utf16_be);
 
     suite_add_tcase(s, tc_namespace);
     tcase_add_checked_fixture(tc_namespace,
