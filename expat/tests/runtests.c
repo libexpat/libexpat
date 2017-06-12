@@ -5776,6 +5776,36 @@ START_TEST(test_ext_entity_utf16_be)
 }
 END_TEST
 
+/* Test not-quite-UTF-8 BOM (0xEF 0xBB 0xBF) */
+START_TEST(test_ext_entity_utf8_non_bom)
+{
+    const char *text =
+        "<!DOCTYPE doc [\n"
+        "  <!ENTITY en SYSTEM 'http://example.org/dummy.ent'>\n"
+        "]>\n"
+        "<doc>&en;</doc>";
+    ExtTest2 test_data = {
+        "\xef\xbb\x80", /* Arabic letter DAD medial form, U+FEC0 */
+        3,
+        NULL,
+        NULL,
+        EE_PARSE_NONE
+    };
+    const XML_Char *expected = "\xef\xbb\x80";
+    CharData storage;
+
+    CharData_Init(&storage);
+    test_data.storage = &storage;
+    XML_SetExternalEntityRefHandler(parser, external_entity_loader2);
+    XML_SetUserData(parser, &test_data);
+    XML_SetCharacterDataHandler(parser, ext2_accumulate_characters);
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+    CharData_CheckXMLChars(&storage, expected);
+}
+END_TEST
+
 /*
  * Namespaces tests.
  */
@@ -11076,6 +11106,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_ext_entity_latin1_utf16le_bom2);
     tcase_add_test(tc_basic, test_ext_entity_latin1_utf16be_bom2);
     tcase_add_test(tc_basic, test_ext_entity_utf16_be);
+    tcase_add_test(tc_basic, test_ext_entity_utf8_non_bom);
 
     suite_add_tcase(s, tc_namespace);
     tcase_add_checked_fixture(tc_namespace,
