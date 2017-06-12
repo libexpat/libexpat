@@ -5671,8 +5671,8 @@ END_TEST
 
 
 /* Parsing the full buffer rather than a byte at a time makes a
- * difference to the encoding scanning code, so repeat the above test
- * without breaking it down by byte.
+ * difference to the encoding scanning code, so repeat the above tests
+ * without breaking them down by byte.
  */
 START_TEST(test_ext_entity_latin1_utf16le_bom2)
 {
@@ -5694,6 +5694,40 @@ START_TEST(test_ext_entity_latin1_utf16le_bom2)
     };
     /* In UTF-8, y-diaeresis is 0xc3 0xbf, lowercase thorn is 0xc3 0xbe */
     const XML_Char *expected = "\xc3\xbf\xc3\xbeL ";
+    CharData storage;
+
+
+    CharData_Init(&storage);
+    test_data.storage = &storage;
+    XML_SetExternalEntityRefHandler(parser, external_entity_loader2);
+    XML_SetUserData(parser, &test_data);
+    XML_SetCharacterDataHandler(parser, ext2_accumulate_characters);
+    if (XML_Parse(parser, text, strlen(text), XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+    CharData_CheckXMLChars(&storage, expected);
+}
+END_TEST
+
+START_TEST(test_ext_entity_latin1_utf16be_bom2)
+{
+    const char *text =
+        "<!DOCTYPE doc [\n"
+        "  <!ENTITY en SYSTEM 'http://example.org/dummy.ent'>\n"
+        "]>\n"
+        "<doc>&en;</doc>";
+    ExtTest2 test_data = {
+        /* If UTF-16, 0xfeff is the BOM and 0x204c is black left bullet */
+        /* If Latin-1, 0xff = Y-diaeresis, 0xfe = lowercase thorn,
+         *   0x4c = L and 0x20 is a space
+         */
+        "\xfe\xff\x20\x4c",
+        4,
+        "iso-8859-1",
+        NULL,
+        EE_PARSE_FULL_BUFFER
+    };
+    /* In UTF-8, y-diaeresis is 0xc3 0xbf, lowercase thorn is 0xc3 0xbe */
+    const XML_Char *expected = "\xc3\xbe\xc3\xbf L";
     CharData storage;
 
 
@@ -11008,6 +11042,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_ext_entity_latin1_utf16le_bom);
     tcase_add_test(tc_basic, test_ext_entity_latin1_utf16be_bom);
     tcase_add_test(tc_basic, test_ext_entity_latin1_utf16le_bom2);
+    tcase_add_test(tc_basic, test_ext_entity_latin1_utf16be_bom2);
 
     suite_add_tcase(s, tc_namespace);
     tcase_add_checked_fixture(tc_namespace,
