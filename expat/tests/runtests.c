@@ -490,6 +490,16 @@ START_TEST(test_bom_utf16_le)
 }
 END_TEST
 
+/* Parse whole buffer at once to exercise a different code path */
+START_TEST(test_nobom_utf16_le)
+{
+    char text[] = " \0<\0e\0/\0>\0";
+
+    if (XML_Parse(parser, text, sizeof(text)-1, XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+}
+END_TEST
+
 static void XMLCALL
 accumulate_characters(void *userData, const XML_Char *s, int len)
 {
@@ -11045,6 +11055,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_bom_utf8);
     tcase_add_test(tc_basic, test_bom_utf16_be);
     tcase_add_test(tc_basic, test_bom_utf16_le);
+    tcase_add_test(tc_basic, test_nobom_utf16_le);
     tcase_add_test(tc_basic, test_illegal_utf8);
     tcase_add_test(tc_basic, test_utf8_auto_align);
     tcase_add_test(tc_basic, test_utf16);
