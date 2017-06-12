@@ -5541,6 +5541,84 @@ START_TEST(test_unknown_encoding_invalid_high)
 }
 END_TEST
 
+/* Test an external entity parser set to use latin-1 detects UTF-16
+ * BOMs correctly.
+ */
+typedef struct ExtTest2 {
+    const char *parse_text;
+    int parse_len;
+    const char *encoding;
+    CharData *storage;
+} ExtTest2;
+
+static int XMLCALL
+external_entity_loader2(XML_Parser parser,
+                        const XML_Char *context,
+                        const XML_Char *UNUSED_P(base),
+                        const XML_Char *UNUSED_P(systemId),
+                        const XML_Char *UNUSED_P(publicId))
+{
+    ExtTest2 *test_data = (ExtTest2 *)XML_GetUserData(parser);
+    XML_Parser extparser;
+
+    extparser = XML_ExternalEntityParserCreate(parser, context, NULL);
+    if (extparser == NULL)
+        fail("Coulr not create external entity parser");
+    if (test_data->encoding != NULL) {
+        if (!XML_SetEncoding(extparser, test_data->encoding))
+            fail("XML_SetEncoding() ignored for external entity");
+    }
+    if (_XML_Parse_SINGLE_BYTES(extparser,
+                                test_data->parse_text,
+                                test_data->parse_len,
+                                XML_TRUE) == XML_STATUS_ERROR) {
+        xml_failure(extparser);
+    }
+    return XML_STATUS_OK;
+}
+
+/* Test that UTF-16 BOM does not select UTF-16 given explicit encoding */
+static void XMLCALL
+ext2_accumulate_characters(void *userData, const XML_Char *s, int len)
+{
+    ExtTest2 *test_data = (ExtTest2 *)userData;
+    accumulate_characters(test_data->storage, s, len);
+}
+
+START_TEST(test_ext_entity_latin1_utf16le_bom)
+{
+    const char *text =
+        "<!DOCTYPE doc [\n"
+        "  <!ENTITY en SYSTEM 'http://example.org/dummy.ent'>\n"
+        "]>\n"
+        "<doc>&en;</doc>";
+    ExtTest2 test_data = {
+        /* If UTF-16, 0xfeff is the BOM and 0x204c is black left bullet */
+        /* If Latin-1, 0xff = Y-diaeresis, 0xfe = lowercase thorn,
+         *   0x4c = L and 0x20 is a space
+         */
+        "\xff\xfe\x4c\x20",
+        4,
+        "iso-8859-1",
+        NULL
+    };
+    /* In UTF-8, y-diaeresis is 0xc3 0xbf, lowercase thorn is 0xc3 0xbe */
+    const XML_Char *expected = "\xc3\xbf\xc3\xbeL ";
+    CharData storage;
+
+
+    CharData_Init(&storage);
+    test_data.storage = &storage;
+    XML_SetExternalEntityRefHandler(parser, external_entity_loader2);
+    XML_SetUserData(parser, &test_data);
+    XML_SetCharacterDataHandler(parser, ext2_accumulate_characters);
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+    CharData_CheckXMLChars(&storage, expected);
+}
+END_TEST
+
 
 /*
  * Namespaces tests.
@@ -10837,6 +10915,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_unknown_encoding_invalid_topbit);
     tcase_add_test(tc_basic, test_unknown_encoding_invalid_surrogate);
     tcase_add_test(tc_basic, test_unknown_encoding_invalid_high);
+    tcase_add_test(tc_basic, test_ext_entity_latin1_utf16le_bom);
 
     suite_add_tcase(s, tc_namespace);
     tcase_add_checked_fixture(tc_namespace,
