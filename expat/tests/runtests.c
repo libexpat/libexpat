@@ -5810,6 +5810,71 @@ START_TEST(test_ext_entity_utf16_le)
 }
 END_TEST
 
+/* Test little-endian UTF-16 given no explicit encoding.
+ * The existing default encoding (UTF-8) is assumed to hold without a
+ * BOM to contradict it, so the entity value will in fact provoke an
+ * error because 0x00 is not a valid XML character.  We parse the
+ * whole buffer in one go rather than feeding it in byte by byte to
+ * exercise different code paths in the initial scanning routines.
+ */
+typedef struct ExtFaults2 {
+    const char *parse_text;
+    int parse_len;
+    const char *fail_text;
+    const char *encoding;
+    enum XML_Error error;
+} ExtFaults2;
+
+static int XMLCALL
+external_entity_faulter2(XML_Parser parser,
+                         const XML_Char *context,
+                         const XML_Char *UNUSED_P(base),
+                         const XML_Char *UNUSED_P(systemId),
+                         const XML_Char *UNUSED_P(publicId))
+{
+    ExtFaults2 *test_data = (ExtFaults2 *)XML_GetUserData(parser);
+    XML_Parser extparser;
+
+    extparser = XML_ExternalEntityParserCreate(parser, context, NULL);
+    if (extparser == NULL)
+        fail("Could not create external entity parser");
+    if (test_data->encoding != NULL) {
+        if (!XML_SetEncoding(extparser, test_data->encoding))
+            fail("XML_SetEncoding() ignored for external entity");
+    }
+    if (XML_Parse(extparser,
+                  test_data->parse_text,
+                  test_data->parse_len,
+                  XML_TRUE) != XML_STATUS_ERROR)
+        fail(test_data->fail_text);
+    if (XML_GetErrorCode(extparser) != test_data->error)
+        xml_failure(extparser);
+
+    return XML_STATUS_ERROR;
+}
+
+START_TEST(test_ext_entity_utf16_unknown)
+{
+    const char *text =
+        "<!DOCTYPE doc [\n"
+        "  <!ENTITY en SYSTEM 'http://example.org/dummy.ent'>\n"
+        "]>\n"
+        "<doc>&en;</doc>";
+    ExtFaults2 test_data = {
+        "a\0b\0c\0",
+        6,
+        "Invalid character in entity not faulted",
+        NULL,
+        XML_ERROR_INVALID_TOKEN
+    };
+
+    XML_SetExternalEntityRefHandler(parser, external_entity_faulter2);
+    XML_SetUserData(parser, &test_data);
+    expect_failure(text, XML_ERROR_EXTERNAL_ENTITY_HANDLING,
+                   "Invalid character should not have been accepted");
+}
+END_TEST
+
 /* Test not-quite-UTF-8 BOM (0xEF 0xBB 0xBF) */
 START_TEST(test_ext_entity_utf8_non_bom)
 {
@@ -11141,6 +11206,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_ext_entity_latin1_utf16be_bom2);
     tcase_add_test(tc_basic, test_ext_entity_utf16_be);
     tcase_add_test(tc_basic, test_ext_entity_utf16_le);
+    tcase_add_test(tc_basic, test_ext_entity_utf16_unknown);
     tcase_add_test(tc_basic, test_ext_entity_utf8_non_bom);
 
     suite_add_tcase(s, tc_namespace);
