@@ -6542,6 +6542,18 @@ START_TEST(test_ns_extremely_long_prefix)
 }
 END_TEST
 
+/* Test unknown encoding handlers in namespace setup */
+START_TEST(test_ns_unknown_encoding_success)
+{
+    const char *text =
+        "<?xml version='1.0' encoding='prefix-conv'?>\n"
+        "<foo:e xmlns:foo='http://example.org/'>Hi</foo:e>";
+
+    XML_SetUnknownEncodingHandler(parser, MiscEncodingHandler, NULL);
+    run_character_check(text, "Hi");
+}
+END_TEST
+
 
 /* Control variable; the number of times duff_allocator() will successfully allocate */
 #define ALLOC_ALWAYS_SUCCEED (-1)
@@ -11245,6 +11257,7 @@ make_suite(void)
     tcase_add_test(tc_namespace, test_ns_reserved_attributes);
     tcase_add_test(tc_namespace, test_ns_reserved_attributes_2);
     tcase_add_test(tc_namespace, test_ns_extremely_long_prefix);
+    tcase_add_test(tc_namespace, test_ns_unknown_encoding_success);
 
     suite_add_tcase(s, tc_misc);
     tcase_add_checked_fixture(tc_misc, NULL, basic_teardown);
