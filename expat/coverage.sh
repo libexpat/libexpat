@@ -85,7 +85,7 @@ _run() {
         # Make sure that files overlap in report despite different build folders
         sed "/SF:/ s,${build_dir}/,${source_dir}/," "${coverage_info}-all" > "${coverage_info}"
     ) |& sed 's,^,  ,'
-    res=$?
+    res=${PIPESTATUS[0]}
 
     if [[ ${res} -eq 0 ]]; then
         echo PASSED
