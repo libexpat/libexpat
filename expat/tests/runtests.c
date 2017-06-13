@@ -5228,17 +5228,6 @@ START_TEST(test_invalid_character_entity)
 END_TEST
 
 /* Test that processing instructions are picked up by a default handler */
-static void XMLCALL
-default_matching_handler(void *userData,
-                         const XML_Char *s,
-                         int len)
-{
-    const char *target = (const char *)userData;
-
-    if ((int)strlen(target) == len && !strncmp(target, s, len))
-        dummy_handler_flags |= DUMMY_DEFAULT_HANDLER_FLAG;
-}
-
 START_TEST(test_pi_handled_in_default)
 {
     const char *text = "<?test processing instruction?>\n<doc/>";
@@ -5259,20 +5248,18 @@ END_TEST
 /* Test that comments are picked up by a default handler */
 START_TEST(test_comment_handled_in_default)
 {
-#define COMMENT_TEXT "<!-- This is a comment -->"
-    const char *text = COMMENT_TEXT "\n<doc/>";
-    char comment_text[] = COMMENT_TEXT;
+    const char *text = "<!-- This is a comment -->\n<doc/>";
+    const XML_Char *expected = "<!-- This is a comment -->\n<doc/>";
+    CharData storage;
 
-    XML_SetDefaultHandler(parser, default_matching_handler);
-    XML_SetUserData(parser, comment_text);
-    dummy_handler_flags = 0;
+    CharData_Init(&storage);
+    XML_SetDefaultHandler(parser, accumulate_characters);
+    XML_SetUserData(parser, &storage);
     if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
                                 XML_TRUE) == XML_STATUS_ERROR)
         xml_failure(parser);
-    if (dummy_handler_flags != DUMMY_DEFAULT_HANDLER_FLAG)
-        fail("Comment not picked up by default handler");
+    CharData_CheckXMLChars(&storage, expected);
 }
-#undef COMMENT_TEXT
 END_TEST
 
 /* Test that the unknown encoding handler with map entries that expect
