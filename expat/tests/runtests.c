@@ -2264,6 +2264,10 @@ byte_character_handler(void *userData,
         fail("Buffer length incorrect");
     if (s != buffer + offset)
         fail("Buffer position incorrect");
+#else
+    (void)userData;
+    (void)s;
+    (void)len;
 #endif
 }
 
