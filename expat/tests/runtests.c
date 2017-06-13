@@ -5241,21 +5241,20 @@ default_matching_handler(void *userData,
 
 START_TEST(test_pi_handled_in_default)
 {
-#define PI_TEXT "<?test processing instruction?>"
-    const char *text = PI_TEXT "\n<doc/>";
-    char pi_text[] = PI_TEXT;
+    const char *text = "<?test processing instruction?>\n<doc/>";
+    const XML_Char *expected = "<?test processing instruction?>\n<doc/>";
+    CharData storage;
 
-    XML_SetDefaultHandler(parser, default_matching_handler);
-    XML_SetUserData(parser, pi_text);
-    dummy_handler_flags = 0;
+    CharData_Init(&storage);
+    XML_SetDefaultHandler(parser, accumulate_characters);
+    XML_SetUserData(parser, &storage);
     if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
                                 XML_TRUE)== XML_STATUS_ERROR)
         xml_failure(parser);
-    if (dummy_handler_flags != DUMMY_DEFAULT_HANDLER_FLAG)
-        fail("Processing instruction not picked up by default handler");
+    CharData_CheckXMLChars(&storage, expected);
 }
-#undef PI_TEXT
 END_TEST
+
 
 /* Test that comments are picked up by a default handler */
 START_TEST(test_comment_handled_in_default)
