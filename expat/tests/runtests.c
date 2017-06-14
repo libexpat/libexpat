@@ -5986,6 +5986,16 @@ START_TEST(test_ext_entity_utf8_non_bom)
 }
 END_TEST
 
+/* Test that UTF-8 in a CDATA section is correctly passed through */
+START_TEST(test_utf8_in_cdata_section)
+{
+    const char *text = "<doc><![CDATA[one \xc3\xa9 two]]></doc>";
+    const XML_Char *expected = "one \xc3\xa9 two";
+
+    run_character_check(text, expected);
+}
+END_TEST
+
 /*
  * Namespaces tests.
  */
@@ -11306,6 +11316,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_ext_entity_utf16_le);
     tcase_add_test(tc_basic, test_ext_entity_utf16_unknown);
     tcase_add_test(tc_basic, test_ext_entity_utf8_non_bom);
+    tcase_add_test(tc_basic, test_utf8_in_cdata_section);
 
     suite_add_tcase(s, tc_namespace);
     tcase_add_checked_fixture(tc_namespace,
