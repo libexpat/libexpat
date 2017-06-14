@@ -89,6 +89,7 @@ Release 2.2.1 ??????????
              #10  Move from WIN32 to _WIN32
              #13  Fix "make run-xmltest" order instability
                   Address compile warnings
+                  Bump version info from 7:2:6 to 7:3:6
                   Add AUTHORS file
 
         Infrastructure:
