@@ -11,7 +11,12 @@ _get_source_dir() {
 
 
 _get_build_dir() {
-    echo "build__${version}__unicode_${unicode_enabled}__xml_context_${xml_context}"
+    local libbsd_part=
+    if ${with_libbsd}; then
+        libbsd_part=__libbsd
+    fi
+
+    echo "build__${version}__unicode_${unicode_enabled}__xml_context_${xml_context}${libbsd_part}"
 }
 
 
@@ -31,6 +36,8 @@ _configure() {
     else
         configure_args+=( --enable-xml-context=${xml_context} )
     fi
+
+    ${with_libbsd} && configure_args+=( --with-libbsd )
 
     (
         set -x
@@ -147,11 +154,16 @@ _main() {
         build_dirs+=( "${build_dir}" )
     }
 
+    # All combinations:
+    with_libbsd=false
     for unicode_enabled in false ; do
         for xml_context in 0 1024 ; do
             _build_case
         done
     done
+
+    # Single cases:
+    with_libbsd=true _build_case
 
     echo
     echo 'Merging coverage files...'
