@@ -188,8 +188,8 @@ tests/xmlconf: tests/xmlts.zip
 	cd tests && unzip -q xmlts.zip
 
 run-xmltest: xmlwf/xmlwf@EXEEXT@ tests/xmlconf
-	tests/xmltest.sh 2>&1 | tee tests/xmltest.log
-	diff -u tests/xmltest.log.expected tests/xmltest.log
+	tests/xmltest.sh "$(PWD)/run.sh $(PWD)/xmlwf/xmlwf@EXEEXT@" 2>&1 | tee tests/xmltest.log
+	diff -u -b tests/xmltest.log.expected tests/xmltest.log
 
 .PHONY: qa
 qa:
