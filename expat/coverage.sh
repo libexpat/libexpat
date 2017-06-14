@@ -16,7 +16,12 @@ _get_build_dir() {
         libbsd_part=__libbsd
     fi
 
-    echo "build__${version}__unicode_${unicode_enabled}__xml_context_${xml_context}${libbsd_part}"
+    local mingw_part=
+    if ${with_mingw}; then
+        mingw_part=__windows
+    fi
+
+    echo "build__${version}__unicode_${unicode_enabled}__xml_context_${xml_context}${libbsd_part}${mingw_part}"
 }
 
 
@@ -38,6 +43,7 @@ _configure() {
     fi
 
     ${with_libbsd} && configure_args+=( --with-libbsd )
+    ${with_mingw} && configure_args+=( --host=i686-w64-mingw32 )
 
     (
         set -x
@@ -53,6 +59,21 @@ _copy_to() {
 
     mkdir "${target_dir}"
     git archive --format=tar "${version}" | ( cd "${target_dir}" && tar x )
+}
+
+
+_copy_missing_mingw_libaries() {
+    # These extra files are copied because
+    # * coverage GCC fflags make them needed
+    # * With WINEDLLPATH Wine look for .dll.so in these folders, not .dll
+    local target="$1"
+    local mingw_dll_dir="$(dirname "$(ls -1 /usr/lib*/gcc/i686-w64-mingw32/*/libgcc_s_sjlj-1.dll | head -n1)")"
+    for dll in libgcc_s_sjlj-1.dll libstdc++-6.dll; do
+        (
+            set -x
+            ln -s "${mingw_dll_dir}"/${dll} "${target}"/${dll}
+        )
+    done
 }
 
 
@@ -75,11 +96,18 @@ _run() {
                 CFLAGS="${BASE_FLAGS}" \
                 CXXFLAGS="${BASE_FLAGS}"
 
+        (
+            set -x
+            make buildlib &> build.log
+
+            lcov -c -d "${capture_dir}" -i -o "${coverage_info}-zero" &> run.log
+        )
+
+        if ${with_mingw}; then
+            _copy_missing_mingw_libaries .libs
+        fi
+
         set -x
-        make buildlib &> build.log
-
-        lcov -c -d "${capture_dir}" -i -o "${coverage_info}-zero" &> run.log
-
         make check run-xmltest
 
         lcov -c -d "${capture_dir}" -o "${coverage_info}-test" &>> run.log
@@ -156,9 +184,11 @@ _main() {
 
     # All combinations:
     with_libbsd=false
-    for unicode_enabled in false ; do
-        for xml_context in 0 1024 ; do
-            _build_case
+    for with_mingw in true false ; do
+        for unicode_enabled in false ; do
+            for xml_context in 0 1024 ; do
+                _build_case
+            done
         done
     done
 
