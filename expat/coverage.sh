@@ -137,15 +137,19 @@ _main() {
 
     _copy_to "${source_dir}"
 
+    _build_case() {
+        local build_dir="$(_get_build_dir)"
+
+        echo "[${build_dir}]"
+        _copy_to "${build_dir}"
+        _run "${source_dir}" "${build_dir}"
+
+        build_dirs+=( "${build_dir}" )
+    }
+
     for unicode_enabled in false ; do
         for xml_context in 0 1024 ; do
-            local build_dir="$(_get_build_dir)"
-
-            echo "[${build_dir}]"
-            _copy_to "${build_dir}"
-            _run "${source_dir}" "${build_dir}"
-
-            build_dirs+=( "${build_dir}" )
+            _build_case
         done
     done
 
