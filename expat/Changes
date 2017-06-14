@@ -3,7 +3,7 @@ Release 2.2.1 ??????????
                   CVE-2016-9063 -- Detect integer overflow; commit
                     d4f735b88d9932bd5039df2335eefdd0723dbe20
                     (Fixed version of existing downstream patches!)
-            #539  Fix regression from fix to CVE-2016-0718 cutting off
+   (SF.net) #539  Fix regression from fix to CVE-2016-0718 cutting off
                     longer tag names; commits
                     * 896b6c1fd3b842f377d1b62135dccf0a579cf65d
                     * af507cef2c93cb8d40062a0abe43a4f4e9158fb2
@@ -56,12 +56,12 @@ Release 2.2.1 ??????????
              #33  Reject use of XML_UNICODE_WCHAR_T with sizeof(wchar_t) != 2;
                     XML_UNICODE_WCHAR_T was never meant to be used outside
                     of Windows; 4-byte wchar_t is common on Linux
-            #538  Start using -fno-strict-aliasing
-            #540  Support compilation against cloudlibc of CloudABI
+   (SF.net) #538  Start using -fno-strict-aliasing
+   (SF.net) #540  Support compilation against cloudlibc of CloudABI
                   Allow MinGW cross-compilation
-            #534  CMake: Introduce option "BUILD_doc" (enabled by default)
+   (SF.net) #534  CMake: Introduce option "BUILD_doc" (enabled by default)
                     to bypass compilation of the xmlwf.1 man page
-             pr2  CMake: Introduce option "INSTALL" (enabled by default)
+   (SF.net)  pr2  CMake: Introduce option "INSTALL" (enabled by default)
                     to bypass installation of expat files
                   CMake: Fix ninja support
                   Autotools: Add parameters --enable-xml-context [COUNT]
