@@ -5262,6 +5262,36 @@ START_TEST(test_comment_handled_in_default)
 }
 END_TEST
 
+/* Test PIs that look almost but not quite like XML declarations */
+static void XMLCALL
+accumulate_pi_characters(void *userData,
+                         const XML_Char *target,
+                         const XML_Char *data)
+{
+    CharData *storage = (CharData *)userData;
+
+    CharData_AppendXMLChars(storage, target, -1);
+    CharData_AppendXMLChars(storage, ": ", 2);
+    CharData_AppendXMLChars(storage, data, -1);
+    CharData_AppendXMLChars(storage, "\n", 1);
+}
+
+START_TEST(test_pi_yml)
+{
+    const char *text = "<?yml something like data?><doc/>";
+    const XML_Char *expected = "yml: something like data\n";
+    CharData storage;
+
+    CharData_Init(&storage);
+    XML_SetProcessingInstructionHandler(parser, accumulate_pi_characters);
+    XML_SetUserData(parser, &storage);
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+    CharData_CheckXMLChars(&storage, expected);
+}
+END_TEST
+
 /* Test that the unknown encoding handler with map entries that expect
  * conversion but no conversion function is faulted
  */
@@ -11195,6 +11225,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_invalid_character_entity);
     tcase_add_test(tc_basic, test_pi_handled_in_default);
     tcase_add_test(tc_basic, test_comment_handled_in_default);
+    tcase_add_test(tc_basic, test_pi_yml);
     tcase_add_test(tc_basic, test_missing_encoding_conversion_fn);
     tcase_add_test(tc_basic, test_failing_encoding_conversion_fn);
     tcase_add_test(tc_basic, test_unknown_encoding_success);
