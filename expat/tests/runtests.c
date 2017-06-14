@@ -5996,6 +5996,16 @@ START_TEST(test_utf8_in_cdata_section)
 }
 END_TEST
 
+/* Test that little-endian UTF-16 in a CDATA section is handled */
+START_TEST(test_utf8_in_cdata_section_2)
+{
+    const char *text = "<doc><![CDATA[\xc3\xa9]\xc3\xa9two]]></doc>";
+    const XML_Char *expected = "\xc3\xa9]\xc3\xa9two";
+
+    run_character_check(text, expected);
+}
+END_TEST
+
 /*
  * Namespaces tests.
  */
@@ -11317,6 +11327,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_ext_entity_utf16_unknown);
     tcase_add_test(tc_basic, test_ext_entity_utf8_non_bom);
     tcase_add_test(tc_basic, test_utf8_in_cdata_section);
+    tcase_add_test(tc_basic, test_utf8_in_cdata_section_2);
 
     suite_add_tcase(s, tc_namespace);
     tcase_add_checked_fixture(tc_namespace,
