@@ -5308,6 +5308,22 @@ START_TEST(test_pi_xnl)
 }
 END_TEST
 
+START_TEST(test_pi_xmm)
+{
+    const char *text = "<?xmm everything like data?><doc/>";
+    const XML_Char *expected = "xmm: everything like data\n";
+    CharData storage;
+
+    CharData_Init(&storage);
+    XML_SetProcessingInstructionHandler(parser, accumulate_pi_characters);
+    XML_SetUserData(parser, &storage);
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+    CharData_CheckXMLChars(&storage, expected);
+}
+END_TEST
+
 /* Test that the unknown encoding handler with map entries that expect
  * conversion but no conversion function is faulted
  */
@@ -11243,6 +11259,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_comment_handled_in_default);
     tcase_add_test(tc_basic, test_pi_yml);
     tcase_add_test(tc_basic, test_pi_xnl);
+    tcase_add_test(tc_basic, test_pi_xmm);
     tcase_add_test(tc_basic, test_missing_encoding_conversion_fn);
     tcase_add_test(tc_basic, test_failing_encoding_conversion_fn);
     tcase_add_test(tc_basic, test_unknown_encoding_success);
