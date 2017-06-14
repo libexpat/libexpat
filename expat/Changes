@@ -11,8 +11,9 @@ Release 2.2.1 ??????????
              #25  More integer overflow detection (function poolGrow); commits
                     * 810b74e4703dcfdd8f404e3cb177d44684775143
                     * 44178553f3539ce69d34abee77a05e879a7982ac
-                  Detect overflow from len=INT_MAX call to XML_Parse; commit
-                    4be2cb5afcc018d996f34bbbce6374b7befad47f
+                  Detect overflow from len=INT_MAX call to XML_Parse; commits
+                    * 4be2cb5afcc018d996f34bbbce6374b7befad47f
+                    * 7e5b71b748491b6e459e5c9a1d090820f94544d8
              #30  Use high quality entropy for hash initialization:
                     * arc4random_buf on BSD, systems with libbsd
                       (when configured with --with-libbsd), CloudABI
