@@ -6790,6 +6790,16 @@ START_TEST(test_ns_double_colon)
 }
 END_TEST
 
+START_TEST(test_ns_double_colon_element)
+{
+    const char *text =
+        "<foo:bar:e xmlns:foo='http://example.org/' />";
+
+    expect_failure(text, XML_ERROR_INVALID_TOKEN,
+                   "Double colon in element name not faulted");
+}
+END_TEST
+
 /* Test that non-name characters after a colon are rejected */
 START_TEST(test_ns_bad_attr_leafname)
 {
@@ -11541,6 +11551,7 @@ make_suite(void)
     tcase_add_test(tc_namespace, test_ns_extremely_long_prefix);
     tcase_add_test(tc_namespace, test_ns_unknown_encoding_success);
     tcase_add_test(tc_namespace, test_ns_double_colon);
+    tcase_add_test(tc_namespace, test_ns_double_colon_element);
     tcase_add_test(tc_namespace, test_ns_bad_attr_leafname);
     tcase_add_test(tc_namespace, test_ns_utf16_leafname);
 
