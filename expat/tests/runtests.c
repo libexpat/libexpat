@@ -6730,6 +6730,17 @@ START_TEST(test_ns_unknown_encoding_success)
 }
 END_TEST
 
+/* Test that too many colons are rejected */
+START_TEST(test_ns_double_colon)
+{
+    const char *text =
+        "<foo:e xmlns:foo='http://example.org/' foo:a:b='bar' />";
+
+    expect_failure(text, XML_ERROR_INVALID_TOKEN,
+                   "Double colon in attribute name not faulted");
+}
+END_TEST
+
 
 /* Control variable; the number of times duff_allocator() will successfully allocate */
 #define ALLOC_ALWAYS_SUCCEED (-1)
@@ -11444,6 +11455,7 @@ make_suite(void)
     tcase_add_test(tc_namespace, test_ns_reserved_attributes_2);
     tcase_add_test(tc_namespace, test_ns_extremely_long_prefix);
     tcase_add_test(tc_namespace, test_ns_unknown_encoding_success);
+    tcase_add_test(tc_namespace, test_ns_double_colon);
 
     suite_add_tcase(s, tc_misc);
     tcase_add_checked_fixture(tc_misc, NULL, basic_teardown);
