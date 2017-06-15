@@ -6741,6 +6741,17 @@ START_TEST(test_ns_double_colon)
 }
 END_TEST
 
+/* Test that non-name characters after a colon are rejected */
+START_TEST(test_ns_bad_attr_leafname)
+{
+    const char *text =
+        "<foo:e xmlns:foo='http://example.org/' foo:?ar='baz' />";
+
+    expect_failure(text, XML_ERROR_INVALID_TOKEN,
+                   "Invalid character in leafname not faulted");
+}
+END_TEST
+
 
 /* Control variable; the number of times duff_allocator() will successfully allocate */
 #define ALLOC_ALWAYS_SUCCEED (-1)
@@ -11456,6 +11467,7 @@ make_suite(void)
     tcase_add_test(tc_namespace, test_ns_extremely_long_prefix);
     tcase_add_test(tc_namespace, test_ns_unknown_encoding_success);
     tcase_add_test(tc_namespace, test_ns_double_colon);
+    tcase_add_test(tc_namespace, test_ns_bad_attr_leafname);
 
     suite_add_tcase(s, tc_misc);
     tcase_add_checked_fixture(tc_misc, NULL, basic_teardown);
