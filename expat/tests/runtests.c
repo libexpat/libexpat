@@ -6811,6 +6811,16 @@ START_TEST(test_ns_bad_attr_leafname)
 }
 END_TEST
 
+START_TEST(test_ns_bad_element_leafname)
+{
+    const char *text =
+        "<foo:?oc xmlns:foo='http://example.org/' />";
+
+    expect_failure(text, XML_ERROR_INVALID_TOKEN,
+                   "Invalid character in element leafname not faulted");
+}
+END_TEST
+
 /* Test high-byte-set UTF-16 characters are valid in a leafname */
 START_TEST(test_ns_utf16_leafname)
 {
@@ -11553,6 +11563,7 @@ make_suite(void)
     tcase_add_test(tc_namespace, test_ns_double_colon);
     tcase_add_test(tc_namespace, test_ns_double_colon_element);
     tcase_add_test(tc_namespace, test_ns_bad_attr_leafname);
+    tcase_add_test(tc_namespace, test_ns_bad_element_leafname);
     tcase_add_test(tc_namespace, test_ns_utf16_leafname);
 
     suite_add_tcase(s, tc_misc);
