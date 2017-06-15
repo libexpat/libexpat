@@ -5240,6 +5240,29 @@ START_TEST(test_invalid_character_entity_2)
 }
 END_TEST
 
+START_TEST(test_invalid_character_entity_3)
+{
+    const char text[] =
+        /* <!DOCTYPE doc [\n */
+        "\0<\0!\0D\0O\0C\0T\0Y\0P\0E\0 \0d\0o\0c\0 \0[\0\n"
+        /* U+0E04 = KHO KHWAI
+         * U+0E08 = CHO CHAN */
+        /* <!ENTITY entity '&\u0e04\u0e08;'>\n */
+        "\0<\0!\0E\0N\0T\0I\0T\0Y\0 \0e\0n\0t\0i\0t\0y\0 "
+        "\0'\0&\x0e\x04\x0e\x08\0;\0'\0>\0\n"
+        /* ]>\n */
+        "\0]\0>\0\n"
+        /* <doc>&entity;</doc> */
+        "\0<\0d\0o\0c\0>\0&\0e\0n\0t\0i\0t\0y\0;\0<\0/\0d\0o\0c\0>";
+
+    if (_XML_Parse_SINGLE_BYTES(parser, text, sizeof(text)-1,
+                                XML_TRUE) != XML_STATUS_ERROR)
+        fail("Invalid start of entity name not faulted");
+    if (XML_GetErrorCode(parser) != XML_ERROR_UNDEFINED_ENTITY)
+        xml_failure(parser);
+}
+END_TEST
+
 /* Test that processing instructions are picked up by a default handler */
 START_TEST(test_pi_handled_in_default)
 {
@@ -11340,6 +11363,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_param_entity_with_trailing_cr);
     tcase_add_test(tc_basic, test_invalid_character_entity);
     tcase_add_test(tc_basic, test_invalid_character_entity_2);
+    tcase_add_test(tc_basic, test_invalid_character_entity_3);
     tcase_add_test(tc_basic, test_pi_handled_in_default);
     tcase_add_test(tc_basic, test_comment_handled_in_default);
     tcase_add_test(tc_basic, test_pi_yml);
