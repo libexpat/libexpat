@@ -6070,6 +6070,27 @@ START_TEST(test_trailing_spaces_in_elements)
 }
 END_TEST
 
+START_TEST(test_utf16_attribute)
+{
+    const char text[] =
+        /* <d {KHO KHWAI}{CHO CHAN}='a'/>
+         * where {KHO KHWAI} = U+0E04 = 0xe0 0xb8 0x84 in UTF-8
+         * and   {CHO CHAN}  = U+0E08 = 0xe0 0xb8 0x88 in UTF-8
+         */
+        "<\0d\0 \0\x04\x0e\x08\x0e=\0'\0a\0'\0/\0>\0";
+    const XML_Char *expected = "a";
+    CharData storage;
+
+    CharData_Init(&storage);
+    XML_SetStartElementHandler(parser, accumulate_attribute);
+    XML_SetUserData(parser, &storage);
+    if (_XML_Parse_SINGLE_BYTES(parser, text, sizeof(text)-1,
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+    CharData_CheckXMLChars(&storage, expected);
+}
+END_TEST
+
 /*
  * Namespaces tests.
  */
@@ -11395,6 +11416,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_utf8_in_cdata_section);
     tcase_add_test(tc_basic, test_utf8_in_cdata_section_2);
     tcase_add_test(tc_basic, test_trailing_spaces_in_elements);
+    tcase_add_test(tc_basic, test_utf16_attribute);
 
     suite_add_tcase(s, tc_namespace);
     tcase_add_checked_fixture(tc_namespace,
