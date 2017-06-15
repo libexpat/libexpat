@@ -6131,6 +6131,15 @@ START_TEST(test_utf16_second_attr)
 }
 END_TEST
 
+START_TEST(test_attr_after_solidus)
+{
+    const char *text = "<doc attr1='a' / attr2='b'>";
+
+    expect_failure(text, XML_ERROR_INVALID_TOKEN,
+                   "Misplaced / not faulted");
+}
+END_TEST
+
 /*
  * Namespaces tests.
  */
@@ -11503,6 +11512,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_trailing_spaces_in_elements);
     tcase_add_test(tc_basic, test_utf16_attribute);
     tcase_add_test(tc_basic, test_utf16_second_attr);
+    tcase_add_test(tc_basic, test_attr_after_solidus);
 
     suite_add_tcase(s, tc_namespace);
     tcase_add_checked_fixture(tc_namespace,
