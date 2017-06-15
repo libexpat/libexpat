@@ -6752,6 +6752,28 @@ START_TEST(test_ns_bad_attr_leafname)
 }
 END_TEST
 
+/* Test high-byte-set UTF-16 characters are valid in a leafname */
+START_TEST(test_ns_utf16_leafname)
+{
+    const char text[] =
+        /* <n:e xmlns:n='URI' n:{KHO KHWAI}='a' />
+         * where {KHO KHWAI} = U+0E04 = 0xe0 0xb8 0x84 in UTF-8
+         */
+        "<\0n\0:\0e\0 \0x\0m\0l\0n\0s\0:\0n\0=\0'\0U\0R\0I\0'\0 \0"
+        "n\0:\0\x04\x0e=\0'\0a\0'\0 \0/\0>\0";
+    const XML_Char *expected = "a";
+    CharData storage;
+
+    CharData_Init(&storage);
+    XML_SetStartElementHandler(parser, accumulate_attribute);
+    XML_SetUserData(parser, &storage);
+    if (_XML_Parse_SINGLE_BYTES(parser, text, sizeof(text)-1,
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+    CharData_CheckXMLChars(&storage, expected);
+}
+END_TEST
+
 
 /* Control variable; the number of times duff_allocator() will successfully allocate */
 #define ALLOC_ALWAYS_SUCCEED (-1)
@@ -11468,6 +11490,7 @@ make_suite(void)
     tcase_add_test(tc_namespace, test_ns_unknown_encoding_success);
     tcase_add_test(tc_namespace, test_ns_double_colon);
     tcase_add_test(tc_namespace, test_ns_bad_attr_leafname);
+    tcase_add_test(tc_namespace, test_ns_utf16_leafname);
 
     suite_add_tcase(s, tc_misc);
     tcase_add_checked_fixture(tc_misc, NULL, basic_teardown);
