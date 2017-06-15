@@ -6843,6 +6843,33 @@ START_TEST(test_ns_utf16_leafname)
 }
 END_TEST
 
+static void XMLCALL
+start_element_event_handler(void *userData,
+                            const XML_Char *name,
+                            const XML_Char **UNUSED_P(atts))
+{
+    CharData_AppendXMLChars((CharData *)userData, name, -1);
+}
+
+START_TEST(test_ns_utf16_element_leafname)
+{
+    const char text[] =
+        /* <n:{KHO KHWAI} xmlns:n='URI'/>
+         * where {KHO KHWAI} = U+0E04 = 0xe0 0xb8 0x84 in UTF-8
+         */
+        "\0<\0n\0:\x0e\x04\0 \0x\0m\0l\0n\0s\0:\0n\0=\0'\0U\0R\0I\0'\0/\0>";
+    const XML_Char *expected = "URI \xe0\xb8\x84";
+    CharData storage;
+
+    CharData_Init(&storage);
+    XML_SetStartElementHandler(parser, start_element_event_handler);
+    XML_SetUserData(parser, &storage);
+    if (_XML_Parse_SINGLE_BYTES(parser, text, sizeof(text)-1,
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+    CharData_CheckXMLChars(&storage, expected);
+}
+END_TEST
 
 /* Control variable; the number of times duff_allocator() will successfully allocate */
 #define ALLOC_ALWAYS_SUCCEED (-1)
@@ -11565,6 +11592,7 @@ make_suite(void)
     tcase_add_test(tc_namespace, test_ns_bad_attr_leafname);
     tcase_add_test(tc_namespace, test_ns_bad_element_leafname);
     tcase_add_test(tc_namespace, test_ns_utf16_leafname);
+    tcase_add_test(tc_namespace, test_ns_utf16_element_leafname);
 
     suite_add_tcase(s, tc_misc);
     tcase_add_checked_fixture(tc_misc, NULL, basic_teardown);
