@@ -6006,6 +6006,34 @@ START_TEST(test_utf8_in_cdata_section_2)
 }
 END_TEST
 
+/* Test trailing spaces in elements are accepted */
+static void XMLCALL
+record_element_end_handler(void *userData,
+                           const XML_Char *name)
+{
+    CharData *storage = (CharData *)userData;
+
+    CharData_AppendXMLChars(storage, "/", 1);
+    CharData_AppendXMLChars(storage, name, -1);
+}
+
+START_TEST(test_trailing_spaces_in_elements)
+{
+    const char *text = "<doc   >Hi</doc >";
+    const XML_Char *expected = "doc/doc";
+    CharData storage;
+
+    CharData_Init(&storage);
+    XML_SetElementHandler(parser, record_element_start_handler,
+                          record_element_end_handler);
+    XML_SetUserData(parser, &storage);
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+    CharData_CheckXMLChars(&storage, expected);
+}
+END_TEST
+
 /*
  * Namespaces tests.
  */
@@ -11328,6 +11356,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_ext_entity_utf8_non_bom);
     tcase_add_test(tc_basic, test_utf8_in_cdata_section);
     tcase_add_test(tc_basic, test_utf8_in_cdata_section_2);
+    tcase_add_test(tc_basic, test_trailing_spaces_in_elements);
 
     suite_add_tcase(s, tc_namespace);
     tcase_add_checked_fixture(tc_namespace,
