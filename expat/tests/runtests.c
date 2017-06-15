@@ -511,9 +511,15 @@ accumulate_attribute(void *userData, const XML_Char *UNUSED_P(name),
                      const XML_Char **atts)
 {
     CharData *storage = (CharData *)userData;
-    if (storage->count < 0 && atts != NULL && atts[0] != NULL) {
+
+    /* Check there are attributes to deal with */
+    if (atts == NULL)
+        return;
+
+    while (storage->count < 0 && atts[0] != NULL) {
         /* "accumulate" the value of the first attribute we see */
         CharData_AppendXMLChars(storage, atts[1], -1);
+        atts += 2;
     }
 }
 
@@ -6103,6 +6109,28 @@ START_TEST(test_utf16_attribute)
 }
 END_TEST
 
+START_TEST(test_utf16_second_attr)
+{
+    /* <d a='1' {KHO KHWAI}{CHO CHAN}='2'/>
+         * where {KHO KHWAI} = U+0E04 = 0xe0 0xb8 0x84 in UTF-8
+         * and   {CHO CHAN}  = U+0E08 = 0xe0 0xb8 0x88 in UTF-8
+         */
+    const char text[] =
+        "<\0d\0 \0a\0=\0'\0\x31\0'\0 \0"
+        "\x04\x0e\x08\x0e=\0'\0\x32\0'\0/\0>\0";
+    const XML_Char *expected = "1";
+    CharData storage;
+
+    CharData_Init(&storage);
+    XML_SetStartElementHandler(parser, accumulate_attribute);
+    XML_SetUserData(parser, &storage);
+    if (_XML_Parse_SINGLE_BYTES(parser, text, sizeof(text)-1,
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+    CharData_CheckXMLChars(&storage, expected);
+}
+END_TEST
+
 /*
  * Namespaces tests.
  */
@@ -11474,6 +11502,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_utf8_in_cdata_section_2);
     tcase_add_test(tc_basic, test_trailing_spaces_in_elements);
     tcase_add_test(tc_basic, test_utf16_attribute);
+    tcase_add_test(tc_basic, test_utf16_second_attr);
 
     suite_add_tcase(s, tc_namespace);
     tcase_add_checked_fixture(tc_namespace,
