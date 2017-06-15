@@ -5658,6 +5658,18 @@ START_TEST(test_unknown_encoding_invalid_high)
 }
 END_TEST
 
+START_TEST(test_unknown_encoding_invalid_attr_value)
+{
+    const char *text =
+        "<?xml version='1.0' encoding='prefix-conv'?>\n"
+        "<doc attr='\xff\x30'/>";
+
+    XML_SetUnknownEncodingHandler(parser, MiscEncodingHandler, NULL);
+    expect_failure(text, XML_ERROR_INVALID_TOKEN,
+                   "Invalid attribute valid not faulted");
+}
+END_TEST
+
 /* Test an external entity parser set to use latin-1 detects UTF-16
  * BOMs correctly.
  */
@@ -11449,6 +11461,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_unknown_encoding_invalid_topbit);
     tcase_add_test(tc_basic, test_unknown_encoding_invalid_surrogate);
     tcase_add_test(tc_basic, test_unknown_encoding_invalid_high);
+    tcase_add_test(tc_basic, test_unknown_encoding_invalid_attr_value);
     tcase_add_test(tc_basic, test_ext_entity_latin1_utf16le_bom);
     tcase_add_test(tc_basic, test_ext_entity_latin1_utf16be_bom);
     tcase_add_test(tc_basic, test_ext_entity_latin1_utf16le_bom2);
