@@ -7039,6 +7039,17 @@ START_TEST(test_ns_invalid_doctype)
 }
 END_TEST
 
+START_TEST(test_ns_double_colon_doctype)
+{
+    const char *text =
+        "<!DOCTYPE foo:a:doc [ <!ENTITY bar 'baz' ]>\n"
+        "<foo:a:doc>&bar;</foo:a:doc>";
+
+    expect_failure(text, XML_ERROR_SYNTAX,
+                   "Double colon in document name not faulted");
+}
+END_TEST
+
 /* Control variable; the number of times duff_allocator() will successfully allocate */
 #define ALLOC_ALWAYS_SUCCEED (-1)
 #define REALLOC_ALWAYS_SUCCEED (-1)
@@ -11768,6 +11779,7 @@ make_suite(void)
     tcase_add_test(tc_namespace, test_ns_utf16_element_leafname);
     tcase_add_test(tc_namespace, test_ns_utf16_doctype);
     tcase_add_test(tc_namespace, test_ns_invalid_doctype);
+    tcase_add_test(tc_namespace, test_ns_double_colon_doctype);
 
     suite_add_tcase(s, tc_misc);
     tcase_add_checked_fixture(tc_misc, NULL, basic_teardown);
