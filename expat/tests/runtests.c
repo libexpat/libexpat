@@ -1927,6 +1927,16 @@ START_TEST(test_dtd_attr_handling)
             "bar",
             XML_FALSE
         },
+        {
+            "<!ATTLIST doc a CDATA '\xdb\xb2'>\n"
+            "]>"
+            "<doc/>",
+            "doc",
+            "a",
+            "CDATA",
+            "\xdb\xb2",
+            XML_FALSE
+        },
         { NULL, NULL, NULL, NULL, NULL, XML_FALSE }
     };
     AttTest *test;
