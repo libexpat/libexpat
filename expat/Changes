@@ -2,7 +2,7 @@ NOTE: We are looking for help with a few things:
       https://github.com/libexpat/libexpat/labels/help%20wanted
       If you can help, please get in touch.  Thanks!
 
-Release 2.2.1 ??????????
+Release 2.2.1 Sat June 17 2017
         Security fixes:
                   CVE-2017-9233 -- External entity infinite loop DoS
                     Details: https://libexpat.github.io/doc/cve-2017-9233/
