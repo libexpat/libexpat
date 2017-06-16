@@ -6207,6 +6207,33 @@ START_TEST(test_bad_attr_desc_keyword)
 }
 END_TEST
 
+/* Test that an invalid attribute description keyword consisting of
+ * UTF-16 characters with their top bytes non-zero are correctly
+ * faulted
+ */
+START_TEST(test_bad_attr_desc_keyword_utf16)
+{
+    /* <!DOCTYPE d [
+     * <!ATTLIST d a CDATA #{KHO KHWAI}{CHO CHAN}>
+     * ]><d/>
+     *
+     * where {KHO KHWAI} = U+0E04 = 0xe0 0xb8 0x84 in UTF-8
+     * and   {CHO CHAN}  = U+0E08 = 0xe0 0xb8 0x88 in UTF-8
+     */
+    const char text[] =
+        "\0<\0!\0D\0O\0C\0T\0Y\0P\0E\0 \0d\0 \0[\0\n"
+        "\0<\0!\0A\0T\0T\0L\0I\0S\0T\0 \0d\0 \0a\0 \0C\0D\0A\0T\0A\0 "
+        "\0#\x0e\x04\x0e\x08\0>\0\n"
+        "\0]\0>\0<\0d\0/\0>";
+
+    if (_XML_Parse_SINGLE_BYTES(parser, text, sizeof(text)-1,
+                                XML_TRUE) != XML_STATUS_ERROR)
+        fail("Invalid UTF16 attribute keyword not faulted");
+    if (XML_GetErrorCode(parser) != XML_ERROR_SYNTAX)
+        xml_failure(parser);
+}
+END_TEST
+
 /*
  * Namespaces tests.
  */
@@ -11629,6 +11656,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_attr_after_solidus);
     tcase_add_test(tc_basic, test_utf16_pe);
     tcase_add_test(tc_basic, test_bad_attr_desc_keyword);
+    tcase_add_test(tc_basic, test_bad_attr_desc_keyword_utf16);
 
     suite_add_tcase(s, tc_namespace);
     tcase_add_checked_fixture(tc_namespace,
