@@ -1198,8 +1198,14 @@ PREFIX(attributeValueTok)(const ENCODING *enc, const char *ptr,
   const char *start;
   if (ptr >= end)
     return XML_TOK_NONE;
-  else if (! HAS_CHAR(enc, ptr, end))
-    return XML_TOK_PARTIAL;
+  else if (! HAS_CHAR(enc, ptr, end)) {
+    /* This line cannot be executed.  The incoming data has already
+     * been tokenized once, so incomplete characters like this have
+     * already been eliminated from the input.  Retaining the paranoia
+     * check is still valuable, however.
+     */
+    return XML_TOK_PARTIAL; /* LCOV_EXCL_LINE */
+  }
   start = ptr;
   while (HAS_CHAR(enc, ptr, end)) {
     switch (BYTE_TYPE(enc, ptr)) {
