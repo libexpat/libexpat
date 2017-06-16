@@ -6242,6 +6242,21 @@ START_TEST(test_bad_attr_desc_keyword_utf16)
 }
 END_TEST
 
+/* Test that invalid syntax in a <!DOCTYPE> is rejected.  Do this
+ * using prefix-encoding (see above) to trigger specific code paths
+ */
+START_TEST(test_bad_doctype)
+{
+    const char *text =
+        "<?xml version='1.0' encoding='prefix-conv'?>\n"
+        "<!DOCTYPE doc [ \x80\x44 ]><doc/>";
+
+    XML_SetUnknownEncodingHandler(parser, MiscEncodingHandler, NULL);
+    expect_failure(text, XML_ERROR_SYNTAX,
+                   "Invalid bytes in DOCTYPE not faulted");
+}
+END_TEST
+
 /*
  * Namespaces tests.
  */
@@ -11657,6 +11672,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_utf16_pe);
     tcase_add_test(tc_basic, test_bad_attr_desc_keyword);
     tcase_add_test(tc_basic, test_bad_attr_desc_keyword_utf16);
+    tcase_add_test(tc_basic, test_bad_doctype);
 
     suite_add_tcase(s, tc_namespace);
     tcase_add_checked_fixture(tc_namespace,
