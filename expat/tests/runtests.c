@@ -6257,6 +6257,26 @@ START_TEST(test_bad_doctype)
 }
 END_TEST
 
+START_TEST(test_bad_doctype_utf16)
+{
+    const char text[] =
+        /* <!DOCTYPE doc [ \x06f2 ]><doc/>
+         *
+         * U+06F2 = EXTENDED ARABIC-INDIC DIGIT TWO, a valid number
+         * (name character) but not a valid letter (name start character)
+         */
+        "\0<\0!\0D\0O\0C\0T\0Y\0P\0E\0 \0d\0o\0c\0 \0[\0 "
+        "\x06\xf2"
+        "\0 \0]\0>\0<\0d\0o\0c\0/\0>";
+
+    if (_XML_Parse_SINGLE_BYTES(parser, text, sizeof(text)-1,
+                                XML_TRUE) != XML_STATUS_ERROR)
+        fail("Invalid bytes in DOCTYPE not faulted");
+    if (XML_GetErrorCode(parser) != XML_ERROR_SYNTAX)
+        xml_failure(parser);
+}
+END_TEST
+
 /*
  * Namespaces tests.
  */
@@ -11673,6 +11693,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_bad_attr_desc_keyword);
     tcase_add_test(tc_basic, test_bad_attr_desc_keyword_utf16);
     tcase_add_test(tc_basic, test_bad_doctype);
+    tcase_add_test(tc_basic, test_bad_doctype_utf16);
 
     suite_add_tcase(s, tc_namespace);
     tcase_add_checked_fixture(tc_namespace,
