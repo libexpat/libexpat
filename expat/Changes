@@ -4,6 +4,9 @@ NOTE: We are looking for help with a few things:
 
 Release 2.2.1 ??????????
         Security fixes:
+                  CVE-2017-9233 -- External entity infinite loop DoS
+                    Details: https://libexpat.github.io/doc/cve-2017-9233/
+                    Commit c4bf96bb51dd2a1b0e185374362ee136fe2c9d7f
                   CVE-2016-9063 -- Detect integer overflow; commit
                     d4f735b88d9932bd5039df2335eefdd0723dbe20
                     (Fixed version of existing downstream patches!)

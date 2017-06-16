@@ -2287,6 +2287,71 @@ START_TEST(test_byte_info_at_cdata)
 }
 END_TEST
 
+/* Regression test that an invalid tag in an external parameter
+ * reference in an external DTD is correctly faulted.
+ *
+ * Only a few specific tags are legal in DTDs ignoring comments and
+ * processing instructions, all of which begin with an exclamation
+ * mark.  "<el/>" is not one of them, so the parser should raise an
+ * error on encountering it.
+ */
+static int XMLCALL
+external_entity_param(XML_Parser parser,
+                      const XML_Char *context,
+                      const XML_Char *UNUSED_P(base),
+                      const XML_Char *systemId,
+                      const XML_Char *UNUSED_P(publicId))
+{
+    const char *text1 =
+        "<!ELEMENT doc EMPTY>\n"
+        "<!ENTITY % e1 SYSTEM '004-2.ent'>\n"
+        "<!ENTITY % e2 '%e1;'>\n"
+        "%e1;\n";
+    const char *text2 =
+        "<!ELEMENT el EMPTY>\n"
+        "<el/>\n";
+    XML_Parser ext_parser;
+
+    if (systemId == NULL)
+        return XML_STATUS_OK;
+
+    ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
+    if (ext_parser == NULL)
+        fail("Could not create external entity parser");
+
+    if (!strcmp(systemId, "004-1.ent")) {
+        if (_XML_Parse_SINGLE_BYTES(ext_parser, text1, strlen(text1),
+                                    XML_TRUE) != XML_STATUS_ERROR)
+            fail("Inner DTD with invalid tag not rejected");
+        if (XML_GetErrorCode(ext_parser) != XML_ERROR_EXTERNAL_ENTITY_HANDLING)
+            xml_failure(ext_parser);
+    }
+    else if (!strcmp(systemId, "004-2.ent")) {
+        if (_XML_Parse_SINGLE_BYTES(ext_parser, text2, strlen(text2),
+                                    XML_TRUE) != XML_STATUS_ERROR)
+            fail("Invalid tag in external param not rejected");
+        if (XML_GetErrorCode(ext_parser) != XML_ERROR_SYNTAX)
+            xml_failure(ext_parser);
+    } else {
+        fail("Unknown system ID");
+    }
+
+    return XML_STATUS_ERROR;
+}
+
+START_TEST(test_invalid_tag_in_dtd)
+{
+    const char *text =
+        "<!DOCTYPE doc SYSTEM '004-1.ent'>\n"
+        "<doc></doc>\n";
+
+    XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+    XML_SetExternalEntityRefHandler(parser, external_entity_param);
+    expect_failure(text, XML_ERROR_EXTERNAL_ENTITY_HANDLING,
+                   "Invalid tag IN DTD external param not rejected");
+}
+END_TEST
+
 
 /*
  * Namespaces tests.
@@ -3432,6 +3497,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_byte_info_at_end);
     tcase_add_test(tc_basic, test_byte_info_at_error);
     tcase_add_test(tc_basic, test_byte_info_at_cdata);
+    tcase_add_test(tc_basic, test_invalid_tag_in_dtd);
 
     suite_add_tcase(s, tc_namespace);
     tcase_add_checked_fixture(tc_namespace,
