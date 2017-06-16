@@ -6140,6 +6140,59 @@ START_TEST(test_attr_after_solidus)
 }
 END_TEST
 
+static void XMLCALL
+accumulate_entity_decl(void *userData,
+                       const XML_Char *entityName,
+                       int UNUSED_P(is_parameter_entity),
+                       const XML_Char *value,
+                       int value_length,
+                       const XML_Char *UNUSED_P(base),
+                       const XML_Char *UNUSED_P(systemId),
+                       const XML_Char *UNUSED_P(publicId),
+                       const XML_Char *UNUSED_P(notationName))
+{
+    CharData *storage = (CharData *)userData;
+
+    CharData_AppendXMLChars(storage, entityName, -1);
+    CharData_AppendXMLChars(storage, "=", 1);
+    CharData_AppendXMLChars(storage, value, value_length);
+    CharData_AppendXMLChars(storage, "\n", 1);
+}
+
+
+START_TEST(test_utf16_pe)
+{
+    /* <!DOCTYPE doc [
+     * <!ENTITY % {KHO KHWAI}{CHO CHAN} '<!ELEMENT doc (#PCDATA)>'>
+     * %{KHO KHWAI}{CHO CHAN};
+     * ]>
+     * <doc></doc>
+     *
+     * where {KHO KHWAI} = U+0E04 = 0xe0 0xb8 0x84 in UTF-8
+     * and   {CHO CHAN}  = U+0E08 = 0xe0 0xb8 0x88 in UTF-8
+     */
+    const char text[] =
+        "\0<\0!\0D\0O\0C\0T\0Y\0P\0E\0 \0d\0o\0c\0 \0[\0\n"
+        "\0<\0!\0E\0N\0T\0I\0T\0Y\0 \0%\0 \x0e\x04\x0e\x08\0 "
+        "\0'\0<\0!\0E\0L\0E\0M\0E\0N\0T\0 "
+        "\0d\0o\0c\0 \0(\0#\0P\0C\0D\0A\0T\0A\0)\0>\0'\0>\0\n"
+        "\0%\x0e\x04\x0e\x08\0;\0\n"
+        "\0]\0>\0\n"
+        "\0<\0d\0o\0c\0>\0<\0/\0d\0o\0c\0>";
+    const XML_Char *expected =
+        "\xe0\xb8\x84\xe0\xb8\x88=<!ELEMENT doc (#PCDATA)>\n";
+    CharData storage;
+
+    CharData_Init(&storage);
+    XML_SetUserData(parser, &storage);
+    XML_SetEntityDeclHandler(parser, accumulate_entity_decl);
+    if (_XML_Parse_SINGLE_BYTES(parser, text, sizeof(text)-1,
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+    CharData_CheckXMLChars(&storage, expected);
+}
+END_TEST
+
 /*
  * Namespaces tests.
  */
@@ -11560,6 +11613,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_utf16_attribute);
     tcase_add_test(tc_basic, test_utf16_second_attr);
     tcase_add_test(tc_basic, test_attr_after_solidus);
+    tcase_add_test(tc_basic, test_utf16_pe);
 
     suite_add_tcase(s, tc_namespace);
     tcase_add_checked_fixture(tc_namespace,
