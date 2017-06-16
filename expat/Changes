@@ -7,7 +7,7 @@ Release 2.2.1 ??????????
                   CVE-2017-9233 -- External entity infinite loop DoS
                     Details: https://libexpat.github.io/doc/cve-2017-9233/
                     Commit c4bf96bb51dd2a1b0e185374362ee136fe2c9d7f
-                  CVE-2016-9063 -- Detect integer overflow; commit
+   [MOX-002]      CVE-2016-9063 -- Detect integer overflow; commit
                     d4f735b88d9932bd5039df2335eefdd0723dbe20
                     (Fixed version of existing downstream patches!)
    (SF.net) #539  Fix regression from fix to CVE-2016-0718 cutting off
@@ -18,27 +18,30 @@ Release 2.2.1 ??????????
              #25  More integer overflow detection (function poolGrow); commits
                     * 810b74e4703dcfdd8f404e3cb177d44684775143
                     * 44178553f3539ce69d34abee77a05e879a7982ac
-                  Detect overflow from len=INT_MAX call to XML_Parse; commits
+   [MOX-002]      Detect overflow from len=INT_MAX call to XML_Parse; commits
                     * 4be2cb5afcc018d996f34bbbce6374b7befad47f
                     * 7e5b71b748491b6e459e5c9a1d090820f94544d8
-             #30  Use high quality entropy for hash initialization:
+   [MOX-005] #30  Use high quality entropy for hash initialization:
                     * arc4random_buf on BSD, systems with libbsd
                       (when configured with --with-libbsd), CloudABI
                     * RtlGenRandom on Windows XP / Server 2003 and later
                     * getrandom on Linux 3.17+
                     In a way, that's still part of CVE-2016-5300.
                     https://github.com/libexpat/libexpat/pull/30/commits
-                  Prevent use of uninitialised variable; commit
-                    a4dc944f37b664a3ca7199c624a98ee37babdb4b
+   [MOX-005]      For the low quality entropy extraction fallback code,
+                    the parser instance address can no longer leak, commit
+                    04ad658bd3079dd15cb60fc67087900f0ff4b083
+   [MOX-003]      Prevent use of uninitialised variable; commit
+   [MOX-004]        a4dc944f37b664a3ca7199c624a98ee37babdb4b
                   Add missing parameter validation to public API functions
                     and dedicated error code XML_ERROR_INVALID_ARGUMENT:
-                    * NULL checks; commits
+   [MOX-006]        * NULL checks; commits
                       * d37f74b2b7149a3a95a680c4c4cd2a451a51d60a (merge/many)
                       * 9ed727064b675b7180c98cb3d4f75efba6966681
                       * 6a747c837c50114dfa413994e07c0ba477be4534
                     * Negative length (XML_Parse); commit
-                      70db8d2538a10f4c022655d6895e4c3e78692e7f
-                  Change hash algorithm to William Ahern's version of SipHash
+   [MOX-002]          70db8d2538a10f4c022655d6895e4c3e78692e7f
+   [MOX-001]      Change hash algorithm to William Ahern's version of SipHash
                     to go further with fixing CVE-2012-0876.
 
         Bug fixes:
