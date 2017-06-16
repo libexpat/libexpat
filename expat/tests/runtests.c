@@ -6193,6 +6193,20 @@ START_TEST(test_utf16_pe)
 }
 END_TEST
 
+/* Test that duff attribute description keywords are rejected */
+START_TEST(test_bad_attr_desc_keyword)
+{
+    const char *text =
+        "<!DOCTYPE doc [\n"
+        "  <!ATTLIST doc attr CDATA #!IMPLIED>\n"
+        "]>\n"
+        "<doc />";
+
+    expect_failure(text, XML_ERROR_INVALID_TOKEN,
+                   "Bad keyword !IMPLIED not faulted");
+}
+END_TEST
+
 /*
  * Namespaces tests.
  */
@@ -11614,6 +11628,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_utf16_second_attr);
     tcase_add_test(tc_basic, test_attr_after_solidus);
     tcase_add_test(tc_basic, test_utf16_pe);
+    tcase_add_test(tc_basic, test_bad_attr_desc_keyword);
 
     suite_add_tcase(s, tc_namespace);
     tcase_add_checked_fixture(tc_namespace,
