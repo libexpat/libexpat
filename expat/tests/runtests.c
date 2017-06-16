@@ -6295,7 +6295,7 @@ START_TEST(test_bad_doctype_star)
         "<1*>&foo;</1*>";
 
     expect_failure(text, XML_ERROR_INVALID_TOKEN,
-                   "'+' in document name not faulted");
+                   "'*' in document name not faulted");
 }
 END_TEST
 
@@ -6306,7 +6306,7 @@ START_TEST(test_bad_doctype_query)
         "<1?>&foo;</1?>";
 
     expect_failure(text, XML_ERROR_INVALID_TOKEN,
-                   "'+' in document name not faulted");
+                   "'?' in document name not faulted");
 }
 END_TEST
 
