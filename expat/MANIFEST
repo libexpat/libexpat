@@ -46,6 +46,7 @@ lib/latin1tab.h
 lib/libexpat.def
 lib/libexpatw.def
 lib/nametab.h
+lib/siphash.h
 lib/utf8tab.h
 lib/winconfig.h
 lib/xmlparse.c

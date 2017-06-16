@@ -135,7 +135,7 @@ $(LIBRARY): $(LIB_OBJS)
 expat.pc: $(top_builddir)/config.status
 	cd $(top_builddir) && $(SHELL) ./config.status $@
 
-lib/xmlparse.lo: lib/xmlparse.c lib/expat.h lib/xmlrole.h lib/xmltok.h \
+lib/xmlparse.lo: lib/xmlparse.c lib/expat.h lib/siphash.h lib/xmlrole.h lib/xmltok.h \
 	$(top_builddir)/expat_config.h lib/expat_external.h lib/internal.h
 
 lib/xmlrole.lo: lib/xmlrole.c lib/ascii.h lib/xmlrole.h \
@@ -166,7 +166,7 @@ examples/outline: examples/outline.@OBJEXT@ $(LIBRARY)
 tests/chardata.@OBJEXT@: tests/chardata.c tests/chardata.h
 tests/minicheck.@OBJEXT@: tests/minicheck.c tests/minicheck.h
 tests/memcheck.@OBJEXT@: tests/memcheck.c tests/memcheck.h
-tests/runtests.@OBJEXT@: tests/runtests.c tests/chardata.h tests/memcheck.h
+tests/runtests.@OBJEXT@: tests/runtests.c tests/chardata.h tests/memcheck.h lib/siphash.h
 tests/runtests@EXEEXT@: tests/runtests.@OBJEXT@ tests/chardata.@OBJEXT@ tests/minicheck.@OBJEXT@ tests/memcheck.@OBJEXT@ $(LIBRARY)
 	$(LINK_EXE) tests/runtests.@OBJEXT@ tests/chardata.@OBJEXT@ tests/minicheck.@OBJEXT@ tests/memcheck.@OBJEXT@ $(LIBRARY)
 tests/runtestspp.@OBJEXT@: tests/runtestspp.cpp tests/runtests.c tests/chardata.h tests/memcheck.h

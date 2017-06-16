@@ -31,6 +31,7 @@
 
 #include "ascii.h"
 #include "expat.h"
+#include "siphash.h"
 
 #ifdef XML_UNICODE
 #define XML_ENCODE_MAX XML_UTF16_ENCODE_MAX
@@ -109,17 +110,11 @@ typedef struct {
   const XML_Memory_Handling_Suite *mem;
 } HASH_TABLE;
 
-/* Basic character hash algorithm, taken from Python's string hash:
-   h = h * 1000003 ^ character, the constant being a prime number.
+static size_t
+keylen(KEY s);
 
-*/
-#ifdef XML_UNICODE
-#define CHAR_HASH(h, c) \
-  (((h) * 0xF4243) ^ (unsigned short)(c))
-#else
-#define CHAR_HASH(h, c) \
-  (((h) * 0xF4243) ^ (unsigned char)(c))
-#endif
+static void
+copy_salt_to_sipkey(XML_Parser parser, struct sipkey * key);
 
 /* For probing (after a collision) we need a step size relative prime
    to the hash table size, which is a power of 2. We use double-hashing,
@@ -3243,7 +3238,13 @@ storeAtts(XML_Parser parser, const ENCODING *enc,
       if (s[-1] == 2) {  /* prefixed */
         ATTRIBUTE_ID *id;
         const BINDING *b;
-        unsigned long uriHash = get_hash_secret_salt(parser);
+        unsigned long uriHash;
+        struct siphash sip_state;
+        struct sipkey sip_key;
+
+        copy_salt_to_sipkey(parser, &sip_key);
+        sip24_init(&sip_state, &sip_key);
+
         ((XML_Char *)s)[-1] = 0;  /* clear flag */
         id = (ATTRIBUTE_ID *)lookup(parser, &dtd->attributeIds, s, 0);
         if (!id || !id->prefix)
@@ -3252,21 +3253,25 @@ storeAtts(XML_Parser parser, const ENCODING *enc,
         if (!b)
           return XML_ERROR_UNBOUND_PREFIX;
 
-        /* as we expand the name we also calculate its hash value */
         for (j = 0; j < b->uriLen; j++) {
           const XML_Char c = b->uri[j];
           if (!poolAppendChar(&tempPool, c))
             return XML_ERROR_NO_MEMORY;
-          uriHash = CHAR_HASH(uriHash, c);
         }
+
+        sip24_update(&sip_state, b->uri, b->uriLen * sizeof(XML_Char));
+
         while (*s++ != XML_T(ASCII_COLON))
           ;
+
+        sip24_update(&sip_state, s, keylen(s) * sizeof(XML_Char));
+
         do {  /* copies null terminator */
-          const XML_Char c = *s;
           if (!poolAppendChar(&tempPool, *s))
             return XML_ERROR_NO_MEMORY;
-          uriHash = CHAR_HASH(uriHash, c);
         } while (*s++);
+
+        uriHash = (unsigned long)sip24_final(&sip_state);
 
         { /* Check hash table for duplicate of expanded name (uriName).
              Derived from code in lookup(parser, HASH_TABLE *table, ...).
@@ -6308,13 +6313,32 @@ keyeq(KEY s1, KEY s2)
   return XML_FALSE;
 }
 
+static size_t
+keylen(KEY s)
+{
+  size_t len = 0;
+  for (; *s; s++, len++);
+  return len;
+}
+
+static void
+copy_salt_to_sipkey(XML_Parser parser, struct sipkey * key)
+{
+  key->k[0] = 0;
+  key->k[1] = get_hash_secret_salt(parser);
+}
+
 static unsigned long FASTCALL
 hash(XML_Parser parser, KEY s)
 {
-  unsigned long h = get_hash_secret_salt(parser);
-  while (*s)
-    h = CHAR_HASH(h, *s++);
-  return h;
+  struct siphash state;
+  struct sipkey key;
+  (void)sip_tobin;
+  (void)sip24_valid;
+  copy_salt_to_sipkey(parser, &key);
+  sip24_init(&state, &key);
+  sip24_update(&state, s, keylen(s) * sizeof(XML_Char));
+  return (unsigned long)sip24_final(&state);
 }
 
 static NAMED *
