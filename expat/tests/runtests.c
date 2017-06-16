@@ -7000,6 +7000,34 @@ START_TEST(test_ns_utf16_element_leafname)
 }
 END_TEST
 
+START_TEST(test_ns_utf16_doctype)
+{
+    const char text[] =
+        /* <!DOCTYPE foo:{KHO KHWAI} [ <!ENTITY bar 'baz'> ]>\n
+         * where {KHO KHWAI} = U+0E04 = 0xe0 0xb8 0x84 in UTF-8
+         */
+        "\0<\0!\0D\0O\0C\0T\0Y\0P\0E\0 \0f\0o\0o\0:\x0e\x04\0 "
+        "\0[\0 \0<\0!\0E\0N\0T\0I\0T\0Y\0 \0b\0a\0r\0 \0'\0b\0a\0z\0'\0>\0 "
+        "\0]\0>\0\n"
+        /* <foo:{KHO KHWAI} xmlns:foo='URI'>&bar;</foo:{KHO KHWAI}> */
+        "\0<\0f\0o\0o\0:\x0e\x04\0 "
+        "\0x\0m\0l\0n\0s\0:\0f\0o\0o\0=\0'\0U\0R\0I\0'\0>"
+        "\0&\0b\0a\0r\0;"
+        "\0<\0/\0f\0o\0o\0:\x0e\x04\0>";
+    const XML_Char *expected = "URI \xe0\xb8\x84";
+    CharData storage;
+
+    CharData_Init(&storage);
+    XML_SetUserData(parser, &storage);
+    XML_SetStartElementHandler(parser, start_element_event_handler);
+    XML_SetUnknownEncodingHandler(parser, MiscEncodingHandler, NULL);
+    if (_XML_Parse_SINGLE_BYTES(parser, text, sizeof(text)-1,
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+    CharData_CheckXMLChars(&storage, expected);
+}
+END_TEST
+
 /* Control variable; the number of times duff_allocator() will successfully allocate */
 #define ALLOC_ALWAYS_SUCCEED (-1)
 #define REALLOC_ALWAYS_SUCCEED (-1)
@@ -11727,6 +11755,7 @@ make_suite(void)
     tcase_add_test(tc_namespace, test_ns_bad_element_leafname);
     tcase_add_test(tc_namespace, test_ns_utf16_leafname);
     tcase_add_test(tc_namespace, test_ns_utf16_element_leafname);
+    tcase_add_test(tc_namespace, test_ns_utf16_doctype);
 
     suite_add_tcase(s, tc_misc);
     tcase_add_checked_fixture(tc_misc, NULL, basic_teardown);
