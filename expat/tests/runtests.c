@@ -7028,6 +7028,17 @@ START_TEST(test_ns_utf16_doctype)
 }
 END_TEST
 
+START_TEST(test_ns_invalid_doctype)
+{
+    const char *text =
+        "<!DOCTYPE foo:!bad [ <!ENTITY bar 'baz' ]>\n"
+        "<foo:!bad>&bar;</foo:!bad>";
+
+    expect_failure(text, XML_ERROR_INVALID_TOKEN,
+                   "Invalid character in document local name not faulted");
+}
+END_TEST
+
 /* Control variable; the number of times duff_allocator() will successfully allocate */
 #define ALLOC_ALWAYS_SUCCEED (-1)
 #define REALLOC_ALWAYS_SUCCEED (-1)
@@ -11756,6 +11767,7 @@ make_suite(void)
     tcase_add_test(tc_namespace, test_ns_utf16_leafname);
     tcase_add_test(tc_namespace, test_ns_utf16_element_leafname);
     tcase_add_test(tc_namespace, test_ns_utf16_doctype);
+    tcase_add_test(tc_namespace, test_ns_invalid_doctype);
 
     suite_add_tcase(s, tc_misc);
     tcase_add_checked_fixture(tc_misc, NULL, basic_teardown);
