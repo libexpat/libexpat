@@ -6277,6 +6277,17 @@ START_TEST(test_bad_doctype_utf16)
 }
 END_TEST
 
+START_TEST(test_bad_doctype_plus)
+{
+    const char *text =
+        "<!DOCTYPE 1+ [ <!ENTITY foo 'bar'> ]>\n"
+        "<1+>&foo;</1+>";
+
+    expect_failure(text, XML_ERROR_INVALID_TOKEN,
+                   "'+' in document name not faulted");
+}
+END_TEST
+
 /*
  * Namespaces tests.
  */
@@ -11744,6 +11755,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_bad_attr_desc_keyword_utf16);
     tcase_add_test(tc_basic, test_bad_doctype);
     tcase_add_test(tc_basic, test_bad_doctype_utf16);
+    tcase_add_test(tc_basic, test_bad_doctype_plus);
 
     suite_add_tcase(s, tc_namespace);
     tcase_add_checked_fixture(tc_namespace,
