@@ -1193,6 +1193,14 @@ END_TEST
  */
 
 static void XMLCALL
+start_element_event_handler(void *userData,
+                            const XML_Char *name,
+                            const XML_Char **UNUSED_P(atts))
+{
+    CharData_AppendXMLChars((CharData *)userData, name, -1);
+}
+
+static void XMLCALL
 end_element_event_handler(void *userData, const XML_Char *name)
 {
     CharData *storage = (CharData *) userData;
@@ -6936,14 +6944,6 @@ START_TEST(test_ns_utf16_leafname)
     CharData_CheckXMLChars(&storage, expected);
 }
 END_TEST
-
-static void XMLCALL
-start_element_event_handler(void *userData,
-                            const XML_Char *name,
-                            const XML_Char **UNUSED_P(atts))
-{
-    CharData_AppendXMLChars((CharData *)userData, name, -1);
-}
 
 START_TEST(test_ns_utf16_element_leafname)
 {
