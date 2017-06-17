@@ -126,7 +126,7 @@
   <ItemGroup>
     <ClCompile Include="chardata.c" />
     <ClCompile Include="minicheck.c" />
-    <ClCompile Include="memcheck.h" />
+    <ClCompile Include="memcheck.c" />
     <ClCompile Include="runtests.c" />
   </ItemGroup>
   <ItemGroup>

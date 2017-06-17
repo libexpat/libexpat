@@ -9,7 +9,7 @@ AppName=Expat
 AppId=expat
 AppVersion=2.2.1
 AppVerName=Expat 2.2.1
-AppCopyright=Copyright © 1998-2017 Thai Open Source Software Center, Clark Cooper, and the Expat maintainers
+AppCopyright=Copyright ï¿½ 1998-2017 Thai Open Source Software Center, Clark Cooper, and the Expat maintainers
 AppPublisher=The Expat Developers
 AppPublisherURL=http://www.libexpat.org/
 AppSupportURL=http://www.libexpat.org/
@@ -54,13 +54,11 @@ Flags: ignoreversion; Source: examples\*.vcxproj.filters;   DestDir: "{app}\Sour
 Flags: ignoreversion; Source: tests\*.c;                    DestDir: "{app}\Source\tests"
 Flags: ignoreversion; Source: tests\*.cpp;                  DestDir: "{app}\Source\tests"
 Flags: ignoreversion; Source: tests\*.h;                    DestDir: "{app}\Source\tests"
-Flags: ignoreversion; Source: tests\*.ds*;                  DestDir: "{app}\Source\tests"
 Flags: ignoreversion; Source: tests\*.sln;                  DestDir: "{app}\Source\tests"
 Flags: ignoreversion; Source: tests\*.vcxproj;              DestDir: "{app}\Source\tests"
 Flags: ignoreversion; Source: tests\*.vcxproj.filters;      DestDir: "{app}\Source\tests"
 Flags: ignoreversion; Source: tests\README.txt;             DestDir: "{app}\Source\tests"
 Flags: ignoreversion; Source: tests\benchmark\*.c;          DestDir: "{app}\Source\tests\benchmark"
-Flags: ignoreversion; Source: tests\benchmark\*.ds*;        DestDir: "{app}\Source\tests\benchmark"
 Flags: ignoreversion; Source: tests\benchmark\*.sln;        DestDir: "{app}\Source\tests\benchmark"
 Flags: ignoreversion; Source: tests\benchmark\*.vcxproj;    DestDir: "{app}\Source\tests\benchmark"
 Flags: ignoreversion; Source: tests\benchmark\README.txt;   DestDir: "{app}\Source\tests\benchmark"
