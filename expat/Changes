@@ -41,7 +41,7 @@ Release 2.2.1 Sat June 17 2017
                       * 6a747c837c50114dfa413994e07c0ba477be4534
                     * Negative length (XML_Parse); commit
    [MOX-002]          70db8d2538a10f4c022655d6895e4c3e78692e7f
-   [MOX-001]      Change hash algorithm to William Ahern's version of SipHash
+   [MOX-001] #35  Change hash algorithm to William Ahern's version of SipHash
                     to go further with fixing CVE-2012-0876.
 
         Bug fixes:
