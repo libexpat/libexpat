@@ -130,7 +130,7 @@ AC_LINK_IFELSE([AC_LANG_SOURCE([
 
 
 AC_MSG_CHECKING([for getrandom (Linux 3.17+, glibc 2.25+)])
-AC_COMPILE_IFELSE([AC_LANG_SOURCE([
+AC_LINK_IFELSE([AC_LANG_SOURCE([
   #include <stdlib.h>  /* for NULL */
   #include <sys/random.h>
   int main() {
