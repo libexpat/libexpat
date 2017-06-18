@@ -220,8 +220,8 @@ AS_HELP_STRING([--disable-xml-context],
     [Do not retain context around the current parse point]),
   [enable_xml_context=${enableval}])
 AS_IF([test "x${enable_xml_context}" != "xno"], [
-  AS_IF([test "x${enable_xml_context}" == "xyes" \
-      -o "x${enable_xml_context}" == "x"], [
+  AS_IF([test "x${enable_xml_context}" = "xyes" \
+      -o "x${enable_xml_context}" = "x"], [
     enable_xml_context=1024
   ])
   AC_DEFINE_UNQUOTED([XML_CONTEXT_BYTES], [${enable_xml_context}],
