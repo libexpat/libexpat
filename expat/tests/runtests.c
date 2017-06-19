@@ -6584,9 +6584,10 @@ END_TEST
 START_TEST(test_entity_in_utf16_be_attr)
 {
     const char text[] =
-        /* <e a='&#228;'></e> */
-        "\0<\0e\0 \0a\0=\0'\0&\0#\0\x32\0\x32\0\x38\0;\0'\0>\0<\0/\0e\0>";
-    const XML_Char *expected = "\xc3\xa4";
+        /* <e a='&#228; &#x00E4;'></e> */
+        "\0<\0e\0 \0a\0=\0'\0&\0#\0\x32\0\x32\0\x38\0;\0 "
+        "\0&\0#\0x\0\x30\0\x30\0E\0\x34\0;\0'\0>\0<\0/\0e\0>";
+    const XML_Char *expected = "\xc3\xa4 \xc3\xa4";
     CharData storage;
 
     CharData_Init(&storage);
