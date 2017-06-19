@@ -6373,6 +6373,28 @@ START_TEST(test_bad_doctype_query)
 }
 END_TEST
 
+START_TEST(test_unknown_encoding_bad_ignore)
+{
+    const char *text =
+        "<?xml version='1.0' encoding='prefix-conv'?>"
+        "<!DOCTYPE doc SYSTEM 'foo'>"
+        "<doc><e>&entity;</e></doc>";
+    ExtFaults fault = {
+        "<![IGNORE[<!ELEMENT \xffG (#PCDATA)*>]]>",
+        "Invalid character not faulted",
+        "prefix-conv",
+        XML_ERROR_INVALID_TOKEN
+    };
+
+    XML_SetUnknownEncodingHandler(parser, MiscEncodingHandler, NULL);
+    XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+    XML_SetExternalEntityRefHandler(parser, external_entity_faulter);
+    XML_SetUserData(parser, &fault);
+    expect_failure(text, XML_ERROR_EXTERNAL_ENTITY_HANDLING,
+                   "Bad IGNORE section with unknown encoding not failed");
+}
+END_TEST
+
 /*
  * Namespaces tests.
  */
@@ -11844,6 +11866,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_bad_doctype_plus);
     tcase_add_test(tc_basic, test_bad_doctype_star);
     tcase_add_test(tc_basic, test_bad_doctype_query);
+    tcase_add_test(tc_basic, test_unknown_encoding_bad_ignore);
 
     suite_add_tcase(s, tc_namespace);
     tcase_add_checked_fixture(tc_namespace,
