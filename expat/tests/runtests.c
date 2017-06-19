@@ -4292,6 +4292,59 @@ START_TEST(test_ignore_section_utf16)
 }
 END_TEST
 
+static int XMLCALL
+external_entity_load_ignore_utf16_be(XML_Parser parser,
+                                     const XML_Char *context,
+                                     const XML_Char *UNUSED_P(base),
+                                     const XML_Char *UNUSED_P(systemId),
+                                     const XML_Char *UNUSED_P(publicId))
+{
+    const char text[] =
+        /* <![IGNORE[<!ELEMENT e (#PCDATA)*>]]> */
+        "\0<\0!\0[\0I\0G\0N\0O\0R\0E\0["
+        "\0<\0!\0E\0L\0E\0M\0E\0N\0T\0 \0e\0 "
+        "\0(\0#\0P\0C\0D\0A\0T\0A\0)\0*\0>\0]\0]\0>";
+    XML_Parser ext_parser;
+
+    ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
+    if (ext_parser == NULL)
+        fail("Could not create external entity parser");
+    if (_XML_Parse_SINGLE_BYTES(ext_parser, text, sizeof(text)-1,
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+    return XML_STATUS_OK;
+}
+
+START_TEST(test_ignore_section_utf16_be)
+{
+    const char text[] =
+        /* <!DOCTYPE d SYSTEM 's'> */
+        "\0<\0!\0D\0O\0C\0T\0Y\0P\0E\0 \0d\0 "
+        "\0S\0Y\0S\0T\0E\0M\0 \0'\0s\0'\0>\0\n"
+        /* <d><e>&en;</e></d> */
+        "\0<\0d\0>\0<\0e\0>\0&\0e\0n\0;\0<\0/\0e\0>\0<\0/\0d\0>";
+    const XML_Char *expected =
+        "<![IGNORE[<!ELEMENT e (#PCDATA)*>]]>\n&en;";
+    CharData storage;
+
+    CharData_Init(&storage);
+    XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+    XML_SetUserData(parser, &storage);
+    XML_SetExternalEntityRefHandler(parser,
+                                    external_entity_load_ignore_utf16_be);
+    XML_SetDefaultHandler(parser, accumulate_characters);
+    XML_SetStartDoctypeDeclHandler(parser, dummy_start_doctype_handler);
+    XML_SetEndDoctypeDeclHandler(parser, dummy_end_doctype_handler);
+    XML_SetElementDeclHandler(parser, dummy_element_decl_handler);
+    XML_SetStartElementHandler(parser, dummy_start_element);
+    XML_SetEndElementHandler(parser, dummy_end_element);
+    if (_XML_Parse_SINGLE_BYTES(parser, text, sizeof(text)-1,
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+    CharData_CheckXMLChars(&storage, expected);
+}
+END_TEST
+
 /* Test mis-formatted conditional exclusion */
 START_TEST(test_bad_ignore_section)
 {
@@ -11907,6 +11960,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_not_predefined_entities);
     tcase_add_test(tc_basic, test_ignore_section);
     tcase_add_test(tc_basic, test_ignore_section_utf16);
+    tcase_add_test(tc_basic, test_ignore_section_utf16_be);
     tcase_add_test(tc_basic, test_bad_ignore_section);
     tcase_add_test(tc_basic, test_external_entity_values);
     tcase_add_test(tc_basic, test_ext_entity_not_standalone);
