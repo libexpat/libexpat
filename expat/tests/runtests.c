@@ -6453,6 +6453,24 @@ START_TEST(test_unknown_encoding_bad_ignore)
 }
 END_TEST
 
+START_TEST(test_entity_in_utf16_be_attr)
+{
+    const char text[] =
+        /* <e a='&#228;'></e> */
+        "\0<\0e\0 \0a\0=\0'\0&\0#\0\x32\0\x32\0\x38\0;\0'\0>\0<\0/\0e\0>";
+    const XML_Char *expected = "\xc3\xa4";
+    CharData storage;
+
+    CharData_Init(&storage);
+    XML_SetUserData(parser, &storage);
+    XML_SetStartElementHandler(parser, accumulate_attribute);
+    if (_XML_Parse_SINGLE_BYTES(parser, text, sizeof(text)-1,
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+    CharData_CheckXMLChars(&storage, expected);
+}
+END_TEST
+
 /*
  * Namespaces tests.
  */
@@ -11928,6 +11946,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_bad_doctype_star);
     tcase_add_test(tc_basic, test_bad_doctype_query);
     tcase_add_test(tc_basic, test_unknown_encoding_bad_ignore);
+    tcase_add_test(tc_basic, test_entity_in_utf16_be_attr);
 
     suite_add_tcase(s, tc_namespace);
     tcase_add_checked_fixture(tc_namespace,
