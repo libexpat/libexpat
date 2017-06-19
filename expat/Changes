@@ -6,6 +6,7 @@ Release 2.??? ????????????????
         Other changes:
              #49  Fix "==" Bashism in configure script
              #50  Fix too eager getrandom detection for Debian GNU/kFreeBSD
+             #52    and macOS
              #51  Address lack of stdint.h in Visual Studio 2003 to 2008
 
         Special thanks to:
