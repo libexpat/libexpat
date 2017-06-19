@@ -5495,6 +5495,29 @@ START_TEST(test_utf16_pi)
 }
 END_TEST
 
+START_TEST(test_utf16_be_pi)
+{
+    const char text[] =
+        /* <?{KHO KHWAI}{CHO CHAN}?>
+         * where {KHO KHWAI} = U+0E04
+         * and   {CHO CHAN}  = U+0E08
+         */
+        "\0<\0?\x0e\x04\x0e\x08\0?\0>"
+        /* <q/> */
+        "\0<\0q\0/\0>";
+    const XML_Char *expected = "\xe0\xb8\x84\xe0\xb8\x88: \n";
+    CharData storage;
+
+    CharData_Init(&storage);
+    XML_SetProcessingInstructionHandler(parser, accumulate_pi_characters);
+    XML_SetUserData(parser, &storage);
+    if (_XML_Parse_SINGLE_BYTES(parser, text, sizeof(text)-1,
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+    CharData_CheckXMLChars(&storage, expected);
+}
+END_TEST
+
 /* Test that the unknown encoding handler with map entries that expect
  * conversion but no conversion function is faulted
  */
@@ -11866,6 +11889,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_pi_xnl);
     tcase_add_test(tc_basic, test_pi_xmm);
     tcase_add_test(tc_basic, test_utf16_pi);
+    tcase_add_test(tc_basic, test_utf16_be_pi);
     tcase_add_test(tc_basic, test_missing_encoding_conversion_fn);
     tcase_add_test(tc_basic, test_failing_encoding_conversion_fn);
     tcase_add_test(tc_basic, test_unknown_encoding_success);
