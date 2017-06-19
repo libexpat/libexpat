@@ -6567,6 +6567,44 @@ START_TEST(test_entity_in_utf16_le_attr)
 }
 END_TEST
 
+START_TEST(test_entity_public_utf16_be)
+{
+    const char text[] =
+        /* <!DOCTYPE d [ */
+        "\0<\0!\0D\0O\0C\0T\0Y\0P\0E\0 \0d\0 \0[\0\n"
+        /* <!ENTITY % e PUBLIC 'foo' 'bar.ent'> */
+        "\0<\0!\0E\0N\0T\0I\0T\0Y\0 \0%\0 \0e\0 \0P\0U\0B\0L\0I\0C\0 "
+        "\0'\0f\0o\0o\0'\0 \0'\0b\0a\0r\0.\0e\0n\0t\0'\0>\0\n"
+        /* %e; */
+        "\0%\0e\0;\0\n"
+        /* ]> */
+        "\0]\0>\0\n"
+        /* <d>&j;</d> */
+        "\0<\0d\0>\0&\0j\0;\0<\0/\0d\0>";
+    ExtTest2 test_data = {
+        /* <!ENTITY j 'baz'> */
+        "\0<\0!\0E\0N\0T\0I\0T\0Y\0 \0j\0 \0'\0b\0a\0z\0'\0>",
+        34,
+        NULL,
+        NULL,
+        EE_PARSE_NONE
+    };
+    const XML_Char *expected = "baz";
+    CharData storage;
+
+    CharData_Init(&storage);
+    test_data.storage = &storage;
+    XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+    XML_SetExternalEntityRefHandler(parser, external_entity_loader2);
+    XML_SetUserData(parser, &test_data);
+    XML_SetCharacterDataHandler(parser, ext2_accumulate_characters);
+    if (_XML_Parse_SINGLE_BYTES(parser, text, sizeof(text)-1,
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+    CharData_CheckXMLChars(&storage, expected);
+}
+END_TEST
+
 /*
  * Namespaces tests.
  */
@@ -12046,6 +12084,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_unknown_encoding_bad_ignore);
     tcase_add_test(tc_basic, test_entity_in_utf16_be_attr);
     tcase_add_test(tc_basic, test_entity_in_utf16_le_attr);
+    tcase_add_test(tc_basic, test_entity_public_utf16_be);
 
     suite_add_tcase(s, tc_namespace);
     tcase_add_checked_fixture(tc_namespace,
