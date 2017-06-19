@@ -5626,6 +5626,26 @@ START_TEST(test_utf16_be_comment)
 }
 END_TEST
 
+START_TEST(test_utf16_le_comment)
+{
+    const char text[] =
+        /* <!-- Comment B --> */
+        "<\0!\0-\0-\0 \0C\0o\0m\0m\0e\0n\0t\0 \0B\0 \0-\0-\0>\0\n\0"
+        /* <doc/> */
+        "<\0d\0o\0c\0/\0>\0";
+    const XML_Char *expected = " Comment B ";
+    CharData storage;
+
+    CharData_Init(&storage);
+    XML_SetCommentHandler(parser, accumulate_comment);
+    XML_SetUserData(parser, &storage);
+    if (_XML_Parse_SINGLE_BYTES(parser, text, sizeof(text)-1,
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+    CharData_CheckXMLChars(&storage, expected);
+}
+END_TEST
+
 /* Test that the unknown encoding handler with map entries that expect
  * conversion but no conversion function is faulted
  */
@@ -12113,6 +12133,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_utf16_pi);
     tcase_add_test(tc_basic, test_utf16_be_pi);
     tcase_add_test(tc_basic, test_utf16_be_comment);
+    tcase_add_test(tc_basic, test_utf16_le_comment);
     tcase_add_test(tc_basic, test_missing_encoding_conversion_fn);
     tcase_add_test(tc_basic, test_failing_encoding_conversion_fn);
     tcase_add_test(tc_basic, test_unknown_encoding_success);
