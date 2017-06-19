@@ -4145,6 +4145,27 @@ START_TEST(test_invalid_tag_in_dtd)
 }
 END_TEST
 
+/* Test entities not quite the predefined ones are not mis-recognised */
+START_TEST(test_not_predefined_entities)
+{
+    const char *text[] = {
+        "<doc>&pt;</doc>",
+        "<doc>&amo;</doc>",
+        "<doc>&quid;</doc>",
+        "<doc>&apod;</doc>",
+        NULL
+    };
+    int i = 0;
+
+    while (text[i] != NULL) {
+        expect_failure(text[i], XML_ERROR_UNDEFINED_ENTITY,
+                       "Undefined entity not rejected");
+        XML_ParserReset(parser, NULL);
+        i++;
+    }
+}
+END_TEST
+
 /* Test conditional inclusion (IGNORE) */
 static int XMLCALL
 external_entity_load_ignore(XML_Parser parser,
@@ -11798,6 +11819,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_byte_info_at_cdata);
     tcase_add_test(tc_basic, test_predefined_entities);
     tcase_add_test(tc_basic, test_invalid_tag_in_dtd);
+    tcase_add_test(tc_basic, test_not_predefined_entities);
     tcase_add_test(tc_basic, test_ignore_section);
     tcase_add_test(tc_basic, test_ignore_section_utf16);
     tcase_add_test(tc_basic, test_bad_ignore_section);
