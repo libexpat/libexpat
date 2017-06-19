@@ -5340,6 +5340,20 @@ START_TEST(test_invalid_character_entity_3)
 }
 END_TEST
 
+START_TEST(test_invalid_character_entity_4)
+{
+    const char *text =
+        "<!DOCTYPE doc [\n"
+        "  <!ENTITY entity '&#1114112;'>\n" /* = &#x110000 */
+        "]>\n"
+        "<doc>&entity;</doc>";
+
+    expect_failure(text, XML_ERROR_BAD_CHAR_REF,
+                   "Out of range character reference not faulted");
+}
+END_TEST
+
+
 /* Test that processing instructions are picked up by a default handler */
 START_TEST(test_pi_handled_in_default)
 {
@@ -11823,6 +11837,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_invalid_character_entity);
     tcase_add_test(tc_basic, test_invalid_character_entity_2);
     tcase_add_test(tc_basic, test_invalid_character_entity_3);
+    tcase_add_test(tc_basic, test_invalid_character_entity_4);
     tcase_add_test(tc_basic, test_pi_handled_in_default);
     tcase_add_test(tc_basic, test_comment_handled_in_default);
     tcase_add_test(tc_basic, test_pi_yml);
