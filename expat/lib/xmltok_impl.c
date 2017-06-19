@@ -1626,6 +1626,14 @@ PREFIX(predefinedEntityName)(const ENCODING *UNUSED_P(enc), const char *ptr,
   return 0;
 }
 
+/* This function does not appear to be called from anywhere within the
+ * library code.  It is used via the macro XmlSameName(), which is
+ * defined but never used.  Since it appears in the encoding function
+ * table, removing it is not a thing to be undertaken lightly.  For
+ * the moment, we simply exclude it from coverage tests.
+ *
+ * LCOV_EXCL_START
+ */
 static int PTRCALL
 PREFIX(sameName)(const ENCODING *enc, const char *ptr1, const char *ptr2)
 {
@@ -1689,6 +1697,7 @@ PREFIX(sameName)(const ENCODING *enc, const char *ptr1, const char *ptr2)
   }
   /* not reached */
 }
+/* LCOV_EXCL_STOP */
 
 static int PTRCALL
 PREFIX(nameMatchesAscii)(const ENCODING *UNUSED_P(enc), const char *ptr1,
