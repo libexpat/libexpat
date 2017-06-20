@@ -6779,6 +6779,18 @@ START_TEST(test_bad_entity_4)
 }
 END_TEST
 
+START_TEST(test_bad_notation)
+{
+    const char *text =
+        "<!DOCTYPE doc [\n"
+        "  <!NOTATION n SYSTEM>\n"
+        "]>\n"
+        "<doc/>";
+    expect_failure(text, XML_ERROR_SYNTAX,
+                   "Notation without System ID is not rejected");
+}
+END_TEST
+
 /*
  * Namespaces tests.
  */
@@ -12270,6 +12282,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_bad_entity_2);
     tcase_add_test(tc_basic, test_bad_entity_3);
     tcase_add_test(tc_basic, test_bad_entity_4);
+    tcase_add_test(tc_basic, test_bad_notation);
 
     suite_add_tcase(s, tc_namespace);
     tcase_add_checked_fixture(tc_namespace,
