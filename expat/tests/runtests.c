@@ -6706,6 +6706,14 @@ START_TEST(test_short_doctype)
 }
 END_TEST
 
+START_TEST(test_short_doctype_2)
+{
+    const char *text = "<!DOCTYPE doc PUBLIC></doc>";
+    expect_failure(text, XML_ERROR_SYNTAX,
+                   "DOCTYPE without Public ID not rejected");
+}
+END_TEST
+
 /*
  * Namespaces tests.
  */
@@ -12190,6 +12198,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_entity_public_utf16_be);
     tcase_add_test(tc_basic, test_entity_public_utf16_le);
     tcase_add_test(tc_basic, test_short_doctype);
+    tcase_add_test(tc_basic, test_short_doctype_2);
 
     suite_add_tcase(s, tc_namespace);
     tcase_add_checked_fixture(tc_namespace,
