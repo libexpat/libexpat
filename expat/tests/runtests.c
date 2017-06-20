@@ -6742,6 +6742,19 @@ START_TEST(test_bad_entity)
 }
 END_TEST
 
+/* Test unquoted value is faulted */
+START_TEST(test_bad_entity_2)
+{
+    const char *text =
+        "<!DOCTYPE doc [\n"
+        "  <!ENTITY % foo bar>\n"
+        "]>\n"
+        "<doc/>";
+    expect_failure(text, XML_ERROR_SYNTAX,
+                   "ENTITY without Public ID is not rejected");
+}
+END_TEST
+
 /*
  * Namespaces tests.
  */
@@ -12230,6 +12243,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_short_doctype_3);
     tcase_add_test(tc_basic, test_long_doctype);
     tcase_add_test(tc_basic, test_bad_entity);
+    tcase_add_test(tc_basic, test_bad_entity_2);
 
     suite_add_tcase(s, tc_namespace);
     tcase_add_checked_fixture(tc_namespace,
