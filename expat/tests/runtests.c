@@ -6695,6 +6695,17 @@ START_TEST(test_entity_public_utf16_le)
 }
 END_TEST
 
+/* Test that a doctype with neither an internal nor external subset is
+ * faulted
+ */
+START_TEST(test_short_doctype)
+{
+    const char *text = "<!DOCTYPE doc></doc>";
+    expect_failure(text, XML_ERROR_INVALID_TOKEN,
+                   "DOCTYPE without subset not rejected");
+}
+END_TEST
+
 /*
  * Namespaces tests.
  */
@@ -12178,6 +12189,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_entity_in_utf16_le_attr);
     tcase_add_test(tc_basic, test_entity_public_utf16_be);
     tcase_add_test(tc_basic, test_entity_public_utf16_le);
+    tcase_add_test(tc_basic, test_short_doctype);
 
     suite_add_tcase(s, tc_namespace);
     tcase_add_checked_fixture(tc_namespace,
