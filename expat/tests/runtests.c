@@ -6755,6 +6755,18 @@ START_TEST(test_bad_entity_2)
 }
 END_TEST
 
+START_TEST(test_bad_entity_3)
+{
+    const char *text =
+        "<!DOCTYPE doc [\n"
+        "  <!ENTITY % foo PUBLIC>\n"
+        "]>\n"
+        "<doc/>";
+    expect_failure(text, XML_ERROR_SYNTAX,
+                   "Parameter ENTITY without Public ID is not rejected");
+}
+END_TEST
+
 /*
  * Namespaces tests.
  */
@@ -12244,6 +12256,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_long_doctype);
     tcase_add_test(tc_basic, test_bad_entity);
     tcase_add_test(tc_basic, test_bad_entity_2);
+    tcase_add_test(tc_basic, test_bad_entity_3);
 
     suite_add_tcase(s, tc_namespace);
     tcase_add_checked_fixture(tc_namespace,
