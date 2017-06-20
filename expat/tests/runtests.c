@@ -6722,6 +6722,14 @@ START_TEST(test_short_doctype_3)
 }
 END_TEST
 
+START_TEST(test_long_doctype)
+{
+    const char *text = "<!DOCTYPE doc PUBLIC 'foo' 'bar' 'baz'></doc>";
+    expect_failure(text, XML_ERROR_SYNTAX,
+                   "DOCTYPE with extra ID not rejected");
+}
+END_TEST
+
 /*
  * Namespaces tests.
  */
@@ -12208,6 +12216,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_short_doctype);
     tcase_add_test(tc_basic, test_short_doctype_2);
     tcase_add_test(tc_basic, test_short_doctype_3);
+    tcase_add_test(tc_basic, test_long_doctype);
 
     suite_add_tcase(s, tc_namespace);
     tcase_add_checked_fixture(tc_namespace,
