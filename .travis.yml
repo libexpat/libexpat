@@ -4,26 +4,19 @@
 language: cpp
 dist: trusty
 
+env:
+  global:
+    - CFLAGS='-g -pipe'
+  matrix:
+    - MODE=address
+    - MODE=lib-coverage
+
 addons:
   apt:
     packages:
       - docbook2x
 
-install:
-  - wget -O xmlts.zip https://www.w3.org/XML/Test/xmlts20080827.zip
-
 script:
   - cd expat
-  - |
-    set -e
-    ret=0
-    for mode in \
-            address \
-            lib-coverage \
-            ; do
-        git clean -X -d -f
-        cp -v ../xmlts.zip tests/xmlts.zip
-        ./buildconf.sh
-        CFLAGS='-g -pipe' ./qa.sh ${mode} || ret=1
-    done
-    exit ${ret}
+  - ./buildconf.sh
+  - ./qa.sh ${MODE}
