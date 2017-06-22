@@ -2,7 +2,6 @@
  * siphash.h - SipHash-2-4 in a single header file
  * --------------------------------------------------------------------------
  * Derived by William Ahern from the reference implementation[1] published[2]
- * by Jean-Philippe Aumasson and Daniel J. Berstein. Licensed in kind.
  * by Jean-Philippe Aumasson and Daniel J. Berstein.
  * Minimal changes by Sebastian Pipping on top, details below.
  * Licensed under the CC0 Public Domain Dedication license.
