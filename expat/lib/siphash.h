@@ -3,13 +3,16 @@
  * --------------------------------------------------------------------------
  * Derived by William Ahern from the reference implementation[1] published[2]
  * by Jean-Philippe Aumasson and Daniel J. Berstein.
- * Minimal changes by Sebastian Pipping on top, details below.
+ * Minimal changes by Sebastian Pipping and Victor Stinner on top, see below.
  * Licensed under the CC0 Public Domain Dedication license.
  *
  * 1. https://www.131002.net/siphash/siphash24.c
  * 2. https://www.131002.net/siphash/
  * --------------------------------------------------------------------------
  * HISTORY:
+ *
+ * 2017-06-23  (Victor Stinner)
+ *   - Address Win64 compile warnings
  *
  * 2017-06-18  (Sebastian Pipping)
  *   - Address lack of stdint.h for Visual Studio 2003 to 2008
