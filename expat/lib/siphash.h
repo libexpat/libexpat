@@ -3,7 +3,7 @@
  * --------------------------------------------------------------------------
  * Derived by William Ahern from the reference implementation[1] published[2]
  * by Jean-Philippe Aumasson and Daniel J. Berstein.
- * Minimal changes by Sebastian Pipping on top, details below.
+ * Minimal changes by Sebastian Pipping and Victor Stinner on top, see below.
  * Licensed under the CC0 Public Domain Dedication license.
  *
  * 1. https://www.131002.net/siphash/siphash24.c
@@ -11,10 +11,10 @@
  * --------------------------------------------------------------------------
  * HISTORY:
  *
- * 2017-06-18  (Sebastian Pipping)
- *   - Address lack of stdint.h for Visual Studio 2003 to 2008
+ * 2017-06-23  (Victor Stinner)
+ *   - Address Win64 compile warnings
  *
- * 2017-06-10  (Sebastian Pipping)
+ * 2017-06-18  (Sebastian Pipping)
  *   - Clarify license note in the header
  *   - Address C89 issues:
  *     - Stop using inline keyword (and let compiler decide)
@@ -22,6 +22,7 @@
  *     - Replace _Bool by int
  *     - Turn macro siphash24 into a function
  *     - Address invalid conversion (void pointer) by explicit cast
+ *   - Address lack of stdint.h for Visual Studio 2003 to 2008
  *   - Always expose sip24_valid (for self-tests)
  *
  * 2012-11-04 - Born.  (William Ahern)
@@ -208,7 +209,7 @@ static struct siphash *sip24_update(struct siphash *H, const void *src, size_t l
 
 
 static uint64_t sip24_final(struct siphash *H) {
-	char left = H->p - H->buf;
+	char left = (char)(H->p - H->buf);
 	uint64_t b = (H->c + left) << 56;
 
 	switch (left) {
@@ -323,7 +324,7 @@ static int sip24_valid(void) {
 	sip_tokey(&k, "\000\001\002\003\004\005\006\007\010\011\012\013\014\015\016\017");
 
 	for (i = 0; i < sizeof in; ++i) {
-		in[i] = i;
+		in[i] = (unsigned char)i;
 
 		if (siphash24(in, i, &k) != SIP_U8TO64_LE(vectors[i]))
 			return 0;

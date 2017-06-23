@@ -8,11 +8,13 @@ Release 2.??? ????????????????
              #50  Fix too eager getrandom detection for Debian GNU/kFreeBSD
              #52    and macOS
              #51  Address lack of stdint.h in Visual Studio 2003 to 2008
+             #58  Address compile warnings
 
         Special thanks to:
             Cătălin Răceanu
             László Böszörményi
             S. P. Zeidler
+            Victor Stinner
 
 Release 2.2.1 Sat June 17 2017
         Security fixes:
