@@ -15,9 +15,6 @@
  *   - Address Win64 compile warnings
  *
  * 2017-06-18  (Sebastian Pipping)
- *   - Address lack of stdint.h for Visual Studio 2003 to 2008
- *
- * 2017-06-10  (Sebastian Pipping)
  *   - Clarify license note in the header
  *   - Address C89 issues:
  *     - Stop using inline keyword (and let compiler decide)
@@ -25,6 +22,7 @@
  *     - Replace _Bool by int
  *     - Turn macro siphash24 into a function
  *     - Address invalid conversion (void pointer) by explicit cast
+ *   - Address lack of stdint.h for Visual Studio 2003 to 2008
  *   - Always expose sip24_valid (for self-tests)
  *
  * 2012-11-04 - Born.  (William Ahern)
