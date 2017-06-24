@@ -64,8 +64,8 @@ _copy_to() {
 
 _copy_missing_mingw_libaries() {
     # These extra files are copied because
-    # * coverage GCC fflags make them needed
-    # * With WINEDLLPATH Wine look for .dll.so in these folders, not .dll
+    # * coverage GCC flags make them needed
+    # * With WINEDLLPATH Wine looks for .dll.so in these folders, not .dll
     local target="$1"
     local mingw_dll_dir="$(dirname "$(ls -1 /usr/lib*/gcc/i686-w64-mingw32/*/libgcc_s_sjlj-1.dll | head -n1)")"
     for dll in libgcc_s_sjlj-1.dll libstdc++-6.dll; do
