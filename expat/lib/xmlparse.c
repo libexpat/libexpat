@@ -740,6 +740,10 @@ writeRandomBytes_getrandom(void * target, size_t count) {
 
 typedef BOOLEAN (APIENTRY *RTLGENRANDOM_FUNC)(PVOID, ULONG);
 
+#ifndef LOAD_LIBRARY_SEARCH_SYSTEM32
+# define LOAD_LIBRARY_SEARCH_SYSTEM32  0x00000800
+#endif
+
 /* Obtain entropy on Windows XP / Windows Server 2003 and later.
  * Hint on RtlGenRandom and the following article from libsodioum.
  *
@@ -749,7 +753,7 @@ typedef BOOLEAN (APIENTRY *RTLGENRANDOM_FUNC)(PVOID, ULONG);
 static int
 writeRandomBytes_RtlGenRandom(void * target, size_t count) {
   int success = 0;  /* full count bytes written? */
-  const HMODULE advapi32 = LoadLibrary(TEXT("ADVAPI32.DLL"));
+  const HMODULE advapi32 = LoadLibraryEx(TEXT("ADVAPI32.DLL"), NULL, LOAD_LIBRARY_SEARCH_SYSTEM32);
 
   if (advapi32) {
     const RTLGENRANDOM_FUNC RtlGenRandom
