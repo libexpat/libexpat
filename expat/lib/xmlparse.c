@@ -749,7 +749,7 @@ typedef BOOLEAN (APIENTRY *RTLGENRANDOM_FUNC)(PVOID, ULONG);
 static int
 writeRandomBytes_RtlGenRandom(void * target, size_t count) {
   int success = 0;  /* full count bytes written? */
-  const HMODULE advapi32 = LoadLibrary("ADVAPI32.DLL");
+  const HMODULE advapi32 = LoadLibraryA("ADVAPI32.DLL");
 
   if (advapi32) {
     const RTLGENRANDOM_FUNC RtlGenRandom
