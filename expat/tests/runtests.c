@@ -489,9 +489,11 @@ START_TEST(test_utf8_auto_align)
         if (actualMovementInChars != cases[i].expectedMovementInChars) {
             size_t j = 0;
             success = false;
-            printf("[-] UTF-8 case %2lu: Expected movement by %2ld chars"
-                    ", actually moved by %2ld chars: \"",
-                    i + 1, cases[i].expectedMovementInChars, actualMovementInChars);
+            printf("[-] UTF-8 case %2u: Expected movement by %2d chars"
+                    ", actually moved by %2d chars: \"",
+                    (unsigned)(i + 1),
+                    (int)cases[i].expectedMovementInChars,
+                    (int)actualMovementInChars);
             for (; j < strlen(cases[i].input); j++) {
                 printf("\\x%02x", (unsigned char)cases[i].input[j]);
             }
