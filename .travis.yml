@@ -15,6 +15,7 @@ addons:
   apt:
     packages:
       - docbook2x
+      - dos2unix
 
 script:
   - cd expat
