@@ -28,8 +28,8 @@ if test ! -r "$hdr"; then
   exit 1
 fi
 
-MAJOR_VERSION="`sed -n -e '/MAJOR_VERSION/s/[^0-9]*//gp' $hdr`"
-MINOR_VERSION="`sed -n -e '/MINOR_VERSION/s/[^0-9]*//gp' $hdr`"
-MICRO_VERSION="`sed -n -e '/MICRO_VERSION/s/[^0-9]*//gp' $hdr`"
+MAJOR_VERSION=$(sed -n -e '/MAJOR_VERSION/s/[^0-9]*//gp' "$hdr")
+MINOR_VERSION=$(sed -n -e '/MINOR_VERSION/s/[^0-9]*//gp' "$hdr")
+MICRO_VERSION=$(sed -n -e '/MICRO_VERSION/s/[^0-9]*//gp' "$hdr")
 
 printf '%s.%s.%s' "$MAJOR_VERSION" "$MINOR_VERSION" "$MICRO_VERSION"
