@@ -3,6 +3,9 @@ NOTE: We are looking for help with a few things:
       If you can help, please get in touch.  Thanks!
 
 Release 2.??? ????????????????
+        Bug fixes:
+                  Fix non-NULL parser parameter validation in XML_Parse
+
         Other changes:
              #49  Fix "==" Bashism in configure script
              #50  Fix too eager getrandom detection for Debian GNU/kFreeBSD
@@ -21,6 +24,8 @@ Release 2.??? ????????????????
             Václav Slavík
             Victor Stinner
             Viktor Szakats
+                 and
+            Radically Open Security
 
 Release 2.2.1 Sat June 17 2017
         Security fixes:
