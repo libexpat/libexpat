@@ -10,9 +10,12 @@ Release 2.??? ????????????????
              #51  Address lack of stdint.h in Visual Studio 2003 to 2008
              #58  Address compile warnings
              #60  Fix Windows compilation for _UNICODE defined
+             #68  Fix "./buildconf.sh && ./configure" for some versions
+                    of Dash for /bin/sh
 
         Special thanks to:
             Cătălin Răceanu
+            Kerin Millar
             László Böszörményi
             S. P. Zeidler
             Václav Slavík
