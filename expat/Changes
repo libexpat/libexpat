@@ -4,7 +4,7 @@ NOTE: We are looking for help with a few things:
 
 Release 2.??? ????????????????
         Bug fixes:
-                  Fix non-NULL parser parameter validation in XML_Parse
+   [MOX-006]      Fix non-NULL parser parameter validation in XML_Parse
 
         Other changes:
              #49  Fix "==" Bashism in configure script
