@@ -33,6 +33,17 @@
 #include "expat.h"
 #include "siphash.h"
 
+#if defined(HAVE_GETRANDOM) || defined(HAVE_SYSCALL_GETRANDOM)
+# include <errno.h>
+# if defined(HAVE_GETRANDOM)
+#  include <sys/random.h>    /* getrandom */
+# else
+#  include <unistd.h>        /* syscall */
+#  include <sys/syscall.h>   /* SYS_getrandom */
+# endif
+#endif  /* defined(HAVE_GETRANDOM) || defined(HAVE_SYSCALL_GETRANDOM) */
+
+
 #ifdef XML_UNICODE
 #define XML_ENCODE_MAX XML_UTF16_ENCODE_MAX
 #define XmlConvert XmlUtf16Convert
@@ -696,14 +707,6 @@ static const XML_Char implicitContext[] = {
 
 
 #if defined(HAVE_GETRANDOM) || defined(HAVE_SYSCALL_GETRANDOM)
-# include <errno.h>
-
-# if defined(HAVE_GETRANDOM)
-#  include <sys/random.h>    /* getrandom */
-# else
-#  include <unistd.h>        /* syscall */
-#  include <sys/syscall.h>   /* SYS_getrandom */
-# endif
 
 /* Obtain entropy on Linux 3.17+ */
 static int
