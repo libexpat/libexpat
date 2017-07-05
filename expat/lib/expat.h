@@ -24,7 +24,6 @@ extern "C" {
 struct XML_ParserStruct;
 typedef struct XML_ParserStruct *XML_Parser;
 
-/* Should this be defined using stdbool.h when C99 is available? */
 typedef unsigned char XML_Bool;
 #define XML_TRUE   ((XML_Bool) 1)
 #define XML_FALSE  ((XML_Bool) 0)

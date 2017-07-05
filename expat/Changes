@@ -19,7 +19,11 @@ Release 2.??? ????????????????
                     quality entropy enabled, e.g. with CMake; commit
                     ff0207e6076e9828e536b8d9cd45c9c92069b895
 
+        Bug fixes:
+             #69  Fix improper use of unsigned long long integer literals
+
         Other changes:
+             #73  Start requiring a C99 compiler
              #49  Fix "==" Bashism in configure script
              #50  Fix too eager getrandom detection for Debian GNU/kFreeBSD
              #52    and macOS
@@ -32,6 +36,7 @@ Release 2.??? ????????????????
              #72  CMake: Resolve mistaken executable permissions
 
         Special thanks to:
+            Alexander Bluhm
             Ben Boeckel
             Cătălin Răceanu
             Kerin Millar
