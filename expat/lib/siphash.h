@@ -13,6 +13,7 @@
  *
  * 2017-07-05  (Sebastian Pipping)
  *   - Add const qualifiers at two places
+ *   - Ensure <=80 characters line length (assuming tab width 4)
  *
  * 2017-06-23  (Victor Stinner)
  *   - Address Win64 compile warnings
@@ -172,7 +173,8 @@ static void sip_round(struct siphash *H, const int rounds) {
 } /* sip_round() */
 
 
-static struct siphash *sip24_init(struct siphash *H, const struct sipkey *key) {
+static struct siphash *sip24_init(struct siphash *H,
+		const struct sipkey *key) {
 	H->v0 = 0x736f6d6570736575UL ^ key->k[0];
 	H->v1 = 0x646f72616e646f6dUL ^ key->k[1];
 	H->v2 = 0x6c7967656e657261UL ^ key->k[0];
@@ -187,7 +189,8 @@ static struct siphash *sip24_init(struct siphash *H, const struct sipkey *key) {
 
 #define sip_endof(a) (&(a)[sizeof (a) / sizeof *(a)])
 
-static struct siphash *sip24_update(struct siphash *H, const void *src, size_t len) {
+static struct siphash *sip24_update(struct siphash *H, const void *src,
+		size_t len) {
 	const unsigned char *p = (const unsigned char *)src, *pe = p + len;
 	uint64_t m;
 
@@ -236,7 +239,8 @@ static uint64_t sip24_final(struct siphash *H) {
 } /* sip24_final() */
 
 
-static uint64_t siphash24(const void *src, size_t len, const struct sipkey *key) {
+static uint64_t siphash24(const void *src, size_t len,
+		const struct sipkey *key) {
 	struct siphash state = SIPHASH_INITIALIZER;
 	return sip24_final(sip24_update(sip24_init(&state, key), src, len));
 } /* siphash24() */
@@ -324,7 +328,8 @@ static int sip24_valid(void) {
 	struct sipkey k;
 	size_t i;
 
-	sip_tokey(&k, "\000\001\002\003\004\005\006\007\010\011\012\013\014\015\016\017");
+	sip_tokey(&k, "\000\001\002\003\004\005\006\007\010\011"
+			"\012\013\014\015\016\017");
 
 	for (i = 0; i < sizeof in; ++i) {
 		in[i] = (unsigned char)i;
