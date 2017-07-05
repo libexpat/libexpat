@@ -11,6 +11,9 @@
  * --------------------------------------------------------------------------
  * HISTORY:
  *
+ * 2017-07-05  (Sebastian Pipping)
+ *   - Add const qualifiers at two places
+ *
  * 2017-06-23  (Victor Stinner)
  *   - Address Win64 compile warnings
  *
@@ -209,7 +212,7 @@ static struct siphash *sip24_update(struct siphash *H, const void *src, size_t l
 
 
 static uint64_t sip24_final(struct siphash *H) {
-	char left = (char)(H->p - H->buf);
+	const char left = (char)(H->p - H->buf);
 	uint64_t b = (H->c + left) << 56;
 
 	switch (left) {
@@ -339,7 +342,7 @@ static int sip24_valid(void) {
 #include <stdio.h>
 
 int main(void) {
-	int ok = sip24_valid();
+	const int ok = sip24_valid();
 
 	if (ok)
 		puts("OK");
