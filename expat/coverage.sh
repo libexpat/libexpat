@@ -95,7 +95,7 @@ _run() {
     local BASE_FLAGS='-pipe -Wall -Wextra -pedantic -Wno-overlength-strings'
     BASE_FLAGS+=' --coverage --no-inline'
 
-    local CFLAGS="-std=c89 ${BASE_FLAGS}"
+    local CFLAGS="-std=c99 ${BASE_FLAGS}"
     local CXXFLAGS="-std=c++98 ${BASE_FLAGS}"
 
     (
