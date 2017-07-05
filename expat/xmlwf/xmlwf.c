@@ -279,49 +279,105 @@ startDoctypeDecl(void *UNUSED_P(userData),
   currentDoctypeName = xmlCharDup(doctypeName);
 }
 
+static void
+freeNotations(void)
+{
+  while (notationListHead != NULL) {
+    NotationList *next = notationListHead->next;
+    free((void *)notationListHead->notationName);
+    free((void *)notationListHead->systemId);
+    free((void *)notationListHead->publicId);
+    free(notationListHead);
+    notationListHead = next;
+  }
+}
+
+static int
+notationCmp(const void *a, const void *b)
+{
+  const NotationList *n1 = *(NotationList **)a;
+  const NotationList *n2 = *(NotationList **)b;
+  const XML_Char *name1 = n1->notationName;
+  const XML_Char *name2 = n2->notationName;
+
+  /* Compare notations by comparing their names */
+  while (*name1 != 0 && *name2 != 0) {
+    if (*name1 < *name2)
+      return -1;
+    if (*name1 > *name2)
+      return +1;
+    name1++;
+    name2++;
+  }
+  if (*name1 < *name2)
+    return -1;
+  if (*name1 > *name2)
+    return +1;
+  return 0;
+}
+
 static void XMLCALL
 endDoctypeDecl(void *userData)
 {
   FILE *fp = (FILE *)userData;
+  NotationList **notations;
+  int notationCount = 0;
+  NotationList *p;
+  int i;
 
-  if (notationListHead != NULL) {
-    /* Output the DOCTYPE header */
-    fputts(T("<!DOCTYPE "), fp);
-    fputts(currentDoctypeName, fp);
-    fputts(T(" [\n"), fp);
+  /* How many notations do we have? */
+  for (p = notationListHead; p != NULL; p = p->next)
+    notationCount++;
+  if (notationCount == 0)
+    return; /* Nothing to report */
 
-    /* Now the NOTATIONs */
-    while (notationListHead != NULL) {
-      NotationList *next = notationListHead->next;
-      fputts(T("<!NOTATION "), fp);
-      fputts(notationListHead->notationName, fp);
-      if (notationListHead->publicId != NULL) {
-        fputts(T(" PUBLIC '"), fp);
-        fputts(notationListHead->publicId, fp);
-        puttc(T('\''), fp);
-        if (notationListHead->systemId != NULL) {
-            puttc(T(' '), fp);
-            puttc(T('\''), fp);
-            fputts(notationListHead->systemId, fp);
-            puttc(T('\''), fp);
-        }
-      }
-      else if (notationListHead->systemId != NULL) {
-        fputts(T(" SYSTEM '"), fp);
-        fputts(notationListHead->systemId, fp);
-        puttc(T('\''), fp);
-      }
-      puttc(T('>'), fp);
-      puttc(T('\n'), fp);
-      free((void *)notationListHead->notationName);
-      free((void *)notationListHead->systemId);
-      free((void *)notationListHead->publicId);
-      free(notationListHead);
-      notationListHead = next;
-    }
-    /* Finally end the DOCTYPE */
-    fputts(T("]>\n"), fp);
+  notations = malloc(notationCount * sizeof(NotationList *));
+  if (notations == NULL) {
+    fprintf(stderr, "Unable to sort notations");
+    freeNotations();
+    return;
   }
+
+  for (p = notationListHead, i = 0;
+       i < notationCount;
+       p = p->next, i++) {
+      notations[i] = p;
+  }
+  qsort(notations, notationCount, sizeof(NotationList *), notationCmp);
+
+  /* Output the DOCTYPE header */
+  fputts(T("<!DOCTYPE "), fp);
+  fputts(currentDoctypeName, fp);
+  fputts(T(" [\n"), fp);
+
+  /* Now the NOTATIONs */
+  for (i = 0; i < notationCount; i++) {
+    fputts(T("<!NOTATION "), fp);
+    fputts(notations[i]->notationName, fp);
+    if (notations[i]->publicId != NULL) {
+      fputts(T(" PUBLIC '"), fp);
+      fputts(notations[i]->publicId, fp);
+      puttc(T('\''), fp);
+      if (notations[i]->systemId != NULL) {
+        puttc(T(' '), fp);
+        puttc(T('\''), fp);
+        fputts(notations[i]->systemId, fp);
+        puttc(T('\''), fp);
+      }
+    }
+    else if (notations[i]->systemId != NULL) {
+      fputts(T(" SYSTEM '"), fp);
+      fputts(notations[i]->systemId, fp);
+      puttc(T('\''), fp);
+    }
+    puttc(T('>'), fp);
+    puttc(T('\n'), fp);
+  }
+
+  /* Finally end the DOCTYPE */
+  fputts(T("]>\n"), fp);
+
+  freeNotations();
   free((void *)currentDoctypeName);
   currentDoctypeName = NULL;
 }
