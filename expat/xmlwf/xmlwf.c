@@ -270,6 +270,136 @@ processingInstruction(void *userData, const XML_Char *target,
   puttc(T('>'), fp);
 }
 
+
+typedef struct NotationList {
+  struct NotationList *next;
+  const XML_Char *notationName;
+  const XML_Char *systemId;
+  const XML_Char *publicId;
+} NotationList;
+
+static NotationList *notationListHead = NULL;
+static const XML_Char *currentDoctypeName = NULL;
+
+static XML_Char *xmlCharDup(const XML_Char *s)
+{
+  XML_Char *result;
+  int len = 0;
+
+  /* Get the length of the string, including terminator */
+  while (s[len++] != 0) {
+    /* Do nothing */
+  }
+  result = malloc(len * sizeof(XML_Char));
+  if (result == NULL)
+    return NULL;
+  memcpy(result, s, len * sizeof(XML_Char));
+  return result;
+}
+
+static void XMLCALL
+startDoctypeDecl(void *UNUSED_P(userData),
+                 const XML_Char *doctypeName,
+                 const XML_Char *UNUSED_P(sysid),
+                 const XML_Char *UNUSED_P(publid),
+                 int has_internal_subset)
+{
+  currentDoctypeName = xmlCharDup(doctypeName);
+}
+
+static void XMLCALL
+endDoctypeDecl(void *userData)
+{
+  FILE *fp = (FILE *)userData;
+
+  if (notationListHead != NULL) {
+    /* Output the DOCTYPE header */
+    fputts(T("<!DOCTYPE "), fp);
+    fputts(currentDoctypeName, fp);
+    fputts(T(" [\n"), fp);
+
+    /* Now the NOTATIONs */
+    while (notationListHead != NULL) {
+      NotationList *next = notationListHead->next;
+      fputts(T("<!NOTATION "), fp);
+      fputts(notationListHead->notationName, fp);
+      if (notationListHead->publicId != NULL) {
+        fputts(T(" PUBLIC '"), fp);
+        fputts(notationListHead->publicId, fp);
+        puttc(T('\''), fp);
+        if (notationListHead->systemId != NULL) {
+            puttc(T(' '), fp);
+            puttc(T('\''), fp);
+            fputts(notationListHead->systemId, fp);
+            puttc(T('\''), fp);
+        }
+      }
+      else if (notationListHead->systemId != NULL) {
+        fputts(T(" SYSTEM '"), fp);
+        fputts(notationListHead->systemId, fp);
+        puttc(T('\''), fp);
+      }
+      puttc(T('>'), fp);
+      puttc(T('\n'), fp);
+      free((void *)notationListHead->notationName);
+      free((void *)notationListHead->systemId);
+      free((void *)notationListHead->publicId);
+      free(notationListHead);
+      notationListHead = next;
+    }
+    /* Finally end the DOCTYPE */
+    fputts(T("]>\n"), fp);
+  }
+  free((void *)currentDoctypeName);
+  currentDoctypeName = NULL;
+}
+
+static void XMLCALL
+notationDecl(void *UNUSED_P(userData),
+             const XML_Char *notationName,
+             const XML_Char *UNUSED_P(base),
+             const XML_Char *systemId,
+             const XML_Char *publicId)
+{
+  NotationList *entry = malloc(sizeof(NotationList));
+
+  if (entry == NULL) {
+    fprintf(stderr, "Unable to store NOTATION for output\n");
+    return; /* Nothing we can really do about this */
+  }
+  entry->notationName = xmlCharDup(notationName);
+  if (entry->notationName == NULL) {
+    fprintf(stderr, "Unable to store NOTATION for output\n");
+    free(entry);
+    return;
+  }
+  if (systemId != NULL) {
+    entry->systemId = xmlCharDup(systemId);
+    if (entry->systemId == NULL) {
+      fprintf(stderr, "Unable to store NOTATION for output\n");
+      free((void *)entry->notationName);
+      free(entry);
+      return;
+    }
+  }
+  else {
+    entry->systemId = NULL;
+  }
+  if (publicId != NULL) {
+    entry->publicId = xmlCharDup(publicId);
+    if (entry->publicId == NULL) {
+      fprintf(stderr, "Unable to store NOTATION for output\n");
+      free((void *)entry->systemId); /* Safe if it's NULL */
+      free((void *)entry->notationName);
+      free(entry);
+      return;
+    }
+  }
+
+  entry->next = notationListHead;
+  notationListHead = entry;
+}
+
 #endif /* not W3C14N */
 
 static void XMLCALL
@@ -868,6 +998,8 @@ tmain(int argc, XML_Char **argv)
         XML_SetCharacterDataHandler(parser, characterData);
 #ifndef W3C14N
         XML_SetProcessingInstructionHandler(parser, processingInstruction);
+        XML_SetDoctypeDeclHandler(parser, startDoctypeDecl, endDoctypeDecl);
+        XML_SetNotationDeclHandler(parser, notationDecl);
 #endif /* not W3C14N */
         break;
       }
