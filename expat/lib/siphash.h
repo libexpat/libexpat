@@ -12,6 +12,7 @@
  * HISTORY:
  *
  * 2017-07-05  (Sebastian Pipping)
+ *   - Use _SIP_ULL macro to not require a C++11 compiler if compiled as C++
  *   - Add const qualifiers at two places
  *   - Ensure <=80 characters line length (assuming tab width 4)
  *
@@ -22,7 +23,6 @@
  *   - Clarify license note in the header
  *   - Address C89 issues:
  *     - Stop using inline keyword (and let compiler decide)
- *     - Turn integer suffix ULL to UL
  *     - Replace _Bool by int
  *     - Turn macro siphash24 into a function
  *     - Address invalid conversion (void pointer) by explicit cast
@@ -92,6 +92,14 @@
 #else
  #include <stdint.h> /* uint64_t uint32_t uint8_t */
 #endif
+
+
+/*
+ * Workaround to not require a C++11 compiler for using ULL suffix
+ * if this code is included and compiled as C++; related GCC warning is:
+ * warning: use of C++11 long long integer constant [-Wlong-long]
+ */
+#define _SIP_ULL(high, low)  (((uint64_t)high << 32) | low)
 
 
 #define SIP_ROTL(x, b) (uint64_t)(((x) << (b)) | ( (x) >> (64 - (b))))
@@ -175,10 +183,10 @@ static void sip_round(struct siphash *H, const int rounds) {
 
 static struct siphash *sip24_init(struct siphash *H,
 		const struct sipkey *key) {
-	H->v0 = 0x736f6d6570736575UL ^ key->k[0];
-	H->v1 = 0x646f72616e646f6dUL ^ key->k[1];
-	H->v2 = 0x6c7967656e657261UL ^ key->k[0];
-	H->v3 = 0x7465646279746573UL ^ key->k[1];
+	H->v0 = _SIP_ULL(0x736f6d65U, 0x70736575U) ^ key->k[0];
+	H->v1 = _SIP_ULL(0x646f7261U, 0x6e646f6dU) ^ key->k[1];
+	H->v2 = _SIP_ULL(0x6c796765U, 0x6e657261U) ^ key->k[0];
+	H->v3 = _SIP_ULL(0x74656462U, 0x79746573U) ^ key->k[1];
 
 	H->p = H->buf;
 	H->c = 0;

@@ -4,6 +4,8 @@ NOTE: We are looking for help with a few things:
 
 Release 2.??? ????????????????
         Bug fixes:
+             #69  Fix improper use of unsigned long long integer literals;
+                    start requiring a C99 compiler
    [MOX-006]      Fix non-NULL parser parameter validation in XML_Parse
 
         Other changes:
@@ -17,6 +19,7 @@ Release 2.??? ????????????????
                     of Dash for /bin/sh
 
         Special thanks to:
+            Alexander Bluhm
             Cătălin Răceanu
             Kerin Millar
             László Böszörményi

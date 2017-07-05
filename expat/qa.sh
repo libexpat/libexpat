@@ -76,7 +76,7 @@ main() {
         ;;
     esac
 
-    local CFLAGS="-std=c89 ${BASE_FLAGS} ${CFLAGS:-}"
+    local CFLAGS="-std=c99 ${BASE_FLAGS} ${CFLAGS:-}"
     local CXXFLAGS="-std=c++98 ${BASE_FLAGS} ${CXXFLAGS:-}"
 
     (
