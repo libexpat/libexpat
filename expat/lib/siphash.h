@@ -12,6 +12,9 @@
  * HISTORY:
  *
  * 2017-07-05  (Sebastian Pipping)
+ *   - Address C89 issues:
+ *     - Resolve use of uint64_t and ULL integer constants by moving to
+ *       a pair of uint32_t's
  *   - Add const qualifiers at two places
  *   - Ensure <=80 characters line length (assuming tab width 4)
  *
@@ -22,7 +25,6 @@
  *   - Clarify license note in the header
  *   - Address C89 issues:
  *     - Stop using inline keyword (and let compiler decide)
- *     - Turn integer suffix ULL to UL
  *     - Replace _Bool by int
  *     - Turn macro siphash24 into a function
  *     - Address invalid conversion (void pointer) by explicit cast
@@ -54,7 +56,7 @@
  * 	struct siphash state;
  * 	void *msg;
  * 	size_t len;
- * 	uint64_t hash;
+ * 	split_uint64_t hash;
  *
  * 	sip24_init(&state, key);
  * 	sip24_update(&state, msg, len);
@@ -88,47 +90,149 @@
   /* For vs2003/7.1 up to vs2008/9.0; _MSC_VER 1600 is vs2010/10.0 */
   typedef unsigned __int8   uint8_t;
   typedef unsigned __int32 uint32_t;
-  typedef unsigned __int64 uint64_t;
 #else
- #include <stdint.h> /* uint64_t uint32_t uint8_t */
+ #include <stdint.h> /* uint32_t uint8_t */
 #endif
 
 
-#define SIP_ROTL(x, b) (uint64_t)(((x) << (b)) | ( (x) >> (64 - (b))))
+typedef struct _split_uint64_t {
+#if defined(WORDS_BIGENDIAN)
+	uint32_t high;
+	uint32_t low;
+#else
+	uint32_t low;
+	uint32_t high;
+#endif  /* defined(WORDS_BIGENDIAN) */
+} split_uint64_t;
+
+
+static split_uint64_t sui64(uint32_t high, uint32_t low) {
+	split_uint64_t res;
+	res.high = high;
+	res.low = low;
+	return res;
+}
+
+static split_uint64_t sui64_from_char(char c) {
+	split_uint64_t res;
+	res.high = 0;
+	res.low = (unsigned char)c;
+	return res;
+}
+
+static split_uint64_t sui64_bitwise_or(
+		const split_uint64_t a,
+		const split_uint64_t b) {
+	split_uint64_t res;
+	res.high = a.high | b.high;
+	res.low = a.low | b.low;
+	return res;
+}
+
+static split_uint64_t sui64_add(const split_uint64_t a,
+		const split_uint64_t b) {
+	split_uint64_t res;
+	res.high = a.high + b.high + (a.low > (0xffffffffU - b.low));
+	res.low = a.low + b.low;
+	return res;
+}
+
+static split_uint64_t sui64_bitwise_xor(const split_uint64_t a,
+		const split_uint64_t b) {
+	split_uint64_t res;
+	res.high = a.high ^ b.high;
+	res.low = a.low ^ b.low;
+	return res;
+}
+
+static int sui64_equal(const split_uint64_t a, const split_uint64_t b) {
+	return ((a.high == b.high) && (a.low == b.low)) ? 1 : 0;
+}
+
+static split_uint64_t sui64_shift_left(const split_uint64_t v, size_t bits) {
+	if (bits == 0) {
+		return v;
+	}
+
+	{
+		split_uint64_t res;
+		if (bits >= 64) {
+			res.high = 0;
+			res.low = 0;
+		} else if (bits < 32) {
+			res.high = (v.high << bits) | (v.low >> (32 - bits));
+			res.low = v.low << bits;
+		} else {
+			res.high = v.low << (bits - 32);
+			res.low = 0;
+		}
+		return res;
+	}
+}
+
+static split_uint64_t sui64_rotate_left(const split_uint64_t v, size_t bits) {
+	bits &= 0x3fU;
+	if (bits == 0) {
+		return v;
+	}
+
+	{
+		split_uint64_t res;
+		if (bits < 32) {
+			res.high = (v.high << bits) | (v.low >> (32 - bits));
+			res.low = (v.low << bits) | (v.high >> (32 - bits));
+		} else if (bits == 32) {
+			res.high = v.low;
+			res.low = v.high;
+		} else {
+			res.high = (v.low << (bits - 32)) | (v.high >> (64 - bits));
+			res.low = (v.high << (bits - 32)) | (v.low >> (64 - bits));
+		}
+		return res;
+	}
+}
+
+static uint32_t sui64_combine(const split_uint64_t v) {
+	return v.high ^ v.low;
+}
+
 
 #define SIP_U32TO8_LE(p, v) \
 	(p)[0] = (uint8_t)((v) >>  0); (p)[1] = (uint8_t)((v) >>  8); \
 	(p)[2] = (uint8_t)((v) >> 16); (p)[3] = (uint8_t)((v) >> 24);
 
 #define SIP_U64TO8_LE(p, v) \
-	SIP_U32TO8_LE((p) + 0, (uint32_t)((v) >>  0)); \
-	SIP_U32TO8_LE((p) + 4, (uint32_t)((v) >> 32));
+	SIP_U32TO8_LE((p) + 0, v.low); \
+	SIP_U32TO8_LE((p) + 4, v.high);
 
 #define SIP_U8TO64_LE(p) \
-	(((uint64_t)((p)[0]) <<  0) | \
-	 ((uint64_t)((p)[1]) <<  8) | \
-	 ((uint64_t)((p)[2]) << 16) | \
-	 ((uint64_t)((p)[3]) << 24) | \
-	 ((uint64_t)((p)[4]) << 32) | \
-	 ((uint64_t)((p)[5]) << 40) | \
-	 ((uint64_t)((p)[6]) << 48) | \
-	 ((uint64_t)((p)[7]) << 56))
+	sui64( \
+		((uint32_t)((p)[4]) << (32 - 32)) | \
+		((uint32_t)((p)[5]) << (40 - 32)) | \
+		((uint32_t)((p)[6]) << (48 - 32)) | \
+		((uint32_t)((p)[7]) << (56 - 32)), \
+		((uint32_t)((p)[0]) <<  0) | \
+		((uint32_t)((p)[1]) <<  8) | \
+		((uint32_t)((p)[2]) << 16) | \
+		((uint32_t)((p)[3]) << 24) \
+	)
 
 
-#define SIPHASH_INITIALIZER { 0, 0, 0, 0, { 0 }, 0, 0 }
+#define SIPHASH_INITIALIZER \
+	{ {0, 0}, {0, 0}, {0, 0}, {0, 0}, { 0 }, 0, {0, 0} }
 
 struct siphash {
-	uint64_t v0, v1, v2, v3;
+	split_uint64_t v0, v1, v2, v3;
 
 	unsigned char buf[8], *p;
-	uint64_t c;
+	split_uint64_t c;
 }; /* struct siphash */
 
 
 #define SIP_KEYLEN 16
 
 struct sipkey {
-	uint64_t k[2];
+	split_uint64_t k[2];
 }; /* struct sipkey */
 
 #define sip_keyof(k) sip_tokey(&(struct sipkey){ { 0 } }, (k))
@@ -142,7 +246,7 @@ static struct sipkey *sip_tokey(struct sipkey *key, const void *src) {
 
 #define sip_binof(v) sip_tobin((unsigned char[8]){ 0 }, (v))
 
-static void *sip_tobin(void *dst, uint64_t u64) {
+static void *sip_tobin(void *dst, split_uint64_t u64) {
 	SIP_U64TO8_LE((unsigned char *)dst, u64);
 	return dst;
 } /* sip_tobin() */
@@ -152,36 +256,36 @@ static void sip_round(struct siphash *H, const int rounds) {
 	int i;
 
 	for (i = 0; i < rounds; i++) {
-		H->v0 += H->v1;
-		H->v1 = SIP_ROTL(H->v1, 13);
-		H->v1 ^= H->v0;
-		H->v0 = SIP_ROTL(H->v0, 32);
+		H->v0 = sui64_add(H->v0, H->v1);
+		H->v1 = sui64_rotate_left(H->v1, 13);
+		H->v1 = sui64_bitwise_xor(H->v1, H->v0);
+		H->v0 = sui64_rotate_left(H->v0, 32);
 
-		H->v2 += H->v3;
-		H->v3 = SIP_ROTL(H->v3, 16);
-		H->v3 ^= H->v2;
+		H->v2 = sui64_add(H->v2, H->v3);
+		H->v3 = sui64_rotate_left(H->v3, 16);
+		H->v3 = sui64_bitwise_xor(H->v3, H->v2);
 
-		H->v0 += H->v3;
-		H->v3 = SIP_ROTL(H->v3, 21);
-		H->v3 ^= H->v0;
+		H->v0 = sui64_add(H->v0, H->v3);
+		H->v3 = sui64_rotate_left(H->v3, 21);
+		H->v3 = sui64_bitwise_xor(H->v3, H->v0);
 
-		H->v2 += H->v1;
-		H->v1 = SIP_ROTL(H->v1, 17);
-		H->v1 ^= H->v2;
-		H->v2 = SIP_ROTL(H->v2, 32);
+		H->v2 = sui64_add(H->v2, H->v1);
+		H->v1 = sui64_rotate_left(H->v1, 17);
+		H->v1 = sui64_bitwise_xor(H->v1, H->v2);
+		H->v2 = sui64_rotate_left(H->v2, 32);
 	}
 } /* sip_round() */
 
 
 static struct siphash *sip24_init(struct siphash *H,
 		const struct sipkey *key) {
-	H->v0 = 0x736f6d6570736575UL ^ key->k[0];
-	H->v1 = 0x646f72616e646f6dUL ^ key->k[1];
-	H->v2 = 0x6c7967656e657261UL ^ key->k[0];
-	H->v3 = 0x7465646279746573UL ^ key->k[1];
+	H->v0 = sui64_bitwise_xor(sui64(0x736f6d65U, 0x70736575U), key->k[0]);
+	H->v1 = sui64_bitwise_xor(sui64(0x646f7261U, 0x6e646f6dU), key->k[1]);
+	H->v2 = sui64_bitwise_xor(sui64(0x6c796765U, 0x6e657261U), key->k[0]);
+	H->v3 = sui64_bitwise_xor(sui64(0x74656462U, 0x79746573U), key->k[1]);
 
 	H->p = H->buf;
-	H->c = 0;
+	H->c = sui64_from_char(0);
 
 	return H;
 } /* sip24_init() */
@@ -192,7 +296,7 @@ static struct siphash *sip24_init(struct siphash *H,
 static struct siphash *sip24_update(struct siphash *H, const void *src,
 		size_t len) {
 	const unsigned char *p = (const unsigned char *)src, *pe = p + len;
-	uint64_t m;
+	split_uint64_t m;
 
 	do {
 		while (p < pe && H->p < sip_endof(H->buf))
@@ -202,44 +306,55 @@ static struct siphash *sip24_update(struct siphash *H, const void *src,
 			break;
 
 		m = SIP_U8TO64_LE(H->buf);
-		H->v3 ^= m;
+		H->v3 = sui64_bitwise_xor(H->v3, m);
 		sip_round(H, 2);
-		H->v0 ^= m;
+		H->v0 = sui64_bitwise_xor(H->v0, m);
 
 		H->p = H->buf;
-		H->c += 8;
+		H->c = sui64_add(H->c, sui64_from_char(8));
 	} while (p < pe);
 
 	return H;
 } /* sip24_update() */
 
 
-static uint64_t sip24_final(struct siphash *H) {
+static split_uint64_t sip24_final(struct siphash *H) {
 	const char left = (char)(H->p - H->buf);
-	uint64_t b = (H->c + left) << 56;
+	split_uint64_t b = sui64_shift_left(
+			sui64_add(H->c, sui64_from_char(left)), 56);
 
 	switch (left) {
-	case 7: b |= (uint64_t)H->buf[6] << 48;
-	case 6: b |= (uint64_t)H->buf[5] << 40;
-	case 5: b |= (uint64_t)H->buf[4] << 32;
-	case 4: b |= (uint64_t)H->buf[3] << 24;
-	case 3: b |= (uint64_t)H->buf[2] << 16;
-	case 2: b |= (uint64_t)H->buf[1] << 8;
-	case 1: b |= (uint64_t)H->buf[0] << 0;
+	case 7: b = sui64_bitwise_or(b,
+			sui64_shift_left(sui64_from_char(H->buf[6]), 48));
+	case 6: b = sui64_bitwise_or(b,
+			sui64_shift_left(sui64_from_char(H->buf[5]), 40));
+	case 5: b = sui64_bitwise_or(b,
+			sui64_shift_left(sui64_from_char(H->buf[4]), 32));
+	case 4: b = sui64_bitwise_or(b,
+			sui64_shift_left(sui64_from_char(H->buf[3]), 24));
+	case 3: b = sui64_bitwise_or(b,
+			sui64_shift_left(sui64_from_char(H->buf[2]), 16));
+	case 2: b = sui64_bitwise_or(b,
+			sui64_shift_left(sui64_from_char(H->buf[1]), 8));
+	case 1: b = sui64_bitwise_or(b,
+			sui64_shift_left(sui64_from_char(H->buf[0]), 0));
 	case 0: break;
 	}
 
-	H->v3 ^= b;
+	H->v3 = sui64_bitwise_xor(H->v3, b);
 	sip_round(H, 2);
-	H->v0 ^= b;
-	H->v2 ^= 0xff;
+	H->v0 = sui64_bitwise_xor(H->v0, b);
+	H->v2 = sui64_bitwise_xor(H->v2, sui64_from_char((char)0xff));
 	sip_round(H, 4);
 
-	return H->v0 ^ H->v1 ^ H->v2  ^ H->v3;
+	return sui64_bitwise_xor(
+		sui64_bitwise_xor(H->v0, H->v1),
+		sui64_bitwise_xor(H->v2, H->v3)
+	);
 } /* sip24_final() */
 
 
-static uint64_t siphash24(const void *src, size_t len,
+static split_uint64_t siphash24(const void *src, size_t len,
 		const struct sipkey *key) {
 	struct siphash state = SIPHASH_INITIALIZER;
 	return sip24_final(sip24_update(sip24_init(&state, key), src, len));
@@ -334,7 +449,7 @@ static int sip24_valid(void) {
 	for (i = 0; i < sizeof in; ++i) {
 		in[i] = (unsigned char)i;
 
-		if (siphash24(in, i, &k) != SIP_U8TO64_LE(vectors[i]))
+		if (! sui64_equal(siphash24(in, i, &k), SIP_U8TO64_LE(vectors[i])))
 			return 0;
 	}
 

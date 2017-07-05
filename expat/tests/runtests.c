@@ -234,10 +234,110 @@ START_TEST(test_u0000_char)
 }
 END_TEST
 
+START_TEST(test_sui64_math)
+{
+    /* sui64_equal */
+    if (! sui64_equal(sui64(1, 2), sui64(1, 2)))
+        fail("sui64_equal test failed\n");
+
+    /* sui64 */
+    if (sui64_equal(sui64(1, 2), sui64(2, 1)))
+        fail("sui64 constructor test failed\n");
+
+    /* sui64_from_char */
+    if (! sui64_equal(sui64_from_char(2), sui64(0, 2)))
+        fail("sui64_from_char positive test failed\n");
+    if (! sui64_equal(sui64_from_char(-2), sui64(0, 0x000000feU)))
+        fail("sui64_from_char negative test failed\n");
+
+    /* sui64_bitwise_or */
+    if (! sui64_equal(sui64_bitwise_or(
+            sui64(0x11111111U, 0x11110000U),
+            sui64(0x22222222U, 0x11001100U)),
+            sui64(0x33333333U, 0x11111100U)))
+        fail("sui64_bitwise_or test failed\n");
+
+    /* sui64_add */
+    if (! sui64_equal(sui64_add(
+            sui64(2, 3),
+            sui64(4, 5)),
+            sui64(2 + 4, 3 + 5)))
+        fail("sui64_add separate test failed\n");
+    if (! sui64_equal(sui64_add(
+            sui64(0, 0xffffffffU),
+            sui64(0, 0xffffffffU)),
+            sui64(0x1U, 0xfffffffeU)))
+        fail("sui64_add overflow test failed\n");
+
+    /* sui64_bitwise_xor */
+    if (! sui64_equal(sui64_bitwise_xor(
+            sui64(0xff00ff00U, 0x88888888U),
+            sui64(0x00ff00ffU, 0x44444444U)),
+            sui64(0xffffffffU, 0xccccccccU)))
+        fail("sui64_bitwise_xor test failed\n");
+
+    /* sui64_shift_left */
+    if (! sui64_equal(sui64_shift_left(
+            sui64(0x12345678U, 0xabcdef01U), 0),
+            sui64(0x12345678U, 0xabcdef01U)))
+        fail("sui64_shift_left 0 test failed\n");
+    if (! sui64_equal(sui64_shift_left(
+            sui64(0x12345678U, 0xabcdef01U), 8),
+            sui64(0x345678abU, 0xcdef0100U)))
+        fail("sui64_shift_left 8 test failed\n");
+    if (! sui64_equal(sui64_shift_left(
+            sui64(0x12345678U, 0xabcdef01U), 32),
+            sui64(0xabcdef01U, 0x00000000U)))
+        fail("sui64_shift_left 32 test failed\n");
+    if (! sui64_equal(sui64_shift_left(
+            sui64(0x12345678U, 0xabcdef01U), 40),
+            sui64(0xcdef0100U, 0x00000000U)))
+        fail("sui64_shift_left 40 test failed\n");
+    if (! sui64_equal(sui64_shift_left(
+            sui64(0x12345678U, 0xabcdef01U), 64),
+            sui64(0x00000000U, 0x00000000U)))
+        fail("sui64_shift_left 64 test failed\n");
+    if (! sui64_equal(sui64_shift_left(
+            sui64(0x12345678U, 0xabcdef01U), 80),
+            sui64(0x00000000U, 0x00000000U)))
+        fail("sui64_shift_left 80 test failed\n");
+
+    /* sui64_rotate_left */
+    if (! sui64_equal(sui64_rotate_left(
+            sui64(0x12345678U, 0xabcdef01U), 0),
+            sui64(0x12345678U, 0xabcdef01U)))
+        fail("sui64_rotate_left 0 test failed\n");
+    if (! sui64_equal(sui64_rotate_left(
+            sui64(0x12345678U, 0xabcdef01U), 8),
+            sui64(0x345678abU, 0xcdef0112U)))
+        fail("sui64_rotate_left 8 test failed\n");
+    if (! sui64_equal(sui64_rotate_left(
+            sui64(0x12345678U, 0xabcdef01U), 32),
+            sui64(0xabcdef01U, 0x12345678U)))
+        fail("sui64_rotate_left 32 test failed\n");
+    if (! sui64_equal(sui64_rotate_left(
+            sui64(0x12345678U, 0xabcdef01U), 40),
+            sui64(0xcdef0112U, 0x345678abU)))
+        fail("sui64_rotate_left 40 test failed\n");
+    if (! sui64_equal(sui64_rotate_left(
+            sui64(0x12345678U, 0xabcdef01U), 64),
+            sui64(0x12345678U, 0xabcdef01U)))
+        fail("sui64_rotate_left 64 test failed\n");
+    if (! sui64_equal(sui64_rotate_left(
+            sui64(0x12345678U, 0xabcdef01U), 80),
+            sui64(0x5678abcdU, 0xef011234U)))
+        fail("sui64_rotate_left 80 test failed\n");
+
+    /* sui64_combine */
+    if (sui64_combine(sui64(0xff00ff00U, 0xffff0000U)) != 0x00ffff00U)
+        fail("sui64_combine 48 test failed\n");
+}
+END_TEST
+
 START_TEST(test_siphash_self)
 {
     if (! sip24_valid())
-        fail("SipHash self-test failed");
+        fail("SipHash self-test failed\n");
 }
 END_TEST
 
@@ -247,7 +347,7 @@ START_TEST(test_siphash_spec)
     const char message[] = "\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09"
             "\x0a\x0b\x0c\x0d\x0e";
     const size_t len = sizeof(message) - 1;
-    const uint64_t expected = 0xa129ca6149be45e5U;
+    const split_uint64_t expected = sui64(0xa129ca61U, 0x49be45e5U);
     struct siphash state;
     struct sipkey key;
     (void)sip_tobin;
@@ -264,11 +364,11 @@ START_TEST(test_siphash_spec)
     /* Cover null length */
     sip24_update(&state, message, 0);
 
-    if (sip24_final(&state) != expected)
+    if (! sui64_equal(sip24_final(&state), expected))
         fail("sip24_final failed spec test\n");
 
     /* Cover wrapper */
-    if (siphash24(message, len, &key) != expected)
+    if (! sui64_equal(siphash24(message, len, &key), expected))
         fail("siphash24 failed spec test\n");
 }
 END_TEST
@@ -3472,6 +3572,7 @@ make_suite(void)
     tcase_add_checked_fixture(tc_basic, basic_setup, basic_teardown);
     tcase_add_test(tc_basic, test_nul_byte);
     tcase_add_test(tc_basic, test_u0000_char);
+    tcase_add_test(tc_basic, test_sui64_math);
     tcase_add_test(tc_basic, test_siphash_self);
     tcase_add_test(tc_basic, test_siphash_spec);
     tcase_add_test(tc_basic, test_bom_utf8);
