@@ -15,8 +15,12 @@ Release 2.??? ????????????????
              #60  Fix Windows compilation for _UNICODE defined
              #68  Fix "./buildconf.sh && ./configure" for some versions
                     of Dash for /bin/sh
+             #72  CMake: Ease use of Expat in context of a parent project
+                    with multipe CMakeLists.txt files
+             #72  CMake: Resolve mistaken executable permissions
 
         Special thanks to:
+            Ben Boeckel
             Cătălin Răceanu
             Kerin Millar
             László Böszörményi
