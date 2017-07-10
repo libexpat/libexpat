@@ -1126,11 +1126,15 @@ XML_SetEncoding(XML_Parser parser, const XML_Char *encodingName)
   */
   if (ps_parsing == XML_PARSING || ps_parsing == XML_SUSPENDED)
     return XML_STATUS_ERROR;
+
+  /* Get rid of any previous encoding name */
   FREE((void *)protocolEncodingName);
+
   if (encodingName == NULL) {
+    /* No new encoding name */
     protocolEncodingName = NULL;
-  }
-  else {
+  } else {
+    /* Copy the new encoding name into allocated memory */
     protocolEncodingName = copyString(encodingName, &(parser->m_mem));
     if (!protocolEncodingName)
       return XML_STATUS_ERROR;
@@ -6846,11 +6850,13 @@ copyString(const XML_Char *s,
     int charsRequired = 0;
     XML_Char *result;
 
-    /* First determine how long the string is, including the terminator */
+    /* First determine how long the string is */
     while (s[charsRequired] != 0) {
       charsRequired++;
     }
+    /* Include the terminator */
     charsRequired++;
+
     /* Now allocate space for the copy */
     result = memsuite->malloc_fcn(charsRequired * sizeof(XML_Char));
     if (result == NULL)
