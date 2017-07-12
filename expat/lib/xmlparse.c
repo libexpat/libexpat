@@ -5,7 +5,7 @@
 */
 
 #if !defined(_GNU_SOURCE)
-# define _GNU_SOURCE                    /* syscall prototype */
+# define _GNU_SOURCE 1                  /* syscall prototype */
 #endif
 
 #include <stddef.h>
