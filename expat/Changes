@@ -34,6 +34,7 @@ Release 2.2.2 Wed July 12 2017
              #72  CMake: Ease use of Expat in context of a parent project
                     with multipe CMakeLists.txt files
              #72  CMake: Resolve mistaken executable permissions
+             #76  Address compile warning with -DNDEBUG (not recommended!)
 
         Special thanks to:
             Alexander Bluhm
@@ -42,6 +43,7 @@ Release 2.2.2 Wed July 12 2017
             Kerin Millar
             László Böszörményi
             S. P. Zeidler
+            Segev Finer
             Václav Slavík
             Victor Stinner
             Viktor Szakats
