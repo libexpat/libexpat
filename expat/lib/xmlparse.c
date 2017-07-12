@@ -43,6 +43,10 @@
 # endif
 #endif  /* defined(HAVE_GETRANDOM) || defined(HAVE_SYSCALL_GETRANDOM) */
 
+#if defined(HAVE_ARC4RANDOM_BUF) && defined(HAVE_LIBBSD)
+# include <bsd/stdlib.h>
+#endif
+
 
 #ifdef XML_UNICODE
 #define XML_ENCODE_MAX XML_UTF16_ENCODE_MAX
@@ -792,10 +796,6 @@ gather_time_entropy(void)
   return tv.tv_usec;
 #endif
 }
-
-#if defined(HAVE_ARC4RANDOM_BUF) && defined(HAVE_LIBBSD)
-# include <bsd/stdlib.h>
-#endif
 
 static unsigned long
 ENTROPY_DEBUG(const char * label, unsigned long entropy) {
