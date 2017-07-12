@@ -3,8 +3,18 @@ NOTE: We are looking for help with a few things:
       If you can help, please get in touch.  Thanks!
 
 Release 2.??? ????????????????
-        Bug fixes:
-   [MOX-006]      Fix non-NULL parser parameter validation in XML_Parse
+        Security fixes:
+             #60  Windows with _UNICODE:
+                    Unintended use of LoadLibraryW with a non-wide string
+                    resulted in failure to load advapi32.dll and degradation
+                    in quality of used entropy when compiled with _UNICODE for
+                    Windows; you can launch existing binaries with
+                    EXPAT_ENTROPY_DEBUG=1 in the environment to inspect the
+                    quality of entropy used during runtime; commits
+                    * 95b95032f907ef1cd17ee7a9a1768010a825d61d
+                    * 73a5a2e9c081f49f2d775cf7ced864158b68dc80
+   [MOX-006]      Fix non-NULL parser parameter validation in XML_Parse;
+                    commit ac256dafdffc9622ab0dc2c62fcecb0dfcfa71fe
 
         Other changes:
              #49  Fix "==" Bashism in configure script
@@ -12,7 +22,6 @@ Release 2.??? ????????????????
              #52    and macOS
              #51  Address lack of stdint.h in Visual Studio 2003 to 2008
              #58  Address compile warnings
-             #60  Fix Windows compilation for _UNICODE defined
              #68  Fix "./buildconf.sh && ./configure" for some versions
                     of Dash for /bin/sh
              #72  CMake: Ease use of Expat in context of a parent project
