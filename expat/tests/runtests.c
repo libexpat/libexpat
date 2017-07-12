@@ -33,6 +33,18 @@
 #define XML_FMT_INT_MOD "l"
 #endif
 
+
+#if defined(NDEBUG)
+# error  \
+    The test suite relies on assert(...) at the moment. \
+    You have NDEBUG defined which removes that code so that failures in the \
+    test suite can go unnoticed. \
+    \
+    While we rely on assert(...), compiling the test suite with NDEBUG \
+    defined is not supported.
+#endif
+
+
 static XML_Parser parser = NULL;
 
 
