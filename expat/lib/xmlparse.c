@@ -4,7 +4,9 @@
    cd4063469a95eab9a93001afb109e3dee122cdda4635bbec36257fc01c327348 (2.2.2+)
 */
 
-#define _GNU_SOURCE 1                   /* syscall prototype */
+#if !defined(_GNU_SOURCE)
+# define _GNU_SOURCE 1                  /* syscall prototype */
+#endif
 
 #include <stddef.h>
 #include <string.h>                     /* memset(), memcpy() */
