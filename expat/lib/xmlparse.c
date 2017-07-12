@@ -48,6 +48,31 @@
 #endif
 
 
+#if !defined(HAVE_GETRANDOM) && !defined(HAVE_SYSCALL_GETRANDOM) \
+    && !defined(HAVE_ARC4RANDOM_BUF) && !defined(_WIN32) \
+    && !defined(XML_POOR_ENTROPY)
+# error  \
+    You do not have support for any sources of high quality entropy \
+    enabled.  For end user security, that is probably not what you want. \
+    \
+    Your options include: \
+      * Linux + glibc >=2.25 (getrandom): HAVE_GETRANDOM, \
+      * Linux + glibc <2.25 (syscall SYS_getrandom): HAVE_SYSCALL_GETRANDOM, \
+      * BSD / macOS (arc4random_buf): HAVE_ARC4RANDOM_BUF, \
+      * libbsd (arc4random_buf): HAVE_ARC4RANDOM_BUF + HAVE_LIBBSD, \
+      * Windows (RtlGenRandom): _WIN32. \
+    \
+    If insist on not using any of these, bypass this error by defining \
+    XML_POOR_ENTROPY; you have been warned. \
+    \
+    For CMake, one way to pass the define is: \
+        cmake -DCMAKE_C_FLAGS="-pipe -O2 -DHAVE_SYSCALL_GETRANDOM" . \
+    \
+    If you have reasons to patch this detection code away or need changes \
+    to the build system, please open a bug.  Thank you!
+#endif
+
+
 #ifdef XML_UNICODE
 #define XML_ENCODE_MAX XML_UTF16_ENCODE_MAX
 #define XmlConvert XmlUtf16Convert
