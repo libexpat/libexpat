@@ -4,6 +4,9 @@ NOTE: We are looking for help with a few things:
 
 Release 2.2.2 Wed July 12 2017
         Security fixes:
+             #43  Protect against compilation without any source of high
+                    quality entropy enabled, e.g. with CMake build system;
+                    commit ff0207e6076e9828e536b8d9cd45c9c92069b895
              #60  Windows with _UNICODE:
                     Unintended use of LoadLibraryW with a non-wide string
                     resulted in failure to load advapi32.dll and degradation
@@ -14,10 +17,8 @@ Release 2.2.2 Wed July 12 2017
                     * 95b95032f907ef1cd17ee7a9a1768010a825d61d
                     * 73a5a2e9c081f49f2d775cf7ced864158b68dc80
    [MOX-006]      Fix non-NULL parser parameter validation in XML_Parse;
+                    resulted in NULL dereference, previously;
                     commit ac256dafdffc9622ab0dc2c62fcecb0dfcfa71fe
-             #43  Protect against compilation without any source of high
-                    quality entropy enabled, e.g. with CMake; commit
-                    ff0207e6076e9828e536b8d9cd45c9c92069b895
 
         Bug fixes:
              #69  Fix improper use of unsigned long long integer literals
