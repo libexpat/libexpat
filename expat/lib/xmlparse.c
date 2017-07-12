@@ -864,7 +864,7 @@ generate_hash_secret_salt(XML_Parser parser)
     return ENTROPY_DEBUG("fallback(4)", entropy * 2147483647);
   } else {
     return ENTROPY_DEBUG("fallback(8)",
-        entropy * (unsigned long)2305843009213693951);
+        entropy * ((unsigned long)(0x1fffffffU << 31 < 1) | 0xffffffffU));
   }
 #endif
 }
@@ -3314,7 +3314,7 @@ storeAtts(XML_Parser parser, const ENCODING *enc,
             return XML_ERROR_NO_MEMORY;
         } while (*s++);
 
-        uriHash = (unsigned long)sip24_final(&sip_state);
+        uriHash = (unsigned long)sui64_combine(sip24_final(&sip_state));
 
         { /* Check hash table for duplicate of expanded name (uriName).
              Derived from code in lookup(parser, HASH_TABLE *table, ...).
@@ -6368,8 +6368,10 @@ keylen(KEY s)
 static void
 copy_salt_to_sipkey(XML_Parser parser, struct sipkey * key)
 {
-  key->k[0] = 0;
-  key->k[1] = get_hash_secret_salt(parser);
+  const unsigned long salt = get_hash_secret_salt(parser);
+  const uint32_t high = (sizeof(salt) > 4) ? (salt >> 31 >> 1) : 0;
+  key->k[0] = sui64(0, 0);
+  key->k[1] = sui64(high, salt);
 }
 
 static unsigned long FASTCALL
@@ -6382,7 +6384,7 @@ hash(XML_Parser parser, KEY s)
   copy_salt_to_sipkey(parser, &key);
   sip24_init(&state, &key);
   sip24_update(&state, s, keylen(s) * sizeof(XML_Char));
-  return (unsigned long)sip24_final(&state);
+  return (unsigned long)sui64_combine(sip24_final(&state));
 }
 
 static NAMED *
