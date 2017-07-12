@@ -1,7 +1,7 @@
 /* Copyright (c) 1998, 1999, 2000 Thai Open Source Software Center Ltd
    See the file COPYING for copying permission.
 
-   77fea421d361dca90041d0040ecf1dca651167fadf2af79e990e35168d70d933 (2.2.1+)
+   cd4063469a95eab9a93001afb109e3dee122cdda4635bbec36257fc01c327348 (2.2.2+)
 */
 
 #define _GNU_SOURCE                     /* syscall prototype */
