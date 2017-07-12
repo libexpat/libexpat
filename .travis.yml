@@ -6,6 +6,7 @@ dist: trusty
 
 env:
   global:
+    - CPPFLAGS='-DXML_POOR_ENTROPY'  # bad idea, do not copy!
     - CFLAGS='-g -pipe'
   matrix:
     - MODE=address
