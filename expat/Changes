@@ -35,6 +35,7 @@ Release 2.2.2 Wed July 12 2017
                     with multipe CMakeLists.txt files
              #72  CMake: Resolve mistaken executable permissions
              #76  Address compile warning with -DNDEBUG (not recommended!)
+             #77  Address compile warning about macro redefinition
 
         Special thanks to:
             Alexander Bluhm
