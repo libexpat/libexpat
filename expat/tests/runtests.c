@@ -1004,6 +1004,7 @@ external_entity_loader_set_encoding(XML_Parser parser,
         xml_failure(parser);
         return 0;
     }
+    XML_ParserFree(extparser);
     return 1;
 }
 
