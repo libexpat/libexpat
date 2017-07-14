@@ -1938,6 +1938,7 @@ external_entity_suspender(XML_Parser parser,
         xml_failure(ext_parser);
         return XML_STATUS_ERROR;
     }
+    XML_ParserFree(ext_parser);
     return XML_STATUS_OK;
 }
 
