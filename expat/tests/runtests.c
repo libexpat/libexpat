@@ -1882,6 +1882,7 @@ external_entity_resetter(XML_Parser parser,
         fail("Parsing status not still FINISHED");
         return XML_STATUS_ERROR;
     }
+    XML_ParserFree(ext_parser);
     return XML_STATUS_OK;
 }
 
