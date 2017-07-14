@@ -2394,6 +2394,7 @@ external_entity_param(XML_Parser parser,
         fail("Unknown system ID");
     }
 
+    XML_ParserFree(ext_parser);
     return XML_STATUS_ERROR;
 }
 
