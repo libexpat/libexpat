@@ -2047,6 +2047,7 @@ external_entity_param_checker(XML_Parser parser,
         return XML_STATUS_ERROR;
     }
     handler_data = parser;
+    XML_ParserFree(ext_parser);
     return XML_STATUS_OK;
 }
 
