@@ -163,8 +163,14 @@ dummy_notation_decl_handler(void *UNUSED_P(userData),
 static void XMLCALL
 dummy_element_decl_handler(void *UNUSED_P(userData),
                            const XML_Char *UNUSED_P(name),
-                           XML_Content *UNUSED_P(model))
-{}
+                           XML_Content *model)
+{
+    /* The content model must be freed by the handler.  Unfortunately
+     * we cannot pass the parser as the userData because this is used
+     * with other handlers that require other userData.
+     */
+    XML_FreeContentModel(parser, model);
+}
 
 static void XMLCALL
 dummy_attlist_decl_handler(void           *UNUSED_P(userData),
