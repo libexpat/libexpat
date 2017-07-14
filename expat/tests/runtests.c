@@ -1071,6 +1071,7 @@ external_entity_loader(XML_Parser parser,
         xml_failure(extparser);
         return XML_STATUS_ERROR;
     }
+    XML_ParserFree(extparser);
     return XML_STATUS_OK;
 }
 
