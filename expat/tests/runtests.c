@@ -1068,7 +1068,7 @@ external_entity_loader(XML_Parser parser,
         fail("Could not create external entity parser.");
     if (  _XML_Parse_SINGLE_BYTES(extparser, text, strlen(text), XML_TRUE)
           == XML_STATUS_ERROR) {
-        xml_failure(parser);
+        xml_failure(extparser);
         return XML_STATUS_ERROR;
     }
     return XML_STATUS_OK;
