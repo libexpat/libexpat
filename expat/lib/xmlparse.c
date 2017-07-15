@@ -778,7 +778,7 @@ writeRandomBytes_getrandom(void * target, size_t count) {
 typedef BOOLEAN (APIENTRY *RTLGENRANDOM_FUNC)(PVOID, ULONG);
 
 /* Obtain entropy on Windows XP / Windows Server 2003 and later.
- * Hint on RtlGenRandom and the following article from libsodioum.
+ * Hint on RtlGenRandom and the following article from libsodium.
  *
  * Michael Howard: Cryptographically Secure Random number on Windows without using CryptoAPI
  * https://blogs.msdn.microsoft.com/michael_howard/2005/01/14/cryptographically-secure-random-number-on-windows-without-using-cryptoapi/
