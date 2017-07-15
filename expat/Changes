@@ -2,6 +2,13 @@ NOTE: We are looking for help with a few things:
       https://github.com/libexpat/libexpat/labels/help%20wanted
       If you can help, please get in touch.  Thanks!
 
+Release 2.2.? ????????????????
+        Security fixes:
+             #82  Windows: Fix DLL hijacking vulnerability
+
+        Special thanks to:
+            Viktor Szakats
+
 Release 2.2.2 Wed July 12 2017
         Security fixes:
              #43  Protect against compilation without any source of high
