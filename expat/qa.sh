@@ -41,8 +41,8 @@ main() {
     case "${mode}" in
     address)
         # http://clang.llvm.org/docs/AddressSanitizer.html
-        local CC="${GCC_CC}"
-        local CXX="${GCC_CXX}"
+        local CC="${CLANG_CC}"
+        local CXX="${CLANG_CXX}"
         BASE_COMPILE_FLAGS+=" -g -fsanitize=address -fno-omit-frame-pointer"
         ;;
     coverage | lib-coverage | app-coverage)
