@@ -49,6 +49,9 @@
 # include <bsd/stdlib.h>
 #endif
 
+#if defined(_WIN32) && !defined(LOAD_LIBRARY_SEARCH_SYSTEM32)
+# define LOAD_LIBRARY_SEARCH_SYSTEM32  0x00000800
+#endif
 
 #if !defined(HAVE_GETRANDOM) && !defined(HAVE_SYSCALL_GETRANDOM) \
     && !defined(HAVE_ARC4RANDOM_BUF) && !defined(_WIN32) \
@@ -778,7 +781,7 @@ writeRandomBytes_getrandom(void * target, size_t count) {
 typedef BOOLEAN (APIENTRY *RTLGENRANDOM_FUNC)(PVOID, ULONG);
 
 /* Obtain entropy on Windows XP / Windows Server 2003 and later.
- * Hint on RtlGenRandom and the following article from libsodioum.
+ * Hint on RtlGenRandom and the following article from libsodium.
  *
  * Michael Howard: Cryptographically Secure Random number on Windows without using CryptoAPI
  * https://blogs.msdn.microsoft.com/michael_howard/2005/01/14/cryptographically-secure-random-number-on-windows-without-using-cryptoapi/
@@ -786,7 +789,13 @@ typedef BOOLEAN (APIENTRY *RTLGENRANDOM_FUNC)(PVOID, ULONG);
 static int
 writeRandomBytes_RtlGenRandom(void * target, size_t count) {
   int success = 0;  /* full count bytes written? */
-  const HMODULE advapi32 = LoadLibrary(TEXT("ADVAPI32.DLL"));
+  const LPCTSTR file_name = TEXT("ADVAPI32.DLL");
+  HMODULE advapi32 = LoadLibraryEx(file_name, 0, LOAD_LIBRARY_SEARCH_SYSTEM32);
+
+  if (! advapi32) {
+    /* Try again without LOAD_LIBRARY_SEARCH_SYSTEM32 if unsupported */
+    advapi32 = LoadLibraryEx(file_name, 0, 0);
+  }
 
   if (advapi32) {
     const RTLGENRANDOM_FUNC RtlGenRandom
