@@ -126,6 +126,25 @@ AC_LINK_IFELSE([AC_LANG_SOURCE([
     AC_MSG_RESULT([yes])
 ], [
     AC_MSG_RESULT([no])
+
+    AC_MSG_CHECKING([for arc4random (BSD, macOS or libbsd)])
+    AC_LINK_IFELSE([AC_LANG_SOURCE([
+      #if defined(HAVE_LIBBSD)
+      # include <bsd/stdlib.h>
+      #else
+      # include <stdlib.h>
+      #endif
+      int main() {
+          arc4random();
+          return 0;
+      }
+    ])], [
+        AC_DEFINE([HAVE_ARC4RANDOM], [1],
+            [Define to 1 if you have the `arc4random' function.])
+        AC_MSG_RESULT([yes])
+    ], [
+        AC_MSG_RESULT([no])
+    ])
 ])
 
 
