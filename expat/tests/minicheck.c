@@ -73,6 +73,10 @@ tcase_add_test(TCase *tc, tcase_test_function test)
 static void
 tcase_free(TCase *tc)
 {
+    if (! tc) {
+        return;
+    }
+
     free(tc->tests);
     free(tc);
 }
@@ -80,6 +84,10 @@ tcase_free(TCase *tc)
 static void
 suite_free(Suite *suite)
 {
+    if (! suite) {
+        return;
+    }
+
     while (suite->tests != NULL) {
         TCase *next = suite->tests->next_tcase;
         tcase_free(suite->tests);
@@ -193,6 +201,10 @@ srunner_ntests_failed(SRunner *runner)
 void
 srunner_free(SRunner *runner)
 {
+    if (! runner) {
+        return;
+    }
+
     suite_free(runner->suite);
     free(runner);
 }
