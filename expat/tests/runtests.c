@@ -163,8 +163,14 @@ dummy_notation_decl_handler(void *UNUSED_P(userData),
 static void XMLCALL
 dummy_element_decl_handler(void *UNUSED_P(userData),
                            const XML_Char *UNUSED_P(name),
-                           XML_Content *UNUSED_P(model))
-{}
+                           XML_Content *model)
+{
+    /* The content model must be freed by the handler.  Unfortunately
+     * we cannot pass the parser as the userData because this is used
+     * with other handlers that require other userData.
+     */
+    XML_FreeContentModel(parser, model);
+}
 
 static void XMLCALL
 dummy_attlist_decl_handler(void           *UNUSED_P(userData),
@@ -998,6 +1004,7 @@ external_entity_loader_set_encoding(XML_Parser parser,
         xml_failure(parser);
         return 0;
     }
+    XML_ParserFree(extparser);
     return 1;
 }
 
@@ -1068,9 +1075,10 @@ external_entity_loader(XML_Parser parser,
         fail("Could not create external entity parser.");
     if (  _XML_Parse_SINGLE_BYTES(extparser, text, strlen(text), XML_TRUE)
           == XML_STATUS_ERROR) {
-        xml_failure(parser);
+        xml_failure(extparser);
         return XML_STATUS_ERROR;
     }
+    XML_ParserFree(extparser);
     return XML_STATUS_OK;
 }
 
@@ -1881,6 +1889,7 @@ external_entity_resetter(XML_Parser parser,
         fail("Parsing status not still FINISHED");
         return XML_STATUS_ERROR;
     }
+    XML_ParserFree(ext_parser);
     return XML_STATUS_OK;
 }
 
@@ -1936,6 +1945,7 @@ external_entity_suspender(XML_Parser parser,
         xml_failure(ext_parser);
         return XML_STATUS_ERROR;
     }
+    XML_ParserFree(ext_parser);
     return XML_STATUS_OK;
 }
 
@@ -2045,6 +2055,7 @@ external_entity_param_checker(XML_Parser parser,
         return XML_STATUS_ERROR;
     }
     handler_data = parser;
+    XML_ParserFree(ext_parser);
     return XML_STATUS_OK;
 }
 
@@ -2390,6 +2401,7 @@ external_entity_param(XML_Parser parser,
         fail("Unknown system ID");
     }
 
+    XML_ParserFree(ext_parser);
     return XML_STATUS_ERROR;
 }
 
