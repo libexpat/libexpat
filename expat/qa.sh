@@ -15,7 +15,7 @@ set -o nounset
 : ${LD:=ld}
 : ${MAKE:=make}
 
-: ${BASE_FLAGS:="-pipe -Wall -Wextra -pedantic -Wno-overlength-strings"}
+: ${BASE_COMPILE_FLAGS:="-pipe -Wall -Wextra -pedantic -Wno-overlength-strings"}
 
 ANNOUNCE() {
     local open='\e[1m'
@@ -36,37 +36,37 @@ main() {
     shift
 
     local RUNENV
-    local BASE_FLAGS="${BASE_FLAGS}"
+    local BASE_COMPILE_FLAGS="${BASE_COMPILE_FLAGS}"
 
     case "${mode}" in
     address)
         # http://clang.llvm.org/docs/AddressSanitizer.html
         local CC="${GCC_CC}"
         local CXX="${GCC_CXX}"
-        BASE_FLAGS+=" -g -fsanitize=address -fno-omit-frame-pointer"
+        BASE_COMPILE_FLAGS+=" -g -fsanitize=address -fno-omit-frame-pointer"
         ;;
     coverage | lib-coverage | app-coverage)
         local CC="${GCC_CC}"
         local CXX="${GCC_CXX}"
-        BASE_FLAGS+=" --coverage --no-inline"
+        BASE_COMPILE_FLAGS+=" --coverage --no-inline"
         ;;
     egypt)
-        BASE_FLAGS+=" -fdump-rtl-expand"
+        BASE_COMPILE_FLAGS+=" -fdump-rtl-expand"
         ;;
     memory)
         # http://clang.llvm.org/docs/MemorySanitizer.html
-        BASE_FLAGS+=" -fsanitize=memory -fno-omit-frame-pointer -g -O2 -fsanitize-memory-track-origins -fsanitize-blacklist=memory-sanitizer-blacklist.txt"
+        BASE_COMPILE_FLAGS+=" -fsanitize=memory -fno-omit-frame-pointer -g -O2 -fsanitize-memory-track-origins -fsanitize-blacklist=memory-sanitizer-blacklist.txt"
         ;;
     ncc)
         # http://students.ceid.upatras.gr/~sxanth/ncc/
         local CC="ncc -ncgcc -ncld -ncfabs"
         local AR=nccar
         local LD=nccld
-        BASE_FLAGS+=" -fPIC"
+        BASE_COMPILE_FLAGS+=" -fPIC"
         ;;
     undefined)
         # http://clang.llvm.org/docs/UndefinedBehaviorSanitizer.html
-        BASE_FLAGS+=" -fsanitize=undefined"
+        BASE_COMPILE_FLAGS+=" -fsanitize=undefined"
         export UBSAN_OPTIONS=print_stacktrace=1
         ;;
     *)
@@ -76,8 +76,8 @@ main() {
         ;;
     esac
 
-    local CFLAGS="-std=c99 ${BASE_FLAGS} ${CFLAGS:-}"
-    local CXXFLAGS="-std=c++98 ${BASE_FLAGS} ${CXXFLAGS:-}"
+    local CFLAGS="-std=c99 ${BASE_COMPILE_FLAGS} ${CFLAGS:-}"
+    local CXXFLAGS="-std=c++98 ${BASE_COMPILE_FLAGS} ${CXXFLAGS:-}"
 
     (
         set -e
