@@ -71,18 +71,18 @@ tcase_add_test(TCase *tc, tcase_test_function test)
 }
 
 static void
-tcase_dispose(TCase *tc)
+tcase_free(TCase *tc)
 {
     free(tc->tests);
     free(tc);
 }
 
 static void
-suite_dispose(Suite *suite)
+suite_free(Suite *suite)
 {
     while (suite->tests != NULL) {
         TCase *next = suite->tests->next_tcase;
-        tcase_dispose(suite->tests);
+        tcase_free(suite->tests);
         suite->tests = next;
     }
     free(suite);
@@ -193,6 +193,6 @@ srunner_ntests_failed(SRunner *runner)
 void
 srunner_free(SRunner *runner)
 {
-    suite_dispose(runner->suite);
+    suite_free(runner->suite);
     free(runner);
 }
