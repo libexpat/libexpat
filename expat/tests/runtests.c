@@ -2168,6 +2168,8 @@ external_entity_suspend_xmldecl(XML_Parser parser,
         if (status.parsing != XML_FINISHED)
             fail("Ext Parsing status not FINISHED");
     }
+
+    XML_ParserFree(ext_parser);
     return XML_STATUS_OK;
 }
 
@@ -2239,6 +2241,8 @@ external_entity_suspending_faulter(XML_Parser parser,
         fail(fault->fail_text);
     if (XML_GetErrorCode(ext_parser) != fault->error)
         xml_failure(ext_parser);
+
+    XML_ParserFree(ext_parser);
     return XML_STATUS_ERROR;
 }
 
