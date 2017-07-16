@@ -3117,13 +3117,17 @@ storeAtts(XML_Parser parser, const ENCODING *enc,
 #endif
     attsSize = n + nDefaultAtts + INIT_ATTS_SIZE;
     temp = (ATTRIBUTE *)REALLOC((void *)atts, attsSize * sizeof(ATTRIBUTE));
-    if (temp == NULL)
+    if (temp == NULL) {
+      attsSize = oldAttsSize;
       return XML_ERROR_NO_MEMORY;
+    }
     atts = temp;
 #ifdef XML_ATTR_INFO
     temp2 = (XML_AttrInfo *)REALLOC((void *)attInfo, attsSize * sizeof(XML_AttrInfo));
-    if (temp2 == NULL)
+    if (temp2 == NULL) {
+      attsSize = oldAttsSize;
       return XML_ERROR_NO_MEMORY;
+    }
     attInfo = temp2;
 #endif
     if (n > oldAttsSize)
@@ -3260,6 +3264,7 @@ storeAtts(XML_Parser parser, const ENCODING *enc,
     int j;  /* hash table index */
     unsigned long version = nsAttsVersion;
     int nsAttsSize = (int)1 << nsAttsPower;
+    unsigned char oldNsAttsPower = nsAttsPower;
     /* size of hash table must be at least 2 * (# of prefixed attributes) */
     if ((nPrefixes << 1) >> nsAttsPower) {  /* true for nsAttsPower = 0 */
       NS_ATT *temp;
@@ -3269,8 +3274,11 @@ storeAtts(XML_Parser parser, const ENCODING *enc,
         nsAttsPower = 3;
       nsAttsSize = (int)1 << nsAttsPower;
       temp = (NS_ATT *)REALLOC(nsAtts, nsAttsSize * sizeof(NS_ATT));
-      if (!temp)
+      if (!temp) {
+        /* Restore actual size of memory in nsAtts */
+        nsAttsPower = oldNsAttsPower;
         return XML_ERROR_NO_MEMORY;
+      }
       nsAtts = temp;
       version = 0;  /* force re-initialization of nsAtts hash table */
     }
