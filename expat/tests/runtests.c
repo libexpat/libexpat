@@ -1048,6 +1048,8 @@ external_entity_loader_set_bom(XML_Parser parser,
         xml_failure(extparser);
         return 0;
     }
+
+    XML_ParserFree(extparser);
     return 1;
 }
 
@@ -1090,6 +1092,8 @@ external_entity_loader_bad_encoding(XML_Parser parser,
         fail("Unsupported encoding not faulted");
     if (XML_GetErrorCode(extparser) != XML_ERROR_UNKNOWN_ENCODING)
         xml_failure(extparser);
+
+    XML_ParserFree(extparser);
     return 0;
 }
 
@@ -1300,6 +1304,8 @@ external_entity_faulter(XML_Parser parser,
         fail(fault->fail_text);
     if (XML_GetErrorCode(ext_parser) != fault->error)
         xml_failure(ext_parser);
+
+    XML_ParserFree(ext_parser);
     return XML_STATUS_ERROR;
 }
 
