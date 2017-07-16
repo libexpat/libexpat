@@ -1310,7 +1310,7 @@ START_TEST(test_ext_entity_invalid_parse)
         "  <!ENTITY en SYSTEM 'http://xml.libexpat.org/dummy.ent'>\n"
         "]>\n"
         "<doc>&en;</doc>";
-    ExtFaults faults[] = {
+    const ExtFaults faults[] = {
         {
             "<",
             "Incomplete element declaration not faulted",
@@ -1323,12 +1323,12 @@ START_TEST(test_ext_entity_invalid_parse)
         },
         { NULL, NULL, XML_ERROR_NONE }
     };
-    ExtFaults *fault;
+    const ExtFaults *fault = faults;
 
-    for (fault = &faults[0]; fault->parse_text != NULL; fault++) {
+    for (; fault->parse_text != NULL; fault++) {
         XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
         XML_SetExternalEntityRefHandler(parser, external_entity_faulter);
-        XML_SetUserData(parser, fault);
+        XML_SetUserData(parser, (void *)fault);
         expect_failure(text,
                        XML_ERROR_EXTERNAL_ENTITY_HANDLING,
                        "Parser did not report external entity error");
