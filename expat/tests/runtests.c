@@ -2778,6 +2778,7 @@ external_entity_ref_param_checker(XML_Parser parameter,
                                 XML_TRUE) == XML_STATUS_ERROR)
         xml_failure(ext_parser);
 
+    XML_ParserFree(ext_parser);
     return XML_STATUS_OK;
 }
 
