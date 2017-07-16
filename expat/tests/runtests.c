@@ -2929,6 +2929,7 @@ external_entity_good_cdata_ascii(XML_Parser parser,
         xml_failure(ext_parser);
     CharData_CheckXMLChars(&storage, expected);
 
+    XML_ParserFree(ext_parser);
     return XML_STATUS_OK;
 }
 
@@ -3415,6 +3416,8 @@ external_entity_load_ignore(XML_Parser parser,
     if (_XML_Parse_SINGLE_BYTES(ext_parser, text, strlen(text),
                                 XML_TRUE) == XML_STATUS_ERROR)
         xml_failure(parser);
+
+    XML_ParserFree(ext_parser);
     return XML_STATUS_OK;
 }
 
