@@ -4832,8 +4832,10 @@ doProlog(XML_Parser parser,
       if (prologState.level >= groupSize) {
         if (groupSize) {
           char *temp = (char *)REALLOC(groupConnector, groupSize *= 2);
-          if (temp == NULL)
+          if (temp == NULL) {
+            groupSize /= 2;
             return XML_ERROR_NO_MEMORY;
+          }
           groupConnector = temp;
           if (dtd->scaffIndex) {
             int *temp = (int *)REALLOC(dtd->scaffIndex,
@@ -4845,8 +4847,10 @@ doProlog(XML_Parser parser,
         }
         else {
           groupConnector = (char *)MALLOC(groupSize = 32);
-          if (!groupConnector)
+          if (!groupConnector) {
+            groupSize = 0;
             return XML_ERROR_NO_MEMORY;
+          }
         }
       }
       groupConnector[prologState.level] = 0;

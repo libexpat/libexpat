@@ -127,6 +127,23 @@ _expect_failure(const char *text, enum XML_Error errorCode, const char *errorMes
 /* Dummy handlers for when we need to set a handler to tickle a bug,
    but it doesn't need to do anything.
 */
+static unsigned long dummy_handler_flags = 0;
+
+#define DUMMY_START_DOCTYPE_HANDLER_FLAG        (1UL << 0)
+#define DUMMY_END_DOCTYPE_HANDLER_FLAG          (1UL << 1)
+#define DUMMY_ENTITY_DECL_HANDLER_FLAG          (1UL << 2)
+#define DUMMY_NOTATION_DECL_HANDLER_FLAG        (1UL << 3)
+#define DUMMY_ELEMENT_DECL_HANDLER_FLAG         (1UL << 4)
+#define DUMMY_ATTLIST_DECL_HANDLER_FLAG         (1UL << 5)
+#define DUMMY_COMMENT_HANDLER_FLAG              (1UL << 6)
+#define DUMMY_PI_HANDLER_FLAG                   (1UL << 7)
+#define DUMMY_START_ELEMENT_HANDLER_FLAG        (1UL << 8)
+#define DUMMY_START_CDATA_HANDLER_FLAG          (1UL << 9)
+#define DUMMY_END_CDATA_HANDLER_FLAG            (1UL << 10)
+#define DUMMY_UNPARSED_ENTITY_DECL_HANDLER_FLAG (1UL << 11)
+#define DUMMY_START_NS_DECL_HANDLER_FLAG        (1UL << 12)
+#define DUMMY_END_NS_DECL_HANDLER_FLAG          (1UL << 13)
+
 
 static void XMLCALL
 dummy_start_doctype_handler(void           *UNUSED_P(userData),
@@ -134,11 +151,15 @@ dummy_start_doctype_handler(void           *UNUSED_P(userData),
                             const XML_Char *UNUSED_P(sysid),
                             const XML_Char *UNUSED_P(pubid),
                             int            UNUSED_P(has_internal_subset))
-{}
+{
+    dummy_handler_flags |= DUMMY_START_DOCTYPE_HANDLER_FLAG;
+}
 
 static void XMLCALL
 dummy_end_doctype_handler(void *UNUSED_P(userData))
-{}
+{
+    dummy_handler_flags |= DUMMY_END_DOCTYPE_HANDLER_FLAG;
+}
 
 static void XMLCALL
 dummy_entity_decl_handler(void           *UNUSED_P(userData),
@@ -150,7 +171,9 @@ dummy_entity_decl_handler(void           *UNUSED_P(userData),
                           const XML_Char *UNUSED_P(systemId),
                           const XML_Char *UNUSED_P(publicId),
                           const XML_Char *UNUSED_P(notationName))
-{}
+{
+    dummy_handler_flags |= DUMMY_ENTITY_DECL_HANDLER_FLAG;
+}
 
 static void XMLCALL
 dummy_notation_decl_handler(void *UNUSED_P(userData),
@@ -158,7 +181,9 @@ dummy_notation_decl_handler(void *UNUSED_P(userData),
                             const XML_Char *UNUSED_P(base),
                             const XML_Char *UNUSED_P(systemId),
                             const XML_Char *UNUSED_P(publicId))
-{}
+{
+    dummy_handler_flags |= DUMMY_NOTATION_DECL_HANDLER_FLAG;
+}
 
 static void XMLCALL
 dummy_element_decl_handler(void *UNUSED_P(userData),
@@ -170,6 +195,7 @@ dummy_element_decl_handler(void *UNUSED_P(userData),
      * with other handlers that require other userData.
      */
     XML_FreeContentModel(parser, model);
+    dummy_handler_flags |= DUMMY_ELEMENT_DECL_HANDLER_FLAG;
 }
 
 static void XMLCALL
@@ -179,20 +205,28 @@ dummy_attlist_decl_handler(void           *UNUSED_P(userData),
                            const XML_Char *UNUSED_P(att_type),
                            const XML_Char *UNUSED_P(dflt),
                            int            UNUSED_P(isrequired))
-{}
+{
+    dummy_handler_flags |= DUMMY_ATTLIST_DECL_HANDLER_FLAG;
+}
 
 static void XMLCALL
 dummy_comment_handler(void *UNUSED_P(userData), const XML_Char *UNUSED_P(data))
-{}
+{
+    dummy_handler_flags |= DUMMY_COMMENT_HANDLER_FLAG;
+}
 
 static void XMLCALL
 dummy_pi_handler(void *UNUSED_P(userData), const XML_Char *UNUSED_P(target), const XML_Char *UNUSED_P(data))
-{}
+{
+    dummy_handler_flags |= DUMMY_PI_HANDLER_FLAG;
+}
 
 static void XMLCALL
 dummy_start_element(void *UNUSED_P(userData),
                     const XML_Char *UNUSED_P(name), const XML_Char **UNUSED_P(atts))
-{}
+{
+    dummy_handler_flags |= DUMMY_START_ELEMENT_HANDLER_FLAG;
+}
 
 static void XMLCALL
 dummy_end_element(void *UNUSED_P(userData), const XML_Char *UNUSED_P(name))
@@ -200,11 +234,15 @@ dummy_end_element(void *UNUSED_P(userData), const XML_Char *UNUSED_P(name))
 
 static void XMLCALL
 dummy_start_cdata_handler(void *UNUSED_P(userData))
-{}
+{
+    dummy_handler_flags |= DUMMY_START_CDATA_HANDLER_FLAG;
+}
 
 static void XMLCALL
 dummy_end_cdata_handler(void *UNUSED_P(userData))
-{}
+{
+    dummy_handler_flags |= DUMMY_END_CDATA_HANDLER_FLAG;
+}
 
 static void XMLCALL
 dummy_cdata_handler(void *UNUSED_P(userData),
@@ -216,12 +254,16 @@ static void XMLCALL
 dummy_start_namespace_decl_handler(void *UNUSED_P(userData),
                                    const XML_Char *UNUSED_P(prefix),
                                    const XML_Char *UNUSED_P(uri))
-{}
+{
+    dummy_handler_flags |= DUMMY_START_NS_DECL_HANDLER_FLAG;
+}
 
 static void XMLCALL
 dummy_end_namespace_decl_handler(void *UNUSED_P(userData),
                                  const XML_Char *UNUSED_P(prefix))
-{}
+{
+    dummy_handler_flags |= DUMMY_END_NS_DECL_HANDLER_FLAG;
+}
 
 /* This handler is obsolete, but while the code exists we should
  * ensure that dealing with the handler is covered by tests.
@@ -233,7 +275,9 @@ dummy_unparsed_entity_decl_handler(void *UNUSED_P(userData),
                                    const XML_Char *UNUSED_P(systemId),
                                    const XML_Char *UNUSED_P(publicId),
                                    const XML_Char *UNUSED_P(notationName))
-{}
+{
+    dummy_handler_flags |= DUMMY_UNPARSED_ENTITY_DECL_HANDLER_FLAG;
+}
 
 static void XMLCALL
 dummy_default_handler(void *UNUSED_P(userData),
@@ -1068,17 +1112,17 @@ external_entity_loader_set_encoding(XML_Parser parser,
     if (  _XML_Parse_SINGLE_BYTES(extparser, text, strlen(text), XML_TRUE)
           == XML_STATUS_ERROR) {
         xml_failure(parser);
-        return 0;
+        return XML_STATUS_ERROR;
     }
     XML_ParserFree(extparser);
-    return 1;
+    return XML_STATUS_OK;
 }
 
 START_TEST(test_ext_entity_set_encoding)
 {
     const char *text =
         "<!DOCTYPE doc [\n"
-        "  <!ENTITY en SYSTEM 'http://xml.libexpat.org/dummy.ent'>\n"
+        "  <!ENTITY en SYSTEM 'http://example.org/dummy.ent'>\n"
         "]>\n"
         "<doc>&en;</doc>";
 
@@ -1093,7 +1137,7 @@ START_TEST(test_ext_entity_no_handler)
 {
     const char *text =
         "<!DOCTYPE doc [\n"
-        "  <!ENTITY en SYSTEM 'http://xml.libexpat.org/dummy.ent'>\n"
+        "  <!ENTITY en SYSTEM 'http://example.org/dummy.ent'>\n"
         "]>\n"
         "<doc>&en;</doc>";
 
@@ -1126,18 +1170,18 @@ external_entity_loader_set_bom(XML_Parser parser,
     if (  _XML_Parse_SINGLE_BYTES(extparser, text, strlen(text), XML_TRUE)
           == XML_STATUS_ERROR) {
         xml_failure(extparser);
-        return 0;
+        return XML_STATUS_ERROR;
     }
 
     XML_ParserFree(extparser);
-    return 1;
+    return XML_STATUS_OK;
 }
 
 START_TEST(test_ext_entity_set_bom)
 {
     const char *text =
         "<!DOCTYPE doc [\n"
-        "  <!ENTITY en SYSTEM 'http://xml.libexpat.org/dummy.ent'>\n"
+        "  <!ENTITY en SYSTEM 'http://example.org/dummy.ent'>\n"
         "]>\n"
         "<doc>&en;</doc>";
 
@@ -1174,14 +1218,14 @@ external_entity_loader_bad_encoding(XML_Parser parser,
         xml_failure(extparser);
 
     XML_ParserFree(extparser);
-    return 0;
+    return XML_STATUS_ERROR;
 }
 
 START_TEST(test_ext_entity_bad_encoding)
 {
     const char *text =
         "<!DOCTYPE doc [\n"
-        "  <!ENTITY en SYSTEM 'http://xml.libexpat.org/dummy.ent'>\n"
+        "  <!ENTITY en SYSTEM 'http://example.org/dummy.ent'>\n"
         "]>\n"
         "<doc>&en;</doc>";
 
@@ -1393,7 +1437,7 @@ START_TEST(test_ext_entity_invalid_parse)
 {
     const char *text =
         "<!DOCTYPE doc [\n"
-        "  <!ENTITY en SYSTEM 'http://xml.libexpat.org/dummy.ent'>\n"
+        "  <!ENTITY en SYSTEM 'http://example.org/dummy.ent'>\n"
         "]>\n"
         "<doc>&en;</doc>";
     const ExtFaults faults[] = {
@@ -1434,8 +1478,8 @@ START_TEST(test_dtd_default_handling)
 {
     const char *text =
         "<!DOCTYPE doc [\n"
-        "<!ENTITY e SYSTEM 'http://xml.libexpat.org/e'>\n"
-        "<!NOTATION n SYSTEM 'http://xml.libexpat.org/n'>\n"
+        "<!ENTITY e SYSTEM 'http://example.org/e'>\n"
+        "<!NOTATION n SYSTEM 'http://example.org/n'>\n"
         "<!ELEMENT doc EMPTY>\n"
         "<!ATTLIST doc a CDATA #IMPLIED>\n"
         "<?pi in dtd?>\n"
@@ -1466,7 +1510,7 @@ END_TEST
 START_TEST(test_empty_ns_without_namespaces)
 {
     const char *text =
-        "<doc xmlns:prefix='http://www.example.com/'>\n"
+        "<doc xmlns:prefix='http://example.org/'>\n"
         "  <e xmlns:prefix=''/>\n"
         "</doc>";
 
@@ -1484,7 +1528,7 @@ START_TEST(test_ns_in_attribute_default_without_namespaces)
     const char *text =
         "<!DOCTYPE e:element [\n"
         "  <!ATTLIST e:element\n"
-        "    xmlns:e CDATA 'http://example.com/'>\n"
+        "    xmlns:e CDATA 'http://example.org/'>\n"
         "      ]>\n"
         "<e:element/>";
 
@@ -2050,6 +2094,15 @@ record_cdata_nodefault_handler(void *userData,
     CharData_AppendString((CharData *)userData, "c");
 }
 
+static void XMLCALL
+record_skip_handler(void *userData,
+                    const XML_Char *UNUSED_P(entityName),
+                    int is_parameter_entity)
+{
+    CharData_AppendString((CharData *)userData,
+                          is_parameter_entity ? "E" : "e");
+}
+
 /* Test XML_DefaultCurrent() passes handling on correctly */
 START_TEST(test_default_current)
 {
@@ -2092,6 +2145,19 @@ START_TEST(test_default_current)
         xml_failure(parser);
     /* The default handler suppresses the entity */
     CharData_CheckString(&storage, "DDDDDDDDDDDDDDDDDDD");
+
+    /* Again, with a skip handler */
+    XML_ParserReset(parser, NULL);
+    XML_SetDefaultHandler(parser, record_default_handler);
+    XML_SetCharacterDataHandler(parser, record_cdata_handler);
+    XML_SetSkippedEntityHandler(parser, record_skip_handler);
+    CharData_Init(&storage);
+    XML_SetUserData(parser, &storage);
+    if (_XML_Parse_SINGLE_BYTES(parser, entity_text, strlen(entity_text),
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+    /* The default handler suppresses the entity */
+    CharData_CheckString(&storage, "DDDDDDDDDDDDDDDDDeD");
 
     /* This time, allow the entity through */
     XML_ParserReset(parser, NULL);
@@ -2289,12 +2355,6 @@ START_TEST(test_attributes)
     info[0].attributes = doc_info;
     info[1].attributes = tag_info;
 
-    /* Silence some warnings: doc_info and tag_info are not computable
-     * at load time, making the variable initialisation harder.
-     */
-    info[0].attributes = doc_info;
-    info[1].attributes = tag_info;
-
     XML_SetStartElementHandler(parser, counting_start_element_handler);
     XML_SetUserData(parser, info);
     if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text), XML_TRUE) == XML_STATUS_ERROR)
@@ -2432,7 +2492,7 @@ external_entity_resetter(XML_Parser parser,
 
 START_TEST(test_subordinate_reset)
 {
-   const char *text =
+    const char *text =
         "<?xml version='1.0' encoding='us-ascii'?>\n"
         "<!DOCTYPE doc SYSTEM 'foo'>\n"
         "<doc>&entity;</doc>";
@@ -2555,7 +2615,7 @@ START_TEST(test_subordinate_xdecl_suspend)
 {
     const char *text =
         "<!DOCTYPE doc [\n"
-        "  <!ENTITY entity SYSTEM 'http://xml.libexpat.org/dummy.ent'>\n"
+        "  <!ENTITY entity SYSTEM 'http://example.org/dummy.ent'>\n"
         "]>\n"
         "<doc>&entity;</doc>";
 
@@ -2573,7 +2633,7 @@ START_TEST(test_subordinate_xdecl_abort)
 {
     const char *text =
         "<!DOCTYPE doc [\n"
-        "  <!ENTITY entity SYSTEM 'http://xml.libexpat.org/dummy.ent'>\n"
+        "  <!ENTITY entity SYSTEM 'http://example.org/dummy.ent'>\n"
         "]>\n"
         "<doc>&entity;</doc>";
 
@@ -2628,7 +2688,7 @@ START_TEST(test_ext_entity_invalid_suspended_parse)
 {
     const char *text =
         "<!DOCTYPE doc [\n"
-        "  <!ENTITY en SYSTEM 'http://xml.libexpat.org/dummy.ent'>\n"
+        "  <!ENTITY en SYSTEM 'http://example.org/dummy.ent'>\n"
         "]>\n"
         "<doc>&en;</doc>";
     ExtFaults faults[] = {
@@ -2779,7 +2839,7 @@ START_TEST(test_ext_entity_trailing_cr)
 {
     const char *text =
         "<!DOCTYPE doc [\n"
-        "  <!ENTITY en SYSTEM 'http://example.com/dummy.ent'>\n"
+        "  <!ENTITY en SYSTEM 'http://example.org/dummy.ent'>\n"
         "]>\n"
         "<doc>&en;</doc>";
     int found_cr;
@@ -2886,7 +2946,7 @@ START_TEST(test_ext_entity_trailing_rsqb)
 {
     const char *text =
         "<!DOCTYPE doc [\n"
-        "  <!ENTITY en SYSTEM 'http://example.com/dummy.ent'>\n"
+        "  <!ENTITY en SYSTEM 'http://example.org/dummy.ent'>\n"
         "]>\n"
         "<doc>&en;</doc>";
     int found_rsqb;
@@ -2969,7 +3029,7 @@ xml_decl_handler(void *userData,
     if (userData != handler_data)
         fail("User data (xml decl) not correctly set");
     if (standalone != -1)
-        fail("Standalone not show as not present");
+        fail("Standalone not flagged as not present in XML decl");
     xdecl_count++;
 }
 
@@ -3161,9 +3221,28 @@ START_TEST(test_empty_parse)
 END_TEST
 
 /* Test odd corners of the XML_GetBuffer interface */
-START_TEST(test_get_buffer_1)
+static enum XML_Status
+get_feature(enum XML_FeatureEnum feature_id, long *presult)
 {
-    const char *text =
+    const XML_Feature *feature = XML_GetFeatureList();
+
+    if (feature == NULL)
+        return XML_STATUS_ERROR;
+    for (; feature->feature != XML_FEATURE_END; feature++) {
+        if (feature->feature == feature_id) {
+            *presult = feature->value;
+            return XML_STATUS_OK;
+        }
+    }
+    return XML_STATUS_ERROR;
+}
+
+/* Having an element name longer than 1024 characters exercises some
+ * of the pool allocation code in the parser that otherwise does not
+ * get executed.  The count at the end of the line is the number of
+ * characters (bytes) in the element name by that point.x
+ */
+static const char *get_buffer_test_text =
         "<documentwitharidiculouslylongelementnametotease" /* 0x030 */
         "aparticularcorneroftheallocationinXML_GetBuffers" /* 0x060 */
         "othatwecanimprovethecoverageyetagain012345678901" /* 0x090 */
@@ -3186,7 +3265,13 @@ START_TEST(test_get_buffer_1)
         "123456789abcdef0123456789abcdef0123456789abcdef0" /* 0x3c0 */
         "123456789abcdef0123456789abcdef0123456789abcdef0" /* 0x3f0 */
         "123456789abcdef0123456789abcdef0123456789>\n<ef0"; /* 0x420 */
+
+/* Test odd corners of the XML_GetBuffer interface */
+START_TEST(test_get_buffer_1)
+{
+    const char *text = get_buffer_test_text;
     void *buffer;
+    long context_bytes;
 
     /* Attempt to allocate a negative length buffer */
     if (XML_GetBuffer(parser, -12) != NULL)
@@ -3202,8 +3287,20 @@ START_TEST(test_get_buffer_1)
     if (XML_GetBuffer(parser, INT_MAX) != NULL)
         fail("INT_MAX buffer not failed");
 
-    /* Now try extending it a more reasonable but still too large amount */
-    if (XML_GetBuffer(parser, INT_MAX - 2049) != NULL)
+    /* Now try extending it a more reasonable but still too large
+     * amount.  The allocator in XML_GetBuffer() doubles the buffer
+     * size until it exceeds the requested amount or INT_MAX.  If it
+     * exceeds INT_MAX, it rejects the request, so we want a request
+     * between INT_MAX and INT_MAX/2.  A gap of 1K seems comfortable,
+     * with an extra byte just to ensure that the request is off any
+     * boundary.  The request will be inflated internally by
+     * XML_CONTEXT_BYTES (if defined), so we subtract that from our
+     * request.
+     */
+    if (get_feature(XML_FEATURE_CONTEXT_BYTES,
+                    &context_bytes) != XML_STATUS_OK)
+        context_bytes = 0;
+    if (XML_GetBuffer(parser, INT_MAX - (context_bytes + 1025)) != NULL)
         fail("INT_MAX- buffer not failed");
 
     /* Now try extending it a carefully crafted amount */
@@ -3215,29 +3312,7 @@ END_TEST
 /* Test more corners of the XML_GetBuffer interface */
 START_TEST(test_get_buffer_2)
 {
-    const char *text =
-        "<documentwitharidiculouslylongelementnametotease" /* 0x030 */
-        "aparticularcorneroftheallocationinXML_GetBuffers" /* 0x060 */
-        "othatwecanimprovethecoverageyetagain012345678901" /* 0x090 */
-        "123456789abcdef0123456789abcdef0123456789abcdef0" /* 0x0c0 */
-        "123456789abcdef0123456789abcdef0123456789abcdef0" /* 0x0f0 */
-        "123456789abcdef0123456789abcdef0123456789abcdef0" /* 0x120 */
-        "123456789abcdef0123456789abcdef0123456789abcdef0" /* 0x150 */
-        "123456789abcdef0123456789abcdef0123456789abcdef0" /* 0x180 */
-        "123456789abcdef0123456789abcdef0123456789abcdef0" /* 0x1b0 */
-        "123456789abcdef0123456789abcdef0123456789abcdef0" /* 0x1e0 */
-        "123456789abcdef0123456789abcdef0123456789abcdef0" /* 0x210 */
-        "123456789abcdef0123456789abcdef0123456789abcdef0" /* 0x240 */
-        "123456789abcdef0123456789abcdef0123456789abcdef0" /* 0x270 */
-        "123456789abcdef0123456789abcdef0123456789abcdef0" /* 0x2a0 */
-        "123456789abcdef0123456789abcdef0123456789abcdef0" /* 0x2d0 */
-        "123456789abcdef0123456789abcdef0123456789abcdef0" /* 0x300 */
-        "123456789abcdef0123456789abcdef0123456789abcdef0" /* 0x330 */
-        "123456789abcdef0123456789abcdef0123456789abcdef0" /* 0x360 */
-        "123456789abcdef0123456789abcdef0123456789abcdef0" /* 0x390 */
-        "123456789abcdef0123456789abcdef0123456789abcdef0" /* 0x3c0 */
-        "123456789abcdef0123456789abcdef0123456789abcdef0" /* 0x3f0 */
-        "123456789abcdef0123456789abcdef0123456789>\n<ef0"; /* 0x420 */
+    const char *text = get_buffer_test_text;
     void *buffer;
 
     /* Now get a decent buffer */
@@ -3330,6 +3405,31 @@ START_TEST(test_byte_info_at_cdata)
     XML_SetUserData(parser, (void *)strlen(text));
     if (XML_Parse(parser, text, strlen(text), XML_TRUE) != XML_STATUS_OK)
         xml_failure(parser);
+}
+END_TEST
+
+/* Test predefined entities are correctly recognised */
+START_TEST(test_predefined_entities)
+{
+    const char *text = "<doc>&lt;&gt;&amp;&quot;&apos;</doc>";
+    const char *result = "<>&\"'";
+    CharData storage;
+
+    XML_SetDefaultHandler(parser, accumulate_characters);
+    /* run_character_check uses XML_SetCharacterDataHandler(), which
+     * unfortunately heads off a code path that we need to exercise.
+     */
+    CharData_Init(&storage);
+    XML_SetUserData(parser, &storage);
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+    /* The default handler doesn't translate the entities */
+    CharData_CheckXMLChars(&storage, text);
+
+    /* Now try again and check the translation */
+    XML_ParserReset(parser, NULL);
+    run_character_check(text, result);
 }
 END_TEST
 
@@ -3479,6 +3579,7 @@ START_TEST(test_bad_ignore_section)
 }
 END_TEST
 
+
 /*
  * Namespaces tests.
  */
@@ -3502,7 +3603,8 @@ namespace_teardown(void)
    provided as the userData argument; the first is the expected
    element name, and the second is the expected attribute name.
 */
-static int triplet_count = 0;
+static int triplet_start_flag = XML_FALSE;
+static int triplet_end_flag = XML_FALSE;
 
 static void XMLCALL
 triplet_start_checker(void *userData, const XML_Char *name,
@@ -3518,7 +3620,7 @@ triplet_start_checker(void *userData, const XML_Char *name,
         sprintf(buffer, "unexpected attribute string: '%s'", atts[0]);
         fail(buffer);
     }
-    triplet_count++;
+    triplet_start_flag = XML_TRUE;
 }
 
 /* Check that the element name passed to the end-element handler matches
@@ -3534,18 +3636,18 @@ triplet_end_checker(void *userData, const XML_Char *name)
         sprintf(buffer, "unexpected end string: '%s'", name);
         fail(buffer);
     }
-    triplet_count++;
+    triplet_end_flag = XML_TRUE;
 }
 
 START_TEST(test_return_ns_triplet)
 {
     const char *text =
-        "<foo:e xmlns:foo='http://expat.sf.net/' bar:a='12'\n"
-        "       xmlns:bar='http://expat.sf.net/'>";
+        "<foo:e xmlns:foo='http://example.org/' bar:a='12'\n"
+        "       xmlns:bar='http://example.org/'>";
     const char *epilog = "</foo:e>";
     const char *elemstr[] = {
-        "http://expat.sf.net/ e foo",
-        "http://expat.sf.net/ a bar"
+        "http://example.org/ e foo",
+        "http://example.org/ a bar"
     };
     XML_SetReturnNSTriplet(parser, XML_TRUE);
     XML_SetUserData(parser, elemstr);
@@ -3554,19 +3656,27 @@ START_TEST(test_return_ns_triplet)
     XML_SetNamespaceDeclHandler(parser,
                                 dummy_start_namespace_decl_handler,
                                 dummy_end_namespace_decl_handler);
-    triplet_count = 0;
+    triplet_start_flag = XML_FALSE;
+    triplet_end_flag = XML_FALSE;
+    XML_SetNamespaceDeclHandler(parser,
+                                dummy_start_namespace_decl_handler,
+                                dummy_end_namespace_decl_handler);
+    dummy_handler_flags = 0;
     if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
                                 XML_FALSE) == XML_STATUS_ERROR)
         xml_failure(parser);
-    if (triplet_count != 1)
+    if (!triplet_start_flag)
         fail("triplet_start_checker not invoked");
     /* Check that unsetting "return triplets" fails while still parsing */
     XML_SetReturnNSTriplet(parser, XML_FALSE);
     if (_XML_Parse_SINGLE_BYTES(parser, epilog, strlen(epilog),
                                 XML_TRUE) == XML_STATUS_ERROR)
         xml_failure(parser);
-    if (triplet_count != 2)
+    if (!triplet_end_flag)
         fail("triplet_end_checker not invoked");
+    if (dummy_handler_flags != (DUMMY_START_NS_DECL_HANDLER_FLAG |
+                                DUMMY_END_NS_DECL_HANDLER_FLAG))
+        fail("Namespace handlers not called");
 }
 END_TEST
 
@@ -3611,19 +3721,19 @@ run_ns_tagname_overwrite_test(const char *text, const char *result)
 START_TEST(test_ns_tagname_overwrite)
 {
     const char *text =
-        "<n:e xmlns:n='http://xml.libexpat.org/'>\n"
+        "<n:e xmlns:n='http://example.org/'>\n"
         "  <n:f n:attr='foo'/>\n"
         "  <n:g n:attr2='bar'/>\n"
         "</n:e>";
     const char *result =
-        "start http://xml.libexpat.org/ e\n"
-        "start http://xml.libexpat.org/ f\n"
-        "attribute http://xml.libexpat.org/ attr\n"
-        "end http://xml.libexpat.org/ f\n"
-        "start http://xml.libexpat.org/ g\n"
-        "attribute http://xml.libexpat.org/ attr2\n"
-        "end http://xml.libexpat.org/ g\n"
-        "end http://xml.libexpat.org/ e\n";
+        "start http://example.org/ e\n"
+        "start http://example.org/ f\n"
+        "attribute http://example.org/ attr\n"
+        "end http://example.org/ f\n"
+        "start http://example.org/ g\n"
+        "attribute http://example.org/ attr2\n"
+        "end http://example.org/ g\n"
+        "end http://example.org/ e\n";
     run_ns_tagname_overwrite_test(text, result);
 }
 END_TEST
@@ -3632,19 +3742,19 @@ END_TEST
 START_TEST(test_ns_tagname_overwrite_triplet)
 {
     const char *text =
-        "<n:e xmlns:n='http://xml.libexpat.org/'>\n"
+        "<n:e xmlns:n='http://example.org/'>\n"
         "  <n:f n:attr='foo'/>\n"
         "  <n:g n:attr2='bar'/>\n"
         "</n:e>";
     const char *result =
-        "start http://xml.libexpat.org/ e n\n"
-        "start http://xml.libexpat.org/ f n\n"
-        "attribute http://xml.libexpat.org/ attr n\n"
-        "end http://xml.libexpat.org/ f n\n"
-        "start http://xml.libexpat.org/ g n\n"
-        "attribute http://xml.libexpat.org/ attr2 n\n"
-        "end http://xml.libexpat.org/ g n\n"
-        "end http://xml.libexpat.org/ e n\n";
+        "start http://example.org/ e n\n"
+        "start http://example.org/ f n\n"
+        "attribute http://example.org/ attr n\n"
+        "end http://example.org/ f n\n"
+        "start http://example.org/ g n\n"
+        "attribute http://example.org/ attr2 n\n"
+        "end http://example.org/ g n\n"
+        "end http://example.org/ e n\n";
     XML_SetReturnNSTriplet(parser, XML_TRUE);
     run_ns_tagname_overwrite_test(text, result);
 }
@@ -3674,7 +3784,7 @@ START_TEST(test_start_ns_clears_start_element)
        syntax doesn't cause the problematic path through Expat to be
        taken.
     */
-    const char *text = "<e xmlns='http://xml.libexpat.org/'></e>";
+    const char *text = "<e xmlns='http://example.org/'></e>";
 
     XML_SetStartElementHandler(parser, start_element_fail);
     XML_SetStartNamespaceDeclHandler(parser, start_ns_clearing_start_element);
@@ -3709,20 +3819,20 @@ external_entity_handler(XML_Parser parser,
     p2 = XML_ExternalEntityParserCreate(parser, context, NULL);
     if (_XML_Parse_SINGLE_BYTES(p2, text, strlen(text), XML_TRUE) == XML_STATUS_ERROR) {
         xml_failure(p2);
-        return 0;
+        return XML_STATUS_ERROR;
     }
     XML_ParserFree(p2);
-    return 1;
+    return XML_STATUS_OK;
 }
 
 START_TEST(test_default_ns_from_ext_subset_and_ext_ge)
 {
     const char *text =
         "<?xml version='1.0'?>\n"
-        "<!DOCTYPE doc SYSTEM 'http://xml.libexpat.org/doc.dtd' [\n"
-        "  <!ENTITY en SYSTEM 'http://xml.libexpat.org/entity.ent'>\n"
+        "<!DOCTYPE doc SYSTEM 'http://example.org/doc.dtd' [\n"
+        "  <!ENTITY en SYSTEM 'http://example.org/entity.ent'>\n"
         "]>\n"
-        "<doc xmlns='http://xml.libexpat.org/ns1'>\n"
+        "<doc xmlns='http://example.org/ns1'>\n"
         "&en;\n"
         "</doc>";
 
@@ -3740,7 +3850,7 @@ END_TEST
 START_TEST(test_ns_prefix_with_empty_uri_1)
 {
     const char *text =
-        "<doc xmlns:prefix='http://xml.libexpat.org/'>\n"
+        "<doc xmlns:prefix='http://example.org/'>\n"
         "  <e xmlns:prefix=''/>\n"
         "</doc>";
 
@@ -3788,14 +3898,14 @@ START_TEST(test_ns_prefix_with_empty_uri_4)
         "<!DOCTYPE doc [\n"
         "  <!ELEMENT prefix:doc EMPTY>\n"
         "  <!ATTLIST prefix:doc\n"
-        "    xmlns:prefix CDATA 'http://xml.libexpat.org/'>\n"
+        "    xmlns:prefix CDATA 'http://example.org/'>\n"
         "]>\n"
         "<prefix:doc/>";
     /* Packaged info expected by the end element handler;
        the weird structuring lets us re-use the triplet_end_checker()
        function also used for another test. */
     const char *elemstr[] = {
-        "http://xml.libexpat.org/ doc prefix"
+        "http://example.org/ doc prefix"
     };
     XML_SetReturnNSTriplet(parser, XML_TRUE);
     XML_SetUserData(parser, elemstr);
@@ -3812,7 +3922,7 @@ START_TEST(test_ns_unbound_prefix)
         "<!DOCTYPE doc [\n"
         "  <!ELEMENT prefix:doc EMPTY>\n"
         "  <!ATTLIST prefix:doc\n"
-        "    notxmlns:prefix CDATA 'http://example.com/'>\n"
+        "    notxmlns:prefix CDATA 'http://example.org/'>\n"
         "]>\n"
         "<prefix:doc/>";
 
@@ -3827,7 +3937,7 @@ END_TEST
 START_TEST(test_ns_default_with_empty_uri)
 {
     const char *text =
-        "<doc xmlns='http://xml.libexpat.org/'>\n"
+        "<doc xmlns='http://example.org/'>\n"
         "  <e xmlns=''/>\n"
         "</doc>";
     /* Add some handlers to exercise extra code paths */
@@ -3844,8 +3954,8 @@ END_TEST
 START_TEST(test_ns_duplicate_attrs_diff_prefixes)
 {
     const char *text =
-        "<doc xmlns:a='http://xml.libexpat.org/a'\n"
-        "     xmlns:b='http://xml.libexpat.org/a'\n"
+        "<doc xmlns:a='http://example.org/a'\n"
+        "     xmlns:b='http://example.org/a'\n"
         "     a:a='v' b:a='v' />";
     expect_failure(text,
                    XML_ERROR_DUPLICATE_ATTRIBUTE,
@@ -3927,13 +4037,13 @@ START_TEST(test_ns_long_element)
 {
     const char *text =
         "<foo:thisisalongenoughelementnametotriggerareallocation\n"
-        " xmlns:foo='http://expat.sf.net/' bar:a='12'\n"
-        " xmlns:bar='http://expat.sf.net/'>"
+        " xmlns:foo='http://example.org/' bar:a='12'\n"
+        " xmlns:bar='http://example.org/'>"
         "</foo:thisisalongenoughelementnametotriggerareallocation>";
     const char *elemstr[] = {
-        "http://expat.sf.net/"
+        "http://example.org/"
         " thisisalongenoughelementnametotriggerareallocation foo",
-        "http://expat.sf.net/ a bar"
+        "http://example.org/ a bar"
     };
 
     XML_SetReturnNSTriplet(parser, XML_TRUE);
@@ -4138,6 +4248,34 @@ START_TEST(test_misc_version)
         fail("Micro version conversion from text failed");
     if (value != version_struct.micro)
         fail("Micro version mismatch");
+}
+END_TEST
+
+/* Test feature information */
+START_TEST(test_misc_features)
+{
+    const XML_Feature *features = XML_GetFeatureList();
+
+    /* Prevent problems with double-freeing parsers */
+    parser = NULL;
+    if (features == NULL)
+        fail("Failed to get feature information");
+    /* Loop through the features checking what we can */
+    while (features->feature != XML_FEATURE_END) {
+        switch(features->feature) {
+            case XML_FEATURE_SIZEOF_XML_CHAR:
+                if (features->value != sizeof(XML_Char))
+                    fail("Incorrect size of XML_Char");
+                break;
+            case XML_FEATURE_SIZEOF_XML_LCHAR:
+                if (features->value != sizeof(XML_LChar))
+                    fail("Incorrect size of XML_LChar");
+                break;
+            default:
+                break;
+        }
+        features++;
+    }
 }
 END_TEST
 
@@ -4454,7 +4592,7 @@ external_entity_dbl_handler(XML_Parser parser,
         new_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
         if (new_parser == NULL) {
             fail("Unable to allocate first external parser");
-            return 0;
+            return XML_STATUS_ERROR;
         }
         /* Stash the number of calls in the user data */
         XML_SetUserData(parser, (void *)(intptr_t)(10000 - allocation_count));
@@ -4473,21 +4611,21 @@ external_entity_dbl_handler(XML_Parser parser,
         if (i == 0) {
             fail("Second external parser unexpectedly created");
             XML_ParserFree(new_parser);
-            return 0;
+            return XML_STATUS_ERROR;
         }
         else if (i == 20) {
             fail("Second external parser not created");
-            return 0;
+            return XML_STATUS_ERROR;
         }
     }
 
     allocation_count = ALLOC_ALWAYS_SUCCEED;
     if (_XML_Parse_SINGLE_BYTES(new_parser, text, strlen(text), XML_TRUE) == XML_STATUS_ERROR) {
         xml_failure(new_parser);
-        return 0;
+        return XML_STATUS_ERROR;
     }
     XML_ParserFree(new_parser);
-    return 1;
+    return XML_STATUS_OK;
 }
 
 /* Test that running out of memory in dtdCopy is correctly reported.
@@ -4497,10 +4635,10 @@ START_TEST(test_alloc_dtd_copy_default_atts)
 {
     const char *text =
         "<?xml version='1.0'?>\n"
-        "<!DOCTYPE doc SYSTEM 'http://xml.libexpat.org/doc.dtd' [\n"
-        "  <!ENTITY en SYSTEM 'http://xml.libexpat.org/entity.ent'>\n"
+        "<!DOCTYPE doc SYSTEM 'http://example.org/doc.dtd' [\n"
+        "  <!ENTITY en SYSTEM 'http://example.org/entity.ent'>\n"
         "]>\n"
-        "<doc xmlns='http://xml.libexpat.org/ns1'>\n"
+        "<doc xmlns='http://example.org/ns1'>\n"
         "&en;\n"
         "</doc>";
 
@@ -4524,7 +4662,7 @@ external_entity_dbl_handler_2(XML_Parser parser,
     intptr_t callno = (intptr_t)XML_GetUserData(parser);
     const char *text;
     XML_Parser new_parser;
-    int i;
+    enum XML_Status rv;
 
     if (callno == 0) {
         /* Try different allocation levels for whole exercise */
@@ -4532,49 +4670,27 @@ external_entity_dbl_handler_2(XML_Parser parser,
                 "<!ATTLIST doc xmlns CDATA #IMPLIED>\n"
                 "<!ELEMENT e EMPTY>\n");
         XML_SetUserData(parser, (void *)(intptr_t)1);
-        for (i = 0; i < 20; i++) {
-            allocation_count = i;
-            new_parser = XML_ExternalEntityParserCreate(parser,
-                                                        context,
-                                                        NULL);
-            if (new_parser == NULL)
-                continue;
-            if (_XML_Parse_SINGLE_BYTES(new_parser, text, strlen(text),
-                                        XML_TRUE) != XML_STATUS_ERROR)
-                break;
-            XML_ParserFree(new_parser);
-        }
-
-        /* Ensure future allocations will be well */
-        allocation_count = ALLOC_ALWAYS_SUCCEED;
-        if (i == 0) {
-            fail("first external parser unexpectedly created");
-            XML_ParserFree(new_parser);
-            return 0;
-        }
-        else if (i == 20) {
-            fail("first external parser not allocated with count 20");
-            return 0;
-        }
+        new_parser = XML_ExternalEntityParserCreate(parser,
+                                                    context,
+                                                    NULL);
+        if (new_parser == NULL)
+            return XML_STATUS_ERROR;
+        rv = _XML_Parse_SINGLE_BYTES(new_parser, text, strlen(text),
+                                     XML_TRUE);
     } else {
         /* Just run through once */
         text = ("<?xml version='1.0' encoding='us-ascii'?>"
                 "<e/>");
-        allocation_count = ALLOC_ALWAYS_SUCCEED;
         new_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
-        if (new_parser == NULL) {
-            fail("Unable to create second external parser");
-            return 0;
-        }
-        if (_XML_Parse_SINGLE_BYTES(new_parser, text, strlen(text),
-                                    XML_TRUE) == XML_STATUS_ERROR) {
-            xml_failure(new_parser);
-            XML_ParserFree(new_parser);
-            return 0;
-        }
+        if (new_parser == NULL)
+            return XML_STATUS_ERROR;
+        rv =_XML_Parse_SINGLE_BYTES(new_parser, text, strlen(text),
+                                    XML_TRUE);
     }
     XML_ParserFree(new_parser);
-    return 1;
+    if (rv == XML_STATUS_ERROR)
+        return XML_STATUS_ERROR;
+    return XML_STATUS_OK;
 }
 
 /* Test more external entity allocation failure paths */
@@ -4582,20 +4698,47 @@ START_TEST(test_alloc_external_entity)
 {
     const char *text =
         "<?xml version='1.0'?>\n"
-        "<!DOCTYPE doc SYSTEM 'http://xml.libexpat.org/doc.dtd' [\n"
-        "  <!ENTITY en SYSTEM 'http://xml.libexpat.org/entity.ent'>\n"
+        "<!DOCTYPE doc SYSTEM 'http://example.org/doc.dtd' [\n"
+        "  <!ENTITY en SYSTEM 'http://example.org/entity.ent'>\n"
         "]>\n"
-        "<doc xmlns='http://xml.libexpat.org/ns1'>\n"
+        "<doc xmlns='http://example.org/ns1'>\n"
         "&en;\n"
         "</doc>";
+    int i;
+    int repeat = 0;
+#define ALLOC_TEST_MAX_REPEATS 50
 
-    XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
-    XML_SetExternalEntityRefHandler(parser,
-                                    external_entity_dbl_handler_2);
-    XML_SetUserData(parser, NULL);
-    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
-                                XML_TRUE) == XML_STATUS_ERROR)
-        xml_failure(parser);
+    for (i = 0; i < ALLOC_TEST_MAX_REPEATS; i++) {
+        /* Some allocation counts need to be repeated to follow all
+         * the failure paths, given some allocations are cached.
+         */
+        if (i == 11 && repeat == 7) {
+            i -= 2;
+            repeat++;
+        } else if ((i == 1 && repeat < 2) ||
+                   (i == 2 && repeat < 4) ||
+                   (repeat < 7 && i == repeat+2) ||
+                   (i == 10 && repeat == 8)) {
+            i--;
+            repeat++;
+        }
+        allocation_count = -1;
+        XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+        XML_SetExternalEntityRefHandler(parser,
+                                        external_entity_dbl_handler_2);
+        XML_SetUserData(parser, NULL);
+        allocation_count = i;
+        if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                    XML_TRUE) == XML_STATUS_OK)
+            break;
+        XML_ParserReset(parser, NULL);
+    }
+    allocation_count = -1;
+    if (i == 0)
+        fail("External entity parsed despite duff allocator");
+    if (i == ALLOC_TEST_MAX_REPEATS)
+        fail("External entity not parsed at max allocation count");
+#undef ALLOC_TEST_MAX_REPEATS
 }
 END_TEST
 
@@ -4616,17 +4759,17 @@ external_entity_alloc_set_encoding(XML_Parser parser,
 
     ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
     if (ext_parser == NULL)
-        return 0;
+        return XML_STATUS_ERROR;
     if (!XML_SetEncoding(ext_parser, "utf-8")) {
         XML_ParserFree(ext_parser);
-        return 0;
+        return XML_STATUS_ERROR;
     }
     status = _XML_Parse_SINGLE_BYTES(ext_parser, text, strlen(text),
                                      XML_TRUE);
     XML_ParserFree(ext_parser);
     if (status == XML_STATUS_ERROR)
-        return 0;
-    return 1;
+        return XML_STATUS_ERROR;
+    return XML_STATUS_OK;
 }
 
 START_TEST(test_alloc_ext_entity_set_encoding)
@@ -4724,26 +4867,32 @@ START_TEST(test_alloc_dtd_default_handling)
 {
     const char *text =
         "<!DOCTYPE doc [\n"
-        "<!ENTITY e SYSTEM 'http://xml.libexpat.org/e'>\n"
-        "<!NOTATION n SYSTEM 'http://xml.libexpat.org/n'>\n"
-        "<!ELEMENT doc EMPTY>\n"
+        "<!ENTITY e SYSTEM 'http://example.org/e'>\n"
+        "<!NOTATION n SYSTEM 'http://example.org/n'>\n"
+        "<!ENTITY e1 SYSTEM 'http://example.org/e' NDATA n>\n"
+        "<!ELEMENT doc (#PCDATA)>\n"
         "<!ATTLIST doc a CDATA #IMPLIED>\n"
         "<?pi in dtd?>\n"
         "<!--comment in dtd-->\n"
-        "]><doc/>";
-    const char *expected = "\n\n\n\n\n\n\n<doc/>";
+        "]>\n"
+        "<doc><![CDATA[text in doc]]></doc>";
+    const char *expected = "\n\n\n\n\n\n\n\n\n<doc>text in doc</doc>";
     CharData storage;
     int i;
+#define MAX_ALLOC_COUNT 15
     int repeat = 0;
 
-    for (i = 0; i < 10; i++) {
+    for (i = 0; i < MAX_ALLOC_COUNT; i++) {
         /* Repeat some counts to catch cached allocations */
         if ((repeat < 4 && i == 2) ||
-            (repeat == 4 && i == 3)) {
+            (repeat == 4 && i == 4) ||
+            (repeat == 5 && i == 5) ||
+            (repeat == 6 && i == 8)) {
             i--;
             repeat++;
         }
         allocation_count = i;
+        dummy_handler_flags = 0;
         XML_SetDefaultHandler(parser, accumulate_characters);
         XML_SetDoctypeDeclHandler(parser,
                                   dummy_start_doctype_handler,
@@ -4768,14 +4917,25 @@ START_TEST(test_alloc_dtd_default_handling)
             break;
         XML_ParserReset(parser, NULL);
     }
-    if (i == 0) {
+    if (i == 0)
         fail("Default DTD parsed despite allocation failures");
-    } else if (i == 10) {
-        fail("Default DTD not parsed with alloc count 10");
-    } else {
-        CharData_CheckXMLChars(&storage, expected);
-    }
+    if (i == MAX_ALLOC_COUNT)
+        fail("Default DTD not parsed with maximum alloc count");
+    CharData_CheckXMLChars(&storage, expected);
+    if (dummy_handler_flags != (DUMMY_START_DOCTYPE_HANDLER_FLAG |
+                                DUMMY_END_DOCTYPE_HANDLER_FLAG |
+                                DUMMY_ENTITY_DECL_HANDLER_FLAG |
+                                DUMMY_NOTATION_DECL_HANDLER_FLAG |
+                                DUMMY_ELEMENT_DECL_HANDLER_FLAG |
+                                DUMMY_ATTLIST_DECL_HANDLER_FLAG |
+                                DUMMY_COMMENT_HANDLER_FLAG |
+                                DUMMY_PI_HANDLER_FLAG |
+                                DUMMY_START_CDATA_HANDLER_FLAG |
+                                DUMMY_END_CDATA_HANDLER_FLAG |
+                                DUMMY_UNPARSED_ENTITY_DECL_HANDLER_FLAG))
+        fail("Not all handlers were called");
 }
+#undef MAX_ALLOC_COUNT
 END_TEST
 
 /* Test robustness of XML_SetEncoding() with a failing allocator */
@@ -4813,6 +4973,138 @@ START_TEST(test_alloc_set_base)
 }
 END_TEST
 
+/* Test buffer extension in the face of a duff reallocator */
+START_TEST(test_alloc_realloc_buffer)
+{
+    const char *text = get_buffer_test_text;
+    void *buffer;
+    int i;
+    int repeat = 0;
+
+    /* Get a smallish buffer */
+    for (i = 0; i < 10; i++) {
+        /* Repeat some indexes for cached allocations */
+        if (repeat < 6 && i == 2) {
+            i--;
+            repeat++;
+        }
+        reallocation_count = i;
+        buffer = XML_GetBuffer(parser, 1536);
+        if (buffer == NULL)
+            fail("1.5K buffer reallocation failed");
+        memcpy(buffer, text, strlen(text));
+        if (XML_ParseBuffer(parser, strlen(text),
+                            XML_FALSE) == XML_STATUS_OK)
+            break;
+        XML_ParserReset(parser, NULL);
+    }
+    reallocation_count = -1;
+    if (i == 0)
+        fail("Parse succeeded with no reallocation");
+    else if (i == 10)
+        fail("Parse failed with reallocation count 10");
+}
+END_TEST
+
+/* Same test for external entity parsers */
+static int XMLCALL
+external_entity_reallocator(XML_Parser parser,
+                            const XML_Char *context,
+                            const XML_Char *UNUSED_P(base),
+                            const XML_Char *UNUSED_P(systemId),
+                            const XML_Char *UNUSED_P(publicId))
+{
+    const char *text = get_buffer_test_text;
+    XML_Parser ext_parser;
+    void *buffer;
+    enum XML_Status status;
+
+    ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
+    if (ext_parser == NULL)
+        fail("Could not create external entity parser");
+
+    reallocation_count = (intptr_t)XML_GetUserData(parser);
+    buffer = XML_GetBuffer(ext_parser, 1536);
+    if (buffer == NULL)
+        fail("Buffer allocation failed");
+    memcpy(buffer, text, strlen(text));
+    status = XML_ParseBuffer(ext_parser, strlen(text), XML_FALSE);
+    reallocation_count = -1;
+    XML_ParserFree(ext_parser);
+    return (status == XML_STATUS_OK) ? XML_STATUS_OK : XML_STATUS_ERROR;
+}
+
+START_TEST(test_alloc_ext_entity_realloc_buffer)
+{
+    const char *text =
+        "<!DOCTYPE doc [\n"
+        "  <!ENTITY en SYSTEM 'http://example.org/dummy.ent'>\n"
+        "]>\n"
+        "<doc>&en;</doc>";
+    int i;
+
+    for (i = 0; i < 10; i++) {
+        XML_SetExternalEntityRefHandler(parser,
+                                        external_entity_reallocator);
+        XML_SetUserData(parser, (void *)(intptr_t)i);
+        if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                    XML_TRUE) == XML_STATUS_OK)
+            break;
+        XML_ParserReset(parser, NULL);
+    }
+    if (i == 0)
+        fail("Succeeded with no reallocations");
+    if (i == 10)
+        fail("Failed with 10 reallocations");
+}
+END_TEST
+
+/* Test elements with many attributes are handled correctly */
+START_TEST(test_alloc_realloc_many_attributes)
+{
+    const char *text =
+        "<!DOCTYPE doc [\n"
+        "<!ATTLIST doc za CDATA 'default'>\n"
+        "<!ATTLIST doc zb CDATA 'def2'>\n"
+        "<!ATTLIST doc zc CDATA 'def3'>\n"
+        "]>\n"
+        "<doc a='1'"
+        "     b='2'"
+        "     c='3'"
+        "     d='4'"
+        "     e='5'"
+        "     f='6'"
+        "     g='7'"
+        "     h='8'"
+        "     i='9'"
+        "     j='10'"
+        "     k='11'"
+        "     l='12'"
+        "     m='13'"
+        "     n='14'"
+        "     p='15'"
+        "     q='16'"
+        "     r='17'"
+        "     s='18'>"
+        "</doc>";
+    int i;
+#define MAX_REALLOC_COUNT 10
+
+    for (i = 0; i < MAX_REALLOC_COUNT; i++) {
+        reallocation_count = i;
+        if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                    XML_TRUE) != XML_STATUS_ERROR)
+            break;
+        XML_ParserReset(parser, NULL);
+    }
+    if (i == 0)
+        fail("Parse succeeded despite no reallocations");
+    if (i == MAX_REALLOC_COUNT)
+        fail("Parse failed at max reallocations");
+#undef MAX_REALLOC_COUNT
+}
+END_TEST
+
 
 static void
 nsalloc_setup(void)
@@ -4845,7 +5137,7 @@ nsalloc_teardown(void)
 START_TEST(test_nsalloc_xmlns)
 {
     const char *text =
-        "<doc xmlns='http://xml.libexpat.org/'>\n"
+        "<doc xmlns='http://example.org/'>\n"
         "  <e xmlns=''/>\n"
         "</doc>";
     unsigned int i;
@@ -4978,7 +5270,7 @@ START_TEST(test_nsalloc_long_prefix)
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
-        "='http://example.com/'>"
+        "='http://example.org/'>"
         "</"
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
@@ -5035,7 +5327,7 @@ END_TEST
 START_TEST(test_nsalloc_long_uri)
 {
     const char *text =
-        "<foo:e xmlns:foo='http://example.com/"
+        "<foo:e xmlns:foo='http://example.org/"
         /* 64 characters per line */
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789A/"
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789A/"
@@ -5054,7 +5346,7 @@ START_TEST(test_nsalloc_long_uri)
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789A/"
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789A/"
         "' bar:a='12'\n"
-        "xmlns:bar='http://example.com/"
+        "xmlns:bar='http://example.org/"
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789A/"
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789A/"
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789A/"
@@ -5277,8 +5569,8 @@ END_TEST
 START_TEST(test_nsalloc_realloc_attributes)
 {
     const char *text =
-        "<foo:e xmlns:foo='http://expat.sf.net/' bar:a='12'\n"
-        "       xmlns:bar='http://expat.sf.net/'>"
+        "<foo:e xmlns:foo='http://example.org/' bar:a='12'\n"
+        "       xmlns:bar='http://example.org/'>"
         "</foo:e>";
     int i;
 #define MAX_REALLOC_COUNT 10
@@ -5498,6 +5790,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_byte_info_at_end);
     tcase_add_test(tc_basic, test_byte_info_at_error);
     tcase_add_test(tc_basic, test_byte_info_at_cdata);
+    tcase_add_test(tc_basic, test_predefined_entities);
     tcase_add_test(tc_basic, test_invalid_tag_in_dtd);
     tcase_add_test(tc_basic, test_ignore_section);
     tcase_add_test(tc_basic, test_bad_ignore_section);
@@ -5534,6 +5827,7 @@ make_suite(void)
     tcase_add_test(tc_misc, test_misc_null_parser);
     tcase_add_test(tc_misc, test_misc_error_string);
     tcase_add_test(tc_misc, test_misc_version);
+    tcase_add_test(tc_misc, test_misc_features);
     tcase_add_test(tc_misc, test_misc_attribute_leak);
 
     suite_add_tcase(s, tc_alloc);
@@ -5551,6 +5845,9 @@ make_suite(void)
     tcase_add_test(tc_alloc, test_alloc_dtd_default_handling);
     tcase_add_test(tc_alloc, test_alloc_explicit_encoding);
     tcase_add_test(tc_alloc, test_alloc_set_base);
+    tcase_add_test(tc_alloc, test_alloc_realloc_buffer);
+    tcase_add_test(tc_alloc, test_alloc_ext_entity_realloc_buffer);
+    tcase_add_test(tc_alloc, test_alloc_realloc_many_attributes);
 
     suite_add_tcase(s, tc_nsalloc);
     tcase_add_checked_fixture(tc_nsalloc, nsalloc_setup, nsalloc_teardown);
