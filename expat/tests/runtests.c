@@ -2492,7 +2492,7 @@ external_entity_resetter(XML_Parser parser,
 
 START_TEST(test_subordinate_reset)
 {
-   const char *text =
+    const char *text =
         "<?xml version='1.0' encoding='us-ascii'?>\n"
         "<!DOCTYPE doc SYSTEM 'foo'>\n"
         "<doc>&entity;</doc>";
