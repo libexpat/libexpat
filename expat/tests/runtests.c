@@ -1022,6 +1022,97 @@ START_TEST(test_ext_entity_set_encoding)
 }
 END_TEST
 
+/* Test UTF-8 BOM is accepted */
+static int XMLCALL
+external_entity_loader_set_bom(XML_Parser parser,
+                               const XML_Char *context,
+                               const XML_Char *UNUSED_P(base),
+                               const XML_Char *UNUSED_P(systemId),
+                               const XML_Char *UNUSED_P(publicId))
+{    /* This text says it's an unsupported encoding, but it's really
+       UTF-8, which we tell Expat using XML_SetEncoding().
+    */
+    const char *text =
+        "\xEF\xBB\xBF" /* BOM */
+        "<?xml encoding='iso-8859-3'?>"
+        "\xC3\xA9";
+    XML_Parser extparser;
+
+    extparser = XML_ExternalEntityParserCreate(parser, context, NULL);
+    if (extparser == NULL)
+        fail("Could not create external entity parser.");
+    if (!XML_SetEncoding(extparser, "utf-8"))
+      fail("XML_SetEncoding() ignored for external entity");
+    if (  _XML_Parse_SINGLE_BYTES(extparser, text, strlen(text), XML_TRUE)
+          == XML_STATUS_ERROR) {
+        xml_failure(extparser);
+        return 0;
+    }
+
+    XML_ParserFree(extparser);
+    return 1;
+}
+
+START_TEST(test_ext_entity_set_bom)
+{
+    const char *text =
+        "<!DOCTYPE doc [\n"
+        "  <!ENTITY en SYSTEM 'http://xml.libexpat.org/dummy.ent'>\n"
+        "]>\n"
+        "<doc>&en;</doc>";
+
+    XML_SetExternalEntityRefHandler(parser,
+                                    external_entity_loader_set_bom);
+    run_character_check(text, "\xC3\xA9");
+}
+END_TEST
+
+
+/* Test that bad encodings are faulted */
+static int XMLCALL
+external_entity_loader_bad_encoding(XML_Parser parser,
+                                    const XML_Char *context,
+                                    const XML_Char *UNUSED_P(base),
+                                    const XML_Char *UNUSED_P(systemId),
+                                    const XML_Char *UNUSED_P(publicId))
+{
+    /* Claim this is an unsupported encoding */
+    const char *text =
+        "<?xml encoding='iso-8859-3'?>"
+        "u";
+    XML_Parser extparser;
+
+    extparser = XML_ExternalEntityParserCreate(parser, context, NULL);
+    if (extparser == NULL)
+        fail("Could not create external entity parser.");
+    if (!XML_SetEncoding(extparser, "unknown"))
+        fail("XML_SetEncoding unknown encoding failed");
+    if (_XML_Parse_SINGLE_BYTES(extparser, text, strlen(text),
+                                XML_TRUE) != XML_STATUS_ERROR)
+        fail("Unsupported encoding not faulted");
+    if (XML_GetErrorCode(extparser) != XML_ERROR_UNKNOWN_ENCODING)
+        xml_failure(extparser);
+
+    XML_ParserFree(extparser);
+    return 0;
+}
+
+START_TEST(test_ext_entity_bad_encoding)
+{
+    const char *text =
+        "<!DOCTYPE doc [\n"
+        "  <!ENTITY en SYSTEM 'http://xml.libexpat.org/dummy.ent'>\n"
+        "]>\n"
+        "<doc>&en;</doc>";
+
+    XML_SetExternalEntityRefHandler(parser,
+                                    external_entity_loader_bad_encoding);
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                XML_TRUE) != XML_STATUS_ERROR)
+        fail("Bad encoding should not have been accepted");
+}
+END_TEST
+
 /* Test that no error is reported for unknown entities if we don't
    read an external subset.  This was fixed in Expat 1.95.5.
 */
@@ -1184,6 +1275,74 @@ START_TEST(test_wfc_no_recursive_entity_refs)
                    "Parser did not report recursive entity reference.");
 }
 END_TEST
+
+/* Test incomplete external entities are faulted */
+typedef struct ext_faults
+{
+    const char *parse_text;
+    const char *fail_text;
+    enum XML_Error error;
+} ExtFaults;
+
+static int XMLCALL
+external_entity_faulter(XML_Parser parser,
+                        const XML_Char *context,
+                        const XML_Char *UNUSED_P(base),
+                        const XML_Char *UNUSED_P(systemId),
+                        const XML_Char *UNUSED_P(publicId))
+{
+    XML_Parser ext_parser;
+    ExtFaults *fault = (ExtFaults *)XML_GetUserData(parser);
+
+    ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
+    if (ext_parser == NULL)
+        fail("Could not create external entity parser");
+    if (_XML_Parse_SINGLE_BYTES(ext_parser,
+                                fault->parse_text,
+                                strlen(fault->parse_text),
+                                XML_TRUE) != XML_STATUS_ERROR)
+        fail(fault->fail_text);
+    if (XML_GetErrorCode(ext_parser) != fault->error)
+        xml_failure(ext_parser);
+
+    XML_ParserFree(ext_parser);
+    return XML_STATUS_ERROR;
+}
+
+START_TEST(test_ext_entity_invalid_parse)
+{
+    const char *text =
+        "<!DOCTYPE doc [\n"
+        "  <!ENTITY en SYSTEM 'http://xml.libexpat.org/dummy.ent'>\n"
+        "]>\n"
+        "<doc>&en;</doc>";
+    const ExtFaults faults[] = {
+        {
+            "<",
+            "Incomplete element declaration not faulted",
+            XML_ERROR_UNCLOSED_TOKEN
+        },
+        {
+            "<\xe2\x82", /* First two bytes of a three-byte char */
+            "Incomplete character not faulted",
+            XML_ERROR_PARTIAL_CHAR
+        },
+        { NULL, NULL, XML_ERROR_NONE }
+    };
+    const ExtFaults *fault = faults;
+
+    for (; fault->parse_text != NULL; fault++) {
+        XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+        XML_SetExternalEntityRefHandler(parser, external_entity_faulter);
+        XML_SetUserData(parser, (void *)fault);
+        expect_failure(text,
+                       XML_ERROR_EXTERNAL_ENTITY_HANDLING,
+                       "Parser did not report external entity error");
+        XML_ParserReset(parser, NULL);
+    }
+}
+END_TEST
+
 
 /* Regression test for SF bug #483514. */
 START_TEST(test_dtd_default_handling)
@@ -2811,16 +2970,57 @@ START_TEST(test_ns_parser_reset)
 }
 END_TEST
 
+/* Test that long element names with namespaces are handled correctly */
+START_TEST(test_ns_long_element)
+{
+    const char *text =
+        "<foo:thisisalongenoughelementnametotriggerareallocation\n"
+        " xmlns:foo='http://expat.sf.net/' bar:a='12'\n"
+        " xmlns:bar='http://expat.sf.net/'>"
+        "</foo:thisisalongenoughelementnametotriggerareallocation>";
+    const char *elemstr[] = {
+        "http://expat.sf.net/"
+        " thisisalongenoughelementnametotriggerareallocation foo",
+        "http://expat.sf.net/ a bar"
+    };
+
+    XML_SetReturnNSTriplet(parser, XML_TRUE);
+    XML_SetUserData(parser, elemstr);
+    XML_SetElementHandler(parser,
+                          triplet_start_checker,
+                          triplet_end_checker);
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+}
+END_TEST
+
+
 /* Control variable; the number of times duff_allocator() will successfully allocate */
-static unsigned int allocation_count = 0;
+#define ALLOC_ALWAYS_SUCCEED (-1)
+#define REALLOC_ALWAYS_SUCCEED (-1)
+
+static int allocation_count = ALLOC_ALWAYS_SUCCEED;
+static int reallocation_count = REALLOC_ALWAYS_SUCCEED;
 
 /* Crocked allocator for allocation failure tests */
 static void *duff_allocator(size_t size)
 {
     if (allocation_count == 0)
         return NULL;
-    allocation_count--;
+    if (allocation_count != ALLOC_ALWAYS_SUCCEED)
+        allocation_count--;
     return malloc(size);
+}
+
+/* Crocked reallocator for allocation failure tests */
+static void *duff_reallocator(void *ptr, size_t size)
+{
+    if (reallocation_count == 0)
+        return NULL;
+    if (reallocation_count != REALLOC_ALWAYS_SUCCEED)
+        reallocation_count--;
+    return realloc(ptr, size);
 }
 
 /* Test that a failure to allocate the parser structure fails gracefully */
@@ -2878,7 +3078,7 @@ START_TEST(test_misc_alloc_ns)
     int repeated = 0;
     XML_Char ns_sep[2] = { ' ', '\0' };
 
-    allocation_count = 10000;
+    allocation_count = ALLOC_ALWAYS_SUCCEED;
     parser = XML_ParserCreate_MM(NULL, &memsuite, ns_sep);
     if (parser == NULL) {
         fail("Parser not created");
@@ -2917,7 +3117,7 @@ START_TEST(test_misc_alloc_ns_parse_buffer)
     void *buffer;
 
     /* Make sure the basic parser is allocated */
-    allocation_count = 10000;
+    allocation_count = ALLOC_ALWAYS_SUCCEED;
     parser = XML_ParserCreate_MM(NULL, &memsuite, ns_sep);
     if (parser == NULL)
         fail("Parser not created");
@@ -2931,7 +3131,7 @@ START_TEST(test_misc_alloc_ns_parse_buffer)
         fail("Pre-init XML_ParseBuffer faulted for wrong reason");
 
     /* Now with actual memory allocation */
-    allocation_count = 10000;
+    allocation_count = ALLOC_ALWAYS_SUCCEED;
     if (XML_ParseBuffer(parser, 0, XML_FALSE) != XML_STATUS_OK)
         xml_failure(parser);
 
@@ -3056,10 +3256,15 @@ END_TEST
 static void
 alloc_setup(void)
 {
-    XML_Memory_Handling_Suite memsuite = { duff_allocator, realloc, free };
+    XML_Memory_Handling_Suite memsuite = {
+        duff_allocator,
+        duff_reallocator,
+        free
+    };
 
     /* Ensure the parser creation will go through */
-    allocation_count = 10000;
+    allocation_count = ALLOC_ALWAYS_SUCCEED;
+    reallocation_count = REALLOC_ALWAYS_SUCCEED;
     parser = XML_ParserCreate_MM(NULL, &memsuite, NULL);
     if (parser == NULL)
         fail("Parser not created");
@@ -3098,7 +3303,7 @@ external_entity_duff_loader(XML_Parser parser,
         fail("Extern parser not created with allocation count 10");
 
     /* Make sure other random allocation doesn't now fail */
-    allocation_count = 10000;
+    allocation_count = ALLOC_ALWAYS_SUCCEED;
 
     /* Make sure the failure code path is executed too */
     return XML_STATUS_ERROR;
@@ -3215,7 +3420,7 @@ external_entity_dbl_handler(XML_Parser parser,
         }
     }
 
-    allocation_count = 10000;
+    allocation_count = ALLOC_ALWAYS_SUCCEED;
     if (_XML_Parse_SINGLE_BYTES(new_parser, text, strlen(text), XML_TRUE) == XML_STATUS_ERROR) {
         xml_failure(new_parser);
         return 0;
@@ -3280,7 +3485,7 @@ external_entity_dbl_handler_2(XML_Parser parser,
         }
 
         /* Ensure future allocations will be well */
-        allocation_count = 10000;
+        allocation_count = ALLOC_ALWAYS_SUCCEED;
         if (i == 0) {
             fail("first external parser unexpectedly created");
             XML_ParserFree(new_parser);
@@ -3294,7 +3499,7 @@ external_entity_dbl_handler_2(XML_Parser parser,
         /* Just run through once */
         text = ("<?xml version='1.0' encoding='us-ascii'?>"
                 "<e/>");
-        allocation_count = 10000;
+        allocation_count = ALLOC_ALWAYS_SUCCEED;
         new_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
         if (new_parser == NULL) {
             fail("Unable to create second external parser");
@@ -3536,6 +3741,9 @@ make_suite(void)
                    test_wfc_undeclared_entity_with_external_subset_standalone);
     tcase_add_test(tc_basic, test_wfc_no_recursive_entity_refs);
     tcase_add_test(tc_basic, test_ext_entity_set_encoding);
+    tcase_add_test(tc_basic, test_ext_entity_set_bom);
+    tcase_add_test(tc_basic, test_ext_entity_bad_encoding);
+    tcase_add_test(tc_basic, test_ext_entity_invalid_parse);
     tcase_add_test(tc_basic, test_dtd_default_handling);
     tcase_add_test(tc_basic, test_empty_ns_without_namespaces);
     tcase_add_test(tc_basic, test_ns_in_attribute_default_without_namespaces);
@@ -3584,6 +3792,7 @@ make_suite(void)
     tcase_add_test(tc_namespace, test_ns_unbound_prefix_on_attribute);
     tcase_add_test(tc_namespace, test_ns_unbound_prefix_on_element);
     tcase_add_test(tc_namespace, test_ns_parser_reset);
+    tcase_add_test(tc_namespace, test_ns_long_element);
 
     suite_add_tcase(s, tc_misc);
     tcase_add_checked_fixture(tc_misc, NULL, basic_teardown);
