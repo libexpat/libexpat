@@ -5,9 +5,12 @@ NOTE: We are looking for help with a few things:
 Release 2.2.? ????????????????
         Other changes:
              #23  Test suite: Fix memory leaks
+                  Rely on macro HAVE_ARC4RANDOM_BUF (rather than __CloudABI__)
+                    for CloudABI
 
         Special thanks to:
             Rhodri James
+            Viktor Szakats
                  and
             Core Infrastructure Initiative
 
