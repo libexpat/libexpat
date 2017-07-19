@@ -6740,6 +6740,7 @@ poolGrow(STRING_POOL *pool)
     BLOCK *temp;
     int blockSize = (int)((unsigned)(pool->end - pool->start)*2U);
     size_t bytesToAllocate;
+    const ptrdiff_t ptrMinusStart = pool->ptr - pool->start;
 
     if (blockSize < 0)
       return XML_FALSE;
@@ -6754,7 +6755,7 @@ poolGrow(STRING_POOL *pool)
       return XML_FALSE;
     pool->blocks = temp;
     pool->blocks->size = blockSize;
-    pool->ptr = pool->blocks->s + (pool->ptr - pool->start);
+    pool->ptr = pool->blocks->s + ptrMinusStart;
     pool->start = pool->blocks->s;
     pool->end = pool->start + blockSize;
   }
