@@ -45,13 +45,15 @@
 # endif
 #endif  /* defined(HAVE_GETRANDOM) || defined(HAVE_SYSCALL_GETRANDOM) */
 
-#if defined(HAVE_ARC4RANDOM_BUF) && defined(HAVE_LIBBSD)
+#if defined(HAVE_LIBBSD) \
+    && (defined(HAVE_ARC4RANDOM_BUF) || defined(HAVE_ARC4RANDOM))
 # include <bsd/stdlib.h>
 #endif
 
 
 #if !defined(HAVE_GETRANDOM) && !defined(HAVE_SYSCALL_GETRANDOM) \
-    && !defined(HAVE_ARC4RANDOM_BUF) && !defined(_WIN32) \
+    && !defined(HAVE_ARC4RANDOM_BUF) && !defined(HAVE_ARC4RANDOM) \
+    && !defined(_WIN32) \
     && !defined(XML_POOR_ENTROPY)
 # error  \
     You do not have support for any sources of high quality entropy \
@@ -60,8 +62,10 @@
     Your options include: \
       * Linux + glibc >=2.25 (getrandom): HAVE_GETRANDOM, \
       * Linux + glibc <2.25 (syscall SYS_getrandom): HAVE_SYSCALL_GETRANDOM, \
-      * BSD / macOS (arc4random_buf): HAVE_ARC4RANDOM_BUF, \
+      * BSD / macOS >=10.7 (arc4random_buf): HAVE_ARC4RANDOM_BUF, \
+      * BSD / macOS <10.7 (arc4random): HAVE_ARC4RANDOM, \
       * libbsd (arc4random_buf): HAVE_ARC4RANDOM_BUF + HAVE_LIBBSD, \
+      * libbsd (arc4random): HAVE_ARC4RANDOM + HAVE_LIBBSD, \
       * Windows (RtlGenRandom): _WIN32. \
     \
     If insist on not using any of these, bypass this error by defining \
@@ -773,6 +777,27 @@ writeRandomBytes_getrandom(void * target, size_t count) {
 #endif  /* defined(HAVE_GETRANDOM) || defined(HAVE_SYSCALL_GETRANDOM) */
 
 
+#if defined(HAVE_ARC4RANDOM)
+
+static void
+writeRandomBytes_arc4random(void * target, size_t count) {
+  size_t bytesWrittenTotal = 0;
+
+  while (bytesWrittenTotal < count) {
+    const uint32_t random32 = arc4random();
+    size_t i = 0;
+
+    for (; (i < sizeof(random32)) && (bytesWrittenTotal < count);
+        i++, bytesWrittenTotal++) {
+      const uint8_t random8 = (uint8_t)(random32 >> (i * 8));
+      ((uint8_t *)target)[bytesWrittenTotal] = random8;
+    }
+  }
+}
+
+#endif  /* defined(HAVE_ARC4RANDOM) */
+
+
 #ifdef _WIN32
 
 typedef BOOLEAN (APIENTRY *RTLGENRANDOM_FUNC)(PVOID, ULONG);
@@ -850,6 +875,9 @@ generate_hash_secret_salt(XML_Parser parser)
   (void)gather_time_entropy;
   arc4random_buf(&entropy, sizeof(entropy));
   return ENTROPY_DEBUG("arc4random_buf", entropy);
+#elif defined(HAVE_ARC4RANDOM)
+  writeRandomBytes_arc4random((void *)&entropy, sizeof(entropy));
+  return ENTROPY_DEBUG("arc4random", entropy);
 #else
   /* Try high quality providers first .. */
 #ifdef _WIN32
