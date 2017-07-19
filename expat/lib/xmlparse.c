@@ -773,7 +773,7 @@ writeRandomBytes_getrandom(void * target, size_t count) {
 #endif  /* defined(HAVE_GETRANDOM) || defined(HAVE_SYSCALL_GETRANDOM) */
 
 
-#if !(defined(HAVE_ARC4RANDOM_BUF) || defined(__CloudABI__))
+#if ! defined(HAVE_ARC4RANDOM_BUF)
 #ifdef _WIN32
 
 typedef BOOLEAN (APIENTRY *RTLGENRANDOM_FUNC)(PVOID, ULONG);
@@ -829,7 +829,7 @@ gather_time_entropy(void)
   return tv.tv_usec;
 #endif
 }
-#endif
+#endif /* ! defined(HAVE_ARC4RANDOM_BUF) */
 
 static unsigned long
 ENTROPY_DEBUG(const char * label, unsigned long entropy) {
@@ -848,7 +848,7 @@ generate_hash_secret_salt(XML_Parser parser)
 {
   unsigned long entropy;
   (void)parser;
-#if defined(HAVE_ARC4RANDOM_BUF) || defined(__CloudABI__)
+#if defined(HAVE_ARC4RANDOM_BUF)
   arc4random_buf(&entropy, sizeof(entropy));
   return ENTROPY_DEBUG("arc4random_buf", entropy);
 #else
