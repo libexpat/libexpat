@@ -854,7 +854,7 @@ gather_time_entropy(void)
   return tv.tv_usec;
 #endif
 }
-#endif /* ! defined(HAVE_ARC4RANDOM_BUF) */
+#endif  /* ! defined(HAVE_ARC4RANDOM_BUF) */
 
 static unsigned long
 ENTROPY_DEBUG(const char * label, unsigned long entropy) {
