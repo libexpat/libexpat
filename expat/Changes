@@ -5,6 +5,7 @@ NOTE: We are looking for help with a few things:
 Release 2.2.? ????????????????
         Security fixes:
              #81  Pre-10.7/Lion macOS: Support entropy from arc4random
+             #82  Windows: Fix DLL hijacking vulnerability
 
         Other changes:
              #23  Test suite: Fix memory leaks
@@ -13,6 +14,7 @@ Release 2.2.? ????????????????
 
         Special thanks to:
             Rhodri James
+            Viktor Szakats
                  and
             Core Infrastructure Initiative
 
