@@ -805,6 +805,8 @@ writeRandomBytes_RtlGenRandom(void * target, size_t count) {
 #endif /* _WIN32 */
 
 
+#if ! defined(HAVE_ARC4RANDOM_BUF)
+
 static unsigned long
 gather_time_entropy(void)
 {
@@ -829,6 +831,9 @@ gather_time_entropy(void)
 #endif
 }
 
+#endif  /* ! defined(HAVE_ARC4RANDOM_BUF) */
+
+
 static unsigned long
 ENTROPY_DEBUG(const char * label, unsigned long entropy) {
   const char * const EXPAT_ENTROPY_DEBUG = getenv("EXPAT_ENTROPY_DEBUG");
@@ -847,7 +852,6 @@ generate_hash_secret_salt(XML_Parser parser)
   unsigned long entropy;
   (void)parser;
 #if defined(HAVE_ARC4RANDOM_BUF)
-  (void)gather_time_entropy;
   arc4random_buf(&entropy, sizeof(entropy));
   return ENTROPY_DEBUG("arc4random_buf", entropy);
 #else
