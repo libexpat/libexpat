@@ -754,7 +754,7 @@ static const XML_Char implicitContext[] = {
 
 /* Obtain entropy on Linux 3.17+ */
 static int
-writeRandomBytes_getrandom(void * target, size_t count) {
+writeRandomBytes_getrandom_nonblock(void * target, size_t count) {
   int success = 0;  /* full count bytes written? */
   size_t bytesWrittenTotal = 0;
   const unsigned int getrandomFlags = GRND_NONBLOCK;
@@ -901,7 +901,7 @@ generate_hash_secret_salt(XML_Parser parser)
     return ENTROPY_DEBUG("RtlGenRandom", entropy);
   }
 #elif defined(HAVE_GETRANDOM) || defined(HAVE_SYSCALL_GETRANDOM)
-  if (writeRandomBytes_getrandom((void *)&entropy, sizeof(entropy))) {
+  if (writeRandomBytes_getrandom_nonblock((void *)&entropy, sizeof(entropy))) {
     return ENTROPY_DEBUG("getrandom", entropy);
   }
 #endif
