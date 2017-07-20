@@ -6741,6 +6741,10 @@ poolGrow(STRING_POOL *pool)
     int blockSize = (int)((unsigned)(pool->end - pool->start)*2U);
     size_t bytesToAllocate;
 
+    // NOTE: Needs to be calculated prior to calling `realloc`
+    //       to avoid dangling pointers:
+    const ptrdiff_t offsetInsideBlock = pool->ptr - pool->start;
+
     if (blockSize < 0)
       return XML_FALSE;
 
@@ -6754,7 +6758,7 @@ poolGrow(STRING_POOL *pool)
       return XML_FALSE;
     pool->blocks = temp;
     pool->blocks->size = blockSize;
-    pool->ptr = pool->blocks->s + (pool->ptr - pool->start);
+    pool->ptr = pool->blocks->s + offsetInsideBlock;
     pool->start = pool->blocks->s;
     pool->end = pool->start + blockSize;
   }
