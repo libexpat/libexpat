@@ -21,6 +21,7 @@
 #include <sys/time.h>                   /* gettimeofday() */
 #include <sys/types.h>                  /* getpid() */
 #include <unistd.h>                     /* getpid() */
+#include <linux/random.h>		/* GRND_NONBLOCK */
 #endif
 
 #define XML_BUILDING_EXPAT 1
@@ -754,7 +755,7 @@ static int
 writeRandomBytes_getrandom(void * target, size_t count) {
   int success = 0;  /* full count bytes written? */
   size_t bytesWrittenTotal = 0;
-  const unsigned int getrandomFlags = 0;
+  const unsigned int getrandomFlags = GRND_NONBLOCK;
 
   do {
     void * const currentTarget = (void*)((char*)target + bytesWrittenTotal);
@@ -772,7 +773,7 @@ writeRandomBytes_getrandom(void * target, size_t count) {
       if (bytesWrittenTotal >= count)
         success = 1;
     }
-  } while (! success && (errno == EINTR || errno == EAGAIN));
+  } while (! success && (errno == EINTR));
 
   return success;
 }
