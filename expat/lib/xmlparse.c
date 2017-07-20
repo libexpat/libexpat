@@ -43,6 +43,9 @@
 #  include <unistd.h>        /* syscall */
 #  include <sys/syscall.h>   /* SYS_getrandom */
 # endif
+# if ! defined(GRND_NONBLOCK)
+#  define GRND_NONBLOCK  0x0001
+# endif  /* defined(GRND_NONBLOCK) */
 #endif  /* defined(HAVE_GETRANDOM) || defined(HAVE_SYSCALL_GETRANDOM) */
 
 #if defined(HAVE_LIBBSD) \
@@ -754,7 +757,7 @@ static int
 writeRandomBytes_getrandom(void * target, size_t count) {
   int success = 0;  /* full count bytes written? */
   size_t bytesWrittenTotal = 0;
-  const unsigned int getrandomFlags = 0;
+  const unsigned int getrandomFlags = GRND_NONBLOCK;
 
   do {
     void * const currentTarget = (void*)((char*)target + bytesWrittenTotal);
@@ -772,7 +775,7 @@ writeRandomBytes_getrandom(void * target, size_t count) {
       if (bytesWrittenTotal >= count)
         success = 1;
     }
-  } while (! success && (errno == EINTR || errno == EAGAIN));
+  } while (! success && (errno == EINTR));
 
   return success;
 }
