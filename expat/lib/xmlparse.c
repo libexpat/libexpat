@@ -3913,7 +3913,14 @@ processXmlDecl(XML_Parser parser, int isGeneralTextEntity,
     reportDefault(parser, encoding, s, next);
   if (protocolEncodingName == NULL) {
     if (newEncoding) {
-      if (newEncoding->minBytesPerChar != encoding->minBytesPerChar) {
+      /* Check that the specified encoding does not conflict with what
+       * the parser has already deduced.  Do we have the same number
+       * of bytes in the smallest representation of a character?  If
+       * this is UTF-16, is it the same endianness?
+       */
+      if (newEncoding->minBytesPerChar != encoding->minBytesPerChar
+          || (newEncoding->minBytesPerChar == 2 &&
+              newEncoding != encoding)) {
         eventPtr = encodingName;
         return XML_ERROR_INCORRECT_ENCODING;
       }
