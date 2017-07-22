@@ -3692,6 +3692,8 @@ external_entity_valuer(XML_Parser parser,
                                     XML_TRUE) == XML_STATUS_ERROR)
             xml_failure(ext_parser);
     }
+
+    XML_ParserFree(ext_parser);
     return XML_STATUS_OK;
 }
 
