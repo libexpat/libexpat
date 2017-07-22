@@ -26,6 +26,7 @@
 #include "minicheck.h"
 #include "memcheck.h"
 #include "siphash.h"
+#include "ascii.h" /* for ASCII_xxx */
 
 #ifdef XML_LARGE_SIZE
 #define XML_FMT_INT_MOD "ll"
@@ -143,7 +144,18 @@ static unsigned long dummy_handler_flags = 0;
 #define DUMMY_UNPARSED_ENTITY_DECL_HANDLER_FLAG (1UL << 11)
 #define DUMMY_START_NS_DECL_HANDLER_FLAG        (1UL << 12)
 #define DUMMY_END_NS_DECL_HANDLER_FLAG          (1UL << 13)
+#define DUMMY_START_DOCTYPE_DECL_HANDLER_FLAG   (1UL << 14)
+#define DUMMY_END_DOCTYPE_DECL_HANDLER_FLAG     (1UL << 15)
+#define DUMMY_SKIP_HANDLER_FLAG                 (1UL << 16)
+#define DUMMY_DEFAULT_HANDLER_FLAG              (1UL << 17)
 
+
+static void XMLCALL
+dummy_xdecl_handler(void *UNUSED_P(userData),
+                    const XML_Char *UNUSED_P(version),
+                    const XML_Char *UNUSED_P(encoding),
+                    int UNUSED_P(standalone))
+{}
 
 static void XMLCALL
 dummy_start_doctype_handler(void           *UNUSED_P(userData),
@@ -285,6 +297,106 @@ dummy_default_handler(void *UNUSED_P(userData),
                       int UNUSED_P(len))
 {}
 
+static void XMLCALL
+dummy_start_doctype_decl_handler(void *UNUSED_P(userData),
+                                 const XML_Char *UNUSED_P(doctypeName),
+                                 const XML_Char *UNUSED_P(sysid),
+                                 const XML_Char *UNUSED_P(pubid),
+                                 int UNUSED_P(has_internal_subset))
+{
+    dummy_handler_flags |= DUMMY_START_DOCTYPE_DECL_HANDLER_FLAG;
+}
+
+static void XMLCALL
+dummy_end_doctype_decl_handler(void *UNUSED_P(userData))
+{
+    dummy_handler_flags |= DUMMY_END_DOCTYPE_DECL_HANDLER_FLAG;
+}
+
+static void XMLCALL
+dummy_skip_handler(void *UNUSED_P(userData),
+                   const XML_Char *UNUSED_P(entityName),
+                   int UNUSED_P(is_parameter_entity))
+{
+    dummy_handler_flags |= DUMMY_SKIP_HANDLER_FLAG;
+}
+
+/* Useful external entity handler */
+typedef struct ExtOption {
+    const char *system_id;
+    const char *parse_text;
+} ExtOption;
+
+static int XMLCALL
+external_entity_optioner(XML_Parser parser,
+                         const XML_Char *context,
+                         const XML_Char *UNUSED_P(base),
+                         const XML_Char *systemId,
+                         const XML_Char *UNUSED_P(publicId))
+{
+    ExtOption *options = (ExtOption *)XML_GetUserData(parser);
+    XML_Parser ext_parser;
+
+    while (options->parse_text != NULL) {
+        if (!strcmp(systemId, options->system_id)) {
+            ext_parser =
+                XML_ExternalEntityParserCreate(parser, context, NULL);
+            if (ext_parser == NULL)
+                return XML_STATUS_ERROR;
+            if (_XML_Parse_SINGLE_BYTES(ext_parser, options->parse_text,
+                                        strlen(options->parse_text),
+                                        XML_TRUE) == XML_STATUS_ERROR)
+                return XML_STATUS_ERROR;
+            XML_ParserFree(ext_parser);
+            return XML_STATUS_OK;
+        }
+        options++;
+    }
+    fail("No suitable option found");
+    return XML_STATUS_ERROR;
+}
+
+/*
+ * Parameter entity evaluation support.
+ */
+#define ENTITY_MATCH_FAIL      (-1)
+#define ENTITY_MATCH_NOT_FOUND  (0)
+#define ENTITY_MATCH_SUCCESS    (1)
+static const XML_Char *entity_name_to_match = NULL;
+static const XML_Char *entity_value_to_match = NULL;
+static int entity_match_flag = ENTITY_MATCH_NOT_FOUND;
+
+static void XMLCALL
+param_entity_match_handler(void           *UNUSED_P(userData),
+                           const XML_Char *entityName,
+                           int            is_parameter_entity,
+                           const XML_Char *value,
+                           int            value_length,
+                           const XML_Char *UNUSED_P(base),
+                           const XML_Char *UNUSED_P(systemId),
+                           const XML_Char *UNUSED_P(publicId),
+                           const XML_Char *UNUSED_P(notationName))
+{
+    if (!is_parameter_entity ||
+        entity_name_to_match == NULL ||
+        entity_value_to_match == NULL) {
+        return;
+    }
+    if (!strcmp(entityName, entity_name_to_match)) {
+        /* The cast here is safe because we control the horizontal and
+         * the vertical, and we therefore know our strings are never
+         * going to overflow an int.
+         */
+        if (value_length != (int)strlen(entity_value_to_match) ||
+            strncmp(value, entity_value_to_match, value_length)) {
+            entity_match_flag = ENTITY_MATCH_FAIL;
+        } else {
+            entity_match_flag = ENTITY_MATCH_SUCCESS;
+        }
+    }
+    /* Else leave the match flag alone */
+}
+
 /*
  * Character & encoding tests.
  */
@@ -378,6 +490,16 @@ START_TEST(test_bom_utf16_le)
 }
 END_TEST
 
+/* Parse whole buffer at once to exercise a different code path */
+START_TEST(test_nobom_utf16_le)
+{
+    char text[] = " \0<\0e\0/\0>\0";
+
+    if (XML_Parse(parser, text, sizeof(text)-1, XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+}
+END_TEST
+
 static void XMLCALL
 accumulate_characters(void *userData, const XML_Char *s, int len)
 {
@@ -389,9 +511,15 @@ accumulate_attribute(void *userData, const XML_Char *UNUSED_P(name),
                      const XML_Char **atts)
 {
     CharData *storage = (CharData *)userData;
-    if (storage->count < 0 && atts != NULL && atts[0] != NULL) {
+
+    /* Check there are attributes to deal with */
+    if (atts == NULL)
+        return;
+
+    while (storage->count < 0 && atts[0] != NULL) {
         /* "accumulate" the value of the first attribute we see */
         CharData_AppendXMLChars(storage, atts[1], -1);
+        atts += 2;
     }
 }
 
@@ -429,6 +557,40 @@ _run_attribute_check(const XML_Char *text, const XML_Char *expected,
 
 #define run_attribute_check(text, expected) \
         _run_attribute_check(text, expected, __FILE__, __LINE__)
+
+typedef struct ExtTest {
+    const char *parse_text;
+    const char *encoding;
+    CharData   *storage;
+} ExtTest;
+
+static void XMLCALL
+ext_accumulate_characters(void *userData, const XML_Char *s, int len)
+{
+    ExtTest *test_data = (ExtTest *)userData;
+    accumulate_characters(test_data->storage, s, len);
+}
+
+static void
+_run_ext_character_check(const XML_Char *text,
+                         ExtTest *test_data,
+                         const XML_Char *expected,
+                         const char *file, int line)
+{
+    CharData storage;
+
+    CharData_Init(&storage);
+    test_data->storage = &storage;
+    XML_SetUserData(parser, test_data);
+    XML_SetCharacterDataHandler(parser, ext_accumulate_characters);
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                XML_TRUE) == XML_STATUS_ERROR)
+        _xml_failure(parser, file, line);
+    CharData_CheckXMLChars(&storage, expected);
+}
+
+#define run_ext_character_check(text, test_data, expected)               \
+    _run_ext_character_check(text, test_data, expected, __FILE__, __LINE__)
 
 /* Regression test for SF bug #491986. */
 START_TEST(test_danish_latin1)
@@ -587,18 +749,27 @@ END_TEST
 START_TEST(test_utf16)
 {
     /* <?xml version="1.0" encoding="UTF-16"?>
-       <doc a='123'>some text</doc>
-    */
+     *  <doc a='123'>some {A} text</doc>
+     *
+     * where {A} is U+FF21, FULLWIDTH LATIN CAPITAL LETTER A
+     */
     char text[] =
         "\000<\000?\000x\000m\000\154\000 \000v\000e\000r\000s\000i\000o"
         "\000n\000=\000'\0001\000.\000\060\000'\000 \000e\000n\000c\000o"
         "\000d\000i\000n\000g\000=\000'\000U\000T\000F\000-\0001\000\066"
         "\000'\000?\000>\000\n"
-        "\000<\000d\000o\000c\000 \000a\000=\000'\0001\0002\0003\000'"
-        "\000>\000s\000o\000m\000e\000 \000t\000e\000x\000t\000<\000/"
-        "\000d\000o\000c\000>";
+        "\000<\000d\000o\000c\000 \000a\000=\000'\0001\0002\0003\000'\000>"
+        "\000s\000o\000m\000e\000 \xff\x21\000 \000t\000e\000x\000t\000"
+        "<\000/\000d\000o\000c\000>";
+    char expected[] = "some \357\274\241 text";
+    CharData storage;
+
+    CharData_Init(&storage);
+    XML_SetUserData(parser, &storage);
+    XML_SetCharacterDataHandler(parser, accumulate_characters);
     if (_XML_Parse_SINGLE_BYTES(parser, text, sizeof(text)-1, XML_TRUE) == XML_STATUS_ERROR)
         xml_failure(parser);
+    CharData_CheckXMLChars(&storage, expected);
 }
 END_TEST
 
@@ -625,6 +796,34 @@ START_TEST(test_utf16_le_epilog_newline)
 }
 END_TEST
 
+/* Test that an outright lie in the encoding is faulted */
+START_TEST(test_not_utf16)
+{
+    const char *text =
+        "<?xml version='1.0' encoding='utf-16'?>"
+        "<doc>Hi</doc>";
+
+    /* Use a handler to provoke the appropriate code paths */
+    XML_SetXmlDeclHandler(parser, dummy_xdecl_handler);
+    expect_failure(text,
+                   XML_ERROR_INCORRECT_ENCODING,
+                   "UTF-16 declared in UTF-8 not faulted");
+}
+END_TEST
+
+/* Test that an unknown encoding is rejected */
+START_TEST(test_bad_encoding)
+{
+    const char *text = "<doc>Hi</doc>";
+
+    if (!XML_SetEncoding(parser, "unknown-encoding"))
+        fail("XML_SetEncoding failed");
+    expect_failure(text,
+                   XML_ERROR_UNKNOWN_ENCODING,
+                   "Unknown encoding not faulted");
+}
+END_TEST
+
 /* Regression test for SF bug #481609, #774028. */
 START_TEST(test_latin1_umlauts)
 {
@@ -646,6 +845,121 @@ START_TEST(test_latin1_umlauts)
     XML_ParserReset(parser, NULL);
     XML_SetDefaultHandler(parser, dummy_default_handler);
     run_attribute_check(text, utf8);
+}
+END_TEST
+
+/* Test that an element name with a 4-byte UTF-8 character is rejected */
+START_TEST(test_long_utf8_character)
+{
+    const char *text =
+        "<?xml version='1.0' encoding='utf-8'?>\n"
+        /* 0xf0 0x90 0x80 0x80 = U+10000, the first Linear B character */
+        "<do\xf0\x90\x80\x80/>";
+    expect_failure(text,
+                   XML_ERROR_INVALID_TOKEN,
+                   "4-byte UTF-8 character in element name not faulted");
+}
+END_TEST
+
+/* Test that a long latin-1 attribute (too long to convert in one go)
+ * is correctly converted
+ */
+START_TEST(test_long_latin1_attribute)
+{
+    const char *text =
+        "<?xml version='1.0' encoding='iso-8859-1'?>\n"
+        "<doc att='"
+        /* 64 characters per line */
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNO"
+        /* Last character splits across a buffer boundary */
+        "\xe4'>\n</doc>";
+    const char *expected =
+        /* 64 characters per line */
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNO"
+        "\xc3\xa4";
+
+    run_attribute_check(text, expected);
+}
+END_TEST
+
+
+/* Test that a long ASCII attribute (too long to convert in one go)
+ * is correctly converted
+ */
+START_TEST(test_long_ascii_attribute)
+{
+    const char *text =
+        "<?xml version='1.0' encoding='us-ascii'?>\n"
+        "<doc att='"
+        /* 64 characters per line */
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "01234'>\n</doc>";
+    const char *expected =
+        /* 64 characters per line */
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "01234";
+
+    run_attribute_check(text, expected);
 }
 END_TEST
 
@@ -879,6 +1193,14 @@ END_TEST
  */
 
 static void XMLCALL
+start_element_event_handler(void *userData,
+                            const XML_Char *name,
+                            const XML_Char **UNUSED_P(atts))
+{
+    CharData_AppendXMLChars((CharData *)userData, name, -1);
+}
+
+static void XMLCALL
 end_element_event_handler(void *userData, const XML_Char *name)
 {
     CharData *storage = (CharData *) userData;
@@ -1028,6 +1350,31 @@ START_TEST(test_xmldecl_misplaced)
 }
 END_TEST
 
+START_TEST(test_xmldecl_invalid)
+{
+    expect_failure("<?xml version='1.0' \xc3\xa7?>\n<doc/>",
+                   XML_ERROR_XML_DECL,
+                   "Failed to report invalid XML declaration");
+}
+END_TEST
+
+START_TEST(test_xmldecl_missing_attr)
+{
+    expect_failure("<?xml ='1.0'?>\n<doc/>\n",
+                   XML_ERROR_XML_DECL,
+                   "Failed to report missing XML declaration attribute");
+}
+END_TEST
+
+START_TEST(test_xmldecl_missing_value)
+{
+    expect_failure("<?xml version='1.0' encoding='us-ascii' standalone?>\n"
+                   "<doc/>",
+                   XML_ERROR_XML_DECL,
+                   "Failed to report missing attribute value");
+}
+END_TEST
+
 /* Regression test for SF bug #584832. */
 static int XMLCALL
 UnknownEncodingHandler(void *UNUSED_P(data),const XML_Char *encoding,XML_Encoding *info)
@@ -1090,28 +1437,28 @@ END_TEST
 
 /* Regression test for SF bug #620106. */
 static int XMLCALL
-external_entity_loader_set_encoding(XML_Parser parser,
-                                    const XML_Char *context,
-                                    const XML_Char *UNUSED_P(base),
-                                    const XML_Char *UNUSED_P(systemId),
-                                    const XML_Char *UNUSED_P(publicId))
+external_entity_loader(XML_Parser parser,
+                       const XML_Char *context,
+                       const XML_Char *UNUSED_P(base),
+                       const XML_Char *UNUSED_P(systemId),
+                       const XML_Char *UNUSED_P(publicId))
 {
-    /* This text says it's an unsupported encoding, but it's really
-       UTF-8, which we tell Expat using XML_SetEncoding().
-    */
-    const char *text =
-        "<?xml encoding='iso-8859-3'?>"
-        "\xC3\xA9";
+    ExtTest *test_data = (ExtTest *)XML_GetUserData(parser);
     XML_Parser extparser;
 
     extparser = XML_ExternalEntityParserCreate(parser, context, NULL);
     if (extparser == NULL)
         fail("Could not create external entity parser.");
-    if (!XML_SetEncoding(extparser, "utf-8"))
-        fail("XML_SetEncoding() ignored for external entity");
-    if (  _XML_Parse_SINGLE_BYTES(extparser, text, strlen(text), XML_TRUE)
+    if (test_data->encoding != NULL) {
+        if (!XML_SetEncoding(extparser, test_data->encoding))
+            fail("XML_SetEncoding() ignored for external entity");
+    }
+    if ( _XML_Parse_SINGLE_BYTES(extparser,
+                                 test_data->parse_text,
+                                 strlen(test_data->parse_text),
+                                 XML_TRUE)
           == XML_STATUS_ERROR) {
-        xml_failure(parser);
+        xml_failure(extparser);
         return XML_STATUS_ERROR;
     }
     XML_ParserFree(extparser);
@@ -1125,10 +1472,17 @@ START_TEST(test_ext_entity_set_encoding)
         "  <!ENTITY en SYSTEM 'http://example.org/dummy.ent'>\n"
         "]>\n"
         "<doc>&en;</doc>";
+    ExtTest test_data = {
+        /* This text says it's an unsupported encoding, but it's really
+           UTF-8, which we tell Expat using XML_SetEncoding().
+        */
+        "<?xml encoding='iso-8859-3'?>\xC3\xA9",
+        "utf-8",
+        NULL
+    };
 
-    XML_SetExternalEntityRefHandler(parser,
-                                    external_entity_loader_set_encoding);
-    run_character_check(text, "\xC3\xA9");
+    XML_SetExternalEntityRefHandler(parser, external_entity_loader);
+    run_ext_character_check(text, &test_data, "\xC3\xA9");
 }
 END_TEST
 
@@ -1147,36 +1501,6 @@ START_TEST(test_ext_entity_no_handler)
 END_TEST
 
 /* Test UTF-8 BOM is accepted */
-static int XMLCALL
-external_entity_loader_set_bom(XML_Parser parser,
-                               const XML_Char *context,
-                               const XML_Char *UNUSED_P(base),
-                               const XML_Char *UNUSED_P(systemId),
-                               const XML_Char *UNUSED_P(publicId))
-{    /* This text says it's an unsupported encoding, but it's really
-       UTF-8, which we tell Expat using XML_SetEncoding().
-    */
-    const char *text =
-        "\xEF\xBB\xBF" /* BOM */
-        "<?xml encoding='iso-8859-3'?>"
-        "\xC3\xA9";
-    XML_Parser extparser;
-
-    extparser = XML_ExternalEntityParserCreate(parser, context, NULL);
-    if (extparser == NULL)
-        fail("Could not create external entity parser.");
-    if (!XML_SetEncoding(extparser, "utf-8"))
-      fail("XML_SetEncoding() ignored for external entity");
-    if (  _XML_Parse_SINGLE_BYTES(extparser, text, strlen(text), XML_TRUE)
-          == XML_STATUS_ERROR) {
-        xml_failure(extparser);
-        return XML_STATUS_ERROR;
-    }
-
-    XML_ParserFree(extparser);
-    return XML_STATUS_OK;
-}
-
 START_TEST(test_ext_entity_set_bom)
 {
     const char *text =
@@ -1184,40 +1508,55 @@ START_TEST(test_ext_entity_set_bom)
         "  <!ENTITY en SYSTEM 'http://example.org/dummy.ent'>\n"
         "]>\n"
         "<doc>&en;</doc>";
+    ExtTest test_data = {
+        "\xEF\xBB\xBF" /* BOM */
+        "<?xml encoding='iso-8859-3'?>"
+        "\xC3\xA9",
+        "utf-8",
+        NULL
+    };
 
-    XML_SetExternalEntityRefHandler(parser,
-                                    external_entity_loader_set_bom);
-    run_character_check(text, "\xC3\xA9");
+    XML_SetExternalEntityRefHandler(parser, external_entity_loader);
+    run_ext_character_check(text, &test_data, "\xC3\xA9");
 }
 END_TEST
 
 
 /* Test that bad encodings are faulted */
-static int XMLCALL
-external_entity_loader_bad_encoding(XML_Parser parser,
-                                    const XML_Char *context,
-                                    const XML_Char *UNUSED_P(base),
-                                    const XML_Char *UNUSED_P(systemId),
-                                    const XML_Char *UNUSED_P(publicId))
+typedef struct ext_faults
 {
-    /* Claim this is an unsupported encoding */
-    const char *text =
-        "<?xml encoding='iso-8859-3'?>"
-        "u";
-    XML_Parser extparser;
+    const char *parse_text;
+    const char *fail_text;
+    const char *encoding;
+    enum XML_Error error;
+} ExtFaults;
 
-    extparser = XML_ExternalEntityParserCreate(parser, context, NULL);
-    if (extparser == NULL)
-        fail("Could not create external entity parser.");
-    if (!XML_SetEncoding(extparser, "unknown"))
-        fail("XML_SetEncoding unknown encoding failed");
-    if (_XML_Parse_SINGLE_BYTES(extparser, text, strlen(text),
+static int XMLCALL
+external_entity_faulter(XML_Parser parser,
+                        const XML_Char *context,
+                        const XML_Char *UNUSED_P(base),
+                        const XML_Char *UNUSED_P(systemId),
+                        const XML_Char *UNUSED_P(publicId))
+{
+    XML_Parser ext_parser;
+    ExtFaults *fault = (ExtFaults *)XML_GetUserData(parser);
+
+    ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
+    if (ext_parser == NULL)
+        fail("Could not create external entity parser");
+    if (fault->encoding != NULL) {
+        if (!XML_SetEncoding(ext_parser, fault->encoding))
+            fail("XML_SetEncoding failed");
+    }
+    if (_XML_Parse_SINGLE_BYTES(ext_parser,
+                                fault->parse_text,
+                                strlen(fault->parse_text),
                                 XML_TRUE) != XML_STATUS_ERROR)
-        fail("Unsupported encoding not faulted");
-    if (XML_GetErrorCode(extparser) != XML_ERROR_UNKNOWN_ENCODING)
-        xml_failure(extparser);
+        fail(fault->fail_text);
+    if (XML_GetErrorCode(ext_parser) != fault->error)
+        xml_failure(ext_parser);
 
-    XML_ParserFree(extparser);
+    XML_ParserFree(ext_parser);
     return XML_STATUS_ERROR;
 }
 
@@ -1228,12 +1567,40 @@ START_TEST(test_ext_entity_bad_encoding)
         "  <!ENTITY en SYSTEM 'http://example.org/dummy.ent'>\n"
         "]>\n"
         "<doc>&en;</doc>";
+    ExtFaults fault = {
+        "<?xml encoding='iso-8859-3'?>u",
+        "Unsupported encoding not faulted",
+        "unknown",
+        XML_ERROR_UNKNOWN_ENCODING
+    };
 
-    XML_SetExternalEntityRefHandler(parser,
-                                    external_entity_loader_bad_encoding);
-    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
-                                XML_TRUE) != XML_STATUS_ERROR)
-        fail("Bad encoding should not have been accepted");
+    XML_SetExternalEntityRefHandler(parser, external_entity_faulter);
+    XML_SetUserData(parser, &fault);
+    expect_failure(text,
+                   XML_ERROR_EXTERNAL_ENTITY_HANDLING,
+                   "Bad encoding should not have been accepted");
+}
+END_TEST
+
+/* Try handing an invalid encoding to an external entity parser */
+START_TEST(test_ext_entity_bad_encoding_2)
+{
+    const char *text =
+        "<?xml version='1.0' encoding='us-ascii'?>\n"
+        "<!DOCTYPE doc SYSTEM 'foo'>\n"
+        "<doc>&entity;</doc>";
+    ExtFaults fault = {
+        "<!ELEMENT doc (#PCDATA)*>",
+        "Unknown encoding not faulted",
+        "unknown-encoding",
+        XML_ERROR_UNKNOWN_ENCODING
+    };
+
+    XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+    XML_SetExternalEntityRefHandler(parser, external_entity_faulter);
+    XML_SetUserData(parser, &fault);
+    expect_failure(text, XML_ERROR_EXTERNAL_ENTITY_HANDLING,
+                   "Bad encoding not faulted in external entity handler");
 }
 END_TEST
 
@@ -1275,28 +1642,6 @@ START_TEST(test_wfc_undeclared_entity_standalone) {
 }
 END_TEST
 
-static int XMLCALL
-external_entity_loader(XML_Parser parser,
-                       const XML_Char *context,
-                       const XML_Char *UNUSED_P(base),
-                       const XML_Char *UNUSED_P(systemId),
-                       const XML_Char *UNUSED_P(publicId))
-{
-    char *text = (char *)XML_GetUserData(parser);
-    XML_Parser extparser;
-
-    extparser = XML_ExternalEntityParserCreate(parser, context, NULL);
-    if (extparser == NULL)
-        fail("Could not create external entity parser.");
-    if (  _XML_Parse_SINGLE_BYTES(extparser, text, strlen(text), XML_TRUE)
-          == XML_STATUS_ERROR) {
-        xml_failure(extparser);
-        return XML_STATUS_ERROR;
-    }
-    XML_ParserFree(extparser);
-    return XML_STATUS_OK;
-}
-
 /* Test that an error is reported for unknown entities if we have read
    an external subset, and standalone is true.
 */
@@ -1305,15 +1650,38 @@ START_TEST(test_wfc_undeclared_entity_with_external_subset_standalone) {
         "<?xml version='1.0' encoding='us-ascii' standalone='yes'?>\n"
         "<!DOCTYPE doc SYSTEM 'foo'>\n"
         "<doc>&entity;</doc>";
-    char foo_text[] =
-        "<!ELEMENT doc (#PCDATA)*>";
+    ExtTest test_data = {
+        "<!ELEMENT doc (#PCDATA)*>",
+        NULL,
+        NULL
+    };
 
     XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
-    XML_SetUserData(parser, foo_text);
+    XML_SetUserData(parser, &test_data);
     XML_SetExternalEntityRefHandler(parser, external_entity_loader);
     expect_failure(text,
                    XML_ERROR_UNDEFINED_ENTITY,
                    "Parser did not report undefined entity (external DTD).");
+}
+END_TEST
+
+/* Test that external entity handling is not done if the parsing flag
+ * is set to UNLESS_STANDALONE
+ */
+START_TEST(test_entity_with_external_subset_unless_standalone) {
+    const char *text =
+        "<?xml version='1.0' encoding='us-ascii' standalone='yes'?>\n"
+        "<!DOCTYPE doc SYSTEM 'foo'>\n"
+        "<doc>&entity;</doc>";
+    ExtTest test_data = { "<!ENTITY entity 'bar'>", NULL, NULL };
+
+    XML_SetParamEntityParsing(parser,
+                              XML_PARAM_ENTITY_PARSING_UNLESS_STANDALONE);
+    XML_SetUserData(parser, &test_data);
+    XML_SetExternalEntityRefHandler(parser, external_entity_loader);
+    expect_failure(text,
+                   XML_ERROR_UNDEFINED_ENTITY,
+                   "Parser did not report undefined entity");
 }
 END_TEST
 
@@ -1325,14 +1693,15 @@ START_TEST(test_wfc_undeclared_entity_with_external_subset) {
         "<?xml version='1.0' encoding='us-ascii'?>\n"
         "<!DOCTYPE doc SYSTEM 'foo'>\n"
         "<doc>&entity;</doc>";
-    char foo_text[] =
-        "<!ELEMENT doc (#PCDATA)*>";
+    ExtTest test_data = {
+        "<!ELEMENT doc (#PCDATA)*>",
+        NULL,
+        NULL
+    };
 
     XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
-    XML_SetUserData(parser, foo_text);
     XML_SetExternalEntityRefHandler(parser, external_entity_loader);
-    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text), XML_TRUE) == XML_STATUS_ERROR)
-        xml_failure(parser);
+    run_ext_character_check(text, &test_data, "");
 }
 END_TEST
 
@@ -1349,15 +1718,24 @@ START_TEST(test_not_standalone_handler_reject)
         "<?xml version='1.0' encoding='us-ascii'?>\n"
         "<!DOCTYPE doc SYSTEM 'foo'>\n"
         "<doc>&entity;</doc>";
-    char foo_text[] =
-        "<!ELEMENT doc (#PCDATA)*>";
+    ExtTest test_data = {
+        "<!ELEMENT doc (#PCDATA)*>",
+        NULL,
+        NULL
+    };
 
     XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
-    XML_SetUserData(parser, foo_text);
+    XML_SetUserData(parser, &test_data);
     XML_SetExternalEntityRefHandler(parser, external_entity_loader);
     XML_SetNotStandaloneHandler(parser, reject_not_standalone_handler);
-    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text), XML_TRUE) != XML_STATUS_ERROR)
-        fail("NotStandalone handler failed to reject");
+    expect_failure(text, XML_ERROR_NOT_STANDALONE,
+                   "NotStandalone handler failed to reject");
+
+    /* Try again but without external entity handling */
+    XML_ParserReset(parser, NULL);
+    XML_SetNotStandaloneHandler(parser, reject_not_standalone_handler);
+    expect_failure(text, XML_ERROR_NOT_STANDALONE,
+                   "NotStandalone handler failed to reject");
 }
 END_TEST
 
@@ -1374,15 +1752,21 @@ START_TEST(test_not_standalone_handler_accept)
         "<?xml version='1.0' encoding='us-ascii'?>\n"
         "<!DOCTYPE doc SYSTEM 'foo'>\n"
         "<doc>&entity;</doc>";
-    char foo_text[] =
-        "<!ELEMENT doc (#PCDATA)*>";
+    ExtTest test_data = {
+        "<!ELEMENT doc (#PCDATA)*>",
+        NULL,
+        NULL
+    };
 
     XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
-    XML_SetUserData(parser, foo_text);
     XML_SetExternalEntityRefHandler(parser, external_entity_loader);
     XML_SetNotStandaloneHandler(parser, accept_not_standalone_handler);
-    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text), XML_TRUE) == XML_STATUS_ERROR)
-        xml_failure(parser);
+    run_ext_character_check(text, &test_data, "");
+
+    /* Repeat wtihout the external entity handler */
+    XML_ParserReset(parser, NULL);
+    XML_SetNotStandaloneHandler(parser, accept_not_standalone_handler);
+    run_character_check(text, "");
 }
 END_TEST
 
@@ -1401,38 +1785,6 @@ START_TEST(test_wfc_no_recursive_entity_refs)
 END_TEST
 
 /* Test incomplete external entities are faulted */
-typedef struct ext_faults
-{
-    const char *parse_text;
-    const char *fail_text;
-    enum XML_Error error;
-} ExtFaults;
-
-static int XMLCALL
-external_entity_faulter(XML_Parser parser,
-                        const XML_Char *context,
-                        const XML_Char *UNUSED_P(base),
-                        const XML_Char *UNUSED_P(systemId),
-                        const XML_Char *UNUSED_P(publicId))
-{
-    XML_Parser ext_parser;
-    ExtFaults *fault = (ExtFaults *)XML_GetUserData(parser);
-
-    ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
-    if (ext_parser == NULL)
-        fail("Could not create external entity parser");
-    if (_XML_Parse_SINGLE_BYTES(ext_parser,
-                                fault->parse_text,
-                                strlen(fault->parse_text),
-                                XML_TRUE) != XML_STATUS_ERROR)
-        fail(fault->fail_text);
-    if (XML_GetErrorCode(ext_parser) != fault->error)
-        xml_failure(ext_parser);
-
-    XML_ParserFree(ext_parser);
-    return XML_STATUS_ERROR;
-}
-
 START_TEST(test_ext_entity_invalid_parse)
 {
     const char *text =
@@ -1444,19 +1796,22 @@ START_TEST(test_ext_entity_invalid_parse)
         {
             "<",
             "Incomplete element declaration not faulted",
+            NULL,
             XML_ERROR_UNCLOSED_TOKEN
         },
         {
             "<\xe2\x82", /* First two bytes of a three-byte char */
             "Incomplete character not faulted",
+            NULL,
             XML_ERROR_PARTIAL_CHAR
         },
         {
             "<tag>\xe2\x82",
             "Incomplete character in CDATA not faulted",
+            NULL,
             XML_ERROR_PARTIAL_CHAR
         },
-        { NULL, NULL, XML_ERROR_NONE }
+        { NULL, NULL, NULL, XML_ERROR_NONE }
     };
     const ExtFaults *fault = faults;
 
@@ -1498,6 +1853,107 @@ START_TEST(test_dtd_default_handling)
     XML_SetStartCdataSectionHandler(parser, dummy_start_cdata_handler);
     XML_SetEndCdataSectionHandler(parser, dummy_end_cdata_handler);
     run_character_check(text, "\n\n\n\n\n\n\n<doc/>");
+}
+END_TEST
+
+/* Test handling of attribute declarations */
+typedef struct AttTest {
+    const XML_Char *definition;
+    const XML_Char *element_name;
+    const XML_Char *attr_name;
+    const XML_Char *attr_type;
+    const XML_Char *default_value;
+    int is_required;
+} AttTest;
+
+static void XMLCALL
+verify_attlist_decl_handler(void *userData,
+                            const XML_Char *element_name,
+                            const XML_Char *attr_name,
+                            const XML_Char *attr_type,
+                            const XML_Char *default_value,
+                            int is_required)
+{
+    AttTest *at = (AttTest *)userData;
+
+    if (strcmp(element_name, at->element_name))
+        fail("Unexpected element name in attribute declaration");
+    if (strcmp(attr_name, at->attr_name))
+        fail("Unexpected attribute name in attribute declaration");
+    if (strcmp(attr_type, at->attr_type))
+        fail("Unexpected attribute type in attribute declaration");
+    if ((default_value == NULL && at->default_value != NULL) ||
+        (default_value != NULL && at->default_value == NULL) ||
+        (default_value != NULL && strcmp(default_value, at->default_value)))
+        fail("Unexpected default value in attribute declaration");
+    if (is_required != at->is_required)
+        fail("Requirement mismatch in attribute declaration");
+}
+
+START_TEST(test_dtd_attr_handling)
+{
+    const char *prolog =
+        "<!DOCTYPE doc [\n"
+        "<!ELEMENT doc EMPTY>\n";
+    AttTest attr_data[] = {
+        {
+            "<!ATTLIST doc a ( one | two | three ) #REQUIRED>\n"
+            "]>"
+            "<doc a='two'/>",
+            "doc",
+            "a",
+            "(one|two|three)", /* Extraneous spaces will be removed */
+            NULL,
+            XML_TRUE
+        },
+        {
+            "<!NOTATION foo SYSTEM 'http://example.org/foo'>\n"
+            "<!ATTLIST doc a NOTATION (foo) #IMPLIED>\n"
+            "]>"
+            "<doc/>",
+            "doc",
+            "a",
+            "NOTATION(foo)",
+            NULL,
+            XML_FALSE
+        },
+        {
+            "<!ATTLIST doc a NOTATION (foo) 'bar'>\n"
+            "]>"
+            "<doc/>",
+            "doc",
+            "a",
+            "NOTATION(foo)",
+            "bar",
+            XML_FALSE
+        },
+        {
+            "<!ATTLIST doc a CDATA '\xdb\xb2'>\n"
+            "]>"
+            "<doc/>",
+            "doc",
+            "a",
+            "CDATA",
+            "\xdb\xb2",
+            XML_FALSE
+        },
+        { NULL, NULL, NULL, NULL, NULL, XML_FALSE }
+    };
+    AttTest *test;
+
+    for (test = attr_data; test->definition != NULL; test++) {
+        XML_SetAttlistDeclHandler(parser, verify_attlist_decl_handler);
+        XML_SetUserData(parser, test);
+        if (_XML_Parse_SINGLE_BYTES(parser, prolog, strlen(prolog),
+                                    XML_FALSE) == XML_STATUS_ERROR)
+            xml_failure(parser);
+        if (_XML_Parse_SINGLE_BYTES(parser,
+                                    test->definition,
+                                    strlen(test->definition),
+                                    XML_TRUE) == XML_STATUS_ERROR)
+            xml_failure(parser);
+        XML_ParserReset(parser, NULL);
+    }
 }
 END_TEST
 
@@ -1733,6 +2189,31 @@ START_TEST(test_good_cdata_utf16)
 }
 END_TEST
 
+START_TEST(test_good_cdata_utf16_le)
+{
+    /* Test data is:
+     *   <?xml version='1.0' encoding='utf-16'?>
+     *   <a><![CDATA[hello]]></a>
+     */
+    const char text[] =
+            "<\0?\0x\0m\0l\0"
+                " \0v\0e\0r\0s\0i\0o\0n\0=\0'\0\x31\0.\0\x30\0'\0"
+                " \0e\0n\0c\0o\0d\0i\0n\0g\0=\0'\0u\0t\0f\0-\0""1\0""6\0'"
+                "\0?\0>\0\n"
+            "\0<\0a\0>\0<\0!\0[\0C\0D\0A\0T\0A\0[\0h\0e\0l\0l\0o\0]\0]\0>\0<\0/\0a\0>\0";
+    const char *expected = "hello";
+
+    CharData storage;
+    CharData_Init(&storage);
+    XML_SetUserData(parser, &storage);
+    XML_SetCharacterDataHandler(parser, accumulate_characters);
+
+    if (_XML_Parse_SINGLE_BYTES(parser, text, sizeof(text) - 1, XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+    CharData_CheckXMLChars(&storage, expected);
+}
+END_TEST
+
 /* Test UTF16 conversion of a long cdata string */
 
 /* 16 characters: handy macro to reduce visual clutter */
@@ -1838,6 +2319,34 @@ START_TEST(test_multichar_cdata_utf16)
     if (_XML_Parse_SINGLE_BYTES(parser, text, sizeof(text) - 1, XML_TRUE) == XML_STATUS_ERROR)
         xml_failure(parser);
     CharData_CheckXMLChars(&storage, expected);
+}
+END_TEST
+
+/* Test that an element name with a UTF-16 surrogate pair is rejected */
+START_TEST(test_utf16_bad_surrogate_pair)
+{
+    /* Test data is:
+     *   <?xml version='1.0' encoding='utf-16'?>
+     *   <a><![CDATA[{BADLINB}]]></a>
+     *
+     * where {BADLINB} is U+10000 (the first Linear B character)
+     * with the UTF-16 surrogate pair in the wrong order, i.e.
+     *   0xdc00 0xd800
+     */
+    const char text[] =
+        "\0<\0?\0x\0m\0l\0"
+        " \0v\0e\0r\0s\0i\0o\0n\0=\0'\0\x31\0.\0\x30\0'\0"
+        " \0e\0n\0c\0o\0d\0i\0n\0g\0=\0'\0u\0t\0f\0-\0""1\0""6\0'"
+        "\0?\0>\0\n"
+        "\0<\0a\0>\0<\0!\0[\0C\0D\0A\0T\0A\0["
+        "\xdc\x00\xd8\x00"
+        "\0]\0]\0>\0<\0/\0a\0>";
+
+    if (_XML_Parse_SINGLE_BYTES(parser, text, sizeof(text) - 1,
+                                XML_TRUE) != XML_STATUS_ERROR)
+        fail("Reversed UTF-16 surrogate pair not faulted");
+    if (XML_GetErrorCode(parser) != XML_ERROR_INVALID_TOKEN)
+        xml_failure(parser);
 }
 END_TEST
 
@@ -2207,12 +2716,16 @@ START_TEST(test_set_foreign_dtd)
         "<?xml version='1.0' encoding='us-ascii'?>\n";
     const char *text2 =
         "<doc>&entity;</doc>";
-    char dtd_text[] = "<!ELEMENT doc (#PCDATA)*>";
+    ExtTest test_data = {
+        "<!ELEMENT doc (#PCDATA)*>",
+        NULL,
+        NULL
+    };
 
     /* Check hash salt is passed through too */
     XML_SetHashSalt(parser, 0x12345678);
     XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
-    XML_SetUserData(parser, dtd_text);
+    XML_SetUserData(parser, &test_data);
     XML_SetExternalEntityRefHandler(parser, external_entity_loader);
     /* Add a default handler to exercise more code paths */
     XML_SetDefaultHandler(parser, dummy_default_handler);
@@ -2236,6 +2749,137 @@ START_TEST(test_set_foreign_dtd)
     if (_XML_Parse_SINGLE_BYTES(parser, text2, strlen(text2),
                                 XML_TRUE) == XML_STATUS_ERROR)
         xml_failure(parser);
+}
+END_TEST
+
+/* Test foreign DTD handling with a failing NotStandalone handler */
+START_TEST(test_foreign_dtd_not_standalone)
+{
+    const char *text =
+        "<?xml version='1.0' encoding='us-ascii'?>\n"
+        "<doc>&entity;</doc>";
+    ExtTest test_data = {
+        "<!ELEMENT doc (#PCDATA)*>",
+        NULL,
+        NULL
+    };
+
+    XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+    XML_SetUserData(parser, &test_data);
+    XML_SetExternalEntityRefHandler(parser, external_entity_loader);
+    XML_SetNotStandaloneHandler(parser, reject_not_standalone_handler);
+    if (XML_UseForeignDTD(parser, XML_TRUE) != XML_ERROR_NONE)
+        fail("Could not set foreign DTD");
+    expect_failure(text, XML_ERROR_NOT_STANDALONE,
+                   "NotStandalonehandler failed to reject");
+}
+END_TEST
+
+/* Test invalid character in a foreign DTD is faulted */
+START_TEST(test_invalid_foreign_dtd)
+{
+    const char *text =
+        "<?xml version='1.0' encoding='us-ascii'?>\n"
+        "<doc>&entity;</doc>";
+    ExtFaults test_data = {
+        "$",
+        "Dollar not faulted",
+        NULL,
+        XML_ERROR_INVALID_TOKEN
+    };
+
+    XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+    XML_SetUserData(parser, &test_data);
+    XML_SetExternalEntityRefHandler(parser, external_entity_faulter);
+    XML_UseForeignDTD(parser, XML_TRUE);
+    expect_failure(text,
+                   XML_ERROR_EXTERNAL_ENTITY_HANDLING,
+                   "Bad DTD should not have been accepted");
+}
+END_TEST
+
+/* Test foreign DTD use with a doctype */
+START_TEST(test_foreign_dtd_with_doctype)
+{
+    const char *text1 =
+        "<?xml version='1.0' encoding='us-ascii'?>\n"
+        "<!DOCTYPE doc [<!ENTITY entity 'hello world'>]>\n";
+    const char *text2 =
+        "<doc>&entity;</doc>";
+    ExtTest test_data = {
+        "<!ELEMENT doc (#PCDATA)*>",
+        NULL,
+        NULL
+    };
+
+    /* Check hash salt is passed through too */
+    XML_SetHashSalt(parser, 0x12345678);
+    XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+    XML_SetUserData(parser, &test_data);
+    XML_SetExternalEntityRefHandler(parser, external_entity_loader);
+    /* Add a default handler to exercise more code paths */
+    XML_SetDefaultHandler(parser, dummy_default_handler);
+    if (XML_UseForeignDTD(parser, XML_TRUE) != XML_ERROR_NONE)
+        fail("Could not set foreign DTD");
+    if (_XML_Parse_SINGLE_BYTES(parser, text1, strlen(text1),
+                                XML_FALSE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+
+    /* Ensure that trying to set the DTD after parsing has started
+     * is faulted, even if it's the same setting.
+     */
+    if (XML_UseForeignDTD(parser, XML_TRUE) !=
+        XML_ERROR_CANT_CHANGE_FEATURE_ONCE_PARSING)
+        fail("Failed to reject late foreign DTD setting");
+    /* Ditto for the hash salt */
+    if (XML_SetHashSalt(parser, 0x23456789))
+        fail("Failed to reject late hash salt change");
+
+    /* Now finish the parse */
+    if (_XML_Parse_SINGLE_BYTES(parser, text2, strlen(text2),
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+}
+END_TEST
+
+/* Test XML_UseForeignDTD with no external subset present */
+static int XMLCALL
+external_entity_null_loader(XML_Parser UNUSED_P(parser),
+                            const XML_Char *UNUSED_P(context),
+                            const XML_Char *UNUSED_P(base),
+                            const XML_Char *UNUSED_P(systemId),
+                            const XML_Char *UNUSED_P(publicId))
+{
+    return XML_STATUS_OK;
+}
+
+START_TEST(test_foreign_dtd_without_external_subset)
+{
+    const char *text =
+        "<!DOCTYPE doc [<!ENTITY foo 'bar'>]>\n"
+        "<doc>&foo;</doc>";
+
+    XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+    XML_SetUserData(parser, NULL);
+    XML_SetExternalEntityRefHandler(parser, external_entity_null_loader);
+    XML_UseForeignDTD(parser, XML_TRUE);
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+}
+END_TEST
+
+START_TEST(test_empty_foreign_dtd)
+{
+    const char *text =
+        "<?xml version='1.0' encoding='us-ascii'?>\n"
+        "<doc>&entity;</doc>";
+
+    XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+    XML_SetExternalEntityRefHandler(parser, external_entity_null_loader);
+    XML_UseForeignDTD(parser, XML_TRUE);
+    expect_failure(text, XML_ERROR_UNDEFINED_ENTITY,
+                   "Undefined entity not faulted");
 }
 END_TEST
 
@@ -2695,15 +3339,17 @@ START_TEST(test_ext_entity_invalid_suspended_parse)
         {
             "<?xml version='1.0' encoding='us-ascii'?><",
             "Incomplete element declaration not faulted",
+            NULL,
             XML_ERROR_UNCLOSED_TOKEN
         },
         {
             /* First two bytes of a three-byte char */
             "<?xml version='1.0' encoding='utf-8'?>\xe2\x82",
             "Incomplete character not faulted",
+            NULL,
             XML_ERROR_PARTIAL_CHAR
         },
-        { NULL, NULL, XML_ERROR_NONE }
+        { NULL, NULL, NULL, XML_ERROR_NONE }
     };
     ExtFaults *fault;
 
@@ -2748,6 +3394,7 @@ START_TEST(test_explicit_encoding)
         fail("Failed to unset encoding");
 }
 END_TEST
+
 
 /* Test handling of trailing CR (rather than newline) */
 static void XMLCALL
@@ -3349,21 +3996,31 @@ START_TEST(test_byte_info_at_end)
 END_TEST
 
 /* Test position information from errors */
+#define PRE_ERROR_STR  "<doc></"
+#define POST_ERROR_STR "wombat></doc>"
 START_TEST(test_byte_info_at_error)
 {
-    const char *text = "<doc></wombat></doc>";
+    const char *text = PRE_ERROR_STR POST_ERROR_STR;
 
     if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
                                 XML_TRUE) == XML_STATUS_OK)
         fail("Syntax error not faulted");
     if (XML_GetCurrentByteCount(parser) != 0)
         fail("Error byte count incorrect");
-    if (XML_GetCurrentByteIndex(parser) != 7)
+    if (XML_GetCurrentByteIndex(parser) != strlen(PRE_ERROR_STR))
         fail("Error byte index incorrect");
 }
 END_TEST
+#undef PRE_ERROR_STR
+#undef POST_ERROR_STR
 
 /* Test position information in handler */
+typedef struct ByteTestData {
+    int start_element_len;
+    int cdata_len;
+    int total_string_len;
+} ByteTestData;
+
 static void
 byte_character_handler(void *userData,
                        const XML_Char *s,
@@ -3372,17 +4029,21 @@ byte_character_handler(void *userData,
 #ifdef XML_CONTEXT_BYTES
     int offset, size;
     const char *buffer;
-    intptr_t buflen = (intptr_t)userData;
+    ByteTestData *data = (ByteTestData *)userData;
 
     buffer = XML_GetInputContext(parser, &offset, &size);
     if (buffer == NULL)
         fail("Failed to get context buffer");
+    if (offset != data->start_element_len)
+        fail("Context offset in unexpected position");
+    if (len != data->cdata_len)
+        fail("CDATA length reported incorrectly");
+    if (size != data->total_string_len)
+        fail("Context size is not full buffer");
     if (XML_GetCurrentByteIndex(parser) != offset)
         fail("Character byte index incorrect");
     if (XML_GetCurrentByteCount(parser) != len)
         fail("Character byte count incorrect");
-    if (buflen != size)
-        fail("Buffer length incorrect");
     if (s != buffer + offset)
         fail("Buffer position incorrect");
 #else
@@ -3392,21 +4053,31 @@ byte_character_handler(void *userData,
 #endif
 }
 
+#define START_ELEMENT "<e>"
+#define CDATA_TEXT    "Hello"
+#define END_ELEMENT   "</e>"
 START_TEST(test_byte_info_at_cdata)
 {
-    const char *text = "<doc>Hello</doc>";
+    const char *text = START_ELEMENT CDATA_TEXT END_ELEMENT;
     int offset, size;
+    ByteTestData data;
 
     /* Check initial context is empty */
     if (XML_GetInputContext(parser, &offset, &size) != NULL)
         fail("Unexpected context at start of parse");
 
+    data.start_element_len = strlen(START_ELEMENT);
+    data.cdata_len = strlen(CDATA_TEXT);
+    data.total_string_len = strlen(text);
     XML_SetCharacterDataHandler(parser, byte_character_handler);
-    XML_SetUserData(parser, (void *)strlen(text));
+    XML_SetUserData(parser, &data);
     if (XML_Parse(parser, text, strlen(text), XML_TRUE) != XML_STATUS_OK)
         xml_failure(parser);
 }
 END_TEST
+#undef START_ELEMENT
+#undef CDATA_TEXT
+#undef END_ELEMENT
 
 /* Test predefined entities are correctly recognised */
 START_TEST(test_predefined_entities)
@@ -3499,6 +4170,27 @@ START_TEST(test_invalid_tag_in_dtd)
 }
 END_TEST
 
+/* Test entities not quite the predefined ones are not mis-recognised */
+START_TEST(test_not_predefined_entities)
+{
+    const char *text[] = {
+        "<doc>&pt;</doc>",
+        "<doc>&amo;</doc>",
+        "<doc>&quid;</doc>",
+        "<doc>&apod;</doc>",
+        NULL
+    };
+    int i = 0;
+
+    while (text[i] != NULL) {
+        expect_failure(text[i], XML_ERROR_UNDEFINED_ENTITY,
+                       "Undefined entity not rejected");
+        XML_ParserReset(parser, NULL);
+        i++;
+    }
+}
+END_TEST
+
 /* Test conditional inclusion (IGNORE) */
 static int XMLCALL
 external_entity_load_ignore(XML_Parser parser,
@@ -3547,6 +4239,116 @@ START_TEST(test_ignore_section)
 }
 END_TEST
 
+static int XMLCALL
+external_entity_load_ignore_utf16(XML_Parser parser,
+                                  const XML_Char *context,
+                                  const XML_Char *UNUSED_P(base),
+                                  const XML_Char *UNUSED_P(systemId),
+                                  const XML_Char *UNUSED_P(publicId))
+{
+    const char text[] =
+        /* <![IGNORE[<!ELEMENT e (#PCDATA)*>]]> */
+        "<\0!\0[\0I\0G\0N\0O\0R\0E\0[\0"
+        "<\0!\0E\0L\0E\0M\0E\0N\0T\0 \0e\0 \0"
+        "(\0#\0P\0C\0D\0A\0T\0A\0)\0*\0>\0]\0]\0>\0";
+    XML_Parser ext_parser;
+
+    ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
+    if (ext_parser == NULL)
+        fail("Could not create external entity parser");
+    if (_XML_Parse_SINGLE_BYTES(ext_parser, text, sizeof(text)-1,
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+
+    XML_ParserFree(ext_parser);
+    return XML_STATUS_OK;
+}
+
+START_TEST(test_ignore_section_utf16)
+{
+    const char text[] =
+        /* <!DOCTYPE d SYSTEM 's'> */
+        "<\0!\0D\0O\0C\0T\0Y\0P\0E\0 \0d\0 "
+        "\0S\0Y\0S\0T\0E\0M\0 \0'\0s\0'\0>\0\n\0"
+        /* <d><e>&en;</e></d> */
+        "<\0d\0>\0<\0e\0>\0&\0e\0n\0;\0<\0/\0e\0>\0<\0/\0d\0>\0";
+    const XML_Char *expected =
+        "<![IGNORE[<!ELEMENT e (#PCDATA)*>]]>\n&en;";
+    CharData storage;
+
+    CharData_Init(&storage);
+    XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+    XML_SetUserData(parser, &storage);
+    XML_SetExternalEntityRefHandler(parser,
+                                    external_entity_load_ignore_utf16);
+    XML_SetDefaultHandler(parser, accumulate_characters);
+    XML_SetStartDoctypeDeclHandler(parser, dummy_start_doctype_handler);
+    XML_SetEndDoctypeDeclHandler(parser, dummy_end_doctype_handler);
+    XML_SetElementDeclHandler(parser, dummy_element_decl_handler);
+    XML_SetStartElementHandler(parser, dummy_start_element);
+    XML_SetEndElementHandler(parser, dummy_end_element);
+    if (_XML_Parse_SINGLE_BYTES(parser, text, sizeof(text)-1,
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+    CharData_CheckXMLChars(&storage, expected);
+}
+END_TEST
+
+static int XMLCALL
+external_entity_load_ignore_utf16_be(XML_Parser parser,
+                                     const XML_Char *context,
+                                     const XML_Char *UNUSED_P(base),
+                                     const XML_Char *UNUSED_P(systemId),
+                                     const XML_Char *UNUSED_P(publicId))
+{
+    const char text[] =
+        /* <![IGNORE[<!ELEMENT e (#PCDATA)*>]]> */
+        "\0<\0!\0[\0I\0G\0N\0O\0R\0E\0["
+        "\0<\0!\0E\0L\0E\0M\0E\0N\0T\0 \0e\0 "
+        "\0(\0#\0P\0C\0D\0A\0T\0A\0)\0*\0>\0]\0]\0>";
+    XML_Parser ext_parser;
+
+    ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
+    if (ext_parser == NULL)
+        fail("Could not create external entity parser");
+    if (_XML_Parse_SINGLE_BYTES(ext_parser, text, sizeof(text)-1,
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+
+    XML_ParserFree(ext_parser);
+    return XML_STATUS_OK;
+}
+
+START_TEST(test_ignore_section_utf16_be)
+{
+    const char text[] =
+        /* <!DOCTYPE d SYSTEM 's'> */
+        "\0<\0!\0D\0O\0C\0T\0Y\0P\0E\0 \0d\0 "
+        "\0S\0Y\0S\0T\0E\0M\0 \0'\0s\0'\0>\0\n"
+        /* <d><e>&en;</e></d> */
+        "\0<\0d\0>\0<\0e\0>\0&\0e\0n\0;\0<\0/\0e\0>\0<\0/\0d\0>";
+    const XML_Char *expected =
+        "<![IGNORE[<!ELEMENT e (#PCDATA)*>]]>\n&en;";
+    CharData storage;
+
+    CharData_Init(&storage);
+    XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+    XML_SetUserData(parser, &storage);
+    XML_SetExternalEntityRefHandler(parser,
+                                    external_entity_load_ignore_utf16_be);
+    XML_SetDefaultHandler(parser, accumulate_characters);
+    XML_SetStartDoctypeDeclHandler(parser, dummy_start_doctype_handler);
+    XML_SetEndDoctypeDeclHandler(parser, dummy_end_doctype_handler);
+    XML_SetElementDeclHandler(parser, dummy_element_decl_handler);
+    XML_SetStartElementHandler(parser, dummy_start_element);
+    XML_SetEndElementHandler(parser, dummy_end_element);
+    if (_XML_Parse_SINGLE_BYTES(parser, text, sizeof(text)-1,
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+    CharData_CheckXMLChars(&storage, expected);
+}
+END_TEST
+
 /* Test mis-formatted conditional exclusion */
 START_TEST(test_bad_ignore_section)
 {
@@ -3557,14 +4359,23 @@ START_TEST(test_bad_ignore_section)
         {
             "<![IGNORE[<!ELEM",
             "Broken-off declaration not faulted",
+            NULL,
             XML_ERROR_SYNTAX
         },
         {
             "<![IGNORE[\x01]]>",
             "Invalid XML character not faulted",
+            NULL,
             XML_ERROR_INVALID_TOKEN
         },
-        { NULL, NULL, XML_ERROR_NONE }
+        {
+            /* FIrst two bytes of a three-byte char */
+            "<![IGNORE[\xe2\x82",
+            "Partial XML character not faulted",
+            NULL,
+            XML_ERROR_PARTIAL_CHAR
+        },
+        { NULL, NULL, NULL, XML_ERROR_NONE }
     };
     ExtFaults *fault;
 
@@ -3579,6 +4390,2420 @@ START_TEST(test_bad_ignore_section)
 }
 END_TEST
 
+/* Test recursive parsing */
+static int XMLCALL
+external_entity_valuer(XML_Parser parser,
+                       const XML_Char *context,
+                       const XML_Char *UNUSED_P(base),
+                       const XML_Char *systemId,
+                       const XML_Char *UNUSED_P(publicId))
+{
+    const char *text1 =
+        "<!ELEMENT doc EMPTY>\n"
+        "<!ENTITY % e1 SYSTEM '004-2.ent'>\n"
+        "<!ENTITY % e2 '%e1;'>\n"
+        "%e1;\n";
+    XML_Parser ext_parser;
+
+    if (systemId == NULL)
+        return XML_STATUS_OK;
+    ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
+    if (ext_parser == NULL)
+        fail("Could not create external entity parser");
+    if (!strcmp(systemId, "004-1.ent")) {
+        if (_XML_Parse_SINGLE_BYTES(ext_parser, text1, strlen(text1),
+                                    XML_TRUE) == XML_STATUS_ERROR)
+            xml_failure(ext_parser);
+    }
+    else if (!strcmp(systemId, "004-2.ent")) {
+        ExtFaults *fault = (ExtFaults *)XML_GetUserData(parser);
+        enum XML_Status status;
+        enum XML_Error error;
+
+        status = _XML_Parse_SINGLE_BYTES(ext_parser,
+                                         fault->parse_text,
+                                         strlen(fault->parse_text),
+                                         XML_TRUE);
+        if (fault->error == XML_ERROR_NONE) {
+            if (status == XML_STATUS_ERROR)
+                xml_failure(ext_parser);
+        } else {
+            if (status != XML_STATUS_ERROR)
+                fail(fault->fail_text);
+            error = XML_GetErrorCode(ext_parser);
+            if (error != fault->error &&
+                (fault->error != XML_ERROR_XML_DECL ||
+                 error != XML_ERROR_TEXT_DECL))
+                xml_failure(ext_parser);
+        }
+    }
+
+    XML_ParserFree(ext_parser);
+    return XML_STATUS_OK;
+}
+
+START_TEST(test_external_entity_values)
+{
+    const char *text =
+        "<!DOCTYPE doc SYSTEM '004-1.ent'>\n"
+        "<doc></doc>\n";
+    ExtFaults data_004_2[] = {
+        {
+            "<!ATTLIST doc a1 CDATA 'value'>",
+            NULL,
+            NULL,
+            XML_ERROR_NONE
+        },
+        {
+            "<!ATTLIST $doc a1 CDATA 'value'>",
+            "Invalid token not faulted",
+            NULL,
+            XML_ERROR_INVALID_TOKEN
+        },
+        {
+            "'wombat",
+            "Unterminated string not faulted",
+            NULL,
+            XML_ERROR_UNCLOSED_TOKEN
+        },
+        {
+            "\xe2\x82",
+            "Partial UTF-8 character not faulted",
+            NULL,
+            XML_ERROR_PARTIAL_CHAR
+        },
+        {
+            "<?xml version='1.0' encoding='utf-8'?>\n",
+            NULL,
+            NULL,
+            XML_ERROR_NONE
+        },
+        {
+            "<?xml?>",
+            "Malformed XML declaration not faulted",
+            NULL,
+            XML_ERROR_XML_DECL
+        },
+        {
+            /* UTF-8 BOM */
+            "\xEF\xBB\xBF<!ATTLIST doc a1 CDATA 'value'>",
+            NULL,
+            NULL,
+            XML_ERROR_NONE
+        },
+        {
+            "<?xml version='1.0' encoding='utf-8'?>\n$",
+            "Invalid token after text declaration not faulted",
+            NULL,
+            XML_ERROR_INVALID_TOKEN
+        },
+        {
+            "<?xml version='1.0' encoding='utf-8'?>\n'wombat",
+            "Unterminated string after text decl not faulted",
+            NULL,
+            XML_ERROR_UNCLOSED_TOKEN
+        },
+        {
+            "<?xml version='1.0' encoding='utf-8'?>\n\xe2\x82",
+            "Partial UTF-8 character after text decl not faulted",
+            NULL,
+            XML_ERROR_PARTIAL_CHAR
+        },
+        {
+            "%e1;",
+            "Recursive parameter entity not faulted",
+            NULL,
+            XML_ERROR_RECURSIVE_ENTITY_REF
+        },
+        { NULL, NULL, NULL, XML_ERROR_NONE }
+    };
+    int i;
+
+    for (i = 0; data_004_2[i].parse_text != NULL; i++) {
+        XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+        XML_SetExternalEntityRefHandler(parser, external_entity_valuer);
+        XML_SetUserData(parser, &data_004_2[i]);
+        if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                    XML_TRUE) == XML_STATUS_ERROR)
+            xml_failure(parser);
+        XML_ParserReset(parser, NULL);
+    }
+}
+END_TEST
+
+/* Test the recursive parse interacts with a not standalone handler */
+static int XMLCALL
+external_entity_not_standalone(XML_Parser parser,
+                               const XML_Char *context,
+                               const XML_Char *UNUSED_P(base),
+                               const XML_Char *systemId,
+                               const XML_Char *UNUSED_P(publicId))
+{
+    const char *text1 =
+        "<!ELEMENT doc EMPTY>\n"
+        "<!ENTITY % e1 SYSTEM 'bar'>\n"
+        "%e1;\n";
+    const char *text2 = "<!ATTLIST doc a1 CDATA 'value'>";
+    XML_Parser ext_parser;
+
+    if (systemId == NULL)
+        return XML_STATUS_OK;
+    ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
+    if (ext_parser == NULL)
+        fail("Could not create external entity parser");
+    if (!strcmp(systemId, "foo")) {
+        XML_SetNotStandaloneHandler(ext_parser,
+                                    reject_not_standalone_handler);
+        if (_XML_Parse_SINGLE_BYTES(ext_parser, text1, strlen(text1),
+                                    XML_TRUE) != XML_STATUS_ERROR)
+            fail("Expected not standalone rejection");
+        if (XML_GetErrorCode(ext_parser) != XML_ERROR_NOT_STANDALONE)
+            xml_failure(ext_parser);
+        XML_SetNotStandaloneHandler(ext_parser, NULL);
+        XML_ParserFree(ext_parser);
+        return XML_STATUS_ERROR;
+    }
+    else if (!strcmp(systemId, "bar")) {
+        if (_XML_Parse_SINGLE_BYTES(ext_parser, text2, strlen(text2),
+                                    XML_TRUE) == XML_STATUS_ERROR)
+            xml_failure(ext_parser);
+    }
+
+    XML_ParserFree(ext_parser);
+    return XML_STATUS_OK;
+}
+
+START_TEST(test_ext_entity_not_standalone)
+{
+    const char *text =
+        "<!DOCTYPE doc SYSTEM 'foo'>\n"
+        "<doc></doc>";
+
+    XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+    XML_SetExternalEntityRefHandler(parser, external_entity_not_standalone);
+    expect_failure(text, XML_ERROR_EXTERNAL_ENTITY_HANDLING,
+                   "Standalone rejection not caught");
+}
+END_TEST
+
+static int XMLCALL
+external_entity_value_aborter(XML_Parser parser,
+                              const XML_Char *context,
+                              const XML_Char *UNUSED_P(base),
+                              const XML_Char *systemId,
+                              const XML_Char *UNUSED_P(publicId))
+{
+    const char *text1 =
+        "<!ELEMENT doc EMPTY>\n"
+        "<!ENTITY % e1 SYSTEM '004-2.ent'>\n"
+        "<!ENTITY % e2 '%e1;'>\n"
+        "%e1;\n";
+    const char *text2 =
+        "<?xml version='1.0' encoding='utf-8'?>";
+    XML_Parser ext_parser;
+
+    if (systemId == NULL)
+        return XML_STATUS_OK;
+    ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
+    if (ext_parser == NULL)
+        fail("Could not create external entity parser");
+    if (!strcmp(systemId, "004-1.ent")) {
+        if (_XML_Parse_SINGLE_BYTES(ext_parser, text1, strlen(text1),
+                                    XML_TRUE) == XML_STATUS_ERROR)
+            xml_failure(ext_parser);
+    }
+    if (!strcmp(systemId, "004-2.ent")) {
+        XML_SetXmlDeclHandler(ext_parser, entity_suspending_xdecl_handler);
+        XML_SetUserData(ext_parser, ext_parser);
+        if (_XML_Parse_SINGLE_BYTES(ext_parser, text2, strlen(text2),
+                                    XML_TRUE) != XML_STATUS_ERROR)
+            fail("Aborted parse not faulted");
+        if (XML_GetErrorCode(ext_parser) != XML_ERROR_ABORTED)
+            xml_failure(ext_parser);
+    }
+
+    XML_ParserFree(ext_parser);
+    return XML_STATUS_OK;
+}
+
+START_TEST(test_ext_entity_value_abort)
+{
+    const char *text =
+        "<!DOCTYPE doc SYSTEM '004-1.ent'>\n"
+        "<doc></doc>\n";
+
+    XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+    XML_SetExternalEntityRefHandler(parser,
+                                    external_entity_value_aborter);
+    resumable = XML_FALSE;
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+}
+END_TEST
+
+START_TEST(test_bad_public_doctype)
+{
+    const char *text =
+        "<?xml version='1.0' encoding='utf-8'?>\n"
+        "<!DOCTYPE doc PUBLIC '{BadName}' 'test'>\n"
+        "<doc></doc>";
+
+    /* Setting a handler provokes a particular code path */
+    XML_SetDoctypeDeclHandler(parser,
+                              dummy_start_doctype_handler,
+                              dummy_end_doctype_handler);
+    expect_failure(text, XML_ERROR_PUBLICID, "Bad Public ID not failed");
+}
+END_TEST
+
+/* Test based on ibm/valid/P32/ibm32v04.xml */
+START_TEST(test_attribute_enum_value)
+{
+    const char *text =
+        "<?xml version='1.0' standalone='no'?>\n"
+        "<!DOCTYPE animal SYSTEM 'test.dtd'>\n"
+        "<animal>This is a \n    <a/>  \n\nyellow tiger</animal>";
+    ExtTest dtd_data = {
+        "<!ELEMENT animal (#PCDATA|a)*>\n"
+        "<!ELEMENT a EMPTY>\n"
+        "<!ATTLIST animal xml:space (default|preserve) 'preserve'>",
+        NULL,
+        NULL
+    };
+
+    XML_SetExternalEntityRefHandler(parser, external_entity_loader);
+    XML_SetUserData(parser, &dtd_data);
+    XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+    /* An attribute list handler provokes a different code path */
+    XML_SetAttlistDeclHandler(parser, dummy_attlist_decl_handler);
+    run_ext_character_check(text, &dtd_data,
+                            "This is a \n      \n\nyellow tiger");
+}
+END_TEST
+
+/* Slightly bizarrely, the library seems to silently ignore entity
+ * definitions for predefined entities, even when they are wrong.  The
+ * language of the XML 1.0 spec is somewhat unhelpful as to what ought
+ * to happen, so this is currently treated as acceptable.
+ */
+START_TEST(test_predefined_entity_redefinition)
+{
+    const char *text =
+        "<!DOCTYPE doc [\n"
+        "<!ENTITY apos 'foo'>\n"
+        "]>\n"
+        "<doc>&apos;</doc>";
+    run_character_check(text, "'");
+}
+END_TEST
+
+/* Test that the parser stops processing the DTD after an unresolved
+ * parameter entity is encountered.
+ */
+START_TEST(test_dtd_stop_processing)
+{
+    const char *text =
+        "<!DOCTYPE doc [\n"
+        "%foo;\n"
+        "<!ENTITY bar 'bas'>\n"
+        "]><doc/>";
+
+    XML_SetEntityDeclHandler(parser, dummy_entity_decl_handler);
+    dummy_handler_flags = 0;
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+    if (dummy_handler_flags != 0)
+        fail("DTD processing still going after undefined PE");
+}
+END_TEST
+
+/* Test public notations with no system ID */
+START_TEST(test_public_notation_no_sysid)
+{
+    const char *text =
+        "<!DOCTYPE doc [\n"
+        "<!NOTATION note PUBLIC 'foo'>\n"
+        "<!ELEMENT doc EMPTY>\n"
+        "]>\n<doc/>";
+
+    dummy_handler_flags = 0;
+    XML_SetNotationDeclHandler(parser, dummy_notation_decl_handler);
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+    if (dummy_handler_flags != DUMMY_NOTATION_DECL_HANDLER_FLAG)
+        fail("Notation declaration handler not called");
+}
+END_TEST
+
+static void XMLCALL
+record_element_start_handler(void *userData,
+                             const XML_Char *name,
+                             const XML_Char **UNUSED_P(atts))
+{
+    CharData_AppendString((CharData *)userData, name);
+}
+
+START_TEST(test_nested_groups)
+{
+    const char *text =
+        "<!DOCTYPE doc [\n"
+        "<!ELEMENT doc "
+        /* Sixteen elements per line */
+        "(e,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,"
+        "(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?"
+        "))))))))))))))))))))))))))))))))>\n"
+        "<!ELEMENT e EMPTY>"
+        "]>\n"
+        "<doc><e/></doc>";
+    CharData storage;
+
+    CharData_Init(&storage);
+    XML_SetElementDeclHandler(parser, dummy_element_decl_handler);
+    XML_SetStartElementHandler(parser, record_element_start_handler);
+    XML_SetUserData(parser, &storage);
+    dummy_handler_flags = 0;
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+    CharData_CheckString(&storage, "doce");
+    if (dummy_handler_flags != DUMMY_ELEMENT_DECL_HANDLER_FLAG)
+        fail("Element handler not fired");
+}
+END_TEST
+
+START_TEST(test_group_choice)
+{
+    const char *text =
+        "<!DOCTYPE doc [\n"
+        "<!ELEMENT doc (a|b|c)+>\n"
+        "<!ELEMENT a EMPTY>\n"
+        "<!ELEMENT b (#PCDATA)>\n"
+        "<!ELEMENT c ANY>\n"
+        "]>\n"
+        "<doc>\n"
+        "<a/>\n"
+        "<b attr='foo'>This is a foo</b>\n"
+        "<c></c>\n"
+        "</doc>\n";
+
+    XML_SetElementDeclHandler(parser, dummy_element_decl_handler);
+    dummy_handler_flags = 0;
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+    if (dummy_handler_flags != DUMMY_ELEMENT_DECL_HANDLER_FLAG)
+        fail("Element handler flag not raised");
+}
+END_TEST
+
+static int XMLCALL
+external_entity_public(XML_Parser parser,
+                       const XML_Char *context,
+                       const XML_Char *UNUSED_P(base),
+                       const XML_Char *systemId,
+                       const XML_Char *publicId)
+{
+    const char *text1 = (const char *)XML_GetUserData(parser);
+    const char *text2 = "<!ATTLIST doc a CDATA 'value'>";
+    const char *text = NULL;
+    XML_Parser ext_parser;
+    int parse_res;
+
+    ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
+    if (ext_parser == NULL)
+        return XML_STATUS_ERROR;
+    if (systemId != NULL && !strcmp(systemId, "http://example.org/")) {
+        text = text1;
+    }
+    else if (publicId != NULL && !strcmp(publicId, "foo")) {
+        text = text2;
+    }
+    else
+        fail("Unexpected parameters to external entity parser");
+    parse_res = _XML_Parse_SINGLE_BYTES(ext_parser, text, strlen(text),
+                                   XML_TRUE);
+    XML_ParserFree(ext_parser);
+    return parse_res;
+}
+
+START_TEST(test_standalone_parameter_entity)
+{
+    const char *text =
+        "<?xml version='1.0' standalone='yes'?>\n"
+        "<!DOCTYPE doc SYSTEM 'http://example.org/' [\n"
+        "<!ENTITY % entity '<!ELEMENT doc (#PCDATA)>'>\n"
+        "%entity;\n"
+        "]>\n"
+        "<doc></doc>";
+    char dtd_data[] =
+        "<!ENTITY % e1 'foo'>\n";
+
+    XML_SetUserData(parser, dtd_data);
+    XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+    XML_SetExternalEntityRefHandler(parser, external_entity_public);
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+}
+END_TEST
+
+/* Test skipping of parameter entity in an external DTD */
+/* Derived from ibm/invalid/P69/ibm69i01.xml */
+START_TEST(test_skipped_parameter_entity)
+{
+    const char *text =
+        "<?xml version='1.0'?>\n"
+        "<!DOCTYPE root SYSTEM 'http://example.org/dtd.ent' [\n"
+        "<!ELEMENT root (#PCDATA|a)* >\n"
+        "]>\n"
+        "<root></root>";
+    ExtTest dtd_data = { "%pe2;", NULL, NULL };
+
+    XML_SetExternalEntityRefHandler(parser, external_entity_loader);
+    XML_SetUserData(parser, &dtd_data);
+    XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+    XML_SetSkippedEntityHandler(parser, dummy_skip_handler);
+    dummy_handler_flags = 0;
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+    if (dummy_handler_flags != DUMMY_SKIP_HANDLER_FLAG)
+        fail("Skip handler not executed");
+}
+END_TEST
+
+/* Test recursive parameter entity definition rejected in external DTD */
+START_TEST(test_recursive_external_parameter_entity)
+{
+    const char *text =
+        "<?xml version='1.0'?>\n"
+        "<!DOCTYPE root SYSTEM 'http://example.org/dtd.ent' [\n"
+        "<!ELEMENT root (#PCDATA|a)* >\n"
+        "]>\n"
+        "<root></root>";
+    ExtFaults dtd_data = {
+        "<!ENTITY % pe2 '&#37;pe2;'>\n%pe2;",
+        "Recursive external parameter entity not faulted",
+        NULL,
+        XML_ERROR_RECURSIVE_ENTITY_REF
+    };
+
+    XML_SetExternalEntityRefHandler(parser, external_entity_faulter);
+    XML_SetUserData(parser, &dtd_data);
+    XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+    expect_failure(text,
+                   XML_ERROR_EXTERNAL_ENTITY_HANDLING,
+                   "Recursive external parameter not spotted");
+}
+END_TEST
+
+/* Test undefined parameter entity in external entity handler */
+static int XMLCALL
+external_entity_devaluer(XML_Parser parser,
+                         const XML_Char *context,
+                         const XML_Char *UNUSED_P(base),
+                         const XML_Char *systemId,
+                         const XML_Char *UNUSED_P(publicId))
+{
+    const char *text =
+        "<!ELEMENT doc EMPTY>\n"
+        "<!ENTITY % e1 SYSTEM 'bar'>\n"
+        "%e1;\n";
+    XML_Parser ext_parser;
+    int clear_handler = (intptr_t)XML_GetUserData(parser);
+
+    if (systemId == NULL || !strcmp(systemId, "bar"))
+        return XML_STATUS_OK;
+    if (strcmp(systemId, "foo"))
+        fail("Unexpected system ID");
+    ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
+    if (ext_parser == NULL)
+        fail("Could note create external entity parser");
+    if (clear_handler)
+        XML_SetExternalEntityRefHandler(ext_parser, NULL);
+    if (_XML_Parse_SINGLE_BYTES(ext_parser, text, strlen(text),
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(ext_parser);
+
+    XML_ParserFree(ext_parser);
+    return XML_STATUS_OK;
+}
+
+START_TEST(test_undefined_ext_entity_in_external_dtd)
+{
+    const char *text =
+        "<!DOCTYPE doc SYSTEM 'foo'>\n"
+        "<doc></doc>\n";
+
+    XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+    XML_SetExternalEntityRefHandler(parser, external_entity_devaluer);
+    XML_SetUserData(parser, (void *)(intptr_t)XML_FALSE);
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+
+    /* Now repeat without the external entity ref handler invoking
+     * another copy of itself.
+     */
+    XML_ParserReset(parser, NULL);
+    XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+    XML_SetExternalEntityRefHandler(parser, external_entity_devaluer);
+    XML_SetUserData(parser, (void *)(intptr_t)XML_TRUE);
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+}
+END_TEST
+
+
+static void XMLCALL
+aborting_xdecl_handler(void           *UNUSED_P(userData),
+                       const XML_Char *UNUSED_P(version),
+                       const XML_Char *UNUSED_P(encoding),
+                       int             UNUSED_P(standalone))
+{
+    XML_StopParser(parser, resumable);
+    XML_SetXmlDeclHandler(parser, NULL);
+}
+
+/* Test suspending the parse on receiving an XML declaration works */
+START_TEST(test_suspend_xdecl)
+{
+    const char *text = long_character_data_text;
+
+    XML_SetXmlDeclHandler(parser, aborting_xdecl_handler);
+    resumable = XML_TRUE;
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                XML_TRUE) != XML_STATUS_SUSPENDED)
+        xml_failure(parser);
+    if (XML_GetErrorCode(parser) != XML_ERROR_NONE)
+        xml_failure(parser);
+    /* Attempt to start a new parse while suspended */
+    if (XML_Parse(parser, text, strlen(text), XML_TRUE) != XML_STATUS_ERROR)
+        fail("Attempt to parse while suspended not faulted");
+    if (XML_GetErrorCode(parser) != XML_ERROR_SUSPENDED)
+        fail("Suspended parse not faulted with correct error");
+}
+END_TEST
+
+/* Test aborting the parse in an epilog works */
+static void XMLCALL
+selective_aborting_default_handler(void *userData,
+                                   const XML_Char *s,
+                                   int len)
+{
+    const char *match = (const char *)userData;
+
+    if (match == NULL ||
+        (strlen(match) == (unsigned)len &&
+         !strncmp(match, s, len))) {
+        XML_StopParser(parser, resumable);
+        XML_SetDefaultHandler(parser, NULL);
+    }
+}
+
+START_TEST(test_abort_epilog)
+{
+    const char *text = "<doc></doc>\n\r\n";
+    char match[] = "\r";
+
+    XML_SetDefaultHandler(parser, selective_aborting_default_handler);
+    XML_SetUserData(parser, match);
+    resumable = XML_FALSE;
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                XML_TRUE) != XML_STATUS_ERROR)
+        fail("Abort not triggered");
+    if (XML_GetErrorCode(parser) != XML_ERROR_ABORTED)
+        xml_failure(parser);
+}
+END_TEST
+
+/* Test a different code path for abort in the epilog */
+START_TEST(test_abort_epilog_2)
+{
+    const char *text = "<doc></doc>\n";
+    char match[] = "\n";
+
+    XML_SetDefaultHandler(parser, selective_aborting_default_handler);
+    XML_SetUserData(parser, match);
+    resumable = XML_FALSE;
+    expect_failure(text, XML_ERROR_ABORTED, "Abort not triggered");
+}
+END_TEST
+
+/* Test suspension from the epilog */
+START_TEST(test_suspend_epilog)
+{
+    const char *text = "<doc></doc>\n";
+    char match[] = "\n";
+
+    XML_SetDefaultHandler(parser, selective_aborting_default_handler);
+    XML_SetUserData(parser, match);
+    resumable = XML_TRUE;
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                XML_TRUE) != XML_STATUS_SUSPENDED)
+        xml_failure(parser);
+}
+END_TEST
+
+START_TEST(test_unfinished_epilog)
+{
+    const char *text = "<doc></doc><";
+
+    expect_failure(text, XML_ERROR_UNCLOSED_TOKEN,
+                   "Incomplete epilog entry not faulted");
+}
+END_TEST
+
+START_TEST(test_partial_char_in_epilog)
+{
+    const char *text = "<doc></doc>\xe2\x82";
+
+    /* First check that no fault is raised if the parse is not finished */
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                XML_FALSE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+    /* Now check that it is faulted once we finish */
+    if (XML_ParseBuffer(parser, 0, XML_TRUE) != XML_STATUS_ERROR)
+        fail("Partial character in epilog not faulted");
+    if (XML_GetErrorCode(parser) != XML_ERROR_PARTIAL_CHAR)
+        xml_failure(parser);
+}
+END_TEST
+
+START_TEST(test_hash_collision)
+{
+    /* For full coverage of the lookup routine, we need to ensure a
+     * hash collision even though we can only tell that we have one
+     * through breakpoint debugging or coverage statistics.  The
+     * following will cause a hash collision on machines with a 64-bit
+     * long type; others will have to experiment.  The full coverage
+     * tests invoked from qa.sh usually provide a hash collision, but
+     * not always.  This is an attempt to provide insurance.
+     */
+#define COLLIDING_HASH_SALT 0xffffffffff99fc90
+    const char * text =
+        "<doc>\n"
+        "<a1/><a2/><a3/><a4/><a5/><a6/><a7/><a8/>\n"
+        "<b1></b1><b2 attr='foo'>This is a foo</b2><b3></b3><b4></b4>\n"
+        "<b5></b5><b6></b6><b7></b7><b8></b8>\n"
+        "<c1/><c2/><c3/><c4/><c5/><c6/><c7/><c8/>\n"
+        "<d1/><d2/><d3/><d4/><d5/><d6/><d7/>\n"
+        "<d8>This triggers the table growth and collides with b2</d8>\n"
+        "</doc>\n";
+
+    XML_SetHashSalt(parser, COLLIDING_HASH_SALT);
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+}
+END_TEST
+#undef COLLIDING_HASH_SALT
+
+/* Test resuming a parse suspended in entity substitution */
+static void XMLCALL
+start_element_suspender(void *UNUSED_P(userData),
+                        const XML_Char *name,
+                        const XML_Char **UNUSED_P(atts))
+{
+    if (!strcmp(name, "suspend"))
+        XML_StopParser(parser, XML_TRUE);
+}
+
+START_TEST(test_suspend_resume_internal_entity)
+{
+    const char *text =
+        "<!DOCTYPE doc [\n"
+        "<!ENTITY foo '<suspend>Hi<suspend>Ho</suspend></suspend>'>\n"
+        "]>\n"
+        "<doc>&foo;</doc>\n";
+    const char *expected1 = "Hi";
+    const char *expected2 = "HiHo";
+    CharData storage;
+
+    CharData_Init(&storage);
+    XML_SetStartElementHandler(parser, start_element_suspender);
+    XML_SetCharacterDataHandler(parser, accumulate_characters);
+    XML_SetUserData(parser, &storage);
+    if (XML_Parse(parser, text, strlen(text),
+                  XML_TRUE) != XML_STATUS_SUSPENDED)
+        xml_failure(parser);
+    CharData_CheckXMLChars(&storage, "");
+    if (XML_ResumeParser(parser) != XML_STATUS_SUSPENDED)
+        xml_failure(parser);
+    CharData_CheckXMLChars(&storage, expected1);
+    if (XML_ResumeParser(parser) != XML_STATUS_OK)
+        xml_failure(parser);
+    CharData_CheckXMLChars(&storage, expected2);
+}
+END_TEST
+
+/* Test syntax error is caught at parse resumption */
+START_TEST(test_resume_entity_with_syntax_error)
+{
+    const char *text =
+        "<!DOCTYPE doc [\n"
+        "<!ENTITY foo '<suspend>Hi</wombat>'>\n"
+        "]>\n"
+        "<doc>&foo;</doc>\n";
+
+    XML_SetStartElementHandler(parser, start_element_suspender);
+    if (XML_Parse(parser, text, strlen(text),
+                  XML_TRUE) != XML_STATUS_SUSPENDED)
+        xml_failure(parser);
+    if (XML_ResumeParser(parser) != XML_STATUS_ERROR)
+        fail("Syntax error in entity not faulted");
+    if (XML_GetErrorCode(parser) != XML_ERROR_TAG_MISMATCH)
+        xml_failure(parser);
+}
+END_TEST
+
+/* Test suspending and resuming in a parameter entity substitution */
+static void XMLCALL
+element_decl_suspender(void *UNUSED_P(userData),
+                       const XML_Char *UNUSED_P(name),
+                       XML_Content *model)
+{
+    XML_StopParser(parser, XML_TRUE);
+    XML_FreeContentModel(parser, model);
+}
+
+START_TEST(test_suspend_resume_parameter_entity)
+{
+    const char *text =
+        "<!DOCTYPE doc [\n"
+        "<!ENTITY % foo '<!ELEMENT doc (#PCDATA)*>'>\n"
+        "%foo;\n"
+        "]>\n"
+        "<doc>Hello, world</doc>";
+    const char *expected = "Hello, world";
+    CharData storage;
+
+    CharData_Init(&storage);
+    XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+    XML_SetElementDeclHandler(parser, element_decl_suspender);
+    XML_SetCharacterDataHandler(parser, accumulate_characters);
+    XML_SetUserData(parser, &storage);
+    if (XML_Parse(parser, text, strlen(text),
+                  XML_TRUE) != XML_STATUS_SUSPENDED)
+        xml_failure(parser);
+    CharData_CheckXMLChars(&storage, "");
+    if (XML_ResumeParser(parser) != XML_STATUS_OK)
+        xml_failure(parser);
+    CharData_CheckXMLChars(&storage, expected);
+}
+END_TEST
+
+/* Test attempting to use parser after an error is faulted */
+START_TEST(test_restart_on_error)
+{
+    const char *text = "<$doc><doc></doc>";
+
+    if (XML_Parse(parser, text, strlen(text), XML_TRUE) != XML_STATUS_ERROR)
+        fail("Invalid tag name not faulted");
+    if (XML_GetErrorCode(parser) != XML_ERROR_INVALID_TOKEN)
+        xml_failure(parser);
+    if (XML_Parse(parser, NULL, 0, XML_TRUE) != XML_STATUS_ERROR)
+        fail("Restarting invalid parse not faulted");
+    if (XML_GetErrorCode(parser) != XML_ERROR_INVALID_TOKEN)
+        xml_failure(parser);
+}
+END_TEST
+
+/* Test that angle brackets in an attribute default value are faulted */
+START_TEST(test_reject_lt_in_attribute_value)
+{
+    const char *text =
+        "<!DOCTYPE doc [<!ATTLIST doc a CDATA '<bar>'>]>\n"
+        "<doc></doc>";
+
+    expect_failure(text, XML_ERROR_INVALID_TOKEN,
+                   "Bad attribute default not faulted");
+}
+END_TEST
+
+START_TEST(test_reject_unfinished_param_in_att_value)
+{
+    const char *text =
+        "<!DOCTYPE doc [<!ATTLIST doc a CDATA '&foo'>]>\n"
+        "<doc></doc>";
+
+    expect_failure(text, XML_ERROR_INVALID_TOKEN,
+                   "Bad attribute default not faulted");
+}
+END_TEST
+
+START_TEST(test_trailing_cr_in_att_value)
+{
+    const char *text = "<doc a='value\r'/>";
+
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+}
+END_TEST
+
+/* Try parsing a general entity within a parameter entity in a
+ * standalone internal DTD.  Covers a corner case in the parser.
+ */
+START_TEST(test_standalone_internal_entity)
+{
+    const char *text =
+        "<?xml version='1.0' standalone='yes' ?>\n"
+        "<!DOCTYPE doc [\n"
+        "  <!ELEMENT doc (#PCDATA)>\n"
+        "  <!ENTITY % pe '<!ATTLIST doc att2 CDATA \"&ge;\">'>\n"
+        "  <!ENTITY ge 'AttDefaultValue'>\n"
+        "  %pe;\n"
+        "]>\n"
+        "<doc att2='any'/>";
+
+    XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+}
+END_TEST
+
+/* Test that a reference to an unknown external entity is skipped */
+START_TEST(test_skipped_external_entity)
+{
+    const char *text =
+        "<!DOCTYPE doc SYSTEM 'http://example.org/'>\n"
+        "<doc></doc>\n";
+    ExtTest test_data = {
+        "<!ELEMENT doc EMPTY>\n"
+        "<!ENTITY % e2 '%e1;'>\n",
+        NULL,
+        NULL
+    };
+
+    XML_SetUserData(parser, &test_data);
+    XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+    XML_SetExternalEntityRefHandler(parser, external_entity_loader);
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+}
+END_TEST
+
+/* Test a different form of unknown external entity */
+typedef struct ext_hdlr_data {
+    const char *parse_text;
+    XML_ExternalEntityRefHandler handler;
+} ExtHdlrData;
+
+static int XMLCALL
+external_entity_oneshot_loader(XML_Parser parser,
+                               const XML_Char *context,
+                               const XML_Char *UNUSED_P(base),
+                               const XML_Char *UNUSED_P(systemId),
+                               const XML_Char *UNUSED_P(publicId))
+{
+    ExtHdlrData *test_data = (ExtHdlrData *)XML_GetUserData(parser);
+    XML_Parser ext_parser;
+
+    ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
+    if (ext_parser == NULL)
+        fail("Could not create external entity parser.");
+    /* Use the requested entity parser for further externals */
+    XML_SetExternalEntityRefHandler(ext_parser, test_data->handler);
+    if ( _XML_Parse_SINGLE_BYTES(ext_parser,
+                                 test_data->parse_text,
+                                 strlen(test_data->parse_text),
+                                 XML_TRUE) == XML_STATUS_ERROR) {
+        xml_failure(ext_parser);
+    }
+
+    XML_ParserFree(ext_parser);
+    return XML_STATUS_OK;
+}
+
+START_TEST(test_skipped_null_loaded_ext_entity)
+{
+    const char *text =
+        "<!DOCTYPE doc SYSTEM 'http://example.org/one.ent'>\n"
+        "<doc />";
+    ExtHdlrData test_data = {
+        "<!ENTITY % pe1 SYSTEM 'http://example.org/two.ent'>\n"
+        "<!ENTITY % pe2 '%pe1;'>\n"
+        "%pe2;\n",
+        external_entity_null_loader
+    };
+
+    XML_SetUserData(parser, &test_data);
+    XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+    XML_SetExternalEntityRefHandler(parser, external_entity_oneshot_loader);
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+}
+END_TEST
+
+START_TEST(test_skipped_unloaded_ext_entity)
+{
+    const char *text =
+        "<!DOCTYPE doc SYSTEM 'http://example.org/one.ent'>\n"
+        "<doc />";
+    ExtHdlrData test_data = {
+        "<!ENTITY % pe1 SYSTEM 'http://example.org/two.ent'>\n"
+        "<!ENTITY % pe2 '%pe1;'>\n"
+        "%pe2;\n",
+        NULL
+    };
+
+    XML_SetUserData(parser, &test_data);
+    XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+    XML_SetExternalEntityRefHandler(parser, external_entity_oneshot_loader);
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+}
+END_TEST
+
+/* Test that a parameter entity value ending with a carriage return
+ * has it translated internally into a newline.
+ */
+START_TEST(test_param_entity_with_trailing_cr)
+{
+#define PARAM_ENTITY_NAME "pe"
+#define PARAM_ENTITY_CORE_VALUE "<!ATTLIST doc att CDATA \"default\">"
+    const char *text =
+        "<!DOCTYPE doc SYSTEM 'http://example.org/'>\n"
+        "<doc/>";
+    ExtTest test_data = {
+        "<!ENTITY % " PARAM_ENTITY_NAME
+        " '" PARAM_ENTITY_CORE_VALUE "\r'>\n"
+        "%" PARAM_ENTITY_NAME ";\n",
+        NULL,
+        NULL
+    };
+
+    XML_SetUserData(parser, &test_data);
+    XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+    XML_SetExternalEntityRefHandler(parser, external_entity_loader);
+    XML_SetEntityDeclHandler(parser, param_entity_match_handler);
+    entity_name_to_match = PARAM_ENTITY_NAME;
+    entity_value_to_match = PARAM_ENTITY_CORE_VALUE "\n";
+    entity_match_flag = ENTITY_MATCH_NOT_FOUND;
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+    if (entity_match_flag == ENTITY_MATCH_FAIL)
+        fail("Parameter entity CR->NEWLINE conversion failed");
+    else if (entity_match_flag == ENTITY_MATCH_NOT_FOUND)
+        fail("Parameter entity not parsed");
+}
+#undef PARAM_ENTITY_NAME
+#undef PARAM_ENTITY_CORE_VALUE
+END_TEST
+
+START_TEST(test_invalid_character_entity)
+{
+    const char *text =
+        "<!DOCTYPE doc [\n"
+        "  <!ENTITY entity '&#x110000;'>\n"
+        "]>\n"
+        "<doc>&entity;</doc>";
+
+    expect_failure(text, XML_ERROR_BAD_CHAR_REF,
+                   "Out of range character reference not faulted");
+}
+END_TEST
+
+START_TEST(test_invalid_character_entity_2)
+{
+    const char *text =
+        "<!DOCTYPE doc [\n"
+        "  <!ENTITY entity '&#xg0;'>\n"
+        "]>\n"
+        "<doc>&entity;</doc>";
+
+    expect_failure(text, XML_ERROR_INVALID_TOKEN,
+                   "Out of range character reference not faulted");
+}
+END_TEST
+
+START_TEST(test_invalid_character_entity_3)
+{
+    const char text[] =
+        /* <!DOCTYPE doc [\n */
+        "\0<\0!\0D\0O\0C\0T\0Y\0P\0E\0 \0d\0o\0c\0 \0[\0\n"
+        /* U+0E04 = KHO KHWAI
+         * U+0E08 = CHO CHAN */
+        /* <!ENTITY entity '&\u0e04\u0e08;'>\n */
+        "\0<\0!\0E\0N\0T\0I\0T\0Y\0 \0e\0n\0t\0i\0t\0y\0 "
+        "\0'\0&\x0e\x04\x0e\x08\0;\0'\0>\0\n"
+        /* ]>\n */
+        "\0]\0>\0\n"
+        /* <doc>&entity;</doc> */
+        "\0<\0d\0o\0c\0>\0&\0e\0n\0t\0i\0t\0y\0;\0<\0/\0d\0o\0c\0>";
+
+    if (_XML_Parse_SINGLE_BYTES(parser, text, sizeof(text)-1,
+                                XML_TRUE) != XML_STATUS_ERROR)
+        fail("Invalid start of entity name not faulted");
+    if (XML_GetErrorCode(parser) != XML_ERROR_UNDEFINED_ENTITY)
+        xml_failure(parser);
+}
+END_TEST
+
+START_TEST(test_invalid_character_entity_4)
+{
+    const char *text =
+        "<!DOCTYPE doc [\n"
+        "  <!ENTITY entity '&#1114112;'>\n" /* = &#x110000 */
+        "]>\n"
+        "<doc>&entity;</doc>";
+
+    expect_failure(text, XML_ERROR_BAD_CHAR_REF,
+                   "Out of range character reference not faulted");
+}
+END_TEST
+
+
+/* Test that processing instructions are picked up by a default handler */
+START_TEST(test_pi_handled_in_default)
+{
+    const char *text = "<?test processing instruction?>\n<doc/>";
+    const XML_Char *expected = "<?test processing instruction?>\n<doc/>";
+    CharData storage;
+
+    CharData_Init(&storage);
+    XML_SetDefaultHandler(parser, accumulate_characters);
+    XML_SetUserData(parser, &storage);
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                XML_TRUE)== XML_STATUS_ERROR)
+        xml_failure(parser);
+    CharData_CheckXMLChars(&storage, expected);
+}
+END_TEST
+
+
+/* Test that comments are picked up by a default handler */
+START_TEST(test_comment_handled_in_default)
+{
+    const char *text = "<!-- This is a comment -->\n<doc/>";
+    const XML_Char *expected = "<!-- This is a comment -->\n<doc/>";
+    CharData storage;
+
+    CharData_Init(&storage);
+    XML_SetDefaultHandler(parser, accumulate_characters);
+    XML_SetUserData(parser, &storage);
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+    CharData_CheckXMLChars(&storage, expected);
+}
+END_TEST
+
+/* Test PIs that look almost but not quite like XML declarations */
+static void XMLCALL
+accumulate_pi_characters(void *userData,
+                         const XML_Char *target,
+                         const XML_Char *data)
+{
+    CharData *storage = (CharData *)userData;
+
+    CharData_AppendXMLChars(storage, target, -1);
+    CharData_AppendXMLChars(storage, ": ", 2);
+    CharData_AppendXMLChars(storage, data, -1);
+    CharData_AppendXMLChars(storage, "\n", 1);
+}
+
+START_TEST(test_pi_yml)
+{
+    const char *text = "<?yml something like data?><doc/>";
+    const XML_Char *expected = "yml: something like data\n";
+    CharData storage;
+
+    CharData_Init(&storage);
+    XML_SetProcessingInstructionHandler(parser, accumulate_pi_characters);
+    XML_SetUserData(parser, &storage);
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+    CharData_CheckXMLChars(&storage, expected);
+}
+END_TEST
+
+START_TEST(test_pi_xnl)
+{
+    const char *text = "<?xnl nothing like data?><doc/>";
+    const XML_Char *expected = "xnl: nothing like data\n";
+    CharData storage;
+
+    CharData_Init(&storage);
+    XML_SetProcessingInstructionHandler(parser, accumulate_pi_characters);
+    XML_SetUserData(parser, &storage);
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+    CharData_CheckXMLChars(&storage, expected);
+}
+END_TEST
+
+START_TEST(test_pi_xmm)
+{
+    const char *text = "<?xmm everything like data?><doc/>";
+    const XML_Char *expected = "xmm: everything like data\n";
+    CharData storage;
+
+    CharData_Init(&storage);
+    XML_SetProcessingInstructionHandler(parser, accumulate_pi_characters);
+    XML_SetUserData(parser, &storage);
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+    CharData_CheckXMLChars(&storage, expected);
+}
+END_TEST
+
+START_TEST(test_utf16_pi)
+{
+    const char text[] =
+        /* <?{KHO KHWAI}{CHO CHAN}?>
+         * where {KHO KHWAI} = U+0E04
+         * and   {CHO CHAN}  = U+0E08
+         */
+        "<\0?\0\x04\x0e\x08\x0e?\0>\0"
+        /* <q/> */
+        "<\0q\0/\0>\0";
+    const XML_Char *expected = "\xe0\xb8\x84\xe0\xb8\x88: \n";
+    CharData storage;
+
+    CharData_Init(&storage);
+    XML_SetProcessingInstructionHandler(parser, accumulate_pi_characters);
+    XML_SetUserData(parser, &storage);
+    if (_XML_Parse_SINGLE_BYTES(parser, text, sizeof(text)-1,
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+    CharData_CheckXMLChars(&storage, expected);
+}
+END_TEST
+
+START_TEST(test_utf16_be_pi)
+{
+    const char text[] =
+        /* <?{KHO KHWAI}{CHO CHAN}?>
+         * where {KHO KHWAI} = U+0E04
+         * and   {CHO CHAN}  = U+0E08
+         */
+        "\0<\0?\x0e\x04\x0e\x08\0?\0>"
+        /* <q/> */
+        "\0<\0q\0/\0>";
+    const XML_Char *expected = "\xe0\xb8\x84\xe0\xb8\x88: \n";
+    CharData storage;
+
+    CharData_Init(&storage);
+    XML_SetProcessingInstructionHandler(parser, accumulate_pi_characters);
+    XML_SetUserData(parser, &storage);
+    if (_XML_Parse_SINGLE_BYTES(parser, text, sizeof(text)-1,
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+    CharData_CheckXMLChars(&storage, expected);
+}
+END_TEST
+
+/* Test that comments can be picked up and translated */
+static void XMLCALL
+accumulate_comment(void *userData,
+                   const XML_Char *data)
+{
+    CharData *storage = (CharData *)userData;
+
+    CharData_AppendXMLChars(storage, data, -1);
+}
+
+START_TEST(test_utf16_be_comment)
+{
+    const char text[] =
+        /* <!-- Comment A --> */
+        "\0<\0!\0-\0-\0 \0C\0o\0m\0m\0e\0n\0t\0 \0A\0 \0-\0-\0>\0\n"
+        /* <doc/> */
+        "\0<\0d\0o\0c\0/\0>";
+    const XML_Char *expected = " Comment A ";
+    CharData storage;
+
+    CharData_Init(&storage);
+    XML_SetCommentHandler(parser, accumulate_comment);
+    XML_SetUserData(parser, &storage);
+    if (_XML_Parse_SINGLE_BYTES(parser, text, sizeof(text)-1,
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+    CharData_CheckXMLChars(&storage, expected);
+}
+END_TEST
+
+START_TEST(test_utf16_le_comment)
+{
+    const char text[] =
+        /* <!-- Comment B --> */
+        "<\0!\0-\0-\0 \0C\0o\0m\0m\0e\0n\0t\0 \0B\0 \0-\0-\0>\0\n\0"
+        /* <doc/> */
+        "<\0d\0o\0c\0/\0>\0";
+    const XML_Char *expected = " Comment B ";
+    CharData storage;
+
+    CharData_Init(&storage);
+    XML_SetCommentHandler(parser, accumulate_comment);
+    XML_SetUserData(parser, &storage);
+    if (_XML_Parse_SINGLE_BYTES(parser, text, sizeof(text)-1,
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+    CharData_CheckXMLChars(&storage, expected);
+}
+END_TEST
+
+/* Test that the unknown encoding handler with map entries that expect
+ * conversion but no conversion function is faulted
+ */
+static int XMLCALL
+failing_converter(void *UNUSED_P(data), const char *UNUSED_P(s))
+{
+    /* Always claim to have failed */
+    return -1;
+}
+
+static int XMLCALL
+prefix_converter(void *UNUSED_P(data), const char *s)
+{
+    /* If the first byte is 0xff, raise an error */
+    if (s[0] == -1)
+        return -1;
+    /* Just add the low bits of the first byte to the second */
+    return (s[1] + (s[0] & 0x7f)) & 0x01ff;
+}
+
+static int XMLCALL
+MiscEncodingHandler(void *data,
+                    const XML_Char *encoding,
+                    XML_Encoding *info)
+{
+    int i;
+    int high_map = -2; /* Assume a 2-byte sequence */
+
+    if (!strcmp(encoding, "invalid-9") ||
+        !strcmp(encoding, "ascii-like") ||
+        !strcmp(encoding, "invalid-len") ||
+        !strcmp(encoding, "invalid-a") ||
+        !strcmp(encoding, "invalid-surrogate") ||
+        !strcmp(encoding, "invalid-high"))
+        high_map = -1;
+
+    for (i = 0; i < 128; ++i)
+        info->map[i] = i;
+    for (; i < 256; ++i)
+        info->map[i] = high_map;
+
+    /* If required, put an invalid value in the ASCII entries */
+    if (!strcmp(encoding, "invalid-9"))
+        info->map[9] = 5;
+    /* If required, have a top-bit set character starts a 5-byte sequence */
+    if (!strcmp(encoding, "invalid-len"))
+        info->map[0x81] = -5;
+    /* If required, make a top-bit set character a valid ASCII character */
+    if (!strcmp(encoding, "invalid-a"))
+        info->map[0x82] = 'a';
+    /* If required, give a top-bit set character a forbidden value,
+     * what would otherwise be the first of a surrogate pair.
+     */
+    if (!strcmp(encoding, "invalid-surrogate"))
+        info->map[0x83] = 0xd801;
+    /* If required, give a top-bit set character too high a value */
+    if (!strcmp(encoding, "invalid-high"))
+        info->map[0x84] = 0x010101;
+
+    info->data = data;
+    info->release = NULL;
+    if (!strcmp(encoding, "failing-conv"))
+        info->convert = failing_converter;
+    else if (!strcmp(encoding, "prefix-conv"))
+        info->convert = prefix_converter;
+    else
+        info->convert = NULL;
+    return XML_STATUS_OK;
+}
+
+START_TEST(test_missing_encoding_conversion_fn)
+{
+    const char *text =
+        "<?xml version='1.0' encoding='no-conv'?>\n"
+        "<doc>\x81</doc>";
+
+    XML_SetUnknownEncodingHandler(parser, MiscEncodingHandler, NULL);
+    /* MiscEncodingHandler sets up an encoding with every top-bit-set
+     * character introducing a two-byte sequence.  For this, it
+     * requires a convert function.  The above function call doesn't
+     * pass one through, so when BadEncodingHandler actually gets
+     * called it should supply an invalid encoding.
+     */
+    expect_failure(text, XML_ERROR_UNKNOWN_ENCODING,
+                   "Encoding with missing convert() not faulted");
+}
+END_TEST
+
+START_TEST(test_failing_encoding_conversion_fn)
+{
+    const char *text =
+        "<?xml version='1.0' encoding='failing-conv'?>\n"
+        "<doc>\x81</doc>";
+
+    XML_SetUnknownEncodingHandler(parser, MiscEncodingHandler, NULL);
+    /* BadEncodingHandler sets up an encoding with every top-bit-set
+     * character introducing a two-byte sequence.  For this, it
+     * requires a convert function.  The above function call passes
+     * one that insists all possible sequences are invalid anyway.
+     */
+    expect_failure(text, XML_ERROR_INVALID_TOKEN,
+                   "Encoding with failing convert() not faulted");
+}
+END_TEST
+
+/* Test unknown encoding conversions */
+START_TEST(test_unknown_encoding_success)
+{
+    const char *text =
+        "<?xml version='1.0' encoding='prefix-conv'?>\n"
+        /* Equivalent to <eoc>Hello, world</eoc> */
+        "<\x81\x64\x80oc>Hello, world</\x81\x64\x80oc>";
+
+    XML_SetUnknownEncodingHandler(parser, MiscEncodingHandler, NULL);
+    run_character_check(text, "Hello, world");
+}
+END_TEST
+
+/* Test bad name character in unknown encoding */
+START_TEST(test_unknown_encoding_bad_name)
+{
+    const char *text =
+        "<?xml version='1.0' encoding='prefix-conv'?>\n"
+        "<\xff\x64oc>Hello, world</\xff\x64oc>";
+
+    XML_SetUnknownEncodingHandler(parser, MiscEncodingHandler, NULL);
+    expect_failure(text, XML_ERROR_INVALID_TOKEN,
+                   "Bad name start in unknown encoding not faulted");
+}
+END_TEST
+
+/* Test bad mid-name character in unknown encoding */
+START_TEST(test_unknown_encoding_bad_name_2)
+{
+    const char *text =
+        "<?xml version='1.0' encoding='prefix-conv'?>\n"
+        "<d\xffoc>Hello, world</d\xffoc>";
+
+    XML_SetUnknownEncodingHandler(parser, MiscEncodingHandler, NULL);
+    expect_failure(text, XML_ERROR_INVALID_TOKEN,
+                   "Bad name in unknown encoding not faulted");
+}
+END_TEST
+
+/* Test element name that is long enough to fill the conversion buffer
+ * in an unknown encoding, finishing with an encoded character.
+ */
+START_TEST(test_unknown_encoding_long_name_1)
+{
+    const char *text =
+        "<?xml version='1.0' encoding='prefix-conv'?>\n"
+        "<abcdefghabcdefghabcdefghijkl\x80m\x80n\x80o\x80p>"
+        "Hi"
+        "</abcdefghabcdefghabcdefghijkl\x80m\x80n\x80o\x80p>";
+    const XML_Char *expected = "abcdefghabcdefghabcdefghijklmnop";
+    CharData storage;
+
+    CharData_Init(&storage);
+    XML_SetUnknownEncodingHandler(parser, MiscEncodingHandler, NULL);
+    XML_SetStartElementHandler(parser, record_element_start_handler);
+    XML_SetUserData(parser, &storage);
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+    CharData_CheckXMLChars(&storage, expected);
+}
+END_TEST
+
+/* Test element name that is long enough to fill the conversion buffer
+ * in an unknown encoding, finishing with an simple character.
+ */
+START_TEST(test_unknown_encoding_long_name_2)
+{
+    const char *text =
+        "<?xml version='1.0' encoding='prefix-conv'?>\n"
+        "<abcdefghabcdefghabcdefghijklmnop>"
+        "Hi"
+        "</abcdefghabcdefghabcdefghijklmnop>";
+    const XML_Char *expected = "abcdefghabcdefghabcdefghijklmnop";
+    CharData storage;
+
+    CharData_Init(&storage);
+    XML_SetUnknownEncodingHandler(parser, MiscEncodingHandler, NULL);
+    XML_SetStartElementHandler(parser, record_element_start_handler);
+    XML_SetUserData(parser, &storage);
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+    CharData_CheckXMLChars(&storage, expected);
+}
+END_TEST
+
+START_TEST(test_invalid_unknown_encoding)
+{
+    const char *text =
+        "<?xml version='1.0' encoding='invalid-9'?>\n"
+        "<doc>Hello world</doc>";
+
+    XML_SetUnknownEncodingHandler(parser, MiscEncodingHandler, NULL);
+    expect_failure(text, XML_ERROR_UNKNOWN_ENCODING,
+                   "Invalid unknown encoding not faulted");
+}
+END_TEST
+
+START_TEST(test_unknown_ascii_encoding_ok)
+{
+    const char *text =
+        "<?xml version='1.0' encoding='ascii-like'?>\n"
+        "<doc>Hello, world</doc>";
+
+    XML_SetUnknownEncodingHandler(parser, MiscEncodingHandler, NULL);
+    run_character_check(text, "Hello, world");
+}
+END_TEST
+
+START_TEST(test_unknown_ascii_encoding_fail)
+{
+    const char *text =
+        "<?xml version='1.0' encoding='ascii-like'?>\n"
+        "<doc>Hello, \x80 world</doc>";
+
+    XML_SetUnknownEncodingHandler(parser, MiscEncodingHandler, NULL);
+    expect_failure(text, XML_ERROR_INVALID_TOKEN,
+                   "Invalid character not faulted");
+}
+END_TEST
+
+START_TEST(test_unknown_encoding_invalid_length)
+{
+    const char *text =
+        "<?xml version='1.0' encoding='invalid-len'?>\n"
+        "<doc>Hello, world</doc>";
+
+    XML_SetUnknownEncodingHandler(parser, MiscEncodingHandler, NULL);
+    expect_failure(text, XML_ERROR_UNKNOWN_ENCODING,
+                   "Invalid unknown encoding not faulted");
+}
+END_TEST
+
+START_TEST(test_unknown_encoding_invalid_topbit)
+{
+    const char *text =
+        "<?xml version='1.0' encoding='invalid-a'?>\n"
+        "<doc>Hello, world</doc>";
+
+    XML_SetUnknownEncodingHandler(parser, MiscEncodingHandler, NULL);
+    expect_failure(text, XML_ERROR_UNKNOWN_ENCODING,
+                   "Invalid unknown encoding not faulted");
+}
+END_TEST
+
+START_TEST(test_unknown_encoding_invalid_surrogate)
+{
+    const char *text =
+        "<?xml version='1.0' encoding='invalid-surrogate'?>\n"
+        "<doc>Hello, \x82 world</doc>";
+
+    XML_SetUnknownEncodingHandler(parser, MiscEncodingHandler, NULL);
+    expect_failure(text, XML_ERROR_INVALID_TOKEN,
+                   "Invalid unknown encoding not faulted");
+}
+END_TEST
+
+START_TEST(test_unknown_encoding_invalid_high)
+{
+    const char *text =
+        "<?xml version='1.0' encoding='invalid-high'?>\n"
+        "<doc>Hello, world</doc>";
+
+    XML_SetUnknownEncodingHandler(parser, MiscEncodingHandler, NULL);
+    expect_failure(text, XML_ERROR_UNKNOWN_ENCODING,
+                   "Invalid unknown encoding not faulted");
+}
+END_TEST
+
+START_TEST(test_unknown_encoding_invalid_attr_value)
+{
+    const char *text =
+        "<?xml version='1.0' encoding='prefix-conv'?>\n"
+        "<doc attr='\xff\x30'/>";
+
+    XML_SetUnknownEncodingHandler(parser, MiscEncodingHandler, NULL);
+    expect_failure(text, XML_ERROR_INVALID_TOKEN,
+                   "Invalid attribute valid not faulted");
+}
+END_TEST
+
+/* Test an external entity parser set to use latin-1 detects UTF-16
+ * BOMs correctly.
+ */
+enum ee_parse_flags {
+    EE_PARSE_NONE = 0x00,
+    EE_PARSE_FULL_BUFFER = 0x01
+};
+
+typedef struct ExtTest2 {
+    const char *parse_text;
+    int parse_len;
+    const char *encoding;
+    CharData *storage;
+    enum ee_parse_flags flags;
+} ExtTest2;
+
+static int XMLCALL
+external_entity_loader2(XML_Parser parser,
+                        const XML_Char *context,
+                        const XML_Char *UNUSED_P(base),
+                        const XML_Char *UNUSED_P(systemId),
+                        const XML_Char *UNUSED_P(publicId))
+{
+    ExtTest2 *test_data = (ExtTest2 *)XML_GetUserData(parser);
+    XML_Parser extparser;
+
+    extparser = XML_ExternalEntityParserCreate(parser, context, NULL);
+    if (extparser == NULL)
+        fail("Coulr not create external entity parser");
+    if (test_data->encoding != NULL) {
+        if (!XML_SetEncoding(extparser, test_data->encoding))
+            fail("XML_SetEncoding() ignored for external entity");
+    }
+    if (test_data->flags & EE_PARSE_FULL_BUFFER) {
+        if (XML_Parse(extparser,
+                      test_data->parse_text,
+                      test_data->parse_len,
+                      XML_TRUE) == XML_STATUS_ERROR) {
+            xml_failure(extparser);
+        }
+    }
+    else if (_XML_Parse_SINGLE_BYTES(extparser,
+                                     test_data->parse_text,
+                                     test_data->parse_len,
+                                     XML_TRUE) == XML_STATUS_ERROR) {
+        xml_failure(extparser);
+    }
+
+    XML_ParserFree(extparser);
+    return XML_STATUS_OK;
+}
+
+/* Test that UTF-16 BOM does not select UTF-16 given explicit encoding */
+static void XMLCALL
+ext2_accumulate_characters(void *userData, const XML_Char *s, int len)
+{
+    ExtTest2 *test_data = (ExtTest2 *)userData;
+    accumulate_characters(test_data->storage, s, len);
+}
+
+START_TEST(test_ext_entity_latin1_utf16le_bom)
+{
+    const char *text =
+        "<!DOCTYPE doc [\n"
+        "  <!ENTITY en SYSTEM 'http://example.org/dummy.ent'>\n"
+        "]>\n"
+        "<doc>&en;</doc>";
+    ExtTest2 test_data = {
+        /* If UTF-16, 0xfeff is the BOM and 0x204c is black left bullet */
+        /* If Latin-1, 0xff = Y-diaeresis, 0xfe = lowercase thorn,
+         *   0x4c = L and 0x20 is a space
+         */
+        "\xff\xfe\x4c\x20",
+        4,
+        "iso-8859-1",
+        NULL,
+        EE_PARSE_NONE
+    };
+    /* In UTF-8, y-diaeresis is 0xc3 0xbf, lowercase thorn is 0xc3 0xbe */
+    const XML_Char *expected = "\xc3\xbf\xc3\xbeL ";
+    CharData storage;
+
+
+    CharData_Init(&storage);
+    test_data.storage = &storage;
+    XML_SetExternalEntityRefHandler(parser, external_entity_loader2);
+    XML_SetUserData(parser, &test_data);
+    XML_SetCharacterDataHandler(parser, ext2_accumulate_characters);
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+    CharData_CheckXMLChars(&storage, expected);
+}
+END_TEST
+
+START_TEST(test_ext_entity_latin1_utf16be_bom)
+{
+    const char *text =
+        "<!DOCTYPE doc [\n"
+        "  <!ENTITY en SYSTEM 'http://example.org/dummy.ent'>\n"
+        "]>\n"
+        "<doc>&en;</doc>";
+    ExtTest2 test_data = {
+        /* If UTF-16, 0xfeff is the BOM and 0x204c is black left bullet */
+        /* If Latin-1, 0xff = Y-diaeresis, 0xfe = lowercase thorn,
+         *   0x4c = L and 0x20 is a space
+         */
+        "\xfe\xff\x20\x4c",
+        4,
+        "iso-8859-1",
+        NULL,
+        EE_PARSE_NONE
+    };
+    /* In UTF-8, y-diaeresis is 0xc3 0xbf, lowercase thorn is 0xc3 0xbe */
+    const XML_Char *expected = "\xc3\xbe\xc3\xbf L";
+    CharData storage;
+
+
+    CharData_Init(&storage);
+    test_data.storage = &storage;
+    XML_SetExternalEntityRefHandler(parser, external_entity_loader2);
+    XML_SetUserData(parser, &test_data);
+    XML_SetCharacterDataHandler(parser, ext2_accumulate_characters);
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+    CharData_CheckXMLChars(&storage, expected);
+}
+END_TEST
+
+
+/* Parsing the full buffer rather than a byte at a time makes a
+ * difference to the encoding scanning code, so repeat the above tests
+ * without breaking them down by byte.
+ */
+START_TEST(test_ext_entity_latin1_utf16le_bom2)
+{
+    const char *text =
+        "<!DOCTYPE doc [\n"
+        "  <!ENTITY en SYSTEM 'http://example.org/dummy.ent'>\n"
+        "]>\n"
+        "<doc>&en;</doc>";
+    ExtTest2 test_data = {
+        /* If UTF-16, 0xfeff is the BOM and 0x204c is black left bullet */
+        /* If Latin-1, 0xff = Y-diaeresis, 0xfe = lowercase thorn,
+         *   0x4c = L and 0x20 is a space
+         */
+        "\xff\xfe\x4c\x20",
+        4,
+        "iso-8859-1",
+        NULL,
+        EE_PARSE_FULL_BUFFER
+    };
+    /* In UTF-8, y-diaeresis is 0xc3 0xbf, lowercase thorn is 0xc3 0xbe */
+    const XML_Char *expected = "\xc3\xbf\xc3\xbeL ";
+    CharData storage;
+
+
+    CharData_Init(&storage);
+    test_data.storage = &storage;
+    XML_SetExternalEntityRefHandler(parser, external_entity_loader2);
+    XML_SetUserData(parser, &test_data);
+    XML_SetCharacterDataHandler(parser, ext2_accumulate_characters);
+    if (XML_Parse(parser, text, strlen(text), XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+    CharData_CheckXMLChars(&storage, expected);
+}
+END_TEST
+
+START_TEST(test_ext_entity_latin1_utf16be_bom2)
+{
+    const char *text =
+        "<!DOCTYPE doc [\n"
+        "  <!ENTITY en SYSTEM 'http://example.org/dummy.ent'>\n"
+        "]>\n"
+        "<doc>&en;</doc>";
+    ExtTest2 test_data = {
+        /* If UTF-16, 0xfeff is the BOM and 0x204c is black left bullet */
+        /* If Latin-1, 0xff = Y-diaeresis, 0xfe = lowercase thorn,
+         *   0x4c = L and 0x20 is a space
+         */
+        "\xfe\xff\x20\x4c",
+        4,
+        "iso-8859-1",
+        NULL,
+        EE_PARSE_FULL_BUFFER
+    };
+    /* In UTF-8, y-diaeresis is 0xc3 0xbf, lowercase thorn is 0xc3 0xbe */
+    const XML_Char *expected = "\xc3\xbe\xc3\xbf L";
+    CharData storage;
+
+
+    CharData_Init(&storage);
+    test_data.storage = &storage;
+    XML_SetExternalEntityRefHandler(parser, external_entity_loader2);
+    XML_SetUserData(parser, &test_data);
+    XML_SetCharacterDataHandler(parser, ext2_accumulate_characters);
+    if (XML_Parse(parser, text, strlen(text), XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+    CharData_CheckXMLChars(&storage, expected);
+}
+END_TEST
+
+/* Test little-endian UTF-16 given an explicit big-endian encoding */
+START_TEST(test_ext_entity_utf16_be)
+{
+    const char *text =
+        "<!DOCTYPE doc [\n"
+        "  <!ENTITY en SYSTEM 'http://example.org/dummy.ent'>\n"
+        "]>\n"
+        "<doc>&en;</doc>";
+    ExtTest2 test_data = {
+        "<\0e\0/\0>\0",
+        8,
+        "utf-16be",
+        NULL,
+        EE_PARSE_NONE
+    };
+    const XML_Char *expected =
+        "\xe3\xb0\x80"  /* U+3C00 */
+        "\xe6\x94\x80"  /* U+6A00 */
+        "\xe2\xbc\x80"  /* U+2F00 */
+        "\xe3\xb8\x80"; /* U+3E00 */
+    CharData storage;
+
+    CharData_Init(&storage);
+    test_data.storage = &storage;
+    XML_SetExternalEntityRefHandler(parser, external_entity_loader2);
+    XML_SetUserData(parser, &test_data);
+    XML_SetCharacterDataHandler(parser, ext2_accumulate_characters);
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+    CharData_CheckXMLChars(&storage, expected);
+}
+END_TEST
+
+/* Test big-endian UTF-16 given an explicit little-endian encoding */
+START_TEST(test_ext_entity_utf16_le)
+{
+    const char *text =
+        "<!DOCTYPE doc [\n"
+        "  <!ENTITY en SYSTEM 'http://example.org/dummy.ent'>\n"
+        "]>\n"
+        "<doc>&en;</doc>";
+    ExtTest2 test_data = {
+        "\0<\0e\0/\0>",
+        8,
+        "utf-16le",
+        NULL,
+        EE_PARSE_NONE
+    };
+    const XML_Char *expected =
+        "\xe3\xb0\x80"  /* U+3C00 */
+        "\xe6\x94\x80"  /* U+6A00 */
+        "\xe2\xbc\x80"  /* U+2F00 */
+        "\xe3\xb8\x80"; /* U+3E00 */
+    CharData storage;
+
+    CharData_Init(&storage);
+    test_data.storage = &storage;
+    XML_SetExternalEntityRefHandler(parser, external_entity_loader2);
+    XML_SetUserData(parser, &test_data);
+    XML_SetCharacterDataHandler(parser, ext2_accumulate_characters);
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+    CharData_CheckXMLChars(&storage, expected);
+}
+END_TEST
+
+/* Test little-endian UTF-16 given no explicit encoding.
+ * The existing default encoding (UTF-8) is assumed to hold without a
+ * BOM to contradict it, so the entity value will in fact provoke an
+ * error because 0x00 is not a valid XML character.  We parse the
+ * whole buffer in one go rather than feeding it in byte by byte to
+ * exercise different code paths in the initial scanning routines.
+ */
+typedef struct ExtFaults2 {
+    const char *parse_text;
+    int parse_len;
+    const char *fail_text;
+    const char *encoding;
+    enum XML_Error error;
+} ExtFaults2;
+
+static int XMLCALL
+external_entity_faulter2(XML_Parser parser,
+                         const XML_Char *context,
+                         const XML_Char *UNUSED_P(base),
+                         const XML_Char *UNUSED_P(systemId),
+                         const XML_Char *UNUSED_P(publicId))
+{
+    ExtFaults2 *test_data = (ExtFaults2 *)XML_GetUserData(parser);
+    XML_Parser extparser;
+
+    extparser = XML_ExternalEntityParserCreate(parser, context, NULL);
+    if (extparser == NULL)
+        fail("Could not create external entity parser");
+    if (test_data->encoding != NULL) {
+        if (!XML_SetEncoding(extparser, test_data->encoding))
+            fail("XML_SetEncoding() ignored for external entity");
+    }
+    if (XML_Parse(extparser,
+                  test_data->parse_text,
+                  test_data->parse_len,
+                  XML_TRUE) != XML_STATUS_ERROR)
+        fail(test_data->fail_text);
+    if (XML_GetErrorCode(extparser) != test_data->error)
+        xml_failure(extparser);
+
+    XML_ParserFree(extparser);
+    return XML_STATUS_ERROR;
+}
+
+START_TEST(test_ext_entity_utf16_unknown)
+{
+    const char *text =
+        "<!DOCTYPE doc [\n"
+        "  <!ENTITY en SYSTEM 'http://example.org/dummy.ent'>\n"
+        "]>\n"
+        "<doc>&en;</doc>";
+    ExtFaults2 test_data = {
+        "a\0b\0c\0",
+        6,
+        "Invalid character in entity not faulted",
+        NULL,
+        XML_ERROR_INVALID_TOKEN
+    };
+
+    XML_SetExternalEntityRefHandler(parser, external_entity_faulter2);
+    XML_SetUserData(parser, &test_data);
+    expect_failure(text, XML_ERROR_EXTERNAL_ENTITY_HANDLING,
+                   "Invalid character should not have been accepted");
+}
+END_TEST
+
+/* Test not-quite-UTF-8 BOM (0xEF 0xBB 0xBF) */
+START_TEST(test_ext_entity_utf8_non_bom)
+{
+    const char *text =
+        "<!DOCTYPE doc [\n"
+        "  <!ENTITY en SYSTEM 'http://example.org/dummy.ent'>\n"
+        "]>\n"
+        "<doc>&en;</doc>";
+    ExtTest2 test_data = {
+        "\xef\xbb\x80", /* Arabic letter DAD medial form, U+FEC0 */
+        3,
+        NULL,
+        NULL,
+        EE_PARSE_NONE
+    };
+    const XML_Char *expected = "\xef\xbb\x80";
+    CharData storage;
+
+    CharData_Init(&storage);
+    test_data.storage = &storage;
+    XML_SetExternalEntityRefHandler(parser, external_entity_loader2);
+    XML_SetUserData(parser, &test_data);
+    XML_SetCharacterDataHandler(parser, ext2_accumulate_characters);
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+    CharData_CheckXMLChars(&storage, expected);
+}
+END_TEST
+
+/* Test that UTF-8 in a CDATA section is correctly passed through */
+START_TEST(test_utf8_in_cdata_section)
+{
+    const char *text = "<doc><![CDATA[one \xc3\xa9 two]]></doc>";
+    const XML_Char *expected = "one \xc3\xa9 two";
+
+    run_character_check(text, expected);
+}
+END_TEST
+
+/* Test that little-endian UTF-16 in a CDATA section is handled */
+START_TEST(test_utf8_in_cdata_section_2)
+{
+    const char *text = "<doc><![CDATA[\xc3\xa9]\xc3\xa9two]]></doc>";
+    const XML_Char *expected = "\xc3\xa9]\xc3\xa9two";
+
+    run_character_check(text, expected);
+}
+END_TEST
+
+/* Test trailing spaces in elements are accepted */
+static void XMLCALL
+record_element_end_handler(void *userData,
+                           const XML_Char *name)
+{
+    CharData *storage = (CharData *)userData;
+
+    CharData_AppendXMLChars(storage, "/", 1);
+    CharData_AppendXMLChars(storage, name, -1);
+}
+
+START_TEST(test_trailing_spaces_in_elements)
+{
+    const char *text = "<doc   >Hi</doc >";
+    const XML_Char *expected = "doc/doc";
+    CharData storage;
+
+    CharData_Init(&storage);
+    XML_SetElementHandler(parser, record_element_start_handler,
+                          record_element_end_handler);
+    XML_SetUserData(parser, &storage);
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+    CharData_CheckXMLChars(&storage, expected);
+}
+END_TEST
+
+START_TEST(test_utf16_attribute)
+{
+    const char text[] =
+        /* <d {KHO KHWAI}{CHO CHAN}='a'/>
+         * where {KHO KHWAI} = U+0E04 = 0xe0 0xb8 0x84 in UTF-8
+         * and   {CHO CHAN}  = U+0E08 = 0xe0 0xb8 0x88 in UTF-8
+         */
+        "<\0d\0 \0\x04\x0e\x08\x0e=\0'\0a\0'\0/\0>\0";
+    const XML_Char *expected = "a";
+    CharData storage;
+
+    CharData_Init(&storage);
+    XML_SetStartElementHandler(parser, accumulate_attribute);
+    XML_SetUserData(parser, &storage);
+    if (_XML_Parse_SINGLE_BYTES(parser, text, sizeof(text)-1,
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+    CharData_CheckXMLChars(&storage, expected);
+}
+END_TEST
+
+START_TEST(test_utf16_second_attr)
+{
+    /* <d a='1' {KHO KHWAI}{CHO CHAN}='2'/>
+         * where {KHO KHWAI} = U+0E04 = 0xe0 0xb8 0x84 in UTF-8
+         * and   {CHO CHAN}  = U+0E08 = 0xe0 0xb8 0x88 in UTF-8
+         */
+    const char text[] =
+        "<\0d\0 \0a\0=\0'\0\x31\0'\0 \0"
+        "\x04\x0e\x08\x0e=\0'\0\x32\0'\0/\0>\0";
+    const XML_Char *expected = "1";
+    CharData storage;
+
+    CharData_Init(&storage);
+    XML_SetStartElementHandler(parser, accumulate_attribute);
+    XML_SetUserData(parser, &storage);
+    if (_XML_Parse_SINGLE_BYTES(parser, text, sizeof(text)-1,
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+    CharData_CheckXMLChars(&storage, expected);
+}
+END_TEST
+
+START_TEST(test_attr_after_solidus)
+{
+    const char *text = "<doc attr1='a' / attr2='b'>";
+
+    expect_failure(text, XML_ERROR_INVALID_TOKEN,
+                   "Misplaced / not faulted");
+}
+END_TEST
+
+static void XMLCALL
+accumulate_entity_decl(void *userData,
+                       const XML_Char *entityName,
+                       int UNUSED_P(is_parameter_entity),
+                       const XML_Char *value,
+                       int value_length,
+                       const XML_Char *UNUSED_P(base),
+                       const XML_Char *UNUSED_P(systemId),
+                       const XML_Char *UNUSED_P(publicId),
+                       const XML_Char *UNUSED_P(notationName))
+{
+    CharData *storage = (CharData *)userData;
+
+    CharData_AppendXMLChars(storage, entityName, -1);
+    CharData_AppendXMLChars(storage, "=", 1);
+    CharData_AppendXMLChars(storage, value, value_length);
+    CharData_AppendXMLChars(storage, "\n", 1);
+}
+
+
+START_TEST(test_utf16_pe)
+{
+    /* <!DOCTYPE doc [
+     * <!ENTITY % {KHO KHWAI}{CHO CHAN} '<!ELEMENT doc (#PCDATA)>'>
+     * %{KHO KHWAI}{CHO CHAN};
+     * ]>
+     * <doc></doc>
+     *
+     * where {KHO KHWAI} = U+0E04 = 0xe0 0xb8 0x84 in UTF-8
+     * and   {CHO CHAN}  = U+0E08 = 0xe0 0xb8 0x88 in UTF-8
+     */
+    const char text[] =
+        "\0<\0!\0D\0O\0C\0T\0Y\0P\0E\0 \0d\0o\0c\0 \0[\0\n"
+        "\0<\0!\0E\0N\0T\0I\0T\0Y\0 \0%\0 \x0e\x04\x0e\x08\0 "
+        "\0'\0<\0!\0E\0L\0E\0M\0E\0N\0T\0 "
+        "\0d\0o\0c\0 \0(\0#\0P\0C\0D\0A\0T\0A\0)\0>\0'\0>\0\n"
+        "\0%\x0e\x04\x0e\x08\0;\0\n"
+        "\0]\0>\0\n"
+        "\0<\0d\0o\0c\0>\0<\0/\0d\0o\0c\0>";
+    const XML_Char *expected =
+        "\xe0\xb8\x84\xe0\xb8\x88=<!ELEMENT doc (#PCDATA)>\n";
+    CharData storage;
+
+    CharData_Init(&storage);
+    XML_SetUserData(parser, &storage);
+    XML_SetEntityDeclHandler(parser, accumulate_entity_decl);
+    if (_XML_Parse_SINGLE_BYTES(parser, text, sizeof(text)-1,
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+    CharData_CheckXMLChars(&storage, expected);
+}
+END_TEST
+
+/* Test that duff attribute description keywords are rejected */
+START_TEST(test_bad_attr_desc_keyword)
+{
+    const char *text =
+        "<!DOCTYPE doc [\n"
+        "  <!ATTLIST doc attr CDATA #!IMPLIED>\n"
+        "]>\n"
+        "<doc />";
+
+    expect_failure(text, XML_ERROR_INVALID_TOKEN,
+                   "Bad keyword !IMPLIED not faulted");
+}
+END_TEST
+
+/* Test that an invalid attribute description keyword consisting of
+ * UTF-16 characters with their top bytes non-zero are correctly
+ * faulted
+ */
+START_TEST(test_bad_attr_desc_keyword_utf16)
+{
+    /* <!DOCTYPE d [
+     * <!ATTLIST d a CDATA #{KHO KHWAI}{CHO CHAN}>
+     * ]><d/>
+     *
+     * where {KHO KHWAI} = U+0E04 = 0xe0 0xb8 0x84 in UTF-8
+     * and   {CHO CHAN}  = U+0E08 = 0xe0 0xb8 0x88 in UTF-8
+     */
+    const char text[] =
+        "\0<\0!\0D\0O\0C\0T\0Y\0P\0E\0 \0d\0 \0[\0\n"
+        "\0<\0!\0A\0T\0T\0L\0I\0S\0T\0 \0d\0 \0a\0 \0C\0D\0A\0T\0A\0 "
+        "\0#\x0e\x04\x0e\x08\0>\0\n"
+        "\0]\0>\0<\0d\0/\0>";
+
+    if (_XML_Parse_SINGLE_BYTES(parser, text, sizeof(text)-1,
+                                XML_TRUE) != XML_STATUS_ERROR)
+        fail("Invalid UTF16 attribute keyword not faulted");
+    if (XML_GetErrorCode(parser) != XML_ERROR_SYNTAX)
+        xml_failure(parser);
+}
+END_TEST
+
+/* Test that invalid syntax in a <!DOCTYPE> is rejected.  Do this
+ * using prefix-encoding (see above) to trigger specific code paths
+ */
+START_TEST(test_bad_doctype)
+{
+    const char *text =
+        "<?xml version='1.0' encoding='prefix-conv'?>\n"
+        "<!DOCTYPE doc [ \x80\x44 ]><doc/>";
+
+    XML_SetUnknownEncodingHandler(parser, MiscEncodingHandler, NULL);
+    expect_failure(text, XML_ERROR_SYNTAX,
+                   "Invalid bytes in DOCTYPE not faulted");
+}
+END_TEST
+
+START_TEST(test_bad_doctype_utf16)
+{
+    const char text[] =
+        /* <!DOCTYPE doc [ \x06f2 ]><doc/>
+         *
+         * U+06F2 = EXTENDED ARABIC-INDIC DIGIT TWO, a valid number
+         * (name character) but not a valid letter (name start character)
+         */
+        "\0<\0!\0D\0O\0C\0T\0Y\0P\0E\0 \0d\0o\0c\0 \0[\0 "
+        "\x06\xf2"
+        "\0 \0]\0>\0<\0d\0o\0c\0/\0>";
+
+    if (_XML_Parse_SINGLE_BYTES(parser, text, sizeof(text)-1,
+                                XML_TRUE) != XML_STATUS_ERROR)
+        fail("Invalid bytes in DOCTYPE not faulted");
+    if (XML_GetErrorCode(parser) != XML_ERROR_SYNTAX)
+        xml_failure(parser);
+}
+END_TEST
+
+START_TEST(test_bad_doctype_plus)
+{
+    const char *text =
+        "<!DOCTYPE 1+ [ <!ENTITY foo 'bar'> ]>\n"
+        "<1+>&foo;</1+>";
+
+    expect_failure(text, XML_ERROR_INVALID_TOKEN,
+                   "'+' in document name not faulted");
+}
+END_TEST
+
+START_TEST(test_bad_doctype_star)
+{
+    const char *text =
+        "<!DOCTYPE 1* [ <!ENTITY foo 'bar'> ]>\n"
+        "<1*>&foo;</1*>";
+
+    expect_failure(text, XML_ERROR_INVALID_TOKEN,
+                   "'*' in document name not faulted");
+}
+END_TEST
+
+START_TEST(test_bad_doctype_query)
+{
+    const char *text =
+        "<!DOCTYPE 1? [ <!ENTITY foo 'bar'> ]>\n"
+        "<1?>&foo;</1?>";
+
+    expect_failure(text, XML_ERROR_INVALID_TOKEN,
+                   "'?' in document name not faulted");
+}
+END_TEST
+
+START_TEST(test_unknown_encoding_bad_ignore)
+{
+    const char *text =
+        "<?xml version='1.0' encoding='prefix-conv'?>"
+        "<!DOCTYPE doc SYSTEM 'foo'>"
+        "<doc><e>&entity;</e></doc>";
+    ExtFaults fault = {
+        "<![IGNORE[<!ELEMENT \xffG (#PCDATA)*>]]>",
+        "Invalid character not faulted",
+        "prefix-conv",
+        XML_ERROR_INVALID_TOKEN
+    };
+
+    XML_SetUnknownEncodingHandler(parser, MiscEncodingHandler, NULL);
+    XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+    XML_SetExternalEntityRefHandler(parser, external_entity_faulter);
+    XML_SetUserData(parser, &fault);
+    expect_failure(text, XML_ERROR_EXTERNAL_ENTITY_HANDLING,
+                   "Bad IGNORE section with unknown encoding not failed");
+}
+END_TEST
+
+START_TEST(test_entity_in_utf16_be_attr)
+{
+    const char text[] =
+        /* <e a='&#228; &#x00E4;'></e> */
+        "\0<\0e\0 \0a\0=\0'\0&\0#\0\x32\0\x32\0\x38\0;\0 "
+        "\0&\0#\0x\0\x30\0\x30\0E\0\x34\0;\0'\0>\0<\0/\0e\0>";
+    const XML_Char *expected = "\xc3\xa4 \xc3\xa4";
+    CharData storage;
+
+    CharData_Init(&storage);
+    XML_SetUserData(parser, &storage);
+    XML_SetStartElementHandler(parser, accumulate_attribute);
+    if (_XML_Parse_SINGLE_BYTES(parser, text, sizeof(text)-1,
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+    CharData_CheckXMLChars(&storage, expected);
+}
+END_TEST
+
+START_TEST(test_entity_in_utf16_le_attr)
+{
+    const char text[] =
+        /* <e a='&#228; &#x00E4;'></e> */
+        "<\0e\0 \0a\0=\0'\0&\0#\0\x32\0\x32\0\x38\0;\0 \0"
+        "&\0#\0x\0\x30\0\x30\0E\0\x34\0;\0'\0>\0<\0/\0e\0>\0";
+    const XML_Char *expected = "\xc3\xa4 \xc3\xa4";
+    CharData storage;
+
+    CharData_Init(&storage);
+    XML_SetUserData(parser, &storage);
+    XML_SetStartElementHandler(parser, accumulate_attribute);
+    if (_XML_Parse_SINGLE_BYTES(parser, text, sizeof(text)-1,
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+    CharData_CheckXMLChars(&storage, expected);
+}
+END_TEST
+
+START_TEST(test_entity_public_utf16_be)
+{
+    const char text[] =
+        /* <!DOCTYPE d [ */
+        "\0<\0!\0D\0O\0C\0T\0Y\0P\0E\0 \0d\0 \0[\0\n"
+        /* <!ENTITY % e PUBLIC 'foo' 'bar.ent'> */
+        "\0<\0!\0E\0N\0T\0I\0T\0Y\0 \0%\0 \0e\0 \0P\0U\0B\0L\0I\0C\0 "
+        "\0'\0f\0o\0o\0'\0 \0'\0b\0a\0r\0.\0e\0n\0t\0'\0>\0\n"
+        /* %e; */
+        "\0%\0e\0;\0\n"
+        /* ]> */
+        "\0]\0>\0\n"
+        /* <d>&j;</d> */
+        "\0<\0d\0>\0&\0j\0;\0<\0/\0d\0>";
+    ExtTest2 test_data = {
+        /* <!ENTITY j 'baz'> */
+        "\0<\0!\0E\0N\0T\0I\0T\0Y\0 \0j\0 \0'\0b\0a\0z\0'\0>",
+        34,
+        NULL,
+        NULL,
+        EE_PARSE_NONE
+    };
+    const XML_Char *expected = "baz";
+    CharData storage;
+
+    CharData_Init(&storage);
+    test_data.storage = &storage;
+    XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+    XML_SetExternalEntityRefHandler(parser, external_entity_loader2);
+    XML_SetUserData(parser, &test_data);
+    XML_SetCharacterDataHandler(parser, ext2_accumulate_characters);
+    if (_XML_Parse_SINGLE_BYTES(parser, text, sizeof(text)-1,
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+    CharData_CheckXMLChars(&storage, expected);
+}
+END_TEST
+
+START_TEST(test_entity_public_utf16_le)
+{
+    const char text[] =
+        /* <!DOCTYPE d [ */
+        "<\0!\0D\0O\0C\0T\0Y\0P\0E\0 \0d\0 \0[\0\n\0"
+        /* <!ENTITY % e PUBLIC 'foo' 'bar.ent'> */
+        "<\0!\0E\0N\0T\0I\0T\0Y\0 \0%\0 \0e\0 \0P\0U\0B\0L\0I\0C\0 \0"
+        "'\0f\0o\0o\0'\0 \0'\0b\0a\0r\0.\0e\0n\0t\0'\0>\0\n\0"
+        /* %e; */
+        "%\0e\0;\0\n\0"
+        /* ]> */
+        "]\0>\0\n\0"
+        /* <d>&j;</d> */
+        "<\0d\0>\0&\0j\0;\0<\0/\0d\0>\0";
+    ExtTest2 test_data = {
+        /* <!ENTITY j 'baz'> */
+        "<\0!\0E\0N\0T\0I\0T\0Y\0 \0j\0 \0'\0b\0a\0z\0'\0>\0",
+        34,
+        NULL,
+        NULL,
+        EE_PARSE_NONE
+    };
+    const XML_Char *expected = "baz";
+    CharData storage;
+
+    CharData_Init(&storage);
+    test_data.storage = &storage;
+    XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+    XML_SetExternalEntityRefHandler(parser, external_entity_loader2);
+    XML_SetUserData(parser, &test_data);
+    XML_SetCharacterDataHandler(parser, ext2_accumulate_characters);
+    if (_XML_Parse_SINGLE_BYTES(parser, text, sizeof(text)-1,
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+    CharData_CheckXMLChars(&storage, expected);
+}
+END_TEST
+
+/* Test that a doctype with neither an internal nor external subset is
+ * faulted
+ */
+START_TEST(test_short_doctype)
+{
+    const char *text = "<!DOCTYPE doc></doc>";
+    expect_failure(text, XML_ERROR_INVALID_TOKEN,
+                   "DOCTYPE without subset not rejected");
+}
+END_TEST
+
+START_TEST(test_short_doctype_2)
+{
+    const char *text = "<!DOCTYPE doc PUBLIC></doc>";
+    expect_failure(text, XML_ERROR_SYNTAX,
+                   "DOCTYPE without Public ID not rejected");
+}
+END_TEST
+
+START_TEST(test_short_doctype_3)
+{
+    const char *text = "<!DOCTYPE doc SYSTEM></doc>";
+    expect_failure(text, XML_ERROR_SYNTAX,
+                   "DOCTYPE without System ID not rejected");
+}
+END_TEST
+
+START_TEST(test_long_doctype)
+{
+    const char *text = "<!DOCTYPE doc PUBLIC 'foo' 'bar' 'baz'></doc>";
+    expect_failure(text, XML_ERROR_SYNTAX,
+                   "DOCTYPE with extra ID not rejected");
+}
+END_TEST
+
+START_TEST(test_bad_entity)
+{
+    const char *text =
+        "<!DOCTYPE doc [\n"
+        "  <!ENTITY foo PUBLIC>\n"
+        "]>\n"
+        "<doc/>";
+    expect_failure(text, XML_ERROR_SYNTAX,
+                   "ENTITY without Public ID is not rejected");
+}
+END_TEST
+
+/* Test unquoted value is faulted */
+START_TEST(test_bad_entity_2)
+{
+    const char *text =
+        "<!DOCTYPE doc [\n"
+        "  <!ENTITY % foo bar>\n"
+        "]>\n"
+        "<doc/>";
+    expect_failure(text, XML_ERROR_SYNTAX,
+                   "ENTITY without Public ID is not rejected");
+}
+END_TEST
+
+START_TEST(test_bad_entity_3)
+{
+    const char *text =
+        "<!DOCTYPE doc [\n"
+        "  <!ENTITY % foo PUBLIC>\n"
+        "]>\n"
+        "<doc/>";
+    expect_failure(text, XML_ERROR_SYNTAX,
+                   "Parameter ENTITY without Public ID is not rejected");
+}
+END_TEST
+
+START_TEST(test_bad_entity_4)
+{
+    const char *text =
+        "<!DOCTYPE doc [\n"
+        "  <!ENTITY % foo SYSTEM>\n"
+        "]>\n"
+        "<doc/>";
+    expect_failure(text, XML_ERROR_SYNTAX,
+                   "Parameter ENTITY without Public ID is not rejected");
+}
+END_TEST
+
+START_TEST(test_bad_notation)
+{
+    const char *text =
+        "<!DOCTYPE doc [\n"
+        "  <!NOTATION n SYSTEM>\n"
+        "]>\n"
+        "<doc/>";
+    expect_failure(text, XML_ERROR_SYNTAX,
+                   "Notation without System ID is not rejected");
+}
+END_TEST
 
 /*
  * Namespaces tests.
@@ -3658,9 +6883,6 @@ START_TEST(test_return_ns_triplet)
                                 dummy_end_namespace_decl_handler);
     triplet_start_flag = XML_FALSE;
     triplet_end_flag = XML_FALSE;
-    XML_SetNamespaceDeclHandler(parser,
-                                dummy_start_namespace_decl_handler,
-                                dummy_end_namespace_decl_handler);
     dummy_handler_flags = 0;
     if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
                                 XML_FALSE) == XML_STATUS_ERROR)
@@ -4128,6 +7350,234 @@ START_TEST(test_ns_reserved_attributes_2)
 }
 END_TEST
 
+/* Test string pool handling of namespace names of 2048 characters */
+/* Exercises a particular string pool growth path */
+START_TEST(test_ns_extremely_long_prefix)
+{
+    const char *text =
+        "<doc "
+        /* 64 character on each line */
+        /* ...gives a total length of 2048 */
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        ":a='12' xmlns:"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "='foo'\n>"
+        "</doc>";
+
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                XML_FALSE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+}
+END_TEST
+
+/* Test unknown encoding handlers in namespace setup */
+START_TEST(test_ns_unknown_encoding_success)
+{
+    const char *text =
+        "<?xml version='1.0' encoding='prefix-conv'?>\n"
+        "<foo:e xmlns:foo='http://example.org/'>Hi</foo:e>";
+
+    XML_SetUnknownEncodingHandler(parser, MiscEncodingHandler, NULL);
+    run_character_check(text, "Hi");
+}
+END_TEST
+
+/* Test that too many colons are rejected */
+START_TEST(test_ns_double_colon)
+{
+    const char *text =
+        "<foo:e xmlns:foo='http://example.org/' foo:a:b='bar' />";
+
+    expect_failure(text, XML_ERROR_INVALID_TOKEN,
+                   "Double colon in attribute name not faulted");
+}
+END_TEST
+
+START_TEST(test_ns_double_colon_element)
+{
+    const char *text =
+        "<foo:bar:e xmlns:foo='http://example.org/' />";
+
+    expect_failure(text, XML_ERROR_INVALID_TOKEN,
+                   "Double colon in element name not faulted");
+}
+END_TEST
+
+/* Test that non-name characters after a colon are rejected */
+START_TEST(test_ns_bad_attr_leafname)
+{
+    const char *text =
+        "<foo:e xmlns:foo='http://example.org/' foo:?ar='baz' />";
+
+    expect_failure(text, XML_ERROR_INVALID_TOKEN,
+                   "Invalid character in leafname not faulted");
+}
+END_TEST
+
+START_TEST(test_ns_bad_element_leafname)
+{
+    const char *text =
+        "<foo:?oc xmlns:foo='http://example.org/' />";
+
+    expect_failure(text, XML_ERROR_INVALID_TOKEN,
+                   "Invalid character in element leafname not faulted");
+}
+END_TEST
+
+/* Test high-byte-set UTF-16 characters are valid in a leafname */
+START_TEST(test_ns_utf16_leafname)
+{
+    const char text[] =
+        /* <n:e xmlns:n='URI' n:{KHO KHWAI}='a' />
+         * where {KHO KHWAI} = U+0E04 = 0xe0 0xb8 0x84 in UTF-8
+         */
+        "<\0n\0:\0e\0 \0x\0m\0l\0n\0s\0:\0n\0=\0'\0U\0R\0I\0'\0 \0"
+        "n\0:\0\x04\x0e=\0'\0a\0'\0 \0/\0>\0";
+    const XML_Char *expected = "a";
+    CharData storage;
+
+    CharData_Init(&storage);
+    XML_SetStartElementHandler(parser, accumulate_attribute);
+    XML_SetUserData(parser, &storage);
+    if (_XML_Parse_SINGLE_BYTES(parser, text, sizeof(text)-1,
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+    CharData_CheckXMLChars(&storage, expected);
+}
+END_TEST
+
+START_TEST(test_ns_utf16_element_leafname)
+{
+    const char text[] =
+        /* <n:{KHO KHWAI} xmlns:n='URI'/>
+         * where {KHO KHWAI} = U+0E04 = 0xe0 0xb8 0x84 in UTF-8
+         */
+        "\0<\0n\0:\x0e\x04\0 \0x\0m\0l\0n\0s\0:\0n\0=\0'\0U\0R\0I\0'\0/\0>";
+    const XML_Char *expected = "URI \xe0\xb8\x84";
+    CharData storage;
+
+    CharData_Init(&storage);
+    XML_SetStartElementHandler(parser, start_element_event_handler);
+    XML_SetUserData(parser, &storage);
+    if (_XML_Parse_SINGLE_BYTES(parser, text, sizeof(text)-1,
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+    CharData_CheckXMLChars(&storage, expected);
+}
+END_TEST
+
+START_TEST(test_ns_utf16_doctype)
+{
+    const char text[] =
+        /* <!DOCTYPE foo:{KHO KHWAI} [ <!ENTITY bar 'baz'> ]>\n
+         * where {KHO KHWAI} = U+0E04 = 0xe0 0xb8 0x84 in UTF-8
+         */
+        "\0<\0!\0D\0O\0C\0T\0Y\0P\0E\0 \0f\0o\0o\0:\x0e\x04\0 "
+        "\0[\0 \0<\0!\0E\0N\0T\0I\0T\0Y\0 \0b\0a\0r\0 \0'\0b\0a\0z\0'\0>\0 "
+        "\0]\0>\0\n"
+        /* <foo:{KHO KHWAI} xmlns:foo='URI'>&bar;</foo:{KHO KHWAI}> */
+        "\0<\0f\0o\0o\0:\x0e\x04\0 "
+        "\0x\0m\0l\0n\0s\0:\0f\0o\0o\0=\0'\0U\0R\0I\0'\0>"
+        "\0&\0b\0a\0r\0;"
+        "\0<\0/\0f\0o\0o\0:\x0e\x04\0>";
+    const XML_Char *expected = "URI \xe0\xb8\x84";
+    CharData storage;
+
+    CharData_Init(&storage);
+    XML_SetUserData(parser, &storage);
+    XML_SetStartElementHandler(parser, start_element_event_handler);
+    XML_SetUnknownEncodingHandler(parser, MiscEncodingHandler, NULL);
+    if (_XML_Parse_SINGLE_BYTES(parser, text, sizeof(text)-1,
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+    CharData_CheckXMLChars(&storage, expected);
+}
+END_TEST
+
+START_TEST(test_ns_invalid_doctype)
+{
+    const char *text =
+        "<!DOCTYPE foo:!bad [ <!ENTITY bar 'baz' ]>\n"
+        "<foo:!bad>&bar;</foo:!bad>";
+
+    expect_failure(text, XML_ERROR_INVALID_TOKEN,
+                   "Invalid character in document local name not faulted");
+}
+END_TEST
+
+START_TEST(test_ns_double_colon_doctype)
+{
+    const char *text =
+        "<!DOCTYPE foo:a:doc [ <!ENTITY bar 'baz' ]>\n"
+        "<foo:a:doc>&bar;</foo:a:doc>";
+
+    expect_failure(text, XML_ERROR_SYNTAX,
+                   "Double colon in document name not faulted");
+}
+END_TEST
+
 /* Control variable; the number of times duff_allocator() will successfully allocate */
 #define ALLOC_ALWAYS_SUCCEED (-1)
 #define REALLOC_ALWAYS_SUCCEED (-1)
@@ -4216,38 +7666,74 @@ START_TEST(test_misc_error_string)
 END_TEST
 
 /* Test the version information is consistent */
+
+/* Since we are working in XML_LChars (potentially 16-bits), we
+ * can't use the standard C library functions for character
+ * manipulation and have to roll our own.
+ */
+static int
+parse_version(const XML_LChar *version_text,
+              XML_Expat_Version *version_struct)
+{
+    while (*version_text != 0x00) {
+        if (*version_text >= ASCII_0 && *version_text <= ASCII_9)
+            break;
+        version_text++;
+    }
+    if (*version_text == 0x00)
+        return XML_FALSE;
+
+    /* version_struct->major = strtoul(version_text, 10, &version_text) */
+    version_struct->major = 0;
+    while (*version_text >= ASCII_0 && *version_text <= ASCII_9) {
+        version_struct->major =
+            10 * version_struct->major + (*version_text++ - ASCII_0);
+    }
+    if (*version_text++ != ASCII_PERIOD)
+        return XML_FALSE;
+
+    /* Now for the minor version number */
+    version_struct->minor = 0;
+    while (*version_text >= ASCII_0 && *version_text <= ASCII_9) {
+        version_struct->minor =
+            10 * version_struct->minor + (*version_text++ - ASCII_0);
+    }
+    if (*version_text++ != ASCII_PERIOD)
+        return XML_FALSE;
+
+    /* Finally the micro version number */
+    version_struct->micro = 0;
+    while (*version_text >= ASCII_0 && *version_text <= ASCII_9) {
+        version_struct->micro =
+            10 * version_struct->micro + (*version_text++ - ASCII_0);
+    }
+    if (*version_text != 0x00)
+        return XML_FALSE;
+    return XML_TRUE;
+}
+
+static int
+versions_equal(const XML_Expat_Version *first,
+               const XML_Expat_Version *second)
+{
+    return (first->major == second->major &&
+            first->minor == second->minor &&
+            first->micro == second->micro);
+}
+
 START_TEST(test_misc_version)
 {
-    XML_Expat_Version version_struct = XML_ExpatVersionInfo();
+    XML_Expat_Version read_version = XML_ExpatVersionInfo();
+     /* Silence compiler warning with the following assignment */
+    XML_Expat_Version parsed_version = { 0, 0, 0 };
     const XML_LChar *version_text = XML_ExpatVersion();
-    long value;
-    const char *p;
-    char *endp;
 
     if (version_text == NULL)
         fail("Could not obtain version text");
-    for (p = version_text; *p != '\0'; p++)
-        if (isdigit(*p))
-            break;
-    if (*p == '\0')
-        fail("No numbers in version text");
-    value = strtoul(p, &endp, 10);
-    if (*endp != '.')
-        fail("Major version conversion from text failed");
-    if (value != version_struct.major)
-        fail("Major version mismatch");
-    p = endp + 1;
-    value = strtoul(p, &endp, 10);
-    if (*endp != '.')
-        fail("Minor version conversion from text failed");
-    if (value != version_struct.minor)
-        fail("Minor version mismatch");
-    p = endp + 1;
-    value = strtoul(p, &endp, 10);
-    if (*endp != '\0')
-        fail("Micro version conversion from text failed");
-    if (value != version_struct.micro)
-        fail("Micro version mismatch");
+    if (!parse_version(version_text, &parsed_version))
+        fail("Unable to parse version text");
+    if (!versions_equal(&read_version, &parsed_version))
+        fail("Version mismatch");
 }
 END_TEST
 
@@ -4303,6 +7789,31 @@ START_TEST(test_misc_attribute_leak)
 }
 END_TEST
 
+/* Test parser created for UTF-16LE is successful */
+START_TEST(test_misc_utf16le)
+{
+    const char text[] =
+        /* <?xml version='1.0'?><q>Hi</q> */
+        "<\0?\0x\0m\0l\0 \0"
+        "v\0e\0r\0s\0i\0o\0n\0=\0'\0\x31\0.\0\x30\0'\0?\0>\0"
+        "<\0q\0>\0H\0i\0<\0/\0q\0>\0";
+    const XML_Char *expected = "Hi";
+    CharData storage;
+
+    parser = XML_ParserCreate("UTF-16LE");
+    if (parser == NULL)
+        fail("Parser not created");
+
+    CharData_Init(&storage);
+    XML_SetUserData(parser, &storage);
+    XML_SetCharacterDataHandler(parser, accumulate_characters);
+    if (_XML_Parse_SINGLE_BYTES(parser, text, sizeof(text)-1,
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+    CharData_CheckXMLChars(&storage, expected);
+}
+END_TEST
+
 
 static void
 alloc_setup(void)
@@ -4327,6 +7838,113 @@ alloc_teardown(void)
     basic_teardown();
 }
 
+
+/* Test the effects of allocation failures on xml declaration processing */
+START_TEST(test_alloc_parse_xdecl)
+{
+    const char *text =
+        "<?xml version='1.0' encoding='utf-8'?>\n"
+        "<doc>Hello, world</doc>";
+    int i;
+    int repeat = 0;
+#define MAX_ALLOC_COUNT 10
+
+    for (i = 0; i < MAX_ALLOC_COUNT; i++) {
+        /* Repeat some (most) counts to defeat cached allocations */
+        if (i == 2 && repeat != 1) {
+            i--;
+            repeat++;
+        }
+        else if (i == 3) {
+            i -= 2;
+            repeat++;
+        }
+        allocation_count = i;
+        XML_SetXmlDeclHandler(parser, dummy_xdecl_handler);
+        if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                    XML_TRUE) != XML_STATUS_ERROR)
+            break;
+        XML_ParserReset(parser, NULL);
+    }
+    if (i == 0)
+        fail("Parse succeeded despite failing allocator");
+    if (i == MAX_ALLOC_COUNT)
+        fail("Parse failed with max allocations");
+}
+#undef MAX_ALLOC_COUNT
+END_TEST
+
+/* As above, but with an encoding big enough to cause storing the
+ * version information to expand the string pool being used.
+ */
+static int XMLCALL
+long_encoding_handler(void *UNUSED_P(userData),
+                      const XML_Char *UNUSED_P(encoding),
+                      XML_Encoding *info)
+{
+    int i;
+
+    for (i = 0; i < 256; i++)
+        info->map[i] = i;
+    info->data = NULL;
+    info->convert = NULL;
+    info->release = NULL;
+    return XML_STATUS_OK;
+}
+
+START_TEST(test_alloc_parse_xdecl_2)
+{
+    const char *text =
+        "<?xml version='1.0' encoding='"
+        /* Each line is 64 characters */
+        "ThisIsAStupidlyLongEncodingNameIntendedToTriggerPoolGrowth123456"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMN"
+        "'?>"
+        "<doc>Hello, world</doc>";
+    int i;
+    int repeat = 0;
+#define MAX_ALLOC_COUNT 10
+
+    for (i = 0; i < MAX_ALLOC_COUNT; i++) {
+        /* Repeat counts to defeat cached allocations */
+        if (i == 4 && repeat == 3) {
+            i -= 2;
+            repeat++;
+        }
+        else if ((i == 2 && repeat < 3) ||
+                 (i == 3 && repeat > 3)) {
+            i--;
+            repeat++;
+        }
+        allocation_count = i;
+        XML_SetXmlDeclHandler(parser, dummy_xdecl_handler);
+        XML_SetUnknownEncodingHandler(parser, long_encoding_handler, NULL);
+        if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                    XML_TRUE) != XML_STATUS_ERROR)
+            break;
+        XML_ParserReset(parser, NULL);
+    }
+    if (i == 0)
+        fail("Parse succeeded despite failing allocator");
+    if (i == MAX_ALLOC_COUNT)
+        fail("Parse failed with max allocations");
+}
+#undef MAX_ALLOC_COUNT
+END_TEST
 
 /* Test the effects of allocation failures on a straightforward parse */
 START_TEST(test_alloc_parse_pi)
@@ -4401,6 +8019,48 @@ START_TEST(test_alloc_parse_pi_2)
         fail("Parse failed with max allocations");
 #undef MAX_ALLOC_COUNT
 }
+END_TEST
+
+START_TEST(test_alloc_parse_pi_3)
+{
+    const char *text =
+        "<?"
+        /* 64 characters per line */
+        "This processing instruction should be long enough to ensure that"
+        "it triggers the growth of an internal string pool when the      "
+        "allocator fails at a cruicial moment FGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "Q?><doc/>";
+    int i;
+#define MAX_ALLOC_COUNT 10
+
+    for (i = 0; i < MAX_ALLOC_COUNT; i++) {
+        /* Every allocation bar the last is cached */
+        allocation_count = (i == 0) ? 0 : 1;
+        XML_SetProcessingInstructionHandler(parser, dummy_pi_handler);
+        if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                    XML_TRUE) != XML_STATUS_ERROR)
+            break;
+        XML_ParserReset(parser, NULL);
+    }
+    if (i == 0)
+        fail("Parse succeeded despite failing allocator");
+    if (i == MAX_ALLOC_COUNT)
+        fail("Parse failed with max allocations");
+}
+#undef MAX_ALLOC_COUNT
 END_TEST
 
 START_TEST(test_alloc_parse_comment)
@@ -4529,16 +8189,6 @@ START_TEST(test_alloc_create_external_parser)
     }
 }
 END_TEST
-
-static int XMLCALL
-external_entity_null_loader(XML_Parser UNUSED_P(parser),
-                            const XML_Char *UNUSED_P(context),
-                            const XML_Char *UNUSED_P(base),
-                            const XML_Char *UNUSED_P(systemId),
-                            const XML_Char *UNUSED_P(publicId))
-{
-    return XML_STATUS_OK;
-}
 
 /* More external parser memory allocation testing */
 START_TEST(test_alloc_run_external_parser)
@@ -4750,7 +8400,7 @@ external_entity_alloc_set_encoding(XML_Parser parser,
                                    const XML_Char *UNUSED_P(systemId),
                                    const XML_Char *UNUSED_P(publicId))
 {
-    /* As for external_entity_loader_set_encoding() */
+    /* As for external_entity_loader() */
     const char *text =
         "<?xml encoding='iso-8859-3'?>"
         "\xC3\xA9";
@@ -5103,6 +8753,1649 @@ START_TEST(test_alloc_realloc_many_attributes)
         fail("Parse failed at max reallocations");
 #undef MAX_REALLOC_COUNT
 }
+END_TEST
+
+/* Test handling of a public entity with failing allocator */
+START_TEST(test_alloc_public_entity_value)
+{
+    const char *text =
+        "<!DOCTYPE doc SYSTEM 'http://example.org/'>\n"
+        "<doc></doc>\n";
+    char dtd_text[] =
+        "<!ELEMENT doc EMPTY>\n"
+        "<!ENTITY % e1 PUBLIC 'foo' 'bar.ent'>\n"
+        "<!ENTITY % "
+        /* Each line is 64 characters */
+        "ThisIsAStupidlyLongParameterNameIntendedToTriggerPoolGrowth12345"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        " '%e1;'>\n"
+        "%e1;\n";
+    int i;
+#define MAX_ALLOC_COUNT 25
+    int repeat = 0;
+
+    for (i = 0; i < MAX_ALLOC_COUNT; i++) {
+        /* Repeat certain counts to defeat cached allocations */
+        if ((i == 2 && repeat < 2) ||
+            (i == 3 && repeat == 2) ||
+            (i == 8 && repeat == 3) ||
+            (i == 9 && repeat == 4) ||
+            (i == 18 && repeat == 5) ||
+            (i == 19 && repeat == 6)) {
+            i--;
+            repeat++;
+        }
+        allocation_count = i;
+        dummy_handler_flags = 0;
+        XML_SetUserData(parser, dtd_text);
+        XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+        XML_SetExternalEntityRefHandler(parser, external_entity_public);
+        /* Provoke a particular code path */
+        XML_SetEntityDeclHandler(parser, dummy_entity_decl_handler);
+        if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                    XML_TRUE) != XML_STATUS_ERROR)
+            break;
+        XML_ParserReset(parser, NULL);
+    }
+    if (i == 0)
+        fail("Parsing worked despite failing allocation");
+    if (i == MAX_ALLOC_COUNT)
+        fail("Parsing failed at max allocation count");
+    if (dummy_handler_flags != DUMMY_ENTITY_DECL_HANDLER_FLAG)
+        fail("Entity declaration handler not called");
+}
+#undef MAX_ALLOC_COUNT
+END_TEST
+
+START_TEST(test_alloc_realloc_subst_public_entity_value)
+{
+    const char *text =
+        "<!DOCTYPE doc SYSTEM 'http://example.org/'>\n"
+        "<doc></doc>\n";
+    char dtd_text[] =
+        "<!ELEMENT doc EMPTY>\n"
+        "<!ENTITY % "
+        /* Each line is 64 characters */
+        "ThisIsAStupidlyLongParameterNameIntendedToTriggerPoolGrowth12345"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        " PUBLIC 'foo' 'bar.ent'>\n"
+        "%ThisIsAStupidlyLongParameterNameIntendedToTriggerPoolGrowth12345"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP;";
+    int i;
+#define MAX_REALLOC_COUNT 10
+
+    for (i = 0; i < MAX_REALLOC_COUNT; i++) {
+        reallocation_count = i;
+        XML_SetUserData(parser, dtd_text);
+        XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+        XML_SetExternalEntityRefHandler(parser, external_entity_public);
+        if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                    XML_TRUE) != XML_STATUS_ERROR)
+            break;
+        XML_ParserReset(parser, NULL);
+    }
+    if (i == 0)
+        fail("Parsing worked despite failing reallocation");
+    if (i == MAX_REALLOC_COUNT)
+        fail("Parsing failed at max reallocation count");
+}
+#undef MAX_REALLOC_COUNT
+END_TEST
+
+START_TEST(test_alloc_parse_public_doctype)
+{
+    const char *text =
+        "<?xml version='1.0' encoding='utf-8'?>\n"
+        "<!DOCTYPE doc PUBLIC '"
+        /* 64 characters per line */
+        "http://example.com/a/long/enough/name/to/trigger/pool/growth/zz/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "' 'test'>\n"
+        "<doc></doc>";
+    int i;
+#define MAX_ALLOC_COUNT 10
+    int repeat = 0;
+
+    for (i = 0; i < MAX_ALLOC_COUNT; i++) {
+        /* Repeat certain counts to defeat cached allocations */
+        if (i == 4 && repeat == 5) {
+            i -= 2;
+            repeat++;
+        }
+        else if ((i == 2 && repeat < 3) ||
+            (i == 3 && repeat < 5)) {
+            i--;
+            repeat++;
+        }
+        allocation_count = i;
+        dummy_handler_flags = 0;
+        XML_SetDoctypeDeclHandler(parser,
+                                  dummy_start_doctype_decl_handler,
+                                  dummy_end_doctype_decl_handler);
+        if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                    XML_TRUE) != XML_STATUS_ERROR)
+            break;
+        XML_ParserReset(parser, NULL);
+    }
+    if (i == 0)
+        fail("Parse succeeded despite failing allocator");
+    if (i == MAX_ALLOC_COUNT)
+        fail("Parse failed at maximum allocation count");
+    if (dummy_handler_flags != (DUMMY_START_DOCTYPE_DECL_HANDLER_FLAG |
+                                DUMMY_END_DOCTYPE_DECL_HANDLER_FLAG))
+        fail("Doctype handler functions not called");
+}
+#undef MAX_ALLOC_COUNT
+END_TEST
+
+START_TEST(test_alloc_parse_public_doctype_long_name)
+{
+    const char *text =
+        "<?xml version='1.0' encoding='utf-8'?>\n"
+        "<!DOCTYPE doc PUBLIC 'http://example.com/foo' '"
+        /* 64 characters per line */
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNOP"
+        "'>\n"
+        "<doc></doc>";
+    int i;
+#define MAX_ALLOC_COUNT 10
+    int repeat = 0;
+
+    for (i = 0; i < MAX_ALLOC_COUNT; i++) {
+        /* Repeat some counts to defeat cached allocations */
+        if (i == 4 && repeat == 6) {
+            i -= 2;
+            repeat++;
+        }
+        else if ((i == 2 && repeat < 3) ||
+                 (i == 3 && repeat < 6)) {
+            i--;
+            repeat++;
+        }
+        allocation_count = i;
+        XML_SetDoctypeDeclHandler(parser,
+                                  dummy_start_doctype_decl_handler,
+                                  dummy_end_doctype_decl_handler);
+        if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                    XML_TRUE) != XML_STATUS_ERROR)
+            break;
+        XML_ParserReset(parser, NULL);
+    }
+    if (i == 0)
+        fail("Parse succeeded despite failing allocator");
+    if (i == MAX_ALLOC_COUNT)
+        fail("Parse failed at maximum allocation count");
+}
+#undef MAX_ALLOC_COUNT
+END_TEST
+
+static int XMLCALL
+external_entity_alloc(XML_Parser parser,
+                      const XML_Char *context,
+                      const XML_Char *UNUSED_P(base),
+                      const XML_Char *UNUSED_P(systemId),
+                      const XML_Char *UNUSED_P(publicId))
+{
+    const char *text = (const char *)XML_GetUserData(parser);
+    XML_Parser ext_parser;
+    int parse_res;
+
+    ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
+    if (ext_parser == NULL)
+        return XML_STATUS_ERROR;
+    parse_res = _XML_Parse_SINGLE_BYTES(ext_parser, text, strlen(text),
+                                        XML_TRUE);
+    XML_ParserFree(ext_parser);
+    return parse_res;
+}
+
+/* Test foreign DTD handling */
+START_TEST(test_alloc_set_foreign_dtd)
+{
+    const char *text1 =
+        "<?xml version='1.0' encoding='us-ascii'?>\n"
+        "<doc>&entity;</doc>";
+    char text2[] = "<!ELEMENT doc (#PCDATA)*>";
+    int i;
+#define MAX_ALLOC_COUNT 10
+    int repeat = 0;
+
+    for (i = 0; i < MAX_ALLOC_COUNT; i++) {
+        /* Repeat some counts to deal with cached allocations */
+        if (i == 9 && repeat == 2) {
+            i -= 2;
+            repeat++;
+        }
+        else if (i == 2 && repeat < 2) {
+            i--;
+            repeat++;
+        }
+        allocation_count = i;
+        XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+        XML_SetUserData(parser, &text2);
+        XML_SetExternalEntityRefHandler(parser, external_entity_alloc);
+        if (XML_UseForeignDTD(parser, XML_TRUE) != XML_ERROR_NONE)
+            fail("Could not set foreign DTD");
+        if (_XML_Parse_SINGLE_BYTES(parser, text1, strlen(text1),
+                                    XML_TRUE) != XML_STATUS_ERROR)
+            break;
+        XML_ParserReset(parser, NULL);
+    }
+    if (i == 0)
+        fail("Parse succeeded despite failing allocator");
+    if (i == MAX_ALLOC_COUNT)
+        fail("Parse failed at maximum allocation count");
+}
+#undef MAX_ALLOC_COUNT
+END_TEST
+
+/* Test based on ibm/valid/P32/ibm32v04.xml */
+START_TEST(test_alloc_attribute_enum_value)
+{
+    const char *text =
+        "<?xml version='1.0' standalone='no'?>\n"
+        "<!DOCTYPE animal SYSTEM 'test.dtd'>\n"
+        "<animal>This is a \n    <a/>  \n\nyellow tiger</animal>";
+    char dtd_text[] =
+        "<!ELEMENT animal (#PCDATA|a)*>\n"
+        "<!ELEMENT a EMPTY>\n"
+        "<!ATTLIST animal xml:space (default|preserve) 'preserve'>";
+    int i;
+#define MAX_ALLOC_COUNT 20
+    int repeat = 0;
+
+    for (i = 0; i < MAX_ALLOC_COUNT; i++) {
+        /* Repeat some counts to allow for cached allocations */
+        if (i == 13 && repeat == 5) {
+            i -= 2;
+            repeat++;
+        }
+        else if ((i == 2 && repeat < 2) ||
+                 (i == 3 && repeat == 2) ||
+                 (i == 8 && repeat == 3) ||
+                 (i == 9 && repeat == 4)) {
+            i--;
+            repeat++;
+        }
+        allocation_count = i;
+        XML_SetExternalEntityRefHandler(parser, external_entity_alloc);
+        XML_SetUserData(parser, dtd_text);
+        XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+        /* An attribute list handler provokes a different code path */
+        XML_SetAttlistDeclHandler(parser, dummy_attlist_decl_handler);
+        if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                    XML_TRUE) != XML_STATUS_ERROR)
+            break;
+        XML_ParserReset(parser, NULL);
+    }
+    if (i == 0)
+        fail("Parse succeeded despite failing allocator");
+    if (i == MAX_ALLOC_COUNT)
+        fail("Parse failed at maximum allocation count");
+}
+#undef MAX_ALLOC_COUNT
+END_TEST
+
+/* Test attribute enums sufficient to overflow the string pool */
+START_TEST(test_alloc_realloc_attribute_enum_value)
+{
+    const char *text =
+        "<?xml version='1.0' standalone='no'?>\n"
+        "<!DOCTYPE animal SYSTEM 'test.dtd'>\n"
+        "<animal>This is a yellow tiger</animal>";
+    /* We wish to define a collection of attribute enums that will
+     * cause the string pool storing them to have to expand.  This
+     * means more than 1024 bytes, including the parentheses and
+     * separator bars.
+     */
+    char dtd_text[] =
+        "<!ELEMENT animal (#PCDATA)*>\n"
+        "<!ATTLIST animal thing "
+        "(default"
+        /* Each line is 64 characters */
+        "|ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNO"
+        "|BBCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNO"
+        "|CBCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNO"
+        "|DBCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNO"
+        "|EBCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNO"
+        "|FBCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNO"
+        "|GBCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNO"
+        "|HBCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNO"
+        "|IBCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNO"
+        "|JBCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNO"
+        "|KBCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNO"
+        "|LBCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNO"
+        "|MBCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNO"
+        "|NBCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNO"
+        "|OBCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNO"
+        "|PBCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNO)"
+        " 'default'>";
+    int i;
+#define MAX_REALLOC_COUNT 10
+
+    for (i = 0; i < MAX_REALLOC_COUNT; i++) {
+        reallocation_count = i;
+        XML_SetExternalEntityRefHandler(parser, external_entity_alloc);
+        XML_SetUserData(parser, dtd_text);
+        XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+        /* An attribute list handler provokes a different code path */
+        XML_SetAttlistDeclHandler(parser, dummy_attlist_decl_handler);
+        if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                    XML_TRUE) != XML_STATUS_ERROR)
+            break;
+        XML_ParserReset(parser, NULL);
+    }
+    if (i == 0)
+        fail("Parse succeeded despite failing reallocator");
+    if (i == MAX_REALLOC_COUNT)
+        fail("Parse failed at maximum reallocation count");
+}
+#undef MAX_REALLOC_COUNT
+END_TEST
+
+/* Test attribute enums in a #IMPLIED attribute forcing pool growth */
+START_TEST(test_alloc_realloc_implied_attribute)
+{
+    /* Forcing this particular code path is a balancing act.  The
+     * addition of the closing parenthesis and terminal NUL must be
+     * what pushes the string of enums over the 1024-byte limit,
+     * otherwise a different code path will pick up the realloc.
+     */
+    const char *text =
+        "<!DOCTYPE doc [\n"
+        "<!ELEMENT doc EMPTY>\n"
+        "<!ATTLIST doc a "
+        /* Each line is 64 characters */
+        "(ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNO"
+        "|BBCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNO"
+        "|CBCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNO"
+        "|DBCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNO"
+        "|EBCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNO"
+        "|FBCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNO"
+        "|GBCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNO"
+        "|HBCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNO"
+        "|IBCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNO"
+        "|JBCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNO"
+        "|KBCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNO"
+        "|LBCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNO"
+        "|MBCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNO"
+        "|NBCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNO"
+        "|OBCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNO"
+        "|PBCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMN)"
+        " #IMPLIED>\n"
+        "]><doc/>";
+    int i;
+#define MAX_REALLOC_COUNT 10
+    for (i = 0; i < MAX_REALLOC_COUNT; i++) {
+        reallocation_count = i;
+        XML_SetAttlistDeclHandler(parser, dummy_attlist_decl_handler);
+        if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                    XML_TRUE) != XML_STATUS_ERROR)
+            break;
+        XML_ParserReset(parser, NULL);
+    }
+    if (i == 0)
+        fail("Parse succeeded despite failing reallocator");
+    if (i == MAX_REALLOC_COUNT)
+        fail("Parse failed at maximum reallocation count");
+}
+#undef MAX_REALLOC_COUNT
+END_TEST
+
+/* Test attribute enums in a defaulted attribute forcing pool growth */
+START_TEST(test_alloc_realloc_default_attribute)
+{
+    /* Forcing this particular code path is a balancing act.  The
+     * addition of the closing parenthesis and terminal NUL must be
+     * what pushes the string of enums over the 1024-byte limit,
+     * otherwise a different code path will pick up the realloc.
+     */
+    const char *text =
+        "<!DOCTYPE doc [\n"
+        "<!ELEMENT doc EMPTY>\n"
+        "<!ATTLIST doc a "
+        /* Each line is 64 characters */
+        "(ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNO"
+        "|BBCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNO"
+        "|CBCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNO"
+        "|DBCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNO"
+        "|EBCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNO"
+        "|FBCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNO"
+        "|GBCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNO"
+        "|HBCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNO"
+        "|IBCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNO"
+        "|JBCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNO"
+        "|KBCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNO"
+        "|LBCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNO"
+        "|MBCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNO"
+        "|NBCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNO"
+        "|OBCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNO"
+        "|PBCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMN)"
+        " 'ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNO'"
+        ">\n]><doc/>";
+    int i;
+#define MAX_REALLOC_COUNT 10
+
+    for (i = 0; i < MAX_REALLOC_COUNT; i++) {
+        reallocation_count = i;
+        XML_SetAttlistDeclHandler(parser, dummy_attlist_decl_handler);
+        if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                    XML_TRUE) != XML_STATUS_ERROR)
+            break;
+        XML_ParserReset(parser, NULL);
+    }
+    if (i == 0)
+        fail("Parse succeeded despite failing reallocator");
+    if (i == MAX_REALLOC_COUNT)
+        fail("Parse failed at maximum reallocation count");
+}
+#undef MAX_REALLOC_COUNT
+END_TEST
+
+/* Test long notation name with dodgy allocator */
+START_TEST(test_alloc_notation)
+{
+    const char *text =
+        "<!DOCTYPE doc [\n"
+        "<!NOTATION "
+        /* Each line is 64 characters */
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        " SYSTEM 'http://example.org/n'>\n"
+        "<!ENTITY e SYSTEM 'http://example.org/e' NDATA "
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        ">\n"
+        "<!ELEMENT doc EMPTY>\n"
+        "]>\n<doc/>";
+    int i;
+#define MAX_ALLOC_COUNT 10
+    int repeat = 0;
+
+    for (i = 0; i < MAX_ALLOC_COUNT; i++) {
+        /* Repeat some counts to allow for cached allocations */
+        if ((i == 2 && repeat < 4) || (i == 3)) {
+            i--;
+            repeat++;
+        }
+        allocation_count = i;
+        dummy_handler_flags = 0;
+        XML_SetNotationDeclHandler(parser, dummy_notation_decl_handler);
+        XML_SetEntityDeclHandler(parser, dummy_entity_decl_handler);
+        if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                    XML_TRUE) != XML_STATUS_ERROR)
+            break;
+        XML_ParserReset(parser, NULL);
+    }
+    if (i == 0)
+        fail("Parse succeeded despite allocation failures");
+    if (i == MAX_ALLOC_COUNT)
+        fail("Parse failed at maximum allocation count");
+    if (dummy_handler_flags != (DUMMY_ENTITY_DECL_HANDLER_FLAG |
+                                DUMMY_NOTATION_DECL_HANDLER_FLAG))
+        fail("Entity declaration handler not called");
+}
+#undef MAX_ALLOC_COUNT
+END_TEST
+
+/* Test public notation with dodgy allocator */
+START_TEST(test_alloc_public_notation)
+{
+    const char *text =
+        "<!DOCTYPE doc [\n"
+        "<!NOTATION note PUBLIC '"
+        /* 64 characters per line */
+        "http://example.com/a/long/enough/name/to/trigger/pool/growth/zz/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "' 'foo'>\n"
+        "<!ENTITY e SYSTEM 'http://example.com/e' NDATA note>\n"
+        "<!ELEMENT doc EMPTY>\n"
+        "]>\n<doc/>";
+    int i;
+#define MAX_ALLOC_COUNT 10
+    int repeat = 0;
+
+    for (i = 0; i < MAX_ALLOC_COUNT; i++) {
+        /* Repeat some counts to allow for cached allocations */
+        if ((i == 2 && repeat < 5) ||
+            (i == 3 && repeat == 5)) {
+            i--;
+            repeat++;
+        }
+        allocation_count = i;
+        dummy_handler_flags = 0;
+        XML_SetNotationDeclHandler(parser, dummy_notation_decl_handler);
+        if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                    XML_TRUE) != XML_STATUS_ERROR)
+            break;
+        XML_ParserReset(parser, NULL);
+    }
+    if (i == 0)
+        fail("Parse succeeded despite allocation failures");
+    if (i == MAX_ALLOC_COUNT)
+        fail("Parse failed at maximum allocation count");
+    if (dummy_handler_flags != DUMMY_NOTATION_DECL_HANDLER_FLAG)
+        fail("Notation handler not called");
+}
+#undef MAX_ALLOC_COUNT
+END_TEST
+
+/* Test public notation with dodgy allocator */
+START_TEST(test_alloc_system_notation)
+{
+    const char *text =
+        "<!DOCTYPE doc [\n"
+        "<!NOTATION note SYSTEM '"
+        /* 64 characters per line */
+        "http://example.com/a/long/enough/name/to/trigger/pool/growth/zz/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "'>\n"
+        "<!ENTITY e SYSTEM 'http://example.com/e' NDATA note>\n"
+        "<!ELEMENT doc EMPTY>\n"
+        "]>\n<doc/>";
+    int i;
+#define MAX_ALLOC_COUNT 10
+    int repeat = 0;
+
+    for (i = 0; i < MAX_ALLOC_COUNT; i++) {
+        /* Repeat some counts to allow for cached allocations */
+        if ((i == 2 && repeat < 5) ||
+            (i == 3 && repeat == 5)) {
+            i--;
+            repeat++;
+        }
+        allocation_count = i;
+        dummy_handler_flags = 0;
+        XML_SetNotationDeclHandler(parser, dummy_notation_decl_handler);
+        if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                    XML_TRUE) != XML_STATUS_ERROR)
+            break;
+        XML_ParserReset(parser, NULL);
+    }
+    if (i == 0)
+        fail("Parse succeeded despite allocation failures");
+    if (i == MAX_ALLOC_COUNT)
+        fail("Parse failed at maximum allocation count");
+    if (dummy_handler_flags != DUMMY_NOTATION_DECL_HANDLER_FLAG)
+        fail("Notation handler not called");
+}
+#undef MAX_ALLOC_COUNT
+END_TEST
+
+START_TEST(test_alloc_nested_groups)
+{
+    const char *text =
+        "<!DOCTYPE doc [\n"
+        "<!ELEMENT doc "
+        /* Sixteen elements per line */
+        "(e,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,"
+        "(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?"
+        "))))))))))))))))))))))))))))))))>\n"
+        "<!ELEMENT e EMPTY>"
+        "]>\n"
+        "<doc><e/></doc>";
+    CharData storage;
+    int i;
+#define MAX_ALLOC_COUNT 10
+    int repeat = 0;
+
+    for (i = 0; i < MAX_ALLOC_COUNT; i++) {
+        /* Repeat some counts to allow for cached allocations */
+        if ((i == 2 && repeat < 3) || (i == 3 && repeat == 3)) {
+            i--;
+            repeat++;
+        }
+        allocation_count = i;
+        CharData_Init(&storage);
+        XML_SetElementDeclHandler(parser, dummy_element_decl_handler);
+        XML_SetStartElementHandler(parser, record_element_start_handler);
+        XML_SetUserData(parser, &storage);
+        dummy_handler_flags = 0;
+        if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                    XML_TRUE) != XML_STATUS_ERROR)
+            break;
+        XML_ParserReset(parser, NULL);
+    }
+
+    if (i == 0)
+        fail("Parse succeeded despite failing reallocator");
+    if (i == MAX_ALLOC_COUNT)
+        fail("Parse failed at maximum reallocation count");
+    CharData_CheckString(&storage, "doce");
+    if (dummy_handler_flags != DUMMY_ELEMENT_DECL_HANDLER_FLAG)
+        fail("Element handler not fired");
+}
+#undef MAX_ALLOC_COUNT
+END_TEST
+
+START_TEST(test_alloc_realloc_nested_groups)
+{
+    const char *text =
+        "<!DOCTYPE doc [\n"
+        "<!ELEMENT doc "
+        /* Sixteen elements per line */
+        "(e,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,"
+        "(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?"
+        "))))))))))))))))))))))))))))))))>\n"
+        "<!ELEMENT e EMPTY>"
+        "]>\n"
+        "<doc><e/></doc>";
+    CharData storage;
+    int i;
+#define MAX_REALLOC_COUNT 10
+
+    for (i = 0; i < MAX_REALLOC_COUNT; i++) {
+        reallocation_count = i;
+        CharData_Init(&storage);
+        XML_SetElementDeclHandler(parser, dummy_element_decl_handler);
+        XML_SetStartElementHandler(parser, record_element_start_handler);
+        XML_SetUserData(parser, &storage);
+        dummy_handler_flags = 0;
+        if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                    XML_TRUE) != XML_STATUS_ERROR)
+            break;
+        XML_ParserReset(parser, NULL);
+    }
+
+    if (i == 0)
+        fail("Parse succeeded despite failing reallocator");
+    if (i == MAX_REALLOC_COUNT)
+        fail("Parse failed at maximum reallocation count");
+    CharData_CheckString(&storage, "doce");
+    if (dummy_handler_flags != DUMMY_ELEMENT_DECL_HANDLER_FLAG)
+        fail("Element handler not fired");
+}
+#undef MAX_REALLOC_COUNT
+END_TEST
+
+START_TEST(test_alloc_large_group)
+{
+    const char *text =
+        "<!DOCTYPE doc [\n"
+        "<!ELEMENT doc ("
+        "a1|a2|a3|a4|a5|a6|a7|a8|"
+        "b1|b2|b3|b4|b5|b6|b7|b8|"
+        "c1|c2|c3|c4|c5|c6|c7|c8|"
+        "d1|d2|d3|d4|d5|d6|d7|d8|"
+        "e1"
+        ")+>\n"
+        "]>\n"
+        "<doc>\n"
+        "<a1/>\n"
+        "</doc>\n";
+    int i;
+#define MAX_ALLOC_COUNT 45
+    int repeat = 0;
+
+    for (i = 0; i < MAX_ALLOC_COUNT; i++) {
+        /* Repeat some counts to defeat cached allocations */
+        if ((i == 2 && repeat < 3) ||
+            (i == 3 && repeat == 3) ||
+            (i == 37 && repeat == 4)) {
+            i--;
+            repeat++;
+        }
+        allocation_count = i;
+        XML_SetElementDeclHandler(parser, dummy_element_decl_handler);
+        dummy_handler_flags = 0;
+        if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                    XML_TRUE) != XML_STATUS_ERROR)
+            break;
+        XML_ParserReset(parser, NULL);
+    }
+    if (i == 0)
+        fail("Parse succeeded despite failing allocator");
+    if (i == MAX_ALLOC_COUNT)
+        fail("Parse failed at maximum allocation count");
+    if (dummy_handler_flags != DUMMY_ELEMENT_DECL_HANDLER_FLAG)
+        fail("Element handler flag not raised");
+}
+#undef MAX_ALLOC_COUNT
+END_TEST
+
+START_TEST(test_alloc_realloc_group_choice)
+{
+    const char *text =
+        "<!DOCTYPE doc [\n"
+        "<!ELEMENT doc ("
+        "a1|a2|a3|a4|a5|a6|a7|a8|"
+        "b1|b2|b3|b4|b5|b6|b7|b8|"
+        "c1|c2|c3|c4|c5|c6|c7|c8|"
+        "d1|d2|d3|d4|d5|d6|d7|d8|"
+        "e1"
+        ")+>\n"
+        "]>\n"
+        "<doc>\n"
+        "<a1/>\n"
+        "<b2 attr='foo'>This is a foo</b2>\n"
+        "<c3></c3>\n"
+        "</doc>\n";
+    int i;
+#define MAX_REALLOC_COUNT 10
+
+    for (i = 0; i < MAX_REALLOC_COUNT; i++) {
+        reallocation_count = i;
+        XML_SetElementDeclHandler(parser, dummy_element_decl_handler);
+        dummy_handler_flags = 0;
+        if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                    XML_TRUE) != XML_STATUS_ERROR)
+            break;
+        XML_ParserReset(parser, NULL);
+    }
+    if (i == 0)
+        fail("Parse succeeded despite failing reallocator");
+    if (i == MAX_REALLOC_COUNT)
+        fail("Parse failed at maximum reallocation count");
+    if (dummy_handler_flags != DUMMY_ELEMENT_DECL_HANDLER_FLAG)
+        fail("Element handler flag not raised");
+}
+#undef MAX_REALLOC_COUNT
+END_TEST
+
+START_TEST(test_alloc_pi_in_epilog)
+{
+    const char *text =
+        "<doc></doc>\n"
+        "<?pi in epilog?>";
+    int i;
+#define MAX_ALLOC_COUNT 10
+    int repeat = 0;
+
+    for (i = 0; i < MAX_ALLOC_COUNT; i++) {
+        /* Repeat certain counts to allow for cached allocations */
+        if (i == 3 && repeat == 1) {
+            i -= 2;
+            repeat++;
+        }
+        else if (i == 2 && repeat < 4 && repeat != 1) {
+            i--;
+            repeat++;
+        }
+        allocation_count = i;
+        XML_SetProcessingInstructionHandler(parser, dummy_pi_handler);
+        dummy_handler_flags = 0;
+        if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                    XML_TRUE) != XML_STATUS_ERROR)
+            break;
+        XML_ParserReset(parser, NULL);
+    }
+    if (i == 0)
+        fail("Parse completed despite failing allocator");
+    if (i == MAX_ALLOC_COUNT)
+        fail("Parse failed at maximum allocation count");
+    if (dummy_handler_flags != DUMMY_PI_HANDLER_FLAG)
+        fail("Processing instruction handler not invoked");
+}
+#undef MAX_ALLOC_COUNT
+END_TEST
+
+START_TEST(test_alloc_comment_in_epilog)
+{
+    const char *text =
+        "<doc></doc>\n"
+        "<!-- comment in epilog -->";
+    int i;
+#define MAX_ALLOC_COUNT 10
+    int repeat = 0;
+
+    for (i = 0; i < MAX_ALLOC_COUNT; i++) {
+        /* Repeat certain counts to allow for cached allocations */
+        if (i == 3 && repeat == 1) {
+            i -= 2;
+            repeat++;
+        }
+        else if (i == 2 && repeat < 4 && repeat != 1) {
+            i--;
+            repeat++;
+        }
+        allocation_count = i;
+        XML_SetCommentHandler(parser, dummy_comment_handler);
+        dummy_handler_flags = 0;
+        if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                    XML_TRUE) != XML_STATUS_ERROR)
+            break;
+        XML_ParserReset(parser, NULL);
+    }
+    if (i == 0)
+        fail("Parse completed despite failing allocator");
+    if (i == MAX_ALLOC_COUNT)
+        fail("Parse failed at maximum allocation count");
+    if (dummy_handler_flags != DUMMY_COMMENT_HANDLER_FLAG)
+        fail("Processing instruction handler not invoked");
+}
+#undef MAX_ALLOC_COUNT
+END_TEST
+
+START_TEST(test_alloc_realloc_long_attribute_value)
+{
+    const char *text =
+        "<!DOCTYPE doc [<!ENTITY foo '"
+        /* Each line is 64 characters */
+        "This entity will be substituted as an attribute value, and is   "
+        "calculated to be exactly long enough that the terminating NUL   "
+        "that the library adds internally will trigger the string pool to"
+        "grow. GHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "'>]>\n"
+        "<doc a='&foo;'></doc>";
+    int i;
+#define MAX_REALLOC_COUNT 10
+
+    for (i = 0; i < MAX_REALLOC_COUNT; i++) {
+        reallocation_count = i;
+        if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                    XML_TRUE) != XML_STATUS_ERROR)
+            break;
+        XML_ParserReset(parser, NULL);
+    }
+    if (i == 0)
+        fail("Parse succeeded despite failing reallocator");
+    if (i == MAX_REALLOC_COUNT)
+        fail("Parse failed at maximum reallocation count");
+}
+#undef MAX_REALLOC_COUNT
+END_TEST
+
+START_TEST(test_alloc_attribute_whitespace)
+{
+    const char *text = "<doc a=' '></doc>";
+    int i;
+#define MAX_ALLOC_COUNT 10
+    int repeat = 0;
+
+    for (i = 0; i < MAX_ALLOC_COUNT; i++) {
+        /* Repeat some counts to defeat cached allocations */
+        if (i == 3 && repeat == 1) {
+            i -= 2;
+            repeat++;
+        }
+        else if ((i == 2 &&
+                  (repeat == 0 || repeat == 2 || repeat == 3)) ||
+                 (i == 3 && repeat == 4)) {
+            i--;
+            repeat++;
+        }
+        allocation_count = i;
+        if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                    XML_TRUE) != XML_STATUS_ERROR)
+            break;
+        XML_ParserReset(parser, NULL);
+    }
+    if (i == 0)
+        fail("Parse succeeded despite failing allocator");
+    if (i == MAX_ALLOC_COUNT)
+        fail("Parse failed at maximum allocation count");
+}
+#undef MAX_ALLOC_COUNT
+END_TEST
+
+START_TEST(test_alloc_attribute_predefined_entity)
+{
+    const char *text = "<doc a='&amp;'></doc>";
+    int i;
+#define MAX_ALLOC_COUNT 10
+    int repeat = 0;
+
+    for (i = 0; i < MAX_ALLOC_COUNT; i++) {
+        /* Repeat some counts to defeat cached allocations */
+        if (i == 3 && repeat == 1) {
+            i -= 2;
+            repeat++;
+        }
+        else if ((i == 2 &&
+                  (repeat == 0 || repeat == 2 || repeat == 3)) ||
+                 (i == 3 && repeat == 4)) {
+            i--;
+            repeat++;
+        }
+        allocation_count = i;
+        if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                    XML_TRUE) != XML_STATUS_ERROR)
+            break;
+        XML_ParserReset(parser, NULL);
+    }
+    if (i == 0)
+        fail("Parse succeeded despite failing allocator");
+    if (i == MAX_ALLOC_COUNT)
+        fail("Parse failed at maximum allocation count");
+}
+#undef MAX_ALLOC_COUNT
+END_TEST
+
+/* Test that a character reference at the end of a suitably long
+ * default value for an attribute can trigger pool growth, and recovers
+ * if the allocator fails on it.
+ */
+START_TEST(test_alloc_long_attr_default_with_char_ref)
+{
+    const char *text =
+        "<!DOCTYPE doc [<!ATTLIST doc a CDATA '"
+        /* 64 characters per line */
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHI"
+        "&#x31;'>]>\n"
+        "<doc/>";
+    int i;
+#define MAX_ALLOC_COUNT 10
+    int repeat = 0;
+
+    for (i = 0; i < MAX_ALLOC_COUNT; i++) {
+        /* Repeat some counts to defeat cached allocations */
+        if ((i == 2 && repeat < 3) ||
+            (i == 3 && repeat == 3) ||
+            (i == 4 && repeat == 4)) {
+            i--;
+            repeat++;
+        }
+        allocation_count = i;
+        if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                    XML_TRUE) != XML_STATUS_ERROR)
+            break;
+        XML_ParserReset(parser, NULL);
+    }
+    if (i == 0)
+        fail("Parse succeeded despite failing allocator");
+    if (i == MAX_ALLOC_COUNT)
+        fail("Parse failed at maximum allocation count");
+}
+#undef MAX_ALLOC_COUNT
+END_TEST
+
+/* Test that a long character reference substitution triggers a pool
+ * expansion correctly for an attribute value.
+ */
+START_TEST(test_alloc_long_attr_value)
+{
+    const char *text =
+        "<!DOCTYPE test [<!ENTITY foo '\n"
+        /* 64 characters per line */
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "'>]>\n"
+        "<test a='&foo;'/>";
+    int i;
+#define MAX_ALLOC_COUNT 10
+    int repeat = 0;
+
+    for (i = 0; i < MAX_ALLOC_COUNT; i++) {
+        /* Repeat some counts to defeat cached allocations */
+        if ((i == 2 && repeat < 3) ||
+            (i == 3 && repeat < 6) ||
+            (i == 4 && repeat == 6) ||
+            (i == 5 && repeat == 7)) {
+            i--;
+            repeat++;
+        }
+        allocation_count = i;
+        if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                    XML_TRUE) != XML_STATUS_ERROR)
+            break;
+        XML_ParserReset(parser, NULL);
+    }
+    if (i == 0)
+        fail("Parse succeeded despite failing allocator");
+    if (i == MAX_ALLOC_COUNT)
+        fail("Parse failed at maximum allocation count");
+}
+#undef MAX_ALLOC_COUNT
+END_TEST
+
+/* Test that an error in a nested parameter entity substitution is
+ * handled correctly.  It seems unlikely that the code path being
+ * exercised can be reached purely by carefully crafted XML, but an
+ * allocation error in the right place will definitely do it.
+ */
+START_TEST(test_alloc_nested_entities)
+{
+    const char *text =
+        "<!DOCTYPE doc SYSTEM 'http://example.org/one.ent'>\n"
+        "<doc />";
+    ExtFaults test_data = {
+        "<!ENTITY % pe1 '"
+        /* 64 characters per line */
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "'>\n"
+        "<!ENTITY % pe2 '%pe1;'>\n"
+        "%pe2;",
+        "Memory Fail not faulted",
+        NULL,
+        XML_ERROR_NO_MEMORY
+    };
+
+    /* Causes an allocation error in a nested storeEntityValue() */
+    allocation_count = 12;
+    XML_SetUserData(parser, &test_data);
+    XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+    XML_SetExternalEntityRefHandler(parser, external_entity_faulter);
+    expect_failure(text, XML_ERROR_EXTERNAL_ENTITY_HANDLING,
+                   "Entity allocation failure not noted");
+}
+END_TEST
+
+START_TEST(test_alloc_realloc_param_entity_newline)
+{
+    const char *text =
+        "<!DOCTYPE doc SYSTEM 'http://example.org/'>\n"
+        "<doc/>";
+    char dtd_text[] =
+        "<!ENTITY % pe '<!ATTLIST doc att CDATA \""
+        /* 64 characters per line */
+        "This default value is carefully crafted so that the carriage    "
+        "return right at the end of the entity string causes an internal "
+        "string pool to have to grow.  This allows us to test the alloc  "
+        "failure path from that point. OPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDE"
+        "\">\n'>"
+        "%pe;\n";
+    int i;
+#define MAX_REALLOC_COUNT 5
+
+    for (i = 0; i < MAX_REALLOC_COUNT; i++) {
+        reallocation_count = i;
+        XML_SetUserData(parser, dtd_text);
+        XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+        XML_SetExternalEntityRefHandler(parser, external_entity_alloc);
+        if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                    XML_TRUE) != XML_STATUS_ERROR)
+            break;
+        XML_ParserReset(parser, NULL);
+    }
+    if (i == 0)
+        fail("Parse succeeded despite failing reallocator");
+    if (i == MAX_REALLOC_COUNT)
+        fail("Parse failed at maximum reallocation count");
+}
+#undef MAX_REALLOC_COUNT
+END_TEST
+
+START_TEST(test_alloc_realloc_ce_extends_pe)
+{
+    const char *text =
+        "<!DOCTYPE doc SYSTEM 'http://example.org/'>\n"
+        "<doc/>";
+    char dtd_text[] =
+        "<!ENTITY % pe '<!ATTLIST doc att CDATA \""
+        /* 64 characters per line */
+        "This default value is carefully crafted so that the character   "
+        "entity at the end causes an internal string pool to have to     "
+        "grow.  This allows us to test the allocation failure path from  "
+        "that point onwards. EFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFG&#x51;"
+        "\">\n'>"
+        "%pe;\n";
+    int i;
+#define MAX_REALLOC_COUNT 5
+
+    for (i = 0; i < MAX_REALLOC_COUNT; i++) {
+        reallocation_count = i;
+        XML_SetUserData(parser, dtd_text);
+        XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+        XML_SetExternalEntityRefHandler(parser, external_entity_alloc);
+        if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                    XML_TRUE) != XML_STATUS_ERROR)
+            break;
+        XML_ParserReset(parser, NULL);
+    }
+    if (i == 0)
+        fail("Parse succeeded despite failing reallocator");
+    if (i == MAX_REALLOC_COUNT)
+        fail("Parse failed at maximum reallocation count");
+}
+#undef MAX_REALLOC_COUNT
+END_TEST
+
+START_TEST(test_alloc_realloc_attributes)
+{
+    const char *text =
+        "<!DOCTYPE doc [\n"
+        "  <!ATTLIST doc\n"
+        "    a1  (a|b|c)   'a'\n"
+        "    a2  (foo|bar) #IMPLIED\n"
+        "    a3  NMTOKEN   #IMPLIED\n"
+        "    a4  NMTOKENS  #IMPLIED\n"
+        "    a5  ID        #IMPLIED\n"
+        "    a6  IDREF     #IMPLIED\n"
+        "    a7  IDREFS    #IMPLIED\n"
+        "    a8  ENTITY    #IMPLIED\n"
+        "    a9  ENTITIES  #IMPLIED\n"
+        "    a10 CDATA     #IMPLIED\n"
+        "  >]>\n"
+        "<doc>wombat</doc>\n";
+    int i;
+#define MAX_REALLOC_COUNT 5
+
+    for (i = 0; i < MAX_REALLOC_COUNT; i++) {
+        reallocation_count = i;
+        if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                    XML_TRUE) != XML_STATUS_ERROR)
+            break;
+        XML_ParserReset(parser, NULL);
+    }
+
+    if (i == 0)
+        fail("Parse succeeded despite failing reallocator");
+    if (i == MAX_REALLOC_COUNT)
+        fail("Parse failed at maximum reallocation count");
+}
+#undef MAX_REALLOC_COUNT
+END_TEST
+
+START_TEST(test_alloc_long_doc_name)
+{
+    const char *text =
+        /* 64 characters per line */
+        "<LongRootElementNameThatWillCauseTheNextAllocationToExpandTheStr"
+        "ingPoolForTheDTDQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        " a='1'/>";
+    int i;
+#define MAX_ALLOC_COUNT 10
+    int repeat = 0;
+
+    for (i = 0; i < MAX_ALLOC_COUNT; i++) {
+        /* Repeat certain counts to defeat cached allocations */
+        if ((i == 2 && repeat < 4) ||
+            (i == 3 && repeat < 6)) {
+            i--;
+            repeat++;
+        }
+        allocation_count = i;
+        if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                    XML_TRUE) != XML_STATUS_ERROR)
+            break;
+        XML_ParserReset(parser, NULL);
+    }
+    if (i == 0)
+        fail("Parsing worked despite failing reallocations");
+    else if (i == MAX_ALLOC_COUNT)
+        fail("Parsing failed even at max reallocation count");
+}
+#undef MAX_ALLOC_COUNT
+END_TEST
+
+START_TEST(test_alloc_long_base)
+{
+    const char *text =
+        "<!DOCTYPE doc [\n"
+        "  <!ENTITY e SYSTEM 'foo'>\n"
+        "]>\n"
+        "<doc>&e;</doc>";
+    char entity_text[] = "Hello world";
+    const char *base =
+        /* 64 characters per line */
+        "LongBaseURI/that/will/overflow/an/internal/buffer/and/cause/it/t"
+        "o/have/to/grow/PQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789A/"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789A/"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789A/"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789A/"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789A/"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789A/"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789A/"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789A/"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789A/"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789A/"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789A/"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789A/"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789A/"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789A/"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789A/";
+    int i;
+ #define MAX_ALLOC_COUNT 20
+    int repeat = 0;
+
+    for (i = 0; i < MAX_ALLOC_COUNT; i++) {
+        /* Repeat some counts to defeat cached allocations */
+        if (i == 4 && repeat == 4) {
+            i -= 2;
+            repeat++;
+        }
+        else if ((i == 2 && repeat < 4) ||
+                 (i == 3 && repeat == 5) ||
+                 (i == 4 && repeat == 6)) {
+            i--;
+            repeat++;
+        }
+        allocation_count = i;
+        XML_SetUserData(parser, entity_text);
+        XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+        XML_SetExternalEntityRefHandler(parser, external_entity_alloc);
+        if (XML_SetBase(parser, base) == XML_STATUS_ERROR) {
+            XML_ParserReset(parser, NULL);
+            continue;
+        }
+        if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                    XML_TRUE) != XML_STATUS_ERROR)
+            break;
+        XML_ParserReset(parser, NULL);
+    }
+    if (i == 0)
+        fail("Parsing worked despite failing allocations");
+    else if (i == MAX_ALLOC_COUNT)
+        fail("Parsing failed even at max allocation count");
+}
+#undef MAX_ALLOC_COUNT
+END_TEST
+
+START_TEST(test_alloc_long_public_id)
+{
+    const char *text =
+        "<!DOCTYPE doc [\n"
+        "  <!ENTITY e PUBLIC '"
+        /* 64 characters per line */
+        "LongPublicIDThatShouldResultInAnInternalStringPoolGrowingAtASpec"
+        "ificMomentKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AB"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AB"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AB"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AB"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AB"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AB"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AB"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AB"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AB"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AB"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AB"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AB"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AB"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AB"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AB"
+        "' 'bar'>\n"
+        "]>\n"
+        "<doc>&e;</doc>";
+    char entity_text[] = "Hello world";
+    int i;
+#define MAX_ALLOC_COUNT 20
+    int repeat = 0;
+
+    for (i = 0; i < MAX_ALLOC_COUNT; i++) {
+        /* Repeat certain counts to defeat allocation caching */
+        if (i == 4 && repeat == 4) {
+            i -= 2;
+            repeat++;
+        }
+        else if ((i == 2 && repeat < 3) ||
+                 (i == 3 && (repeat == 3 || repeat == 5)) ||
+                 (i == 4 && repeat == 6)) {
+            i--;
+            repeat++;
+        }
+        allocation_count = i;
+        XML_SetUserData(parser, entity_text);
+        XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+        XML_SetExternalEntityRefHandler(parser, external_entity_alloc);
+        if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                    XML_TRUE) != XML_STATUS_ERROR)
+            break;
+        XML_ParserReset(parser, NULL);
+    }
+    if (i == 0)
+        fail("Parsing worked despite failing allocations");
+    else if (i == MAX_ALLOC_COUNT)
+        fail("Parsing failed even at max allocation count");
+}
+#undef MAX_ALLOC_COUNT
+END_TEST
+
+START_TEST(test_alloc_long_entity_value)
+{
+    const char *text =
+        "<!DOCTYPE doc [\n"
+        "  <!ENTITY e1 '"
+        /* 64 characters per line */
+        "Long entity value that should provoke a string pool to grow whil"
+        "e setting up to parse the external entity below. xyz0123456789AB"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AB"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AB"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AB"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AB"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AB"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AB"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AB"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AB"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AB"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AB"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AB"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AB"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AB"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AB"
+        "'>\n"
+        "  <!ENTITY e2 SYSTEM 'bar'>\n"
+        "]>\n"
+        "<doc>&e2;</doc>";
+    char entity_text[] = "Hello world";
+    int i;
+#define MAX_ALLOC_COUNT 20
+    int repeat = 0;
+
+    for (i = 0; i < MAX_ALLOC_COUNT; i++) {
+        /* Repeat certain counts to defeat cached allocations */
+        if (i == 5 && repeat == 4) {
+            i -= 2;
+            repeat++;
+        }
+        else if ((i == 2 && repeat < 3) ||
+                 (i == 3 && repeat == 3) ||
+                 (i == 4 && repeat == 5) ||
+                 (i == 5 && repeat == 6)) {
+            i--;
+            repeat++;
+        }
+        allocation_count = i;
+        XML_SetUserData(parser, entity_text);
+        XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+        XML_SetExternalEntityRefHandler(parser, external_entity_alloc);
+        if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                    XML_TRUE) != XML_STATUS_ERROR)
+            break;
+        XML_ParserReset(parser, NULL);
+    }
+    if (i == 0)
+        fail("Parsing worked despite failing allocations");
+    else if (i == MAX_ALLOC_COUNT)
+        fail("Parsing failed even at max allocation count");
+}
+#undef MAX_ALLOC_COUNT
+END_TEST
+
+START_TEST(test_alloc_long_notation)
+{
+    const char *text =
+        "<!DOCTYPE doc [\n"
+        "  <!NOTATION note SYSTEM '"
+        /* 64 characters per line */
+        "ALongNotationNameThatShouldProvokeStringPoolGrowthWhileCallingAn"
+        "ExternalEntityParserUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AB"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AB"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AB"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AB"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AB"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AB"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AB"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AB"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AB"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AB"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AB"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AB"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AB"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AB"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AB"
+        "'>\n"
+        "  <!ENTITY e1 SYSTEM 'foo' NDATA "
+        /* 64 characters per line */
+        "ALongNotationNameThatShouldProvokeStringPoolGrowthWhileCallingAn"
+        "ExternalEntityParserUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AB"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AB"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AB"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AB"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AB"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AB"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AB"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AB"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AB"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AB"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AB"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AB"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AB"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AB"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AB"
+        ">\n"
+        "  <!ENTITY e2 SYSTEM 'bar'>\n"
+        "]>\n"
+        "<doc>&e2;</doc>";
+    ExtOption options[] = {
+        { "foo", "Entity Foo" },
+        { "bar", "Entity Bar" },
+        { NULL, NULL }
+    };
+    int i;
+#define MAX_ALLOC_COUNT 20
+    int repeat = 0;
+
+    for (i = 0; i < MAX_ALLOC_COUNT; i++) {
+        /* Repeat some counts to defeat cached allocations */
+        if (i == 5 && repeat == 5) {
+            i -= 2;
+            repeat++;
+        }
+        else if ((i == 2 && repeat < 3) ||
+                 (i == 3 && (repeat == 3 || repeat == 4)) ||
+                 (i == 4 && repeat == 6) ||
+                 (i == 5 && repeat == 7)) {
+            i--;
+            repeat++;
+        }
+        allocation_count = i;
+        XML_SetUserData(parser, options);
+        XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+        XML_SetExternalEntityRefHandler(parser, external_entity_optioner);
+        if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                    XML_TRUE) != XML_STATUS_ERROR)
+            break;
+
+        XML_ParserFree(parser);
+        parser = XML_ParserCreate(NULL);
+    }
+    if (i == 0)
+        fail("Parsing worked despite failing allocations");
+    else if (i == MAX_ALLOC_COUNT)
+        fail("Parsing failed even at max allocation count");
+}
+#undef MAX_ALLOC_COUNT
 END_TEST
 
 
@@ -5687,6 +10980,1106 @@ START_TEST(test_nsalloc_realloc_binding_uri)
 #undef MAX_REALLOC_COUNT
 END_TEST
 
+/* Check handling of long prefix names (pool growth) */
+START_TEST(test_nsalloc_realloc_long_prefix)
+{
+    const char *text =
+        "<"
+        /* 64 characters per line */
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        ":foo xmlns:"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "='http://example.org/'>"
+        "</"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        ":foo>";
+    int i;
+#define MAX_REALLOC_COUNT 12
+
+    for (i = 0; i < MAX_REALLOC_COUNT; i++) {
+        /* Every reallocation bar the last is cached */
+        reallocation_count = (i == 0) ? 0 : 1;
+        if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                    XML_TRUE) != XML_STATUS_ERROR)
+            break;
+        XML_ParserReset(parser, NULL);
+    }
+    if (i == 0)
+        fail("Parsing worked despite failing reallocations");
+    else if (i == MAX_REALLOC_COUNT)
+        fail("Parsing failed even at max reallocation count");
+}
+#undef MAX_REALLOC_COUNT
+END_TEST
+
+/* Check handling of even long prefix names (different code path) */
+START_TEST(test_nsalloc_realloc_longer_prefix)
+{
+    const char *text =
+        "<"
+        /* 64 characters per line */
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "Q:foo xmlns:"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "Q='http://example.org/'>"
+        "</"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "Q:foo>";
+    int i;
+#define MAX_REALLOC_COUNT 12
+
+    for (i = 0; i < MAX_REALLOC_COUNT; i++) {
+        /* Every reallocation bar the last is cached */
+        reallocation_count = (i == 0) ? 0 : 1;
+        if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                    XML_TRUE) != XML_STATUS_ERROR)
+            break;
+        XML_ParserReset(parser, NULL);
+    }
+    if (i == 0)
+        fail("Parsing worked despite failing reallocations");
+    else if (i == MAX_REALLOC_COUNT)
+        fail("Parsing failed even at max reallocation count");
+}
+#undef MAX_REALLOC_COUNT
+END_TEST
+
+START_TEST(test_nsalloc_long_namespace)
+{
+    const char *text =
+        "<"
+        /* 64 characters per line */
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        ":e xmlns:"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "='http://example.org/'>\n"
+        "<"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        ":f "
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        ":attr='foo'/>\n"
+        "</"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        ":e>";
+    int i;
+#define MAX_ALLOC_COUNT 10
+    int repeat = 0;
+
+    for (i = 0; i < MAX_ALLOC_COUNT; i++) {
+        /* Repeat some counts to defeat cached allocations */
+        if ((i == 4 && (repeat == 3 || repeat == 6)) ||
+            (i == 7 && repeat == 11)) {
+            i -= 2;
+            repeat++;
+        }
+        else if ((i == 2 && repeat < 2) ||
+                 (i == 3 && (repeat == 2 ||
+                             repeat == 4 ||
+                             repeat == 5 ||
+                             repeat == 7 ||
+                             repeat == 8)) ||
+                 (i == 5 && (repeat == 9 ||
+                             repeat == 10)) ||
+                 (i == 6 && repeat == 12) ||
+                 (i == 7 && repeat == 13)) {
+            i--;
+            repeat++;
+        }
+        allocation_count = i;
+        if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                    XML_TRUE) != XML_STATUS_ERROR)
+            break;
+        XML_ParserReset(parser, NULL);
+    }
+    if (i == 0)
+        fail("Parsing worked despite failing allocations");
+    else if (i == MAX_ALLOC_COUNT)
+        fail("Parsing failed even at max allocation count");
+}
+#undef MAX_ALLOC_COUNT
+END_TEST
+
+/* Using a slightly shorter namespace name provokes allocations in
+ * slightly different places in the code.
+ */
+START_TEST(test_nsalloc_less_long_namespace)
+{
+    const char *text =
+        "<"
+        /* 64 characters per line */
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz012345678"
+        ":e xmlns:"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz012345678"
+        "='http://example.org/'>\n"
+        "<"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz012345678"
+        ":f "
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz012345678"
+        ":att='foo'/>\n"
+        "</"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz012345678"
+        ":e>";
+    int i;
+#define MAX_ALLOC_COUNT 10
+    int repeat = 0;
+
+    for (i = 0; i < MAX_ALLOC_COUNT; i++) {
+        /* Repeat some counts to defeat cached allocations */
+        if ((i == 4 && (repeat == 3 || repeat == 5)) ||
+            (i == 7 && repeat == 10)) {
+            i -= 2;
+            repeat++;
+        }
+        else if ((i == 2 && repeat < 2) ||
+                 (i == 3 && (repeat == 2 ||
+                             repeat == 4 ||
+                             repeat == 6)) ||
+                 (i == 4 && repeat == 7) ||
+                 (i == 5 && (repeat == 8 ||
+                             repeat == 9)) ||
+                 (i == 6 && (repeat == 11 || repeat == 12)) ||
+                 (i == 7 && repeat == 13)) {
+            i--;
+            repeat++;
+        }
+        allocation_count = i;
+        if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                    XML_TRUE) != XML_STATUS_ERROR)
+            break;
+        XML_ParserReset(parser, NULL);
+    }
+    if (i == 0)
+        fail("Parsing worked despite failing allocations");
+    else if (i == MAX_ALLOC_COUNT)
+        fail("Parsing failed even at max allocation count");
+}
+#undef MAX_ALLOC_COUNT
+END_TEST
+
+START_TEST(test_nsalloc_long_context)
+{
+    const char *text =
+        "<!DOCTYPE doc SYSTEM 'foo' [\n"
+        "  <!ATTLIST doc baz ID #REQUIRED>\n"
+        "  <!ENTITY en SYSTEM 'bar'>\n"
+        "]>\n"
+        "<doc xmlns='http://example.org/"
+        /* 64 characters per line */
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKL"
+        "' baz='2'>\n"
+        "&en;"
+        "</doc>";
+    ExtOption options[] = {
+        { "foo", "<!ELEMENT e EMPTY>"},
+        { "bar", "<e/>" },
+        { NULL, NULL }
+    };
+    int i;
+#define MAX_ALLOC_COUNT 40
+    int repeat = 0;
+
+    for (i = 0; i < MAX_ALLOC_COUNT; i++) {
+        /* Repeat some counts to defeat allocation caching */
+        if ((i == 4 && repeat == 3) ||
+            (i == 13 && repeat == 9) ||
+            (i == 14 && repeat == 10)) {
+            i -= 2;
+            repeat++;
+        }
+        else if ((i == 2 && repeat < 2) ||
+                 (i == 3 && (repeat == 2 || repeat == 4 || repeat == 5)) ||
+                 (i == 4 && repeat == 6) ||
+                 (i == 5 && repeat == 7) ||
+                 (i == 7 && repeat == 8) ||
+                 (i == 13 && repeat == 11)) {
+            i--;
+            repeat++;
+        }
+        allocation_count = i;
+        XML_SetUserData(parser, options);
+        XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+        XML_SetExternalEntityRefHandler(parser, external_entity_optioner);
+        if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                    XML_TRUE) != XML_STATUS_ERROR)
+            break;
+
+        XML_ParserFree(parser);
+        parser = XML_ParserCreate(NULL);
+    }
+    if (i == 0)
+        fail("Parsing worked despite failing allocations");
+    else if (i == MAX_ALLOC_COUNT)
+        fail("Parsing failed even at max allocation count");
+#undef MAX_ALLOC_COUNT
+}
+END_TEST
+
+/* This function is void; it will throw a fail() on error, so if it
+ * returns normally it must have succeeded.
+ */
+static void
+context_realloc_test(XML_Parser parser, const char *text)
+{
+    ExtOption options[] = {
+        { "foo", "<!ELEMENT e EMPTY>"},
+        { "bar", "<e/>" },
+        { NULL, NULL }
+    };
+    int i;
+#define MAX_REALLOC_COUNT 5
+
+    for (i = 0; i < MAX_REALLOC_COUNT; i++) {
+        reallocation_count = i;
+        XML_SetUserData(parser, options);
+        XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+        XML_SetExternalEntityRefHandler(parser, external_entity_optioner);
+        if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                    XML_TRUE) != XML_STATUS_ERROR)
+            break;
+        XML_ParserReset(parser, NULL);
+    }
+    if (i == 0)
+        fail("Parsing worked despite failing reallocations");
+    else if (i == MAX_REALLOC_COUNT)
+        fail("Parsing failed even at max reallocation count");
+#undef MAX_REALLOC_COUNT
+}
+
+START_TEST(test_nsalloc_realloc_long_context)
+{
+    const char *text =
+        "<!DOCTYPE doc SYSTEM 'foo' [\n"
+        "  <!ENTITY en SYSTEM 'bar'>\n"
+        "]>\n"
+        "<doc xmlns='http://example.org/"
+        /* 64 characters per line */
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKL"
+        "'>\n"
+        "&en;"
+        "</doc>";
+
+    context_realloc_test(parser, text);
+}
+END_TEST
+
+START_TEST(test_nsalloc_realloc_long_context_2)
+{
+    const char *text =
+        "<!DOCTYPE doc SYSTEM 'foo' [\n"
+        "  <!ENTITY en SYSTEM 'bar'>\n"
+        "]>\n"
+        "<doc xmlns='http://example.org/"
+        /* 64 characters per line */
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJK"
+        "'>\n"
+        "&en;"
+        "</doc>";
+
+    context_realloc_test(parser, text);
+}
+END_TEST
+
+START_TEST(test_nsalloc_realloc_long_context_3)
+{
+    const char *text =
+        "<!DOCTYPE doc SYSTEM 'foo' [\n"
+        "  <!ENTITY en SYSTEM 'bar'>\n"
+        "]>\n"
+        "<doc xmlns='http://example.org/"
+        /* 64 characters per line */
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGH"
+        "'>\n"
+        "&en;"
+        "</doc>";
+
+    context_realloc_test(parser, text);
+}
+END_TEST
+
+START_TEST(test_nsalloc_realloc_long_context_4)
+{
+    const char *text =
+        "<!DOCTYPE doc SYSTEM 'foo' [\n"
+        "  <!ENTITY en SYSTEM 'bar'>\n"
+        "]>\n"
+        "<doc xmlns='http://example.org/"
+        /* 64 characters per line */
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO"
+        "'>\n"
+        "&en;"
+        "</doc>";
+
+    context_realloc_test(parser, text);
+}
+END_TEST
+
+START_TEST(test_nsalloc_realloc_long_context_5)
+{
+    const char *text =
+        "<!DOCTYPE doc SYSTEM 'foo' [\n"
+        "  <!ENTITY en SYSTEM 'bar'>\n"
+        "]>\n"
+        "<doc xmlns='http://example.org/"
+        /* 64 characters per line */
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABC"
+        "'>\n"
+        "&en;"
+        "</doc>";
+
+    context_realloc_test(parser, text);
+}
+END_TEST
+
+START_TEST(test_nsalloc_realloc_long_context_6)
+{
+    const char *text =
+        "<!DOCTYPE doc SYSTEM 'foo' [\n"
+        "  <!ENTITY en SYSTEM 'bar'>\n"
+        "]>\n"
+        "<doc xmlns='http://example.org/"
+        /* 64 characters per line */
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNOP"
+        "'>\n"
+        "&en;"
+        "</doc>";
+
+    context_realloc_test(parser, text);
+}
+END_TEST
+
+START_TEST(test_nsalloc_realloc_long_context_7)
+{
+    const char *text =
+        "<!DOCTYPE doc SYSTEM 'foo' [\n"
+        "  <!ENTITY en SYSTEM 'bar'>\n"
+        "]>\n"
+        "<doc xmlns='http://example.org/"
+        /* 64 characters per line */
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLM"
+        "'>\n"
+        "&en;"
+        "</doc>";
+
+    context_realloc_test(parser, text);
+}
+END_TEST
+
+START_TEST(test_nsalloc_realloc_long_ge_name)
+{
+    const char *text =
+        "<!DOCTYPE doc SYSTEM 'foo' [\n"
+        "  <!ENTITY "
+        /* 64 characters per line */
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        " SYSTEM 'bar'>\n"
+        "]>\n"
+        "<doc xmlns='http://example.org/baz'>\n"
+        "&"
+        /* 64 characters per line */
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        ";"
+        "</doc>";
+    ExtOption options[] = {
+        { "foo", "<!ELEMENT el EMPTY>" },
+        { "bar", "<el/>" },
+        { NULL, NULL }
+    };
+    int i;
+#define MAX_REALLOC_COUNT 5
+    int repeat = 0;
+
+    for (i = 0; i < MAX_REALLOC_COUNT; i++) {
+        /* Repeat some counts to defeat caching */
+        if (i == 2 && repeat < 3) {
+            i--;
+            repeat++;
+        }
+        reallocation_count = i;
+        XML_SetUserData(parser, options);
+        XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+        XML_SetExternalEntityRefHandler(parser, external_entity_optioner);
+        if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                    XML_TRUE) != XML_STATUS_ERROR)
+            break;
+        XML_ParserReset(parser, NULL);
+    }
+    if (i == 0)
+        fail("Parsing worked despite failing reallocations");
+    else if (i == MAX_REALLOC_COUNT)
+        fail("Parsing failed even at max reallocation count");
+#undef MAX_REALLOC_COUNT
+}
+END_TEST
+
+/* Test that when a namespace is passed through the context mechanism
+ * to an external entity parser, the parsers handle reallocation
+ * failures correctly.  The prefix is exactly the right length to
+ * provoke particular uncommon code paths.
+ */
+START_TEST(test_nsalloc_realloc_long_context_in_dtd)
+{
+    const char *text =
+        "<!DOCTYPE "
+        /* 64 characters per line */
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        ":doc [\n"
+        "  <!ENTITY First SYSTEM 'foo/First'>\n"
+        "]>\n"
+        "<"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        ":doc xmlns:"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "='foo/Second'>&First;</"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        ":doc>";
+    ExtOption options[] = {
+        { "foo/First", "Hello world" },
+        { NULL, NULL }
+    };
+    int i;
+#define MAX_REALLOC_COUNT 10
+    int repeat = 0;
+
+    for (i = 0; i < MAX_REALLOC_COUNT; i++) {
+        /* Repeat some counts to defeat allocation caching */
+        if (i == 2 && repeat < 11) {
+            i--;
+            repeat++;
+        }
+        reallocation_count = i;
+        XML_SetUserData(parser, options);
+        XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+        XML_SetExternalEntityRefHandler(parser, external_entity_optioner);
+        if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                    XML_TRUE) != XML_STATUS_ERROR)
+            break;
+        XML_ParserReset(parser, NULL);
+    }
+    if (i == 0)
+        fail("Parsing worked despite failing reallocations");
+    else if (i == MAX_REALLOC_COUNT)
+        fail("Parsing failed even at max reallocation count");
+#undef MAX_REALLOC_COUNT
+}
+END_TEST
+
+START_TEST(test_nsalloc_long_default_in_ext)
+{
+    const char *text =
+        "<!DOCTYPE doc [\n"
+        "  <!ATTLIST e a1 CDATA '"
+        /* 64 characters per line */
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "'>\n"
+        "  <!ENTITY x SYSTEM 'foo'>\n"
+        "]>\n"
+        "<doc>&x;</doc>";
+    ExtOption options[] = {
+        { "foo", "<e/>"},
+        { NULL, NULL }
+    };
+    int i;
+#define MAX_ALLOC_COUNT 30
+    int repeat = 0;
+
+    for (i = 0; i < MAX_ALLOC_COUNT; i++) {
+        /* Repeat some counts to defeat allocation caching */
+        if ((i == 4 && repeat == 3) || (i == 8 && repeat == 9)) {
+            i -= 2;
+            repeat++;
+        }
+        else if ((i == 2 && repeat < 2) ||
+                 (i == 3 && (repeat == 2 || repeat == 4 || repeat == 5)) ||
+                 (i == 4 && repeat == 6) ||
+                 (i == 5 && repeat == 7) ||
+                 (i == 6 && repeat == 8)) {
+            i--;
+            repeat++;
+        }
+        allocation_count = i;
+        XML_SetUserData(parser, options);
+        XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+        XML_SetExternalEntityRefHandler(parser, external_entity_optioner);
+        if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                    XML_TRUE) != XML_STATUS_ERROR)
+            break;
+
+        XML_ParserFree(parser);
+        parser = XML_ParserCreate(NULL);
+    }
+    if (i == 0)
+        fail("Parsing worked despite failing allocations");
+    else if (i == MAX_ALLOC_COUNT)
+        fail("Parsing failed even at max allocation count");
+#undef MAX_ALLOC_COUNT
+}
+END_TEST
+
+START_TEST(test_nsalloc_long_systemid_in_ext)
+{
+    const char *text =
+        "<!DOCTYPE doc SYSTEM 'foo' [\n"
+        "  <!ENTITY en SYSTEM '"
+        /* 64 characters per line */
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "'>\n"
+        "]>\n"
+        "<doc>&en;</doc>";
+    ExtOption options[] = {
+        { "foo", "<!ELEMENT e EMPTY>" },
+        {
+            "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+            "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+            "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+            "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+            "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+            "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+            "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+            "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+            "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+            "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+            "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+            "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+            "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+            "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+            "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+            "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/",
+            "<e/>"
+        },
+        { NULL, NULL }
+    };
+    int i;
+#define MAX_ALLOC_COUNT 30
+    int repeat = 0;
+
+    for (i = 0; i < MAX_ALLOC_COUNT; i++) {
+        /* Repeat some counts to allow for cached allocations */
+        if ((i == 4 && repeat == 3) || (i == 10 && repeat == 8)) {
+            i -= 2;
+            repeat++;
+        }
+        else if ((i == 2 && repeat < 2) ||
+                 (i == 3 && (repeat == 2 || repeat == 4 || repeat == 5)) ||
+                 (i == 4 && repeat == 6) ||
+                 (i == 5 && repeat == 7) ||
+                 (i == 9 && repeat == 8)) {
+            i--;
+            repeat++;
+        }
+        allocation_count = i;
+        XML_SetUserData(parser, options);
+        XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+        XML_SetExternalEntityRefHandler(parser, external_entity_optioner);
+        if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                    XML_TRUE) != XML_STATUS_ERROR)
+            break;
+
+        XML_ParserFree(parser);
+        parser = XML_ParserCreate(NULL);
+    }
+    if (i == 0)
+        fail("Parsing worked despite failing allocations");
+    else if (i == MAX_ALLOC_COUNT)
+        fail("Parsing failed even at max allocation count");
+#undef MAX_ALLOC_COUNT
+}
+END_TEST
+
+/* Test the effects of allocation failure on parsing an element in a
+ * namespace.  Based on test_nsalloc_long_context.
+ */
+START_TEST(test_nsalloc_prefixed_element)
+{
+    const char *text =
+        "<!DOCTYPE pfx:element SYSTEM 'foo' [\n"
+        "  <!ATTLIST pfx:element baz ID #REQUIRED>\n"
+        "  <!ENTITY en SYSTEM 'bar'>\n"
+        "]>\n"
+        "<pfx:element xmlns:pfx='http://example.org/' baz='2'>\n"
+        "&en;"
+        "</pfx:element>";
+    ExtOption options[] = {
+        { "foo", "<!ELEMENT e EMPTY>" },
+        { "bar", "<e/>" },
+        { NULL, NULL }
+    };
+    int i;
+#define MAX_ALLOC_COUNT 40
+    int repeat = 0;
+
+    for (i = 0; i < MAX_ALLOC_COUNT; i++) {
+        /* Repeat some counts to defeat cached allocations */
+        if ((i == 4 && repeat == 3) ||
+            (i == 14 && repeat == 9) ||
+            (i == 15 && repeat == 10)) {
+            i -= 2;
+            repeat++;
+        }
+        else if ((i == 2 && repeat < 2) ||
+                 (i == 3 && (repeat == 2 || repeat == 4 || repeat == 5)) ||
+                 (i == 4 && repeat == 6) ||
+                 (i == 6 && repeat == 7) ||
+                 (i == 8 && repeat == 8)) {
+            i--;
+            repeat++;
+        }
+        allocation_count = i;
+        XML_SetUserData(parser, options);
+        XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+        XML_SetExternalEntityRefHandler(parser, external_entity_optioner);
+        if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                    XML_TRUE) != XML_STATUS_ERROR)
+            break;
+
+        XML_ParserFree(parser);
+        parser = XML_ParserCreate(NULL);
+    }
+    if (i == 0)
+        fail("Success despite failing allocator");
+    else if (i == MAX_ALLOC_COUNT)
+        fail("Failed even at full allocation count");
+}
+#undef MAX_ALLOC_COUNT
+END_TEST
 
 static Suite *
 make_suite(void)
@@ -5707,11 +12100,17 @@ make_suite(void)
     tcase_add_test(tc_basic, test_bom_utf8);
     tcase_add_test(tc_basic, test_bom_utf16_be);
     tcase_add_test(tc_basic, test_bom_utf16_le);
+    tcase_add_test(tc_basic, test_nobom_utf16_le);
     tcase_add_test(tc_basic, test_illegal_utf8);
     tcase_add_test(tc_basic, test_utf8_auto_align);
     tcase_add_test(tc_basic, test_utf16);
     tcase_add_test(tc_basic, test_utf16_le_epilog_newline);
+    tcase_add_test(tc_basic, test_not_utf16);
+    tcase_add_test(tc_basic, test_bad_encoding);
     tcase_add_test(tc_basic, test_latin1_umlauts);
+    tcase_add_test(tc_basic, test_long_utf8_character);
+    tcase_add_test(tc_basic, test_long_latin1_attribute);
+    tcase_add_test(tc_basic, test_long_ascii_attribute);
     /* Regression test for SF bug #491986. */
     tcase_add_test(tc_basic, test_danish_latin1);
     /* Regression test for SF bug #514281. */
@@ -5730,6 +12129,9 @@ make_suite(void)
     tcase_add_test(tc_basic, test_end_element_events);
     tcase_add_test(tc_basic, test_attr_whitespace_normalization);
     tcase_add_test(tc_basic, test_xmldecl_misplaced);
+    tcase_add_test(tc_basic, test_xmldecl_invalid);
+    tcase_add_test(tc_basic, test_xmldecl_missing_attr);
+    tcase_add_test(tc_basic, test_xmldecl_missing_value);
     tcase_add_test(tc_basic, test_unknown_encoding_internal_entity);
     tcase_add_test(tc_basic, test_unrecognised_encoding_internal_entity);
     tcase_add_test(tc_basic,
@@ -5741,14 +12143,18 @@ make_suite(void)
     tcase_add_test(tc_basic, test_not_standalone_handler_accept);
     tcase_add_test(tc_basic,
                    test_wfc_undeclared_entity_with_external_subset_standalone);
+    tcase_add_test(tc_basic,
+                   test_entity_with_external_subset_unless_standalone);
     tcase_add_test(tc_basic, test_wfc_no_recursive_entity_refs);
     tcase_add_test(tc_basic, test_ext_entity_set_encoding);
     tcase_add_test(tc_basic, test_ext_entity_no_handler);
     tcase_add_test(tc_basic, test_ext_entity_set_bom);
     tcase_add_test(tc_basic, test_ext_entity_bad_encoding);
+    tcase_add_test(tc_basic, test_ext_entity_bad_encoding_2);
     tcase_add_test(tc_basic, test_ext_entity_invalid_parse);
     tcase_add_test(tc_basic, test_ext_entity_invalid_suspended_parse);
     tcase_add_test(tc_basic, test_dtd_default_handling);
+    tcase_add_test(tc_basic, test_dtd_attr_handling);
     tcase_add_test(tc_basic, test_empty_ns_without_namespaces);
     tcase_add_test(tc_basic, test_ns_in_attribute_default_without_namespaces);
     tcase_add_test(tc_basic, test_stop_parser_between_char_data_calls);
@@ -5756,8 +12162,10 @@ make_suite(void)
     tcase_add_test(tc_basic, test_repeated_stop_parser_between_char_data_calls);
     tcase_add_test(tc_basic, test_good_cdata_ascii);
     tcase_add_test(tc_basic, test_good_cdata_utf16);
+    tcase_add_test(tc_basic, test_good_cdata_utf16_le);
     tcase_add_test(tc_basic, test_long_cdata_utf16);
     tcase_add_test(tc_basic, test_multichar_cdata_utf16);
+    tcase_add_test(tc_basic, test_utf16_bad_surrogate_pair);
     tcase_add_test(tc_basic, test_bad_cdata);
     tcase_add_test(tc_basic, test_bad_cdata_utf16);
     tcase_add_test(tc_basic, test_stop_parser_between_cdata_calls);
@@ -5766,6 +12174,11 @@ make_suite(void)
     tcase_add_test(tc_basic, test_default_current);
     tcase_add_test(tc_basic, test_dtd_elements);
     tcase_add_test(tc_basic, test_set_foreign_dtd);
+    tcase_add_test(tc_basic, test_foreign_dtd_not_standalone);
+    tcase_add_test(tc_basic, test_invalid_foreign_dtd);
+    tcase_add_test(tc_basic, test_foreign_dtd_with_doctype);
+    tcase_add_test(tc_basic, test_foreign_dtd_without_external_subset);
+    tcase_add_test(tc_basic, test_empty_foreign_dtd);
     tcase_add_test(tc_basic, test_set_base);
     tcase_add_test(tc_basic, test_attributes);
     tcase_add_test(tc_basic, test_reset_in_entity);
@@ -5792,8 +12205,108 @@ make_suite(void)
     tcase_add_test(tc_basic, test_byte_info_at_cdata);
     tcase_add_test(tc_basic, test_predefined_entities);
     tcase_add_test(tc_basic, test_invalid_tag_in_dtd);
+    tcase_add_test(tc_basic, test_not_predefined_entities);
     tcase_add_test(tc_basic, test_ignore_section);
+    tcase_add_test(tc_basic, test_ignore_section_utf16);
+    tcase_add_test(tc_basic, test_ignore_section_utf16_be);
     tcase_add_test(tc_basic, test_bad_ignore_section);
+    tcase_add_test(tc_basic, test_external_entity_values);
+    tcase_add_test(tc_basic, test_ext_entity_not_standalone);
+    tcase_add_test(tc_basic, test_ext_entity_value_abort);
+    tcase_add_test(tc_basic, test_bad_public_doctype);
+    tcase_add_test(tc_basic, test_attribute_enum_value);
+    tcase_add_test(tc_basic, test_predefined_entity_redefinition);
+    tcase_add_test(tc_basic, test_dtd_stop_processing);
+    tcase_add_test(tc_basic, test_public_notation_no_sysid);
+    tcase_add_test(tc_basic, test_nested_groups);
+    tcase_add_test(tc_basic, test_group_choice);
+    tcase_add_test(tc_basic, test_standalone_parameter_entity);
+    tcase_add_test(tc_basic, test_skipped_parameter_entity);
+    tcase_add_test(tc_basic, test_recursive_external_parameter_entity);
+    tcase_add_test(tc_basic, test_undefined_ext_entity_in_external_dtd);
+    tcase_add_test(tc_basic, test_suspend_xdecl);
+    tcase_add_test(tc_basic, test_abort_epilog);
+    tcase_add_test(tc_basic, test_abort_epilog_2);
+    tcase_add_test(tc_basic, test_suspend_epilog);
+    tcase_add_test(tc_basic, test_unfinished_epilog);
+    tcase_add_test(tc_basic, test_partial_char_in_epilog);
+    tcase_add_test(tc_basic, test_hash_collision);
+    tcase_add_test(tc_basic, test_suspend_resume_internal_entity);
+    tcase_add_test(tc_basic, test_resume_entity_with_syntax_error);
+    tcase_add_test(tc_basic, test_suspend_resume_parameter_entity);
+    tcase_add_test(tc_basic, test_restart_on_error);
+    tcase_add_test(tc_basic, test_reject_lt_in_attribute_value);
+    tcase_add_test(tc_basic, test_reject_unfinished_param_in_att_value);
+    tcase_add_test(tc_basic, test_trailing_cr_in_att_value);
+    tcase_add_test(tc_basic, test_standalone_internal_entity);
+    tcase_add_test(tc_basic, test_skipped_external_entity);
+    tcase_add_test(tc_basic, test_skipped_null_loaded_ext_entity);
+    tcase_add_test(tc_basic, test_skipped_unloaded_ext_entity);
+    tcase_add_test(tc_basic, test_param_entity_with_trailing_cr);
+    tcase_add_test(tc_basic, test_invalid_character_entity);
+    tcase_add_test(tc_basic, test_invalid_character_entity_2);
+    tcase_add_test(tc_basic, test_invalid_character_entity_3);
+    tcase_add_test(tc_basic, test_invalid_character_entity_4);
+    tcase_add_test(tc_basic, test_pi_handled_in_default);
+    tcase_add_test(tc_basic, test_comment_handled_in_default);
+    tcase_add_test(tc_basic, test_pi_yml);
+    tcase_add_test(tc_basic, test_pi_xnl);
+    tcase_add_test(tc_basic, test_pi_xmm);
+    tcase_add_test(tc_basic, test_utf16_pi);
+    tcase_add_test(tc_basic, test_utf16_be_pi);
+    tcase_add_test(tc_basic, test_utf16_be_comment);
+    tcase_add_test(tc_basic, test_utf16_le_comment);
+    tcase_add_test(tc_basic, test_missing_encoding_conversion_fn);
+    tcase_add_test(tc_basic, test_failing_encoding_conversion_fn);
+    tcase_add_test(tc_basic, test_unknown_encoding_success);
+    tcase_add_test(tc_basic, test_unknown_encoding_bad_name);
+    tcase_add_test(tc_basic, test_unknown_encoding_bad_name_2);
+    tcase_add_test(tc_basic, test_unknown_encoding_long_name_1);
+    tcase_add_test(tc_basic, test_unknown_encoding_long_name_2);
+    tcase_add_test(tc_basic, test_invalid_unknown_encoding);
+    tcase_add_test(tc_basic, test_unknown_ascii_encoding_ok);
+    tcase_add_test(tc_basic, test_unknown_ascii_encoding_fail);
+    tcase_add_test(tc_basic, test_unknown_encoding_invalid_length);
+    tcase_add_test(tc_basic, test_unknown_encoding_invalid_topbit);
+    tcase_add_test(tc_basic, test_unknown_encoding_invalid_surrogate);
+    tcase_add_test(tc_basic, test_unknown_encoding_invalid_high);
+    tcase_add_test(tc_basic, test_unknown_encoding_invalid_attr_value);
+    tcase_add_test(tc_basic, test_ext_entity_latin1_utf16le_bom);
+    tcase_add_test(tc_basic, test_ext_entity_latin1_utf16be_bom);
+    tcase_add_test(tc_basic, test_ext_entity_latin1_utf16le_bom2);
+    tcase_add_test(tc_basic, test_ext_entity_latin1_utf16be_bom2);
+    tcase_add_test(tc_basic, test_ext_entity_utf16_be);
+    tcase_add_test(tc_basic, test_ext_entity_utf16_le);
+    tcase_add_test(tc_basic, test_ext_entity_utf16_unknown);
+    tcase_add_test(tc_basic, test_ext_entity_utf8_non_bom);
+    tcase_add_test(tc_basic, test_utf8_in_cdata_section);
+    tcase_add_test(tc_basic, test_utf8_in_cdata_section_2);
+    tcase_add_test(tc_basic, test_trailing_spaces_in_elements);
+    tcase_add_test(tc_basic, test_utf16_attribute);
+    tcase_add_test(tc_basic, test_utf16_second_attr);
+    tcase_add_test(tc_basic, test_attr_after_solidus);
+    tcase_add_test(tc_basic, test_utf16_pe);
+    tcase_add_test(tc_basic, test_bad_attr_desc_keyword);
+    tcase_add_test(tc_basic, test_bad_attr_desc_keyword_utf16);
+    tcase_add_test(tc_basic, test_bad_doctype);
+    tcase_add_test(tc_basic, test_bad_doctype_utf16);
+    tcase_add_test(tc_basic, test_bad_doctype_plus);
+    tcase_add_test(tc_basic, test_bad_doctype_star);
+    tcase_add_test(tc_basic, test_bad_doctype_query);
+    tcase_add_test(tc_basic, test_unknown_encoding_bad_ignore);
+    tcase_add_test(tc_basic, test_entity_in_utf16_be_attr);
+    tcase_add_test(tc_basic, test_entity_in_utf16_le_attr);
+    tcase_add_test(tc_basic, test_entity_public_utf16_be);
+    tcase_add_test(tc_basic, test_entity_public_utf16_le);
+    tcase_add_test(tc_basic, test_short_doctype);
+    tcase_add_test(tc_basic, test_short_doctype_2);
+    tcase_add_test(tc_basic, test_short_doctype_3);
+    tcase_add_test(tc_basic, test_long_doctype);
+    tcase_add_test(tc_basic, test_bad_entity);
+    tcase_add_test(tc_basic, test_bad_entity_2);
+    tcase_add_test(tc_basic, test_bad_entity_3);
+    tcase_add_test(tc_basic, test_bad_entity_4);
+    tcase_add_test(tc_basic, test_bad_notation);
 
     suite_add_tcase(s, tc_namespace);
     tcase_add_checked_fixture(tc_namespace,
@@ -5819,6 +12332,17 @@ make_suite(void)
     tcase_add_test(tc_namespace, test_ns_extend_uri_buffer);
     tcase_add_test(tc_namespace, test_ns_reserved_attributes);
     tcase_add_test(tc_namespace, test_ns_reserved_attributes_2);
+    tcase_add_test(tc_namespace, test_ns_extremely_long_prefix);
+    tcase_add_test(tc_namespace, test_ns_unknown_encoding_success);
+    tcase_add_test(tc_namespace, test_ns_double_colon);
+    tcase_add_test(tc_namespace, test_ns_double_colon_element);
+    tcase_add_test(tc_namespace, test_ns_bad_attr_leafname);
+    tcase_add_test(tc_namespace, test_ns_bad_element_leafname);
+    tcase_add_test(tc_namespace, test_ns_utf16_leafname);
+    tcase_add_test(tc_namespace, test_ns_utf16_element_leafname);
+    tcase_add_test(tc_namespace, test_ns_utf16_doctype);
+    tcase_add_test(tc_namespace, test_ns_invalid_doctype);
+    tcase_add_test(tc_namespace, test_ns_double_colon_doctype);
 
     suite_add_tcase(s, tc_misc);
     tcase_add_checked_fixture(tc_misc, NULL, basic_teardown);
@@ -5829,11 +12353,15 @@ make_suite(void)
     tcase_add_test(tc_misc, test_misc_version);
     tcase_add_test(tc_misc, test_misc_features);
     tcase_add_test(tc_misc, test_misc_attribute_leak);
+    tcase_add_test(tc_misc, test_misc_utf16le);
 
     suite_add_tcase(s, tc_alloc);
     tcase_add_checked_fixture(tc_alloc, alloc_setup, alloc_teardown);
+    tcase_add_test(tc_alloc, test_alloc_parse_xdecl);
+    tcase_add_test(tc_alloc, test_alloc_parse_xdecl_2);
     tcase_add_test(tc_alloc, test_alloc_parse_pi);
     tcase_add_test(tc_alloc, test_alloc_parse_pi_2);
+    tcase_add_test(tc_alloc, test_alloc_parse_pi_3);
     tcase_add_test(tc_alloc, test_alloc_parse_comment);
     tcase_add_test(tc_alloc, test_alloc_parse_comment_2);
     tcase_add_test(tc_alloc, test_alloc_create_external_parser);
@@ -5848,6 +12376,38 @@ make_suite(void)
     tcase_add_test(tc_alloc, test_alloc_realloc_buffer);
     tcase_add_test(tc_alloc, test_alloc_ext_entity_realloc_buffer);
     tcase_add_test(tc_alloc, test_alloc_realloc_many_attributes);
+    tcase_add_test(tc_alloc, test_alloc_public_entity_value);
+    tcase_add_test(tc_alloc, test_alloc_realloc_subst_public_entity_value);
+    tcase_add_test(tc_alloc, test_alloc_parse_public_doctype);
+    tcase_add_test(tc_alloc, test_alloc_parse_public_doctype_long_name);
+    tcase_add_test(tc_alloc, test_alloc_set_foreign_dtd);
+    tcase_add_test(tc_alloc, test_alloc_attribute_enum_value);
+    tcase_add_test(tc_alloc, test_alloc_realloc_attribute_enum_value);
+    tcase_add_test(tc_alloc, test_alloc_realloc_implied_attribute);
+    tcase_add_test(tc_alloc, test_alloc_realloc_default_attribute);
+    tcase_add_test(tc_alloc, test_alloc_notation);
+    tcase_add_test(tc_alloc, test_alloc_public_notation);
+    tcase_add_test(tc_alloc, test_alloc_system_notation);
+    tcase_add_test(tc_alloc, test_alloc_nested_groups);
+    tcase_add_test(tc_alloc, test_alloc_realloc_nested_groups);
+    tcase_add_test(tc_alloc, test_alloc_large_group);
+    tcase_add_test(tc_alloc, test_alloc_realloc_group_choice);
+    tcase_add_test(tc_alloc, test_alloc_pi_in_epilog);
+    tcase_add_test(tc_alloc, test_alloc_comment_in_epilog);
+    tcase_add_test(tc_alloc, test_alloc_realloc_long_attribute_value);
+    tcase_add_test(tc_alloc, test_alloc_attribute_whitespace);
+    tcase_add_test(tc_alloc, test_alloc_attribute_predefined_entity);
+    tcase_add_test(tc_alloc, test_alloc_long_attr_default_with_char_ref);
+    tcase_add_test(tc_alloc, test_alloc_long_attr_value);
+    tcase_add_test(tc_alloc, test_alloc_nested_entities);
+    tcase_add_test(tc_alloc, test_alloc_realloc_param_entity_newline);
+    tcase_add_test(tc_alloc, test_alloc_realloc_ce_extends_pe);
+    tcase_add_test(tc_alloc, test_alloc_realloc_attributes);
+    tcase_add_test(tc_alloc, test_alloc_long_doc_name);
+    tcase_add_test(tc_alloc, test_alloc_long_base);
+    tcase_add_test(tc_alloc, test_alloc_long_public_id);
+    tcase_add_test(tc_alloc, test_alloc_long_entity_value);
+    tcase_add_test(tc_alloc, test_alloc_long_notation);
 
     suite_add_tcase(s, tc_nsalloc);
     tcase_add_checked_fixture(tc_nsalloc, nsalloc_setup, nsalloc_teardown);
@@ -5860,6 +12420,23 @@ make_suite(void)
     tcase_add_test(tc_nsalloc, test_nsalloc_realloc_attributes);
     tcase_add_test(tc_nsalloc, test_nsalloc_long_element);
     tcase_add_test(tc_nsalloc, test_nsalloc_realloc_binding_uri);
+    tcase_add_test(tc_nsalloc, test_nsalloc_realloc_long_prefix);
+    tcase_add_test(tc_nsalloc, test_nsalloc_realloc_longer_prefix);
+    tcase_add_test(tc_nsalloc, test_nsalloc_long_namespace);
+    tcase_add_test(tc_nsalloc, test_nsalloc_less_long_namespace);
+    tcase_add_test(tc_nsalloc, test_nsalloc_long_context);
+    tcase_add_test(tc_nsalloc, test_nsalloc_realloc_long_context);
+    tcase_add_test(tc_nsalloc, test_nsalloc_realloc_long_context_2);
+    tcase_add_test(tc_nsalloc, test_nsalloc_realloc_long_context_3);
+    tcase_add_test(tc_nsalloc, test_nsalloc_realloc_long_context_4);
+    tcase_add_test(tc_nsalloc, test_nsalloc_realloc_long_context_5);
+    tcase_add_test(tc_nsalloc, test_nsalloc_realloc_long_context_6);
+    tcase_add_test(tc_nsalloc, test_nsalloc_realloc_long_context_7);
+    tcase_add_test(tc_nsalloc, test_nsalloc_realloc_long_ge_name);
+    tcase_add_test(tc_nsalloc, test_nsalloc_realloc_long_context_in_dtd);
+    tcase_add_test(tc_nsalloc, test_nsalloc_long_default_in_ext);
+    tcase_add_test(tc_nsalloc, test_nsalloc_long_systemid_in_ext);
+    tcase_add_test(tc_nsalloc, test_nsalloc_prefixed_element);
 
     return s;
 }
