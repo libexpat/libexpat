@@ -4259,6 +4259,8 @@ external_entity_load_ignore_utf16(XML_Parser parser,
     if (_XML_Parse_SINGLE_BYTES(ext_parser, text, sizeof(text)-1,
                                 XML_TRUE) == XML_STATUS_ERROR)
         xml_failure(parser);
+
+    XML_ParserFree(ext_parser);
     return XML_STATUS_OK;
 }
 
@@ -4312,6 +4314,8 @@ external_entity_load_ignore_utf16_be(XML_Parser parser,
     if (_XML_Parse_SINGLE_BYTES(ext_parser, text, sizeof(text)-1,
                                 XML_TRUE) == XML_STATUS_ERROR)
         xml_failure(parser);
+
+    XML_ParserFree(ext_parser);
     return XML_STATUS_OK;
 }
 
@@ -4556,6 +4560,7 @@ external_entity_not_standalone(XML_Parser parser,
         if (XML_GetErrorCode(ext_parser) != XML_ERROR_NOT_STANDALONE)
             xml_failure(ext_parser);
         XML_SetNotStandaloneHandler(ext_parser, NULL);
+        XML_ParserFree(ext_parser);
         return XML_STATUS_ERROR;
     }
     else if (!strcmp(systemId, "bar")) {
@@ -4563,6 +4568,8 @@ external_entity_not_standalone(XML_Parser parser,
                                     XML_TRUE) == XML_STATUS_ERROR)
             xml_failure(ext_parser);
     }
+
+    XML_ParserFree(ext_parser);
     return XML_STATUS_OK;
 }
 
@@ -4920,6 +4927,8 @@ external_entity_devaluer(XML_Parser parser,
     if (_XML_Parse_SINGLE_BYTES(ext_parser, text, strlen(text),
                                 XML_TRUE) == XML_STATUS_ERROR)
         xml_failure(ext_parser);
+
+    XML_ParserFree(ext_parser);
     return XML_STATUS_OK;
 }
 
@@ -5308,6 +5317,8 @@ external_entity_oneshot_loader(XML_Parser parser,
                                  XML_TRUE) == XML_STATUS_ERROR) {
         xml_failure(ext_parser);
     }
+
+    XML_ParserFree(ext_parser);
     return XML_STATUS_OK;
 }
 
@@ -5980,6 +5991,8 @@ external_entity_loader2(XML_Parser parser,
                                      XML_TRUE) == XML_STATUS_ERROR) {
         xml_failure(extparser);
     }
+
+    XML_ParserFree(extparser);
     return XML_STATUS_OK;
 }
 
@@ -6242,6 +6255,7 @@ external_entity_faulter2(XML_Parser parser,
     if (XML_GetErrorCode(extparser) != test_data->error)
         xml_failure(extparser);
 
+    XML_ParserFree(extparser);
     return XML_STATUS_ERROR;
 }
 
@@ -10372,7 +10386,9 @@ START_TEST(test_alloc_long_notation)
         if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
                                     XML_TRUE) != XML_STATUS_ERROR)
             break;
-        XML_ParserReset(parser, NULL);
+
+        XML_ParserFree(parser);
+        parser = XML_ParserCreate(NULL);
     }
     if (i == 0)
         fail("Parsing worked despite failing allocations");
@@ -11401,7 +11417,9 @@ START_TEST(test_nsalloc_long_context)
         if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
                                     XML_TRUE) != XML_STATUS_ERROR)
             break;
-        XML_ParserReset(parser, NULL);
+
+        XML_ParserFree(parser);
+        parser = XML_ParserCreate(NULL);
     }
     if (i == 0)
         fail("Parsing worked despite failing allocations");
@@ -11909,7 +11927,9 @@ START_TEST(test_nsalloc_long_default_in_ext)
         if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
                                     XML_TRUE) != XML_STATUS_ERROR)
             break;
-        XML_ParserReset(parser, NULL);
+
+        XML_ParserFree(parser);
+        parser = XML_ParserCreate(NULL);
     }
     if (i == 0)
         fail("Parsing worked despite failing allocations");
@@ -11992,7 +12012,9 @@ START_TEST(test_nsalloc_long_systemid_in_ext)
         if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
                                     XML_TRUE) != XML_STATUS_ERROR)
             break;
-        XML_ParserReset(parser, NULL);
+
+        XML_ParserFree(parser);
+        parser = XML_ParserCreate(NULL);
     }
     if (i == 0)
         fail("Parsing worked despite failing allocations");
@@ -12047,7 +12069,9 @@ START_TEST(test_nsalloc_prefixed_element)
         if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
                                     XML_TRUE) != XML_STATUS_ERROR)
             break;
-        XML_ParserReset(parser, NULL);
+
+        XML_ParserFree(parser);
+        parser = XML_ParserCreate(NULL);
     }
     if (i == 0)
         fail("Success despite failing allocator");
