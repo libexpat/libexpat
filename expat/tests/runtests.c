@@ -4119,9 +4119,6 @@ START_TEST(test_return_ns_triplet)
                                 dummy_end_namespace_decl_handler);
     triplet_start_flag = XML_FALSE;
     triplet_end_flag = XML_FALSE;
-    XML_SetNamespaceDeclHandler(parser,
-                                dummy_start_namespace_decl_handler,
-                                dummy_end_namespace_decl_handler);
     dummy_handler_flags = 0;
     if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
                                 XML_FALSE) == XML_STATUS_ERROR)
