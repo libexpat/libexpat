@@ -3980,6 +3980,8 @@ external_entity_value_aborter(XML_Parser parser,
         if (XML_GetErrorCode(ext_parser) != XML_ERROR_ABORTED)
             xml_failure(ext_parser);
     }
+
+    XML_ParserFree(ext_parser);
     return XML_STATUS_OK;
 }
 
@@ -5677,6 +5679,7 @@ external_entity_public(XML_Parser parser,
     const char *text2 = "<!ATTLIST doc a CDATA 'value'>";
     const char *text;
     XML_Parser ext_parser;
+    int parse_res;
 
     ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
     if (ext_parser == NULL)
@@ -5687,8 +5690,10 @@ external_entity_public(XML_Parser parser,
     else if (publicId != NULL && !strcmp(publicId, "foo")) {
         text = text2;
     }
-    return _XML_Parse_SINGLE_BYTES(ext_parser, text, strlen(text),
+    parse_res = _XML_Parse_SINGLE_BYTES(ext_parser, text, strlen(text),
                                    XML_TRUE);
+    XML_ParserFree(ext_parser);
+    return parse_res;
 }
 
 START_TEST(test_alloc_public_entity_value)
@@ -5800,11 +5805,15 @@ external_entity_alloc(XML_Parser parser,
 {
     const char *text = (const char *)XML_GetUserData(parser);
     XML_Parser ext_parser;
+    int parse_res;
 
     ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
     if (ext_parser == NULL)
         return XML_STATUS_ERROR;
-    return _XML_Parse_SINGLE_BYTES(ext_parser, text, strlen(text), XML_TRUE);
+    parse_res = _XML_Parse_SINGLE_BYTES(ext_parser, text, strlen(text),
+                                        XML_TRUE);
+    XML_ParserFree(ext_parser);
+    return parse_res;
 }
 
 /* Test foreign DTD handling */
