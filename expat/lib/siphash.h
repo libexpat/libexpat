@@ -11,6 +11,9 @@
  * --------------------------------------------------------------------------
  * HISTORY:
  *
+ * 2017-07-25  (Vadim Zeitlin)
+ *   - Fix use of SIPHASH_MAIN macro
+ *
  * 2017-07-05  (Sebastian Pipping)
  *   - Use _SIP_ULL macro to not require a C++11 compiler if compiled as C++
  *   - Add const qualifiers at two places
