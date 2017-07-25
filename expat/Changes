@@ -14,10 +14,12 @@ Release 2.2.? ????????????????
              #23  Test suite: Fix memory leaks
                   Rely on macro HAVE_ARC4RANDOM_BUF (rather than __CloudABI__)
                     for CloudABI
+            #100  Fix use of SIPHASH_MAIN in siphash.h
 
         Special thanks to:
             Pascal Cuoq
             Rhodri James
+            Vadim Zeitlin
             Viktor Szakats
                  and
             Core Infrastructure Initiative
