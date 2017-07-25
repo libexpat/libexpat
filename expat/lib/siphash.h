@@ -350,7 +350,7 @@ static int sip24_valid(void) {
 } /* sip24_valid() */
 
 
-#if SIPHASH_MAIN
+#ifdef SIPHASH_MAIN
 
 #include <stdio.h>
 
