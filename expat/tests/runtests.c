@@ -12089,7 +12089,7 @@ make_suite(void)
     TCase *tc_namespace = tcase_create("XML namespaces");
     TCase *tc_misc = tcase_create("miscellaneous tests");
     TCase *tc_alloc = tcase_create("allocation tests");
-    TCase *tc_nsalloc = tcase_create("namespace allocattion tests");
+    TCase *tc_nsalloc = tcase_create("namespace allocation tests");
 
     suite_add_tcase(s, tc_basic);
     tcase_add_checked_fixture(tc_basic, basic_setup, basic_teardown);
