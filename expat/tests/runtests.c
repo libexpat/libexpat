@@ -2478,7 +2478,7 @@ START_TEST(test_bad_cdata_utf16)
                     XML_ErrorString(cases[i].expected_error),
                     actual_error,
                     XML_ErrorString(actual_error),
-                    i+1);
+                    (long unsigned)(i+1));
             fail(message);
         }
         XML_ParserReset(parser, NULL);
@@ -5084,7 +5084,7 @@ START_TEST(test_hash_collision)
      * tests invoked from qa.sh usually provide a hash collision, but
      * not always.  This is an attempt to provide insurance.
      */
-#define COLLIDING_HASH_SALT 0xffffffffff99fc90
+#define COLLIDING_HASH_SALT (unsigned long)_SIP_ULL(0xffffffffU, 0xff99fc90U)
     const char * text =
         "<doc>\n"
         "<a1/><a2/><a3/><a4/><a5/><a6/><a7/><a8/>\n"
