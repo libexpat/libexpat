@@ -10804,7 +10804,9 @@ START_TEST(test_nsalloc_realloc_attributes)
         if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
                                     XML_TRUE) != XML_STATUS_ERROR)
             break;
-        XML_ParserReset(parser, NULL);
+        /* See comment in test_nsalloc_xmlns() */
+        nsalloc_teardown();
+        nsalloc_setup();
     }
     if (i == 0)
         fail("Parsing worked despite failing reallocations");
