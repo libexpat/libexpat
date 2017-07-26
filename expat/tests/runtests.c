@@ -7846,25 +7846,21 @@ START_TEST(test_alloc_parse_xdecl)
         "<?xml version='1.0' encoding='utf-8'?>\n"
         "<doc>Hello, world</doc>";
     int i;
-    int repeat = 0;
-#define MAX_ALLOC_COUNT 10
+#define MAX_ALLOC_COUNT 15
 
     for (i = 0; i < MAX_ALLOC_COUNT; i++) {
-        /* Repeat some (most) counts to defeat cached allocations */
-        if (i == 2 && repeat != 1) {
-            i--;
-            repeat++;
-        }
-        else if (i == 3) {
-            i -= 2;
-            repeat++;
-        }
         allocation_count = i;
         XML_SetXmlDeclHandler(parser, dummy_xdecl_handler);
         if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
                                     XML_TRUE) != XML_STATUS_ERROR)
             break;
-        XML_ParserReset(parser, NULL);
+        /* Resetting the parser is insufficient, because some memory
+         * allocations are cached within the parser.  Instead we use
+         * the teardown and setup routines to ensure that we have the
+         * right sort of parser back in our hands.
+         */
+        alloc_teardown();
+        alloc_setup();
     }
     if (i == 0)
         fail("Parse succeeded despite failing allocator");
