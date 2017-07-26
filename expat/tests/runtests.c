@@ -10637,29 +10637,16 @@ START_TEST(test_nsalloc_long_uri)
         "'>"
         "</foo:e>";
     int i;
-#define MAX_ALLOC_COUNT 15
-    int repeated = 0;
+#define MAX_ALLOC_COUNT 40
 
     for (i = 0; i < MAX_ALLOC_COUNT; i++) {
-        /* Repeat some tests with the same allocation count to
-         * catch cached allocations not freed by XML_ParserReset()
-         */
-        if ((i == 3 && repeated == 1) ||
-            (i == 6 && repeated == 4)) {
-            i -= 2;
-            repeated++;
-        }
-        else if ((i == 2 && (repeated == 0 || repeated == 2)) ||
-                 (i == 4 && repeated == 3) ||
-                 (i == 8 && repeated == 5)) {
-            i--;
-            repeated++;
-        }
         allocation_count = i;
         if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
                                     XML_TRUE) != XML_STATUS_ERROR)
             break;
-        XML_ParserReset(parser, NULL);
+        /* See comment in test_nsalloc_xmlns() */
+        nsalloc_teardown();
+        nsalloc_setup();
     }
     if (i == 0)
         fail("Parsing worked despite failing allocations");
