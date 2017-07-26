@@ -11,6 +11,7 @@ Release 2.2.? ????????????????
              #85  Fix a dangling pointer issue related to realloc
 
         Other changes:
+                  Increase code coverage
              #23  Test suite: Fix memory leaks
                   Rely on macro HAVE_ARC4RANDOM_BUF (rather than __CloudABI__)
                     for CloudABI
