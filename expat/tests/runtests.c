@@ -10575,30 +10575,16 @@ START_TEST(test_nsalloc_long_prefix)
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
         ":foo>";
     int i;
-#define MAX_ALLOC_COUNT 10
-    int repeated = 0;
+#define MAX_ALLOC_COUNT 40
 
     for (i = 0; i < MAX_ALLOC_COUNT; i++) {
-        /* Repeat some tests with the same allocation count to
-         * catch cached allocations not freed by XML_ParserReset()
-         */
-        if ((i == 4 && repeated == 3) ||
-            (i == 4 && repeated == 6)) {
-            i -= 2;
-            repeated++;
-        }
-        else if ((i == 2 && repeated < 2) ||
-                 (i == 3 && repeated < 3) ||
-                 (i == 3 && repeated > 3 && repeated < 6) ||
-                 (i == 3 && repeated > 6 && repeated < 9)) {
-            i--;
-            repeated++;
-        }
         allocation_count = i;
         if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
                                     XML_TRUE) != XML_STATUS_ERROR)
             break;
-        XML_ParserReset(parser, NULL);
+        /* See comment in test_nsalloc_xmlns() */
+        nsalloc_teardown();
+        nsalloc_setup();
     }
     if (i == 0)
         fail("Parsing worked despite failing allocations");
