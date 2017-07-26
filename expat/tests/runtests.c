@@ -11147,34 +11147,16 @@ START_TEST(test_nsalloc_long_namespace)
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
         ":e>";
     int i;
-#define MAX_ALLOC_COUNT 10
-    int repeat = 0;
+#define MAX_ALLOC_COUNT 40
 
     for (i = 0; i < MAX_ALLOC_COUNT; i++) {
-        /* Repeat some counts to defeat cached allocations */
-        if ((i == 4 && (repeat == 3 || repeat == 6)) ||
-            (i == 7 && repeat == 11)) {
-            i -= 2;
-            repeat++;
-        }
-        else if ((i == 2 && repeat < 2) ||
-                 (i == 3 && (repeat == 2 ||
-                             repeat == 4 ||
-                             repeat == 5 ||
-                             repeat == 7 ||
-                             repeat == 8)) ||
-                 (i == 5 && (repeat == 9 ||
-                             repeat == 10)) ||
-                 (i == 6 && repeat == 12) ||
-                 (i == 7 && repeat == 13)) {
-            i--;
-            repeat++;
-        }
         allocation_count = i;
         if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
                                     XML_TRUE) != XML_STATUS_ERROR)
             break;
-        XML_ParserReset(parser, NULL);
+        /* See comment in test_nsalloc_xmlns() */
+        nsalloc_teardown();
+        nsalloc_setup();
     }
     if (i == 0)
         fail("Parsing worked despite failing allocations");
