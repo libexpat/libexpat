@@ -10434,37 +10434,29 @@ START_TEST(test_nsalloc_xmlns)
         "  <e xmlns=''/>\n"
         "</doc>";
     unsigned int i;
-    int repeated = 0;
+#define MAX_ALLOC_COUNT 30
 
-    for (i = 0; i < 10; i++) {
-        /* Repeat some tests with the same allocation count to
-         * catch cached allocations not freed by XML_ParserReset()
-         */
-        if ((i == 4 && repeated == 3) ||
-            (i == 7 && repeated == 8)) {
-            i -= 2;
-            repeated++;
-        }
-        else if ((i == 2 && repeated < 2) ||
-                 (i == 3 && repeated < 3) ||
-                 (i == 3 && repeated > 3 && repeated < 7) ||
-                 (i == 5 && repeated < 8)) {
-            i--;
-            repeated++;
-        }
+    for (i = 0; i < MAX_ALLOC_COUNT; i++) {
         allocation_count = i;
         /* Exercise more code paths with a default handler */
         XML_SetDefaultHandler(parser, dummy_default_handler);
         if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
                                     XML_TRUE) != XML_STATUS_ERROR)
             break;
-        XML_ParserReset(parser, NULL);
+        /* Resetting the parser is insufficient, because some memory
+         * allocations are cached within the parser.  Instead we use
+         * the teardown and setup routines to ensure that we have the
+         * right sort of parser back in our hands.
+         */
+        nsalloc_teardown();
+        nsalloc_setup();
     }
     if (i == 0)
         fail("Parsing worked despite failing allocations");
-    else if (i == 10)
-        fail("Parsing failed even at allocation count 10");
+    else if (i == MAX_ALLOC_COUNT)
+        fail("Parsing failed even at maximum allocation count");
 }
+#undef MAX_ALLOC_COUNT
 END_TEST
 
 /* Test XML_ParseBuffer interface with namespace and a dicky allocator */
