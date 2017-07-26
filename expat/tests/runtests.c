@@ -10830,26 +10830,9 @@ START_TEST(test_nsalloc_long_element)
         "http://example.org/ a bar"
     };
     int i;
-#define MAX_ALLOC_COUNT 15
-    int repeated = 0;
+#define MAX_ALLOC_COUNT 30
 
     for (i = 0; i < MAX_ALLOC_COUNT; i++) {
-        /* Repeat some allocation counts because some allocations
-         * get cached across XML_ParserReset() called.
-         */
-        if ((i == 4 && (repeated == 3 || repeated == 5)) ||
-            (i == 7 && repeated == 8) ||
-            (i == 10 && repeated == 9)) {
-            i -= 2;
-            repeated++;
-        }
-        else if ((i == 2 && repeated < 2) ||
-                 (i == 3 &&
-                  (repeated == 2 || repeated == 4 || repeated == 6)) ||
-                 (i == 5 && repeated == 7)) {
-            i--;
-            repeated++;
-        }
         allocation_count = i;
         XML_SetReturnNSTriplet(parser, XML_TRUE);
         XML_SetUserData(parser, elemstr);
@@ -10859,7 +10842,9 @@ START_TEST(test_nsalloc_long_element)
         if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
                                     XML_TRUE) != XML_STATUS_ERROR)
             break;
-        XML_ParserReset(parser, NULL);
+        /* See comment in test_nsalloc_xmlns() */
+        nsalloc_teardown();
+        nsalloc_setup();
     }
     if (i == 0)
         fail("Parsing worked despite failing reallocations");
