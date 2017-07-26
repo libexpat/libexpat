@@ -10960,12 +10960,13 @@ START_TEST(test_nsalloc_realloc_long_prefix)
 #define MAX_REALLOC_COUNT 12
 
     for (i = 0; i < MAX_REALLOC_COUNT; i++) {
-        /* Every reallocation bar the last is cached */
-        reallocation_count = (i == 0) ? 0 : 1;
+        reallocation_count = i;
         if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
                                     XML_TRUE) != XML_STATUS_ERROR)
             break;
-        XML_ParserReset(parser, NULL);
+        /* See comment in test_nsalloc_xmlns() */
+        nsalloc_teardown();
+        nsalloc_setup();
     }
     if (i == 0)
         fail("Parsing worked despite failing reallocations");
