@@ -11605,15 +11605,9 @@ START_TEST(test_nsalloc_realloc_long_ge_name)
         { NULL, NULL }
     };
     int i;
-#define MAX_REALLOC_COUNT 5
-    int repeat = 0;
+#define MAX_REALLOC_COUNT 10
 
     for (i = 0; i < MAX_REALLOC_COUNT; i++) {
-        /* Repeat some counts to defeat caching */
-        if (i == 2 && repeat < 3) {
-            i--;
-            repeat++;
-        }
         reallocation_count = i;
         XML_SetUserData(parser, options);
         XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
@@ -11621,7 +11615,9 @@ START_TEST(test_nsalloc_realloc_long_ge_name)
         if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
                                     XML_TRUE) != XML_STATUS_ERROR)
             break;
-        XML_ParserReset(parser, NULL);
+        /* See comment in test_nsalloc_xmlns() */
+        nsalloc_teardown();
+        nsalloc_setup();
     }
     if (i == 0)
         fail("Parsing worked despite failing reallocations");
