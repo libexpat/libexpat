@@ -804,7 +804,7 @@ writeRandomBytes_arc4random(void * target, size_t count) {
 #ifdef _WIN32
 
 typedef BOOLEAN (APIENTRY *RTLGENRANDOM_FUNC)(PVOID, ULONG);
-HMODULE Curl_load_library(LPCTSTR filename);  /* see loadlibrary.c */
+HMODULE _Expat_LoadLibrary(LPCTSTR filename);  /* see loadlibrary.c */
 
 /* Obtain entropy on Windows XP / Windows Server 2003 and later.
  * Hint on RtlGenRandom and the following article from libsodium.
@@ -815,7 +815,7 @@ HMODULE Curl_load_library(LPCTSTR filename);  /* see loadlibrary.c */
 static int
 writeRandomBytes_RtlGenRandom(void * target, size_t count) {
   int success = 0;  /* full count bytes written? */
-  const HMODULE advapi32 = Curl_load_library(TEXT("ADVAPI32.DLL"));
+  const HMODULE advapi32 = _Expat_LoadLibrary(TEXT("ADVAPI32.DLL"));
 
   if (advapi32) {
     const RTLGENRANDOM_FUNC RtlGenRandom

@@ -34,7 +34,7 @@
 #include <tchar.h>
 
 
-HMODULE Curl_load_library(LPCTSTR filename);
+HMODULE _Expat_LoadLibrary(LPCTSTR filename);
 
 
 #if !defined(LOAD_WITH_ALTERED_SEARCH_PATH)
@@ -61,7 +61,7 @@ typedef HMODULE (APIENTRY *LOADLIBRARYEX_FN)(LPCTSTR, HANDLE, DWORD);
 
 
 /*
- * Curl_load_library()
+ * _Expat_LoadLibrary()
  *
  * This is used to dynamically load DLLs using the most secure method available
  * for the version of Windows that we are running on.
@@ -74,7 +74,7 @@ typedef HMODULE (APIENTRY *LOADLIBRARYEX_FN)(LPCTSTR, HANDLE, DWORD);
  *
  * Returns the handle of the module on success; otherwise NULL.
  */
-HMODULE Curl_load_library(LPCTSTR filename)
+HMODULE _Expat_LoadLibrary(LPCTSTR filename)
 {
   HMODULE hModule = NULL;
   LOADLIBRARYEX_FN pLoadLibraryEx = NULL;
