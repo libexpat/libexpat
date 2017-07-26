@@ -7,16 +7,24 @@
  *
  * Copyright (C) 2016 - 2017, Steve Holme, <steve_holme@hotmail.com>.
  *
- * This software is licensed as described in the file COPYING, which
- * you should have received as part of this distribution. The terms
- * are also available at https://curl.haxx.se/docs/copyright.html.
+ * All rights reserved.
  *
- * You may opt to use, copy, modify, merge, publish, distribute and/or sell
- * copies of the Software, and permit persons to whom the Software is
- * furnished to do so, under the terms of the COPYING file.
+ * Permission to  use, copy,  modify, and distribute  this software  for any
+ * purpose with  or without fee is  hereby granted, provided that  the above
+ * copyright notice and this permission notice appear in all copies.
  *
- * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
- * KIND, either express or implied.
+ * THE  SOFTWARE  IS  PROVIDED  "AS  IS",  WITHOUT  WARRANTY  OF  ANY  KIND,
+ * EXPRESS  OR IMPLIED,  INCLUDING  BUT  NOT LIMITED  TO  THE WARRANTIES  OF
+ * MERCHANTABILITY, FITNESS FOR A  PARTICULAR PURPOSE AND NONINFRINGEMENT OF
+ * THIRD PARTY RIGHTS. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+ * LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
+ * CONTRACT, TORT OR  OTHERWISE, ARISING FROM, OUT OF OR  IN CONNECTION WITH
+ * THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
+ * Except as contained in this notice,  the name of a copyright holder shall
+ * not be used in advertising or otherwise to promote the sale, use or other
+ * dealings  in this  Software without  prior written  authorization of  the
+ * copyright holder.
  *
  ***************************************************************************/
 
