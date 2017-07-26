@@ -11766,23 +11766,9 @@ START_TEST(test_nsalloc_long_default_in_ext)
         { NULL, NULL }
     };
     int i;
-#define MAX_ALLOC_COUNT 30
-    int repeat = 0;
+#define MAX_ALLOC_COUNT 50
 
     for (i = 0; i < MAX_ALLOC_COUNT; i++) {
-        /* Repeat some counts to defeat allocation caching */
-        if ((i == 4 && repeat == 3) || (i == 8 && repeat == 9)) {
-            i -= 2;
-            repeat++;
-        }
-        else if ((i == 2 && repeat < 2) ||
-                 (i == 3 && (repeat == 2 || repeat == 4 || repeat == 5)) ||
-                 (i == 4 && repeat == 6) ||
-                 (i == 5 && repeat == 7) ||
-                 (i == 6 && repeat == 8)) {
-            i--;
-            repeat++;
-        }
         allocation_count = i;
         XML_SetUserData(parser, options);
         XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
@@ -11791,8 +11777,9 @@ START_TEST(test_nsalloc_long_default_in_ext)
                                     XML_TRUE) != XML_STATUS_ERROR)
             break;
 
-        XML_ParserFree(parser);
-        parser = XML_ParserCreate(NULL);
+        /* See comment in test_nsalloc_xmlns() */
+        nsalloc_teardown();
+        nsalloc_setup();
     }
     if (i == 0)
         fail("Parsing worked despite failing allocations");
