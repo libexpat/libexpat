@@ -11302,7 +11302,7 @@ END_TEST
  * returns normally it must have succeeded.
  */
 static void
-context_realloc_test(XML_Parser parser, const char *text)
+context_realloc_test(const char *text)
 {
     ExtOption options[] = {
         { "foo", "<!ELEMENT e EMPTY>"},
@@ -11320,7 +11320,9 @@ context_realloc_test(XML_Parser parser, const char *text)
         if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
                                     XML_TRUE) != XML_STATUS_ERROR)
             break;
-        XML_ParserReset(parser, NULL);
+        /* See comment in test_nsalloc_xmlns() */
+        nsalloc_teardown();
+        nsalloc_setup();
     }
     if (i == 0)
         fail("Parsing worked despite failing reallocations");
@@ -11357,7 +11359,7 @@ START_TEST(test_nsalloc_realloc_long_context)
         "&en;"
         "</doc>";
 
-    context_realloc_test(parser, text);
+    context_realloc_test(text);
 }
 END_TEST
 
@@ -11389,7 +11391,7 @@ START_TEST(test_nsalloc_realloc_long_context_2)
         "&en;"
         "</doc>";
 
-    context_realloc_test(parser, text);
+    context_realloc_test(text);
 }
 END_TEST
 
@@ -11421,7 +11423,7 @@ START_TEST(test_nsalloc_realloc_long_context_3)
         "&en;"
         "</doc>";
 
-    context_realloc_test(parser, text);
+    context_realloc_test(text);
 }
 END_TEST
 
@@ -11453,7 +11455,7 @@ START_TEST(test_nsalloc_realloc_long_context_4)
         "&en;"
         "</doc>";
 
-    context_realloc_test(parser, text);
+    context_realloc_test(text);
 }
 END_TEST
 
@@ -11485,7 +11487,7 @@ START_TEST(test_nsalloc_realloc_long_context_5)
         "&en;"
         "</doc>";
 
-    context_realloc_test(parser, text);
+    context_realloc_test(text);
 }
 END_TEST
 
@@ -11516,7 +11518,7 @@ START_TEST(test_nsalloc_realloc_long_context_6)
         "&en;"
         "</doc>";
 
-    context_realloc_test(parser, text);
+    context_realloc_test(text);
 }
 END_TEST
 
@@ -11548,7 +11550,7 @@ START_TEST(test_nsalloc_realloc_long_context_7)
         "&en;"
         "</doc>";
 
-    context_realloc_test(parser, text);
+    context_realloc_test(text);
 }
 END_TEST
 
