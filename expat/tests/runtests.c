@@ -339,16 +339,16 @@ external_entity_optioner(XML_Parser parser,
 
     while (options->parse_text != NULL) {
         if (!strcmp(systemId, options->system_id)) {
+            enum XML_Status rc;
             ext_parser =
                 XML_ExternalEntityParserCreate(parser, context, NULL);
             if (ext_parser == NULL)
                 return XML_STATUS_ERROR;
-            if (_XML_Parse_SINGLE_BYTES(ext_parser, options->parse_text,
-                                        strlen(options->parse_text),
-                                        XML_TRUE) == XML_STATUS_ERROR)
-                return XML_STATUS_ERROR;
+            rc = _XML_Parse_SINGLE_BYTES(ext_parser, options->parse_text,
+                                         strlen(options->parse_text),
+                                         XML_TRUE);
             XML_ParserFree(ext_parser);
-            return XML_STATUS_OK;
+            return rc;
         }
         options++;
     }
