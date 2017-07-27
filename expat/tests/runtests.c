@@ -9095,13 +9095,16 @@ START_TEST(test_alloc_realloc_implied_attribute)
         "]><doc/>";
     int i;
 #define MAX_REALLOC_COUNT 10
+
     for (i = 0; i < MAX_REALLOC_COUNT; i++) {
         reallocation_count = i;
         XML_SetAttlistDeclHandler(parser, dummy_attlist_decl_handler);
         if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
                                     XML_TRUE) != XML_STATUS_ERROR)
             break;
-        XML_ParserReset(parser, NULL);
+        /* See comment in test_alloc_parse_xdecl() */
+        alloc_teardown();
+        alloc_setup();
     }
     if (i == 0)
         fail("Parse succeeded despite failing reallocator");
