@@ -8314,23 +8314,9 @@ START_TEST(test_alloc_external_entity)
         "&en;\n"
         "</doc>";
     int i;
-    int repeat = 0;
 #define ALLOC_TEST_MAX_REPEATS 50
 
     for (i = 0; i < ALLOC_TEST_MAX_REPEATS; i++) {
-        /* Some allocation counts need to be repeated to follow all
-         * the failure paths, given some allocations are cached.
-         */
-        if (i == 11 && repeat == 7) {
-            i -= 2;
-            repeat++;
-        } else if ((i == 1 && repeat < 2) ||
-                   (i == 2 && repeat < 4) ||
-                   (repeat < 7 && i == repeat+2) ||
-                   (i == 10 && repeat == 8)) {
-            i--;
-            repeat++;
-        }
         allocation_count = -1;
         XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
         XML_SetExternalEntityRefHandler(parser,
@@ -8340,7 +8326,9 @@ START_TEST(test_alloc_external_entity)
         if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
                                     XML_TRUE) == XML_STATUS_OK)
             break;
-        XML_ParserReset(parser, NULL);
+        /* See comment in test_alloc_parse_xdecl() */
+        alloc_teardown();
+        alloc_setup();
     }
     allocation_count = -1;
     if (i == 0)
