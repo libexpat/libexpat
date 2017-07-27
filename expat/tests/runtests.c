@@ -8544,17 +8544,19 @@ START_TEST(test_alloc_set_base)
 {
     const XML_Char *new_base = "/local/file/name.xml";
     int i;
+#define MAX_ALLOC_COUNT 5
 
-    for (i = 0; i < 5; i++) {
+    for (i = 0; i < MAX_ALLOC_COUNT; i++) {
         allocation_count = i;
         if (XML_SetBase(parser, new_base) == XML_STATUS_OK)
             break;
     }
     if (i == 0)
         fail("Base set despite failing allocator");
-    else if (i == 5)
-        fail("Base not set with allocation count 5");
+    else if (i == MAX_ALLOC_COUNT)
+        fail("Base not set with max allocation count");
 }
+#undef MAX_ALLOC_COUNT
 END_TEST
 
 /* Test buffer extension in the face of a duff reallocator */
