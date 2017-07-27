@@ -8427,27 +8427,25 @@ START_TEST(test_alloc_internal_entity)
         "<!DOCTYPE test [<!ENTITY foo 'bar'>]>\n"
         "<test a='&foo;'/>";
     unsigned int i;
-    int repeated = 0;
+#define MAX_ALLOC_COUNT 20
 
-    for (i = 0; i < 10; i++) {
-        /* Again, repeat some counts to account for caching */
-        if (repeated < 2 && i == 2) {
-            i--;
-            repeated++;
-        }
+    for (i = 0; i < MAX_ALLOC_COUNT; i++) {
+        allocation_count = i;
         XML_SetUnknownEncodingHandler(parser,
                                       unknown_released_encoding_handler,
                                       NULL);
-        allocation_count = i;
         if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text), XML_TRUE) != XML_STATUS_ERROR)
             break;
-        XML_ParserReset(parser, NULL);
+        /* See comment in test_alloc_parse_xdecl() */
+        alloc_teardown();
+        alloc_setup();
     }
     if (i == 0)
         fail("Internal entity worked despite failing allocations");
-    else if (i == 10)
-        fail("Internal entity failed at allocation count 10");
+    else if (i == MAX_ALLOC_COUNT)
+        fail("Internal entity failed at max allocation count");
 }
+#undef MAX_ALLOC_COUNT
 END_TEST
 
 
