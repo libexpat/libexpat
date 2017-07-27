@@ -8104,9 +8104,10 @@ external_entity_duff_loader(XML_Parser parser,
 {
     XML_Parser new_parser;
     unsigned int i;
+#define MAX_ALLOC_COUNT 10
 
     /* Try a few different allocation levels */
-    for (i = 0; i < 10; i++)
+    for (i = 0; i < MAX_ALLOC_COUNT; i++)
     {
         allocation_count = i;
         new_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
@@ -8118,14 +8119,15 @@ external_entity_duff_loader(XML_Parser parser,
     }
     if (i == 0)
         fail("External parser creation ignored failing allocator");
-    else if (i == 10)
-        fail("Extern parser not created with allocation count 10");
+    else if (i == MAX_ALLOC_COUNT)
+        fail("Extern parser not created with max allocation count");
 
     /* Make sure other random allocation doesn't now fail */
     allocation_count = ALLOC_ALWAYS_SUCCEED;
 
     /* Make sure the failure code path is executed too */
     return XML_STATUS_ERROR;
+#undef MAX_ALLOC_COUNT
 }
 
 /* Test that external parser creation running out of memory is
