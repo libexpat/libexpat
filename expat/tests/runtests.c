@@ -8565,15 +8565,10 @@ START_TEST(test_alloc_realloc_buffer)
     const char *text = get_buffer_test_text;
     void *buffer;
     int i;
-    int repeat = 0;
+#define MAX_REALLOC_COUNT 10
 
     /* Get a smallish buffer */
-    for (i = 0; i < 10; i++) {
-        /* Repeat some indexes for cached allocations */
-        if (repeat < 6 && i == 2) {
-            i--;
-            repeat++;
-        }
+    for (i = 0; i < MAX_REALLOC_COUNT; i++) {
         reallocation_count = i;
         buffer = XML_GetBuffer(parser, 1536);
         if (buffer == NULL)
@@ -8582,14 +8577,17 @@ START_TEST(test_alloc_realloc_buffer)
         if (XML_ParseBuffer(parser, strlen(text),
                             XML_FALSE) == XML_STATUS_OK)
             break;
-        XML_ParserReset(parser, NULL);
+        /* See comment in test_alloc_parse_xdecl() */
+        alloc_teardown();
+        alloc_setup();
     }
     reallocation_count = -1;
     if (i == 0)
         fail("Parse succeeded with no reallocation");
-    else if (i == 10)
-        fail("Parse failed with reallocation count 10");
+    else if (i == MAX_REALLOC_COUNT)
+        fail("Parse failed with max reallocation count");
 }
+#undef MAX_REALLOC_COUNT
 END_TEST
 
 /* Same test for external entity parsers */
