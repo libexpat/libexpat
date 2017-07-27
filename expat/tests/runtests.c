@@ -9508,26 +9508,18 @@ START_TEST(test_alloc_pi_in_epilog)
         "<doc></doc>\n"
         "<?pi in epilog?>";
     int i;
-#define MAX_ALLOC_COUNT 10
-    int repeat = 0;
+#define MAX_ALLOC_COUNT 15
 
     for (i = 0; i < MAX_ALLOC_COUNT; i++) {
-        /* Repeat certain counts to allow for cached allocations */
-        if (i == 3 && repeat == 1) {
-            i -= 2;
-            repeat++;
-        }
-        else if (i == 2 && repeat < 4 && repeat != 1) {
-            i--;
-            repeat++;
-        }
         allocation_count = i;
         XML_SetProcessingInstructionHandler(parser, dummy_pi_handler);
         dummy_handler_flags = 0;
         if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
                                     XML_TRUE) != XML_STATUS_ERROR)
             break;
-        XML_ParserReset(parser, NULL);
+        /* See comment in test_alloc_parse_xdecl() */
+        alloc_teardown();
+        alloc_setup();
     }
     if (i == 0)
         fail("Parse completed despite failing allocator");
