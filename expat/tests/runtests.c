@@ -7972,25 +7972,17 @@ START_TEST(test_alloc_parse_pi_2)
         "<?pi unknown?>\n"
         "</doc>";
     int i;
-    int repeat = 0;
-#define MAX_ALLOC_COUNT 10
+#define MAX_ALLOC_COUNT 15
 
     for (i = 0; i < MAX_ALLOC_COUNT; i++) {
         allocation_count = i;
-        /* Repeat some counts because of cached memory */
-        if (i == 2 && repeat == 1) {
-            i -= 2;
-            repeat++;
-        } else if ((i == 1 && repeat < 1) ||
-                   (i == 1 && repeat > 1 && repeat < 4)) {
-            i--;
-            repeat++;
-        }
         XML_SetProcessingInstructionHandler(parser, dummy_pi_handler);
         if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
                                     XML_TRUE) != XML_STATUS_ERROR)
             break;
-        XML_ParserReset(parser, NULL);
+        /* See comment in test_alloc_parse_xdecl() */
+        alloc_teardown();
+        alloc_setup();
     }
     if (i == 0)
         fail("Parse succeeded despite failing allocator");
