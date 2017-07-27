@@ -8626,21 +8626,25 @@ START_TEST(test_alloc_ext_entity_realloc_buffer)
         "]>\n"
         "<doc>&en;</doc>";
     int i;
+#define MAX_REALLOC_COUNT 10
 
-    for (i = 0; i < 10; i++) {
+    for (i = 0; i < MAX_REALLOC_COUNT; i++) {
         XML_SetExternalEntityRefHandler(parser,
                                         external_entity_reallocator);
         XML_SetUserData(parser, (void *)(intptr_t)i);
         if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
                                     XML_TRUE) == XML_STATUS_OK)
             break;
-        XML_ParserReset(parser, NULL);
+        /* See comment in test_alloc_parse_xdecl() */
+        alloc_teardown();
+        alloc_setup();
     }
     if (i == 0)
         fail("Succeeded with no reallocations");
-    if (i == 10)
-        fail("Failed with 10 reallocations");
+    if (i == MAX_REALLOC_COUNT)
+        fail("Failed with max reallocations");
 }
+#undef MAX_REALLOC_COUNT
 END_TEST
 
 /* Test elements with many attributes are handled correctly */
