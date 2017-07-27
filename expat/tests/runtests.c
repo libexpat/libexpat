@@ -8015,16 +8015,17 @@ START_TEST(test_alloc_parse_pi_3)
         "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
         "Q?><doc/>";
     int i;
-#define MAX_ALLOC_COUNT 10
+#define MAX_ALLOC_COUNT 20
 
     for (i = 0; i < MAX_ALLOC_COUNT; i++) {
-        /* Every allocation bar the last is cached */
-        allocation_count = (i == 0) ? 0 : 1;
+        allocation_count = i;
         XML_SetProcessingInstructionHandler(parser, dummy_pi_handler);
         if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
                                     XML_TRUE) != XML_STATUS_ERROR)
             break;
-        XML_ParserReset(parser, NULL);
+        /* See comment in test_alloc_parse_xdecl() */
+        alloc_teardown();
+        alloc_setup();
     }
     if (i == 0)
         fail("Parse succeeded despite failing allocator");
