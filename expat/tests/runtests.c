@@ -8156,8 +8156,9 @@ START_TEST(test_alloc_run_external_parser)
     char foo_text[] =
         "<!ELEMENT doc (#PCDATA)*>";
     unsigned int i;
+#define MAX_ALLOC_COUNT 15
 
-    for (i = 0; i < 10; i++) {
+    for (i = 0; i < MAX_ALLOC_COUNT; i++) {
         XML_SetParamEntityParsing(parser,
                                   XML_PARAM_ENTITY_PARSING_ALWAYS);
         XML_SetUserData(parser, foo_text);
@@ -8166,14 +8167,16 @@ START_TEST(test_alloc_run_external_parser)
         allocation_count = i;
         if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text), XML_TRUE) != XML_STATUS_ERROR)
             break;
-        /* Re-use the parser */
-        XML_ParserReset(parser, NULL);
+        /* See comment in test_alloc_parse_xdecl() */
+        alloc_teardown();
+        alloc_setup();
     }
     if (i == 0)
         fail("Parsing ignored failing allocator");
-    else if (i == 10)
+    else if (i == MAX_ALLOC_COUNT)
         fail("Parsing failed with allocation count 10");
 }
+#undef MAX_ALLOC_COUNT
 END_TEST
 
 
