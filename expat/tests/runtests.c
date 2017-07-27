@@ -8524,17 +8524,19 @@ END_TEST
 START_TEST(test_alloc_explicit_encoding)
 {
     int i;
+#define MAX_ALLOC_COUNT 5
 
-    for (i = 0; i < 5; i++) {
+    for (i = 0; i < MAX_ALLOC_COUNT; i++) {
         allocation_count = i;
         if (XML_SetEncoding(parser, "us-ascii") == XML_STATUS_OK)
             break;
     }
     if (i == 0)
         fail("Encoding set despite failing allocator");
-    else if (i == 5)
-        fail("Encoding not set at allocation count 5");
+    else if (i == MAX_ALLOC_COUNT)
+        fail("Encoding not set at max allocation count");
 }
+#undef MAX_ALLOC_COUNT
 END_TEST
 
 /* Test robustness of XML_SetBase against a failing allocator */
