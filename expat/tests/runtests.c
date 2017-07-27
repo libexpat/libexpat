@@ -8197,6 +8197,7 @@ external_entity_dbl_handler(XML_Parser parser,
     const char *text;
     XML_Parser new_parser;
     int i;
+#define MAX_ALLOC_COUNT 20
 
     if (callno == 0) {
         /* First time through, check how many calls to malloc occur */
@@ -8215,7 +8216,7 @@ external_entity_dbl_handler(XML_Parser parser,
         text = ("<?xml version='1.0' encoding='us-ascii'?>"
                 "<e/>");
         /* Try at varying levels to exercise more code paths */
-        for (i = 0; i < 20; i++) {
+        for (i = 0; i < MAX_ALLOC_COUNT; i++) {
             allocation_count = callno + i;
             new_parser = XML_ExternalEntityParserCreate(parser,
                                                         context,
@@ -8228,7 +8229,7 @@ external_entity_dbl_handler(XML_Parser parser,
             XML_ParserFree(new_parser);
             return XML_STATUS_ERROR;
         }
-        else if (i == 20) {
+        else if (i == MAX_ALLOC_COUNT) {
             fail("Second external parser not created");
             return XML_STATUS_ERROR;
         }
@@ -8241,6 +8242,7 @@ external_entity_dbl_handler(XML_Parser parser,
     }
     XML_ParserFree(new_parser);
     return XML_STATUS_OK;
+#undef MAX_ALLOC_COUNT
 }
 
 /* Test that running out of memory in dtdCopy is correctly reported.
