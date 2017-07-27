@@ -8377,17 +8377,9 @@ START_TEST(test_alloc_ext_entity_set_encoding)
         "]>\n"
         "<doc>&en;</doc>";
     int i;
-    int repeat = 0;
-#define MAX_ALLOCATION_COUNT 20
+#define MAX_ALLOCATION_COUNT 30
 
     for (i = 0; i < MAX_ALLOCATION_COUNT; i++) {
-        /* Repeat some counts to get round caching */
-        if ((i == 2 && repeat < 3) ||
-            (i == 3 && repeat < 6) ||
-            (i == 4 && repeat == 6)) {
-            i--;
-            repeat++;
-        }
         XML_SetExternalEntityRefHandler(parser,
                                         external_entity_alloc_set_encoding);
         allocation_count = i;
@@ -8395,7 +8387,9 @@ START_TEST(test_alloc_ext_entity_set_encoding)
                                     XML_TRUE) == XML_STATUS_OK)
             break;
         allocation_count = -1;
-        XML_ParserReset(parser, NULL);
+        /* See comment in test_alloc_parse_xdecl() */
+        alloc_teardown();
+        alloc_setup();
     }
     if (i == 0)
         fail("Encoding check succeeded despite failing allocator");
