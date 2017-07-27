@@ -10169,22 +10169,9 @@ START_TEST(test_alloc_long_notation)
         { NULL, NULL }
     };
     int i;
-#define MAX_ALLOC_COUNT 20
-    int repeat = 0;
+#define MAX_ALLOC_COUNT 40
 
     for (i = 0; i < MAX_ALLOC_COUNT; i++) {
-        /* Repeat some counts to defeat cached allocations */
-        if (i == 5 && repeat == 5) {
-            i -= 2;
-            repeat++;
-        }
-        else if ((i == 2 && repeat < 3) ||
-                 (i == 3 && (repeat == 3 || repeat == 4)) ||
-                 (i == 4 && repeat == 6) ||
-                 (i == 5 && repeat == 7)) {
-            i--;
-            repeat++;
-        }
         allocation_count = i;
         XML_SetUserData(parser, options);
         XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
@@ -10193,8 +10180,9 @@ START_TEST(test_alloc_long_notation)
                                     XML_TRUE) != XML_STATUS_ERROR)
             break;
 
-        XML_ParserFree(parser);
-        parser = XML_ParserCreate(NULL);
+        /* See comment in test_alloc_parse_xdecl() */
+        alloc_teardown();
+        alloc_setup();
     }
     if (i == 0)
         fail("Parsing worked despite failing allocations");
