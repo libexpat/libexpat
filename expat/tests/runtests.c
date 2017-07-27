@@ -7633,9 +7633,10 @@ START_TEST(test_misc_alloc_create_parser_with_encoding)
 {
     XML_Memory_Handling_Suite memsuite = { duff_allocator, realloc, free };
     unsigned int i;
+#define MAX_ALLOC_COUNT 10
 
     /* Try several levels of allocation */
-    for (i = 0; i < 10; i++) {
+    for (i = 0; i < MAX_ALLOC_COUNT; i++) {
         allocation_count = i;
         parser = XML_ParserCreate_MM("us-ascii", &memsuite, NULL);
         if (parser != NULL)
@@ -7643,9 +7644,10 @@ START_TEST(test_misc_alloc_create_parser_with_encoding)
     }
     if (i == 0)
         fail("Parser ignored failing allocator");
-    else if (i == 10)
-        fail("Parser not created with allocation count 10");
+    else if (i == MAX_ALLOC_COUNT)
+        fail("Parser not created with max allocation count");
 }
+#undef MAX_ALLOC_COUNT
 END_TEST
 
 /* Test that freeing a NULL parser doesn't cause an explosion.
