@@ -80,7 +80,7 @@ these instructions (after having run `make distclean`):
    For UTF-16 output as `wchar_t` (incl. version/error strings), run:<br/>
    `./configure CFLAGS="-g -O2 -fshort-wchar" CPPFLAGS=-DXML_UNICODE_WCHAR_T`
 
-1. Edit the MakeFile, changing:<br/>
+1. Edit `Makefile`, changing:<br/>
    `LIBRARY = libexpat.la`<br/>
    to:<br/>
    `LIBRARY = libexpatw.la`<br/>
