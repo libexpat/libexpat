@@ -35,7 +35,7 @@ Flags: ignoreversion; Source: win32\MANIFEST.txt;           DestDir: "{app}"
 Flags: ignoreversion; Source: AUTHORS;                      DestDir: "{app}"; DestName: AUTHORS.txt
 Flags: ignoreversion; Source: Changes;                      DestDir: "{app}"; DestName: Changes.txt
 Flags: ignoreversion; Source: COPYING;                      DestDir: "{app}"; DestName: COPYING.txt
-Flags: ignoreversion; Source: README;                       DestDir: "{app}"; DestName: README.txt
+Flags: ignoreversion; Source: README.md;                    DestDir: "{app}"; DestName: README.txt
 Flags: ignoreversion; Source: doc\*.html;                   DestDir: "{app}\Doc"
 Flags: ignoreversion; Source: doc\*.css;                    DestDir: "{app}\Doc"
 Flags: ignoreversion; Source: doc\*.png;                    DestDir: "{app}\Doc"
