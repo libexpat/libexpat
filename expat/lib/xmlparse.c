@@ -21,6 +21,8 @@
 #include <sys/time.h>                   /* gettimeofday() */
 #include <sys/types.h>                  /* getpid() */
 #include <unistd.h>                     /* getpid() */
+#include <fcntl.h>                      /* O_RDONLY */
+#include <errno.h>
 #endif
 
 #define XML_BUILDING_EXPAT 1
@@ -36,13 +38,15 @@
 #include "siphash.h"
 
 #if defined(HAVE_GETRANDOM) || defined(HAVE_SYSCALL_GETRANDOM)
-# include <errno.h>
 # if defined(HAVE_GETRANDOM)
 #  include <sys/random.h>    /* getrandom */
 # else
 #  include <unistd.h>        /* syscall */
 #  include <sys/syscall.h>   /* SYS_getrandom */
 # endif
+# if ! defined(GRND_NONBLOCK)
+#  define GRND_NONBLOCK  0x0001
+# endif  /* defined(GRND_NONBLOCK) */
 #endif  /* defined(HAVE_GETRANDOM) || defined(HAVE_SYSCALL_GETRANDOM) */
 
 #if defined(HAVE_LIBBSD) \
@@ -751,10 +755,10 @@ static const XML_Char implicitContext[] = {
 
 /* Obtain entropy on Linux 3.17+ */
 static int
-writeRandomBytes_getrandom(void * target, size_t count) {
+writeRandomBytes_getrandom_nonblock(void * target, size_t count) {
   int success = 0;  /* full count bytes written? */
   size_t bytesWrittenTotal = 0;
-  const unsigned int getrandomFlags = 0;
+  const unsigned int getrandomFlags = GRND_NONBLOCK;
 
   do {
     void * const currentTarget = (void*)((char*)target + bytesWrittenTotal);
@@ -772,12 +776,45 @@ writeRandomBytes_getrandom(void * target, size_t count) {
       if (bytesWrittenTotal >= count)
         success = 1;
     }
-  } while (! success && (errno == EINTR || errno == EAGAIN));
+  } while (! success && (errno == EINTR));
 
   return success;
 }
 
 #endif  /* defined(HAVE_GETRANDOM) || defined(HAVE_SYSCALL_GETRANDOM) */
+
+
+#if ! defined(_WIN32)
+
+/* Extract entropy from /dev/urandom */
+static int
+writeRandomBytes_dev_urandom(void * target, size_t count) {
+  int success = 0;  /* full count bytes written? */
+  size_t bytesWrittenTotal = 0;
+
+  const int fd = open("/dev/urandom", O_RDONLY);
+  if (fd < 0) {
+    return 0;
+  }
+
+  do {
+    void * const currentTarget = (void*)((char*)target + bytesWrittenTotal);
+    const size_t bytesToWrite = count - bytesWrittenTotal;
+
+    const ssize_t bytesWrittenMore = read(fd, currentTarget, bytesToWrite);
+
+    if (bytesWrittenMore > 0) {
+      bytesWrittenTotal += bytesWrittenMore;
+      if (bytesWrittenTotal >= count)
+        success = 1;
+    }
+  } while (! success && (errno == EINTR));
+
+  close(fd);
+  return success;
+}
+
+#endif  /* ! defined(_WIN32) */
 
 
 #if defined(HAVE_ARC4RANDOM)
@@ -898,10 +935,15 @@ generate_hash_secret_salt(XML_Parser parser)
     return ENTROPY_DEBUG("RtlGenRandom", entropy);
   }
 #elif defined(HAVE_GETRANDOM) || defined(HAVE_SYSCALL_GETRANDOM)
-  if (writeRandomBytes_getrandom((void *)&entropy, sizeof(entropy))) {
+  if (writeRandomBytes_getrandom_nonblock((void *)&entropy, sizeof(entropy))) {
     return ENTROPY_DEBUG("getrandom", entropy);
   }
 #endif
+#if ! defined(_WIN32)
+  if (writeRandomBytes_dev_urandom((void *)&entropy, sizeof(entropy))) {
+    return ENTROPY_DEBUG("/dev/urandom", entropy);
+  }
+#endif  /* ! defined(_WIN32) */
   /* .. and self-made low quality for backup: */
 
   /* Process ID is 0 bits entropy if attacker has local access */

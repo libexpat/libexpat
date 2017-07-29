@@ -12,14 +12,19 @@ Release 2.2.? ????????????????
 
         Other changes:
                   Increase code coverage
+             #91  Linux: Allow getrandom to fail if nonblocking pool has not
+                    yet been initialized and read /dev/urandom then, instead.
+                    This is in line with what recent Python does.
              #23  Test suite: Fix memory leaks
                   Rely on macro HAVE_ARC4RANDOM_BUF (rather than __CloudABI__)
                     for CloudABI
             #100  Fix use of SIPHASH_MAIN in siphash.h
 
         Special thanks to:
+            Chanho Park
             Pascal Cuoq
             Rhodri James
+            Simon McVittie
             Vadim Zeitlin
             Viktor Szakats
                  and
