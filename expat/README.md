@@ -14,10 +14,11 @@ which includes both precompiled libraries and executables, and source code for
 developers.
 
 Expat is [free software](https://www.gnu.org/philosophy/free-sw.en.html).
-You may copy, distribute, and modify it under
-the terms of the License contained in the file [`COPYING`](COPYING) distributed
-with this package.  This license is the same as the MIT/X Consortium
-license.
+You may copy, distribute, and modify it under the terms of the License
+contained in the file
+[`COPYING`](https://github.com/libexpat/libexpat/blob/master/expat/COPYING)
+distributed with this package.
+This license is the same as the MIT/X Consortium license.
 
 If you are building Expat from a check-out from the
 [Git repository](https://github.com/libexpat/libexpat/),
