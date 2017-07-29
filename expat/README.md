@@ -13,8 +13,9 @@ Windows users should use the
 which includes both precompiled libraries and executables, and source code for
 developers.
 
-Expat is free software.  You may copy, distribute, and modify it under
-the terms of the License contained in the file `COPYING` distributed
+Expat is [free software](https://www.gnu.org/philosophy/free-sw.en.html).
+You may copy, distribute, and modify it under
+the terms of the License contained in the file [`COPYING`](COPYING) distributed
 with this package.  This license is the same as the MIT/X Consortium
 license.
 
