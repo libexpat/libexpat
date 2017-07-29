@@ -4,7 +4,6 @@ NOTE: We are looking for help with a few things:
 
 Release 2.2.? ????????????????
         Security fixes:
-             #81  Pre-10.7/Lion macOS: Support entropy from arc4random
              #82  Windows: Fix DLL hijacking vulnerability using
                     Steve Holme's LoadLibrary wrapper for/of cURL
 
@@ -16,13 +15,14 @@ Release 2.2.? ????????????????
              #91  Linux: Allow getrandom to fail if nonblocking pool has not
                     yet been initialized and read /dev/urandom then, instead.
                     This is in line with what recent Python does.
-             #23  Test suite: Fix memory leaks
-                  Rely on macro HAVE_ARC4RANDOM_BUF (rather than __CloudABI__)
-                    for CloudABI
-            #100  Fix use of SIPHASH_MAIN in siphash.h
+             #81  Pre-10.7/Lion macOS: Support entropy from arc4random
                   Repair "./configure && make" for systems without any
                     provider of high quality entropy
                     and try reading /dev/urandom on those
+                  Rely on macro HAVE_ARC4RANDOM_BUF (rather than __CloudABI__)
+                    for CloudABI
+            #100  Fix use of SIPHASH_MAIN in siphash.h
+             #23  Test suite: Fix memory leaks
 
         Special thanks to:
             Chanho Park
