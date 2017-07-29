@@ -78,6 +78,7 @@ these instructions (after having run `make distclean`):
    `./configure CPPFLAGS=-DXML_UNICODE`<br/>
    For UTF-16 output as `wchar_t` (incl. version/error strings), run:<br/>
    `./configure CFLAGS="-g -O2 -fshort-wchar" CPPFLAGS=-DXML_UNICODE_WCHAR_T`
+   <br/>Note: The latter requires libc compiled with `-fshort-wchar`, as well.
 
 1. Edit `Makefile`, changing:<br/>
    `LIBRARY = libexpat.la`<br/>
