@@ -199,6 +199,8 @@ AC_DEFINE([XML_NS], 1,
           [Define to make XML Namespaces functionality available.])
 AC_DEFINE([XML_DTD], 1,
           [Define to make parameter entity parsing functionality available.])
+AC_DEFINE([XML_DEV_URANDOM], 1,
+          [Define to include code reading entropy from `/dev/urandom'.])
 
 AC_ARG_ENABLE([xml-context],
   AS_HELP_STRING([--enable-xml-context @<:@COUNT@:>@],

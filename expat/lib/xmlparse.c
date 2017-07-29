@@ -60,6 +60,7 @@
 
 #if !defined(HAVE_GETRANDOM) && !defined(HAVE_SYSCALL_GETRANDOM) \
     && !defined(HAVE_ARC4RANDOM_BUF) && !defined(HAVE_ARC4RANDOM) \
+    && !defined(XML_DEV_URANDOM) \
     && !defined(_WIN32) \
     && !defined(XML_POOR_ENTROPY)
 # error  \
@@ -73,6 +74,7 @@
       * BSD / macOS <10.7 (arc4random): HAVE_ARC4RANDOM, \
       * libbsd (arc4random_buf): HAVE_ARC4RANDOM_BUF + HAVE_LIBBSD, \
       * libbsd (arc4random): HAVE_ARC4RANDOM + HAVE_LIBBSD, \
+      * Linux / BSD / macOS (/dev/urandom): XML_DEV_URANDOM \
       * Windows (RtlGenRandom): _WIN32. \
     \
     If insist on not using any of these, bypass this error by defining \
@@ -784,7 +786,7 @@ writeRandomBytes_getrandom_nonblock(void * target, size_t count) {
 #endif  /* defined(HAVE_GETRANDOM) || defined(HAVE_SYSCALL_GETRANDOM) */
 
 
-#if ! defined(_WIN32)
+#if ! defined(_WIN32) && defined(XML_DEV_URANDOM)
 
 /* Extract entropy from /dev/urandom */
 static int
@@ -814,7 +816,7 @@ writeRandomBytes_dev_urandom(void * target, size_t count) {
   return success;
 }
 
-#endif  /* ! defined(_WIN32) */
+#endif  /* ! defined(_WIN32) && defined(XML_DEV_URANDOM) */
 
 
 #if defined(HAVE_ARC4RANDOM)
@@ -934,11 +936,11 @@ generate_hash_secret_salt(XML_Parser parser)
     return ENTROPY_DEBUG("getrandom", entropy);
   }
 #endif
-#if ! defined(_WIN32)
+#if ! defined(_WIN32) && defined(XML_DEV_URANDOM)
   if (writeRandomBytes_dev_urandom((void *)&entropy, sizeof(entropy))) {
     return ENTROPY_DEBUG("/dev/urandom", entropy);
   }
-#endif  /* ! defined(_WIN32) */
+#endif  /* ! defined(_WIN32) && defined(XML_DEV_URANDOM) */
   /* .. and self-made low quality for backup: */
 
   /* Process ID is 0 bits entropy if attacker has local access */

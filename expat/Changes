@@ -20,6 +20,9 @@ Release 2.2.? ????????????????
                   Rely on macro HAVE_ARC4RANDOM_BUF (rather than __CloudABI__)
                     for CloudABI
             #100  Fix use of SIPHASH_MAIN in siphash.h
+                  Repair "./configure && make" for systems without any
+                    provider of high quality entropy
+                    and try reading /dev/urandom on those
 
         Special thanks to:
             Chanho Park
