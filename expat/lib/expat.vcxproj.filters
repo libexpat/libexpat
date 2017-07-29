@@ -15,6 +15,9 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="loadlibrary.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="xmlparse.c">
       <Filter>Source Files</Filter>
     </ClCompile>
