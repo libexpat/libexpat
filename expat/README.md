@@ -1,14 +1,16 @@
 # Expat, Release 2.2.2
 
-This is Expat, a C library for parsing XML, written by James Clark.
+This is Expat, a C library for parsing XML, started by
+[James Clark](https://en.wikipedia.org/wiki/James_Clark_(programmer)) in 1997.
 Expat is a stream-oriented XML parser.  This means that you register
 handlers with the parser before starting the parse.  These handlers
 are called when the parser discovers the associated structures in the
 document being parsed.  A start tag is an example of the kind of
 structures for which you may register handlers.
 
-Windows users should use the `expat_win32bin` package, which includes
-both precompiled libraries and executables, and source code for
+Windows users should use the
+[`expat_win32` package](https://sourceforge.net/projects/expat/files/expat_win32/),
+which includes both precompiled libraries and executables, and source code for
 developers.
 
 Expat is free software.  You may copy, distribute, and modify it under
@@ -16,12 +18,8 @@ the terms of the License contained in the file `COPYING` distributed
 with this package.  This license is the same as the MIT/X Consortium
 license.
 
-Versions of Expat that have an odd minor version (the middle number in
-the release above), are development releases and should be considered
-as beta software.  Releases with even minor version numbers are
-intended to be production grade software.
-
-If you are building Expat from a check-out from the CVS repository,
+If you are building Expat from a check-out from the
+[Git repository](https://github.com/libexpat/libexpat/),
 you need to run a script that generates the configure script using the
 GNU autoconf and libtool tools.  To do this, you need to have
 autoconf 2.58 or newer. Run the script like this:
@@ -116,17 +114,6 @@ environment, because variable-setting priority is
 Note: This only applies to the Expat library itself, building UTF-16 versions
 of xmlwf and the tests is currently not supported.
 
-Note for Solaris users:  The `ar` command is usually located in
-`/usr/ccs/bin`, which is not in the default `PATH`.  You will need to
-add this to your path for the `make` command, and probably also switch
-to GNU make (the `make` found in `/usr/ccs/bin` does not seem to work
-properly &mdash; apparently it does not understand `.PHONY` directives).  If
-you're using ksh or bash, use this command to build:
-
-```console
-PATH=/usr/ccs/bin:$PATH make
-```
-
 When using Expat with a project using autoconf for configuration, you
 can use the probing macro in `conftools/expat.m4` to determine how to
 include Expat.  See the comments at the top of that file for more
@@ -134,13 +121,3 @@ information.
 
 A reference manual is available in the file `doc/reference.html` in this
 distribution.
-
-The homepage for this project is http://www.libexpat.org/.  There
-are links there to connect you to the bug reports page.  If you need
-to report a bug when you don't have access to a browser, you may also
-send a bug report by email to expat-bugs@mail.libexpat.org.
-
-Discussion related to the direction of future expat development takes
-place on expat-discuss@mail.libexpat.org.  Archives of this list and
-other Expat-related lists may be found at
-http://mail.libexpat.org/mailman/listinfo/
