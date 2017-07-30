@@ -4,8 +4,8 @@ NOTE: We are looking for help with a few things:
 
 Release 2.2.? ????????????????
         Security fixes:
-             #82  Windows: Fix DLL hijacking vulnerability using
-                    Steve Holme's LoadLibrary wrapper for/of cURL
+             #82  CVE-2017-11742 -- Windows: Fix DLL hijacking vulnerability
+                    using Steve Holme's LoadLibrary wrapper for/of cURL
 
         Bug fixes:
              #85  Fix a dangling pointer issue related to realloc
