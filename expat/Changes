@@ -19,6 +19,8 @@ Release 2.2.? ????????????????
                   Repair "./configure && make" for systems without any
                     provider of high quality entropy
                     and try reading /dev/urandom on those
+                  Ensure that user-defined character encodings have converter
+                    functions when they are needed
                   Fix mis-leading description of argument -c in xmlwf.1
                   Rely on macro HAVE_ARC4RANDOM_BUF (rather than __CloudABI__)
                     for CloudABI
