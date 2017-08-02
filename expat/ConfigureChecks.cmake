@@ -1,3 +1,4 @@
+include(CheckCCompilerFlag)
 include(CheckIncludeFile)
 include(CheckIncludeFiles)
 include(CheckFunctionExists)
@@ -42,3 +43,5 @@ endif(HAVE_SYS_TYPES_H)
 
 configure_file(expat_config.h.cmake "${CMAKE_CURRENT_BINARY_DIR}/expat_config.h")
 add_definitions(-DHAVE_EXPAT_CONFIG_H)
+
+check_c_compiler_flag("-fno-strict-aliasing" FLAG_NO_STRICT_ALIASING)
