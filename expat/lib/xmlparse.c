@@ -6029,8 +6029,10 @@ defineAttribute(ELEMENT_TYPE *type, ATTRIBUTE_ID *attId, XML_Bool isCdata,
       type->allocDefaultAtts = 8;
       type->defaultAtts = (DEFAULT_ATTRIBUTE *)MALLOC(type->allocDefaultAtts
                             * sizeof(DEFAULT_ATTRIBUTE));
-      if (!type->defaultAtts)
+      if (!type->defaultAtts) {
+        type->allocDefaultAtts = 0;
         return 0;
+      }
     }
     else {
       DEFAULT_ATTRIBUTE *temp;
