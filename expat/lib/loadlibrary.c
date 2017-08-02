@@ -132,4 +132,10 @@ HMODULE _Expat_LoadLibrary(LPCTSTR filename)
   return hModule;
 }
 
+#else /* defined(_WIN32) */
+
+/* ISO C requires a translation unit to contain at least one declaration
+   [-Wempty-translation-unit] */
+typedef int _TRANSLATION_UNIT_LOAD_LIBRARY_C_NOT_EMTPY;
+
 #endif /* defined(_WIN32) */
