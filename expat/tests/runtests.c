@@ -7736,6 +7736,11 @@ START_TEST(test_misc_version)
         fail("Unable to parse version text");
     if (!versions_equal(&read_version, &parsed_version))
         fail("Version mismatch");
+
+#if ! defined(XML_UNICODE)
+    if (strcmp(version_text, "expat_2.2.2"))  /* needs bump on releases */
+        fail("XML_*_VERSION in expat.h out of sync?\n");
+#endif  /* ! defined(XML_UNICODE) */
 }
 END_TEST
 
