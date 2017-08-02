@@ -80,9 +80,6 @@
     If insist on not using any of these, bypass this error by defining \
     XML_POOR_ENTROPY; you have been warned. \
     \
-    For CMake, one way to pass the define is: \
-        cmake -DCMAKE_C_FLAGS="-pipe -O2 -DHAVE_SYSCALL_GETRANDOM" . \
-    \
     If you have reasons to patch this detection code away or need changes \
     to the build system, please open a bug.  Thank you!
 #endif

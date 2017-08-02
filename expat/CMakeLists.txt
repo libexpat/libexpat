@@ -15,6 +15,7 @@ option(BUILD_examples "build the examples for expat library" ON)
 option(BUILD_tests "build the tests for expat library" ON)
 option(BUILD_shared "build a shared expat library" ON)
 option(BUILD_doc "build man page for xmlwf" ON)
+option(USE_libbsd "utilize libbsd (for arc4random_buf)" OFF)
 option(INSTALL "install expat files in cmake install target" ON)
 
 # configuration options
@@ -78,6 +79,9 @@ else(BUILD_shared)
 endif(BUILD_shared)
 
 add_library(expat ${_SHARED} ${expat_SRCS})
+if(USE_libbsd)
+    target_link_libraries(expat bsd)
+endif()
 
 set(LIBCURRENT 7)   # sync
 set(LIBREVISION 5)  # with
