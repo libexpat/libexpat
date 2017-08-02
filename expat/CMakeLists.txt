@@ -77,7 +77,7 @@ endif(BUILD_shared)
 add_library(expat ${_SHARED} ${expat_SRCS})
 
 set(LIBCURRENT 7)   # sync
-set(LIBREVISION 4)  # with
+set(LIBREVISION 5)  # with
 set(LIBAGE 6)       # configure.ac!
 math(EXPR LIBCURRENT_MINUS_AGE "${LIBCURRENT} - ${LIBAGE}")
 

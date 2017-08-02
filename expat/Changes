@@ -29,6 +29,7 @@ Release 2.2.? ????????????????
                     for CloudABI
             #100  Fix use of SIPHASH_MAIN in siphash.h
              #23  Test suite: Fix memory leaks
+                  Version info bumped from 7:4:6 to 7:5:6
 
         Special thanks to:
             Chanho Park
