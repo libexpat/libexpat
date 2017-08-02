@@ -1,7 +1,7 @@
 /* Copyright (c) 1998, 1999, 2000 Thai Open Source Software Center Ltd
    See the file COPYING for copying permission.
 
-   cd4063469a95eab9a93001afb109e3dee122cdda4635bbec36257fc01c327348 (2.2.2+)
+   101bfd65d1ff3d1511cf6671e6aae65f82cd97df6f4da137d46d510731830ad9 (2.2.3+)
 */
 
 #if !defined(_GNU_SOURCE)
