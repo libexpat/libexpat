@@ -377,6 +377,7 @@ endDoctypeDecl(void *userData)
   /* Finally end the DOCTYPE */
   fputts(T("]>\n"), fp);
 
+  free(notations);
   freeNotations();
   free((void *)currentDoctypeName);
   currentDoctypeName = NULL;
@@ -422,6 +423,9 @@ notationDecl(void *UNUSED_P(userData),
       free(entry);
       return;
     }
+  }
+  else {
+    entry->publicId = NULL;
   }
 
   entry->next = notationListHead;
@@ -817,7 +821,7 @@ static void
 usage(const XML_Char *prog, int rc)
 {
   ftprintf(stderr,
-           T("usage: %s [-s] [-n] [-p] [-x] [-e encoding] [-w] [-d output-dir] [-c] [-m] [-r] [-t] [file ...]\n"), prog);
+           T("usage: %s [-s] [-n] [-p] [-x] [-e encoding] [-w] [-d output-dir] [-c] [-m] [-r] [-t] [-N] [file ...]\n"), prog);
   exit(rc);
 }
 
@@ -832,6 +836,7 @@ tmain(int argc, XML_Char **argv)
   int outputType = 0;
   int useNamespaces = 0;
   int requireStandalone = 0;
+  int requiresNotations = 0;
   enum XML_ParamEntityParsing paramEntityParsing = 
     XML_PARAM_ENTITY_PARSING_NEVER;
   int useStdin = 0;
@@ -887,6 +892,10 @@ tmain(int argc, XML_Char **argv)
       break;
     case T('t'):
       outputType = 't';
+      j++;
+      break;
+    case T('N'):
+      requiresNotations = 1;
       j++;
       break;
     case T('d'):
@@ -1026,8 +1035,10 @@ tmain(int argc, XML_Char **argv)
         XML_SetCharacterDataHandler(parser, characterData);
 #ifndef W3C14N
         XML_SetProcessingInstructionHandler(parser, processingInstruction);
-        XML_SetDoctypeDeclHandler(parser, startDoctypeDecl, endDoctypeDecl);
-        XML_SetNotationDeclHandler(parser, notationDecl);
+        if (requiresNotations) {
+          XML_SetDoctypeDeclHandler(parser, startDoctypeDecl, endDoctypeDecl);
+          XML_SetNotationDeclHandler(parser, notationDecl);
+        }
 #endif /* not W3C14N */
         break;
       }
