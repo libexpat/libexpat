@@ -4478,7 +4478,10 @@ doProlog(XML_Parser parser,
         normalizePublicId(tem);
         declEntity->publicId = tem;
         poolFinish(&dtd->pool);
-        if (entityDeclHandler)
+        /* Don't suppress the default handler if we fell through from
+         * the XML_ROLE_DOCTYPE_PUBLIC_ID case.
+         */
+        if (entityDeclHandler && role == XML_ROLE_ENTITY_PUBLIC_ID)
           handleDefault = XML_FALSE;
       }
       break;
@@ -4782,7 +4785,10 @@ doProlog(XML_Parser parser,
           return XML_ERROR_NO_MEMORY;
         declEntity->base = curBase;
         poolFinish(&dtd->pool);
-        if (entityDeclHandler)
+        /* Don't suppress the default handler if we fell through from
+         * the XML_ROLE_DOCTYPE_SYSTEM_ID case.
+         */
+        if (entityDeclHandler && role == XML_ROLE_ENTITY_SYSTEM_ID)
           handleDefault = XML_FALSE;
       }
       break;
