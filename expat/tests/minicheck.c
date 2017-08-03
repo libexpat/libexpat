@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <setjmp.h>
 #include <assert.h>
+#include <string.h>
 
 #include "internal.h"  /* for UNUSED_P only */
 #include "minicheck.h"
@@ -186,8 +187,10 @@ _fail_unless(int UNUSED_P(condition), const char *UNUSED_P(file), int UNUSED_P(l
        we have a failure, so there's no reason to be quiet about what
        it is.
     */
-    if (msg != NULL)
-        printf("%s", msg);
+    if (msg != NULL) {
+        const int has_newline = (msg[strlen(msg) - 1] == '\n');
+        fprintf(stderr, "ERROR: %s%s", msg, has_newline ? "" : "\n");
+    }
     longjmp(env, 1);
 }
 
