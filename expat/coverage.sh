@@ -21,7 +21,12 @@ _get_build_dir() {
         mingw_part=__windows
     fi
 
-    echo "build__${version}__unicode_${unicode_enabled}__xml_context_${xml_context}${libbsd_part}${mingw_part}"
+    local char_part=
+    if ${with_unsigned_char}; then
+        char_part=__unsigned_char
+    fi
+
+    echo "build__${version}__unicode_${unicode_enabled}__xml_context_${xml_context}${libbsd_part}${mingw_part}${char_part}"
 }
 
 
@@ -94,6 +99,8 @@ _run() {
 
     local BASE_FLAGS='-pipe -Wall -Wextra -pedantic -Wno-overlength-strings'
     BASE_FLAGS+=' --coverage --no-inline'
+
+    ${with_unsigned_char} && BASE_FLAGS="${BASE_FLAGS} -funsigned-char"
 
     local CFLAGS="-std=c99 ${BASE_FLAGS}"
     local CXXFLAGS="-std=c++98 ${BASE_FLAGS}"
@@ -193,6 +200,7 @@ _main() {
     }
 
     # All combinations:
+    with_unsigned_char=false
     with_libbsd=false
     for with_mingw in true false ; do
         for unicode_enabled in false ; do
@@ -204,6 +212,7 @@ _main() {
 
     # Single cases:
     with_libbsd=true _build_case
+    with_unsigned_char=true _build_case
 
     echo
     echo 'Merging coverage files...'
