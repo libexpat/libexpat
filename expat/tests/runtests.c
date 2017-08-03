@@ -5671,7 +5671,7 @@ static int XMLCALL
 prefix_converter(void *UNUSED_P(data), const char *s)
 {
     /* If the first byte is 0xff, raise an error */
-    if (s[0] == -1)
+    if (s[0] == (char)-1)
         return -1;
     /* Just add the low bits of the first byte to the second */
     return (s[1] + (s[0] & 0x7f)) & 0x01ff;
