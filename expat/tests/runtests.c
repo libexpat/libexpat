@@ -69,6 +69,17 @@
 #define XML_FMT_INT_MOD "l"
 #endif
 
+#ifdef XML_UNICODE_WCHAR_T
+#define XML_FMT_CHAR "lc"
+#define XML_FMT_STR "ls"
+#else
+#ifdef XML_UNICODE
+#error "No support for UTF-16 character without wchar_t in tests"
+#else
+#define XML_FMT_CHAR "c"
+#define XML_FMT_STR "s"
+#endif /* XML_UNICODE */
+#endif /* XML_UNICODE_WCHAR_T */
 
 #if defined(NDEBUG)
 # error  \
@@ -111,7 +122,8 @@ _xml_failure(XML_Parser parser, const char *file, int line)
     char buffer[1024];
     enum XML_Error err = XML_GetErrorCode(parser);
     sprintf(buffer,
-            "    %d: %s (line %" XML_FMT_INT_MOD "u, offset %"\
+            "    %d: %" XML_FMT_STR " (line %"
+                XML_FMT_INT_MOD "u, offset %"
                 XML_FMT_INT_MOD "u)\n    reported from %s, line %d\n",
             err,
             XML_ErrorString(err),
@@ -1045,8 +1057,9 @@ start_element_event_handler2(void *userData, const XML_Char *name,
     char buffer[100];
 
     sprintf(buffer,
-        "<%s> at col:%" XML_FMT_INT_MOD "u line:%"\
-            XML_FMT_INT_MOD "u\n", name,
+            "<%" XML_FMT_STR "> at col:%" XML_FMT_INT_MOD "u line:%"
+            XML_FMT_INT_MOD "u\n",
+            name,
 	    XML_GetCurrentColumnNumber(parser),
 	    XML_GetCurrentLineNumber(parser));
     CharData_AppendString(storage, buffer);
@@ -1059,8 +1072,9 @@ end_element_event_handler2(void *userData, const XML_Char *name)
     char buffer[100];
 
     sprintf(buffer,
-        "</%s> at col:%" XML_FMT_INT_MOD "u line:%"\
-            XML_FMT_INT_MOD "u\n", name,
+            "</%" XML_FMT_STR "> at col:%" XML_FMT_INT_MOD "u line:%"
+            XML_FMT_INT_MOD "u\n",
+            name,
 	    XML_GetCurrentColumnNumber(parser),
 	    XML_GetCurrentLineNumber(parser));
     CharData_AppendString(storage, buffer);
@@ -1339,7 +1353,8 @@ check_attr_contains_normalized_whitespace(void *UNUSED_P(userData),
             || strcmp("refs", attrname) == 0) {
             if (!is_whitespace_normalized(value, 0)) {
                 char buffer[256];
-                sprintf(buffer, "attribute value not normalized: %s='%s'",
+                sprintf(buffer, "attribute value not normalized: %"
+                        XML_FMT_STR "='%" XML_FMT_STR "'",
                         attrname, value);
                 fail(buffer);
             }
@@ -2508,7 +2523,8 @@ START_TEST(test_bad_cdata_utf16)
             char message[1024];
 
             sprintf(message,
-                    "Expected error %d (%s), got %d (%s) for case %lu\n",
+                    "Expected error %d (%" XML_FMT_STR
+                    "), got %d (%" XML_FMT_STR ") for case %lu\n",
                     cases[i].expected_error,
                     XML_ErrorString(cases[i].expected_error),
                     actual_error,
@@ -6931,11 +6947,12 @@ triplet_start_checker(void *userData, const XML_Char *name,
     char **elemstr = (char **)userData;
     char buffer[1024];
     if (strcmp(elemstr[0], name) != 0) {
-        sprintf(buffer, "unexpected start string: '%s'", name);
+        sprintf(buffer, "unexpected start string: '%" XML_FMT_STR "'", name);
         fail(buffer);
     }
     if (strcmp(elemstr[1], atts[0]) != 0) {
-        sprintf(buffer, "unexpected attribute string: '%s'", atts[0]);
+        sprintf(buffer, "unexpected attribute string: '%" XML_FMT_STR "'",
+                atts[0]);
         fail(buffer);
     }
     triplet_start_flag = XML_TRUE;
@@ -6951,7 +6968,7 @@ triplet_end_checker(void *userData, const XML_Char *name)
     char **elemstr = (char **)userData;
     if (strcmp(elemstr[0], name) != 0) {
         char buffer[1024];
-        sprintf(buffer, "unexpected end string: '%s'", name);
+        sprintf(buffer, "unexpected end string: '%" XML_FMT_STR "'", name);
         fail(buffer);
     }
     triplet_end_flag = XML_TRUE;
@@ -12117,7 +12134,7 @@ main(int argc, char *argv[])
         }
     }
     if (verbosity != CK_SILENT)
-        printf("Expat version: %s\n", XML_ExpatVersion());
+        printf("Expat version: %" XML_FMT_STR "\n", XML_ExpatVersion());
     srunner_run_all(sr, verbosity);
     nf = srunner_ntests_failed(sr);
     srunner_free(sr);
