@@ -894,20 +894,30 @@ START_TEST(test_latin1_umlauts)
         "<?xml version='1.0' encoding='iso-8859-1'?>\n"
         "<e a='\xE4 \xF6 \xFC &#228; &#246; &#252; &#x00E4; &#x0F6; &#xFC; >'\n"
         "  >\xE4 \xF6 \xFC &#228; &#246; &#252; &#x00E4; &#x0F6; &#xFC; ></e>";
-    const char *utf8 =
-        "\xC3\xA4 \xC3\xB6 \xC3\xBC "
-        "\xC3\xA4 \xC3\xB6 \xC3\xBC "
-        "\xC3\xA4 \xC3\xB6 \xC3\xBC >";
-    run_character_check(text, utf8);
+#ifdef XML_UNICODE
+    /* Expected results in UTF-16 */
+    const XML_Char *expected =
+        XCS("\x00e4 \x00f6 \x00fc ")
+        XCS("\x00e4 \x00f6 \x00fc ")
+        XCS("\x00e4 \x00f6 \x00fc >");
+#else
+    /* Expected results in UTF-8 */
+    const XML_Char *expected =
+        XCS("\xC3\xA4 \xC3\xB6 \xC3\xBC ")
+        XCS("\xC3\xA4 \xC3\xB6 \xC3\xBC ")
+        XCS("\xC3\xA4 \xC3\xB6 \xC3\xBC >");
+#endif
+
+    run_character_check(text, expected);
     XML_ParserReset(parser, NULL);
-    run_attribute_check(text, utf8);
+    run_attribute_check(text, expected);
     /* Repeat with a default handler */
     XML_ParserReset(parser, NULL);
     XML_SetDefaultHandler(parser, dummy_default_handler);
-    run_character_check(text, utf8);
+    run_character_check(text, expected);
     XML_ParserReset(parser, NULL);
     XML_SetDefaultHandler(parser, dummy_default_handler);
-    run_attribute_check(text, utf8);
+    run_attribute_check(text, expected);
 }
 END_TEST
 
