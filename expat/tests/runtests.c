@@ -436,13 +436,13 @@ param_entity_match_handler(void           *UNUSED_P(userData),
         entity_value_to_match == NULL) {
         return;
     }
-    if (!strcmp(entityName, entity_name_to_match)) {
+    if (!xcstrcmp(entityName, entity_name_to_match)) {
         /* The cast here is safe because we control the horizontal and
          * the vertical, and we therefore know our strings are never
          * going to overflow an int.
          */
-        if (value_length != (int)strlen(entity_value_to_match) ||
-            strncmp(value, entity_value_to_match, value_length)) {
+        if (value_length != (int)xcstrlen(entity_value_to_match) ||
+            xcstrncmp(value, entity_value_to_match, value_length)) {
             entity_match_flag = ENTITY_MATCH_FAIL;
         } else {
             entity_match_flag = ENTITY_MATCH_SUCCESS;
