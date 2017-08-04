@@ -616,9 +616,9 @@ _run_attribute_check(const char *text, const XML_Char *expected,
         _run_attribute_check(text, expected, __FILE__, __LINE__)
 
 typedef struct ExtTest {
-    const char *parse_text;
-    const char *encoding;
-    CharData   *storage;
+    const char     *parse_text;
+    const XML_Char *encoding;
+    CharData       *storage;
 } ExtTest;
 
 static void XMLCALL
@@ -911,7 +911,7 @@ START_TEST(test_bad_encoding)
 {
     const char *text = "<doc>Hi</doc>";
 
-    if (!XML_SetEncoding(parser, "unknown-encoding"))
+    if (!XML_SetEncoding(parser, XCS("unknown-encoding")))
         fail("XML_SetEncoding failed");
     expect_failure(text,
                    XML_ERROR_UNKNOWN_ENCODING,
@@ -1585,7 +1585,7 @@ START_TEST(test_ext_entity_set_encoding)
            UTF-8, which we tell Expat using XML_SetEncoding().
         */
         "<?xml encoding='iso-8859-3'?>\xC3\xA9",
-        "utf-8",
+        XCS("utf-8"),
         NULL
     };
 
@@ -1620,7 +1620,7 @@ START_TEST(test_ext_entity_set_bom)
         "\xEF\xBB\xBF" /* BOM */
         "<?xml encoding='iso-8859-3'?>"
         "\xC3\xA9",
-        "utf-8",
+        XCS("utf-8"),
         NULL
     };
 
@@ -1633,10 +1633,10 @@ END_TEST
 /* Test that bad encodings are faulted */
 typedef struct ext_faults
 {
-    const char *parse_text;
-    const char *fail_text;
-    const char *encoding;
-    enum XML_Error error;
+    const char     *parse_text;
+    const char     *fail_text;
+    const XML_Char *encoding;
+    enum XML_Error  error;
 } ExtFaults;
 
 static int XMLCALL
@@ -1678,7 +1678,7 @@ START_TEST(test_ext_entity_bad_encoding)
     ExtFaults fault = {
         "<?xml encoding='iso-8859-3'?>u",
         "Unsupported encoding not faulted",
-        "unknown",
+        XCS("unknown"),
         XML_ERROR_UNKNOWN_ENCODING
     };
 
@@ -1700,7 +1700,7 @@ START_TEST(test_ext_entity_bad_encoding_2)
     ExtFaults fault = {
         "<!ELEMENT doc (#PCDATA)*>",
         "Unknown encoding not faulted",
-        "unknown-encoding",
+        XCS("unknown-encoding"),
         XML_ERROR_UNKNOWN_ENCODING
     };
 
@@ -3487,13 +3487,13 @@ START_TEST(test_explicit_encoding)
     if (XML_SetEncoding(parser, NULL) != XML_STATUS_OK)
         fail("Failed to initialise encoding to NULL");
     /* Say we are UTF-8 */
-    if (XML_SetEncoding(parser, "utf-8") != XML_STATUS_OK)
+    if (XML_SetEncoding(parser, XCS("utf-8")) != XML_STATUS_OK)
         fail("Failed to set explicit encoding");
     if (_XML_Parse_SINGLE_BYTES(parser, text1, strlen(text1),
                                 XML_FALSE) == XML_STATUS_ERROR)
         xml_failure(parser);
     /* Try to switch encodings mid-parse */
-    if (XML_SetEncoding(parser, "us-ascii") != XML_STATUS_ERROR)
+    if (XML_SetEncoding(parser, XCS("us-ascii")) != XML_STATUS_ERROR)
         fail("Allowed encoding change");
     if (_XML_Parse_SINGLE_BYTES(parser, text2, strlen(text2),
                                 XML_TRUE) == XML_STATUS_ERROR)
@@ -6064,7 +6064,7 @@ enum ee_parse_flags {
 typedef struct ExtTest2 {
     const char *parse_text;
     int parse_len;
-    const char *encoding;
+    const XML_Char *encoding;
     CharData *storage;
     enum ee_parse_flags flags;
 } ExtTest2;
@@ -6127,7 +6127,7 @@ START_TEST(test_ext_entity_latin1_utf16le_bom)
          */
         "\xff\xfe\x4c\x20",
         4,
-        "iso-8859-1",
+        XCS("iso-8859-1"),
         NULL,
         EE_PARSE_NONE
     };
@@ -6162,7 +6162,7 @@ START_TEST(test_ext_entity_latin1_utf16be_bom)
          */
         "\xfe\xff\x20\x4c",
         4,
-        "iso-8859-1",
+        XCS("iso-8859-1"),
         NULL,
         EE_PARSE_NONE
     };
@@ -6202,7 +6202,7 @@ START_TEST(test_ext_entity_latin1_utf16le_bom2)
          */
         "\xff\xfe\x4c\x20",
         4,
-        "iso-8859-1",
+        XCS("iso-8859-1"),
         NULL,
         EE_PARSE_FULL_BUFFER
     };
@@ -6236,7 +6236,7 @@ START_TEST(test_ext_entity_latin1_utf16be_bom2)
          */
         "\xfe\xff\x20\x4c",
         4,
-        "iso-8859-1",
+        XCS("iso-8859-1"),
         NULL,
         EE_PARSE_FULL_BUFFER
     };
@@ -6267,7 +6267,7 @@ START_TEST(test_ext_entity_utf16_be)
     ExtTest2 test_data = {
         "<\0e\0/\0>\0",
         8,
-        "utf-16be",
+        XCS("utf-16be"),
         NULL,
         EE_PARSE_NONE
     };
@@ -6301,7 +6301,7 @@ START_TEST(test_ext_entity_utf16_le)
     ExtTest2 test_data = {
         "\0<\0e\0/\0>",
         8,
-        "utf-16le",
+        XCS("utf-16le"),
         NULL,
         EE_PARSE_NONE
     };
@@ -6335,7 +6335,7 @@ typedef struct ExtFaults2 {
     const char *parse_text;
     int parse_len;
     const char *fail_text;
-    const char *encoding;
+    const XML_Char *encoding;
     enum XML_Error error;
 } ExtFaults2;
 
@@ -6691,7 +6691,7 @@ START_TEST(test_unknown_encoding_bad_ignore)
     ExtFaults fault = {
         "<![IGNORE[<!ELEMENT \xffG (#PCDATA)*>]]>",
         "Invalid character not faulted",
-        "prefix-conv",
+        XCS("prefix-conv"),
         XML_ERROR_INVALID_TOKEN
     };
 
@@ -8525,7 +8525,7 @@ external_entity_alloc_set_encoding(XML_Parser parser,
     ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
     if (ext_parser == NULL)
         return XML_STATUS_ERROR;
-    if (!XML_SetEncoding(ext_parser, "utf-8")) {
+    if (!XML_SetEncoding(ext_parser, XCS("utf-8"))) {
         XML_ParserFree(ext_parser);
         return XML_STATUS_ERROR;
     }
@@ -8693,7 +8693,7 @@ START_TEST(test_alloc_explicit_encoding)
 
     for (i = 0; i < max_alloc_count; i++) {
         allocation_count = i;
-        if (XML_SetEncoding(parser, "us-ascii") == XML_STATUS_OK)
+        if (XML_SetEncoding(parser, XCS("us-ascii")) == XML_STATUS_OK)
             break;
     }
     if (i == 0)
