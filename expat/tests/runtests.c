@@ -72,12 +72,15 @@
 #ifdef XML_UNICODE_WCHAR_T
 #define XML_FMT_CHAR "lc"
 #define XML_FMT_STR "ls"
+#include <wchar.h>
+#define xcstrcmp(s, t) wcscmp((s), (t))
 #else
 #ifdef XML_UNICODE
 #error "No support for UTF-16 character without wchar_t in tests"
 #else
 #define XML_FMT_CHAR "c"
 #define XML_FMT_STR "s"
+#define xcstrcmp(s, t) strcmp((s), (t))
 #endif /* XML_UNICODE */
 #endif /* XML_UNICODE_WCHAR_T */
 
@@ -370,7 +373,7 @@ dummy_skip_handler(void *UNUSED_P(userData),
 
 /* Useful external entity handler */
 typedef struct ExtOption {
-    const char *system_id;
+    const XML_Char *system_id;
     const char *parse_text;
 } ExtOption;
 
@@ -385,7 +388,7 @@ external_entity_optioner(XML_Parser parser,
     XML_Parser ext_parser;
 
     while (options->parse_text != NULL) {
-        if (!strcmp(systemId, options->system_id)) {
+        if (!xcstrcmp(systemId, options->system_id)) {
             enum XML_Status rc;
             ext_parser =
                 XML_ExternalEntityParserCreate(parser, context, NULL);
