@@ -705,8 +705,14 @@ START_TEST(test_french_latin1)
     const char *text =
         "<?xml version='1.0' encoding='iso-8859-1'?>\n"
         "<doc>\xE9\xE8\xE0\xE7\xEa\xC8</doc>";
-    run_character_check(text,
-                        "\xC3\xA9\xC3\xA8\xC3\xA0\xC3\xA7\xC3\xAA\xC3\x88");
+#ifdef XML_UNICODE
+    const XML_Char *expected =
+        XCS("\x00e9\x00e8\x00e0\x00e7\x00ea\x00c8");
+#else
+    const XML_Char *expected =
+        XCS("\xC3\xA9\xC3\xA8\xC3\xA0\xC3\xA7\xC3\xAA\xC3\x88");
+#endif
+    run_character_check(text, expected);
 }
 END_TEST
 
