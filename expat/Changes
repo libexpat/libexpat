@@ -8,8 +8,10 @@ Release 2.?.? ?????????????????
                     to unsigned type char (-128..127 rather than 0..255)
             #109  coverage.sh: Cover -funsigned-char
                   Improve test suite error output
+            #111  Fix some typos in documentation
 
         Special thanks to:
+            Jakub Wilk
             Joe Orton
 
 Release 2.2.3 Wed August 2 2017
