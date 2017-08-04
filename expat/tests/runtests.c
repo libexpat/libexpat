@@ -852,7 +852,11 @@ START_TEST(test_utf16)
         "\000<\000d\000o\000c\000 \000a\000=\000'\0001\0002\0003\000'\000>"
         "\000s\000o\000m\000e\000 \xff\x21\000 \000t\000e\000x\000t\000"
         "<\000/\000d\000o\000c\000>";
-    char expected[] = "some \357\274\241 text";
+#ifdef XML_UNICODE
+    const XML_Char *expected = XCS("some \xff21 text");
+#else
+    const XML_Char *expected = XCS("some \357\274\241 text");
+#endif
     CharData storage;
 
     CharData_Init(&storage);
