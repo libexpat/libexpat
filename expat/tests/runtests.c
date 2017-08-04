@@ -738,7 +738,12 @@ END_TEST
 START_TEST(test_utf8_false_rejection)
 {
     const char *text = "<doc>\xEF\xBA\xBF</doc>";
-    run_character_check(text, "\xEF\xBA\xBF");
+#ifdef XML_UNICODE
+    const XML_Char *expected = XCS("\xfebf");
+#else
+    const XML_Char *expected = XCS("\xEF\xBA\xBF");
+#endif
+    run_character_check(text, expected);
 }
 END_TEST
 
