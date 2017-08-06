@@ -9,6 +9,7 @@ Release 2.?.? ?????????????????
             #109  coverage.sh: Cover -funsigned-char
              #43  CMake: Auto-detect high quality entropy extractors, add new
                     option USE_libbsd=ON to use arc4random_buf of libbsd
+             #74  CMake: Add -fno-strict-aliasing only where supported
                   Improve test suite error output
             #111  Fix some typos in documentation
 
