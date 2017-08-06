@@ -15,12 +15,19 @@ option(BUILD_examples "build the examples for expat library" ON)
 option(BUILD_tests "build the tests for expat library" ON)
 option(BUILD_shared "build a shared expat library" ON)
 option(BUILD_doc "build man page for xmlwf" ON)
+option(USE_libbsd "utilize libbsd (for arc4random_buf)" OFF)
 option(INSTALL "install expat files in cmake install target" ON)
 
 # configuration options
 set(XML_CONTEXT_BYTES 1024 CACHE STRING "Define to specify how much context to retain around the current parse point")
 option(XML_DTD "Define to make parameter entity parsing functionality available" ON)
 option(XML_NS "Define to make XML Namespaces functionality available" ON)
+if(NOT WIN32)
+    option(XML_DEV_URANDOM "Define to include code reading entropy from `/dev/urandom'." ON)
+    if(XML_DEV_URANDOM)
+        add_definitions(-DXML_DEV_URANDOM)
+    endif()
+endif()
 
 if(XML_DTD)
     set(XML_DTD 1)
@@ -39,7 +46,10 @@ endif(BUILD_tests)
 
 include(${CMAKE_CURRENT_LIST_DIR}/ConfigureChecks.cmake)
 
-set(EXTRA_LINK_AND_COMPILE_FLAGS "-fno-strict-aliasing")
+set(EXTRA_LINK_AND_COMPILE_FLAGS)
+if(FLAG_NO_STRICT_ALIASING)
+    set(EXTRA_LINK_AND_COMPILE_FLAGS "${EXTRA_LINK_AND_COMPILE_FLAGS} -fno-strict-aliasing")
+endif()
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${EXTRA_LINK_AND_COMPILE_FLAGS}")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${EXTRA_LINK_AND_COMPILE_FLAGS}")
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${EXTRA_LINK_AND_COMPILE_FLAGS}")
@@ -75,6 +85,9 @@ else(BUILD_shared)
 endif(BUILD_shared)
 
 add_library(expat ${_SHARED} ${expat_SRCS})
+if(USE_libbsd)
+    target_link_libraries(expat bsd)
+endif()
 
 set(LIBCURRENT 7)   # sync
 set(LIBREVISION 5)  # with
