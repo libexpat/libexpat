@@ -7,12 +7,15 @@ Release 2.?.? ?????????????????
             #109  Fix "make check" for non-x86 architectures that default
                     to unsigned type char (-128..127 rather than 0..255)
             #109  coverage.sh: Cover -funsigned-char
+             #43  CMake: Auto-detect high quality entropy extractors, add new
+                    option USE_libbsd=ON to use arc4random_buf of libbsd
                   Improve test suite error output
             #111  Fix some typos in documentation
 
         Special thanks to:
             Jakub Wilk
             Joe Orton
+            Rolf Eike Beer
 
 Release 2.2.3 Wed August 2 2017
         Security fixes:
