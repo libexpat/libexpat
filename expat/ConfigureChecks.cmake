@@ -25,7 +25,7 @@ check_function_exists("mmap" HAVE_MMAP)
 check_function_exists("getrandom" HAVE_GETRANDOM)
 
 if(USE_libbsd)
-    set(CMAKE_REQUIRED_LIBRARIES "bsd")
+    set(CMAKE_REQUIRED_LIBRARIES "${LIB_BSD}")
 endif()
 check_function_exists("arc4random_buf" HAVE_ARC4RANDOM_BUF)
 if(NOT HAVE_ARC4RANDOM_BUF)

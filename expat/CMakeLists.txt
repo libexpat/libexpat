@@ -18,6 +18,15 @@ option(BUILD_doc "build man page for xmlwf" ON)
 option(USE_libbsd "utilize libbsd (for arc4random_buf)" OFF)
 option(INSTALL "install expat files in cmake install target" ON)
 
+if(USE_libbsd)
+    find_library(LIB_BSD NAMES bsd)
+    if(NOT LIB_BSD)
+        message(FATAL_ERROR "USE_libbsd option is enabled, but libbsd was not found")
+    else()
+        set(HAVE_LIBBSD TRUE)
+    endif()
+endif()
+
 # configuration options
 set(XML_CONTEXT_BYTES 1024 CACHE STRING "Define to specify how much context to retain around the current parse point")
 option(XML_DTD "Define to make parameter entity parsing functionality available" ON)
@@ -86,7 +95,7 @@ endif(BUILD_shared)
 
 add_library(expat ${_SHARED} ${expat_SRCS})
 if(USE_libbsd)
-    target_link_libraries(expat bsd)
+    target_link_libraries(expat ${LIB_BSD})
 endif()
 
 set(LIBCURRENT 7)   # sync
