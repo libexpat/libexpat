@@ -10,6 +10,8 @@ Release 2.?.? ?????????????????
              #43  CMake: Auto-detect high quality entropy extractors, add new
                     option USE_libbsd=ON to use arc4random_buf of libbsd
              #74  CMake: Add -fno-strict-aliasing only where supported
+            #114  CMake: Always honor manually set BUILD_* options
+            #114  CMake: Compile man page if docbook2x-man is available, only
                   Improve test suite error output
             #111  Fix some typos in documentation
 
