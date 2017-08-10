@@ -3,6 +3,8 @@
 */
 
 #include <stddef.h>
+#include <stdbool.h>
+#include <string.h>  // memcpy
 
 #ifdef _WIN32
 #include "winconfig.h"
@@ -363,22 +365,33 @@ utf8_toUtf8(const ENCODING *UNUSED_P(enc),
             const char **fromP, const char *fromLim,
             char **toP, const char *toLim)
 {
-  char *to;
-  const char *from;
-  const char *fromLimInitial = fromLim;
+  bool input_incomplete = false;
+  bool output_exhausted = false;
 
-  /* Avoid copying partial characters. */
+  /* Avoid copying partial characters (due to limited space). */
+  const ptrdiff_t bytesAvailable = fromLim - *fromP;
+  const ptrdiff_t bytesStorable = toLim - *toP;
+  if (bytesAvailable > bytesStorable) {
+    fromLim = *fromP + bytesStorable;
+    output_exhausted = true;
+  }
+
+  /* Avoid copying partial characters (from incomplete input). */
+  const char * const fromLimBefore = fromLim;
   align_limit_to_full_utf8_characters(*fromP, &fromLim);
+  if (fromLim < fromLimBefore) {
+    input_incomplete = true;
+  }
 
-  for (to = *toP, from = *fromP; (from < fromLim) && (to < toLim); from++, to++)
-    *to = *from;
-  *fromP = from;
-  *toP = to;
+  const ptrdiff_t bytesToCopy = fromLim - *fromP;
+  memcpy((void *)*toP, (const void *)*fromP, (size_t)bytesToCopy);
+  *fromP += bytesToCopy;
+  *toP += bytesToCopy;
 
-  if (fromLim < fromLimInitial)
-    return XML_CONVERT_INPUT_INCOMPLETE;
-  else if ((to == toLim) && (from < fromLim))
+  if (output_exhausted)  // needs to go first
     return XML_CONVERT_OUTPUT_EXHAUSTED;
+  else if (input_incomplete)
+    return XML_CONVERT_INPUT_INCOMPLETE;
   else
     return XML_CONVERT_COMPLETED;
 }

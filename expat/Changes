@@ -3,6 +3,9 @@ NOTE: We are looking for help with a few things:
       If you can help, please get in touch.  Thanks!
 
 Release 2.?.? ?????????????????
+        Bug fixes:
+            #115  Fix potential copying of partial characters for UTF-8 input
+
         Other changes:
             #109  Fix "make check" for non-x86 architectures that default
                     to unsigned type char (-128..127 rather than 0..255)
@@ -19,6 +22,7 @@ Release 2.?.? ?????????????????
             Jakub Wilk
             Joe Orton
             Rolf Eike Beer
+            Lin Tian
 
 Release 2.2.3 Wed August 2 2017
         Security fixes:
