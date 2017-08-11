@@ -100,6 +100,11 @@ AC_TYPE_SIZE_T
 AC_CHECK_FUNCS(memmove bcopy)
 
 
+AC_ARG_WITH([xmlwf], [
+AS_HELP_STRING([--without-xmlwf], [do not build xmlwf])], [], [with_xmlwf=yes])
+AC_SUBST(with_xmlwf)
+
+
 AC_ARG_WITH([libbsd], [
 AS_HELP_STRING([--with-libbsd], [utilize libbsd (for arc4random_buf)])
 ], [], [with_libbsd=no])

@@ -47,11 +47,16 @@ LIBRARY = libexpat.la
 
 DESTDIR = $(INSTALL_ROOT)
 
-default:  buildlib xmlwf/xmlwf@EXEEXT@
+XMLWF_ENABLED = test @with_xmlwf@ = yes
+
+
+default:  buildlib
+	if $(XMLWF_ENABLED) ; then $(MAKE) xmlwf/xmlwf@EXEEXT@ ; fi
 
 buildlib: $(LIBRARY) expat.pc
 
-all: $(LIBRARY) expat.pc xmlwf/xmlwf@EXEEXT@ examples/elements examples/outline $(MANFILE)
+all: $(LIBRARY) expat.pc examples/elements examples/outline $(MANFILE)
+	if $(XMLWF_ENABLED) ; then $(MAKE) xmlwf/xmlwf@EXEEXT@ ; fi
 
 clean:
 	cd lib && rm -f $(LIBRARY) *.@OBJEXT@ *.lo && rm -rf .libs _libs
@@ -80,7 +85,8 @@ check: tests/runtests@EXEEXT@ tests/runtestspp@EXEEXT@
 $(MANFILE):
 	$(MAKE) -C doc xmlwf.1
 
-install: installlib installman installxmlwf
+install: installlib
+	if $(XMLWF_ENABLED) ; then $(MAKE) installman installxmlwf ; fi
 
 .PHONY: installman
 installman: $(MANFILE)
