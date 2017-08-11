@@ -47,11 +47,16 @@ LIBRARY = libexpat.la
 
 DESTDIR = $(INSTALL_ROOT)
 
-default:  buildlib xmlwf/xmlwf@EXEEXT@
+XMLWF_ENABLED = test @with_xmlwf@ = yes
+
+
+default:  buildlib
+	if $(XMLWF_ENABLED) ; then $(MAKE) xmlwf/xmlwf@EXEEXT@ ; fi
 
 buildlib: $(LIBRARY) expat.pc
 
-all: $(LIBRARY) expat.pc xmlwf/xmlwf@EXEEXT@ examples/elements examples/outline $(MANFILE)
+all: $(LIBRARY) expat.pc examples/elements examples/outline $(MANFILE)
+	if $(XMLWF_ENABLED) ; then $(MAKE) xmlwf/xmlwf@EXEEXT@ ; fi
 
 clean:
 	cd lib && rm -f $(LIBRARY) *.@OBJEXT@ *.lo && rm -rf .libs _libs
@@ -80,10 +85,18 @@ check: tests/runtests@EXEEXT@ tests/runtestspp@EXEEXT@
 $(MANFILE):
 	$(MAKE) -C doc xmlwf.1
 
-install: xmlwf/xmlwf@EXEEXT@ installlib $(MANFILE)
-	$(mkinstalldirs) $(DESTDIR)$(bindir) $(DESTDIR)$(man1dir)
-	$(LIBTOOL) --mode=install $(INSTALL_PROGRAM) xmlwf/xmlwf@EXEEXT@ $(DESTDIR)$(bindir)/xmlwf
+install: installlib
+	if $(XMLWF_ENABLED) ; then $(MAKE) installman installxmlwf ; fi
+
+.PHONY: installman
+installman: $(MANFILE)
+	$(mkinstalldirs) $(DESTDIR)$(man1dir)
 	$(INSTALL_DATA) $(MANFILE) $(DESTDIR)$(man1dir)
+
+.PHONY: installxmlwf
+installxmlwf: xmlwf/xmlwf@EXEEXT@ installlib
+	$(mkinstalldirs) $(DESTDIR)$(bindir)
+	$(LIBTOOL) --mode=install $(INSTALL_PROGRAM) xmlwf/xmlwf@EXEEXT@ $(DESTDIR)$(bindir)/xmlwf
 
 installlib: $(LIBRARY) $(APIHEADER) expat.pc
 	$(mkinstalldirs) $(DESTDIR)$(libdir) $(DESTDIR)$(includedir) $(DESTDIR)$(pkgconfigdir)
@@ -91,15 +104,21 @@ installlib: $(LIBRARY) $(APIHEADER) expat.pc
 	for FN in $(APIHEADER) ; do $(INSTALL_DATA) $$FN $(DESTDIR)$(includedir) ; done
 	$(INSTALL_DATA) expat.pc $(DESTDIR)$(pkgconfigdir)/expat.pc
 
-uninstall: uninstalllib
-	$(LIBTOOL) --mode=uninstall rm -f $(DESTDIR)$(bindir)/xmlwf@EXEEXT@
-	rm -f $(DESTDIR)$(man1dir)/xmlwf.1
+uninstall: uninstalllib uninstallman uninstallxmlwf
 
 uninstalllib:
 	$(LIBTOOL) --mode=uninstall rm -f $(DESTDIR)$(libdir)/$(LIBRARY)
 	rm -f $(DESTDIR)$(includedir)/expat.h
 	rm -f $(DESTDIR)$(includedir)/expat_external.h
 	rm -f $(DESTDIR)$(pkgconfigdir)/expat.pc
+
+.PHONY: uninstallman
+uninstallman:
+	rm -f $(DESTDIR)$(man1dir)/xmlwf.1
+
+.PHONY: uninstallxmlwf
+uninstallxmlwf:
+	$(LIBTOOL) --mode=uninstall rm -f $(DESTDIR)$(bindir)/xmlwf@EXEEXT@
 
 # for VPATH builds (invoked by configure)
 mkdir-init:

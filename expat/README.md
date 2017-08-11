@@ -72,13 +72,16 @@ the directories into which things will be installed.
 
 If you are interested in building Expat to provide document
 information in UTF-16 encoding rather than the default UTF-8, follow
-these instructions (after having run `make distclean`):
+these instructions (after having run `make distclean`).
+Please note that we configure with `--without-xmlwf` as xmlwf does not
+support this mode of compilation (yet):
 
 1. For UTF-16 output as unsigned short (and version/error strings as char),
    run:<br/>
-   `./configure CPPFLAGS=-DXML_UNICODE`<br/>
+   `./configure CPPFLAGS=-DXML_UNICODE --without-xmlwf`<br/>
    For UTF-16 output as `wchar_t` (incl. version/error strings), run:<br/>
-   `./configure CFLAGS="-g -O2 -fshort-wchar" CPPFLAGS=-DXML_UNICODE_WCHAR_T`
+   `./configure CFLAGS="-g -O2 -fshort-wchar" CPPFLAGS=-DXML_UNICODE_WCHAR_T
+       --without-xmlwf`
    <br/>Note: The latter requires libc compiled with `-fshort-wchar`, as well.
 
 1. Edit `Makefile`, changing:<br/>
@@ -87,11 +90,11 @@ these instructions (after having run `make distclean`):
    `LIBRARY = libexpatw.la`<br/>
    (Note the additional "w" in the library name.)
 
-1. Run `make buildlib` (which builds the library only).
-   Or, to save step 2, run `make buildlib LIBRARY=libexpatw.la`.
+1. Run `make` (which excludes xmlwf).
+   Or, to save step 2, run `make LIBRARY=libexpatw.la`.
 
-1. Run `make installlib` (which installs the library only).
-   Or, if step 2 was omitted, run `make installlib LIBRARY=libexpatw.la`.
+1. Run `make install` (again, excludes xmlwf).
+   Or, if step 2 was omitted, run `make install LIBRARY=libexpatw.la`.
 
 Using `DESTDIR` or `INSTALL_ROOT` is enabled, with `INSTALL_ROOT` being the
 default value for `DESTDIR`, and the rest of the make file using only
