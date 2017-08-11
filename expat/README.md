@@ -76,6 +76,16 @@ these instructions (after having run `make distclean`).
 Please note that we configure with `--without-xmlwf` as xmlwf does not
 support this mode of compilation (yet):
 
+1. Mass-patch `Makefile.am` files to use `libexpatw.la` for a library name:
+   <br/>
+   `find -name Makefile.am -exec sed
+       -e 's,libexpat\.la,libexpatw\.la,'
+       -e 's,libexpat_la,libexpatw_la,'
+       -i {} +`
+
+1. Run `automake` to re-write `Makefile.in` files:<br/>
+   `automake`
+
 1. For UTF-16 output as unsigned short (and version/error strings as char),
    run:<br/>
    `./configure CPPFLAGS=-DXML_UNICODE --without-xmlwf`<br/>
@@ -84,17 +94,9 @@ support this mode of compilation (yet):
        --without-xmlwf`
    <br/>Note: The latter requires libc compiled with `-fshort-wchar`, as well.
 
-1. Edit `Makefile`, changing:<br/>
-   `LIBRARY = libexpat.la`<br/>
-   to:<br/>
-   `LIBRARY = libexpatw.la`<br/>
-   (Note the additional "w" in the library name.)
-
 1. Run `make` (which excludes xmlwf).
-   Or, to save step 2, run `make LIBRARY=libexpatw.la`.
 
 1. Run `make install` (again, excludes xmlwf).
-   Or, if step 2 was omitted, run `make install LIBRARY=libexpatw.la`.
 
 Using `DESTDIR` or `INSTALL_ROOT` is enabled, with `INSTALL_ROOT` being the
 default value for `DESTDIR`, and the rest of the make file using only

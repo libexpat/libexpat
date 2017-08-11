@@ -9,6 +9,7 @@ CTestTestfile.cmake
 install_manifest.txt
 Makefile
 .deps
+Makefile.in
 .libs
 *.la
 configure
