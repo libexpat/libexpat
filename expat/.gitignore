@@ -1,3 +1,4 @@
+/autom4te.cache/
 m4/
 CMakeFiles/
 Testing/
@@ -7,6 +8,7 @@ cmake_install.cmake
 CTestTestfile.cmake
 install_manifest.txt
 Makefile
+.deps
 .libs
 *.la
 configure
