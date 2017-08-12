@@ -98,23 +98,13 @@ support this mode of compilation (yet):
 
 1. Run `make install` (again, excludes xmlwf).
 
-Using `DESTDIR` or `INSTALL_ROOT` is enabled, with `INSTALL_ROOT` being the
-default value for `DESTDIR`, and the rest of the make file using only
-`DESTDIR`.  It works as follows:
+Using `DESTDIR` is supported.  It works as follows:
 
 ```console
 make install DESTDIR=/path/to/image
 ```
 
-overrides the in-makefile set `DESTDIR`, while both
-
-```console
-INSTALL_ROOT=/path/to/image make install
-make install INSTALL_ROOT=/path/to/image
-```
-
-use `DESTDIR=$(INSTALL_ROOT)`, even if `DESTDIR` eventually is defined in the
-environment, because variable-setting priority is
+overrides the in-makefile set `DESTDIR`, because variable-setting priority is
 1. commandline
 2. in-makefile
 3. environment
