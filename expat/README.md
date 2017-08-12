@@ -105,9 +105,10 @@ make install DESTDIR=/path/to/image
 ```
 
 overrides the in-makefile set `DESTDIR`, because variable-setting priority is
+
 1. commandline
-2. in-makefile
-3. environment
+1. in-makefile
+1. environment
 
 Note: This only applies to the Expat library itself, building UTF-16 versions
 of xmlwf and the tests is currently not supported.
