@@ -46,20 +46,52 @@ pkgconfig_DATA = expat.pc
 pkgconfigdir = $(libdir)/pkgconfig
 
 
-EXTRA_DIST = \
-    conftools/expat.m4 \
-    conftools/get-version.sh \
-    conftools/PrintPath \
+_EXTRA_DIST_CMAKE = \
+    CMakeLists.txt \
+    CMake.README \
+    ConfigureChecks.cmake \
+    expat_config.h.cmake
+
+_EXTRA_DIST_WINDOWS = \
+    examples/elements.vcxproj \
+    examples/elements.vcxproj.filters \
+    examples/outline.vcxproj \
+    examples/outline.vcxproj.filters \
+    \
+    lib/expat_static.vcxproj \
+    lib/expat_static.vcxproj.filters \
+    lib/expat.vcxproj \
+    lib/expat.vcxproj.filters \
+    lib/expatw_static.vcxproj \
+    lib/expatw_static.vcxproj.filters \
+    lib/expatw.vcxproj \
+    lib/expatw.vcxproj.filters \
+    \
+    tests/benchmark/benchmark.sln \
+    tests/benchmark/benchmark.vcxproj \
+    \
+    tests/runtests.sln \
+    tests/runtests.vcxproj \
+    tests/runtests.vcxproj.filters \
     \
     win32/expat.iss \
     win32/MANIFEST.txt \
     win32/README.txt \
     \
+    xmlwf/xmlwf.vcxproj \
+    xmlwf/xmlwf.vcxproj.filters \
+    \
+    expat.sln
+
+EXTRA_DIST = \
+    $(_EXTRA_DIST_CMAKE) \
+    $(_EXTRA_DIST_WINDOWS) \
+    \
+    conftools/expat.m4 \
+    conftools/get-version.sh \
+    conftools/PrintPath \
+    \
     Changes \
-    CMakeLists.txt \
-    CMake.README \
-    ConfigureChecks.cmake \
-    expat_config.h.cmake \
     README.md \
     test-driver-wrapper.sh
 
