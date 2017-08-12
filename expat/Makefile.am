@@ -46,20 +46,26 @@ pkgconfig_DATA = expat.pc
 pkgconfigdir = $(libdir)/pkgconfig
 
 
+_EXTRA_DIST_CMAKE = \
+    CMakeLists.txt \
+    CMake.README \
+    ConfigureChecks.cmake \
+    expat_config.h.cmake
+
+_EXTRA_DIST_WINDOWS = \
+    win32/expat.iss \
+    win32/MANIFEST.txt \
+    win32/README.txt
+
 EXTRA_DIST = \
+    $(_EXTRA_DIST_CMAKE) \
+    $(_EXTRA_DIST_WINDOWS) \
+    \
     conftools/expat.m4 \
     conftools/get-version.sh \
     conftools/PrintPath \
     \
-    win32/expat.iss \
-    win32/MANIFEST.txt \
-    win32/README.txt \
-    \
     Changes \
-    CMakeLists.txt \
-    CMake.README \
-    ConfigureChecks.cmake \
-    expat_config.h.cmake \
     README.md \
     test-driver-wrapper.sh
 
