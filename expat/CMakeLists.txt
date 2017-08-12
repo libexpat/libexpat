@@ -161,7 +161,7 @@ if(BUILD_tools)
             set(make_command "make")
         endif()
 
-        add_custom_command(TARGET expat PRE_BUILD COMMAND "${make_command}" -C "${PROJECT_SOURCE_DIR}/doc" xmlwf.1 "DOCBOOK_TO_MAN=${DOCBOOK_TO_MAN}")
+        add_custom_command(TARGET expat PRE_BUILD COMMAND "${make_command}" -f "${PROJECT_SOURCE_DIR}/doc/doc.mk" -C "${PROJECT_SOURCE_DIR}/doc" xmlwf.1 "DOCBOOK_TO_MAN=${DOCBOOK_TO_MAN}")
         expat_install(FILES "${PROJECT_SOURCE_DIR}/doc/xmlwf.1" DESTINATION share/man/man1)
     endif()
 endif()

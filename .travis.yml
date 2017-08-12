@@ -9,6 +9,7 @@ env:
     - CFLAGS='-g -pipe'
   matrix:
     - MODE=address
+    - MODE=distcheck
     - MODE=lib-coverage
 
 addons:
@@ -21,6 +22,4 @@ addons:
       - dos2unix
 
 script:
-  - cd expat
-  - ./buildconf.sh
-  - ./qa.sh ${MODE}
+  - ./.travis.sh

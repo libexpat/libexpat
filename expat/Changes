@@ -11,6 +11,7 @@ Release 2.?.? ?????????????????
                     to unsigned type char (-128..127 rather than 0..255)
             #109  coverage.sh: Cover -funsigned-char
                   Autotools: Introduce --without-xmlwf argument
+             #65  Autotools: Replace handwritten Makefile with GNU Automake
              #43  CMake: Auto-detect high quality entropy extractors, add new
                     option USE_libbsd=ON to use arc4random_buf of libbsd
              #74  CMake: Add -fno-strict-aliasing only where supported
