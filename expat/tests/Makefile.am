@@ -59,4 +59,5 @@ EXTRA_DIST = \
     minicheck.h \
     memcheck.h \
     README.txt \
+    xmltest.log.expected \
     xmltest.sh

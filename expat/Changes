@@ -17,6 +17,8 @@ Release 2.?.? ?????????????????
              #74  CMake: Add -fno-strict-aliasing only where supported
             #114  CMake: Always honor manually set BUILD_* options
             #114  CMake: Compile man page if docbook2x-man is available, only
+            #117  Include file tests/xmltest.log.expected in source tarball
+                    (required for "make run-xmltest")
                   Improve test suite error output
             #111  Fix some typos in documentation
 
