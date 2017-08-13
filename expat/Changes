@@ -4,7 +4,7 @@ NOTE: We are looking for help with a few things:
 
 Release 2.?.? ?????????????????
         Bug fixes:
-            #115  Fix potential copying of partial characters for UTF-8 input
+            #115  Fix copying of partial characters for UTF-8 input
 
         Other changes:
             #109  Fix "make check" for non-x86 architectures that default
