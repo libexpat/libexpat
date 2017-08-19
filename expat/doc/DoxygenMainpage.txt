@@ -1,0 +1,16 @@
+/*!
+   \mainpage
+
+
+   \section getting-started Getting Started
+   For a tutorials on using Expat as well as articles on Expat, please
+   check out [Expat documentation](https://libexpat.github.io/doc/), instead.
+
+
+   \section Overview
+   For a listing of groups of functions, please see
+   the [API page](usergroup0.html).
+
+   For a *complete* overview of the API, please see
+   the lib/expat.h page.
+*/
