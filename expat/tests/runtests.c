@@ -7764,7 +7764,7 @@ START_TEST(test_misc_version)
         fail("Version mismatch");
 
 #if ! defined(XML_UNICODE)
-    if (strcmp(version_text, "expat_2.2.3"))  /* needs bump on releases */
+    if (strcmp(version_text, "expat_2.2.4"))  /* needs bump on releases */
         fail("XML_*_VERSION in expat.h out of sync?\n");
 #endif  /* ! defined(XML_UNICODE) */
 }

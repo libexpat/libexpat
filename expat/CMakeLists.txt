@@ -6,7 +6,7 @@ project(expat)
 cmake_minimum_required(VERSION 2.6)
 set(PACKAGE_BUGREPORT "expat-bugs@libexpat.org")
 set(PACKAGE_NAME "expat")
-set(PACKAGE_VERSION "2.2.3")
+set(PACKAGE_VERSION "2.2.4")
 set(PACKAGE_STRING "${PACKAGE_NAME} ${PACKAGE_VERSION}")
 set(PACKAGE_TARNAME "${PACKAGE_NAME}")
 

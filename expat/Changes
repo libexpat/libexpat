@@ -2,7 +2,7 @@ NOTE: We are looking for help with a few things:
       https://github.com/libexpat/libexpat/labels/help%20wanted
       If you can help, please get in touch.  Thanks!
 
-Release 2.?.? ?????????????????
+Release 2.2.4 Sat Auguest 19 2017
         Bug fixes:
             #115  Fix copying of partial characters for UTF-8 input
 
