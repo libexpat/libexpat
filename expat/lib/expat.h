@@ -203,6 +203,9 @@ typedef void (XMLCALL *XML_AttlistDeclHandler) (
                                     const XML_Char  *dflt,
                                     int              isrequired);
 
+/*!
+   DOCME
+*/
 XMLPARSEAPI(void)
 XML_SetAttlistDeclHandler(XML_Parser parser,
                           XML_AttlistDeclHandler attdecl);
@@ -221,6 +224,9 @@ typedef void (XMLCALL *XML_XmlDeclHandler) (void           *userData,
                                             const XML_Char *encoding,
                                             int             standalone);
 
+/*!
+   DOCME
+*/
 XMLPARSEAPI(void)
 XML_SetXmlDeclHandler(XML_Parser parser,
                       XML_XmlDeclHandler xmldecl);
@@ -379,6 +385,9 @@ typedef void (XMLCALL *XML_EntityDeclHandler) (
                               const XML_Char *publicId,
                               const XML_Char *notationName);
 
+/*!
+   DOCME
+*/
 XMLPARSEAPI(void)
 XML_SetEntityDeclHandler(XML_Parser parser,
                          XML_EntityDeclHandler handler);
@@ -580,39 +589,67 @@ typedef int (XMLCALL *XML_UnknownEncodingHandler) (
                                     const XML_Char *name,
                                     XML_Encoding *info);
 
+/*!
+   DOCME
+*/
 XMLPARSEAPI(void)
 XML_SetElementHandler(XML_Parser parser,
                       XML_StartElementHandler start,
                       XML_EndElementHandler end);
 
+/*!
+   DOCME
+*/
 XMLPARSEAPI(void)
 XML_SetStartElementHandler(XML_Parser parser,
                            XML_StartElementHandler handler);
 
+/*!
+   DOCME
+*/
 XMLPARSEAPI(void)
 XML_SetEndElementHandler(XML_Parser parser,
                          XML_EndElementHandler handler);
 
+/*!
+   DOCME
+*/
 XMLPARSEAPI(void)
 XML_SetCharacterDataHandler(XML_Parser parser,
                             XML_CharacterDataHandler handler);
 
+/*!
+   DOCME
+*/
 XMLPARSEAPI(void)
 XML_SetProcessingInstructionHandler(XML_Parser parser,
                                     XML_ProcessingInstructionHandler handler);
+
+/*!
+   DOCME
+*/
 XMLPARSEAPI(void)
 XML_SetCommentHandler(XML_Parser parser,
                       XML_CommentHandler handler);
 
+/*!
+   DOCME
+*/
 XMLPARSEAPI(void)
 XML_SetCdataSectionHandler(XML_Parser parser,
                            XML_StartCdataSectionHandler start,
                            XML_EndCdataSectionHandler end);
 
+/*!
+   DOCME
+*/
 XMLPARSEAPI(void)
 XML_SetStartCdataSectionHandler(XML_Parser parser,
                                 XML_StartCdataSectionHandler start);
 
+/*!
+   DOCME
+*/
 XMLPARSEAPI(void)
 XML_SetEndCdataSectionHandler(XML_Parser parser,
                               XML_EndCdataSectionHandler end);
@@ -635,44 +672,74 @@ XMLPARSEAPI(void)
 XML_SetDefaultHandlerExpand(XML_Parser parser,
                             XML_DefaultHandler handler);
 
+/*!
+   DOCME
+*/
 XMLPARSEAPI(void)
 XML_SetDoctypeDeclHandler(XML_Parser parser,
                           XML_StartDoctypeDeclHandler start,
                           XML_EndDoctypeDeclHandler end);
 
+/*!
+   DOCME
+*/
 XMLPARSEAPI(void)
 XML_SetStartDoctypeDeclHandler(XML_Parser parser,
                                XML_StartDoctypeDeclHandler start);
 
+/*!
+   DOCME
+*/
 XMLPARSEAPI(void)
 XML_SetEndDoctypeDeclHandler(XML_Parser parser,
                              XML_EndDoctypeDeclHandler end);
 
+/*!
+   DOCME
+*/
 XMLPARSEAPI(void)
 XML_SetUnparsedEntityDeclHandler(XML_Parser parser,
                                  XML_UnparsedEntityDeclHandler handler);
 
+/*!
+   DOCME
+*/
 XMLPARSEAPI(void)
 XML_SetNotationDeclHandler(XML_Parser parser,
                            XML_NotationDeclHandler handler);
 
+/*!
+   DOCME
+*/
 XMLPARSEAPI(void)
 XML_SetNamespaceDeclHandler(XML_Parser parser,
                             XML_StartNamespaceDeclHandler start,
                             XML_EndNamespaceDeclHandler end);
 
+/*!
+   DOCME
+*/
 XMLPARSEAPI(void)
 XML_SetStartNamespaceDeclHandler(XML_Parser parser,
                                  XML_StartNamespaceDeclHandler start);
 
+/*!
+   DOCME
+*/
 XMLPARSEAPI(void)
 XML_SetEndNamespaceDeclHandler(XML_Parser parser,
                                XML_EndNamespaceDeclHandler end);
 
+/*!
+   DOCME
+*/
 XMLPARSEAPI(void)
 XML_SetNotStandaloneHandler(XML_Parser parser,
                             XML_NotStandaloneHandler handler);
 
+/*!
+   DOCME
+*/
 XMLPARSEAPI(void)
 XML_SetExternalEntityRefHandler(XML_Parser parser,
                                 XML_ExternalEntityRefHandler handler);
@@ -686,10 +753,16 @@ XMLPARSEAPI(void)
 XML_SetExternalEntityRefHandlerArg(XML_Parser parser,
                                    void *arg);
 
+/*!
+   DOCME
+*/
 XMLPARSEAPI(void)
 XML_SetSkippedEntityHandler(XML_Parser parser,
                             XML_SkippedEntityHandler handler);
 
+/*!
+   DOCME
+*/
 XMLPARSEAPI(void)
 XML_SetUnknownEncodingHandler(XML_Parser parser,
                               XML_UnknownEncodingHandler handler,
@@ -782,6 +855,9 @@ XML_UseForeignDTD(XML_Parser parser, XML_Bool useDTD);
 XMLPARSEAPI(enum XML_Status)
 XML_SetBase(XML_Parser parser, const XML_Char *base);
 
+/*!
+   DOCME
+*/
 XMLPARSEAPI(const XML_Char *)
 XML_GetBase(XML_Parser parser);
 
@@ -843,9 +919,15 @@ XML_GetAttributeInfo(XML_Parser parser);
 XMLPARSEAPI(enum XML_Status)
 XML_Parse(XML_Parser parser, const char *s, int len, int isFinal);
 
+/*!
+   DOCME
+*/
 XMLPARSEAPI(void *)
 XML_GetBuffer(XML_Parser parser, int len);
 
+/*!
+   DOCME
+*/
 XMLPARSEAPI(enum XML_Status)
 XML_ParseBuffer(XML_Parser parser, int len, int isFinal);
 
@@ -1018,7 +1100,15 @@ XML_GetErrorCode(XML_Parser parser);
    Note: XML_GetCurrentByteIndex returns -1 to indicate an error.
 */
 XMLPARSEAPI(XML_Size) XML_GetCurrentLineNumber(XML_Parser parser);
+
+/*!
+   DOCME
+*/
 XMLPARSEAPI(XML_Size) XML_GetCurrentColumnNumber(XML_Parser parser);
+
+/*!
+   DOCME
+*/
 XMLPARSEAPI(XML_Index) XML_GetCurrentByteIndex(XML_Parser parser);
 
 /*!
@@ -1059,10 +1149,16 @@ XML_ATTR_MALLOC
 XML_ATTR_ALLOC_SIZE(2)
 XML_MemMalloc(XML_Parser parser, size_t size);
 
+/*!
+   DOCME
+*/
 XMLPARSEAPI(void *)
 XML_ATTR_ALLOC_SIZE(3)
 XML_MemRealloc(XML_Parser parser, void *ptr, size_t size);
 
+/*!
+   DOCME
+*/
 XMLPARSEAPI(void)
 XML_MemFree(XML_Parser parser, void *ptr);
 
@@ -1113,6 +1209,9 @@ typedef struct {
   long int              value;
 } XML_Feature;
 
+/*!
+   DOCME
+*/
 XMLPARSEAPI(const XML_Feature *)
 XML_GetFeatureList(void);
 
