@@ -47,7 +47,7 @@ dnl If the API changes incompatibly set LIBAGE back to 0
 dnl
 
 LIBCURRENT=7   # sync
-LIBREVISION=5  # with
+LIBREVISION=6  # with
 LIBAGE=6       # CMakeLists.txt!
 
 CPPFLAGS="${CPPFLAGS} -DHAVE_EXPAT_CONFIG_H"
