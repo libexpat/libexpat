@@ -79,11 +79,17 @@ typedef unsigned char XML_Bool;
 */
 enum XML_Status {
   XML_STATUS_ERROR = 0,
+#if ! defined(DOXYGEN)
 #define XML_STATUS_ERROR XML_STATUS_ERROR
+#endif /* ! defined(DOXYGEN) */
   XML_STATUS_OK = 1,
+#if ! defined(DOXYGEN)
 #define XML_STATUS_OK XML_STATUS_OK
+#endif /* ! defined(DOXYGEN) */
   XML_STATUS_SUSPENDED = 2
+#if ! defined(DOXYGEN)
 #define XML_STATUS_SUSPENDED XML_STATUS_SUSPENDED
+#endif /* ! defined(DOXYGEN) */
 };
 
 enum XML_Error {
@@ -1268,9 +1274,11 @@ XML_GetInputContext(XML_Parser parser,
                     int *size);
 
 /* For backwards compatibility with previous versions. */
+#if ! defined(DOXYGEN)
 #define XML_GetErrorLineNumber   XML_GetCurrentLineNumber
 #define XML_GetErrorColumnNumber XML_GetCurrentColumnNumber
 #define XML_GetErrorByteIndex    XML_GetCurrentByteIndex
+#endif /* ! defined(DOXYGEN) */
 
 /*!
    Frees the content model passed to the element declaration handler
