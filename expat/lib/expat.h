@@ -45,6 +45,14 @@
 #include <stdlib.h>
 #include "expat_external.h"
 
+/*!
+   \defgroup parser-creation  Parser Creation Functions
+   \defgroup parsing          Parsing Functions
+   \defgroup handler-setting  Handler Setting Functions
+   \defgroup reporting        Parse Position and Error Reporting Functions
+   \defgroup misc             Miscellaneous Functions
+*/
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -182,6 +190,11 @@ typedef void (XMLCALL *XML_ElementDeclHandler) (void *userData,
                                                 const XML_Char *name,
                                                 XML_Content *model);
 
+/*!
+   DOCME
+
+   \ingroup handler-setting
+*/
 XMLPARSEAPI(void)
 XML_SetElementDeclHandler(XML_Parser parser,
                           XML_ElementDeclHandler eldecl);
@@ -205,6 +218,8 @@ typedef void (XMLCALL *XML_AttlistDeclHandler) (
 
 /*!
    DOCME
+
+   \ingroup handler-setting
 */
 XMLPARSEAPI(void)
 XML_SetAttlistDeclHandler(XML_Parser parser,
@@ -226,6 +241,8 @@ typedef void (XMLCALL *XML_XmlDeclHandler) (void           *userData,
 
 /*!
    DOCME
+
+   \ingroup handler-setting
 */
 XMLPARSEAPI(void)
 XML_SetXmlDeclHandler(XML_Parser parser,
@@ -241,6 +258,8 @@ typedef struct {
 /*!
    Constructs a new parser; encoding is the encoding specified by the
    external protocol or NULL if there is none specified.
+
+   \ingroup parser-creation
 */
 XMLPARSEAPI(XML_Parser)
 XML_ParserCreate(const XML_Char *encoding);
@@ -256,6 +275,8 @@ XML_ParserCreate(const XML_Char *encoding);
    and the local part will be concatenated without any separator.
    It is a programming error to use the separator '\0' with namespace
    triplets (see XML_SetReturnNSTriplet).
+
+   \ingroup parser-creation
 */
 XMLPARSEAPI(XML_Parser)
 XML_ParserCreateNS(const XML_Char *encoding, XML_Char namespaceSeparator);
@@ -270,6 +291,8 @@ XML_ParserCreateNS(const XML_Char *encoding, XML_Char namespaceSeparator);
 
    All further memory operations used for the created parser will come from
    the given suite.
+
+   \ingroup parser-creation
 */
 XMLPARSEAPI(XML_Parser)
 XML_ParserCreate_MM(const XML_Char *encoding,
@@ -285,6 +308,8 @@ XML_ParserCreate_MM(const XML_Char *encoding,
    except for the values of ns and ns_triplets.
 
    Added in Expat 1.95.3.
+
+   \ingroup parser-creation
 */
 XMLPARSEAPI(XML_Bool)
 XML_ParserReset(XML_Parser parser, const XML_Char *encoding);
@@ -387,6 +412,8 @@ typedef void (XMLCALL *XML_EntityDeclHandler) (
 
 /*!
    DOCME
+
+   \ingroup handler-setting
 */
 XMLPARSEAPI(void)
 XML_SetEntityDeclHandler(XML_Parser parser,
@@ -591,6 +618,8 @@ typedef int (XMLCALL *XML_UnknownEncodingHandler) (
 
 /*!
    DOCME
+
+   \ingroup handler-setting
 */
 XMLPARSEAPI(void)
 XML_SetElementHandler(XML_Parser parser,
@@ -599,6 +628,8 @@ XML_SetElementHandler(XML_Parser parser,
 
 /*!
    DOCME
+
+   \ingroup handler-setting
 */
 XMLPARSEAPI(void)
 XML_SetStartElementHandler(XML_Parser parser,
@@ -606,6 +637,8 @@ XML_SetStartElementHandler(XML_Parser parser,
 
 /*!
    DOCME
+
+   \ingroup handler-setting
 */
 XMLPARSEAPI(void)
 XML_SetEndElementHandler(XML_Parser parser,
@@ -613,6 +646,8 @@ XML_SetEndElementHandler(XML_Parser parser,
 
 /*!
    DOCME
+
+   \ingroup handler-setting
 */
 XMLPARSEAPI(void)
 XML_SetCharacterDataHandler(XML_Parser parser,
@@ -620,6 +655,8 @@ XML_SetCharacterDataHandler(XML_Parser parser,
 
 /*!
    DOCME
+
+   \ingroup handler-setting
 */
 XMLPARSEAPI(void)
 XML_SetProcessingInstructionHandler(XML_Parser parser,
@@ -627,6 +664,8 @@ XML_SetProcessingInstructionHandler(XML_Parser parser,
 
 /*!
    DOCME
+
+   \ingroup handler-setting
 */
 XMLPARSEAPI(void)
 XML_SetCommentHandler(XML_Parser parser,
@@ -634,6 +673,8 @@ XML_SetCommentHandler(XML_Parser parser,
 
 /*!
    DOCME
+
+   \ingroup handler-setting
 */
 XMLPARSEAPI(void)
 XML_SetCdataSectionHandler(XML_Parser parser,
@@ -642,6 +683,8 @@ XML_SetCdataSectionHandler(XML_Parser parser,
 
 /*!
    DOCME
+
+   \ingroup handler-setting
 */
 XMLPARSEAPI(void)
 XML_SetStartCdataSectionHandler(XML_Parser parser,
@@ -649,6 +692,8 @@ XML_SetStartCdataSectionHandler(XML_Parser parser,
 
 /*!
    DOCME
+
+   \ingroup handler-setting
 */
 XMLPARSEAPI(void)
 XML_SetEndCdataSectionHandler(XML_Parser parser,
@@ -658,6 +703,8 @@ XML_SetEndCdataSectionHandler(XML_Parser parser,
    This sets the default handler and also inhibits expansion of
    internal entities. These entity references will be passed to the
    default handler, or to the skipped entity handler, if one is set.
+
+   \ingroup handler-setting
 */
 XMLPARSEAPI(void)
 XML_SetDefaultHandler(XML_Parser parser,
@@ -667,6 +714,8 @@ XML_SetDefaultHandler(XML_Parser parser,
    This sets the default handler but does not inhibit expansion of
    internal entities.  The entity reference will not be passed to the
    default handler.
+
+   \ingroup handler-setting
 */
 XMLPARSEAPI(void)
 XML_SetDefaultHandlerExpand(XML_Parser parser,
@@ -674,6 +723,8 @@ XML_SetDefaultHandlerExpand(XML_Parser parser,
 
 /*!
    DOCME
+
+   \ingroup handler-setting
 */
 XMLPARSEAPI(void)
 XML_SetDoctypeDeclHandler(XML_Parser parser,
@@ -682,6 +733,8 @@ XML_SetDoctypeDeclHandler(XML_Parser parser,
 
 /*!
    DOCME
+
+   \ingroup handler-setting
 */
 XMLPARSEAPI(void)
 XML_SetStartDoctypeDeclHandler(XML_Parser parser,
@@ -689,6 +742,8 @@ XML_SetStartDoctypeDeclHandler(XML_Parser parser,
 
 /*!
    DOCME
+
+   \ingroup handler-setting
 */
 XMLPARSEAPI(void)
 XML_SetEndDoctypeDeclHandler(XML_Parser parser,
@@ -696,6 +751,8 @@ XML_SetEndDoctypeDeclHandler(XML_Parser parser,
 
 /*!
    DOCME
+
+   \ingroup handler-setting
 */
 XMLPARSEAPI(void)
 XML_SetUnparsedEntityDeclHandler(XML_Parser parser,
@@ -703,6 +760,8 @@ XML_SetUnparsedEntityDeclHandler(XML_Parser parser,
 
 /*!
    DOCME
+
+   \ingroup handler-setting
 */
 XMLPARSEAPI(void)
 XML_SetNotationDeclHandler(XML_Parser parser,
@@ -710,6 +769,8 @@ XML_SetNotationDeclHandler(XML_Parser parser,
 
 /*!
    DOCME
+
+   \ingroup handler-setting
 */
 XMLPARSEAPI(void)
 XML_SetNamespaceDeclHandler(XML_Parser parser,
@@ -718,6 +779,8 @@ XML_SetNamespaceDeclHandler(XML_Parser parser,
 
 /*!
    DOCME
+
+   \ingroup handler-setting
 */
 XMLPARSEAPI(void)
 XML_SetStartNamespaceDeclHandler(XML_Parser parser,
@@ -725,6 +788,8 @@ XML_SetStartNamespaceDeclHandler(XML_Parser parser,
 
 /*!
    DOCME
+
+   \ingroup handler-setting
 */
 XMLPARSEAPI(void)
 XML_SetEndNamespaceDeclHandler(XML_Parser parser,
@@ -732,6 +797,8 @@ XML_SetEndNamespaceDeclHandler(XML_Parser parser,
 
 /*!
    DOCME
+
+   \ingroup handler-setting
 */
 XMLPARSEAPI(void)
 XML_SetNotStandaloneHandler(XML_Parser parser,
@@ -739,6 +806,8 @@ XML_SetNotStandaloneHandler(XML_Parser parser,
 
 /*!
    DOCME
+
+   \ingroup handler-setting
 */
 XMLPARSEAPI(void)
 XML_SetExternalEntityRefHandler(XML_Parser parser,
@@ -748,6 +817,8 @@ XML_SetExternalEntityRefHandler(XML_Parser parser,
    If a non-NULL value for arg is specified here, then it will be
    passed as the first argument to the external entity ref handler
    instead of the parser object.
+
+   \ingroup handler-setting
 */
 XMLPARSEAPI(void)
 XML_SetExternalEntityRefHandlerArg(XML_Parser parser,
@@ -755,6 +826,8 @@ XML_SetExternalEntityRefHandlerArg(XML_Parser parser,
 
 /*!
    DOCME
+
+   \ingroup handler-setting
 */
 XMLPARSEAPI(void)
 XML_SetSkippedEntityHandler(XML_Parser parser,
@@ -762,6 +835,8 @@ XML_SetSkippedEntityHandler(XML_Parser parser,
 
 /*!
    DOCME
+
+   \ingroup handler-setting
 */
 XMLPARSEAPI(void)
 XML_SetUnknownEncodingHandler(XML_Parser parser,
@@ -772,6 +847,8 @@ XML_SetUnknownEncodingHandler(XML_Parser parser,
    This can be called within a handler for a start element, end
    element, processing instruction or character data.  It causes the
    corresponding markup to be passed to the default handler.
+
+   \ingroup misc
 */
 XMLPARSEAPI(void)
 XML_DefaultCurrent(XML_Parser parser);
@@ -789,16 +866,26 @@ XML_DefaultCurrent(XML_Parser parser);
 
    Note: Calling XML_SetReturnNSTriplet after XML_Parse or
      XML_ParseBuffer has no effect.
+
+   \ingroup misc
 */
 
 XMLPARSEAPI(void)
 XML_SetReturnNSTriplet(XML_Parser parser, int do_nst);
 
-/*! This value is passed as the userData argument to callbacks. */
+/*!
+   This value is passed as the userData argument to callbacks.
+
+   \ingroup misc
+*/
 XMLPARSEAPI(void)
 XML_SetUserData(XML_Parser parser, void *userData);
 
-/*! Returns the last value set by XML_SetUserData or NULL. */
+/*!
+   Returns the last value set by XML_SetUserData or NULL.
+
+   \ingroup misc
+*/
 #define XML_GetUserData(parser) (*(void **)(parser))
 
 /*!
@@ -807,6 +894,8 @@ XML_SetUserData(XML_Parser parser, void *userData);
    zero otherwise.
    Note: Calling XML_SetEncoding after XML_Parse or XML_ParseBuffer
      has no effect and returns XML_STATUS_ERROR.
+
+   \ingroup misc
 */
 XMLPARSEAPI(enum XML_Status)
 XML_SetEncoding(XML_Parser parser, const XML_Char *encoding);
@@ -815,6 +904,8 @@ XML_SetEncoding(XML_Parser parser, const XML_Char *encoding);
    If this function is called, then the parser will be passed as the
    first argument to callbacks instead of userData.  The userData will
    still be accessible using XML_GetUserData.
+
+   \ingroup misc
 */
 XMLPARSEAPI(void)
 XML_UseParserAsHandlerArg(XML_Parser parser);
@@ -838,6 +929,8 @@ XML_UseParserAsHandlerArg(XML_Parser parser);
    Note: If XML_DTD is not defined when Expat is compiled, returns
      XML_ERROR_FEATURE_REQUIRES_XML_DTD.
    Note: If parser == NULL, returns XML_ERROR_INVALID_ARGUMENT.
+
+   \ingroup misc
 */
 XMLPARSEAPI(enum XML_Error)
 XML_UseForeignDTD(XML_Parser parser, XML_Bool useDTD);
@@ -851,12 +944,16 @@ XML_UseForeignDTD(XML_Parser parser, XML_Bool useDTD);
    XML_NotationDeclHandler and XML_UnparsedEntityDeclHandler. The base
    argument will be copied.  Returns XML_STATUS_ERROR if out of memory,
    XML_STATUS_OK otherwise.
+
+   \ingroup misc
 */
 XMLPARSEAPI(enum XML_Status)
 XML_SetBase(XML_Parser parser, const XML_Char *base);
 
 /*!
    DOCME
+
+   \ingroup misc
 */
 XMLPARSEAPI(const XML_Char *)
 XML_GetBase(XML_Parser parser);
@@ -867,6 +964,8 @@ XML_GetBase(XML_Parser parser);
    rather than defaulted. Each attribute/value pair counts as 2; thus
    this correspondds to an index into the atts array passed to the
    XML_StartElementHandler.  Returns -1 if parser == NULL.
+
+   \ingroup misc
 */
 XMLPARSEAPI(int)
 XML_GetSpecifiedAttributeCount(XML_Parser parser);
@@ -877,6 +976,8 @@ XML_GetSpecifiedAttributeCount(XML_Parser parser);
    parser == NULL.  Each attribute/value pair counts as 2; thus this
    correspondds to an index into the atts array passed to the
    XML_StartElementHandler.
+
+   \ingroup misc
 */
 XMLPARSEAPI(int)
 XML_GetIdAttributeIndex(XML_Parser parser);
@@ -901,6 +1002,8 @@ typedef struct {
    in the start-tag rather than defaulted. Each attribute/value pair counts
    as 1; thus the number of entries in the array is
    XML_GetSpecifiedAttributeCount(parser) / 2.
+
+   \ingroup misc
 */
 XMLPARSEAPI(const XML_AttrInfo *)
 XML_GetAttributeInfo(XML_Parser parser);
@@ -915,18 +1018,24 @@ XML_GetAttributeInfo(XML_Parser parser);
    described as a Boolean value, the implementation, at least for the
    1.95.x series, has always returned exactly one of the XML_Status
    values.
+
+   \ingroup parsing
 */
 XMLPARSEAPI(enum XML_Status)
 XML_Parse(XML_Parser parser, const char *s, int len, int isFinal);
 
 /*!
    DOCME
+
+   \ingroup parsing
 */
 XMLPARSEAPI(void *)
 XML_GetBuffer(XML_Parser parser, int len);
 
 /*!
    DOCME
+
+   \ingroup parsing
 */
 XMLPARSEAPI(enum XML_Status)
 XML_ParseBuffer(XML_Parser parser, int len, int isFinal);
@@ -962,6 +1071,8 @@ XML_ParseBuffer(XML_Parser parser, int len, int isFinal);
    parser (recursively), if one wants to stop parsing altogether.
 
    When suspended, parsing can be resumed by calling XML_ResumeParser(). 
+
+   \ingroup parsing
 */
 XMLPARSEAPI(enum XML_Status)
 XML_StopParser(XML_Parser parser, XML_Bool resumable);
@@ -978,6 +1089,8 @@ XML_StopParser(XML_Parser parser, XML_Bool resumable);
    to be applied recursively until the document entity's parser is restarted.
    That is, the parent parser will not resume by itself and it is up to the
    application to call XML_ResumeParser() on it at the appropriate moment.
+
+   \ingroup parsing
 */
 XMLPARSEAPI(enum XML_Status)
 XML_ResumeParser(XML_Parser parser);
@@ -999,6 +1112,8 @@ typedef struct {
    finished, or suspended and processing the final buffer.
    XXX XML_Parse() and XML_ParseBuffer() should return XML_ParsingStatus,
    XXX with XML_FINISHED_OK or XML_FINISHED_ERROR replacing XML_FINISHED
+
+   \ingroup parsing
 */
 XMLPARSEAPI(void)
 XML_GetParsingStatus(XML_Parser parser, XML_ParsingStatus *status);
@@ -1019,6 +1134,8 @@ XML_GetParsingStatus(XML_Parser parser, XML_ParsingStatus *status);
    safely be used in a separate thread.  The handlers and userData are
    initialized from the parser argument.  Returns NULL if out of memory.
    Otherwise returns a new XML_Parser object.
+
+   \ingroup parser-creation
 */
 XMLPARSEAPI(XML_Parser)
 XML_ExternalEntityParserCreate(XML_Parser parser,
@@ -1055,6 +1172,8 @@ enum XML_ParamEntityParsing {
    Note: If XML_SetParamEntityParsing is called after XML_Parse or
       XML_ParseBuffer, then it has no effect and will always return 0.
    Note: If parser == NULL, the function will do nothing and return 0.
+
+   \ingroup misc
 */
 XMLPARSEAPI(int)
 XML_SetParamEntityParsing(XML_Parser parser,
@@ -1066,6 +1185,8 @@ XML_SetParamEntityParsing(XML_Parser parser,
    function behavior. This must be called before parsing is started.
    Returns 1 if successful, 0 when called after parsing has started.
    Note: If parser == NULL, the function will do nothing and return 0.
+
+   \ingroup misc
 */
 XMLPARSEAPI(int)
 XML_SetHashSalt(XML_Parser parser,
@@ -1074,6 +1195,8 @@ XML_SetHashSalt(XML_Parser parser,
 /*!
    If XML_Parse or XML_ParseBuffer have returned XML_STATUS_ERROR, then
    XML_GetErrorCode returns information about the error.
+
+   \ingroup reporting
 */
 XMLPARSEAPI(enum XML_Error)
 XML_GetErrorCode(XML_Parser parser);
@@ -1098,22 +1221,30 @@ XML_GetErrorCode(XML_Parser parser);
    Note: XML_GetCurrentLineNumber and XML_GetCurrentColumnNumber
    return 0 to indicate an error.
    Note: XML_GetCurrentByteIndex returns -1 to indicate an error.
+
+   \ingroup reporting
 */
 XMLPARSEAPI(XML_Size) XML_GetCurrentLineNumber(XML_Parser parser);
 
 /*!
    DOCME
+
+   \ingroup reporting
 */
 XMLPARSEAPI(XML_Size) XML_GetCurrentColumnNumber(XML_Parser parser);
 
 /*!
    DOCME
+
+   \ingroup reporting
 */
 XMLPARSEAPI(XML_Index) XML_GetCurrentByteIndex(XML_Parser parser);
 
 /*!
    Return the number of bytes in the current event.
    Returns 0 if the event is in an internal entity.
+
+   \ingroup reporting
 */
 XMLPARSEAPI(int)
 XML_GetCurrentByteCount(XML_Parser parser);
@@ -1128,6 +1259,8 @@ XML_GetCurrentByteCount(XML_Parser parser);
 
    NOTE: The character pointer returned should not be used outside
    the handler that makes the call.
+
+   \ingroup reporting
 */
 XMLPARSEAPI(const char *)
 XML_GetInputContext(XML_Parser parser,
@@ -1139,11 +1272,19 @@ XML_GetInputContext(XML_Parser parser,
 #define XML_GetErrorColumnNumber XML_GetCurrentColumnNumber
 #define XML_GetErrorByteIndex    XML_GetCurrentByteIndex
 
-/*! Frees the content model passed to the element declaration handler */
+/*!
+   Frees the content model passed to the element declaration handler
+
+   \ingroup misc
+*/
 XMLPARSEAPI(void)
 XML_FreeContentModel(XML_Parser parser, XML_Content *model);
 
-/*! Exposing the memory handling functions used in Expat */
+/*!
+   Exposing the memory handling functions used in Expat
+
+   \ingroup misc
+*/
 XMLPARSEAPI(void *)
 XML_ATTR_MALLOC
 XML_ATTR_ALLOC_SIZE(2)
@@ -1151,6 +1292,8 @@ XML_MemMalloc(XML_Parser parser, size_t size);
 
 /*!
    DOCME
+
+   \ingroup misc
 */
 XMLPARSEAPI(void *)
 XML_ATTR_ALLOC_SIZE(3)
@@ -1158,19 +1301,33 @@ XML_MemRealloc(XML_Parser parser, void *ptr, size_t size);
 
 /*!
    DOCME
+
+   \ingroup misc
 */
 XMLPARSEAPI(void)
 XML_MemFree(XML_Parser parser, void *ptr);
 
-/*! Frees memory used by the parser. */
+/*!
+   Frees memory used by the parser.
+
+   \ingroup parser-creation
+*/
 XMLPARSEAPI(void)
 XML_ParserFree(XML_Parser parser);
 
-/*! Returns a string describing the error. */
+/*!
+   Returns a string describing the error.
+
+   \ingroup reporting
+*/
 XMLPARSEAPI(const XML_LChar *)
 XML_ErrorString(enum XML_Error code);
 
-/*! Return a string containing the version number of this expat */
+/*!
+   Return a string containing the version number of this expat
+
+   \ingroup misc
+*/
 XMLPARSEAPI(const XML_LChar *)
 XML_ExpatVersion(void);
 
@@ -1183,6 +1340,8 @@ typedef struct {
 /*!
    Return an XML_Expat_Version structure containing numeric version
    number information for this version of expat.
+
+   \ingroup misc
 */
 XMLPARSEAPI(XML_Expat_Version)
 XML_ExpatVersionInfo(void);
@@ -1211,6 +1370,8 @@ typedef struct {
 
 /*!
    DOCME
+
+   \ingroup misc
 */
 XMLPARSEAPI(const XML_Feature *)
 XML_GetFeatureList(void);
