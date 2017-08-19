@@ -39,6 +39,10 @@ cd expat
 if [[ ${MODE} = distcheck ]]; then
     ./configure
     make distcheck
+
+    mkdir -p ~/rpmbuild/{BUILD,BUILDROOT,RPMS,SOURCES,SPECS,SRPMS}
+    ln -v -s "$PWD"/expat-*.tar.bz2 ~/rpmbuild/SOURCES/
+    rpmbuild -ba expat.spec
 else
     ./qa.sh "${MODE}"
 fi

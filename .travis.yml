@@ -20,6 +20,7 @@ addons:
       - clang-4.0
       - docbook2x
       - dos2unix
+      - rpm
 
 script:
   - ./.travis.sh
