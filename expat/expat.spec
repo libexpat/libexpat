@@ -8,7 +8,7 @@ Release: %{release}
 License: MIT/X
 Group: Utilities/parsers
 URL: http://www.libexpat.org/
-Source: http://download.sourceforge.net/expat/expat-%{version}.tar.gz
+Source: https://downloads.sourceforge.net/project/expat/expat/%{version}/expat-%{version}.tar.bz2
 BuildRoot: /var/tmp/%{name}-buildroot
 
 %description
