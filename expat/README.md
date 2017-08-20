@@ -79,7 +79,7 @@ support this mode of compilation (yet):
 1. Mass-patch `Makefile.am` files to use `libexpatw.la` for a library name:
    <br/>
    `find -name Makefile.am -exec sed
-       -e 's,libexpat\.la,libexpatw\.la,'
+       -e 's,libexpat\.la,libexpatw.la,'
        -e 's,libexpat_la,libexpatw_la,'
        -i {} +`
 
