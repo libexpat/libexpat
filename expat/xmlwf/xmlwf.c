@@ -433,21 +433,22 @@ notationDecl(void *userData,
 {
   XmlwfUserData *data = (XmlwfUserData *)userData;
   NotationList *entry = malloc(sizeof(NotationList));
+  const char *errorMessage = "Unable to store NOTATION for output\n";
 
   if (entry == NULL) {
-    fprintf(stderr, "Unable to store NOTATION for output\n");
+    fputs(errorMessage, stderr);
     return; /* Nothing we can really do about this */
   }
   entry->notationName = xcsdup(notationName);
   if (entry->notationName == NULL) {
-    fprintf(stderr, "Unable to store NOTATION for output\n");
+    fputs(errorMessage, stderr);
     free(entry);
     return;
   }
   if (systemId != NULL) {
     entry->systemId = xcsdup(systemId);
     if (entry->systemId == NULL) {
-      fprintf(stderr, "Unable to store NOTATION for output\n");
+      fputs(errorMessage, stderr);
       free((void *)entry->notationName);
       free(entry);
       return;
@@ -459,7 +460,7 @@ notationDecl(void *userData,
   if (publicId != NULL) {
     entry->publicId = xcsdup(publicId);
     if (entry->publicId == NULL) {
-      fprintf(stderr, "Unable to store NOTATION for output\n");
+      fputs(errorMessage, stderr);
       free((void *)entry->systemId); /* Safe if it's NULL */
       free((void *)entry->notationName);
       free(entry);
