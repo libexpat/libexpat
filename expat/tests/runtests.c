@@ -6808,7 +6808,7 @@ END_TEST
 /* Test for issue #11, wrongly suppressed default handler */
 typedef struct default_check {
     const XML_Char *expected;
-    int len;
+    const int expectedLen;
     XML_Bool seen;
 } DefaultCheck;
 
@@ -6821,7 +6821,7 @@ checking_default_handler(void *userData,
     int i;
 
     for (i = 0; data[i].expected != NULL; i++) {
-        if (data[i].len == len &&
+        if (data[i].expectedLen == len &&
             !memcmp(data[i].expected, s, len * sizeof(XML_Char))) {
             data[i].seen = XML_TRUE;
             break;
