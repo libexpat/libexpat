@@ -258,19 +258,21 @@ processingInstruction(void *userData, const XML_Char *target,
 }
 
 
-static XML_Char *xmlCharDup(const XML_Char *s)
+static XML_Char *xcsdup(const XML_Char *s)
 {
   XML_Char *result;
-  int len = 0;
+  int count = 0;
+  int numBytes;
 
   /* Get the length of the string, including terminator */
-  while (s[len++] != 0) {
+  while (s[count++] != 0) {
     /* Do nothing */
   }
-  result = malloc(len * sizeof(XML_Char));
+  numBytes = count * sizeof(XML_Char);
+  result = malloc(numBytes);
   if (result == NULL)
     return NULL;
-  memcpy(result, s, len * sizeof(XML_Char));
+  memcpy(result, s, numBytes);
   return result;
 }
 
@@ -282,7 +284,7 @@ startDoctypeDecl(void *userData,
                  int has_internal_subset)
 {
   XmlwfUserData *data = (XmlwfUserData *)userData;
-  data->currentDoctypeName = xmlCharDup(doctypeName);
+  data->currentDoctypeName = xcsdup(doctypeName);
 }
 
 static void
@@ -406,14 +408,14 @@ notationDecl(void *userData,
     fprintf(stderr, "Unable to store NOTATION for output\n");
     return; /* Nothing we can really do about this */
   }
-  entry->notationName = xmlCharDup(notationName);
+  entry->notationName = xcsdup(notationName);
   if (entry->notationName == NULL) {
     fprintf(stderr, "Unable to store NOTATION for output\n");
     free(entry);
     return;
   }
   if (systemId != NULL) {
-    entry->systemId = xmlCharDup(systemId);
+    entry->systemId = xcsdup(systemId);
     if (entry->systemId == NULL) {
       fprintf(stderr, "Unable to store NOTATION for output\n");
       free((void *)entry->notationName);
@@ -425,7 +427,7 @@ notationDecl(void *userData,
     entry->systemId = NULL;
   }
   if (publicId != NULL) {
-    entry->publicId = xmlCharDup(publicId);
+    entry->publicId = xcsdup(publicId);
     if (entry->publicId == NULL) {
       fprintf(stderr, "Unable to store NOTATION for output\n");
       free((void *)entry->systemId); /* Safe if it's NULL */
