@@ -303,28 +303,30 @@ freeNotations(XmlwfUserData *data)
   data->notationListHead = NULL;
 }
 
+static int xcscmp(const XML_Char *xs, const XML_Char *xt)
+{
+  while (*xs != 0 && *xt != 0) {
+    if (*xs < *xt)
+      return -1;
+    if (*xs > *xt)
+      return 1;
+    xs++;
+    xt++;
+  }
+  if (*xs < *xt)
+    return -1;
+  if (*xs > *xt)
+    return 1;
+  return 0;
+}
+
 static int
 notationCmp(const void *a, const void *b)
 {
   const NotationList * const n1 = *(NotationList **)a;
   const NotationList * const n2 = *(NotationList **)b;
-  const XML_Char *name1 = n1->notationName;
-  const XML_Char *name2 = n2->notationName;
 
-  /* Compare notations by comparing their names */
-  while (*name1 != 0 && *name2 != 0) {
-    if (*name1 < *name2)
-      return -1;
-    if (*name1 > *name2)
-      return +1;
-    name1++;
-    name2++;
-  }
-  if (*name1 < *name2)
-    return -1;
-  if (*name1 > *name2)
-    return +1;
-  return 0;
+  return xcscmp(n1->notationName, n2->notationName);
 }
 
 static void XMLCALL
