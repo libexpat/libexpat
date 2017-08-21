@@ -412,7 +412,7 @@ utf8_toUtf8(const ENCODING *UNUSED_P(enc),
   }
 
   const ptrdiff_t bytesToCopy = fromLim - *fromP;
-  memcpy((void *)*toP, (const void *)*fromP, (size_t)bytesToCopy);
+  memcpy(*toP, *fromP, bytesToCopy);
   *fromP += bytesToCopy;
   *toP += bytesToCopy;
 
