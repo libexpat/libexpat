@@ -304,8 +304,8 @@ freeNotations(XmlwfUserData *data)
 static int
 notationCmp(const void *a, const void *b)
 {
-  const NotationList *n1 = *(NotationList **)a;
-  const NotationList *n2 = *(NotationList **)b;
+  const NotationList * const n1 = *(NotationList **)a;
+  const NotationList * const n2 = *(NotationList **)b;
   const XML_Char *name1 = n1->notationName;
   const XML_Char *name2 = n2->notationName;
 
