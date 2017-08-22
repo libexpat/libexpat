@@ -6538,7 +6538,7 @@ record_element_end_handler(void *userData,
 START_TEST(test_trailing_spaces_in_elements)
 {
     const char *text = "<doc   >Hi</doc >";
-    const XML_Char *expected = "doc/doc";
+    const XML_Char *expected = XCS("doc/doc");
     CharData storage;
 
     CharData_Init(&storage);
