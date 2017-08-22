@@ -7172,27 +7172,27 @@ overwrite_start_checker(void *userData, const XML_Char *name,
                         const XML_Char **atts)
 {
     CharData *storage = (CharData *) userData;
-    CharData_AppendString(storage, "start ");
+    CharData_AppendXMLChars(storage, XCS("start "), 6);
     CharData_AppendXMLChars(storage, name, -1);
     while (*atts != NULL) {
-        CharData_AppendString(storage, "\nattribute ");
+        CharData_AppendXMLChars(storage, XCS("\nattribute "), 11);
         CharData_AppendXMLChars(storage, *atts, -1);
         atts += 2;
     }
-    CharData_AppendString(storage, "\n");
+    CharData_AppendXMLChars(storage, XCS("\n"), 1);
 }
 
 static void XMLCALL
 overwrite_end_checker(void *userData, const XML_Char *name)
 {
     CharData *storage = (CharData *) userData;
-    CharData_AppendString(storage, "end ");
+    CharData_AppendXMLChars(storage, XCS("end "), 4);
     CharData_AppendXMLChars(storage, name, -1);
-    CharData_AppendString(storage, "\n");
+    CharData_AppendXMLChars(storage, XCS("\n"), 1);
 }
 
 static void
-run_ns_tagname_overwrite_test(const char *text, const char *result)
+run_ns_tagname_overwrite_test(const char *text, const XML_Char *result)
 {
     CharData storage;
     CharData_Init(&storage);
@@ -7201,7 +7201,7 @@ run_ns_tagname_overwrite_test(const char *text, const char *result)
                           overwrite_start_checker, overwrite_end_checker);
     if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text), XML_TRUE) == XML_STATUS_ERROR)
         xml_failure(parser);
-    CharData_CheckString(&storage, result);
+    CharData_CheckXMLChars(&storage, result);
 }
 
 /* Regression test for SF bug #566334. */
@@ -7212,15 +7212,15 @@ START_TEST(test_ns_tagname_overwrite)
         "  <n:f n:attr='foo'/>\n"
         "  <n:g n:attr2='bar'/>\n"
         "</n:e>";
-    const char *result =
-        "start http://example.org/ e\n"
-        "start http://example.org/ f\n"
-        "attribute http://example.org/ attr\n"
-        "end http://example.org/ f\n"
-        "start http://example.org/ g\n"
-        "attribute http://example.org/ attr2\n"
-        "end http://example.org/ g\n"
-        "end http://example.org/ e\n";
+    const XML_Char *result =
+        XCS("start http://example.org/ e\n")
+        XCS("start http://example.org/ f\n")
+        XCS("attribute http://example.org/ attr\n")
+        XCS("end http://example.org/ f\n")
+        XCS("start http://example.org/ g\n")
+        XCS("attribute http://example.org/ attr2\n")
+        XCS("end http://example.org/ g\n")
+        XCS("end http://example.org/ e\n");
     run_ns_tagname_overwrite_test(text, result);
 }
 END_TEST
@@ -7233,15 +7233,15 @@ START_TEST(test_ns_tagname_overwrite_triplet)
         "  <n:f n:attr='foo'/>\n"
         "  <n:g n:attr2='bar'/>\n"
         "</n:e>";
-    const char *result =
-        "start http://example.org/ e n\n"
-        "start http://example.org/ f n\n"
-        "attribute http://example.org/ attr n\n"
-        "end http://example.org/ f n\n"
-        "start http://example.org/ g n\n"
-        "attribute http://example.org/ attr2 n\n"
-        "end http://example.org/ g n\n"
-        "end http://example.org/ e n\n";
+    const XML_Char *result =
+        XCS("start http://example.org/ e n\n")
+        XCS("start http://example.org/ f n\n")
+        XCS("attribute http://example.org/ attr n\n")
+        XCS("end http://example.org/ f n\n")
+        XCS("start http://example.org/ g n\n")
+        XCS("attribute http://example.org/ attr2 n\n")
+        XCS("end http://example.org/ g n\n")
+        XCS("end http://example.org/ e n\n");
     XML_SetReturnNSTriplet(parser, XML_TRUE);
     run_ns_tagname_overwrite_test(text, result);
 }
