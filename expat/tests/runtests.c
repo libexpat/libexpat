@@ -7760,7 +7760,7 @@ START_TEST(test_ns_utf16_leafname)
          */
         "<\0n\0:\0e\0 \0x\0m\0l\0n\0s\0:\0n\0=\0'\0U\0R\0I\0'\0 \0"
         "n\0:\0\x04\x0e=\0'\0a\0'\0 \0/\0>\0";
-    const XML_Char *expected = "a";
+    const XML_Char *expected = XCS("a");
     CharData storage;
 
     CharData_Init(&storage);
