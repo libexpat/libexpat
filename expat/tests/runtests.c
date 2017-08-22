@@ -2420,8 +2420,8 @@ START_TEST(test_multichar_cdata_utf16)
      *   UTF-16: 0xd834 0xdd5e
      *   UTF-8:  0xf0 0x9d 0x85 0x9e
      * and {CROTCHET} is U+1d15f (a crotchet or quarter-note)
-     *   UTF-16: 0xd834 0xdd5e
-     *   UTF-8:  0xf0 0x9d 0x85 0x9e
+     *   UTF-16: 0xd834 0xdd5f
+     *   UTF-8:  0xf0 0x9d 0x85 0x9f
      */
     const char text[] =
         "\0<\0?\0x\0m\0l\0"
@@ -2431,7 +2431,11 @@ START_TEST(test_multichar_cdata_utf16)
         "\0<\0a\0>\0<\0!\0[\0C\0D\0A\0T\0A\0["
         "\xd8\x34\xdd\x5e\xd8\x34\xdd\x5f"
         "\0]\0]\0>\0<\0/\0a\0>";
-    const char *expected = "\xf0\x9d\x85\x9e\xf0\x9d\x85\x9f";
+#ifdef XML_UNICODE
+    const XML_Char *expected = XCS("\xd834\xdd5e\xd834\xdd5f");
+#else
+    const XML_Char *expected = XCS("\xf0\x9d\x85\x9e\xf0\x9d\x85\x9f");
+#endif
     CharData storage;
 
     CharData_Init(&storage);
