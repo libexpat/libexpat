@@ -4537,12 +4537,12 @@ external_entity_valuer(XML_Parser parser,
     ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
     if (ext_parser == NULL)
         fail("Could not create external entity parser");
-    if (!strcmp(systemId, "004-1.ent")) {
+    if (!xcstrcmp(systemId, XCS("004-1.ent"))) {
         if (_XML_Parse_SINGLE_BYTES(ext_parser, text1, strlen(text1),
                                     XML_TRUE) == XML_STATUS_ERROR)
             xml_failure(ext_parser);
     }
-    else if (!strcmp(systemId, "004-2.ent")) {
+    else if (!xcstrcmp(systemId, XCS("004-2.ent"))) {
         ExtFaults *fault = (ExtFaults *)XML_GetUserData(parser);
         enum XML_Status status;
         enum XML_Error error;
