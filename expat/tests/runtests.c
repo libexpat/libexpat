@@ -1819,7 +1819,7 @@ START_TEST(test_wfc_undeclared_entity_with_external_subset) {
 
     XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
     XML_SetExternalEntityRefHandler(parser, external_entity_loader);
-    run_ext_character_check(text, &test_data, "");
+    run_ext_character_check(text, &test_data, XCS(""));
 }
 END_TEST
 
