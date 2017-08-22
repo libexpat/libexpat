@@ -7099,13 +7099,13 @@ static void XMLCALL
 triplet_start_checker(void *userData, const XML_Char *name,
                       const XML_Char **atts)
 {
-    char **elemstr = (char **)userData;
+    XML_Char **elemstr = (XML_Char **)userData;
     char buffer[1024];
-    if (strcmp(elemstr[0], name) != 0) {
+    if (xcstrcmp(elemstr[0], name) != 0) {
         sprintf(buffer, "unexpected start string: '%" XML_FMT_STR "'", name);
         fail(buffer);
     }
-    if (strcmp(elemstr[1], atts[0]) != 0) {
+    if (xcstrcmp(elemstr[1], atts[0]) != 0) {
         sprintf(buffer, "unexpected attribute string: '%" XML_FMT_STR "'",
                 atts[0]);
         fail(buffer);
@@ -7120,8 +7120,8 @@ triplet_start_checker(void *userData, const XML_Char *name,
 static void XMLCALL
 triplet_end_checker(void *userData, const XML_Char *name)
 {
-    char **elemstr = (char **)userData;
-    if (strcmp(elemstr[0], name) != 0) {
+    XML_Char **elemstr = (XML_Char **)userData;
+    if (xcstrcmp(elemstr[0], name) != 0) {
         char buffer[1024];
         sprintf(buffer, "unexpected end string: '%" XML_FMT_STR "'", name);
         fail(buffer);
