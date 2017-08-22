@@ -3748,7 +3748,7 @@ external_entity_good_cdata_ascii(XML_Parser parser,
 {
     const char *text =
         "<a><![CDATA[<greeting>Hello, world!</greeting>]]></a>";
-    const char *expected = "<greeting>Hello, world!</greeting>";
+    const XML_Char *expected = XCS("<greeting>Hello, world!</greeting>");
     CharData storage;
     XML_Parser ext_parser;
 
