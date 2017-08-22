@@ -53,7 +53,7 @@ RunXmlwfNotWF() {
 RunXmlwfWF() {
   file="$1"
   reldir="$2"
-  $XMLWF -p -d "$OUTPUT$reldir" "$file" > outfile || return $?
+  $XMLWF -p -N -d "$OUTPUT$reldir" "$file" > outfile || return $?
   read outdata < outfile 
   if test "$outdata" = "" ; then 
       if [ -f "out/$file" ] ; then 
