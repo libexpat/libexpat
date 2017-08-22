@@ -5970,7 +5970,7 @@ START_TEST(test_unknown_encoding_long_name_2)
         "<abcdefghabcdefghabcdefghijklmnop>"
         "Hi"
         "</abcdefghabcdefghabcdefghijklmnop>";
-    const XML_Char *expected = "abcdefghabcdefghabcdefghijklmnop";
+    const XML_Char *expected = XCS("abcdefghabcdefghabcdefghijklmnop");
     CharData storage;
 
     CharData_Init(&storage);
