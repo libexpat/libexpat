@@ -4400,7 +4400,7 @@ START_TEST(test_ignore_section_utf16)
         /* <d><e>&en;</e></d> */
         "<\0d\0>\0<\0e\0>\0&\0e\0n\0;\0<\0/\0e\0>\0<\0/\0d\0>\0";
     const XML_Char *expected =
-        "<![IGNORE[<!ELEMENT e (#PCDATA)*>]]>\n&en;";
+        XCS("<![IGNORE[<!ELEMENT e (#PCDATA)*>]]>\n&en;");
     CharData storage;
 
     CharData_Init(&storage);
