@@ -1976,12 +1976,12 @@ END_TEST
 
 /* Test handling of attribute declarations */
 typedef struct AttTest {
-    const XML_Char *definition;
+    const char     *definition;
     const XML_Char *element_name;
     const XML_Char *attr_name;
     const XML_Char *attr_type;
     const XML_Char *default_value;
-    int is_required;
+    int             is_required;
 } AttTest;
 
 static void XMLCALL
@@ -1994,15 +1994,15 @@ verify_attlist_decl_handler(void *userData,
 {
     AttTest *at = (AttTest *)userData;
 
-    if (strcmp(element_name, at->element_name))
+    if (xcstrcmp(element_name, at->element_name))
         fail("Unexpected element name in attribute declaration");
-    if (strcmp(attr_name, at->attr_name))
+    if (xcstrcmp(attr_name, at->attr_name))
         fail("Unexpected attribute name in attribute declaration");
-    if (strcmp(attr_type, at->attr_type))
+    if (xcstrcmp(attr_type, at->attr_type))
         fail("Unexpected attribute type in attribute declaration");
     if ((default_value == NULL && at->default_value != NULL) ||
         (default_value != NULL && at->default_value == NULL) ||
-        (default_value != NULL && strcmp(default_value, at->default_value)))
+        (default_value != NULL && xcstrcmp(default_value, at->default_value)))
         fail("Unexpected default value in attribute declaration");
     if (is_required != at->is_required)
         fail("Requirement mismatch in attribute declaration");
@@ -2018,9 +2018,9 @@ START_TEST(test_dtd_attr_handling)
             "<!ATTLIST doc a ( one | two | three ) #REQUIRED>\n"
             "]>"
             "<doc a='two'/>",
-            "doc",
-            "a",
-            "(one|two|three)", /* Extraneous spaces will be removed */
+            XCS("doc"),
+            XCS("a"),
+            XCS("(one|two|three)"), /* Extraneous spaces will be removed */
             NULL,
             XML_TRUE
         },
@@ -2029,9 +2029,9 @@ START_TEST(test_dtd_attr_handling)
             "<!ATTLIST doc a NOTATION (foo) #IMPLIED>\n"
             "]>"
             "<doc/>",
-            "doc",
-            "a",
-            "NOTATION(foo)",
+            XCS("doc"),
+            XCS("a"),
+            XCS("NOTATION(foo)"),
             NULL,
             XML_FALSE
         },
@@ -2039,20 +2039,24 @@ START_TEST(test_dtd_attr_handling)
             "<!ATTLIST doc a NOTATION (foo) 'bar'>\n"
             "]>"
             "<doc/>",
-            "doc",
-            "a",
-            "NOTATION(foo)",
-            "bar",
+            XCS("doc"),
+            XCS("a"),
+            XCS("NOTATION(foo)"),
+            XCS("bar"),
             XML_FALSE
         },
         {
             "<!ATTLIST doc a CDATA '\xdb\xb2'>\n"
             "]>"
             "<doc/>",
-            "doc",
-            "a",
-            "CDATA",
-            "\xdb\xb2",
+            XCS("doc"),
+            XCS("a"),
+            XCS("CDATA"),
+#ifdef XML_UNICODE
+            XCS("\x06f2"),
+#else
+            XCS("\xdb\xb2"),
+#endif
             XML_FALSE
         },
         { NULL, NULL, NULL, NULL, NULL, XML_FALSE }
