@@ -5820,12 +5820,12 @@ MiscEncodingHandler(void *data,
     int i;
     int high_map = -2; /* Assume a 2-byte sequence */
 
-    if (!strcmp(encoding, "invalid-9") ||
-        !strcmp(encoding, "ascii-like") ||
-        !strcmp(encoding, "invalid-len") ||
-        !strcmp(encoding, "invalid-a") ||
-        !strcmp(encoding, "invalid-surrogate") ||
-        !strcmp(encoding, "invalid-high"))
+    if (!xcstrcmp(encoding, XCS("invalid-9")) ||
+        !xcstrcmp(encoding, XCS("ascii-like")) ||
+        !xcstrcmp(encoding, XCS("invalid-len")) ||
+        !xcstrcmp(encoding, XCS("invalid-a")) ||
+        !xcstrcmp(encoding, XCS("invalid-surrogate")) ||
+        !xcstrcmp(encoding, XCS("invalid-high")))
         high_map = -1;
 
     for (i = 0; i < 128; ++i)
@@ -5834,28 +5834,28 @@ MiscEncodingHandler(void *data,
         info->map[i] = high_map;
 
     /* If required, put an invalid value in the ASCII entries */
-    if (!strcmp(encoding, "invalid-9"))
+    if (!xcstrcmp(encoding, XCS("invalid-9")))
         info->map[9] = 5;
     /* If required, have a top-bit set character starts a 5-byte sequence */
-    if (!strcmp(encoding, "invalid-len"))
+    if (!xcstrcmp(encoding, XCS("invalid-len")))
         info->map[0x81] = -5;
     /* If required, make a top-bit set character a valid ASCII character */
-    if (!strcmp(encoding, "invalid-a"))
+    if (!xcstrcmp(encoding, XCS("invalid-a")))
         info->map[0x82] = 'a';
     /* If required, give a top-bit set character a forbidden value,
      * what would otherwise be the first of a surrogate pair.
      */
-    if (!strcmp(encoding, "invalid-surrogate"))
+    if (!xcstrcmp(encoding, XCS("invalid-surrogate")))
         info->map[0x83] = 0xd801;
     /* If required, give a top-bit set character too high a value */
-    if (!strcmp(encoding, "invalid-high"))
+    if (!xcstrcmp(encoding, XCS("invalid-high")))
         info->map[0x84] = 0x010101;
 
     info->data = data;
     info->release = NULL;
-    if (!strcmp(encoding, "failing-conv"))
+    if (!xcstrcmp(encoding, XCS("failing-conv")))
         info->convert = failing_converter;
-    else if (!strcmp(encoding, "prefix-conv"))
+    else if (!xcstrcmp(encoding, XCS("prefix-conv")))
         info->convert = prefix_converter;
     else
         info->convert = NULL;
