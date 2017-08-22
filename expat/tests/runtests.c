@@ -4209,7 +4209,8 @@ END_TEST
 START_TEST(test_predefined_entities)
 {
     const char *text = "<doc>&lt;&gt;&amp;&quot;&apos;</doc>";
-    const char *result = "<>&\"'";
+    const XML_Char *expected = XCS("<doc>&lt;&gt;&amp;&quot;&apos;</doc>");
+    const XML_Char *result = XCS("<>&\"'");
     CharData storage;
 
     XML_SetDefaultHandler(parser, accumulate_characters);
@@ -4222,7 +4223,7 @@ START_TEST(test_predefined_entities)
                                 XML_TRUE) == XML_STATUS_ERROR)
         xml_failure(parser);
     /* The default handler doesn't translate the entities */
-    CharData_CheckXMLChars(&storage, text);
+    CharData_CheckXMLChars(&storage, expected);
 
     /* Now try again and check the translation */
     XML_ParserReset(parser, NULL);
