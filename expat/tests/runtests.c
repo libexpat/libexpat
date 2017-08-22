@@ -6455,7 +6455,11 @@ START_TEST(test_ext_entity_utf8_non_bom)
         NULL,
         EE_PARSE_NONE
     };
-    const XML_Char *expected = "\xef\xbb\x80";
+#ifdef XML_UNICODE
+    const XML_Char *expected = XCS("\xfec0");
+#else
+    const XML_Char *expected = XCS("\xef\xbb\x80");
+#endif
     CharData storage;
 
     CharData_Init(&storage);
