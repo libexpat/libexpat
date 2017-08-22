@@ -6582,7 +6582,7 @@ START_TEST(test_utf16_second_attr)
     const char text[] =
         "<\0d\0 \0a\0=\0'\0\x31\0'\0 \0"
         "\x04\x0e\x08\x0e=\0'\0\x32\0'\0/\0>\0";
-    const XML_Char *expected = "1";
+    const XML_Char *expected = XCS("1");
     CharData storage;
 
     CharData_Init(&storage);
