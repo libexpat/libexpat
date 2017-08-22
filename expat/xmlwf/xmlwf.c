@@ -309,7 +309,7 @@ startDoctypeDecl(void *userData,
                  const XML_Char *doctypeName,
                  const XML_Char *UNUSED_P(sysid),
                  const XML_Char *UNUSED_P(publid),
-                 int has_internal_subset)
+                 int UNUSED_P(has_internal_subset))
 {
   XmlwfUserData *data = (XmlwfUserData *)userData;
   data->currentDoctypeName = xcsdup(doctypeName);
