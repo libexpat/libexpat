@@ -3649,7 +3649,7 @@ rsqb_handler(void *userData, const XML_Char *s, int len)
 {
     int *pfound = (int *)userData;
 
-    if (len == 1 && *s == ']')
+    if (len == 1 && *s == XCS(']'))
         *pfound = 1;
 }
 
