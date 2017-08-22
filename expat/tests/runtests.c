@@ -5306,7 +5306,7 @@ START_TEST(test_suspend_resume_parameter_entity)
         "%foo;\n"
         "]>\n"
         "<doc>Hello, world</doc>";
-    const char *expected = "Hello, world";
+    const XML_Char *expected = XCS("Hello, world");
     CharData storage;
 
     CharData_Init(&storage);
@@ -5317,7 +5317,7 @@ START_TEST(test_suspend_resume_parameter_entity)
     if (XML_Parse(parser, text, strlen(text),
                   XML_TRUE) != XML_STATUS_SUSPENDED)
         xml_failure(parser);
-    CharData_CheckXMLChars(&storage, "");
+    CharData_CheckXMLChars(&storage, XCS(""));
     if (XML_ResumeParser(parser) != XML_STATUS_OK)
         xml_failure(parser);
     CharData_CheckXMLChars(&storage, expected);
