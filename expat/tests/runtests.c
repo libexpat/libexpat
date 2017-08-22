@@ -5759,7 +5759,7 @@ START_TEST(test_utf16_be_comment)
         "\0<\0!\0-\0-\0 \0C\0o\0m\0m\0e\0n\0t\0 \0A\0 \0-\0-\0>\0\n"
         /* <doc/> */
         "\0<\0d\0o\0c\0/\0>";
-    const XML_Char *expected = " Comment A ";
+    const XML_Char *expected = XCS(" Comment A ");
     CharData storage;
 
     CharData_Init(&storage);
@@ -5779,7 +5779,7 @@ START_TEST(test_utf16_le_comment)
         "<\0!\0-\0-\0 \0C\0o\0m\0m\0e\0n\0t\0 \0B\0 \0-\0-\0>\0\n\0"
         /* <doc/> */
         "<\0d\0o\0c\0/\0>\0";
-    const XML_Char *expected = " Comment B ";
+    const XML_Char *expected = XCS(" Comment B ");
     CharData storage;
 
     CharData_Init(&storage);
