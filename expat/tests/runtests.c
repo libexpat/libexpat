@@ -4821,7 +4821,7 @@ START_TEST(test_predefined_entity_redefinition)
         "<!ENTITY apos 'foo'>\n"
         "]>\n"
         "<doc>&apos;</doc>";
-    run_character_check(text, "'");
+    run_character_check(text, XCS("'"));
 }
 END_TEST
 
