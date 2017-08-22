@@ -6514,7 +6514,11 @@ END_TEST
 START_TEST(test_utf8_in_cdata_section_2)
 {
     const char *text = "<doc><![CDATA[\xc3\xa9]\xc3\xa9two]]></doc>";
-    const XML_Char *expected = "\xc3\xa9]\xc3\xa9two";
+#ifdef XML_UNICODE
+    const XML_Char *expected = XCS("\x00e9]\x00e9two");
+#else
+    const XML_Char *expected = XCS("\xc3\xa9]\xc3\xa9two");
+#endif
 
     run_character_check(text, expected);
 }
