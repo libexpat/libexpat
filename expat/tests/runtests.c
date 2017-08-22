@@ -7811,7 +7811,11 @@ START_TEST(test_ns_utf16_doctype)
         "\0x\0m\0l\0n\0s\0:\0f\0o\0o\0=\0'\0U\0R\0I\0'\0>"
         "\0&\0b\0a\0r\0;"
         "\0<\0/\0f\0o\0o\0:\x0e\x04\0>";
-    const XML_Char *expected = "URI \xe0\xb8\x84";
+#ifdef XML_UNICODE
+    const XML_Char *expected = XCS("URI \x0e04");
+#else
+    const XML_Char *expected = XCS("URI \xe0\xb8\x84");
+#endif
     CharData storage;
 
     CharData_Init(&storage);
