@@ -4895,7 +4895,7 @@ START_TEST(test_nested_groups)
     if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
                                 XML_TRUE) == XML_STATUS_ERROR)
         xml_failure(parser);
-    CharData_CheckString(&storage, "doce");
+    CharData_CheckXMLChars(&storage, XCS("doce"));
     if (dummy_handler_flags != DUMMY_ELEMENT_DECL_HANDLER_FLAG)
         fail("Element handler not fired");
 }
