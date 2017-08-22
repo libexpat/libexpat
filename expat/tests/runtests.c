@@ -6196,8 +6196,12 @@ START_TEST(test_ext_entity_latin1_utf16be_bom)
         NULL,
         EE_PARSE_NONE
     };
+#ifdef XML_UNICODE
+    const XML_Char *expected = XCS("\x00fe\x00ff L");
+#else
     /* In UTF-8, y-diaeresis is 0xc3 0xbf, lowercase thorn is 0xc3 0xbe */
-    const XML_Char *expected = "\xc3\xbe\xc3\xbf L";
+    const XML_Char *expected = XCS("\xc3\xbe\xc3\xbf L");
+#endif
     CharData storage;
 
 
