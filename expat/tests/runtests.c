@@ -6618,9 +6618,9 @@ accumulate_entity_decl(void *userData,
     CharData *storage = (CharData *)userData;
 
     CharData_AppendXMLChars(storage, entityName, -1);
-    CharData_AppendXMLChars(storage, "=", 1);
+    CharData_AppendXMLChars(storage, XCS("="), 1);
     CharData_AppendXMLChars(storage, value, value_length);
-    CharData_AppendXMLChars(storage, "\n", 1);
+    CharData_AppendXMLChars(storage, XCS("\n"), 1);
 }
 
 
