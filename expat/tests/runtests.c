@@ -3031,14 +3031,14 @@ END_TEST
 
 /* Test attribute counts, indexing, etc */
 typedef struct attrInfo {
-    const char *name;
-    const char *value;
+    const XML_Char *name;
+    const XML_Char *value;
 } AttrInfo;
 
 typedef struct elementInfo {
-    const char *name;
+    const XML_Char *name;
     int attr_count;
-    const char *id_name;
+    const XML_Char *id_name;
     AttrInfo *attributes;
 } ElementInfo;
 
@@ -3052,7 +3052,7 @@ counting_start_element_handler(void *userData,
     int count, id, i;
 
     while (info->name != NULL) {
-        if (!strcmp(name, info->name))
+        if (!xcstrcmp(name, info->name))
             break;
         info++;
     }
@@ -3074,14 +3074,14 @@ counting_start_element_handler(void *userData,
         fail("ID not present");
         return;
     }
-    if (id != -1 && strcmp(atts[id], info->id_name)) {
+    if (id != -1 && xcstrcmp(atts[id], info->id_name)) {
         fail("ID does not have the correct name");
         return;
     }
     for (i = 0; i < info->attr_count; i++) {
         attr = info->attributes;
         while (attr->name != NULL) {
-            if (!strcmp(atts[0], attr->name))
+            if (!xcstrcmp(atts[0], attr->name))
                 break;
             attr++;
         }
@@ -3089,7 +3089,7 @@ counting_start_element_handler(void *userData,
             fail("Attribute not recognised");
             return;
         }
-        if (strcmp(atts[1], attr->value)) {
+        if (xcstrcmp(atts[1], attr->value)) {
             fail("Attribute has wrong value");
             return;
         }
