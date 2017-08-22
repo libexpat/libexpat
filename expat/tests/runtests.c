@@ -7135,9 +7135,9 @@ START_TEST(test_return_ns_triplet)
         "<foo:e xmlns:foo='http://example.org/' bar:a='12'\n"
         "       xmlns:bar='http://example.org/'>";
     const char *epilog = "</foo:e>";
-    const char *elemstr[] = {
-        "http://example.org/ e foo",
-        "http://example.org/ a bar"
+    const XML_Char *elemstr[] = {
+        XCS("http://example.org/ e foo"),
+        XCS("http://example.org/ a bar")
     };
     XML_SetReturnNSTriplet(parser, XML_TRUE);
     XML_SetUserData(parser, elemstr);
