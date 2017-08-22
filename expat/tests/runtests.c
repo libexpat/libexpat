@@ -6643,8 +6643,13 @@ START_TEST(test_utf16_pe)
         "\0%\x0e\x04\x0e\x08\0;\0\n"
         "\0]\0>\0\n"
         "\0<\0d\0o\0c\0>\0<\0/\0d\0o\0c\0>";
+#ifdef XML_UNICODE
     const XML_Char *expected =
-        "\xe0\xb8\x84\xe0\xb8\x88=<!ELEMENT doc (#PCDATA)>\n";
+        XCS("\x0e04\x0e08=<!ELEMENT doc (#PCDATA)>\n");
+#else
+    const XML_Char *expected =
+        XCS("\xe0\xb8\x84\xe0\xb8\x88=<!ELEMENT doc (#PCDATA)>\n");
+#endif
     CharData storage;
 
     CharData_Init(&storage);
