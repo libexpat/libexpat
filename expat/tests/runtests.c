@@ -1879,7 +1879,7 @@ START_TEST(test_not_standalone_handler_accept)
     XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
     XML_SetExternalEntityRefHandler(parser, external_entity_loader);
     XML_SetNotStandaloneHandler(parser, accept_not_standalone_handler);
-    run_ext_character_check(text, &test_data, "");
+    run_ext_character_check(text, &test_data, XCS(""));
 
     /* Repeat wtihout the external entity handler */
     XML_ParserReset(parser, NULL);
