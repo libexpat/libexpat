@@ -7076,7 +7076,7 @@ END_TEST
 static void
 namespace_setup(void)
 {
-    parser = XML_ParserCreateNS(NULL, ' ');
+    parser = XML_ParserCreateNS(NULL, XCS(' '));
     if (parser == NULL)
         fail("Parser not created.");
 }
