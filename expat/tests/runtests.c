@@ -6313,11 +6313,15 @@ START_TEST(test_ext_entity_utf16_be)
         NULL,
         EE_PARSE_NONE
     };
+#ifdef XML_UNICODE
+    const XML_Char *expected = XCS("\x3c00\x6500\x2f00\x3e00");
+#else
     const XML_Char *expected =
-        "\xe3\xb0\x80"  /* U+3C00 */
-        "\xe6\x94\x80"  /* U+6A00 */
-        "\xe2\xbc\x80"  /* U+2F00 */
-        "\xe3\xb8\x80"; /* U+3E00 */
+        XCS("\xe3\xb0\x80"   /* U+3C00 */
+            "\xe6\x94\x80"   /* U+6500 */
+            "\xe2\xbc\x80"   /* U+2F00 */
+            "\xe3\xb8\x80"); /* U+3E00 */
+#endif
     CharData storage;
 
     CharData_Init(&storage);
