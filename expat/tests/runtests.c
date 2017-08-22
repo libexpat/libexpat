@@ -7391,8 +7391,8 @@ START_TEST(test_ns_prefix_with_empty_uri_4)
     /* Packaged info expected by the end element handler;
        the weird structuring lets us re-use the triplet_end_checker()
        function also used for another test. */
-    const char *elemstr[] = {
-        "http://example.org/ doc prefix"
+    const XML_Char *elemstr[] = {
+        XCS("http://example.org/ doc prefix")
     };
     XML_SetReturnNSTriplet(parser, XML_TRUE);
     XML_SetUserData(parser, elemstr);
