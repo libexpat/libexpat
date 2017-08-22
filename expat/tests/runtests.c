@@ -6003,7 +6003,7 @@ START_TEST(test_unknown_ascii_encoding_ok)
         "<doc>Hello, world</doc>";
 
     XML_SetUnknownEncodingHandler(parser, MiscEncodingHandler, NULL);
-    run_character_check(text, "Hello, world");
+    run_character_check(text, XCS("Hello, world"));
 }
 END_TEST
 
