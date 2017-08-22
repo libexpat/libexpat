@@ -5042,9 +5042,9 @@ external_entity_devaluer(XML_Parser parser,
     XML_Parser ext_parser;
     int clear_handler = (intptr_t)XML_GetUserData(parser);
 
-    if (systemId == NULL || !strcmp(systemId, "bar"))
+    if (systemId == NULL || !xcstrcmp(systemId, XCS("bar")))
         return XML_STATUS_OK;
-    if (strcmp(systemId, "foo"))
+    if (xcstrcmp(systemId, XCS("foo")))
         fail("Unexpected system ID");
     ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
     if (ext_parser == NULL)
