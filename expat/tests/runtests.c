@@ -6531,7 +6531,7 @@ record_element_end_handler(void *userData,
 {
     CharData *storage = (CharData *)userData;
 
-    CharData_AppendXMLChars(storage, "/", 1);
+    CharData_AppendXMLChars(storage, XCS("/"), 1);
     CharData_AppendXMLChars(storage, name, -1);
 }
 
