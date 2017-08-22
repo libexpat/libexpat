@@ -1970,7 +1970,7 @@ START_TEST(test_dtd_default_handling)
     XML_SetCommentHandler(parser, dummy_comment_handler);
     XML_SetStartCdataSectionHandler(parser, dummy_start_cdata_handler);
     XML_SetEndCdataSectionHandler(parser, dummy_end_cdata_handler);
-    run_character_check(text, "\n\n\n\n\n\n\n<doc/>");
+    run_character_check(text, XCS("\n\n\n\n\n\n\n<doc/>"));
 }
 END_TEST
 
