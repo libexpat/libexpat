@@ -4263,14 +4263,14 @@ external_entity_param(XML_Parser parser,
     if (ext_parser == NULL)
         fail("Could not create external entity parser");
 
-    if (!strcmp(systemId, "004-1.ent")) {
+    if (!xcstrcmp(systemId, XCS("004-1.ent"))) {
         if (_XML_Parse_SINGLE_BYTES(ext_parser, text1, strlen(text1),
                                     XML_TRUE) != XML_STATUS_ERROR)
             fail("Inner DTD with invalid tag not rejected");
         if (XML_GetErrorCode(ext_parser) != XML_ERROR_EXTERNAL_ENTITY_HANDLING)
             xml_failure(ext_parser);
     }
-    else if (!strcmp(systemId, "004-2.ent")) {
+    else if (!xcstrcmp(systemId, XCS("004-2.ent"))) {
         if (_XML_Parse_SINGLE_BYTES(ext_parser, text2, strlen(text2),
                                     XML_TRUE) != XML_STATUS_ERROR)
             fail("Invalid tag in external param not rejected");
