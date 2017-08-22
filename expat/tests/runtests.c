@@ -4678,7 +4678,7 @@ external_entity_not_standalone(XML_Parser parser,
     ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
     if (ext_parser == NULL)
         fail("Could not create external entity parser");
-    if (!strcmp(systemId, "foo")) {
+    if (!xcstrcmp(systemId, XCS("foo"))) {
         XML_SetNotStandaloneHandler(ext_parser,
                                     reject_not_standalone_handler);
         if (_XML_Parse_SINGLE_BYTES(ext_parser, text1, strlen(text1),
@@ -4690,7 +4690,7 @@ external_entity_not_standalone(XML_Parser parser,
         XML_ParserFree(ext_parser);
         return XML_STATUS_ERROR;
     }
-    else if (!strcmp(systemId, "bar")) {
+    else if (!xcstrcmp(systemId, XCS("bar"))) {
         if (_XML_Parse_SINGLE_BYTES(ext_parser, text2, strlen(text2),
                                     XML_TRUE) == XML_STATUS_ERROR)
             xml_failure(ext_parser);
