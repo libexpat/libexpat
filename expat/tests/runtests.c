@@ -4345,8 +4345,8 @@ START_TEST(test_ignore_section)
     const char *text =
         "<!DOCTYPE doc SYSTEM 'foo'>\n"
         "<doc><e>&entity;</e></doc>";
-    const char *expected =
-        "<![IGNORE[<!ELEMENT e (#PCDATA)*>]]>\n&entity;";
+    const XML_Char *expected =
+        XCS("<![IGNORE[<!ELEMENT e (#PCDATA)*>]]>\n&entity;");
     CharData storage;
 
     CharData_Init(&storage);
