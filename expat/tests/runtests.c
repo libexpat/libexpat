@@ -5236,7 +5236,7 @@ start_element_suspender(void *UNUSED_P(userData),
                         const XML_Char *name,
                         const XML_Char **UNUSED_P(atts))
 {
-    if (!strcmp(name, "suspend"))
+    if (!xcstrcmp(name, XCS("suspend")))
         XML_StopParser(parser, XML_TRUE);
 }
 
