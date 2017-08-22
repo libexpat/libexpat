@@ -7780,7 +7780,11 @@ START_TEST(test_ns_utf16_element_leafname)
          * where {KHO KHWAI} = U+0E04 = 0xe0 0xb8 0x84 in UTF-8
          */
         "\0<\0n\0:\x0e\x04\0 \0x\0m\0l\0n\0s\0:\0n\0=\0'\0U\0R\0I\0'\0/\0>";
-    const XML_Char *expected = "URI \xe0\xb8\x84";
+#ifdef XML_UNICODE
+    const XML_Char *expected = XCS("URI \x0e04");
+#else
+    const XML_Char *expected = XCS("URI \xe0\xb8\x84");
+#endif
     CharData storage;
 
     CharData_Init(&storage);
