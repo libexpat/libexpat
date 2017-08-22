@@ -3,6 +3,11 @@ NOTE: We are looking for help with a few things:
       If you can help, please get in touch.  Thanks!
 
 Release 2.?.? ???????????????????
+        Bug fixes:
+              #8  If the parser runs out of memory, make sure its internal
+                    state reflects the memory it actually has, not the memory
+                    it wanted to have.
+
         Other changes:
             #106  xmlwf: Add argument -N adding notation declarations
         #75 #106  Test suite: Resolve expected failure cases where xmlwf
