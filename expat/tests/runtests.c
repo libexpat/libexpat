@@ -7705,7 +7705,7 @@ START_TEST(test_ns_unknown_encoding_success)
         "<foo:e xmlns:foo='http://example.org/'>Hi</foo:e>";
 
     XML_SetUnknownEncodingHandler(parser, MiscEncodingHandler, NULL);
-    run_character_check(text, "Hi");
+    run_character_check(text, XCS("Hi"));
 }
 END_TEST
 
