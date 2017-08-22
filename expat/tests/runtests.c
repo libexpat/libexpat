@@ -5906,7 +5906,7 @@ START_TEST(test_unknown_encoding_success)
         "<\x81\x64\x80oc>Hello, world</\x81\x64\x80oc>";
 
     XML_SetUnknownEncodingHandler(parser, MiscEncodingHandler, NULL);
-    run_character_check(text, "Hello, world");
+    run_character_check(text, XCS("Hello, world"));
 }
 END_TEST
 
@@ -5946,7 +5946,7 @@ START_TEST(test_unknown_encoding_long_name_1)
         "<abcdefghabcdefghabcdefghijkl\x80m\x80n\x80o\x80p>"
         "Hi"
         "</abcdefghabcdefghabcdefghijkl\x80m\x80n\x80o\x80p>";
-    const XML_Char *expected = "abcdefghabcdefghabcdefghijklmnop";
+    const XML_Char *expected = XCS("abcdefghabcdefghabcdefghijklmnop");
     CharData storage;
 
     CharData_Init(&storage);
