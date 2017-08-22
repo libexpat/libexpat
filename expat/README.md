@@ -1,3 +1,6 @@
+[![Build Status](https://travis-ci.org/libexpat/libexpat.svg?branch=master)](https://travis-ci.org/libexpat/libexpat)
+
+
 # Expat, Release 2.2.4
 
 This is Expat, a C library for parsing XML, started by
