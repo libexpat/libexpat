@@ -6560,7 +6560,7 @@ START_TEST(test_utf16_attribute)
          * and   {CHO CHAN}  = U+0E08 = 0xe0 0xb8 0x88 in UTF-8
          */
         "<\0d\0 \0\x04\x0e\x08\x0e=\0'\0a\0'\0/\0>\0";
-    const XML_Char *expected = "a";
+    const XML_Char *expected = XCS("a");
     CharData storage;
 
     CharData_Init(&storage);
