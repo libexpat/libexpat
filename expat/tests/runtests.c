@@ -3202,6 +3202,7 @@ END_TEST
 START_TEST(test_cdata_default)
 {
     const char *text = "<doc><![CDATA[Hello\nworld]]></doc>";
+    const XML_Char *expected = XCS("<doc><![CDATA[Hello\nworld]]></doc>");
     CharData storage;
 
     CharData_Init(&storage);
@@ -3211,7 +3212,7 @@ START_TEST(test_cdata_default)
     if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
                                 XML_TRUE) == XML_STATUS_ERROR)
         xml_failure(parser);
-    CharData_CheckXMLChars(&storage, text);
+    CharData_CheckXMLChars(&storage, expected);
 }
 END_TEST
 
