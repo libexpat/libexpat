@@ -3109,18 +3109,18 @@ START_TEST(test_attributes)
         "<tag c='3'/>"
         "</doc>";
     AttrInfo doc_info[] = {
-        { "a",  "1" },
-        { "b",  "2" },
-        { "id", "one" },
+        { XCS("a"),  XCS("1") },
+        { XCS("b"),  XCS("2") },
+        { XCS("id"), XCS("one") },
         { NULL, NULL }
     };
     AttrInfo tag_info[] = {
-        { "c",  "3" },
+        { XCS("c"),  XCS("3") },
         { NULL, NULL }
     };
     ElementInfo info[] = {
-        { "doc", 3, "id", NULL },
-        { "tag", 1, NULL, NULL },
+        { XCS("doc"), 3, XCS("id"), NULL },
+        { XCS("tag"), 1, NULL, NULL },
         { NULL, 0, NULL, NULL }
     };
     info[0].attributes = doc_info;
