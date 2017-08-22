@@ -4798,14 +4798,14 @@ START_TEST(test_attribute_enum_value)
         NULL,
         NULL
     };
+    const XML_Char *expected = XCS("This is a \n      \n\nyellow tiger");
 
     XML_SetExternalEntityRefHandler(parser, external_entity_loader);
     XML_SetUserData(parser, &dtd_data);
     XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
     /* An attribute list handler provokes a different code path */
     XML_SetAttlistDeclHandler(parser, dummy_attlist_decl_handler);
-    run_ext_character_check(text, &dtd_data,
-                            "This is a \n      \n\nyellow tiger");
+    run_ext_character_check(text, &dtd_data, expected);
 }
 END_TEST
 
