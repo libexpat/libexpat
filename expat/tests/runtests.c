@@ -1487,7 +1487,7 @@ END_TEST
 static int XMLCALL
 UnknownEncodingHandler(void *UNUSED_P(data),const XML_Char *encoding,XML_Encoding *info)
 {
-    if (strcmp(encoding,"unsupported-encoding") == 0) {
+    if (xcstrcmp(encoding, XCS("unsupported-encoding")) == 0) {
         int i;
         for (i = 0; i < 256; ++i)
             info->map[i] = i;
