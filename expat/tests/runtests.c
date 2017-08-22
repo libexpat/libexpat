@@ -5595,7 +5595,7 @@ END_TEST
 START_TEST(test_pi_handled_in_default)
 {
     const char *text = "<?test processing instruction?>\n<doc/>";
-    const XML_Char *expected = "<?test processing instruction?>\n<doc/>";
+    const XML_Char *expected = XCS("<?test processing instruction?>\n<doc/>");
     CharData storage;
 
     CharData_Init(&storage);
