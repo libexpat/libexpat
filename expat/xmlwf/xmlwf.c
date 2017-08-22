@@ -341,8 +341,12 @@ endDoctypeDecl(void *userData)
   /* How many notations do we have? */
   for (p = data->notationListHead; p != NULL; p = p->next)
     notationCount++;
-  if (notationCount == 0)
-    return; /* Nothing to report */
+  if (notationCount == 0) {
+    /* Nothing to report */
+    free((void *)data->currentDoctypeName);
+    data->currentDoctypeName = NULL;
+    return;
+  }
 
   notations = malloc(notationCount * sizeof(NotationList *));
   if (notations == NULL) {
