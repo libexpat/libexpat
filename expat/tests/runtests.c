@@ -4942,10 +4942,10 @@ external_entity_public(XML_Parser parser,
     ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
     if (ext_parser == NULL)
         return XML_STATUS_ERROR;
-    if (systemId != NULL && !strcmp(systemId, "http://example.org/")) {
+    if (systemId != NULL && !xcstrcmp(systemId, XCS("http://example.org/"))) {
         text = text1;
     }
-    else if (publicId != NULL && !strcmp(publicId, "foo")) {
+    else if (publicId != NULL && !xcstrcmp(publicId, XCS("foo"))) {
         text = text2;
     }
     else
