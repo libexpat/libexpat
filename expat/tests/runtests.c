@@ -5635,15 +5635,15 @@ accumulate_pi_characters(void *userData,
     CharData *storage = (CharData *)userData;
 
     CharData_AppendXMLChars(storage, target, -1);
-    CharData_AppendXMLChars(storage, ": ", 2);
+    CharData_AppendXMLChars(storage, XCS(": "), 2);
     CharData_AppendXMLChars(storage, data, -1);
-    CharData_AppendXMLChars(storage, "\n", 1);
+    CharData_AppendXMLChars(storage, XCS("\n"), 1);
 }
 
 START_TEST(test_pi_yml)
 {
     const char *text = "<?yml something like data?><doc/>";
-    const XML_Char *expected = "yml: something like data\n";
+    const XML_Char *expected = XCS("yml: something like data\n");
     CharData storage;
 
     CharData_Init(&storage);
@@ -5659,7 +5659,7 @@ END_TEST
 START_TEST(test_pi_xnl)
 {
     const char *text = "<?xnl nothing like data?><doc/>";
-    const XML_Char *expected = "xnl: nothing like data\n";
+    const XML_Char *expected = XCS("xnl: nothing like data\n");
     CharData storage;
 
     CharData_Init(&storage);
@@ -5675,7 +5675,7 @@ END_TEST
 START_TEST(test_pi_xmm)
 {
     const char *text = "<?xmm everything like data?><doc/>";
-    const XML_Char *expected = "xmm: everything like data\n";
+    const XML_Char *expected = XCS("xmm: everything like data\n");
     CharData storage;
 
     CharData_Init(&storage);
@@ -5698,7 +5698,11 @@ START_TEST(test_utf16_pi)
         "<\0?\0\x04\x0e\x08\x0e?\0>\0"
         /* <q/> */
         "<\0q\0/\0>\0";
-    const XML_Char *expected = "\xe0\xb8\x84\xe0\xb8\x88: \n";
+#ifdef XML_UNICODE
+    const XML_Char *expected = XCS("\x0e04\x0e08: \n");
+#else
+    const XML_Char *expected = XCS("\xe0\xb8\x84\xe0\xb8\x88: \n");
+#endif
     CharData storage;
 
     CharData_Init(&storage);
@@ -5721,7 +5725,11 @@ START_TEST(test_utf16_be_pi)
         "\0<\0?\x0e\x04\x0e\x08\0?\0>"
         /* <q/> */
         "\0<\0q\0/\0>";
-    const XML_Char *expected = "\xe0\xb8\x84\xe0\xb8\x88: \n";
+#ifdef XML_UNICODE
+    const XML_Char *expected = XCS("\x0e04\x0e08: \n");
+#else
+    const XML_Char *expected = XCS("\xe0\xb8\x84\xe0\xb8\x88: \n");
+#endif
     CharData storage;
 
     CharData_Init(&storage);
