@@ -7,6 +7,9 @@ Release 2.?.? ???????????????????
               #8  If the parser runs out of memory, make sure its internal
                     state reflects the memory it actually has, not the memory
                     it wanted to have.
+             #11  The default handler wasn't being called when it should for
+                    a SYSTEM or PUBLIC doctype if an entity declaration handler
+                    was registered.
 
         Other changes:
             #106  xmlwf: Add argument -N adding notation declarations
