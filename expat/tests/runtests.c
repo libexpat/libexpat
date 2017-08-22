@@ -4734,12 +4734,12 @@ external_entity_value_aborter(XML_Parser parser,
     ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
     if (ext_parser == NULL)
         fail("Could not create external entity parser");
-    if (!strcmp(systemId, "004-1.ent")) {
+    if (!xcstrcmp(systemId, XCS("004-1.ent"))) {
         if (_XML_Parse_SINGLE_BYTES(ext_parser, text1, strlen(text1),
                                     XML_TRUE) == XML_STATUS_ERROR)
             xml_failure(ext_parser);
     }
-    if (!strcmp(systemId, "004-2.ent")) {
+    if (!xcstrcmp(systemId, XCS("004-2.ent"))) {
         XML_SetXmlDeclHandler(ext_parser, entity_suspending_xdecl_handler);
         XML_SetUserData(ext_parser, ext_parser);
         if (_XML_Parse_SINGLE_BYTES(ext_parser, text2, strlen(text2),
