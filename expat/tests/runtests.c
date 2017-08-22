@@ -8010,10 +8010,16 @@ START_TEST(test_misc_version)
     if (!versions_equal(&read_version, &parsed_version))
         fail("Version mismatch");
 
-#if ! defined(XML_UNICODE)
-    if (strcmp(version_text, "expat_2.2.4"))  /* needs bump on releases */
+#if ! defined(XML_UNICODE) || defined(XML_UNICODE_WCHAR_T)
+    if (xcstrcmp(version_text, XCS("expat_2.2.4")))  /* needs bump on releases */
         fail("XML_*_VERSION in expat.h out of sync?\n");
-#endif  /* ! defined(XML_UNICODE) */
+#else
+    /* If we have XML_UNICODE defined but not XML_UNICODE_WCHAR_T
+     * then XML_LChar is defined as char, for some reason.
+     */
+    if (strcmp(version_text, "expat_2.2.4")) /* needs bump on releases */
+        fail("XML_*_VERSION in expat.h out of sync?\n");
+#endif  /* ! defined(XML_UNICODE) || defined(XML_UNICODE_WCHAR_T) */
 }
 END_TEST
 
