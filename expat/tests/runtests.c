@@ -6899,7 +6899,7 @@ START_TEST(test_entity_public_utf16_le)
         NULL,
         EE_PARSE_NONE
     };
-    const XML_Char *expected = "baz";
+    const XML_Char *expected = XCS("baz");
     CharData storage;
 
     CharData_Init(&storage);
