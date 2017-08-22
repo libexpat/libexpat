@@ -3533,7 +3533,7 @@ cr_cdata_handler(void *userData, const XML_Char *s, int len)
     /* Internal processing turns the CR into a newline for the
      * character data handler, but not for the default handler
      */
-    if (len == 1 && (*s == '\n' || *s == '\r'))
+    if (len == 1 && (*s == XCS('\n') || *s == XCS('\r')))
         *pfound = 1;
 }
 
