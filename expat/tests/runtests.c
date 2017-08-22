@@ -1609,7 +1609,7 @@ START_TEST(test_ext_entity_no_handler)
         "<doc>&en;</doc>";
 
     XML_SetDefaultHandler(parser, dummy_default_handler);
-    run_character_check(text, "");
+    run_character_check(text, XCS(""));
 }
 END_TEST
 
