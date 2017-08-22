@@ -4870,7 +4870,7 @@ record_element_start_handler(void *userData,
                              const XML_Char *name,
                              const XML_Char **UNUSED_P(atts))
 {
-    CharData_AppendString((CharData *)userData, name);
+    CharData_AppendXMLChars((CharData *)userData, name, xcstrlen(name));
 }
 
 START_TEST(test_nested_groups)
