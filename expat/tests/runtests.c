@@ -5613,7 +5613,7 @@ END_TEST
 START_TEST(test_comment_handled_in_default)
 {
     const char *text = "<!-- This is a comment -->\n<doc/>";
-    const XML_Char *expected = "<!-- This is a comment -->\n<doc/>";
+    const XML_Char *expected = XCS("<!-- This is a comment -->\n<doc/>");
     CharData storage;
 
     CharData_Init(&storage);
