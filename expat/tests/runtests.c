@@ -1406,9 +1406,9 @@ check_attr_contains_normalized_whitespace(void *UNUSED_P(userData),
     for (i = 0; atts[i] != NULL; i += 2) {
         const XML_Char *attrname = atts[i];
         const XML_Char *value = atts[i + 1];
-        if (strcmp("attr", attrname) == 0
-            || strcmp("ents", attrname) == 0
-            || strcmp("refs", attrname) == 0) {
+        if (xcstrcmp(XCS("attr"), attrname) == 0
+            || xcstrcmp(XCS("ents"), attrname) == 0
+            || xcstrcmp(XCS("refs"), attrname) == 0) {
             if (!is_whitespace_normalized(value, 0)) {
                 char buffer[256];
                 sprintf(buffer, "attribute value not normalized: %"
