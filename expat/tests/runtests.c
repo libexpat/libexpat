@@ -4151,7 +4151,7 @@ typedef struct ByteTestData {
 
 static void
 byte_character_handler(void *userData,
-                       const XML_Char *s,
+                       const XML_Char *UNUSED_P(s),
                        int len)
 {
 #ifdef XML_CONTEXT_BYTES
@@ -4172,8 +4172,6 @@ byte_character_handler(void *userData,
         fail("Character byte index incorrect");
     if (XML_GetCurrentByteCount(parser) != len)
         fail("Character byte count incorrect");
-    if (s != buffer + offset)
-        fail("Buffer position incorrect");
 #else
     (void)userData;
     (void)s;
