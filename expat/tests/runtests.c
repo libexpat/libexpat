@@ -6831,6 +6831,64 @@ START_TEST(test_bad_notation)
 }
 END_TEST
 
+/* Test for issue #11, wrongly suppressed default handler */
+typedef struct default_check {
+    const XML_Char *expected;
+    const int expectedLen;
+    XML_Bool seen;
+} DefaultCheck;
+
+static void XMLCALL
+checking_default_handler(void *userData,
+                         const XML_Char *s,
+                         int len)
+{
+    DefaultCheck *data = (DefaultCheck *)userData;
+    int i;
+
+    for (i = 0; data[i].expected != NULL; i++) {
+        if (data[i].expectedLen == len &&
+            !memcmp(data[i].expected, s, len * sizeof(XML_Char))) {
+            data[i].seen = XML_TRUE;
+            break;
+        }
+    }
+}
+
+START_TEST(test_default_doctype_handler)
+{
+    const char *text =
+        "<!DOCTYPE doc PUBLIC 'pubname' 'test.dtd' [\n"
+        "  <!ENTITY foo 'bar'>\n"
+        "]>\n"
+        "<doc>&foo;</doc>";
+    DefaultCheck test_data[] = {
+        {
+            "'pubname'",
+            9,
+            XML_FALSE
+        },
+        {
+            "'test.dtd'",
+            10,
+            XML_FALSE
+        },
+        { NULL, 0, XML_FALSE }
+    };
+    int i;
+
+    XML_SetUserData(parser, &test_data);
+    XML_SetDefaultHandler(parser, checking_default_handler);
+    XML_SetEntityDeclHandler(parser, dummy_entity_decl_handler);
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                XML_TRUE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+    for (i = 0; test_data[i].expected != NULL; i++)
+        if (!test_data[i].seen)
+            fail("Default handler not run for public !DOCTYPE");
+}
+END_TEST
+
 /*
  * Namespaces tests.
  */
@@ -11891,6 +11949,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_bad_entity_3);
     tcase_add_test(tc_basic, test_bad_entity_4);
     tcase_add_test(tc_basic, test_bad_notation);
+    tcase_add_test(tc_basic, test_default_doctype_handler);
 
     suite_add_tcase(s, tc_namespace);
     tcase_add_checked_fixture(tc_namespace,
