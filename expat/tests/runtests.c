@@ -3014,12 +3014,12 @@ END_TEST
 START_TEST(test_set_base)
 {
     const XML_Char *old_base;
-    const XML_Char *new_base = "/local/file/name.xml";
+    const XML_Char *new_base = XCS("/local/file/name.xml");
 
     old_base = XML_GetBase(parser);
     if (XML_SetBase(parser, new_base) != XML_STATUS_OK)
         fail("Unable to set base");
-    if (strcmp(XML_GetBase(parser), new_base) != 0)
+    if (xcstrcmp(XML_GetBase(parser), new_base) != 0)
         fail("Base setting not correct");
     if (XML_SetBase(parser, NULL) != XML_STATUS_OK)
         fail("Unable to NULL base");
