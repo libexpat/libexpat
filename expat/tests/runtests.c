@@ -757,7 +757,7 @@ START_TEST(test_utf8_auto_align)
         const char * const fromLimInitially = fromLim;
         ptrdiff_t actualMovementInChars;
 
-        align_limit_to_full_utf8_characters(cases[i].input, &fromLim);
+        _INTERNAL_trim_to_complete_utf8_characters(cases[i].input, &fromLim);
 
         actualMovementInChars = (fromLim - fromLimInitially);
         if (actualMovementInChars != cases[i].expectedMovementInChars) {
