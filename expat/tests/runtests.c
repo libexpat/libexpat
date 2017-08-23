@@ -11292,8 +11292,8 @@ START_TEST(test_nsalloc_long_context)
         "&en;"
         "</doc>";
     ExtOption options[] = {
-        { "foo", "<!ELEMENT e EMPTY>"},
-        { "bar", "<e/>" },
+        { XCS("foo"), "<!ELEMENT e EMPTY>"},
+        { XCS("bar"), "<e/>" },
         { NULL, NULL }
     };
     int i;
