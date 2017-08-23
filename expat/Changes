@@ -25,7 +25,7 @@ Release 2.2.5 ???????????????????
                  and
             Core Infrastructure Initiative
 
-Release 2.2.4 Sat Auguest 19 2017
+Release 2.2.4 Sat August 19 2017
         Bug fixes:
             #115  Fix copying of partial characters for UTF-8 input
 
