@@ -11780,7 +11780,7 @@ START_TEST(test_nsalloc_long_default_in_ext)
         "]>\n"
         "<doc>&x;</doc>";
     ExtOption options[] = {
-        { "foo", "<e/>"},
+        { XCS("foo"), "<e/>"},
         { NULL, NULL }
     };
     int i;
