@@ -41,10 +41,19 @@
 #include <stdint.h>
 #include <stddef.h>  /* ptrdiff_t */
 #include <ctype.h>
-#ifndef __cplusplus
-# include <stdbool.h>
-#endif
 #include <limits.h>
+
+#if ! defined(__cplusplus)
+# if defined(_MSC_VER) && (_MSC_VER <= 1700)
+   /* for vs2012/11.0/1700 and earlier Visual Studio compilers */
+#  define bool   int
+#  define false  0
+#  define true   1
+# else
+#  include <stdbool.h>
+# endif
+#endif
+
 
 #include "expat.h"
 #include "chardata.h"
