@@ -11728,7 +11728,7 @@ START_TEST(test_nsalloc_realloc_long_context_in_dtd)
         "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
         ":doc>";
     ExtOption options[] = {
-        { "foo/First", "Hello world" },
+        { XCS("foo/First"), "Hello world" },
         { NULL, NULL }
     };
     int i;
