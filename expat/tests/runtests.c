@@ -11326,8 +11326,8 @@ static void
 context_realloc_test(const char *text)
 {
     ExtOption options[] = {
-        { "foo", "<!ELEMENT e EMPTY>"},
-        { "bar", "<e/>" },
+        { XCS("foo"), "<!ELEMENT e EMPTY>"},
+        { XCS("bar"), "<e/>" },
         { NULL, NULL }
     };
     int i;
