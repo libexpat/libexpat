@@ -11620,8 +11620,8 @@ START_TEST(test_nsalloc_realloc_long_ge_name)
         ";"
         "</doc>";
     ExtOption options[] = {
-        { "foo", "<!ELEMENT el EMPTY>" },
-        { "bar", "<el/>" },
+        { XCS("foo"), "<!ELEMENT el EMPTY>" },
+        { XCS("bar"), "<el/>" },
         { NULL, NULL }
     };
     int i;
