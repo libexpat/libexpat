@@ -15,7 +15,7 @@ set -o nounset
 : ${LD:=ld}
 : ${MAKE:=make}
 
-: ${BASE_COMPILE_FLAGS:="-pipe -Wall -Wextra -pedantic -Wno-overlength-strings"}
+: ${BASE_COMPILE_FLAGS:="-pipe -Wall -Wextra -pedantic -Wno-overlength-strings -Wno-long-long"}
 
 ANNOUNCE() {
     local open='\e[1m'
@@ -76,7 +76,7 @@ main() {
         ;;
     esac
 
-    local CFLAGS="-std=c99 ${BASE_COMPILE_FLAGS} ${CFLAGS:-}"
+    local CFLAGS="-std=c89 ${BASE_COMPILE_FLAGS} ${CFLAGS:-}"
     local CXXFLAGS="-std=c++98 ${BASE_COMPILE_FLAGS} ${CXXFLAGS:-}"
 
     (
