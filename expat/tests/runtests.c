@@ -8742,7 +8742,7 @@ START_TEST(test_alloc_dtd_default_handling)
         "<!--comment in dtd-->\n"
         "]>\n"
         "<doc><![CDATA[text in doc]]></doc>";
-    const char *expected = "\n\n\n\n\n\n\n\n\n<doc>text in doc</doc>";
+    const XML_Char *expected = XCS("\n\n\n\n\n\n\n\n\n<doc>text in doc</doc>");
     CharData storage;
     int i;
     const int max_alloc_count = 25;
