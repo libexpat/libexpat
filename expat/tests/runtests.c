@@ -8817,7 +8817,7 @@ END_TEST
 /* Test robustness of XML_SetBase against a failing allocator */
 START_TEST(test_alloc_set_base)
 {
-    const XML_Char *new_base = "/local/file/name.xml";
+    const XML_Char *new_base = XCS("/local/file/name.xml");
     int i;
     const int max_alloc_count = 5;
 
