@@ -2,7 +2,7 @@ NOTE: We are looking for help with a few things:
       https://github.com/libexpat/libexpat/labels/help%20wanted
       If you can help, please get in touch.  Thanks!
 
-Release 2.?.? ???????????????????
+Release 2.2.5 ???????????????????
         Bug fixes:
               #8  If the parser runs out of memory, make sure its internal
                     state reflects the memory it actually has, not the memory
@@ -15,8 +15,12 @@ Release 2.?.? ???????????????????
             #106  xmlwf: Add argument -N adding notation declarations
         #75 #106  Test suite: Resolve expected failure cases where xmlwf
                     output was incomplete
+            #127  Windows: Fix test suite compilation
+       #126 #127  Windows: Fix compilation for Visual Studio 2012
 
         Special thanks to:
+            Benbuck Nason
+            Jose Gutierrez de la Concha
             Rhodri James
                  and
             Core Infrastructure Initiative

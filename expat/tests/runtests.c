@@ -41,10 +41,19 @@
 #include <stdint.h>
 #include <stddef.h>  /* ptrdiff_t */
 #include <ctype.h>
-#ifndef __cplusplus
-# include <stdbool.h>
-#endif
 #include <limits.h>
+
+#if ! defined(__cplusplus)
+# if defined(_MSC_VER) && (_MSC_VER <= 1700)
+   /* for vs2012/11.0/1700 and earlier Visual Studio compilers */
+#  define bool   int
+#  define false  0
+#  define true   1
+# else
+#  include <stdbool.h>
+# endif
+#endif
+
 
 #include "expat.h"
 #include "chardata.h"
@@ -748,7 +757,7 @@ START_TEST(test_utf8_auto_align)
         const char * const fromLimInitially = fromLim;
         ptrdiff_t actualMovementInChars;
 
-        align_limit_to_full_utf8_characters(cases[i].input, &fromLim);
+        _INTERNAL_trim_to_complete_utf8_characters(cases[i].input, &fromLim);
 
         actualMovementInChars = (fromLim - fromLimInitially);
         if (actualMovementInChars != cases[i].expectedMovementInChars) {
