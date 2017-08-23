@@ -10852,10 +10852,10 @@ START_TEST(test_nsalloc_long_element)
         " xmlns:foo='http://example.org/' bar:a='12'\n"
         " xmlns:bar='http://example.org/'>"
         "</foo:thisisalongenoughelementnametotriggerareallocation>";
-    const char *elemstr[] = {
-        "http://example.org/"
-        " thisisalongenoughelementnametotriggerareallocation foo",
-        "http://example.org/ a bar"
+    const XML_Char *elemstr[] = {
+        XCS("http://example.org/")
+        XCS(" thisisalongenoughelementnametotriggerareallocation foo"),
+        XCS("http://example.org/ a bar")
     };
     int i;
     const int max_alloc_count = 30;
