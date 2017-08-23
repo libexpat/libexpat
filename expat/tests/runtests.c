@@ -8083,10 +8083,10 @@ START_TEST(test_misc_utf16le)
         "<\0?\0x\0m\0l\0 \0"
         "v\0e\0r\0s\0i\0o\0n\0=\0'\0\x31\0.\0\x30\0'\0?\0>\0"
         "<\0q\0>\0H\0i\0<\0/\0q\0>\0";
-    const XML_Char *expected = "Hi";
+    const XML_Char *expected = XCS("Hi");
     CharData storage;
 
-    parser = XML_ParserCreate("UTF-16LE");
+    parser = XML_ParserCreate(XCS("UTF-16LE"));
     if (parser == NULL)
         fail("Parser not created");
 
