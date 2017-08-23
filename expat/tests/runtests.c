@@ -10405,8 +10405,8 @@ START_TEST(test_alloc_long_notation)
         "]>\n"
         "<doc>&e2;</doc>";
     ExtOption options[] = {
-        { "foo", "Entity Foo" },
-        { "bar", "Entity Bar" },
+        { XCS("foo"), "Entity Foo" },
+        { XCS("bar"), "Entity Bar" },
         { NULL, NULL }
     };
     int i;
