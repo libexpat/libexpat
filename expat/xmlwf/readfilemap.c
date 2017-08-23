@@ -41,6 +41,17 @@
 # include <unistd.h>
 #endif
 
+/* Function "read": */
+#if defined(_MSC_VER)
+  /* https://msdn.microsoft.com/en-us/library/wyssk1bs(v=vs.100).aspx */
+# define _EXPAT_read          _read
+# define _EXPAT_read_count_t  int
+#else  /* POSIX */
+  /* http://pubs.opengroup.org/onlinepubs/009695399/functions/read.html */
+# define _EXPAT_read          read
+# define _EXPAT_read_count_t  ssize_t
+#endif
+
 #ifndef S_ISREG
 #ifndef S_IFREG
 #define S_IFREG _S_IFREG
@@ -68,7 +79,7 @@ filemap(const char *name,
 {
   size_t nbytes;
   int fd;
-  ssize_t n;
+  _EXPAT_read_count_t n;
   struct stat sb;
   void *p;
 
@@ -106,14 +117,14 @@ filemap(const char *name,
     close(fd);
     return 0;
   }
-  n = read(fd, p, nbytes);
+  n = _EXPAT_read(fd, p, nbytes);
   if (n < 0) {
     perror(name);
     free(p);
     close(fd);
     return 0;
   }
-  if (n != (ssize_t)nbytes) {
+  if (n != (_EXPAT_read_count_t)nbytes) {
     fprintf(stderr, "%s: read unexpected number of bytes\n", name);
     free(p);
     close(fd);
