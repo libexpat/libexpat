@@ -31,7 +31,7 @@
 */
 
 #include <stddef.h>
-#include <string.h>  // memcpy
+#include <string.h>  /* memcpy */
 
 #if defined(_MSC_VER) && (_MSC_VER <= 1700)
   /* for vs2012/11.0/1700 and earlier Visual Studio compilers */
@@ -429,7 +429,7 @@ utf8_toUtf8(const ENCODING *UNUSED_P(enc),
     *toP += bytesToCopy;
   }
 
-  if (output_exhausted)  // needs to go first
+  if (output_exhausted)  /* needs to go first */
     return XML_CONVERT_OUTPUT_EXHAUSTED;
   else if (input_incomplete)
     return XML_CONVERT_INPUT_INCOMPLETE;
