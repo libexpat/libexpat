@@ -50,6 +50,16 @@ configuration: Debug
 # https://cmake.org/cmake/help/latest/manual/cmake-generators.7.html#visual-studio-generators
 environment:
   matrix:
+    # Visual Studio 2010 Win32
+    - GENERATOR: Visual Studio 10 2010
+      PLATFORM: Win32
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
+
+    # Visual Studio 2010 x64
+    - GENERATOR: Visual Studio 10 2010 Win64
+      PLATFORM: x64
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
+
     # Visual Studio 2012 Win32
     - GENERATOR: Visual Studio 11 2012
       PLATFORM: Win32
