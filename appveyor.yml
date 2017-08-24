@@ -1,0 +1,72 @@
+# Copyright (C) 2017 José Gutiérrez de la Concha <jose@zeroc.com>
+# Licensed under the MIT license
+
+# scripts that are called at very beginning, before repo cloning
+init:
+- git config --global core.autocrlf input
+
+# version format
+version: libexpat-{build}
+
+# set clone depth, clone entire repository history if not defined
+clone_depth: 1
+
+# clone directory
+clone_folder: c:\projects\libexpat
+
+configuration: Debug
+
+environment:
+  matrix:
+    # Visual Studio 2012 Win32
+    - GENERATOR: Visual Studio 11 2012
+      PLATFORM: Win32
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
+
+    # Visual Studio 2012 x64
+    - GENERATOR: Visual Studio 11 2012 Win64
+      PLATFORM: x64
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
+
+    # Visual Studio 2013 Win32
+    - GENERATOR: Visual Studio 12 2013
+      PLATFORM: Win32
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
+
+    # Visual Studio 2013 x64
+    - GENERATOR: Visual Studio 12 2013 Win64
+      PLATFORM: x64
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
+
+    # Visual Studio 2015 Win32
+    - GENERATOR: Visual Studio 14 2015
+      PLATFORM: Win32
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
+
+    # Visual Studio 2015 x64
+    - GENERATOR: Visual Studio 14 2015 Win64
+      PLATFORM: x64
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
+
+    # Visual Studio 2017 Win32
+    - GENERATOR: Visual Studio 15 2017
+      PLATFORM: Win32
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+
+    # Visual Studio 2017 x64
+    - GENERATOR: Visual Studio 15 2017 Win64
+      PLATFORM: x64
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+
+before_build:
+  - echo Running cmake...
+  - cd c:\projects\libexpat
+  - cmake -G"%GENERATOR%" expat
+
+build:
+  parallel: true                  # enable MSBuild parallel builds
+  project: expat.sln              # path to Visual Studio solution or project
+
+test_script:
+  - cp Debug\expatd.dll tests\Debug
+  - tests\Debug\runtests.exe
