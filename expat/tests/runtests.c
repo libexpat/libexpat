@@ -9673,7 +9673,7 @@ START_TEST(test_alloc_realloc_nested_groups)
         fail("Parse succeeded despite failing reallocator");
     if (i == max_realloc_count)
         fail("Parse failed at maximum reallocation count");
-    CharData_CheckString(&storage, "doce");
+    CharData_CheckXMLChars(&storage, XCS("doce"));
     if (dummy_handler_flags != DUMMY_ELEMENT_DECL_HANDLER_FLAG)
         fail("Element handler not fired");
 }
