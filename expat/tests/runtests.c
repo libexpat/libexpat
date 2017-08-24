@@ -8063,7 +8063,7 @@ START_TEST(test_misc_attribute_leak)
         tracking_free
     };
 
-    parser = XML_ParserCreate_MM("UTF-8", &memsuite, "\n");
+    parser = XML_ParserCreate_MM(XCS("UTF-8"), &memsuite, XCS("\n"));
     expect_failure(text, XML_ERROR_UNBOUND_PREFIX,
                    "Unbound prefixes not found");
     XML_ParserFree(parser);
