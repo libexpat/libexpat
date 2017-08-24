@@ -57,6 +57,7 @@
 
 #include "expat.h"
 #include "chardata.h"
+#include "structdata.h"
 #include "internal.h"  /* for UNUSED_P only */
 #include "minicheck.h"
 #include "memcheck.h"
@@ -1129,35 +1130,27 @@ START_TEST(test_column_number_after_parse)
 }
 END_TEST
 
+#define STRUCT_START_TAG 0
+#define STRUCT_END_TAG 1
 static void XMLCALL
 start_element_event_handler2(void *userData, const XML_Char *name,
 			     const XML_Char **UNUSED_P(attr))
 {
-    CharData *storage = (CharData *) userData;
-    char buffer[100];
-
-    sprintf(buffer,
-            "<%" XML_FMT_STR "> at col:%" XML_FMT_INT_MOD "u line:%"
-            XML_FMT_INT_MOD "u\n",
-            name,
-	    XML_GetCurrentColumnNumber(parser),
-	    XML_GetCurrentLineNumber(parser));
-    CharData_AppendString(storage, buffer);
+    StructData *storage = (StructData *) userData;
+    StructData_AddItem(storage, name,
+                       XML_GetCurrentColumnNumber(parser),
+                       XML_GetCurrentLineNumber(parser),
+                       STRUCT_START_TAG);
 }
 
 static void XMLCALL
 end_element_event_handler2(void *userData, const XML_Char *name)
 {
-    CharData *storage = (CharData *) userData;
-    char buffer[100];
-
-    sprintf(buffer,
-            "</%" XML_FMT_STR "> at col:%" XML_FMT_INT_MOD "u line:%"
-            XML_FMT_INT_MOD "u\n",
-            name,
-	    XML_GetCurrentColumnNumber(parser),
-	    XML_GetCurrentLineNumber(parser));
-    CharData_AppendString(storage, buffer);
+    StructData *storage = (StructData *) userData;
+    StructData_AddItem(storage, name,
+                       XML_GetCurrentColumnNumber(parser),
+                       XML_GetCurrentLineNumber(parser),
+                       STRUCT_END_TAG);
 }
 
 /* Regression test #3 for SF bug #653180. */
@@ -1172,27 +1165,30 @@ START_TEST(test_line_and_column_numbers_inside_handlers)
         "    <f/>\n"
         "  </d>\n"
         "</a>";
-    const char *expected =
-        "<a> at col:0 line:1\n"
-        "<b> at col:2 line:2\n"
-        "<c> at col:4 line:3\n"
-        "</c> at col:8 line:3\n"
-        "</b> at col:2 line:4\n"
-        "<d> at col:2 line:5\n"
-        "<f> at col:4 line:6\n"
-        "</f> at col:8 line:6\n"
-        "</d> at col:2 line:7\n"
-        "</a> at col:0 line:8\n";
-    CharData storage;
+    const StructDataEntry expected[] = {
+        { XCS("a"), 0, 1, STRUCT_START_TAG },
+        { XCS("b"), 2, 2, STRUCT_START_TAG },
+        { XCS("c"), 4, 3, STRUCT_START_TAG },
+        { XCS("c"), 8, 3, STRUCT_END_TAG },
+        { XCS("b"), 2, 4, STRUCT_END_TAG },
+        { XCS("d"), 2, 5, STRUCT_START_TAG },
+        { XCS("f"), 4, 6, STRUCT_START_TAG },
+        { XCS("f"), 8, 6, STRUCT_END_TAG },
+        { XCS("d"), 2, 7, STRUCT_END_TAG },
+        { XCS("a"), 0, 8, STRUCT_END_TAG }
+    };
+    const int expected_count = sizeof(expected) / sizeof(StructDataEntry);
+    StructData storage;
 
-    CharData_Init(&storage);
+    StructData_Init(&storage);
     XML_SetUserData(parser, &storage);
     XML_SetStartElementHandler(parser, start_element_event_handler2);
     XML_SetEndElementHandler(parser, end_element_event_handler2);
     if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text), XML_TRUE) == XML_STATUS_ERROR)
         xml_failure(parser);
 
-    CharData_CheckString(&storage, expected); 
+    StructData_CheckItems(&storage, expected, expected_count);
+    StructData_Dispose(&storage);
 }
 END_TEST
 
