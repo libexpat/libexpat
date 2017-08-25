@@ -41,11 +41,6 @@
 
 #include "chardata.h"
 
-#ifdef XML_UNICODE_WCHAR_T
-#define XML_FMT_STR "ls"
-#else
-#define XML_FMT_STR "s"
-#endif
 
 static int
 xmlstrlen(const XML_Char *s)
@@ -63,25 +58,6 @@ CharData_Init(CharData *storage)
 {
     assert(storage != NULL);
     storage->count = -1;
-}
-
-void
-CharData_AppendString(CharData *storage, const char *s)
-{
-    int maxchars = sizeof(storage->data) / sizeof(storage->data[0]);
-    int len;
-
-    assert(s != NULL);
-    len = strlen(s);
-    if (storage->count < 0)
-        storage->count = 0;
-    if ((len + storage->count) > maxchars) {
-        len = (maxchars - storage->count);
-    }
-    if (len + storage->count < (int)sizeof(storage->data)) {
-        memcpy(storage->data + storage->count, s, len);
-        storage->count += len;
-    }
 }
 
 void
@@ -104,36 +80,6 @@ CharData_AppendXMLChars(CharData *storage, const XML_Char *s, int len)
                len * sizeof(storage->data[0]));
         storage->count += len;
     }
-}
-
-int
-CharData_CheckString(CharData *storage, const char *expected)
-{
-    char buffer[4096];
-    int len;
-    int count;
-
-    assert(storage != NULL);
-    assert(expected != NULL);
-    count = (storage->count < 0) ? 0 : storage->count;
-    len = strlen(expected);
-    if (len != count) {
-        if (sizeof(XML_Char) == 1)
-            sprintf(buffer, "wrong number of data characters:"
-                    " got %d, expected %d:\n%" XML_FMT_STR,
-                    count, len, storage->data);
-        else
-            sprintf(buffer,
-                    "wrong number of data characters: got %d, expected %d",
-                    count, len);
-        fail(buffer);
-        return 0;
-    }
-    if (memcmp(expected, storage->data, len) != 0) {
-        fail("got bad data bytes");
-        return 0;
-    }
-    return 1;
 }
 
 int
