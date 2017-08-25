@@ -2728,7 +2728,7 @@ record_default_handler(void *userData,
                        const XML_Char *UNUSED_P(s),
                        int UNUSED_P(len))
 {
-    CharData_AppendString((CharData *)userData, "D");
+    CharData_AppendXMLChars((CharData *)userData, XCS("D"), 1);
 }
 
 static void XMLCALL
@@ -2736,7 +2736,7 @@ record_cdata_handler(void *userData,
                      const XML_Char *UNUSED_P(s),
                      int UNUSED_P(len))
 {
-    CharData_AppendString((CharData *)userData, "C");
+    CharData_AppendXMLChars((CharData *)userData, XCS("C"), 1);
     XML_DefaultCurrent(parser);
 }
 
@@ -2745,7 +2745,7 @@ record_cdata_nodefault_handler(void *userData,
                      const XML_Char *UNUSED_P(s),
                      int UNUSED_P(len))
 {
-    CharData_AppendString((CharData *)userData, "c");
+    CharData_AppendXMLChars((CharData *)userData, XCS("c"), 1);
 }
 
 static void XMLCALL
@@ -2753,8 +2753,8 @@ record_skip_handler(void *userData,
                     const XML_Char *UNUSED_P(entityName),
                     int is_parameter_entity)
 {
-    CharData_AppendString((CharData *)userData,
-                          is_parameter_entity ? "E" : "e");
+    CharData_AppendXMLChars((CharData *)userData,
+                            is_parameter_entity ? XCS("E") : XCS("e"), 1);
 }
 
 /* Test XML_DefaultCurrent() passes handling on correctly */
@@ -2775,7 +2775,7 @@ START_TEST(test_default_current)
     if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
                                 XML_TRUE) == XML_STATUS_ERROR)
         xml_failure(parser);
-    CharData_CheckString(&storage, "DCDCDCDCDCDD");
+    CharData_CheckXMLChars(&storage, XCS("DCDCDCDCDCDD"));
 
     /* Again, without the defaulting */
     XML_ParserReset(parser, NULL);
@@ -2786,7 +2786,7 @@ START_TEST(test_default_current)
     if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
                                 XML_TRUE) == XML_STATUS_ERROR)
         xml_failure(parser);
-    CharData_CheckString(&storage, "DcccccD");
+    CharData_CheckXMLChars(&storage, XCS("DcccccD"));
 
     /* Now with an internal entity to complicate matters */
     XML_ParserReset(parser, NULL);
@@ -2798,7 +2798,7 @@ START_TEST(test_default_current)
                                 XML_TRUE) == XML_STATUS_ERROR)
         xml_failure(parser);
     /* The default handler suppresses the entity */
-    CharData_CheckString(&storage, "DDDDDDDDDDDDDDDDDDD");
+    CharData_CheckXMLChars(&storage, XCS("DDDDDDDDDDDDDDDDDDD"));
 
     /* Again, with a skip handler */
     XML_ParserReset(parser, NULL);
@@ -2811,7 +2811,7 @@ START_TEST(test_default_current)
                                 XML_TRUE) == XML_STATUS_ERROR)
         xml_failure(parser);
     /* The default handler suppresses the entity */
-    CharData_CheckString(&storage, "DDDDDDDDDDDDDDDDDeD");
+    CharData_CheckXMLChars(&storage, XCS("DDDDDDDDDDDDDDDDDeD"));
 
     /* This time, allow the entity through */
     XML_ParserReset(parser, NULL);
@@ -2822,7 +2822,7 @@ START_TEST(test_default_current)
     if (_XML_Parse_SINGLE_BYTES(parser, entity_text, strlen(entity_text),
                                 XML_TRUE) == XML_STATUS_ERROR)
         xml_failure(parser);
-    CharData_CheckString(&storage, "DDDDDDDDDDDDDDDDDCDD");
+    CharData_CheckXMLChars(&storage, XCS("DDDDDDDDDDDDDDDDDCDD"));
 
     /* Finally, without passing the cdata to the default handler */
     XML_ParserReset(parser, NULL);
@@ -2833,7 +2833,7 @@ START_TEST(test_default_current)
     if (_XML_Parse_SINGLE_BYTES(parser, entity_text, strlen(entity_text),
                                 XML_TRUE) == XML_STATUS_ERROR)
         xml_failure(parser);
-    CharData_CheckString(&storage, "DDDDDDDDDDDDDDDDDcD");
+    CharData_CheckXMLChars(&storage, XCS("DDDDDDDDDDDDDDDDDcD"));
 }
 END_TEST
 
