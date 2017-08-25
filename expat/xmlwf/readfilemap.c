@@ -71,10 +71,11 @@
 #endif
 
 #include "filemap.h"
+#include "xmltchar.h"
 
 int
-filemap(const char *name,
-        void (*processor)(const void *, size_t, const char *, void *arg),
+filemap(const tchar *name,
+        void (*processor)(const void *, size_t, const tchar *, void *arg),
         void *arg)
 {
   size_t nbytes;
@@ -83,18 +84,18 @@ filemap(const char *name,
   struct stat sb;
   void *p;
 
-  fd = open(name, O_RDONLY|O_BINARY);
+  fd = topen(name, O_RDONLY|O_BINARY);
   if (fd < 0) {
-    perror(name);
+    tperror(name);
     return 0;
   }
   if (fstat(fd, &sb) < 0) {
-    perror(name);
+    tperror(name);
     close(fd);
     return 0;
   }
   if (!S_ISREG(sb.st_mode)) {
-    fprintf(stderr, "%s: not a regular file\n", name);
+    ftprintf(stderr, T("%s: not a regular file\n"), name);
     close(fd);
     return 0;
   }
@@ -113,19 +114,19 @@ filemap(const char *name,
   }
   p = malloc(nbytes);
   if (!p) {
-    fprintf(stderr, "%s: out of memory\n", name);
+    ftprintf(stderr, T("%s: out of memory\n"), name);
     close(fd);
     return 0;
   }
   n = _EXPAT_read(fd, p, nbytes);
   if (n < 0) {
-    perror(name);
+    tperror(name);
     free(p);
     close(fd);
     return 0;
   }
   if (n != (_EXPAT_read_count_t)nbytes) {
-    fprintf(stderr, "%s: read unexpected number of bytes\n", name);
+    ftprintf(stderr, T("%s: read unexpected number of bytes\n"), name);
     free(p);
     close(fd);
     return 0;

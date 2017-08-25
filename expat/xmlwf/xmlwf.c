@@ -46,6 +46,10 @@
 #include <crtdbg.h>
 #endif
 
+#ifdef XML_UNICODE
+#include <wchar.h>
+#endif
+
 /* Structures for handler user data */
 typedef struct NotationList {
   struct NotationList *next;
@@ -1018,7 +1022,7 @@ tmain(int argc, XML_Char **argv)
       parser = XML_ParserCreate(encoding);
 
     if (! parser) {
-      tperror("Could not instantiate parser");
+      tperror(T("Could not instantiate parser"));
       exit(1);
     }
 

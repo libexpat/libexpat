@@ -49,6 +49,7 @@
 #define topen _wopen
 #define tmain wmain
 #define tremove _wremove
+#define tchar wchar_t
 #else /* not XML_UNICODE */
 #define T(x) x
 #define ftprintf fprintf
@@ -65,4 +66,5 @@
 #define topen open
 #define tmain main
 #define tremove remove
+#define tchar char
 #endif /* not XML_UNICODE */
