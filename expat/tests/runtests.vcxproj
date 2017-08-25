@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -128,11 +128,13 @@
     <ClCompile Include="minicheck.c" />
     <ClCompile Include="memcheck.c" />
     <ClCompile Include="runtests.c" />
+    <ClCompile Include="structdata.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="chardata.h" />
     <ClInclude Include="minicheck.h" />
     <ClInclude Include="memcheck.h" />
+    <ClInclude Include="structdata.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
