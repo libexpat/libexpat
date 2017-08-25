@@ -41,6 +41,11 @@
 
 #include "chardata.h"
 
+#ifdef XML_UNICODE_WCHAR_T
+#define XML_FMT_STR "ls"
+#else
+#define XML_FMT_STR "s"
+#endif
 
 static int
 xmlstrlen(const XML_Char *s)
@@ -115,7 +120,8 @@ CharData_CheckString(CharData *storage, const char *expected)
     if (len != count) {
         if (sizeof(XML_Char) == 1)
             sprintf(buffer, "wrong number of data characters:"
-                    " got %d, expected %d:\n%s", count, len, storage->data);
+                    " got %d, expected %d:\n%" XML_FMT_STR,
+                    count, len, storage->data);
         else
             sprintf(buffer,
                     "wrong number of data characters: got %d, expected %d",
