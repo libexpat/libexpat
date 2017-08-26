@@ -38,22 +38,22 @@
 #include <expat.h>
 
 #ifdef XML_LARGE_SIZE
-#if defined(XML_USE_MSC_EXTENSIONS) && _MSC_VER < 1400
-#define XML_FMT_INT_MOD "I64"
+# if defined(XML_USE_MSC_EXTENSIONS) && _MSC_VER < 1400
+#  define XML_FMT_INT_MOD "I64"
+# else
+#  define XML_FMT_INT_MOD "ll"
+# endif
 #else
-#define XML_FMT_INT_MOD "ll"
-#endif
-#else
-#define XML_FMT_INT_MOD "l"
+# define XML_FMT_INT_MOD "l"
 #endif
 
 #ifdef XML_UNICODE_WCHAR_T
-#include <wchar.h>
-#define XML_FMT_STR "ls"
-#define xcputs(s) do { fputws((s), stdout); putchar('\n'); } while (0)
+# include <wchar.h>
+# define XML_FMT_STR "ls"
+# define xcputs(s) do { fputws((s), stdout); putchar('\n'); } while (0)
 #else
-#define XML_FMT_STR "s"
-#define xcputs(s) puts(s)
+# define XML_FMT_STR "s"
+# define xcputs(s) puts(s)
 #endif
 
 static void XMLCALL
