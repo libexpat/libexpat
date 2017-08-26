@@ -56,6 +56,15 @@
 # define xcputs(s) puts(s)
 #endif
 
+#ifdef XML_UNICODE_WCHAR_T
+#include <wchar.h>
+#define XML_FMT_STR "ls"
+#define xcputs(s) do { fputws((s), stdout); putchar('\n'); } while (0)
+#else
+#define XML_FMT_STR "s"
+#define xcputs(s) puts(s)
+#endif
+
 static void XMLCALL
 startElement(void *userData, const XML_Char *name, const XML_Char **atts)
 {

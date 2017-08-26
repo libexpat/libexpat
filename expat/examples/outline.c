@@ -51,6 +51,12 @@
 # define XML_FMT_STR "s"
 #endif
 
+#ifdef XML_UNICODE_WCHAR_T
+#define XML_FMT_STR "ls"
+#else
+#define XML_FMT_STR "s"
+#endif
+
 #define BUFFSIZE        8192
 
 char Buff[BUFFSIZE];
