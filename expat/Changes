@@ -18,6 +18,7 @@ Release 2.2.5 ???????????????????
             #127  Windows: Fix test suite compilation
        #126 #127  Windows: Fix compilation for Visual Studio 2012
             #129  examples: Fix compilation for XML_UNICODE_WCHAR_T
+            #130  benchmark: Fix compilation for XML_UNICODE_WCHAR_T
 
         Special thanks to:
             Benbuck Nason
