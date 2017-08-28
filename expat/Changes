@@ -19,6 +19,7 @@ Release 2.2.5 ???????????????????
        #126 #127  Windows: Fix compilation for Visual Studio 2012
             #129  examples: Fix compilation for XML_UNICODE_WCHAR_T
             #130  benchmark: Fix compilation for XML_UNICODE_WCHAR_T
+                  xmlwf: Address Clang Static Analyzer warning
 
         Special thanks to:
             Benbuck Nason

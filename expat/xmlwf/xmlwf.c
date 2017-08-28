@@ -30,6 +30,7 @@
    USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stddef.h>
@@ -105,6 +106,7 @@ attributeValue(FILE *fp, const XML_Char *s)
 {
   puttc(T('='), fp);
   puttc(T('"'), fp);
+  assert(s);
   for (;;) {
     switch (*s) {
     case 0:
