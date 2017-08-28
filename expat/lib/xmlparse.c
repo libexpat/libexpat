@@ -2012,9 +2012,7 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal)
         char *temp = NULL;
         const int bytesToAllocate = (int)((unsigned)len * 2U);
         if (bytesToAllocate > 0) {
-          temp = (buffer == NULL
-                ? (char *)MALLOC(bytesToAllocate)
-                : (char *)REALLOC(buffer, bytesToAllocate));
+          temp = (char *)REALLOC(buffer, bytesToAllocate);
         }
         if (temp == NULL) {
           errorCode = XML_ERROR_NO_MEMORY;
