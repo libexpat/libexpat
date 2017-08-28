@@ -1465,9 +1465,8 @@ unknown_toUtf8(const ENCODING *enc,
         return XML_CONVERT_OUTPUT_EXHAUSTED;
       (*fromP)++;
     }
-    do {
-      *(*toP)++ = *utf8++;
-    } while (--n != 0);
+    memcpy(*toP, utf8, n);
+    *toP += n;
   }
 }
 
