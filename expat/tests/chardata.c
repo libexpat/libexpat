@@ -31,7 +31,7 @@
 */
 
 #ifdef HAVE_EXPAT_CONFIG_H
-#include <expat_config.h>
+# include <expat_config.h>
 #endif
 #include "minicheck.h"
 

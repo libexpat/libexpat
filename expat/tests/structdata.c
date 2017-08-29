@@ -31,7 +31,7 @@
 */
 
 #ifdef HAVE_EXPAT_CONFIG_H
-#include "expat_config.h"
+# include "expat_config.h"
 #endif
 
 
@@ -46,14 +46,14 @@
 #define STRUCT_EXTENSION_COUNT 8
 
 #ifdef XML_UNICODE_WCHAR_T
-#include <wchar.h>
-#define XML_FMT_STR "ls"
-#define xcstrlen(s) wcslen(s)
-#define xcstrcmp(s, t) wcscmp((s), (t))
+# include <wchar.h>
+# define XML_FMT_STR "ls"
+# define xcstrlen(s) wcslen(s)
+# define xcstrcmp(s, t) wcscmp((s), (t))
 #else
-#define XML_FMT_STR "s"
-#define xcstrlen(s) strlen(s)
-#define xcstrcmp(s, t) strcmp((s), (t))
+# define XML_FMT_STR "s"
+# define xcstrlen(s) strlen(s)
+# define xcstrcmp(s, t) strcmp((s), (t))
 #endif
 
 
