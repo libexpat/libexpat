@@ -7040,12 +7040,12 @@ START_TEST(test_default_doctype_handler)
         "<doc>&foo;</doc>";
     DefaultCheck test_data[] = {
         {
-            "'pubname'",
+            XCS("'pubname'"),
             9,
             XML_FALSE
         },
         {
-            "'test.dtd'",
+            XCS("'test.dtd'"),
             10,
             XML_FALSE
         },
