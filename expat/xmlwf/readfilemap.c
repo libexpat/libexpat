@@ -70,8 +70,8 @@
 #endif
 #endif
 
-#include "filemap.h"
 #include "xmltchar.h"
+#include "filemap.h"
 
 int
 filemap(const tchar *name,
