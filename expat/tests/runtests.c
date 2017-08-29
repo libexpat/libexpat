@@ -11085,7 +11085,7 @@ END_TEST
 
 START_TEST(test_nsalloc_long_namespace)
 {
-    const char *text =
+    const char *text1 =
         "<"
         /* 64 characters per line */
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
@@ -11121,7 +11121,8 @@ START_TEST(test_nsalloc_long_namespace)
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
-        "='http://example.org/'>\n"
+        "='http://example.org/'>\n";
+    const char *text2 =
         "<"
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
@@ -11180,7 +11181,9 @@ START_TEST(test_nsalloc_long_namespace)
 
     for (i = 0; i < max_alloc_count; i++) {
         allocation_count = i;
-        if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+        if (_XML_Parse_SINGLE_BYTES(parser, text1, strlen(text1),
+                                    XML_FALSE) != XML_STATUS_ERROR &&
+            _XML_Parse_SINGLE_BYTES(parser, text2, strlen(text2),
                                     XML_TRUE) != XML_STATUS_ERROR)
             break;
         /* See comment in test_nsalloc_xmlns() */
