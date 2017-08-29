@@ -11661,7 +11661,7 @@ END_TEST
  */
 START_TEST(test_nsalloc_realloc_long_context_in_dtd)
 {
-    const char *text =
+    const char *text1 =
         "<!DOCTYPE "
         /* 64 characters per line */
         "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
@@ -11717,7 +11717,8 @@ START_TEST(test_nsalloc_realloc_long_context_in_dtd)
         "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
         "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
         "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
-        "='foo/Second'>&First;</"
+        "='foo/Second'>&First;";
+    const char *text2 = "</"
         "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
         "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
         "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
@@ -11747,7 +11748,9 @@ START_TEST(test_nsalloc_realloc_long_context_in_dtd)
         XML_SetUserData(parser, options);
         XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
         XML_SetExternalEntityRefHandler(parser, external_entity_optioner);
-        if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+        if (_XML_Parse_SINGLE_BYTES(parser, text1, strlen(text1),
+                                    XML_FALSE) != XML_STATUS_ERROR &&
+            _XML_Parse_SINGLE_BYTES(parser, text2, strlen(text2),
                                     XML_TRUE) != XML_STATUS_ERROR)
             break;
         /* See comment in test_nsalloc_xmlns() */
