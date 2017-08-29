@@ -7615,7 +7615,11 @@ END_TEST
 /* Exercises a particular string pool growth path */
 START_TEST(test_ns_extremely_long_prefix)
 {
-    const char *text =
+    /* C99 compilers are only required to support 4095-character
+     * strings, so the following needs to be split in two to be safe
+     * for all compilers.
+     */
+    const char *text1 =
         "<doc "
         /* 64 character on each line */
         /* ...gives a total length of 2048 */
@@ -7651,7 +7655,9 @@ START_TEST(test_ns_extremely_long_prefix)
         "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
         "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
         "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
-        ":a='12' xmlns:"
+        ":a='12'";
+    const char *text2 =
+        " xmlns:"
         "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
         "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
         "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
@@ -7687,8 +7693,11 @@ START_TEST(test_ns_extremely_long_prefix)
         "='foo'\n>"
         "</doc>";
 
-    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+    if (_XML_Parse_SINGLE_BYTES(parser, text1, strlen(text1),
                                 XML_FALSE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+    if (_XML_Parse_SINGLE_BYTES(parser, text2, strlen(text2),
+                                XML_TRUE) == XML_STATUS_ERROR)
         xml_failure(parser);
 }
 END_TEST
