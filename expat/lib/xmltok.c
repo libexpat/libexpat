@@ -66,7 +66,6 @@
   { PREFIX(prologTok), PREFIX(contentTok), \
     PREFIX(cdataSectionTok) IGNORE_SECTION_TOK_VTABLE }, \
   { PREFIX(attributeValueTok), PREFIX(entityValueTok) }, \
-  PREFIX(sameName), \
   PREFIX(nameMatchesAscii), \
   PREFIX(nameLength), \
   PREFIX(skipS), \
