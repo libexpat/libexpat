@@ -119,7 +119,7 @@ buildlib:
 .PHONY: run-benchmark
 run-benchmark:
 	$(MAKE) -C tests/benchmark
-	tests/benchmark/benchmark@EXEEXT@ -n $(top_srcdir)/../testdata/largefiles/recset.xml 65535 3
+	./run.sh tests/benchmark/benchmark@EXEEXT@ -n $(top_srcdir)/../testdata/largefiles/recset.xml 65535 3
 
 tests/xmlts.zip:
 	if test "$(XMLTS_ZIP)" = ""; then \
