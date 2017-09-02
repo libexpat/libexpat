@@ -470,7 +470,7 @@ setContext(XML_Parser parser, const XML_Char *context);
 static void FASTCALL normalizePublicId(XML_Char *s);
 
 static DTD * dtdCreate(const XML_Memory_Handling_Suite *ms);
-/* do not call if parentParser != NULL */
+/* do not call if m_parentParser != NULL */
 static void dtdReset(DTD *p, const XML_Memory_Handling_Suite *ms);
 static void
 dtdDestroy(DTD *p, XML_Bool isDocEntity, const XML_Memory_Handling_Suite *ms);
@@ -668,7 +668,6 @@ struct XML_ParserStruct {
 #define defaultExpandInternalEntities \
         (parser->m_defaultExpandInternalEntities)
 #define buffer (parser->m_buffer)
-#define parentParser (parser->m_parentParser)
 #define ps_parsing (parser->m_parsingStatus.parsing)
 #define ps_finalBuffer (parser->m_parsingStatus.finalBuffer)
 #ifdef XML_DTD
@@ -1115,7 +1114,7 @@ parserInit(XML_Parser parser, const XML_Char *encodingName)
   parser->m_unknownEncodingMem = NULL;
   parser->m_unknownEncodingRelease = NULL;
   parser->m_unknownEncodingData = NULL;
-  parentParser = NULL;
+  parser->m_parentParser = NULL;
   ps_parsing = XML_INITIALIZED;
 #ifdef XML_DTD
   isParamEntity = XML_FALSE;
@@ -1146,7 +1145,7 @@ XML_ParserReset(XML_Parser parser, const XML_Char *encodingName)
   if (parser == NULL)
       return XML_FALSE;
 
-  if (parentParser)
+  if (parser->m_parentParser)
     return XML_FALSE;
   /* move m_tagStack to m_freeTagList */
   tStk = parser->m_tagStack;
@@ -1349,7 +1348,7 @@ XML_ExternalEntityParserCreate(XML_Parser oldParser,
   defaultExpandInternalEntities = oldDefaultExpandInternalEntities;
   parser->m_ns_triplets = oldns_triplets;
   hash_secret_salt = oldhash_secret_salt;
-  parentParser = oldParser;
+  parser->m_parentParser = oldParser;
 #ifdef XML_DTD
   paramEntityParsing = oldParamEntityParsing;
   parser->m_prologState.inEntityValue = oldInEntityValue;
@@ -1443,7 +1442,7 @@ XML_ParserFree(XML_Parser parser)
 #else
   if (parser->m_dtd)
 #endif /* XML_DTD */
-    dtdDestroy(parser->m_dtd, (XML_Bool)!parentParser, &parser->m_mem);
+    dtdDestroy(parser->m_dtd, (XML_Bool)!parser->m_parentParser, &parser->m_mem);
   FREE((void *)parser->m_atts);
 #ifdef XML_ATTR_INFO
   FREE((void *)parser->m_attInfo);
@@ -1838,7 +1837,7 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal)
     parser->m_errorCode = XML_ERROR_FINISHED;
     return XML_STATUS_ERROR;
   case XML_INITIALIZED:
-    if (parentParser == NULL && !startParsing(parser)) {
+    if (parser->m_parentParser == NULL && !startParsing(parser)) {
       parser->m_errorCode = XML_ERROR_NO_MEMORY;
       return XML_STATUS_ERROR;
     }
@@ -1987,7 +1986,7 @@ XML_ParseBuffer(XML_Parser parser, int len, int isFinal)
     parser->m_errorCode = XML_ERROR_FINISHED;
     return XML_STATUS_ERROR;
   case XML_INITIALIZED:
-    if (parentParser == NULL && !startParsing(parser)) {
+    if (parser->m_parentParser == NULL && !startParsing(parser)) {
       parser->m_errorCode = XML_ERROR_NO_MEMORY;
       return XML_STATUS_ERROR;
     }
@@ -3639,7 +3638,7 @@ cdataSectionProcessor(XML_Parser parser,
   if (result != XML_ERROR_NONE)
     return result;
   if (start) {
-    if (parentParser) {  /* we are parsing an external entity */
+    if (parser->m_parentParser) {  /* we are parsing an external entity */
       parser->m_processor = externalEntityContentProcessor;
       return externalEntityContentProcessor(parser, start, end, endPtr);
     }
@@ -4809,7 +4808,7 @@ doProlog(XML_Parser parser,
             /* if we have a parent parser or are reading an internal parameter
                entity, then the entity declaration is not considered "internal"
             */
-            parser->m_declEntity->is_internal = !(parentParser || parser->m_openInternalEntities);
+            parser->m_declEntity->is_internal = !(parser->m_parentParser || parser->m_openInternalEntities);
             if (parser->m_entityDeclHandler)
               handleDefault = XML_FALSE;
           }
@@ -4841,7 +4840,7 @@ doProlog(XML_Parser parser,
           /* if we have a parent parser or are reading an internal parameter
              entity, then the entity declaration is not considered "internal"
           */
-          parser->m_declEntity->is_internal = !(parentParser || parser->m_openInternalEntities);
+          parser->m_declEntity->is_internal = !(parser->m_parentParser || parser->m_openInternalEntities);
           if (parser->m_entityDeclHandler)
             handleDefault = XML_FALSE;
         }
@@ -5453,7 +5452,7 @@ internalEntityProcessor(XML_Parser parser,
   {
     parser->m_processor = contentProcessor;
     /* see externalEntityContentProcessor vs contentProcessor */
-    return doContent(parser, parentParser ? 1 : 0, encoding, s, end,
+    return doContent(parser, parser->m_parentParser ? 1 : 0, encoding, s, end,
                      nextPtr, (XML_Bool)!ps_finalBuffer);
   }
 }
