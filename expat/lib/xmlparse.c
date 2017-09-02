@@ -665,7 +665,6 @@ struct XML_ParserStruct {
 #define encoding (parser->m_encoding)
 #define unknownEncodingHandlerData \
   (parser->m_unknownEncodingHandlerData)
-#define position (parser->m_position)
 #define openInternalEntities (parser->m_openInternalEntities)
 #define freeInternalEntities (parser->m_freeInternalEntities)
 #define defaultExpandInternalEntities \
@@ -1142,7 +1141,7 @@ parserInit(XML_Parser parser, const XML_Char *encodingName)
   declNotationPublicId = NULL;
   declAttributeIsCdata = XML_FALSE;
   declAttributeIsId = XML_FALSE;
-  memset(&position, 0, sizeof(POSITION));
+  memset(&parser->m_position, 0, sizeof(POSITION));
   parser->m_errorCode = XML_ERROR_NONE;
   parser->m_eventPtr = NULL;
   parser->m_eventEndPtr = NULL;
@@ -1915,7 +1914,7 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal)
          *
          * LCOV_EXCL_START
          */
-        XmlUpdatePosition(encoding, parser->m_positionPtr, bufferPtr, &position);
+        XmlUpdatePosition(encoding, parser->m_positionPtr, bufferPtr, &parser->m_position);
         parser->m_positionPtr = bufferPtr;
         return XML_STATUS_SUSPENDED;
         /* LCOV_EXCL_STOP */
@@ -1971,7 +1970,7 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal)
       }
     }
 
-    XmlUpdatePosition(encoding, parser->m_positionPtr, end, &position);
+    XmlUpdatePosition(encoding, parser->m_positionPtr, end, &parser->m_position);
     nLeftOver = s + len - end;
     if (nLeftOver) {
       if (buffer == NULL || nLeftOver > bufferLim - buffer) {
@@ -2065,7 +2064,7 @@ XML_ParseBuffer(XML_Parser parser, int len, int isFinal)
     }
   }
 
-  XmlUpdatePosition(encoding, parser->m_positionPtr, bufferPtr, &position);
+  XmlUpdatePosition(encoding, parser->m_positionPtr, bufferPtr, &parser->m_position);
   parser->m_positionPtr = bufferPtr;
   return result;
 }
@@ -2235,7 +2234,7 @@ XML_ResumeParser(XML_Parser parser)
     }
   }
 
-  XmlUpdatePosition(encoding, parser->m_positionPtr, bufferPtr, &position);
+  XmlUpdatePosition(encoding, parser->m_positionPtr, bufferPtr, &parser->m_position);
   parser->m_positionPtr = bufferPtr;
   return result;
 }
@@ -2304,10 +2303,10 @@ XML_GetCurrentLineNumber(XML_Parser parser)
   if (parser == NULL)
     return 0;
   if (parser->m_eventPtr && parser->m_eventPtr >= parser->m_positionPtr) {
-    XmlUpdatePosition(encoding, parser->m_positionPtr, parser->m_eventPtr, &position);
+    XmlUpdatePosition(encoding, parser->m_positionPtr, parser->m_eventPtr, &parser->m_position);
     parser->m_positionPtr = parser->m_eventPtr;
   }
-  return position.lineNumber + 1;
+  return parser->m_position.lineNumber + 1;
 }
 
 XML_Size XMLCALL
@@ -2316,10 +2315,10 @@ XML_GetCurrentColumnNumber(XML_Parser parser)
   if (parser == NULL)
     return 0;
   if (parser->m_eventPtr && parser->m_eventPtr >= parser->m_positionPtr) {
-    XmlUpdatePosition(encoding, parser->m_positionPtr, parser->m_eventPtr, &position);
+    XmlUpdatePosition(encoding, parser->m_positionPtr, parser->m_eventPtr, &parser->m_position);
     parser->m_positionPtr = parser->m_eventPtr;
   }
-  return position.columnNumber;
+  return parser->m_position.columnNumber;
 }
 
 void XMLCALL
