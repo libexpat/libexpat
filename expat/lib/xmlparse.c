@@ -665,7 +665,6 @@ struct XML_ParserStruct {
 #define encoding (parser->m_encoding)
 #define unknownEncodingHandlerData \
   (parser->m_unknownEncodingHandlerData)
-#define ns (parser->m_ns)
 #define ns_triplets (parser->m_ns_triplets)
 #define prologState (parser->m_prologState)
 #define processor (parser->m_processor)
@@ -967,7 +966,7 @@ startParsing(XML_Parser parser)
     /* hash functions must be initialized before setContext() is called */
     if (hash_secret_salt == 0)
       hash_secret_salt = generate_hash_secret_salt(parser);
-    if (ns) {
+    if (parser->m_ns) {
       /* implicit context only set for root parser, since child
          parsers (i.e. external entity parsers) will inherit it
       */
@@ -1071,7 +1070,7 @@ parserCreate(const XML_Char *encodingName,
   unknownEncodingHandlerData = NULL;
 
   namespaceSeparator = ASCII_EXCL;
-  ns = XML_FALSE;
+  parser->m_ns = XML_FALSE;
   ns_triplets = XML_FALSE;
 
   nsAtts = NULL;
@@ -1090,7 +1089,7 @@ parserCreate(const XML_Char *encodingName,
   }
 
   if (nameSep) {
-    ns = XML_TRUE;
+    parser->m_ns = XML_TRUE;
     parser->m_internalEncoding = XmlGetInternalEncodingNS();
     namespaceSeparator = *nameSep;
   }
@@ -1355,7 +1354,7 @@ XML_ExternalEntityParserCreate(XML_Parser oldParser,
      here.  This makes this function more painful to follow than it
      would be otherwise.
   */
-  if (ns) {
+  if (parser->m_ns) {
     XML_Char tmp[2];
     *tmp = namespaceSeparator;
     parser = parserCreate(encodingName, &parser->m_mem, tmp, newDtd);
@@ -2962,7 +2961,7 @@ doContent(XML_Parser parser,
           const XML_Char *prefix;
           XML_Char *uri;
           localPart = tag->name.localPart;
-          if (ns && localPart) {
+          if (parser->m_ns && localPart) {
             /* localPart and prefix may have been overwritten in
                tag->name.str, since this points to the binding->uri
                buffer which gets re-used; so we have to add them again
@@ -3201,7 +3200,7 @@ storeAtts(XML_Parser parser, const ENCODING *enc,
                                          sizeof(ELEMENT_TYPE));
     if (!elementType)
       return XML_ERROR_NO_MEMORY;
-    if (ns && !setElementTypePrefix(parser, elementType))
+    if (parser->m_ns && !setElementTypePrefix(parser, elementType))
       return XML_ERROR_NO_MEMORY;
   }
   nDefaultAtts = elementType->nDefaultAtts;
@@ -3501,7 +3500,7 @@ storeAtts(XML_Parser parser, const ENCODING *enc,
   for (binding = *bindingsPtr; binding; binding = binding->nextTagBinding)
     binding->attId->name[-1] = 0;
 
-  if (!ns)
+  if (!parser->m_ns)
     return XML_ERROR_NONE;
 
   /* expand the element type name */
@@ -3953,7 +3952,7 @@ initializeEncoding(XML_Parser parser)
 #else
   s = parser->m_protocolEncodingName;
 #endif
-  if ((ns ? XmlInitEncodingNS : XmlInitEncoding)(&parser->m_initEncoding, &encoding, s))
+  if ((parser->m_ns ? XmlInitEncodingNS : XmlInitEncoding)(&parser->m_initEncoding, &encoding, s))
     return XML_ERROR_NONE;
   return handleUnknownEncoding(parser, parser->m_protocolEncodingName);
 }
@@ -3969,7 +3968,7 @@ processXmlDecl(XML_Parser parser, int isGeneralTextEntity,
   const char *versionend;
   const XML_Char *storedversion = NULL;
   int standalone = -1;
-  if (!(ns
+  if (!(parser->m_ns
         ? XmlParseXmlDeclNS
         : XmlParseXmlDecl)(isGeneralTextEntity,
                            encoding,
@@ -4074,7 +4073,7 @@ handleUnknownEncoding(XML_Parser parser, const XML_Char *encodingName)
           info.release(info.data);
         return XML_ERROR_NO_MEMORY;
       }
-      enc = (ns
+      enc = (parser->m_ns
              ? XmlInitUnknownEncodingNS
              : XmlInitUnknownEncoding)(parser->m_unknownEncodingMem,
                                        info.map,
@@ -6110,7 +6109,7 @@ getAttributeId(XML_Parser parser, const ENCODING *enc,
     poolDiscard(&dtd->pool);
   else {
     poolFinish(&dtd->pool);
-    if (!ns)
+    if (!parser->m_ns)
       ;
     else if (name[0] == XML_T(ASCII_x)
         && name[1] == XML_T(ASCII_m)
