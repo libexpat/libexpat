@@ -663,7 +663,6 @@ struct XML_ParserStruct {
 #define internalEntityRefHandler \
         (parser->m_internalEntityRefHandler)
 #define encoding (parser->m_encoding)
-#define internalEncoding (parser->m_internalEncoding)
 #define unknownEncodingMem (parser->m_unknownEncodingMem)
 #define unknownEncodingData (parser->m_unknownEncodingData)
 #define unknownEncodingHandlerData \
@@ -1096,11 +1095,11 @@ parserCreate(const XML_Char *encodingName,
 
   if (nameSep) {
     ns = XML_TRUE;
-    internalEncoding = XmlGetInternalEncodingNS();
+    parser->m_internalEncoding = XmlGetInternalEncodingNS();
     namespaceSeparator = *nameSep;
   }
   else {
-    internalEncoding = XmlGetInternalEncoding();
+    parser->m_internalEncoding = XmlGetInternalEncoding();
   }
 
   return parser;
@@ -2373,7 +2372,7 @@ XML_DefaultCurrent(XML_Parser parser)
   if (parser->m_defaultHandler) {
     if (openInternalEntities)
       reportDefault(parser,
-                    internalEncoding,
+                    parser->m_internalEncoding,
                     openInternalEntities->internalEventPtr,
                     openInternalEntities->internalEventEndPtr);
     else
@@ -5424,13 +5423,13 @@ processInternalEntity(XML_Parser parser, ENTITY *entity,
 
 #ifdef XML_DTD
   if (entity->is_param) {
-    int tok = XmlPrologTok(internalEncoding, textStart, textEnd, &next);
-    result = doProlog(parser, internalEncoding, textStart, textEnd, tok,
+    int tok = XmlPrologTok(parser->m_internalEncoding, textStart, textEnd, &next);
+    result = doProlog(parser, parser->m_internalEncoding, textStart, textEnd, tok,
                       next, &next, XML_FALSE);
   }
   else
 #endif /* XML_DTD */
-    result = doContent(parser, tagLevel, internalEncoding, textStart,
+    result = doContent(parser, tagLevel, parser->m_internalEncoding, textStart,
                        textEnd, &next, XML_FALSE);
 
   if (result == XML_ERROR_NONE) {
@@ -5471,13 +5470,13 @@ internalEntityProcessor(XML_Parser parser,
 
 #ifdef XML_DTD
   if (entity->is_param) {
-    int tok = XmlPrologTok(internalEncoding, textStart, textEnd, &next);
-    result = doProlog(parser, internalEncoding, textStart, textEnd, tok,
+    int tok = XmlPrologTok(parser->m_internalEncoding, textStart, textEnd, &next);
+    result = doProlog(parser, parser->m_internalEncoding, textStart, textEnd, tok,
                       next, &next, XML_FALSE);
   }
   else
 #endif /* XML_DTD */
-    result = doContent(parser, openEntity->startTagLevel, internalEncoding,
+    result = doContent(parser, openEntity->startTagLevel, parser->m_internalEncoding,
                        textStart, textEnd, &next, XML_FALSE);
 
   if (result != XML_ERROR_NONE)
@@ -5690,7 +5689,7 @@ appendAttributeValue(XML_Parser parser, const ENCODING *enc, XML_Bool isCdata,
           enum XML_Error result;
           const XML_Char *textEnd = entity->textPtr + entity->textLen;
           entity->open = XML_TRUE;
-          result = appendAttributeValue(parser, internalEncoding, isCdata,
+          result = appendAttributeValue(parser, parser->m_internalEncoding, isCdata,
                                         (char *)entity->textPtr,
                                         (char *)textEnd, pool);
           entity->open = XML_FALSE;
@@ -5799,7 +5798,7 @@ storeEntityValue(XML_Parser parser,
         else {
           entity->open = XML_TRUE;
           result = storeEntityValue(parser,
-                                    internalEncoding,
+                                    parser->m_internalEncoding,
                                     (char *)entity->textPtr,
                                     (char *)(entity->textPtr
                                              + entity->textLen));
