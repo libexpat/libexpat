@@ -665,7 +665,6 @@ struct XML_ParserStruct {
 #define encoding (parser->m_encoding)
 #define unknownEncodingHandlerData \
   (parser->m_unknownEncodingHandlerData)
-#define freeInternalEntities (parser->m_freeInternalEntities)
 #define defaultExpandInternalEntities \
         (parser->m_defaultExpandInternalEntities)
 #define tagLevel (parser->m_tagLevel)
@@ -1052,7 +1051,7 @@ parserCreate(const XML_Char *encodingName,
 
   freeBindingList = NULL;
   freeTagList = NULL;
-  freeInternalEntities = NULL;
+  parser->m_freeInternalEntities = NULL;
 
   groupSize = 0;
   groupConnector = NULL;
@@ -1197,13 +1196,13 @@ XML_ParserReset(XML_Parser parser, const XML_Char *encodingName)
     tag->bindings = NULL;
     freeTagList = tag;
   }
-  /* move m_openInternalEntities to freeInternalEntities */
+  /* move m_openInternalEntities to m_freeInternalEntities */
   openEntityList = parser->m_openInternalEntities;
   while (openEntityList) {
     OPEN_INTERNAL_ENTITY *openEntity = openEntityList;
     openEntityList = openEntity->next;
-    openEntity->next = freeInternalEntities;
-    freeInternalEntities = openEntity;
+    openEntity->next = parser->m_freeInternalEntities;
+    parser->m_freeInternalEntities = openEntity;
   }
   moveToFreeBindingList(parser, inheritedBindings);
   FREE(parser->m_unknownEncodingMem);
@@ -1454,15 +1453,15 @@ XML_ParserFree(XML_Parser parser)
     destroyBindings(p->bindings, parser);
     FREE(p);
   }
-  /* free m_openInternalEntities and freeInternalEntities */
+  /* free m_openInternalEntities and m_freeInternalEntities */
   entityList = parser->m_openInternalEntities;
   for (;;) {
     OPEN_INTERNAL_ENTITY *openEntity;
     if (entityList == NULL) {
-      if (freeInternalEntities == NULL)
+      if (parser->m_freeInternalEntities == NULL)
         break;
-      entityList = freeInternalEntities;
-      freeInternalEntities = NULL;
+      entityList = parser->m_freeInternalEntities;
+      parser->m_freeInternalEntities = NULL;
     }
     openEntity = entityList;
     entityList = entityList->next;
@@ -5384,9 +5383,9 @@ processInternalEntity(XML_Parser parser, ENTITY *entity,
   enum XML_Error result;
   OPEN_INTERNAL_ENTITY *openEntity;
 
-  if (freeInternalEntities) {
-    openEntity = freeInternalEntities;
-    freeInternalEntities = openEntity->next;
+  if (parser->m_freeInternalEntities) {
+    openEntity = parser->m_freeInternalEntities;
+    parser->m_freeInternalEntities = openEntity->next;
   }
   else {
     openEntity = (OPEN_INTERNAL_ENTITY *)MALLOC(sizeof(OPEN_INTERNAL_ENTITY));
@@ -5427,8 +5426,8 @@ processInternalEntity(XML_Parser parser, ENTITY *entity,
       entity->open = XML_FALSE;
       parser->m_openInternalEntities = openEntity->next;
       /* put openEntity back in list of free instances */
-      openEntity->next = freeInternalEntities;
-      freeInternalEntities = openEntity;
+      openEntity->next = parser->m_freeInternalEntities;
+      parser->m_freeInternalEntities = openEntity;
     }
   }
   return result;
@@ -5475,8 +5474,8 @@ internalEntityProcessor(XML_Parser parser,
     entity->open = XML_FALSE;
     parser->m_openInternalEntities = openEntity->next;
     /* put openEntity back in list of free instances */
-    openEntity->next = freeInternalEntities;
-    freeInternalEntities = openEntity;
+    openEntity->next = parser->m_freeInternalEntities;
+    parser->m_freeInternalEntities = openEntity;
   }
 
 #ifdef XML_DTD
