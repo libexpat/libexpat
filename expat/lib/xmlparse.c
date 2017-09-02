@@ -668,7 +668,6 @@ struct XML_ParserStruct {
 #define defaultExpandInternalEntities \
         (parser->m_defaultExpandInternalEntities)
 #define buffer (parser->m_buffer)
-#define groupConnector (parser->m_groupConnector)
 #define groupSize (parser->m_groupSize)
 #define namespaceSeparator (parser->m_namespaceSeparator)
 #define parentParser (parser->m_parentParser)
@@ -1019,7 +1018,7 @@ parserCreate(const XML_Char *encodingName,
   parser->m_freeInternalEntities = NULL;
 
   groupSize = 0;
-  groupConnector = NULL;
+  parser->m_groupConnector = NULL;
 
   parser->m_unknownEncodingHandler = NULL;
   unknownEncodingHandlerData = NULL;
@@ -1451,7 +1450,7 @@ XML_ParserFree(XML_Parser parser)
 #ifdef XML_ATTR_INFO
   FREE((void *)parser->m_attInfo);
 #endif
-  FREE(groupConnector);
+  FREE(parser->m_groupConnector);
   FREE(buffer);
   FREE(parser->m_dataBuf);
   FREE(parser->m_nsAtts);
@@ -4945,12 +4944,12 @@ doProlog(XML_Parser parser,
     case XML_ROLE_GROUP_OPEN:
       if (parser->m_prologState.level >= groupSize) {
         if (groupSize) {
-          char *temp = (char *)REALLOC(groupConnector, groupSize *= 2);
+          char *temp = (char *)REALLOC(parser->m_groupConnector, groupSize *= 2);
           if (temp == NULL) {
             groupSize /= 2;
             return XML_ERROR_NO_MEMORY;
           }
-          groupConnector = temp;
+          parser->m_groupConnector = temp;
           if (dtd->scaffIndex) {
             int *temp = (int *)REALLOC(dtd->scaffIndex,
                           groupSize * sizeof(int));
@@ -4960,14 +4959,14 @@ doProlog(XML_Parser parser,
           }
         }
         else {
-          groupConnector = (char *)MALLOC(groupSize = 32);
-          if (!groupConnector) {
+          parser->m_groupConnector = (char *)MALLOC(groupSize = 32);
+          if (!parser->m_groupConnector) {
             groupSize = 0;
             return XML_ERROR_NO_MEMORY;
           }
         }
       }
-      groupConnector[parser->m_prologState.level] = 0;
+      parser->m_groupConnector[parser->m_prologState.level] = 0;
       if (dtd->in_eldecl) {
         int myindex = nextScaffoldPart(parser);
         if (myindex < 0)
@@ -4980,17 +4979,17 @@ doProlog(XML_Parser parser,
       }
       break;
     case XML_ROLE_GROUP_SEQUENCE:
-      if (groupConnector[parser->m_prologState.level] == ASCII_PIPE)
+      if (parser->m_groupConnector[parser->m_prologState.level] == ASCII_PIPE)
         return XML_ERROR_SYNTAX;
-      groupConnector[parser->m_prologState.level] = ASCII_COMMA;
+      parser->m_groupConnector[parser->m_prologState.level] = ASCII_COMMA;
       if (dtd->in_eldecl && parser->m_elementDeclHandler)
         handleDefault = XML_FALSE;
       break;
     case XML_ROLE_GROUP_CHOICE:
-      if (groupConnector[parser->m_prologState.level] == ASCII_COMMA)
+      if (parser->m_groupConnector[parser->m_prologState.level] == ASCII_COMMA)
         return XML_ERROR_SYNTAX;
       if (dtd->in_eldecl
-          && !groupConnector[parser->m_prologState.level]
+          && !parser->m_groupConnector[parser->m_prologState.level]
           && (dtd->scaffold[dtd->scaffIndex[dtd->scaffLevel - 1]].type
               != XML_CTYPE_MIXED)
           ) {
@@ -4999,7 +4998,7 @@ doProlog(XML_Parser parser,
         if (parser->m_elementDeclHandler)
           handleDefault = XML_FALSE;
       }
-      groupConnector[parser->m_prologState.level] = ASCII_PIPE;
+      parser->m_groupConnector[parser->m_prologState.level] = ASCII_PIPE;
       break;
     case XML_ROLE_PARAM_ENTITY_REF:
 #ifdef XML_DTD
