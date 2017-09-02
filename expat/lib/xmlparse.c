@@ -668,7 +668,6 @@ struct XML_ParserStruct {
 #define defaultExpandInternalEntities \
         (parser->m_defaultExpandInternalEntities)
 #define buffer (parser->m_buffer)
-#define curBase (parser->m_curBase)
 #define declEntity (parser->m_declEntity)
 #define doctypeName (parser->m_doctypeName)
 #define doctypeSysid (parser->m_doctypeSysid)
@@ -1089,7 +1088,7 @@ parserInit(XML_Parser parser, const XML_Char *encodingName)
   if (encodingName != NULL) {
     parser->m_protocolEncodingName = copyString(encodingName, &(parser->m_mem));
   }
-  curBase = NULL;
+  parser->m_curBase = NULL;
   XmlInitEncoding(&parser->m_initEncoding, &encoding, 0);
   parser->m_userData = NULL;
   parser->m_handlerArg = NULL;
@@ -1541,10 +1540,10 @@ XML_SetBase(XML_Parser parser, const XML_Char *p)
     p = poolCopyString(&parser->m_dtd->pool, p);
     if (!p)
       return XML_STATUS_ERROR;
-    curBase = p;
+    parser->m_curBase = p;
   }
   else
-    curBase = NULL;
+    parser->m_curBase = NULL;
   return XML_STATUS_OK;
 }
 
@@ -1553,7 +1552,7 @@ XML_GetBase(XML_Parser parser)
 {
   if (parser == NULL)
     return NULL;
-  return curBase;
+  return parser->m_curBase;
 }
 
 int XMLCALL
@@ -4492,7 +4491,7 @@ doProlog(XML_Parser parser,
             return XML_ERROR_NO_MEMORY; /* LCOV_EXCL_LINE */
           }
           if (useForeignDTD)
-            entity->base = curBase;
+            entity->base = parser->m_curBase;
           dtd->paramEntityRead = XML_FALSE;
           if (!externalEntityRefHandler(externalEntityRefHandlerArg,
                                         0,
@@ -4535,7 +4534,7 @@ doProlog(XML_Parser parser,
                                             sizeof(ENTITY));
           if (!entity)
             return XML_ERROR_NO_MEMORY;
-          entity->base = curBase;
+          entity->base = parser->m_curBase;
           dtd->paramEntityRead = XML_FALSE;
           if (!externalEntityRefHandler(externalEntityRefHandlerArg,
                                         0,
@@ -4703,7 +4702,7 @@ doProlog(XML_Parser parser,
                               declEntity->is_param,
                               declEntity->textPtr,
                               declEntity->textLen,
-                              curBase, 0, 0, 0);
+                              parser->m_curBase, 0, 0, 0);
             handleDefault = XML_FALSE;
           }
         }
@@ -4761,7 +4760,7 @@ doProlog(XML_Parser parser,
                                                next - enc->minBytesPerChar);
         if (!declEntity->systemId)
           return XML_ERROR_NO_MEMORY;
-        declEntity->base = curBase;
+        declEntity->base = parser->m_curBase;
         poolFinish(&dtd->pool);
         /* Don't suppress the default handler if we fell through from
          * the XML_ROLE_DOCTYPE_SYSTEM_ID case.
@@ -4921,7 +4920,7 @@ doProlog(XML_Parser parser,
         *eventEndPP = s;
         parser->m_notationDeclHandler(parser->m_handlerArg,
                             declNotationName,
-                            curBase,
+                            parser->m_curBase,
                             systemId,
                             declNotationPublicId);
         handleDefault = XML_FALSE;
@@ -4933,7 +4932,7 @@ doProlog(XML_Parser parser,
         *eventEndPP = s;
         parser->m_notationDeclHandler(parser->m_handlerArg,
                             declNotationName,
-                            curBase,
+                            parser->m_curBase,
                             0,
                             declNotationPublicId);
         handleDefault = XML_FALSE;
