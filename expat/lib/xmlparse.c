@@ -668,7 +668,6 @@ struct XML_ParserStruct {
 #define defaultExpandInternalEntities \
         (parser->m_defaultExpandInternalEntities)
 #define buffer (parser->m_buffer)
-#define declElementType (parser->m_declElementType)
 #define declAttributeId (parser->m_declAttributeId)
 #define declAttributeIsCdata (parser->m_declAttributeIsCdata)
 #define declAttributeIsId (parser->m_declAttributeIsId)
@@ -1111,7 +1110,7 @@ parserInit(XML_Parser parser, const XML_Char *encodingName)
   parser->m_bufferEnd = buffer;
   parser->m_parseEndByteIndex = 0;
   parser->m_parseEndPtr = NULL;
-  declElementType = NULL;
+  parser->m_declElementType = NULL;
   declAttributeId = NULL;
   parser->m_declEntity = NULL;
   parser->m_doctypeName = NULL;
@@ -1299,7 +1298,7 @@ XML_ExternalEntityParserCreate(XML_Parser oldParser,
   oldAttlistDeclHandler = parser->m_attlistDeclHandler;
   oldEntityDeclHandler = parser->m_entityDeclHandler;
   oldXmlDeclHandler = parser->m_xmlDeclHandler;
-  oldDeclElementType = declElementType;
+  oldDeclElementType = parser->m_declElementType;
 
   oldUserData = parser->m_userData;
   oldHandlerArg = parser->m_handlerArg;
@@ -1359,7 +1358,7 @@ XML_ExternalEntityParserCreate(XML_Parser oldParser,
   parser->m_attlistDeclHandler = oldAttlistDeclHandler;
   parser->m_entityDeclHandler = oldEntityDeclHandler;
   parser->m_xmlDeclHandler = oldXmlDeclHandler;
-  declElementType = oldDeclElementType;
+  parser->m_declElementType = oldDeclElementType;
   parser->m_userData = oldUserData;
   if (oldUserData == oldHandlerArg)
     parser->m_handlerArg = parser->m_userData;
@@ -4553,8 +4552,8 @@ doProlog(XML_Parser parser,
       parser->m_processor = contentProcessor;
       return contentProcessor(parser, s, end, nextPtr);
     case XML_ROLE_ATTLIST_ELEMENT_NAME:
-      declElementType = getElementType(parser, enc, s, next);
-      if (!declElementType)
+      parser->m_declElementType = getElementType(parser, enc, s, next);
+      if (!parser->m_declElementType)
         return XML_ERROR_NO_MEMORY;
       goto checkAttListDeclHandler;
     case XML_ROLE_ATTRIBUTE_NAME:
@@ -4617,7 +4616,7 @@ doProlog(XML_Parser parser,
     case XML_ROLE_IMPLIED_ATTRIBUTE_VALUE:
     case XML_ROLE_REQUIRED_ATTRIBUTE_VALUE:
       if (dtd->keepProcessing) {
-        if (!defineAttribute(declElementType, declAttributeId,
+        if (!defineAttribute(parser->m_declElementType, declAttributeId,
                              declAttributeIsCdata, declAttributeIsId,
                              0, parser))
           return XML_ERROR_NO_MEMORY;
@@ -4633,7 +4632,7 @@ doProlog(XML_Parser parser,
             poolFinish(&tempPool);
           }
           *eventEndPP = s;
-          parser->m_attlistDeclHandler(parser->m_handlerArg, declElementType->name,
+          parser->m_attlistDeclHandler(parser->m_handlerArg, parser->m_declElementType->name,
                              declAttributeId->name, parser->m_declAttributeType,
                              0, role == XML_ROLE_REQUIRED_ATTRIBUTE_VALUE);
           poolClear(&tempPool);
@@ -4655,7 +4654,7 @@ doProlog(XML_Parser parser,
         attVal = poolStart(&dtd->pool);
         poolFinish(&dtd->pool);
         /* ID attributes aren't allowed to have a default */
-        if (!defineAttribute(declElementType, declAttributeId,
+        if (!defineAttribute(parser->m_declElementType, declAttributeId,
                              declAttributeIsCdata, XML_FALSE, attVal, parser))
           return XML_ERROR_NO_MEMORY;
         if (parser->m_attlistDeclHandler && parser->m_declAttributeType) {
@@ -4670,7 +4669,7 @@ doProlog(XML_Parser parser,
             poolFinish(&tempPool);
           }
           *eventEndPP = s;
-          parser->m_attlistDeclHandler(parser->m_handlerArg, declElementType->name,
+          parser->m_attlistDeclHandler(parser->m_handlerArg, parser->m_declElementType->name,
                              declAttributeId->name, parser->m_declAttributeType,
                              attVal,
                              role == XML_ROLE_FIXED_ATTRIBUTE_VALUE);
@@ -5124,8 +5123,8 @@ doProlog(XML_Parser parser,
 
     case XML_ROLE_ELEMENT_NAME:
       if (parser->m_elementDeclHandler) {
-        declElementType = getElementType(parser, enc, s, next);
-        if (!declElementType)
+        parser->m_declElementType = getElementType(parser, enc, s, next);
+        if (!parser->m_declElementType)
           return XML_ERROR_NO_MEMORY;
         dtd->scaffLevel = 0;
         dtd->scaffCount = 0;
@@ -5149,7 +5148,7 @@ doProlog(XML_Parser parser,
                            XML_CTYPE_ANY :
                            XML_CTYPE_EMPTY);
           *eventEndPP = s;
-          parser->m_elementDeclHandler(parser->m_handlerArg, declElementType->name, content);
+          parser->m_elementDeclHandler(parser->m_handlerArg, parser->m_declElementType->name, content);
           handleDefault = XML_FALSE;
         }
         dtd->in_eldecl = XML_FALSE;
@@ -5225,7 +5224,7 @@ doProlog(XML_Parser parser,
             if (!model)
               return XML_ERROR_NO_MEMORY;
             *eventEndPP = s;
-            parser->m_elementDeclHandler(parser->m_handlerArg, declElementType->name, model);
+            parser->m_elementDeclHandler(parser->m_handlerArg, parser->m_declElementType->name, model);
           }
           dtd->in_eldecl = XML_FALSE;
           dtd->contentStringLen = 0;
