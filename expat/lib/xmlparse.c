@@ -665,7 +665,6 @@ struct XML_ParserStruct {
 #define encoding (parser->m_encoding)
 #define unknownEncodingHandlerData \
   (parser->m_unknownEncodingHandlerData)
-#define prologState (parser->m_prologState)
 #define processor (parser->m_processor)
 #define errorCode (parser->m_errorCode)
 #define eventPtr (parser->m_eventPtr)
@@ -1103,7 +1102,7 @@ static void
 parserInit(XML_Parser parser, const XML_Char *encodingName)
 {
   processor = prologInitProcessor;
-  XmlPrologStateInit(&prologState);
+  XmlPrologStateInit(&parser->m_prologState);
   if (encodingName != NULL) {
     parser->m_protocolEncodingName = copyString(encodingName, &(parser->m_mem));
   }
@@ -1333,7 +1332,7 @@ XML_ExternalEntityParserCreate(XML_Parser oldParser,
   oldExternalEntityRefHandlerArg = externalEntityRefHandlerArg;
 #ifdef XML_DTD
   oldParamEntityParsing = paramEntityParsing;
-  oldInEntityValue = prologState.inEntityValue;
+  oldInEntityValue = parser->m_prologState.inEntityValue;
 #endif
   oldns_triplets = parser->m_ns_triplets;
   /* Note that the new parser shares the same hash secret as the old
@@ -1399,7 +1398,7 @@ XML_ExternalEntityParserCreate(XML_Parser oldParser,
   parentParser = oldParser;
 #ifdef XML_DTD
   paramEntityParsing = oldParamEntityParsing;
-  prologState.inEntityValue = oldInEntityValue;
+  parser->m_prologState.inEntityValue = oldInEntityValue;
   if (context) {
 #endif /* XML_DTD */
     if (!dtdCopy(oldParser, _dtd, oldDtd, &parser->m_mem)
@@ -1419,7 +1418,7 @@ XML_ExternalEntityParserCreate(XML_Parser oldParser,
        This would leave those prefixes with dangling pointers.
     */
     isParamEntity = XML_TRUE;
-    XmlPrologStateInitExternalEntity(&prologState);
+    XmlPrologStateInitExternalEntity(&parser->m_prologState);
     processor = externalParEntInitProcessor;
   }
 #endif /* XML_DTD */
@@ -4120,7 +4119,7 @@ externalParEntInitProcessor(XML_Parser parser,
      so we consider the external parameter entity read */
   _dtd->paramEntityRead = XML_TRUE;
 
-  if (prologState.inEntityValue) {
+  if (parser->m_prologState.inEntityValue) {
     processor = entityValueInitProcessor;
     return entityValueInitProcessor(parser, s, end, nextPtr);
   }
@@ -4377,7 +4376,7 @@ doProlog(XML_Parser parser,
            internal PEs if the reference occurs between declarations.
         */
         if (isParamEntity || enc != encoding) {
-          if (XmlTokenRole(&prologState, XML_TOK_NONE, end, end, enc)
+          if (XmlTokenRole(&parser->m_prologState, XML_TOK_NONE, end, end, enc)
               == XML_ROLE_ERROR)
             return XML_ERROR_INCOMPLETE_PE;
           *nextPtr = s;
@@ -4391,7 +4390,7 @@ doProlog(XML_Parser parser,
         break;
       }
     }
-    role = XmlTokenRole(&prologState, tok, s, next, enc);
+    role = XmlTokenRole(&parser->m_prologState, tok, s, next, enc);
     switch (role) {
     case XML_ROLE_XML_DECL:
       {
@@ -4987,7 +4986,7 @@ doProlog(XML_Parser parser,
       break;
 #endif /* XML_DTD */
     case XML_ROLE_GROUP_OPEN:
-      if (prologState.level >= groupSize) {
+      if (parser->m_prologState.level >= groupSize) {
         if (groupSize) {
           char *temp = (char *)REALLOC(groupConnector, groupSize *= 2);
           if (temp == NULL) {
@@ -5011,7 +5010,7 @@ doProlog(XML_Parser parser,
           }
         }
       }
-      groupConnector[prologState.level] = 0;
+      groupConnector[parser->m_prologState.level] = 0;
       if (dtd->in_eldecl) {
         int myindex = nextScaffoldPart(parser);
         if (myindex < 0)
@@ -5024,17 +5023,17 @@ doProlog(XML_Parser parser,
       }
       break;
     case XML_ROLE_GROUP_SEQUENCE:
-      if (groupConnector[prologState.level] == ASCII_PIPE)
+      if (groupConnector[parser->m_prologState.level] == ASCII_PIPE)
         return XML_ERROR_SYNTAX;
-      groupConnector[prologState.level] = ASCII_COMMA;
+      groupConnector[parser->m_prologState.level] = ASCII_COMMA;
       if (dtd->in_eldecl && parser->m_elementDeclHandler)
         handleDefault = XML_FALSE;
       break;
     case XML_ROLE_GROUP_CHOICE:
-      if (groupConnector[prologState.level] == ASCII_COMMA)
+      if (groupConnector[parser->m_prologState.level] == ASCII_COMMA)
         return XML_ERROR_SYNTAX;
       if (dtd->in_eldecl
-          && !groupConnector[prologState.level]
+          && !groupConnector[parser->m_prologState.level]
           && (dtd->scaffold[dtd->scaffIndex[dtd->scaffLevel - 1]].type
               != XML_CTYPE_MIXED)
           ) {
@@ -5043,7 +5042,7 @@ doProlog(XML_Parser parser,
         if (parser->m_elementDeclHandler)
           handleDefault = XML_FALSE;
       }
-      groupConnector[prologState.level] = ASCII_PIPE;
+      groupConnector[parser->m_prologState.level] = ASCII_PIPE;
       break;
     case XML_ROLE_PARAM_ENTITY_REF:
 #ifdef XML_DTD
@@ -5065,7 +5064,7 @@ doProlog(XML_Parser parser,
            if yes, check that the entity exists, and that it is internal,
            otherwise call the skipped entity handler
         */
-        if (prologState.documentEntity &&
+        if (parser->m_prologState.documentEntity &&
             (dtd->standalone
              ? !openInternalEntities
              : !dtd->hasParamEntityRefs)) {
@@ -5620,7 +5619,7 @@ appendAttributeValue(XML_Parser parser, const ENCODING *enc, XML_Bool isCdata,
         if (pool == &dtd->pool)  /* are we called from prolog? */
           checkEntityDecl =
 #ifdef XML_DTD
-              prologState.documentEntity &&
+              parser->m_prologState.documentEntity &&
 #endif /* XML_DTD */
               (dtd->standalone
                ? !openInternalEntities
@@ -5724,8 +5723,8 @@ storeEntityValue(XML_Parser parser,
   STRING_POOL *pool = &(dtd->entityValuePool);
   enum XML_Error result = XML_ERROR_NONE;
 #ifdef XML_DTD
-  int oldInEntityValue = prologState.inEntityValue;
-  prologState.inEntityValue = 1;
+  int oldInEntityValue = parser->m_prologState.inEntityValue;
+  parser->m_prologState.inEntityValue = 1;
 #endif /* XML_DTD */
   /* never return Null for the value argument in EntityDeclHandler,
      since this would indicate an external entity; therefore we
@@ -5886,7 +5885,7 @@ storeEntityValue(XML_Parser parser,
   }
 endEntityValue:
 #ifdef XML_DTD
-  prologState.inEntityValue = oldInEntityValue;
+  parser->m_prologState.inEntityValue = oldInEntityValue;
 #endif /* XML_DTD */
   return result;
 }
