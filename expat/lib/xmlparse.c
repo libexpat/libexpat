@@ -668,7 +668,6 @@ struct XML_ParserStruct {
 #define defaultExpandInternalEntities \
         (parser->m_defaultExpandInternalEntities)
 #define buffer (parser->m_buffer)
-#define parseEndByteIndex (parser->m_parseEndByteIndex)
 #define parseEndPtr (parser->m_parseEndPtr)
 #define bufferLim (parser->m_bufferLim)
 #define dataBuf (parser->m_dataBuf)
@@ -1123,7 +1122,7 @@ parserInit(XML_Parser parser, const XML_Char *encodingName)
   parser->m_xmlDeclHandler = NULL;
   parser->m_bufferPtr = buffer;
   parser->m_bufferEnd = buffer;
-  parseEndByteIndex = 0;
+  parser->m_parseEndByteIndex = 0;
   parseEndPtr = NULL;
   declElementType = NULL;
   declAttributeId = NULL;
@@ -1931,13 +1930,13 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal)
     int nLeftOver;
     enum XML_Status result;
     /* Detect overflow (a+b > MAX <==> b > MAX-a) */
-    if (len > ((XML_Size)-1) / 2 - parseEndByteIndex) {
+    if (len > ((XML_Size)-1) / 2 - parser->m_parseEndByteIndex) {
        parser->m_errorCode = XML_ERROR_NO_MEMORY;
        parser->m_eventPtr = parser->m_eventEndPtr = NULL;
        parser->m_processor = errorProcessor;
        return XML_STATUS_ERROR;
     }
-    parseEndByteIndex += len;
+    parser->m_parseEndByteIndex += len;
     parser->m_positionPtr = s;
     ps_finalBuffer = (XML_Bool)isFinal;
 
@@ -2034,7 +2033,7 @@ XML_ParseBuffer(XML_Parser parser, int len, int isFinal)
   parser->m_positionPtr = start;
   parser->m_bufferEnd += len;
   parseEndPtr = parser->m_bufferEnd;
-  parseEndByteIndex += len;
+  parser->m_parseEndByteIndex += len;
   ps_finalBuffer = (XML_Bool)isFinal;
 
   parser->m_errorCode = parser->m_processor(parser, start, parseEndPtr, &parser->m_bufferPtr);
@@ -2257,7 +2256,7 @@ XML_GetCurrentByteIndex(XML_Parser parser)
   if (parser == NULL)
     return -1;
   if (parser->m_eventPtr)
-    return (XML_Index)(parseEndByteIndex - (parseEndPtr - parser->m_eventPtr));
+    return (XML_Index)(parser->m_parseEndByteIndex - (parseEndPtr - parser->m_eventPtr));
   return -1;
 }
 
@@ -3232,12 +3231,12 @@ storeAtts(XML_Parser parser, const ENCODING *enc,
     if (!attId)
       return XML_ERROR_NO_MEMORY;
 #ifdef XML_ATTR_INFO
-    currAttInfo->nameStart = parseEndByteIndex - (parseEndPtr - currAtt->name);
+    currAttInfo->nameStart = parser->m_parseEndByteIndex - (parseEndPtr - currAtt->name);
     currAttInfo->nameEnd = currAttInfo->nameStart +
                            XmlNameLength(enc, currAtt->name);
-    currAttInfo->valueStart = parseEndByteIndex -
+    currAttInfo->valueStart = parser->m_parseEndByteIndex -
                             (parseEndPtr - currAtt->valuePtr);
-    currAttInfo->valueEnd = parseEndByteIndex - (parseEndPtr - currAtt->valueEnd);
+    currAttInfo->valueEnd = parser->m_parseEndByteIndex - (parseEndPtr - currAtt->valueEnd);
 #endif
     /* Detect duplicate attributes by their QNames. This does not work when
        namespace processing is turned on and different prefixes for the same
