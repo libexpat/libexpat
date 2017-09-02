@@ -668,7 +668,6 @@ struct XML_ParserStruct {
 #define defaultExpandInternalEntities \
         (parser->m_defaultExpandInternalEntities)
 #define buffer (parser->m_buffer)
-#define ps_parsing (parser->m_parsingStatus.parsing)
 #define ps_finalBuffer (parser->m_parsingStatus.finalBuffer)
 #ifdef XML_DTD
 #define isParamEntity (parser->m_isParamEntity)
@@ -1115,7 +1114,7 @@ parserInit(XML_Parser parser, const XML_Char *encodingName)
   parser->m_unknownEncodingRelease = NULL;
   parser->m_unknownEncodingData = NULL;
   parser->m_parentParser = NULL;
-  ps_parsing = XML_INITIALIZED;
+  parser->m_parsingStatus.parsing = XML_INITIALIZED;
 #ifdef XML_DTD
   isParamEntity = XML_FALSE;
   useForeignDTD = XML_FALSE;
@@ -1187,7 +1186,7 @@ XML_SetEncoding(XML_Parser parser, const XML_Char *encodingName)
      XXX There's no way for the caller to determine which of the
      XXX possible error cases caused the XML_STATUS_ERROR return.
   */
-  if (ps_parsing == XML_PARSING || ps_parsing == XML_SUSPENDED)
+  if (parser->m_parsingStatus.parsing == XML_PARSING || parser->m_parsingStatus.parsing == XML_SUSPENDED)
     return XML_STATUS_ERROR;
 
   /* Get rid of any previous encoding name */
@@ -1471,7 +1470,7 @@ XML_UseForeignDTD(XML_Parser parser, XML_Bool useDTD)
     return XML_ERROR_INVALID_ARGUMENT;
 #ifdef XML_DTD
   /* block after XML_Parse()/XML_ParseBuffer() has been called */
-  if (ps_parsing == XML_PARSING || ps_parsing == XML_SUSPENDED)
+  if (parser->m_parsingStatus.parsing == XML_PARSING || parser->m_parsingStatus.parsing == XML_SUSPENDED)
     return XML_ERROR_CANT_CHANGE_FEATURE_ONCE_PARSING;
   useForeignDTD = useDTD;
   return XML_ERROR_NONE;
@@ -1486,7 +1485,7 @@ XML_SetReturnNSTriplet(XML_Parser parser, int do_nst)
   if (parser == NULL)
     return;
   /* block after XML_Parse()/XML_ParseBuffer() has been called */
-  if (ps_parsing == XML_PARSING || ps_parsing == XML_SUSPENDED)
+  if (parser->m_parsingStatus.parsing == XML_PARSING || parser->m_parsingStatus.parsing == XML_SUSPENDED)
     return;
   parser->m_ns_triplets = do_nst ? XML_TRUE : XML_FALSE;
 }
@@ -1796,7 +1795,7 @@ XML_SetParamEntityParsing(XML_Parser parser,
   if (parser == NULL)
     return 0;
   /* block after XML_Parse()/XML_ParseBuffer() has been called */
-  if (ps_parsing == XML_PARSING || ps_parsing == XML_SUSPENDED)
+  if (parser->m_parsingStatus.parsing == XML_PARSING || parser->m_parsingStatus.parsing == XML_SUSPENDED)
     return 0;
 #ifdef XML_DTD
   paramEntityParsing = peParsing;
@@ -1815,7 +1814,7 @@ XML_SetHashSalt(XML_Parser parser,
   if (parser->m_parentParser)
     return XML_SetHashSalt(parser->m_parentParser, hash_salt);
   /* block after XML_Parse()/XML_ParseBuffer() has been called */
-  if (ps_parsing == XML_PARSING || ps_parsing == XML_SUSPENDED)
+  if (parser->m_parsingStatus.parsing == XML_PARSING || parser->m_parsingStatus.parsing == XML_SUSPENDED)
     return 0;
   hash_secret_salt = hash_salt;
   return 1;
@@ -1829,7 +1828,7 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal)
       parser->m_errorCode = XML_ERROR_INVALID_ARGUMENT;
     return XML_STATUS_ERROR;
   }
-  switch (ps_parsing) {
+  switch (parser->m_parsingStatus.parsing) {
   case XML_SUSPENDED:
     parser->m_errorCode = XML_ERROR_SUSPENDED;
     return XML_STATUS_ERROR;
@@ -1842,7 +1841,7 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal)
       return XML_STATUS_ERROR;
     }
   default:
-    ps_parsing = XML_PARSING;
+    parser->m_parsingStatus.parsing = XML_PARSING;
   }
 
   if (len == 0) {
@@ -1859,7 +1858,7 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal)
     parser->m_errorCode = parser->m_processor(parser, parser->m_bufferPtr, parser->m_parseEndPtr, &parser->m_bufferPtr);
 
     if (parser->m_errorCode == XML_ERROR_NONE) {
-      switch (ps_parsing) {
+      switch (parser->m_parsingStatus.parsing) {
       case XML_SUSPENDED:
         /* It is hard to be certain, but it seems that this case
          * cannot occur.  This code is cleaning up a previous parse
@@ -1879,7 +1878,7 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal)
         /* LCOV_EXCL_STOP */
       case XML_INITIALIZED:
       case XML_PARSING:
-        ps_parsing = XML_FINISHED;
+        parser->m_parsingStatus.parsing = XML_FINISHED;
         /* fall through */
       default:
         return XML_STATUS_OK;
@@ -1913,14 +1912,14 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal)
       return XML_STATUS_ERROR;
     }
     else {
-      switch (ps_parsing) {
+      switch (parser->m_parsingStatus.parsing) {
       case XML_SUSPENDED:
         result = XML_STATUS_SUSPENDED;
         break;
       case XML_INITIALIZED:
       case XML_PARSING:
         if (isFinal) {
-          ps_parsing = XML_FINISHED;
+          parser->m_parsingStatus.parsing = XML_FINISHED;
           return XML_STATUS_OK;
         }
       /* fall through */
@@ -1978,7 +1977,7 @@ XML_ParseBuffer(XML_Parser parser, int len, int isFinal)
 
   if (parser == NULL)
     return XML_STATUS_ERROR;
-  switch (ps_parsing) {
+  switch (parser->m_parsingStatus.parsing) {
   case XML_SUSPENDED:
     parser->m_errorCode = XML_ERROR_SUSPENDED;
     return XML_STATUS_ERROR;
@@ -1991,7 +1990,7 @@ XML_ParseBuffer(XML_Parser parser, int len, int isFinal)
       return XML_STATUS_ERROR;
     }
   default:
-    ps_parsing = XML_PARSING;
+    parser->m_parsingStatus.parsing = XML_PARSING;
   }
 
   start = parser->m_bufferPtr;
@@ -2009,14 +2008,14 @@ XML_ParseBuffer(XML_Parser parser, int len, int isFinal)
     return XML_STATUS_ERROR;
   }
   else {
-    switch (ps_parsing) {
+    switch (parser->m_parsingStatus.parsing) {
     case XML_SUSPENDED:
       result = XML_STATUS_SUSPENDED;
       break;
     case XML_INITIALIZED:
     case XML_PARSING:
       if (isFinal) {
-        ps_parsing = XML_FINISHED;
+        parser->m_parsingStatus.parsing = XML_FINISHED;
         return result;
       }
     default: ;  /* should not happen */
@@ -2037,7 +2036,7 @@ XML_GetBuffer(XML_Parser parser, int len)
     parser->m_errorCode = XML_ERROR_NO_MEMORY;
     return NULL;
   }
-  switch (ps_parsing) {
+  switch (parser->m_parsingStatus.parsing) {
   case XML_SUSPENDED:
     parser->m_errorCode = XML_ERROR_SUSPENDED;
     return NULL;
@@ -2131,13 +2130,13 @@ XML_StopParser(XML_Parser parser, XML_Bool resumable)
 {
   if (parser == NULL)
     return XML_STATUS_ERROR;
-  switch (ps_parsing) {
+  switch (parser->m_parsingStatus.parsing) {
   case XML_SUSPENDED:
     if (resumable) {
       parser->m_errorCode = XML_ERROR_SUSPENDED;
       return XML_STATUS_ERROR;
     }
-    ps_parsing = XML_FINISHED;
+    parser->m_parsingStatus.parsing = XML_FINISHED;
     break;
   case XML_FINISHED:
     parser->m_errorCode = XML_ERROR_FINISHED;
@@ -2150,10 +2149,10 @@ XML_StopParser(XML_Parser parser, XML_Bool resumable)
         return XML_STATUS_ERROR;
       }
 #endif
-      ps_parsing = XML_SUSPENDED;
+      parser->m_parsingStatus.parsing = XML_SUSPENDED;
     }
     else
-      ps_parsing = XML_FINISHED;
+      parser->m_parsingStatus.parsing = XML_FINISHED;
   }
   return XML_STATUS_OK;
 }
@@ -2165,11 +2164,11 @@ XML_ResumeParser(XML_Parser parser)
 
   if (parser == NULL)
     return XML_STATUS_ERROR;
-  if (ps_parsing != XML_SUSPENDED) {
+  if (parser->m_parsingStatus.parsing != XML_SUSPENDED) {
     parser->m_errorCode = XML_ERROR_NOT_SUSPENDED;
     return XML_STATUS_ERROR;
   }
-  ps_parsing = XML_PARSING;
+  parser->m_parsingStatus.parsing = XML_PARSING;
 
   parser->m_errorCode = parser->m_processor(parser, parser->m_bufferPtr, parser->m_parseEndPtr, &parser->m_bufferPtr);
 
@@ -2179,14 +2178,14 @@ XML_ResumeParser(XML_Parser parser)
     return XML_STATUS_ERROR;
   }
   else {
-    switch (ps_parsing) {
+    switch (parser->m_parsingStatus.parsing) {
     case XML_SUSPENDED:
       result = XML_STATUS_SUSPENDED;
       break;
     case XML_INITIALIZED:
     case XML_PARSING:
       if (ps_finalBuffer) {
-        ps_parsing = XML_FINISHED;
+        parser->m_parsingStatus.parsing = XML_FINISHED;
         return result;
       }
     default: ;
@@ -2585,7 +2584,7 @@ externalEntityInitProcessor3(XML_Parser parser,
       result = processXmlDecl(parser, 1, start, next);
       if (result != XML_ERROR_NONE)
         return result;
-      switch (ps_parsing) {
+      switch (parser->m_parsingStatus.parsing) {
       case XML_SUSPENDED:
         *endPtr = next;
         return XML_ERROR_NONE;
@@ -2885,7 +2884,7 @@ doContent(XML_Parser parser,
         freeBindings(parser, bindings);
       }
       if ((parser->m_tagLevel == 0) &&
-          !((ps_parsing == XML_FINISHED) || (ps_parsing == XML_SUSPENDED))) {
+          !((parser->m_parsingStatus.parsing == XML_FINISHED) || (parser->m_parsingStatus.parsing == XML_SUSPENDED))) {
         return epilogProcessor(parser, next, end, nextPtr);
       }
       break;
@@ -3078,7 +3077,7 @@ doContent(XML_Parser parser,
       /* LCOV_EXCL_STOP */
     }
     *eventPP = s = next;
-    switch (ps_parsing) {
+    switch (parser->m_parsingStatus.parsing) {
     case XML_SUSPENDED:
       *nextPtr = next;
       return XML_ERROR_NONE;
@@ -3693,7 +3692,7 @@ doCdataSection(XML_Parser parser,
         reportDefault(parser, enc, s, next);
       *startPtr = next;
       *nextPtr = next;
-      if (ps_parsing == XML_FINISHED)
+      if (parser->m_parsingStatus.parsing == XML_FINISHED)
         return XML_ERROR_ABORTED;
       else
         return XML_ERROR_NONE;
@@ -3760,7 +3759,7 @@ doCdataSection(XML_Parser parser,
     }
 
     *eventPP = s = next;
-    switch (ps_parsing) {
+    switch (parser->m_parsingStatus.parsing) {
     case XML_SUSPENDED:
       *nextPtr = next;
       return XML_ERROR_NONE;
@@ -3841,7 +3840,7 @@ doIgnoreSection(XML_Parser parser,
       reportDefault(parser, enc, s, next);
     *startPtr = next;
     *nextPtr = next;
-    if (ps_parsing == XML_FINISHED)
+    if (parser->m_parsingStatus.parsing == XML_FINISHED)
       return XML_ERROR_ABORTED;
     else
       return XML_ERROR_NONE;
@@ -4120,12 +4119,12 @@ entityValueInitProcessor(XML_Parser parser,
       result = processXmlDecl(parser, 0, start, next);
       if (result != XML_ERROR_NONE)
         return result;
-      /* At this point, ps_parsing cannot be XML_SUSPENDED.  For that
+      /* At this point, m_parsingStatus.parsing cannot be XML_SUSPENDED.  For that
        * to happen, a parameter entity parsing handler must have
        * attempted to suspend the parser, which fails and raises an
        * error.  The parser can be aborted, but can't be suspended.
        */
-      if (ps_parsing == XML_FINISHED)
+      if (parser->m_parsingStatus.parsing == XML_FINISHED)
         return XML_ERROR_ABORTED;
       *nextPtr = next;
       /* stop scanning for text declaration - we found one */
@@ -5254,7 +5253,7 @@ doProlog(XML_Parser parser,
     if (handleDefault && parser->m_defaultHandler)
       reportDefault(parser, enc, s, next);
 
-    switch (ps_parsing) {
+    switch (parser->m_parsingStatus.parsing) {
     case XML_SUSPENDED:
       *nextPtr = next;
       return XML_ERROR_NONE;
@@ -5285,7 +5284,7 @@ epilogProcessor(XML_Parser parser,
     case -XML_TOK_PROLOG_S:
       if (parser->m_defaultHandler) {
         reportDefault(parser, encoding, s, next);
-        if (ps_parsing == XML_FINISHED)
+        if (parser->m_parsingStatus.parsing == XML_FINISHED)
           return XML_ERROR_ABORTED;
       }
       *nextPtr = next;
@@ -5324,7 +5323,7 @@ epilogProcessor(XML_Parser parser,
       return XML_ERROR_JUNK_AFTER_DOC_ELEMENT;
     }
     parser->m_eventPtr = s = next;
-    switch (ps_parsing) {
+    switch (parser->m_parsingStatus.parsing) {
     case XML_SUSPENDED:
       *nextPtr = next;
       return XML_ERROR_NONE;
@@ -5379,7 +5378,7 @@ processInternalEntity(XML_Parser parser, ENTITY *entity,
                        textEnd, &next, XML_FALSE);
 
   if (result == XML_ERROR_NONE) {
-    if (textEnd != next && ps_parsing == XML_SUSPENDED) {
+    if (textEnd != next && parser->m_parsingStatus.parsing == XML_SUSPENDED) {
       entity->processed = (int)(next - textStart);
       parser->m_processor = internalEntityProcessor;
     }
@@ -5427,7 +5426,7 @@ internalEntityProcessor(XML_Parser parser,
 
   if (result != XML_ERROR_NONE)
     return result;
-  else if (textEnd != next && ps_parsing == XML_SUSPENDED) {
+  else if (textEnd != next && parser->m_parsingStatus.parsing == XML_SUSPENDED) {
     entity->processed = (int)(next - (char *)entity->textPtr);
     return result;
   }
