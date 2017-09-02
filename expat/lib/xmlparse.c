@@ -552,7 +552,7 @@ struct XML_ParserStruct {
   const char *m_bufferPtr;
   /* past last character to be parsed */
   char *m_bufferEnd;
-  /* allocated end of buffer */
+  /* allocated end of m_buffer */
   const char *m_bufferLim;
   XML_Index m_parseEndByteIndex;
   const char *m_parseEndPtr;
@@ -648,7 +648,6 @@ struct XML_ParserStruct {
 #define REALLOC(p,s) (parser->m_mem.realloc_fcn((p),(s)))
 #define FREE(p) (parser->m_mem.free_fcn((p)))
 
-#define buffer (parser->m_buffer)
 
 XML_Parser XMLCALL
 XML_ParserCreate(const XML_Char *encodingName)
@@ -940,7 +939,7 @@ parserCreate(const XML_Char *encodingName,
   if (!parser)
     return parser;
 
-  buffer = NULL;
+  parser->m_buffer = NULL;
   parser->m_bufferLim = NULL;
 
   parser->m_attsSize = INIT_ATTS_SIZE;
@@ -1058,8 +1057,8 @@ parserInit(XML_Parser parser, const XML_Char *encodingName)
   parser->m_attlistDeclHandler = NULL;
   parser->m_entityDeclHandler = NULL;
   parser->m_xmlDeclHandler = NULL;
-  parser->m_bufferPtr = buffer;
-  parser->m_bufferEnd = buffer;
+  parser->m_bufferPtr = parser->m_buffer;
+  parser->m_bufferEnd = parser->m_buffer;
   parser->m_parseEndByteIndex = 0;
   parser->m_parseEndPtr = NULL;
   parser->m_declElementType = NULL;
@@ -1421,7 +1420,7 @@ XML_ParserFree(XML_Parser parser)
   FREE((void *)parser->m_attInfo);
 #endif
   FREE(parser->m_groupConnector);
-  FREE(buffer);
+  FREE(parser->m_buffer);
   FREE(parser->m_dataBuf);
   FREE(parser->m_nsAtts);
   FREE(parser->m_unknownEncodingMem);
@@ -1905,12 +1904,12 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal)
     XmlUpdatePosition(parser->m_encoding, parser->m_positionPtr, end, &parser->m_position);
     nLeftOver = s + len - end;
     if (nLeftOver) {
-      if (buffer == NULL || nLeftOver > parser->m_bufferLim - buffer) {
+      if (parser->m_buffer == NULL || nLeftOver > parser->m_bufferLim - parser->m_buffer) {
         /* avoid _signed_ integer overflow */
         char *temp = NULL;
         const int bytesToAllocate = (int)((unsigned)len * 2U);
         if (bytesToAllocate > 0) {
-          temp = (char *)REALLOC(buffer, bytesToAllocate);
+          temp = (char *)REALLOC(parser->m_buffer, bytesToAllocate);
         }
         if (temp == NULL) {
           parser->m_errorCode = XML_ERROR_NO_MEMORY;
@@ -1918,13 +1917,13 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal)
           parser->m_processor = errorProcessor;
           return XML_STATUS_ERROR;
         }
-        buffer = temp;
-        parser->m_bufferLim = buffer + bytesToAllocate;
+        parser->m_buffer = temp;
+        parser->m_bufferLim = parser->m_buffer + bytesToAllocate;
       }
-      memcpy(buffer, end, nLeftOver);
+      memcpy(parser->m_buffer, end, nLeftOver);
     }
-    parser->m_bufferPtr = buffer;
-    parser->m_bufferEnd = buffer + nLeftOver;
+    parser->m_bufferPtr = parser->m_buffer;
+    parser->m_bufferEnd = parser->m_buffer + nLeftOver;
     parser->m_positionPtr = parser->m_bufferPtr;
     parser->m_parseEndPtr = parser->m_bufferEnd;
     parser->m_eventPtr = parser->m_bufferPtr;
@@ -2031,23 +2030,23 @@ XML_GetBuffer(XML_Parser parser, int len)
       return NULL;
     }
 #ifdef XML_CONTEXT_BYTES
-    keep = (int)(parser->m_bufferPtr - buffer);
+    keep = (int)(parser->m_bufferPtr - parser->m_buffer);
     if (keep > XML_CONTEXT_BYTES)
       keep = XML_CONTEXT_BYTES;
     neededSize += keep;
 #endif  /* defined XML_CONTEXT_BYTES */
-    if (neededSize  <= parser->m_bufferLim - buffer) {
+    if (neededSize  <= parser->m_bufferLim - parser->m_buffer) {
 #ifdef XML_CONTEXT_BYTES
-      if (keep < parser->m_bufferPtr - buffer) {
-        int offset = (int)(parser->m_bufferPtr - buffer) - keep;
-        memmove(buffer, &buffer[offset], parser->m_bufferEnd - parser->m_bufferPtr + keep);
+      if (keep < parser->m_bufferPtr - parser->m_buffer) {
+        int offset = (int)(parser->m_bufferPtr - parser->m_buffer) - keep;
+        memmove(parser->m_buffer, &parser->m_buffer[offset], parser->m_bufferEnd - parser->m_bufferPtr + keep);
         parser->m_bufferEnd -= offset;
         parser->m_bufferPtr -= offset;
       }
 #else
-      memmove(buffer, parser->m_bufferPtr, parser->m_bufferEnd - parser->m_bufferPtr);
-      parser->m_bufferEnd = buffer + (parser->m_bufferEnd - parser->m_bufferPtr);
-      parser->m_bufferPtr = buffer;
+      memmove(parser->m_buffer, parser->m_bufferPtr, parser->m_bufferEnd - parser->m_bufferPtr);
+      parser->m_bufferEnd = parser->m_buffer + (parser->m_bufferEnd - parser->m_bufferPtr);
+      parser->m_bufferPtr = parser->m_buffer;
 #endif  /* not defined XML_CONTEXT_BYTES */
     }
     else {
@@ -2071,26 +2070,26 @@ XML_GetBuffer(XML_Parser parser, int len)
       parser->m_bufferLim = newBuf + bufferSize;
 #ifdef XML_CONTEXT_BYTES
       if (parser->m_bufferPtr) {
-        int keep = (int)(parser->m_bufferPtr - buffer);
+        int keep = (int)(parser->m_bufferPtr - parser->m_buffer);
         if (keep > XML_CONTEXT_BYTES)
           keep = XML_CONTEXT_BYTES;
         memcpy(newBuf, &parser->m_bufferPtr[-keep], parser->m_bufferEnd - parser->m_bufferPtr + keep);
-        FREE(buffer);
-        buffer = newBuf;
-        parser->m_bufferEnd = buffer + (parser->m_bufferEnd - parser->m_bufferPtr) + keep;
-        parser->m_bufferPtr = buffer + keep;
+        FREE(parser->m_buffer);
+        parser->m_buffer = newBuf;
+        parser->m_bufferEnd = parser->m_buffer + (parser->m_bufferEnd - parser->m_bufferPtr) + keep;
+        parser->m_bufferPtr = parser->m_buffer + keep;
       }
       else {
         parser->m_bufferEnd = newBuf + (parser->m_bufferEnd - parser->m_bufferPtr);
-        parser->m_bufferPtr = buffer = newBuf;
+        parser->m_bufferPtr = parser->m_buffer = newBuf;
       }
 #else
       if (parser->m_bufferPtr) {
         memcpy(newBuf, parser->m_bufferPtr, parser->m_bufferEnd - parser->m_bufferPtr);
-        FREE(buffer);
+        FREE(parser->m_buffer);
       }
       parser->m_bufferEnd = newBuf + (parser->m_bufferEnd - parser->m_bufferPtr);
-      parser->m_bufferPtr = buffer = newBuf;
+      parser->m_bufferPtr = parser->m_buffer = newBuf;
 #endif  /* not defined XML_CONTEXT_BYTES */
     }
     parser->m_eventPtr = parser->m_eventEndPtr = NULL;
@@ -2214,12 +2213,12 @@ XML_GetInputContext(XML_Parser parser, int *offset, int *size)
 #ifdef XML_CONTEXT_BYTES
   if (parser == NULL)
     return NULL;
-  if (parser->m_eventPtr && buffer) {
+  if (parser->m_eventPtr && parser->m_buffer) {
     if (offset != NULL)
-      *offset = (int)(parser->m_eventPtr - buffer);
+      *offset = (int)(parser->m_eventPtr - parser->m_buffer);
     if (size != NULL)
-      *size   = (int)(parser->m_bufferEnd - buffer);
-    return buffer;
+      *size   = (int)(parser->m_bufferEnd - parser->m_buffer);
+    return parser->m_buffer;
   }
 #else
   (void)parser;
