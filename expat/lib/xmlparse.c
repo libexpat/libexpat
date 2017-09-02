@@ -648,7 +648,6 @@ struct XML_ParserStruct {
 #define REALLOC(p,s) (parser->m_mem.realloc_fcn((p),(s)))
 #define FREE(p) (parser->m_mem.free_fcn((p)))
 
-#define handlerArg (parser->m_handlerArg)
 #define startElementHandler (parser->m_startElementHandler)
 #define endElementHandler (parser->m_endElementHandler)
 #define characterDataHandler (parser->m_characterDataHandler)
@@ -1136,7 +1135,7 @@ parserInit(XML_Parser parser, const XML_Char *encodingName)
   curBase = NULL;
   XmlInitEncoding(&initEncoding, &encoding, 0);
   parser->m_userData = NULL;
-  handlerArg = NULL;
+  parser->m_handlerArg = NULL;
   startElementHandler = NULL;
   endElementHandler = NULL;
   characterDataHandler = NULL;
@@ -1354,7 +1353,7 @@ XML_ExternalEntityParserCreate(XML_Parser oldParser,
   oldDeclElementType = declElementType;
 
   oldUserData = parser->m_userData;
-  oldHandlerArg = handlerArg;
+  oldHandlerArg = parser->m_handlerArg;
   oldDefaultExpandInternalEntities = defaultExpandInternalEntities;
   oldExternalEntityRefHandlerArg = externalEntityRefHandlerArg;
 #ifdef XML_DTD
@@ -1414,9 +1413,9 @@ XML_ExternalEntityParserCreate(XML_Parser oldParser,
   declElementType = oldDeclElementType;
   parser->m_userData = oldUserData;
   if (oldUserData == oldHandlerArg)
-    handlerArg = parser->m_userData;
+    parser->m_handlerArg = parser->m_userData;
   else
-    handlerArg = parser;
+    parser->m_handlerArg = parser;
   if (oldExternalEntityRefHandlerArg != oldParser)
     externalEntityRefHandlerArg = oldExternalEntityRefHandlerArg;
   defaultExpandInternalEntities = oldDefaultExpandInternalEntities;
@@ -1535,7 +1534,7 @@ void XMLCALL
 XML_UseParserAsHandlerArg(XML_Parser parser)
 {
   if (parser != NULL)
-    handlerArg = parser;
+    parser->m_handlerArg = parser;
 }
 
 enum XML_Error XMLCALL
@@ -1570,8 +1569,8 @@ XML_SetUserData(XML_Parser parser, void *p)
 {
   if (parser == NULL)
     return;
-  if (handlerArg == parser->m_userData)
-    handlerArg = parser->m_userData = p;
+  if (parser->m_handlerArg == parser->m_userData)
+    parser->m_handlerArg = parser->m_userData = p;
   else
     parser->m_userData = p;
 }
@@ -2740,7 +2739,7 @@ doContent(XML_Parser parser,
       *eventEndPP = end;
       if (characterDataHandler) {
         XML_Char c = 0xA;
-        characterDataHandler(handlerArg, &c, 1);
+        characterDataHandler(parser->m_handlerArg, &c, 1);
       }
       else if (defaultHandler)
         reportDefault(parser, enc, s, end);
@@ -2789,7 +2788,7 @@ doContent(XML_Parser parser,
                                               next - enc->minBytesPerChar);
         if (ch) {
           if (characterDataHandler)
-            characterDataHandler(handlerArg, &ch, 1);
+            characterDataHandler(parser->m_handlerArg, &ch, 1);
           else if (defaultHandler)
             reportDefault(parser, enc, s, next);
           break;
@@ -2813,7 +2812,7 @@ doContent(XML_Parser parser,
         }
         else if (!entity) {
           if (skippedEntityHandler)
-            skippedEntityHandler(handlerArg, name, 0);
+            skippedEntityHandler(parser->m_handlerArg, name, 0);
           else if (defaultHandler)
             reportDefault(parser, enc, s, next);
           break;
@@ -2826,7 +2825,7 @@ doContent(XML_Parser parser,
           enum XML_Error result;
           if (!defaultExpandInternalEntities) {
             if (skippedEntityHandler)
-              skippedEntityHandler(handlerArg, entity->name, 0);
+              skippedEntityHandler(parser->m_handlerArg, entity->name, 0);
             else if (defaultHandler)
               reportDefault(parser, enc, s, next);
             break;
@@ -2916,7 +2915,7 @@ doContent(XML_Parser parser,
         if (result)
           return result;
         if (startElementHandler)
-          startElementHandler(handlerArg, tag->name.str,
+          startElementHandler(parser->m_handlerArg, tag->name.str,
                               (const XML_Char **)atts);
         else if (defaultHandler)
           reportDefault(parser, enc, s, next);
@@ -2944,13 +2943,13 @@ doContent(XML_Parser parser,
         }
         poolFinish(&tempPool);
         if (startElementHandler) {
-          startElementHandler(handlerArg, name.str, (const XML_Char **)atts);
+          startElementHandler(parser->m_handlerArg, name.str, (const XML_Char **)atts);
           noElmHandlers = XML_FALSE;
         }
         if (endElementHandler) {
           if (startElementHandler)
             *eventPP = *eventEndPP;
-          endElementHandler(handlerArg, name.str);
+          endElementHandler(parser->m_handlerArg, name.str);
           noElmHandlers = XML_FALSE;
         }
         if (noElmHandlers && defaultHandler)
@@ -3001,14 +3000,14 @@ doContent(XML_Parser parser,
              }
             *uri = XML_T('\0');
           }
-          endElementHandler(handlerArg, tag->name.str);
+          endElementHandler(parser->m_handlerArg, tag->name.str);
         }
         else if (defaultHandler)
           reportDefault(parser, enc, s, next);
         while (tag->bindings) {
           BINDING *b = tag->bindings;
           if (endNamespaceDeclHandler)
-            endNamespaceDeclHandler(handlerArg, b->prefix->name);
+            endNamespaceDeclHandler(parser->m_handlerArg, b->prefix->name);
           tag->bindings = tag->bindings->nextTagBinding;
           b->nextTagBinding = freeBindingList;
           freeBindingList = b;
@@ -3025,7 +3024,7 @@ doContent(XML_Parser parser,
           return XML_ERROR_BAD_CHAR_REF;
         if (characterDataHandler) {
           XML_Char buf[XML_ENCODE_MAX];
-          characterDataHandler(handlerArg, buf, XmlEncode(n, (ICHAR *)buf));
+          characterDataHandler(parser->m_handlerArg, buf, XmlEncode(n, (ICHAR *)buf));
         }
         else if (defaultHandler)
           reportDefault(parser, enc, s, next);
@@ -3036,7 +3035,7 @@ doContent(XML_Parser parser,
     case XML_TOK_DATA_NEWLINE:
       if (characterDataHandler) {
         XML_Char c = 0xA;
-        characterDataHandler(handlerArg, &c, 1);
+        characterDataHandler(parser->m_handlerArg, &c, 1);
       }
       else if (defaultHandler)
         reportDefault(parser, enc, s, next);
@@ -3045,7 +3044,7 @@ doContent(XML_Parser parser,
       {
         enum XML_Error result;
         if (startCdataSectionHandler)
-          startCdataSectionHandler(handlerArg);
+          startCdataSectionHandler(parser->m_handlerArg);
 #if 0
         /* Suppose you doing a transformation on a document that involves
            changing only the character data.  You set up a defaultHandler
@@ -3060,7 +3059,7 @@ doContent(XML_Parser parser,
            easier to let the user deal with this.
         */
         else if (characterDataHandler)
-          characterDataHandler(handlerArg, dataBuf, 0);
+          characterDataHandler(parser->m_handlerArg, dataBuf, 0);
 #endif
         else if (defaultHandler)
           reportDefault(parser, enc, s, next);
@@ -3082,11 +3081,11 @@ doContent(XML_Parser parser,
         if (MUST_CONVERT(enc, s)) {
           ICHAR *dataPtr = (ICHAR *)dataBuf;
           XmlConvert(enc, &s, end, &dataPtr, (ICHAR *)dataBufEnd);
-          characterDataHandler(handlerArg, dataBuf,
+          characterDataHandler(parser->m_handlerArg, dataBuf,
                                (int)(dataPtr - (ICHAR *)dataBuf));
         }
         else
-          characterDataHandler(handlerArg,
+          characterDataHandler(parser->m_handlerArg,
                                (XML_Char *)s,
                                (int)((XML_Char *)end - (XML_Char *)s));
       }
@@ -3114,7 +3113,7 @@ doContent(XML_Parser parser,
               ICHAR *dataPtr = (ICHAR *)dataBuf;
               const enum XML_Convert_Result convert_res = XmlConvert(enc, &s, next, &dataPtr, (ICHAR *)dataBufEnd);
               *eventEndPP = s;
-              charDataHandler(handlerArg, dataBuf,
+              charDataHandler(parser->m_handlerArg, dataBuf,
                               (int)(dataPtr - (ICHAR *)dataBuf));
               if ((convert_res == XML_CONVERT_COMPLETED) || (convert_res == XML_CONVERT_INPUT_INCOMPLETE))
                 break;
@@ -3122,7 +3121,7 @@ doContent(XML_Parser parser,
             }
           }
           else
-            charDataHandler(handlerArg,
+            charDataHandler(parser->m_handlerArg,
                             (XML_Char *)s,
                             (int)((XML_Char *)next - (XML_Char *)s));
         }
@@ -3178,7 +3177,7 @@ freeBindings(XML_Parser parser, BINDING *bindings)
      * binding in addBindings(), so call the end handler now.
      */
     if (endNamespaceDeclHandler)
-        endNamespaceDeclHandler(handlerArg, b->prefix->name);
+        endNamespaceDeclHandler(parser->m_handlerArg, b->prefix->name);
 
     bindings = bindings->nextTagBinding;
     b->nextTagBinding = freeBindingList;
@@ -3693,7 +3692,7 @@ addBinding(XML_Parser parser, PREFIX *prefix, const ATTRIBUTE_ID *attId,
   *bindingsPtr = b;
   /* if attId == NULL then we are not starting a namespace scope */
   if (attId && startNamespaceDeclHandler)
-    startNamespaceDeclHandler(handlerArg, prefix->name,
+    startNamespaceDeclHandler(parser->m_handlerArg, prefix->name,
                               prefix->binding ? uri : 0);
   return XML_ERROR_NONE;
 }
@@ -3757,11 +3756,11 @@ doCdataSection(XML_Parser parser,
     switch (tok) {
     case XML_TOK_CDATA_SECT_CLOSE:
       if (endCdataSectionHandler)
-        endCdataSectionHandler(handlerArg);
+        endCdataSectionHandler(parser->m_handlerArg);
 #if 0
       /* see comment under XML_TOK_CDATA_SECT_OPEN */
       else if (characterDataHandler)
-        characterDataHandler(handlerArg, dataBuf, 0);
+        characterDataHandler(parser->m_handlerArg, dataBuf, 0);
 #endif
       else if (defaultHandler)
         reportDefault(parser, enc, s, next);
@@ -3774,7 +3773,7 @@ doCdataSection(XML_Parser parser,
     case XML_TOK_DATA_NEWLINE:
       if (characterDataHandler) {
         XML_Char c = 0xA;
-        characterDataHandler(handlerArg, &c, 1);
+        characterDataHandler(parser->m_handlerArg, &c, 1);
       }
       else if (defaultHandler)
         reportDefault(parser, enc, s, next);
@@ -3788,7 +3787,7 @@ doCdataSection(XML_Parser parser,
               ICHAR *dataPtr = (ICHAR *)dataBuf;
               const enum XML_Convert_Result convert_res = XmlConvert(enc, &s, next, &dataPtr, (ICHAR *)dataBufEnd);
               *eventEndPP = next;
-              charDataHandler(handlerArg, dataBuf,
+              charDataHandler(parser->m_handlerArg, dataBuf,
                               (int)(dataPtr - (ICHAR *)dataBuf));
               if ((convert_res == XML_CONVERT_COMPLETED) || (convert_res == XML_CONVERT_INPUT_INCOMPLETE))
                 break;
@@ -3796,7 +3795,7 @@ doCdataSection(XML_Parser parser,
             }
           }
           else
-            charDataHandler(handlerArg,
+            charDataHandler(parser->m_handlerArg,
                             (XML_Char *)s,
                             (int)((XML_Char *)next - (XML_Char *)s));
         }
@@ -4036,7 +4035,7 @@ processXmlDecl(XML_Parser parser, int isGeneralTextEntity,
       if (!storedversion)
         return XML_ERROR_NO_MEMORY;
     }
-    xmlDeclHandler(handlerArg, storedversion, storedEncName, standalone);
+    xmlDeclHandler(parser->m_handlerArg, storedversion, storedEncName, standalone);
   }
   else if (defaultHandler)
     reportDefault(parser, encoding, s, next);
@@ -4441,7 +4440,7 @@ doProlog(XML_Parser parser,
       break;
     case XML_ROLE_DOCTYPE_INTERNAL_SUBSET:
       if (startDoctypeDeclHandler) {
-        startDoctypeDeclHandler(handlerArg, doctypeName, doctypeSysid,
+        startDoctypeDeclHandler(parser->m_handlerArg, doctypeName, doctypeSysid,
                                 doctypePubid, 1);
         doctypeName = NULL;
         poolClear(&tempPool);
@@ -4509,7 +4508,7 @@ doProlog(XML_Parser parser,
       break;
     case XML_ROLE_DOCTYPE_CLOSE:
       if (doctypeName) {
-        startDoctypeDeclHandler(handlerArg, doctypeName,
+        startDoctypeDeclHandler(parser->m_handlerArg, doctypeName,
                                 doctypeSysid, doctypePubid, 0);
         poolClear(&tempPool);
         handleDefault = XML_FALSE;
@@ -4547,7 +4546,7 @@ doProlog(XML_Parser parser,
           if (dtd->paramEntityRead) {
             if (!dtd->standalone &&
                 notStandaloneHandler &&
-                !notStandaloneHandler(handlerArg))
+                !notStandaloneHandler(parser->m_handlerArg))
               return XML_ERROR_NOT_STANDALONE;
           }
           /* if we didn't read the foreign DTD then this means that there
@@ -4561,7 +4560,7 @@ doProlog(XML_Parser parser,
       }
 #endif /* XML_DTD */
       if (endDoctypeDeclHandler) {
-        endDoctypeDeclHandler(handlerArg);
+        endDoctypeDeclHandler(parser->m_handlerArg);
         handleDefault = XML_FALSE;
       }
       break;
@@ -4590,7 +4589,7 @@ doProlog(XML_Parser parser,
           if (dtd->paramEntityRead) {
             if (!dtd->standalone &&
                 notStandaloneHandler &&
-                !notStandaloneHandler(handlerArg))
+                !notStandaloneHandler(parser->m_handlerArg))
               return XML_ERROR_NOT_STANDALONE;
           }
           /* if we didn't read the foreign DTD then this means that there
@@ -4685,7 +4684,7 @@ doProlog(XML_Parser parser,
             poolFinish(&tempPool);
           }
           *eventEndPP = s;
-          attlistDeclHandler(handlerArg, declElementType->name,
+          attlistDeclHandler(parser->m_handlerArg, declElementType->name,
                              declAttributeId->name, declAttributeType,
                              0, role == XML_ROLE_REQUIRED_ATTRIBUTE_VALUE);
           poolClear(&tempPool);
@@ -4722,7 +4721,7 @@ doProlog(XML_Parser parser,
             poolFinish(&tempPool);
           }
           *eventEndPP = s;
-          attlistDeclHandler(handlerArg, declElementType->name,
+          attlistDeclHandler(parser->m_handlerArg, declElementType->name,
                              declAttributeId->name, declAttributeType,
                              attVal,
                              role == XML_ROLE_FIXED_ATTRIBUTE_VALUE);
@@ -4742,7 +4741,7 @@ doProlog(XML_Parser parser,
           poolFinish(&dtd->entityValuePool);
           if (entityDeclHandler) {
             *eventEndPP = s;
-            entityDeclHandler(handlerArg,
+            entityDeclHandler(parser->m_handlerArg,
                               declEntity->name,
                               declEntity->is_param,
                               declEntity->textPtr,
@@ -4782,7 +4781,7 @@ doProlog(XML_Parser parser,
           && !paramEntityParsing
 #endif /* XML_DTD */
           && notStandaloneHandler
-          && !notStandaloneHandler(handlerArg))
+          && !notStandaloneHandler(parser->m_handlerArg))
         return XML_ERROR_NOT_STANDALONE;
 #ifndef XML_DTD
       break;
@@ -4817,7 +4816,7 @@ doProlog(XML_Parser parser,
     case XML_ROLE_ENTITY_COMPLETE:
       if (dtd->keepProcessing && declEntity && entityDeclHandler) {
         *eventEndPP = s;
-        entityDeclHandler(handlerArg,
+        entityDeclHandler(parser->m_handlerArg,
                           declEntity->name,
                           declEntity->is_param,
                           0,0,
@@ -4836,7 +4835,7 @@ doProlog(XML_Parser parser,
         poolFinish(&dtd->pool);
         if (unparsedEntityDeclHandler) {
           *eventEndPP = s;
-          unparsedEntityDeclHandler(handlerArg,
+          unparsedEntityDeclHandler(parser->m_handlerArg,
                                     declEntity->name,
                                     declEntity->base,
                                     declEntity->systemId,
@@ -4846,7 +4845,7 @@ doProlog(XML_Parser parser,
         }
         else if (entityDeclHandler) {
           *eventEndPP = s;
-          entityDeclHandler(handlerArg,
+          entityDeclHandler(parser->m_handlerArg,
                             declEntity->name,
                             0,0,0,
                             declEntity->base,
@@ -4963,7 +4962,7 @@ doProlog(XML_Parser parser,
         if (!systemId)
           return XML_ERROR_NO_MEMORY;
         *eventEndPP = s;
-        notationDeclHandler(handlerArg,
+        notationDeclHandler(parser->m_handlerArg,
                             declNotationName,
                             curBase,
                             systemId,
@@ -4975,7 +4974,7 @@ doProlog(XML_Parser parser,
     case XML_ROLE_NOTATION_NO_SYSTEM_ID:
       if (declNotationPublicId && notationDeclHandler) {
         *eventEndPP = s;
-        notationDeclHandler(handlerArg,
+        notationDeclHandler(parser->m_handlerArg,
                             declNotationName,
                             curBase,
                             0,
@@ -5125,7 +5124,7 @@ doProlog(XML_Parser parser,
           dtd->keepProcessing = dtd->standalone;
           /* cannot report skipped entities in declarations */
           if ((role == XML_ROLE_PARAM_ENTITY_REF) && skippedEntityHandler) {
-            skippedEntityHandler(handlerArg, name, 1);
+            skippedEntityHandler(parser->m_handlerArg, name, 1);
             handleDefault = XML_FALSE;
           }
           break;
@@ -5168,7 +5167,7 @@ doProlog(XML_Parser parser,
 #endif /* XML_DTD */
       if (!dtd->standalone &&
           notStandaloneHandler &&
-          !notStandaloneHandler(handlerArg))
+          !notStandaloneHandler(parser->m_handlerArg))
         return XML_ERROR_NOT_STANDALONE;
       break;
 
@@ -5201,7 +5200,7 @@ doProlog(XML_Parser parser,
                            XML_CTYPE_ANY :
                            XML_CTYPE_EMPTY);
           *eventEndPP = s;
-          elementDeclHandler(handlerArg, declElementType->name, content);
+          elementDeclHandler(parser->m_handlerArg, declElementType->name, content);
           handleDefault = XML_FALSE;
         }
         dtd->in_eldecl = XML_FALSE;
@@ -5277,7 +5276,7 @@ doProlog(XML_Parser parser,
             if (!model)
               return XML_ERROR_NO_MEMORY;
             *eventEndPP = s;
-            elementDeclHandler(handlerArg, declElementType->name, model);
+            elementDeclHandler(parser->m_handlerArg, declElementType->name, model);
           }
           dtd->in_eldecl = XML_FALSE;
           dtd->contentStringLen = 0;
@@ -5663,7 +5662,7 @@ appendAttributeValue(XML_Parser parser, const ENCODING *enc, XML_Bool isCdata,
           /* Cannot report skipped entity here - see comments on
              skippedEntityHandler.
           if (skippedEntityHandler)
-            skippedEntityHandler(handlerArg, name, 0);
+            skippedEntityHandler(parser->m_handlerArg, name, 0);
           */
           /* Cannot call the default handler because this would be
              out of sync with the call to the startElementHandler.
@@ -5784,7 +5783,7 @@ storeEntityValue(XML_Parser parser,
           /* cannot report skipped entity here - see comments on
              skippedEntityHandler
           if (skippedEntityHandler)
-            skippedEntityHandler(handlerArg, name, 0);
+            skippedEntityHandler(parser->m_handlerArg, name, 0);
           */
           dtd->keepProcessing = dtd->standalone;
           goto endEntityValue;
@@ -5964,7 +5963,7 @@ reportProcessingInstruction(XML_Parser parser, const ENCODING *enc,
   if (!data)
     return 0;
   normalizeLines(data);
-  processingInstructionHandler(handlerArg, target, data);
+  processingInstructionHandler(parser->m_handlerArg, target, data);
   poolClear(&tempPool);
   return 1;
 }
@@ -5986,7 +5985,7 @@ reportComment(XML_Parser parser, const ENCODING *enc,
   if (!data)
     return 0;
   normalizeLines(data);
-  commentHandler(handlerArg, data);
+  commentHandler(parser->m_handlerArg, data);
   poolClear(&tempPool);
   return 1;
 }
@@ -6028,12 +6027,12 @@ reportDefault(XML_Parser parser, const ENCODING *enc,
       ICHAR *dataPtr = (ICHAR *)dataBuf;
       convert_res = XmlConvert(enc, &s, end, &dataPtr, (ICHAR *)dataBufEnd);
       *eventEndPP = s;
-      defaultHandler(handlerArg, dataBuf, (int)(dataPtr - (ICHAR *)dataBuf));
+      defaultHandler(parser->m_handlerArg, dataBuf, (int)(dataPtr - (ICHAR *)dataBuf));
       *eventPP = s;
     } while ((convert_res != XML_CONVERT_COMPLETED) && (convert_res != XML_CONVERT_INPUT_INCOMPLETE));
   }
   else
-    defaultHandler(handlerArg, (XML_Char *)s, (int)((XML_Char *)end - (XML_Char *)s));
+    defaultHandler(parser->m_handlerArg, (XML_Char *)s, (int)((XML_Char *)end - (XML_Char *)s));
 }
 
 
