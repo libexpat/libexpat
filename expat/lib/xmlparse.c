@@ -665,7 +665,6 @@ struct XML_ParserStruct {
 #define encoding (parser->m_encoding)
 #define unknownEncodingHandlerData \
   (parser->m_unknownEncodingHandlerData)
-#define protocolEncodingName (parser->m_protocolEncodingName)
 #define ns (parser->m_ns)
 #define ns_triplets (parser->m_ns_triplets)
 #define prologState (parser->m_prologState)
@@ -1079,13 +1078,13 @@ parserCreate(const XML_Char *encodingName,
   nsAttsVersion = 0;
   nsAttsPower = 0;
 
-  protocolEncodingName = NULL;
+  parser->m_protocolEncodingName = NULL;
 
   poolInit(&tempPool, &(parser->m_mem));
   poolInit(&temp2Pool, &(parser->m_mem));
   parserInit(parser, encodingName);
 
-  if (encodingName && !protocolEncodingName) {
+  if (encodingName && !parser->m_protocolEncodingName) {
     XML_ParserFree(parser);
     return NULL;
   }
@@ -1108,7 +1107,7 @@ parserInit(XML_Parser parser, const XML_Char *encodingName)
   processor = prologInitProcessor;
   XmlPrologStateInit(&prologState);
   if (encodingName != NULL) {
-    protocolEncodingName = copyString(encodingName, &(parser->m_mem));
+    parser->m_protocolEncodingName = copyString(encodingName, &(parser->m_mem));
   }
   curBase = NULL;
   XmlInitEncoding(&parser->m_initEncoding, &encoding, 0);
@@ -1222,8 +1221,8 @@ XML_ParserReset(XML_Parser parser, const XML_Char *encodingName)
     parser->m_unknownEncodingRelease(parser->m_unknownEncodingData);
   poolClear(&tempPool);
   poolClear(&temp2Pool);
-  FREE((void *)protocolEncodingName);
-  protocolEncodingName = NULL;
+  FREE((void *)parser->m_protocolEncodingName);
+  parser->m_protocolEncodingName = NULL;
   parserInit(parser, encodingName);
   dtdReset(_dtd, &parser->m_mem);
   return XML_TRUE;
@@ -1242,15 +1241,15 @@ XML_SetEncoding(XML_Parser parser, const XML_Char *encodingName)
     return XML_STATUS_ERROR;
 
   /* Get rid of any previous encoding name */
-  FREE((void *)protocolEncodingName);
+  FREE((void *)parser->m_protocolEncodingName);
 
   if (encodingName == NULL)
     /* No new encoding name */
-    protocolEncodingName = NULL;
+    parser->m_protocolEncodingName = NULL;
   else {
     /* Copy the new encoding name into allocated memory */
-    protocolEncodingName = copyString(encodingName, &(parser->m_mem));
-    if (!protocolEncodingName)
+    parser->m_protocolEncodingName = copyString(encodingName, &(parser->m_mem));
+    if (!parser->m_protocolEncodingName)
       return XML_STATUS_ERROR;
   }
   return XML_STATUS_OK;
@@ -1484,7 +1483,7 @@ XML_ParserFree(XML_Parser parser)
   destroyBindings(inheritedBindings, parser);
   poolDestroy(&tempPool);
   poolDestroy(&temp2Pool);
-  FREE((void *)protocolEncodingName);
+  FREE((void *)parser->m_protocolEncodingName);
 #ifdef XML_DTD
   /* external parameter entity parsers share the DTD structure
      parser->m_dtd with the root parser, so we must not destroy it
@@ -3936,27 +3935,27 @@ initializeEncoding(XML_Parser parser)
 #ifdef XML_UNICODE
   char encodingBuf[128];
   /* See comments abount `protoclEncodingName` in parserInit() */
-  if (!protocolEncodingName)
+  if (!parser->m_protocolEncodingName)
     s = NULL;
   else {
     int i;
-    for (i = 0; protocolEncodingName[i]; i++) {
+    for (i = 0; parser->m_protocolEncodingName[i]; i++) {
       if (i == sizeof(encodingBuf) - 1
-          || (protocolEncodingName[i] & ~0x7f) != 0) {
+          || (parser->m_protocolEncodingName[i] & ~0x7f) != 0) {
         encodingBuf[0] = '\0';
         break;
       }
-      encodingBuf[i] = (char)protocolEncodingName[i];
+      encodingBuf[i] = (char)parser->m_protocolEncodingName[i];
     }
     encodingBuf[i] = '\0';
     s = encodingBuf;
   }
 #else
-  s = protocolEncodingName;
+  s = parser->m_protocolEncodingName;
 #endif
   if ((ns ? XmlInitEncodingNS : XmlInitEncoding)(&parser->m_initEncoding, &encoding, s))
     return XML_ERROR_NONE;
-  return handleUnknownEncoding(parser, protocolEncodingName);
+  return handleUnknownEncoding(parser, parser->m_protocolEncodingName);
 }
 
 static enum XML_Error
@@ -4017,7 +4016,7 @@ processXmlDecl(XML_Parser parser, int isGeneralTextEntity,
   }
   else if (parser->m_defaultHandler)
     reportDefault(parser, encoding, s, next);
-  if (protocolEncodingName == NULL) {
+  if (parser->m_protocolEncodingName == NULL) {
     if (newEncoding) {
       /* Check that the specified encoding does not conflict with what
        * the parser has already deduced.  Do we have the same number
