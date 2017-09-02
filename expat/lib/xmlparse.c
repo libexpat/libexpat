@@ -668,7 +668,6 @@ struct XML_ParserStruct {
 #define defaultExpandInternalEntities \
         (parser->m_defaultExpandInternalEntities)
 #define buffer (parser->m_buffer)
-#define declNotationName (parser->m_declNotationName)
 #define declNotationPublicId (parser->m_declNotationPublicId)
 #define declElementType (parser->m_declElementType)
 #define declAttributeId (parser->m_declAttributeId)
@@ -1120,7 +1119,7 @@ parserInit(XML_Parser parser, const XML_Char *encodingName)
   parser->m_doctypeSysid = NULL;
   parser->m_doctypePubid = NULL;
   parser->m_declAttributeType = NULL;
-  declNotationName = NULL;
+  parser->m_declNotationName = NULL;
   declNotationPublicId = NULL;
   declAttributeIsCdata = XML_FALSE;
   declAttributeIsId = XML_FALSE;
@@ -4879,10 +4878,10 @@ doProlog(XML_Parser parser,
       break;
     case XML_ROLE_NOTATION_NAME:
       declNotationPublicId = NULL;
-      declNotationName = NULL;
+      parser->m_declNotationName = NULL;
       if (parser->m_notationDeclHandler) {
-        declNotationName = poolStoreString(&tempPool, enc, s, next);
-        if (!declNotationName)
+        parser->m_declNotationName = poolStoreString(&tempPool, enc, s, next);
+        if (!parser->m_declNotationName)
           return XML_ERROR_NO_MEMORY;
         poolFinish(&tempPool);
         handleDefault = XML_FALSE;
@@ -4891,7 +4890,7 @@ doProlog(XML_Parser parser,
     case XML_ROLE_NOTATION_PUBLIC_ID:
       if (!XmlIsPublicId(enc, s, next, eventPP))
         return XML_ERROR_PUBLICID;
-      if (declNotationName) {  /* means m_notationDeclHandler != NULL */
+      if (parser->m_declNotationName) {  /* means m_notationDeclHandler != NULL */
         XML_Char *tem = poolStoreString(&tempPool,
                                         enc,
                                         s + enc->minBytesPerChar,
@@ -4905,7 +4904,7 @@ doProlog(XML_Parser parser,
       }
       break;
     case XML_ROLE_NOTATION_SYSTEM_ID:
-      if (declNotationName && parser->m_notationDeclHandler) {
+      if (parser->m_declNotationName && parser->m_notationDeclHandler) {
         const XML_Char *systemId
           = poolStoreString(&tempPool, enc,
                             s + enc->minBytesPerChar,
@@ -4914,7 +4913,7 @@ doProlog(XML_Parser parser,
           return XML_ERROR_NO_MEMORY;
         *eventEndPP = s;
         parser->m_notationDeclHandler(parser->m_handlerArg,
-                            declNotationName,
+                            parser->m_declNotationName,
                             parser->m_curBase,
                             systemId,
                             declNotationPublicId);
@@ -4926,7 +4925,7 @@ doProlog(XML_Parser parser,
       if (declNotationPublicId && parser->m_notationDeclHandler) {
         *eventEndPP = s;
         parser->m_notationDeclHandler(parser->m_handlerArg,
-                            declNotationName,
+                            parser->m_declNotationName,
                             parser->m_curBase,
                             0,
                             declNotationPublicId);
