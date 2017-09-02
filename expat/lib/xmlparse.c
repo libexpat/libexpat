@@ -668,7 +668,6 @@ struct XML_ParserStruct {
 #define defaultExpandInternalEntities \
         (parser->m_defaultExpandInternalEntities)
 #define buffer (parser->m_buffer)
-#define nsAttsVersion (parser->m_nsAttsVersion)
 #define nsAttsPower (parser->m_nsAttsPower)
 #define attInfo (parser->m_attInfo)
 #define tempPool (parser->m_tempPool)
@@ -1034,7 +1033,7 @@ parserCreate(const XML_Char *encodingName,
   parser->m_ns_triplets = XML_FALSE;
 
   parser->m_nsAtts = NULL;
-  nsAttsVersion = 0;
+  parser->m_nsAttsVersion = 0;
   nsAttsPower = 0;
 
   parser->m_protocolEncodingName = NULL;
@@ -3320,7 +3319,7 @@ storeAtts(XML_Parser parser, const ENCODING *enc,
   i = 0;
   if (nPrefixes) {
     int j;  /* hash table index */
-    unsigned long version = nsAttsVersion;
+    unsigned long version = parser->m_nsAttsVersion;
     int nsAttsSize = (int)1 << nsAttsPower;
     unsigned char oldNsAttsPower = nsAttsPower;
     /* size of hash table must be at least 2 * (# of prefixed attributes) */
@@ -3346,7 +3345,7 @@ storeAtts(XML_Parser parser, const ENCODING *enc,
       for (j = nsAttsSize; j != 0; )
         parser->m_nsAtts[--j].version = version;
     }
-    nsAttsVersion = --version;
+    parser->m_nsAttsVersion = --version;
 
     /* expand prefixed names and check for duplicates */
     for (; i < attIndex; i += 2) {
