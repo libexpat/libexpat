@@ -668,7 +668,6 @@ struct XML_ParserStruct {
 #define defaultExpandInternalEntities \
         (parser->m_defaultExpandInternalEntities)
 #define buffer (parser->m_buffer)
-#define doctypePubid (parser->m_doctypePubid)
 #define declAttributeType (parser->m_declAttributeType)
 #define declNotationName (parser->m_declNotationName)
 #define declNotationPublicId (parser->m_declNotationPublicId)
@@ -1120,7 +1119,7 @@ parserInit(XML_Parser parser, const XML_Char *encodingName)
   parser->m_declEntity = NULL;
   parser->m_doctypeName = NULL;
   parser->m_doctypeSysid = NULL;
-  doctypePubid = NULL;
+  parser->m_doctypePubid = NULL;
   declAttributeType = NULL;
   declNotationName = NULL;
   declNotationPublicId = NULL;
@@ -4386,7 +4385,7 @@ doProlog(XML_Parser parser,
         if (!parser->m_doctypeName)
           return XML_ERROR_NO_MEMORY;
         poolFinish(&tempPool);
-        doctypePubid = NULL;
+        parser->m_doctypePubid = NULL;
         handleDefault = XML_FALSE;
       }
       parser->m_doctypeSysid = NULL; /* always initialize to NULL */
@@ -4394,7 +4393,7 @@ doProlog(XML_Parser parser,
     case XML_ROLE_DOCTYPE_INTERNAL_SUBSET:
       if (parser->m_startDoctypeDeclHandler) {
         parser->m_startDoctypeDeclHandler(parser->m_handlerArg, parser->m_doctypeName, parser->m_doctypeSysid,
-                                doctypePubid, 1);
+                                parser->m_doctypePubid, 1);
         parser->m_doctypeName = NULL;
         poolClear(&tempPool);
         handleDefault = XML_FALSE;
@@ -4433,7 +4432,7 @@ doProlog(XML_Parser parser,
           return XML_ERROR_NO_MEMORY;
         normalizePublicId(pubId);
         poolFinish(&tempPool);
-        doctypePubid = pubId;
+        parser->m_doctypePubid = pubId;
         handleDefault = XML_FALSE;
         goto alreadyChecked;
       }
@@ -4462,7 +4461,7 @@ doProlog(XML_Parser parser,
     case XML_ROLE_DOCTYPE_CLOSE:
       if (parser->m_doctypeName) {
         parser->m_startDoctypeDeclHandler(parser->m_handlerArg, parser->m_doctypeName,
-                                parser->m_doctypeSysid, doctypePubid, 0);
+                                parser->m_doctypeSysid, parser->m_doctypePubid, 0);
         poolClear(&tempPool);
         handleDefault = XML_FALSE;
       }
