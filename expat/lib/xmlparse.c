@@ -668,7 +668,6 @@ struct XML_ParserStruct {
 #define defaultExpandInternalEntities \
         (parser->m_defaultExpandInternalEntities)
 #define buffer (parser->m_buffer)
-#define bufferPtr (parser->m_bufferPtr)
 #define bufferEnd (parser->m_bufferEnd)
 #define parseEndByteIndex (parser->m_parseEndByteIndex)
 #define parseEndPtr (parser->m_parseEndPtr)
@@ -1123,7 +1122,7 @@ parserInit(XML_Parser parser, const XML_Char *encodingName)
   parser->m_attlistDeclHandler = NULL;
   parser->m_entityDeclHandler = NULL;
   parser->m_xmlDeclHandler = NULL;
-  bufferPtr = buffer;
+  parser->m_bufferPtr = buffer;
   bufferEnd = buffer;
   parseEndByteIndex = 0;
   parseEndPtr = NULL;
@@ -1887,14 +1886,14 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal)
     ps_finalBuffer = (XML_Bool)isFinal;
     if (!isFinal)
       return XML_STATUS_OK;
-    parser->m_positionPtr = bufferPtr;
+    parser->m_positionPtr = parser->m_bufferPtr;
     parseEndPtr = bufferEnd;
 
     /* If data are left over from last buffer, and we now know that these
        data are the final chunk of input, then we have to check them again
        to detect errors based on that fact.
     */
-    parser->m_errorCode = parser->m_processor(parser, bufferPtr, parseEndPtr, &bufferPtr);
+    parser->m_errorCode = parser->m_processor(parser, parser->m_bufferPtr, parseEndPtr, &parser->m_bufferPtr);
 
     if (parser->m_errorCode == XML_ERROR_NONE) {
       switch (ps_parsing) {
@@ -1911,8 +1910,8 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal)
          *
          * LCOV_EXCL_START
          */
-        XmlUpdatePosition(encoding, parser->m_positionPtr, bufferPtr, &parser->m_position);
-        parser->m_positionPtr = bufferPtr;
+        XmlUpdatePosition(encoding, parser->m_positionPtr, parser->m_bufferPtr, &parser->m_position);
+        parser->m_positionPtr = parser->m_bufferPtr;
         return XML_STATUS_SUSPENDED;
         /* LCOV_EXCL_STOP */
       case XML_INITIALIZED:
@@ -1928,7 +1927,7 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal)
     return XML_STATUS_ERROR;
   }
 #ifndef XML_CONTEXT_BYTES
-  else if (bufferPtr == bufferEnd) {
+  else if (parser->m_bufferPtr == bufferEnd) {
     const char *end;
     int nLeftOver;
     enum XML_Status result;
@@ -1988,12 +1987,12 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal)
       }
       memcpy(buffer, end, nLeftOver);
     }
-    bufferPtr = buffer;
+    parser->m_bufferPtr = buffer;
     bufferEnd = buffer + nLeftOver;
-    parser->m_positionPtr = bufferPtr;
+    parser->m_positionPtr = parser->m_bufferPtr;
     parseEndPtr = bufferEnd;
-    parser->m_eventPtr = bufferPtr;
-    parser->m_eventEndPtr = bufferPtr;
+    parser->m_eventPtr = parser->m_bufferPtr;
+    parser->m_eventEndPtr = parser->m_bufferPtr;
     return result;
   }
 #endif  /* not defined XML_CONTEXT_BYTES */
@@ -2032,14 +2031,14 @@ XML_ParseBuffer(XML_Parser parser, int len, int isFinal)
     ps_parsing = XML_PARSING;
   }
 
-  start = bufferPtr;
+  start = parser->m_bufferPtr;
   parser->m_positionPtr = start;
   bufferEnd += len;
   parseEndPtr = bufferEnd;
   parseEndByteIndex += len;
   ps_finalBuffer = (XML_Bool)isFinal;
 
-  parser->m_errorCode = parser->m_processor(parser, start, parseEndPtr, &bufferPtr);
+  parser->m_errorCode = parser->m_processor(parser, start, parseEndPtr, &parser->m_bufferPtr);
 
   if (parser->m_errorCode != XML_ERROR_NONE) {
     parser->m_eventEndPtr = parser->m_eventPtr;
@@ -2061,8 +2060,8 @@ XML_ParseBuffer(XML_Parser parser, int len, int isFinal)
     }
   }
 
-  XmlUpdatePosition(encoding, parser->m_positionPtr, bufferPtr, &parser->m_position);
-  parser->m_positionPtr = bufferPtr;
+  XmlUpdatePosition(encoding, parser->m_positionPtr, parser->m_bufferPtr, &parser->m_position);
+  parser->m_positionPtr = parser->m_bufferPtr;
   return result;
 }
 
@@ -2090,34 +2089,34 @@ XML_GetBuffer(XML_Parser parser, int len)
     int keep;
 #endif  /* defined XML_CONTEXT_BYTES */
     /* Do not invoke signed arithmetic overflow: */
-    int neededSize = (int) ((unsigned)len + (unsigned)(bufferEnd - bufferPtr));
+    int neededSize = (int) ((unsigned)len + (unsigned)(bufferEnd - parser->m_bufferPtr));
     if (neededSize < 0) {
       parser->m_errorCode = XML_ERROR_NO_MEMORY;
       return NULL;
     }
 #ifdef XML_CONTEXT_BYTES
-    keep = (int)(bufferPtr - buffer);
+    keep = (int)(parser->m_bufferPtr - buffer);
     if (keep > XML_CONTEXT_BYTES)
       keep = XML_CONTEXT_BYTES;
     neededSize += keep;
 #endif  /* defined XML_CONTEXT_BYTES */
     if (neededSize  <= bufferLim - buffer) {
 #ifdef XML_CONTEXT_BYTES
-      if (keep < bufferPtr - buffer) {
-        int offset = (int)(bufferPtr - buffer) - keep;
-        memmove(buffer, &buffer[offset], bufferEnd - bufferPtr + keep);
+      if (keep < parser->m_bufferPtr - buffer) {
+        int offset = (int)(parser->m_bufferPtr - buffer) - keep;
+        memmove(buffer, &buffer[offset], bufferEnd - parser->m_bufferPtr + keep);
         bufferEnd -= offset;
-        bufferPtr -= offset;
+        parser->m_bufferPtr -= offset;
       }
 #else
-      memmove(buffer, bufferPtr, bufferEnd - bufferPtr);
-      bufferEnd = buffer + (bufferEnd - bufferPtr);
-      bufferPtr = buffer;
+      memmove(buffer, parser->m_bufferPtr, bufferEnd - parser->m_bufferPtr);
+      bufferEnd = buffer + (bufferEnd - parser->m_bufferPtr);
+      parser->m_bufferPtr = buffer;
 #endif  /* not defined XML_CONTEXT_BYTES */
     }
     else {
       char *newBuf;
-      int bufferSize = (int)(bufferLim - bufferPtr);
+      int bufferSize = (int)(bufferLim - parser->m_bufferPtr);
       if (bufferSize == 0)
         bufferSize = INIT_BUFFER_SIZE;
       do {
@@ -2135,27 +2134,27 @@ XML_GetBuffer(XML_Parser parser, int len)
       }
       bufferLim = newBuf + bufferSize;
 #ifdef XML_CONTEXT_BYTES
-      if (bufferPtr) {
-        int keep = (int)(bufferPtr - buffer);
+      if (parser->m_bufferPtr) {
+        int keep = (int)(parser->m_bufferPtr - buffer);
         if (keep > XML_CONTEXT_BYTES)
           keep = XML_CONTEXT_BYTES;
-        memcpy(newBuf, &bufferPtr[-keep], bufferEnd - bufferPtr + keep);
+        memcpy(newBuf, &parser->m_bufferPtr[-keep], bufferEnd - parser->m_bufferPtr + keep);
         FREE(buffer);
         buffer = newBuf;
-        bufferEnd = buffer + (bufferEnd - bufferPtr) + keep;
-        bufferPtr = buffer + keep;
+        bufferEnd = buffer + (bufferEnd - parser->m_bufferPtr) + keep;
+        parser->m_bufferPtr = buffer + keep;
       }
       else {
-        bufferEnd = newBuf + (bufferEnd - bufferPtr);
-        bufferPtr = buffer = newBuf;
+        bufferEnd = newBuf + (bufferEnd - parser->m_bufferPtr);
+        parser->m_bufferPtr = buffer = newBuf;
       }
 #else
-      if (bufferPtr) {
-        memcpy(newBuf, bufferPtr, bufferEnd - bufferPtr);
+      if (parser->m_bufferPtr) {
+        memcpy(newBuf, parser->m_bufferPtr, bufferEnd - parser->m_bufferPtr);
         FREE(buffer);
       }
-      bufferEnd = newBuf + (bufferEnd - bufferPtr);
-      bufferPtr = buffer = newBuf;
+      bufferEnd = newBuf + (bufferEnd - parser->m_bufferPtr);
+      parser->m_bufferPtr = buffer = newBuf;
 #endif  /* not defined XML_CONTEXT_BYTES */
     }
     parser->m_eventPtr = parser->m_eventEndPtr = NULL;
@@ -2209,7 +2208,7 @@ XML_ResumeParser(XML_Parser parser)
   }
   ps_parsing = XML_PARSING;
 
-  parser->m_errorCode = parser->m_processor(parser, bufferPtr, parseEndPtr, &bufferPtr);
+  parser->m_errorCode = parser->m_processor(parser, parser->m_bufferPtr, parseEndPtr, &parser->m_bufferPtr);
 
   if (parser->m_errorCode != XML_ERROR_NONE) {
     parser->m_eventEndPtr = parser->m_eventPtr;
@@ -2231,8 +2230,8 @@ XML_ResumeParser(XML_Parser parser)
     }
   }
 
-  XmlUpdatePosition(encoding, parser->m_positionPtr, bufferPtr, &parser->m_position);
-  parser->m_positionPtr = bufferPtr;
+  XmlUpdatePosition(encoding, parser->m_positionPtr, parser->m_bufferPtr, &parser->m_position);
+  parser->m_positionPtr = parser->m_bufferPtr;
   return result;
 }
 
