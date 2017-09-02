@@ -668,7 +668,6 @@ struct XML_ParserStruct {
 #define defaultExpandInternalEntities \
         (parser->m_defaultExpandInternalEntities)
 #define buffer (parser->m_buffer)
-#define inheritedBindings (parser->m_inheritedBindings)
 #define tagStack (parser->m_tagStack)
 #define atts (parser->m_atts)
 #define attsSize (parser->m_attsSize)
@@ -1125,7 +1124,7 @@ parserInit(XML_Parser parser, const XML_Char *encodingName)
   defaultExpandInternalEntities = XML_TRUE;
   parser->m_tagLevel = 0;
   tagStack = NULL;
-  inheritedBindings = NULL;
+  parser->m_inheritedBindings = NULL;
   nSpecifiedAtts = 0;
   parser->m_unknownEncodingMem = NULL;
   parser->m_unknownEncodingRelease = NULL;
@@ -1181,7 +1180,7 @@ XML_ParserReset(XML_Parser parser, const XML_Char *encodingName)
     openEntity->next = parser->m_freeInternalEntities;
     parser->m_freeInternalEntities = openEntity;
   }
-  moveToFreeBindingList(parser, inheritedBindings);
+  moveToFreeBindingList(parser, parser->m_inheritedBindings);
   FREE(parser->m_unknownEncodingMem);
   if (parser->m_unknownEncodingRelease)
     parser->m_unknownEncodingRelease(parser->m_unknownEncodingData);
@@ -1446,7 +1445,7 @@ XML_ParserFree(XML_Parser parser)
   }
 
   destroyBindings(parser->m_freeBindingList, parser);
-  destroyBindings(inheritedBindings, parser);
+  destroyBindings(parser->m_inheritedBindings, parser);
   poolDestroy(&tempPool);
   poolDestroy(&temp2Pool);
   FREE((void *)parser->m_protocolEncodingName);
@@ -6262,7 +6261,7 @@ setContext(XML_Parser parser, const XML_Char *context)
       if (!poolAppendChar(&tempPool, XML_T('\0')))
         return XML_FALSE;
       if (addBinding(parser, prefix, NULL, poolStart(&tempPool),
-                     &inheritedBindings) != XML_ERROR_NONE)
+                     &parser->m_inheritedBindings) != XML_ERROR_NONE)
         return XML_FALSE;
       poolDiscard(&tempPool);
       if (*context != XML_T('\0'))
