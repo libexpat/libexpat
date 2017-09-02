@@ -668,7 +668,6 @@ struct XML_ParserStruct {
 #define defaultExpandInternalEntities \
         (parser->m_defaultExpandInternalEntities)
 #define buffer (parser->m_buffer)
-#define _dtd (parser->m_dtd)
 #define curBase (parser->m_curBase)
 #define declEntity (parser->m_declEntity)
 #define doctypeName (parser->m_doctypeName)
@@ -1027,10 +1026,10 @@ parserCreate(const XML_Char *encodingName,
   parser->m_dataBufEnd = parser->m_dataBuf + INIT_DATA_BUF_SIZE;
 
   if (dtd)
-    _dtd = dtd;
+    parser->m_dtd = dtd;
   else {
-    _dtd = dtdCreate(&parser->m_mem);
-    if (_dtd == NULL) {
+    parser->m_dtd = dtdCreate(&parser->m_mem);
+    if (parser->m_dtd == NULL) {
       FREE(parser->m_dataBuf);
       FREE(atts);
 #ifdef XML_ATTR_INFO
@@ -1205,7 +1204,7 @@ XML_ParserReset(XML_Parser parser, const XML_Char *encodingName)
   FREE((void *)parser->m_protocolEncodingName);
   parser->m_protocolEncodingName = NULL;
   parserInit(parser, encodingName);
-  dtdReset(_dtd, &parser->m_mem);
+  dtdReset(parser->m_dtd, &parser->m_mem);
   return XML_TRUE;
 }
 
@@ -1287,7 +1286,7 @@ XML_ExternalEntityParserCreate(XML_Parser oldParser,
     return NULL;
 
   /* Stash the original parser contents on the stack */
-  oldDtd = _dtd;
+  oldDtd = parser->m_dtd;
   oldStartElementHandler = parser->m_startElementHandler;
   oldEndElementHandler = parser->m_endElementHandler;
   oldCharacterDataHandler = parser->m_characterDataHandler;
@@ -1385,7 +1384,7 @@ XML_ExternalEntityParserCreate(XML_Parser oldParser,
   parser->m_prologState.inEntityValue = oldInEntityValue;
   if (context) {
 #endif /* XML_DTD */
-    if (!dtdCopy(oldParser, _dtd, oldDtd, &parser->m_mem)
+    if (!dtdCopy(oldParser, parser->m_dtd, oldDtd, &parser->m_mem)
       || !setContext(parser, context)) {
       XML_ParserFree(parser);
       return NULL;
@@ -1394,11 +1393,11 @@ XML_ExternalEntityParserCreate(XML_Parser oldParser,
 #ifdef XML_DTD
   }
   else {
-    /* The DTD instance referenced by _dtd is shared between the document's
+    /* The DTD instance referenced by parser->m_dtd is shared between the document's
        root parser and external PE parsers, therefore one does not need to
        call setContext. In addition, one also *must* not call setContext,
        because this would overwrite existing prefix->binding pointers in
-       _dtd with ones that get destroyed with the external PE parser.
+       parser->m_dtd with ones that get destroyed with the external PE parser.
        This would leave those prefixes with dangling pointers.
     */
     isParamEntity = XML_TRUE;
@@ -1469,11 +1468,11 @@ XML_ParserFree(XML_Parser parser)
   /* external parameter entity parsers share the DTD structure
      parser->m_dtd with the root parser, so we must not destroy it
   */
-  if (!isParamEntity && _dtd)
+  if (!isParamEntity && parser->m_dtd)
 #else
-  if (_dtd)
+  if (parser->m_dtd)
 #endif /* XML_DTD */
-    dtdDestroy(_dtd, (XML_Bool)!parentParser, &parser->m_mem);
+    dtdDestroy(parser->m_dtd, (XML_Bool)!parentParser, &parser->m_mem);
   FREE((void *)atts);
 #ifdef XML_ATTR_INFO
   FREE((void *)attInfo);
@@ -1539,7 +1538,7 @@ XML_SetBase(XML_Parser parser, const XML_Char *p)
   if (parser == NULL)
     return XML_STATUS_ERROR;
   if (p) {
-    p = poolCopyString(&_dtd->pool, p);
+    p = poolCopyString(&parser->m_dtd->pool, p);
     if (!p)
       return XML_STATUS_ERROR;
     curBase = p;
@@ -2670,7 +2669,7 @@ doContent(XML_Parser parser,
           XML_Bool haveMore)
 {
   /* save one level of indirection */
-  DTD * const dtd = _dtd;
+  DTD * const dtd = parser->m_dtd;
 
   const char **eventPP;
   const char **eventEndPP;
@@ -3159,7 +3158,7 @@ storeAtts(XML_Parser parser, const ENCODING *enc,
           const char *attStr, TAG_NAME *tagNamePtr,
           BINDING **bindingsPtr)
 {
-  DTD * const dtd = _dtd;  /* save one level of indirection */
+  DTD * const dtd = parser->m_dtd;  /* save one level of indirection */
   ELEMENT_TYPE *elementType;
   int nDefaultAtts;
   const XML_Char **appAtts;   /* the attribute list for the application */
@@ -3642,7 +3641,7 @@ addBinding(XML_Parser parser, PREFIX *prefix, const ATTRIBUTE_ID *attId,
   b->attId = attId;
   b->prevPrefixBinding = prefix->binding;
   /* NULL binding when default namespace undeclared */
-  if (*uri == XML_T('\0') && prefix == &_dtd->defaultPrefix)
+  if (*uri == XML_T('\0') && prefix == &parser->m_dtd->defaultPrefix)
     prefix->binding = NULL;
   else
     prefix->binding = b;
@@ -3968,7 +3967,7 @@ processXmlDecl(XML_Parser parser, int isGeneralTextEntity,
       return XML_ERROR_XML_DECL;
   }
   if (!isGeneralTextEntity && standalone == 1) {
-    _dtd->standalone = XML_TRUE;
+    parser->m_dtd->standalone = XML_TRUE;
 #ifdef XML_DTD
     if (paramEntityParsing == XML_PARAM_ENTITY_PARSING_UNLESS_STANDALONE)
       paramEntityParsing = XML_PARAM_ENTITY_PARSING_NEVER;
@@ -4101,7 +4100,7 @@ externalParEntInitProcessor(XML_Parser parser,
 
   /* we know now that XML_Parse(Buffer) has been called,
      so we consider the external parameter entity read */
-  _dtd->paramEntityRead = XML_TRUE;
+  parser->m_dtd->paramEntityRead = XML_TRUE;
 
   if (parser->m_prologState.inEntityValue) {
     parser->m_processor = entityValueInitProcessor;
@@ -4312,7 +4311,7 @@ doProlog(XML_Parser parser,
   static const XML_Char enumValueStart[] = { ASCII_LPAREN, '\0' };
 
   /* save one level of indirection */
-  DTD * const dtd = _dtd;
+  DTD * const dtd = parser->m_dtd;
 
   const char **eventPP;
   const char **eventEndPP;
@@ -5518,7 +5517,7 @@ appendAttributeValue(XML_Parser parser, const ENCODING *enc, XML_Bool isCdata,
                      const char *ptr, const char *end,
                      STRING_POOL *pool)
 {
-  DTD * const dtd = _dtd;  /* save one level of indirection */
+  DTD * const dtd = parser->m_dtd;  /* save one level of indirection */
   for (;;) {
     const char *next;
     int tok = XmlAttributeValueTok(enc, ptr, end, &next);
@@ -5703,7 +5702,7 @@ storeEntityValue(XML_Parser parser,
                  const char *entityTextPtr,
                  const char *entityTextEnd)
 {
-  DTD * const dtd = _dtd;  /* save one level of indirection */
+  DTD * const dtd = parser->m_dtd;  /* save one level of indirection */
   STRING_POOL *pool = &(dtd->entityValuePool);
   enum XML_Error result = XML_ERROR_NONE;
 #ifdef XML_DTD
@@ -6043,7 +6042,7 @@ defineAttribute(ELEMENT_TYPE *type, ATTRIBUTE_ID *attId, XML_Bool isCdata,
 static int
 setElementTypePrefix(XML_Parser parser, ELEMENT_TYPE *elementType)
 {
-  DTD * const dtd = _dtd;  /* save one level of indirection */
+  DTD * const dtd = parser->m_dtd;  /* save one level of indirection */
   const XML_Char *name;
   for (name = elementType->name; *name; name++) {
     if (*name == XML_T(ASCII_COLON)) {
@@ -6074,7 +6073,7 @@ static ATTRIBUTE_ID *
 getAttributeId(XML_Parser parser, const ENCODING *enc,
                const char *start, const char *end)
 {
-  DTD * const dtd = _dtd;  /* save one level of indirection */
+  DTD * const dtd = parser->m_dtd;  /* save one level of indirection */
   ATTRIBUTE_ID *id;
   const XML_Char *name;
   if (!poolAppendChar(&dtd->pool, XML_T('\0')))
@@ -6138,7 +6137,7 @@ getAttributeId(XML_Parser parser, const ENCODING *enc,
 static const XML_Char *
 getContext(XML_Parser parser)
 {
-  DTD * const dtd = _dtd;  /* save one level of indirection */
+  DTD * const dtd = parser->m_dtd;  /* save one level of indirection */
   HASH_TABLE_ITER iter;
   XML_Bool needSep = XML_FALSE;
 
@@ -6235,7 +6234,7 @@ getContext(XML_Parser parser)
 static XML_Bool
 setContext(XML_Parser parser, const XML_Char *context)
 {
-  DTD * const dtd = _dtd;  /* save one level of indirection */
+  DTD * const dtd = parser->m_dtd;  /* save one level of indirection */
   const XML_Char *s = context;
 
   while (*context != XML_T('\0')) {
@@ -7049,7 +7048,7 @@ poolGrow(STRING_POOL *pool)
 static int FASTCALL
 nextScaffoldPart(XML_Parser parser)
 {
-  DTD * const dtd = _dtd;  /* save one level of indirection */
+  DTD * const dtd = parser->m_dtd;  /* save one level of indirection */
   CONTENT_SCAFFOLD * me;
   int next;
 
@@ -7101,7 +7100,7 @@ build_node(XML_Parser parser,
            XML_Content **contpos,
            XML_Char **strpos)
 {
-  DTD * const dtd = _dtd;  /* save one level of indirection */
+  DTD * const dtd = parser->m_dtd;  /* save one level of indirection */
   dest->type = dtd->scaffold[src_node].type;
   dest->quant = dtd->scaffold[src_node].quant;
   if (dest->type == XML_CTYPE_NAME) {
@@ -7135,7 +7134,7 @@ build_node(XML_Parser parser,
 static XML_Content *
 build_model (XML_Parser parser)
 {
-  DTD * const dtd = _dtd;  /* save one level of indirection */
+  DTD * const dtd = parser->m_dtd;  /* save one level of indirection */
   XML_Content *ret;
   XML_Content *cpos;
   XML_Char * str;
@@ -7159,7 +7158,7 @@ getElementType(XML_Parser parser,
                const char *ptr,
                const char *end)
 {
-  DTD * const dtd = _dtd;  /* save one level of indirection */
+  DTD * const dtd = parser->m_dtd;  /* save one level of indirection */
   const XML_Char *name = poolStoreString(&dtd->pool, enc, ptr, end);
   ELEMENT_TYPE *ret;
 
