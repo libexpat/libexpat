@@ -668,7 +668,6 @@ struct XML_ParserStruct {
 #define defaultExpandInternalEntities \
         (parser->m_defaultExpandInternalEntities)
 #define buffer (parser->m_buffer)
-#define bufferLim (parser->m_bufferLim)
 #define dataBuf (parser->m_dataBuf)
 #define dataBufEnd (parser->m_dataBufEnd)
 #define _dtd (parser->m_dtd)
@@ -1002,7 +1001,7 @@ parserCreate(const XML_Char *encodingName,
     return parser;
 
   buffer = NULL;
-  bufferLim = NULL;
+  parser->m_bufferLim = NULL;
 
   attsSize = INIT_ATTS_SIZE;
   atts = (ATTRIBUTE *)MALLOC(attsSize * sizeof(ATTRIBUTE));
@@ -1966,7 +1965,7 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal)
     XmlUpdatePosition(encoding, parser->m_positionPtr, end, &parser->m_position);
     nLeftOver = s + len - end;
     if (nLeftOver) {
-      if (buffer == NULL || nLeftOver > bufferLim - buffer) {
+      if (buffer == NULL || nLeftOver > parser->m_bufferLim - buffer) {
         /* avoid _signed_ integer overflow */
         char *temp = NULL;
         const int bytesToAllocate = (int)((unsigned)len * 2U);
@@ -1980,7 +1979,7 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal)
           return XML_STATUS_ERROR;
         }
         buffer = temp;
-        bufferLim = buffer + bytesToAllocate;
+        parser->m_bufferLim = buffer + bytesToAllocate;
       }
       memcpy(buffer, end, nLeftOver);
     }
@@ -2081,7 +2080,7 @@ XML_GetBuffer(XML_Parser parser, int len)
   default: ;
   }
 
-  if (len > bufferLim - parser->m_bufferEnd) {
+  if (len > parser->m_bufferLim - parser->m_bufferEnd) {
 #ifdef XML_CONTEXT_BYTES
     int keep;
 #endif  /* defined XML_CONTEXT_BYTES */
@@ -2097,7 +2096,7 @@ XML_GetBuffer(XML_Parser parser, int len)
       keep = XML_CONTEXT_BYTES;
     neededSize += keep;
 #endif  /* defined XML_CONTEXT_BYTES */
-    if (neededSize  <= bufferLim - buffer) {
+    if (neededSize  <= parser->m_bufferLim - buffer) {
 #ifdef XML_CONTEXT_BYTES
       if (keep < parser->m_bufferPtr - buffer) {
         int offset = (int)(parser->m_bufferPtr - buffer) - keep;
@@ -2113,7 +2112,7 @@ XML_GetBuffer(XML_Parser parser, int len)
     }
     else {
       char *newBuf;
-      int bufferSize = (int)(bufferLim - parser->m_bufferPtr);
+      int bufferSize = (int)(parser->m_bufferLim - parser->m_bufferPtr);
       if (bufferSize == 0)
         bufferSize = INIT_BUFFER_SIZE;
       do {
@@ -2129,7 +2128,7 @@ XML_GetBuffer(XML_Parser parser, int len)
         parser->m_errorCode = XML_ERROR_NO_MEMORY;
         return NULL;
       }
-      bufferLim = newBuf + bufferSize;
+      parser->m_bufferLim = newBuf + bufferSize;
 #ifdef XML_CONTEXT_BYTES
       if (parser->m_bufferPtr) {
         int keep = (int)(parser->m_bufferPtr - buffer);
