@@ -669,7 +669,6 @@ struct XML_ParserStruct {
         (parser->m_defaultExpandInternalEntities)
 #define buffer (parser->m_buffer)
 #ifdef XML_DTD
-#define useForeignDTD (parser->m_useForeignDTD)
 #define paramEntityParsing (parser->m_paramEntityParsing)
 #endif /* XML_DTD */
 #define hash_secret_salt (parser->m_hash_secret_salt)
@@ -1115,7 +1114,7 @@ parserInit(XML_Parser parser, const XML_Char *encodingName)
   parser->m_parsingStatus.parsing = XML_INITIALIZED;
 #ifdef XML_DTD
   parser->m_isParamEntity = XML_FALSE;
-  useForeignDTD = XML_FALSE;
+  parser->m_useForeignDTD = XML_FALSE;
   paramEntityParsing = XML_PARAM_ENTITY_PARSING_NEVER;
 #endif
   hash_secret_salt = 0;
@@ -1470,7 +1469,7 @@ XML_UseForeignDTD(XML_Parser parser, XML_Bool useDTD)
   /* block after XML_Parse()/XML_ParseBuffer() has been called */
   if (parser->m_parsingStatus.parsing == XML_PARSING || parser->m_parsingStatus.parsing == XML_SUSPENDED)
     return XML_ERROR_CANT_CHANGE_FEATURE_ONCE_PARSING;
-  useForeignDTD = useDTD;
+  parser->m_useForeignDTD = useDTD;
   return XML_ERROR_NONE;
 #else
   return XML_ERROR_FEATURE_REQUIRES_XML_DTD;
@@ -4384,7 +4383,7 @@ doProlog(XML_Parser parser,
 #endif /* XML_DTD */
     case XML_ROLE_DOCTYPE_PUBLIC_ID:
 #ifdef XML_DTD
-      useForeignDTD = XML_FALSE;
+      parser->m_useForeignDTD = XML_FALSE;
       parser->m_declEntity = (ENTITY *)lookup(parser,
                                     &dtd->paramEntities,
                                     externalSubsetName,
@@ -4442,7 +4441,7 @@ doProlog(XML_Parser parser,
          was not set, indicating an external subset
       */
 #ifdef XML_DTD
-      if (parser->m_doctypeSysid || useForeignDTD) {
+      if (parser->m_doctypeSysid || parser->m_useForeignDTD) {
         XML_Bool hadParamEntityRefs = dtd->hasParamEntityRefs;
         dtd->hasParamEntityRefs = XML_TRUE;
         if (paramEntityParsing && externalEntityRefHandler) {
@@ -4458,7 +4457,7 @@ doProlog(XML_Parser parser,
              */
             return XML_ERROR_NO_MEMORY; /* LCOV_EXCL_LINE */
           }
-          if (useForeignDTD)
+          if (parser->m_useForeignDTD)
             entity->base = parser->m_curBase;
           dtd->paramEntityRead = XML_FALSE;
           if (!externalEntityRefHandler(externalEntityRefHandlerArg,
@@ -4480,7 +4479,7 @@ doProlog(XML_Parser parser,
             dtd->hasParamEntityRefs = hadParamEntityRefs;
           /* end of DTD - no need to update dtd->keepProcessing */
         }
-        useForeignDTD = XML_FALSE;
+        parser->m_useForeignDTD = XML_FALSE;
       }
 #endif /* XML_DTD */
       if (parser->m_endDoctypeDeclHandler) {
@@ -4493,7 +4492,7 @@ doProlog(XML_Parser parser,
       /* if there is no DOCTYPE declaration then now is the
          last chance to read the foreign DTD
       */
-      if (useForeignDTD) {
+      if (parser->m_useForeignDTD) {
         XML_Bool hadParamEntityRefs = dtd->hasParamEntityRefs;
         dtd->hasParamEntityRefs = XML_TRUE;
         if (paramEntityParsing && externalEntityRefHandler) {
@@ -4682,7 +4681,7 @@ doProlog(XML_Parser parser,
       break;
     case XML_ROLE_DOCTYPE_SYSTEM_ID:
 #ifdef XML_DTD
-      useForeignDTD = XML_FALSE;
+      parser->m_useForeignDTD = XML_FALSE;
 #endif /* XML_DTD */
       dtd->hasParamEntityRefs = XML_TRUE;
       if (parser->m_startDoctypeDeclHandler) {
