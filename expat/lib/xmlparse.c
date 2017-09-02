@@ -542,7 +542,7 @@ parserInit(XML_Parser parser, const XML_Char *encodingName);
    : ((*((pool)->ptr)++ = c), 1))
 
 struct XML_ParserStruct {
-  /* The first member must be userData so that the XML_GetUserData
+  /* The first member must be m_userData so that the XML_GetUserData
      macro works. */
   void *m_userData;
   void *m_handlerArg;
@@ -648,7 +648,6 @@ struct XML_ParserStruct {
 #define REALLOC(p,s) (parser->m_mem.realloc_fcn((p),(s)))
 #define FREE(p) (parser->m_mem.free_fcn((p)))
 
-#define userData (parser->m_userData)
 #define handlerArg (parser->m_handlerArg)
 #define startElementHandler (parser->m_startElementHandler)
 #define endElementHandler (parser->m_endElementHandler)
@@ -1136,7 +1135,7 @@ parserInit(XML_Parser parser, const XML_Char *encodingName)
   }
   curBase = NULL;
   XmlInitEncoding(&initEncoding, &encoding, 0);
-  userData = NULL;
+  parser->m_userData = NULL;
   handlerArg = NULL;
   startElementHandler = NULL;
   endElementHandler = NULL;
@@ -1354,7 +1353,7 @@ XML_ExternalEntityParserCreate(XML_Parser oldParser,
   oldXmlDeclHandler = xmlDeclHandler;
   oldDeclElementType = declElementType;
 
-  oldUserData = userData;
+  oldUserData = parser->m_userData;
   oldHandlerArg = handlerArg;
   oldDefaultExpandInternalEntities = defaultExpandInternalEntities;
   oldExternalEntityRefHandlerArg = externalEntityRefHandlerArg;
@@ -1413,9 +1412,9 @@ XML_ExternalEntityParserCreate(XML_Parser oldParser,
   entityDeclHandler = oldEntityDeclHandler;
   xmlDeclHandler = oldXmlDeclHandler;
   declElementType = oldDeclElementType;
-  userData = oldUserData;
+  parser->m_userData = oldUserData;
   if (oldUserData == oldHandlerArg)
-    handlerArg = userData;
+    handlerArg = parser->m_userData;
   else
     handlerArg = parser;
   if (oldExternalEntityRefHandlerArg != oldParser)
@@ -1571,10 +1570,10 @@ XML_SetUserData(XML_Parser parser, void *p)
 {
   if (parser == NULL)
     return;
-  if (handlerArg == userData)
-    handlerArg = userData = p;
+  if (handlerArg == parser->m_userData)
+    handlerArg = parser->m_userData = p;
   else
-    userData = p;
+    parser->m_userData = p;
 }
 
 enum XML_Status XMLCALL
