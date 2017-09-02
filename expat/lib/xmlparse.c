@@ -665,7 +665,6 @@ struct XML_ParserStruct {
 #define encoding (parser->m_encoding)
 #define unknownEncodingHandlerData \
   (parser->m_unknownEncodingHandlerData)
-#define openInternalEntities (parser->m_openInternalEntities)
 #define freeInternalEntities (parser->m_freeInternalEntities)
 #define defaultExpandInternalEntities \
         (parser->m_defaultExpandInternalEntities)
@@ -1146,7 +1145,7 @@ parserInit(XML_Parser parser, const XML_Char *encodingName)
   parser->m_eventPtr = NULL;
   parser->m_eventEndPtr = NULL;
   parser->m_positionPtr = NULL;
-  openInternalEntities = NULL;
+  parser->m_openInternalEntities = NULL;
   defaultExpandInternalEntities = XML_TRUE;
   tagLevel = 0;
   tagStack = NULL;
@@ -1198,8 +1197,8 @@ XML_ParserReset(XML_Parser parser, const XML_Char *encodingName)
     tag->bindings = NULL;
     freeTagList = tag;
   }
-  /* move openInternalEntities to freeInternalEntities */
-  openEntityList = openInternalEntities;
+  /* move m_openInternalEntities to freeInternalEntities */
+  openEntityList = parser->m_openInternalEntities;
   while (openEntityList) {
     OPEN_INTERNAL_ENTITY *openEntity = openEntityList;
     openEntityList = openEntity->next;
@@ -1455,8 +1454,8 @@ XML_ParserFree(XML_Parser parser)
     destroyBindings(p->bindings, parser);
     FREE(p);
   }
-  /* free openInternalEntities and freeInternalEntities */
-  entityList = openInternalEntities;
+  /* free m_openInternalEntities and freeInternalEntities */
+  entityList = parser->m_openInternalEntities;
   for (;;) {
     OPEN_INTERNAL_ENTITY *openEntity;
     if (entityList == NULL) {
@@ -2357,11 +2356,11 @@ XML_DefaultCurrent(XML_Parser parser)
   if (parser == NULL)
     return;
   if (parser->m_defaultHandler) {
-    if (openInternalEntities)
+    if (parser->m_openInternalEntities)
       reportDefault(parser,
                     parser->m_internalEncoding,
-                    openInternalEntities->internalEventPtr,
-                    openInternalEntities->internalEventEndPtr);
+                    parser->m_openInternalEntities->internalEventPtr,
+                    parser->m_openInternalEntities->internalEventEndPtr);
     else
       reportDefault(parser, encoding, parser->m_eventPtr, parser->m_eventEndPtr);
   }
@@ -2689,8 +2688,8 @@ doContent(XML_Parser parser,
     eventEndPP = &parser->m_eventEndPtr;
   }
   else {
-    eventPP = &(openInternalEntities->internalEventPtr);
-    eventEndPP = &(openInternalEntities->internalEventEndPtr);
+    eventPP = &(parser->m_openInternalEntities->internalEventPtr);
+    eventEndPP = &(parser->m_openInternalEntities->internalEventEndPtr);
   }
   *eventPP = s;
 
@@ -3711,8 +3710,8 @@ doCdataSection(XML_Parser parser,
     eventEndPP = &parser->m_eventEndPtr;
   }
   else {
-    eventPP = &(openInternalEntities->internalEventPtr);
-    eventEndPP = &(openInternalEntities->internalEventEndPtr);
+    eventPP = &(parser->m_openInternalEntities->internalEventPtr);
+    eventEndPP = &(parser->m_openInternalEntities->internalEventEndPtr);
   }
   *eventPP = s;
   *startPtr = NULL;
@@ -3868,8 +3867,8 @@ doIgnoreSection(XML_Parser parser,
      *
      * LCOV_EXCL_START
      */
-    eventPP = &(openInternalEntities->internalEventPtr);
-    eventEndPP = &(openInternalEntities->internalEventEndPtr);
+    eventPP = &(parser->m_openInternalEntities->internalEventPtr);
+    eventEndPP = &(parser->m_openInternalEntities->internalEventEndPtr);
     /* LCOV_EXCL_STOP */
   }
   *eventPP = s;
@@ -4333,8 +4332,8 @@ doProlog(XML_Parser parser,
     eventEndPP = &parser->m_eventEndPtr;
   }
   else {
-    eventPP = &(openInternalEntities->internalEventPtr);
-    eventEndPP = &(openInternalEntities->internalEventEndPtr);
+    eventPP = &(parser->m_openInternalEntities->internalEventPtr);
+    eventEndPP = &(parser->m_openInternalEntities->internalEventEndPtr);
   }
 
   for (;;) {
@@ -4361,7 +4360,7 @@ doProlog(XML_Parser parser,
       case XML_TOK_NONE:
 #ifdef XML_DTD
         /* for internal PE NOT referenced between declarations */
-        if (enc != encoding && !openInternalEntities->betweenDecl) {
+        if (enc != encoding && !parser->m_openInternalEntities->betweenDecl) {
           *nextPtr = s;
           return XML_ERROR_NONE;
         }
@@ -4849,7 +4848,7 @@ doProlog(XML_Parser parser,
             /* if we have a parent parser or are reading an internal parameter
                entity, then the entity declaration is not considered "internal"
             */
-            declEntity->is_internal = !(parentParser || openInternalEntities);
+            declEntity->is_internal = !(parentParser || parser->m_openInternalEntities);
             if (parser->m_entityDeclHandler)
               handleDefault = XML_FALSE;
           }
@@ -4881,7 +4880,7 @@ doProlog(XML_Parser parser,
           /* if we have a parent parser or are reading an internal parameter
              entity, then the entity declaration is not considered "internal"
           */
-          declEntity->is_internal = !(parentParser || openInternalEntities);
+          declEntity->is_internal = !(parentParser || parser->m_openInternalEntities);
           if (parser->m_entityDeclHandler)
             handleDefault = XML_FALSE;
         }
@@ -5060,7 +5059,7 @@ doProlog(XML_Parser parser,
         */
         if (parser->m_prologState.documentEntity &&
             (dtd->standalone
-             ? !openInternalEntities
+             ? !parser->m_openInternalEntities
              : !dtd->hasParamEntityRefs)) {
           if (!entity)
             return XML_ERROR_UNDEFINED_ENTITY;
@@ -5396,8 +5395,8 @@ processInternalEntity(XML_Parser parser, ENTITY *entity,
   }
   entity->open = XML_TRUE;
   entity->processed = 0;
-  openEntity->next = openInternalEntities;
-  openInternalEntities = openEntity;
+  openEntity->next = parser->m_openInternalEntities;
+  parser->m_openInternalEntities = openEntity;
   openEntity->entity = entity;
   openEntity->startTagLevel = tagLevel;
   openEntity->betweenDecl = betweenDecl;
@@ -5426,7 +5425,7 @@ processInternalEntity(XML_Parser parser, ENTITY *entity,
     }
     else {
       entity->open = XML_FALSE;
-      openInternalEntities = openEntity->next;
+      parser->m_openInternalEntities = openEntity->next;
       /* put openEntity back in list of free instances */
       openEntity->next = freeInternalEntities;
       freeInternalEntities = openEntity;
@@ -5445,7 +5444,7 @@ internalEntityProcessor(XML_Parser parser,
   const char *textStart, *textEnd;
   const char *next;
   enum XML_Error result;
-  OPEN_INTERNAL_ENTITY *openEntity = openInternalEntities;
+  OPEN_INTERNAL_ENTITY *openEntity = parser->m_openInternalEntities;
   if (!openEntity)
     return XML_ERROR_UNEXPECTED_STATE;
 
@@ -5474,7 +5473,7 @@ internalEntityProcessor(XML_Parser parser,
   }
   else {
     entity->open = XML_FALSE;
-    openInternalEntities = openEntity->next;
+    parser->m_openInternalEntities = openEntity->next;
     /* put openEntity back in list of free instances */
     openEntity->next = freeInternalEntities;
     freeInternalEntities = openEntity;
@@ -5616,7 +5615,7 @@ appendAttributeValue(XML_Parser parser, const ENCODING *enc, XML_Bool isCdata,
               parser->m_prologState.documentEntity &&
 #endif /* XML_DTD */
               (dtd->standalone
-               ? !openInternalEntities
+               ? !parser->m_openInternalEntities
                : !dtd->hasParamEntityRefs);
         else /* if (pool == &tempPool): we are called from content */
           checkEntityDecl = !dtd->hasParamEntityRefs || dtd->standalone;
@@ -5987,8 +5986,8 @@ reportDefault(XML_Parser parser, const ENCODING *enc,
        *
        * LCOV_EXCL_START
        */
-      eventPP = &(openInternalEntities->internalEventPtr);
-      eventEndPP = &(openInternalEntities->internalEventEndPtr);
+      eventPP = &(parser->m_openInternalEntities->internalEventPtr);
+      eventEndPP = &(parser->m_openInternalEntities->internalEventEndPtr);
       /* LCOV_EXCL_STOP */
     }
     do {
