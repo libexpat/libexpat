@@ -668,7 +668,6 @@ struct XML_ParserStruct {
 #define defaultExpandInternalEntities \
         (parser->m_defaultExpandInternalEntities)
 #define buffer (parser->m_buffer)
-#define temp2Pool (parser->m_temp2Pool)
 #define groupConnector (parser->m_groupConnector)
 #define groupSize (parser->m_groupSize)
 #define namespaceSeparator (parser->m_namespaceSeparator)
@@ -1036,7 +1035,7 @@ parserCreate(const XML_Char *encodingName,
   parser->m_protocolEncodingName = NULL;
 
   poolInit(&parser->m_tempPool, &(parser->m_mem));
-  poolInit(&temp2Pool, &(parser->m_mem));
+  poolInit(&parser->m_temp2Pool, &(parser->m_mem));
   parserInit(parser, encodingName);
 
   if (encodingName && !parser->m_protocolEncodingName) {
@@ -1175,7 +1174,7 @@ XML_ParserReset(XML_Parser parser, const XML_Char *encodingName)
   if (parser->m_unknownEncodingRelease)
     parser->m_unknownEncodingRelease(parser->m_unknownEncodingData);
   poolClear(&parser->m_tempPool);
-  poolClear(&temp2Pool);
+  poolClear(&parser->m_temp2Pool);
   FREE((void *)parser->m_protocolEncodingName);
   parser->m_protocolEncodingName = NULL;
   parserInit(parser, encodingName);
@@ -1437,7 +1436,7 @@ XML_ParserFree(XML_Parser parser)
   destroyBindings(parser->m_freeBindingList, parser);
   destroyBindings(parser->m_inheritedBindings, parser);
   poolDestroy(&parser->m_tempPool);
-  poolDestroy(&temp2Pool);
+  poolDestroy(&parser->m_temp2Pool);
   FREE((void *)parser->m_protocolEncodingName);
 #ifdef XML_DTD
   /* external parameter entity parsers share the DTD structure
@@ -3950,17 +3949,17 @@ processXmlDecl(XML_Parser parser, int isGeneralTextEntity,
   }
   if (parser->m_xmlDeclHandler) {
     if (encodingName != NULL) {
-      storedEncName = poolStoreString(&temp2Pool,
+      storedEncName = poolStoreString(&parser->m_temp2Pool,
                                       encoding,
                                       encodingName,
                                       encodingName
                                       + XmlNameLength(encoding, encodingName));
       if (!storedEncName)
               return XML_ERROR_NO_MEMORY;
-      poolFinish(&temp2Pool);
+      poolFinish(&parser->m_temp2Pool);
     }
     if (version) {
-      storedversion = poolStoreString(&temp2Pool,
+      storedversion = poolStoreString(&parser->m_temp2Pool,
                                       encoding,
                                       version,
                                       versionend - encoding->minBytesPerChar);
@@ -3990,13 +3989,13 @@ processXmlDecl(XML_Parser parser, int isGeneralTextEntity,
       enum XML_Error result;
       if (!storedEncName) {
         storedEncName = poolStoreString(
-          &temp2Pool, encoding, encodingName,
+          &parser->m_temp2Pool, encoding, encodingName,
           encodingName + XmlNameLength(encoding, encodingName));
         if (!storedEncName)
           return XML_ERROR_NO_MEMORY;
       }
       result = handleUnknownEncoding(parser, storedEncName);
-      poolClear(&temp2Pool);
+      poolClear(&parser->m_temp2Pool);
       if (result == XML_ERROR_UNKNOWN_ENCODING)
         parser->m_eventPtr = encodingName;
       return result;
@@ -4004,7 +4003,7 @@ processXmlDecl(XML_Parser parser, int isGeneralTextEntity,
   }
 
   if (storedEncName || storedversion)
-    poolClear(&temp2Pool);
+    poolClear(&parser->m_temp2Pool);
 
   return XML_ERROR_NONE;
 }
@@ -5564,13 +5563,13 @@ appendAttributeValue(XML_Parser parser, const ENCODING *enc, XML_Bool isCdata,
                 return XML_ERROR_NO_MEMORY;
           break;
         }
-        name = poolStoreString(&temp2Pool, enc,
+        name = poolStoreString(&parser->m_temp2Pool, enc,
                                ptr + enc->minBytesPerChar,
                                next - enc->minBytesPerChar);
         if (!name)
           return XML_ERROR_NO_MEMORY;
         entity = (ENTITY *)lookup(parser, &dtd->generalEntities, name, 0);
-        poolDiscard(&temp2Pool);
+        poolDiscard(&parser->m_temp2Pool);
         /* First, determine if a check for an existing declaration is needed;
            if yes, check that the entity exists, and that it is internal.
         */
