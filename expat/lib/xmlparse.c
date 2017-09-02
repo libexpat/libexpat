@@ -668,7 +668,6 @@ struct XML_ParserStruct {
 #define defaultExpandInternalEntities \
         (parser->m_defaultExpandInternalEntities)
 #define buffer (parser->m_buffer)
-#define attsSize (parser->m_attsSize)
 #define nSpecifiedAtts (parser->m_nSpecifiedAtts)
 #define idAttIndex (parser->m_idAttIndex)
 #define nsAtts (parser->m_nsAtts)
@@ -983,14 +982,14 @@ parserCreate(const XML_Char *encodingName,
   buffer = NULL;
   parser->m_bufferLim = NULL;
 
-  attsSize = INIT_ATTS_SIZE;
-  parser->m_atts = (ATTRIBUTE *)MALLOC(attsSize * sizeof(ATTRIBUTE));
+  parser->m_attsSize = INIT_ATTS_SIZE;
+  parser->m_atts = (ATTRIBUTE *)MALLOC(parser->m_attsSize * sizeof(ATTRIBUTE));
   if (parser->m_atts == NULL) {
     FREE(parser);
     return NULL;
   }
 #ifdef XML_ATTR_INFO
-  attInfo = (XML_AttrInfo*)MALLOC(attsSize * sizeof(XML_AttrInfo));
+  attInfo = (XML_AttrInfo*)MALLOC(parser->m_attsSize * sizeof(XML_AttrInfo));
   if (attInfo == NULL) {
     FREE(parser->m_atts);
     FREE(parser);
@@ -3170,24 +3169,24 @@ storeAtts(XML_Parser parser, const ENCODING *enc,
   nDefaultAtts = elementType->nDefaultAtts;
 
   /* get the attributes from the tokenizer */
-  n = XmlGetAttributes(enc, attStr, attsSize, parser->m_atts);
-  if (n + nDefaultAtts > attsSize) {
-    int oldAttsSize = attsSize;
+  n = XmlGetAttributes(enc, attStr, parser->m_attsSize, parser->m_atts);
+  if (n + nDefaultAtts > parser->m_attsSize) {
+    int oldAttsSize = parser->m_attsSize;
     ATTRIBUTE *temp;
 #ifdef XML_ATTR_INFO
     XML_AttrInfo *temp2;
 #endif
-    attsSize = n + nDefaultAtts + INIT_ATTS_SIZE;
-    temp = (ATTRIBUTE *)REALLOC((void *)parser->m_atts, attsSize * sizeof(ATTRIBUTE));
+    parser->m_attsSize = n + nDefaultAtts + INIT_ATTS_SIZE;
+    temp = (ATTRIBUTE *)REALLOC((void *)parser->m_atts, parser->m_attsSize * sizeof(ATTRIBUTE));
     if (temp == NULL) {
-      attsSize = oldAttsSize;
+      parser->m_attsSize = oldAttsSize;
       return XML_ERROR_NO_MEMORY;
     }
     parser->m_atts = temp;
 #ifdef XML_ATTR_INFO
-    temp2 = (XML_AttrInfo *)REALLOC((void *)attInfo, attsSize * sizeof(XML_AttrInfo));
+    temp2 = (XML_AttrInfo *)REALLOC((void *)attInfo, parser->m_attsSize * sizeof(XML_AttrInfo));
     if (temp2 == NULL) {
-      attsSize = oldAttsSize;
+      parser->m_attsSize = oldAttsSize;
       return XML_ERROR_NO_MEMORY;
     }
     attInfo = temp2;
