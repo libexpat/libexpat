@@ -665,7 +665,6 @@ struct XML_ParserStruct {
 #define encoding (parser->m_encoding)
 #define unknownEncodingHandlerData \
   (parser->m_unknownEncodingHandlerData)
-#define eventEndPtr (parser->m_eventEndPtr)
 #define positionPtr (parser->m_positionPtr)
 #define position (parser->m_position)
 #define openInternalEntities (parser->m_openInternalEntities)
@@ -1147,7 +1146,7 @@ parserInit(XML_Parser parser, const XML_Char *encodingName)
   memset(&position, 0, sizeof(POSITION));
   parser->m_errorCode = XML_ERROR_NONE;
   parser->m_eventPtr = NULL;
-  eventEndPtr = NULL;
+  parser->m_eventEndPtr = NULL;
   positionPtr = NULL;
   openInternalEntities = NULL;
   defaultExpandInternalEntities = XML_TRUE;
@@ -1929,7 +1928,7 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal)
         return XML_STATUS_OK;
       }
     }
-    eventEndPtr = parser->m_eventPtr;
+    parser->m_eventEndPtr = parser->m_eventPtr;
     parser->m_processor = errorProcessor;
     return XML_STATUS_ERROR;
   }
@@ -1941,7 +1940,7 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal)
     /* Detect overflow (a+b > MAX <==> b > MAX-a) */
     if (len > ((XML_Size)-1) / 2 - parseEndByteIndex) {
        parser->m_errorCode = XML_ERROR_NO_MEMORY;
-       parser->m_eventPtr = eventEndPtr = NULL;
+       parser->m_eventPtr = parser->m_eventEndPtr = NULL;
        parser->m_processor = errorProcessor;
        return XML_STATUS_ERROR;
     }
@@ -1952,7 +1951,7 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal)
     parser->m_errorCode = parser->m_processor(parser, s, parseEndPtr = s + len, &end);
 
     if (parser->m_errorCode != XML_ERROR_NONE) {
-      eventEndPtr = parser->m_eventPtr;
+      parser->m_eventEndPtr = parser->m_eventPtr;
       parser->m_processor = errorProcessor;
       return XML_STATUS_ERROR;
     }
@@ -1985,7 +1984,7 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal)
         }
         if (temp == NULL) {
           parser->m_errorCode = XML_ERROR_NO_MEMORY;
-          parser->m_eventPtr = eventEndPtr = NULL;
+          parser->m_eventPtr = parser->m_eventEndPtr = NULL;
           parser->m_processor = errorProcessor;
           return XML_STATUS_ERROR;
         }
@@ -1999,7 +1998,7 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal)
     positionPtr = bufferPtr;
     parseEndPtr = bufferEnd;
     parser->m_eventPtr = bufferPtr;
-    eventEndPtr = bufferPtr;
+    parser->m_eventEndPtr = bufferPtr;
     return result;
   }
 #endif  /* not defined XML_CONTEXT_BYTES */
@@ -2048,7 +2047,7 @@ XML_ParseBuffer(XML_Parser parser, int len, int isFinal)
   parser->m_errorCode = parser->m_processor(parser, start, parseEndPtr, &bufferPtr);
 
   if (parser->m_errorCode != XML_ERROR_NONE) {
-    eventEndPtr = parser->m_eventPtr;
+    parser->m_eventEndPtr = parser->m_eventPtr;
     parser->m_processor = errorProcessor;
     return XML_STATUS_ERROR;
   }
@@ -2164,7 +2163,7 @@ XML_GetBuffer(XML_Parser parser, int len)
       bufferPtr = buffer = newBuf;
 #endif  /* not defined XML_CONTEXT_BYTES */
     }
-    parser->m_eventPtr = eventEndPtr = NULL;
+    parser->m_eventPtr = parser->m_eventEndPtr = NULL;
     positionPtr = NULL;
   }
   return bufferEnd;
@@ -2218,7 +2217,7 @@ XML_ResumeParser(XML_Parser parser)
   parser->m_errorCode = parser->m_processor(parser, bufferPtr, parseEndPtr, &bufferPtr);
 
   if (parser->m_errorCode != XML_ERROR_NONE) {
-    eventEndPtr = parser->m_eventPtr;
+    parser->m_eventEndPtr = parser->m_eventPtr;
     parser->m_processor = errorProcessor;
     return XML_STATUS_ERROR;
   }
@@ -2274,8 +2273,8 @@ XML_GetCurrentByteCount(XML_Parser parser)
 {
   if (parser == NULL)
     return 0;
-  if (eventEndPtr && parser->m_eventPtr)
-    return (int)(eventEndPtr - parser->m_eventPtr);
+  if (parser->m_eventEndPtr && parser->m_eventPtr)
+    return (int)(parser->m_eventEndPtr - parser->m_eventPtr);
   return 0;
 }
 
@@ -2366,7 +2365,7 @@ XML_DefaultCurrent(XML_Parser parser)
                     openInternalEntities->internalEventPtr,
                     openInternalEntities->internalEventEndPtr);
     else
-      reportDefault(parser, encoding, parser->m_eventPtr, eventEndPtr);
+      reportDefault(parser, encoding, parser->m_eventPtr, parser->m_eventEndPtr);
   }
 }
 
@@ -2620,7 +2619,7 @@ externalEntityInitProcessor3(XML_Parser parser,
   const char *next = start; /* XmlContentTok doesn't always set the last arg */
   parser->m_eventPtr = start;
   tok = XmlContentTok(encoding, start, end, &next);
-  eventEndPtr = next;
+  parser->m_eventEndPtr = next;
 
   switch (tok) {
   case XML_TOK_XML_DECL:
@@ -2689,7 +2688,7 @@ doContent(XML_Parser parser,
   const char **eventEndPP;
   if (enc == encoding) {
     eventPP = &parser->m_eventPtr;
-    eventEndPP = &eventEndPtr;
+    eventEndPP = &parser->m_eventEndPtr;
   }
   else {
     eventPP = &(openInternalEntities->internalEventPtr);
@@ -3711,7 +3710,7 @@ doCdataSection(XML_Parser parser,
   if (enc == encoding) {
     eventPP = &parser->m_eventPtr;
     *eventPP = s;
-    eventEndPP = &eventEndPtr;
+    eventEndPP = &parser->m_eventEndPtr;
   }
   else {
     eventPP = &(openInternalEntities->internalEventPtr);
@@ -3857,7 +3856,7 @@ doIgnoreSection(XML_Parser parser,
   if (enc == encoding) {
     eventPP = &parser->m_eventPtr;
     *eventPP = s;
-    eventEndPP = &eventEndPtr;
+    eventEndPP = &parser->m_eventEndPtr;
   }
   else {
     /* It's not entirely clear, but it seems the following two lines
@@ -4139,7 +4138,7 @@ entityValueInitProcessor(XML_Parser parser,
 
   for (;;) {
     tok = XmlPrologTok(encoding, start, end, &next);
-    eventEndPtr = next;
+    parser->m_eventEndPtr = next;
     if (tok <= 0) {
       if (!ps_finalBuffer && tok != XML_TOK_INVALID) {
         *nextPtr = s;
@@ -4333,7 +4332,7 @@ doProlog(XML_Parser parser,
 
   if (enc == encoding) {
     eventPP = &parser->m_eventPtr;
-    eventEndPP = &eventEndPtr;
+    eventEndPP = &parser->m_eventEndPtr;
   }
   else {
     eventPP = &(openInternalEntities->internalEventPtr);
@@ -5323,7 +5322,7 @@ epilogProcessor(XML_Parser parser,
   for (;;) {
     const char *next = NULL;
     int tok = XmlPrologTok(encoding, s, end, &next);
-    eventEndPtr = next;
+    parser->m_eventEndPtr = next;
     switch (tok) {
     /* report partial linebreak - it might be the last token */
     case -XML_TOK_PROLOG_S:
@@ -5971,7 +5970,7 @@ reportDefault(XML_Parser parser, const ENCODING *enc,
     const char **eventEndPP;
     if (enc == encoding) {
       eventPP = &parser->m_eventPtr;
-      eventEndPP = &eventEndPtr;
+      eventEndPP = &parser->m_eventEndPtr;
     }
     else {
       /* To get here, two things must be true; the parser must be
