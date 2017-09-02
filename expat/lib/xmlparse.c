@@ -667,7 +667,6 @@ struct XML_ParserStruct {
   (parser->m_unknownEncodingHandlerData)
 #define defaultExpandInternalEntities \
         (parser->m_defaultExpandInternalEntities)
-#define tagLevel (parser->m_tagLevel)
 #define buffer (parser->m_buffer)
 #define bufferPtr (parser->m_bufferPtr)
 #define bufferEnd (parser->m_bufferEnd)
@@ -1146,7 +1145,7 @@ parserInit(XML_Parser parser, const XML_Char *encodingName)
   parser->m_positionPtr = NULL;
   parser->m_openInternalEntities = NULL;
   defaultExpandInternalEntities = XML_TRUE;
-  tagLevel = 0;
+  parser->m_tagLevel = 0;
   tagStack = NULL;
   inheritedBindings = NULL;
   nSpecifiedAtts = 0;
@@ -2649,7 +2648,7 @@ externalEntityInitProcessor3(XML_Parser parser,
     return XML_ERROR_PARTIAL_CHAR;
   }
   parser->m_processor = externalEntityContentProcessor;
-  tagLevel = 1;
+  parser->m_tagLevel = 1;
   return externalEntityContentProcessor(parser, start, end, endPtr);
 }
 
@@ -2714,7 +2713,7 @@ doContent(XML_Parser parser,
       */
       if (startTagLevel == 0)
         return XML_ERROR_NO_ELEMENTS;
-      if (tagLevel != startTagLevel)
+      if (parser->m_tagLevel != startTagLevel)
         return XML_ERROR_ASYNC_ENTITY;
       *nextPtr = end;
       return XML_ERROR_NONE;
@@ -2724,7 +2723,7 @@ doContent(XML_Parser parser,
         return XML_ERROR_NONE;
       }
       if (startTagLevel > 0) {
-        if (tagLevel != startTagLevel)
+        if (parser->m_tagLevel != startTagLevel)
           return XML_ERROR_ASYNC_ENTITY;
         *nextPtr = s;
         return XML_ERROR_NONE;
@@ -2848,7 +2847,7 @@ doContent(XML_Parser parser,
         tag->name.prefix = NULL;
         tag->rawName = s + enc->minBytesPerChar;
         tag->rawNameLength = XmlNameLength(enc, tag->rawName);
-        ++tagLevel;
+        ++parser->m_tagLevel;
         {
           const char *rawNameEnd = tag->rawName + tag->rawNameLength;
           const char *fromPtr = tag->rawName;
@@ -2923,13 +2922,13 @@ doContent(XML_Parser parser,
         poolClear(&tempPool);
         freeBindings(parser, bindings);
       }
-      if ((tagLevel == 0) &&
+      if ((parser->m_tagLevel == 0) &&
           !((ps_parsing == XML_FINISHED) || (ps_parsing == XML_SUSPENDED))) {
         return epilogProcessor(parser, next, end, nextPtr);
       }
       break;
     case XML_TOK_END_TAG:
-      if (tagLevel == startTagLevel)
+      if (parser->m_tagLevel == startTagLevel)
         return XML_ERROR_ASYNC_ENTITY;
       else {
         int len;
@@ -2945,7 +2944,7 @@ doContent(XML_Parser parser,
           *eventPP = rawName;
           return XML_ERROR_TAG_MISMATCH;
         }
-        --tagLevel;
+        --parser->m_tagLevel;
         if (parser->m_endElementHandler) {
           const XML_Char *localPart;
           const XML_Char *prefix;
@@ -2979,7 +2978,7 @@ doContent(XML_Parser parser,
           freeBindingList = b;
           b->prefix->binding = b->prevPrefixBinding;
         }
-        if (tagLevel == 0)
+        if (parser->m_tagLevel == 0)
           return epilogProcessor(parser, next, end, nextPtr);
       }
       break;
@@ -3064,7 +3063,7 @@ doContent(XML_Parser parser,
         *eventPP = end;
         return XML_ERROR_NO_ELEMENTS;
       }
-      if (tagLevel != startTagLevel) {
+      if (parser->m_tagLevel != startTagLevel) {
         *eventPP = end;
         return XML_ERROR_ASYNC_ENTITY;
       }
@@ -5397,7 +5396,7 @@ processInternalEntity(XML_Parser parser, ENTITY *entity,
   openEntity->next = parser->m_openInternalEntities;
   parser->m_openInternalEntities = openEntity;
   openEntity->entity = entity;
-  openEntity->startTagLevel = tagLevel;
+  openEntity->startTagLevel = parser->m_tagLevel;
   openEntity->betweenDecl = betweenDecl;
   openEntity->internalEventPtr = NULL;
   openEntity->internalEventEndPtr = NULL;
@@ -5414,7 +5413,7 @@ processInternalEntity(XML_Parser parser, ENTITY *entity,
   }
   else
 #endif /* XML_DTD */
-    result = doContent(parser, tagLevel, parser->m_internalEncoding, textStart,
+    result = doContent(parser, parser->m_tagLevel, parser->m_internalEncoding, textStart,
                        textEnd, &next, XML_FALSE);
 
   if (result == XML_ERROR_NONE) {
