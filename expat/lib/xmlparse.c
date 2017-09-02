@@ -668,7 +668,6 @@ struct XML_ParserStruct {
 #define defaultExpandInternalEntities \
         (parser->m_defaultExpandInternalEntities)
 #define buffer (parser->m_buffer)
-#define declAttributeIsCdata (parser->m_declAttributeIsCdata)
 #define declAttributeIsId (parser->m_declAttributeIsId)
 #define freeTagList (parser->m_freeTagList)
 #define freeBindingList (parser->m_freeBindingList)
@@ -1118,7 +1117,7 @@ parserInit(XML_Parser parser, const XML_Char *encodingName)
   parser->m_declAttributeType = NULL;
   parser->m_declNotationName = NULL;
   parser->m_declNotationPublicId = NULL;
-  declAttributeIsCdata = XML_FALSE;
+  parser->m_declAttributeIsCdata = XML_FALSE;
   declAttributeIsId = XML_FALSE;
   memset(&parser->m_position, 0, sizeof(POSITION));
   parser->m_errorCode = XML_ERROR_NONE;
@@ -4559,12 +4558,12 @@ doProlog(XML_Parser parser,
       parser->m_declAttributeId = getAttributeId(parser, enc, s, next);
       if (!parser->m_declAttributeId)
         return XML_ERROR_NO_MEMORY;
-      declAttributeIsCdata = XML_FALSE;
+      parser->m_declAttributeIsCdata = XML_FALSE;
       parser->m_declAttributeType = NULL;
       declAttributeIsId = XML_FALSE;
       goto checkAttListDeclHandler;
     case XML_ROLE_ATTRIBUTE_TYPE_CDATA:
-      declAttributeIsCdata = XML_TRUE;
+      parser->m_declAttributeIsCdata = XML_TRUE;
       parser->m_declAttributeType = atypeCDATA;
       goto checkAttListDeclHandler;
     case XML_ROLE_ATTRIBUTE_TYPE_ID:
@@ -4616,7 +4615,7 @@ doProlog(XML_Parser parser,
     case XML_ROLE_REQUIRED_ATTRIBUTE_VALUE:
       if (dtd->keepProcessing) {
         if (!defineAttribute(parser->m_declElementType, parser->m_declAttributeId,
-                             declAttributeIsCdata, declAttributeIsId,
+                             parser->m_declAttributeIsCdata, declAttributeIsId,
                              0, parser))
           return XML_ERROR_NO_MEMORY;
         if (parser->m_attlistDeclHandler && parser->m_declAttributeType) {
@@ -4644,7 +4643,7 @@ doProlog(XML_Parser parser,
       if (dtd->keepProcessing) {
         const XML_Char *attVal;
         enum XML_Error result =
-          storeAttributeValue(parser, enc, declAttributeIsCdata,
+          storeAttributeValue(parser, enc, parser->m_declAttributeIsCdata,
                               s + enc->minBytesPerChar,
                               next - enc->minBytesPerChar,
                               &dtd->pool);
@@ -4654,7 +4653,7 @@ doProlog(XML_Parser parser,
         poolFinish(&dtd->pool);
         /* ID attributes aren't allowed to have a default */
         if (!defineAttribute(parser->m_declElementType, parser->m_declAttributeId,
-                             declAttributeIsCdata, XML_FALSE, attVal, parser))
+                             parser->m_declAttributeIsCdata, XML_FALSE, attVal, parser))
           return XML_ERROR_NO_MEMORY;
         if (parser->m_attlistDeclHandler && parser->m_declAttributeType) {
           if (*parser->m_declAttributeType == XML_T(ASCII_LPAREN)
