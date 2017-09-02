@@ -668,7 +668,6 @@ struct XML_ParserStruct {
 #define defaultExpandInternalEntities \
         (parser->m_defaultExpandInternalEntities)
 #define buffer (parser->m_buffer)
-#define declAttributeType (parser->m_declAttributeType)
 #define declNotationName (parser->m_declNotationName)
 #define declNotationPublicId (parser->m_declNotationPublicId)
 #define declElementType (parser->m_declElementType)
@@ -1120,7 +1119,7 @@ parserInit(XML_Parser parser, const XML_Char *encodingName)
   parser->m_doctypeName = NULL;
   parser->m_doctypeSysid = NULL;
   parser->m_doctypePubid = NULL;
-  declAttributeType = NULL;
+  parser->m_declAttributeType = NULL;
   declNotationName = NULL;
   declNotationPublicId = NULL;
   declAttributeIsCdata = XML_FALSE;
@@ -4565,34 +4564,34 @@ doProlog(XML_Parser parser,
       if (!declAttributeId)
         return XML_ERROR_NO_MEMORY;
       declAttributeIsCdata = XML_FALSE;
-      declAttributeType = NULL;
+      parser->m_declAttributeType = NULL;
       declAttributeIsId = XML_FALSE;
       goto checkAttListDeclHandler;
     case XML_ROLE_ATTRIBUTE_TYPE_CDATA:
       declAttributeIsCdata = XML_TRUE;
-      declAttributeType = atypeCDATA;
+      parser->m_declAttributeType = atypeCDATA;
       goto checkAttListDeclHandler;
     case XML_ROLE_ATTRIBUTE_TYPE_ID:
       declAttributeIsId = XML_TRUE;
-      declAttributeType = atypeID;
+      parser->m_declAttributeType = atypeID;
       goto checkAttListDeclHandler;
     case XML_ROLE_ATTRIBUTE_TYPE_IDREF:
-      declAttributeType = atypeIDREF;
+      parser->m_declAttributeType = atypeIDREF;
       goto checkAttListDeclHandler;
     case XML_ROLE_ATTRIBUTE_TYPE_IDREFS:
-      declAttributeType = atypeIDREFS;
+      parser->m_declAttributeType = atypeIDREFS;
       goto checkAttListDeclHandler;
     case XML_ROLE_ATTRIBUTE_TYPE_ENTITY:
-      declAttributeType = atypeENTITY;
+      parser->m_declAttributeType = atypeENTITY;
       goto checkAttListDeclHandler;
     case XML_ROLE_ATTRIBUTE_TYPE_ENTITIES:
-      declAttributeType = atypeENTITIES;
+      parser->m_declAttributeType = atypeENTITIES;
       goto checkAttListDeclHandler;
     case XML_ROLE_ATTRIBUTE_TYPE_NMTOKEN:
-      declAttributeType = atypeNMTOKEN;
+      parser->m_declAttributeType = atypeNMTOKEN;
       goto checkAttListDeclHandler;
     case XML_ROLE_ATTRIBUTE_TYPE_NMTOKENS:
-      declAttributeType = atypeNMTOKENS;
+      parser->m_declAttributeType = atypeNMTOKENS;
     checkAttListDeclHandler:
       if (dtd->keepProcessing && parser->m_attlistDeclHandler)
         handleDefault = XML_FALSE;
@@ -4601,7 +4600,7 @@ doProlog(XML_Parser parser,
     case XML_ROLE_ATTRIBUTE_NOTATION_VALUE:
       if (dtd->keepProcessing && parser->m_attlistDeclHandler) {
         const XML_Char *prefix;
-        if (declAttributeType) {
+        if (parser->m_declAttributeType) {
           prefix = enumValueSep;
         }
         else {
@@ -4613,7 +4612,7 @@ doProlog(XML_Parser parser,
           return XML_ERROR_NO_MEMORY;
         if (!poolAppend(&tempPool, enc, s, next))
           return XML_ERROR_NO_MEMORY;
-        declAttributeType = tempPool.start;
+        parser->m_declAttributeType = tempPool.start;
         handleDefault = XML_FALSE;
       }
       break;
@@ -4624,20 +4623,20 @@ doProlog(XML_Parser parser,
                              declAttributeIsCdata, declAttributeIsId,
                              0, parser))
           return XML_ERROR_NO_MEMORY;
-        if (parser->m_attlistDeclHandler && declAttributeType) {
-          if (*declAttributeType == XML_T(ASCII_LPAREN)
-              || (*declAttributeType == XML_T(ASCII_N)
-                  && declAttributeType[1] == XML_T(ASCII_O))) {
+        if (parser->m_attlistDeclHandler && parser->m_declAttributeType) {
+          if (*parser->m_declAttributeType == XML_T(ASCII_LPAREN)
+              || (*parser->m_declAttributeType == XML_T(ASCII_N)
+                  && parser->m_declAttributeType[1] == XML_T(ASCII_O))) {
             /* Enumerated or Notation type */
             if (!poolAppendChar(&tempPool, XML_T(ASCII_RPAREN))
                 || !poolAppendChar(&tempPool, XML_T('\0')))
               return XML_ERROR_NO_MEMORY;
-            declAttributeType = tempPool.start;
+            parser->m_declAttributeType = tempPool.start;
             poolFinish(&tempPool);
           }
           *eventEndPP = s;
           parser->m_attlistDeclHandler(parser->m_handlerArg, declElementType->name,
-                             declAttributeId->name, declAttributeType,
+                             declAttributeId->name, parser->m_declAttributeType,
                              0, role == XML_ROLE_REQUIRED_ATTRIBUTE_VALUE);
           poolClear(&tempPool);
           handleDefault = XML_FALSE;
@@ -4661,20 +4660,20 @@ doProlog(XML_Parser parser,
         if (!defineAttribute(declElementType, declAttributeId,
                              declAttributeIsCdata, XML_FALSE, attVal, parser))
           return XML_ERROR_NO_MEMORY;
-        if (parser->m_attlistDeclHandler && declAttributeType) {
-          if (*declAttributeType == XML_T(ASCII_LPAREN)
-              || (*declAttributeType == XML_T(ASCII_N)
-                  && declAttributeType[1] == XML_T(ASCII_O))) {
+        if (parser->m_attlistDeclHandler && parser->m_declAttributeType) {
+          if (*parser->m_declAttributeType == XML_T(ASCII_LPAREN)
+              || (*parser->m_declAttributeType == XML_T(ASCII_N)
+                  && parser->m_declAttributeType[1] == XML_T(ASCII_O))) {
             /* Enumerated or Notation type */
             if (!poolAppendChar(&tempPool, XML_T(ASCII_RPAREN))
                 || !poolAppendChar(&tempPool, XML_T('\0')))
               return XML_ERROR_NO_MEMORY;
-            declAttributeType = tempPool.start;
+            parser->m_declAttributeType = tempPool.start;
             poolFinish(&tempPool);
           }
           *eventEndPP = s;
           parser->m_attlistDeclHandler(parser->m_handlerArg, declElementType->name,
-                             declAttributeId->name, declAttributeType,
+                             declAttributeId->name, parser->m_declAttributeType,
                              attVal,
                              role == XML_ROLE_FIXED_ATTRIBUTE_VALUE);
           poolClear(&tempPool);
