@@ -668,7 +668,6 @@ struct XML_ParserStruct {
 #define defaultExpandInternalEntities \
         (parser->m_defaultExpandInternalEntities)
 #define buffer (parser->m_buffer)
-#define nSpecifiedAtts (parser->m_nSpecifiedAtts)
 #define idAttIndex (parser->m_idAttIndex)
 #define nsAtts (parser->m_nsAtts)
 #define nsAttsVersion (parser->m_nsAttsVersion)
@@ -1122,7 +1121,7 @@ parserInit(XML_Parser parser, const XML_Char *encodingName)
   parser->m_tagLevel = 0;
   parser->m_tagStack = NULL;
   parser->m_inheritedBindings = NULL;
-  nSpecifiedAtts = 0;
+  parser->m_nSpecifiedAtts = 0;
   parser->m_unknownEncodingMem = NULL;
   parser->m_unknownEncodingRelease = NULL;
   parser->m_unknownEncodingData = NULL;
@@ -1543,7 +1542,7 @@ XML_GetSpecifiedAttributeCount(XML_Parser parser)
 {
   if (parser == NULL)
     return -1;
-  return nSpecifiedAtts;
+  return parser->m_nSpecifiedAtts;
 }
 
 int XMLCALL
@@ -3280,7 +3279,7 @@ storeAtts(XML_Parser parser, const ENCODING *enc,
   }
 
   /* set-up for XML_GetSpecifiedAttributeCount and XML_GetIdAttributeIndex */
-  nSpecifiedAtts = attIndex;
+  parser->m_nSpecifiedAtts = attIndex;
   if (elementType->idAtt && (elementType->idAtt->name)[-1]) {
     for (i = 0; i < attIndex; i += 2)
       if (appAtts[i] == elementType->idAtt->name) {
