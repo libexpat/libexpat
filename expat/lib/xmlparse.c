@@ -662,7 +662,6 @@ struct XML_ParserStruct {
         (parser->m_externalEntityRefHandlerArg)
 #define internalEntityRefHandler \
         (parser->m_internalEntityRefHandler)
-#define entityDeclHandler (parser->m_entityDeclHandler)
 #define xmlDeclHandler (parser->m_xmlDeclHandler)
 #define encoding (parser->m_encoding)
 #define initEncoding (parser->m_initEncoding)
@@ -1141,7 +1140,7 @@ parserInit(XML_Parser parser, const XML_Char *encodingName)
   parser->m_skippedEntityHandler = NULL;
   parser->m_elementDeclHandler = NULL;
   parser->m_attlistDeclHandler = NULL;
-  entityDeclHandler = NULL;
+  parser->m_entityDeclHandler = NULL;
   xmlDeclHandler = NULL;
   bufferPtr = buffer;
   bufferEnd = buffer;
@@ -1333,7 +1332,7 @@ XML_ExternalEntityParserCreate(XML_Parser oldParser,
   oldUnknownEncodingHandler = parser->m_unknownEncodingHandler;
   oldElementDeclHandler = parser->m_elementDeclHandler;
   oldAttlistDeclHandler = parser->m_attlistDeclHandler;
-  oldEntityDeclHandler = entityDeclHandler;
+  oldEntityDeclHandler = parser->m_entityDeclHandler;
   oldXmlDeclHandler = xmlDeclHandler;
   oldDeclElementType = declElementType;
 
@@ -1393,7 +1392,7 @@ XML_ExternalEntityParserCreate(XML_Parser oldParser,
   parser->m_unknownEncodingHandler = oldUnknownEncodingHandler;
   parser->m_elementDeclHandler = oldElementDeclHandler;
   parser->m_attlistDeclHandler = oldAttlistDeclHandler;
-  entityDeclHandler = oldEntityDeclHandler;
+  parser->m_entityDeclHandler = oldEntityDeclHandler;
   xmlDeclHandler = oldXmlDeclHandler;
   declElementType = oldDeclElementType;
   parser->m_userData = oldUserData;
@@ -1837,7 +1836,7 @@ XML_SetEntityDeclHandler(XML_Parser parser,
                          XML_EntityDeclHandler handler)
 {
   if (parser != NULL)
-    entityDeclHandler = handler;
+    parser->m_entityDeclHandler = handler;
 }
 
 void XMLCALL
@@ -4487,7 +4486,7 @@ doProlog(XML_Parser parser,
         /* Don't suppress the default handler if we fell through from
          * the XML_ROLE_DOCTYPE_PUBLIC_ID case.
          */
-        if (entityDeclHandler && role == XML_ROLE_ENTITY_PUBLIC_ID)
+        if (parser->m_entityDeclHandler && role == XML_ROLE_ENTITY_PUBLIC_ID)
           handleDefault = XML_FALSE;
       }
       break;
@@ -4724,9 +4723,9 @@ doProlog(XML_Parser parser,
           declEntity->textPtr = poolStart(&dtd->entityValuePool);
           declEntity->textLen = (int)(poolLength(&dtd->entityValuePool));
           poolFinish(&dtd->entityValuePool);
-          if (entityDeclHandler) {
+          if (parser->m_entityDeclHandler) {
             *eventEndPP = s;
-            entityDeclHandler(parser->m_handlerArg,
+            parser->m_entityDeclHandler(parser->m_handlerArg,
                               declEntity->name,
                               declEntity->is_param,
                               declEntity->textPtr,
@@ -4794,14 +4793,14 @@ doProlog(XML_Parser parser,
         /* Don't suppress the default handler if we fell through from
          * the XML_ROLE_DOCTYPE_SYSTEM_ID case.
          */
-        if (entityDeclHandler && role == XML_ROLE_ENTITY_SYSTEM_ID)
+        if (parser->m_entityDeclHandler && role == XML_ROLE_ENTITY_SYSTEM_ID)
           handleDefault = XML_FALSE;
       }
       break;
     case XML_ROLE_ENTITY_COMPLETE:
-      if (dtd->keepProcessing && declEntity && entityDeclHandler) {
+      if (dtd->keepProcessing && declEntity && parser->m_entityDeclHandler) {
         *eventEndPP = s;
-        entityDeclHandler(parser->m_handlerArg,
+        parser->m_entityDeclHandler(parser->m_handlerArg,
                           declEntity->name,
                           declEntity->is_param,
                           0,0,
@@ -4828,9 +4827,9 @@ doProlog(XML_Parser parser,
                                     declEntity->notation);
           handleDefault = XML_FALSE;
         }
-        else if (entityDeclHandler) {
+        else if (parser->m_entityDeclHandler) {
           *eventEndPP = s;
-          entityDeclHandler(parser->m_handlerArg,
+          parser->m_entityDeclHandler(parser->m_handlerArg,
                             declEntity->name,
                             0,0,0,
                             declEntity->base,
@@ -4867,7 +4866,7 @@ doProlog(XML_Parser parser,
                entity, then the entity declaration is not considered "internal"
             */
             declEntity->is_internal = !(parentParser || openInternalEntities);
-            if (entityDeclHandler)
+            if (parser->m_entityDeclHandler)
               handleDefault = XML_FALSE;
           }
         }
@@ -4899,7 +4898,7 @@ doProlog(XML_Parser parser,
              entity, then the entity declaration is not considered "internal"
           */
           declEntity->is_internal = !(parentParser || openInternalEntities);
-          if (entityDeclHandler)
+          if (parser->m_entityDeclHandler)
             handleDefault = XML_FALSE;
         }
       }
@@ -5292,7 +5291,7 @@ doProlog(XML_Parser parser,
         handleDefault = XML_FALSE;
       break;
     case XML_ROLE_ENTITY_NONE:
-      if (dtd->keepProcessing && entityDeclHandler)
+      if (dtd->keepProcessing && parser->m_entityDeclHandler)
         handleDefault = XML_FALSE;
       break;
     case XML_ROLE_NOTATION_NONE:
