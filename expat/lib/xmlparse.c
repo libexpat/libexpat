@@ -662,7 +662,6 @@ struct XML_ParserStruct {
         (parser->m_externalEntityRefHandlerArg)
 #define internalEntityRefHandler \
         (parser->m_internalEntityRefHandler)
-#define elementDeclHandler (parser->m_elementDeclHandler)
 #define attlistDeclHandler (parser->m_attlistDeclHandler)
 #define entityDeclHandler (parser->m_entityDeclHandler)
 #define xmlDeclHandler (parser->m_xmlDeclHandler)
@@ -1141,7 +1140,7 @@ parserInit(XML_Parser parser, const XML_Char *encodingName)
   externalEntityRefHandler = NULL;
   externalEntityRefHandlerArg = parser;
   parser->m_skippedEntityHandler = NULL;
-  elementDeclHandler = NULL;
+  parser->m_elementDeclHandler = NULL;
   attlistDeclHandler = NULL;
   entityDeclHandler = NULL;
   xmlDeclHandler = NULL;
@@ -1333,7 +1332,7 @@ XML_ExternalEntityParserCreate(XML_Parser oldParser,
   oldExternalEntityRefHandler = externalEntityRefHandler;
   oldSkippedEntityHandler = parser->m_skippedEntityHandler;
   oldUnknownEncodingHandler = parser->m_unknownEncodingHandler;
-  oldElementDeclHandler = elementDeclHandler;
+  oldElementDeclHandler = parser->m_elementDeclHandler;
   oldAttlistDeclHandler = attlistDeclHandler;
   oldEntityDeclHandler = entityDeclHandler;
   oldXmlDeclHandler = xmlDeclHandler;
@@ -1393,7 +1392,7 @@ XML_ExternalEntityParserCreate(XML_Parser oldParser,
   externalEntityRefHandler = oldExternalEntityRefHandler;
   parser->m_skippedEntityHandler = oldSkippedEntityHandler;
   parser->m_unknownEncodingHandler = oldUnknownEncodingHandler;
-  elementDeclHandler = oldElementDeclHandler;
+  parser->m_elementDeclHandler = oldElementDeclHandler;
   attlistDeclHandler = oldAttlistDeclHandler;
   entityDeclHandler = oldEntityDeclHandler;
   xmlDeclHandler = oldXmlDeclHandler;
@@ -1823,7 +1822,7 @@ XML_SetElementDeclHandler(XML_Parser parser,
                           XML_ElementDeclHandler eldecl)
 {
   if (parser != NULL)
-    elementDeclHandler = eldecl;
+    parser->m_elementDeclHandler = eldecl;
 }
 
 void XMLCALL
@@ -5031,7 +5030,7 @@ doProlog(XML_Parser parser,
         dtd->scaffIndex[dtd->scaffLevel] = myindex;
         dtd->scaffLevel++;
         dtd->scaffold[myindex].type = XML_CTYPE_SEQ;
-        if (elementDeclHandler)
+        if (parser->m_elementDeclHandler)
           handleDefault = XML_FALSE;
       }
       break;
@@ -5039,7 +5038,7 @@ doProlog(XML_Parser parser,
       if (groupConnector[prologState.level] == ASCII_PIPE)
         return XML_ERROR_SYNTAX;
       groupConnector[prologState.level] = ASCII_COMMA;
-      if (dtd->in_eldecl && elementDeclHandler)
+      if (dtd->in_eldecl && parser->m_elementDeclHandler)
         handleDefault = XML_FALSE;
       break;
     case XML_ROLE_GROUP_CHOICE:
@@ -5052,7 +5051,7 @@ doProlog(XML_Parser parser,
           ) {
         dtd->scaffold[dtd->scaffIndex[dtd->scaffLevel - 1]].type
             = XML_CTYPE_CHOICE;
-        if (elementDeclHandler)
+        if (parser->m_elementDeclHandler)
           handleDefault = XML_FALSE;
       }
       groupConnector[prologState.level] = ASCII_PIPE;
@@ -5161,7 +5160,7 @@ doProlog(XML_Parser parser,
     /* Element declaration stuff */
 
     case XML_ROLE_ELEMENT_NAME:
-      if (elementDeclHandler) {
+      if (parser->m_elementDeclHandler) {
         declElementType = getElementType(parser, enc, s, next);
         if (!declElementType)
           return XML_ERROR_NO_MEMORY;
@@ -5175,7 +5174,7 @@ doProlog(XML_Parser parser,
     case XML_ROLE_CONTENT_ANY:
     case XML_ROLE_CONTENT_EMPTY:
       if (dtd->in_eldecl) {
-        if (elementDeclHandler) {
+        if (parser->m_elementDeclHandler) {
           XML_Content * content = (XML_Content *) MALLOC(sizeof(XML_Content));
           if (!content)
             return XML_ERROR_NO_MEMORY;
@@ -5187,7 +5186,7 @@ doProlog(XML_Parser parser,
                            XML_CTYPE_ANY :
                            XML_CTYPE_EMPTY);
           *eventEndPP = s;
-          elementDeclHandler(parser->m_handlerArg, declElementType->name, content);
+          parser->m_elementDeclHandler(parser->m_handlerArg, declElementType->name, content);
           handleDefault = XML_FALSE;
         }
         dtd->in_eldecl = XML_FALSE;
@@ -5198,7 +5197,7 @@ doProlog(XML_Parser parser,
       if (dtd->in_eldecl) {
         dtd->scaffold[dtd->scaffIndex[dtd->scaffLevel - 1]].type
             = XML_CTYPE_MIXED;
-        if (elementDeclHandler)
+        if (parser->m_elementDeclHandler)
           handleDefault = XML_FALSE;
       }
       break;
@@ -5235,7 +5234,7 @@ doProlog(XML_Parser parser,
         nameLen = 0;
         for (; name[nameLen++]; );
         dtd->contentStringLen +=  nameLen;
-        if (elementDeclHandler)
+        if (parser->m_elementDeclHandler)
           handleDefault = XML_FALSE;
       }
       break;
@@ -5253,7 +5252,7 @@ doProlog(XML_Parser parser,
       quant = XML_CQUANT_PLUS;
     closeGroup:
       if (dtd->in_eldecl) {
-        if (elementDeclHandler)
+        if (parser->m_elementDeclHandler)
           handleDefault = XML_FALSE;
         dtd->scaffLevel--;
         dtd->scaffold[dtd->scaffIndex[dtd->scaffLevel]].quant = quant;
@@ -5263,7 +5262,7 @@ doProlog(XML_Parser parser,
             if (!model)
               return XML_ERROR_NO_MEMORY;
             *eventEndPP = s;
-            elementDeclHandler(parser->m_handlerArg, declElementType->name, model);
+            parser->m_elementDeclHandler(parser->m_handlerArg, declElementType->name, model);
           }
           dtd->in_eldecl = XML_FALSE;
           dtd->contentStringLen = 0;
@@ -5306,7 +5305,7 @@ doProlog(XML_Parser parser,
         handleDefault = XML_FALSE;
       break;
     case XML_ROLE_ELEMENT_NONE:
-      if (elementDeclHandler)
+      if (parser->m_elementDeclHandler)
         handleDefault = XML_FALSE;
       break;
     } /* end of big switch */
