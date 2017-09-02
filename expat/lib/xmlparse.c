@@ -668,7 +668,6 @@ struct XML_ParserStruct {
 #define defaultExpandInternalEntities \
         (parser->m_defaultExpandInternalEntities)
 #define buffer (parser->m_buffer)
-#define nsAtts (parser->m_nsAtts)
 #define nsAttsVersion (parser->m_nsAttsVersion)
 #define nsAttsPower (parser->m_nsAttsPower)
 #define attInfo (parser->m_attInfo)
@@ -1034,7 +1033,7 @@ parserCreate(const XML_Char *encodingName,
   parser->m_ns = XML_FALSE;
   parser->m_ns_triplets = XML_FALSE;
 
-  nsAtts = NULL;
+  parser->m_nsAtts = NULL;
   nsAttsVersion = 0;
   nsAttsPower = 0;
 
@@ -1460,7 +1459,7 @@ XML_ParserFree(XML_Parser parser)
   FREE(groupConnector);
   FREE(buffer);
   FREE(parser->m_dataBuf);
-  FREE(nsAtts);
+  FREE(parser->m_nsAtts);
   FREE(parser->m_unknownEncodingMem);
   if (parser->m_unknownEncodingRelease)
     parser->m_unknownEncodingRelease(parser->m_unknownEncodingData);
@@ -3332,20 +3331,20 @@ storeAtts(XML_Parser parser, const ENCODING *enc,
       if (nsAttsPower < 3)
         nsAttsPower = 3;
       nsAttsSize = (int)1 << nsAttsPower;
-      temp = (NS_ATT *)REALLOC(nsAtts, nsAttsSize * sizeof(NS_ATT));
+      temp = (NS_ATT *)REALLOC(parser->m_nsAtts, nsAttsSize * sizeof(NS_ATT));
       if (!temp) {
-        /* Restore actual size of memory in nsAtts */
+        /* Restore actual size of memory in m_nsAtts */
         nsAttsPower = oldNsAttsPower;
         return XML_ERROR_NO_MEMORY;
       }
-      nsAtts = temp;
-      version = 0;  /* force re-initialization of nsAtts hash table */
+      parser->m_nsAtts = temp;
+      version = 0;  /* force re-initialization of m_nsAtts hash table */
     }
-    /* using a version flag saves us from initializing nsAtts every time */
+    /* using a version flag saves us from initializing m_nsAtts every time */
     if (!version) {  /* initialize version flags when version wraps around */
       version = INIT_ATTS_VERSION;
       for (j = nsAttsSize; j != 0; )
-        nsAtts[--j].version = version;
+        parser->m_nsAtts[--j].version = version;
     }
     nsAttsVersion = --version;
 
@@ -3411,11 +3410,11 @@ storeAtts(XML_Parser parser, const ENCODING *enc,
           unsigned char step = 0;
           unsigned long mask = nsAttsSize - 1;
           j = uriHash & mask;  /* index into hash table */
-          while (nsAtts[j].version == version) {
+          while (parser->m_nsAtts[j].version == version) {
             /* for speed we compare stored hash values first */
-            if (uriHash == nsAtts[j].hash) {
+            if (uriHash == parser->m_nsAtts[j].hash) {
               const XML_Char *s1 = poolStart(&tempPool);
-              const XML_Char *s2 = nsAtts[j].uriName;
+              const XML_Char *s2 = parser->m_nsAtts[j].uriName;
               /* s1 is null terminated, but not s2 */
               for (; *s1 == *s2 && *s1 != 0; s1++, s2++);
               if (*s1 == 0)
@@ -3442,9 +3441,9 @@ storeAtts(XML_Parser parser, const ENCODING *enc,
         appAtts[i] = s;
 
         /* fill empty slot with new version, uriName and hash value */
-        nsAtts[j].version = version;
-        nsAtts[j].hash = uriHash;
-        nsAtts[j].uriName = s;
+        parser->m_nsAtts[j].version = version;
+        parser->m_nsAtts[j].hash = uriHash;
+        parser->m_nsAtts[j].uriName = s;
 
         if (!--nPrefixes) {
           i += 2;
