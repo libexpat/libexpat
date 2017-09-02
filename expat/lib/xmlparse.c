@@ -665,7 +665,6 @@ struct XML_ParserStruct {
 #define encoding (parser->m_encoding)
 #define unknownEncodingHandlerData \
   (parser->m_unknownEncodingHandlerData)
-#define ns_triplets (parser->m_ns_triplets)
 #define prologState (parser->m_prologState)
 #define processor (parser->m_processor)
 #define errorCode (parser->m_errorCode)
@@ -1071,7 +1070,7 @@ parserCreate(const XML_Char *encodingName,
 
   namespaceSeparator = ASCII_EXCL;
   parser->m_ns = XML_FALSE;
-  ns_triplets = XML_FALSE;
+  parser->m_ns_triplets = XML_FALSE;
 
   nsAtts = NULL;
   nsAttsVersion = 0;
@@ -1336,7 +1335,7 @@ XML_ExternalEntityParserCreate(XML_Parser oldParser,
   oldParamEntityParsing = paramEntityParsing;
   oldInEntityValue = prologState.inEntityValue;
 #endif
-  oldns_triplets = ns_triplets;
+  oldns_triplets = parser->m_ns_triplets;
   /* Note that the new parser shares the same hash secret as the old
      parser, so that dtdCopy and copyEntityTable can lookup values
      from hash tables associated with either parser without us having
@@ -1395,7 +1394,7 @@ XML_ExternalEntityParserCreate(XML_Parser oldParser,
   if (oldExternalEntityRefHandlerArg != oldParser)
     externalEntityRefHandlerArg = oldExternalEntityRefHandlerArg;
   defaultExpandInternalEntities = oldDefaultExpandInternalEntities;
-  ns_triplets = oldns_triplets;
+  parser->m_ns_triplets = oldns_triplets;
   hash_secret_salt = oldhash_secret_salt;
   parentParser = oldParser;
 #ifdef XML_DTD
@@ -1537,7 +1536,7 @@ XML_SetReturnNSTriplet(XML_Parser parser, int do_nst)
   /* block after XML_Parse()/XML_ParseBuffer() has been called */
   if (ps_parsing == XML_PARSING || ps_parsing == XML_SUSPENDED)
     return;
-  ns_triplets = do_nst ? XML_TRUE : XML_FALSE;
+  parser->m_ns_triplets = do_nst ? XML_TRUE : XML_FALSE;
 }
 
 void XMLCALL
@@ -2970,7 +2969,7 @@ doContent(XML_Parser parser,
             /* don't need to check for space - already done in storeAtts() */
             while (*localPart) *uri++ = *localPart++;
             prefix = (XML_Char *)tag->name.prefix;
-            if (ns_triplets && prefix) {
+            if (parser->m_ns_triplets && prefix) {
               *uri++ = namespaceSeparator;
               while (*prefix) *uri++ = *prefix++;
              }
@@ -3466,7 +3465,7 @@ storeAtts(XML_Parser parser, const ENCODING *enc,
           }
         }
 
-        if (ns_triplets) {  /* append namespace separator and prefix */
+        if (parser->m_ns_triplets) {  /* append namespace separator and prefix */
           tempPool.ptr[-1] = namespaceSeparator;
           s = b->prefix->name;
           do {
@@ -3519,7 +3518,7 @@ storeAtts(XML_Parser parser, const ENCODING *enc,
   else
     return XML_ERROR_NONE;
   prefixLen = 0;
-  if (ns_triplets && binding->prefix->name) {
+  if (parser->m_ns_triplets && binding->prefix->name) {
     for (; binding->prefix->name[prefixLen++];)
       ;  /* prefixLen includes null terminator */
   }
