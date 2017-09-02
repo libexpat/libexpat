@@ -668,7 +668,6 @@ struct XML_ParserStruct {
 #define defaultExpandInternalEntities \
         (parser->m_defaultExpandInternalEntities)
 #define buffer (parser->m_buffer)
-#define declAttributeIsId (parser->m_declAttributeIsId)
 #define freeTagList (parser->m_freeTagList)
 #define freeBindingList (parser->m_freeBindingList)
 #define inheritedBindings (parser->m_inheritedBindings)
@@ -1118,7 +1117,7 @@ parserInit(XML_Parser parser, const XML_Char *encodingName)
   parser->m_declNotationName = NULL;
   parser->m_declNotationPublicId = NULL;
   parser->m_declAttributeIsCdata = XML_FALSE;
-  declAttributeIsId = XML_FALSE;
+  parser->m_declAttributeIsId = XML_FALSE;
   memset(&parser->m_position, 0, sizeof(POSITION));
   parser->m_errorCode = XML_ERROR_NONE;
   parser->m_eventPtr = NULL;
@@ -4560,14 +4559,14 @@ doProlog(XML_Parser parser,
         return XML_ERROR_NO_MEMORY;
       parser->m_declAttributeIsCdata = XML_FALSE;
       parser->m_declAttributeType = NULL;
-      declAttributeIsId = XML_FALSE;
+      parser->m_declAttributeIsId = XML_FALSE;
       goto checkAttListDeclHandler;
     case XML_ROLE_ATTRIBUTE_TYPE_CDATA:
       parser->m_declAttributeIsCdata = XML_TRUE;
       parser->m_declAttributeType = atypeCDATA;
       goto checkAttListDeclHandler;
     case XML_ROLE_ATTRIBUTE_TYPE_ID:
-      declAttributeIsId = XML_TRUE;
+      parser->m_declAttributeIsId = XML_TRUE;
       parser->m_declAttributeType = atypeID;
       goto checkAttListDeclHandler;
     case XML_ROLE_ATTRIBUTE_TYPE_IDREF:
@@ -4615,7 +4614,7 @@ doProlog(XML_Parser parser,
     case XML_ROLE_REQUIRED_ATTRIBUTE_VALUE:
       if (dtd->keepProcessing) {
         if (!defineAttribute(parser->m_declElementType, parser->m_declAttributeId,
-                             parser->m_declAttributeIsCdata, declAttributeIsId,
+                             parser->m_declAttributeIsCdata, parser->m_declAttributeIsId,
                              0, parser))
           return XML_ERROR_NO_MEMORY;
         if (parser->m_attlistDeclHandler && parser->m_declAttributeType) {
