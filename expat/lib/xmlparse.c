@@ -668,7 +668,6 @@ struct XML_ParserStruct {
 #define defaultExpandInternalEntities \
         (parser->m_defaultExpandInternalEntities)
 #define buffer (parser->m_buffer)
-#define idAttIndex (parser->m_idAttIndex)
 #define nsAtts (parser->m_nsAtts)
 #define nsAttsVersion (parser->m_nsAttsVersion)
 #define nsAttsPower (parser->m_nsAttsPower)
@@ -1550,7 +1549,7 @@ XML_GetIdAttributeIndex(XML_Parser parser)
 {
   if (parser == NULL)
     return -1;
-  return idAttIndex;
+  return parser->m_idAttIndex;
 }
 
 #ifdef XML_ATTR_INFO
@@ -3283,12 +3282,12 @@ storeAtts(XML_Parser parser, const ENCODING *enc,
   if (elementType->idAtt && (elementType->idAtt->name)[-1]) {
     for (i = 0; i < attIndex; i += 2)
       if (appAtts[i] == elementType->idAtt->name) {
-        idAttIndex = i;
+        parser->m_idAttIndex = i;
         break;
       }
   }
   else
-    idAttIndex = -1;
+    parser->m_idAttIndex = -1;
 
   /* do attribute defaulting */
   for (i = 0; i < nDefaultAtts; i++) {
