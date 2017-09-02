@@ -648,8 +648,6 @@ struct XML_ParserStruct {
 #define REALLOC(p,s) (parser->m_mem.realloc_fcn((p),(s)))
 #define FREE(p) (parser->m_mem.free_fcn((p)))
 
-#define startNamespaceDeclHandler \
-        (parser->m_startNamespaceDeclHandler)
 #define externalEntityRefHandler \
         (parser->m_externalEntityRefHandler)
 #define externalEntityRefHandlerArg \
@@ -1061,7 +1059,7 @@ parserInit(XML_Parser parser, const XML_Char *encodingName)
   parser->m_endDoctypeDeclHandler = NULL;
   parser->m_unparsedEntityDeclHandler = NULL;
   parser->m_notationDeclHandler = NULL;
-  startNamespaceDeclHandler = NULL;
+  parser->m_startNamespaceDeclHandler = NULL;
   parser->m_endNamespaceDeclHandler = NULL;
   parser->m_notStandaloneHandler = NULL;
   externalEntityRefHandler = NULL;
@@ -1253,7 +1251,7 @@ XML_ExternalEntityParserCreate(XML_Parser oldParser,
   oldDefaultHandler = parser->m_defaultHandler;
   oldUnparsedEntityDeclHandler = parser->m_unparsedEntityDeclHandler;
   oldNotationDeclHandler = parser->m_notationDeclHandler;
-  oldStartNamespaceDeclHandler = startNamespaceDeclHandler;
+  oldStartNamespaceDeclHandler = parser->m_startNamespaceDeclHandler;
   oldEndNamespaceDeclHandler = parser->m_endNamespaceDeclHandler;
   oldNotStandaloneHandler = parser->m_notStandaloneHandler;
   oldExternalEntityRefHandler = externalEntityRefHandler;
@@ -1313,7 +1311,7 @@ XML_ExternalEntityParserCreate(XML_Parser oldParser,
   parser->m_defaultHandler = oldDefaultHandler;
   parser->m_unparsedEntityDeclHandler = oldUnparsedEntityDeclHandler;
   parser->m_notationDeclHandler = oldNotationDeclHandler;
-  startNamespaceDeclHandler = oldStartNamespaceDeclHandler;
+  parser->m_startNamespaceDeclHandler = oldStartNamespaceDeclHandler;
   parser->m_endNamespaceDeclHandler = oldEndNamespaceDeclHandler;
   parser->m_notStandaloneHandler = oldNotStandaloneHandler;
   externalEntityRefHandler = oldExternalEntityRefHandler;
@@ -1680,7 +1678,7 @@ XML_SetNamespaceDeclHandler(XML_Parser parser,
 {
   if (parser == NULL)
     return;
-  startNamespaceDeclHandler = start;
+  parser->m_startNamespaceDeclHandler = start;
   parser->m_endNamespaceDeclHandler = end;
 }
 
@@ -1688,7 +1686,7 @@ void XMLCALL
 XML_SetStartNamespaceDeclHandler(XML_Parser parser,
                                  XML_StartNamespaceDeclHandler start) {
   if (parser != NULL)
-    startNamespaceDeclHandler = start;
+    parser->m_startNamespaceDeclHandler = start;
 }
 
 void XMLCALL
@@ -3086,7 +3084,7 @@ freeBindings(XML_Parser parser, BINDING *bindings)
   while (bindings) {
     BINDING *b = bindings;
 
-    /* startNamespaceDeclHandler will have been called for this
+    /* m_startNamespaceDeclHandler will have been called for this
      * binding in addBindings(), so call the end handler now.
      */
     if (parser->m_endNamespaceDeclHandler)
@@ -3604,8 +3602,8 @@ addBinding(XML_Parser parser, PREFIX *prefix, const ATTRIBUTE_ID *attId,
   b->nextTagBinding = *bindingsPtr;
   *bindingsPtr = b;
   /* if attId == NULL then we are not starting a namespace scope */
-  if (attId && startNamespaceDeclHandler)
-    startNamespaceDeclHandler(parser->m_handlerArg, prefix->name,
+  if (attId && parser->m_startNamespaceDeclHandler)
+    parser->m_startNamespaceDeclHandler(parser->m_handlerArg, prefix->name,
                               prefix->binding ? uri : 0);
   return XML_ERROR_NONE;
 }
