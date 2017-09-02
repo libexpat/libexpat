@@ -668,7 +668,6 @@ struct XML_ParserStruct {
 #define defaultExpandInternalEntities \
         (parser->m_defaultExpandInternalEntities)
 #define buffer (parser->m_buffer)
-#define freeTagList (parser->m_freeTagList)
 #define freeBindingList (parser->m_freeBindingList)
 #define inheritedBindings (parser->m_inheritedBindings)
 #define tagStack (parser->m_tagStack)
@@ -1029,7 +1028,7 @@ parserCreate(const XML_Char *encodingName,
   }
 
   freeBindingList = NULL;
-  freeTagList = NULL;
+  parser->m_freeTagList = NULL;
   parser->m_freeInternalEntities = NULL;
 
   groupSize = 0;
@@ -1165,15 +1164,15 @@ XML_ParserReset(XML_Parser parser, const XML_Char *encodingName)
 
   if (parentParser)
     return XML_FALSE;
-  /* move tagStack to freeTagList */
+  /* move tagStack to m_freeTagList */
   tStk = tagStack;
   while (tStk) {
     TAG *tag = tStk;
     tStk = tStk->parent;
-    tag->parent = freeTagList;
+    tag->parent = parser->m_freeTagList;
     moveToFreeBindingList(parser, tag->bindings);
     tag->bindings = NULL;
-    freeTagList = tag;
+    parser->m_freeTagList = tag;
   }
   /* move m_openInternalEntities to m_freeInternalEntities */
   openEntityList = parser->m_openInternalEntities;
@@ -1416,15 +1415,15 @@ XML_ParserFree(XML_Parser parser)
   OPEN_INTERNAL_ENTITY *entityList;
   if (parser == NULL)
     return;
-  /* free tagStack and freeTagList */
+  /* free tagStack and m_freeTagList */
   tagList = tagStack;
   for (;;) {
     TAG *p;
     if (tagList == NULL) {
-      if (freeTagList == NULL)
+      if (parser->m_freeTagList == NULL)
         break;
-      tagList = freeTagList;
-      freeTagList = NULL;
+      tagList = parser->m_freeTagList;
+      parser->m_freeTagList = NULL;
     }
     p = tagList;
     tagList = tagList->parent;
@@ -2805,9 +2804,9 @@ doContent(XML_Parser parser,
         TAG *tag;
         enum XML_Error result;
         XML_Char *toPtr;
-        if (freeTagList) {
-          tag = freeTagList;
-          freeTagList = freeTagList->parent;
+        if (parser->m_freeTagList) {
+          tag = parser->m_freeTagList;
+          parser->m_freeTagList = parser->m_freeTagList->parent;
         }
         else {
           tag = (TAG *)MALLOC(sizeof(TAG));
@@ -2915,8 +2914,8 @@ doContent(XML_Parser parser,
         const char *rawName;
         TAG *tag = tagStack;
         tagStack = tag->parent;
-        tag->parent = freeTagList;
-        freeTagList = tag;
+        tag->parent = parser->m_freeTagList;
+        parser->m_freeTagList = tag;
         rawName = s + enc->minBytesPerChar*2;
         len = XmlNameLength(enc, rawName);
         if (len != tag->rawNameLength
