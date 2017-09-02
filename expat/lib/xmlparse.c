@@ -652,7 +652,6 @@ struct XML_ParserStruct {
         (parser->m_processingInstructionHandler)
 #define startCdataSectionHandler \
         (parser->m_startCdataSectionHandler)
-#define endCdataSectionHandler (parser->m_endCdataSectionHandler)
 #define defaultHandler (parser->m_defaultHandler)
 #define startDoctypeDeclHandler (parser->m_startDoctypeDeclHandler)
 #define endDoctypeDeclHandler (parser->m_endDoctypeDeclHandler)
@@ -1138,7 +1137,7 @@ parserInit(XML_Parser parser, const XML_Char *encodingName)
   processingInstructionHandler = NULL;
   parser->m_commentHandler = NULL;
   startCdataSectionHandler = NULL;
-  endCdataSectionHandler = NULL;
+  parser->m_endCdataSectionHandler = NULL;
   defaultHandler = NULL;
   startDoctypeDeclHandler = NULL;
   endDoctypeDeclHandler = NULL;
@@ -1332,7 +1331,7 @@ XML_ExternalEntityParserCreate(XML_Parser oldParser,
   oldProcessingInstructionHandler = processingInstructionHandler;
   oldCommentHandler = parser->m_commentHandler;
   oldStartCdataSectionHandler = startCdataSectionHandler;
-  oldEndCdataSectionHandler = endCdataSectionHandler;
+  oldEndCdataSectionHandler = parser->m_endCdataSectionHandler;
   oldDefaultHandler = defaultHandler;
   oldUnparsedEntityDeclHandler = unparsedEntityDeclHandler;
   oldNotationDeclHandler = notationDeclHandler;
@@ -1392,7 +1391,7 @@ XML_ExternalEntityParserCreate(XML_Parser oldParser,
   processingInstructionHandler = oldProcessingInstructionHandler;
   parser->m_commentHandler = oldCommentHandler;
   startCdataSectionHandler = oldStartCdataSectionHandler;
-  endCdataSectionHandler = oldEndCdataSectionHandler;
+  parser->m_endCdataSectionHandler = oldEndCdataSectionHandler;
   defaultHandler = oldDefaultHandler;
   unparsedEntityDeclHandler = oldUnparsedEntityDeclHandler;
   notationDeclHandler = oldNotationDeclHandler;
@@ -1678,7 +1677,7 @@ XML_SetCdataSectionHandler(XML_Parser parser,
   if (parser == NULL)
     return;
   startCdataSectionHandler = start;
-  endCdataSectionHandler = end;
+  parser->m_endCdataSectionHandler = end;
 }
 
 void XMLCALL
@@ -1692,7 +1691,7 @@ void XMLCALL
 XML_SetEndCdataSectionHandler(XML_Parser parser,
                               XML_EndCdataSectionHandler end) {
   if (parser != NULL)
-    endCdataSectionHandler = end;
+    parser->m_endCdataSectionHandler = end;
 }
 
 void XMLCALL
@@ -3751,8 +3750,8 @@ doCdataSection(XML_Parser parser,
     *eventEndPP = next;
     switch (tok) {
     case XML_TOK_CDATA_SECT_CLOSE:
-      if (endCdataSectionHandler)
-        endCdataSectionHandler(parser->m_handlerArg);
+      if (parser->m_endCdataSectionHandler)
+        parser->m_endCdataSectionHandler(parser->m_handlerArg);
 #if 0
       /* see comment under XML_TOK_CDATA_SECT_OPEN */
       else if (parser->m_characterDataHandler)
