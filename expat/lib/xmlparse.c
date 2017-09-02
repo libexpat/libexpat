@@ -663,7 +663,6 @@ struct XML_ParserStruct {
 #define internalEntityRefHandler \
         (parser->m_internalEntityRefHandler)
 #define encoding (parser->m_encoding)
-#define unknownEncodingMem (parser->m_unknownEncodingMem)
 #define unknownEncodingData (parser->m_unknownEncodingData)
 #define unknownEncodingHandlerData \
   (parser->m_unknownEncodingHandlerData)
@@ -1165,7 +1164,7 @@ parserInit(XML_Parser parser, const XML_Char *encodingName)
   tagStack = NULL;
   inheritedBindings = NULL;
   nSpecifiedAtts = 0;
-  unknownEncodingMem = NULL;
+  parser->m_unknownEncodingMem = NULL;
   unknownEncodingRelease = NULL;
   unknownEncodingData = NULL;
   parentParser = NULL;
@@ -1220,7 +1219,7 @@ XML_ParserReset(XML_Parser parser, const XML_Char *encodingName)
     freeInternalEntities = openEntity;
   }
   moveToFreeBindingList(parser, inheritedBindings);
-  FREE(unknownEncodingMem);
+  FREE(parser->m_unknownEncodingMem);
   if (unknownEncodingRelease)
     unknownEncodingRelease(unknownEncodingData);
   poolClear(&tempPool);
@@ -1505,7 +1504,7 @@ XML_ParserFree(XML_Parser parser)
   FREE(buffer);
   FREE(dataBuf);
   FREE(nsAtts);
-  FREE(unknownEncodingMem);
+  FREE(parser->m_unknownEncodingMem);
   if (unknownEncodingRelease)
     unknownEncodingRelease(unknownEncodingData);
   FREE(parser);
@@ -4072,15 +4071,15 @@ handleUnknownEncoding(XML_Parser parser, const XML_Char *encodingName)
     if (parser->m_unknownEncodingHandler(unknownEncodingHandlerData, encodingName,
                                &info)) {
       ENCODING *enc;
-      unknownEncodingMem = MALLOC(XmlSizeOfUnknownEncoding());
-      if (!unknownEncodingMem) {
+      parser->m_unknownEncodingMem = MALLOC(XmlSizeOfUnknownEncoding());
+      if (!parser->m_unknownEncodingMem) {
         if (info.release)
           info.release(info.data);
         return XML_ERROR_NO_MEMORY;
       }
       enc = (ns
              ? XmlInitUnknownEncodingNS
-             : XmlInitUnknownEncoding)(unknownEncodingMem,
+             : XmlInitUnknownEncoding)(parser->m_unknownEncodingMem,
                                        info.map,
                                        info.convert,
                                        info.data);
