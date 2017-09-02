@@ -649,8 +649,6 @@ struct XML_ParserStruct {
 #define FREE(p) (parser->m_mem.free_fcn((p)))
 
 #define encoding (parser->m_encoding)
-#define unknownEncodingHandlerData \
-  (parser->m_unknownEncodingHandlerData)
 #define defaultExpandInternalEntities \
         (parser->m_defaultExpandInternalEntities)
 #define buffer (parser->m_buffer)
@@ -996,7 +994,7 @@ parserCreate(const XML_Char *encodingName,
   parser->m_groupConnector = NULL;
 
   parser->m_unknownEncodingHandler = NULL;
-  unknownEncodingHandlerData = NULL;
+  parser->m_unknownEncodingHandlerData = NULL;
 
   parser->m_namespaceSeparator = ASCII_EXCL;
   parser->m_ns = XML_FALSE;
@@ -1733,7 +1731,7 @@ XML_SetUnknownEncodingHandler(XML_Parser parser,
   if (parser == NULL)
     return;
   parser->m_unknownEncodingHandler = handler;
-  unknownEncodingHandlerData = data;
+  parser->m_unknownEncodingHandlerData = data;
 }
 
 void XMLCALL
@@ -3993,7 +3991,7 @@ handleUnknownEncoding(XML_Parser parser, const XML_Char *encodingName)
     info.convert = NULL;
     info.data = NULL;
     info.release = NULL;
-    if (parser->m_unknownEncodingHandler(unknownEncodingHandlerData, encodingName,
+    if (parser->m_unknownEncodingHandler(parser->m_unknownEncodingHandlerData, encodingName,
                                &info)) {
       ENCODING *enc;
       parser->m_unknownEncodingMem = MALLOC(XmlSizeOfUnknownEncoding());
