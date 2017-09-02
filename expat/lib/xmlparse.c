@@ -668,7 +668,6 @@ struct XML_ParserStruct {
 #define defaultExpandInternalEntities \
         (parser->m_defaultExpandInternalEntities)
 #define buffer (parser->m_buffer)
-#define declEntity (parser->m_declEntity)
 #define doctypeName (parser->m_doctypeName)
 #define doctypeSysid (parser->m_doctypeSysid)
 #define doctypePubid (parser->m_doctypePubid)
@@ -1120,7 +1119,7 @@ parserInit(XML_Parser parser, const XML_Char *encodingName)
   parser->m_parseEndPtr = NULL;
   declElementType = NULL;
   declAttributeId = NULL;
-  declEntity = NULL;
+  parser->m_declEntity = NULL;
   doctypeName = NULL;
   doctypeSysid = NULL;
   doctypePubid = NULL;
@@ -4417,11 +4416,11 @@ doProlog(XML_Parser parser,
     case XML_ROLE_DOCTYPE_PUBLIC_ID:
 #ifdef XML_DTD
       useForeignDTD = XML_FALSE;
-      declEntity = (ENTITY *)lookup(parser,
+      parser->m_declEntity = (ENTITY *)lookup(parser,
                                     &dtd->paramEntities,
                                     externalSubsetName,
                                     sizeof(ENTITY));
-      if (!declEntity)
+      if (!parser->m_declEntity)
         return XML_ERROR_NO_MEMORY;
 #endif /* XML_DTD */
       dtd->hasParamEntityRefs = XML_TRUE;
@@ -4445,7 +4444,7 @@ doProlog(XML_Parser parser,
       if (!XmlIsPublicId(enc, s, next, eventPP))
         return XML_ERROR_PUBLICID;
     alreadyChecked:
-      if (dtd->keepProcessing && declEntity) {
+      if (dtd->keepProcessing && parser->m_declEntity) {
         XML_Char *tem = poolStoreString(&dtd->pool,
                                         enc,
                                         s + enc->minBytesPerChar,
@@ -4453,7 +4452,7 @@ doProlog(XML_Parser parser,
         if (!tem)
           return XML_ERROR_NO_MEMORY;
         normalizePublicId(tem);
-        declEntity->publicId = tem;
+        parser->m_declEntity->publicId = tem;
         poolFinish(&dtd->pool);
         /* Don't suppress the default handler if we fell through from
          * the XML_ROLE_DOCTYPE_PUBLIC_ID case.
@@ -4691,17 +4690,17 @@ doProlog(XML_Parser parser,
         enum XML_Error result = storeEntityValue(parser, enc,
                                             s + enc->minBytesPerChar,
                                             next - enc->minBytesPerChar);
-        if (declEntity) {
-          declEntity->textPtr = poolStart(&dtd->entityValuePool);
-          declEntity->textLen = (int)(poolLength(&dtd->entityValuePool));
+        if (parser->m_declEntity) {
+          parser->m_declEntity->textPtr = poolStart(&dtd->entityValuePool);
+          parser->m_declEntity->textLen = (int)(poolLength(&dtd->entityValuePool));
           poolFinish(&dtd->entityValuePool);
           if (parser->m_entityDeclHandler) {
             *eventEndPP = s;
             parser->m_entityDeclHandler(parser->m_handlerArg,
-                              declEntity->name,
-                              declEntity->is_param,
-                              declEntity->textPtr,
-                              declEntity->textLen,
+                              parser->m_declEntity->name,
+                              parser->m_declEntity->is_param,
+                              parser->m_declEntity->textPtr,
+                              parser->m_declEntity->textLen,
                               parser->m_curBase, 0, 0, 0);
             handleDefault = XML_FALSE;
           }
@@ -4742,25 +4741,25 @@ doProlog(XML_Parser parser,
 #ifndef XML_DTD
       break;
 #else /* XML_DTD */
-      if (!declEntity) {
-        declEntity = (ENTITY *)lookup(parser,
+      if (!parser->m_declEntity) {
+        parser->m_declEntity = (ENTITY *)lookup(parser,
                                       &dtd->paramEntities,
                                       externalSubsetName,
                                       sizeof(ENTITY));
-        if (!declEntity)
+        if (!parser->m_declEntity)
           return XML_ERROR_NO_MEMORY;
-        declEntity->publicId = NULL;
+        parser->m_declEntity->publicId = NULL;
       }
       /* fall through */
 #endif /* XML_DTD */
     case XML_ROLE_ENTITY_SYSTEM_ID:
-      if (dtd->keepProcessing && declEntity) {
-        declEntity->systemId = poolStoreString(&dtd->pool, enc,
+      if (dtd->keepProcessing && parser->m_declEntity) {
+        parser->m_declEntity->systemId = poolStoreString(&dtd->pool, enc,
                                                s + enc->minBytesPerChar,
                                                next - enc->minBytesPerChar);
-        if (!declEntity->systemId)
+        if (!parser->m_declEntity->systemId)
           return XML_ERROR_NO_MEMORY;
-        declEntity->base = parser->m_curBase;
+        parser->m_declEntity->base = parser->m_curBase;
         poolFinish(&dtd->pool);
         /* Don't suppress the default handler if we fell through from
          * the XML_ROLE_DOCTYPE_SYSTEM_ID case.
@@ -4770,44 +4769,44 @@ doProlog(XML_Parser parser,
       }
       break;
     case XML_ROLE_ENTITY_COMPLETE:
-      if (dtd->keepProcessing && declEntity && parser->m_entityDeclHandler) {
+      if (dtd->keepProcessing && parser->m_declEntity && parser->m_entityDeclHandler) {
         *eventEndPP = s;
         parser->m_entityDeclHandler(parser->m_handlerArg,
-                          declEntity->name,
-                          declEntity->is_param,
+                          parser->m_declEntity->name,
+                          parser->m_declEntity->is_param,
                           0,0,
-                          declEntity->base,
-                          declEntity->systemId,
-                          declEntity->publicId,
+                          parser->m_declEntity->base,
+                          parser->m_declEntity->systemId,
+                          parser->m_declEntity->publicId,
                           0);
         handleDefault = XML_FALSE;
       }
       break;
     case XML_ROLE_ENTITY_NOTATION_NAME:
-      if (dtd->keepProcessing && declEntity) {
-        declEntity->notation = poolStoreString(&dtd->pool, enc, s, next);
-        if (!declEntity->notation)
+      if (dtd->keepProcessing && parser->m_declEntity) {
+        parser->m_declEntity->notation = poolStoreString(&dtd->pool, enc, s, next);
+        if (!parser->m_declEntity->notation)
           return XML_ERROR_NO_MEMORY;
         poolFinish(&dtd->pool);
         if (unparsedEntityDeclHandler) {
           *eventEndPP = s;
           unparsedEntityDeclHandler(parser->m_handlerArg,
-                                    declEntity->name,
-                                    declEntity->base,
-                                    declEntity->systemId,
-                                    declEntity->publicId,
-                                    declEntity->notation);
+                                    parser->m_declEntity->name,
+                                    parser->m_declEntity->base,
+                                    parser->m_declEntity->systemId,
+                                    parser->m_declEntity->publicId,
+                                    parser->m_declEntity->notation);
           handleDefault = XML_FALSE;
         }
         else if (parser->m_entityDeclHandler) {
           *eventEndPP = s;
           parser->m_entityDeclHandler(parser->m_handlerArg,
-                            declEntity->name,
+                            parser->m_declEntity->name,
                             0,0,0,
-                            declEntity->base,
-                            declEntity->systemId,
-                            declEntity->publicId,
-                            declEntity->notation);
+                            parser->m_declEntity->base,
+                            parser->m_declEntity->systemId,
+                            parser->m_declEntity->publicId,
+                            parser->m_declEntity->notation);
           handleDefault = XML_FALSE;
         }
       }
@@ -4815,36 +4814,36 @@ doProlog(XML_Parser parser,
     case XML_ROLE_GENERAL_ENTITY_NAME:
       {
         if (XmlPredefinedEntityName(enc, s, next)) {
-          declEntity = NULL;
+          parser->m_declEntity = NULL;
           break;
         }
         if (dtd->keepProcessing) {
           const XML_Char *name = poolStoreString(&dtd->pool, enc, s, next);
           if (!name)
             return XML_ERROR_NO_MEMORY;
-          declEntity = (ENTITY *)lookup(parser, &dtd->generalEntities, name,
+          parser->m_declEntity = (ENTITY *)lookup(parser, &dtd->generalEntities, name,
                                         sizeof(ENTITY));
-          if (!declEntity)
+          if (!parser->m_declEntity)
             return XML_ERROR_NO_MEMORY;
-          if (declEntity->name != name) {
+          if (parser->m_declEntity->name != name) {
             poolDiscard(&dtd->pool);
-            declEntity = NULL;
+            parser->m_declEntity = NULL;
           }
           else {
             poolFinish(&dtd->pool);
-            declEntity->publicId = NULL;
-            declEntity->is_param = XML_FALSE;
+            parser->m_declEntity->publicId = NULL;
+            parser->m_declEntity->is_param = XML_FALSE;
             /* if we have a parent parser or are reading an internal parameter
                entity, then the entity declaration is not considered "internal"
             */
-            declEntity->is_internal = !(parentParser || parser->m_openInternalEntities);
+            parser->m_declEntity->is_internal = !(parentParser || parser->m_openInternalEntities);
             if (parser->m_entityDeclHandler)
               handleDefault = XML_FALSE;
           }
         }
         else {
           poolDiscard(&dtd->pool);
-          declEntity = NULL;
+          parser->m_declEntity = NULL;
         }
       }
       break;
@@ -4854,32 +4853,32 @@ doProlog(XML_Parser parser,
         const XML_Char *name = poolStoreString(&dtd->pool, enc, s, next);
         if (!name)
           return XML_ERROR_NO_MEMORY;
-        declEntity = (ENTITY *)lookup(parser, &dtd->paramEntities,
+        parser->m_declEntity = (ENTITY *)lookup(parser, &dtd->paramEntities,
                                            name, sizeof(ENTITY));
-        if (!declEntity)
+        if (!parser->m_declEntity)
           return XML_ERROR_NO_MEMORY;
-        if (declEntity->name != name) {
+        if (parser->m_declEntity->name != name) {
           poolDiscard(&dtd->pool);
-          declEntity = NULL;
+          parser->m_declEntity = NULL;
         }
         else {
           poolFinish(&dtd->pool);
-          declEntity->publicId = NULL;
-          declEntity->is_param = XML_TRUE;
+          parser->m_declEntity->publicId = NULL;
+          parser->m_declEntity->is_param = XML_TRUE;
           /* if we have a parent parser or are reading an internal parameter
              entity, then the entity declaration is not considered "internal"
           */
-          declEntity->is_internal = !(parentParser || parser->m_openInternalEntities);
+          parser->m_declEntity->is_internal = !(parentParser || parser->m_openInternalEntities);
           if (parser->m_entityDeclHandler)
             handleDefault = XML_FALSE;
         }
       }
       else {
         poolDiscard(&dtd->pool);
-        declEntity = NULL;
+        parser->m_declEntity = NULL;
       }
 #else /* not XML_DTD */
-      declEntity = NULL;
+      parser->m_declEntity = NULL;
 #endif /* XML_DTD */
       break;
     case XML_ROLE_NOTATION_NAME:
