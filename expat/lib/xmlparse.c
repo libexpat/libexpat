@@ -662,7 +662,6 @@ struct XML_ParserStruct {
         (parser->m_externalEntityRefHandlerArg)
 #define internalEntityRefHandler \
         (parser->m_internalEntityRefHandler)
-#define skippedEntityHandler (parser->m_skippedEntityHandler)
 #define unknownEncodingHandler (parser->m_unknownEncodingHandler)
 #define elementDeclHandler (parser->m_elementDeclHandler)
 #define attlistDeclHandler (parser->m_attlistDeclHandler)
@@ -1142,7 +1141,7 @@ parserInit(XML_Parser parser, const XML_Char *encodingName)
   parser->m_notStandaloneHandler = NULL;
   externalEntityRefHandler = NULL;
   externalEntityRefHandlerArg = parser;
-  skippedEntityHandler = NULL;
+  parser->m_skippedEntityHandler = NULL;
   elementDeclHandler = NULL;
   attlistDeclHandler = NULL;
   entityDeclHandler = NULL;
@@ -1333,7 +1332,7 @@ XML_ExternalEntityParserCreate(XML_Parser oldParser,
   oldEndNamespaceDeclHandler = parser->m_endNamespaceDeclHandler;
   oldNotStandaloneHandler = parser->m_notStandaloneHandler;
   oldExternalEntityRefHandler = externalEntityRefHandler;
-  oldSkippedEntityHandler = skippedEntityHandler;
+  oldSkippedEntityHandler = parser->m_skippedEntityHandler;
   oldUnknownEncodingHandler = unknownEncodingHandler;
   oldElementDeclHandler = elementDeclHandler;
   oldAttlistDeclHandler = attlistDeclHandler;
@@ -1393,7 +1392,7 @@ XML_ExternalEntityParserCreate(XML_Parser oldParser,
   parser->m_endNamespaceDeclHandler = oldEndNamespaceDeclHandler;
   parser->m_notStandaloneHandler = oldNotStandaloneHandler;
   externalEntityRefHandler = oldExternalEntityRefHandler;
-  skippedEntityHandler = oldSkippedEntityHandler;
+  parser->m_skippedEntityHandler = oldSkippedEntityHandler;
   unknownEncodingHandler = oldUnknownEncodingHandler;
   elementDeclHandler = oldElementDeclHandler;
   attlistDeclHandler = oldAttlistDeclHandler;
@@ -1806,7 +1805,7 @@ XML_SetSkippedEntityHandler(XML_Parser parser,
                             XML_SkippedEntityHandler handler)
 {
   if (parser != NULL)
-    skippedEntityHandler = handler;
+    parser->m_skippedEntityHandler = handler;
 }
 
 void XMLCALL
@@ -2800,8 +2799,8 @@ doContent(XML_Parser parser,
             return XML_ERROR_ENTITY_DECLARED_IN_PE;
         }
         else if (!entity) {
-          if (skippedEntityHandler)
-            skippedEntityHandler(parser->m_handlerArg, name, 0);
+          if (parser->m_skippedEntityHandler)
+            parser->m_skippedEntityHandler(parser->m_handlerArg, name, 0);
           else if (parser->m_defaultHandler)
             reportDefault(parser, enc, s, next);
           break;
@@ -2813,8 +2812,8 @@ doContent(XML_Parser parser,
         if (entity->textPtr) {
           enum XML_Error result;
           if (!defaultExpandInternalEntities) {
-            if (skippedEntityHandler)
-              skippedEntityHandler(parser->m_handlerArg, entity->name, 0);
+            if (parser->m_skippedEntityHandler)
+              parser->m_skippedEntityHandler(parser->m_handlerArg, entity->name, 0);
             else if (parser->m_defaultHandler)
               reportDefault(parser, enc, s, next);
             break;
@@ -5112,8 +5111,8 @@ doProlog(XML_Parser parser,
         else if (!entity) {
           dtd->keepProcessing = dtd->standalone;
           /* cannot report skipped entities in declarations */
-          if ((role == XML_ROLE_PARAM_ENTITY_REF) && skippedEntityHandler) {
-            skippedEntityHandler(parser->m_handlerArg, name, 1);
+          if ((role == XML_ROLE_PARAM_ENTITY_REF) && parser->m_skippedEntityHandler) {
+            parser->m_skippedEntityHandler(parser->m_handlerArg, name, 1);
             handleDefault = XML_FALSE;
           }
           break;
@@ -5649,9 +5648,9 @@ appendAttributeValue(XML_Parser parser, const ENCODING *enc, XML_Bool isCdata,
         }
         else if (!entity) {
           /* Cannot report skipped entity here - see comments on
-             skippedEntityHandler.
-          if (skippedEntityHandler)
-            skippedEntityHandler(parser->m_handlerArg, name, 0);
+             parser->m_skippedEntityHandler.
+          if (parser->m_skippedEntityHandler)
+            parser->m_skippedEntityHandler(parser->m_handlerArg, name, 0);
           */
           /* Cannot call the default handler because this would be
              out of sync with the call to the startElementHandler.
@@ -5770,9 +5769,9 @@ storeEntityValue(XML_Parser parser,
         if (!entity) {
           /* not a well-formedness error - see XML 1.0: WFC Entity Declared */
           /* cannot report skipped entity here - see comments on
-             skippedEntityHandler
-          if (skippedEntityHandler)
-            skippedEntityHandler(parser->m_handlerArg, name, 0);
+             parser->m_skippedEntityHandler
+          if (parser->m_skippedEntityHandler)
+            parser->m_skippedEntityHandler(parser->m_handlerArg, name, 0);
           */
           dtd->keepProcessing = dtd->standalone;
           goto endEntityValue;
