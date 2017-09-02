@@ -648,7 +648,6 @@ struct XML_ParserStruct {
 #define REALLOC(p,s) (parser->m_mem.realloc_fcn((p),(s)))
 #define FREE(p) (parser->m_mem.free_fcn((p)))
 
-#define characterDataHandler (parser->m_characterDataHandler)
 #define processingInstructionHandler \
         (parser->m_processingInstructionHandler)
 #define commentHandler (parser->m_commentHandler)
@@ -1136,7 +1135,7 @@ parserInit(XML_Parser parser, const XML_Char *encodingName)
   parser->m_handlerArg = NULL;
   parser->m_startElementHandler = NULL;
   parser->m_endElementHandler = NULL;
-  characterDataHandler = NULL;
+  parser->m_characterDataHandler = NULL;
   processingInstructionHandler = NULL;
   commentHandler = NULL;
   startCdataSectionHandler = NULL;
@@ -1330,7 +1329,7 @@ XML_ExternalEntityParserCreate(XML_Parser oldParser,
   oldDtd = _dtd;
   oldStartElementHandler = parser->m_startElementHandler;
   oldEndElementHandler = parser->m_endElementHandler;
-  oldCharacterDataHandler = characterDataHandler;
+  oldCharacterDataHandler = parser->m_characterDataHandler;
   oldProcessingInstructionHandler = processingInstructionHandler;
   oldCommentHandler = commentHandler;
   oldStartCdataSectionHandler = startCdataSectionHandler;
@@ -1390,7 +1389,7 @@ XML_ExternalEntityParserCreate(XML_Parser oldParser,
 
   parser->m_startElementHandler = oldStartElementHandler;
   parser->m_endElementHandler = oldEndElementHandler;
-  characterDataHandler = oldCharacterDataHandler;
+  parser->m_characterDataHandler = oldCharacterDataHandler;
   processingInstructionHandler = oldProcessingInstructionHandler;
   commentHandler = oldCommentHandler;
   startCdataSectionHandler = oldStartCdataSectionHandler;
@@ -1653,7 +1652,7 @@ XML_SetCharacterDataHandler(XML_Parser parser,
                             XML_CharacterDataHandler handler)
 {
   if (parser != NULL)
-    characterDataHandler = handler;
+    parser->m_characterDataHandler = handler;
 }
 
 void XMLCALL
@@ -2735,9 +2734,9 @@ doContent(XML_Parser parser,
         return XML_ERROR_NONE;
       }
       *eventEndPP = end;
-      if (characterDataHandler) {
+      if (parser->m_characterDataHandler) {
         XML_Char c = 0xA;
-        characterDataHandler(parser->m_handlerArg, &c, 1);
+        parser->m_characterDataHandler(parser->m_handlerArg, &c, 1);
       }
       else if (defaultHandler)
         reportDefault(parser, enc, s, end);
@@ -2785,8 +2784,8 @@ doContent(XML_Parser parser,
                                               s + enc->minBytesPerChar,
                                               next - enc->minBytesPerChar);
         if (ch) {
-          if (characterDataHandler)
-            characterDataHandler(parser->m_handlerArg, &ch, 1);
+          if (parser->m_characterDataHandler)
+            parser->m_characterDataHandler(parser->m_handlerArg, &ch, 1);
           else if (defaultHandler)
             reportDefault(parser, enc, s, next);
           break;
@@ -3020,9 +3019,9 @@ doContent(XML_Parser parser,
         int n = XmlCharRefNumber(enc, s);
         if (n < 0)
           return XML_ERROR_BAD_CHAR_REF;
-        if (characterDataHandler) {
+        if (parser->m_characterDataHandler) {
           XML_Char buf[XML_ENCODE_MAX];
-          characterDataHandler(parser->m_handlerArg, buf, XmlEncode(n, (ICHAR *)buf));
+          parser->m_characterDataHandler(parser->m_handlerArg, buf, XmlEncode(n, (ICHAR *)buf));
         }
         else if (defaultHandler)
           reportDefault(parser, enc, s, next);
@@ -3031,9 +3030,9 @@ doContent(XML_Parser parser,
     case XML_TOK_XML_DECL:
       return XML_ERROR_MISPLACED_XML_PI;
     case XML_TOK_DATA_NEWLINE:
-      if (characterDataHandler) {
+      if (parser->m_characterDataHandler) {
         XML_Char c = 0xA;
-        characterDataHandler(parser->m_handlerArg, &c, 1);
+        parser->m_characterDataHandler(parser->m_handlerArg, &c, 1);
       }
       else if (defaultHandler)
         reportDefault(parser, enc, s, next);
@@ -3056,8 +3055,8 @@ doContent(XML_Parser parser,
            However, now we have a start/endCdataSectionHandler, so it seems
            easier to let the user deal with this.
         */
-        else if (characterDataHandler)
-          characterDataHandler(parser->m_handlerArg, dataBuf, 0);
+        else if (parser->m_characterDataHandler)
+          parser->m_characterDataHandler(parser->m_handlerArg, dataBuf, 0);
 #endif
         else if (defaultHandler)
           reportDefault(parser, enc, s, next);
@@ -3075,15 +3074,15 @@ doContent(XML_Parser parser,
         *nextPtr = s;
         return XML_ERROR_NONE;
       }
-      if (characterDataHandler) {
+      if (parser->m_characterDataHandler) {
         if (MUST_CONVERT(enc, s)) {
           ICHAR *dataPtr = (ICHAR *)dataBuf;
           XmlConvert(enc, &s, end, &dataPtr, (ICHAR *)dataBufEnd);
-          characterDataHandler(parser->m_handlerArg, dataBuf,
+          parser->m_characterDataHandler(parser->m_handlerArg, dataBuf,
                                (int)(dataPtr - (ICHAR *)dataBuf));
         }
         else
-          characterDataHandler(parser->m_handlerArg,
+          parser->m_characterDataHandler(parser->m_handlerArg,
                                (XML_Char *)s,
                                (int)((XML_Char *)end - (XML_Char *)s));
       }
@@ -3104,7 +3103,7 @@ doContent(XML_Parser parser,
       return XML_ERROR_NONE;
     case XML_TOK_DATA_CHARS:
       {
-        XML_CharacterDataHandler charDataHandler = characterDataHandler;
+        XML_CharacterDataHandler charDataHandler = parser->m_characterDataHandler;
         if (charDataHandler) {
           if (MUST_CONVERT(enc, s)) {
             for (;;) {
@@ -3757,8 +3756,8 @@ doCdataSection(XML_Parser parser,
         endCdataSectionHandler(parser->m_handlerArg);
 #if 0
       /* see comment under XML_TOK_CDATA_SECT_OPEN */
-      else if (characterDataHandler)
-        characterDataHandler(parser->m_handlerArg, dataBuf, 0);
+      else if (parser->m_characterDataHandler)
+        parser->m_characterDataHandler(parser->m_handlerArg, dataBuf, 0);
 #endif
       else if (defaultHandler)
         reportDefault(parser, enc, s, next);
@@ -3769,16 +3768,16 @@ doCdataSection(XML_Parser parser,
       else
         return XML_ERROR_NONE;
     case XML_TOK_DATA_NEWLINE:
-      if (characterDataHandler) {
+      if (parser->m_characterDataHandler) {
         XML_Char c = 0xA;
-        characterDataHandler(parser->m_handlerArg, &c, 1);
+        parser->m_characterDataHandler(parser->m_handlerArg, &c, 1);
       }
       else if (defaultHandler)
         reportDefault(parser, enc, s, next);
       break;
     case XML_TOK_DATA_CHARS:
       {
-        XML_CharacterDataHandler charDataHandler = characterDataHandler;
+        XML_CharacterDataHandler charDataHandler = parser->m_characterDataHandler;
         if (charDataHandler) {
           if (MUST_CONVERT(enc, s)) {
             for (;;) {
