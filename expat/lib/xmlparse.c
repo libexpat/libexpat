@@ -648,7 +648,6 @@ struct XML_ParserStruct {
 #define REALLOC(p,s) (parser->m_mem.realloc_fcn((p),(s)))
 #define FREE(p) (parser->m_mem.free_fcn((p)))
 
-#define startElementHandler (parser->m_startElementHandler)
 #define endElementHandler (parser->m_endElementHandler)
 #define characterDataHandler (parser->m_characterDataHandler)
 #define processingInstructionHandler \
@@ -1136,7 +1135,7 @@ parserInit(XML_Parser parser, const XML_Char *encodingName)
   XmlInitEncoding(&initEncoding, &encoding, 0);
   parser->m_userData = NULL;
   parser->m_handlerArg = NULL;
-  startElementHandler = NULL;
+  parser->m_startElementHandler = NULL;
   endElementHandler = NULL;
   characterDataHandler = NULL;
   processingInstructionHandler = NULL;
@@ -1330,7 +1329,7 @@ XML_ExternalEntityParserCreate(XML_Parser oldParser,
 
   /* Stash the original parser contents on the stack */
   oldDtd = _dtd;
-  oldStartElementHandler = startElementHandler;
+  oldStartElementHandler = parser->m_startElementHandler;
   oldEndElementHandler = endElementHandler;
   oldCharacterDataHandler = characterDataHandler;
   oldProcessingInstructionHandler = processingInstructionHandler;
@@ -1390,7 +1389,7 @@ XML_ExternalEntityParserCreate(XML_Parser oldParser,
   if (!parser)
     return NULL;
 
-  startElementHandler = oldStartElementHandler;
+  parser->m_startElementHandler = oldStartElementHandler;
   endElementHandler = oldEndElementHandler;
   characterDataHandler = oldCharacterDataHandler;
   processingInstructionHandler = oldProcessingInstructionHandler;
@@ -1632,7 +1631,7 @@ XML_SetElementHandler(XML_Parser parser,
 {
   if (parser == NULL)
     return;
-  startElementHandler = start;
+  parser->m_startElementHandler = start;
   endElementHandler = end;
 }
 
@@ -1640,7 +1639,7 @@ void XMLCALL
 XML_SetStartElementHandler(XML_Parser parser,
                            XML_StartElementHandler start) {
   if (parser != NULL)
-    startElementHandler = start;
+    parser->m_startElementHandler = start;
 }
 
 void XMLCALL
@@ -2914,8 +2913,8 @@ doContent(XML_Parser parser,
         result = storeAtts(parser, enc, s, &(tag->name), &(tag->bindings));
         if (result)
           return result;
-        if (startElementHandler)
-          startElementHandler(parser->m_handlerArg, tag->name.str,
+        if (parser->m_startElementHandler)
+          parser->m_startElementHandler(parser->m_handlerArg, tag->name.str,
                               (const XML_Char **)atts);
         else if (defaultHandler)
           reportDefault(parser, enc, s, next);
@@ -2942,12 +2941,12 @@ doContent(XML_Parser parser,
           return result;
         }
         poolFinish(&tempPool);
-        if (startElementHandler) {
-          startElementHandler(parser->m_handlerArg, name.str, (const XML_Char **)atts);
+        if (parser->m_startElementHandler) {
+          parser->m_startElementHandler(parser->m_handlerArg, name.str, (const XML_Char **)atts);
           noElmHandlers = XML_FALSE;
         }
         if (endElementHandler) {
-          if (startElementHandler)
+          if (parser->m_startElementHandler)
             *eventPP = *eventEndPP;
           endElementHandler(parser->m_handlerArg, name.str);
           noElmHandlers = XML_FALSE;
