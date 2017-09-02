@@ -652,7 +652,6 @@ struct XML_ParserStruct {
         (parser->m_processingInstructionHandler)
 #define startCdataSectionHandler \
         (parser->m_startCdataSectionHandler)
-#define endDoctypeDeclHandler (parser->m_endDoctypeDeclHandler)
 #define unparsedEntityDeclHandler \
         (parser->m_unparsedEntityDeclHandler)
 #define notationDeclHandler (parser->m_notationDeclHandler)
@@ -1138,7 +1137,7 @@ parserInit(XML_Parser parser, const XML_Char *encodingName)
   parser->m_endCdataSectionHandler = NULL;
   parser->m_defaultHandler = NULL;
   parser->m_startDoctypeDeclHandler = NULL;
-  endDoctypeDeclHandler = NULL;
+  parser->m_endDoctypeDeclHandler = NULL;
   unparsedEntityDeclHandler = NULL;
   notationDeclHandler = NULL;
   startNamespaceDeclHandler = NULL;
@@ -1720,7 +1719,7 @@ XML_SetDoctypeDeclHandler(XML_Parser parser,
   if (parser == NULL)
     return;
   parser->m_startDoctypeDeclHandler = start;
-  endDoctypeDeclHandler = end;
+  parser->m_endDoctypeDeclHandler = end;
 }
 
 void XMLCALL
@@ -1734,7 +1733,7 @@ void XMLCALL
 XML_SetEndDoctypeDeclHandler(XML_Parser parser,
                              XML_EndDoctypeDeclHandler end) {
   if (parser != NULL)
-    endDoctypeDeclHandler = end;
+    parser->m_endDoctypeDeclHandler = end;
 }
 
 void XMLCALL
@@ -4552,8 +4551,8 @@ doProlog(XML_Parser parser,
         useForeignDTD = XML_FALSE;
       }
 #endif /* XML_DTD */
-      if (endDoctypeDeclHandler) {
-        endDoctypeDeclHandler(parser->m_handlerArg);
+      if (parser->m_endDoctypeDeclHandler) {
+        parser->m_endDoctypeDeclHandler(parser->m_handlerArg);
         handleDefault = XML_FALSE;
       }
       break;
