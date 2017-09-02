@@ -654,7 +654,6 @@ struct XML_ParserStruct {
         (parser->m_startCdataSectionHandler)
 #define unparsedEntityDeclHandler \
         (parser->m_unparsedEntityDeclHandler)
-#define notationDeclHandler (parser->m_notationDeclHandler)
 #define startNamespaceDeclHandler \
         (parser->m_startNamespaceDeclHandler)
 #define endNamespaceDeclHandler (parser->m_endNamespaceDeclHandler)
@@ -1139,7 +1138,7 @@ parserInit(XML_Parser parser, const XML_Char *encodingName)
   parser->m_startDoctypeDeclHandler = NULL;
   parser->m_endDoctypeDeclHandler = NULL;
   unparsedEntityDeclHandler = NULL;
-  notationDeclHandler = NULL;
+  parser->m_notationDeclHandler = NULL;
   startNamespaceDeclHandler = NULL;
   endNamespaceDeclHandler = NULL;
   notStandaloneHandler = NULL;
@@ -1331,7 +1330,7 @@ XML_ExternalEntityParserCreate(XML_Parser oldParser,
   oldEndCdataSectionHandler = parser->m_endCdataSectionHandler;
   oldDefaultHandler = parser->m_defaultHandler;
   oldUnparsedEntityDeclHandler = unparsedEntityDeclHandler;
-  oldNotationDeclHandler = notationDeclHandler;
+  oldNotationDeclHandler = parser->m_notationDeclHandler;
   oldStartNamespaceDeclHandler = startNamespaceDeclHandler;
   oldEndNamespaceDeclHandler = endNamespaceDeclHandler;
   oldNotStandaloneHandler = notStandaloneHandler;
@@ -1391,7 +1390,7 @@ XML_ExternalEntityParserCreate(XML_Parser oldParser,
   parser->m_endCdataSectionHandler = oldEndCdataSectionHandler;
   parser->m_defaultHandler = oldDefaultHandler;
   unparsedEntityDeclHandler = oldUnparsedEntityDeclHandler;
-  notationDeclHandler = oldNotationDeclHandler;
+  parser->m_notationDeclHandler = oldNotationDeclHandler;
   startNamespaceDeclHandler = oldStartNamespaceDeclHandler;
   endNamespaceDeclHandler = oldEndNamespaceDeclHandler;
   notStandaloneHandler = oldNotStandaloneHandler;
@@ -1749,7 +1748,7 @@ XML_SetNotationDeclHandler(XML_Parser parser,
                            XML_NotationDeclHandler handler)
 {
   if (parser != NULL)
-    notationDeclHandler = handler;
+    parser->m_notationDeclHandler = handler;
 }
 
 void XMLCALL
@@ -4921,7 +4920,7 @@ doProlog(XML_Parser parser,
     case XML_ROLE_NOTATION_NAME:
       declNotationPublicId = NULL;
       declNotationName = NULL;
-      if (notationDeclHandler) {
+      if (parser->m_notationDeclHandler) {
         declNotationName = poolStoreString(&tempPool, enc, s, next);
         if (!declNotationName)
           return XML_ERROR_NO_MEMORY;
@@ -4932,7 +4931,7 @@ doProlog(XML_Parser parser,
     case XML_ROLE_NOTATION_PUBLIC_ID:
       if (!XmlIsPublicId(enc, s, next, eventPP))
         return XML_ERROR_PUBLICID;
-      if (declNotationName) {  /* means notationDeclHandler != NULL */
+      if (declNotationName) {  /* means m_notationDeclHandler != NULL */
         XML_Char *tem = poolStoreString(&tempPool,
                                         enc,
                                         s + enc->minBytesPerChar,
@@ -4946,7 +4945,7 @@ doProlog(XML_Parser parser,
       }
       break;
     case XML_ROLE_NOTATION_SYSTEM_ID:
-      if (declNotationName && notationDeclHandler) {
+      if (declNotationName && parser->m_notationDeclHandler) {
         const XML_Char *systemId
           = poolStoreString(&tempPool, enc,
                             s + enc->minBytesPerChar,
@@ -4954,7 +4953,7 @@ doProlog(XML_Parser parser,
         if (!systemId)
           return XML_ERROR_NO_MEMORY;
         *eventEndPP = s;
-        notationDeclHandler(parser->m_handlerArg,
+        parser->m_notationDeclHandler(parser->m_handlerArg,
                             declNotationName,
                             curBase,
                             systemId,
@@ -4964,9 +4963,9 @@ doProlog(XML_Parser parser,
       poolClear(&tempPool);
       break;
     case XML_ROLE_NOTATION_NO_SYSTEM_ID:
-      if (declNotationPublicId && notationDeclHandler) {
+      if (declNotationPublicId && parser->m_notationDeclHandler) {
         *eventEndPP = s;
-        notationDeclHandler(parser->m_handlerArg,
+        parser->m_notationDeclHandler(parser->m_handlerArg,
                             declNotationName,
                             curBase,
                             0,
@@ -5303,7 +5302,7 @@ doProlog(XML_Parser parser,
         handleDefault = XML_FALSE;
       break;
     case XML_ROLE_NOTATION_NONE:
-      if (notationDeclHandler)
+      if (parser->m_notationDeclHandler)
         handleDefault = XML_FALSE;
       break;
     case XML_ROLE_ATTLIST_NONE:
