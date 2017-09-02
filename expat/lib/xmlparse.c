@@ -668,7 +668,6 @@ struct XML_ParserStruct {
 #define defaultExpandInternalEntities \
         (parser->m_defaultExpandInternalEntities)
 #define buffer (parser->m_buffer)
-#define ps_finalBuffer (parser->m_parsingStatus.finalBuffer)
 #ifdef XML_DTD
 #define isParamEntity (parser->m_isParamEntity)
 #define useForeignDTD (parser->m_useForeignDTD)
@@ -1845,7 +1844,7 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal)
   }
 
   if (len == 0) {
-    ps_finalBuffer = (XML_Bool)isFinal;
+    parser->m_parsingStatus.finalBuffer = (XML_Bool)isFinal;
     if (!isFinal)
       return XML_STATUS_OK;
     parser->m_positionPtr = parser->m_bufferPtr;
@@ -1902,7 +1901,7 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal)
     }
     parser->m_parseEndByteIndex += len;
     parser->m_positionPtr = s;
-    ps_finalBuffer = (XML_Bool)isFinal;
+    parser->m_parsingStatus.finalBuffer = (XML_Bool)isFinal;
 
     parser->m_errorCode = parser->m_processor(parser, s, parser->m_parseEndPtr = s + len, &end);
 
@@ -1998,7 +1997,7 @@ XML_ParseBuffer(XML_Parser parser, int len, int isFinal)
   parser->m_bufferEnd += len;
   parser->m_parseEndPtr = parser->m_bufferEnd;
   parser->m_parseEndByteIndex += len;
-  ps_finalBuffer = (XML_Bool)isFinal;
+  parser->m_parsingStatus.finalBuffer = (XML_Bool)isFinal;
 
   parser->m_errorCode = parser->m_processor(parser, start, parser->m_parseEndPtr, &parser->m_bufferPtr);
 
@@ -2184,7 +2183,7 @@ XML_ResumeParser(XML_Parser parser)
       break;
     case XML_INITIALIZED:
     case XML_PARSING:
-      if (ps_finalBuffer) {
+      if (parser->m_parsingStatus.finalBuffer) {
         parser->m_parsingStatus.parsing = XML_FINISHED;
         return result;
       }
@@ -2504,7 +2503,7 @@ contentProcessor(XML_Parser parser,
                  const char **endPtr)
 {
   enum XML_Error result = doContent(parser, 0, encoding, start, end,
-                                    endPtr, (XML_Bool)!ps_finalBuffer);
+                                    endPtr, (XML_Bool)!parser->m_parsingStatus.finalBuffer);
   if (result == XML_ERROR_NONE) {
     if (!storeRawNames(parser))
       return XML_ERROR_NO_MEMORY;
@@ -2540,21 +2539,21 @@ externalEntityInitProcessor2(XML_Parser parser,
        doContent (by detecting XML_TOK_NONE) without processing any xml text
        declaration - causing the error XML_ERROR_MISPLACED_XML_PI in doContent.
     */
-    if (next == end && !ps_finalBuffer) {
+    if (next == end && !parser->m_parsingStatus.finalBuffer) {
       *endPtr = next;
       return XML_ERROR_NONE;
     }
     start = next;
     break;
   case XML_TOK_PARTIAL:
-    if (!ps_finalBuffer) {
+    if (!parser->m_parsingStatus.finalBuffer) {
       *endPtr = start;
       return XML_ERROR_NONE;
     }
     parser->m_eventPtr = start;
     return XML_ERROR_UNCLOSED_TOKEN;
   case XML_TOK_PARTIAL_CHAR:
-    if (!ps_finalBuffer) {
+    if (!parser->m_parsingStatus.finalBuffer) {
       *endPtr = start;
       return XML_ERROR_NONE;
     }
@@ -2596,13 +2595,13 @@ externalEntityInitProcessor3(XML_Parser parser,
     }
     break;
   case XML_TOK_PARTIAL:
-    if (!ps_finalBuffer) {
+    if (!parser->m_parsingStatus.finalBuffer) {
       *endPtr = start;
       return XML_ERROR_NONE;
     }
     return XML_ERROR_UNCLOSED_TOKEN;
   case XML_TOK_PARTIAL_CHAR:
-    if (!ps_finalBuffer) {
+    if (!parser->m_parsingStatus.finalBuffer) {
       *endPtr = start;
       return XML_ERROR_NONE;
     }
@@ -2620,7 +2619,7 @@ externalEntityContentProcessor(XML_Parser parser,
                                const char **endPtr)
 {
   enum XML_Error result = doContent(parser, 1, encoding, start, end,
-                                    endPtr, (XML_Bool)!ps_finalBuffer);
+                                    endPtr, (XML_Bool)!parser->m_parsingStatus.finalBuffer);
   if (result == XML_ERROR_NONE) {
     if (!storeRawNames(parser))
       return XML_ERROR_NO_MEMORY;
@@ -3633,7 +3632,7 @@ cdataSectionProcessor(XML_Parser parser,
                       const char **endPtr)
 {
   enum XML_Error result = doCdataSection(parser, encoding, &start, end,
-                                         endPtr, (XML_Bool)!ps_finalBuffer);
+                                         endPtr, (XML_Bool)!parser->m_parsingStatus.finalBuffer);
   if (result != XML_ERROR_NONE)
     return result;
   if (start) {
@@ -3783,7 +3782,7 @@ ignoreSectionProcessor(XML_Parser parser,
                        const char **endPtr)
 {
   enum XML_Error result = doIgnoreSection(parser, encoding, &start, end,
-                                          endPtr, (XML_Bool)!ps_finalBuffer);
+                                          endPtr, (XML_Bool)!parser->m_parsingStatus.finalBuffer);
   if (result != XML_ERROR_NONE)
     return result;
   if (start) {
@@ -4096,7 +4095,7 @@ entityValueInitProcessor(XML_Parser parser,
     tok = XmlPrologTok(encoding, start, end, &next);
     parser->m_eventEndPtr = next;
     if (tok <= 0) {
-      if (!ps_finalBuffer && tok != XML_TOK_INVALID) {
+      if (!parser->m_parsingStatus.finalBuffer && tok != XML_TOK_INVALID) {
         *nextPtr = s;
         return XML_ERROR_NONE;
       }
@@ -4138,7 +4137,7 @@ entityValueInitProcessor(XML_Parser parser,
        then, when this routine is entered the next time, XmlPrologTok will
        return XML_TOK_INVALID, since the BOM is still in the buffer
     */
-    else if (tok == XML_TOK_BOM && next == end && !ps_finalBuffer) {
+    else if (tok == XML_TOK_BOM && next == end && !parser->m_parsingStatus.finalBuffer) {
       *nextPtr = next;
       return XML_ERROR_NONE;
     }
@@ -4166,7 +4165,7 @@ externalParEntProcessor(XML_Parser parser,
 
   tok = XmlPrologTok(encoding, s, end, &next);
   if (tok <= 0) {
-    if (!ps_finalBuffer && tok != XML_TOK_INVALID) {
+    if (!parser->m_parsingStatus.finalBuffer && tok != XML_TOK_INVALID) {
       *nextPtr = s;
       return XML_ERROR_NONE;
     }
@@ -4193,7 +4192,7 @@ externalParEntProcessor(XML_Parser parser,
 
   parser->m_processor = prologProcessor;
   return doProlog(parser, encoding, s, end, tok, next,
-                  nextPtr, (XML_Bool)!ps_finalBuffer);
+                  nextPtr, (XML_Bool)!parser->m_parsingStatus.finalBuffer);
 }
 
 static enum XML_Error PTRCALL
@@ -4210,7 +4209,7 @@ entityValueProcessor(XML_Parser parser,
   for (;;) {
     tok = XmlPrologTok(enc, start, end, &next);
     if (tok <= 0) {
-      if (!ps_finalBuffer && tok != XML_TOK_INVALID) {
+      if (!parser->m_parsingStatus.finalBuffer && tok != XML_TOK_INVALID) {
         *nextPtr = s;
         return XML_ERROR_NONE;
       }
@@ -4243,7 +4242,7 @@ prologProcessor(XML_Parser parser,
   const char *next = s;
   int tok = XmlPrologTok(encoding, s, end, &next);
   return doProlog(parser, encoding, s, end, tok, next,
-                  nextPtr, (XML_Bool)!ps_finalBuffer);
+                  nextPtr, (XML_Bool)!parser->m_parsingStatus.finalBuffer);
 }
 
 static enum XML_Error
@@ -5308,13 +5307,13 @@ epilogProcessor(XML_Parser parser,
       parser->m_eventPtr = next;
       return XML_ERROR_INVALID_TOKEN;
     case XML_TOK_PARTIAL:
-      if (!ps_finalBuffer) {
+      if (!parser->m_parsingStatus.finalBuffer) {
         *nextPtr = s;
         return XML_ERROR_NONE;
       }
       return XML_ERROR_UNCLOSED_TOKEN;
     case XML_TOK_PARTIAL_CHAR:
-      if (!ps_finalBuffer) {
+      if (!parser->m_parsingStatus.finalBuffer) {
         *nextPtr = s;
         return XML_ERROR_NONE;
       }
@@ -5444,7 +5443,7 @@ internalEntityProcessor(XML_Parser parser,
     parser->m_processor = prologProcessor;
     tok = XmlPrologTok(encoding, s, end, &next);
     return doProlog(parser, encoding, s, end, tok, next, nextPtr,
-                    (XML_Bool)!ps_finalBuffer);
+                    (XML_Bool)!parser->m_parsingStatus.finalBuffer);
   }
   else
 #endif /* XML_DTD */
@@ -5452,7 +5451,7 @@ internalEntityProcessor(XML_Parser parser,
     parser->m_processor = contentProcessor;
     /* see externalEntityContentProcessor vs contentProcessor */
     return doContent(parser, parser->m_parentParser ? 1 : 0, encoding, s, end,
-                     nextPtr, (XML_Bool)!ps_finalBuffer);
+                     nextPtr, (XML_Bool)!parser->m_parsingStatus.finalBuffer);
   }
 }
 
