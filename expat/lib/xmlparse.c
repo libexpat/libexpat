@@ -668,7 +668,6 @@ struct XML_ParserStruct {
 #define defaultExpandInternalEntities \
         (parser->m_defaultExpandInternalEntities)
 #define buffer (parser->m_buffer)
-#define hash_secret_salt (parser->m_hash_secret_salt)
 
 XML_Parser XMLCALL
 XML_ParserCreate(const XML_Char *encodingName)
@@ -908,8 +907,8 @@ static XML_Bool  /* only valid for root parser */
 startParsing(XML_Parser parser)
 {
     /* hash functions must be initialized before setContext() is called */
-    if (hash_secret_salt == 0)
-      hash_secret_salt = generate_hash_secret_salt(parser);
+    if (parser->m_hash_secret_salt == 0)
+      parser->m_hash_secret_salt = generate_hash_secret_salt(parser);
     if (parser->m_ns) {
       /* implicit context only set for root parser, since child
          parsers (i.e. external entity parsers) will inherit it
@@ -1114,7 +1113,7 @@ parserInit(XML_Parser parser, const XML_Char *encodingName)
   parser->m_useForeignDTD = XML_FALSE;
   parser->m_paramEntityParsing = XML_PARAM_ENTITY_PARSING_NEVER;
 #endif
-  hash_secret_salt = 0;
+  parser->m_hash_secret_salt = 0;
 }
 
 /* moves list of bindings to m_freeBindingList */
@@ -1286,7 +1285,7 @@ XML_ExternalEntityParserCreate(XML_Parser oldParser,
      from hash tables associated with either parser without us having
      to worry which hash secrets each table has.
   */
-  oldhash_secret_salt = hash_secret_salt;
+  oldhash_secret_salt = parser->m_hash_secret_salt;
 
 #ifdef XML_DTD
   if (!context)
@@ -1340,7 +1339,7 @@ XML_ExternalEntityParserCreate(XML_Parser oldParser,
     externalEntityRefHandlerArg = oldExternalEntityRefHandlerArg;
   defaultExpandInternalEntities = oldDefaultExpandInternalEntities;
   parser->m_ns_triplets = oldns_triplets;
-  hash_secret_salt = oldhash_secret_salt;
+  parser->m_hash_secret_salt = oldhash_secret_salt;
   parser->m_parentParser = oldParser;
 #ifdef XML_DTD
   parser->m_paramEntityParsing = oldParamEntityParsing;
@@ -1810,7 +1809,7 @@ XML_SetHashSalt(XML_Parser parser,
   /* block after XML_Parse()/XML_ParseBuffer() has been called */
   if (parser->m_parsingStatus.parsing == XML_PARSING || parser->m_parsingStatus.parsing == XML_SUSPENDED)
     return 0;
-  hash_secret_salt = hash_salt;
+  parser->m_hash_secret_salt = hash_salt;
   return 1;
 }
 
