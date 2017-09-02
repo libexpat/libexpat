@@ -662,7 +662,6 @@ struct XML_ParserStruct {
         (parser->m_externalEntityRefHandlerArg)
 #define internalEntityRefHandler \
         (parser->m_internalEntityRefHandler)
-#define unknownEncodingHandler (parser->m_unknownEncodingHandler)
 #define elementDeclHandler (parser->m_elementDeclHandler)
 #define attlistDeclHandler (parser->m_attlistDeclHandler)
 #define entityDeclHandler (parser->m_entityDeclHandler)
@@ -1078,7 +1077,7 @@ parserCreate(const XML_Char *encodingName,
   groupSize = 0;
   groupConnector = NULL;
 
-  unknownEncodingHandler = NULL;
+  parser->m_unknownEncodingHandler = NULL;
   unknownEncodingHandlerData = NULL;
 
   namespaceSeparator = ASCII_EXCL;
@@ -1333,7 +1332,7 @@ XML_ExternalEntityParserCreate(XML_Parser oldParser,
   oldNotStandaloneHandler = parser->m_notStandaloneHandler;
   oldExternalEntityRefHandler = externalEntityRefHandler;
   oldSkippedEntityHandler = parser->m_skippedEntityHandler;
-  oldUnknownEncodingHandler = unknownEncodingHandler;
+  oldUnknownEncodingHandler = parser->m_unknownEncodingHandler;
   oldElementDeclHandler = elementDeclHandler;
   oldAttlistDeclHandler = attlistDeclHandler;
   oldEntityDeclHandler = entityDeclHandler;
@@ -1393,7 +1392,7 @@ XML_ExternalEntityParserCreate(XML_Parser oldParser,
   parser->m_notStandaloneHandler = oldNotStandaloneHandler;
   externalEntityRefHandler = oldExternalEntityRefHandler;
   parser->m_skippedEntityHandler = oldSkippedEntityHandler;
-  unknownEncodingHandler = oldUnknownEncodingHandler;
+  parser->m_unknownEncodingHandler = oldUnknownEncodingHandler;
   elementDeclHandler = oldElementDeclHandler;
   attlistDeclHandler = oldAttlistDeclHandler;
   entityDeclHandler = oldEntityDeclHandler;
@@ -1815,7 +1814,7 @@ XML_SetUnknownEncodingHandler(XML_Parser parser,
 {
   if (parser == NULL)
     return;
-  unknownEncodingHandler = handler;
+  parser->m_unknownEncodingHandler = handler;
   unknownEncodingHandlerData = data;
 }
 
@@ -4068,7 +4067,7 @@ processXmlDecl(XML_Parser parser, int isGeneralTextEntity,
 static enum XML_Error
 handleUnknownEncoding(XML_Parser parser, const XML_Char *encodingName)
 {
-  if (unknownEncodingHandler) {
+  if (parser->m_unknownEncodingHandler) {
     XML_Encoding info;
     int i;
     for (i = 0; i < 256; i++)
@@ -4076,7 +4075,7 @@ handleUnknownEncoding(XML_Parser parser, const XML_Char *encodingName)
     info.convert = NULL;
     info.data = NULL;
     info.release = NULL;
-    if (unknownEncodingHandler(unknownEncodingHandlerData, encodingName,
+    if (parser->m_unknownEncodingHandler(unknownEncodingHandlerData, encodingName,
                                &info)) {
       ENCODING *enc;
       unknownEncodingMem = MALLOC(XmlSizeOfUnknownEncoding());
