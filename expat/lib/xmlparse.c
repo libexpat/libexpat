@@ -668,7 +668,6 @@ struct XML_ParserStruct {
 #define defaultExpandInternalEntities \
         (parser->m_defaultExpandInternalEntities)
 #define buffer (parser->m_buffer)
-#define tempPool (parser->m_tempPool)
 #define temp2Pool (parser->m_temp2Pool)
 #define groupConnector (parser->m_groupConnector)
 #define groupSize (parser->m_groupSize)
@@ -1036,7 +1035,7 @@ parserCreate(const XML_Char *encodingName,
 
   parser->m_protocolEncodingName = NULL;
 
-  poolInit(&tempPool, &(parser->m_mem));
+  poolInit(&parser->m_tempPool, &(parser->m_mem));
   poolInit(&temp2Pool, &(parser->m_mem));
   parserInit(parser, encodingName);
 
@@ -1175,7 +1174,7 @@ XML_ParserReset(XML_Parser parser, const XML_Char *encodingName)
   FREE(parser->m_unknownEncodingMem);
   if (parser->m_unknownEncodingRelease)
     parser->m_unknownEncodingRelease(parser->m_unknownEncodingData);
-  poolClear(&tempPool);
+  poolClear(&parser->m_tempPool);
   poolClear(&temp2Pool);
   FREE((void *)parser->m_protocolEncodingName);
   parser->m_protocolEncodingName = NULL;
@@ -1437,7 +1436,7 @@ XML_ParserFree(XML_Parser parser)
 
   destroyBindings(parser->m_freeBindingList, parser);
   destroyBindings(parser->m_inheritedBindings, parser);
-  poolDestroy(&tempPool);
+  poolDestroy(&parser->m_tempPool);
   poolDestroy(&temp2Pool);
   FREE((void *)parser->m_protocolEncodingName);
 #ifdef XML_DTD
@@ -2780,7 +2779,7 @@ doContent(XML_Parser parser,
                                         entity->systemId,
                                         entity->publicId))
             return XML_ERROR_EXTERNAL_ENTITY_HANDLING;
-          poolDiscard(&tempPool);
+          poolDiscard(&parser->m_tempPool);
         }
         else if (parser->m_defaultHandler)
           reportDefault(parser, enc, s, next);
@@ -2852,7 +2851,7 @@ doContent(XML_Parser parser,
                               (const XML_Char **)parser->m_atts);
         else if (parser->m_defaultHandler)
           reportDefault(parser, enc, s, next);
-        poolClear(&tempPool);
+        poolClear(&parser->m_tempPool);
         break;
       }
     case XML_TOK_EMPTY_ELEMENT_NO_ATTS:
@@ -2864,17 +2863,17 @@ doContent(XML_Parser parser,
         BINDING *bindings = NULL;
         XML_Bool noElmHandlers = XML_TRUE;
         TAG_NAME name;
-        name.str = poolStoreString(&tempPool, enc, rawName,
+        name.str = poolStoreString(&parser->m_tempPool, enc, rawName,
                                    rawName + XmlNameLength(enc, rawName));
         if (!name.str)
           return XML_ERROR_NO_MEMORY;
-        poolFinish(&tempPool);
+        poolFinish(&parser->m_tempPool);
         result = storeAtts(parser, enc, s, &name, &bindings);
         if (result != XML_ERROR_NONE) {
           freeBindings(parser, bindings);
           return result;
         }
-        poolFinish(&tempPool);
+        poolFinish(&parser->m_tempPool);
         if (parser->m_startElementHandler) {
           parser->m_startElementHandler(parser->m_handlerArg, name.str, (const XML_Char **)parser->m_atts);
           noElmHandlers = XML_FALSE;
@@ -2887,7 +2886,7 @@ doContent(XML_Parser parser,
         }
         if (noElmHandlers && parser->m_defaultHandler)
           reportDefault(parser, enc, s, next);
-        poolClear(&tempPool);
+        poolClear(&parser->m_tempPool);
         freeBindings(parser, bindings);
       }
       if ((parser->m_tagLevel == 0) &&
@@ -3238,19 +3237,19 @@ storeAtts(XML_Parser parser, const ENCODING *enc,
       /* normalize the attribute value */
       result = storeAttributeValue(parser, enc, isCdata,
                                    parser->m_atts[i].valuePtr, parser->m_atts[i].valueEnd,
-                                   &tempPool);
+                                   &parser->m_tempPool);
       if (result)
         return result;
-      appAtts[attIndex] = poolStart(&tempPool);
-      poolFinish(&tempPool);
+      appAtts[attIndex] = poolStart(&parser->m_tempPool);
+      poolFinish(&parser->m_tempPool);
     }
     else {
       /* the value did not need normalizing */
-      appAtts[attIndex] = poolStoreString(&tempPool, enc, parser->m_atts[i].valuePtr,
+      appAtts[attIndex] = poolStoreString(&parser->m_tempPool, enc, parser->m_atts[i].valuePtr,
                                           parser->m_atts[i].valueEnd);
       if (appAtts[attIndex] == 0)
         return XML_ERROR_NO_MEMORY;
-      poolFinish(&tempPool);
+      poolFinish(&parser->m_tempPool);
     }
     /* handle prefixed attribute names */
     if (attId->prefix) {
@@ -3383,7 +3382,7 @@ storeAtts(XML_Parser parser, const ENCODING *enc,
 
         for (j = 0; j < b->uriLen; j++) {
           const XML_Char c = b->uri[j];
-          if (!poolAppendChar(&tempPool, c))
+          if (!poolAppendChar(&parser->m_tempPool, c))
             return XML_ERROR_NO_MEMORY;
         }
 
@@ -3395,7 +3394,7 @@ storeAtts(XML_Parser parser, const ENCODING *enc,
         sip24_update(&sip_state, s, keylen(s) * sizeof(XML_Char));
 
         do {  /* copies null terminator */
-          if (!poolAppendChar(&tempPool, *s))
+          if (!poolAppendChar(&parser->m_tempPool, *s))
             return XML_ERROR_NO_MEMORY;
         } while (*s++);
 
@@ -3410,7 +3409,7 @@ storeAtts(XML_Parser parser, const ENCODING *enc,
           while (parser->m_nsAtts[j].version == version) {
             /* for speed we compare stored hash values first */
             if (uriHash == parser->m_nsAtts[j].hash) {
-              const XML_Char *s1 = poolStart(&tempPool);
+              const XML_Char *s1 = poolStart(&parser->m_tempPool);
               const XML_Char *s2 = parser->m_nsAtts[j].uriName;
               /* s1 is null terminated, but not s2 */
               for (; *s1 == *s2 && *s1 != 0; s1++, s2++);
@@ -3424,17 +3423,17 @@ storeAtts(XML_Parser parser, const ENCODING *enc,
         }
 
         if (parser->m_ns_triplets) {  /* append namespace separator and prefix */
-          tempPool.ptr[-1] = namespaceSeparator;
+          parser->m_tempPool.ptr[-1] = namespaceSeparator;
           s = b->prefix->name;
           do {
-            if (!poolAppendChar(&tempPool, *s))
+            if (!poolAppendChar(&parser->m_tempPool, *s))
               return XML_ERROR_NO_MEMORY;
           } while (*s++);
         }
 
         /* store expanded name in attribute list */
-        s = poolStart(&tempPool);
-        poolFinish(&tempPool);
+        s = poolStart(&parser->m_tempPool);
+        poolFinish(&parser->m_tempPool);
         appAtts[i] = s;
 
         /* fill empty slot with new version, uriName and hash value */
@@ -4362,10 +4361,10 @@ doProlog(XML_Parser parser,
       break;
     case XML_ROLE_DOCTYPE_NAME:
       if (parser->m_startDoctypeDeclHandler) {
-        parser->m_doctypeName = poolStoreString(&tempPool, enc, s, next);
+        parser->m_doctypeName = poolStoreString(&parser->m_tempPool, enc, s, next);
         if (!parser->m_doctypeName)
           return XML_ERROR_NO_MEMORY;
-        poolFinish(&tempPool);
+        poolFinish(&parser->m_tempPool);
         parser->m_doctypePubid = NULL;
         handleDefault = XML_FALSE;
       }
@@ -4376,7 +4375,7 @@ doProlog(XML_Parser parser,
         parser->m_startDoctypeDeclHandler(parser->m_handlerArg, parser->m_doctypeName, parser->m_doctypeSysid,
                                 parser->m_doctypePubid, 1);
         parser->m_doctypeName = NULL;
-        poolClear(&tempPool);
+        poolClear(&parser->m_tempPool);
         handleDefault = XML_FALSE;
       }
       break;
@@ -4406,13 +4405,13 @@ doProlog(XML_Parser parser,
         XML_Char *pubId;
         if (!XmlIsPublicId(enc, s, next, eventPP))
           return XML_ERROR_PUBLICID;
-        pubId = poolStoreString(&tempPool, enc,
+        pubId = poolStoreString(&parser->m_tempPool, enc,
                                 s + enc->minBytesPerChar,
                                 next - enc->minBytesPerChar);
         if (!pubId)
           return XML_ERROR_NO_MEMORY;
         normalizePublicId(pubId);
-        poolFinish(&tempPool);
+        poolFinish(&parser->m_tempPool);
         parser->m_doctypePubid = pubId;
         handleDefault = XML_FALSE;
         goto alreadyChecked;
@@ -4443,7 +4442,7 @@ doProlog(XML_Parser parser,
       if (parser->m_doctypeName) {
         parser->m_startDoctypeDeclHandler(parser->m_handlerArg, parser->m_doctypeName,
                                 parser->m_doctypeSysid, parser->m_doctypePubid, 0);
-        poolClear(&tempPool);
+        poolClear(&parser->m_tempPool);
         handleDefault = XML_FALSE;
       }
       /* parser->m_doctypeSysid will be non-NULL in the case of a previous
@@ -4590,11 +4589,11 @@ doProlog(XML_Parser parser,
                     ? notationPrefix
                     : enumValueStart);
         }
-        if (!poolAppendString(&tempPool, prefix))
+        if (!poolAppendString(&parser->m_tempPool, prefix))
           return XML_ERROR_NO_MEMORY;
-        if (!poolAppend(&tempPool, enc, s, next))
+        if (!poolAppend(&parser->m_tempPool, enc, s, next))
           return XML_ERROR_NO_MEMORY;
-        parser->m_declAttributeType = tempPool.start;
+        parser->m_declAttributeType = parser->m_tempPool.start;
         handleDefault = XML_FALSE;
       }
       break;
@@ -4610,17 +4609,17 @@ doProlog(XML_Parser parser,
               || (*parser->m_declAttributeType == XML_T(ASCII_N)
                   && parser->m_declAttributeType[1] == XML_T(ASCII_O))) {
             /* Enumerated or Notation type */
-            if (!poolAppendChar(&tempPool, XML_T(ASCII_RPAREN))
-                || !poolAppendChar(&tempPool, XML_T('\0')))
+            if (!poolAppendChar(&parser->m_tempPool, XML_T(ASCII_RPAREN))
+                || !poolAppendChar(&parser->m_tempPool, XML_T('\0')))
               return XML_ERROR_NO_MEMORY;
-            parser->m_declAttributeType = tempPool.start;
-            poolFinish(&tempPool);
+            parser->m_declAttributeType = parser->m_tempPool.start;
+            poolFinish(&parser->m_tempPool);
           }
           *eventEndPP = s;
           parser->m_attlistDeclHandler(parser->m_handlerArg, parser->m_declElementType->name,
                              parser->m_declAttributeId->name, parser->m_declAttributeType,
                              0, role == XML_ROLE_REQUIRED_ATTRIBUTE_VALUE);
-          poolClear(&tempPool);
+          poolClear(&parser->m_tempPool);
           handleDefault = XML_FALSE;
         }
       }
@@ -4647,18 +4646,18 @@ doProlog(XML_Parser parser,
               || (*parser->m_declAttributeType == XML_T(ASCII_N)
                   && parser->m_declAttributeType[1] == XML_T(ASCII_O))) {
             /* Enumerated or Notation type */
-            if (!poolAppendChar(&tempPool, XML_T(ASCII_RPAREN))
-                || !poolAppendChar(&tempPool, XML_T('\0')))
+            if (!poolAppendChar(&parser->m_tempPool, XML_T(ASCII_RPAREN))
+                || !poolAppendChar(&parser->m_tempPool, XML_T('\0')))
               return XML_ERROR_NO_MEMORY;
-            parser->m_declAttributeType = tempPool.start;
-            poolFinish(&tempPool);
+            parser->m_declAttributeType = parser->m_tempPool.start;
+            poolFinish(&parser->m_tempPool);
           }
           *eventEndPP = s;
           parser->m_attlistDeclHandler(parser->m_handlerArg, parser->m_declElementType->name,
                              parser->m_declAttributeId->name, parser->m_declAttributeType,
                              attVal,
                              role == XML_ROLE_FIXED_ATTRIBUTE_VALUE);
-          poolClear(&tempPool);
+          poolClear(&parser->m_tempPool);
           handleDefault = XML_FALSE;
         }
       }
@@ -4695,12 +4694,12 @@ doProlog(XML_Parser parser,
 #endif /* XML_DTD */
       dtd->hasParamEntityRefs = XML_TRUE;
       if (parser->m_startDoctypeDeclHandler) {
-        parser->m_doctypeSysid = poolStoreString(&tempPool, enc,
+        parser->m_doctypeSysid = poolStoreString(&parser->m_tempPool, enc,
                                        s + enc->minBytesPerChar,
                                        next - enc->minBytesPerChar);
         if (parser->m_doctypeSysid == NULL)
           return XML_ERROR_NO_MEMORY;
-        poolFinish(&tempPool);
+        poolFinish(&parser->m_tempPool);
         handleDefault = XML_FALSE;
       }
 #ifdef XML_DTD
@@ -4863,10 +4862,10 @@ doProlog(XML_Parser parser,
       parser->m_declNotationPublicId = NULL;
       parser->m_declNotationName = NULL;
       if (parser->m_notationDeclHandler) {
-        parser->m_declNotationName = poolStoreString(&tempPool, enc, s, next);
+        parser->m_declNotationName = poolStoreString(&parser->m_tempPool, enc, s, next);
         if (!parser->m_declNotationName)
           return XML_ERROR_NO_MEMORY;
-        poolFinish(&tempPool);
+        poolFinish(&parser->m_tempPool);
         handleDefault = XML_FALSE;
       }
       break;
@@ -4874,7 +4873,7 @@ doProlog(XML_Parser parser,
       if (!XmlIsPublicId(enc, s, next, eventPP))
         return XML_ERROR_PUBLICID;
       if (parser->m_declNotationName) {  /* means m_notationDeclHandler != NULL */
-        XML_Char *tem = poolStoreString(&tempPool,
+        XML_Char *tem = poolStoreString(&parser->m_tempPool,
                                         enc,
                                         s + enc->minBytesPerChar,
                                         next - enc->minBytesPerChar);
@@ -4882,14 +4881,14 @@ doProlog(XML_Parser parser,
           return XML_ERROR_NO_MEMORY;
         normalizePublicId(tem);
         parser->m_declNotationPublicId = tem;
-        poolFinish(&tempPool);
+        poolFinish(&parser->m_tempPool);
         handleDefault = XML_FALSE;
       }
       break;
     case XML_ROLE_NOTATION_SYSTEM_ID:
       if (parser->m_declNotationName && parser->m_notationDeclHandler) {
         const XML_Char *systemId
-          = poolStoreString(&tempPool, enc,
+          = poolStoreString(&parser->m_tempPool, enc,
                             s + enc->minBytesPerChar,
                             next - enc->minBytesPerChar);
         if (!systemId)
@@ -4902,7 +4901,7 @@ doProlog(XML_Parser parser,
                             parser->m_declNotationPublicId);
         handleDefault = XML_FALSE;
       }
-      poolClear(&tempPool);
+      poolClear(&parser->m_tempPool);
       break;
     case XML_ROLE_NOTATION_NO_SYSTEM_ID:
       if (parser->m_declNotationPublicId && parser->m_notationDeclHandler) {
@@ -4914,7 +4913,7 @@ doProlog(XML_Parser parser,
                             parser->m_declNotationPublicId);
         handleDefault = XML_FALSE;
       }
-      poolClear(&tempPool);
+      poolClear(&parser->m_tempPool);
       break;
     case XML_ROLE_ERROR:
       switch (tok) {
@@ -5583,7 +5582,7 @@ appendAttributeValue(XML_Parser parser, const ENCODING *enc, XML_Bool isCdata,
               (dtd->standalone
                ? !parser->m_openInternalEntities
                : !dtd->hasParamEntityRefs);
-        else /* if (pool == &tempPool): we are called from content */
+        else /* if (pool == &parser->m_tempPool): we are called from content */
           checkEntityDecl = !dtd->hasParamEntityRefs || dtd->standalone;
         if (checkEntityDecl) {
           if (!entity)
@@ -5599,7 +5598,7 @@ appendAttributeValue(XML_Parser parser, const ENCODING *enc, XML_Bool isCdata,
           */
           /* Cannot call the default handler because this would be
              out of sync with the call to the startElementHandler.
-          if ((pool == &tempPool) && parser->m_defaultHandler)
+          if ((pool == &parser->m_tempPool) && parser->m_defaultHandler)
             reportDefault(parser, enc, ptr, next);
           */
           break;
@@ -5702,7 +5701,7 @@ storeEntityValue(XML_Parser parser,
       if (isParamEntity || enc != encoding) {
         const XML_Char *name;
         ENTITY *entity;
-        name = poolStoreString(&tempPool, enc,
+        name = poolStoreString(&parser->m_tempPool, enc,
                                entityTextPtr + enc->minBytesPerChar,
                                next - enc->minBytesPerChar);
         if (!name) {
@@ -5710,7 +5709,7 @@ storeEntityValue(XML_Parser parser,
           goto endEntityValue;
         }
         entity = (ENTITY *)lookup(parser, &dtd->paramEntities, name, 0);
-        poolDiscard(&tempPool);
+        poolDiscard(&parser->m_tempPool);
         if (!entity) {
           /* not a well-formedness error - see XML 1.0: WFC Entity Declared */
           /* cannot report skipped entity here - see comments on
@@ -5886,18 +5885,18 @@ reportProcessingInstruction(XML_Parser parser, const ENCODING *enc,
   }
   start += enc->minBytesPerChar * 2;
   tem = start + XmlNameLength(enc, start);
-  target = poolStoreString(&tempPool, enc, start, tem);
+  target = poolStoreString(&parser->m_tempPool, enc, start, tem);
   if (!target)
     return 0;
-  poolFinish(&tempPool);
-  data = poolStoreString(&tempPool, enc,
+  poolFinish(&parser->m_tempPool);
+  data = poolStoreString(&parser->m_tempPool, enc,
                         XmlSkipS(enc, tem),
                         end - enc->minBytesPerChar*2);
   if (!data)
     return 0;
   normalizeLines(data);
   processingInstructionHandler(parser->m_handlerArg, target, data);
-  poolClear(&tempPool);
+  poolClear(&parser->m_tempPool);
   return 1;
 }
 
@@ -5911,7 +5910,7 @@ reportComment(XML_Parser parser, const ENCODING *enc,
       reportDefault(parser, enc, start, end);
     return 1;
   }
-  data = poolStoreString(&tempPool,
+  data = poolStoreString(&parser->m_tempPool,
                          enc,
                          start + enc->minBytesPerChar * 4,
                          end - enc->minBytesPerChar * 3);
@@ -5919,7 +5918,7 @@ reportComment(XML_Parser parser, const ENCODING *enc,
     return 0;
   normalizeLines(data);
   parser->m_commentHandler(parser->m_handlerArg, data);
-  poolClear(&tempPool);
+  poolClear(&parser->m_tempPool);
   return 1;
 }
 
@@ -6120,13 +6119,13 @@ getContext(XML_Parser parser)
   if (dtd->defaultPrefix.binding) {
     int i;
     int len;
-    if (!poolAppendChar(&tempPool, XML_T(ASCII_EQUALS)))
+    if (!poolAppendChar(&parser->m_tempPool, XML_T(ASCII_EQUALS)))
       return NULL;
     len = dtd->defaultPrefix.binding->uriLen;
     if (namespaceSeparator)
       len--;
     for (i = 0; i < len; i++) {
-      if (!poolAppendChar(&tempPool, dtd->defaultPrefix.binding->uri[i])) {
+      if (!poolAppendChar(&parser->m_tempPool, dtd->defaultPrefix.binding->uri[i])) {
         /* Because of memory caching, I don't believe this line can be
          * executed.
          *
@@ -6169,18 +6168,18 @@ getContext(XML_Parser parser)
        */
       continue; /* LCOV_EXCL_LINE */
     }
-    if (needSep && !poolAppendChar(&tempPool, CONTEXT_SEP))
+    if (needSep && !poolAppendChar(&parser->m_tempPool, CONTEXT_SEP))
       return NULL;
     for (s = prefix->name; *s; s++)
-      if (!poolAppendChar(&tempPool, *s))
+      if (!poolAppendChar(&parser->m_tempPool, *s))
         return NULL;
-    if (!poolAppendChar(&tempPool, XML_T(ASCII_EQUALS)))
+    if (!poolAppendChar(&parser->m_tempPool, XML_T(ASCII_EQUALS)))
       return NULL;
     len = prefix->binding->uriLen;
     if (namespaceSeparator)
       len--;
     for (i = 0; i < len; i++)
-      if (!poolAppendChar(&tempPool, prefix->binding->uri[i]))
+      if (!poolAppendChar(&parser->m_tempPool, prefix->binding->uri[i]))
         return NULL;
     needSep = XML_TRUE;
   }
@@ -6194,17 +6193,17 @@ getContext(XML_Parser parser)
       break;
     if (!e->open)
       continue;
-    if (needSep && !poolAppendChar(&tempPool, CONTEXT_SEP))
+    if (needSep && !poolAppendChar(&parser->m_tempPool, CONTEXT_SEP))
       return NULL;
     for (s = e->name; *s; s++)
-      if (!poolAppendChar(&tempPool, *s))
+      if (!poolAppendChar(&parser->m_tempPool, *s))
         return 0;
     needSep = XML_TRUE;
   }
 
-  if (!poolAppendChar(&tempPool, XML_T('\0')))
+  if (!poolAppendChar(&parser->m_tempPool, XML_T('\0')))
     return NULL;
-  return tempPool.start;
+  return parser->m_tempPool.start;
 }
 
 static XML_Bool
@@ -6216,51 +6215,51 @@ setContext(XML_Parser parser, const XML_Char *context)
   while (*context != XML_T('\0')) {
     if (*s == CONTEXT_SEP || *s == XML_T('\0')) {
       ENTITY *e;
-      if (!poolAppendChar(&tempPool, XML_T('\0')))
+      if (!poolAppendChar(&parser->m_tempPool, XML_T('\0')))
         return XML_FALSE;
-      e = (ENTITY *)lookup(parser, &dtd->generalEntities, poolStart(&tempPool), 0);
+      e = (ENTITY *)lookup(parser, &dtd->generalEntities, poolStart(&parser->m_tempPool), 0);
       if (e)
         e->open = XML_TRUE;
       if (*s != XML_T('\0'))
         s++;
       context = s;
-      poolDiscard(&tempPool);
+      poolDiscard(&parser->m_tempPool);
     }
     else if (*s == XML_T(ASCII_EQUALS)) {
       PREFIX *prefix;
-      if (poolLength(&tempPool) == 0)
+      if (poolLength(&parser->m_tempPool) == 0)
         prefix = &dtd->defaultPrefix;
       else {
-        if (!poolAppendChar(&tempPool, XML_T('\0')))
+        if (!poolAppendChar(&parser->m_tempPool, XML_T('\0')))
           return XML_FALSE;
-        prefix = (PREFIX *)lookup(parser, &dtd->prefixes, poolStart(&tempPool),
+        prefix = (PREFIX *)lookup(parser, &dtd->prefixes, poolStart(&parser->m_tempPool),
                                   sizeof(PREFIX));
         if (!prefix)
           return XML_FALSE;
-        if (prefix->name == poolStart(&tempPool)) {
+        if (prefix->name == poolStart(&parser->m_tempPool)) {
           prefix->name = poolCopyString(&dtd->pool, prefix->name);
           if (!prefix->name)
             return XML_FALSE;
         }
-        poolDiscard(&tempPool);
+        poolDiscard(&parser->m_tempPool);
       }
       for (context = s + 1;
            *context != CONTEXT_SEP && *context != XML_T('\0');
            context++)
-        if (!poolAppendChar(&tempPool, *context))
+        if (!poolAppendChar(&parser->m_tempPool, *context))
           return XML_FALSE;
-      if (!poolAppendChar(&tempPool, XML_T('\0')))
+      if (!poolAppendChar(&parser->m_tempPool, XML_T('\0')))
         return XML_FALSE;
-      if (addBinding(parser, prefix, NULL, poolStart(&tempPool),
+      if (addBinding(parser, prefix, NULL, poolStart(&parser->m_tempPool),
                      &parser->m_inheritedBindings) != XML_ERROR_NONE)
         return XML_FALSE;
-      poolDiscard(&tempPool);
+      poolDiscard(&parser->m_tempPool);
       if (*context != XML_T('\0'))
         ++context;
       s = context;
     }
     else {
-      if (!poolAppendChar(&tempPool, *s))
+      if (!poolAppendChar(&parser->m_tempPool, *s))
         return XML_FALSE;
       s++;
     }
