@@ -648,8 +648,6 @@ struct XML_ParserStruct {
 #define REALLOC(p,s) (parser->m_mem.realloc_fcn((p),(s)))
 #define FREE(p) (parser->m_mem.free_fcn((p)))
 
-#define externalEntityRefHandlerArg \
-        (parser->m_externalEntityRefHandlerArg)
 #define internalEntityRefHandler \
         (parser->m_internalEntityRefHandler)
 #define encoding (parser->m_encoding)
@@ -1061,7 +1059,7 @@ parserInit(XML_Parser parser, const XML_Char *encodingName)
   parser->m_endNamespaceDeclHandler = NULL;
   parser->m_notStandaloneHandler = NULL;
   parser->m_externalEntityRefHandler = NULL;
-  externalEntityRefHandlerArg = parser;
+  parser->m_externalEntityRefHandlerArg = parser;
   parser->m_skippedEntityHandler = NULL;
   parser->m_elementDeclHandler = NULL;
   parser->m_attlistDeclHandler = NULL;
@@ -1264,7 +1262,7 @@ XML_ExternalEntityParserCreate(XML_Parser oldParser,
   oldUserData = parser->m_userData;
   oldHandlerArg = parser->m_handlerArg;
   oldDefaultExpandInternalEntities = defaultExpandInternalEntities;
-  oldExternalEntityRefHandlerArg = externalEntityRefHandlerArg;
+  oldExternalEntityRefHandlerArg = parser->m_externalEntityRefHandlerArg;
 #ifdef XML_DTD
   oldParamEntityParsing = parser->m_paramEntityParsing;
   oldInEntityValue = parser->m_prologState.inEntityValue;
@@ -1326,7 +1324,7 @@ XML_ExternalEntityParserCreate(XML_Parser oldParser,
   else
     parser->m_handlerArg = parser;
   if (oldExternalEntityRefHandlerArg != oldParser)
-    externalEntityRefHandlerArg = oldExternalEntityRefHandlerArg;
+    parser->m_externalEntityRefHandlerArg = oldExternalEntityRefHandlerArg;
   defaultExpandInternalEntities = oldDefaultExpandInternalEntities;
   parser->m_ns_triplets = oldns_triplets;
   parser->m_hash_secret_salt = oldhash_secret_salt;
@@ -1716,9 +1714,9 @@ XML_SetExternalEntityRefHandlerArg(XML_Parser parser, void *arg)
   if (parser == NULL)
     return;
   if (arg)
-    externalEntityRefHandlerArg = (XML_Parser)arg;
+    parser->m_externalEntityRefHandlerArg = (XML_Parser)arg;
   else
-    externalEntityRefHandlerArg = parser;
+    parser->m_externalEntityRefHandlerArg = parser;
 }
 
 void XMLCALL
@@ -2750,7 +2748,7 @@ doContent(XML_Parser parser,
           entity->open = XML_FALSE;
           if (!context)
             return XML_ERROR_NO_MEMORY;
-          if (!parser->m_externalEntityRefHandler(externalEntityRefHandlerArg,
+          if (!parser->m_externalEntityRefHandler(parser->m_externalEntityRefHandlerArg,
                                         context,
                                         entity->base,
                                         entity->systemId,
@@ -4446,7 +4444,7 @@ doProlog(XML_Parser parser,
           if (parser->m_useForeignDTD)
             entity->base = parser->m_curBase;
           dtd->paramEntityRead = XML_FALSE;
-          if (!parser->m_externalEntityRefHandler(externalEntityRefHandlerArg,
+          if (!parser->m_externalEntityRefHandler(parser->m_externalEntityRefHandlerArg,
                                         0,
                                         entity->base,
                                         entity->systemId,
@@ -4489,7 +4487,7 @@ doProlog(XML_Parser parser,
             return XML_ERROR_NO_MEMORY;
           entity->base = parser->m_curBase;
           dtd->paramEntityRead = XML_FALSE;
-          if (!parser->m_externalEntityRefHandler(externalEntityRefHandlerArg,
+          if (!parser->m_externalEntityRefHandler(parser->m_externalEntityRefHandlerArg,
                                         0,
                                         entity->base,
                                         entity->systemId,
@@ -5053,7 +5051,7 @@ doProlog(XML_Parser parser,
         if (parser->m_externalEntityRefHandler) {
           dtd->paramEntityRead = XML_FALSE;
           entity->open = XML_TRUE;
-          if (!parser->m_externalEntityRefHandler(externalEntityRefHandlerArg,
+          if (!parser->m_externalEntityRefHandler(parser->m_externalEntityRefHandlerArg,
                                         0,
                                         entity->base,
                                         entity->systemId,
@@ -5707,7 +5705,7 @@ storeEntityValue(XML_Parser parser,
           if (parser->m_externalEntityRefHandler) {
             dtd->paramEntityRead = XML_FALSE;
             entity->open = XML_TRUE;
-            if (!parser->m_externalEntityRefHandler(externalEntityRefHandlerArg,
+            if (!parser->m_externalEntityRefHandler(parser->m_externalEntityRefHandlerArg,
                                           0,
                                           entity->base,
                                           entity->systemId,
