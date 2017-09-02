@@ -668,7 +668,6 @@ struct XML_ParserStruct {
 #define defaultExpandInternalEntities \
         (parser->m_defaultExpandInternalEntities)
 #define buffer (parser->m_buffer)
-#define parseEndPtr (parser->m_parseEndPtr)
 #define bufferLim (parser->m_bufferLim)
 #define dataBuf (parser->m_dataBuf)
 #define dataBufEnd (parser->m_dataBufEnd)
@@ -1123,7 +1122,7 @@ parserInit(XML_Parser parser, const XML_Char *encodingName)
   parser->m_bufferPtr = buffer;
   parser->m_bufferEnd = buffer;
   parser->m_parseEndByteIndex = 0;
-  parseEndPtr = NULL;
+  parser->m_parseEndPtr = NULL;
   declElementType = NULL;
   declAttributeId = NULL;
   declEntity = NULL;
@@ -1885,13 +1884,13 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal)
     if (!isFinal)
       return XML_STATUS_OK;
     parser->m_positionPtr = parser->m_bufferPtr;
-    parseEndPtr = parser->m_bufferEnd;
+    parser->m_parseEndPtr = parser->m_bufferEnd;
 
     /* If data are left over from last buffer, and we now know that these
        data are the final chunk of input, then we have to check them again
        to detect errors based on that fact.
     */
-    parser->m_errorCode = parser->m_processor(parser, parser->m_bufferPtr, parseEndPtr, &parser->m_bufferPtr);
+    parser->m_errorCode = parser->m_processor(parser, parser->m_bufferPtr, parser->m_parseEndPtr, &parser->m_bufferPtr);
 
     if (parser->m_errorCode == XML_ERROR_NONE) {
       switch (ps_parsing) {
@@ -1940,7 +1939,7 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal)
     parser->m_positionPtr = s;
     ps_finalBuffer = (XML_Bool)isFinal;
 
-    parser->m_errorCode = parser->m_processor(parser, s, parseEndPtr = s + len, &end);
+    parser->m_errorCode = parser->m_processor(parser, s, parser->m_parseEndPtr = s + len, &end);
 
     if (parser->m_errorCode != XML_ERROR_NONE) {
       parser->m_eventEndPtr = parser->m_eventPtr;
@@ -1988,7 +1987,7 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal)
     parser->m_bufferPtr = buffer;
     parser->m_bufferEnd = buffer + nLeftOver;
     parser->m_positionPtr = parser->m_bufferPtr;
-    parseEndPtr = parser->m_bufferEnd;
+    parser->m_parseEndPtr = parser->m_bufferEnd;
     parser->m_eventPtr = parser->m_bufferPtr;
     parser->m_eventEndPtr = parser->m_bufferPtr;
     return result;
@@ -2032,11 +2031,11 @@ XML_ParseBuffer(XML_Parser parser, int len, int isFinal)
   start = parser->m_bufferPtr;
   parser->m_positionPtr = start;
   parser->m_bufferEnd += len;
-  parseEndPtr = parser->m_bufferEnd;
+  parser->m_parseEndPtr = parser->m_bufferEnd;
   parser->m_parseEndByteIndex += len;
   ps_finalBuffer = (XML_Bool)isFinal;
 
-  parser->m_errorCode = parser->m_processor(parser, start, parseEndPtr, &parser->m_bufferPtr);
+  parser->m_errorCode = parser->m_processor(parser, start, parser->m_parseEndPtr, &parser->m_bufferPtr);
 
   if (parser->m_errorCode != XML_ERROR_NONE) {
     parser->m_eventEndPtr = parser->m_eventPtr;
@@ -2206,7 +2205,7 @@ XML_ResumeParser(XML_Parser parser)
   }
   ps_parsing = XML_PARSING;
 
-  parser->m_errorCode = parser->m_processor(parser, parser->m_bufferPtr, parseEndPtr, &parser->m_bufferPtr);
+  parser->m_errorCode = parser->m_processor(parser, parser->m_bufferPtr, parser->m_parseEndPtr, &parser->m_bufferPtr);
 
   if (parser->m_errorCode != XML_ERROR_NONE) {
     parser->m_eventEndPtr = parser->m_eventPtr;
@@ -2256,7 +2255,7 @@ XML_GetCurrentByteIndex(XML_Parser parser)
   if (parser == NULL)
     return -1;
   if (parser->m_eventPtr)
-    return (XML_Index)(parser->m_parseEndByteIndex - (parseEndPtr - parser->m_eventPtr));
+    return (XML_Index)(parser->m_parseEndByteIndex - (parser->m_parseEndPtr - parser->m_eventPtr));
   return -1;
 }
 
@@ -3231,12 +3230,12 @@ storeAtts(XML_Parser parser, const ENCODING *enc,
     if (!attId)
       return XML_ERROR_NO_MEMORY;
 #ifdef XML_ATTR_INFO
-    currAttInfo->nameStart = parser->m_parseEndByteIndex - (parseEndPtr - currAtt->name);
+    currAttInfo->nameStart = parser->m_parseEndByteIndex - (parser->m_parseEndPtr - currAtt->name);
     currAttInfo->nameEnd = currAttInfo->nameStart +
                            XmlNameLength(enc, currAtt->name);
     currAttInfo->valueStart = parser->m_parseEndByteIndex -
-                            (parseEndPtr - currAtt->valuePtr);
-    currAttInfo->valueEnd = parser->m_parseEndByteIndex - (parseEndPtr - currAtt->valueEnd);
+                            (parser->m_parseEndPtr - currAtt->valuePtr);
+    currAttInfo->valueEnd = parser->m_parseEndByteIndex - (parser->m_parseEndPtr - currAtt->valueEnd);
 #endif
     /* Detect duplicate attributes by their QNames. This does not work when
        namespace processing is turned on and different prefixes for the same
