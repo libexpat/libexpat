@@ -652,7 +652,6 @@ struct XML_ParserStruct {
         (parser->m_processingInstructionHandler)
 #define startCdataSectionHandler \
         (parser->m_startCdataSectionHandler)
-#define startDoctypeDeclHandler (parser->m_startDoctypeDeclHandler)
 #define endDoctypeDeclHandler (parser->m_endDoctypeDeclHandler)
 #define unparsedEntityDeclHandler \
         (parser->m_unparsedEntityDeclHandler)
@@ -1138,7 +1137,7 @@ parserInit(XML_Parser parser, const XML_Char *encodingName)
   startCdataSectionHandler = NULL;
   parser->m_endCdataSectionHandler = NULL;
   parser->m_defaultHandler = NULL;
-  startDoctypeDeclHandler = NULL;
+  parser->m_startDoctypeDeclHandler = NULL;
   endDoctypeDeclHandler = NULL;
   unparsedEntityDeclHandler = NULL;
   notationDeclHandler = NULL;
@@ -1720,7 +1719,7 @@ XML_SetDoctypeDeclHandler(XML_Parser parser,
 {
   if (parser == NULL)
     return;
-  startDoctypeDeclHandler = start;
+  parser->m_startDoctypeDeclHandler = start;
   endDoctypeDeclHandler = end;
 }
 
@@ -1728,7 +1727,7 @@ void XMLCALL
 XML_SetStartDoctypeDeclHandler(XML_Parser parser,
                                XML_StartDoctypeDeclHandler start) {
   if (parser != NULL)
-    startDoctypeDeclHandler = start;
+    parser->m_startDoctypeDeclHandler = start;
 }
 
 void XMLCALL
@@ -4422,7 +4421,7 @@ doProlog(XML_Parser parser,
       }
       break;
     case XML_ROLE_DOCTYPE_NAME:
-      if (startDoctypeDeclHandler) {
+      if (parser->m_startDoctypeDeclHandler) {
         doctypeName = poolStoreString(&tempPool, enc, s, next);
         if (!doctypeName)
           return XML_ERROR_NO_MEMORY;
@@ -4433,8 +4432,8 @@ doProlog(XML_Parser parser,
       doctypeSysid = NULL; /* always initialize to NULL */
       break;
     case XML_ROLE_DOCTYPE_INTERNAL_SUBSET:
-      if (startDoctypeDeclHandler) {
-        startDoctypeDeclHandler(parser->m_handlerArg, doctypeName, doctypeSysid,
+      if (parser->m_startDoctypeDeclHandler) {
+        parser->m_startDoctypeDeclHandler(parser->m_handlerArg, doctypeName, doctypeSysid,
                                 doctypePubid, 1);
         doctypeName = NULL;
         poolClear(&tempPool);
@@ -4463,7 +4462,7 @@ doProlog(XML_Parser parser,
         return XML_ERROR_NO_MEMORY;
 #endif /* XML_DTD */
       dtd->hasParamEntityRefs = XML_TRUE;
-      if (startDoctypeDeclHandler) {
+      if (parser->m_startDoctypeDeclHandler) {
         XML_Char *pubId;
         if (!XmlIsPublicId(enc, s, next, eventPP))
           return XML_ERROR_PUBLICID;
@@ -4502,13 +4501,13 @@ doProlog(XML_Parser parser,
       break;
     case XML_ROLE_DOCTYPE_CLOSE:
       if (doctypeName) {
-        startDoctypeDeclHandler(parser->m_handlerArg, doctypeName,
+        parser->m_startDoctypeDeclHandler(parser->m_handlerArg, doctypeName,
                                 doctypeSysid, doctypePubid, 0);
         poolClear(&tempPool);
         handleDefault = XML_FALSE;
       }
       /* doctypeSysid will be non-NULL in the case of a previous
-         XML_ROLE_DOCTYPE_SYSTEM_ID, even if startDoctypeDeclHandler
+         XML_ROLE_DOCTYPE_SYSTEM_ID, even if parser->m_startDoctypeDeclHandler
          was not set, indicating an external subset
       */
 #ifdef XML_DTD
@@ -4755,7 +4754,7 @@ doProlog(XML_Parser parser,
       useForeignDTD = XML_FALSE;
 #endif /* XML_DTD */
       dtd->hasParamEntityRefs = XML_TRUE;
-      if (startDoctypeDeclHandler) {
+      if (parser->m_startDoctypeDeclHandler) {
         doctypeSysid = poolStoreString(&tempPool, enc,
                                        s + enc->minBytesPerChar,
                                        next - enc->minBytesPerChar);
@@ -4767,7 +4766,7 @@ doProlog(XML_Parser parser,
 #ifdef XML_DTD
       else
         /* use externalSubsetName to make doctypeSysid non-NULL
-           for the case where no startDoctypeDeclHandler is set */
+           for the case where no parser->m_startDoctypeDeclHandler is set */
         doctypeSysid = externalSubsetName;
 #endif /* XML_DTD */
       if (!dtd->standalone
@@ -5297,7 +5296,7 @@ doProlog(XML_Parser parser,
       }
       break;
     case XML_ROLE_DOCTYPE_NONE:
-      if (startDoctypeDeclHandler)
+      if (parser->m_startDoctypeDeclHandler)
         handleDefault = XML_FALSE;
       break;
     case XML_ROLE_ENTITY_NONE:
