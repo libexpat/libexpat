@@ -668,7 +668,6 @@ struct XML_ParserStruct {
 #define defaultExpandInternalEntities \
         (parser->m_defaultExpandInternalEntities)
 #define buffer (parser->m_buffer)
-#define attInfo (parser->m_attInfo)
 #define tempPool (parser->m_tempPool)
 #define temp2Pool (parser->m_temp2Pool)
 #define groupConnector (parser->m_groupConnector)
@@ -984,8 +983,8 @@ parserCreate(const XML_Char *encodingName,
     return NULL;
   }
 #ifdef XML_ATTR_INFO
-  attInfo = (XML_AttrInfo*)MALLOC(parser->m_attsSize * sizeof(XML_AttrInfo));
-  if (attInfo == NULL) {
+  parser->m_attInfo = (XML_AttrInfo*)MALLOC(parser->m_attsSize * sizeof(XML_AttrInfo));
+  if (parser->m_attInfo == NULL) {
     FREE(parser->m_atts);
     FREE(parser);
     return NULL;
@@ -995,7 +994,7 @@ parserCreate(const XML_Char *encodingName,
   if (parser->m_dataBuf == NULL) {
     FREE(parser->m_atts);
 #ifdef XML_ATTR_INFO
-    FREE(attInfo);
+    FREE(parser->m_attInfo);
 #endif
     FREE(parser);
     return NULL;
@@ -1010,7 +1009,7 @@ parserCreate(const XML_Char *encodingName,
       FREE(parser->m_dataBuf);
       FREE(parser->m_atts);
 #ifdef XML_ATTR_INFO
-      FREE(attInfo);
+      FREE(parser->m_attInfo);
 #endif
       FREE(parser);
       return NULL;
@@ -1452,7 +1451,7 @@ XML_ParserFree(XML_Parser parser)
     dtdDestroy(parser->m_dtd, (XML_Bool)!parentParser, &parser->m_mem);
   FREE((void *)parser->m_atts);
 #ifdef XML_ATTR_INFO
-  FREE((void *)attInfo);
+  FREE((void *)parser->m_attInfo);
 #endif
   FREE(groupConnector);
   FREE(buffer);
@@ -1555,7 +1554,7 @@ XML_GetAttributeInfo(XML_Parser parser)
 {
   if (parser == NULL)
     return NULL;
-  return attInfo;
+  return parser->m_attInfo;
 }
 #endif
 
@@ -3179,12 +3178,12 @@ storeAtts(XML_Parser parser, const ENCODING *enc,
     }
     parser->m_atts = temp;
 #ifdef XML_ATTR_INFO
-    temp2 = (XML_AttrInfo *)REALLOC((void *)attInfo, parser->m_attsSize * sizeof(XML_AttrInfo));
+    temp2 = (XML_AttrInfo *)REALLOC((void *)parser->m_attInfo, parser->m_attsSize * sizeof(XML_AttrInfo));
     if (temp2 == NULL) {
       parser->m_attsSize = oldAttsSize;
       return XML_ERROR_NO_MEMORY;
     }
-    attInfo = temp2;
+    parser->m_attInfo = temp2;
 #endif
     if (n > oldAttsSize)
       XmlGetAttributes(enc, attStr, n, parser->m_atts);
@@ -3194,7 +3193,7 @@ storeAtts(XML_Parser parser, const ENCODING *enc,
   for (i = 0; i < n; i++) {
     ATTRIBUTE *currAtt = &parser->m_atts[i];
 #ifdef XML_ATTR_INFO
-    XML_AttrInfo *currAttInfo = &attInfo[i];
+    XML_AttrInfo *currAttInfo = &parser->m_attInfo[i];
 #endif
     /* add the name and value to the attribute list */
     ATTRIBUTE_ID *attId = getAttributeId(parser, enc, currAtt->name,
