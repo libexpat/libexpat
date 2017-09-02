@@ -650,7 +650,6 @@ struct XML_ParserStruct {
 
 #define processingInstructionHandler \
         (parser->m_processingInstructionHandler)
-#define commentHandler (parser->m_commentHandler)
 #define startCdataSectionHandler \
         (parser->m_startCdataSectionHandler)
 #define endCdataSectionHandler (parser->m_endCdataSectionHandler)
@@ -1137,7 +1136,7 @@ parserInit(XML_Parser parser, const XML_Char *encodingName)
   parser->m_endElementHandler = NULL;
   parser->m_characterDataHandler = NULL;
   processingInstructionHandler = NULL;
-  commentHandler = NULL;
+  parser->m_commentHandler = NULL;
   startCdataSectionHandler = NULL;
   endCdataSectionHandler = NULL;
   defaultHandler = NULL;
@@ -1331,7 +1330,7 @@ XML_ExternalEntityParserCreate(XML_Parser oldParser,
   oldEndElementHandler = parser->m_endElementHandler;
   oldCharacterDataHandler = parser->m_characterDataHandler;
   oldProcessingInstructionHandler = processingInstructionHandler;
-  oldCommentHandler = commentHandler;
+  oldCommentHandler = parser->m_commentHandler;
   oldStartCdataSectionHandler = startCdataSectionHandler;
   oldEndCdataSectionHandler = endCdataSectionHandler;
   oldDefaultHandler = defaultHandler;
@@ -1391,7 +1390,7 @@ XML_ExternalEntityParserCreate(XML_Parser oldParser,
   parser->m_endElementHandler = oldEndElementHandler;
   parser->m_characterDataHandler = oldCharacterDataHandler;
   processingInstructionHandler = oldProcessingInstructionHandler;
-  commentHandler = oldCommentHandler;
+  parser->m_commentHandler = oldCommentHandler;
   startCdataSectionHandler = oldStartCdataSectionHandler;
   endCdataSectionHandler = oldEndCdataSectionHandler;
   defaultHandler = oldDefaultHandler;
@@ -1668,7 +1667,7 @@ XML_SetCommentHandler(XML_Parser parser,
                       XML_CommentHandler handler)
 {
   if (parser != NULL)
-    commentHandler = handler;
+    parser->m_commentHandler = handler;
 }
 
 void XMLCALL
@@ -5970,7 +5969,7 @@ reportComment(XML_Parser parser, const ENCODING *enc,
               const char *start, const char *end)
 {
   XML_Char *data;
-  if (!commentHandler) {
+  if (!parser->m_commentHandler) {
     if (defaultHandler)
       reportDefault(parser, enc, start, end);
     return 1;
@@ -5982,7 +5981,7 @@ reportComment(XML_Parser parser, const ENCODING *enc,
   if (!data)
     return 0;
   normalizeLines(data);
-  commentHandler(parser->m_handlerArg, data);
+  parser->m_commentHandler(parser->m_handlerArg, data);
   poolClear(&tempPool);
   return 1;
 }
