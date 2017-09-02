@@ -648,8 +648,6 @@ struct XML_ParserStruct {
 #define REALLOC(p,s) (parser->m_mem.realloc_fcn((p),(s)))
 #define FREE(p) (parser->m_mem.free_fcn((p)))
 
-#define startCdataSectionHandler \
-        (parser->m_startCdataSectionHandler)
 #define unparsedEntityDeclHandler \
         (parser->m_unparsedEntityDeclHandler)
 #define startNamespaceDeclHandler \
@@ -1058,7 +1056,7 @@ parserInit(XML_Parser parser, const XML_Char *encodingName)
   parser->m_characterDataHandler = NULL;
   parser->m_processingInstructionHandler = NULL;
   parser->m_commentHandler = NULL;
-  startCdataSectionHandler = NULL;
+  parser->m_startCdataSectionHandler = NULL;
   parser->m_endCdataSectionHandler = NULL;
   parser->m_defaultHandler = NULL;
   parser->m_startDoctypeDeclHandler = NULL;
@@ -1252,7 +1250,7 @@ XML_ExternalEntityParserCreate(XML_Parser oldParser,
   oldCharacterDataHandler = parser->m_characterDataHandler;
   oldProcessingInstructionHandler = parser->m_processingInstructionHandler;
   oldCommentHandler = parser->m_commentHandler;
-  oldStartCdataSectionHandler = startCdataSectionHandler;
+  oldStartCdataSectionHandler = parser->m_startCdataSectionHandler;
   oldEndCdataSectionHandler = parser->m_endCdataSectionHandler;
   oldDefaultHandler = parser->m_defaultHandler;
   oldUnparsedEntityDeclHandler = unparsedEntityDeclHandler;
@@ -1312,7 +1310,7 @@ XML_ExternalEntityParserCreate(XML_Parser oldParser,
   parser->m_characterDataHandler = oldCharacterDataHandler;
   parser->m_processingInstructionHandler = oldProcessingInstructionHandler;
   parser->m_commentHandler = oldCommentHandler;
-  startCdataSectionHandler = oldStartCdataSectionHandler;
+  parser->m_startCdataSectionHandler = oldStartCdataSectionHandler;
   parser->m_endCdataSectionHandler = oldEndCdataSectionHandler;
   parser->m_defaultHandler = oldDefaultHandler;
   unparsedEntityDeclHandler = oldUnparsedEntityDeclHandler;
@@ -1598,7 +1596,7 @@ XML_SetCdataSectionHandler(XML_Parser parser,
 {
   if (parser == NULL)
     return;
-  startCdataSectionHandler = start;
+  parser->m_startCdataSectionHandler = start;
   parser->m_endCdataSectionHandler = end;
 }
 
@@ -1606,7 +1604,7 @@ void XMLCALL
 XML_SetStartCdataSectionHandler(XML_Parser parser,
                                 XML_StartCdataSectionHandler start) {
   if (parser != NULL)
-    startCdataSectionHandler = start;
+    parser->m_startCdataSectionHandler = start;
 }
 
 void XMLCALL
@@ -2960,8 +2958,8 @@ doContent(XML_Parser parser,
     case XML_TOK_CDATA_SECT_OPEN:
       {
         enum XML_Error result;
-        if (startCdataSectionHandler)
-          startCdataSectionHandler(parser->m_handlerArg);
+        if (parser->m_startCdataSectionHandler)
+          parser->m_startCdataSectionHandler(parser->m_handlerArg);
 #if 0
         /* Suppose you doing a transformation on a document that involves
            changing only the character data.  You set up a defaultHandler
