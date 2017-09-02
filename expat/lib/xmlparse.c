@@ -648,8 +648,6 @@ struct XML_ParserStruct {
 #define REALLOC(p,s) (parser->m_mem.realloc_fcn((p),(s)))
 #define FREE(p) (parser->m_mem.free_fcn((p)))
 
-#define processingInstructionHandler \
-        (parser->m_processingInstructionHandler)
 #define startCdataSectionHandler \
         (parser->m_startCdataSectionHandler)
 #define unparsedEntityDeclHandler \
@@ -1058,7 +1056,7 @@ parserInit(XML_Parser parser, const XML_Char *encodingName)
   parser->m_startElementHandler = NULL;
   parser->m_endElementHandler = NULL;
   parser->m_characterDataHandler = NULL;
-  processingInstructionHandler = NULL;
+  parser->m_processingInstructionHandler = NULL;
   parser->m_commentHandler = NULL;
   startCdataSectionHandler = NULL;
   parser->m_endCdataSectionHandler = NULL;
@@ -1252,7 +1250,7 @@ XML_ExternalEntityParserCreate(XML_Parser oldParser,
   oldStartElementHandler = parser->m_startElementHandler;
   oldEndElementHandler = parser->m_endElementHandler;
   oldCharacterDataHandler = parser->m_characterDataHandler;
-  oldProcessingInstructionHandler = processingInstructionHandler;
+  oldProcessingInstructionHandler = parser->m_processingInstructionHandler;
   oldCommentHandler = parser->m_commentHandler;
   oldStartCdataSectionHandler = startCdataSectionHandler;
   oldEndCdataSectionHandler = parser->m_endCdataSectionHandler;
@@ -1312,7 +1310,7 @@ XML_ExternalEntityParserCreate(XML_Parser oldParser,
   parser->m_startElementHandler = oldStartElementHandler;
   parser->m_endElementHandler = oldEndElementHandler;
   parser->m_characterDataHandler = oldCharacterDataHandler;
-  processingInstructionHandler = oldProcessingInstructionHandler;
+  parser->m_processingInstructionHandler = oldProcessingInstructionHandler;
   parser->m_commentHandler = oldCommentHandler;
   startCdataSectionHandler = oldStartCdataSectionHandler;
   parser->m_endCdataSectionHandler = oldEndCdataSectionHandler;
@@ -1582,7 +1580,7 @@ XML_SetProcessingInstructionHandler(XML_Parser parser,
                                     XML_ProcessingInstructionHandler handler)
 {
   if (parser != NULL)
-    processingInstructionHandler = handler;
+    parser->m_processingInstructionHandler = handler;
 }
 
 void XMLCALL
@@ -5865,7 +5863,7 @@ reportProcessingInstruction(XML_Parser parser, const ENCODING *enc,
   const XML_Char *target;
   XML_Char *data;
   const char *tem;
-  if (!processingInstructionHandler) {
+  if (!parser->m_processingInstructionHandler) {
     if (parser->m_defaultHandler)
       reportDefault(parser, enc, start, end);
     return 1;
@@ -5882,7 +5880,7 @@ reportProcessingInstruction(XML_Parser parser, const ENCODING *enc,
   if (!data)
     return 0;
   normalizeLines(data);
-  processingInstructionHandler(parser->m_handlerArg, target, data);
+  parser->m_processingInstructionHandler(parser->m_handlerArg, target, data);
   poolClear(&parser->m_tempPool);
   return 1;
 }
