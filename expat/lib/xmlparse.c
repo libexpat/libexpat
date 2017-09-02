@@ -668,7 +668,6 @@ struct XML_ParserStruct {
 #define defaultExpandInternalEntities \
         (parser->m_defaultExpandInternalEntities)
 #define buffer (parser->m_buffer)
-#define doctypeSysid (parser->m_doctypeSysid)
 #define doctypePubid (parser->m_doctypePubid)
 #define declAttributeType (parser->m_declAttributeType)
 #define declNotationName (parser->m_declNotationName)
@@ -1120,7 +1119,7 @@ parserInit(XML_Parser parser, const XML_Char *encodingName)
   declAttributeId = NULL;
   parser->m_declEntity = NULL;
   parser->m_doctypeName = NULL;
-  doctypeSysid = NULL;
+  parser->m_doctypeSysid = NULL;
   doctypePubid = NULL;
   declAttributeType = NULL;
   declNotationName = NULL;
@@ -4390,11 +4389,11 @@ doProlog(XML_Parser parser,
         doctypePubid = NULL;
         handleDefault = XML_FALSE;
       }
-      doctypeSysid = NULL; /* always initialize to NULL */
+      parser->m_doctypeSysid = NULL; /* always initialize to NULL */
       break;
     case XML_ROLE_DOCTYPE_INTERNAL_SUBSET:
       if (parser->m_startDoctypeDeclHandler) {
-        parser->m_startDoctypeDeclHandler(parser->m_handlerArg, parser->m_doctypeName, doctypeSysid,
+        parser->m_startDoctypeDeclHandler(parser->m_handlerArg, parser->m_doctypeName, parser->m_doctypeSysid,
                                 doctypePubid, 1);
         parser->m_doctypeName = NULL;
         poolClear(&tempPool);
@@ -4463,16 +4462,16 @@ doProlog(XML_Parser parser,
     case XML_ROLE_DOCTYPE_CLOSE:
       if (parser->m_doctypeName) {
         parser->m_startDoctypeDeclHandler(parser->m_handlerArg, parser->m_doctypeName,
-                                doctypeSysid, doctypePubid, 0);
+                                parser->m_doctypeSysid, doctypePubid, 0);
         poolClear(&tempPool);
         handleDefault = XML_FALSE;
       }
-      /* doctypeSysid will be non-NULL in the case of a previous
+      /* parser->m_doctypeSysid will be non-NULL in the case of a previous
          XML_ROLE_DOCTYPE_SYSTEM_ID, even if parser->m_startDoctypeDeclHandler
          was not set, indicating an external subset
       */
 #ifdef XML_DTD
-      if (doctypeSysid || useForeignDTD) {
+      if (parser->m_doctypeSysid || useForeignDTD) {
         XML_Bool hadParamEntityRefs = dtd->hasParamEntityRefs;
         dtd->hasParamEntityRefs = XML_TRUE;
         if (paramEntityParsing && externalEntityRefHandler) {
@@ -4506,7 +4505,7 @@ doProlog(XML_Parser parser,
           /* if we didn't read the foreign DTD then this means that there
              is no external subset and we must reset dtd->hasParamEntityRefs
           */
-          else if (!doctypeSysid)
+          else if (!parser->m_doctypeSysid)
             dtd->hasParamEntityRefs = hadParamEntityRefs;
           /* end of DTD - no need to update dtd->keepProcessing */
         }
@@ -4716,19 +4715,19 @@ doProlog(XML_Parser parser,
 #endif /* XML_DTD */
       dtd->hasParamEntityRefs = XML_TRUE;
       if (parser->m_startDoctypeDeclHandler) {
-        doctypeSysid = poolStoreString(&tempPool, enc,
+        parser->m_doctypeSysid = poolStoreString(&tempPool, enc,
                                        s + enc->minBytesPerChar,
                                        next - enc->minBytesPerChar);
-        if (doctypeSysid == NULL)
+        if (parser->m_doctypeSysid == NULL)
           return XML_ERROR_NO_MEMORY;
         poolFinish(&tempPool);
         handleDefault = XML_FALSE;
       }
 #ifdef XML_DTD
       else
-        /* use externalSubsetName to make doctypeSysid non-NULL
+        /* use externalSubsetName to make parser->m_doctypeSysid non-NULL
            for the case where no parser->m_startDoctypeDeclHandler is set */
-        doctypeSysid = externalSubsetName;
+        parser->m_doctypeSysid = externalSubsetName;
 #endif /* XML_DTD */
       if (!dtd->standalone
 #ifdef XML_DTD
