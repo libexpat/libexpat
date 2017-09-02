@@ -665,7 +665,6 @@ struct XML_ParserStruct {
 #define encoding (parser->m_encoding)
 #define unknownEncodingHandlerData \
   (parser->m_unknownEncodingHandlerData)
-#define processor (parser->m_processor)
 #define errorCode (parser->m_errorCode)
 #define eventPtr (parser->m_eventPtr)
 #define eventEndPtr (parser->m_eventEndPtr)
@@ -1101,7 +1100,7 @@ parserCreate(const XML_Char *encodingName,
 static void
 parserInit(XML_Parser parser, const XML_Char *encodingName)
 {
-  processor = prologInitProcessor;
+  parser->m_processor = prologInitProcessor;
   XmlPrologStateInit(&parser->m_prologState);
   if (encodingName != NULL) {
     parser->m_protocolEncodingName = copyString(encodingName, &(parser->m_mem));
@@ -1406,7 +1405,7 @@ XML_ExternalEntityParserCreate(XML_Parser oldParser,
       XML_ParserFree(parser);
       return NULL;
     }
-    processor = externalEntityInitProcessor;
+    parser->m_processor = externalEntityInitProcessor;
 #ifdef XML_DTD
   }
   else {
@@ -1419,7 +1418,7 @@ XML_ExternalEntityParserCreate(XML_Parser oldParser,
     */
     isParamEntity = XML_TRUE;
     XmlPrologStateInitExternalEntity(&parser->m_prologState);
-    processor = externalParEntInitProcessor;
+    parser->m_processor = externalParEntInitProcessor;
   }
 #endif /* XML_DTD */
   return parser;
@@ -1903,7 +1902,7 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal)
        data are the final chunk of input, then we have to check them again
        to detect errors based on that fact.
     */
-    errorCode = processor(parser, bufferPtr, parseEndPtr, &bufferPtr);
+    errorCode = parser->m_processor(parser, bufferPtr, parseEndPtr, &bufferPtr);
 
     if (errorCode == XML_ERROR_NONE) {
       switch (ps_parsing) {
@@ -1933,7 +1932,7 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal)
       }
     }
     eventEndPtr = eventPtr;
-    processor = errorProcessor;
+    parser->m_processor = errorProcessor;
     return XML_STATUS_ERROR;
   }
 #ifndef XML_CONTEXT_BYTES
@@ -1945,18 +1944,18 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal)
     if (len > ((XML_Size)-1) / 2 - parseEndByteIndex) {
        errorCode = XML_ERROR_NO_MEMORY;
        eventPtr = eventEndPtr = NULL;
-       processor = errorProcessor;
+       parser->m_processor = errorProcessor;
        return XML_STATUS_ERROR;
     }
     parseEndByteIndex += len;
     positionPtr = s;
     ps_finalBuffer = (XML_Bool)isFinal;
 
-    errorCode = processor(parser, s, parseEndPtr = s + len, &end);
+    errorCode = parser->m_processor(parser, s, parseEndPtr = s + len, &end);
 
     if (errorCode != XML_ERROR_NONE) {
       eventEndPtr = eventPtr;
-      processor = errorProcessor;
+      parser->m_processor = errorProcessor;
       return XML_STATUS_ERROR;
     }
     else {
@@ -1989,7 +1988,7 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal)
         if (temp == NULL) {
           errorCode = XML_ERROR_NO_MEMORY;
           eventPtr = eventEndPtr = NULL;
-          processor = errorProcessor;
+          parser->m_processor = errorProcessor;
           return XML_STATUS_ERROR;
         }
         buffer = temp;
@@ -2048,11 +2047,11 @@ XML_ParseBuffer(XML_Parser parser, int len, int isFinal)
   parseEndByteIndex += len;
   ps_finalBuffer = (XML_Bool)isFinal;
 
-  errorCode = processor(parser, start, parseEndPtr, &bufferPtr);
+  errorCode = parser->m_processor(parser, start, parseEndPtr, &bufferPtr);
 
   if (errorCode != XML_ERROR_NONE) {
     eventEndPtr = eventPtr;
-    processor = errorProcessor;
+    parser->m_processor = errorProcessor;
     return XML_STATUS_ERROR;
   }
   else {
@@ -2218,11 +2217,11 @@ XML_ResumeParser(XML_Parser parser)
   }
   ps_parsing = XML_PARSING;
 
-  errorCode = processor(parser, bufferPtr, parseEndPtr, &bufferPtr);
+  errorCode = parser->m_processor(parser, bufferPtr, parseEndPtr, &bufferPtr);
 
   if (errorCode != XML_ERROR_NONE) {
     eventEndPtr = eventPtr;
-    processor = errorProcessor;
+    parser->m_processor = errorProcessor;
     return XML_STATUS_ERROR;
   }
   else {
@@ -2569,7 +2568,7 @@ externalEntityInitProcessor(XML_Parser parser,
   enum XML_Error result = initializeEncoding(parser);
   if (result != XML_ERROR_NONE)
     return result;
-  processor = externalEntityInitProcessor2;
+  parser->m_processor = externalEntityInitProcessor2;
   return externalEntityInitProcessor2(parser, start, end, endPtr);
 }
 
@@ -2609,7 +2608,7 @@ externalEntityInitProcessor2(XML_Parser parser,
     eventPtr = start;
     return XML_ERROR_PARTIAL_CHAR;
   }
-  processor = externalEntityInitProcessor3;
+  parser->m_processor = externalEntityInitProcessor3;
   return externalEntityInitProcessor3(parser, start, end, endPtr);
 }
 
@@ -2656,7 +2655,7 @@ externalEntityInitProcessor3(XML_Parser parser,
     }
     return XML_ERROR_PARTIAL_CHAR;
   }
-  processor = externalEntityContentProcessor;
+  parser->m_processor = externalEntityContentProcessor;
   tagLevel = 1;
   return externalEntityContentProcessor(parser, start, end, endPtr);
 }
@@ -3041,7 +3040,7 @@ doContent(XML_Parser parser,
         if (result != XML_ERROR_NONE)
           return result;
         else if (!next) {
-          processor = cdataSectionProcessor;
+          parser->m_processor = cdataSectionProcessor;
           return result;
         }
       }
@@ -3686,11 +3685,11 @@ cdataSectionProcessor(XML_Parser parser,
     return result;
   if (start) {
     if (parentParser) {  /* we are parsing an external entity */
-      processor = externalEntityContentProcessor;
+      parser->m_processor = externalEntityContentProcessor;
       return externalEntityContentProcessor(parser, start, end, endPtr);
     }
     else {
-      processor = contentProcessor;
+      parser->m_processor = contentProcessor;
       return contentProcessor(parser, start, end, endPtr);
     }
   }
@@ -3835,7 +3834,7 @@ ignoreSectionProcessor(XML_Parser parser,
   if (result != XML_ERROR_NONE)
     return result;
   if (start) {
-    processor = prologProcessor;
+    parser->m_processor = prologProcessor;
     return prologProcessor(parser, start, end, endPtr);
   }
   return result;
@@ -4099,7 +4098,7 @@ prologInitProcessor(XML_Parser parser,
   enum XML_Error result = initializeEncoding(parser);
   if (result != XML_ERROR_NONE)
     return result;
-  processor = prologProcessor;
+  parser->m_processor = prologProcessor;
   return prologProcessor(parser, s, end, nextPtr);
 }
 
@@ -4120,11 +4119,11 @@ externalParEntInitProcessor(XML_Parser parser,
   _dtd->paramEntityRead = XML_TRUE;
 
   if (parser->m_prologState.inEntityValue) {
-    processor = entityValueInitProcessor;
+    parser->m_processor = entityValueInitProcessor;
     return entityValueInitProcessor(parser, s, end, nextPtr);
   }
   else {
-    processor = externalParEntProcessor;
+    parser->m_processor = externalParEntProcessor;
     return externalParEntProcessor(parser, s, end, nextPtr);
   }
 }
@@ -4176,7 +4175,7 @@ entityValueInitProcessor(XML_Parser parser,
         return XML_ERROR_ABORTED;
       *nextPtr = next;
       /* stop scanning for text declaration - we found one */
-      processor = entityValueProcessor;
+      parser->m_processor = entityValueProcessor;
       return entityValueProcessor(parser, next, end, nextPtr);
     }
     /* If we are at the end of the buffer, this would cause XmlPrologTok to
@@ -4239,7 +4238,7 @@ externalParEntProcessor(XML_Parser parser,
     tok = XmlPrologTok(encoding, s, end, &next);
   }
 
-  processor = prologProcessor;
+  parser->m_processor = prologProcessor;
   return doProlog(parser, encoding, s, end, tok, next,
                   nextPtr, (XML_Bool)!ps_finalBuffer);
 }
@@ -4575,7 +4574,7 @@ doProlog(XML_Parser parser,
         }
       }
 #endif /* XML_DTD */
-      processor = contentProcessor;
+      parser->m_processor = contentProcessor;
       return contentProcessor(parser, s, end, nextPtr);
     case XML_ROLE_ATTLIST_ELEMENT_NAME:
       declElementType = getElementType(parser, enc, s, next);
@@ -4979,7 +4978,7 @@ doProlog(XML_Parser parser,
         if (result != XML_ERROR_NONE)
           return result;
         else if (!next) {
-          processor = ignoreSectionProcessor;
+          parser->m_processor = ignoreSectionProcessor;
           return result;
         }
       }
@@ -5321,7 +5320,7 @@ epilogProcessor(XML_Parser parser,
                 const char *end,
                 const char **nextPtr)
 {
-  processor = epilogProcessor;
+  parser->m_processor = epilogProcessor;
   eventPtr = s;
   for (;;) {
     const char *next = NULL;
@@ -5428,7 +5427,7 @@ processInternalEntity(XML_Parser parser, ENTITY *entity,
   if (result == XML_ERROR_NONE) {
     if (textEnd != next && ps_parsing == XML_SUSPENDED) {
       entity->processed = (int)(next - textStart);
-      processor = internalEntityProcessor;
+      parser->m_processor = internalEntityProcessor;
     }
     else {
       entity->open = XML_FALSE;
@@ -5489,7 +5488,7 @@ internalEntityProcessor(XML_Parser parser,
 #ifdef XML_DTD
   if (entity->is_param) {
     int tok;
-    processor = prologProcessor;
+    parser->m_processor = prologProcessor;
     tok = XmlPrologTok(encoding, s, end, &next);
     return doProlog(parser, encoding, s, end, tok, next, nextPtr,
                     (XML_Bool)!ps_finalBuffer);
@@ -5497,7 +5496,7 @@ internalEntityProcessor(XML_Parser parser,
   else
 #endif /* XML_DTD */
   {
-    processor = contentProcessor;
+    parser->m_processor = contentProcessor;
     /* see externalEntityContentProcessor vs contentProcessor */
     return doContent(parser, parentParser ? 1 : 0, encoding, s, end,
                      nextPtr, (XML_Bool)!ps_finalBuffer);
