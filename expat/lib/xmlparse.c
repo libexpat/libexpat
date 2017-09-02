@@ -663,7 +663,6 @@ struct XML_ParserStruct {
 #define internalEntityRefHandler \
         (parser->m_internalEntityRefHandler)
 #define encoding (parser->m_encoding)
-#define initEncoding (parser->m_initEncoding)
 #define internalEncoding (parser->m_internalEncoding)
 #define unknownEncodingMem (parser->m_unknownEncodingMem)
 #define unknownEncodingData (parser->m_unknownEncodingData)
@@ -1116,7 +1115,7 @@ parserInit(XML_Parser parser, const XML_Char *encodingName)
     protocolEncodingName = copyString(encodingName, &(parser->m_mem));
   }
   curBase = NULL;
-  XmlInitEncoding(&initEncoding, &encoding, 0);
+  XmlInitEncoding(&parser->m_initEncoding, &encoding, 0);
   parser->m_userData = NULL;
   parser->m_handlerArg = NULL;
   parser->m_startElementHandler = NULL;
@@ -3959,7 +3958,7 @@ initializeEncoding(XML_Parser parser)
 #else
   s = protocolEncodingName;
 #endif
-  if ((ns ? XmlInitEncodingNS : XmlInitEncoding)(&initEncoding, &encoding, s))
+  if ((ns ? XmlInitEncodingNS : XmlInitEncoding)(&parser->m_initEncoding, &encoding, s))
     return XML_ERROR_NONE;
   return handleUnknownEncoding(parser, protocolEncodingName);
 }
