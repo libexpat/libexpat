@@ -668,7 +668,6 @@ struct XML_ParserStruct {
 #define defaultExpandInternalEntities \
         (parser->m_defaultExpandInternalEntities)
 #define buffer (parser->m_buffer)
-#define freeBindingList (parser->m_freeBindingList)
 #define inheritedBindings (parser->m_inheritedBindings)
 #define tagStack (parser->m_tagStack)
 #define atts (parser->m_atts)
@@ -1027,7 +1026,7 @@ parserCreate(const XML_Char *encodingName,
     }
   }
 
-  freeBindingList = NULL;
+  parser->m_freeBindingList = NULL;
   parser->m_freeTagList = NULL;
   parser->m_freeInternalEntities = NULL;
 
@@ -1141,15 +1140,15 @@ parserInit(XML_Parser parser, const XML_Char *encodingName)
   hash_secret_salt = 0;
 }
 
-/* moves list of bindings to freeBindingList */
+/* moves list of bindings to m_freeBindingList */
 static void FASTCALL
 moveToFreeBindingList(XML_Parser parser, BINDING *bindings)
 {
   while (bindings) {
     BINDING *b = bindings;
     bindings = bindings->nextTagBinding;
-    b->nextTagBinding = freeBindingList;
-    freeBindingList = b;
+    b->nextTagBinding = parser->m_freeBindingList;
+    parser->m_freeBindingList = b;
   }
 }
 
@@ -1446,7 +1445,7 @@ XML_ParserFree(XML_Parser parser)
     FREE(openEntity);
   }
 
-  destroyBindings(freeBindingList, parser);
+  destroyBindings(parser->m_freeBindingList, parser);
   destroyBindings(inheritedBindings, parser);
   poolDestroy(&tempPool);
   poolDestroy(&temp2Pool);
@@ -2953,8 +2952,8 @@ doContent(XML_Parser parser,
           if (parser->m_endNamespaceDeclHandler)
             parser->m_endNamespaceDeclHandler(parser->m_handlerArg, b->prefix->name);
           tag->bindings = tag->bindings->nextTagBinding;
-          b->nextTagBinding = freeBindingList;
-          freeBindingList = b;
+          b->nextTagBinding = parser->m_freeBindingList;
+          parser->m_freeBindingList = b;
           b->prefix->binding = b->prevPrefixBinding;
         }
         if (parser->m_tagLevel == 0)
@@ -3108,7 +3107,7 @@ doContent(XML_Parser parser,
 }
 
 /* This function does not call free() on the allocated memory, merely
- * moving it to the parser's freeBindingList where it can be freed or
+ * moving it to the parser's m_freeBindingList where it can be freed or
  * reused as appropriate.
  */
 static void
@@ -3124,8 +3123,8 @@ freeBindings(XML_Parser parser, BINDING *bindings)
         parser->m_endNamespaceDeclHandler(parser->m_handlerArg, b->prefix->name);
 
     bindings = bindings->nextTagBinding;
-    b->nextTagBinding = freeBindingList;
-    freeBindingList = b;
+    b->nextTagBinding = parser->m_freeBindingList;
+    parser->m_freeBindingList = b;
     b->prefix->binding = b->prevPrefixBinding;
   }
 }
@@ -3597,8 +3596,8 @@ addBinding(XML_Parser parser, PREFIX *prefix, const ATTRIBUTE_ID *attId,
 
   if (namespaceSeparator)
     len++;
-  if (freeBindingList) {
-    b = freeBindingList;
+  if (parser->m_freeBindingList) {
+    b = parser->m_freeBindingList;
     if (len > b->uriAlloc) {
       XML_Char *temp = (XML_Char *)REALLOC(b->uri,
                           sizeof(XML_Char) * (len + EXPAND_SPARE));
@@ -3607,7 +3606,7 @@ addBinding(XML_Parser parser, PREFIX *prefix, const ATTRIBUTE_ID *attId,
       b->uri = temp;
       b->uriAlloc = len + EXPAND_SPARE;
     }
-    freeBindingList = b->nextTagBinding;
+    parser->m_freeBindingList = b->nextTagBinding;
   }
   else {
     b = (BINDING *)MALLOC(sizeof(BINDING));
