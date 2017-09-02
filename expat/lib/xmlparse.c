@@ -668,9 +668,6 @@ struct XML_ParserStruct {
 #define defaultExpandInternalEntities \
         (parser->m_defaultExpandInternalEntities)
 #define buffer (parser->m_buffer)
-#ifdef XML_DTD
-#define paramEntityParsing (parser->m_paramEntityParsing)
-#endif /* XML_DTD */
 #define hash_secret_salt (parser->m_hash_secret_salt)
 
 XML_Parser XMLCALL
@@ -1115,7 +1112,7 @@ parserInit(XML_Parser parser, const XML_Char *encodingName)
 #ifdef XML_DTD
   parser->m_isParamEntity = XML_FALSE;
   parser->m_useForeignDTD = XML_FALSE;
-  paramEntityParsing = XML_PARAM_ENTITY_PARSING_NEVER;
+  parser->m_paramEntityParsing = XML_PARAM_ENTITY_PARSING_NEVER;
 #endif
   hash_secret_salt = 0;
 }
@@ -1280,7 +1277,7 @@ XML_ExternalEntityParserCreate(XML_Parser oldParser,
   oldDefaultExpandInternalEntities = defaultExpandInternalEntities;
   oldExternalEntityRefHandlerArg = externalEntityRefHandlerArg;
 #ifdef XML_DTD
-  oldParamEntityParsing = paramEntityParsing;
+  oldParamEntityParsing = parser->m_paramEntityParsing;
   oldInEntityValue = parser->m_prologState.inEntityValue;
 #endif
   oldns_triplets = parser->m_ns_triplets;
@@ -1346,7 +1343,7 @@ XML_ExternalEntityParserCreate(XML_Parser oldParser,
   hash_secret_salt = oldhash_secret_salt;
   parser->m_parentParser = oldParser;
 #ifdef XML_DTD
-  paramEntityParsing = oldParamEntityParsing;
+  parser->m_paramEntityParsing = oldParamEntityParsing;
   parser->m_prologState.inEntityValue = oldInEntityValue;
   if (context) {
 #endif /* XML_DTD */
@@ -1795,7 +1792,7 @@ XML_SetParamEntityParsing(XML_Parser parser,
   if (parser->m_parsingStatus.parsing == XML_PARSING || parser->m_parsingStatus.parsing == XML_SUSPENDED)
     return 0;
 #ifdef XML_DTD
-  paramEntityParsing = peParsing;
+  parser->m_paramEntityParsing = peParsing;
   return 1;
 #else
   return peParsing == XML_PARAM_ENTITY_PARSING_NEVER;
@@ -3935,8 +3932,8 @@ processXmlDecl(XML_Parser parser, int isGeneralTextEntity,
   if (!isGeneralTextEntity && standalone == 1) {
     parser->m_dtd->standalone = XML_TRUE;
 #ifdef XML_DTD
-    if (paramEntityParsing == XML_PARAM_ENTITY_PARSING_UNLESS_STANDALONE)
-      paramEntityParsing = XML_PARAM_ENTITY_PARSING_NEVER;
+    if (parser->m_paramEntityParsing == XML_PARAM_ENTITY_PARSING_UNLESS_STANDALONE)
+      parser->m_paramEntityParsing = XML_PARAM_ENTITY_PARSING_NEVER;
 #endif /* XML_DTD */
   }
   if (parser->m_xmlDeclHandler) {
@@ -4444,7 +4441,7 @@ doProlog(XML_Parser parser,
       if (parser->m_doctypeSysid || parser->m_useForeignDTD) {
         XML_Bool hadParamEntityRefs = dtd->hasParamEntityRefs;
         dtd->hasParamEntityRefs = XML_TRUE;
-        if (paramEntityParsing && externalEntityRefHandler) {
+        if (parser->m_paramEntityParsing && externalEntityRefHandler) {
           ENTITY *entity = (ENTITY *)lookup(parser,
                                             &dtd->paramEntities,
                                             externalSubsetName,
@@ -4495,7 +4492,7 @@ doProlog(XML_Parser parser,
       if (parser->m_useForeignDTD) {
         XML_Bool hadParamEntityRefs = dtd->hasParamEntityRefs;
         dtd->hasParamEntityRefs = XML_TRUE;
-        if (paramEntityParsing && externalEntityRefHandler) {
+        if (parser->m_paramEntityParsing && externalEntityRefHandler) {
           ENTITY *entity = (ENTITY *)lookup(parser, &dtd->paramEntities,
                                             externalSubsetName,
                                             sizeof(ENTITY));
@@ -4701,7 +4698,7 @@ doProlog(XML_Parser parser,
 #endif /* XML_DTD */
       if (!dtd->standalone
 #ifdef XML_DTD
-          && !paramEntityParsing
+          && !parser->m_paramEntityParsing
 #endif /* XML_DTD */
           && parser->m_notStandaloneHandler
           && !parser->m_notStandaloneHandler(parser->m_handlerArg))
@@ -4997,7 +4994,7 @@ doProlog(XML_Parser parser,
 #ifdef XML_DTD
     case XML_ROLE_INNER_PARAM_ENTITY_REF:
       dtd->hasParamEntityRefs = XML_TRUE;
-      if (!paramEntityParsing)
+      if (!parser->m_paramEntityParsing)
         dtd->keepProcessing = dtd->standalone;
       else {
         const XML_Char *name;
