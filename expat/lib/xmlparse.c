@@ -668,7 +668,6 @@ struct XML_ParserStruct {
 #define defaultExpandInternalEntities \
         (parser->m_defaultExpandInternalEntities)
 #define buffer (parser->m_buffer)
-#define tagStack (parser->m_tagStack)
 #define atts (parser->m_atts)
 #define attsSize (parser->m_attsSize)
 #define nSpecifiedAtts (parser->m_nSpecifiedAtts)
@@ -1123,7 +1122,7 @@ parserInit(XML_Parser parser, const XML_Char *encodingName)
   parser->m_openInternalEntities = NULL;
   defaultExpandInternalEntities = XML_TRUE;
   parser->m_tagLevel = 0;
-  tagStack = NULL;
+  parser->m_tagStack = NULL;
   parser->m_inheritedBindings = NULL;
   nSpecifiedAtts = 0;
   parser->m_unknownEncodingMem = NULL;
@@ -1162,8 +1161,8 @@ XML_ParserReset(XML_Parser parser, const XML_Char *encodingName)
 
   if (parentParser)
     return XML_FALSE;
-  /* move tagStack to m_freeTagList */
-  tStk = tagStack;
+  /* move m_tagStack to m_freeTagList */
+  tStk = parser->m_tagStack;
   while (tStk) {
     TAG *tag = tStk;
     tStk = tStk->parent;
@@ -1413,8 +1412,8 @@ XML_ParserFree(XML_Parser parser)
   OPEN_INTERNAL_ENTITY *entityList;
   if (parser == NULL)
     return;
-  /* free tagStack and m_freeTagList */
-  tagList = tagStack;
+  /* free m_tagStack and m_freeTagList */
+  tagList = parser->m_tagStack;
   for (;;) {
     TAG *p;
     if (tagList == NULL) {
@@ -2471,12 +2470,12 @@ XML_GetFeatureList(void)
 static XML_Bool
 storeRawNames(XML_Parser parser)
 {
-  TAG *tag = tagStack;
+  TAG *tag = parser->m_tagStack;
   while (tag) {
     int bufSize;
     int nameLen = sizeof(XML_Char) * (tag->name.strLen + 1);
     char *rawNameBuf = tag->buf + nameLen;
-    /* Stop if already stored.  Since tagStack is a stack, we can stop
+    /* Stop if already stored.  Since m_tagStack is a stack, we can stop
        at the first entry that has already been copied; everything
        below it in the stack is already been accounted for in a
        previous call to this function.
@@ -2818,8 +2817,8 @@ doContent(XML_Parser parser,
           tag->bufEnd = tag->buf + INIT_TAG_BUF_SIZE;
         }
         tag->bindings = NULL;
-        tag->parent = tagStack;
-        tagStack = tag;
+        tag->parent = parser->m_tagStack;
+        parser->m_tagStack = tag;
         tag->name.localPart = NULL;
         tag->name.prefix = NULL;
         tag->rawName = s + enc->minBytesPerChar;
@@ -2910,8 +2909,8 @@ doContent(XML_Parser parser,
       else {
         int len;
         const char *rawName;
-        TAG *tag = tagStack;
-        tagStack = tag->parent;
+        TAG *tag = parser->m_tagStack;
+        parser->m_tagStack = tag->parent;
         tag->parent = parser->m_freeTagList;
         parser->m_freeTagList = tag;
         rawName = s + enc->minBytesPerChar*2;
@@ -3503,7 +3502,7 @@ storeAtts(XML_Parser parser, const ENCODING *enc,
       return XML_ERROR_NO_MEMORY;
     binding->uriAlloc = n + EXPAND_SPARE;
     memcpy(uri, binding->uri, binding->uriLen * sizeof(XML_Char));
-    for (p = tagStack; p; p = p->parent)
+    for (p = parser->m_tagStack; p; p = p->parent)
       if (p->name.str == binding->uri)
         p->name.str = uri;
     FREE(binding->uri);
