@@ -648,8 +648,6 @@ struct XML_ParserStruct {
 #define REALLOC(p,s) (parser->m_mem.realloc_fcn((p),(s)))
 #define FREE(p) (parser->m_mem.free_fcn((p)))
 
-#define unparsedEntityDeclHandler \
-        (parser->m_unparsedEntityDeclHandler)
 #define startNamespaceDeclHandler \
         (parser->m_startNamespaceDeclHandler)
 #define externalEntityRefHandler \
@@ -1061,7 +1059,7 @@ parserInit(XML_Parser parser, const XML_Char *encodingName)
   parser->m_defaultHandler = NULL;
   parser->m_startDoctypeDeclHandler = NULL;
   parser->m_endDoctypeDeclHandler = NULL;
-  unparsedEntityDeclHandler = NULL;
+  parser->m_unparsedEntityDeclHandler = NULL;
   parser->m_notationDeclHandler = NULL;
   startNamespaceDeclHandler = NULL;
   parser->m_endNamespaceDeclHandler = NULL;
@@ -1253,7 +1251,7 @@ XML_ExternalEntityParserCreate(XML_Parser oldParser,
   oldStartCdataSectionHandler = parser->m_startCdataSectionHandler;
   oldEndCdataSectionHandler = parser->m_endCdataSectionHandler;
   oldDefaultHandler = parser->m_defaultHandler;
-  oldUnparsedEntityDeclHandler = unparsedEntityDeclHandler;
+  oldUnparsedEntityDeclHandler = parser->m_unparsedEntityDeclHandler;
   oldNotationDeclHandler = parser->m_notationDeclHandler;
   oldStartNamespaceDeclHandler = startNamespaceDeclHandler;
   oldEndNamespaceDeclHandler = parser->m_endNamespaceDeclHandler;
@@ -1313,7 +1311,7 @@ XML_ExternalEntityParserCreate(XML_Parser oldParser,
   parser->m_startCdataSectionHandler = oldStartCdataSectionHandler;
   parser->m_endCdataSectionHandler = oldEndCdataSectionHandler;
   parser->m_defaultHandler = oldDefaultHandler;
-  unparsedEntityDeclHandler = oldUnparsedEntityDeclHandler;
+  parser->m_unparsedEntityDeclHandler = oldUnparsedEntityDeclHandler;
   parser->m_notationDeclHandler = oldNotationDeclHandler;
   startNamespaceDeclHandler = oldStartNamespaceDeclHandler;
   parser->m_endNamespaceDeclHandler = oldEndNamespaceDeclHandler;
@@ -1664,7 +1662,7 @@ XML_SetUnparsedEntityDeclHandler(XML_Parser parser,
                                  XML_UnparsedEntityDeclHandler handler)
 {
   if (parser != NULL)
-    unparsedEntityDeclHandler = handler;
+    parser->m_unparsedEntityDeclHandler = handler;
 }
 
 void XMLCALL
@@ -4748,9 +4746,9 @@ doProlog(XML_Parser parser,
         if (!parser->m_declEntity->notation)
           return XML_ERROR_NO_MEMORY;
         poolFinish(&dtd->pool);
-        if (unparsedEntityDeclHandler) {
+        if (parser->m_unparsedEntityDeclHandler) {
           *eventEndPP = s;
-          unparsedEntityDeclHandler(parser->m_handlerArg,
+          parser->m_unparsedEntityDeclHandler(parser->m_handlerArg,
                                     parser->m_declEntity->name,
                                     parser->m_declEntity->base,
                                     parser->m_declEntity->systemId,
