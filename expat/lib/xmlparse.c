@@ -665,7 +665,6 @@ struct XML_ParserStruct {
 #define encoding (parser->m_encoding)
 #define unknownEncodingHandlerData \
   (parser->m_unknownEncodingHandlerData)
-#define errorCode (parser->m_errorCode)
 #define eventPtr (parser->m_eventPtr)
 #define eventEndPtr (parser->m_eventEndPtr)
 #define positionPtr (parser->m_positionPtr)
@@ -1147,7 +1146,7 @@ parserInit(XML_Parser parser, const XML_Char *encodingName)
   declAttributeIsCdata = XML_FALSE;
   declAttributeIsId = XML_FALSE;
   memset(&position, 0, sizeof(POSITION));
-  errorCode = XML_ERROR_NONE;
+  parser->m_errorCode = XML_ERROR_NONE;
   eventPtr = NULL;
   eventEndPtr = NULL;
   positionPtr = NULL;
@@ -1877,14 +1876,14 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal)
   }
   switch (ps_parsing) {
   case XML_SUSPENDED:
-    errorCode = XML_ERROR_SUSPENDED;
+    parser->m_errorCode = XML_ERROR_SUSPENDED;
     return XML_STATUS_ERROR;
   case XML_FINISHED:
-    errorCode = XML_ERROR_FINISHED;
+    parser->m_errorCode = XML_ERROR_FINISHED;
     return XML_STATUS_ERROR;
   case XML_INITIALIZED:
     if (parentParser == NULL && !startParsing(parser)) {
-      errorCode = XML_ERROR_NO_MEMORY;
+      parser->m_errorCode = XML_ERROR_NO_MEMORY;
       return XML_STATUS_ERROR;
     }
   default:
@@ -1902,9 +1901,9 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal)
        data are the final chunk of input, then we have to check them again
        to detect errors based on that fact.
     */
-    errorCode = parser->m_processor(parser, bufferPtr, parseEndPtr, &bufferPtr);
+    parser->m_errorCode = parser->m_processor(parser, bufferPtr, parseEndPtr, &bufferPtr);
 
-    if (errorCode == XML_ERROR_NONE) {
+    if (parser->m_errorCode == XML_ERROR_NONE) {
       switch (ps_parsing) {
       case XML_SUSPENDED:
         /* It is hard to be certain, but it seems that this case
@@ -1942,7 +1941,7 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal)
     enum XML_Status result;
     /* Detect overflow (a+b > MAX <==> b > MAX-a) */
     if (len > ((XML_Size)-1) / 2 - parseEndByteIndex) {
-       errorCode = XML_ERROR_NO_MEMORY;
+       parser->m_errorCode = XML_ERROR_NO_MEMORY;
        eventPtr = eventEndPtr = NULL;
        parser->m_processor = errorProcessor;
        return XML_STATUS_ERROR;
@@ -1951,9 +1950,9 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal)
     positionPtr = s;
     ps_finalBuffer = (XML_Bool)isFinal;
 
-    errorCode = parser->m_processor(parser, s, parseEndPtr = s + len, &end);
+    parser->m_errorCode = parser->m_processor(parser, s, parseEndPtr = s + len, &end);
 
-    if (errorCode != XML_ERROR_NONE) {
+    if (parser->m_errorCode != XML_ERROR_NONE) {
       eventEndPtr = eventPtr;
       parser->m_processor = errorProcessor;
       return XML_STATUS_ERROR;
@@ -1986,7 +1985,7 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal)
           temp = (char *)REALLOC(buffer, bytesToAllocate);
         }
         if (temp == NULL) {
-          errorCode = XML_ERROR_NO_MEMORY;
+          parser->m_errorCode = XML_ERROR_NO_MEMORY;
           eventPtr = eventEndPtr = NULL;
           parser->m_processor = errorProcessor;
           return XML_STATUS_ERROR;
@@ -2026,14 +2025,14 @@ XML_ParseBuffer(XML_Parser parser, int len, int isFinal)
     return XML_STATUS_ERROR;
   switch (ps_parsing) {
   case XML_SUSPENDED:
-    errorCode = XML_ERROR_SUSPENDED;
+    parser->m_errorCode = XML_ERROR_SUSPENDED;
     return XML_STATUS_ERROR;
   case XML_FINISHED:
-    errorCode = XML_ERROR_FINISHED;
+    parser->m_errorCode = XML_ERROR_FINISHED;
     return XML_STATUS_ERROR;
   case XML_INITIALIZED:
     if (parentParser == NULL && !startParsing(parser)) {
-      errorCode = XML_ERROR_NO_MEMORY;
+      parser->m_errorCode = XML_ERROR_NO_MEMORY;
       return XML_STATUS_ERROR;
     }
   default:
@@ -2047,9 +2046,9 @@ XML_ParseBuffer(XML_Parser parser, int len, int isFinal)
   parseEndByteIndex += len;
   ps_finalBuffer = (XML_Bool)isFinal;
 
-  errorCode = parser->m_processor(parser, start, parseEndPtr, &bufferPtr);
+  parser->m_errorCode = parser->m_processor(parser, start, parseEndPtr, &bufferPtr);
 
-  if (errorCode != XML_ERROR_NONE) {
+  if (parser->m_errorCode != XML_ERROR_NONE) {
     eventEndPtr = eventPtr;
     parser->m_processor = errorProcessor;
     return XML_STATUS_ERROR;
@@ -2080,15 +2079,15 @@ XML_GetBuffer(XML_Parser parser, int len)
   if (parser == NULL)
     return NULL;
   if (len < 0) {
-    errorCode = XML_ERROR_NO_MEMORY;
+    parser->m_errorCode = XML_ERROR_NO_MEMORY;
     return NULL;
   }
   switch (ps_parsing) {
   case XML_SUSPENDED:
-    errorCode = XML_ERROR_SUSPENDED;
+    parser->m_errorCode = XML_ERROR_SUSPENDED;
     return NULL;
   case XML_FINISHED:
-    errorCode = XML_ERROR_FINISHED;
+    parser->m_errorCode = XML_ERROR_FINISHED;
     return NULL;
   default: ;
   }
@@ -2100,7 +2099,7 @@ XML_GetBuffer(XML_Parser parser, int len)
     /* Do not invoke signed arithmetic overflow: */
     int neededSize = (int) ((unsigned)len + (unsigned)(bufferEnd - bufferPtr));
     if (neededSize < 0) {
-      errorCode = XML_ERROR_NO_MEMORY;
+      parser->m_errorCode = XML_ERROR_NO_MEMORY;
       return NULL;
     }
 #ifdef XML_CONTEXT_BYTES
@@ -2133,12 +2132,12 @@ XML_GetBuffer(XML_Parser parser, int len)
         bufferSize = (int) (2U * (unsigned) bufferSize);
       } while (bufferSize < neededSize && bufferSize > 0);
       if (bufferSize <= 0) {
-        errorCode = XML_ERROR_NO_MEMORY;
+        parser->m_errorCode = XML_ERROR_NO_MEMORY;
         return NULL;
       }
       newBuf = (char *)MALLOC(bufferSize);
       if (newBuf == 0) {
-        errorCode = XML_ERROR_NO_MEMORY;
+        parser->m_errorCode = XML_ERROR_NO_MEMORY;
         return NULL;
       }
       bufferLim = newBuf + bufferSize;
@@ -2180,19 +2179,19 @@ XML_StopParser(XML_Parser parser, XML_Bool resumable)
   switch (ps_parsing) {
   case XML_SUSPENDED:
     if (resumable) {
-      errorCode = XML_ERROR_SUSPENDED;
+      parser->m_errorCode = XML_ERROR_SUSPENDED;
       return XML_STATUS_ERROR;
     }
     ps_parsing = XML_FINISHED;
     break;
   case XML_FINISHED:
-    errorCode = XML_ERROR_FINISHED;
+    parser->m_errorCode = XML_ERROR_FINISHED;
     return XML_STATUS_ERROR;
   default:
     if (resumable) {
 #ifdef XML_DTD
       if (isParamEntity) {
-        errorCode = XML_ERROR_SUSPEND_PE;
+        parser->m_errorCode = XML_ERROR_SUSPEND_PE;
         return XML_STATUS_ERROR;
       }
 #endif
@@ -2212,14 +2211,14 @@ XML_ResumeParser(XML_Parser parser)
   if (parser == NULL)
     return XML_STATUS_ERROR;
   if (ps_parsing != XML_SUSPENDED) {
-    errorCode = XML_ERROR_NOT_SUSPENDED;
+    parser->m_errorCode = XML_ERROR_NOT_SUSPENDED;
     return XML_STATUS_ERROR;
   }
   ps_parsing = XML_PARSING;
 
-  errorCode = parser->m_processor(parser, bufferPtr, parseEndPtr, &bufferPtr);
+  parser->m_errorCode = parser->m_processor(parser, bufferPtr, parseEndPtr, &bufferPtr);
 
-  if (errorCode != XML_ERROR_NONE) {
+  if (parser->m_errorCode != XML_ERROR_NONE) {
     eventEndPtr = eventPtr;
     parser->m_processor = errorProcessor;
     return XML_STATUS_ERROR;
@@ -2258,7 +2257,7 @@ XML_GetErrorCode(XML_Parser parser)
 {
   if (parser == NULL)
     return XML_ERROR_INVALID_ARGUMENT;
-  return errorCode;
+  return parser->m_errorCode;
 }
 
 XML_Index XMLCALL
@@ -5509,7 +5508,7 @@ errorProcessor(XML_Parser parser,
                const char *UNUSED_P(end),
                const char **UNUSED_P(nextPtr))
 {
-  return errorCode;
+  return parser->m_errorCode;
 }
 
 static enum XML_Error
