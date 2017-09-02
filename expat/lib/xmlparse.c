@@ -669,7 +669,6 @@ struct XML_ParserStruct {
         (parser->m_defaultExpandInternalEntities)
 #define buffer (parser->m_buffer)
 #ifdef XML_DTD
-#define isParamEntity (parser->m_isParamEntity)
 #define useForeignDTD (parser->m_useForeignDTD)
 #define paramEntityParsing (parser->m_paramEntityParsing)
 #endif /* XML_DTD */
@@ -1115,7 +1114,7 @@ parserInit(XML_Parser parser, const XML_Char *encodingName)
   parser->m_parentParser = NULL;
   parser->m_parsingStatus.parsing = XML_INITIALIZED;
 #ifdef XML_DTD
-  isParamEntity = XML_FALSE;
+  parser->m_isParamEntity = XML_FALSE;
   useForeignDTD = XML_FALSE;
   paramEntityParsing = XML_PARAM_ENTITY_PARSING_NEVER;
 #endif
@@ -1368,7 +1367,7 @@ XML_ExternalEntityParserCreate(XML_Parser oldParser,
        parser->m_dtd with ones that get destroyed with the external PE parser.
        This would leave those prefixes with dangling pointers.
     */
-    isParamEntity = XML_TRUE;
+    parser->m_isParamEntity = XML_TRUE;
     XmlPrologStateInitExternalEntity(&parser->m_prologState);
     parser->m_processor = externalParEntInitProcessor;
   }
@@ -1436,7 +1435,7 @@ XML_ParserFree(XML_Parser parser)
   /* external parameter entity parsers share the DTD structure
      parser->m_dtd with the root parser, so we must not destroy it
   */
-  if (!isParamEntity && parser->m_dtd)
+  if (!parser->m_isParamEntity && parser->m_dtd)
 #else
   if (parser->m_dtd)
 #endif /* XML_DTD */
@@ -2143,7 +2142,7 @@ XML_StopParser(XML_Parser parser, XML_Bool resumable)
   default:
     if (resumable) {
 #ifdef XML_DTD
-      if (isParamEntity) {
+      if (parser->m_isParamEntity) {
         parser->m_errorCode = XML_ERROR_SUSPEND_PE;
         return XML_STATUS_ERROR;
       }
@@ -4326,7 +4325,7 @@ doProlog(XML_Parser parser,
            complete markup, not only for external PEs, but also for
            internal PEs if the reference occurs between declarations.
         */
-        if (isParamEntity || enc != encoding) {
+        if (parser->m_isParamEntity || enc != encoding) {
           if (XmlTokenRole(&parser->m_prologState, XML_TOK_NONE, end, end, enc)
               == XML_ROLE_ERROR)
             return XML_ERROR_INCOMPLETE_PE;
@@ -5691,7 +5690,7 @@ storeEntityValue(XML_Parser parser,
     switch (tok) {
     case XML_TOK_PARAM_ENTITY_REF:
 #ifdef XML_DTD
-      if (isParamEntity || enc != encoding) {
+      if (parser->m_isParamEntity || enc != encoding) {
         const XML_Char *name;
         ENTITY *entity;
         name = poolStoreString(&parser->m_tempPool, enc,
