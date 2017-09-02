@@ -668,7 +668,6 @@ struct XML_ParserStruct {
 #define defaultExpandInternalEntities \
         (parser->m_defaultExpandInternalEntities)
 #define buffer (parser->m_buffer)
-#define dataBuf (parser->m_dataBuf)
 #define dataBufEnd (parser->m_dataBufEnd)
 #define _dtd (parser->m_dtd)
 #define curBase (parser->m_curBase)
@@ -1017,8 +1016,8 @@ parserCreate(const XML_Char *encodingName,
     return NULL;
   }
 #endif
-  dataBuf = (XML_Char *)MALLOC(INIT_DATA_BUF_SIZE * sizeof(XML_Char));
-  if (dataBuf == NULL) {
+  parser->m_dataBuf = (XML_Char *)MALLOC(INIT_DATA_BUF_SIZE * sizeof(XML_Char));
+  if (parser->m_dataBuf == NULL) {
     FREE(atts);
 #ifdef XML_ATTR_INFO
     FREE(attInfo);
@@ -1026,14 +1025,14 @@ parserCreate(const XML_Char *encodingName,
     FREE(parser);
     return NULL;
   }
-  dataBufEnd = dataBuf + INIT_DATA_BUF_SIZE;
+  dataBufEnd = parser->m_dataBuf + INIT_DATA_BUF_SIZE;
 
   if (dtd)
     _dtd = dtd;
   else {
     _dtd = dtdCreate(&parser->m_mem);
     if (_dtd == NULL) {
-      FREE(dataBuf);
+      FREE(parser->m_dataBuf);
       FREE(atts);
 #ifdef XML_ATTR_INFO
       FREE(attInfo);
@@ -1482,7 +1481,7 @@ XML_ParserFree(XML_Parser parser)
 #endif
   FREE(groupConnector);
   FREE(buffer);
-  FREE(dataBuf);
+  FREE(parser->m_dataBuf);
   FREE(nsAtts);
   FREE(parser->m_unknownEncodingMem);
   if (parser->m_unknownEncodingRelease)
@@ -3019,7 +3018,7 @@ doContent(XML_Parser parser,
            easier to let the user deal with this.
         */
         else if (parser->m_characterDataHandler)
-          parser->m_characterDataHandler(parser->m_handlerArg, dataBuf, 0);
+          parser->m_characterDataHandler(parser->m_handlerArg, parser->m_dataBuf, 0);
 #endif
         else if (parser->m_defaultHandler)
           reportDefault(parser, enc, s, next);
@@ -3039,10 +3038,10 @@ doContent(XML_Parser parser,
       }
       if (parser->m_characterDataHandler) {
         if (MUST_CONVERT(enc, s)) {
-          ICHAR *dataPtr = (ICHAR *)dataBuf;
+          ICHAR *dataPtr = (ICHAR *)parser->m_dataBuf;
           XmlConvert(enc, &s, end, &dataPtr, (ICHAR *)dataBufEnd);
-          parser->m_characterDataHandler(parser->m_handlerArg, dataBuf,
-                               (int)(dataPtr - (ICHAR *)dataBuf));
+          parser->m_characterDataHandler(parser->m_handlerArg, parser->m_dataBuf,
+                               (int)(dataPtr - (ICHAR *)parser->m_dataBuf));
         }
         else
           parser->m_characterDataHandler(parser->m_handlerArg,
@@ -3070,11 +3069,11 @@ doContent(XML_Parser parser,
         if (charDataHandler) {
           if (MUST_CONVERT(enc, s)) {
             for (;;) {
-              ICHAR *dataPtr = (ICHAR *)dataBuf;
+              ICHAR *dataPtr = (ICHAR *)parser->m_dataBuf;
               const enum XML_Convert_Result convert_res = XmlConvert(enc, &s, next, &dataPtr, (ICHAR *)dataBufEnd);
               *eventEndPP = s;
-              charDataHandler(parser->m_handlerArg, dataBuf,
-                              (int)(dataPtr - (ICHAR *)dataBuf));
+              charDataHandler(parser->m_handlerArg, parser->m_dataBuf,
+                              (int)(dataPtr - (ICHAR *)parser->m_dataBuf));
               if ((convert_res == XML_CONVERT_COMPLETED) || (convert_res == XML_CONVERT_INPUT_INCOMPLETE))
                 break;
               *eventPP = s;
@@ -3720,7 +3719,7 @@ doCdataSection(XML_Parser parser,
 #if 0
       /* see comment under XML_TOK_CDATA_SECT_OPEN */
       else if (parser->m_characterDataHandler)
-        parser->m_characterDataHandler(parser->m_handlerArg, dataBuf, 0);
+        parser->m_characterDataHandler(parser->m_handlerArg, parser->m_dataBuf, 0);
 #endif
       else if (parser->m_defaultHandler)
         reportDefault(parser, enc, s, next);
@@ -3744,11 +3743,11 @@ doCdataSection(XML_Parser parser,
         if (charDataHandler) {
           if (MUST_CONVERT(enc, s)) {
             for (;;) {
-              ICHAR *dataPtr = (ICHAR *)dataBuf;
+              ICHAR *dataPtr = (ICHAR *)parser->m_dataBuf;
               const enum XML_Convert_Result convert_res = XmlConvert(enc, &s, next, &dataPtr, (ICHAR *)dataBufEnd);
               *eventEndPP = next;
-              charDataHandler(parser->m_handlerArg, dataBuf,
-                              (int)(dataPtr - (ICHAR *)dataBuf));
+              charDataHandler(parser->m_handlerArg, parser->m_dataBuf,
+                              (int)(dataPtr - (ICHAR *)parser->m_dataBuf));
               if ((convert_res == XML_CONVERT_COMPLETED) || (convert_res == XML_CONVERT_INPUT_INCOMPLETE))
                 break;
               *eventPP = s;
@@ -5984,10 +5983,10 @@ reportDefault(XML_Parser parser, const ENCODING *enc,
       /* LCOV_EXCL_STOP */
     }
     do {
-      ICHAR *dataPtr = (ICHAR *)dataBuf;
+      ICHAR *dataPtr = (ICHAR *)parser->m_dataBuf;
       convert_res = XmlConvert(enc, &s, end, &dataPtr, (ICHAR *)dataBufEnd);
       *eventEndPP = s;
-      parser->m_defaultHandler(parser->m_handlerArg, dataBuf, (int)(dataPtr - (ICHAR *)dataBuf));
+      parser->m_defaultHandler(parser->m_handlerArg, parser->m_dataBuf, (int)(dataPtr - (ICHAR *)parser->m_dataBuf));
       *eventPP = s;
     } while ((convert_res != XML_CONVERT_COMPLETED) && (convert_res != XML_CONVERT_INPUT_INCOMPLETE));
   }
