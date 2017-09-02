@@ -668,7 +668,6 @@ struct XML_ParserStruct {
 #define defaultExpandInternalEntities \
         (parser->m_defaultExpandInternalEntities)
 #define buffer (parser->m_buffer)
-#define atts (parser->m_atts)
 #define attsSize (parser->m_attsSize)
 #define nSpecifiedAtts (parser->m_nSpecifiedAtts)
 #define idAttIndex (parser->m_idAttIndex)
@@ -985,22 +984,22 @@ parserCreate(const XML_Char *encodingName,
   parser->m_bufferLim = NULL;
 
   attsSize = INIT_ATTS_SIZE;
-  atts = (ATTRIBUTE *)MALLOC(attsSize * sizeof(ATTRIBUTE));
-  if (atts == NULL) {
+  parser->m_atts = (ATTRIBUTE *)MALLOC(attsSize * sizeof(ATTRIBUTE));
+  if (parser->m_atts == NULL) {
     FREE(parser);
     return NULL;
   }
 #ifdef XML_ATTR_INFO
   attInfo = (XML_AttrInfo*)MALLOC(attsSize * sizeof(XML_AttrInfo));
   if (attInfo == NULL) {
-    FREE(atts);
+    FREE(parser->m_atts);
     FREE(parser);
     return NULL;
   }
 #endif
   parser->m_dataBuf = (XML_Char *)MALLOC(INIT_DATA_BUF_SIZE * sizeof(XML_Char));
   if (parser->m_dataBuf == NULL) {
-    FREE(atts);
+    FREE(parser->m_atts);
 #ifdef XML_ATTR_INFO
     FREE(attInfo);
 #endif
@@ -1015,7 +1014,7 @@ parserCreate(const XML_Char *encodingName,
     parser->m_dtd = dtdCreate(&parser->m_mem);
     if (parser->m_dtd == NULL) {
       FREE(parser->m_dataBuf);
-      FREE(atts);
+      FREE(parser->m_atts);
 #ifdef XML_ATTR_INFO
       FREE(attInfo);
 #endif
@@ -1457,7 +1456,7 @@ XML_ParserFree(XML_Parser parser)
   if (parser->m_dtd)
 #endif /* XML_DTD */
     dtdDestroy(parser->m_dtd, (XML_Bool)!parentParser, &parser->m_mem);
-  FREE((void *)atts);
+  FREE((void *)parser->m_atts);
 #ifdef XML_ATTR_INFO
   FREE((void *)attInfo);
 #endif
@@ -2857,7 +2856,7 @@ doContent(XML_Parser parser,
           return result;
         if (parser->m_startElementHandler)
           parser->m_startElementHandler(parser->m_handlerArg, tag->name.str,
-                              (const XML_Char **)atts);
+                              (const XML_Char **)parser->m_atts);
         else if (parser->m_defaultHandler)
           reportDefault(parser, enc, s, next);
         poolClear(&tempPool);
@@ -2884,7 +2883,7 @@ doContent(XML_Parser parser,
         }
         poolFinish(&tempPool);
         if (parser->m_startElementHandler) {
-          parser->m_startElementHandler(parser->m_handlerArg, name.str, (const XML_Char **)atts);
+          parser->m_startElementHandler(parser->m_handlerArg, name.str, (const XML_Char **)parser->m_atts);
           noElmHandlers = XML_FALSE;
         }
         if (parser->m_endElementHandler) {
@@ -3171,7 +3170,7 @@ storeAtts(XML_Parser parser, const ENCODING *enc,
   nDefaultAtts = elementType->nDefaultAtts;
 
   /* get the attributes from the tokenizer */
-  n = XmlGetAttributes(enc, attStr, attsSize, atts);
+  n = XmlGetAttributes(enc, attStr, attsSize, parser->m_atts);
   if (n + nDefaultAtts > attsSize) {
     int oldAttsSize = attsSize;
     ATTRIBUTE *temp;
@@ -3179,12 +3178,12 @@ storeAtts(XML_Parser parser, const ENCODING *enc,
     XML_AttrInfo *temp2;
 #endif
     attsSize = n + nDefaultAtts + INIT_ATTS_SIZE;
-    temp = (ATTRIBUTE *)REALLOC((void *)atts, attsSize * sizeof(ATTRIBUTE));
+    temp = (ATTRIBUTE *)REALLOC((void *)parser->m_atts, attsSize * sizeof(ATTRIBUTE));
     if (temp == NULL) {
       attsSize = oldAttsSize;
       return XML_ERROR_NO_MEMORY;
     }
-    atts = temp;
+    parser->m_atts = temp;
 #ifdef XML_ATTR_INFO
     temp2 = (XML_AttrInfo *)REALLOC((void *)attInfo, attsSize * sizeof(XML_AttrInfo));
     if (temp2 == NULL) {
@@ -3194,12 +3193,12 @@ storeAtts(XML_Parser parser, const ENCODING *enc,
     attInfo = temp2;
 #endif
     if (n > oldAttsSize)
-      XmlGetAttributes(enc, attStr, n, atts);
+      XmlGetAttributes(enc, attStr, n, parser->m_atts);
   }
 
-  appAtts = (const XML_Char **)atts;
+  appAtts = (const XML_Char **)parser->m_atts;
   for (i = 0; i < n; i++) {
-    ATTRIBUTE *currAtt = &atts[i];
+    ATTRIBUTE *currAtt = &parser->m_atts[i];
 #ifdef XML_ATTR_INFO
     XML_AttrInfo *currAttInfo = &attInfo[i];
 #endif
@@ -3223,12 +3222,12 @@ storeAtts(XML_Parser parser, const ENCODING *enc,
     */
     if ((attId->name)[-1]) {
       if (enc == encoding)
-        parser->m_eventPtr = atts[i].name;
+        parser->m_eventPtr = parser->m_atts[i].name;
       return XML_ERROR_DUPLICATE_ATTRIBUTE;
     }
     (attId->name)[-1] = 1;
     appAtts[attIndex++] = attId->name;
-    if (!atts[i].normalized) {
+    if (!parser->m_atts[i].normalized) {
       enum XML_Error result;
       XML_Bool isCdata = XML_TRUE;
 
@@ -3245,7 +3244,7 @@ storeAtts(XML_Parser parser, const ENCODING *enc,
 
       /* normalize the attribute value */
       result = storeAttributeValue(parser, enc, isCdata,
-                                   atts[i].valuePtr, atts[i].valueEnd,
+                                   parser->m_atts[i].valuePtr, parser->m_atts[i].valueEnd,
                                    &tempPool);
       if (result)
         return result;
@@ -3254,8 +3253,8 @@ storeAtts(XML_Parser parser, const ENCODING *enc,
     }
     else {
       /* the value did not need normalizing */
-      appAtts[attIndex] = poolStoreString(&tempPool, enc, atts[i].valuePtr,
-                                          atts[i].valueEnd);
+      appAtts[attIndex] = poolStoreString(&tempPool, enc, parser->m_atts[i].valuePtr,
+                                          parser->m_atts[i].valueEnd);
       if (appAtts[attIndex] == 0)
         return XML_ERROR_NO_MEMORY;
       poolFinish(&tempPool);
