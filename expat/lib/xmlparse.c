@@ -648,8 +648,6 @@ struct XML_ParserStruct {
 #define REALLOC(p,s) (parser->m_mem.realloc_fcn((p),(s)))
 #define FREE(p) (parser->m_mem.free_fcn((p)))
 
-#define externalEntityRefHandler \
-        (parser->m_externalEntityRefHandler)
 #define externalEntityRefHandlerArg \
         (parser->m_externalEntityRefHandlerArg)
 #define internalEntityRefHandler \
@@ -1062,7 +1060,7 @@ parserInit(XML_Parser parser, const XML_Char *encodingName)
   parser->m_startNamespaceDeclHandler = NULL;
   parser->m_endNamespaceDeclHandler = NULL;
   parser->m_notStandaloneHandler = NULL;
-  externalEntityRefHandler = NULL;
+  parser->m_externalEntityRefHandler = NULL;
   externalEntityRefHandlerArg = parser;
   parser->m_skippedEntityHandler = NULL;
   parser->m_elementDeclHandler = NULL;
@@ -1254,7 +1252,7 @@ XML_ExternalEntityParserCreate(XML_Parser oldParser,
   oldStartNamespaceDeclHandler = parser->m_startNamespaceDeclHandler;
   oldEndNamespaceDeclHandler = parser->m_endNamespaceDeclHandler;
   oldNotStandaloneHandler = parser->m_notStandaloneHandler;
-  oldExternalEntityRefHandler = externalEntityRefHandler;
+  oldExternalEntityRefHandler = parser->m_externalEntityRefHandler;
   oldSkippedEntityHandler = parser->m_skippedEntityHandler;
   oldUnknownEncodingHandler = parser->m_unknownEncodingHandler;
   oldElementDeclHandler = parser->m_elementDeclHandler;
@@ -1314,7 +1312,7 @@ XML_ExternalEntityParserCreate(XML_Parser oldParser,
   parser->m_startNamespaceDeclHandler = oldStartNamespaceDeclHandler;
   parser->m_endNamespaceDeclHandler = oldEndNamespaceDeclHandler;
   parser->m_notStandaloneHandler = oldNotStandaloneHandler;
-  externalEntityRefHandler = oldExternalEntityRefHandler;
+  parser->m_externalEntityRefHandler = oldExternalEntityRefHandler;
   parser->m_skippedEntityHandler = oldSkippedEntityHandler;
   parser->m_unknownEncodingHandler = oldUnknownEncodingHandler;
   parser->m_elementDeclHandler = oldElementDeclHandler;
@@ -1709,7 +1707,7 @@ XML_SetExternalEntityRefHandler(XML_Parser parser,
                                 XML_ExternalEntityRefHandler handler)
 {
   if (parser != NULL)
-    externalEntityRefHandler = handler;
+    parser->m_externalEntityRefHandler = handler;
 }
 
 void XMLCALL
@@ -2745,14 +2743,14 @@ doContent(XML_Parser parser,
           if (result != XML_ERROR_NONE)
             return result;
         }
-        else if (externalEntityRefHandler) {
+        else if (parser->m_externalEntityRefHandler) {
           const XML_Char *context;
           entity->open = XML_TRUE;
           context = getContext(parser);
           entity->open = XML_FALSE;
           if (!context)
             return XML_ERROR_NO_MEMORY;
-          if (!externalEntityRefHandler(externalEntityRefHandlerArg,
+          if (!parser->m_externalEntityRefHandler(externalEntityRefHandlerArg,
                                         context,
                                         entity->base,
                                         entity->systemId,
@@ -4432,7 +4430,7 @@ doProlog(XML_Parser parser,
       if (parser->m_doctypeSysid || parser->m_useForeignDTD) {
         XML_Bool hadParamEntityRefs = dtd->hasParamEntityRefs;
         dtd->hasParamEntityRefs = XML_TRUE;
-        if (parser->m_paramEntityParsing && externalEntityRefHandler) {
+        if (parser->m_paramEntityParsing && parser->m_externalEntityRefHandler) {
           ENTITY *entity = (ENTITY *)lookup(parser,
                                             &dtd->paramEntities,
                                             externalSubsetName,
@@ -4448,7 +4446,7 @@ doProlog(XML_Parser parser,
           if (parser->m_useForeignDTD)
             entity->base = parser->m_curBase;
           dtd->paramEntityRead = XML_FALSE;
-          if (!externalEntityRefHandler(externalEntityRefHandlerArg,
+          if (!parser->m_externalEntityRefHandler(externalEntityRefHandlerArg,
                                         0,
                                         entity->base,
                                         entity->systemId,
@@ -4483,7 +4481,7 @@ doProlog(XML_Parser parser,
       if (parser->m_useForeignDTD) {
         XML_Bool hadParamEntityRefs = dtd->hasParamEntityRefs;
         dtd->hasParamEntityRefs = XML_TRUE;
-        if (parser->m_paramEntityParsing && externalEntityRefHandler) {
+        if (parser->m_paramEntityParsing && parser->m_externalEntityRefHandler) {
           ENTITY *entity = (ENTITY *)lookup(parser, &dtd->paramEntities,
                                             externalSubsetName,
                                             sizeof(ENTITY));
@@ -4491,7 +4489,7 @@ doProlog(XML_Parser parser,
             return XML_ERROR_NO_MEMORY;
           entity->base = parser->m_curBase;
           dtd->paramEntityRead = XML_FALSE;
-          if (!externalEntityRefHandler(externalEntityRefHandlerArg,
+          if (!parser->m_externalEntityRefHandler(externalEntityRefHandlerArg,
                                         0,
                                         entity->base,
                                         entity->systemId,
@@ -5052,10 +5050,10 @@ doProlog(XML_Parser parser,
           handleDefault = XML_FALSE;
           break;
         }
-        if (externalEntityRefHandler) {
+        if (parser->m_externalEntityRefHandler) {
           dtd->paramEntityRead = XML_FALSE;
           entity->open = XML_TRUE;
-          if (!externalEntityRefHandler(externalEntityRefHandlerArg,
+          if (!parser->m_externalEntityRefHandler(externalEntityRefHandlerArg,
                                         0,
                                         entity->base,
                                         entity->systemId,
@@ -5706,10 +5704,10 @@ storeEntityValue(XML_Parser parser,
           goto endEntityValue;
         }
         if (entity->systemId) {
-          if (externalEntityRefHandler) {
+          if (parser->m_externalEntityRefHandler) {
             dtd->paramEntityRead = XML_FALSE;
             entity->open = XML_TRUE;
-            if (!externalEntityRefHandler(externalEntityRefHandlerArg,
+            if (!parser->m_externalEntityRefHandler(externalEntityRefHandlerArg,
                                           0,
                                           entity->base,
                                           entity->systemId,
