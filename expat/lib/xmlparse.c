@@ -668,7 +668,6 @@ struct XML_ParserStruct {
 #define defaultExpandInternalEntities \
         (parser->m_defaultExpandInternalEntities)
 #define buffer (parser->m_buffer)
-#define doctypeName (parser->m_doctypeName)
 #define doctypeSysid (parser->m_doctypeSysid)
 #define doctypePubid (parser->m_doctypePubid)
 #define declAttributeType (parser->m_declAttributeType)
@@ -1120,7 +1119,7 @@ parserInit(XML_Parser parser, const XML_Char *encodingName)
   declElementType = NULL;
   declAttributeId = NULL;
   parser->m_declEntity = NULL;
-  doctypeName = NULL;
+  parser->m_doctypeName = NULL;
   doctypeSysid = NULL;
   doctypePubid = NULL;
   declAttributeType = NULL;
@@ -4384,8 +4383,8 @@ doProlog(XML_Parser parser,
       break;
     case XML_ROLE_DOCTYPE_NAME:
       if (parser->m_startDoctypeDeclHandler) {
-        doctypeName = poolStoreString(&tempPool, enc, s, next);
-        if (!doctypeName)
+        parser->m_doctypeName = poolStoreString(&tempPool, enc, s, next);
+        if (!parser->m_doctypeName)
           return XML_ERROR_NO_MEMORY;
         poolFinish(&tempPool);
         doctypePubid = NULL;
@@ -4395,9 +4394,9 @@ doProlog(XML_Parser parser,
       break;
     case XML_ROLE_DOCTYPE_INTERNAL_SUBSET:
       if (parser->m_startDoctypeDeclHandler) {
-        parser->m_startDoctypeDeclHandler(parser->m_handlerArg, doctypeName, doctypeSysid,
+        parser->m_startDoctypeDeclHandler(parser->m_handlerArg, parser->m_doctypeName, doctypeSysid,
                                 doctypePubid, 1);
-        doctypeName = NULL;
+        parser->m_doctypeName = NULL;
         poolClear(&tempPool);
         handleDefault = XML_FALSE;
       }
@@ -4462,8 +4461,8 @@ doProlog(XML_Parser parser,
       }
       break;
     case XML_ROLE_DOCTYPE_CLOSE:
-      if (doctypeName) {
-        parser->m_startDoctypeDeclHandler(parser->m_handlerArg, doctypeName,
+      if (parser->m_doctypeName) {
+        parser->m_startDoctypeDeclHandler(parser->m_handlerArg, parser->m_doctypeName,
                                 doctypeSysid, doctypePubid, 0);
         poolClear(&tempPool);
         handleDefault = XML_FALSE;
