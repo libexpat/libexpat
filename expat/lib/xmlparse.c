@@ -2959,8 +2959,19 @@ doContent(XML_Parser parser,
         poolClear(&tempPool);
         freeBindings(parser, bindings);
       }
-      if (tagLevel == 0)
-        return epilogProcessor(parser, next, end, nextPtr);
+      if (tagLevel == 0) {
+        /* Pull out now if the parse has been stopped */
+        *eventPP = s = next;
+        switch (ps_parsing) {
+        case XML_SUSPENDED:
+          *nextPtr = next;
+          return XML_ERROR_NONE;
+        case XML_FINISHED:
+          return XML_ERROR_ABORTED;
+        default:
+          return epilogProcessor(parser, next, end, nextPtr);
+        }
+      }
       break;
     case XML_TOK_END_TAG:
       if (tagLevel == startTagLevel)

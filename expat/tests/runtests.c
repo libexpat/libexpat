@@ -5256,6 +5256,8 @@ start_element_suspender(void *UNUSED_P(userData),
 {
     if (!xcstrcmp(name, XCS("suspend")))
         XML_StopParser(parser, XML_TRUE);
+    if (!xcstrcmp(name, XCS("abort")))
+        XML_StopParser(parser, XML_FALSE);
 }
 
 START_TEST(test_suspend_resume_internal_entity)
@@ -7062,6 +7064,17 @@ START_TEST(test_default_doctype_handler)
     for (i = 0; test_data[i].expected != NULL; i++)
         if (!test_data[i].seen)
             fail("Default handler not run for public !DOCTYPE");
+}
+END_TEST
+
+START_TEST(test_empty_element_abort)
+{
+    const char *text = "<abort/>";
+
+    XML_SetStartElementHandler(parser, start_element_suspender);
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
+                                XML_TRUE) != XML_STATUS_ERROR)
+        fail("Expected to error on abort");
 }
 END_TEST
 
@@ -12156,6 +12169,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_bad_entity_4);
     tcase_add_test(tc_basic, test_bad_notation);
     tcase_add_test(tc_basic, test_default_doctype_handler);
+    tcase_add_test(tc_basic, test_empty_element_abort);
 
     suite_add_tcase(s, tc_namespace);
     tcase_add_checked_fixture(tc_namespace,
