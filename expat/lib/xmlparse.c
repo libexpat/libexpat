@@ -668,7 +668,6 @@ struct XML_ParserStruct {
 #define defaultExpandInternalEntities \
         (parser->m_defaultExpandInternalEntities)
 #define buffer (parser->m_buffer)
-#define declNotationPublicId (parser->m_declNotationPublicId)
 #define declElementType (parser->m_declElementType)
 #define declAttributeId (parser->m_declAttributeId)
 #define declAttributeIsCdata (parser->m_declAttributeIsCdata)
@@ -1120,7 +1119,7 @@ parserInit(XML_Parser parser, const XML_Char *encodingName)
   parser->m_doctypePubid = NULL;
   parser->m_declAttributeType = NULL;
   parser->m_declNotationName = NULL;
-  declNotationPublicId = NULL;
+  parser->m_declNotationPublicId = NULL;
   declAttributeIsCdata = XML_FALSE;
   declAttributeIsId = XML_FALSE;
   memset(&parser->m_position, 0, sizeof(POSITION));
@@ -4877,7 +4876,7 @@ doProlog(XML_Parser parser,
 #endif /* XML_DTD */
       break;
     case XML_ROLE_NOTATION_NAME:
-      declNotationPublicId = NULL;
+      parser->m_declNotationPublicId = NULL;
       parser->m_declNotationName = NULL;
       if (parser->m_notationDeclHandler) {
         parser->m_declNotationName = poolStoreString(&tempPool, enc, s, next);
@@ -4898,7 +4897,7 @@ doProlog(XML_Parser parser,
         if (!tem)
           return XML_ERROR_NO_MEMORY;
         normalizePublicId(tem);
-        declNotationPublicId = tem;
+        parser->m_declNotationPublicId = tem;
         poolFinish(&tempPool);
         handleDefault = XML_FALSE;
       }
@@ -4916,19 +4915,19 @@ doProlog(XML_Parser parser,
                             parser->m_declNotationName,
                             parser->m_curBase,
                             systemId,
-                            declNotationPublicId);
+                            parser->m_declNotationPublicId);
         handleDefault = XML_FALSE;
       }
       poolClear(&tempPool);
       break;
     case XML_ROLE_NOTATION_NO_SYSTEM_ID:
-      if (declNotationPublicId && parser->m_notationDeclHandler) {
+      if (parser->m_declNotationPublicId && parser->m_notationDeclHandler) {
         *eventEndPP = s;
         parser->m_notationDeclHandler(parser->m_handlerArg,
                             parser->m_declNotationName,
                             parser->m_curBase,
                             0,
-                            declNotationPublicId);
+                            parser->m_declNotationPublicId);
         handleDefault = XML_FALSE;
       }
       poolClear(&tempPool);
