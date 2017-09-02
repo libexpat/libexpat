@@ -648,8 +648,6 @@ struct XML_ParserStruct {
 #define REALLOC(p,s) (parser->m_mem.realloc_fcn((p),(s)))
 #define FREE(p) (parser->m_mem.free_fcn((p)))
 
-#define internalEntityRefHandler \
-        (parser->m_internalEntityRefHandler)
 #define encoding (parser->m_encoding)
 #define unknownEncodingHandlerData \
   (parser->m_unknownEncodingHandlerData)
