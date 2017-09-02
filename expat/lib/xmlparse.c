@@ -665,7 +665,6 @@ struct XML_ParserStruct {
 #define encoding (parser->m_encoding)
 #define unknownEncodingHandlerData \
   (parser->m_unknownEncodingHandlerData)
-#define unknownEncodingRelease (parser->m_unknownEncodingRelease)
 #define protocolEncodingName (parser->m_protocolEncodingName)
 #define ns (parser->m_ns)
 #define ns_triplets (parser->m_ns_triplets)
@@ -1164,7 +1163,7 @@ parserInit(XML_Parser parser, const XML_Char *encodingName)
   inheritedBindings = NULL;
   nSpecifiedAtts = 0;
   parser->m_unknownEncodingMem = NULL;
-  unknownEncodingRelease = NULL;
+  parser->m_unknownEncodingRelease = NULL;
   parser->m_unknownEncodingData = NULL;
   parentParser = NULL;
   ps_parsing = XML_INITIALIZED;
@@ -1219,8 +1218,8 @@ XML_ParserReset(XML_Parser parser, const XML_Char *encodingName)
   }
   moveToFreeBindingList(parser, inheritedBindings);
   FREE(parser->m_unknownEncodingMem);
-  if (unknownEncodingRelease)
-    unknownEncodingRelease(parser->m_unknownEncodingData);
+  if (parser->m_unknownEncodingRelease)
+    parser->m_unknownEncodingRelease(parser->m_unknownEncodingData);
   poolClear(&tempPool);
   poolClear(&temp2Pool);
   FREE((void *)protocolEncodingName);
@@ -1504,8 +1503,8 @@ XML_ParserFree(XML_Parser parser)
   FREE(dataBuf);
   FREE(nsAtts);
   FREE(parser->m_unknownEncodingMem);
-  if (unknownEncodingRelease)
-    unknownEncodingRelease(parser->m_unknownEncodingData);
+  if (parser->m_unknownEncodingRelease)
+    parser->m_unknownEncodingRelease(parser->m_unknownEncodingData);
   FREE(parser);
 }
 
@@ -4084,7 +4083,7 @@ handleUnknownEncoding(XML_Parser parser, const XML_Char *encodingName)
                                        info.data);
       if (enc) {
         parser->m_unknownEncodingData = info.data;
-        unknownEncodingRelease = info.release;
+        parser->m_unknownEncodingRelease = info.release;
         encoding = enc;
         return XML_ERROR_NONE;
       }
