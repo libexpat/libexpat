@@ -10,6 +10,8 @@ Release 2.2.5 ???????????????????
              #11  The default handler wasn't being called when it should for
                     a SYSTEM or PUBLIC doctype if an entity declaration handler
                     was registered.
+       #137 #138  Fix a case of mistakenly reported parsing success where
+                    XML_StopParser was called from an element handler
 
         Other changes:
             #106  xmlwf: Add argument -N adding notation declarations
@@ -27,6 +29,7 @@ Release 2.2.5 ???????????????????
             Benbuck Nason
             José Gutiérrez de la Concha
             Rhodri James
+            Rolf Ade
                  and
             Core Infrastructure Initiative
 
