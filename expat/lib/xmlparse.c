@@ -662,7 +662,6 @@ struct XML_ParserStruct {
         (parser->m_externalEntityRefHandlerArg)
 #define internalEntityRefHandler \
         (parser->m_internalEntityRefHandler)
-#define attlistDeclHandler (parser->m_attlistDeclHandler)
 #define entityDeclHandler (parser->m_entityDeclHandler)
 #define xmlDeclHandler (parser->m_xmlDeclHandler)
 #define encoding (parser->m_encoding)
@@ -1141,7 +1140,7 @@ parserInit(XML_Parser parser, const XML_Char *encodingName)
   externalEntityRefHandlerArg = parser;
   parser->m_skippedEntityHandler = NULL;
   parser->m_elementDeclHandler = NULL;
-  attlistDeclHandler = NULL;
+  parser->m_attlistDeclHandler = NULL;
   entityDeclHandler = NULL;
   xmlDeclHandler = NULL;
   bufferPtr = buffer;
@@ -1333,7 +1332,7 @@ XML_ExternalEntityParserCreate(XML_Parser oldParser,
   oldSkippedEntityHandler = parser->m_skippedEntityHandler;
   oldUnknownEncodingHandler = parser->m_unknownEncodingHandler;
   oldElementDeclHandler = parser->m_elementDeclHandler;
-  oldAttlistDeclHandler = attlistDeclHandler;
+  oldAttlistDeclHandler = parser->m_attlistDeclHandler;
   oldEntityDeclHandler = entityDeclHandler;
   oldXmlDeclHandler = xmlDeclHandler;
   oldDeclElementType = declElementType;
@@ -1393,7 +1392,7 @@ XML_ExternalEntityParserCreate(XML_Parser oldParser,
   parser->m_skippedEntityHandler = oldSkippedEntityHandler;
   parser->m_unknownEncodingHandler = oldUnknownEncodingHandler;
   parser->m_elementDeclHandler = oldElementDeclHandler;
-  attlistDeclHandler = oldAttlistDeclHandler;
+  parser->m_attlistDeclHandler = oldAttlistDeclHandler;
   entityDeclHandler = oldEntityDeclHandler;
   xmlDeclHandler = oldXmlDeclHandler;
   declElementType = oldDeclElementType;
@@ -1830,7 +1829,7 @@ XML_SetAttlistDeclHandler(XML_Parser parser,
                           XML_AttlistDeclHandler attdecl)
 {
   if (parser != NULL)
-    attlistDeclHandler = attdecl;
+    parser->m_attlistDeclHandler = attdecl;
 }
 
 void XMLCALL
@@ -4628,12 +4627,12 @@ doProlog(XML_Parser parser,
     case XML_ROLE_ATTRIBUTE_TYPE_NMTOKENS:
       declAttributeType = atypeNMTOKENS;
     checkAttListDeclHandler:
-      if (dtd->keepProcessing && attlistDeclHandler)
+      if (dtd->keepProcessing && parser->m_attlistDeclHandler)
         handleDefault = XML_FALSE;
       break;
     case XML_ROLE_ATTRIBUTE_ENUM_VALUE:
     case XML_ROLE_ATTRIBUTE_NOTATION_VALUE:
-      if (dtd->keepProcessing && attlistDeclHandler) {
+      if (dtd->keepProcessing && parser->m_attlistDeclHandler) {
         const XML_Char *prefix;
         if (declAttributeType) {
           prefix = enumValueSep;
@@ -4658,7 +4657,7 @@ doProlog(XML_Parser parser,
                              declAttributeIsCdata, declAttributeIsId,
                              0, parser))
           return XML_ERROR_NO_MEMORY;
-        if (attlistDeclHandler && declAttributeType) {
+        if (parser->m_attlistDeclHandler && declAttributeType) {
           if (*declAttributeType == XML_T(ASCII_LPAREN)
               || (*declAttributeType == XML_T(ASCII_N)
                   && declAttributeType[1] == XML_T(ASCII_O))) {
@@ -4670,7 +4669,7 @@ doProlog(XML_Parser parser,
             poolFinish(&tempPool);
           }
           *eventEndPP = s;
-          attlistDeclHandler(parser->m_handlerArg, declElementType->name,
+          parser->m_attlistDeclHandler(parser->m_handlerArg, declElementType->name,
                              declAttributeId->name, declAttributeType,
                              0, role == XML_ROLE_REQUIRED_ATTRIBUTE_VALUE);
           poolClear(&tempPool);
@@ -4695,7 +4694,7 @@ doProlog(XML_Parser parser,
         if (!defineAttribute(declElementType, declAttributeId,
                              declAttributeIsCdata, XML_FALSE, attVal, parser))
           return XML_ERROR_NO_MEMORY;
-        if (attlistDeclHandler && declAttributeType) {
+        if (parser->m_attlistDeclHandler && declAttributeType) {
           if (*declAttributeType == XML_T(ASCII_LPAREN)
               || (*declAttributeType == XML_T(ASCII_N)
                   && declAttributeType[1] == XML_T(ASCII_O))) {
@@ -4707,7 +4706,7 @@ doProlog(XML_Parser parser,
             poolFinish(&tempPool);
           }
           *eventEndPP = s;
-          attlistDeclHandler(parser->m_handlerArg, declElementType->name,
+          parser->m_attlistDeclHandler(parser->m_handlerArg, declElementType->name,
                              declAttributeId->name, declAttributeType,
                              attVal,
                              role == XML_ROLE_FIXED_ATTRIBUTE_VALUE);
@@ -5301,7 +5300,7 @@ doProlog(XML_Parser parser,
         handleDefault = XML_FALSE;
       break;
     case XML_ROLE_ATTLIST_NONE:
-      if (dtd->keepProcessing && attlistDeclHandler)
+      if (dtd->keepProcessing && parser->m_attlistDeclHandler)
         handleDefault = XML_FALSE;
       break;
     case XML_ROLE_ELEMENT_NONE:
