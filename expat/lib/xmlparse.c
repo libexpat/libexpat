@@ -668,7 +668,6 @@ struct XML_ParserStruct {
 #define defaultExpandInternalEntities \
         (parser->m_defaultExpandInternalEntities)
 #define buffer (parser->m_buffer)
-#define groupSize (parser->m_groupSize)
 #define namespaceSeparator (parser->m_namespaceSeparator)
 #define parentParser (parser->m_parentParser)
 #define ps_parsing (parser->m_parsingStatus.parsing)
@@ -1017,7 +1016,7 @@ parserCreate(const XML_Char *encodingName,
   parser->m_freeTagList = NULL;
   parser->m_freeInternalEntities = NULL;
 
-  groupSize = 0;
+  parser->m_groupSize = 0;
   parser->m_groupConnector = NULL;
 
   parser->m_unknownEncodingHandler = NULL;
@@ -4942,26 +4941,26 @@ doProlog(XML_Parser parser,
       break;
 #endif /* XML_DTD */
     case XML_ROLE_GROUP_OPEN:
-      if (parser->m_prologState.level >= groupSize) {
-        if (groupSize) {
-          char *temp = (char *)REALLOC(parser->m_groupConnector, groupSize *= 2);
+      if (parser->m_prologState.level >= parser->m_groupSize) {
+        if (parser->m_groupSize) {
+          char *temp = (char *)REALLOC(parser->m_groupConnector, parser->m_groupSize *= 2);
           if (temp == NULL) {
-            groupSize /= 2;
+            parser->m_groupSize /= 2;
             return XML_ERROR_NO_MEMORY;
           }
           parser->m_groupConnector = temp;
           if (dtd->scaffIndex) {
             int *temp = (int *)REALLOC(dtd->scaffIndex,
-                          groupSize * sizeof(int));
+                          parser->m_groupSize * sizeof(int));
             if (temp == NULL)
               return XML_ERROR_NO_MEMORY;
             dtd->scaffIndex = temp;
           }
         }
         else {
-          parser->m_groupConnector = (char *)MALLOC(groupSize = 32);
+          parser->m_groupConnector = (char *)MALLOC(parser->m_groupSize = 32);
           if (!parser->m_groupConnector) {
-            groupSize = 0;
+            parser->m_groupSize = 0;
             return XML_ERROR_NO_MEMORY;
           }
         }
@@ -7026,7 +7025,7 @@ nextScaffoldPart(XML_Parser parser)
   int next;
 
   if (!dtd->scaffIndex) {
-    dtd->scaffIndex = (int *)MALLOC(groupSize * sizeof(int));
+    dtd->scaffIndex = (int *)MALLOC(parser->m_groupSize * sizeof(int));
     if (!dtd->scaffIndex)
       return -1;
     dtd->scaffIndex[0] = 0;
