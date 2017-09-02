@@ -668,7 +668,6 @@ struct XML_ParserStruct {
 #define defaultExpandInternalEntities \
         (parser->m_defaultExpandInternalEntities)
 #define buffer (parser->m_buffer)
-#define nsAttsPower (parser->m_nsAttsPower)
 #define attInfo (parser->m_attInfo)
 #define tempPool (parser->m_tempPool)
 #define temp2Pool (parser->m_temp2Pool)
@@ -1034,7 +1033,7 @@ parserCreate(const XML_Char *encodingName,
 
   parser->m_nsAtts = NULL;
   parser->m_nsAttsVersion = 0;
-  nsAttsPower = 0;
+  parser->m_nsAttsPower = 0;
 
   parser->m_protocolEncodingName = NULL;
 
@@ -3320,20 +3319,20 @@ storeAtts(XML_Parser parser, const ENCODING *enc,
   if (nPrefixes) {
     int j;  /* hash table index */
     unsigned long version = parser->m_nsAttsVersion;
-    int nsAttsSize = (int)1 << nsAttsPower;
-    unsigned char oldNsAttsPower = nsAttsPower;
+    int nsAttsSize = (int)1 << parser->m_nsAttsPower;
+    unsigned char oldNsAttsPower = parser->m_nsAttsPower;
     /* size of hash table must be at least 2 * (# of prefixed attributes) */
-    if ((nPrefixes << 1) >> nsAttsPower) {  /* true for nsAttsPower = 0 */
+    if ((nPrefixes << 1) >> parser->m_nsAttsPower) {  /* true for m_nsAttsPower = 0 */
       NS_ATT *temp;
       /* hash table size must also be a power of 2 and >= 8 */
-      while (nPrefixes >> nsAttsPower++);
-      if (nsAttsPower < 3)
-        nsAttsPower = 3;
-      nsAttsSize = (int)1 << nsAttsPower;
+      while (nPrefixes >> parser->m_nsAttsPower++);
+      if (parser->m_nsAttsPower < 3)
+        parser->m_nsAttsPower = 3;
+      nsAttsSize = (int)1 << parser->m_nsAttsPower;
       temp = (NS_ATT *)REALLOC(parser->m_nsAtts, nsAttsSize * sizeof(NS_ATT));
       if (!temp) {
         /* Restore actual size of memory in m_nsAtts */
-        nsAttsPower = oldNsAttsPower;
+        parser->m_nsAttsPower = oldNsAttsPower;
         return XML_ERROR_NO_MEMORY;
       }
       parser->m_nsAtts = temp;
@@ -3420,7 +3419,7 @@ storeAtts(XML_Parser parser, const ENCODING *enc,
                 return XML_ERROR_DUPLICATE_ATTRIBUTE;
             }
             if (!step)
-              step = PROBE_STEP(uriHash, mask, nsAttsPower);
+              step = PROBE_STEP(uriHash, mask, parser->m_nsAttsPower);
             j < step ? (j += nsAttsSize - step) : (j -= step);
           }
         }
