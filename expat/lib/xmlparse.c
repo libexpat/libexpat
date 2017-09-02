@@ -656,7 +656,6 @@ struct XML_ParserStruct {
         (parser->m_unparsedEntityDeclHandler)
 #define startNamespaceDeclHandler \
         (parser->m_startNamespaceDeclHandler)
-#define notStandaloneHandler (parser->m_notStandaloneHandler)
 #define externalEntityRefHandler \
         (parser->m_externalEntityRefHandler)
 #define externalEntityRefHandlerArg \
@@ -1140,7 +1139,7 @@ parserInit(XML_Parser parser, const XML_Char *encodingName)
   parser->m_notationDeclHandler = NULL;
   startNamespaceDeclHandler = NULL;
   parser->m_endNamespaceDeclHandler = NULL;
-  notStandaloneHandler = NULL;
+  parser->m_notStandaloneHandler = NULL;
   externalEntityRefHandler = NULL;
   externalEntityRefHandlerArg = parser;
   skippedEntityHandler = NULL;
@@ -1332,7 +1331,7 @@ XML_ExternalEntityParserCreate(XML_Parser oldParser,
   oldNotationDeclHandler = parser->m_notationDeclHandler;
   oldStartNamespaceDeclHandler = startNamespaceDeclHandler;
   oldEndNamespaceDeclHandler = parser->m_endNamespaceDeclHandler;
-  oldNotStandaloneHandler = notStandaloneHandler;
+  oldNotStandaloneHandler = parser->m_notStandaloneHandler;
   oldExternalEntityRefHandler = externalEntityRefHandler;
   oldSkippedEntityHandler = skippedEntityHandler;
   oldUnknownEncodingHandler = unknownEncodingHandler;
@@ -1392,7 +1391,7 @@ XML_ExternalEntityParserCreate(XML_Parser oldParser,
   parser->m_notationDeclHandler = oldNotationDeclHandler;
   startNamespaceDeclHandler = oldStartNamespaceDeclHandler;
   parser->m_endNamespaceDeclHandler = oldEndNamespaceDeclHandler;
-  notStandaloneHandler = oldNotStandaloneHandler;
+  parser->m_notStandaloneHandler = oldNotStandaloneHandler;
   externalEntityRefHandler = oldExternalEntityRefHandler;
   skippedEntityHandler = oldSkippedEntityHandler;
   unknownEncodingHandler = oldUnknownEncodingHandler;
@@ -1780,7 +1779,7 @@ XML_SetNotStandaloneHandler(XML_Parser parser,
                             XML_NotStandaloneHandler handler)
 {
   if (parser != NULL)
-    notStandaloneHandler = handler;
+    parser->m_notStandaloneHandler = handler;
 }
 
 void XMLCALL
@@ -4535,8 +4534,8 @@ doProlog(XML_Parser parser,
             return XML_ERROR_EXTERNAL_ENTITY_HANDLING;
           if (dtd->paramEntityRead) {
             if (!dtd->standalone &&
-                notStandaloneHandler &&
-                !notStandaloneHandler(parser->m_handlerArg))
+                parser->m_notStandaloneHandler &&
+                !parser->m_notStandaloneHandler(parser->m_handlerArg))
               return XML_ERROR_NOT_STANDALONE;
           }
           /* if we didn't read the foreign DTD then this means that there
@@ -4578,8 +4577,8 @@ doProlog(XML_Parser parser,
             return XML_ERROR_EXTERNAL_ENTITY_HANDLING;
           if (dtd->paramEntityRead) {
             if (!dtd->standalone &&
-                notStandaloneHandler &&
-                !notStandaloneHandler(parser->m_handlerArg))
+                parser->m_notStandaloneHandler &&
+                !parser->m_notStandaloneHandler(parser->m_handlerArg))
               return XML_ERROR_NOT_STANDALONE;
           }
           /* if we didn't read the foreign DTD then this means that there
@@ -4770,8 +4769,8 @@ doProlog(XML_Parser parser,
 #ifdef XML_DTD
           && !paramEntityParsing
 #endif /* XML_DTD */
-          && notStandaloneHandler
-          && !notStandaloneHandler(parser->m_handlerArg))
+          && parser->m_notStandaloneHandler
+          && !parser->m_notStandaloneHandler(parser->m_handlerArg))
         return XML_ERROR_NOT_STANDALONE;
 #ifndef XML_DTD
       break;
@@ -5156,8 +5155,8 @@ doProlog(XML_Parser parser,
       }
 #endif /* XML_DTD */
       if (!dtd->standalone &&
-          notStandaloneHandler &&
-          !notStandaloneHandler(parser->m_handlerArg))
+          parser->m_notStandaloneHandler &&
+          !parser->m_notStandaloneHandler(parser->m_handlerArg))
         return XML_ERROR_NOT_STANDALONE;
       break;
 
