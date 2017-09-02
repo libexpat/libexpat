@@ -649,8 +649,6 @@ struct XML_ParserStruct {
 #define FREE(p) (parser->m_mem.free_fcn((p)))
 
 #define encoding (parser->m_encoding)
-#define defaultExpandInternalEntities \
-        (parser->m_defaultExpandInternalEntities)
 #define buffer (parser->m_buffer)
 
 XML_Parser XMLCALL
@@ -1082,7 +1080,7 @@ parserInit(XML_Parser parser, const XML_Char *encodingName)
   parser->m_eventEndPtr = NULL;
   parser->m_positionPtr = NULL;
   parser->m_openInternalEntities = NULL;
-  defaultExpandInternalEntities = XML_TRUE;
+  parser->m_defaultExpandInternalEntities = XML_TRUE;
   parser->m_tagLevel = 0;
   parser->m_tagStack = NULL;
   parser->m_inheritedBindings = NULL;
@@ -1257,7 +1255,7 @@ XML_ExternalEntityParserCreate(XML_Parser oldParser,
 
   oldUserData = parser->m_userData;
   oldHandlerArg = parser->m_handlerArg;
-  oldDefaultExpandInternalEntities = defaultExpandInternalEntities;
+  oldDefaultExpandInternalEntities = parser->m_defaultExpandInternalEntities;
   oldExternalEntityRefHandlerArg = parser->m_externalEntityRefHandlerArg;
 #ifdef XML_DTD
   oldParamEntityParsing = parser->m_paramEntityParsing;
@@ -1321,7 +1319,7 @@ XML_ExternalEntityParserCreate(XML_Parser oldParser,
     parser->m_handlerArg = parser;
   if (oldExternalEntityRefHandlerArg != oldParser)
     parser->m_externalEntityRefHandlerArg = oldExternalEntityRefHandlerArg;
-  defaultExpandInternalEntities = oldDefaultExpandInternalEntities;
+  parser->m_defaultExpandInternalEntities = oldDefaultExpandInternalEntities;
   parser->m_ns_triplets = oldns_triplets;
   parser->m_hash_secret_salt = oldhash_secret_salt;
   parser->m_parentParser = oldParser;
@@ -1609,7 +1607,7 @@ XML_SetDefaultHandler(XML_Parser parser,
   if (parser == NULL)
     return;
   parser->m_defaultHandler = handler;
-  defaultExpandInternalEntities = XML_FALSE;
+  parser->m_defaultExpandInternalEntities = XML_FALSE;
 }
 
 void XMLCALL
@@ -1619,7 +1617,7 @@ XML_SetDefaultHandlerExpand(XML_Parser parser,
   if (parser == NULL)
     return;
   parser->m_defaultHandler = handler;
-  defaultExpandInternalEntities = XML_TRUE;
+  parser->m_defaultExpandInternalEntities = XML_TRUE;
 }
 
 void XMLCALL
@@ -2726,7 +2724,7 @@ doContent(XML_Parser parser,
           return XML_ERROR_BINARY_ENTITY_REF;
         if (entity->textPtr) {
           enum XML_Error result;
-          if (!defaultExpandInternalEntities) {
+          if (!parser->m_defaultExpandInternalEntities) {
             if (parser->m_skippedEntityHandler)
               parser->m_skippedEntityHandler(parser->m_handlerArg, entity->name, 0);
             else if (parser->m_defaultHandler)
