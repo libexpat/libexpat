@@ -662,7 +662,6 @@ struct XML_ParserStruct {
         (parser->m_externalEntityRefHandlerArg)
 #define internalEntityRefHandler \
         (parser->m_internalEntityRefHandler)
-#define xmlDeclHandler (parser->m_xmlDeclHandler)
 #define encoding (parser->m_encoding)
 #define initEncoding (parser->m_initEncoding)
 #define internalEncoding (parser->m_internalEncoding)
@@ -1141,7 +1140,7 @@ parserInit(XML_Parser parser, const XML_Char *encodingName)
   parser->m_elementDeclHandler = NULL;
   parser->m_attlistDeclHandler = NULL;
   parser->m_entityDeclHandler = NULL;
-  xmlDeclHandler = NULL;
+  parser->m_xmlDeclHandler = NULL;
   bufferPtr = buffer;
   bufferEnd = buffer;
   parseEndByteIndex = 0;
@@ -1333,7 +1332,7 @@ XML_ExternalEntityParserCreate(XML_Parser oldParser,
   oldElementDeclHandler = parser->m_elementDeclHandler;
   oldAttlistDeclHandler = parser->m_attlistDeclHandler;
   oldEntityDeclHandler = parser->m_entityDeclHandler;
-  oldXmlDeclHandler = xmlDeclHandler;
+  oldXmlDeclHandler = parser->m_xmlDeclHandler;
   oldDeclElementType = declElementType;
 
   oldUserData = parser->m_userData;
@@ -1393,7 +1392,7 @@ XML_ExternalEntityParserCreate(XML_Parser oldParser,
   parser->m_elementDeclHandler = oldElementDeclHandler;
   parser->m_attlistDeclHandler = oldAttlistDeclHandler;
   parser->m_entityDeclHandler = oldEntityDeclHandler;
-  xmlDeclHandler = oldXmlDeclHandler;
+  parser->m_xmlDeclHandler = oldXmlDeclHandler;
   declElementType = oldDeclElementType;
   parser->m_userData = oldUserData;
   if (oldUserData == oldHandlerArg)
@@ -1843,7 +1842,7 @@ void XMLCALL
 XML_SetXmlDeclHandler(XML_Parser parser,
                       XML_XmlDeclHandler handler) {
   if (parser != NULL)
-    xmlDeclHandler = handler;
+    parser->m_xmlDeclHandler = handler;
 }
 
 int XMLCALL
@@ -4000,7 +3999,7 @@ processXmlDecl(XML_Parser parser, int isGeneralTextEntity,
       paramEntityParsing = XML_PARAM_ENTITY_PARSING_NEVER;
 #endif /* XML_DTD */
   }
-  if (xmlDeclHandler) {
+  if (parser->m_xmlDeclHandler) {
     if (encodingName != NULL) {
       storedEncName = poolStoreString(&temp2Pool,
                                       encoding,
@@ -4019,7 +4018,7 @@ processXmlDecl(XML_Parser parser, int isGeneralTextEntity,
       if (!storedversion)
         return XML_ERROR_NO_MEMORY;
     }
-    xmlDeclHandler(parser->m_handlerArg, storedversion, storedEncName, standalone);
+    parser->m_xmlDeclHandler(parser->m_handlerArg, storedversion, storedEncName, standalone);
   }
   else if (parser->m_defaultHandler)
     reportDefault(parser, encoding, s, next);
