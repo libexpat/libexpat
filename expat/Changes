@@ -23,6 +23,8 @@ Release 2.2.5 ???????????????????
             #129  examples: Fix compilation for XML_UNICODE_WCHAR_T
             #130  benchmark: Fix compilation for XML_UNICODE_WCHAR_T
               #9  Address two Clang Static Analyzer false positives
+             #59  Resolve troublesome macros hiding parser struct membership
+                    and dereferencing that pointer
               #6  Resolve superfluous internal malloc/realloc switch
 
         Special thanks to:
