@@ -102,6 +102,33 @@ support this mode of compilation (yet):
 
 1. Run `make install` (again, excludes xmlwf).
 
+You can also use MinGW to build Expat to provide document information
+in UTF-16 encoding, with an experimental variant of `xmlwf`.  Follow
+these instructions (after having run `make distclean`):
+
+1. Mass-patch `Makefile.am` as above:
+   <br/>
+   `find -name Makefile.am -exec sed
+       -e 's,libexpat\.la,libexpatw.la,'
+       -e 's,libexpat_la,libexpatw_la,'
+       -i {} +`
+
+1. Edit `xmlwf/Makefile.am` to add the following:
+   <br/>
+   `AM_CPPFLAGS = -I$(srcdir)/../lib -mwindows
+   AM_LDFLAGS = -municode`
+
+1. Run `automake` to re-write `Makefile.in` files:<br/>
+   `automake`
+
+1. Configure for a MinGW build:
+   `./configure CPPFLAGS=-DXML_UNICODE_WCHAR_T --host=i686-w64-mingw32`
+
+1. Run `make` as usual.
+
+`make check` and `make run-xmltest` will automatically `wine` to run
+the Windows executables.
+
 Using `DESTDIR` is supported.  It works as follows:
 
 ```console

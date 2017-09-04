@@ -30,6 +30,9 @@
    USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+/* Ensures compile-time constants are consistent */
+#include "expat_external.h"
+
 #ifdef XML_UNICODE
 #ifndef XML_UNICODE_WCHAR_T
 #error xmlwf requires a 16-bit Unicode-compatible wchar_t 
@@ -49,6 +52,7 @@
 #define topen _wopen
 #define tmain wmain
 #define tremove _wremove
+#define tchar wchar_t
 #else /* not XML_UNICODE */
 #define T(x) x
 #define ftprintf fprintf
@@ -65,4 +69,5 @@
 #define topen open
 #define tmain main
 #define tremove remove
+#define tchar char
 #endif /* not XML_UNICODE */
