@@ -106,6 +106,9 @@ AC_ARG_WITH([xmlwf], [
 AS_HELP_STRING([--without-xmlwf], [do not build xmlwf])], [], [with_xmlwf=yes])
 AM_CONDITIONAL([WITH_XMLWF], [test x${with_xmlwf} = xyes])
 
+AM_CONDITIONAL([MINGW], [echo -- "${host}" | fgrep -q mingw])
+AM_CONDITIONAL([UNICODE], [echo -- "${CPPFLAGS}${CFLAGS}" | fgrep -q XML_UNICODE])
+
 
 AC_ARG_WITH([libbsd], [
 AS_HELP_STRING([--with-libbsd], [utilize libbsd (for arc4random_buf)])

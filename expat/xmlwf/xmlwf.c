@@ -894,6 +894,11 @@ usage(const XML_Char *prog, int rc)
   exit(rc);
 }
 
+#if defined(__MINGW32__) && defined(XML_UNICODE)
+/* Silence warning about missing prototype */
+int wmain(int argc, XML_Char **argv);
+#endif
+
 int
 tmain(int argc, XML_Char **argv)
 {
