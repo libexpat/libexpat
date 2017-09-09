@@ -28,8 +28,9 @@
 # OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 # USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-import sys
+import argparse
 import difflib
+import sys
 
 
 def _read_lines(filename):
@@ -41,14 +42,21 @@ def _read_lines(filename):
             return f.readlines()
 
 
-if len(sys.argv) != 3:
-    sys.exit(2)
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('first', metavar='FILE')
+    parser.add_argument('second', metavar='FILE')
+    config = parser.parse_args()
 
-first = _read_lines(sys.argv[1])
-second = _read_lines(sys.argv[2])
+    first = _read_lines(config.first)
+    second = _read_lines(config.second)
 
-diffs = list(difflib.unified_diff(first, second,
-                                  fromfile=sys.argv[1], tofile=sys.argv[2]))
-if diffs:
-    sys.stdout.writelines(diffs)
-    sys.exit(1)
+    diffs = list(difflib.unified_diff(first, second, fromfile=config.first,
+                                      tofile=config.second))
+    if diffs:
+        sys.stdout.writelines(diffs)
+        sys.exit(1)
+
+
+if __name__ == '__main__':
+    main()
