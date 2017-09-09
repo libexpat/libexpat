@@ -4192,7 +4192,6 @@ byte_character_handler(void *userData,
         fail("Character byte count incorrect");
 #else
     (void)userData;
-    (void)s;
     (void)len;
 #endif
 }

@@ -43,7 +43,11 @@
 #include "xmltchar.h"
 
 #ifdef _MSC_VER
-#include <crtdbg.h>
+# include <crtdbg.h>
+#endif
+
+#ifdef XML_UNICODE
+# include <wchar.h>
 #endif
 
 /* Structures for handler user data */
@@ -890,6 +894,11 @@ usage(const XML_Char *prog, int rc)
   exit(rc);
 }
 
+#if defined(__MINGW32__) && defined(XML_UNICODE)
+/* Silence warning about missing prototype */
+int wmain(int argc, XML_Char **argv);
+#endif
+
 int
 tmain(int argc, XML_Char **argv)
 {
@@ -1018,7 +1027,7 @@ tmain(int argc, XML_Char **argv)
       parser = XML_ParserCreate(encoding);
 
     if (! parser) {
-      tperror("Could not instantiate parser");
+      tperror(T("Could not instantiate parser"));
       exit(1);
     }
 

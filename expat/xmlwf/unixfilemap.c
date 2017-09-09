@@ -43,11 +43,18 @@
 #define MAP_FILE 0
 #endif
 
+#include "xmltchar.h"
 #include "filemap.h"
 
+#ifdef XML_UNICODE_WCHAR_T
+# define XML_FMT_STR "ls"
+#else
+# define XML_FMT_STR "s"
+#endif
+
 int
-filemap(const char *name,
-        void (*processor)(const void *, size_t, const char *, void *arg),
+filemap(const tchar *name,
+        void (*processor)(const void *, size_t, const tchar *, void *arg),
         void *arg)
 {
   int fd;
@@ -55,19 +62,19 @@ filemap(const char *name,
   struct stat sb;
   void *p;
 
-  fd = open(name, O_RDONLY);
+  fd = topen(name, O_RDONLY);
   if (fd < 0) {
-    perror(name);
+    tperror(name);
     return 0;
   }
   if (fstat(fd, &sb) < 0) {
-    perror(name);
+    tperror(name);
     close(fd);
     return 0;
   }
   if (!S_ISREG(sb.st_mode)) {
     close(fd);
-    fprintf(stderr, "%s: not a regular file\n", name);
+    fprintf(stderr, "%" XML_FMT_STR ": not a regular file\n", name);
     return 0;
   }
   if (sb.st_size > XML_MAX_CHUNK_LEN) {
@@ -86,7 +93,7 @@ filemap(const char *name,
   p = (void *)mmap((void *)0, (size_t)nbytes, PROT_READ,
                    MAP_FILE|MAP_PRIVATE, fd, (off_t)0);
   if (p == (void *)-1) {
-    perror(name);
+    tperror(name);
     close(fd);
     return 0;
   }

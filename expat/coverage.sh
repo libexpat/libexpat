@@ -115,17 +115,20 @@ _run() {
 
         (
             set -x
-            make buildlib &> build.log
+            make -C lib &> build.log
 
             lcov -c -d "${capture_dir}" -i -o "${coverage_info}-zero" &> run.log
         )
 
         if ${with_mingw}; then
-            _copy_missing_mingw_libaries .libs
+            for d in {tests,xmlwf}/.libs ; do
+                mkdir -p "${d}"
+                _copy_missing_mingw_libaries "${d}"
+            done
         fi
 
         set -x
-        make check run-xmltest
+        make all check run-xmltest
 
         lcov -c -d "${capture_dir}" -o "${coverage_info}-test" &>> run.log
         lcov \
@@ -203,7 +206,11 @@ _main() {
     with_unsigned_char=false
     with_libbsd=false
     for with_mingw in true false ; do
-        for unicode_enabled in false ; do
+        for unicode_enabled in true false ; do
+            if ${unicode_enabled} && ! ${with_mingw} ; then
+                continue
+            fi
+
             for xml_context in 0 1024 ; do
                 _build_case
             done
