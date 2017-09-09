@@ -22,6 +22,8 @@ Release 2.2.5 ???????????????????
         #33 #132  tests: Mass-fix compilation for XML_UNICODE_WCHAR_T
             #129  examples: Fix compilation for XML_UNICODE_WCHAR_T
             #130  benchmark: Fix compilation for XML_UNICODE_WCHAR_T
+            #144  xmlwf: Fix compilation for XML_UNICODE_WCHAR_T; still needs
+                    Windows or MinGW for 2-byte wchar_t
               #9  Address two Clang Static Analyzer false positives
              #59  Resolve troublesome macros hiding parser struct membership
                     and dereferencing that pointer
