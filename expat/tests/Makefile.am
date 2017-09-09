@@ -61,5 +61,6 @@ EXTRA_DIST = \
     minicheck.h \
     memcheck.h \
     README.txt \
+    udiffer.py \
     xmltest.log.expected \
     xmltest.sh
