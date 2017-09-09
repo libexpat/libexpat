@@ -47,9 +47,9 @@
 #include "filemap.h"
 
 #ifdef XML_UNICODE_WCHAR_T
-#define XML_FMT_STR "ls"
+# define XML_FMT_STR "ls"
 #else
-#define XML_FMT_STR "s"
+# define XML_FMT_STR "s"
 #endif
 
 int

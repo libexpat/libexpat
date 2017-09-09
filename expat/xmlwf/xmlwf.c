@@ -43,11 +43,11 @@
 #include "xmltchar.h"
 
 #ifdef _MSC_VER
-#include <crtdbg.h>
+# include <crtdbg.h>
 #endif
 
 #ifdef XML_UNICODE
-#include <wchar.h>
+# include <wchar.h>
 #endif
 
 /* Structures for handler user data */
