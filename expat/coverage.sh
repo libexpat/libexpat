@@ -206,7 +206,11 @@ _main() {
     with_unsigned_char=false
     with_libbsd=false
     for with_mingw in true false ; do
-        for unicode_enabled in false ; do
+        for unicode_enabled in true false ; do
+            if ${unicode_enabled} && ! ${with_mingw} ; then
+                continue
+            fi
+
             for xml_context in 0 1024 ; do
                 _build_case
             done
