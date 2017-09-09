@@ -115,17 +115,20 @@ _run() {
 
         (
             set -x
-            make buildlib &> build.log
+            make -C lib &> build.log
 
             lcov -c -d "${capture_dir}" -i -o "${coverage_info}-zero" &> run.log
         )
 
         if ${with_mingw}; then
-            _copy_missing_mingw_libaries .libs
+            for d in {tests,xmlwf}/.libs ; do
+                mkdir -p "${d}"
+                _copy_missing_mingw_libaries "${d}"
+            done
         fi
 
         set -x
-        make check run-xmltest
+        make all check run-xmltest
 
         lcov -c -d "${capture_dir}" -o "${coverage_info}-test" &>> run.log
         lcov \
