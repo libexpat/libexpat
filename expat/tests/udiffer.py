@@ -31,21 +31,21 @@
 import sys
 import difflib
 
+
+def _read_lines(filename):
+    try:
+        with open(filename) as f:
+            return f.readlines()
+    except UnicodeDecodeError:
+        with open(filename, encoding='utf_16') as f:
+            return f.readlines()
+
+
 if len(sys.argv) != 3:
     sys.exit(2)
 
-try:
-    with open(sys.argv[1]) as infile1:
-        first = infile1.readlines()
-except UnicodeDecodeError:
-    with open(sys.argv[1], encoding="utf_16") as infile1:
-        first = infile1.readlines()
-try:
-    with open(sys.argv[2]) as infile2:
-        second = infile2.readlines()
-except UnicodeDecodeError:
-    with open(sys.argv[2], encoding="utf_16") as infile2:
-        second = infile2.readlines()
+first = _read_lines(sys.argv[1])
+second = _read_lines(sys.argv[2])
 
 diffs = list(difflib.unified_diff(first, second,
                                   fromfile=sys.argv[1], tofile=sys.argv[2]))
