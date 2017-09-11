@@ -11351,7 +11351,7 @@ context_realloc_test(const char *text)
         { NULL, NULL }
     };
     int i;
-    const int max_realloc_count = 5;
+    const int max_realloc_count = 6;
 
     for (i = 0; i < max_realloc_count; i++) {
         reallocation_count = i;
