@@ -44,11 +44,13 @@ main() {
         local CC="${CLANG_CC}"
         local CXX="${CLANG_CXX}"
         BASE_COMPILE_FLAGS+=" -g -fsanitize=address -fno-omit-frame-pointer"
+	LDFLAGS+="-Wc,-fsanitize=address -fsanitize=address"
         ;;
     coverage | lib-coverage | app-coverage)
         local CC="${GCC_CC}"
         local CXX="${GCC_CXX}"
         BASE_COMPILE_FLAGS+=" --coverage --no-inline"
+	LDFLAGS+=""
         ;;
     egypt)
         BASE_COMPILE_FLAGS+=" -fdump-rtl-expand"
@@ -84,6 +86,7 @@ main() {
 
         RUN CC="${CC}" CFLAGS="${CFLAGS}" \
                 CXX="${CXX}" CXXFLAGS="${CXXFLAGS}" \
+		LDFLAGS="${LDFLAGS}" \
                 AR="${AR}" \
                 LD="${LD}" \
                 ./configure "$@"
@@ -91,6 +94,7 @@ main() {
         RUN "${MAKE}" \
                 CFLAGS="${CFLAGS} -Werror" \
                 CXXFLAGS="${CXXFLAGS} -Werror" \
+		LDFLAGS="${LDFLAGS}" \
                 clean all
 
         case "${mode}" in
@@ -100,6 +104,7 @@ main() {
             RUN "${MAKE}" \
                     CFLAGS="${CFLAGS} -Werror" \
                     CXXFLAGS="${CXXFLAGS} -Werror" \
+		    LDFLAGS="${LDFLAGS}" \
                     check run-xmltest
             ;;
         esac
