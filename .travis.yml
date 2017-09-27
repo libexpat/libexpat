@@ -2,6 +2,9 @@
 # Licensed under the MIT license
 
 language: cpp
+os:
+  - linux
+  - osx
 dist: trusty
 
 # Unbreak clang address sanitizer, needs SYS_PTRACE
@@ -14,7 +17,7 @@ git:
 
 env:
   global:
-    - CFLAGS='-g -pipe'
+    - CFLAGS='-g -pipe' PATH="/usr/local/opt/coreutils/libexec/gnubin:$PATH"
   matrix:
     - MODE=address
     - MODE=cmake
@@ -22,7 +25,15 @@ env:
     - MODE=distcheck
     - MODE=lib-coverage
 
+matrix:
+  exclude:
+    - os: osx
+      env: MODE=lib-coverage
+
 addons:
+  homebrew:
+    update: true
+    brewfile: true
   apt:
     packages:
       - cmake
