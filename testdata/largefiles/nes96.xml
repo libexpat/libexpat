@@ -41063,7 +41063,7 @@ Washington DC
                2
             </catValu>
             <txt level="category">
-               Repubican candidate name given
+               Republican candidate name given
             </txt>
          </catgry>
          <catgry>
@@ -46518,7 +46518,8 @@ section.
 
 Prestige scores are based on Occupational Prestige Ratings from the 1989
 General Social Survey, by James A. Davis, Robert W. Hodge, Keiko Nakao, Tom
-W. Smith, and Judith Treas (ICPSR 9593), Inter-univeristy Consortium for
+W. Smith, and Judith Treas (ICPSR 9593), Inter-university Consortium for
+Political and Social Research, Ann Arbor, MI 48106, December 1991.
 
 Prestige Score data have been blanked out to preserve respondents' anonymity.
 Contact NES project staff for information about a procedure by which it is
@@ -47498,7 +47499,8 @@ section.
 
 Prestige scores are based on Occupational Prestige Ratings from the 1989
 General Social Survey, by James A. Davis, Robert W. Hodge, Keiko Nakao, Tom
-W. Smith, and Judith Treas (ICPSR 9593), Inter-univeristy Consortium for
+W. Smith, and Judith Treas (ICPSR 9593), Inter-university Consortium for
+Political and Social Research, Ann Arbor, MI 48106, December 1991.
 
 Prestige Score data have been blanked out to preserve respondents' anonymity.
 Contact NES project staff for information about a procedure by which it is
@@ -48415,7 +48417,8 @@ section.
 
 Prestige scores are based on Occupational Prestige Ratings from the 1989
 General Social Survey, by James A. Davis, Robert W. Hodge, Keiko Nakao, Tom
-W. Smith, and Judith Treas (ICPSR 9593), Inter-univeristy Consortium for
+W. Smith, and Judith Treas (ICPSR 9593), Inter-university Consortium for
+Political and Social Research, Ann Arbor, MI 48106, December 1991.
 
 Prestige Score data have been blanked out to preserve respondents' anonymity.
 Contact NES project staff for information about a procedure by which it is
@@ -49400,7 +49403,8 @@ OCCUPATION PRESTIGE SCORE
 
 Prestige scores are based on Occupational Prestige Ratings from the 1989
 General Social Survey, by James A. Davis, Robert W. Hodge, Keiko Nakao, Tom
-W. Smith, and Judith Treas (ICPSR 9593), Inter-univeristy Consortium for
+W. Smith, and Judith Treas (ICPSR 9593), Inter-university Consortium for
+Political and Social Research, Ann Arbor, MI 48106, December 1991.
 
 Prestige Score data have been blanked out to preserve respondents' anonymity.
 Contact NES project staff for information about a procedure by which it is
@@ -50088,7 +50092,8 @@ section.
 
 Prestige scores are based on Occupational Prestige Ratings from the 1989
 General Social Survey, by James A. Davis, Robert W. Hodge, Keiko Nakao, Tom
-W. Smith, and Judith Treas (ICPSR 9593), Inter-univeristy Consortium for
+W. Smith, and Judith Treas (ICPSR 9593), Inter-university Consortium for
+Political and Social Research, Ann Arbor, MI 48106, December 1991.
 
 Prestige Score data have been blanked out to preserve respondents' anonymity.
 Contact NES project staff for information about a procedure by which it is
@@ -50699,7 +50704,7 @@ from Y12/Y12a coded here rather than current occupation in Y7/Y7a.
 The original 3-digit 1980 US Census Occupation variable has been recoded nto
 71 subgroups, in order to protect Respondents' anonymity.  Contact NES
 Project Staff for information about a procedure by which it is possible to
-gain acceess to the full 3-digit code values.
+gain access to the full 3-digit code values.
 
 See CENSUS OCCUPATION Master Code.
 
@@ -50974,6 +50979,7 @@ Y12ax(2) coded here rather than current occupation in Y7ax(2).
 NOTE:  Prestige scores are based on Occupational Prestige Ratings from the
 1989 General Social Survey, by James a Davis, Robert W. Hodge, Keiko Nakao,
 Tom W. Smith, and Judith Treas (ICPSR 9593), Inter-University Consortium for
+Political and Social Research, Ann Arbor, MI 48106, December 1991.
 
 Prestige Score data have been blanked out to preserve respondents' anonymity.
 Contact NES Project Staff for information about a procedure by which it s
@@ -52696,6 +52702,7 @@ this variable.
 NOTE:  Prestige scores are based on Occupational Prestige Ratings from the
 1989 General Social Survey, by James a Davis, Robert W. Hodge, Keiko Nakao,
 Tom W. Smith, and Judith Treas (ICPSR 9593), Inter-University Consortium for
+Political and Social Research, Ann Arbor, MI 48106, December 1991.
 
 Prestige Score data have been blanked out to preserve respondents' anonymity.
 Contact NES Project Staff for information about a procedure by which it is
@@ -55407,7 +55414,7 @@ Codes 2,3,4,5 (positions 2nd - 5th in Presidential Performance items).
    <var name="v960739" ID="v960739" format="char" dcml="0">
       <location cardNo="1" StartPos="1145" width="1"/>
       <labl level="variable">
-         Pre. Foreign Affairs Postion in Pres Performance Random E2-E5
+         Pre. Foreign Affairs Position in Pres Performance Random E2-E5
       </labl>
       <qstn>
          <qstnLit>
@@ -59232,7 +59239,7 @@ Rand.L4b
 RANDOMIZATION Position of
 Clinton in Pre questions L4b-L4d
 
-[Presidential candidates, Government Guranteed Job/Standard of Living]
+[Presidential candidates, Government Guaranteed Job/Standard of Living]
 
 -------------------------------------------------------------------
 
@@ -59271,7 +59278,7 @@ Rand.L4c
 RANDOMIZATION Position of
 Dole in Pre questions L4b-L4d
 
-[Presidential candidates, Government Guranteed Job/Standard of Living]
+[Presidential candidates, Government Guaranteed Job/Standard of Living]
 
 -------------------------------------------------------------------
 
@@ -59310,7 +59317,7 @@ Rand.L4d
 RANDOMIZATION Position of
 Perot in Pre questions L4b-L4d
 
-[Presidential candidates, Government Guranteed Job/Standard of Living]
+[Presidential candidates, Government Guaranteed Job/Standard of Living]
 
 -------------------------------------------------------------------
 
@@ -112330,7 +112337,7 @@ people think, where would you place yourself?
 T5                                        CSES Q5
 
 Looking at page 17 in the booklet:
-Some people say that political parties are neccessary to make our political
+Some people say that political parties are necessary to make our political
 system work in the United States.  Others think that political parties are not
 needed in the United States.
 
