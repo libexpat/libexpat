@@ -228,6 +228,20 @@ AS_IF([test "x${enable_xml_context}" != "xno"], [
     [Define to specify how much context to retain around the current parse point.])
 ])
 
+AC_ARG_WITH([docbook],
+  [AS_HELP_STRING([--with-docbook],
+    [support xml to man page generation @<:@default=check@:>@])],
+  [],
+  [with_docbook=check])
+
+DOCBOOK_TO_MAN=
+AS_IF([test "x$with_docbook" != xno],
+  [AC_CHECK_PROGS([DOCBOOK_TO_MAN], [docbook2x-man docbook2man],
+  [if test "x$with_docbook" != xcheck; then 
+    AC_MSG_ERROR([Required program 'docbook2x-man' not found.])])])
+
+AM_CONDITIONAL(WITH_DOCBOOK, [test x${DOCBOOK_TO_MAN} != x])
+
 AC_CONFIG_FILES([Makefile expat.pc])
 AC_CONFIG_FILES([
   doc/Makefile
