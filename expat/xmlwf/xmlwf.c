@@ -551,7 +551,7 @@ metaLocation(XML_Parser parser)
     ftprintf(fp, T(" uri=\"%s\""), uri);
   ftprintf(fp,
            T(" byte=\"%" XML_FMT_INT_MOD "d\" nbytes=\"%d\" \
-			 line=\"%" XML_FMT_INT_MOD "u\" col=\"%" XML_FMT_INT_MOD "u\""),
+             line=\"%" XML_FMT_INT_MOD "u\" col=\"%" XML_FMT_INT_MOD "u\""),
            XML_GetCurrentByteIndex(parser),
            XML_GetCurrentByteCount(parser),
            XML_GetCurrentLineNumber(parser),
