@@ -550,8 +550,10 @@ metaLocation(XML_Parser parser)
   if (uri)
     ftprintf(fp, T(" uri=\"%s\""), uri);
   ftprintf(fp,
-           T(" byte=\"%" XML_FMT_INT_MOD "d\" nbytes=\"%d\" \
-			 line=\"%" XML_FMT_INT_MOD "u\" col=\"%" XML_FMT_INT_MOD "u\""),
+           T(" byte=\"%") T(XML_FMT_INT_MOD) T("d\"")
+             T(" nbytes=\"%d\"")
+             T(" line=\"%") T(XML_FMT_INT_MOD) T("u\"")
+             T(" col=\"%") T(XML_FMT_INT_MOD) T("u\""),
            XML_GetCurrentByteIndex(parser),
            XML_GetCurrentByteCount(parser),
            XML_GetCurrentLineNumber(parser),

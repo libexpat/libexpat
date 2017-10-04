@@ -5533,7 +5533,7 @@ START_TEST(test_param_entity_with_trailing_cr)
     XML_SetExternalEntityRefHandler(parser, external_entity_loader);
     XML_SetEntityDeclHandler(parser, param_entity_match_handler);
     entity_name_to_match = XCS(PARAM_ENTITY_NAME);
-    entity_value_to_match = XCS(PARAM_ENTITY_CORE_VALUE "\n");
+    entity_value_to_match = XCS(PARAM_ENTITY_CORE_VALUE) XCS("\n");
     entity_match_flag = ENTITY_MATCH_NOT_FOUND;
     if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
                                 XML_TRUE) == XML_STATUS_ERROR)
