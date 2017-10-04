@@ -37,7 +37,8 @@
 # ifndef XML_UNICODE_WCHAR_T
 #  error xmlwf requires a 16-bit Unicode-compatible wchar_t
 # endif
-# define T(x) L ## x
+# define _PREPEND_BIG_L(x) L ## x
+# define T(x) _PREPEND_BIG_L(x)
 # define ftprintf fwprintf
 # define tfopen _wfopen
 # define fputts fputws
