@@ -28,10 +28,12 @@
 # OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 # USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+if WITH_DOCBOOK
 dist_man_MANS = xmlwf.1
 
-xmlwf.1: doc.mk xmlwf.xml
-	$(MAKE) -f $(srcdir)/doc.mk xmlwf.1 srcdir=$(srcdir)
+xmlwf.1: xmlwf.xml
+	${DOCBOOK_TO_MAN} $<
+	mv XMLWF.1 $@
 
 # https://www.gnu.org/software/automake/manual/automake.html#What-Gets-Cleaned
 .PHONY: clean-local
@@ -39,12 +41,12 @@ clean-local: clean-local-check
 
 .PHONY: clean-local-check
 clean-local-check:
-	$(MAKE) -f $(srcdir)/doc.mk clean
+	$(RM) ${dist_man_MANS}
 
 EXTRA_DIST = \
-    doc.mk \
     expat.png \
     reference.html \
     style.css \
     valid-xhtml10.png \
     xmlwf.xml
+endif
