@@ -28,12 +28,14 @@ Release 2.2.5 ???????????????????
              #59  Resolve troublesome macros hiding parser struct membership
                     and dereferencing that pointer
               #6  Resolve superfluous internal malloc/realloc switch
+       #153 #155  Improve docbook2x-man detection
 
         Special thanks to:
             Benbuck Nason
             José Gutiérrez de la Concha
             Rhodri James
             Rolf Ade
+            Stephen Groat
                  and
             Core Infrastructure Initiative
 
