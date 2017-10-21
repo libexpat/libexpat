@@ -28,12 +28,16 @@
 # OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 # USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-if WITH_DOCBOOK
 dist_man_MANS = xmlwf.1
 
 xmlwf.1: xmlwf.xml
+if WITH_DOCBOOK
 	${DOCBOOK_TO_MAN} $<
 	mv XMLWF.1 $@
+else
+	@echo 'ERROR: Configure with --with-docbook for "make dist".' 1>&2
+	@false
+endif
 
 # https://www.gnu.org/software/automake/manual/automake.html#What-Gets-Cleaned
 .PHONY: clean-local
@@ -49,4 +53,3 @@ EXTRA_DIST = \
     style.css \
     valid-xhtml10.png \
     xmlwf.xml
-endif
