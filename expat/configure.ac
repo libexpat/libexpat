@@ -234,7 +234,7 @@ AC_ARG_WITH([docbook],
   [],
   [with_docbook=check])
 
-DOCBOOK_TO_MAN=
+AC_ARG_VAR([DOCBOOK_TO_MAN], [docbook2x-man command])
 AS_IF([test "x$with_docbook" != xno],
   [AC_CHECK_PROGS([DOCBOOK_TO_MAN], [docbook2x-man docbook2man],
   [if test "x$with_docbook" != xcheck; then 
