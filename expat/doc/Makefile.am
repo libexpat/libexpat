@@ -32,7 +32,7 @@ dist_man_MANS = xmlwf.1
 
 xmlwf.1: xmlwf.xml
 if WITH_DOCBOOK
-	${DOCBOOK_TO_MAN} $<
+	$(DOCBOOK_TO_MAN) $<
 	mv XMLWF.1 $@
 else
 	@echo 'ERROR: Configure with --with-docbook for "make dist".' 1>&2
