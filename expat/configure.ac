@@ -228,9 +228,10 @@ AS_IF([test "x${enable_xml_context}" != "xno"], [
     [Define to specify how much context to retain around the current parse point.])
 ])
 
-AC_ARG_WITH([docbook],
-  [AS_HELP_STRING([--with-docbook],
-    [support xml to man page generation @<:@default=check@:>@])],
+AC_ARG_WITH([docbook], [AS_HELP_STRING([--with-docbook],
+    [enforce XML to man page compilation @<:@default=check@:>@])
+AS_HELP_STRING([--without-docbook],
+    [skip XML to man page compilation @<:@default=check@:>@])],
   [],
   [with_docbook=check])
 
