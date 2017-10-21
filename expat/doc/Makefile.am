@@ -45,7 +45,7 @@ clean-local: clean-local-check
 
 .PHONY: clean-local-check
 clean-local-check:
-	$(RM) ${dist_man_MANS}
+	$(RM) xmlwf.1
 
 EXTRA_DIST = \
     expat.png \
