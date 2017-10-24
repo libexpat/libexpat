@@ -844,6 +844,8 @@ generate_hash_secret_salt(XML_Parser parser)
 {
   unsigned long entropy;
   (void)parser;
+
+  /* "Failproof" high quality providers: */
 #if defined(HAVE_ARC4RANDOM_BUF)
   arc4random_buf(&entropy, sizeof(entropy));
   return ENTROPY_DEBUG("arc4random_buf", entropy);
