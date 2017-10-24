@@ -29,6 +29,7 @@ Release 2.2.5 ???????????????????
                     and dereferencing that pointer
               #6  Resolve superfluous internal malloc/realloc switch
        #153 #155  Improve docbook2x-man detection
+            #160  Undefine NDEBUG in the test suite (rather than rejecting it)
 
         Special thanks to:
             Benbuck Nason

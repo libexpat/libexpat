@@ -30,6 +30,10 @@
    USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+#if defined(NDEBUG)
+# undef NDEBUG  /* because test suite relies on assert(...) at the moment */
+#endif
+
 #ifdef HAVE_EXPAT_CONFIG_H
 # include <expat_config.h>
 #endif
@@ -91,16 +95,6 @@
 #  define XCS(s) s
 # endif /* XML_UNICODE */
 #endif /* XML_UNICODE_WCHAR_T */
-
-#if defined(NDEBUG)
-# error  \
-    The test suite relies on assert(...) at the moment. \
-    You have NDEBUG defined which removes that code so that failures in the \
-    test suite can go unnoticed. \
-    \
-    While we rely on assert(...), compiling the test suite with NDEBUG \
-    defined is not supported.
-#endif
 
 
 static XML_Parser parser = NULL;
