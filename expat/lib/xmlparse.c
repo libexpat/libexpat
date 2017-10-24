@@ -673,6 +673,9 @@ static const XML_Char implicitContext[] = {
 };
 
 
+/* To avoid warnings about unused functions: */
+#if ! defined(HAVE_ARC4RANDOM_BUF) && ! defined(HAVE_ARC4RANDOM)
+
 #if defined(HAVE_GETRANDOM) || defined(HAVE_SYSCALL_GETRANDOM)
 
 /* Obtain entropy on Linux 3.17+ */
@@ -737,6 +740,8 @@ writeRandomBytes_dev_urandom(void * target, size_t count) {
 }
 
 #endif  /* ! defined(_WIN32) && defined(XML_DEV_URANDOM) */
+
+#endif  /* ! defined(HAVE_ARC4RANDOM_BUF) && ! defined(HAVE_ARC4RANDOM) */
 
 
 #if defined(HAVE_ARC4RANDOM)

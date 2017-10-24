@@ -30,6 +30,7 @@ Release 2.2.5 ???????????????????
               #6  Resolve superfluous internal malloc/realloc switch
        #153 #155  Improve docbook2x-man detection
             #160  Undefine NDEBUG in the test suite (rather than rejecting it)
+            #161  Address compiler warnings
 
         Special thanks to:
             Benbuck Nason
