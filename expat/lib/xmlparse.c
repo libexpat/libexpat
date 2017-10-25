@@ -2363,8 +2363,10 @@ XML_ErrorString(enum XML_Error code)
     return XML_L("requested feature requires XML_DTD support in Expat");
   case XML_ERROR_CANT_CHANGE_FEATURE_ONCE_PARSING:
     return XML_L("cannot change setting once parsing has begun");
+  /* Added in 1.95.7. */
   case XML_ERROR_UNBOUND_PREFIX:
     return XML_L("unbound prefix");
+  /* Added in 1.95.8. */
   case XML_ERROR_UNDECLARING_PREFIX:
     return XML_L("must not undeclare prefix");
   case XML_ERROR_INCOMPLETE_PE:
@@ -2385,13 +2387,15 @@ XML_ErrorString(enum XML_Error code)
     return XML_L("parsing finished");
   case XML_ERROR_SUSPEND_PE:
     return XML_L("cannot suspend in external parameter entity");
+  /* Added in 2.0.0. */
   case XML_ERROR_RESERVED_PREFIX_XML:
     return XML_L("reserved prefix (xml) must not be undeclared or bound to another namespace name");
   case XML_ERROR_RESERVED_PREFIX_XMLNS:
     return XML_L("reserved prefix (xmlns) must not be declared or undeclared");
   case XML_ERROR_RESERVED_NAMESPACE_URI:
     return XML_L("prefix must not be bound to one of the reserved namespace names");
-  case XML_ERROR_INVALID_ARGUMENT:
+  /* Added in 2.2.5. */
+  case XML_ERROR_INVALID_ARGUMENT:  /* Constant added in 2.2.1, already */
     return XML_L("invalid argument");
   }
   return NULL;
