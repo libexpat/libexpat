@@ -2391,6 +2391,8 @@ XML_ErrorString(enum XML_Error code)
     return XML_L("reserved prefix (xmlns) must not be declared or undeclared");
   case XML_ERROR_RESERVED_NAMESPACE_URI:
     return XML_L("prefix must not be bound to one of the reserved namespace names");
+  case XML_ERROR_INVALID_ARGUMENT:
+    return XML_L("invalid argument");
   }
   return NULL;
 }
