@@ -12,6 +12,9 @@ Release 2.2.5 ???????????????????
                     was registered.
        #137 #138  Fix a case of mistakenly reported parsing success where
                     XML_StopParser was called from an element handler
+            #162  Function XML_ErrorString was returning NULL rather than
+                    a message for code XML_ERROR_INVALID_ARGUMENT
+                    introduced with release 2.2.1
 
         Other changes:
             #106  xmlwf: Add argument -N adding notation declarations
@@ -34,6 +37,7 @@ Release 2.2.5 ???????????????????
 
         Special thanks to:
             Benbuck Nason
+            Hans Wennborg
             José Gutiérrez de la Concha
             Rhodri James
             Rolf Ade
