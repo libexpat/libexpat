@@ -34,6 +34,7 @@ Release 2.2.5 ???????????????????
        #153 #155  Improve docbook2x-man detection
             #160  Undefine NDEBUG in the test suite (rather than rejecting it)
             #161  Address compiler warnings
+                  Version info bumped from 7:6:6 to 7:7:6
 
         Special thanks to:
             Benbuck Nason
