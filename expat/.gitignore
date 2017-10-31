@@ -34,3 +34,5 @@ expat.pc
 build__R*
 coverage__R*
 source__R*
+/expat-*.tar.bz2
+/stamp-h1
