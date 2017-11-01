@@ -22,6 +22,7 @@ Release 2.2.5 Tue October 31 2017
                     output was incomplete
             #127  Windows: Fix test suite compilation
        #126 #127  Windows: Fix compilation for Visual Studio 2012
+                  Windows: Upgrade shipped project files to Visual Studio 2017
         #33 #132  tests: Mass-fix compilation for XML_UNICODE_WCHAR_T
             #129  examples: Fix compilation for XML_UNICODE_WCHAR_T
             #130  benchmark: Fix compilation for XML_UNICODE_WCHAR_T
