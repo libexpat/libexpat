@@ -18,6 +18,7 @@ AppSupportURL=http://www.libexpat.org/
 AppUpdatesURL=http://www.libexpat.org/
 UninstallDisplayName=Expat XML Parser {#expatVer}
 VersionInfoVersion={#expatVer}
+OutputBaseFilename=expat-win32bin-{#expatVer}
 
 DefaultDirName={pf}\Expat {#expatVer}
 UninstallFilesDir={app}\Uninstall
