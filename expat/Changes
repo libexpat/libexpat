@@ -5,8 +5,14 @@ NOTE: We are looking for help with a few things:
 Release 2.2.? ???????????????????
         Other changes:
             #166  Avoid grep option `-q` for Solaris
+            #167  Autotools: Support
+                    ./configure DOCBOOK_TO_MAN="xmlto man --skip-validation"
+       #159 #167  Autotools: Support DOCBOOK_TO_MAN command which produces
+                    xmlwf.1 rather than XMLWF.1; also covers case insensitive
+                    file systems
 
         Special thanks to:
+            Joe Orton
             Rainer Jung
 
 Release 2.2.5 Tue October 31 2017
