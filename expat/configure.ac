@@ -241,7 +241,7 @@ AS_IF([test "x$with_docbook" != xno],
   [if test "x$with_docbook" != xcheck; then 
     AC_MSG_ERROR([Required program 'docbook2x-man' not found.])])])
 
-AM_CONDITIONAL(WITH_DOCBOOK, [test x${DOCBOOK_TO_MAN} != x])
+AM_CONDITIONAL(WITH_DOCBOOK, [test "x${DOCBOOK_TO_MAN}" != x])
 
 AC_CONFIG_FILES([Makefile expat.pc])
 AC_CONFIG_FILES([
