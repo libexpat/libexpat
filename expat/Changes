@@ -2,6 +2,13 @@ NOTE: We are looking for help with a few things:
       https://github.com/libexpat/libexpat/labels/help%20wanted
       If you can help, please get in touch.  Thanks!
 
+Release 2.2.? ???????????????????
+        Other changes:
+            #166  Avoid grep option `-q` for Solaris
+
+        Special thanks to:
+            Rainer Jung
+
 Release 2.2.5 Tue October 31 2017
         Bug fixes:
               #8  If the parser runs out of memory, make sure its internal
