@@ -88,13 +88,19 @@ main() {
                 LD="${LD}" \
                 ./configure "$@"
 
-        RUN "${MAKE}" clean all
+        RUN "${MAKE}" \
+                CFLAGS="${CFLAGS} -Werror" \
+                CXXFLAGS="${CXXFLAGS} -Werror" \
+                clean all
 
         case "${mode}" in
         egypt|ncc)
             ;;
         *)
-            RUN "${MAKE}" check run-xmltest
+            RUN "${MAKE}" \
+                    CFLAGS="${CFLAGS} -Werror" \
+                    CXXFLAGS="${CXXFLAGS} -Werror" \
+                    check run-xmltest
             ;;
         esac
     )
