@@ -7142,7 +7142,7 @@ START_TEST(test_return_ns_triplet)
         XCS("http://example.org/ a bar")
     };
     XML_SetReturnNSTriplet(parser, XML_TRUE);
-    XML_SetUserData(parser, elemstr);
+    XML_SetUserData(parser, (void *)elemstr);
     XML_SetElementHandler(parser, triplet_start_checker,
                           triplet_end_checker);
     XML_SetNamespaceDeclHandler(parser,
@@ -7397,7 +7397,7 @@ START_TEST(test_ns_prefix_with_empty_uri_4)
         XCS("http://example.org/ doc prefix")
     };
     XML_SetReturnNSTriplet(parser, XML_TRUE);
-    XML_SetUserData(parser, elemstr);
+    XML_SetUserData(parser, (void *)elemstr);
     XML_SetEndElementHandler(parser, triplet_end_checker);
     if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text), XML_TRUE) == XML_STATUS_ERROR)
         xml_failure(parser);
@@ -7536,7 +7536,7 @@ START_TEST(test_ns_long_element)
     };
 
     XML_SetReturnNSTriplet(parser, XML_TRUE);
-    XML_SetUserData(parser, elemstr);
+    XML_SetUserData(parser, (void *)elemstr);
     XML_SetElementHandler(parser,
                           triplet_start_checker,
                           triplet_end_checker);
@@ -10811,7 +10811,7 @@ START_TEST(test_nsalloc_long_attr_prefix)
     for (i = 0; i < max_alloc_count; i++) {
         allocation_count = i;
         XML_SetReturnNSTriplet(parser, XML_TRUE);
-        XML_SetUserData(parser, elemstr);
+        XML_SetUserData(parser, (void *)elemstr);
         XML_SetElementHandler(parser,
                               triplet_start_checker,
                               triplet_end_checker);
@@ -10874,7 +10874,7 @@ START_TEST(test_nsalloc_long_element)
     for (i = 0; i < max_alloc_count; i++) {
         allocation_count = i;
         XML_SetReturnNSTriplet(parser, XML_TRUE);
-        XML_SetUserData(parser, elemstr);
+        XML_SetUserData(parser, (void *)elemstr);
         XML_SetElementHandler(parser,
                               triplet_start_checker,
                               triplet_end_checker);
