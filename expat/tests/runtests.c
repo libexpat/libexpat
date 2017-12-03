@@ -1127,7 +1127,7 @@ END_TEST
 #define STRUCT_END_TAG 1
 static void XMLCALL
 start_element_event_handler2(void *userData, const XML_Char *name,
-			     const XML_Char **UNUSED_P(attr))
+                const XML_Char **UNUSED_P(attr))
 {
     StructData *storage = (StructData *) userData;
     StructData_AddItem(storage, name,
@@ -7137,11 +7137,11 @@ START_TEST(test_return_ns_triplet)
         "       xmlns:bar='http://example.org/'>";
     const char *epilog = "</foo:e>";
     const XML_Char *elemstr[] = {
-        XCS("http://example.org/ e foo"),
-        XCS("http://example.org/ a bar")
+        (XML_Char *)XCS("http://example.org/ e foo"),
+        (XML_Char *)XCS("http://example.org/ a bar")
     };
     XML_SetReturnNSTriplet(parser, XML_TRUE);
-    XML_SetUserData(parser, elemstr);
+    XML_SetUserData(parser, (XML_Char **)elemstr);
     XML_SetElementHandler(parser, triplet_start_checker,
                           triplet_end_checker);
     XML_SetNamespaceDeclHandler(parser,
@@ -7392,8 +7392,8 @@ START_TEST(test_ns_prefix_with_empty_uri_4)
     /* Packaged info expected by the end element handler;
        the weird structuring lets us re-use the triplet_end_checker()
        function also used for another test. */
-    const XML_Char *elemstr[] = {
-        XCS("http://example.org/ doc prefix")
+    XML_Char *elemstr[] = {
+        (XML_Char *)XCS("http://example.org/ doc prefix")
     };
     XML_SetReturnNSTriplet(parser, XML_TRUE);
     XML_SetUserData(parser, elemstr);
@@ -7528,10 +7528,10 @@ START_TEST(test_ns_long_element)
         " xmlns:foo='http://example.org/' bar:a='12'\n"
         " xmlns:bar='http://example.org/'>"
         "</foo:thisisalongenoughelementnametotriggerareallocation>";
-    const XML_Char *elemstr[] = {
-        XCS("http://example.org/")
+    XML_Char *elemstr[] = {
+        (XML_Char *)XCS("http://example.org/")
         XCS(" thisisalongenoughelementnametotriggerareallocation foo"),
-        XCS("http://example.org/ a bar")
+        (XML_Char *)XCS("http://example.org/ a bar")
     };
 
     XML_SetReturnNSTriplet(parser, XML_TRUE);
@@ -10784,9 +10784,9 @@ START_TEST(test_nsalloc_long_attr_prefix)
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
         "='http://example.org/'>"
         "</foo:e>";
-    const XML_Char *elemstr[] = {
-        XCS("http://example.org/ e foo"),
-        XCS("http://example.org/ a ")
+    XML_Char *elemstr[] = {
+        (XML_Char *)XCS("http://example.org/ e foo"),
+        (XML_Char *)XCS("http://example.org/ a ")
         XCS("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ")
         XCS("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ")
         XCS("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ")
@@ -10862,10 +10862,10 @@ START_TEST(test_nsalloc_long_element)
         " xmlns:foo='http://example.org/' bar:a='12'\n"
         " xmlns:bar='http://example.org/'>"
         "</foo:thisisalongenoughelementnametotriggerareallocation>";
-    const XML_Char *elemstr[] = {
-        XCS("http://example.org/")
+    XML_Char *elemstr[] = {
+        (XML_Char *)XCS("http://example.org/")
         XCS(" thisisalongenoughelementnametotriggerareallocation foo"),
-        XCS("http://example.org/ a bar")
+        (XML_Char *)XCS("http://example.org/ a bar")
     };
     int i;
     const int max_alloc_count = 30;
