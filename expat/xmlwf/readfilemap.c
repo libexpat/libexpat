@@ -43,6 +43,7 @@
 
 /* Function "read": */
 #if defined(_MSC_VER)
+# include <io.h>
   /* https://msdn.microsoft.com/en-us/library/wyssk1bs(v=vs.100).aspx */
 # define _EXPAT_read          _read
 # define _EXPAT_read_count_t  int
@@ -78,7 +79,7 @@ filemap(const tchar *name,
         void (*processor)(const void *, size_t, const tchar *, void *arg),
         void *arg)
 {
-  size_t nbytes;
+  unsigned int nbytes;
   int fd;
   _EXPAT_read_count_t n;
   struct stat sb;

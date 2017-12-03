@@ -80,7 +80,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${EXTRA_COMPILE_FLAGS}")
 
 include_directories(${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/lib)
 if(MSVC)
-    add_definitions(-D_CRT_SECURE_NO_WARNINGS -wd4996)
+    add_definitions(-D_CRT_SECURE_NO_WARNINGS -wd4996 /WX)
 endif(MSVC)
 if(WIN32)
     set(CMAKE_DEBUG_POSTFIX "d" CACHE STRING "Add a suffix, usually d on Windows")

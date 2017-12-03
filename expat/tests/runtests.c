@@ -58,6 +58,10 @@
 # endif
 #endif
 
+#if defined(_MSC_VER)
+   /* https://docs.microsoft.com/en-us/cpp/error-messages/compiler-warnings/compiler-warning-level-3-c4267 */
+#  pragma warning( disable : 4267)
+#endif
 
 #include "expat.h"
 #include "chardata.h"
@@ -491,7 +495,6 @@ START_TEST(test_siphash_spec)
     const uint64_t expected = _SIP_ULL(0xa129ca61U, 0x49be45e5U);
     struct siphash state;
     struct sipkey key;
-    (void)sip_tobin;
 
     sip_tokey(&key,
             "\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09"
@@ -1128,7 +1131,7 @@ END_TEST
 #define STRUCT_END_TAG 1
 static void XMLCALL
 start_element_event_handler2(void *userData, const XML_Char *name,
-			     const XML_Char **UNUSED_P(attr))
+                const XML_Char **UNUSED_P(attr))
 {
     StructData *storage = (StructData *) userData;
     StructData_AddItem(storage, name,
@@ -5051,7 +5054,7 @@ external_entity_devaluer(XML_Parser parser,
         "<!ENTITY % e1 SYSTEM 'bar'>\n"
         "%e1;\n";
     XML_Parser ext_parser;
-    int clear_handler = (intptr_t)XML_GetUserData(parser);
+    intptr_t clear_handler = (intptr_t)XML_GetUserData(parser);
 
     if (systemId == NULL || !xcstrcmp(systemId, XCS("bar")))
         return XML_STATUS_OK;
@@ -7138,11 +7141,11 @@ START_TEST(test_return_ns_triplet)
         "       xmlns:bar='http://example.org/'>";
     const char *epilog = "</foo:e>";
     const XML_Char *elemstr[] = {
-        XCS("http://example.org/ e foo"),
-        XCS("http://example.org/ a bar")
+        (XML_Char *)XCS("http://example.org/ e foo"),
+        (XML_Char *)XCS("http://example.org/ a bar")
     };
     XML_SetReturnNSTriplet(parser, XML_TRUE);
-    XML_SetUserData(parser, elemstr);
+    XML_SetUserData(parser, (XML_Char **)elemstr);
     XML_SetElementHandler(parser, triplet_start_checker,
                           triplet_end_checker);
     XML_SetNamespaceDeclHandler(parser,
@@ -7393,8 +7396,8 @@ START_TEST(test_ns_prefix_with_empty_uri_4)
     /* Packaged info expected by the end element handler;
        the weird structuring lets us re-use the triplet_end_checker()
        function also used for another test. */
-    const XML_Char *elemstr[] = {
-        XCS("http://example.org/ doc prefix")
+    XML_Char *elemstr[] = {
+        (XML_Char *)XCS("http://example.org/ doc prefix")
     };
     XML_SetReturnNSTriplet(parser, XML_TRUE);
     XML_SetUserData(parser, elemstr);
@@ -7529,10 +7532,10 @@ START_TEST(test_ns_long_element)
         " xmlns:foo='http://example.org/' bar:a='12'\n"
         " xmlns:bar='http://example.org/'>"
         "</foo:thisisalongenoughelementnametotriggerareallocation>";
-    const XML_Char *elemstr[] = {
-        XCS("http://example.org/")
+    XML_Char *elemstr[] = {
+        (XML_Char *)XCS("http://example.org/")
         XCS(" thisisalongenoughelementnametotriggerareallocation foo"),
-        XCS("http://example.org/ a bar")
+        (XML_Char *)XCS("http://example.org/ a bar")
     };
 
     XML_SetReturnNSTriplet(parser, XML_TRUE);
@@ -7866,8 +7869,8 @@ END_TEST
 #define ALLOC_ALWAYS_SUCCEED (-1)
 #define REALLOC_ALWAYS_SUCCEED (-1)
 
-static int allocation_count = ALLOC_ALWAYS_SUCCEED;
-static int reallocation_count = REALLOC_ALWAYS_SUCCEED;
+static size_t allocation_count = ALLOC_ALWAYS_SUCCEED;
+static size_t reallocation_count = REALLOC_ALWAYS_SUCCEED;
 
 /* Crocked allocator for allocation failure tests */
 static void *duff_allocator(size_t size)
@@ -10785,9 +10788,9 @@ START_TEST(test_nsalloc_long_attr_prefix)
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
         "='http://example.org/'>"
         "</foo:e>";
-    const XML_Char *elemstr[] = {
-        XCS("http://example.org/ e foo"),
-        XCS("http://example.org/ a ")
+    XML_Char *elemstr[] = {
+        (XML_Char *)XCS("http://example.org/ e foo"),
+        (XML_Char *)XCS("http://example.org/ a ")
         XCS("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ")
         XCS("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ")
         XCS("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ")
@@ -10863,10 +10866,10 @@ START_TEST(test_nsalloc_long_element)
         " xmlns:foo='http://example.org/' bar:a='12'\n"
         " xmlns:bar='http://example.org/'>"
         "</foo:thisisalongenoughelementnametotriggerareallocation>";
-    const XML_Char *elemstr[] = {
-        XCS("http://example.org/")
+    XML_Char *elemstr[] = {
+        (XML_Char *)XCS("http://example.org/")
         XCS(" thisisalongenoughelementnametotriggerareallocation foo"),
-        XCS("http://example.org/ a bar")
+        (XML_Char *)XCS("http://example.org/ a bar")
     };
     int i;
     const int max_alloc_count = 30;
