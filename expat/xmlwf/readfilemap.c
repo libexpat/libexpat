@@ -79,7 +79,7 @@ filemap(const tchar *name,
         void (*processor)(const void *, size_t, const tchar *, void *arg),
         void *arg)
 {
-  size_t nbytes;
+  unsigned int nbytes;
   int fd;
   _EXPAT_read_count_t n;
   struct stat sb;

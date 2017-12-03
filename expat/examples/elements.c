@@ -37,6 +37,11 @@
 #include <stdio.h>
 #include <expat.h>
 
+#if defined(_MSC_VER)
+/* https://docs.microsoft.com/en-us/cpp/error-messages/compiler-warnings/compiler-warning-level-3-c4267 */
+#  pragma warning( disable : 4267)
+#endif
+
 #ifdef XML_LARGE_SIZE
 # if defined(XML_USE_MSC_EXTENSIONS) && _MSC_VER < 1400
 #  define XML_FMT_INT_MOD "I64"

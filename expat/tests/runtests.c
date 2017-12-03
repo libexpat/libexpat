@@ -58,6 +58,10 @@
 # endif
 #endif
 
+#if defined(_MSC_VER)
+   /* https://docs.microsoft.com/en-us/cpp/error-messages/compiler-warnings/compiler-warning-level-3-c4267 */
+#  pragma warning( disable : 4267)
+#endif
 
 #include "expat.h"
 #include "chardata.h"
@@ -5050,7 +5054,7 @@ external_entity_devaluer(XML_Parser parser,
         "<!ENTITY % e1 SYSTEM 'bar'>\n"
         "%e1;\n";
     XML_Parser ext_parser;
-    int clear_handler = (intptr_t)XML_GetUserData(parser);
+    intptr_t clear_handler = (intptr_t)XML_GetUserData(parser);
 
     if (systemId == NULL || !xcstrcmp(systemId, XCS("bar")))
         return XML_STATUS_OK;
@@ -7865,8 +7869,8 @@ END_TEST
 #define ALLOC_ALWAYS_SUCCEED (-1)
 #define REALLOC_ALWAYS_SUCCEED (-1)
 
-static int allocation_count = ALLOC_ALWAYS_SUCCEED;
-static int reallocation_count = REALLOC_ALWAYS_SUCCEED;
+static size_t allocation_count = ALLOC_ALWAYS_SUCCEED;
+static size_t reallocation_count = REALLOC_ALWAYS_SUCCEED;
 
 /* Crocked allocator for allocation failure tests */
 static void *duff_allocator(size_t size)
