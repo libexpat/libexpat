@@ -491,7 +491,6 @@ START_TEST(test_siphash_spec)
     const uint64_t expected = _SIP_ULL(0xa129ca61U, 0x49be45e5U);
     struct siphash state;
     struct sipkey key;
-    (void)sip_tobin;
 
     sip_tokey(&key,
             "\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09"

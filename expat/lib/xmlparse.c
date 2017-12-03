@@ -6643,7 +6643,6 @@ hash(XML_Parser parser, KEY s)
 {
   struct siphash state;
   struct sipkey key;
-  (void)sip_tobin;
   (void)sip24_valid;
   copy_salt_to_sipkey(parser, &key);
   sip24_init(&state, &key);

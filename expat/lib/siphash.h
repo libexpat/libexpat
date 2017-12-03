@@ -11,6 +11,9 @@
  * --------------------------------------------------------------------------
  * HISTORY:
  *
+ * 2017-11-03  (Sebastian Pipping)
+ *   - Hide sip_tobin and sip_binof unless SIPHASH_TOBIN macro is defined
+ *
  * 2017-07-25  (Vadim Zeitlin)
  *   - Fix use of SIPHASH_MAIN macro
  *
@@ -151,12 +154,16 @@ static struct sipkey *sip_tokey(struct sipkey *key, const void *src) {
 } /* sip_tokey() */
 
 
+#ifdef SIPHASH_TOBIN
+
 #define sip_binof(v) sip_tobin((unsigned char[8]){ 0 }, (v))
 
 static void *sip_tobin(void *dst, uint64_t u64) {
 	SIP_U64TO8_LE((unsigned char *)dst, u64);
 	return dst;
 } /* sip_tobin() */
+
+#endif  /* SIPHASH_TOBIN */
 
 
 static void sip_round(struct siphash *H, const int rounds) {
