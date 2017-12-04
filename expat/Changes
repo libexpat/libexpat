@@ -10,8 +10,10 @@ Release 2.2.? ???????????????????
        #159 #167  Autotools: Support DOCBOOK_TO_MAN command which produces
                     xmlwf.1 rather than XMLWF.1; also covers case insensitive
                     file systems
+            #131  Address compiler warnings
 
         Special thanks to:
+            Franek Korta
             Joe Orton
             Rainer Jung
 
@@ -52,7 +54,6 @@ Release 2.2.5 Tue October 31 2017
 
         Special thanks to:
             Benbuck Nason
-            Franek Korta
             Hans Wennborg
             José Gutiérrez de la Concha
             Pedro Monreal Gonzalez
