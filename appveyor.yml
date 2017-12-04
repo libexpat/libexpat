@@ -164,7 +164,7 @@ environment:
 before_build:
   - echo Running cmake...
   - cd c:\projects\libexpat
-  - cmake -G"%GENERATOR%" expat
+  - cmake -DWARNINGS_AS_ERRORS=ON -G"%GENERATOR%" expat
 
 build:
   parallel: true                  # enable MSBuild parallel builds
