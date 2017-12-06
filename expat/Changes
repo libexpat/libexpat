@@ -10,6 +10,7 @@ Release 2.2.? ???????????????????
        #159 #167  Autotools: Support DOCBOOK_TO_MAN command which produces
                     xmlwf.1 rather than XMLWF.1; also covers case insensitive
                     file systems
+            #174  CMake: Introduce option WARNINGS_AS_ERRORS, defaults to OFF
             #131  Address compiler warnings
 
         Special thanks to:
