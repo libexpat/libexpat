@@ -43,6 +43,11 @@ if [[ ${MODE} = distcheck ]]; then
     mkdir -p ~/rpmbuild/{BUILD,BUILDROOT,RPMS,SOURCES,SPECS,SRPMS}
     ln -v -s "$PWD"/expat-*.tar.bz2 ~/rpmbuild/SOURCES/
     rpmbuild -ba expat.spec
+elif [[ ${MODE} = cmake ]]; then
+    cmake .
+    make all test
+    make DESTDIR="${PWD}"/ROOT install
+    ( cd ROOT/ && find | sort )
 else
     ./qa.sh "${MODE}"
 fi

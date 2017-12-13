@@ -9,6 +9,7 @@ env:
     - CFLAGS='-g -pipe'
   matrix:
     - MODE=address
+    - MODE=cmake
     - MODE=distcheck
     - MODE=lib-coverage
 
@@ -18,6 +19,7 @@ addons:
       - llvm-toolchain-trusty-4.0
     packages:
       - clang-4.0
+      - cmake
       - docbook2x
       - dos2unix
       - rpm
