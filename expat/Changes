@@ -13,6 +13,7 @@ Release 2.2.? ???????????????????
                     file systems
             #174  CMake: Introduce option WARNINGS_AS_ERRORS, defaults to OFF
             #175  CMake: Prefer check_symbol_exists over check_function_exists
+            #176  CMake: Create the same pkg-config file as with GNU Autotools
        #131 #173  Address compiler warnings
 
         Special thanks to:
@@ -20,6 +21,7 @@ Release 2.2.? ???????????????????
             Franek Korta
             Joe Orton
             Rainer Jung
+            Rolf Eike Beer
 
 Release 2.2.5 Tue October 31 2017
         Bug fixes:
