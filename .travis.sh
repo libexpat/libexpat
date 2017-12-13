@@ -47,7 +47,14 @@ elif [[ ${MODE} = cmake ]]; then
     cmake .
     make all test
     make DESTDIR="${PWD}"/ROOT install
-    ( cd ROOT/ && find | sort )
+    find ROOT -printf "%P\n" | sort
+elif [[ ${MODE} = cmake-oos ]]; then
+    mkdir build
+    cd build
+    cmake ..
+    make all test
+    make DESTDIR="${PWD}"/ROOT install
+    find ROOT -printf "%P\n" | sort
 else
     ./qa.sh "${MODE}"
 fi

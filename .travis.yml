@@ -10,6 +10,7 @@ env:
   matrix:
     - MODE=address
     - MODE=cmake
+    - MODE=cmake-oos
     - MODE=distcheck
     - MODE=lib-coverage
 
