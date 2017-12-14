@@ -14,6 +14,8 @@ Release 2.2.? ???????????????????
             #174  CMake: Introduce option WARNINGS_AS_ERRORS, defaults to OFF
             #175  CMake: Prefer check_symbol_exists over check_function_exists
             #176  CMake: Create the same pkg-config file as with GNU Autotools
+       #178 #179  CMake: Use GNUInstallDirs module to set proper defaults for
+                    install directories
        #131 #173  Address compiler warnings
 
         Special thanks to:
