@@ -45,16 +45,6 @@ libexpat_la_SOURCES = \
     xmltok.c \
     xmlrole.c
 
-doc_DATA = \
-    ../AUTHORS \
-    ../Changes
-
-install-data-hook:
-	cd "$(DESTDIR)$(docdir)" && $(am__mv) Changes changelog
-
-uninstall-local:
-	$(RM) "$(DESTDIR)$(docdir)/changelog"
-
 EXTRA_DIST = \
     ascii.h \
     asciitab.h \
