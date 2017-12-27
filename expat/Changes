@@ -16,6 +16,7 @@ Release 2.2.? ???????????????????
             #176  CMake: Create the same pkg-config file as with GNU Autotools
        #178 #179  CMake: Use GNUInstallDirs module to set proper defaults for
                     install directories
+            #180  Windows: Fix compilation of test suite for Visual Studio 2008
        #131 #173  Address compiler warnings
 
         Special thanks to:
