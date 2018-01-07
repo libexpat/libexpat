@@ -13,6 +13,7 @@ Release 2.2.? ???????????????????
                     file systems
             #181  Autotools: Drop -rpath option passed to libtool
             #174  CMake: Introduce option WARNINGS_AS_ERRORS, defaults to OFF
+       #184 #185  CMake: Introduce option MSVC_USE_STATIC_CRT, defaults to OFF
             #175  CMake: Prefer check_symbol_exists over check_function_exists
             #176  CMake: Create the same pkg-config file as with GNU Autotools
        #178 #179  CMake: Use GNUInstallDirs module to set proper defaults for
@@ -24,6 +25,7 @@ Release 2.2.? ???????????????????
             Brad King
             Franek Korta
             Joe Orton
+            Pedro Vicente
             Rainer Jung
             Rolf Eike Beer
             Tomasz Kłoczko
