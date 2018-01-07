@@ -88,6 +88,23 @@ endif(WARNINGS_AS_ERRORS)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${EXTRA_COMPILE_FLAGS}")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${EXTRA_COMPILE_FLAGS}")
 
+set(MSVC_USE_STATIC_CRT off CACHE BOOL "Use /MT flag(static CRT) when compiling in MSVC")
+if (MSVC)
+    if (MSVC_USE_STATIC_CRT)
+        message("-- Using static CRT ${MSVC_USE_STATIC_CRT}")
+        foreach(flag_var CMAKE_CXX_FLAGS_DEBUG
+            CMAKE_CXX_FLAGS_RELEASE
+            CMAKE_CXX_FLAGS_MINSIZEREL
+            CMAKE_CXX_FLAGS_RELWITHDEBINFO
+            CMAKE_C_FLAGS_DEBUG
+            CMAKE_C_FLAGS_RELEASE
+            CMAKE_C_FLAGS_MINSIZEREL
+            CMAKE_C_FLAGS_RELWITHDEBINFO)
+            string(REPLACE "/MD" "/MT" ${flag_var} "${${flag_var}}")
+        endforeach()
+    endif()
+endif()
+
 include_directories(${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/lib)
 if(MSVC)
     add_definitions(-D_CRT_SECURE_NO_WARNINGS -wd4996)
