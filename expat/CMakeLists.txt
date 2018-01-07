@@ -12,6 +12,23 @@ set(PACKAGE_TARNAME "${PACKAGE_NAME}")
 
 include(GNUInstallDirs)
 
+#//////////////////////////
+#compile as C++/static CRT on Visual Studio 
+#//////////////////////////
+
+set(MSVC_USE_STATIC_CRT off CACHE BOOL "Use MT flags (static CRT) when compiling in MSVC")
+if (MSVC)
+  if (MSVC_USE_STATIC_CRT)
+     message("-- Using static CRT ${MSVC_USE_STATIC_CRT}")
+     foreach(flag_var CMAKE_CXX_FLAGS_DEBUG CMAKE_CXX_FLAGS_RELEASE
+       CMAKE_CXX_FLAGS_MINSIZEREL CMAKE_CXX_FLAGS_RELWITHDEBINFO
+       CMAKE_C_FLAGS_DEBUG CMAKE_C_FLAGS_RELEASE
+       CMAKE_C_FLAGS_MINSIZEREL CMAKE_C_FLAGS_RELWITHDEBINFO)
+       string(REPLACE "/MD" "/MT" ${flag_var} "${${flag_var}}")
+     endforeach()
+  endif()
+endif()
+
 if(WINCE)
     set(BUILD_tools_default OFF)
 else()
