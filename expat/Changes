@@ -11,6 +11,7 @@ Release 2.2.? ???????????????????
        #159 #167  Autotools: Support DOCBOOK_TO_MAN command which produces
                     xmlwf.1 rather than XMLWF.1; also covers case insensitive
                     file systems
+            #181  Autotools: Drop -rpath option passed to libtool
             #174  CMake: Introduce option WARNINGS_AS_ERRORS, defaults to OFF
             #175  CMake: Prefer check_symbol_exists over check_function_exists
             #176  CMake: Create the same pkg-config file as with GNU Autotools
@@ -25,6 +26,7 @@ Release 2.2.? ???????????????????
             Joe Orton
             Rainer Jung
             Rolf Eike Beer
+            Tomasz Kłoczko
 
 Release 2.2.5 Tue October 31 2017
         Bug fixes:
