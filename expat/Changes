@@ -20,6 +20,7 @@ Release 2.2.? ???????????????????
                     install directories
             #180  Windows: Fix compilation of test suite for Visual Studio 2008
        #131 #173  Address compiler warnings
+            #187  Fix comment typo in expat.h
 
         Special thanks to:
             Brad King
@@ -27,6 +28,7 @@ Release 2.2.? ???????????????????
             Joe Orton
             Pedro Vicente
             Rainer Jung
+            Rolf Ade
             Rolf Eike Beer
             Tomasz Kłoczko
 
