@@ -21,10 +21,7 @@ env:
 
 addons:
   apt:
-    sources:
-      - llvm-toolchain-trusty-4.0
     packages:
-      - clang-4.0
       - cmake
       - docbook2x
       - dos2unix
