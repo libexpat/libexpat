@@ -237,7 +237,7 @@ AS_HELP_STRING([--without-docbook],
 
 AC_ARG_VAR([DOCBOOK_TO_MAN], [docbook2x-man command])
 AS_IF([test "x$with_docbook" != xno],
-  [AC_CHECK_PROGS([DOCBOOK_TO_MAN], [docbook2x-man docbook2man docbook-to-man])])
+  [AC_CHECK_PROGS([DOCBOOK_TO_MAN], [docbook2x-man db2x_docbook2man docbook2man docbook-to-man])])
 AS_IF([test "x${DOCBOOK_TO_MAN}" = x -a "x$with_docbook" = xyes],
   [AC_MSG_ERROR([Required program 'docbook2x-man' not found.])])
 AS_IF([${DOCBOOK_TO_MAN} --help | grep -i -q -F sgmlbase],
