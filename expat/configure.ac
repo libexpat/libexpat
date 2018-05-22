@@ -88,6 +88,20 @@ if test "$GCC" = yes ; then
     LDFLAGS="${LDFLAGS} -fno-strict-aliasing"
 fi
 
+AC_MSG_CHECKING(whether compiler supports visibility)
+OLDCFLAGS="$CFLAGS"
+CFLAGS="$CFLAGS -fvisibility=hidden -Wall -Werror"
+AC_COMPILE_IFELSE([AC_LANG_SOURCE([[void __attribute__((visibility("default"))) foo(void); void foo(void) {}]])],
+                  AC_MSG_RESULT(yes); CFLAGS="$OLDCFLAGS -fvisibility=hidden -DXML_ENABLE_VISIBILITY=1",
+                  AC_MSG_RESULT(no); CFLAGS="$OLDCFLAGS")
+
+OLDLDFLAGS="$LDFLAGS"
+LDFLAGS="$LDFLAGS -Wl,--version-script=$srcdir/expat.version"
+AC_MSG_CHECKING(whether linker accepts version scripts)
+AC_TRY_LINK( , ,
+               AC_MSG_RESULT(yes),
+               AC_MSG_RESULT(no); LDFLAGS="$OLDLDFLAGS")
+
 dnl Checks for header files.
 AC_HEADER_STDC
 

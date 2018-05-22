@@ -115,6 +115,9 @@ extern "C" {
 #endif
 
 
+#if XML_ENABLE_VISIBILITY
+__attribute__ ((visibility ("default")))
+#endif
 void
 _INTERNAL_trim_to_complete_utf8_characters(const char * from, const char ** fromLimRef);
 
