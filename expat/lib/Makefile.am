@@ -50,7 +50,9 @@ doc_DATA = \
     ../Changes
 
 install-data-hook:
-	cd "$(DESTDIR)$(docdir)" && $(am__mv) Changes changelog
+	if test -e "$(DESTDIR)$(docdir)/Changes"; then \
+		cd "$(DESTDIR)$(docdir)" && $(am__mv) Changes changelog; \
+	fi
 
 uninstall-local:
 	$(RM) "$(DESTDIR)$(docdir)/changelog"
