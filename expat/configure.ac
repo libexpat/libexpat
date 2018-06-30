@@ -242,7 +242,7 @@ AS_IF([test "x${DOCBOOK_TO_MAN}" = x -a "x$with_docbook" = xyes],
   [AC_MSG_ERROR([Required program 'docbook2x-man' not found.])])
 AS_IF([test "x${DOCBOOK_TO_MAN}" != x -a "x$with_docbook" != xno],
   [AS_IF([${DOCBOOK_TO_MAN} --help | grep -i -q -F sgmlbase],
-    [AC_MSG_ERROR([You local ${DOCBOOK_TO_MAN} was found to work with SGML rather
+    [AC_MSG_ERROR([Your local ${DOCBOOK_TO_MAN} was found to work with SGML rather
   than XML. Please install docbook2X and use variable DOCBOOK_TO_MAN to point
   configure to command docbook2x-man of docbook2X.
   Or use DOCBOOK_TO_MAN="xmlto man --skip-validation" if you have xmlto around.
