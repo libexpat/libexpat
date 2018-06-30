@@ -22,9 +22,10 @@ Release 2.2.? ???????????????????
                     install directories
             #180  Windows: Fix compilation of test suite for Visual Studio 2008
        #131 #173  Address compiler warnings
-       #187 #190  Fix miscellaneous typos
+  #187 #190 #200  Fix miscellaneous typos
 
         Special thanks to:
+            Benjamin Peterson
             Brad King
             Franek Korta
             Joe Orton
