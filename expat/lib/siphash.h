@@ -11,6 +11,9 @@
  * --------------------------------------------------------------------------
  * HISTORY:
  *
+ * 2018-07-08  (Anton Maklakov)
+ *   - Add "fall through" markers for GCC's -Wimplicit-fallthrough
+ *
  * 2017-11-03  (Sebastian Pipping)
  *   - Hide sip_tobin and sip_binof unless SIPHASH_TOBIN macro is defined
  *
