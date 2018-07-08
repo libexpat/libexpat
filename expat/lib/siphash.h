@@ -11,6 +11,9 @@
  * --------------------------------------------------------------------------
  * HISTORY:
  *
+ * 2018-07-08  (Anton Maklakov)
+ *   - Add "fall through" markers for GCC's -Wimplicit-fallthrough
+ *
  * 2017-11-03  (Sebastian Pipping)
  *   - Hide sip_tobin and sip_binof unless SIPHASH_TOBIN macro is defined
  *
@@ -238,12 +241,19 @@ static uint64_t sip24_final(struct siphash *H) {
 
 	switch (left) {
 	case 7: b |= (uint64_t)H->buf[6] << 48;
+		/* fall through */
 	case 6: b |= (uint64_t)H->buf[5] << 40;
+		/* fall through */
 	case 5: b |= (uint64_t)H->buf[4] << 32;
+		/* fall through */
 	case 4: b |= (uint64_t)H->buf[3] << 24;
+		/* fall through */
 	case 3: b |= (uint64_t)H->buf[2] << 16;
+		/* fall through */
 	case 2: b |= (uint64_t)H->buf[1] << 8;
+		/* fall through */
 	case 1: b |= (uint64_t)H->buf[0] << 0;
+		/* fall through */
 	case 0: break;
 	}
 

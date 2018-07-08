@@ -21,10 +21,11 @@ Release 2.2.? ???????????????????
        #178 #179  CMake: Use GNUInstallDirs module to set proper defaults for
                     install directories
             #180  Windows: Fix compilation of test suite for Visual Studio 2008
-       #131 #173  Address compiler warnings
+  #131 #173 #202  Address compiler warnings
   #187 #190 #200  Fix miscellaneous typos
 
         Special thanks to:
+            Anton Maklakov
             Benjamin Peterson
             Brad King
             Franek Korta
