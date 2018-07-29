@@ -2089,15 +2089,20 @@ XML_GetBuffer(XML_Parser parser, int len)
         parser->m_bufferPtr = parser->m_buffer + keep;
       }
       else {
-        parser->m_bufferEnd = newBuf + (parser->m_bufferEnd - parser->m_bufferPtr);
+        /* This must be a brand new buffer with no data in it yet */
+        parser->m_bufferEnd = newBuf;
         parser->m_bufferPtr = parser->m_buffer = newBuf;
       }
 #else
       if (parser->m_bufferPtr) {
         memcpy(newBuf, parser->m_bufferPtr, parser->m_bufferEnd - parser->m_bufferPtr);
         FREE(parser, parser->m_buffer);
+        parser->m_bufferEnd = newBuf + (parser->m_bufferEnd - parser->m_bufferPtr);
       }
-      parser->m_bufferEnd = newBuf + (parser->m_bufferEnd - parser->m_bufferPtr);
+      else {
+        /* This must be a brand new buffer with no data in it yet */
+        parser->m_bufferEnd = newBuf;
+      }
       parser->m_bufferPtr = parser->m_buffer = newBuf;
 #endif  /* not defined XML_CONTEXT_BYTES */
     }
