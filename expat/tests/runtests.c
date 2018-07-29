@@ -5201,7 +5201,7 @@ END_TEST
 
 static void XMLCALL
 suspending_end_handler(void *userData,
-                       const XML_Char *s)
+                       const XML_Char *UNUSED_P(s))
 {
     XML_StopParser((XML_Parser)userData, 1);
 }
