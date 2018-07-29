@@ -161,6 +161,9 @@ typedef char ICHAR;
 /* Round up n to be a multiple of sz, where sz is a power of 2. */
 #define ROUND_UP(n, sz) (((n) + ((sz) - 1)) & ~((sz) - 1))
 
+/* Do safe (NULL-aware) pointer arithmetic */
+#define EXPAT_SAFE_PTR_DIFF(p, q) (((p) && (q)) ? ((p) - (q)) : 0)
+
 /* Handle the case where memmove() doesn't exist. */
 #ifndef HAVE_MEMMOVE
 #ifdef HAVE_BCOPY
@@ -2028,39 +2031,46 @@ XML_GetBuffer(XML_Parser parser, int len)
   default: ;
   }
 
-  if (len > parser->m_bufferLim - parser->m_bufferEnd) {
+  if (len > EXPAT_SAFE_PTR_DIFF(parser->m_bufferLim, parser->m_bufferEnd)) {
 #ifdef XML_CONTEXT_BYTES
     int keep;
 #endif  /* defined XML_CONTEXT_BYTES */
     /* Do not invoke signed arithmetic overflow: */
-    int neededSize = (int) ((unsigned)len + (unsigned)(parser->m_bufferEnd - parser->m_bufferPtr));
+    int neededSize = (int) ((unsigned)len +
+                            (unsigned)EXPAT_SAFE_PTR_DIFF(parser->m_bufferEnd,
+                                                          parser->m_bufferPtr));
     if (neededSize < 0) {
       parser->m_errorCode = XML_ERROR_NO_MEMORY;
       return NULL;
     }
 #ifdef XML_CONTEXT_BYTES
-    keep = (int)(parser->m_bufferPtr - parser->m_buffer);
+    keep = EXPAT_SAFE_PTR_DIFF(parser->m_bufferPtr, parser->m_buffer);
     if (keep > XML_CONTEXT_BYTES)
       keep = XML_CONTEXT_BYTES;
     neededSize += keep;
 #endif  /* defined XML_CONTEXT_BYTES */
-    if (neededSize  <= parser->m_bufferLim - parser->m_buffer) {
+    if (neededSize <= EXPAT_SAFE_PTR_DIFF(parser->m_bufferLim, parser->m_buffer)) {
 #ifdef XML_CONTEXT_BYTES
-      if (keep < parser->m_bufferPtr - parser->m_buffer) {
-        int offset = (int)(parser->m_bufferPtr - parser->m_buffer) - keep;
+      if (keep < EXPAT_SAFE_PTR_DIFF(parser->m_bufferPtr, parser->m_buffer)) {
+          int offset = (int)EXPAT_SAFE_PTR_DIFF(parser->m_bufferPtr, parser->m_buffer) - keep;
+        /* The buffer pointers cannot be NULL here; we have at least some bytes in the buffer */
         memmove(parser->m_buffer, &parser->m_buffer[offset], parser->m_bufferEnd - parser->m_bufferPtr + keep);
         parser->m_bufferEnd -= offset;
         parser->m_bufferPtr -= offset;
       }
 #else
-      memmove(parser->m_buffer, parser->m_bufferPtr, parser->m_bufferEnd - parser->m_bufferPtr);
-      parser->m_bufferEnd = parser->m_buffer + (parser->m_bufferEnd - parser->m_bufferPtr);
-      parser->m_bufferPtr = parser->m_buffer;
+      if (parser->m_buffer && parser->m_bufferPtr) {
+        memmove(parser->m_buffer, parser->m_bufferPtr,
+                EXPAT_SAFE_PTR_DIFF(parser->m_bufferEnd, parser->m_bufferPtr));
+        parser->m_bufferEnd = parser->m_buffer +
+            EXPAT_SAFE_PTR_DIFF(parser->m_bufferEnd, parser->m_bufferPtr);
+        parser->m_bufferPtr = parser->m_buffer;
+      }
 #endif  /* not defined XML_CONTEXT_BYTES */
     }
     else {
       char *newBuf;
-      int bufferSize = (int)(parser->m_bufferLim - parser->m_bufferPtr);
+      int bufferSize = EXPAT_SAFE_PTR_DIFF(parser->m_bufferLim, parser->m_bufferPtr);
       if (bufferSize == 0)
         bufferSize = INIT_BUFFER_SIZE;
       do {
@@ -2079,13 +2089,15 @@ XML_GetBuffer(XML_Parser parser, int len)
       parser->m_bufferLim = newBuf + bufferSize;
 #ifdef XML_CONTEXT_BYTES
       if (parser->m_bufferPtr) {
-        int keep = (int)(parser->m_bufferPtr - parser->m_buffer);
+        int keep = EXPAT_SAFE_PTR_DIFF(parser->m_bufferPtr, parser->m_buffer);
         if (keep > XML_CONTEXT_BYTES)
           keep = XML_CONTEXT_BYTES;
-        memcpy(newBuf, &parser->m_bufferPtr[-keep], parser->m_bufferEnd - parser->m_bufferPtr + keep);
+        memcpy(newBuf, &parser->m_bufferPtr[-keep],
+               EXPAT_SAFE_PTR_DIFF(parser->m_bufferEnd, parser->m_bufferPtr) + keep);
         FREE(parser, parser->m_buffer);
         parser->m_buffer = newBuf;
-        parser->m_bufferEnd = parser->m_buffer + (parser->m_bufferEnd - parser->m_bufferPtr) + keep;
+        parser->m_bufferEnd = parser->m_buffer +
+            EXPAT_SAFE_PTR_DIFF(parser->m_bufferEnd, parser->m_bufferPtr) + keep;
         parser->m_bufferPtr = parser->m_buffer + keep;
       }
       else {
@@ -2095,9 +2107,11 @@ XML_GetBuffer(XML_Parser parser, int len)
       }
 #else
       if (parser->m_bufferPtr) {
-        memcpy(newBuf, parser->m_bufferPtr, parser->m_bufferEnd - parser->m_bufferPtr);
+        memcpy(newBuf, parser->m_bufferPtr,
+               EXPAT_SAFE_PTR_DIFF(parser->m_bufferEnd, parser->m_bufferPtr));
         FREE(parser, parser->m_buffer);
-        parser->m_bufferEnd = newBuf + (parser->m_bufferEnd - parser->m_bufferPtr);
+        parser->m_bufferEnd = newBuf +
+            EXPAT_SAFE_PTR_DIFF(parser->m_bufferEnd, parser->m_bufferPtr);
       }
       else {
         /* This must be a brand new buffer with no data in it yet */
