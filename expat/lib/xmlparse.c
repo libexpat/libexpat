@@ -3107,6 +3107,9 @@ doContent(XML_Parser parser,
     switch (parser->m_parsingStatus.parsing) {
     case XML_SUSPENDED:
       *nextPtr = next;
+      if (end == next) {
+          parser->m_processor = epilogProcessor;
+      }
       return XML_ERROR_NONE;
     case XML_FINISHED:
       return XML_ERROR_ABORTED;
