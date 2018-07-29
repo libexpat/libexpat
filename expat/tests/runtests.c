@@ -5199,6 +5199,34 @@ START_TEST(test_suspend_epilog)
 }
 END_TEST
 
+static void XMLCALL
+suspending_end_handler(void *userData,
+                       const XML_Char *s)
+{
+    XML_StopParser((XML_Parser)userData, 1);
+}
+
+START_TEST(test_suspend_in_sole_empty_tag)
+{
+    const char *text = "<doc/>";
+    enum XML_Status rc;
+
+    XML_SetEndElementHandler(parser, suspending_end_handler);
+    XML_SetUserData(parser, parser);
+    rc = _XML_Parse_SINGLE_BYTES(parser, text, (int)strlen(text),
+                                 XML_TRUE);
+    if (rc == XML_STATUS_ERROR)
+        xml_failure(parser);
+    else if (rc != XML_STATUS_SUSPENDED)
+        fail("Suspend not triggered");
+    rc = XML_ResumeParser(parser);
+    if (rc == XML_STATUS_ERROR)
+        xml_failure(parser);
+    else if (rc != XML_STATUS_OK)
+        fail("Resume failed");
+}
+END_TEST
+
 START_TEST(test_unfinished_epilog)
 {
     const char *text = "<doc></doc><";
@@ -12094,6 +12122,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_abort_epilog);
     tcase_add_test(tc_basic, test_abort_epilog_2);
     tcase_add_test(tc_basic, test_suspend_epilog);
+    tcase_add_test(tc_basic, test_suspend_in_sole_empty_tag);
     tcase_add_test(tc_basic, test_unfinished_epilog);
     tcase_add_test(tc_basic, test_partial_char_in_epilog);
     tcase_add_test(tc_basic, test_hash_collision);
