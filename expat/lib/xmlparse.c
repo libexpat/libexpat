@@ -2012,6 +2012,8 @@ XML_ParseBuffer(XML_Parser parser, int len, int isFinal)
 void * XMLCALL
 XML_GetBuffer(XML_Parser parser, int len)
 {
+  int bufferAvailBytes;
+
   if (parser == NULL)
     return NULL;
   if (len < 0) {
@@ -2028,41 +2030,81 @@ XML_GetBuffer(XML_Parser parser, int len)
   default: ;
   }
 
-  if (len > parser->m_bufferLim - parser->m_bufferEnd) {
+  if (parser->m_bufferEnd) {
+    bufferAvailBytes = parser->m_bufferLim - parser->m_bufferEnd;
+  }
+  else {
+    bufferAvailBytes = 0;
+  }
+  if (len > bufferAvailBytes) {
 #ifdef XML_CONTEXT_BYTES
     int keep;
 #endif  /* defined XML_CONTEXT_BYTES */
-    /* Do not invoke signed arithmetic overflow: */
-    int neededSize = (int) ((unsigned)len + (unsigned)(parser->m_bufferEnd - parser->m_bufferPtr));
+    int neededSize;
+    int bufferTotalBytes;
+
+    if (parser->m_bufferPtr) {
+      /* Do not invoke signed arithmetic overflow: */
+      neededSize = (int) ((unsigned)len + (unsigned)(parser->m_bufferEnd - parser->m_bufferPtr));
+    }
+    else {
+      neededSize = len;
+    }
     if (neededSize < 0) {
       parser->m_errorCode = XML_ERROR_NO_MEMORY;
       return NULL;
     }
 #ifdef XML_CONTEXT_BYTES
-    keep = (int)(parser->m_bufferPtr - parser->m_buffer);
-    if (keep > XML_CONTEXT_BYTES)
-      keep = XML_CONTEXT_BYTES;
+    if (parser->m_bufferPtr) {
+      keep = (int)(parser->m_bufferPtr - parser->m_buffer);
+      if (keep > XML_CONTEXT_BYTES)
+        keep = XML_CONTEXT_BYTES;
+    }
+    else {
+      keep = 0;
+    }
     neededSize += keep;
 #endif  /* defined XML_CONTEXT_BYTES */
-    if (neededSize  <= parser->m_bufferLim - parser->m_buffer) {
+    if (parser->m_buffer) {
+      bufferTotalBytes = parser->m_bufferLim - parser->m_buffer;
+    }
+    else {
+      bufferTotalBytes = 0;
+    }
+    if (neededSize <= bufferTotalBytes) {
 #ifdef XML_CONTEXT_BYTES
-      if (keep < parser->m_bufferPtr - parser->m_buffer) {
-        int offset = (int)(parser->m_bufferPtr - parser->m_buffer) - keep;
+      int bufferParsedBytes;
+
+      if (parser->m_buffer) {
+        bufferParsedBytes = parser->m_bufferPtr - parser->m_buffer;
+      }
+      else {
+        bufferParsedBytes = 0;
+      }
+      if (keep < bufferParsedBytes) {
+        int offset = (int)bufferParsedBytes - keep;
+        /* The buffer pointers cannot be NULL here; we have at least some bytes in the buffer */
         memmove(parser->m_buffer, &parser->m_buffer[offset], parser->m_bufferEnd - parser->m_bufferPtr + keep);
         parser->m_bufferEnd -= offset;
         parser->m_bufferPtr -= offset;
       }
 #else
-      memmove(parser->m_buffer, parser->m_bufferPtr, parser->m_bufferEnd - parser->m_bufferPtr);
-      parser->m_bufferEnd = parser->m_buffer + (parser->m_bufferEnd - parser->m_bufferPtr);
-      parser->m_bufferPtr = parser->m_buffer;
+      if (parser->m_buffer) {
+        memmove(parser->m_buffer, parser->m_bufferPtr, parser->m_bufferEnd - parser->m_bufferPtr);
+        parser->m_bufferEnd = parser->m_buffer + (parser->m_bufferEnd - parser->m_bufferPtr);
+        parser->m_bufferPtr = parser->m_buffer;
+      }
 #endif  /* not defined XML_CONTEXT_BYTES */
     }
     else {
       char *newBuf;
-      int bufferSize = (int)(parser->m_bufferLim - parser->m_bufferPtr);
-      if (bufferSize == 0)
+      int bufferSize;
+      if (parser->m_bufferPtr) {
+        bufferSize = (int)(parser->m_bufferLim - parser->m_bufferPtr);
+      }
+      else {
         bufferSize = INIT_BUFFER_SIZE;
+      }
       do {
         /* Do not invoke signed arithmetic overflow: */
         bufferSize = (int) (2U * (unsigned) bufferSize);
