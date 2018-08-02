@@ -2910,9 +2910,11 @@ doContent(XML_Parser parser,
         poolClear(&parser->m_tempPool);
         freeBindings(parser, bindings);
       }
-      if ((parser->m_tagLevel == 0) &&
-          !((parser->m_parsingStatus.parsing == XML_FINISHED) || (parser->m_parsingStatus.parsing == XML_SUSPENDED))) {
-        return epilogProcessor(parser, next, end, nextPtr);
+      if ((parser->m_tagLevel == 0) && (parser->m_parsingStatus.parsing != XML_FINISHED)) {
+        if (parser->m_parsingStatus.parsing == XML_SUSPENDED)
+          parser->m_processor = epilogProcessor;
+        else
+          return epilogProcessor(parser, next, end, nextPtr);
       }
       break;
     case XML_TOK_END_TAG:
@@ -3107,9 +3109,6 @@ doContent(XML_Parser parser,
     switch (parser->m_parsingStatus.parsing) {
     case XML_SUSPENDED:
       *nextPtr = next;
-      if (end == next) {
-          parser->m_processor = epilogProcessor;
-      }
       return XML_ERROR_NONE;
     case XML_FINISHED:
       return XML_ERROR_ABORTED;
