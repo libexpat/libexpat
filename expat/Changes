@@ -3,6 +3,10 @@ NOTE: We are looking for help with a few things:
       If you can help, please get in touch.  Thanks!
 
 Release 2.2.? ???????????????????
+        Bug fixes:
+       #204 #205  Fix 2.2.5 regression with suspend-resume while parsing
+                    a document like '<root/>'
+
         Other changes:
        #165 #168  Autotools: Fix docbook-related configure syntax error
             #166  Autotools: Avoid grep option `-q` for Solaris
@@ -33,6 +37,7 @@ Release 2.2.? ???????????????????
             luzpaz
             Pedro Vicente
             Rainer Jung
+            Rhodri James
             Rolf Ade
             Rolf Eike Beer
             Tomasz Kłoczko
