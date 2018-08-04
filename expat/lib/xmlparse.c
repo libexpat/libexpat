@@ -2035,12 +2035,10 @@ XML_GetBuffer(XML_Parser parser, int len)
 #ifdef XML_CONTEXT_BYTES
     int keep;
 #endif  /* defined XML_CONTEXT_BYTES */
-    int neededSize;
-
     /* Do not invoke signed arithmetic overflow: */
-    neededSize = (int) ((unsigned)len +
-                        (unsigned)EXPAT_SAFE_PTR_DIFF(parser->m_bufferEnd,
-                                                      parser->m_bufferPtr));
+    int neededSize = (int) ((unsigned)len +
+                            (unsigned)EXPAT_SAFE_PTR_DIFF(parser->m_bufferEnd,
+                                                          parser->m_bufferPtr));
     if (neededSize < 0) {
       parser->m_errorCode = XML_ERROR_NO_MEMORY;
       return NULL;
@@ -2054,7 +2052,7 @@ XML_GetBuffer(XML_Parser parser, int len)
     if (neededSize <= EXPAT_SAFE_PTR_DIFF(parser->m_bufferLim, parser->m_buffer)) {
 #ifdef XML_CONTEXT_BYTES
       if (keep < EXPAT_SAFE_PTR_DIFF(parser->m_bufferPtr, parser->m_buffer)) {
-        int offset = EXPAT_SAFE_PTR_DIFF(parser->m_bufferPtr, parser->m_buffer) - keep;
+          int offset = (int)EXPAT_SAFE_PTR_DIFF(parser->m_bufferPtr, parser->m_buffer) - keep;
         /* The buffer pointers cannot be NULL here; we have at least some bytes in the buffer */
         memmove(parser->m_buffer, &parser->m_buffer[offset], parser->m_bufferEnd - parser->m_bufferPtr + keep);
         parser->m_bufferEnd -= offset;
@@ -2073,9 +2071,8 @@ XML_GetBuffer(XML_Parser parser, int len)
     else {
       char *newBuf;
       int bufferSize = EXPAT_SAFE_PTR_DIFF(parser->m_bufferLim, parser->m_bufferPtr);
-      if (bufferSize == 0) {
+      if (bufferSize == 0)
         bufferSize = INIT_BUFFER_SIZE;
-      }
       do {
         /* Do not invoke signed arithmetic overflow: */
         bufferSize = (int) (2U * (unsigned) bufferSize);
@@ -2110,8 +2107,8 @@ XML_GetBuffer(XML_Parser parser, int len)
       }
 #else
       if (parser->m_bufferPtr) {
-          memcpy(newBuf, parser->m_bufferPtr,
-                 EXPAT_SAFE_PTR_DIFF(parser->m_bufferEnd, parser->m_bufferPtr));
+        memcpy(newBuf, parser->m_bufferPtr,
+               EXPAT_SAFE_PTR_DIFF(parser->m_bufferEnd, parser->m_bufferPtr));
         FREE(parser, parser->m_buffer);
         parser->m_bufferEnd = newBuf +
             EXPAT_SAFE_PTR_DIFF(parser->m_bufferEnd, parser->m_bufferPtr);
