@@ -4,6 +4,7 @@ NOTE: We are looking for help with a few things:
 
 Release 2.2.? ???????????????????
         Bug fixes:
+       #170 #206  Avoid doing arithmetic with NULL pointers in XML_GetBuffer
        #204 #205  Fix 2.2.5 regression with suspend-resume while parsing
                     a document like '<root/>'
 
@@ -40,6 +41,7 @@ Release 2.2.? ???????????????????
             Rhodri James
             Rolf Ade
             Rolf Eike Beer
+            Thomas Beutlich
             Tomasz Kłoczko
 
 Release 2.2.5 Tue October 31 2017
