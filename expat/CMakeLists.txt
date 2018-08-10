@@ -82,6 +82,14 @@ else(XML_UNICODE_WCHAR_T)
     set(XML_UNICODE_WCHAR_T 0)
 endif(XML_UNICODE_WCHAR_T)
 
+if(XML_UNICODE_WCHAR_T AND NOT XML_UNICODE)
+    message(SEND_ERROR "Option XML_UNICODE_WCHAR_T=ON may not be used without XML_UNICODE=ON.")
+    set(XML_UNICODE 1)
+endif(XML_UNICODE_WCHAR_T AND NOT XML_UNICODE)
+
+if(BUILD_tools AND (XML_UNICODE AND NOT XML_UNICODE_WCHAR_T))
+    message(SEND_ERROR "The xmlwf tool can not be built with option XML_UNICODE_WCHAR_T=OFF and XML_UNICODE=ON. Either set XML_UNICODE_WCHAR_T=ON or BUILD_tools=OFF.")
+endif()
 
 if(BUILD_tests)
     enable_testing()
