@@ -21,10 +21,13 @@ Release 2.2.? ???????????????????
             #188  Autotools/CMake: Support command db2x_docbook2man as well
             #174  CMake: Introduce option WARNINGS_AS_ERRORS, defaults to OFF
        #184 #185  CMake: Introduce option MSVC_USE_STATIC_CRT, defaults to OFF
+       #207 #208  CMake: Introduce option XML_UNICODE and XML_UNICODE_WCHAR_T,
+                    both defaulting to OFF
             #175  CMake: Prefer check_symbol_exists over check_function_exists
             #176  CMake: Create the same pkg-config file as with GNU Autotools
        #178 #179  CMake: Use GNUInstallDirs module to set proper defaults for
                     install directories
+            #208  CMake: Utilize expat_config.h.cmake for XML_DEV_URANDOM
             #180  Windows: Fix compilation of test suite for Visual Studio 2008
   #131 #173 #202  Address compiler warnings
   #187 #190 #200  Fix miscellaneous typos
@@ -34,6 +37,7 @@ Release 2.2.? ???????????????????
             Benjamin Peterson
             Brad King
             Franek Korta
+            Frank Rast
             Joe Orton
             luzpaz
             Pedro Vicente
