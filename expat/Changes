@@ -31,6 +31,7 @@ Release 2.2.? ???????????????????
             #180  Windows: Fix compilation of test suite for Visual Studio 2008
   #131 #173 #202  Address compiler warnings
   #187 #190 #200  Fix miscellaneous typos
+                  Version info bumped from 7:7:6 to 7:8:6
 
         Special thanks to:
             Anton Maklakov
