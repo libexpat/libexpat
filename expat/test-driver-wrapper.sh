@@ -29,8 +29,6 @@
 # USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 set -e
-top_srcdir="$(dirname "$(type -p "$0")")"
-top_builddir=..
 
 # Suck up all dash-dash test-driver arguments
 test_driver_args=()
@@ -40,4 +38,4 @@ while [[ ${1} != '--' ]]; do
 done
 shift  # drop "--"
 
-exec "${top_srcdir}"/conftools/test-driver "${test_driver_args[@]}" "${top_builddir}"/run.sh "$@"
+exec "${EXPAT_SRCDIR}"/conftools/test-driver "${test_driver_args[@]}" "${EXPAT_BUILDDIR}"/run.sh "$@"

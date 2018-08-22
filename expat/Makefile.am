@@ -28,6 +28,9 @@
 # OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 # USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+#page
+#### global variables
+
 AUTOMAKE_OPTIONS = \
     dist-bzip2 \
     foreign \
@@ -37,10 +40,7 @@ AUTOMAKE_OPTIONS = \
 ACLOCAL_AMFLAGS = -I m4
 LIBTOOLFLAGS = --verbose
 
-SUBDIRS = lib examples tests  # lib goes first to build first
-if WITH_XMLWF
-SUBDIRS += xmlwf doc
-endif
+AM_CPPFLAGS = -I$(srcdir)/lib
 
 pkgconfig_DATA = expat.pc
 pkgconfigdir = $(libdir)/pkgconfig
@@ -95,6 +95,96 @@ EXTRA_DIST = \
     README.md \
     test-driver-wrapper.sh
 
+.PHONY: qa
+qa:
+	./qa.sh address
+	./qa.sh memory
+	./qa.sh undefined
+	./qa.sh coverage
+
+#page
+#### documentation
+
+dist_man_MANS = doc/xmlwf.1
+
+doc/$(am__dirstamp):
+	@$(MKDIR_P) doc
+	@: > doc/$(am__dirstamp)
+
+doc/xmlwf.1: doc/xmlwf.xml doc/$(am__dirstamp)
+if WITH_DOCBOOK
+	-rm -f $@
+	$(DOCBOOK_TO_MAN) $<
+	test -f MLWF.1 || mv XMLWF.1 $@
+else
+	@echo 'ERROR: Configure with --with-docbook for "make dist".' 1>&2
+	@false
+endif
+
+# https://www.gnu.org/software/automake/manual/automake.html#What-Gets-Cleaned
+.PHONY: clean-local
+clean-local: clean-local-check
+
+.PHONY: clean-local-check
+clean-local-check:
+	$(RM) doc/xmlwf.1 doc/$(am__dirstamp)
+
+EXTRA_DIST += \
+    doc/expat.png \
+    doc/reference.html \
+    doc/style.css \
+    doc/valid-xhtml10.png \
+    doc/xmlwf.xml
+
+#page
+#### library
+
+include_HEADERS = \
+    expat_config.h \
+    lib/expat.h \
+    lib/expat_external.h
+
+lib_LTLIBRARIES = libexpat.la
+
+libexpat_la_LDFLAGS = \
+    -no-undefined \
+    -version-info @LIBCURRENT@:@LIBREVISION@:@LIBAGE@
+
+libexpat_la_SOURCES = \
+    lib/loadlibrary.c \
+    lib/xmlparse.c \
+    lib/xmltok.c \
+    lib/xmlrole.c
+
+doc_DATA = \
+    AUTHORS \
+    Changes
+
+install-data-hook:
+	cd "$(DESTDIR)$(docdir)" && $(am__mv) Changes changelog
+
+uninstall-local:
+	$(RM) "$(DESTDIR)$(docdir)/changelog"
+
+EXTRA_DIST += \
+    lib/ascii.h \
+    lib/asciitab.h \
+    lib/expat_external.h \
+    lib/expat.h \
+    lib/iasciitab.h \
+    lib/internal.h \
+    lib/latin1tab.h \
+    lib/libexpat.def \
+    lib/libexpatw.def \
+    lib/nametab.h \
+    lib/siphash.h \
+    lib/utf8tab.h \
+    lib/winconfig.h \
+    lib/xmlrole.h \
+    lib/xmltok.h \
+    lib/xmltok_impl.c \
+    lib/xmltok_impl.h \
+    lib/xmltok_ns.c
 
 .PHONY: buildlib
 buildlib:
@@ -102,9 +192,9 @@ buildlib:
 	@echo 'ERROR: is no longer supported.  INSTEAD please:' >&2
 	@echo 'ERROR:' >&2
 	@echo 'ERROR:  * Mass-patch Makefile.am, e.g.' >&2
-	@echo 'ERROR:    # find -name Makefile.am -exec sed \' >&2
-	@echo 'ERROR:          -e "s,libexpat\.la,libexpatw.la," \' >&2
-	@echo 'ERROR:          -e "s,libexpat_la,libexpatw_la," \' >&2
+	@echo 'ERROR:    # find -name Makefile.am -exec sed \ ' >&2
+	@echo 'ERROR:          -e "s,libexpat\.la,libexpatw.la," \ ' >&2
+	@echo 'ERROR:          -e "s,libexpat_la,libexpatw_la," \ ' >&2
 	@echo 'ERROR:          -i {} +' >&2
 	@echo 'ERROR:' >&2
 	@echo 'ERROR:  * Run automake to re-generate Makefile.in files' >&2
@@ -115,11 +205,88 @@ buildlib:
 	@echo 'ERROR:' >&2
 	@false
 
+#page
+#### building xmlwf
 
-.PHONY: run-benchmark
-run-benchmark:
-	$(MAKE) -C tests/benchmark
-	./run.sh tests/benchmark/benchmark@EXEEXT@ -n $(top_srcdir)/../testdata/largefiles/recset.xml 65535 3
+bin_PROGRAMS = xmlwf/xmlwf
+
+xmlwf_xmlwf_LDADD = libexpat.la
+xmlwf_xmlwf_SOURCES = \
+    xmlwf/xmlwf.c \
+    xmlwf/xmlfile.c \
+    xmlwf/codepage.c \
+    xmlwf/@FILEMAP@.c
+
+xmlwf_xmlwf_CPPFLAGS = -I$(srcdir)/lib
+
+if MINGW
+if UNICODE
+xmlwf_xmlwf_CPPFLAGS += -mwindows
+xmlwf_xmlwf_LDFLAGS = -municode
+endif
+endif
+
+EXTRA_DIST += \
+    xmlwf/codepage.h \
+    xmlwf/ct.c \
+    xmlwf/filemap.h \
+    xmlwf/readfilemap.c \
+    xmlwf/unixfilemap.c \
+    xmlwf/win32filemap.c \
+    xmlwf/xmlfile.h \
+    xmlwf/xmlmime.c \
+    xmlwf/xmlmime.h \
+    xmlwf/xmltchar.h \
+    xmlwf/xmlurl.h \
+    xmlwf/xmlwin32url.cxx
+
+#page
+#### examples
+
+noinst_PROGRAMS = examples/elements examples/outline
+
+examples_elements_SOURCES = examples/elements.c
+examples_elements_LDADD = libexpat.la
+
+examples_outline_SOURCES = examples/outline.c
+examples_outline_LDADD = libexpat.la
+
+#page
+#### tests
+
+AM_TESTS_ENVIRONMENT = export EXPAT_SRCDIR=$(srcdir); export EXPAT_BUILDDIR=$(builddir);
+noinst_LIBRARIES = libruntests.a
+
+check_PROGRAMS = tests/runtests tests/runtestspp
+TESTS = tests/runtests tests/runtestspp
+
+# To support MinGW and Non-MinGW at the same time:
+LOG_DRIVER = $(srcdir)/test-driver-wrapper.sh
+
+libruntests_a_SOURCES = \
+    tests/chardata.c \
+    tests/structdata.c \
+    tests/memcheck.c \
+    tests/minicheck.c
+
+tests_runtests_SOURCES = \
+    tests/runtests.c
+
+tests_runtestspp_SOURCES = \
+    tests/runtestspp.cpp
+
+tests_runtests_LDADD = libruntests.a libexpat.la
+tests_runtestspp_LDADD = libruntests.a libexpat.la
+
+EXTRA_DIST += \
+    tests/chardata.h \
+    tests/structdata.h \
+    tests/minicheck.h \
+    tests/memcheck.h \
+    tests/README.txt \
+    tests/udiffer.py \
+    tests/xmltest.log.expected \
+    tests/xmltest.sh
 
 tests/xmlts.zip:
 	if test "$(XMLTS_ZIP)" = ""; then \
@@ -135,19 +302,34 @@ tests/xmlconf: tests/xmlts.zip
 .PHONY: run-xmltest
 run-xmltest: tests/xmlconf
 if WITH_XMLWF
-	$(MAKE) -C xmlwf
-	tests/xmltest.sh "$(PWD)/run.sh $(PWD)/xmlwf/xmlwf@EXEEXT@" 2>&1 | tee tests/xmltest.log
-	dos2unix tests/xmltest.log
-	diff -u tests/xmltest.log.expected tests/xmltest.log
+	$(MAKE) xmlwf/xmlwf
+	$(srcdir)/tests/xmltest.sh "$(PWD)/run.sh $(PWD)/xmlwf/xmlwf@EXEEXT@" 2>&1 | tee $(builddir)/tests/xmltest.log
+	dos2unix $(builddir)/tests/xmltest.log
+	diff -u $(srcdir)/tests/xmltest.log.expected $(builddir)/tests/xmltest.log
 else
 	@echo 'ERROR: xmlwf is needed for "make run-xmltest".' >&2
 	@echo 'ERROR: Please re-configure without --without-xmlwf.' >&2
 	@false
 endif
 
-.PHONY: qa
-qa:
-	./qa.sh address
-	./qa.sh memory
-	./qa.sh undefined
-	./qa.sh coverage
+#page
+#### benchmarking
+
+noinst_PROGRAMS += tests/benchmark/benchmark
+
+tests_benchmark_benchmark_SOURCES = tests/benchmark/benchmark.c
+
+tests_benchmark_benchmark_LDADD = libexpat.la
+
+EXTRA_DIST += \
+    tests/benchmark/README.txt
+
+.PHONY: run-benchmark
+run-benchmark:
+	$(builddir)/run.sh tests/benchmark/benchmark@EXEEXT@ -n $(top_srcdir)/../testdata/largefiles/recset.xml 65535 3
+
+
+### end of file
+# Local Variables:
+# page-delimiter: "^\#page"
+# End:
