@@ -1,4 +1,4 @@
-#! /bin/bash
+#!/usr/bin/env bash
 #                          __  __            _
 #                       ___\ \/ /_ __   __ _| |_
 #                      / _ \\  /| '_ \ / _` | __|
@@ -40,4 +40,4 @@ while [[ ${1} != '--' ]]; do
 done
 shift  # drop "--"
 
-exec "${top_srcdir}"/conftools/test-driver "${test_driver_args[@]}" "${top_builddir}"/run.sh "$@"
+exec "$BASH" "${top_srcdir}"/conftools/test-driver "${test_driver_args[@]}" "${top_builddir}"/run.sh "$@"
