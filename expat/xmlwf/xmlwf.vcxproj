@@ -88,16 +88,18 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <OutDir>.\..\bin\$(Platform)\Release\</OutDir>
-    <IntDir>.\..\$(Platform)\tmp\Release-xmlwf\</IntDir>
+    <OutDir>$(SolutionDir)$(Platform)\Release\</OutDir>
+    <IntDir>$(SolutionDir)$(Platform)\$(ProjectName)tmp\$(Configuration)\</IntDir>
     <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
+    <OutDir>$(SolutionDir)$(Platform)\Release\</OutDir>
+    <IntDir>$(SolutionDir)$(Platform)\$(ProjectName)tmp\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <OutDir>.\..\bin\$(Platform)\Debug\</OutDir>
-    <IntDir>.\..\$(Platform)\tmp\Debug-xmlwf\</IntDir>
+    <IntDir>.\..\$(Platform)\$(ProjectName)tmp\Debug-xmlwf\</IntDir>
     <LinkIncremental>true</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -114,11 +116,11 @@
       <WarningLevel>Level3</WarningLevel>
       <AdditionalIncludeDirectories>..\lib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AssemblerListingLocation>.\..\$(Platform)\tmp\Release-xmlwf\</AssemblerListingLocation>
-      <PrecompiledHeaderOutputFile>.\..\$(Platform)\tmp\Release-xmlwf\xmlwf.pch</PrecompiledHeaderOutputFile>
+      <AssemblerListingLocation>.\..\$(Platform)\$(ProjectName)tmp\Release-xmlwf\</AssemblerListingLocation>
+      <PrecompiledHeaderOutputFile>.\..\$(Platform)\$(ProjectName)tmp\Release-xmlwf\xmlwf.pch</PrecompiledHeaderOutputFile>
       <PrecompiledHeader />
-      <ObjectFileName>.\..\$(Platform)\tmp\Release-xmlwf\</ObjectFileName>
-      <ProgramDataBaseFileName>.\..\$(Platform)\tmp\Release-xmlwf\</ProgramDataBaseFileName>
+      <ObjectFileName>.\..\$(Platform)\$(ProjectName)tmp\Release-xmlwf\</ObjectFileName>
+      <ProgramDataBaseFileName>.\..\$(Platform)\$(ProjectName)tmp\Release-xmlwf\</ProgramDataBaseFileName>
     </ClCompile>
     <Midl>
       <TypeLibraryName>.\..\bin\$(Platform)\Release\xmlwf.tlb</TypeLibraryName>
@@ -151,12 +153,12 @@
       <WarningLevel>Level3</WarningLevel>
       <AdditionalIncludeDirectories>..\lib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_WIN64;NDEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AssemblerListingLocation>.\..\$(Platform)\tmp\Release-xmlwf\</AssemblerListingLocation>
-      <PrecompiledHeaderOutputFile>.\..\$(Platform)\tmp\Release-xmlwf\xmlwf.pch</PrecompiledHeaderOutputFile>
+      <AssemblerListingLocation>.\..\$(Platform)\$(ProjectName)tmp\Release-xmlwf\</AssemblerListingLocation>
+      <PrecompiledHeaderOutputFile>.\..\$(Platform)\$(ProjectName)tmp\Release-xmlwf\xmlwf.pch</PrecompiledHeaderOutputFile>
       <PrecompiledHeader>
       </PrecompiledHeader>
-      <ObjectFileName>.\..\$(Platform)\tmp\Release-xmlwf\</ObjectFileName>
-      <ProgramDataBaseFileName>.\..\$(Platform)\tmp\Release-xmlwf\</ProgramDataBaseFileName>
+      <ObjectFileName>.\..\$(Platform)\$(ProjectName)tmp\Release-xmlwf\</ObjectFileName>
+      <ProgramDataBaseFileName>.\..\$(Platform)\$(ProjectName)tmp\Release-xmlwf\</ProgramDataBaseFileName>
     </ClCompile>
     <Midl>
       <TypeLibraryName>.\..\bin\$(Platform)\Release\xmlwf.tlb</TypeLibraryName>
@@ -189,10 +191,10 @@
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <AdditionalIncludeDirectories>..\lib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AssemblerListingLocation>.\..\$(Platform)\tmp\Debug-xmlwf\</AssemblerListingLocation>
-      <PrecompiledHeaderOutputFile>.\..\$(Platform)\tmp\Debug-xmlwf\xmlwf.pch</PrecompiledHeaderOutputFile>
-      <ObjectFileName>.\..\$(Platform)\tmp\Debug-xmlwf\</ObjectFileName>
-      <ProgramDataBaseFileName>.\..\$(Platform)\tmp\Debug-xmlwf\</ProgramDataBaseFileName>
+      <AssemblerListingLocation>.\..\$(Platform)\$(ProjectName)tmp\Debug-xmlwf\</AssemblerListingLocation>
+      <PrecompiledHeaderOutputFile>.\..\$(Platform)\$(ProjectName)tmp\Debug-xmlwf\xmlwf.pch</PrecompiledHeaderOutputFile>
+      <ObjectFileName>.\..\$(Platform)\$(ProjectName)tmp\Debug-xmlwf\</ObjectFileName>
+      <ProgramDataBaseFileName>.\..\$(Platform)\$(ProjectName)tmp\Debug-xmlwf\</ProgramDataBaseFileName>
     </ClCompile>
     <Midl>
       <TypeLibraryName>.\..\bin\$(Platform)\Debug\xmlwf.tlb</TypeLibraryName>
@@ -225,10 +227,10 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <AdditionalIncludeDirectories>..\lib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_WIN64;_DEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AssemblerListingLocation>.\..\$(Platform)\tmp\Debug-xmlwf\</AssemblerListingLocation>
-      <PrecompiledHeaderOutputFile>.\..\$(Platform)\tmp\Debug-xmlwf\xmlwf.pch</PrecompiledHeaderOutputFile>
-      <ObjectFileName>.\..\$(Platform)\tmp\Debug-xmlwf\</ObjectFileName>
-      <ProgramDataBaseFileName>.\..\$(Platform)\tmp\Debug-xmlwf\</ProgramDataBaseFileName>
+      <AssemblerListingLocation>.\..\$(Platform)\$(ProjectName)tmp\Debug-xmlwf\</AssemblerListingLocation>
+      <PrecompiledHeaderOutputFile>.\..\$(Platform)\$(ProjectName)tmp\Debug-xmlwf\xmlwf.pch</PrecompiledHeaderOutputFile>
+      <ObjectFileName>.\..\$(Platform)\$(ProjectName)tmp\Debug-xmlwf\</ObjectFileName>
+      <ProgramDataBaseFileName>.\..\$(Platform)\$(ProjectName)tmp\Debug-xmlwf\</ProgramDataBaseFileName>
     </ClCompile>
     <Midl>
       <TypeLibraryName>.\..\bin\$(Platform)\Debug\xmlwf.tlb</TypeLibraryName>
