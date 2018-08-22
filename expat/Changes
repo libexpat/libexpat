@@ -7,7 +7,7 @@ Release x.x.x XXX XXXXXX XX XXXX
             #212  CMake: Make libdir of pkgconfig expat.pc support multilib
 
         Special thanks to:
-            userwithuid
+            @userwithuid
 
 Release 2.2.6 Sun August 12 2018
         Bug fixes:
@@ -47,7 +47,7 @@ Release 2.2.6 Sun August 12 2018
             Franek Korta
             Frank Rast
             Joe Orton
-            luzpaz
+            @luzpaz
             Pedro Vicente
             Rainer Jung
             Rhodri James
