@@ -35,3 +35,9 @@ expat/**/*.sdf
 expat/**/*.VC.db
 expat/tests/**/Debug/
 expat/tests/**/Release/
+*.pdb
+*.dll
+*.exp
+*.lib
+*.log
+*.tlog
