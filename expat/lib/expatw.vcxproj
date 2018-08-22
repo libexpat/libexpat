@@ -92,14 +92,16 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <OutDir>$(SolutionDir)$(Platform)\Release\</OutDir>
+    <OutDir>$(SolutionDir)bin\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)$(Platform)\$(ProjectName)tmp\$(Configuration)\</IntDir>
     <LinkIncremental>false</LinkIncremental>
+    <TargetName>libexpatw</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>$(SolutionDir)$(Platform)\Release\</OutDir>
+    <OutDir>$(SolutionDir)bin\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)$(Platform)\$(ProjectName)tmp\$(Configuration)\</IntDir>
+    <TargetName>libexpatw</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <OutDir>.\..\bin\$(Platform)\Debug\</OutDir>
@@ -123,7 +125,7 @@
       <PrecompiledHeaderOutputFile>.\..\$(Platform)\tmp\Release-w\expatw.pch</PrecompiledHeaderOutputFile>
       <PrecompiledHeader />
       <ObjectFileName>.\..\$(Platform)\tmp\Release-w\</ObjectFileName>
-      <ProgramDataBaseFileName>.\..\$(Platform)\tmp\Release-w\</ProgramDataBaseFileName>
+      <ProgramDataBaseFileName>$(OutDir)\$(TargetName).pdb</ProgramDataBaseFileName>
     </ClCompile>
     <Midl>
       <SuppressStartupBanner>true</SuppressStartupBanner>
@@ -144,7 +146,7 @@
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <LinkDLL>true</LinkDLL>
       <SubSystem>Console</SubSystem>
-      <OutputFile>..\bin\$(Platform)\Release\libexpatw.dll</OutputFile>
+      <OutputFile>$(OutDir)\libexpatw.dll</OutputFile>
       <ImportLibrary>.\..\bin\$(Platform)\Release\libexpatw.lib</ImportLibrary>
       <ModuleDefinitionFile>.\libexpatw.def</ModuleDefinitionFile>
     </Link>
@@ -164,7 +166,7 @@
       <PrecompiledHeader>
       </PrecompiledHeader>
       <ObjectFileName>.\..\$(Platform)\tmp\Release-w\</ObjectFileName>
-      <ProgramDataBaseFileName>.\..\$(Platform)\tmp\Release-w\</ProgramDataBaseFileName>
+      <ProgramDataBaseFileName>$(OutDir)\$(TargetName).pdb</ProgramDataBaseFileName>
     </ClCompile>
     <Midl>
       <SuppressStartupBanner>true</SuppressStartupBanner>
@@ -184,7 +186,7 @@
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <LinkDLL>true</LinkDLL>
       <SubSystem>Console</SubSystem>
-      <OutputFile>..\bin\$(Platform)\Release\libexpatw.dll</OutputFile>
+      <OutputFile>$(OutDir)\libexpatw.dll</OutputFile>
       <ImportLibrary>.\..\bin\$(Platform)\Release\libexpatw.lib</ImportLibrary>
       <ModuleDefinitionFile>.\libexpatw.def</ModuleDefinitionFile>
     </Link>

@@ -100,14 +100,16 @@
     <LinkIncremental>true</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <OutDir>$(SolutionDir)$(Platform)\Release\</OutDir>
+    <OutDir>$(SolutionDir)bin\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)$(Platform)\$(ProjectName)tmp\$(Configuration)\</IntDir>
     <LinkIncremental>false</LinkIncremental>
+    <TargetName>libexpatwMT</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>$(SolutionDir)$(Platform)\Release\</OutDir>
+    <OutDir>$(SolutionDir)bin\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)$(Platform)\$(ProjectName)tmp\$(Configuration)\</IntDir>
+    <TargetName>libexpatwMT</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -182,7 +184,7 @@
       <AssemblerListingLocation>.\..\$(Platform)\tmp\Release-w_static\</AssemblerListingLocation>
       <PrecompiledHeaderOutputFile>.\..\$(Platform)\tmp\Release-w_static\expatw_static.pch</PrecompiledHeaderOutputFile>
       <ObjectFileName>.\..\$(Platform)\tmp\Release-w_static\</ObjectFileName>
-      <ProgramDataBaseFileName>.\..\$(Platform)\tmp\Release-w_static\</ProgramDataBaseFileName>
+      <ProgramDataBaseFileName>$(OutDir)\$(TargetName).pdb</ProgramDataBaseFileName>
     </ClCompile>
     <ResourceCompile>
       <Culture>0x0409</Culture>
@@ -194,7 +196,7 @@
     </Bscmake>
     <Lib>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>..\bin\$(Platform)\Release\libexpatwMT.lib</OutputFile>
+      <OutputFile>$(OutDir)\libexpatwMT.lib</OutputFile>
     </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -210,7 +212,7 @@
       <AssemblerListingLocation>.\..\$(Platform)\tmp\Release-w_static\</AssemblerListingLocation>
       <PrecompiledHeaderOutputFile>.\..\$(Platform)\tmp\Release-w_static\expatw_static.pch</PrecompiledHeaderOutputFile>
       <ObjectFileName>.\..\$(Platform)\tmp\Release-w_static\</ObjectFileName>
-      <ProgramDataBaseFileName>.\..\$(Platform)\tmp\Release-w_static\</ProgramDataBaseFileName>
+      <ProgramDataBaseFileName>$(OutDir)\$(TargetName).pdb</ProgramDataBaseFileName>
     </ClCompile>
     <ResourceCompile>
       <Culture>0x0409</Culture>
@@ -222,7 +224,7 @@
     </Bscmake>
     <Lib>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>..\bin\$(Platform)\Release\libexpatwMT.lib</OutputFile>
+      <OutputFile>$(OutDir)\libexpatwMT.lib</OutputFile>
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
