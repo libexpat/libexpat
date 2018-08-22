@@ -92,16 +92,16 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <OutDir>.\..\win32\bin\Debug\</OutDir>
-    <IntDir>.\..\win32\tmp\Debug-w_static\</IntDir>
+    <OutDir>.\..\$(Platform)\bin\Debug\</OutDir>
+    <IntDir>.\..\$(Platform)\tmp\Debug-w_static\</IntDir>
     <LinkIncremental>true</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <OutDir>.\..\win32\bin\Release\</OutDir>
-    <IntDir>.\..\win32\tmp\Release-w_static\</IntDir>
+    <OutDir>.\..\$(Platform)\bin\Release\</OutDir>
+    <IntDir>.\..\$(Platform)\tmp\Release-w_static\</IntDir>
     <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -117,11 +117,11 @@
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <PreprocessorDefinitions>_DEBUG;_WINDOWS;_LIB;XML_UNICODE_WCHAR_T;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AssemblerListingLocation>.\..\win32\tmp\Debug-w_static\</AssemblerListingLocation>
+      <AssemblerListingLocation>.\..\$(Platform)\tmp\Debug-w_static\</AssemblerListingLocation>
       <BrowseInformation>true</BrowseInformation>
-      <PrecompiledHeaderOutputFile>.\..\win32\tmp\Debug-w_static\expatw_static.pch</PrecompiledHeaderOutputFile>
-      <ObjectFileName>.\..\win32\tmp\Debug-w_static\</ObjectFileName>
-      <ProgramDataBaseFileName>.\..\win32\tmp\Debug-w_static\</ProgramDataBaseFileName>
+      <PrecompiledHeaderOutputFile>.\..\$(Platform)\tmp\Debug-w_static\expatw_static.pch</PrecompiledHeaderOutputFile>
+      <ObjectFileName>.\..\$(Platform)\tmp\Debug-w_static\</ObjectFileName>
+      <ProgramDataBaseFileName>.\..\$(Platform)\tmp\Debug-w_static\</ProgramDataBaseFileName>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
     </ClCompile>
     <ResourceCompile>
@@ -130,11 +130,11 @@
     </ResourceCompile>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>.\..\win32\bin\Debug\expatw_static.bsc</OutputFile>
+      <OutputFile>.\..\$(Platform)\bin\Debug\expatw_static.bsc</OutputFile>
     </Bscmake>
     <Lib>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>..\win32\bin\Debug\libexpatwMT.lib</OutputFile>
+      <OutputFile>..\$(Platform)\bin\Debug\libexpatwMT.lib</OutputFile>
     </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -146,25 +146,25 @@
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <PreprocessorDefinitions>_DEBUG;_WINDOWS;_LIB;XML_UNICODE_WCHAR_T;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AssemblerListingLocation>.\..\win32\tmp\Debug-w_static\</AssemblerListingLocation>
+      <PreprocessorDefinitions>_WIN64;_DEBUG;_WINDOWS;_LIB;XML_UNICODE_WCHAR_T;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AssemblerListingLocation>.\..\$(Platform)\tmp\Debug-w_static\</AssemblerListingLocation>
       <BrowseInformation>true</BrowseInformation>
-      <PrecompiledHeaderOutputFile>.\..\win32\tmp\Debug-w_static\expatw_static.pch</PrecompiledHeaderOutputFile>
-      <ObjectFileName>.\..\win32\tmp\Debug-w_static\</ObjectFileName>
-      <ProgramDataBaseFileName>.\..\win32\tmp\Debug-w_static\</ProgramDataBaseFileName>
+      <PrecompiledHeaderOutputFile>.\..\$(Platform)\tmp\Debug-w_static\expatw_static.pch</PrecompiledHeaderOutputFile>
+      <ObjectFileName>.\..\$(Platform)\tmp\Debug-w_static\</ObjectFileName>
+      <ProgramDataBaseFileName>.\..\$(Platform)\tmp\Debug-w_static\</ProgramDataBaseFileName>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
     </ClCompile>
     <ResourceCompile>
       <Culture>0x0409</Culture>
-      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_WIN64;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ResourceCompile>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>.\..\win32\bin\Debug\expatw_static.bsc</OutputFile>
+      <OutputFile>.\..\$(Platform)\bin\Debug\expatw_static.bsc</OutputFile>
     </Bscmake>
     <Lib>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>..\win32\bin\Debug\libexpatwMT.lib</OutputFile>
+      <OutputFile>..\$(Platform)\bin\Debug\libexpatwMT.lib</OutputFile>
     </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -177,10 +177,10 @@
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>_WINDOWS;NDEBUG;_LIB;XML_UNICODE_WCHAR_T;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AssemblerListingLocation>.\..\win32\tmp\Release-w_static\</AssemblerListingLocation>
-      <PrecompiledHeaderOutputFile>.\..\win32\tmp\Release-w_static\expatw_static.pch</PrecompiledHeaderOutputFile>
-      <ObjectFileName>.\..\win32\tmp\Release-w_static\</ObjectFileName>
-      <ProgramDataBaseFileName>.\..\win32\tmp\Release-w_static\</ProgramDataBaseFileName>
+      <AssemblerListingLocation>.\..\$(Platform)\tmp\Release-w_static\</AssemblerListingLocation>
+      <PrecompiledHeaderOutputFile>.\..\$(Platform)\tmp\Release-w_static\expatw_static.pch</PrecompiledHeaderOutputFile>
+      <ObjectFileName>.\..\$(Platform)\tmp\Release-w_static\</ObjectFileName>
+      <ProgramDataBaseFileName>.\..\$(Platform)\tmp\Release-w_static\</ProgramDataBaseFileName>
     </ClCompile>
     <ResourceCompile>
       <Culture>0x0409</Culture>
@@ -188,11 +188,11 @@
     </ResourceCompile>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>.\..\win32\bin\Release\expatw_static.bsc</OutputFile>
+      <OutputFile>.\..\$(Platform)\bin\Release\expatw_static.bsc</OutputFile>
     </Bscmake>
     <Lib>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>..\win32\bin\Release\libexpatwMT.lib</OutputFile>
+      <OutputFile>..\$(Platform)\bin\Release\libexpatwMT.lib</OutputFile>
     </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -204,23 +204,23 @@
       <Optimization>MaxSpeed</Optimization>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>_WINDOWS;NDEBUG;_LIB;XML_UNICODE_WCHAR_T;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AssemblerListingLocation>.\..\win32\tmp\Release-w_static\</AssemblerListingLocation>
-      <PrecompiledHeaderOutputFile>.\..\win32\tmp\Release-w_static\expatw_static.pch</PrecompiledHeaderOutputFile>
-      <ObjectFileName>.\..\win32\tmp\Release-w_static\</ObjectFileName>
-      <ProgramDataBaseFileName>.\..\win32\tmp\Release-w_static\</ProgramDataBaseFileName>
+      <PreprocessorDefinitions>_WIN64;_WINDOWS;NDEBUG;_LIB;XML_UNICODE_WCHAR_T;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AssemblerListingLocation>.\..\$(Platform)\tmp\Release-w_static\</AssemblerListingLocation>
+      <PrecompiledHeaderOutputFile>.\..\$(Platform)\tmp\Release-w_static\expatw_static.pch</PrecompiledHeaderOutputFile>
+      <ObjectFileName>.\..\$(Platform)\tmp\Release-w_static\</ObjectFileName>
+      <ProgramDataBaseFileName>.\..\$(Platform)\tmp\Release-w_static\</ProgramDataBaseFileName>
     </ClCompile>
     <ResourceCompile>
       <Culture>0x0409</Culture>
-      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_WIN64;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ResourceCompile>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>.\..\win32\bin\Release\expatw_static.bsc</OutputFile>
+      <OutputFile>.\..\$(Platform)\bin\Release\expatw_static.bsc</OutputFile>
     </Bscmake>
     <Lib>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>..\win32\bin\Release\libexpatwMT.lib</OutputFile>
+      <OutputFile>..\$(Platform)\bin\Release\libexpatwMT.lib</OutputFile>
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>

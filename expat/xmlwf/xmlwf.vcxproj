@@ -88,16 +88,16 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <OutDir>.\..\win32\bin\Release\</OutDir>
-    <IntDir>.\..\win32\tmp\Release-xmlwf\</IntDir>
+    <OutDir>.\..\$(Platform)\bin\Release\</OutDir>
+    <IntDir>.\..\$(Platform)\tmp\Release-xmlwf\</IntDir>
     <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <OutDir>.\..\win32\bin\Debug\</OutDir>
-    <IntDir>.\..\win32\tmp\Debug-xmlwf\</IntDir>
+    <OutDir>.\..\$(Platform)\bin\Debug\</OutDir>
+    <IntDir>.\..\$(Platform)\tmp\Debug-xmlwf\</IntDir>
     <LinkIncremental>true</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -114,14 +114,14 @@
       <WarningLevel>Level3</WarningLevel>
       <AdditionalIncludeDirectories>..\lib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AssemblerListingLocation>.\..\win32\tmp\Release-xmlwf\</AssemblerListingLocation>
-      <PrecompiledHeaderOutputFile>.\..\win32\tmp\Release-xmlwf\xmlwf.pch</PrecompiledHeaderOutputFile>
+      <AssemblerListingLocation>.\..\$(Platform)\tmp\Release-xmlwf\</AssemblerListingLocation>
+      <PrecompiledHeaderOutputFile>.\..\$(Platform)\tmp\Release-xmlwf\xmlwf.pch</PrecompiledHeaderOutputFile>
       <PrecompiledHeader />
-      <ObjectFileName>.\..\win32\tmp\Release-xmlwf\</ObjectFileName>
-      <ProgramDataBaseFileName>.\..\win32\tmp\Release-xmlwf\</ProgramDataBaseFileName>
+      <ObjectFileName>.\..\$(Platform)\tmp\Release-xmlwf\</ObjectFileName>
+      <ProgramDataBaseFileName>.\..\$(Platform)\tmp\Release-xmlwf\</ProgramDataBaseFileName>
     </ClCompile>
     <Midl>
-      <TypeLibraryName>.\..\win32\bin\Release\xmlwf.tlb</TypeLibraryName>
+      <TypeLibraryName>.\..\$(Platform)\bin\Release\xmlwf.tlb</TypeLibraryName>
     </Midl>
     <ResourceCompile>
       <Culture>0x0409</Culture>
@@ -129,14 +129,14 @@
     </ResourceCompile>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>.\..\win32\bin\Release\xmlwf.bsc</OutputFile>
+      <OutputFile>.\..\$(Platform)\bin\Release\xmlwf.bsc</OutputFile>
     </Bscmake>
     <Link>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <SubSystem>Console</SubSystem>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
-      <OutputFile>..\win32\bin\Release\xmlwf.exe</OutputFile>
-      <AdditionalLibraryDirectories>..\win32\bin\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <OutputFile>..\$(Platform)\bin\Release\xmlwf.exe</OutputFile>
+      <AdditionalLibraryDirectories>..\$(Platform)\bin\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>libexpat.lib;setargv.obj;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -150,31 +150,31 @@
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <WarningLevel>Level3</WarningLevel>
       <AdditionalIncludeDirectories>..\lib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>NDEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AssemblerListingLocation>.\..\win32\tmp\Release-xmlwf\</AssemblerListingLocation>
-      <PrecompiledHeaderOutputFile>.\..\win32\tmp\Release-xmlwf\xmlwf.pch</PrecompiledHeaderOutputFile>
+      <PreprocessorDefinitions>_WIN64;NDEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AssemblerListingLocation>.\..\$(Platform)\tmp\Release-xmlwf\</AssemblerListingLocation>
+      <PrecompiledHeaderOutputFile>.\..\$(Platform)\tmp\Release-xmlwf\xmlwf.pch</PrecompiledHeaderOutputFile>
       <PrecompiledHeader>
       </PrecompiledHeader>
-      <ObjectFileName>.\..\win32\tmp\Release-xmlwf\</ObjectFileName>
-      <ProgramDataBaseFileName>.\..\win32\tmp\Release-xmlwf\</ProgramDataBaseFileName>
+      <ObjectFileName>.\..\$(Platform)\tmp\Release-xmlwf\</ObjectFileName>
+      <ProgramDataBaseFileName>.\..\$(Platform)\tmp\Release-xmlwf\</ProgramDataBaseFileName>
     </ClCompile>
     <Midl>
-      <TypeLibraryName>.\..\win32\bin\Release\xmlwf.tlb</TypeLibraryName>
+      <TypeLibraryName>.\..\$(Platform)\bin\Release\xmlwf.tlb</TypeLibraryName>
     </Midl>
     <ResourceCompile>
       <Culture>0x0409</Culture>
-      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_WIN64;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ResourceCompile>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>.\..\win32\bin\Release\xmlwf.bsc</OutputFile>
+      <OutputFile>.\..\$(Platform)\bin\Release\xmlwf.bsc</OutputFile>
     </Bscmake>
     <Link>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <SubSystem>Console</SubSystem>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
-      <OutputFile>..\win32\bin\Release\xmlwf.exe</OutputFile>
-      <AdditionalLibraryDirectories>..\win32\bin\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <OutputFile>..\$(Platform)\bin\Release\xmlwf.exe</OutputFile>
+      <AdditionalLibraryDirectories>..\$(Platform)\bin\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>libexpat.lib;setargv.obj;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -189,13 +189,13 @@
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <AdditionalIncludeDirectories>..\lib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AssemblerListingLocation>.\..\win32\tmp\Debug-xmlwf\</AssemblerListingLocation>
-      <PrecompiledHeaderOutputFile>.\..\win32\tmp\Debug-xmlwf\xmlwf.pch</PrecompiledHeaderOutputFile>
-      <ObjectFileName>.\..\win32\tmp\Debug-xmlwf\</ObjectFileName>
-      <ProgramDataBaseFileName>.\..\win32\tmp\Debug-xmlwf\</ProgramDataBaseFileName>
+      <AssemblerListingLocation>.\..\$(Platform)\tmp\Debug-xmlwf\</AssemblerListingLocation>
+      <PrecompiledHeaderOutputFile>.\..\$(Platform)\tmp\Debug-xmlwf\xmlwf.pch</PrecompiledHeaderOutputFile>
+      <ObjectFileName>.\..\$(Platform)\tmp\Debug-xmlwf\</ObjectFileName>
+      <ProgramDataBaseFileName>.\..\$(Platform)\tmp\Debug-xmlwf\</ProgramDataBaseFileName>
     </ClCompile>
     <Midl>
-      <TypeLibraryName>.\..\win32\bin\Debug\xmlwf.tlb</TypeLibraryName>
+      <TypeLibraryName>.\..\$(Platform)\bin\Debug\xmlwf.tlb</TypeLibraryName>
     </Midl>
     <ResourceCompile>
       <Culture>0x0409</Culture>
@@ -203,14 +203,14 @@
     </ResourceCompile>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>.\..\win32\bin\Debug\xmlwf.bsc</OutputFile>
+      <OutputFile>.\..\$(Platform)\bin\Debug\xmlwf.bsc</OutputFile>
     </Bscmake>
     <Link>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
-      <OutputFile>..\win32\bin\Debug\xmlwf.exe</OutputFile>
-      <AdditionalLibraryDirectories>..\win32\bin\Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <OutputFile>..\$(Platform)\bin\Debug\xmlwf.exe</OutputFile>
+      <AdditionalLibraryDirectories>..\$(Platform)\bin\Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>libexpat.lib;setargv.obj;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -224,29 +224,29 @@
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <AdditionalIncludeDirectories>..\lib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AssemblerListingLocation>.\..\win32\tmp\Debug-xmlwf\</AssemblerListingLocation>
-      <PrecompiledHeaderOutputFile>.\..\win32\tmp\Debug-xmlwf\xmlwf.pch</PrecompiledHeaderOutputFile>
-      <ObjectFileName>.\..\win32\tmp\Debug-xmlwf\</ObjectFileName>
-      <ProgramDataBaseFileName>.\..\win32\tmp\Debug-xmlwf\</ProgramDataBaseFileName>
+      <PreprocessorDefinitions>_WIN64;_DEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AssemblerListingLocation>.\..\$(Platform)\tmp\Debug-xmlwf\</AssemblerListingLocation>
+      <PrecompiledHeaderOutputFile>.\..\$(Platform)\tmp\Debug-xmlwf\xmlwf.pch</PrecompiledHeaderOutputFile>
+      <ObjectFileName>.\..\$(Platform)\tmp\Debug-xmlwf\</ObjectFileName>
+      <ProgramDataBaseFileName>.\..\$(Platform)\tmp\Debug-xmlwf\</ProgramDataBaseFileName>
     </ClCompile>
     <Midl>
-      <TypeLibraryName>.\..\win32\bin\Debug\xmlwf.tlb</TypeLibraryName>
+      <TypeLibraryName>.\..\$(Platform)\bin\Debug\xmlwf.tlb</TypeLibraryName>
     </Midl>
     <ResourceCompile>
       <Culture>0x0409</Culture>
-      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_WIN64;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ResourceCompile>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>.\..\win32\bin\Debug\xmlwf.bsc</OutputFile>
+      <OutputFile>.\..\$(Platform)\bin\Debug\xmlwf.bsc</OutputFile>
     </Bscmake>
     <Link>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
-      <OutputFile>..\win32\bin\Debug\xmlwf.exe</OutputFile>
-      <AdditionalLibraryDirectories>..\win32\bin\Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <OutputFile>..\$(Platform)\bin\Debug\xmlwf.exe</OutputFile>
+      <AdditionalLibraryDirectories>..\$(Platform)\bin\Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>libexpat.lib;setargv.obj;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>

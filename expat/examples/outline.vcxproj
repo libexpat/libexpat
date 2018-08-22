@@ -92,16 +92,16 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <OutDir>.\..\win32\bin\Debug\</OutDir>
-    <IntDir>.\..\win32\tmp\Debug-outline\</IntDir>
+    <OutDir>.\..\$(Platform)\bin\Debug\</OutDir>
+    <IntDir>.\..\$(Platform)\tmp\Debug-outline\</IntDir>
     <LinkIncremental>true</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <OutDir>.\..\win32\bin\Release\</OutDir>
-    <IntDir>.\..\win32\tmp\Release-outline\</IntDir>
+    <OutDir>.\..\$(Platform)\bin\Release\</OutDir>
+    <IntDir>.\..\$(Platform)\tmp\Release-outline\</IntDir>
     <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -119,14 +119,14 @@
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <AdditionalIncludeDirectories>..\lib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AssemblerListingLocation>.\..\win32\tmp\Debug-outline\</AssemblerListingLocation>
-      <PrecompiledHeaderOutputFile>.\..\win32\tmp\Debug-outline\outline.pch</PrecompiledHeaderOutputFile>
-      <ObjectFileName>.\..\win32\tmp\Debug-outline\</ObjectFileName>
-      <ProgramDataBaseFileName>.\..\win32\tmp\Debug-outline\</ProgramDataBaseFileName>
+      <AssemblerListingLocation>.\..\$(Platform)\tmp\Debug-outline\</AssemblerListingLocation>
+      <PrecompiledHeaderOutputFile>.\..\$(Platform)\tmp\Debug-outline\outline.pch</PrecompiledHeaderOutputFile>
+      <ObjectFileName>.\..\$(Platform)\tmp\Debug-outline\</ObjectFileName>
+      <ProgramDataBaseFileName>.\..\$(Platform)\tmp\Debug-outline\</ProgramDataBaseFileName>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
     </ClCompile>
     <Midl>
-      <TypeLibraryName>.\..\win32\bin\Debug\outline.tlb</TypeLibraryName>
+      <TypeLibraryName>.\..\$(Platform)\bin\Debug\outline.tlb</TypeLibraryName>
     </Midl>
     <ResourceCompile>
       <Culture>0x0409</Culture>
@@ -134,14 +134,14 @@
     </ResourceCompile>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>.\..\win32\bin\Debug\outline.bsc</OutputFile>
+      <OutputFile>.\..\$(Platform)\bin\Debug\outline.bsc</OutputFile>
     </Bscmake>
     <Link>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
-      <OutputFile>..\win32\bin\Debug\outline.exe</OutputFile>
-      <AdditionalLibraryDirectories>..\win32\bin\Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <OutputFile>..\$(Platform)\bin\Debug\outline.exe</OutputFile>
+      <AdditionalLibraryDirectories>..\$(Platform)\bin\Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>libexpat.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -155,30 +155,30 @@
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <AdditionalIncludeDirectories>..\lib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AssemblerListingLocation>.\..\win32\tmp\Debug-outline\</AssemblerListingLocation>
-      <PrecompiledHeaderOutputFile>.\..\win32\tmp\Debug-outline\outline.pch</PrecompiledHeaderOutputFile>
-      <ObjectFileName>.\..\win32\tmp\Debug-outline\</ObjectFileName>
-      <ProgramDataBaseFileName>.\..\win32\tmp\Debug-outline\</ProgramDataBaseFileName>
+      <PreprocessorDefinitions>_WIN64;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AssemblerListingLocation>.\..\$(Platform)\tmp\Debug-outline\</AssemblerListingLocation>
+      <PrecompiledHeaderOutputFile>.\..\$(Platform)\tmp\Debug-outline\outline.pch</PrecompiledHeaderOutputFile>
+      <ObjectFileName>.\..\$(Platform)\tmp\Debug-outline\</ObjectFileName>
+      <ProgramDataBaseFileName>.\..\$(Platform)\tmp\Debug-outline\</ProgramDataBaseFileName>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
     </ClCompile>
     <Midl>
-      <TypeLibraryName>.\..\win32\bin\Debug\outline.tlb</TypeLibraryName>
+      <TypeLibraryName>.\..\$(Platform)\bin\Debug\outline.tlb</TypeLibraryName>
     </Midl>
     <ResourceCompile>
       <Culture>0x0409</Culture>
-      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_WIN64;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ResourceCompile>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>.\..\win32\bin\Debug\outline.bsc</OutputFile>
+      <OutputFile>.\..\$(Platform)\bin\Debug\outline.bsc</OutputFile>
     </Bscmake>
     <Link>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
-      <OutputFile>..\win32\bin\Debug\outline.exe</OutputFile>
-      <AdditionalLibraryDirectories>..\win32\bin\Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <OutputFile>..\$(Platform)\bin\Debug\outline.exe</OutputFile>
+      <AdditionalLibraryDirectories>..\$(Platform)\bin\Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>libexpat.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -194,13 +194,13 @@
       <IgnoreStandardIncludePath>false</IgnoreStandardIncludePath>
       <AdditionalIncludeDirectories>..\lib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AssemblerListingLocation>.\..\win32\tmp\Release-outline\</AssemblerListingLocation>
-      <PrecompiledHeaderOutputFile>.\..\win32\tmp\Release-outline\outline.pch</PrecompiledHeaderOutputFile>
-      <ObjectFileName>.\..\win32\tmp\Release-outline\</ObjectFileName>
-      <ProgramDataBaseFileName>.\..\win32\tmp\Release-outline\</ProgramDataBaseFileName>
+      <AssemblerListingLocation>.\..\$(Platform)\tmp\Release-outline\</AssemblerListingLocation>
+      <PrecompiledHeaderOutputFile>.\..\$(Platform)\tmp\Release-outline\outline.pch</PrecompiledHeaderOutputFile>
+      <ObjectFileName>.\..\$(Platform)\tmp\Release-outline\</ObjectFileName>
+      <ProgramDataBaseFileName>.\..\$(Platform)\tmp\Release-outline\</ProgramDataBaseFileName>
     </ClCompile>
     <Midl>
-      <TypeLibraryName>.\..\win32\bin\Release\outline.tlb</TypeLibraryName>
+      <TypeLibraryName>.\..\$(Platform)\bin\Release\outline.tlb</TypeLibraryName>
     </Midl>
     <ResourceCompile>
       <Culture>0x0409</Culture>
@@ -208,13 +208,13 @@
     </ResourceCompile>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>.\..\win32\bin\Release\outline.bsc</OutputFile>
+      <OutputFile>.\..\$(Platform)\bin\Release\outline.bsc</OutputFile>
     </Bscmake>
     <Link>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <SubSystem>Console</SubSystem>
-      <OutputFile>..\win32\bin\Release\outline.exe</OutputFile>
-      <AdditionalLibraryDirectories>..\win32\bin\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <OutputFile>..\$(Platform)\bin\Release\outline.exe</OutputFile>
+      <AdditionalLibraryDirectories>..\$(Platform)\bin\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>libexpat.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -229,28 +229,28 @@
       <WarningLevel>Level3</WarningLevel>
       <IgnoreStandardIncludePath>false</IgnoreStandardIncludePath>
       <AdditionalIncludeDirectories>..\lib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AssemblerListingLocation>.\..\win32\tmp\Release-outline\</AssemblerListingLocation>
-      <PrecompiledHeaderOutputFile>.\..\win32\tmp\Release-outline\outline.pch</PrecompiledHeaderOutputFile>
-      <ObjectFileName>.\..\win32\tmp\Release-outline\</ObjectFileName>
-      <ProgramDataBaseFileName>.\..\win32\tmp\Release-outline\</ProgramDataBaseFileName>
+      <PreprocessorDefinitions>_WIN64;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AssemblerListingLocation>.\..\$(Platform)\tmp\Release-outline\</AssemblerListingLocation>
+      <PrecompiledHeaderOutputFile>.\..\$(Platform)\tmp\Release-outline\outline.pch</PrecompiledHeaderOutputFile>
+      <ObjectFileName>.\..\$(Platform)\tmp\Release-outline\</ObjectFileName>
+      <ProgramDataBaseFileName>.\..\$(Platform)\tmp\Release-outline\</ProgramDataBaseFileName>
     </ClCompile>
     <Midl>
-      <TypeLibraryName>.\..\win32\bin\Release\outline.tlb</TypeLibraryName>
+      <TypeLibraryName>.\..\$(Platform)\bin\Release\outline.tlb</TypeLibraryName>
     </Midl>
     <ResourceCompile>
       <Culture>0x0409</Culture>
-      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_WIN64;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ResourceCompile>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>.\..\win32\bin\Release\outline.bsc</OutputFile>
+      <OutputFile>.\..\$(Platform)\bin\Release\outline.bsc</OutputFile>
     </Bscmake>
     <Link>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <SubSystem>Console</SubSystem>
-      <OutputFile>..\win32\bin\Release\outline.exe</OutputFile>
-      <AdditionalLibraryDirectories>..\win32\bin\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <OutputFile>..\$(Platform)\bin\Release\outline.exe</OutputFile>
+      <AdditionalLibraryDirectories>..\$(Platform)\bin\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>libexpat.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>

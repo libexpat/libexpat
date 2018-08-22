@@ -92,16 +92,16 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <OutDir>.\..\win32\bin\Debug\</OutDir>
-    <IntDir>.\..\win32\tmp\Debug\</IntDir>
+    <OutDir>.\..\$(Platform)\bin\Debug\</OutDir>
+    <IntDir>.\..\$(Platform)\tmp\Debug\</IntDir>
     <LinkIncremental>true</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <OutDir>.\..\win32\bin\Release\</OutDir>
-    <IntDir>.\..\win32\tmp\Release\</IntDir>
+    <OutDir>.\..\$(Platform)\bin\Release\</OutDir>
+    <IntDir>.\..\$(Platform)\tmp\Release\</IntDir>
     <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -117,17 +117,17 @@
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <PreprocessorDefinitions>_DEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AssemblerListingLocation>.\..\win32\tmp\Debug\</AssemblerListingLocation>
+      <AssemblerListingLocation>.\..\$(Platform)\tmp\Debug\</AssemblerListingLocation>
       <BrowseInformation>true</BrowseInformation>
-      <PrecompiledHeaderOutputFile>.\..\win32\tmp\Debug\expat.pch</PrecompiledHeaderOutputFile>
-      <ObjectFileName>.\..\win32\tmp\Debug\</ObjectFileName>
-      <ProgramDataBaseFileName>.\..\win32\tmp\Debug\</ProgramDataBaseFileName>
+      <PrecompiledHeaderOutputFile>.\..\$(Platform)\tmp\Debug\expat.pch</PrecompiledHeaderOutputFile>
+      <ObjectFileName>.\..\$(Platform)\tmp\Debug\</ObjectFileName>
+      <ProgramDataBaseFileName>.\..\$(Platform)\tmp\Debug\</ProgramDataBaseFileName>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
     </ClCompile>
     <Midl>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <TypeLibraryName>.\..\win32\bin\Debug\expat.tlb</TypeLibraryName>
+      <TypeLibraryName>.\..\$(Platform)\bin\Debug\expat.tlb</TypeLibraryName>
       <MkTypLibCompatible>true</MkTypLibCompatible>
       <TargetEnvironment>Win32</TargetEnvironment>
     </Midl>
@@ -137,15 +137,15 @@
     </ResourceCompile>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>.\..\win32\bin\Debug\expat.bsc</OutputFile>
+      <OutputFile>.\..\$(Platform)\bin\Debug\expat.bsc</OutputFile>
     </Bscmake>
     <Link>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <LinkDLL>true</LinkDLL>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
-      <OutputFile>..\win32\bin\Debug\libexpat.dll</OutputFile>
-      <ImportLibrary>.\..\win32\bin\Debug\libexpat.lib</ImportLibrary>
+      <OutputFile>..\$(Platform)\bin\Debug\libexpat.dll</OutputFile>
+      <ImportLibrary>.\..\$(Platform)\bin\Debug\libexpat.lib</ImportLibrary>
       <ModuleDefinitionFile>.\libexpat.def</ModuleDefinitionFile>
     </Link>
   </ItemDefinitionGroup>
@@ -158,35 +158,35 @@
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <PreprocessorDefinitions>_DEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AssemblerListingLocation>.\..\win32\tmp\Debug\</AssemblerListingLocation>
+      <PreprocessorDefinitions>_WIN64;_DEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AssemblerListingLocation>.\..\$(Platform)\tmp\Debug\</AssemblerListingLocation>
       <BrowseInformation>true</BrowseInformation>
-      <PrecompiledHeaderOutputFile>.\..\win32\tmp\Debug\expat.pch</PrecompiledHeaderOutputFile>
-      <ObjectFileName>.\..\win32\tmp\Debug\</ObjectFileName>
-      <ProgramDataBaseFileName>.\..\win32\tmp\Debug\</ProgramDataBaseFileName>
+      <PrecompiledHeaderOutputFile>.\..\$(Platform)\tmp\Debug\expat.pch</PrecompiledHeaderOutputFile>
+      <ObjectFileName>.\..\$(Platform)\tmp\Debug\</ObjectFileName>
+      <ProgramDataBaseFileName>.\..\$(Platform)\tmp\Debug\</ProgramDataBaseFileName>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
     </ClCompile>
     <Midl>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <TypeLibraryName>.\..\win32\bin\Debug\expat.tlb</TypeLibraryName>
+      <PreprocessorDefinitions>_WIN64;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <TypeLibraryName>.\..\$(Platform)\bin\Debug\expat.tlb</TypeLibraryName>
       <MkTypLibCompatible>true</MkTypLibCompatible>
     </Midl>
     <ResourceCompile>
       <Culture>0x0409</Culture>
-      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_WIN64;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ResourceCompile>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>.\..\win32\bin\Debug\expat.bsc</OutputFile>
+      <OutputFile>.\..\$(Platform)\bin\Debug\expat.bsc</OutputFile>
     </Bscmake>
     <Link>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <LinkDLL>true</LinkDLL>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
-      <OutputFile>..\win32\bin\Debug\libexpat.dll</OutputFile>
-      <ImportLibrary>.\..\win32\bin\Debug\libexpat.lib</ImportLibrary>
+      <OutputFile>..\$(Platform)\bin\Debug\libexpat.dll</OutputFile>
+      <ImportLibrary>.\..\$(Platform)\bin\Debug\libexpat.lib</ImportLibrary>
       <ModuleDefinitionFile>.\libexpat.def</ModuleDefinitionFile>
     </Link>
   </ItemDefinitionGroup>
@@ -200,16 +200,16 @@
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>NDEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AssemblerListingLocation>.\..\win32\tmp\Release\</AssemblerListingLocation>
-      <PrecompiledHeaderOutputFile>.\..\win32\tmp\Release\expat.pch</PrecompiledHeaderOutputFile>
+      <AssemblerListingLocation>.\..\$(Platform)\tmp\Release\</AssemblerListingLocation>
+      <PrecompiledHeaderOutputFile>.\..\$(Platform)\tmp\Release\expat.pch</PrecompiledHeaderOutputFile>
       <PrecompiledHeader />
-      <ObjectFileName>.\..\win32\tmp\Release\</ObjectFileName>
-      <ProgramDataBaseFileName>.\..\win32\tmp\Release\</ProgramDataBaseFileName>
+      <ObjectFileName>.\..\$(Platform)\tmp\Release\</ObjectFileName>
+      <ProgramDataBaseFileName>.\..\$(Platform)\tmp\Release\</ProgramDataBaseFileName>
     </ClCompile>
     <Midl>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <TypeLibraryName>.\..\win32\bin\Release\expat.tlb</TypeLibraryName>
+      <TypeLibraryName>.\..\$(Platform)\bin\Release\expat.tlb</TypeLibraryName>
       <MkTypLibCompatible>true</MkTypLibCompatible>
       <TargetEnvironment>Win32</TargetEnvironment>
     </Midl>
@@ -219,14 +219,14 @@
     </ResourceCompile>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>.\..\win32\bin\Release\expat.bsc</OutputFile>
+      <OutputFile>.\..\$(Platform)\bin\Release\expat.bsc</OutputFile>
     </Bscmake>
     <Link>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <LinkDLL>true</LinkDLL>
       <SubSystem>Console</SubSystem>
-      <OutputFile>..\win32\bin\Release\libexpat.dll</OutputFile>
-      <ImportLibrary>.\..\win32\bin\Release\libexpat.lib</ImportLibrary>
+      <OutputFile>..\$(Platform)\bin\Release\libexpat.dll</OutputFile>
+      <ImportLibrary>.\..\$(Platform)\bin\Release\libexpat.lib</ImportLibrary>
       <ModuleDefinitionFile>.\libexpat.def</ModuleDefinitionFile>
     </Link>
   </ItemDefinitionGroup>
@@ -239,34 +239,34 @@
       <Optimization>MaxSpeed</Optimization>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>NDEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AssemblerListingLocation>.\..\win32\tmp\Release\</AssemblerListingLocation>
-      <PrecompiledHeaderOutputFile>.\..\win32\tmp\Release\expat.pch</PrecompiledHeaderOutputFile>
+      <PreprocessorDefinitions>_WIN64;NDEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AssemblerListingLocation>.\..\$(Platform)\tmp\Release\</AssemblerListingLocation>
+      <PrecompiledHeaderOutputFile>.\..\$(Platform)\tmp\Release\expat.pch</PrecompiledHeaderOutputFile>
       <PrecompiledHeader>
       </PrecompiledHeader>
-      <ObjectFileName>.\..\win32\tmp\Release\</ObjectFileName>
-      <ProgramDataBaseFileName>.\..\win32\tmp\Release\</ProgramDataBaseFileName>
+      <ObjectFileName>.\..\$(Platform)\tmp\Release\</ObjectFileName>
+      <ProgramDataBaseFileName>.\..\$(Platform)\tmp\Release\</ProgramDataBaseFileName>
     </ClCompile>
     <Midl>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <TypeLibraryName>.\..\win32\bin\Release\expat.tlb</TypeLibraryName>
+      <PreprocessorDefinitions>_WIN64;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <TypeLibraryName>.\..\$(Platform)\bin\Release\expat.tlb</TypeLibraryName>
       <MkTypLibCompatible>true</MkTypLibCompatible>
     </Midl>
     <ResourceCompile>
       <Culture>0x0409</Culture>
-      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_WIN64;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ResourceCompile>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>.\..\win32\bin\Release\expat.bsc</OutputFile>
+      <OutputFile>.\..\$(Platform)\bin\Release\expat.bsc</OutputFile>
     </Bscmake>
     <Link>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <LinkDLL>true</LinkDLL>
       <SubSystem>Console</SubSystem>
-      <OutputFile>..\win32\bin\Release\libexpat.dll</OutputFile>
-      <ImportLibrary>.\..\win32\bin\Release\libexpat.lib</ImportLibrary>
+      <OutputFile>..\$(Platform)\bin\Release\libexpat.dll</OutputFile>
+      <ImportLibrary>.\..\$(Platform)\bin\Release\libexpat.lib</ImportLibrary>
       <ModuleDefinitionFile>.\libexpat.def</ModuleDefinitionFile>
     </Link>
   </ItemDefinitionGroup>
