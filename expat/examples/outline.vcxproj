@@ -92,7 +92,7 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <OutDir>.\..\$(Platform)\bin\Debug\</OutDir>
+    <OutDir>.\..\bin\$(Platform)\Debug\</OutDir>
     <IntDir>.\..\$(Platform)\tmp\Debug-outline\</IntDir>
     <LinkIncremental>true</LinkIncremental>
   </PropertyGroup>
@@ -100,7 +100,7 @@
     <LinkIncremental>true</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <OutDir>.\..\$(Platform)\bin\Release\</OutDir>
+    <OutDir>.\..\bin\$(Platform)\Release\</OutDir>
     <IntDir>.\..\$(Platform)\tmp\Release-outline\</IntDir>
     <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
@@ -126,7 +126,7 @@
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
     </ClCompile>
     <Midl>
-      <TypeLibraryName>.\..\$(Platform)\bin\Debug\outline.tlb</TypeLibraryName>
+      <TypeLibraryName>.\..\bin\$(Platform)\Debug\outline.tlb</TypeLibraryName>
     </Midl>
     <ResourceCompile>
       <Culture>0x0409</Culture>
@@ -134,14 +134,14 @@
     </ResourceCompile>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>.\..\$(Platform)\bin\Debug\outline.bsc</OutputFile>
+      <OutputFile>.\..\bin\$(Platform)\Debug\outline.bsc</OutputFile>
     </Bscmake>
     <Link>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
-      <OutputFile>..\$(Platform)\bin\Debug\outline.exe</OutputFile>
-      <AdditionalLibraryDirectories>..\$(Platform)\bin\Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <OutputFile>..\bin\$(Platform)\Debug\outline.exe</OutputFile>
+      <AdditionalLibraryDirectories>..\bin\$(Platform)\Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>libexpat.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -163,7 +163,7 @@
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
     </ClCompile>
     <Midl>
-      <TypeLibraryName>.\..\$(Platform)\bin\Debug\outline.tlb</TypeLibraryName>
+      <TypeLibraryName>.\..\bin\$(Platform)\Debug\outline.tlb</TypeLibraryName>
     </Midl>
     <ResourceCompile>
       <Culture>0x0409</Culture>
@@ -171,14 +171,14 @@
     </ResourceCompile>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>.\..\$(Platform)\bin\Debug\outline.bsc</OutputFile>
+      <OutputFile>.\..\bin\$(Platform)\Debug\outline.bsc</OutputFile>
     </Bscmake>
     <Link>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
-      <OutputFile>..\$(Platform)\bin\Debug\outline.exe</OutputFile>
-      <AdditionalLibraryDirectories>..\$(Platform)\bin\Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <OutputFile>..\bin\$(Platform)\Debug\outline.exe</OutputFile>
+      <AdditionalLibraryDirectories>..\bin\$(Platform)\Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>libexpat.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -200,7 +200,7 @@
       <ProgramDataBaseFileName>.\..\$(Platform)\tmp\Release-outline\</ProgramDataBaseFileName>
     </ClCompile>
     <Midl>
-      <TypeLibraryName>.\..\$(Platform)\bin\Release\outline.tlb</TypeLibraryName>
+      <TypeLibraryName>.\..\bin\$(Platform)\Release\outline.tlb</TypeLibraryName>
     </Midl>
     <ResourceCompile>
       <Culture>0x0409</Culture>
@@ -208,13 +208,13 @@
     </ResourceCompile>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>.\..\$(Platform)\bin\Release\outline.bsc</OutputFile>
+      <OutputFile>.\..\bin\$(Platform)\Release\outline.bsc</OutputFile>
     </Bscmake>
     <Link>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <SubSystem>Console</SubSystem>
-      <OutputFile>..\$(Platform)\bin\Release\outline.exe</OutputFile>
-      <AdditionalLibraryDirectories>..\$(Platform)\bin\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <OutputFile>..\bin\$(Platform)\Release\outline.exe</OutputFile>
+      <AdditionalLibraryDirectories>..\bin\$(Platform)\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>libexpat.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -236,7 +236,7 @@
       <ProgramDataBaseFileName>.\..\$(Platform)\tmp\Release-outline\</ProgramDataBaseFileName>
     </ClCompile>
     <Midl>
-      <TypeLibraryName>.\..\$(Platform)\bin\Release\outline.tlb</TypeLibraryName>
+      <TypeLibraryName>.\..\bin\$(Platform)\Release\outline.tlb</TypeLibraryName>
     </Midl>
     <ResourceCompile>
       <Culture>0x0409</Culture>
@@ -244,13 +244,13 @@
     </ResourceCompile>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>.\..\$(Platform)\bin\Release\outline.bsc</OutputFile>
+      <OutputFile>.\..\bin\$(Platform)\Release\outline.bsc</OutputFile>
     </Bscmake>
     <Link>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <SubSystem>Console</SubSystem>
-      <OutputFile>..\$(Platform)\bin\Release\outline.exe</OutputFile>
-      <AdditionalLibraryDirectories>..\$(Platform)\bin\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <OutputFile>..\bin\$(Platform)\Release\outline.exe</OutputFile>
+      <AdditionalLibraryDirectories>..\bin\$(Platform)\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>libexpat.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>

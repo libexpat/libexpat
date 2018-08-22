@@ -88,7 +88,7 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <OutDir>.\..\$(Platform)\bin\Release\</OutDir>
+    <OutDir>.\..\bin\$(Platform)\Release\</OutDir>
     <IntDir>.\..\$(Platform)\tmp\Release-xmlwf\</IntDir>
     <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
@@ -96,7 +96,7 @@
     <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <OutDir>.\..\$(Platform)\bin\Debug\</OutDir>
+    <OutDir>.\..\bin\$(Platform)\Debug\</OutDir>
     <IntDir>.\..\$(Platform)\tmp\Debug-xmlwf\</IntDir>
     <LinkIncremental>true</LinkIncremental>
   </PropertyGroup>
@@ -121,7 +121,7 @@
       <ProgramDataBaseFileName>.\..\$(Platform)\tmp\Release-xmlwf\</ProgramDataBaseFileName>
     </ClCompile>
     <Midl>
-      <TypeLibraryName>.\..\$(Platform)\bin\Release\xmlwf.tlb</TypeLibraryName>
+      <TypeLibraryName>.\..\bin\$(Platform)\Release\xmlwf.tlb</TypeLibraryName>
     </Midl>
     <ResourceCompile>
       <Culture>0x0409</Culture>
@@ -129,14 +129,14 @@
     </ResourceCompile>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>.\..\$(Platform)\bin\Release\xmlwf.bsc</OutputFile>
+      <OutputFile>.\..\bin\$(Platform)\Release\xmlwf.bsc</OutputFile>
     </Bscmake>
     <Link>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <SubSystem>Console</SubSystem>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
-      <OutputFile>..\$(Platform)\bin\Release\xmlwf.exe</OutputFile>
-      <AdditionalLibraryDirectories>..\$(Platform)\bin\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <OutputFile>..\bin\$(Platform)\Release\xmlwf.exe</OutputFile>
+      <AdditionalLibraryDirectories>..\bin\$(Platform)\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>libexpat.lib;setargv.obj;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -159,7 +159,7 @@
       <ProgramDataBaseFileName>.\..\$(Platform)\tmp\Release-xmlwf\</ProgramDataBaseFileName>
     </ClCompile>
     <Midl>
-      <TypeLibraryName>.\..\$(Platform)\bin\Release\xmlwf.tlb</TypeLibraryName>
+      <TypeLibraryName>.\..\bin\$(Platform)\Release\xmlwf.tlb</TypeLibraryName>
     </Midl>
     <ResourceCompile>
       <Culture>0x0409</Culture>
@@ -167,14 +167,14 @@
     </ResourceCompile>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>.\..\$(Platform)\bin\Release\xmlwf.bsc</OutputFile>
+      <OutputFile>.\..\bin\$(Platform)\Release\xmlwf.bsc</OutputFile>
     </Bscmake>
     <Link>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <SubSystem>Console</SubSystem>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
-      <OutputFile>..\$(Platform)\bin\Release\xmlwf.exe</OutputFile>
-      <AdditionalLibraryDirectories>..\$(Platform)\bin\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <OutputFile>..\bin\$(Platform)\Release\xmlwf.exe</OutputFile>
+      <AdditionalLibraryDirectories>..\bin\$(Platform)\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>libexpat.lib;setargv.obj;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -195,7 +195,7 @@
       <ProgramDataBaseFileName>.\..\$(Platform)\tmp\Debug-xmlwf\</ProgramDataBaseFileName>
     </ClCompile>
     <Midl>
-      <TypeLibraryName>.\..\$(Platform)\bin\Debug\xmlwf.tlb</TypeLibraryName>
+      <TypeLibraryName>.\..\bin\$(Platform)\Debug\xmlwf.tlb</TypeLibraryName>
     </Midl>
     <ResourceCompile>
       <Culture>0x0409</Culture>
@@ -203,14 +203,14 @@
     </ResourceCompile>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>.\..\$(Platform)\bin\Debug\xmlwf.bsc</OutputFile>
+      <OutputFile>.\..\bin\$(Platform)\Debug\xmlwf.bsc</OutputFile>
     </Bscmake>
     <Link>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
-      <OutputFile>..\$(Platform)\bin\Debug\xmlwf.exe</OutputFile>
-      <AdditionalLibraryDirectories>..\$(Platform)\bin\Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <OutputFile>..\bin\$(Platform)\Debug\xmlwf.exe</OutputFile>
+      <AdditionalLibraryDirectories>..\bin\$(Platform)\Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>libexpat.lib;setargv.obj;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -231,7 +231,7 @@
       <ProgramDataBaseFileName>.\..\$(Platform)\tmp\Debug-xmlwf\</ProgramDataBaseFileName>
     </ClCompile>
     <Midl>
-      <TypeLibraryName>.\..\$(Platform)\bin\Debug\xmlwf.tlb</TypeLibraryName>
+      <TypeLibraryName>.\..\bin\$(Platform)\Debug\xmlwf.tlb</TypeLibraryName>
     </Midl>
     <ResourceCompile>
       <Culture>0x0409</Culture>
@@ -239,14 +239,14 @@
     </ResourceCompile>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>.\..\$(Platform)\bin\Debug\xmlwf.bsc</OutputFile>
+      <OutputFile>.\..\bin\$(Platform)\Debug\xmlwf.bsc</OutputFile>
     </Bscmake>
     <Link>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
-      <OutputFile>..\$(Platform)\bin\Debug\xmlwf.exe</OutputFile>
-      <AdditionalLibraryDirectories>..\$(Platform)\bin\Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <OutputFile>..\bin\$(Platform)\Debug\xmlwf.exe</OutputFile>
+      <AdditionalLibraryDirectories>..\bin\$(Platform)\Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>libexpat.lib;setargv.obj;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>

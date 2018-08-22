@@ -92,7 +92,7 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <OutDir>.\..\$(Platform)\bin\Debug\</OutDir>
+    <OutDir>.\..\bin\$(Platform)\Debug\</OutDir>
     <IntDir>.\..\$(Platform)\tmp\Debug\</IntDir>
     <LinkIncremental>true</LinkIncremental>
   </PropertyGroup>
@@ -100,7 +100,7 @@
     <LinkIncremental>true</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <OutDir>.\..\$(Platform)\bin\Release\</OutDir>
+    <OutDir>.\..\bin\$(Platform)\Release\</OutDir>
     <IntDir>.\..\$(Platform)\tmp\Release\</IntDir>
     <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
@@ -127,7 +127,7 @@
     <Midl>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <TypeLibraryName>.\..\$(Platform)\bin\Debug\expat.tlb</TypeLibraryName>
+      <TypeLibraryName>.\..\bin\$(Platform)\Debug\expat.tlb</TypeLibraryName>
       <MkTypLibCompatible>true</MkTypLibCompatible>
       <TargetEnvironment>Win32</TargetEnvironment>
     </Midl>
@@ -137,15 +137,15 @@
     </ResourceCompile>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>.\..\$(Platform)\bin\Debug\expat.bsc</OutputFile>
+      <OutputFile>.\..\bin\$(Platform)\Debug\expat.bsc</OutputFile>
     </Bscmake>
     <Link>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <LinkDLL>true</LinkDLL>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
-      <OutputFile>..\$(Platform)\bin\Debug\libexpat.dll</OutputFile>
-      <ImportLibrary>.\..\$(Platform)\bin\Debug\libexpat.lib</ImportLibrary>
+      <OutputFile>..\bin\$(Platform)\Debug\libexpat.dll</OutputFile>
+      <ImportLibrary>.\..\bin\$(Platform)\Debug\libexpat.lib</ImportLibrary>
       <ModuleDefinitionFile>.\libexpat.def</ModuleDefinitionFile>
     </Link>
   </ItemDefinitionGroup>
@@ -169,7 +169,7 @@
     <Midl>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <PreprocessorDefinitions>_WIN64;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <TypeLibraryName>.\..\$(Platform)\bin\Debug\expat.tlb</TypeLibraryName>
+      <TypeLibraryName>.\..\bin\$(Platform)\Debug\expat.tlb</TypeLibraryName>
       <MkTypLibCompatible>true</MkTypLibCompatible>
     </Midl>
     <ResourceCompile>
@@ -178,15 +178,15 @@
     </ResourceCompile>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>.\..\$(Platform)\bin\Debug\expat.bsc</OutputFile>
+      <OutputFile>.\..\bin\$(Platform)\Debug\expat.bsc</OutputFile>
     </Bscmake>
     <Link>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <LinkDLL>true</LinkDLL>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
-      <OutputFile>..\$(Platform)\bin\Debug\libexpat.dll</OutputFile>
-      <ImportLibrary>.\..\$(Platform)\bin\Debug\libexpat.lib</ImportLibrary>
+      <OutputFile>..\bin\$(Platform)\Debug\libexpat.dll</OutputFile>
+      <ImportLibrary>.\..\bin\$(Platform)\Debug\libexpat.lib</ImportLibrary>
       <ModuleDefinitionFile>.\libexpat.def</ModuleDefinitionFile>
     </Link>
   </ItemDefinitionGroup>
@@ -209,7 +209,7 @@
     <Midl>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <TypeLibraryName>.\..\$(Platform)\bin\Release\expat.tlb</TypeLibraryName>
+      <TypeLibraryName>.\..\bin\$(Platform)\Release\expat.tlb</TypeLibraryName>
       <MkTypLibCompatible>true</MkTypLibCompatible>
       <TargetEnvironment>Win32</TargetEnvironment>
     </Midl>
@@ -219,14 +219,14 @@
     </ResourceCompile>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>.\..\$(Platform)\bin\Release\expat.bsc</OutputFile>
+      <OutputFile>.\..\bin\$(Platform)\Release\expat.bsc</OutputFile>
     </Bscmake>
     <Link>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <LinkDLL>true</LinkDLL>
       <SubSystem>Console</SubSystem>
-      <OutputFile>..\$(Platform)\bin\Release\libexpat.dll</OutputFile>
-      <ImportLibrary>.\..\$(Platform)\bin\Release\libexpat.lib</ImportLibrary>
+      <OutputFile>..\bin\$(Platform)\Release\libexpat.dll</OutputFile>
+      <ImportLibrary>.\..\bin\$(Platform)\Release\libexpat.lib</ImportLibrary>
       <ModuleDefinitionFile>.\libexpat.def</ModuleDefinitionFile>
     </Link>
   </ItemDefinitionGroup>
@@ -250,7 +250,7 @@
     <Midl>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <PreprocessorDefinitions>_WIN64;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <TypeLibraryName>.\..\$(Platform)\bin\Release\expat.tlb</TypeLibraryName>
+      <TypeLibraryName>.\..\bin\$(Platform)\Release\expat.tlb</TypeLibraryName>
       <MkTypLibCompatible>true</MkTypLibCompatible>
     </Midl>
     <ResourceCompile>
@@ -259,14 +259,14 @@
     </ResourceCompile>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>.\..\$(Platform)\bin\Release\expat.bsc</OutputFile>
+      <OutputFile>.\..\bin\$(Platform)\Release\expat.bsc</OutputFile>
     </Bscmake>
     <Link>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <LinkDLL>true</LinkDLL>
       <SubSystem>Console</SubSystem>
-      <OutputFile>..\$(Platform)\bin\Release\libexpat.dll</OutputFile>
-      <ImportLibrary>.\..\$(Platform)\bin\Release\libexpat.lib</ImportLibrary>
+      <OutputFile>..\bin\$(Platform)\Release\libexpat.dll</OutputFile>
+      <ImportLibrary>.\..\bin\$(Platform)\Release\libexpat.lib</ImportLibrary>
       <ModuleDefinitionFile>.\libexpat.def</ModuleDefinitionFile>
     </Link>
   </ItemDefinitionGroup>

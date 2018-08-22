@@ -214,7 +214,7 @@
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
     </ClCompile>
     <Midl>
-      <TypeLibraryName>.\..\$(Platform)\bin\Debug\elements.tlb</TypeLibraryName>
+      <TypeLibraryName>.\..\bin\$(Platform)\Debug\elements.tlb</TypeLibraryName>
     </Midl>
     <ResourceCompile>
       <Culture>0x0409</Culture>

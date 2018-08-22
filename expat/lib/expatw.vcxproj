@@ -92,7 +92,7 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <OutDir>.\..\$(Platform)\bin\Release\</OutDir>
+    <OutDir>.\..\bin\$(Platform)\Release\</OutDir>
     <IntDir>.\..\$(Platform)\tmp\Release-w\</IntDir>
     <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
@@ -100,7 +100,7 @@
     <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <OutDir>.\..\$(Platform)\bin\Debug\</OutDir>
+    <OutDir>.\..\bin\$(Platform)\Debug\</OutDir>
     <IntDir>.\..\$(Platform)\tmp\Debug-w\</IntDir>
     <LinkIncremental>true</LinkIncremental>
   </PropertyGroup>
@@ -126,7 +126,7 @@
     <Midl>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <TypeLibraryName>.\..\$(Platform)\bin\Release\expatw.tlb</TypeLibraryName>
+      <TypeLibraryName>.\..\bin\$(Platform)\Release\expatw.tlb</TypeLibraryName>
       <MkTypLibCompatible>true</MkTypLibCompatible>
       <TargetEnvironment>Win32</TargetEnvironment>
     </Midl>
@@ -136,14 +136,14 @@
     </ResourceCompile>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>.\..\$(Platform)\bin\Release\expatw.bsc</OutputFile>
+      <OutputFile>.\..\bin\$(Platform)\Release\expatw.bsc</OutputFile>
     </Bscmake>
     <Link>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <LinkDLL>true</LinkDLL>
       <SubSystem>Console</SubSystem>
-      <OutputFile>..\$(Platform)\bin\Release\libexpatw.dll</OutputFile>
-      <ImportLibrary>.\..\$(Platform)\bin\Release\libexpatw.lib</ImportLibrary>
+      <OutputFile>..\bin\$(Platform)\Release\libexpatw.dll</OutputFile>
+      <ImportLibrary>.\..\bin\$(Platform)\Release\libexpatw.lib</ImportLibrary>
       <ModuleDefinitionFile>.\libexpatw.def</ModuleDefinitionFile>
     </Link>
   </ItemDefinitionGroup>
@@ -167,7 +167,7 @@
     <Midl>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <PreprocessorDefinitions>_WIN64;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <TypeLibraryName>.\..\$(Platform)\bin\Release\expatw.tlb</TypeLibraryName>
+      <TypeLibraryName>.\..\bin\$(Platform)\Release\expatw.tlb</TypeLibraryName>
       <MkTypLibCompatible>true</MkTypLibCompatible>
     </Midl>
     <ResourceCompile>
@@ -176,14 +176,14 @@
     </ResourceCompile>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>.\..\$(Platform)\bin\Release\expatw.bsc</OutputFile>
+      <OutputFile>.\..\bin\$(Platform)\Release\expatw.bsc</OutputFile>
     </Bscmake>
     <Link>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <LinkDLL>true</LinkDLL>
       <SubSystem>Console</SubSystem>
-      <OutputFile>..\$(Platform)\bin\Release\libexpatw.dll</OutputFile>
-      <ImportLibrary>.\..\$(Platform)\bin\Release\libexpatw.lib</ImportLibrary>
+      <OutputFile>..\bin\$(Platform)\Release\libexpatw.dll</OutputFile>
+      <ImportLibrary>.\..\bin\$(Platform)\Release\libexpatw.lib</ImportLibrary>
       <ModuleDefinitionFile>.\libexpatw.def</ModuleDefinitionFile>
     </Link>
   </ItemDefinitionGroup>
@@ -207,7 +207,7 @@
     <Midl>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <TypeLibraryName>.\..\$(Platform)\bin\Debug\expatw.tlb</TypeLibraryName>
+      <TypeLibraryName>.\..\bin\$(Platform)\Debug\expatw.tlb</TypeLibraryName>
       <MkTypLibCompatible>true</MkTypLibCompatible>
       <TargetEnvironment>Win32</TargetEnvironment>
     </Midl>
@@ -217,15 +217,15 @@
     </ResourceCompile>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>.\..\$(Platform)\bin\Debug\expatw.bsc</OutputFile>
+      <OutputFile>.\..\bin\$(Platform)\Debug\expatw.bsc</OutputFile>
     </Bscmake>
     <Link>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <LinkDLL>true</LinkDLL>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
-      <OutputFile>..\$(Platform)\bin\Debug\libexpatw.dll</OutputFile>
-      <ImportLibrary>.\..\$(Platform)\bin\Debug\libexpatw.lib</ImportLibrary>
+      <OutputFile>..\bin\$(Platform)\Debug\libexpatw.dll</OutputFile>
+      <ImportLibrary>.\..\bin\$(Platform)\Debug\libexpatw.lib</ImportLibrary>
       <ModuleDefinitionFile>.\libexpatw.def</ModuleDefinitionFile>
     </Link>
   </ItemDefinitionGroup>
@@ -249,7 +249,7 @@
     <Midl>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <PreprocessorDefinitions>_WIN64;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <TypeLibraryName>.\..\$(Platform)\bin\Debug\expatw.tlb</TypeLibraryName>
+      <TypeLibraryName>.\..\bin\$(Platform)\Debug\expatw.tlb</TypeLibraryName>
       <MkTypLibCompatible>true</MkTypLibCompatible>
     </Midl>
     <ResourceCompile>
@@ -258,15 +258,15 @@
     </ResourceCompile>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>.\..\$(Platform)\bin\Debug\expatw.bsc</OutputFile>
+      <OutputFile>.\..\bin\$(Platform)\Debug\expatw.bsc</OutputFile>
     </Bscmake>
     <Link>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <LinkDLL>true</LinkDLL>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
-      <OutputFile>..\$(Platform)\bin\Debug\libexpatw.dll</OutputFile>
-      <ImportLibrary>.\..\$(Platform)\bin\Debug\libexpatw.lib</ImportLibrary>
+      <OutputFile>..\bin\$(Platform)\Debug\libexpatw.dll</OutputFile>
+      <ImportLibrary>.\..\bin\$(Platform)\Debug\libexpatw.lib</ImportLibrary>
       <ModuleDefinitionFile>.\libexpatw.def</ModuleDefinitionFile>
     </Link>
   </ItemDefinitionGroup>

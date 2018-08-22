@@ -92,7 +92,7 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <OutDir>.\..\$(Platform)\bin\Debug\</OutDir>
+    <OutDir>.\..\bin\$(Platform)\Debug\</OutDir>
     <IntDir>.\..\$(Platform)\tmp\Debug-w_static\</IntDir>
     <LinkIncremental>true</LinkIncremental>
   </PropertyGroup>
@@ -100,7 +100,7 @@
     <LinkIncremental>true</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <OutDir>.\..\$(Platform)\bin\Release\</OutDir>
+    <OutDir>.\..\bin\$(Platform)\Release\</OutDir>
     <IntDir>.\..\$(Platform)\tmp\Release-w_static\</IntDir>
     <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
@@ -130,11 +130,11 @@
     </ResourceCompile>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>.\..\$(Platform)\bin\Debug\expatw_static.bsc</OutputFile>
+      <OutputFile>.\..\bin\$(Platform)\Debug\expatw_static.bsc</OutputFile>
     </Bscmake>
     <Lib>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>..\$(Platform)\bin\Debug\libexpatwMT.lib</OutputFile>
+      <OutputFile>..\bin\$(Platform)\Debug\libexpatwMT.lib</OutputFile>
     </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -160,11 +160,11 @@
     </ResourceCompile>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>.\..\$(Platform)\bin\Debug\expatw_static.bsc</OutputFile>
+      <OutputFile>.\..\bin\$(Platform)\Debug\expatw_static.bsc</OutputFile>
     </Bscmake>
     <Lib>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>..\$(Platform)\bin\Debug\libexpatwMT.lib</OutputFile>
+      <OutputFile>..\bin\$(Platform)\Debug\libexpatwMT.lib</OutputFile>
     </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -188,11 +188,11 @@
     </ResourceCompile>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>.\..\$(Platform)\bin\Release\expatw_static.bsc</OutputFile>
+      <OutputFile>.\..\bin\$(Platform)\Release\expatw_static.bsc</OutputFile>
     </Bscmake>
     <Lib>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>..\$(Platform)\bin\Release\libexpatwMT.lib</OutputFile>
+      <OutputFile>..\bin\$(Platform)\Release\libexpatwMT.lib</OutputFile>
     </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -216,11 +216,11 @@
     </ResourceCompile>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>.\..\$(Platform)\bin\Release\expatw_static.bsc</OutputFile>
+      <OutputFile>.\..\bin\$(Platform)\Release\expatw_static.bsc</OutputFile>
     </Bscmake>
     <Lib>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>..\$(Platform)\bin\Release\libexpatwMT.lib</OutputFile>
+      <OutputFile>..\bin\$(Platform)\Release\libexpatwMT.lib</OutputFile>
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
