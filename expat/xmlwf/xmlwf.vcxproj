@@ -120,7 +120,7 @@
       <PrecompiledHeaderOutputFile>.\..\$(Platform)\$(ProjectName)tmp\Release-xmlwf\xmlwf.pch</PrecompiledHeaderOutputFile>
       <PrecompiledHeader />
       <ObjectFileName>.\..\$(Platform)\$(ProjectName)tmp\Release-xmlwf\</ObjectFileName>
-      <ProgramDataBaseFileName>$(OutDir)\$(TargetName).pdb</ProgramDataBaseFileName>
+      <ProgramDataBaseFileName>$(IntDir)\$(TargetName).pdb</ProgramDataBaseFileName>
     </ClCompile>
     <Midl>
       <TypeLibraryName>.\..\bin\$(Platform)\Release\xmlwf.tlb</TypeLibraryName>
@@ -158,7 +158,7 @@
       <PrecompiledHeader>
       </PrecompiledHeader>
       <ObjectFileName>.\..\$(Platform)\$(ProjectName)tmp\Release-xmlwf\</ObjectFileName>
-      <ProgramDataBaseFileName>$(OutDir)\$(TargetName).pdb</ProgramDataBaseFileName>
+      <ProgramDataBaseFileName>$(IntDir)\$(TargetName).pdb</ProgramDataBaseFileName>
     </ClCompile>
     <Midl>
       <TypeLibraryName>.\..\bin\$(Platform)\Release\xmlwf.tlb</TypeLibraryName>

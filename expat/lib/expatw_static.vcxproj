@@ -184,7 +184,7 @@
       <AssemblerListingLocation>.\..\$(Platform)\tmp\Release-w_static\</AssemblerListingLocation>
       <PrecompiledHeaderOutputFile>.\..\$(Platform)\tmp\Release-w_static\expatw_static.pch</PrecompiledHeaderOutputFile>
       <ObjectFileName>.\..\$(Platform)\tmp\Release-w_static\</ObjectFileName>
-      <ProgramDataBaseFileName>$(OutDir)\$(TargetName).pdb</ProgramDataBaseFileName>
+      <ProgramDataBaseFileName>$(IntDir)\$(TargetName).pdb</ProgramDataBaseFileName>
     </ClCompile>
     <ResourceCompile>
       <Culture>0x0409</Culture>
@@ -212,7 +212,7 @@
       <AssemblerListingLocation>.\..\$(Platform)\tmp\Release-w_static\</AssemblerListingLocation>
       <PrecompiledHeaderOutputFile>.\..\$(Platform)\tmp\Release-w_static\expatw_static.pch</PrecompiledHeaderOutputFile>
       <ObjectFileName>.\..\$(Platform)\tmp\Release-w_static\</ObjectFileName>
-      <ProgramDataBaseFileName>$(OutDir)\$(TargetName).pdb</ProgramDataBaseFileName>
+      <ProgramDataBaseFileName>$(IntDir)\$(TargetName).pdb</ProgramDataBaseFileName>
     </ClCompile>
     <ResourceCompile>
       <Culture>0x0409</Culture>

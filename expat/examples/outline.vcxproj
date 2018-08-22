@@ -199,7 +199,7 @@
       <AssemblerListingLocation>.\..\$(Platform)\tmp\Release-outline\</AssemblerListingLocation>
       <PrecompiledHeaderOutputFile>.\..\$(Platform)\tmp\Release-outline\outline.pch</PrecompiledHeaderOutputFile>
       <ObjectFileName>.\..\$(Platform)\tmp\Release-outline\</ObjectFileName>
-      <ProgramDataBaseFileName>$(OutDir)\$(TargetName).pdb</ProgramDataBaseFileName>
+      <ProgramDataBaseFileName>$(IntDir)\$(TargetName).pdb</ProgramDataBaseFileName>
     </ClCompile>
     <Midl>
       <TypeLibraryName>.\..\bin\$(Platform)\Release\outline.tlb</TypeLibraryName>
@@ -235,7 +235,7 @@
       <AssemblerListingLocation>.\..\$(Platform)\tmp\Release-outline\</AssemblerListingLocation>
       <PrecompiledHeaderOutputFile>.\..\$(Platform)\tmp\Release-outline\outline.pch</PrecompiledHeaderOutputFile>
       <ObjectFileName>.\..\$(Platform)\tmp\Release-outline\</ObjectFileName>
-      <ProgramDataBaseFileName>$(OutDir)\$(TargetName).pdb</ProgramDataBaseFileName>
+      <ProgramDataBaseFileName>$(IntDir)\$(TargetName).pdb</ProgramDataBaseFileName>
     </ClCompile>
     <Midl>
       <TypeLibraryName>.\..\bin\$(Platform)\Release\outline.tlb</TypeLibraryName>

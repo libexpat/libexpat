@@ -102,7 +102,7 @@
       <AssemblerListingLocation>.\..\$(Platform)\tmp\Release-elements\</AssemblerListingLocation>
       <PrecompiledHeaderOutputFile>.\..\$(Platform)\tmp\Release-elements\elements.pch</PrecompiledHeaderOutputFile>
       <ObjectFileName>.\..\$(Platform)\tmp\Release-elements\</ObjectFileName>
-      <ProgramDataBaseFileName>$(OutDir)\$(TargetName).pdb</ProgramDataBaseFileName>
+      <ProgramDataBaseFileName>$(IntDir)\$(TargetName).pdb</ProgramDataBaseFileName>
     </ClCompile>
     <Midl>
       <TypeLibraryName>.\..\bin\$(Platform)\Release\elements.tlb</TypeLibraryName>
@@ -138,7 +138,7 @@
       <AssemblerListingLocation>.\..\$(Platform)\tmp\Release-elements\</AssemblerListingLocation>
       <PrecompiledHeaderOutputFile>.\..\$(Platform)\tmp\Release-elements\elements.pch</PrecompiledHeaderOutputFile>
       <ObjectFileName>.\..\$(Platform)\tmp\Release-elements\</ObjectFileName>
-      <ProgramDataBaseFileName>$(OutDir)\$(TargetName).pdb</ProgramDataBaseFileName>
+      <ProgramDataBaseFileName>$(IntDir)\$(TargetName).pdb</ProgramDataBaseFileName>
     </ClCompile>
     <Midl>
       <TypeLibraryName>.\..\bin\$(Platform)\Release\elements.tlb</TypeLibraryName>

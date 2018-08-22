@@ -125,7 +125,7 @@
       <PrecompiledHeaderOutputFile>.\..\$(Platform)\tmp\Release-w\expatw.pch</PrecompiledHeaderOutputFile>
       <PrecompiledHeader />
       <ObjectFileName>.\..\$(Platform)\tmp\Release-w\</ObjectFileName>
-      <ProgramDataBaseFileName>$(OutDir)\$(TargetName).pdb</ProgramDataBaseFileName>
+      <ProgramDataBaseFileName>$(IntDir)\$(TargetName).pdb</ProgramDataBaseFileName>
     </ClCompile>
     <Midl>
       <SuppressStartupBanner>true</SuppressStartupBanner>
@@ -166,7 +166,7 @@
       <PrecompiledHeader>
       </PrecompiledHeader>
       <ObjectFileName>.\..\$(Platform)\tmp\Release-w\</ObjectFileName>
-      <ProgramDataBaseFileName>$(OutDir)\$(TargetName).pdb</ProgramDataBaseFileName>
+      <ProgramDataBaseFileName>$(IntDir)\$(TargetName).pdb</ProgramDataBaseFileName>
     </ClCompile>
     <Midl>
       <SuppressStartupBanner>true</SuppressStartupBanner>
