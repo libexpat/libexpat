@@ -9,6 +9,9 @@ dist: trusty
 # https://github.com/travis-ci/travis-ci/issues/9033
 sudo: required
 
+git:
+  depth: 1
+
 env:
   global:
     - CFLAGS='-g -pipe'
