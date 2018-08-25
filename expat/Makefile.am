@@ -144,13 +144,13 @@ include_HEADERS = \
     lib/expat.h \
     lib/expat_external.h
 
-lib_LTLIBRARIES = libexpat.la
+lib_LTLIBRARIES = lib/libexpat.la
 
-libexpat_la_LDFLAGS = \
+lib_libexpat_la_LDFLAGS = \
     -no-undefined \
     -version-info @LIBCURRENT@:@LIBREVISION@:@LIBAGE@
 
-libexpat_la_SOURCES = \
+lib_libexpat_la_SOURCES = \
     lib/loadlibrary.c \
     lib/xmlparse.c \
     lib/xmltok.c \
@@ -210,7 +210,7 @@ buildlib:
 
 bin_PROGRAMS = xmlwf/xmlwf
 
-xmlwf_xmlwf_LDADD = libexpat.la
+xmlwf_xmlwf_LDADD = lib/libexpat.la
 xmlwf_xmlwf_SOURCES = \
     xmlwf/xmlwf.c \
     xmlwf/xmlfile.c \
@@ -246,16 +246,16 @@ EXTRA_DIST += \
 noinst_PROGRAMS = examples/elements examples/outline
 
 examples_elements_SOURCES = examples/elements.c
-examples_elements_LDADD = libexpat.la
+examples_elements_LDADD = lib/libexpat.la
 
 examples_outline_SOURCES = examples/outline.c
-examples_outline_LDADD = libexpat.la
+examples_outline_LDADD = lib/libexpat.la
 
 #page
 #### tests
 
 AM_TESTS_ENVIRONMENT = export EXPAT_SRCDIR=$(srcdir); export EXPAT_BUILDDIR=$(builddir);
-noinst_LIBRARIES = libruntests.a
+noinst_LIBRARIES = tests/libruntests.a
 
 check_PROGRAMS = tests/runtests tests/runtestspp
 TESTS = tests/runtests tests/runtestspp
@@ -263,7 +263,7 @@ TESTS = tests/runtests tests/runtestspp
 # To support MinGW and Non-MinGW at the same time:
 LOG_DRIVER = $(srcdir)/test-driver-wrapper.sh
 
-libruntests_a_SOURCES = \
+tests_libruntests_a_SOURCES = \
     tests/chardata.c \
     tests/structdata.c \
     tests/memcheck.c \
@@ -275,8 +275,8 @@ tests_runtests_SOURCES = \
 tests_runtestspp_SOURCES = \
     tests/runtestspp.cpp
 
-tests_runtests_LDADD = libruntests.a libexpat.la
-tests_runtestspp_LDADD = libruntests.a libexpat.la
+tests_runtests_LDADD = tests/libruntests.a lib/libexpat.la
+tests_runtestspp_LDADD = tests/libruntests.a lib/libexpat.la
 
 EXTRA_DIST += \
     tests/chardata.h \
@@ -319,7 +319,7 @@ noinst_PROGRAMS += tests/benchmark/benchmark
 
 tests_benchmark_benchmark_SOURCES = tests/benchmark/benchmark.c
 
-tests_benchmark_benchmark_LDADD = libexpat.la
+tests_benchmark_benchmark_LDADD = lib/libexpat.la
 
 EXTRA_DIST += \
     tests/benchmark/README.txt
