@@ -28,7 +28,7 @@
 # OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 # USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-#page
+
 #### global variables
 
 AUTOMAKE_OPTIONS = \
@@ -102,7 +102,7 @@ qa:
 	./qa.sh undefined
 	./qa.sh coverage
 
-#page
+
 #### documentation
 
 dist_man_MANS = doc/xmlwf.1
@@ -136,7 +136,7 @@ EXTRA_DIST += \
     doc/valid-xhtml10.png \
     doc/xmlwf.xml
 
-#page
+
 #### library
 
 include_HEADERS = \
@@ -205,7 +205,7 @@ buildlib:
 	@echo 'ERROR:' >&2
 	@false
 
-#page
+
 #### building xmlwf
 
 bin_PROGRAMS = xmlwf/xmlwf
@@ -245,7 +245,7 @@ EXTRA_DIST += \
     xmlwf/xmlurl.h \
     xmlwf/xmlwin32url.cxx
 
-#page
+
 #### examples
 
 noinst_PROGRAMS = examples/elements examples/outline
@@ -256,7 +256,7 @@ examples_elements_LDADD = lib/libexpat.la
 examples_outline_SOURCES = examples/outline.c
 examples_outline_LDADD = lib/libexpat.la
 
-#page
+
 #### tests
 
 AM_TESTS_ENVIRONMENT = export EXPAT_SRCDIR=$(srcdir); export EXPAT_BUILDDIR=$(builddir);
@@ -317,7 +317,7 @@ else
 	@false
 endif
 
-#page
+
 #### benchmarking
 
 noinst_PROGRAMS += tests/benchmark/benchmark
@@ -336,5 +336,5 @@ run-benchmark:
 
 ### end of file
 # Local Variables:
-# page-delimiter: "^\#page"
+# page-delimiter: "^"
 # End:
