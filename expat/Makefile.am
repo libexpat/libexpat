@@ -335,6 +335,3 @@ run-benchmark:
 
 
 ### end of file
-# Local Variables:
-# page-delimiter: "^"
-# End:
