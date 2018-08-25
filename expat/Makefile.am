@@ -217,6 +217,11 @@ xmlwf_xmlwf_SOURCES = \
     xmlwf/codepage.c \
     xmlwf/@FILEMAP@.c
 
+# We must  define this variable and  duplicate all the flags  added to
+# AM_CPPFLAGS above.   This is because below  we add a flag  to it and
+# defining a  per-executable _CPPFLAGS variable causes  AM_CPPFLAGS to
+# be ignored by GNU Automake.
+#
 xmlwf_xmlwf_CPPFLAGS = -I$(srcdir)/lib
 
 if MINGW
