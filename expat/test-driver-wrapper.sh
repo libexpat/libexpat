@@ -30,6 +30,10 @@
 
 set -e
 
+# These environment variables are meant to be set in "Makefile.am".
+EXPAT_SRCDIR=${EXPAT_SRCDIR:?'environment variable EXPAT_SRCDIR is not set'}
+EXPAT_BUILDDIR=${EXPAT_BUILDDIR:?'environment variable EXPAT_BUILDDIR is not set'}
+
 # Suck up all dash-dash test-driver arguments
 test_driver_args=()
 while [[ ${1} != '--' ]]; do
