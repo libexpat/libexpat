@@ -42,7 +42,7 @@ dnl If the API has changed, increment LIBCURRENT and set LIBREVISION to 0
 dnl
 dnl If the API changes compatibly (i.e. simply adding a new function
 dnl without changing or removing earlier interfaces), then increment LIBAGE.
-dnl
+dnl 
 dnl If the API changes incompatibly set LIBAGE back to 0
 dnl
 
