@@ -111,12 +111,16 @@ doc/$(am__dirstamp):
 	@$(MKDIR_P) doc
 	@: > doc/$(am__dirstamp)
 
-doc/xmlwf.1: doc/xmlwf.xml doc/$(am__dirstamp)
 if WITH_DOCBOOK
-	-rm -f $@
+.INTERMEDIATE: XMLWF.1
+
+XMLWF.1: doc/xmlwf.xml
 	$(DOCBOOK_TO_MAN) $<
-	test -f MLWF.1 || mv XMLWF.1 $@
+
+doc/xmlwf.1: XMLWF.1 doc/$(am__dirstamp)
+	mv $< $@
 else
+doc/xmlwf.1:
 	@echo 'ERROR: Configure with --with-docbook for "make dist".' 1>&2
 	@false
 endif
