@@ -131,7 +131,7 @@ clean-local: clean-local-check
 
 .PHONY: clean-local-check
 clean-local-check:
-	$(RM) doc/xmlwf.1 doc/$(am__dirstamp)
+	$(RM) doc/xmlwf.1
 
 EXTRA_DIST += \
     doc/expat.png \
