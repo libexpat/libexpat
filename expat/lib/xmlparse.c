@@ -164,15 +164,6 @@ typedef char ICHAR;
 /* Do safe (NULL-aware) pointer arithmetic */
 #define EXPAT_SAFE_PTR_DIFF(p, q) (((p) && (q)) ? ((p) - (q)) : 0)
 
-/* Handle the case where memmove() doesn't exist. */
-#ifndef HAVE_MEMMOVE
-#ifdef HAVE_BCOPY
-#define memmove(d,s,l) bcopy((s),(d),(l))
-#else
-#error memmove does not exist on this platform, nor is a substitute available
-#endif /* HAVE_BCOPY */
-#endif /* HAVE_MEMMOVE */
-
 #include "internal.h"
 #include "xmltok.h"
 #include "xmlrole.h"

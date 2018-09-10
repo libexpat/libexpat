@@ -99,8 +99,6 @@ AC_C_BIGENDIAN_CROSS
 
 AC_C_CONST
 AC_TYPE_SIZE_T
-AC_CHECK_FUNCS(memmove bcopy)
-
 
 AC_ARG_WITH([xmlwf], [
 AS_HELP_STRING([--without-xmlwf], [do not build xmlwf])], [], [with_xmlwf=yes])
