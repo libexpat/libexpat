@@ -124,8 +124,47 @@ enum XML_Error {
   XML_ERROR_RESERVED_PREFIX_XMLNS,
   XML_ERROR_RESERVED_NAMESPACE_URI,
   /* Added in 2.2.1. */
-  XML_ERROR_INVALID_ARGUMENT
+  XML_ERROR_INVALID_ARGUMENT,
+  /* Added in 2.3.0 */
+  XML_ERROR_ENTITY_VIOLATION_SIZE,
+  XML_ERROR_ENTITY_VIOLATION_RATIO,
+  XML_ERROR_ENTITY_VIOLATION_DEPTH
 };
+
+enum XML_Options {
+  /* Added in 2.3.0 */
+  XML_OPTION_NONE = 0,
+  XML_OPTION_HUGE_ENTITIES = 1<<0 /* No limits for entity expansion */
+};
+
+/* Entity expansion protection
+ *
+ * Mitigation against billion laugh and quadratic blowup attacks.
+ *
+ * XML_ENTITY_NESTING_LIMIT confines nesting of entities within entities.
+ * XML_ENTITY_EXPANSION_SIZE restricts the maximum length of entities.
+ * XML_ENTITY_EXPANSION_RATIO constrains the ratio between position in XML
+ * document and total amount of all expanded entities.
+ *
+ * The limits are modelled after libxml2's limits
+ * https://github.com/GNOME/libxml2/blob/v2.9.8/parser.c#L99
+ */
+#ifndef XML_HUGE_ENTITIES_DEFAULT
+#define XML_HUGE_ENTITIES_DEFAULT 0
+#endif
+
+#ifndef XML_ENTITY_NESTING_LIMIT
+#define XML_ENTITY_NESTING_LIMIT 3
+#endif
+
+#ifndef XML_ENTITY_EXPANSION_SIZE
+#define XML_ENTITY_EXPANSION_SIZE 1023
+#endif
+
+#ifndef XML_ENTITY_EXPANSION_RATIO
+#define XML_ENTITY_EXPANSION_RATIO 10
+#endif
+
 
 enum XML_Content_Type {
   XML_CTYPE_EMPTY = 1,
@@ -948,6 +987,16 @@ XMLPARSEAPI(int)
 XML_SetHashSalt(XML_Parser parser,
                 unsigned long hash_salt);
 
+/* Set / get XML parser options, see enum XML_Options
+ *
+ * Added in 2.3.0
+ */
+XMLPARSEAPI(int)
+XML_SetOptions(XML_Parser parser, int options);
+
+XMLPARSEAPI(int)
+XML_GetOptions(XML_Parser parser);
+
 /* If XML_Parse or XML_ParseBuffer have returned XML_STATUS_ERROR, then
    XML_GetErrorCode returns information about the error.
 */
@@ -1057,7 +1106,8 @@ enum XML_FeatureEnum {
   XML_FEATURE_SIZEOF_XML_LCHAR,
   XML_FEATURE_NS,
   XML_FEATURE_LARGE_SIZE,
-  XML_FEATURE_ATTR_INFO
+  XML_FEATURE_ATTR_INFO,
+  XML_FEATURE_HUGE_ENTITIES
   /* Additional features must be added to the end of this enum. */
 };
 

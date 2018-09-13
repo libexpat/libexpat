@@ -3,6 +3,19 @@ NOTE: We are looking for help with a few things:
       If you can help, please get in touch.  Thanks!
 
 Release x.x.x XXX XXXXXX XX XXXX
+        Security fixes:
+            #220  CVE-2013-0340 -- Limit entity expansion nesting, size,
+                    and ratio in relation to processed bytes as well as
+                    DTD hash table entries to mitigate DoS attacks like
+                    billion laughs and quadratic blowup. Countermeasures
+                    are enabled by default and can be tuned with
+                    XML_SetOption().
+
+        New features:
+            #220  Add XML_SetOption(), XML_GetOption() and enum XML_Options
+                    to modify DoS mitigations.
+            #220  xmlwf: Add argument -H to enable huge entities.
+
         Other changes:
        #195 #197  Autotools/CMake: Utilize -fvisibility=hidden to stop
                     exporting non-API symbols
@@ -13,6 +26,7 @@ Release x.x.x XXX XXXXXX XX XXXX
             Benjamin Peterson
             @userwithuid
             Yury Gribov
+            Christian Heimes
 
 Release 2.2.6 Sun August 12 2018
         Bug fixes:

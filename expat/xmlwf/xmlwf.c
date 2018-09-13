@@ -892,7 +892,7 @@ static void
 usage(const XML_Char *prog, int rc)
 {
   ftprintf(stderr,
-           T("usage: %s [-s] [-n] [-p] [-x] [-e encoding] [-w] [-d output-dir] [-c] [-m] [-r] [-t] [-N] [file ...]\n"), prog);
+           T("usage: %s [-s] [-n] [-p] [-x] [-e encoding] [-w] [-d output-dir] [-c] [-m] [-r] [-t] [-N] [-H] [file ...]\n"), prog);
   exit(rc);
 }
 
@@ -913,6 +913,7 @@ tmain(int argc, XML_Char **argv)
   int useNamespaces = 0;
   int requireStandalone = 0;
   int requiresNotations = 0;
+  int hugeEntities = 0;
   enum XML_ParamEntityParsing paramEntityParsing = 
     XML_PARAM_ENTITY_PARSING_NEVER;
   int useStdin = 0;
@@ -975,6 +976,10 @@ tmain(int argc, XML_Char **argv)
       requiresNotations = 1;
       j++;
       break;
+    case T('H'):
+      hugeEntities = 1;
+      j++;
+      break;
     case T('d'):
       if (argv[i][j + 1] == T('\0')) {
         if (++i == argc)
@@ -1035,6 +1040,8 @@ tmain(int argc, XML_Char **argv)
 
     if (requireStandalone)
       XML_SetNotStandaloneHandler(parser, notStandalone);
+    if (hugeEntities)
+      XML_SetOptions(parser, XML_OPTION_HUGE_ENTITIES);
     XML_SetParamEntityParsing(parser, paramEntityParsing);
     if (outputType == 't') {
       /* This is for doing timings; this gives a more realistic estimate of

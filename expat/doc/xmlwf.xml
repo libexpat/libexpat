@@ -48,6 +48,7 @@
 	  <arg><option>-n</option></arg>
 	  <arg><option>-p</option></arg>
 	  <arg><option>-x</option></arg>
+	  <arg><option>-H</option></arg>
 
 	  <arg><option>-e <replaceable>encoding</replaceable></option></arg>
 	  <arg><option>-w</option></arg>
@@ -195,6 +196,16 @@ supports both.
 	<literal>UTF-16</literal>, and
 	<literal>ISO-8859-1</literal>.
    Also see the <option>-w</option> option.
+	   </para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-H</option></term>
+        <listitem>
+		<para>
+  Enables huge entities option, disabling all mitigations against entity
+  expansion attacks.
 	   </para>
         </listitem>
       </varlistentry>

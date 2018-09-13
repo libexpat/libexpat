@@ -594,6 +594,9 @@ struct XML_ParserStruct {
   OPEN_INTERNAL_ENTITY *m_openInternalEntities;
   OPEN_INTERNAL_ENTITY *m_freeInternalEntities;
   XML_Bool m_defaultExpandInternalEntities;
+  int m_entityNestingLevel;
+  int m_options;
+  XML_Size m_entityExpansionLen;
   int m_tagLevel;
   ENTITY *m_declEntity;
   const XML_Char *m_doctypeName;
@@ -1080,6 +1083,13 @@ parserInit(XML_Parser parser, const XML_Char *encodingName)
   parser->m_positionPtr = NULL;
   parser->m_openInternalEntities = NULL;
   parser->m_defaultExpandInternalEntities = XML_TRUE;
+  parser->m_entityNestingLevel = 0;
+  parser->m_entityExpansionLen = 0;
+#if XML_HUGE_ENTITIES_DEFAULT == 1
+  parser->m_options = XML_OPTION_HUGE_ENTITIES;
+#else
+  parser->m_options = XML_OPTION_NONE;
+#endif
   parser->m_tagLevel = 0;
   parser->m_tagStack = NULL;
   parser->m_inheritedBindings = NULL;
@@ -1207,6 +1217,9 @@ XML_ExternalEntityParserCreate(XML_Parser oldParser,
   XML_EntityDeclHandler oldEntityDeclHandler;
   XML_XmlDeclHandler oldXmlDeclHandler;
   ELEMENT_TYPE * oldDeclElementType;
+  int oldEntityNestingLevel;
+  XML_Size oldEntityExpansionLen;
+  int oldOptions;
 
   void *oldUserData;
   void *oldHandlerArg;
@@ -1268,6 +1281,10 @@ XML_ExternalEntityParserCreate(XML_Parser oldParser,
   */
   oldhash_secret_salt = parser->m_hash_secret_salt;
 
+  oldEntityNestingLevel = parser->m_entityNestingLevel;
+  oldEntityExpansionLen = parser->m_entityExpansionLen;
+  oldOptions = parser->m_options;
+
 #ifdef XML_DTD
   if (!context)
     newDtd = oldDtd;
@@ -1321,6 +1338,9 @@ XML_ExternalEntityParserCreate(XML_Parser oldParser,
   parser->m_defaultExpandInternalEntities = oldDefaultExpandInternalEntities;
   parser->m_ns_triplets = oldns_triplets;
   parser->m_hash_secret_salt = oldhash_secret_salt;
+  parser->m_entityNestingLevel = oldEntityNestingLevel;
+  parser->m_entityExpansionLen = oldEntityExpansionLen;
+  parser->m_options = oldOptions;
   parser->m_parentParser = oldParser;
 #ifdef XML_DTD
   parser->m_paramEntityParsing = oldParamEntityParsing;
@@ -1792,6 +1812,27 @@ XML_SetHashSalt(XML_Parser parser,
     return 0;
   parser->m_hash_secret_salt = hash_salt;
   return 1;
+}
+
+int XMLCALL
+XML_SetOptions(XML_Parser parser,
+               int options)
+{
+  if (parser == NULL)
+    return 0;
+  /* block after XML_Parse()/XML_ParseBuffer() has been called */
+  if (parser->m_parsingStatus.parsing == XML_PARSING || parser->m_parsingStatus.parsing == XML_SUSPENDED)
+    return 0;
+  parser->m_options = options;
+  return 1;
+}
+
+int XMLCALL
+XML_GetOptions(XML_Parser parser)
+{
+  if (parser == NULL)
+    return 0;
+  return parser->m_options;
 }
 
 enum XML_Status XMLCALL
@@ -2409,6 +2450,13 @@ XML_ErrorString(enum XML_Error code)
   /* Added in 2.2.5. */
   case XML_ERROR_INVALID_ARGUMENT:  /* Constant added in 2.2.1, already */
     return XML_L("invalid argument");
+  /* Added in 2.3.0 */
+  case XML_ERROR_ENTITY_VIOLATION_SIZE:
+    return XML_L("entity is too large");
+  case XML_ERROR_ENTITY_VIOLATION_RATIO:
+    return XML_L("entity expansion limit reached");
+  case XML_ERROR_ENTITY_VIOLATION_DEPTH:
+    return XML_L("entity recursion limit reached");
   }
   return NULL;
 }
@@ -2478,6 +2526,8 @@ XML_GetFeatureList(void)
 #ifdef XML_ATTR_INFO
     {XML_FEATURE_ATTR_INFO,        XML_L("XML_ATTR_INFO"), 0},
 #endif
+    {XML_FEATURE_HUGE_ENTITIES,    XML_L("XML_OPTION_HUGE_ENTITIES"),
+     XML_HUGE_ENTITIES_DEFAULT},
     {XML_FEATURE_END,              NULL, 0}
   };
 
@@ -5382,6 +5432,13 @@ processInternalEntity(XML_Parser parser, ENTITY *entity,
   enum XML_Error result;
   OPEN_INTERNAL_ENTITY *openEntity;
 
+  if (!(parser->m_options & XML_OPTION_HUGE_ENTITIES)) {
+      parser->m_entityNestingLevel++;
+      if (parser->m_entityNestingLevel > XML_ENTITY_NESTING_LIMIT) {
+        return XML_ERROR_ENTITY_VIOLATION_DEPTH;
+      }
+   }
+
   if (parser->m_freeInternalEntities) {
     openEntity = parser->m_freeInternalEntities;
     parser->m_freeInternalEntities = openEntity->next;
@@ -5429,6 +5486,29 @@ processInternalEntity(XML_Parser parser, ENTITY *entity,
       parser->m_freeInternalEntities = openEntity;
     }
   }
+
+  if (!(parser->m_options & XML_OPTION_HUGE_ENTITIES)) {
+    XML_Index index = XML_GetCurrentByteIndex(parser);
+    parser->m_entityNestingLevel--;
+    if (entity->textLen > XML_ENTITY_EXPANSION_SIZE) {
+      /* Current entity is too large */
+      return XML_ERROR_ENTITY_VIOLATION_SIZE;
+    }
+    /* Entity expension length isn't equal to output length. For nested
+     * entities, it records length of each expansion level and not sum of
+     * expanded text. */
+    parser->m_entityExpansionLen += entity->textLen;
+    if (index > 0) {
+      /* overflow safe comparison */
+      XML_Size limit = (parser->m_entityExpansionLen +
+        (XML_ENTITY_EXPANSION_RATIO - 1)) / XML_ENTITY_EXPANSION_RATIO;
+      if (limit > (XML_Size)index) {
+        /* Ratio between processed bytes and all expanded entities is off */
+        return XML_ERROR_ENTITY_VIOLATION_RATIO;
+      }
+    }
+  }
+
   return result;
 }
 

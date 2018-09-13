@@ -7111,6 +7111,34 @@ START_TEST(test_empty_element_abort)
 }
 END_TEST
 
+START_TEST(test_set_get_options)
+{
+    const char *text = "<test/>";
+
+    /* default */
+    if (XML_GetOptions(parser) != XML_OPTION_NONE)
+        fail("Expected XML_OPTION_NONE as default");
+
+    /* set and get */
+    if (!XML_SetOptions(parser, XML_OPTION_HUGE_ENTITIES)) {
+        fail("XML_SetOptions() failed");
+    }
+    if (XML_GetOptions(parser) != XML_OPTION_HUGE_ENTITIES)
+        fail("Expected XML_OPTION_HUGE_ENTITIES");
+
+    /* XML_SetOptions() fails while parsing */
+    if (_XML_Parse_SINGLE_BYTES(parser, text, (int)strlen(text),
+                                XML_FALSE) == XML_STATUS_ERROR)
+        xml_failure(parser);
+    if (XML_SetOptions(parser, XML_OPTION_NONE)) {
+        fail("XML_SetOptions() should fail during parsing");
+    }
+    if (XML_GetOptions(parser) != XML_OPTION_HUGE_ENTITIES)
+        fail("Failed XML_SetOptions() should not have modified parser options.");
+}
+END_TEST
+
+
 /*
  * Namespaces tests.
  */
@@ -8167,6 +8195,9 @@ alloc_setup(void)
     parser = XML_ParserCreate_MM(NULL, &memsuite, NULL);
     if (parser == NULL)
         fail("Parser not created");
+    /* Enable huge entities for realloc tests */
+    if (XML_SetOptions(parser, XML_OPTION_HUGE_ENTITIES) != 1)
+        fail("XML_SetOptions() failed");
 }
 
 static void
@@ -11975,6 +12006,150 @@ START_TEST(test_nsalloc_prefixed_element)
 }
 END_TEST
 
+/* Tests for huge entity limits */
+static void
+huge_entities_setup(void)
+{
+    XML_Memory_Handling_Suite memsuite = {
+        duff_allocator,
+        duff_reallocator,
+        free
+    };
+
+    /* Ensure the parser creation will go through */
+    allocation_count = ALLOC_ALWAYS_SUCCEED;
+    reallocation_count = REALLOC_ALWAYS_SUCCEED;
+    parser = XML_ParserCreate_MM(NULL, &memsuite, NULL);
+    if (parser == NULL)
+        fail("Parser not created");
+}
+
+static void
+huge_entities_teardown(void)
+{
+    basic_teardown();
+}
+
+START_TEST(test_huge_entities_recursion_limit)
+{
+    const char *text =
+        "<!DOCTYPE he [\n"
+        "  <!ELEMENT he (#PCDATA)*>\n"
+        "  <!ENTITY e1 '&e2;'>\n"
+        "  <!ENTITY e2 '&e3;'>\n"
+        "  <!ENTITY e3 '&e4;'>\n"
+        "  <!ENTITY e4 'entity'>\n"
+        "]>\n"
+        "<he>&e1;</he>\n";
+    expect_failure(text, XML_ERROR_ENTITY_VIOLATION_DEPTH,
+                   "XML_ERROR_ENTITY_VIOLATION_DEPTH not raised");
+}
+END_TEST
+
+START_TEST(test_huge_entities_recursion_ok)
+{
+    const char *text =
+        "<!DOCTYPE he [\n"
+        "  <!ELEMENT he (#PCDATA)*>\n"
+        "  <!ENTITY e1 '&e2;'>\n"
+        "  <!ENTITY e2 '&e3;'>\n"
+        "  <!ENTITY e3 'entity'>\n"
+        "]>\n"
+        "<he>&e1;</he>\n";
+    if (_XML_Parse_SINGLE_BYTES(parser, text, (int)strlen(text), XML_TRUE) != XML_STATUS_OK) {
+        fail("expected XML_STATUS_OK for 3 levels on recursion");
+    }
+}
+END_TEST
+
+
+START_TEST(test_huge_entities_not_too_large)
+{
+    const char *text =
+        "<!DOCTYPE he [\n"
+        "  <!ELEMENT he (#PCDATA)*>\n"
+        "  <!ENTITY large '"
+        /* 64 character on each line but the last */
+        /* ...gives a total length of 1023 */
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNO"
+        /* The last line is only 63 chars                              ^^ */
+        "'>\n"
+        "]>\n"
+        "<he>&large;</he>\n";
+    if (_XML_Parse_SINGLE_BYTES(parser, text, (int)strlen(text), XML_TRUE) != XML_STATUS_OK) {
+        fail("expected XML_STATUS_OK for entity with 1023 bytes");
+    }
+}
+END_TEST
+
+START_TEST(test_huge_entities_too_large)
+{
+    const char *text =
+        "<!DOCTYPE he [\n"
+        "  <!ELEMENT he (#PCDATA)*>\n"
+        "  <!ENTITY large '"
+        /* 64 character on each line */
+        /* ...gives a total length of 1024 */
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "'>\n"
+        "]>\n"
+        "<he>&large;</he>\n";
+    expect_failure(text, XML_ERROR_ENTITY_VIOLATION_SIZE,
+                   "XML_ERROR_ENTITY_VIOLATION_SIZE not raised");
+}
+END_TEST
+
+START_TEST(test_huge_entities_expansion_limit)
+{
+    const char *text =
+        "<!DOCTYPE he ["
+        "<!ELEMENT he (#PCDATA)*>"
+        "<!ENTITY e '"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "'>]><he>"
+        /* 50 + 64 + 8 + (36 * 3) == 230
+         * 36 expansions of 64 bytes == 2304 */
+        "&e;&e;&e;&e;&e;&e;&e;&e;&e;&e;"
+        "&e;&e;&e;&e;&e;&e;&e;&e;&e;&e;"
+        "&e;&e;&e;&e;&e;&e;&e;&e;&e;&e;"
+        "&e;&e;&e;&e;&e;&e;"
+        "</he>\n";
+    expect_failure(text, XML_ERROR_ENTITY_VIOLATION_RATIO,
+                   "XML_ERROR_ENTITY_VIOLATION_RATIO not raised");
+}
+END_TEST
+
+
 static Suite *
 make_suite(void)
 {
@@ -11984,6 +12159,7 @@ make_suite(void)
     TCase *tc_misc = tcase_create("miscellaneous tests");
     TCase *tc_alloc = tcase_create("allocation tests");
     TCase *tc_nsalloc = tcase_create("namespace allocation tests");
+    TCase *tc_huge_entities = tcase_create("huge entities");
 
     suite_add_tcase(s, tc_basic);
     tcase_add_checked_fixture(tc_basic, basic_setup, basic_teardown);
@@ -12204,6 +12380,7 @@ make_suite(void)
     tcase_add_test(tc_basic, test_bad_notation);
     tcase_add_test(tc_basic, test_default_doctype_handler);
     tcase_add_test(tc_basic, test_empty_element_abort);
+    tcase_add_test(tc_basic, test_set_get_options);
 
     suite_add_tcase(s, tc_namespace);
     tcase_add_checked_fixture(tc_namespace,
@@ -12334,6 +12511,15 @@ make_suite(void)
     tcase_add_test(tc_nsalloc, test_nsalloc_long_default_in_ext);
     tcase_add_test(tc_nsalloc, test_nsalloc_long_systemid_in_ext);
     tcase_add_test(tc_nsalloc, test_nsalloc_prefixed_element);
+
+    suite_add_tcase(s, tc_huge_entities);
+    tcase_add_checked_fixture(tc_huge_entities, huge_entities_setup,
+                              huge_entities_teardown);
+    tcase_add_test(tc_huge_entities, test_huge_entities_recursion_limit);
+    tcase_add_test(tc_huge_entities, test_huge_entities_recursion_ok);
+    tcase_add_test(tc_huge_entities, test_huge_entities_too_large);
+    tcase_add_test(tc_huge_entities, test_huge_entities_not_too_large);
+    tcase_add_test(tc_huge_entities, test_huge_entities_expansion_limit);
 
     return s;
 }
