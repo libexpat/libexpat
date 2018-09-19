@@ -7114,27 +7114,42 @@ END_TEST
 START_TEST(test_set_get_options)
 {
     const char *text = "<test/>";
+    XML_Bool he;
 
-    /* default */
-    if (XML_GetOptions(parser) != XML_OPTION_NONE)
-        fail("Expected XML_OPTION_NONE as default");
+    /* unsupported option */
+    if (XML_GetOption(parser, (enum XML_Option)23, &he) != XML_STATUS_ERROR)
+        fail("XML_GetOption with unsupported option should have failed.");
+    if (XML_SetOption(parser, (enum XML_Option)23, &he) != XML_STATUS_ERROR)
+        fail("XML_SetOption with unsupported option should have failed.");
+
+    /* check default */
+    if (XML_GetOption(parser, XML_OPTION_HUGE_ENTITIES, &he) != XML_STATUS_OK)
+        fail("XML_GetOption failed");
+    if (he != XML_FALSE)
+        fail("Expected XML_OPTION_HUGE_ENTITIES=XML_FALSE as default");
 
     /* set and get */
-    if (!XML_SetOptions(parser, XML_OPTION_HUGE_ENTITIES)) {
+    he = XML_TRUE;
+    if (XML_SetOption(parser, XML_OPTION_HUGE_ENTITIES, &he) != XML_STATUS_OK) {
         fail("XML_SetOptions() failed");
     }
-    if (XML_GetOptions(parser) != XML_OPTION_HUGE_ENTITIES)
-        fail("Expected XML_OPTION_HUGE_ENTITIES");
+    if (XML_GetOption(parser, XML_OPTION_HUGE_ENTITIES, &he) != XML_STATUS_OK)
+        fail("XML_GetOption failed");
+    if (he != XML_TRUE)
+        fail("Expected XML_OPTION_HUGE_ENTITIES=XML_TRUE");
 
     /* XML_SetOptions() fails while parsing */
     if (_XML_Parse_SINGLE_BYTES(parser, text, (int)strlen(text),
                                 XML_FALSE) == XML_STATUS_ERROR)
         xml_failure(parser);
-    if (XML_SetOptions(parser, XML_OPTION_NONE)) {
+    he = XML_FALSE;
+    if (XML_SetOption(parser, XML_OPTION_HUGE_ENTITIES, &he) != XML_STATUS_ERROR) {
         fail("XML_SetOptions() should fail during parsing");
     }
-    if (XML_GetOptions(parser) != XML_OPTION_HUGE_ENTITIES)
-        fail("Failed XML_SetOptions() should not have modified parser options.");
+   if (XML_GetOption(parser, XML_OPTION_HUGE_ENTITIES, &he) != XML_STATUS_OK)
+        fail("XML_GetOption failed");
+    if (he != XML_TRUE)
+        fail("Failed XML_SetOption() should not have modified parser options.");
 }
 END_TEST
 
@@ -8183,6 +8198,7 @@ END_TEST
 static void
 alloc_setup(void)
 {
+    XML_Bool huge_entities = XML_TRUE;
     XML_Memory_Handling_Suite memsuite = {
         duff_allocator,
         duff_reallocator,
@@ -8196,7 +8212,8 @@ alloc_setup(void)
     if (parser == NULL)
         fail("Parser not created");
     /* Enable huge entities for realloc tests */
-    if (XML_SetOptions(parser, XML_OPTION_HUGE_ENTITIES) != 1)
+
+    if (XML_SetOption(parser, XML_OPTION_HUGE_ENTITIES, &huge_entities) != XML_STATUS_OK)
         fail("XML_SetOptions() failed");
 }
 
@@ -12010,6 +12027,7 @@ END_TEST
 static void
 huge_entities_setup(void)
 {
+    XML_Bool huge_entities = XML_FALSE;
     XML_Memory_Handling_Suite memsuite = {
         duff_allocator,
         duff_reallocator,
@@ -12022,6 +12040,9 @@ huge_entities_setup(void)
     parser = XML_ParserCreate_MM(NULL, &memsuite, NULL);
     if (parser == NULL)
         fail("Parser not created");
+    /* Enable huge entities for realloc tests */
+    if (XML_SetOption(parser, XML_OPTION_HUGE_ENTITIES, &huge_entities) != XML_STATUS_OK)
+        fail("XML_SetOptions() failed");
 }
 
 static void

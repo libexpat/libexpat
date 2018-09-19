@@ -131,10 +131,9 @@ enum XML_Error {
   XML_ERROR_ENTITY_VIOLATION_DEPTH
 };
 
-enum XML_Options {
+enum XML_Option {
   /* Added in 2.3.0 */
-  XML_OPTION_NONE = 0,
-  XML_OPTION_HUGE_ENTITIES = 1<<0 /* No limits for entity expansion */
+  XML_OPTION_HUGE_ENTITIES = 1 /* XML_Bool, no limits for entity expansion */
 };
 
 /* Entity expansion protection
@@ -991,11 +990,11 @@ XML_SetHashSalt(XML_Parser parser,
  *
  * Added in 2.3.0
  */
-XMLPARSEAPI(int)
-XML_SetOptions(XML_Parser parser, int options);
+XMLPARSEAPI(enum XML_Status)
+XML_SetOption(XML_Parser parser, enum XML_Option option, void *value);
 
-XMLPARSEAPI(int)
-XML_GetOptions(XML_Parser parser);
+XMLPARSEAPI(enum XML_Status)
+XML_GetOption(XML_Parser parser, enum XML_Option option, void *rvalue);
 
 /* If XML_Parse or XML_ParseBuffer have returned XML_STATUS_ERROR, then
    XML_GetErrorCode returns information about the error.
@@ -1107,6 +1106,7 @@ enum XML_FeatureEnum {
   XML_FEATURE_NS,
   XML_FEATURE_LARGE_SIZE,
   XML_FEATURE_ATTR_INFO,
+  /* Added in 2.3.0 */
   XML_FEATURE_HUGE_ENTITIES
   /* Additional features must be added to the end of this enum. */
 };

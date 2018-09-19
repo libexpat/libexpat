@@ -594,8 +594,9 @@ struct XML_ParserStruct {
   OPEN_INTERNAL_ENTITY *m_openInternalEntities;
   OPEN_INTERNAL_ENTITY *m_freeInternalEntities;
   XML_Bool m_defaultExpandInternalEntities;
+  XML_Bool m_hugeEntities;
   int m_entityNestingLevel;
-  int m_options;
+  int m_entityRecursionLevel;
   XML_Size m_entityExpansionLen;
   int m_tagLevel;
   ENTITY *m_declEntity;
@@ -1085,11 +1086,7 @@ parserInit(XML_Parser parser, const XML_Char *encodingName)
   parser->m_defaultExpandInternalEntities = XML_TRUE;
   parser->m_entityNestingLevel = 0;
   parser->m_entityExpansionLen = 0;
-#if XML_HUGE_ENTITIES_DEFAULT == 1
-  parser->m_options = XML_OPTION_HUGE_ENTITIES;
-#else
-  parser->m_options = XML_OPTION_NONE;
-#endif
+  parser->m_hugeEntities = XML_HUGE_ENTITIES_DEFAULT ? XML_TRUE : XML_FALSE;
   parser->m_tagLevel = 0;
   parser->m_tagStack = NULL;
   parser->m_inheritedBindings = NULL;
@@ -1219,7 +1216,7 @@ XML_ExternalEntityParserCreate(XML_Parser oldParser,
   ELEMENT_TYPE * oldDeclElementType;
   int oldEntityNestingLevel;
   XML_Size oldEntityExpansionLen;
-  int oldOptions;
+  XML_Bool oldHugeEntities;
 
   void *oldUserData;
   void *oldHandlerArg;
@@ -1283,7 +1280,7 @@ XML_ExternalEntityParserCreate(XML_Parser oldParser,
 
   oldEntityNestingLevel = parser->m_entityNestingLevel;
   oldEntityExpansionLen = parser->m_entityExpansionLen;
-  oldOptions = parser->m_options;
+  oldHugeEntities = parser->m_hugeEntities;
 
 #ifdef XML_DTD
   if (!context)
@@ -1340,7 +1337,7 @@ XML_ExternalEntityParserCreate(XML_Parser oldParser,
   parser->m_hash_secret_salt = oldhash_secret_salt;
   parser->m_entityNestingLevel = oldEntityNestingLevel;
   parser->m_entityExpansionLen = oldEntityExpansionLen;
-  parser->m_options = oldOptions;
+  parser->m_hugeEntities = oldHugeEntities;
   parser->m_parentParser = oldParser;
 #ifdef XML_DTD
   parser->m_paramEntityParsing = oldParamEntityParsing;
@@ -1814,25 +1811,39 @@ XML_SetHashSalt(XML_Parser parser,
   return 1;
 }
 
-int XMLCALL
-XML_SetOptions(XML_Parser parser,
-               int options)
+enum XML_Status XMLCALL
+XML_SetOption(XML_Parser parser,
+              enum XML_Option option,
+              void *value)
 {
   if (parser == NULL)
-    return 0;
+    return XML_STATUS_ERROR;
   /* block after XML_Parse()/XML_ParseBuffer() has been called */
   if (parser->m_parsingStatus.parsing == XML_PARSING || parser->m_parsingStatus.parsing == XML_SUSPENDED)
-    return 0;
-  parser->m_options = options;
-  return 1;
+    return XML_STATUS_ERROR;
+  switch(option) {
+    case XML_OPTION_HUGE_ENTITIES:
+      parser->m_hugeEntities = *(XML_Bool*)(value) ? XML_TRUE : XML_FALSE;
+      return XML_STATUS_OK;
+    default:
+      return XML_STATUS_ERROR;
+  }
 }
 
-int XMLCALL
-XML_GetOptions(XML_Parser parser)
+enum XML_Status XMLCALL
+XML_GetOption(XML_Parser parser,
+              enum XML_Option option,
+              void *value)
 {
   if (parser == NULL)
-    return 0;
-  return parser->m_options;
+    return XML_STATUS_ERROR;
+  switch(option) {
+    case XML_OPTION_HUGE_ENTITIES:
+      *(XML_Bool*)(value) = parser->m_hugeEntities;
+      return XML_STATUS_OK;
+    default:
+      return XML_STATUS_ERROR;
+  }
 }
 
 enum XML_Status XMLCALL
@@ -5432,7 +5443,7 @@ processInternalEntity(XML_Parser parser, ENTITY *entity,
   enum XML_Error result;
   OPEN_INTERNAL_ENTITY *openEntity;
 
-  if (!(parser->m_options & XML_OPTION_HUGE_ENTITIES)) {
+  if (!parser->m_hugeEntities) {
       parser->m_entityNestingLevel++;
       if (parser->m_entityNestingLevel > XML_ENTITY_NESTING_LIMIT) {
         return XML_ERROR_ENTITY_VIOLATION_DEPTH;
@@ -5487,7 +5498,7 @@ processInternalEntity(XML_Parser parser, ENTITY *entity,
     }
   }
 
-  if (!(parser->m_options & XML_OPTION_HUGE_ENTITIES)) {
+  if (!parser->m_hugeEntities) {
     XML_Index index = XML_GetCurrentByteIndex(parser);
     parser->m_entityNestingLevel--;
     if (entity->textLen > XML_ENTITY_EXPANSION_SIZE) {

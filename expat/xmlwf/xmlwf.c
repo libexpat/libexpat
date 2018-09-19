@@ -913,7 +913,7 @@ tmain(int argc, XML_Char **argv)
   int useNamespaces = 0;
   int requireStandalone = 0;
   int requiresNotations = 0;
-  int hugeEntities = 0;
+  XML_Bool hugeEntities = XML_FALSE;
   enum XML_ParamEntityParsing paramEntityParsing = 
     XML_PARAM_ENTITY_PARSING_NEVER;
   int useStdin = 0;
@@ -977,7 +977,7 @@ tmain(int argc, XML_Char **argv)
       j++;
       break;
     case T('H'):
-      hugeEntities = 1;
+      hugeEntities = XML_TRUE;
       j++;
       break;
     case T('d'):
@@ -1040,8 +1040,7 @@ tmain(int argc, XML_Char **argv)
 
     if (requireStandalone)
       XML_SetNotStandaloneHandler(parser, notStandalone);
-    if (hugeEntities)
-      XML_SetOptions(parser, XML_OPTION_HUGE_ENTITIES);
+    XML_SetOption(parser, XML_OPTION_HUGE_ENTITIES, &hugeEntities);
     XML_SetParamEntityParsing(parser, paramEntityParsing);
     if (outputType == 't') {
       /* This is for doing timings; this gives a more realistic estimate of
