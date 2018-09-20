@@ -127,6 +127,7 @@ enum XML_Error {
   XML_ERROR_INVALID_ARGUMENT,
   /* Added in 2.3.0 */
   XML_ERROR_ENTITY_VIOLATION_SIZE,
+  XML_ERROR_ENTITY_VIOLATION_NESTED_SIZE,
   XML_ERROR_ENTITY_VIOLATION_RATIO,
   XML_ERROR_ENTITY_VIOLATION_DEPTH
 };
@@ -141,29 +142,31 @@ enum XML_Option {
  * Mitigation against billion laugh and quadratic blowup attacks.
  *
  * XML_ENTITY_NESTING_LIMIT confines nesting of entities within entities.
- * XML_ENTITY_EXPANSION_SIZE restricts the maximum length of entities.
+ * XML_ENTITY_EXPANSION_SIZE restricts the maximum length of entities,
+ *   both text of a single entity and resulting text of nested entities.
  * XML_ENTITY_EXPANSION_RATIO constrains the ratio between position in XML
- * document and total amount of all expanded entities.
+ *  document and total amount of all expanded entities once more than
+ *  XML_ENTITY_EXPANSION_SIZE bytes have been expanded.
  *
  * The limits are modelled after libxml2's limits
  * https://github.com/GNOME/libxml2/blob/v2.9.8/parser.c#L99
+ * https://github.com/GNOME/libxml2/blob/v2.9.8/include/libxml/parserInternals.h#L33
  */
 #ifndef XML_HUGE_ENTITIES_DEFAULT
 #define XML_HUGE_ENTITIES_DEFAULT 0
 #endif
 
 #ifndef XML_ENTITY_NESTING_LIMIT
-#define XML_ENTITY_NESTING_LIMIT 3
+#define XML_ENTITY_NESTING_LIMIT 40
 #endif
 
 #ifndef XML_ENTITY_EXPANSION_SIZE
-#define XML_ENTITY_EXPANSION_SIZE 1023
+#define XML_ENTITY_EXPANSION_SIZE 10000
 #endif
 
 #ifndef XML_ENTITY_EXPANSION_RATIO
 #define XML_ENTITY_EXPANSION_RATIO 10
 #endif
-
 
 enum XML_Content_Type {
   XML_CTYPE_EMPTY = 1,
