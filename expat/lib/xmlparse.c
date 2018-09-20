@@ -481,7 +481,7 @@ static LIMIT * limitCreate(const XML_Memory_Handling_Suite *ms);
 static void limitDestroy(LIMIT *limit, const XML_Memory_Handling_Suite *ms);
 static enum XML_Error limitPreContent(XML_Parser parser, ENTITY *entity);
 static enum XML_Error limitPostContent(XML_Parser parser, ENTITY *entity);
-static enum XML_Status limitHashTable(XML_Parser parser, HASH_TABLE *table);
+static enum XML_Status limitHashTables(XML_Parser parser);
 
 static DTD * dtdCreate(const XML_Memory_Handling_Suite *ms);
 /* do not call if m_parentParser != NULL */
@@ -3320,7 +3320,7 @@ storeAtts(XML_Parser parser, const ENCODING *enc,
                                          sizeof(ELEMENT_TYPE));
     if (!elementType)
       return XML_ERROR_NO_MEMORY;
-    if (limitHashTable(parser, &dtd->elementTypes) != XML_STATUS_OK)
+    if (limitHashTables(parser) != XML_STATUS_OK)
       return XML_ERROR_HASH_TABLE_VIOLATION;
     if (parser->m_ns && !setElementTypePrefix(parser, elementType))
       return XML_ERROR_NO_MEMORY;
@@ -4565,7 +4565,7 @@ doProlog(XML_Parser parser,
                                     sizeof(ENTITY));
       if (!parser->m_declEntity)
         return XML_ERROR_NO_MEMORY;
-      if (limitHashTable(parser, &dtd->paramEntities) != XML_STATUS_OK)
+      if (limitHashTables(parser) != XML_STATUS_OK)
         return XML_ERROR_HASH_TABLE_VIOLATION;
 #endif /* XML_DTD */
       dtd->hasParamEntityRefs = XML_TRUE;
@@ -4634,7 +4634,7 @@ doProlog(XML_Parser parser,
              */
             return XML_ERROR_NO_MEMORY; /* LCOV_EXCL_LINE */
           }
-          if (limitHashTable(parser, &dtd->paramEntities) != XML_STATUS_OK)
+          if (limitHashTables(parser) != XML_STATUS_OK)
             return XML_ERROR_HASH_TABLE_VIOLATION;
           if (parser->m_useForeignDTD)
             entity->base = parser->m_curBase;
@@ -4680,7 +4680,7 @@ doProlog(XML_Parser parser,
                                             sizeof(ENTITY));
           if (!entity)
             return XML_ERROR_NO_MEMORY;
-          if (limitHashTable(parser, &dtd->paramEntities) != XML_STATUS_OK)
+          if (limitHashTables(parser) != XML_STATUS_OK)
             return XML_ERROR_HASH_TABLE_VIOLATION;
           entity->base = parser->m_curBase;
           dtd->paramEntityRead = XML_FALSE;
@@ -4897,7 +4897,7 @@ doProlog(XML_Parser parser,
                                       sizeof(ENTITY));
         if (!parser->m_declEntity)
           return XML_ERROR_NO_MEMORY;
-        if (limitHashTable(parser, &dtd->paramEntities) != XML_STATUS_OK)
+        if (limitHashTables(parser) != XML_STATUS_OK)
           return XML_ERROR_HASH_TABLE_VIOLATION;
         parser->m_declEntity->publicId = NULL;
       }
@@ -4976,7 +4976,7 @@ doProlog(XML_Parser parser,
                                         sizeof(ENTITY));
           if (!parser->m_declEntity)
             return XML_ERROR_NO_MEMORY;
-          if (limitHashTable(parser, &dtd->generalEntities) != XML_STATUS_OK)
+          if (limitHashTables(parser) != XML_STATUS_OK)
             return XML_ERROR_HASH_TABLE_VIOLATION;
           if (parser->m_declEntity->name != name) {
             poolDiscard(&dtd->pool);
@@ -5010,7 +5010,7 @@ doProlog(XML_Parser parser,
                                            name, sizeof(ENTITY));
         if (!parser->m_declEntity)
           return XML_ERROR_NO_MEMORY;
-        if (limitHashTable(parser, &dtd->paramEntities) != XML_STATUS_OK)
+        if (limitHashTables(parser) != XML_STATUS_OK)
           return XML_ERROR_HASH_TABLE_VIOLATION;
         if (parser->m_declEntity->name != name) {
           poolDiscard(&dtd->pool);
@@ -6216,7 +6216,7 @@ setElementTypePrefix(XML_Parser parser, ELEMENT_TYPE *elementType)
                                 sizeof(PREFIX));
       if (!prefix)
         return 0;
-      if (limitHashTable(parser, &dtd->prefixes) != XML_STATUS_OK)
+      if (limitHashTables(parser) != XML_STATUS_OK)
         return 0;
       if (prefix->name == poolStart(&dtd->pool))
         poolFinish(&dtd->pool);
@@ -6246,7 +6246,7 @@ getAttributeId(XML_Parser parser, const ENCODING *enc,
   id = (ATTRIBUTE_ID *)lookup(parser, &dtd->attributeIds, name, sizeof(ATTRIBUTE_ID));
   if (!id)
     return NULL;
-  if (limitHashTable(parser, &dtd->attributeIds) != XML_STATUS_OK)
+  if (limitHashTables(parser) != XML_STATUS_OK)
      return NULL;
   if (id->name != name)
     poolDiscard(&dtd->pool);
@@ -6282,7 +6282,7 @@ getAttributeId(XML_Parser parser, const ENCODING *enc,
                                         sizeof(PREFIX));
           if (!id->prefix)
             return NULL;
-          if (limitHashTable(parser, &dtd->prefixes) != XML_STATUS_OK)
+          if (limitHashTables(parser) != XML_STATUS_OK)
             return NULL;
           if (id->prefix->name == poolStart(&dtd->pool))
             poolFinish(&dtd->pool);
@@ -6425,7 +6425,7 @@ setContext(XML_Parser parser, const XML_Char *context)
                                   sizeof(PREFIX));
         if (!prefix)
           return XML_FALSE;
-        if (limitHashTable(parser, &dtd->prefixes) != XML_STATUS_OK)
+        if (limitHashTables(parser) != XML_STATUS_OK)
           return XML_FALSE;
         if (prefix->name == poolStart(&parser->m_tempPool)) {
           prefix->name = poolCopyString(&dtd->pool, prefix->name);
@@ -6564,11 +6564,10 @@ limitPostContent(XML_Parser parser, ENTITY *entity)
 }
 
 static enum XML_Status
-limitHashTable(XML_Parser parser, HASH_TABLE *unused)
+limitHashTables(XML_Parser parser)
 {
     DTD *dtd = parser->m_dtd;
     size_t used = 0;
-    (void)unused;
     if (parser->m_limit->hugeXML || !parser->m_limit->maxHashTableEntries)
       return XML_STATUS_OK;
 
@@ -6586,11 +6585,11 @@ limitHashTable(XML_Parser parser, HASH_TABLE *unused)
 #ifdef XML_DTD
     add_check_used(dtd->paramEntities);
 #endif
+
 #undef add_check_used
 
     return XML_STATUS_OK;
 }
-
 
 static DTD *
 dtdCreate(const XML_Memory_Handling_Suite *ms)
@@ -6716,7 +6715,7 @@ dtdCopy(XML_Parser oldParser, DTD *newDtd, const DTD *oldDtd, const XML_Memory_H
       return 0;
     if (!lookup(oldParser, &(newDtd->prefixes), name, sizeof(PREFIX)))
       return 0;
-    /* no limitHashTable() for copy operation */
+    /* no limitHashTables() for copy operation */
   }
 
   hashTableIterInit(&iter, &(oldDtd->attributeIds));
@@ -6741,7 +6740,7 @@ dtdCopy(XML_Parser oldParser, DTD *newDtd, const DTD *oldDtd, const XML_Memory_H
                                   sizeof(ATTRIBUTE_ID));
     if (!newA)
       return 0;
-    /* no limitHashTable() for copy operation */
+    /* no limitHashTables() for copy operation */
     newA->maybeTokenized = oldA->maybeTokenized;
     if (oldA->prefix) {
       newA->xmlns = oldA->xmlns;
@@ -6771,7 +6770,7 @@ dtdCopy(XML_Parser oldParser, DTD *newDtd, const DTD *oldDtd, const XML_Memory_H
                                   sizeof(ELEMENT_TYPE));
     if (!newE)
       return 0;
-    /* no limitHashTable() for copy operation */
+    /* no limitHashTables() for copy operation */
     if (oldE->nDefaultAtts) {
       newE->defaultAtts = (DEFAULT_ATTRIBUTE *)
           ms->malloc_fcn(oldE->nDefaultAtts * sizeof(DEFAULT_ATTRIBUTE));
@@ -6856,7 +6855,7 @@ copyEntityTable(XML_Parser oldParser,
     newE = (ENTITY *)lookup(oldParser, newTable, name, sizeof(ENTITY));
     if (!newE)
       return 0;
-    /* no limitHashTable() for copy operation */
+    /* no limitHashTables() for copy operation */
     if (oldE->systemId) {
       const XML_Char *tem = poolCopyString(newPool, oldE->systemId);
       if (!tem)
@@ -7448,7 +7447,7 @@ getElementType(XML_Parser parser,
   ret = (ELEMENT_TYPE *) lookup(parser, &dtd->elementTypes, name, sizeof(ELEMENT_TYPE));
   if (!ret)
     return NULL;
-  if (limitHashTable(parser, &dtd->elementTypes) != XML_STATUS_OK)
+  if (limitHashTables(parser) != XML_STATUS_OK)
     return NULL;
   if (ret->name != name)
     poolDiscard(&dtd->pool);
