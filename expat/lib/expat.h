@@ -134,7 +134,7 @@ enum XML_Error {
 
 enum XML_Option {
   /* Added in 2.3.0 */
-  XML_OPTION_HUGE_ENTITIES = 1 /* XML_Bool, no limits for entity expansion */
+  XML_OPTION_HUGE_XML = 1 /* XML_Bool, no limits for huge XML (e.g. entity expansion) */
 };
 
 /* Entity expansion protection
@@ -152,8 +152,8 @@ enum XML_Option {
  * https://github.com/GNOME/libxml2/blob/v2.9.8/parser.c#L99
  * https://github.com/GNOME/libxml2/blob/v2.9.8/include/libxml/parserInternals.h#L33
  */
-#ifndef XML_HUGE_ENTITIES_DEFAULT
-#define XML_HUGE_ENTITIES_DEFAULT 0
+#ifndef XML_HUGE_XML_DEFAULT
+#define XML_HUGE_XML_DEFAULT 0
 #endif
 
 #ifndef XML_ENTITY_NESTING_LIMIT
@@ -161,7 +161,8 @@ enum XML_Option {
 #endif
 
 #ifndef XML_ENTITY_EXPANSION_SIZE
-#define XML_ENTITY_EXPANSION_SIZE 10000
+/* 1MB text */
+#define XML_ENTITY_EXPANSION_SIZE 1000000
 #endif
 
 #ifndef XML_ENTITY_EXPANSION_RATIO
@@ -1110,7 +1111,7 @@ enum XML_FeatureEnum {
   XML_FEATURE_LARGE_SIZE,
   XML_FEATURE_ATTR_INFO,
   /* Added in 2.3.0 */
-  XML_FEATURE_HUGE_ENTITIES
+  XML_FEATURE_HUGE_XML
   /* Additional features must be added to the end of this enum. */
 };
 

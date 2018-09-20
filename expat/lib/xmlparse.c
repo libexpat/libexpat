@@ -376,6 +376,11 @@ typedef struct {
   int entityNestingLevel;
   XML_Size nestedEntityExpansionSize;
   XML_Size totalEntityExpansionSize;
+  /* settings */
+  XML_Bool hugeXML;
+  int nestingLimit;
+  int maxExpansionSize;
+  int expansionRatio;
 } LIMIT;
 
 typedef enum XML_Error PTRCALL Processor(XML_Parser parser,
@@ -608,7 +613,6 @@ struct XML_ParserStruct {
   OPEN_INTERNAL_ENTITY *m_openInternalEntities;
   OPEN_INTERNAL_ENTITY *m_freeInternalEntities;
   XML_Bool m_defaultExpandInternalEntities;
-  XML_Bool m_hugeEntities;
   int m_tagLevel;
   ENTITY *m_declEntity;
   const XML_Char *m_doctypeName;
@@ -1114,7 +1118,6 @@ parserInit(XML_Parser parser, const XML_Char *encodingName)
   parser->m_positionPtr = NULL;
   parser->m_openInternalEntities = NULL;
   parser->m_defaultExpandInternalEntities = XML_TRUE;
-  parser->m_hugeEntities = XML_HUGE_ENTITIES_DEFAULT ? XML_TRUE : XML_FALSE;
   parser->m_tagLevel = 0;
   parser->m_tagStack = NULL;
   parser->m_inheritedBindings = NULL;
@@ -1243,7 +1246,6 @@ XML_ExternalEntityParserCreate(XML_Parser oldParser,
   XML_EntityDeclHandler oldEntityDeclHandler;
   XML_XmlDeclHandler oldXmlDeclHandler;
   ELEMENT_TYPE * oldDeclElementType;
-  XML_Bool oldHugeEntities;
 
   void *oldUserData;
   void *oldHandlerArg;
@@ -1306,8 +1308,6 @@ XML_ExternalEntityParserCreate(XML_Parser oldParser,
   */
   oldhash_secret_salt = parser->m_hash_secret_salt;
 
-  oldHugeEntities = parser->m_hugeEntities;
-
 #ifdef XML_DTD
   if (!context)
     newDtd = oldDtd;
@@ -1361,7 +1361,6 @@ XML_ExternalEntityParserCreate(XML_Parser oldParser,
   parser->m_defaultExpandInternalEntities = oldDefaultExpandInternalEntities;
   parser->m_ns_triplets = oldns_triplets;
   parser->m_hash_secret_salt = oldhash_secret_salt;
-  parser->m_hugeEntities = oldHugeEntities;
   parser->m_parentParser = oldParser;
 #ifdef XML_DTD
   parser->m_paramEntityParsing = oldParamEntityParsing;
@@ -1850,8 +1849,8 @@ XML_SetOption(XML_Parser parser,
   if (parser->m_parsingStatus.parsing == XML_PARSING || parser->m_parsingStatus.parsing == XML_SUSPENDED)
     return XML_STATUS_ERROR;
   switch(option) {
-    case XML_OPTION_HUGE_ENTITIES:
-      parser->m_hugeEntities = *(XML_Bool*)(value) ? XML_TRUE : XML_FALSE;
+    case XML_OPTION_HUGE_XML:
+      parser->m_limit->hugeXML = *(XML_Bool*)(value) ? XML_TRUE : XML_FALSE;
       return XML_STATUS_OK;
     default:
       return XML_STATUS_ERROR;
@@ -1866,8 +1865,8 @@ XML_GetOption(XML_Parser parser,
   if (parser == NULL)
     return XML_STATUS_ERROR;
   switch(option) {
-    case XML_OPTION_HUGE_ENTITIES:
-      *(XML_Bool*)(value) = parser->m_hugeEntities;
+    case XML_OPTION_HUGE_XML:
+      *(XML_Bool*)(value) = parser->m_limit->hugeXML;
       return XML_STATUS_OK;
     default:
       return XML_STATUS_ERROR;
@@ -2567,8 +2566,8 @@ XML_GetFeatureList(void)
 #ifdef XML_ATTR_INFO
     {XML_FEATURE_ATTR_INFO,        XML_L("XML_ATTR_INFO"), 0},
 #endif
-    {XML_FEATURE_HUGE_ENTITIES,    XML_L("XML_OPTION_HUGE_ENTITIES"),
-     XML_HUGE_ENTITIES_DEFAULT},
+    {XML_FEATURE_HUGE_XML,    XML_L("XML_OPTION_HUGE_XML"),
+     XML_HUGE_XML_DEFAULT},
     {XML_FEATURE_END,              NULL, 0}
   };
 
@@ -6437,10 +6436,17 @@ limitCreate(const XML_Memory_Handling_Suite *ms)
     LIMIT *limit = (LIMIT *)ms->malloc_fcn(sizeof(LIMIT));
     if (!limit)
       return NULL;
+
     limit->first_entity = NULL;
     limit->entityNestingLevel = 0;
     limit->nestedEntityExpansionSize = 0;
     limit->totalEntityExpansionSize = 0;
+
+    limit->hugeXML = XML_HUGE_XML_DEFAULT ? XML_TRUE : XML_FALSE;
+    limit->nestingLimit = XML_ENTITY_NESTING_LIMIT;
+    limit->maxExpansionSize = XML_ENTITY_EXPANSION_SIZE;
+    limit->expansionRatio = XML_ENTITY_EXPANSION_RATIO;
+
     return limit;
 }
 
@@ -6453,37 +6459,42 @@ limitDestroy(LIMIT *limit,const XML_Memory_Handling_Suite *ms)
 static enum XML_Error
 limitPreContent(XML_Parser parser, ENTITY *entity)
 {
+  XML_Index index;
+
   if (parser->m_limit->first_entity == NULL) {
     parser->m_limit->first_entity = entity;
-  } else {
-    parser->m_limit->entityNestingLevel++;
   }
+  parser->m_limit->entityNestingLevel++;
   parser->m_limit->nestedEntityExpansionSize += entity->textLen;
   parser->m_limit->totalEntityExpansionSize += entity->textLen;
-  fprintf(stderr, "%s, %s %i %li\n", entity->name, parser->m_limit->first_entity->name, parser->m_limit->entityNestingLevel, parser->m_limit->nestedEntityExpansionSize);
 
-  if (!parser->m_hugeEntities) {
-    XML_Index index = XML_GetCurrentByteIndex(parser);
+  if (parser->m_limit->hugeXML)
+    return XML_ERROR_NONE;
 
-    if (parser->m_limit->entityNestingLevel > XML_ENTITY_NESTING_LIMIT)
-      return XML_ERROR_ENTITY_VIOLATION_DEPTH;
+  if (parser->m_limit->nestingLimit &&
+      (parser->m_limit->entityNestingLevel > parser->m_limit->nestingLimit))
+    return XML_ERROR_ENTITY_VIOLATION_DEPTH;
 
-    if (entity->textLen > XML_ENTITY_EXPANSION_SIZE)
+  if (parser->m_limit->maxExpansionSize) {
+    if (entity->textLen > parser->m_limit->maxExpansionSize)
       /* current entity text is too large */
       return XML_ERROR_ENTITY_VIOLATION_SIZE;
 
-    if (parser->m_limit->nestedEntityExpansionSize > XML_ENTITY_EXPANSION_SIZE)
+    if (parser->m_limit->nestedEntityExpansionSize > parser->m_limit->maxExpansionSize)
       /* sum of text is too large */
       return XML_ERROR_ENTITY_VIOLATION_NESTED_SIZE;
+  }
 
-    if (index > 0) {
-      /* overflow safe comparison */
-      XML_Size limit = (parser->m_limit->totalEntityExpansionSize +
-        (XML_ENTITY_EXPANSION_RATIO - 1)) / XML_ENTITY_EXPANSION_RATIO;
-      if (limit > (XML_Size)index)
-        /* Ratio between processed bytes and all expanded entities is off */
-        return XML_ERROR_ENTITY_VIOLATION_RATIO;
-    }
+  index = XML_GetCurrentByteIndex(parser);
+  if ((index > 0) &&
+      (parser->m_limit->expansionRatio) &&
+      (parser->m_limit->totalEntityExpansionSize > parser->m_limit->maxExpansionSize)) {
+    /* overflow safe comparison */
+    XML_Size limit = (parser->m_limit->totalEntityExpansionSize +
+      (parser->m_limit->expansionRatio - 1)) / parser->m_limit->expansionRatio;
+    if (limit > (XML_Size)index)
+      /* Ratio between processed bytes and all expanded entities is off */
+      return XML_ERROR_ENTITY_VIOLATION_RATIO;
   }
 
   return XML_ERROR_NONE;

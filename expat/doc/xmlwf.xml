@@ -204,8 +204,8 @@ supports both.
         <term><option>-H</option></term>
         <listitem>
 		<para>
-  Enables huge entities option, disabling all mitigations against entity
-  expansion attacks.
+  Enables huge XML option, disabling all mitigations against denial
+  of service attacks like billion laughs entity expansion.
 	   </para>
         </listitem>
       </varlistentry>
