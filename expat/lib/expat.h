@@ -129,7 +129,8 @@ enum XML_Error {
   XML_ERROR_ENTITY_VIOLATION_SIZE,
   XML_ERROR_ENTITY_VIOLATION_NESTED_SIZE,
   XML_ERROR_ENTITY_VIOLATION_RATIO,
-  XML_ERROR_ENTITY_VIOLATION_DEPTH
+  XML_ERROR_ENTITY_VIOLATION_DEPTH,
+  XML_ERROR_HASH_TABLE_VIOLATION
 };
 
 enum XML_Option {
@@ -137,7 +138,8 @@ enum XML_Option {
   XML_OPTION_HUGE_XML = 1, /* XML_Bool, no limits for huge XML (e.g. entity expansion) */
   XML_OPTION_NESTING_LIMIT, /* int, limit entity nesting depth */
   XML_OPTION_EXPANSION_RATIO, /* int, ratio between expansions and processed text */
-  XML_OPTION_MAX_EXPANSION_SIZE /* XML_Size, limit max entity size for single and nested entities */
+  XML_OPTION_MAX_EXPANSION_SIZE, /* XML_Size, limit max entity size for single and nested entities */
+  XML_OPTION_MAX_HASH_TABLE_ENTRIES /* XML_Size, max entries in DTD hash tables */
 };
 
 /* Entity expansion protection
@@ -150,6 +152,8 @@ enum XML_Option {
  * XML_ENTITY_EXPANSION_RATIO constrains the ratio between position in XML
  *  document and total amount of all expanded entities once more than
  *  XML_ENTITY_EXPANSION_SIZE bytes have been expanded.
+ * XML_MAX_HASH_TABLE_ENTRIES limits total amount of entries across all
+ *   DTD hash tables.
  *
  * The limits are modelled after libxml2's limits
  * https://github.com/GNOME/libxml2/blob/v2.9.8/parser.c#L99
@@ -171,6 +175,12 @@ enum XML_Option {
 #ifndef XML_ENTITY_EXPANSION_RATIO
 #define XML_ENTITY_EXPANSION_RATIO 10
 #endif
+
+#ifndef XML_MAX_HASH_TABLE_ENTRIES
+/* 1M entries across all hash tables */
+#define XML_MAX_HASH_TABLE_ENTRIES 1000000
+#endif
+
 
 enum XML_Content_Type {
   XML_CTYPE_EMPTY = 1,

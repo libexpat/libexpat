@@ -12175,6 +12175,55 @@ START_TEST(test_huge_xml_entity_expansion_limit)
 }
 END_TEST
 
+START_TEST(test_huge_xml_hash_table_limit)
+{
+    XML_Size tableEntries = 4; /* smaller than 4 entities + 1 element */
+    const char *text =
+        "<!DOCTYPE he [\n"
+        "  <!ELEMENT he (#PCDATA)*>\n"
+        "  <!ENTITY e1 '&e2;'>\n"
+        "  <!ENTITY e2 '&e3;'>\n"
+        "  <!ENTITY e3 '&e4;'>\n"
+        "  <!ENTITY e4 'entity'>\n"
+        "]>\n"
+        "<he>&e1;</he>\n";
+
+    if (XML_SetOption(parser, XML_OPTION_MAX_HASH_TABLE_ENTRIES, &tableEntries) != XML_STATUS_OK)
+        fail("XML_SetOptions(XML_OPTION_MAX_HASH_TABLE_ENTRIES) failed");
+
+    expect_failure(text, XML_ERROR_HASH_TABLE_VIOLATION,
+                   "XML_ERROR_HASH_TABLE_VIOLATION not raised");
+}
+END_TEST
+
+START_TEST(test_huge_xml_enabled)
+{
+    XML_Size smallSize = 1;
+    int smallInt = 1;
+    XML_Bool hugeXML = XML_TRUE;
+    const char *text =
+        "<!DOCTYPE he [\n"
+        "  <!ELEMENT he (#PCDATA)*>\n"
+        "  <!ENTITY e1 '&e2;'>\n"
+        "  <!ENTITY e2 '&e3;'>\n"
+        "  <!ENTITY e3 '&e4;'>\n"
+        "  <!ENTITY e4 'entity'>\n"
+        "]>\n"
+        "<he>&e1;</he>\n";
+
+    if (XML_SetOption(parser, XML_OPTION_MAX_HASH_TABLE_ENTRIES, &smallSize) != XML_STATUS_OK)
+        fail("XML_SetOptions(XML_OPTION_MAX_HASH_TABLE_ENTRIES) failed");
+    if (XML_SetOption(parser, XML_OPTION_NESTING_LIMIT, &smallInt) != XML_STATUS_OK)
+        fail("XML_SetOptions(XML_OPTION_NESTING_LIMIT) failed");
+    if (XML_SetOption(parser, XML_OPTION_HUGE_XML, &hugeXML) != XML_STATUS_OK)
+        fail("XML_SetOptions(XML_OPTION_HUGE_XML) failed");
+
+    if (_XML_Parse_SINGLE_BYTES(parser, text, (int)strlen(text), XML_TRUE) != XML_STATUS_OK) {
+        fail("expected XML_STATUS_OK with hugeXML");
+    }
+}
+END_TEST
+
 
 static Suite *
 make_suite(void)
@@ -12546,6 +12595,8 @@ make_suite(void)
     tcase_add_test(tc_huge_xml, test_huge_xml_entity_too_large);
     tcase_add_test(tc_huge_xml, test_huge_xml_entity_not_too_large);
     tcase_add_test(tc_huge_xml, test_huge_xml_entity_expansion_limit);
+    tcase_add_test(tc_huge_xml, test_huge_xml_hash_table_limit);
+    tcase_add_test(tc_huge_xml, test_huge_xml_enabled);
 
     return s;
 }
