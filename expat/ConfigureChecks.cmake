@@ -18,8 +18,6 @@ check_include_file("sys/types.h" HAVE_SYS_TYPES_H)
 check_include_file("unistd.h" HAVE_UNISTD_H)
 
 check_symbol_exists("getpagesize" "unistd.h" HAVE_GETPAGESIZE)
-check_symbol_exists("bcopy" "strings.h" HAVE_BCOPY)
-check_symbol_exists("memmove" "string.h" HAVE_MEMMOVE)
 check_symbol_exists("mmap" "sys/mman.h" HAVE_MMAP)
 check_symbol_exists("getrandom" "sys/random.h" HAVE_GETRANDOM)
 
