@@ -134,7 +134,10 @@ enum XML_Error {
 
 enum XML_Option {
   /* Added in 2.3.0 */
-  XML_OPTION_HUGE_XML = 1 /* XML_Bool, no limits for huge XML (e.g. entity expansion) */
+  XML_OPTION_HUGE_XML = 1, /* XML_Bool, no limits for huge XML (e.g. entity expansion) */
+  XML_OPTION_NESTING_LIMIT, /* int, limit entity nesting depth */
+  XML_OPTION_EXPANSION_RATIO, /* int, ratio between expansions and processed text */
+  XML_OPTION_MAX_EXPANSION_SIZE /* XML_Size, limit max entity size for single and nested entities */
 };
 
 /* Entity expansion protection

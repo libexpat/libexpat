@@ -379,8 +379,8 @@ typedef struct {
   /* settings */
   XML_Bool hugeXML;
   int nestingLimit;
-  int maxExpansionSize;
   int expansionRatio;
+  XML_Size maxExpansionSize;
 } LIMIT;
 
 typedef enum XML_Error PTRCALL Processor(XML_Parser parser,
@@ -1843,7 +1843,7 @@ XML_SetOption(XML_Parser parser,
               enum XML_Option option,
               void *value)
 {
-  if (parser == NULL)
+  if ((parser == NULL) || (value == NULL))
     return XML_STATUS_ERROR;
   /* block after XML_Parse()/XML_ParseBuffer() has been called */
   if (parser->m_parsingStatus.parsing == XML_PARSING || parser->m_parsingStatus.parsing == XML_SUSPENDED)
@@ -1851,6 +1851,15 @@ XML_SetOption(XML_Parser parser,
   switch(option) {
     case XML_OPTION_HUGE_XML:
       parser->m_limit->hugeXML = *(XML_Bool*)(value) ? XML_TRUE : XML_FALSE;
+      return XML_STATUS_OK;
+    case XML_OPTION_NESTING_LIMIT:
+      parser->m_limit->nestingLimit = *(int *)(value);
+      return XML_STATUS_OK;
+    case XML_OPTION_EXPANSION_RATIO:
+      parser->m_limit->expansionRatio = *(int *)(value);
+      return XML_STATUS_OK;
+    case XML_OPTION_MAX_EXPANSION_SIZE:
+      parser->m_limit->maxExpansionSize = *(XML_Size *)(value);
       return XML_STATUS_OK;
     default:
       return XML_STATUS_ERROR;
@@ -1862,11 +1871,20 @@ XML_GetOption(XML_Parser parser,
               enum XML_Option option,
               void *value)
 {
-  if (parser == NULL)
+  if ((parser == NULL) || (value == NULL))
     return XML_STATUS_ERROR;
   switch(option) {
     case XML_OPTION_HUGE_XML:
       *(XML_Bool*)(value) = parser->m_limit->hugeXML;
+      return XML_STATUS_OK;
+    case XML_OPTION_NESTING_LIMIT:
+      *(int *)(value) = parser->m_limit->nestingLimit;
+      return XML_STATUS_OK;
+    case XML_OPTION_EXPANSION_RATIO:
+      *(int *)(value) = parser->m_limit->expansionRatio;
+      return XML_STATUS_OK;
+    case XML_OPTION_MAX_EXPANSION_SIZE:
+      *(XML_Size *)(value) = parser->m_limit->maxExpansionSize;
       return XML_STATUS_OK;
     default:
       return XML_STATUS_ERROR;
@@ -6476,7 +6494,7 @@ limitPreContent(XML_Parser parser, ENTITY *entity)
     return XML_ERROR_ENTITY_VIOLATION_DEPTH;
 
   if (parser->m_limit->maxExpansionSize) {
-    if (entity->textLen > parser->m_limit->maxExpansionSize)
+    if ((XML_Size)(entity->textLen) > parser->m_limit->maxExpansionSize)
       /* current entity text is too large */
       return XML_ERROR_ENTITY_VIOLATION_SIZE;
 

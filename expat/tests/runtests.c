@@ -7123,30 +7123,30 @@ START_TEST(test_set_get_options)
         fail("XML_SetOption with unsupported option should have failed.");
 
     /* check default */
-    if (XML_GetOption(parser, XML_OPTION_HUGE_ENTITIES, &he) != XML_STATUS_OK)
+    if (XML_GetOption(parser, XML_OPTION_HUGE_XML, &he) != XML_STATUS_OK)
         fail("XML_GetOption failed");
     if (he != XML_FALSE)
-        fail("Expected XML_OPTION_HUGE_ENTITIES=XML_FALSE as default");
+        fail("Expected XML_OPTION_HUGE_XML=XML_FALSE as default");
 
     /* set and get */
     he = XML_TRUE;
-    if (XML_SetOption(parser, XML_OPTION_HUGE_ENTITIES, &he) != XML_STATUS_OK) {
+    if (XML_SetOption(parser, XML_OPTION_HUGE_XML, &he) != XML_STATUS_OK) {
         fail("XML_SetOptions() failed");
     }
-    if (XML_GetOption(parser, XML_OPTION_HUGE_ENTITIES, &he) != XML_STATUS_OK)
+    if (XML_GetOption(parser, XML_OPTION_HUGE_XML, &he) != XML_STATUS_OK)
         fail("XML_GetOption failed");
     if (he != XML_TRUE)
-        fail("Expected XML_OPTION_HUGE_ENTITIES=XML_TRUE");
+        fail("Expected XML_OPTION_HUGE_XML=XML_TRUE");
 
     /* XML_SetOptions() fails while parsing */
     if (_XML_Parse_SINGLE_BYTES(parser, text, (int)strlen(text),
                                 XML_FALSE) == XML_STATUS_ERROR)
         xml_failure(parser);
     he = XML_FALSE;
-    if (XML_SetOption(parser, XML_OPTION_HUGE_ENTITIES, &he) != XML_STATUS_ERROR) {
+    if (XML_SetOption(parser, XML_OPTION_HUGE_XML, &he) != XML_STATUS_ERROR) {
         fail("XML_SetOptions() should fail during parsing");
     }
-   if (XML_GetOption(parser, XML_OPTION_HUGE_ENTITIES, &he) != XML_STATUS_OK)
+   if (XML_GetOption(parser, XML_OPTION_HUGE_XML, &he) != XML_STATUS_OK)
         fail("XML_GetOption failed");
     if (he != XML_TRUE)
         fail("Failed XML_SetOption() should not have modified parser options.");
@@ -8198,7 +8198,7 @@ END_TEST
 static void
 alloc_setup(void)
 {
-    XML_Bool huge_entities = XML_TRUE;
+    XML_Bool huge_xml = XML_TRUE;
     XML_Memory_Handling_Suite memsuite = {
         duff_allocator,
         duff_reallocator,
@@ -8211,9 +8211,8 @@ alloc_setup(void)
     parser = XML_ParserCreate_MM(NULL, &memsuite, NULL);
     if (parser == NULL)
         fail("Parser not created");
-    /* Enable huge entities for realloc tests */
-
-    if (XML_SetOption(parser, XML_OPTION_HUGE_ENTITIES, &huge_entities) != XML_STATUS_OK)
+    /* Enable huge XML for realloc tests */
+    if (XML_SetOption(parser, XML_OPTION_HUGE_XML, &huge_xml) != XML_STATUS_OK)
         fail("XML_SetOptions() failed");
 }
 
@@ -12023,11 +12022,13 @@ START_TEST(test_nsalloc_prefixed_element)
 }
 END_TEST
 
-/* Tests for huge entity limits */
+/* Tests for huge XML limits */
 static void
-huge_entities_setup(void)
+huge_xml_setup(void)
 {
-    XML_Bool huge_entities = XML_FALSE;
+    XML_Bool huge_xml = XML_FALSE;
+    int nestingLimit = 3;
+    XML_Size expansionSize = 1023;
     XML_Memory_Handling_Suite memsuite = {
         duff_allocator,
         duff_reallocator,
@@ -12040,18 +12041,22 @@ huge_entities_setup(void)
     parser = XML_ParserCreate_MM(NULL, &memsuite, NULL);
     if (parser == NULL)
         fail("Parser not created");
-    /* Enable huge entities for realloc tests */
-    if (XML_SetOption(parser, XML_OPTION_HUGE_ENTITIES, &huge_entities) != XML_STATUS_OK)
-        fail("XML_SetOptions() failed");
+    /* Disable huge XML and reduce limits for huge XML limit tests */
+    if (XML_SetOption(parser, XML_OPTION_HUGE_XML, &huge_xml) != XML_STATUS_OK)
+        fail("XML_SetOptions(XML_OPTION_HUGE_XML) failed");
+    if (XML_SetOption(parser, XML_OPTION_NESTING_LIMIT, &nestingLimit) != XML_STATUS_OK)
+        fail("XML_SetOptions(XML_OPTION_NESTING_LIMIT) failed");
+    if (XML_SetOption(parser, XML_OPTION_MAX_EXPANSION_SIZE, &expansionSize) != XML_STATUS_OK)
+        fail("XML_SetOptions(XML_OPTION_MAX_EXPANSION_SIZE) failed");
 }
 
 static void
-huge_entities_teardown(void)
+huge_xml_teardown(void)
 {
     basic_teardown();
 }
 
-START_TEST(test_huge_entities_recursion_limit)
+START_TEST(test_huge_xml_entity_nesting_limit)
 {
     const char *text =
         "<!DOCTYPE he [\n"
@@ -12067,7 +12072,7 @@ START_TEST(test_huge_entities_recursion_limit)
 }
 END_TEST
 
-START_TEST(test_huge_entities_recursion_ok)
+START_TEST(test_huge_xml_entity_nesting_ok)
 {
     const char *text =
         "<!DOCTYPE he [\n"
@@ -12084,7 +12089,7 @@ START_TEST(test_huge_entities_recursion_ok)
 END_TEST
 
 
-START_TEST(test_huge_entities_not_too_large)
+START_TEST(test_huge_xml_entity_not_too_large)
 {
     const char *text =
         "<!DOCTYPE he [\n"
@@ -12118,7 +12123,7 @@ START_TEST(test_huge_entities_not_too_large)
 }
 END_TEST
 
-START_TEST(test_huge_entities_too_large)
+START_TEST(test_huge_xml_entity_too_large)
 {
     const char *text =
         "<!DOCTYPE he [\n"
@@ -12150,7 +12155,7 @@ START_TEST(test_huge_entities_too_large)
 }
 END_TEST
 
-START_TEST(test_huge_entities_expansion_limit)
+START_TEST(test_huge_xml_entity_expansion_limit)
 {
     const char *text =
         "<!DOCTYPE he ["
@@ -12180,7 +12185,7 @@ make_suite(void)
     TCase *tc_misc = tcase_create("miscellaneous tests");
     TCase *tc_alloc = tcase_create("allocation tests");
     TCase *tc_nsalloc = tcase_create("namespace allocation tests");
-    TCase *tc_huge_entities = tcase_create("huge entities");
+    TCase *tc_huge_xml = tcase_create("huge XML tests");
 
     suite_add_tcase(s, tc_basic);
     tcase_add_checked_fixture(tc_basic, basic_setup, basic_teardown);
@@ -12533,14 +12538,14 @@ make_suite(void)
     tcase_add_test(tc_nsalloc, test_nsalloc_long_systemid_in_ext);
     tcase_add_test(tc_nsalloc, test_nsalloc_prefixed_element);
 
-    suite_add_tcase(s, tc_huge_entities);
-    tcase_add_checked_fixture(tc_huge_entities, huge_entities_setup,
-                              huge_entities_teardown);
-    tcase_add_test(tc_huge_entities, test_huge_entities_recursion_limit);
-    tcase_add_test(tc_huge_entities, test_huge_entities_recursion_ok);
-    tcase_add_test(tc_huge_entities, test_huge_entities_too_large);
-    tcase_add_test(tc_huge_entities, test_huge_entities_not_too_large);
-    tcase_add_test(tc_huge_entities, test_huge_entities_expansion_limit);
+    suite_add_tcase(s, tc_huge_xml);
+    tcase_add_checked_fixture(tc_huge_xml, huge_xml_setup,
+                              huge_xml_teardown);
+    tcase_add_test(tc_huge_xml, test_huge_xml_entity_nesting_limit);
+    tcase_add_test(tc_huge_xml, test_huge_xml_entity_nesting_ok);
+    tcase_add_test(tc_huge_xml, test_huge_xml_entity_too_large);
+    tcase_add_test(tc_huge_xml, test_huge_xml_entity_not_too_large);
+    tcase_add_test(tc_huge_xml, test_huge_xml_entity_expansion_limit);
 
     return s;
 }
