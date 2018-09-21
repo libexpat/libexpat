@@ -373,15 +373,16 @@ typedef struct open_internal_entity {
 
 typedef struct {
   ENTITY *first_entity;
-  int entityNestingLevel;
-  XML_Size nestedEntityExpansionSize;
-  XML_Size totalEntityExpansionSize;
+  unsigned int entitiesNestingLevel;
+  size_t nestedEntitiesExpansionSize; /* in bytes, not XML_Cha) */
+  size_t totalEntitiesExpansionSize; /* in bytes, not XML_Char */
   /* settings */
   XML_Bool hugeXML;
-  int nestingLimit;
-  int expansionRatio;
-  XML_Size maxExpansionSize;
-  XML_Size maxHashTableEntries;
+  unsigned int entitiesMaxNesting;
+  unsigned int entitiesMaxRatio;
+  unsigned int entitiesMaxRatioThreshold;
+  size_t entitiesMaxSize; /* in bytes, not XML_Char */
+  size_t hashTableMaxCount;
 } LIMIT;
 
 typedef enum XML_Error PTRCALL Processor(XML_Parser parser,
@@ -477,10 +478,9 @@ setContext(XML_Parser parser, const XML_Char *context);
 static void FASTCALL normalizePublicId(XML_Char *s);
 
 static LIMIT * limitCreate(const XML_Memory_Handling_Suite *ms);
-/* do not call if m_parentParser != NULL */
-static void limitDestroy(LIMIT *limit, const XML_Memory_Handling_Suite *ms);
-static enum XML_Error limitPreContent(XML_Parser parser, ENTITY *entity);
-static enum XML_Error limitPostContent(XML_Parser parser, ENTITY *entity);
+static void limitReset(LIMIT *limit);
+static enum XML_Error limitEntityPreContent(XML_Parser parser, ENTITY *entity);
+static enum XML_Error limitEntityPostContent(XML_Parser parser, ENTITY *entity);
 static enum XML_Status limitHashTables(XML_Parser parser);
 
 static DTD * dtdCreate(const XML_Memory_Handling_Suite *ms);
@@ -1016,8 +1016,8 @@ parserCreate(const XML_Char *encodingName,
 #ifdef XML_ATTR_INFO
       FREE(parser, parser->m_attInfo);
 #endif
-      if (!limit)
-        limitDestroy(parser->m_limit, &parser->m_mem);
+      if (limit == NULL)
+        FREE(parser, parser->m_limit);
       FREE(parser, parser);
       return NULL;
     }
@@ -1188,6 +1188,7 @@ XML_ParserReset(XML_Parser parser, const XML_Char *encodingName)
   parser->m_protocolEncodingName = NULL;
   parserInit(parser, encodingName);
   dtdReset(parser->m_dtd, &parser->m_mem);
+  limitReset(parser->m_limit);
   return XML_TRUE;
 }
 
@@ -1453,15 +1454,14 @@ XML_ParserFree(XML_Parser parser)
   /* external parameter entity parsers share the DTD structure
      parser->m_dtd with the root parser, so we must not destroy it
   */
-  if (!parser->m_isParamEntity && parser->m_dtd) {
+  if (!parser->m_isParamEntity && parser->m_dtd)
 #else
-  if (parser->m_dtd) {
+  if (parser->m_dtd)
 #endif /* XML_DTD */
     dtdDestroy(parser->m_dtd, (XML_Bool)!parser->m_parentParser, &parser->m_mem);
-  }
-  /* LIMIT structure parser-m_limit is shared with all external parsers */
+  /* LIMIT structure parser->m_limit is shared with all external parsers */
   if (!parser->m_parentParser)
-      limitDestroy(parser->m_limit, &parser->m_mem);
+      FREE(parser, parser->m_limit);
   FREE(parser, (void *)parser->m_atts);
 #ifdef XML_ATTR_INFO
   FREE(parser, (void *)parser->m_attInfo);
@@ -1854,17 +1854,20 @@ XML_SetOption(XML_Parser parser,
     case XML_OPTION_HUGE_XML:
       parser->m_limit->hugeXML = *(XML_Bool*)(value) ? XML_TRUE : XML_FALSE;
       return XML_STATUS_OK;
-    case XML_OPTION_NESTING_LIMIT:
-      parser->m_limit->nestingLimit = *(int *)(value);
+    case XML_OPTION_ENTITIES_MAX_NESTED_REFS:
+      parser->m_limit->entitiesMaxNesting = *(unsigned int *)(value);
       return XML_STATUS_OK;
-    case XML_OPTION_EXPANSION_RATIO:
-      parser->m_limit->expansionRatio = *(int *)(value);
+    case XML_OPTION_ENTITIES_MAX_RATIO:
+      parser->m_limit->entitiesMaxRatio = *(unsigned int *)(value);
       return XML_STATUS_OK;
-    case XML_OPTION_MAX_EXPANSION_SIZE:
-      parser->m_limit->maxExpansionSize = *(XML_Size *)(value);
+    case XML_OPTION_ENTITIES_MAX_RATIO_THRESHOLD:
+      parser->m_limit->entitiesMaxRatioThreshold = *(unsigned int *)(value);
       return XML_STATUS_OK;
-    case XML_OPTION_MAX_HASH_TABLE_ENTRIES:
-      parser->m_limit->maxHashTableEntries = *(XML_Size *)(value);
+    case XML_OPTION_ENTITIES_MAX_SIZE:
+      parser->m_limit->entitiesMaxSize = *(size_t *)(value);
+      return XML_STATUS_OK;
+    case XML_OPTION_HASH_TABLE_DTD_MAX_ENTRY_COUNT:
+      parser->m_limit->hashTableMaxCount = *(size_t *)(value);
       return XML_STATUS_OK;
     default:
       return XML_STATUS_ERROR;
@@ -1882,17 +1885,20 @@ XML_GetOption(XML_Parser parser,
     case XML_OPTION_HUGE_XML:
       *(XML_Bool*)(value) = parser->m_limit->hugeXML;
       return XML_STATUS_OK;
-    case XML_OPTION_NESTING_LIMIT:
-      *(int *)(value) = parser->m_limit->nestingLimit;
+    case XML_OPTION_ENTITIES_MAX_NESTED_REFS:
+      *(unsigned int *)(value) = parser->m_limit->entitiesMaxNesting;
       return XML_STATUS_OK;
-    case XML_OPTION_EXPANSION_RATIO:
-      *(int *)(value) = parser->m_limit->expansionRatio;
+    case XML_OPTION_ENTITIES_MAX_RATIO:
+      *(unsigned int *)(value) = parser->m_limit->entitiesMaxRatio;
       return XML_STATUS_OK;
-    case XML_OPTION_MAX_EXPANSION_SIZE:
-      *(XML_Size *)(value) = parser->m_limit->maxExpansionSize;
+    case XML_OPTION_ENTITIES_MAX_RATIO_THRESHOLD:
+      *(unsigned int *)(value) = parser->m_limit->entitiesMaxRatioThreshold;
       return XML_STATUS_OK;
-    case XML_OPTION_MAX_HASH_TABLE_ENTRIES:
-      *(XML_Size *)(value) = parser->m_limit->maxHashTableEntries;
+    case XML_OPTION_ENTITIES_MAX_SIZE:
+      *(size_t *)(value) = parser->m_limit->entitiesMaxSize;
+      return XML_STATUS_OK;
+    case XML_OPTION_HASH_TABLE_DTD_MAX_ENTRY_COUNT:
+      *(size_t *)(value) = parser->m_limit->hashTableMaxCount;
       return XML_STATUS_OK;
     default:
       return XML_STATUS_ERROR;
@@ -2515,16 +2521,16 @@ XML_ErrorString(enum XML_Error code)
   case XML_ERROR_INVALID_ARGUMENT:  /* Constant added in 2.2.1, already */
     return XML_L("invalid argument");
   /* Added in 2.3.0 */
-  case XML_ERROR_ENTITY_VIOLATION_SIZE:
+  case XML_ERROR_ENTITY_SIZE_VIOLATION:
     return XML_L("entity text is too large");
-  case XML_ERROR_ENTITY_VIOLATION_NESTED_SIZE:
+  case XML_ERROR_ENTITY_NESTED_SIZE_VIOLATION:
     return XML_L("nested entity text is too large");
-  case XML_ERROR_ENTITY_VIOLATION_RATIO:
-    return XML_L("entity expansion limit reached");
-  case XML_ERROR_ENTITY_VIOLATION_DEPTH:
-    return XML_L("entity nesting limit reached");
-  case XML_ERROR_HASH_TABLE_VIOLATION:
-    return XML_L("hash table exceeds limit");
+  case XML_ERROR_ENTITY_EXPANSION_RATIO_VIOLATION:
+    return XML_L("entity expansion ratio exceeded");
+  case XML_ERROR_ENTITY_NESTING_VIOLATION:
+    return XML_L("entity nesting limit exceeded");
+  case XML_ERROR_HASH_TABLE_SIZE_VIOLATION:
+    return XML_L("hash table entry limit exceeded");
   }
   return NULL;
 }
@@ -2594,7 +2600,7 @@ XML_GetFeatureList(void)
 #ifdef XML_ATTR_INFO
     {XML_FEATURE_ATTR_INFO,        XML_L("XML_ATTR_INFO"), 0},
 #endif
-    {XML_FEATURE_HUGE_XML,    XML_L("XML_OPTION_HUGE_XML"),
+    {XML_FEATURE_HUGE_XML,         XML_L("XML_OPTION_HUGE_XML"),
      XML_HUGE_XML_DEFAULT},
     {XML_FEATURE_END,              NULL, 0}
   };
@@ -2903,9 +2909,6 @@ doContent(XML_Parser parser,
           return XML_ERROR_RECURSIVE_ENTITY_REF;
         if (entity->notation)
           return XML_ERROR_BINARY_ENTITY_REF;
-        result = limitPreContent(parser, entity);
-        if (result != XML_ERROR_NONE)
-            return result;
         if (entity->textPtr) {
           if (!parser->m_defaultExpandInternalEntities) {
             if (parser->m_skippedEntityHandler)
@@ -2914,10 +2917,13 @@ doContent(XML_Parser parser,
               reportDefault(parser, enc, s, next);
             break;
           }
+          result = limitEntityPreContent(parser, entity);
+          if (result != XML_ERROR_NONE)
+              return result;
           result = processInternalEntity(parser, entity, XML_FALSE);
           if (result != XML_ERROR_NONE)
             return result;
-          result = limitPostContent(parser, entity);
+          result = limitEntityPostContent(parser, entity);
           if (result != XML_ERROR_NONE)
             return result;
         }
@@ -2926,20 +2932,21 @@ doContent(XML_Parser parser,
           entity->open = XML_TRUE;
           context = getContext(parser);
           entity->open = XML_FALSE;
-          if (!context) {
-            limitPostContent(parser, entity);
-            return XML_ERROR_NO_MEMORY;
-          }
+          if (!context)
+              return XML_ERROR_NO_MEMORY;
+         result = limitEntityPreContent(parser, entity);
+         if (result != XML_ERROR_NONE)
+            return result;
           if (!parser->m_externalEntityRefHandler(parser->m_externalEntityRefHandlerArg,
                                         context,
                                         entity->base,
                                         entity->systemId,
                                         entity->publicId)) {
-            limitPostContent(parser, entity);
+            limitEntityPostContent(parser, entity);
             return XML_ERROR_EXTERNAL_ENTITY_HANDLING;
           }
           poolDiscard(&parser->m_tempPool);
-          result = limitPostContent(parser, entity);
+          result = limitEntityPostContent(parser, entity);
           if (result != XML_ERROR_NONE)
             return result;
         }
@@ -3321,7 +3328,7 @@ storeAtts(XML_Parser parser, const ENCODING *enc,
     if (!elementType)
       return XML_ERROR_NO_MEMORY;
     if (limitHashTables(parser) != XML_STATUS_OK)
-      return XML_ERROR_HASH_TABLE_VIOLATION;
+      return XML_ERROR_HASH_TABLE_SIZE_VIOLATION;
     if (parser->m_ns && !setElementTypePrefix(parser, elementType))
       return XML_ERROR_NO_MEMORY;
   }
@@ -4566,7 +4573,7 @@ doProlog(XML_Parser parser,
       if (!parser->m_declEntity)
         return XML_ERROR_NO_MEMORY;
       if (limitHashTables(parser) != XML_STATUS_OK)
-        return XML_ERROR_HASH_TABLE_VIOLATION;
+        return XML_ERROR_HASH_TABLE_SIZE_VIOLATION;
 #endif /* XML_DTD */
       dtd->hasParamEntityRefs = XML_TRUE;
       if (parser->m_startDoctypeDeclHandler) {
@@ -4635,7 +4642,7 @@ doProlog(XML_Parser parser,
             return XML_ERROR_NO_MEMORY; /* LCOV_EXCL_LINE */
           }
           if (limitHashTables(parser) != XML_STATUS_OK)
-            return XML_ERROR_HASH_TABLE_VIOLATION;
+            return XML_ERROR_HASH_TABLE_SIZE_VIOLATION;
           if (parser->m_useForeignDTD)
             entity->base = parser->m_curBase;
           dtd->paramEntityRead = XML_FALSE;
@@ -4681,7 +4688,7 @@ doProlog(XML_Parser parser,
           if (!entity)
             return XML_ERROR_NO_MEMORY;
           if (limitHashTables(parser) != XML_STATUS_OK)
-            return XML_ERROR_HASH_TABLE_VIOLATION;
+            return XML_ERROR_HASH_TABLE_SIZE_VIOLATION;
           entity->base = parser->m_curBase;
           dtd->paramEntityRead = XML_FALSE;
           if (!parser->m_externalEntityRefHandler(parser->m_externalEntityRefHandlerArg,
@@ -4898,7 +4905,7 @@ doProlog(XML_Parser parser,
         if (!parser->m_declEntity)
           return XML_ERROR_NO_MEMORY;
         if (limitHashTables(parser) != XML_STATUS_OK)
-          return XML_ERROR_HASH_TABLE_VIOLATION;
+          return XML_ERROR_HASH_TABLE_SIZE_VIOLATION;
         parser->m_declEntity->publicId = NULL;
       }
 #endif /* XML_DTD */
@@ -4977,7 +4984,7 @@ doProlog(XML_Parser parser,
           if (!parser->m_declEntity)
             return XML_ERROR_NO_MEMORY;
           if (limitHashTables(parser) != XML_STATUS_OK)
-            return XML_ERROR_HASH_TABLE_VIOLATION;
+            return XML_ERROR_HASH_TABLE_SIZE_VIOLATION;
           if (parser->m_declEntity->name != name) {
             poolDiscard(&dtd->pool);
             parser->m_declEntity = NULL;
@@ -5011,7 +5018,7 @@ doProlog(XML_Parser parser,
         if (!parser->m_declEntity)
           return XML_ERROR_NO_MEMORY;
         if (limitHashTables(parser) != XML_STATUS_OK)
-          return XML_ERROR_HASH_TABLE_VIOLATION;
+          return XML_ERROR_HASH_TABLE_SIZE_VIOLATION;
         if (parser->m_declEntity->name != name) {
           poolDiscard(&dtd->pool);
           parser->m_declEntity = NULL;
@@ -6487,77 +6494,81 @@ limitCreate(const XML_Memory_Handling_Suite *ms)
     if (!limit)
       return NULL;
 
-    limit->first_entity = NULL;
-    limit->entityNestingLevel = 0;
-    limit->nestedEntityExpansionSize = 0;
-    limit->totalEntityExpansionSize = 0;
-
-    limit->hugeXML = XML_HUGE_XML_DEFAULT ? XML_TRUE : XML_FALSE;
-    limit->nestingLimit = XML_ENTITY_NESTING_LIMIT;
-    limit->maxExpansionSize = XML_ENTITY_EXPANSION_SIZE;
-    limit->expansionRatio = XML_ENTITY_EXPANSION_RATIO;
-    limit->maxHashTableEntries = XML_MAX_HASH_TABLE_ENTRIES;
+    limitReset(limit);
 
     return limit;
 }
 
 static void
-limitDestroy(LIMIT *limit,const XML_Memory_Handling_Suite *ms)
+limitReset(LIMIT *limit)
 {
-    ms->free_fcn(limit);
+    limit->first_entity = NULL;
+    limit->entitiesNestingLevel = 0;
+    limit->nestedEntitiesExpansionSize = 0;
+    limit->totalEntitiesExpansionSize = 0;
+
+    limit->hugeXML = XML_HUGE_XML_DEFAULT ? XML_TRUE : XML_FALSE;
+    limit->entitiesMaxNesting = XML_ENTITY_NESTED_REFERENCE_LIMIT;
+    limit->entitiesMaxSize = XML_ENTITY_EXPANSION_SIZE;
+    limit->entitiesMaxRatio = XML_ENTITY_EXPANSION_RATIO;
+    limit->entitiesMaxRatioThreshold = XML_ENTITY_EXPANSION_RATIO_THRESHOLD;
+    limit->hashTableMaxCount = XML_MAX_HASH_TABLE_ENTRIES;
 }
 
 static enum XML_Error
-limitPreContent(XML_Parser parser, ENTITY *entity)
+limitEntityPreContent(XML_Parser parser, ENTITY *entity)
 {
   XML_Index index;
-
-  if (parser->m_limit->first_entity == NULL) {
-    parser->m_limit->first_entity = entity;
-  }
-  parser->m_limit->entityNestingLevel++;
-  parser->m_limit->nestedEntityExpansionSize += entity->textLen;
-  parser->m_limit->totalEntityExpansionSize += entity->textLen;
 
   if (parser->m_limit->hugeXML)
     return XML_ERROR_NONE;
 
-  if (parser->m_limit->nestingLimit &&
-      (parser->m_limit->entityNestingLevel > parser->m_limit->nestingLimit))
-    return XML_ERROR_ENTITY_VIOLATION_DEPTH;
+  if (parser->m_limit->first_entity == NULL) {
+    parser->m_limit->first_entity = entity;
+  }
+  parser->m_limit->entitiesNestingLevel++;
+  parser->m_limit->nestedEntitiesExpansionSize += (entity->textLen * sizeof(XML_Char));
+  parser->m_limit->totalEntitiesExpansionSize += (entity->textLen * sizeof(XML_Char));
 
-  if (parser->m_limit->maxExpansionSize) {
-    if ((XML_Size)(entity->textLen) > parser->m_limit->maxExpansionSize)
+  if (parser->m_limit->entitiesMaxNesting &&
+      (parser->m_limit->entitiesNestingLevel > parser->m_limit->entitiesMaxNesting))
+    return XML_ERROR_ENTITY_NESTING_VIOLATION;
+
+  if (parser->m_limit->entitiesMaxSize) {
+    if ((XML_Size)(entity->textLen * sizeof(XML_Char)) > parser->m_limit->entitiesMaxSize)
       /* current entity text is too large */
-      return XML_ERROR_ENTITY_VIOLATION_SIZE;
+      return XML_ERROR_ENTITY_SIZE_VIOLATION;
 
-    if (parser->m_limit->nestedEntityExpansionSize > parser->m_limit->maxExpansionSize)
+    if (parser->m_limit->nestedEntitiesExpansionSize > parser->m_limit->entitiesMaxSize)
       /* sum of text is too large */
-      return XML_ERROR_ENTITY_VIOLATION_NESTED_SIZE;
+      return XML_ERROR_ENTITY_NESTED_SIZE_VIOLATION;
   }
 
   index = XML_GetCurrentByteIndex(parser);
-  if ((index > 0) &&
-      (parser->m_limit->expansionRatio) &&
-      (parser->m_limit->totalEntityExpansionSize > parser->m_limit->maxExpansionSize)) {
+  if ((parser->m_limit->entitiesMaxRatio) &&
+      (index > 0) &&
+      ((size_t)index > parser->m_limit->entitiesMaxRatioThreshold)) {
     /* overflow safe comparison */
-    XML_Size limit = (parser->m_limit->totalEntityExpansionSize +
-      (parser->m_limit->expansionRatio - 1)) / parser->m_limit->expansionRatio;
-    if (limit > (XML_Size)index)
+    size_t limit = (parser->m_limit->totalEntitiesExpansionSize +
+      (parser->m_limit->entitiesMaxRatio - 1)) / parser->m_limit->entitiesMaxRatio;
+    if (limit > (size_t)index)
       /* Ratio between processed bytes and all expanded entities is off */
-      return XML_ERROR_ENTITY_VIOLATION_RATIO;
+      return XML_ERROR_ENTITY_EXPANSION_RATIO_VIOLATION;
   }
 
   return XML_ERROR_NONE;
 }
 
 static enum XML_Error
-limitPostContent(XML_Parser parser, ENTITY *entity)
+limitEntityPostContent(XML_Parser parser, ENTITY *entity)
 {
+  if (parser->m_limit->hugeXML)
+    return XML_ERROR_NONE;
+
   if (parser->m_limit->first_entity == entity) {
     parser->m_limit->first_entity = NULL;
-    parser->m_limit->entityNestingLevel = 0;
-    parser->m_limit->nestedEntityExpansionSize = 0;
+    parser->m_limit->entitiesNestingLevel = 0;
+    parser->m_limit->nestedEntitiesExpansionSize = 0;
   }
 
   return XML_ERROR_NONE;
@@ -6568,14 +6579,14 @@ limitHashTables(XML_Parser parser)
 {
     DTD *dtd = parser->m_dtd;
     size_t used = 0;
-    if (parser->m_limit->hugeXML || !parser->m_limit->maxHashTableEntries)
+    if (parser->m_limit->hugeXML || !parser->m_limit->hashTableMaxCount)
       return XML_STATUS_OK;
 
 #define add_check_used(table)                           \
       if (((table).used + used) < used)                 \
         return XML_STATUS_ERROR; /* overflow */         \
       used += (table).used;                             \
-      if (used > parser->m_limit->maxHashTableEntries)  \
+      if (used > parser->m_limit->hashTableMaxCount)  \
         return XML_STATUS_ERROR
 
     add_check_used(dtd->generalEntities);

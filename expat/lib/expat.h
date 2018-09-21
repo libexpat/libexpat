@@ -126,32 +126,44 @@ enum XML_Error {
   /* Added in 2.2.1. */
   XML_ERROR_INVALID_ARGUMENT,
   /* Added in 2.3.0 */
-  XML_ERROR_ENTITY_VIOLATION_SIZE,
-  XML_ERROR_ENTITY_VIOLATION_NESTED_SIZE,
-  XML_ERROR_ENTITY_VIOLATION_RATIO,
-  XML_ERROR_ENTITY_VIOLATION_DEPTH,
-  XML_ERROR_HASH_TABLE_VIOLATION
+  XML_ERROR_ENTITY_SIZE_VIOLATION,
+  XML_ERROR_ENTITY_NESTED_SIZE_VIOLATION,
+  XML_ERROR_ENTITY_EXPANSION_RATIO_VIOLATION,
+  XML_ERROR_ENTITY_NESTING_VIOLATION,
+  XML_ERROR_HASH_TABLE_SIZE_VIOLATION
 };
+
+/*
+ * HUGE_XML: enable huge XML processing and disable all parsing limits
+ * ENTITIES_MAX_NESTED_REFS: restrict nested entity expansions of an entity
+ *   reference.
+ * ENTITIES_MAX_RATIO: restrict ratio between expanded entities and processed
+ *  XML bytes.
+ * ENTITIES_MAX_RATIO_THRESHOLD: start treshold for ratio
+ * ENTITIES_MAX_SIZE: limit max entity size in bytes for single and nested entities
+ * HASH_TABLE_DTD_MAX_ENTRY_COUNT: max entries in DTD hash tables
+ */
 
 enum XML_Option {
   /* Added in 2.3.0 */
-  XML_OPTION_HUGE_XML = 1, /* XML_Bool, no limits for huge XML (e.g. entity expansion) */
-  XML_OPTION_NESTING_LIMIT, /* int, limit entity nesting depth */
-  XML_OPTION_EXPANSION_RATIO, /* int, ratio between expansions and processed text */
-  XML_OPTION_MAX_EXPANSION_SIZE, /* XML_Size, limit max entity size for single and nested entities */
-  XML_OPTION_MAX_HASH_TABLE_ENTRIES /* XML_Size, max entries in DTD hash tables */
+  XML_OPTION_HUGE_XML, /* XML_Bool */
+  XML_OPTION_ENTITIES_MAX_NESTED_REFS, /* unsigned int */
+  XML_OPTION_ENTITIES_MAX_RATIO, /* unsigned int */
+  XML_OPTION_ENTITIES_MAX_RATIO_THRESHOLD, /* unsigned int */
+  XML_OPTION_ENTITIES_MAX_SIZE, /* size_t,  */
+  XML_OPTION_HASH_TABLE_DTD_MAX_ENTRY_COUNT /* size_t */
 };
 
 /* Entity expansion protection
  *
  * Mitigation against billion laugh and quadratic blowup attacks.
  *
- * XML_ENTITY_NESTING_LIMIT confines nesting of entities within entities.
+ * XML_ENTITY_NESTED_REFERENCE_LIMIT confines nesting of entities within entities.
  * XML_ENTITY_EXPANSION_SIZE restricts the maximum length of entities,
  *   both text of a single entity and resulting text of nested entities.
  * XML_ENTITY_EXPANSION_RATIO constrains the ratio between position in XML
  *  document and total amount of all expanded entities once more than
- *  XML_ENTITY_EXPANSION_SIZE bytes have been expanded.
+ *  XML_ENTITY_EXPANSION_RATIO_THRESHOLD bytes have been expanded.
  * XML_MAX_HASH_TABLE_ENTRIES limits total amount of entries across all
  *   DTD hash tables.
  *
@@ -163,8 +175,8 @@ enum XML_Option {
 #define XML_HUGE_XML_DEFAULT 0
 #endif
 
-#ifndef XML_ENTITY_NESTING_LIMIT
-#define XML_ENTITY_NESTING_LIMIT 40
+#ifndef XML_ENTITY_NESTED_REFERENCE_LIMIT
+#define XML_ENTITY_NESTED_REFERENCE_LIMIT 40
 #endif
 
 #ifndef XML_ENTITY_EXPANSION_SIZE
@@ -174,6 +186,11 @@ enum XML_Option {
 
 #ifndef XML_ENTITY_EXPANSION_RATIO
 #define XML_ENTITY_EXPANSION_RATIO 10
+#endif
+
+#ifndef XML_ENTITY_EXPANSION_RATIO_THRESHOLD
+/* 1MB text */
+#define XML_ENTITY_EXPANSION_RATIO_THRESHOLD 1000000
 #endif
 
 #ifndef XML_MAX_HASH_TABLE_ENTRIES

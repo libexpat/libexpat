@@ -9,10 +9,10 @@ Release x.x.x XXX XXXXXX XX XXXX
                     DTD hash table entries to mitigate DoS attacks like
                     billion laughs and quadratic blowup. Countermeasures
                     are enabled by default and can be tuned with
-                    XML_SetOption().
+                    XML_SetOption.
 
         New features:
-            #220  Add XML_SetOption(), XML_GetOption() and enum XML_Options
+            #220  Add XML_SetOption, XML_GetOption and enum XML_Options
                     to modify DoS mitigations.
             #220  xmlwf: Add argument -H to enable huge entities.
 

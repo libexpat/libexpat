@@ -7114,42 +7114,97 @@ END_TEST
 START_TEST(test_set_get_options)
 {
     const char *text = "<test/>";
-    XML_Bool he;
+    XML_Bool hx;
+    unsigned int nesting = 5;
+    unsigned int ratio = 7;
+    size_t maxsize = 23;
+    size_t maxentries = 42;
 
     /* unsupported option */
-    if (XML_GetOption(parser, (enum XML_Option)23, &he) != XML_STATUS_ERROR)
+    if (XML_GetOption(parser, (enum XML_Option)23, &hx) != XML_STATUS_ERROR)
         fail("XML_GetOption with unsupported option should have failed.");
-    if (XML_SetOption(parser, (enum XML_Option)23, &he) != XML_STATUS_ERROR)
+    if (XML_SetOption(parser, (enum XML_Option)23, &hx) != XML_STATUS_ERROR)
         fail("XML_SetOption with unsupported option should have failed.");
 
+    if (XML_GetOption(parser, XML_OPTION_HUGE_XML, NULL) != XML_STATUS_ERROR)
+        fail("XML_GetOption with NULL should have failed.");
+    if (XML_SetOption(parser, XML_OPTION_HUGE_XML, NULL) != XML_STATUS_ERROR)
+        fail("XML_SetOption with NULL should have failed.");
+
+    if (XML_GetOption(NULL, XML_OPTION_HUGE_XML, &hx) != XML_STATUS_ERROR)
+        fail("XML_GetOption with NULL parser should have failed.");
+    if (XML_SetOption(NULL, XML_OPTION_HUGE_XML, &hx) != XML_STATUS_ERROR)
+        fail("XML_SetOption with NULL parser should have failed.");
+
     /* check default */
-    if (XML_GetOption(parser, XML_OPTION_HUGE_XML, &he) != XML_STATUS_OK)
+    if (XML_GetOption(parser, XML_OPTION_HUGE_XML, &hx) != XML_STATUS_OK)
         fail("XML_GetOption failed");
-    if (he != XML_FALSE)
+    if (hx != XML_FALSE)
         fail("Expected XML_OPTION_HUGE_XML=XML_FALSE as default");
 
-    /* set and get */
-    he = XML_TRUE;
-    if (XML_SetOption(parser, XML_OPTION_HUGE_XML, &he) != XML_STATUS_OK) {
-        fail("XML_SetOptions() failed");
+    /* set and get XML_OPTION_HUGE_XML */
+    hx = XML_TRUE;
+    if (XML_SetOption(parser, XML_OPTION_HUGE_XML, &hx) != XML_STATUS_OK) {
+        fail("XML_SetOption failed");
     }
-    if (XML_GetOption(parser, XML_OPTION_HUGE_XML, &he) != XML_STATUS_OK)
+    hx = XML_FALSE;
+    if (XML_GetOption(parser, XML_OPTION_HUGE_XML, &hx) != XML_STATUS_OK)
         fail("XML_GetOption failed");
-    if (he != XML_TRUE)
+    if (hx != XML_TRUE)
         fail("Expected XML_OPTION_HUGE_XML=XML_TRUE");
 
-    /* XML_SetOptions() fails while parsing */
+    /* nesting */
+    if (XML_SetOption(parser, XML_OPTION_ENTITIES_MAX_NESTED_REFS, &nesting) != XML_STATUS_OK) {
+        fail("XML_SetOption failed");
+    }
+    nesting = 0;
+    if (XML_GetOption(parser, XML_OPTION_ENTITIES_MAX_NESTED_REFS, &nesting) != XML_STATUS_OK)
+        fail("XML_GetOption failed");
+    if (nesting != 5)
+        fail("Expected XML_OPTION_ENTITIES_MAX_NESTED_REFS=5");
+
+    /* ratio */
+    if (XML_SetOption(parser, XML_OPTION_ENTITIES_MAX_RATIO, &ratio) != XML_STATUS_OK) {
+        fail("XML_SetOption failed");
+    }
+    ratio = 0;
+    if (XML_GetOption(parser, XML_OPTION_ENTITIES_MAX_RATIO, &ratio) != XML_STATUS_OK)
+        fail("XML_GetOption failed");
+    if (ratio != 7)
+        fail("Expected XML_OPTION_ENTITIES_MAX_RATIO=7");
+
+    /* size */
+    if (XML_SetOption(parser, XML_OPTION_ENTITIES_MAX_SIZE, &maxsize) != XML_STATUS_OK) {
+        fail("XML_SetOption failed");
+    }
+    maxsize = 0;
+    if (XML_GetOption(parser, XML_OPTION_ENTITIES_MAX_SIZE, &maxsize) != XML_STATUS_OK)
+        fail("XML_GetOption failed");
+    if (maxsize != 23)
+        fail("Expected XML_OPTION_ENTITIES_MAX_SIZE=23");
+
+    /* entries */
+    if (XML_SetOption(parser, XML_OPTION_HASH_TABLE_DTD_MAX_ENTRY_COUNT, &maxentries) != XML_STATUS_OK) {
+        fail("XML_SetOption failed");
+    }
+    maxentries = 0;
+    if (XML_GetOption(parser, XML_OPTION_HASH_TABLE_DTD_MAX_ENTRY_COUNT, &maxentries) != XML_STATUS_OK)
+        fail("XML_GetOption failed");
+    if (maxentries != 42)
+        fail("Expected XML_OPTION_HASH_TABLE_DTD_MAX_ENTRY_COUNT=42");
+
+    /* XML_SetOption fails while parsing */
     if (_XML_Parse_SINGLE_BYTES(parser, text, (int)strlen(text),
                                 XML_FALSE) == XML_STATUS_ERROR)
         xml_failure(parser);
-    he = XML_FALSE;
-    if (XML_SetOption(parser, XML_OPTION_HUGE_XML, &he) != XML_STATUS_ERROR) {
-        fail("XML_SetOptions() should fail during parsing");
+    hx = XML_FALSE;
+    if (XML_SetOption(parser, XML_OPTION_HUGE_XML, &hx) != XML_STATUS_ERROR) {
+        fail("XML_SetOption should fail during parsing");
     }
-   if (XML_GetOption(parser, XML_OPTION_HUGE_XML, &he) != XML_STATUS_OK)
+   if (XML_GetOption(parser, XML_OPTION_HUGE_XML, &hx) != XML_STATUS_OK)
         fail("XML_GetOption failed");
-    if (he != XML_TRUE)
-        fail("Failed XML_SetOption() should not have modified parser options.");
+    if (hx != XML_TRUE)
+        fail("Failed XML_SetOption should not have modified parser options.");
 }
 END_TEST
 
@@ -8213,7 +8268,7 @@ alloc_setup(void)
         fail("Parser not created");
     /* Enable huge XML for realloc tests */
     if (XML_SetOption(parser, XML_OPTION_HUGE_XML, &huge_xml) != XML_STATUS_OK)
-        fail("XML_SetOptions() failed");
+        fail("XML_SetOption failed");
 }
 
 static void
@@ -12027,8 +12082,9 @@ static void
 huge_xml_setup(void)
 {
     XML_Bool huge_xml = XML_FALSE;
-    int nestingLimit = 3;
-    XML_Size expansionSize = 1023;
+    unsigned int nestingLimit = 3;
+    size_t expansionSize = 1023;
+    size_t ratioThreshold = 224;
     XML_Memory_Handling_Suite memsuite = {
         duff_allocator,
         duff_reallocator,
@@ -12043,11 +12099,13 @@ huge_xml_setup(void)
         fail("Parser not created");
     /* Disable huge XML and reduce limits for huge XML limit tests */
     if (XML_SetOption(parser, XML_OPTION_HUGE_XML, &huge_xml) != XML_STATUS_OK)
-        fail("XML_SetOptions(XML_OPTION_HUGE_XML) failed");
-    if (XML_SetOption(parser, XML_OPTION_NESTING_LIMIT, &nestingLimit) != XML_STATUS_OK)
-        fail("XML_SetOptions(XML_OPTION_NESTING_LIMIT) failed");
-    if (XML_SetOption(parser, XML_OPTION_MAX_EXPANSION_SIZE, &expansionSize) != XML_STATUS_OK)
-        fail("XML_SetOptions(XML_OPTION_MAX_EXPANSION_SIZE) failed");
+        fail("XML_SetOption(XML_OPTION_HUGE_XML) failed");
+    if (XML_SetOption(parser, XML_OPTION_ENTITIES_MAX_NESTED_REFS, &nestingLimit) != XML_STATUS_OK)
+        fail("XML_SetOption(XML_OPTION_ENTITIES_MAX_NESTED_REFS) failed");
+    if (XML_SetOption(parser, XML_OPTION_ENTITIES_MAX_SIZE, &expansionSize) != XML_STATUS_OK)
+        fail("XML_SetOption(XML_OPTION_ENTITIES_MAX_SIZE) failed");
+    if (XML_SetOption(parser, XML_OPTION_ENTITIES_MAX_RATIO_THRESHOLD, &ratioThreshold) != XML_STATUS_OK)
+        fail("XML_SetOption(XML_OPTION_ENTITIES_MAX_RATIO_THRESHOLD) failed");
 }
 
 static void
@@ -12067,8 +12125,8 @@ START_TEST(test_huge_xml_entity_nesting_limit)
         "  <!ENTITY e4 'entity'>\n"
         "]>\n"
         "<he>&e1;</he>\n";
-    expect_failure(text, XML_ERROR_ENTITY_VIOLATION_DEPTH,
-                   "XML_ERROR_ENTITY_VIOLATION_DEPTH not raised");
+    expect_failure(text, XML_ERROR_ENTITY_NESTING_VIOLATION,
+                   "XML_ERROR_ENTITY_NESTING_VIOLATION not raised");
 }
 END_TEST
 
@@ -12150,8 +12208,8 @@ START_TEST(test_huge_xml_entity_too_large)
         "'>\n"
         "]>\n"
         "<he>&large;</he>\n";
-    expect_failure(text, XML_ERROR_ENTITY_VIOLATION_SIZE,
-                   "XML_ERROR_ENTITY_VIOLATION_SIZE not raised");
+    expect_failure(text, XML_ERROR_ENTITY_SIZE_VIOLATION,
+                   "XML_ERROR_ENTITY_SIZE_VIOLATION not raised");
 }
 END_TEST
 
@@ -12170,8 +12228,8 @@ START_TEST(test_huge_xml_entity_expansion_limit)
         "&e;&e;&e;&e;&e;&e;&e;&e;&e;&e;"
         "&e;&e;&e;&e;&e;&e;"
         "</he>\n";
-    expect_failure(text, XML_ERROR_ENTITY_VIOLATION_RATIO,
-                   "XML_ERROR_ENTITY_VIOLATION_RATIO not raised");
+    expect_failure(text, XML_ERROR_ENTITY_EXPANSION_RATIO_VIOLATION,
+                   "XML_ERROR_ENTITY_EXPANSION_RATIO_VIOLATION not raised");
 }
 END_TEST
 
@@ -12188,18 +12246,18 @@ START_TEST(test_huge_xml_hash_table_limit)
         "]>\n"
         "<he>&e1;</he>\n";
 
-    if (XML_SetOption(parser, XML_OPTION_MAX_HASH_TABLE_ENTRIES, &tableEntries) != XML_STATUS_OK)
-        fail("XML_SetOptions(XML_OPTION_MAX_HASH_TABLE_ENTRIES) failed");
+    if (XML_SetOption(parser, XML_OPTION_HASH_TABLE_DTD_MAX_ENTRY_COUNT, &tableEntries) != XML_STATUS_OK)
+        fail("XML_SetOption(XML_OPTION_HASH_TABLE_DTD_MAX_ENTRY_COUNT) failed");
 
-    expect_failure(text, XML_ERROR_HASH_TABLE_VIOLATION,
-                   "XML_ERROR_HASH_TABLE_VIOLATION not raised");
+    expect_failure(text, XML_ERROR_HASH_TABLE_SIZE_VIOLATION,
+                   "XML_ERROR_HASH_TABLE_SIZE_VIOLATION not raised");
 }
 END_TEST
 
 START_TEST(test_huge_xml_enabled)
 {
-    XML_Size smallSize = 1;
-    int smallInt = 1;
+    size_t table_entries = 1;
+    unsigned int nesting = 1;
     XML_Bool hugeXML = XML_TRUE;
     const char *text =
         "<!DOCTYPE he [\n"
@@ -12211,12 +12269,12 @@ START_TEST(test_huge_xml_enabled)
         "]>\n"
         "<he>&e1;</he>\n";
 
-    if (XML_SetOption(parser, XML_OPTION_MAX_HASH_TABLE_ENTRIES, &smallSize) != XML_STATUS_OK)
-        fail("XML_SetOptions(XML_OPTION_MAX_HASH_TABLE_ENTRIES) failed");
-    if (XML_SetOption(parser, XML_OPTION_NESTING_LIMIT, &smallInt) != XML_STATUS_OK)
-        fail("XML_SetOptions(XML_OPTION_NESTING_LIMIT) failed");
+    if (XML_SetOption(parser, XML_OPTION_HASH_TABLE_DTD_MAX_ENTRY_COUNT, &table_entries) != XML_STATUS_OK)
+        fail("XML_SetOption(XML_OPTION_HASH_TABLE_DTD_MAX_ENTRY_COUNT) failed");
+    if (XML_SetOption(parser, XML_OPTION_ENTITIES_MAX_NESTED_REFS, &nesting) != XML_STATUS_OK)
+        fail("XML_SetOption(XML_OPTION_ENTITIES_MAX_NESTED_REFS) failed");
     if (XML_SetOption(parser, XML_OPTION_HUGE_XML, &hugeXML) != XML_STATUS_OK)
-        fail("XML_SetOptions(XML_OPTION_HUGE_XML) failed");
+        fail("XML_SetOption(XML_OPTION_HUGE_XML) failed");
 
     if (_XML_Parse_SINGLE_BYTES(parser, text, (int)strlen(text), XML_TRUE) != XML_STATUS_OK) {
         fail("expected XML_STATUS_OK with hugeXML");
