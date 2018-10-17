@@ -79,7 +79,7 @@ function test_well_formed_tests_cases () {
             sun/valid \
             sun/invalid
     do
-        make_directory "${XML_BASE_DSTDIR}/${XML_RELATIVE_SRCDIR}"
+        make_directory "${XML_BASE_DSTDIR}/${XML_RELATIVE_SRCDIR}" || return $?
         cd "${XML_BASE_SRCDIR}/${XML_RELATIVE_SRCDIR}" || return $?
         for XML_FILE_NAME in $(ls -1 *.xml | sort -d)
         do
@@ -90,7 +90,7 @@ function test_well_formed_tests_cases () {
     done
 
     XML_RELATIVE_SRCDIR=oasis
-    make_directory "${XML_BASE_DSTDIR}/${XML_RELATIVE_SRCDIR}"
+    make_directory "${XML_BASE_DSTDIR}/${XML_RELATIVE_SRCDIR}" || return $?
 
     cd "${XML_BASE_SRCDIR}/${XML_RELATIVE_SRCDIR}" || return $?
     for XML_FILE_NAME in *pass*.xml ; do
@@ -124,7 +124,7 @@ function test_not_well_formed_tests_cases () {
     done
 
     XML_RELATIVE_SRCDIR=oasis
-    make_directory "${XML_BASE_DSTDIR}/${XML_RELATIVE_SRCDIR}"
+    make_directory "${XML_BASE_DSTDIR}/${XML_RELATIVE_SRCDIR}" || return $?
 
     cd "${XML_BASE_SRCDIR}/${XML_RELATIVE_SRCDIR}" || return $?
     for XML_FILE_NAME in *fail*.xml
