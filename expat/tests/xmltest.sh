@@ -34,7 +34,6 @@ declare -r EXPAT_ABS_SRCDIR="${EXPAT_ABS_SRCDIR:?'environment variable EXPAT_ABS
 declare -r EXPAT_ABS_BUILDDIR="${EXPAT_ABS_BUILDDIR:?'environment variable EXPAT_ABS_BUILDDIR is not set'}"
 
 declare -r XMLWF="${1:-${EXPAT_ABS_BUILDDIR}/xmlwf/xmlwf}"
-# declare -r XMLWF=/usr/local/bin/xmlwf
 
 # Unicode-aware diff utility.  Requires Python version 3.
 #
@@ -42,7 +41,6 @@ declare -r DIFF="${EXPAT_ABS_SRCDIR}/tests/udiffer.py"
 
 declare -r XML_BASE_SRCDIR="$EXPAT_ABS_BUILDDIR"/tests/xmlconf
 declare -r XML_BASE_DSTDIR="$EXPAT_ABS_BUILDDIR"/tests/xmltest-output
-# declare -r XML_BASE_DSTDIR=/home/tmp/xml-testsuite-out
 
 # Number of successful tests.
 #
