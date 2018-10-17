@@ -252,7 +252,7 @@ function make_directory () {
     local -r PATHNAME="${1:?missing directory pathname argument in call to ${FUNCNAME}}"
 
     if ! test -d "$PATHNAME"
-    then /bin/mkdir -p "$PATHNAME" || return $?
+    then mkdir -p "$PATHNAME" || return $?
     fi
     return 0
 }
