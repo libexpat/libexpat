@@ -2,6 +2,18 @@ NOTE: We are looking for help with a few things:
       https://github.com/libexpat/libexpat/labels/help%20wanted
       If you can help, please get in touch.  Thanks!
 
+Release x.x.x XXX XXXXXX XX XXXX
+        Other changes:
+       #195 #197  Autotools/CMake: Utilize -fvisibility=hidden to stop
+                    exporting non-API symbols
+            #212  CMake: Make libdir of pkgconfig expat.pc support multilib
+            #219  Remove fallback to bcopy, assume that memmove(3) exists
+
+        Special thanks to:
+            Benjamin Peterson
+            @userwithuid
+            Yury Gribov
+
 Release 2.2.6 Sun August 12 2018
         Bug fixes:
        #170 #206  Avoid doing arithmetic with NULL pointers in XML_GetBuffer
@@ -40,7 +52,7 @@ Release 2.2.6 Sun August 12 2018
             Franek Korta
             Frank Rast
             Joe Orton
-            luzpaz
+            @luzpaz
             Pedro Vicente
             Rainer Jung
             Rhodri James
