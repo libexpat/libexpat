@@ -67,7 +67,7 @@ function main () {
 function test_well_formed_tests_cases () {
     local XML_RELATIVE_SRCDIR XML_FILE_NAME
 
-    cd "${XML_BASE_SRCDIR}"
+    cd "${XML_BASE_SRCDIR}" || return $?
     for XML_RELATIVE_SRCDIR in \
         ibm/valid/P* \
             ibm/invalid/P* \
@@ -80,7 +80,7 @@ function test_well_formed_tests_cases () {
             sun/invalid
     do
         make_directory "${XML_BASE_DSTDIR}/${XML_RELATIVE_SRCDIR}"
-        cd "${XML_BASE_SRCDIR}/${XML_RELATIVE_SRCDIR}"
+        cd "${XML_BASE_SRCDIR}/${XML_RELATIVE_SRCDIR}" || return $?
         for XML_FILE_NAME in $(ls -1 *.xml | sort -d)
         do
             [[ -f "${XML_FILE_NAME}" ]] || continue
@@ -92,7 +92,7 @@ function test_well_formed_tests_cases () {
     XML_RELATIVE_SRCDIR=oasis
     make_directory "${XML_BASE_DSTDIR}/${XML_RELATIVE_SRCDIR}"
 
-    cd "${XML_BASE_SRCDIR}/${XML_RELATIVE_SRCDIR}"
+    cd "${XML_BASE_SRCDIR}/${XML_RELATIVE_SRCDIR}" || return $?
     for XML_FILE_NAME in *pass*.xml ; do
         run_xmlwf_well_formed_doc_test "${XML_RELATIVE_SRCDIR}" "${XML_FILE_NAME}"
         update_test_result_status $?
@@ -105,7 +105,7 @@ function test_well_formed_tests_cases () {
 function test_not_well_formed_tests_cases () {
     local XML_RELATIVE_SRCDIR XML_FILE_NAME
 
-    cd "${XML_BASE_SRCDIR}"
+    cd "${XML_BASE_SRCDIR}" || return $?
     for XML_RELATIVE_SRCDIR in \
         ibm/not-wf/P* \
             ibm/not-wf/p28a \
@@ -115,7 +115,7 @@ function test_not_well_formed_tests_cases () {
             xmltest/not-wf/sa \
             sun/not-wf
     do
-        cd "${XML_BASE_SRCDIR}/${XML_RELATIVE_SRCDIR}"
+        cd "${XML_BASE_SRCDIR}/${XML_RELATIVE_SRCDIR}" || return $?
         for XML_FILE_NAME in *.xml
         do
             run_xmlwf_not_well_formed_doc_test "${XML_RELATIVE_SRCDIR}" "${XML_FILE_NAME}"
@@ -126,7 +126,7 @@ function test_not_well_formed_tests_cases () {
     XML_RELATIVE_SRCDIR=oasis
     make_directory "${XML_BASE_DSTDIR}/${XML_RELATIVE_SRCDIR}"
 
-    cd "${XML_BASE_SRCDIR}/${XML_RELATIVE_SRCDIR}"
+    cd "${XML_BASE_SRCDIR}/${XML_RELATIVE_SRCDIR}" || return $?
     for XML_FILE_NAME in *fail*.xml
     do
         run_xmlwf_not_well_formed_doc_test "${XML_RELATIVE_SRCDIR}" "${XML_FILE_NAME}"
