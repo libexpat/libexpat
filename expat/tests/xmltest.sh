@@ -103,6 +103,8 @@ function test_well_formed_tests_cases () {
 #### not well-formed test cases
 
 function test_not_well_formed_tests_cases () {
+    local XML_RELATIVE_SRCDIR XML_FILE_NAME
+
     cd "${XML_BASE_SRCDIR}"
     for XML_RELATIVE_SRCDIR in \
         ibm/not-wf/P* \
