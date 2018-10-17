@@ -138,7 +138,7 @@ if WITH_XMLWF
 	$(MAKE) -C xmlwf
 	export EXPAT_ABS_SRCDIR=$(abs_top_srcdir); \
 		export EXPAT_ABS_BUILDDIR=$(abs_top_builddir); \
-		$(srcdir)/tests/xmltest.sh "$(abs_top_builddir)/run.sh $(abs_top_builddir)/xmlwf/xmlwf@EXEEXT@" 2>&1 | \
+		$(srcdir)/tests/xmltest.sh "$(abs_top_builddir)/run.sh" "$(abs_top_builddir)/xmlwf/xmlwf@EXEEXT@" 2>&1 | \
 		tee $(builddir)/tests/xmltest.log
 	dos2unix $(builddir)/tests/xmltest.log
 	diff -u $(srcdir)/tests/xmltest.log.expected $(builddir)/tests/xmltest.log

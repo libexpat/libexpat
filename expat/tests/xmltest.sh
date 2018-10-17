@@ -33,7 +33,8 @@ shopt -s nullglob
 declare -r EXPAT_ABS_SRCDIR="${EXPAT_ABS_SRCDIR:?'environment variable EXPAT_ABS_SRCDIR is not set'}"
 declare -r EXPAT_ABS_BUILDDIR="${EXPAT_ABS_BUILDDIR:?'environment variable EXPAT_ABS_BUILDDIR is not set'}"
 
-declare -r XMLWF="${1:-${EXPAT_ABS_BUILDDIR}/xmlwf/xmlwf}"
+declare -r RUNNER="${1:-${EXPAT_ABS_BUILDDIR}/run.sh}"
+declare -r XMLWF="${2:-${EXPAT_ABS_BUILDDIR}/xmlwf/xmlwf}"
 
 # Unicode-aware diff utility.  Requires Python version 3.
 #
@@ -160,7 +161,7 @@ function run_xmlwf_not_well_formed_doc_test () {
     # In case the  document is not well formed, this  command: prints to
     # stdout a description of the "not well formed" error.
     #
-    ${XMLWF} -p "${XML_FILE_NAME}" > "${XMLWF_NOT_WELL_FORMED_LOG_FILE}" || return $?
+    "${RUNNER}" "${XMLWF}" -p "${XML_FILE_NAME}" > "${XMLWF_NOT_WELL_FORMED_LOG_FILE}" || return $?
 
     read NOT_WELL_FORMED_ERROR_DESCRIPTION < "${XMLWF_NOT_WELL_FORMED_LOG_FILE}"
     if test -z "${NOT_WELL_FORMED_ERROR_DESCRIPTION}"
@@ -208,7 +209,7 @@ function run_xmlwf_well_formed_doc_test () {
     # In case the  document is not well formed, this  command: prints to
     # stdout a description of the "not well formed" error.
     #
-    ${XMLWF} -p -N -d "${XMLWF_TRANSFORMED_OUTPUT_DIR}" "${XML_FILE_NAME}" > "${XMLWF_NOT_WELL_FORMED_LOG_FILE}" || return $?
+    "${RUNNER}" "${XMLWF}" -p -N -d "${XMLWF_TRANSFORMED_OUTPUT_DIR}" "${XML_FILE_NAME}" > "${XMLWF_NOT_WELL_FORMED_LOG_FILE}" || return $?
 
     read NOT_WELL_FORMED_ERROR_DESCRIPTION < "${XMLWF_NOT_WELL_FORMED_LOG_FILE}"
     if test -z "${NOT_WELL_FORMED_ERROR_DESCRIPTION}"
