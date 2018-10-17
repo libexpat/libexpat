@@ -18,12 +18,12 @@
 # to an older definition of canonical XML and does not generate notation
 # declarations.
 
-#page
+
 #### global settings
 
 shopt -s nullglob
 
-#page
+
 #### global variables
 
 # The environment  variable EXPAT_ABS_SRCDIR is  set in the  Makefile to
@@ -52,7 +52,7 @@ declare -i SUCCESS=0
 #
 declare -i ERROR=0
 
-#page
+
 #### main function
 
 function main () {
@@ -62,7 +62,7 @@ function main () {
     printf 'Passed: %d\nFailed: %d\n' $SUCCESS $ERROR
 }
 
-#page
+
 #### well-formed test cases
 
 function test_well_formed_tests_cases () {
@@ -100,7 +100,7 @@ function test_well_formed_tests_cases () {
     done
 }
 
-#page
+
 #### not well-formed test cases
 
 function test_not_well_formed_tests_cases () {
@@ -133,7 +133,7 @@ function test_not_well_formed_tests_cases () {
     done
 }
 
-#page
+
 #### not well-formed document processing
 
 # Upon entering this function, the current working directory must be:
@@ -174,7 +174,7 @@ function run_xmlwf_not_well_formed_doc_test () {
     fi
 }
 
-#page
+
 #### well-formed document processing
 
 # Upon entering this function, the current working directory must be:
@@ -235,7 +235,7 @@ function run_xmlwf_well_formed_doc_test () {
     fi
 }
 
-#page
+
 #### utility functions
 
 function print_error_message () {
@@ -268,12 +268,9 @@ function update_test_result_status () {
     fi
 }
 
-#page
+
 #### done
 
 main
 
 ### end of file
-# Local Variables:
-# page-delimiter: "^#page"
-# End:
