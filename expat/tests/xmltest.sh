@@ -68,24 +68,24 @@ function test_well_formed_tests_cases () {
 
     cd "$XML_BASE_SRCDIR"
     for XML_RELATIVE_SRCDIR in \
-	ibm/valid/P* \
-	    ibm/invalid/P* \
-	    xmltest/valid/ext-sa \
-	    xmltest/valid/not-sa \
-	    xmltest/invalid \
-	    xmltest/invalid/not-sa \
-	    xmltest/valid/sa \
-	    sun/valid \
-	    sun/invalid
+        ibm/valid/P* \
+            ibm/invalid/P* \
+            xmltest/valid/ext-sa \
+            xmltest/valid/not-sa \
+            xmltest/invalid \
+            xmltest/invalid/not-sa \
+            xmltest/valid/sa \
+            sun/valid \
+            sun/invalid
     do
-	make_directory "${XML_BASE_DSTDIR}/${XML_RELATIVE_SRCDIR}"
-	cd "${XML_BASE_SRCDIR}/${XML_RELATIVE_SRCDIR}"
-	for XML_FILE_NAME in $(ls -1 *.xml | sort -d)
-	do
-	    [[ -f "$XML_FILE_NAME" ]] || continue
-	    run_xmlwf_well_formed_doc_test "$XML_RELATIVE_SRCDIR" "$XML_FILE_NAME"
-	    update_test_result_status $?
-	done
+        make_directory "${XML_BASE_DSTDIR}/${XML_RELATIVE_SRCDIR}"
+        cd "${XML_BASE_SRCDIR}/${XML_RELATIVE_SRCDIR}"
+        for XML_FILE_NAME in $(ls -1 *.xml | sort -d)
+        do
+            [[ -f "$XML_FILE_NAME" ]] || continue
+            run_xmlwf_well_formed_doc_test "$XML_RELATIVE_SRCDIR" "$XML_FILE_NAME"
+            update_test_result_status $?
+        done
     done
 
     XML_RELATIVE_SRCDIR=oasis
@@ -93,8 +93,8 @@ function test_well_formed_tests_cases () {
 
     cd "${XML_BASE_SRCDIR}/${XML_RELATIVE_SRCDIR}"
     for XML_FILE_NAME in *pass*.xml ; do
-	run_xmlwf_well_formed_doc_test "$XML_RELATIVE_SRCDIR" "$XML_FILE_NAME"
-	update_test_result_status $?
+        run_xmlwf_well_formed_doc_test "$XML_RELATIVE_SRCDIR" "$XML_FILE_NAME"
+        update_test_result_status $?
     done
 }
 
@@ -104,20 +104,20 @@ function test_well_formed_tests_cases () {
 function test_not_well_formed_tests_cases () {
     cd "$XML_BASE_SRCDIR"
     for XML_RELATIVE_SRCDIR in \
-	ibm/not-wf/P* \
-	    ibm/not-wf/p28a \
-	    ibm/not-wf/misc \
-	    xmltest/not-wf/ext-sa \
-	    xmltest/not-wf/not-sa \
-	    xmltest/not-wf/sa \
-	    sun/not-wf
+        ibm/not-wf/P* \
+            ibm/not-wf/p28a \
+            ibm/not-wf/misc \
+            xmltest/not-wf/ext-sa \
+            xmltest/not-wf/not-sa \
+            xmltest/not-wf/sa \
+            sun/not-wf
     do
-	cd "${XML_BASE_SRCDIR}/${XML_RELATIVE_SRCDIR}"
-	for XML_FILE_NAME in *.xml
-	do
-	    run_xmlwf_not_well_formed_doc_test "$XML_RELATIVE_SRCDIR" "$XML_FILE_NAME"
-	    update_test_result_status $?
-	done
+        cd "${XML_BASE_SRCDIR}/${XML_RELATIVE_SRCDIR}"
+        for XML_FILE_NAME in *.xml
+        do
+            run_xmlwf_not_well_formed_doc_test "$XML_RELATIVE_SRCDIR" "$XML_FILE_NAME"
+            update_test_result_status $?
+        done
     done
 
     XML_RELATIVE_SRCDIR=oasis
@@ -126,8 +126,8 @@ function test_not_well_formed_tests_cases () {
     cd "${XML_BASE_SRCDIR}/${XML_RELATIVE_SRCDIR}"
     for XML_FILE_NAME in *fail*.xml
     do
-	run_xmlwf_not_well_formed_doc_test "$XML_RELATIVE_SRCDIR" "$XML_FILE_NAME"
-	update_test_result_status $?
+        run_xmlwf_not_well_formed_doc_test "$XML_RELATIVE_SRCDIR" "$XML_FILE_NAME"
+        update_test_result_status $?
     done
 }
 
@@ -148,8 +148,8 @@ function run_xmlwf_not_well_formed_doc_test () {
 
     if ! test -f "$XML_FILE_NAME"
     then
-	print_error_message 'missing source XML file: %s/%s' "$XML_RELATIVE_SRCDIR" "$XML_FILE_NAME"
-	return 1
+        print_error_message 'missing source XML file: %s/%s' "$XML_RELATIVE_SRCDIR" "$XML_FILE_NAME"
+        return 1
     fi
 
     make_directory "$XMLWF_NOT_WELL_FORMED_LOG_DIR" || return $?
@@ -165,10 +165,10 @@ function run_xmlwf_not_well_formed_doc_test () {
     read NOT_WELL_FORMED_ERROR_DESCRIPTION < "$XMLWF_NOT_WELL_FORMED_LOG_FILE"
     if test -z "$NOT_WELL_FORMED_ERROR_DESCRIPTION"
     then
-	print_log_message 'Expected not well-formed: %s/%s' "$XML_RELATIVE_SRCDIR" "$XML_FILE_NAME"
-	return 1
+        print_log_message 'Expected not well-formed: %s/%s' "$XML_RELATIVE_SRCDIR" "$XML_FILE_NAME"
+        return 1
     else
-	return 0
+        return 0
     fi
 }
 
@@ -194,8 +194,8 @@ function run_xmlwf_well_formed_doc_test () {
 
     if ! test -f "$XML_FILE_NAME"
     then
-	print_error_message 'missing source XML file: %s/%s' "$XML_RELATIVE_SRCDIR" "$XML_FILE_NAME"
-	return 1
+        print_error_message 'missing source XML file: %s/%s' "$XML_RELATIVE_SRCDIR" "$XML_FILE_NAME"
+        return 1
     fi
 
     make_directory "$XMLWF_TRANSFORMED_OUTPUT_DIR"  || return $?
@@ -213,23 +213,23 @@ function run_xmlwf_well_formed_doc_test () {
     read NOT_WELL_FORMED_ERROR_DESCRIPTION < "$XMLWF_NOT_WELL_FORMED_LOG_FILE"
     if test -z "$NOT_WELL_FORMED_ERROR_DESCRIPTION"
     then
-	# Not  all  the  source  files have  a  precomputed  transformed
-	# version.
-	if test -f "$XML_PRECOMPUTED_TRANSFORMED_PATHNAME"
-	then
+        # Not  all  the  source  files have  a  precomputed  transformed
+        # version.
+        if test -f "$XML_PRECOMPUTED_TRANSFORMED_PATHNAME"
+        then
             "$DIFF" "$XML_PRECOMPUTED_TRANSFORMED_PATHNAME" "$XMLWF_TRANSFORMED_OUTPUT_FILE" > "$XMLWF_TRANSFORMED_DIFF_FILE"
 
             if test -s "$XMLWF_TRANSFORMED_DIFF_FILE"
-	    then
-		# The diff file exists and it is not empty.
-		print_log_message 'Output differs: %s/%s' "$XML_RELATIVE_SRCDIR" "$XML_FILE_NAME"
-		return 1
+            then
+                # The diff file exists and it is not empty.
+                print_log_message 'Output differs: %s/%s' "$XML_RELATIVE_SRCDIR" "$XML_FILE_NAME"
+                return 1
             fi
-	fi
-	return 0
+        fi
+        return 0
     else
-	print_log_message 'in %s: %s' "$XML_RELATIVE_SRCDIR" "$NOT_WELL_FORMED_ERROR_DESCRIPTION"
-	return 1
+        print_log_message 'in %s: %s' "$XML_RELATIVE_SRCDIR" "$NOT_WELL_FORMED_ERROR_DESCRIPTION"
+        return 1
     fi
 }
 
