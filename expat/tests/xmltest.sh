@@ -39,8 +39,8 @@ declare -r XMLWF="${1:-${EXPAT_ABS_BUILDDIR}/xmlwf/xmlwf}"
 #
 declare -r DIFF="${EXPAT_ABS_SRCDIR}/tests/udiffer.py"
 
-declare -r XML_BASE_SRCDIR="$EXPAT_ABS_BUILDDIR"/tests/xmlconf
-declare -r XML_BASE_DSTDIR="$EXPAT_ABS_BUILDDIR"/tests/xmltest-output
+declare -r XML_BASE_SRCDIR="${EXPAT_ABS_BUILDDIR}"/tests/xmlconf
+declare -r XML_BASE_DSTDIR="${EXPAT_ABS_BUILDDIR}"/tests/xmltest-output
 
 # Number of successful tests.
 #
@@ -57,7 +57,7 @@ function main () {
     test_well_formed_tests_cases
     test_not_well_formed_tests_cases
 
-    printf 'Passed: %d\nFailed: %d\n' $SUCCESS $ERROR
+    printf 'Passed: %d\nFailed: %d\n' ${SUCCESS} ${ERROR}
 }
 
 
@@ -66,7 +66,7 @@ function main () {
 function test_well_formed_tests_cases () {
     local XML_RELATIVE_SRCDIR XML_FILE_NAME
 
-    cd "$XML_BASE_SRCDIR"
+    cd "${XML_BASE_SRCDIR}"
     for XML_RELATIVE_SRCDIR in \
         ibm/valid/P* \
             ibm/invalid/P* \
@@ -82,8 +82,8 @@ function test_well_formed_tests_cases () {
         cd "${XML_BASE_SRCDIR}/${XML_RELATIVE_SRCDIR}"
         for XML_FILE_NAME in $(ls -1 *.xml | sort -d)
         do
-            [[ -f "$XML_FILE_NAME" ]] || continue
-            run_xmlwf_well_formed_doc_test "$XML_RELATIVE_SRCDIR" "$XML_FILE_NAME"
+            [[ -f "${XML_FILE_NAME}" ]] || continue
+            run_xmlwf_well_formed_doc_test "${XML_RELATIVE_SRCDIR}" "${XML_FILE_NAME}"
             update_test_result_status $?
         done
     done
@@ -93,7 +93,7 @@ function test_well_formed_tests_cases () {
 
     cd "${XML_BASE_SRCDIR}/${XML_RELATIVE_SRCDIR}"
     for XML_FILE_NAME in *pass*.xml ; do
-        run_xmlwf_well_formed_doc_test "$XML_RELATIVE_SRCDIR" "$XML_FILE_NAME"
+        run_xmlwf_well_formed_doc_test "${XML_RELATIVE_SRCDIR}" "${XML_FILE_NAME}"
         update_test_result_status $?
     done
 }
@@ -102,7 +102,7 @@ function test_well_formed_tests_cases () {
 #### not well-formed test cases
 
 function test_not_well_formed_tests_cases () {
-    cd "$XML_BASE_SRCDIR"
+    cd "${XML_BASE_SRCDIR}"
     for XML_RELATIVE_SRCDIR in \
         ibm/not-wf/P* \
             ibm/not-wf/p28a \
@@ -115,7 +115,7 @@ function test_not_well_formed_tests_cases () {
         cd "${XML_BASE_SRCDIR}/${XML_RELATIVE_SRCDIR}"
         for XML_FILE_NAME in *.xml
         do
-            run_xmlwf_not_well_formed_doc_test "$XML_RELATIVE_SRCDIR" "$XML_FILE_NAME"
+            run_xmlwf_not_well_formed_doc_test "${XML_RELATIVE_SRCDIR}" "${XML_FILE_NAME}"
             update_test_result_status $?
         done
     done
@@ -126,7 +126,7 @@ function test_not_well_formed_tests_cases () {
     cd "${XML_BASE_SRCDIR}/${XML_RELATIVE_SRCDIR}"
     for XML_FILE_NAME in *fail*.xml
     do
-        run_xmlwf_not_well_formed_doc_test "$XML_RELATIVE_SRCDIR" "$XML_FILE_NAME"
+        run_xmlwf_not_well_formed_doc_test "${XML_RELATIVE_SRCDIR}" "${XML_FILE_NAME}"
         update_test_result_status $?
     done
 }
@@ -146,13 +146,13 @@ function run_xmlwf_not_well_formed_doc_test () {
     local -r XMLWF_NOT_WELL_FORMED_LOG_FILE="${XMLWF_NOT_WELL_FORMED_LOG_DIR}/${XML_FILE_NAME}.log"
     local NOT_WELL_FORMED_ERROR_DESCRIPTION
 
-    if ! test -f "$XML_FILE_NAME"
+    if ! test -f "${XML_FILE_NAME}"
     then
-        print_error_message 'missing source XML file: %s/%s' "$XML_RELATIVE_SRCDIR" "$XML_FILE_NAME"
+        print_error_message 'missing source XML file: %s/%s' "${XML_RELATIVE_SRCDIR}" "${XML_FILE_NAME}"
         return 1
     fi
 
-    make_directory "$XMLWF_NOT_WELL_FORMED_LOG_DIR" || return $?
+    make_directory "${XMLWF_NOT_WELL_FORMED_LOG_DIR}" || return $?
 
     # In case the document is  well formed, this command: prints nothing
     # to stdout.
@@ -160,12 +160,12 @@ function run_xmlwf_not_well_formed_doc_test () {
     # In case the  document is not well formed, this  command: prints to
     # stdout a description of the "not well formed" error.
     #
-    $XMLWF -p "$XML_FILE_NAME" > "$XMLWF_NOT_WELL_FORMED_LOG_FILE" || return $?
+    ${XMLWF} -p "${XML_FILE_NAME}" > "${XMLWF_NOT_WELL_FORMED_LOG_FILE}" || return $?
 
-    read NOT_WELL_FORMED_ERROR_DESCRIPTION < "$XMLWF_NOT_WELL_FORMED_LOG_FILE"
-    if test -z "$NOT_WELL_FORMED_ERROR_DESCRIPTION"
+    read NOT_WELL_FORMED_ERROR_DESCRIPTION < "${XMLWF_NOT_WELL_FORMED_LOG_FILE}"
+    if test -z "${NOT_WELL_FORMED_ERROR_DESCRIPTION}"
     then
-        print_log_message 'Expected not well-formed: %s/%s' "$XML_RELATIVE_SRCDIR" "$XML_FILE_NAME"
+        print_log_message 'Expected not well-formed: %s/%s' "${XML_RELATIVE_SRCDIR}" "${XML_FILE_NAME}"
         return 1
     else
         return 0
@@ -192,43 +192,43 @@ function run_xmlwf_well_formed_doc_test () {
     local -r XMLWF_TRANSFORMED_OUTPUT_FILE="${XMLWF_TRANSFORMED_OUTPUT_DIR}/${XML_FILE_NAME}"
     local -r XMLWF_TRANSFORMED_DIFF_FILE="${XMLWF_TRANSFORMED_OUTPUT_DIR}/${XML_FILE_NAME}.diff"
 
-    if ! test -f "$XML_FILE_NAME"
+    if ! test -f "${XML_FILE_NAME}"
     then
-        print_error_message 'missing source XML file: %s/%s' "$XML_RELATIVE_SRCDIR" "$XML_FILE_NAME"
+        print_error_message 'missing source XML file: %s/%s' "${XML_RELATIVE_SRCDIR}" "${XML_FILE_NAME}"
         return 1
     fi
 
-    make_directory "$XMLWF_TRANSFORMED_OUTPUT_DIR"  || return $?
-    make_directory "$XMLWF_NOT_WELL_FORMED_LOG_DIR" || return $?
+    make_directory "${XMLWF_TRANSFORMED_OUTPUT_DIR}"  || return $?
+    make_directory "${XMLWF_NOT_WELL_FORMED_LOG_DIR}" || return $?
 
     # In case the document is  well formed, this command: prints nothing
     # to  stdout;  outputs a  transformed  version  of the  document  to
-    # $XMLWF_TRANSFORMED_OUTPUT_DIR.
+    # ${XMLWF_TRANSFORMED_OUTPUT_DIR}.
     #
     # In case the  document is not well formed, this  command: prints to
     # stdout a description of the "not well formed" error.
     #
-    $XMLWF -p -N -d "$XMLWF_TRANSFORMED_OUTPUT_DIR" "$XML_FILE_NAME" > "$XMLWF_NOT_WELL_FORMED_LOG_FILE" || return $?
+    ${XMLWF} -p -N -d "${XMLWF_TRANSFORMED_OUTPUT_DIR}" "${XML_FILE_NAME}" > "${XMLWF_NOT_WELL_FORMED_LOG_FILE}" || return $?
 
-    read NOT_WELL_FORMED_ERROR_DESCRIPTION < "$XMLWF_NOT_WELL_FORMED_LOG_FILE"
-    if test -z "$NOT_WELL_FORMED_ERROR_DESCRIPTION"
+    read NOT_WELL_FORMED_ERROR_DESCRIPTION < "${XMLWF_NOT_WELL_FORMED_LOG_FILE}"
+    if test -z "${NOT_WELL_FORMED_ERROR_DESCRIPTION}"
     then
         # Not  all  the  source  files have  a  precomputed  transformed
         # version.
-        if test -f "$XML_PRECOMPUTED_TRANSFORMED_PATHNAME"
+        if test -f "${XML_PRECOMPUTED_TRANSFORMED_PATHNAME}"
         then
-            "$DIFF" "$XML_PRECOMPUTED_TRANSFORMED_PATHNAME" "$XMLWF_TRANSFORMED_OUTPUT_FILE" > "$XMLWF_TRANSFORMED_DIFF_FILE"
+            "${DIFF}" "${XML_PRECOMPUTED_TRANSFORMED_PATHNAME}" "${XMLWF_TRANSFORMED_OUTPUT_FILE}" > "${XMLWF_TRANSFORMED_DIFF_FILE}"
 
-            if test -s "$XMLWF_TRANSFORMED_DIFF_FILE"
+            if test -s "${XMLWF_TRANSFORMED_DIFF_FILE}"
             then
                 # The diff file exists and it is not empty.
-                print_log_message 'Output differs: %s/%s' "$XML_RELATIVE_SRCDIR" "$XML_FILE_NAME"
+                print_log_message 'Output differs: %s/%s' "${XML_RELATIVE_SRCDIR}" "${XML_FILE_NAME}"
                 return 1
             fi
         fi
         return 0
     else
-        print_log_message 'in %s: %s' "$XML_RELATIVE_SRCDIR" "$NOT_WELL_FORMED_ERROR_DESCRIPTION"
+        print_log_message 'in %s: %s' "${XML_RELATIVE_SRCDIR}" "${NOT_WELL_FORMED_ERROR_DESCRIPTION}"
         return 1
     fi
 }
@@ -251,8 +251,8 @@ function print_log_message () {
 function make_directory () {
     local -r PATHNAME="${1:?missing directory pathname argument in call to ${FUNCNAME}}"
 
-    if ! test -d "$PATHNAME"
-    then mkdir -p "$PATHNAME" || return $?
+    if ! test -d "${PATHNAME}"
+    then mkdir -p "${PATHNAME}" || return $?
     fi
     return 0
 }
@@ -260,7 +260,7 @@ function make_directory () {
 function update_test_result_status () {
     local -r EXIT_STATUS="${1:?missing exit status argument in call to ${FUNCNAME}}"
 
-    if test "$EXIT_STATUS" -eq 0
+    if test "${EXIT_STATUS}" -eq 0
     then let ++SUCCESS
     else let ++ERROR
     fi
