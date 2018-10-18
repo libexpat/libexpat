@@ -102,9 +102,13 @@ AC_HEADER_STDC
 
 dnl Checks for typedefs, structures, and compiler characteristics.
 
-dnl Note: Avoid using AC_C_BIGENDIAN because it does not
-dnl work in a cross compile.
-AC_C_BIGENDIAN_CROSS
+dnl We define BYTEORDER to 1234 when the platform is little endian; it
+dnl defines it to 4321 when the platform is big endian.
+dnl
+dnl A long time ago (early 2000 years) AC_C_BIGENDIAN was considered wrong
+dnl when cross compiling, now (2018) we assume it is fine.
+AC_C_BIGENDIAN([BYTEORDER=4321],[BYTEORDER=1234])
+AC_DEFINE_UNQUOTED(BYTEORDER, $BYTEORDER, [1234 = LILENDIAN, 4321 = BIGENDIAN])
 
 AC_C_CONST
 AC_TYPE_SIZE_T
