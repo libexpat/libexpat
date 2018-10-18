@@ -23,11 +23,12 @@ dnl
 dnl NOTE: esyscmd() is a GNU M4 extension. Thus, we wrap it in an appropriate
 dnl test. I believe this test will work, but I don't have a place with non-
 dnl GNU M4 to test it right now.
-define([expat_version], ifdef([__gnu__],
-                              [esyscmd(conftools/get-version.sh lib/expat.h)],
-                              [2.2.x]))
+m4_define([expat_version],
+  m4_ifdef([__gnu__],
+           [esyscmd(conftools/get-version.sh lib/expat.h)],
+           [2.2.x]))
 AC_INIT(expat, expat_version, expat-bugs@libexpat.org)
-undefine([expat_version])
+m4_undefine([expat_version])
 
 AC_CONFIG_SRCDIR([Makefile.in])
 AC_CONFIG_AUX_DIR([conftools])
