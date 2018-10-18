@@ -88,7 +88,7 @@ AS_IF([test "$GCC" = yes],
 AC_LANG_POP([C++])
 
 AS_IF([test "$GCC" = yes],
-  [AS_VAR_APPEND(LDFLAGS,  " -fno-strict-aliasing")])
+  [AX_APPEND_LINK_FLAGS([-fno-strict-aliasing],[LDFLAGS])])
 
 AC_MSG_CHECKING(whether compiler supports visibility)
 AS_VAR_COPY(OLDCFLAGS,CFLAGS)
