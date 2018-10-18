@@ -50,8 +50,8 @@ LIBCURRENT=7   # sync
 LIBREVISION=8  # with
 LIBAGE=6       # CMakeLists.txt!
 
-CPPFLAGS="${CPPFLAGS} -DHAVE_EXPAT_CONFIG_H"
-AC_CONFIG_HEADER(expat_config.h)
+AS_VAR_APPEND(CPPFLAGS," -DHAVE_EXPAT_CONFIG_H")
+AC_CONFIG_HEADER([expat_config.h])
 
 AM_PROG_AR
 AC_PROG_INSTALL
@@ -69,7 +69,7 @@ AC_SUBST(LIBAGE)
 AC_PROG_CC_C99
 AC_PROG_CXX
 
-if test "$GCC" = yes ; then
+AS_IF([test "$GCC" = yes],[
     dnl
     dnl Be careful about adding the -fexceptions option; some versions of
     dnl GCC don't support it and it causes extra warnings that are only
@@ -81,21 +81,22 @@ if test "$GCC" = yes ; then
     AC_TRY_LINK( , ,
                    AC_MSG_RESULT(yes),
                    AC_MSG_RESULT(no); CFLAGS="$OLDCFLAGS")
-    if test "x$CXXFLAGS" = x ; then
-    CXXFLAGS=`echo "$CFLAGS" | sed 's/ -Wmissing-prototypes -Wstrict-prototypes//'`
-    fi
+    AS_IF([test "x$CXXFLAGS" = x],
+      [CXXFLAGS=`echo "$CFLAGS" | sed 's/ -Wmissing-prototypes -Wstrict-prototypes//'`])
 
     CFLAGS="${CFLAGS} -fno-strict-aliasing"
     CXXFLAGS="${CXXFLAGS} -fno-strict-aliasing"
     LDFLAGS="${LDFLAGS} -fno-strict-aliasing"
-fi
+])
 
 AC_MSG_CHECKING(whether compiler supports visibility)
-OLDCFLAGS="$CFLAGS"
-CFLAGS="$CFLAGS -fvisibility=hidden -Wall -Werror"
+AS_VAR_SET(OLDCFLAGS,$CFLAGS)
+AS_VAR_APPEND(CFLAGS,[" -fvisibility=hidden -Wall -Werror"])
 AC_COMPILE_IFELSE([AC_LANG_SOURCE([[void __attribute__((visibility("default"))) foo(void); void foo(void) {}]])],
-                  AC_MSG_RESULT(yes); CFLAGS="$OLDCFLAGS -fvisibility=hidden -DXML_ENABLE_VISIBILITY=1",
-                  AC_MSG_RESULT(no); CFLAGS="$OLDCFLAGS")
+  [AC_MSG_RESULT(yes)
+   AS_VAR_SET(CFLAGS,"$OLDCFLAGS -fvisibility=hidden -DXML_ENABLE_VISIBILITY=1")],
+  [AC_MSG_RESULT(no)
+   AS_VAR_SET(CFLAGS,"$OLDCFLAGS")])
 
 dnl Checks for header files.
 AC_HEADER_STDC
@@ -113,24 +114,25 @@ AC_DEFINE_UNQUOTED(BYTEORDER, $BYTEORDER, [1234 = LILENDIAN, 4321 = BIGENDIAN])
 AC_C_CONST
 AC_TYPE_SIZE_T
 
-AC_ARG_WITH([xmlwf], [
-AS_HELP_STRING([--without-xmlwf], [do not build xmlwf])], [], [with_xmlwf=yes])
+AC_ARG_WITH([xmlwf],
+  [AS_HELP_STRING([--without-xmlwf], [do not build xmlwf])], [],
+  [with_xmlwf=yes])
 AM_CONDITIONAL([WITH_XMLWF], [test x${with_xmlwf} = xyes])
 
 AM_CONDITIONAL([MINGW], [echo -- "${host}" | ${FGREP} mingw >/dev/null])
 AM_CONDITIONAL([UNICODE], [echo -- "${CPPFLAGS}${CFLAGS}" | ${FGREP} XML_UNICODE >/dev/null])
 
 
-AC_ARG_WITH([libbsd], [
-AS_HELP_STRING([--with-libbsd], [utilize libbsd (for arc4random_buf)])
-], [], [with_libbsd=no])
-AS_IF([test "x${with_libbsd}" != xno], [
-  AC_CHECK_LIB([bsd], [arc4random_buf], [], [
-    AS_IF([test "x${with_libbsd}" = xyes], [
-      AC_MSG_ERROR([Enforced use of libbsd cannot be satisfied.])
-    ])
-  ])
-])
+AC_ARG_WITH([libbsd],
+  [AS_HELP_STRING([--with-libbsd], [utilize libbsd (for arc4random_buf)])],
+  [],
+  [with_libbsd=no])
+AS_IF([test "x${with_libbsd}" != xno],
+  [AC_CHECK_LIB([bsd],
+     [arc4random_buf],
+     [],
+     [AS_IF([test "x${with_libbsd}" = xyes],
+            [AC_MSG_ERROR([Enforced use of libbsd cannot be satisfied.])])])])
 AC_MSG_CHECKING([for arc4random_buf (BSD or libbsd)])
 AC_LINK_IFELSE([AC_LANG_SOURCE([
   #include <stdlib.h>  /* for arc4random_buf on BSD, for NULL */
@@ -141,15 +143,13 @@ AC_LINK_IFELSE([AC_LANG_SOURCE([
     arc4random_buf(NULL, 0U);
     return 0;
   }
-])], [
-    AC_DEFINE([HAVE_ARC4RANDOM_BUF], [1],
-        [Define to 1 if you have the `arc4random_buf' function.])
-    AC_MSG_RESULT([yes])
-], [
-    AC_MSG_RESULT([no])
+])],
+  [AC_DEFINE([HAVE_ARC4RANDOM_BUF], [1], [Define to 1 if you have the `arc4random_buf' function.])
+   AC_MSG_RESULT([yes])],
+  [AC_MSG_RESULT([no])
 
-    AC_MSG_CHECKING([for arc4random (BSD, macOS or libbsd)])
-    AC_LINK_IFELSE([AC_LANG_SOURCE([
+   AC_MSG_CHECKING([for arc4random (BSD, macOS or libbsd)])
+   AC_LINK_IFELSE([AC_LANG_SOURCE([
       #if defined(HAVE_LIBBSD)
       # include <bsd/stdlib.h>
       #else
@@ -159,14 +159,10 @@ AC_LINK_IFELSE([AC_LANG_SOURCE([
           arc4random();
           return 0;
       }
-    ])], [
-        AC_DEFINE([HAVE_ARC4RANDOM], [1],
-            [Define to 1 if you have the `arc4random' function.])
-        AC_MSG_RESULT([yes])
-    ], [
-        AC_MSG_RESULT([no])
-    ])
-])
+     ])],
+     [AC_DEFINE([HAVE_ARC4RANDOM], [1], [Define to 1 if you have the `arc4random' function.])
+      AC_MSG_RESULT([yes])],
+     [AC_MSG_RESULT([no])])])
 
 
 AC_MSG_CHECKING([for getrandom (Linux 3.17+, glibc 2.25+)])
@@ -176,15 +172,13 @@ AC_LINK_IFELSE([AC_LANG_SOURCE([
   int main() {
     return getrandom(NULL, 0U, 0U);
   }
-])], [
-    AC_DEFINE([HAVE_GETRANDOM], [1],
-        [Define to 1 if you have the `getrandom' function.])
-    AC_MSG_RESULT([yes])
-], [
-    AC_MSG_RESULT([no])
+  ])],
+  [AC_DEFINE([HAVE_GETRANDOM], [1], [Define to 1 if you have the `getrandom' function.])
+   AC_MSG_RESULT([yes])],
+  [AC_MSG_RESULT([no])
 
-    AC_MSG_CHECKING([for syscall SYS_getrandom (Linux 3.17+)])
-    AC_LINK_IFELSE([AC_LANG_SOURCE([
+   AC_MSG_CHECKING([for syscall SYS_getrandom (Linux 3.17+)])
+   AC_LINK_IFELSE([AC_LANG_SOURCE([
       #include <stdlib.h>  /* for NULL */
       #include <unistd.h>  /* for syscall */
       #include <sys/syscall.h>  /* for SYS_getrandom */
@@ -192,14 +186,10 @@ AC_LINK_IFELSE([AC_LANG_SOURCE([
         syscall(SYS_getrandom, NULL, 0, 0);
         return 0;
       }
-    ])], [
-        AC_DEFINE([HAVE_SYSCALL_GETRANDOM], [1],
-            [Define to 1 if you have `syscall' and `SYS_getrandom'.])
-        AC_MSG_RESULT([yes])
-    ], [
-        AC_MSG_RESULT([no])
-    ])
-])
+   ])],
+   [AC_DEFINE([HAVE_SYSCALL_GETRANDOM], [1], [Define to 1 if you have `syscall' and `SYS_getrandom'.])
+    AC_MSG_RESULT([yes])],
+   [AC_MSG_RESULT([no])])])
 
 
 dnl Only needed for xmlwf:
@@ -207,11 +197,9 @@ AC_CHECK_HEADERS(fcntl.h unistd.h)
 AC_TYPE_OFF_T
 AC_FUNC_MMAP
 
-if test "$ac_cv_func_mmap_fixed_mapped" = "yes"; then
-    FILEMAP=unixfilemap
-else
-    FILEMAP=readfilemap
-fi
+AS_IF([test "$ac_cv_func_mmap_fixed_mapped" = "yes"],
+  [AS_VAR_SET(FILEMAP,unixfilemap)],
+  [AS_VAR_SET(FILEMAP,readfilemap)])
 AC_SUBST(FILEMAP)
 
 
@@ -226,25 +214,23 @@ AC_DEFINE([XML_DEV_URANDOM], 1,
 AC_ARG_ENABLE([xml-context],
   AS_HELP_STRING([--enable-xml-context @<:@COUNT@:>@],
     [Retain context around the current parse point;
-        default is enabled and a size of 1024 bytes])
-AS_HELP_STRING([--disable-xml-context],
+     default is enabled and a size of 1024 bytes])
+  AS_HELP_STRING([--disable-xml-context],
     [Do not retain context around the current parse point]),
-  [enable_xml_context=${enableval}])
-AS_IF([test "x${enable_xml_context}" != "xno"], [
-  AS_IF([test "x${enable_xml_context}" = "xyes" \
-      -o "x${enable_xml_context}" = "x"], [
-    enable_xml_context=1024
-  ])
-  AC_DEFINE_UNQUOTED([XML_CONTEXT_BYTES], [${enable_xml_context}],
-    [Define to specify how much context to retain around the current parse point.])
-])
+    [enable_xml_context=${enableval}])
+AS_IF([test "x${enable_xml_context}" != "xno"],
+  [AS_IF([test "x${enable_xml_context}" = "xyes" \
+            -o "x${enable_xml_context}" = "x"],
+     [AS_VAR_SET(enable_xml_context,1024)])
+   AC_DEFINE_UNQUOTED([XML_CONTEXT_BYTES], [${enable_xml_context}],
+     [Define to specify how much context to retain around the current parse point.])])
 
-AC_ARG_WITH([docbook], [AS_HELP_STRING([--with-docbook],
-    [enforce XML to man page compilation @<:@default=check@:>@])
-AS_HELP_STRING([--without-docbook],
-    [skip XML to man page compilation @<:@default=check@:>@])],
-  [],
-  [with_docbook=check])
+AC_ARG_WITH([docbook],
+  [AS_HELP_STRING([--with-docbook],
+                  [enforce XML to man page compilation @<:@default=check@:>@])
+   AS_HELP_STRING([--without-docbook],
+                  [skip XML to man page compilation @<:@default=check@:>@])], [],
+                  [with_docbook=check])
 
 AC_ARG_VAR([DOCBOOK_TO_MAN], [docbook2x-man command])
 AS_IF([test "x$with_docbook" != xno],
@@ -262,14 +248,13 @@ AS_IF([test "x${DOCBOOK_TO_MAN}" != x -a "x$with_docbook" != xno],
 
 AM_CONDITIONAL(WITH_DOCBOOK, [test "x${DOCBOOK_TO_MAN}" != x])
 
-AC_CONFIG_FILES([Makefile expat.pc])
-AC_CONFIG_FILES([
-  doc/Makefile
-  examples/Makefile
-  lib/Makefile
-  tests/Makefile
-  tests/benchmark/Makefile
-  xmlwf/Makefile
-])
+AC_CONFIG_FILES([Makefile]
+  [expat.pc]
+  [doc/Makefile]
+  [examples/Makefile]
+  [lib/Makefile]
+  [tests/Makefile]
+  [tests/benchmark/Makefile]
+  [xmlwf/Makefile])
 AC_CONFIG_FILES([run.sh], [chmod +x run.sh])
 AC_OUTPUT
