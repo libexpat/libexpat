@@ -11,7 +11,7 @@ dnl   in the file COPYING that comes with this distribution.
 dnl
 
 dnl Ensure that Expat is configured with autoconf 2.58 or newer
-AC_PREREQ(2.58)
+AC_PREREQ(2.69)
 
 dnl Get the version number of Expat, using m4's esyscmd() command to run
 dnl the command at m4-generation time. This allows us to create an m4
@@ -106,7 +106,7 @@ dnl We define BYTEORDER to 1234 when the platform is little endian; it
 dnl defines it to 4321 when the platform is big endian.
 dnl
 dnl A long time ago (early 2000 years) AC_C_BIGENDIAN was considered wrong
-dnl when cross compiling, now (2018) we assume it is fine.
+dnl when cross compiling, now (2018, GNU Autoconf 2.69) we assume it is fine.
 AC_C_BIGENDIAN([BYTEORDER=4321],[BYTEORDER=1234])
 AC_DEFINE_UNQUOTED(BYTEORDER, $BYTEORDER, [1234 = LILENDIAN, 4321 = BIGENDIAN])
 
