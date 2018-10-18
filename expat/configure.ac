@@ -69,17 +69,20 @@ AC_SUBST(LIBAGE)
 AC_LANG([C])
 AC_PROG_CC_C99
 AS_IF([test "$GCC" = yes],
-  [AX_APPEND_COMPILE_FLAGS([-Wall], [CFLAGS])
+  [AX_APPEND_COMPILE_FLAGS([-Wall -Wextra], [CFLAGS])
    dnl Be careful about adding the -fexceptions option; some versions of
    dnl GCC don't support it and it causes extra warnings that are only
    dnl distracting; avoid.
    AX_APPEND_COMPILE_FLAGS([-fexceptions], [CFLAGS])
-   AX_APPEND_COMPILE_FLAGS([-fno-strict-aliasing -Wmissing-prototypes -Wstrict-prototypes], [CFLAGS])])
+   AX_APPEND_COMPILE_FLAGS([-fno-strict-aliasing -Wmissing-prototypes -Wstrict-prototypes], [CFLAGS])
+   AX_APPEND_COMPILE_FLAGS([-pedantic -Wduplicated-cond -Wduplicated-branches -Wlogical-op], [CFLAGS])
+   AX_APPEND_COMPILE_FLAGS([-Wrestrict -Wnull-dereference -Wjump-misses-init -Wdouble-promotion], [CFLAGS])
+   AX_APPEND_COMPILE_FLAGS([-Wshadow -Wformat=2 -Wmisleading-indentation], [CFLAGS])])
 
 AC_LANG_PUSH([C++])
 AC_PROG_CXX
 AS_IF([test "$GCC" = yes],
-  [AX_APPEND_COMPILE_FLAGS([-Wall], [CXXFLAGS])
+  [AX_APPEND_COMPILE_FLAGS([-Wall -Wextra], [CXXFLAGS])
    dnl Be careful about adding the -fexceptions option; some versions of
    dnl GCC don't support it and it causes extra warnings that are only
    dnl distracting; avoid.
