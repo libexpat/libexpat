@@ -136,9 +136,11 @@ tests/xmlconf: tests/xmlts.zip
 run-xmltest: tests/xmlconf
 if WITH_XMLWF
 	$(MAKE) -C xmlwf
-	export EXPAT_ABS_SRCDIR=$(abs_top_srcdir); \
-		export EXPAT_ABS_BUILDDIR=$(abs_top_builddir); \
-		$(srcdir)/tests/xmltest.sh "$(abs_top_builddir)/run.sh" "$(abs_top_builddir)/xmlwf/xmlwf@EXEEXT@" 2>&1 | \
+	$(srcdir)/tests/xmltest.sh		\
+		-S "$(abs_top_srcdir)"		\
+		-B "$(abs_top_builddir)"	\
+		-R "$(abs_top_builddir)/run.sh" \
+		-X "$(abs_top_builddir)/xmlwf/xmlwf@EXEEXT@" 2>&1 | \
 		tee $(builddir)/tests/xmltest.log
 	dos2unix $(builddir)/tests/xmltest.log
 	diff -u $(srcdir)/tests/xmltest.log.expected $(builddir)/tests/xmltest.log
