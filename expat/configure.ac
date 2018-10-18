@@ -70,30 +70,28 @@ AC_PROG_CC_C99
 AC_PROG_CXX
 
 AS_IF([test "$GCC" = yes],
-  [AS_VAR_APPEND(CFLAGS," -Wall -Wmissing-prototypes -Wstrict-prototypes")
+  [AX_APPEND_COMPILE_FLAGS([-Wall], [CFLAGS])
 
    dnl Be careful about adding the -fexceptions option; some versions of
    dnl GCC don't support it and it causes extra warnings that are only
    dnl distracting; avoid.
-   AX_CHECK_COMPILE_FLAG([-fexceptions],
-     [AS_VAR_APPEND(CFLAGS," -fexceptions")],
-     [AC_MSG_WARN([The GCC compiler does not support -fexceptions.])])
+   AX_APPEND_COMPILE_FLAGS([-fexceptions], [CFLAGS])
 
    AS_IF([test "x$CXXFLAGS" = x],
-     [CXXFLAGS=`echo "$CFLAGS" | sed 's/ -Wmissing-prototypes -Wstrict-prototypes//'`])
+     [AS_VAR_COPY(CXXFLAGS, CFLAGS)])
 
-   AS_VAR_APPEND(CFLAGS,   " -fno-strict-aliasing")
+   AX_APPEND_COMPILE_FLAGS([-fno-strict-aliasing -Wmissing-prototypes -Wstrict-prototypes], [CFLAGS])
    AS_VAR_APPEND(CXXFLAGS, " -fno-strict-aliasing")
    AS_VAR_APPEND(LDFLAGS,  " -fno-strict-aliasing")])
 
 AC_MSG_CHECKING(whether compiler supports visibility)
-AS_VAR_SET(OLDCFLAGS,$CFLAGS)
+AS_VAR_COPY(OLDCFLAGS,CFLAGS)
 AS_VAR_APPEND(CFLAGS,[" -fvisibility=hidden -Wall -Werror"])
 AC_COMPILE_IFELSE([AC_LANG_SOURCE([[void __attribute__((visibility("default"))) foo(void); void foo(void) {}]])],
   [AC_MSG_RESULT(yes)
    AS_VAR_SET(CFLAGS,"$OLDCFLAGS -fvisibility=hidden -DXML_ENABLE_VISIBILITY=1")],
   [AC_MSG_RESULT(no)
-   AS_VAR_SET(CFLAGS,"$OLDCFLAGS")])
+   AS_VAR_COPY(CFLAGS, OLDCFLAGS)])
 
 dnl Checks for header files.
 AC_HEADER_STDC
