@@ -90,14 +90,9 @@ AC_LANG_POP([C++])
 AS_IF([test "$GCC" = yes],
   [AX_APPEND_LINK_FLAGS([-fno-strict-aliasing],[LDFLAGS])])
 
-AC_MSG_CHECKING(whether compiler supports visibility)
-AS_VAR_COPY(OLDCFLAGS,CFLAGS)
-AS_VAR_APPEND(CFLAGS,[" -fvisibility=hidden -Wall -Werror"])
-AC_COMPILE_IFELSE([AC_LANG_SOURCE([[void __attribute__((visibility("default"))) foo(void); void foo(void) {}]])],
-  [AC_MSG_RESULT(yes)
-   AS_VAR_SET(CFLAGS,"$OLDCFLAGS -fvisibility=hidden -DXML_ENABLE_VISIBILITY=1")],
-  [AC_MSG_RESULT(no)
-   AS_VAR_COPY(CFLAGS, OLDCFLAGS)])
+EXPAT_COMPILER_SUPPORTS_VISIBILITY([
+  AX_APPEND_FLAG([-fvisibility=hidden],       [CFLAGS])
+  AX_APPEND_FLAG([-DXML_ENABLE_VISIBILITY=1], [CFLAGS])])
 
 dnl Checks for header files.
 AC_HEADER_STDC

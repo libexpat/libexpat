@@ -8,5 +8,6 @@ m4_include(conftools/ax-append-flag.m4)
 m4_include(conftools/ax-append-compile-flags.m4)
 m4_include(conftools/ax-append-link-flags.m4)
 dnl m4_include(conftools/ax-gcc-version.m4)
+m4_include(conftools/expat-compiler-supports-visibility.mp4)
 
 ### end of file
