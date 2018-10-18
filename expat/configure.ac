@@ -69,25 +69,22 @@ AC_SUBST(LIBAGE)
 AC_PROG_CC_C99
 AC_PROG_CXX
 
-AS_IF([test "$GCC" = yes],[
-    dnl
-    dnl Be careful about adding the -fexceptions option; some versions of
-    dnl GCC don't support it and it causes extra warnings that are only
-    dnl distracting; avoid.
-    dnl
-    OLDCFLAGS="$CFLAGS -Wall -Wmissing-prototypes -Wstrict-prototypes"
-    CFLAGS="$OLDCFLAGS -fexceptions"
-    AC_MSG_CHECKING(whether $CC accepts -fexceptions)
-    AC_TRY_LINK( , ,
-                   AC_MSG_RESULT(yes),
-                   AC_MSG_RESULT(no); CFLAGS="$OLDCFLAGS")
-    AS_IF([test "x$CXXFLAGS" = x],
-      [CXXFLAGS=`echo "$CFLAGS" | sed 's/ -Wmissing-prototypes -Wstrict-prototypes//'`])
+AS_IF([test "$GCC" = yes],
+  [AS_VAR_APPEND(CFLAGS," -Wall -Wmissing-prototypes -Wstrict-prototypes")
 
-    CFLAGS="${CFLAGS} -fno-strict-aliasing"
-    CXXFLAGS="${CXXFLAGS} -fno-strict-aliasing"
-    LDFLAGS="${LDFLAGS} -fno-strict-aliasing"
-])
+   dnl Be careful about adding the -fexceptions option; some versions of
+   dnl GCC don't support it and it causes extra warnings that are only
+   dnl distracting; avoid.
+   AX_CHECK_COMPILE_FLAG([-fexceptions],
+     [AS_VAR_APPEND(CFLAGS," -fexceptions")],
+     [AC_MSG_WARN([The GCC compiler does not support -fexceptions.])])
+
+   AS_IF([test "x$CXXFLAGS" = x],
+     [CXXFLAGS=`echo "$CFLAGS" | sed 's/ -Wmissing-prototypes -Wstrict-prototypes//'`])
+
+   AS_VAR_APPEND(CFLAGS,   " -fno-strict-aliasing")
+   AS_VAR_APPEND(CXXFLAGS, " -fno-strict-aliasing")
+   AS_VAR_APPEND(LDFLAGS,  " -fno-strict-aliasing")])
 
 AC_MSG_CHECKING(whether compiler supports visibility)
 AS_VAR_SET(OLDCFLAGS,$CFLAGS)
