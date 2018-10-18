@@ -29,10 +29,10 @@ define([expat_version], ifdef([__gnu__],
 AC_INIT(expat, expat_version, expat-bugs@libexpat.org)
 undefine([expat_version])
 
-AC_CONFIG_SRCDIR(Makefile.in)
-AC_CONFIG_AUX_DIR(conftools)
-AM_INIT_AUTOMAKE
+AC_CONFIG_SRCDIR([Makefile.in])
+AC_CONFIG_AUX_DIR([conftools])
 AC_CONFIG_MACRO_DIR([m4])
+AM_INIT_AUTOMAKE
 
 
 dnl
@@ -42,7 +42,7 @@ dnl If the API has changed, increment LIBCURRENT and set LIBREVISION to 0
 dnl
 dnl If the API changes compatibly (i.e. simply adding a new function
 dnl without changing or removing earlier interfaces), then increment LIBAGE.
-dnl 
+dnl
 dnl If the API changes incompatibly set LIBAGE back to 0
 dnl
 
@@ -53,19 +53,21 @@ LIBAGE=6       # CMakeLists.txt!
 CPPFLAGS="${CPPFLAGS} -DHAVE_EXPAT_CONFIG_H"
 AC_CONFIG_HEADER(expat_config.h)
 
-sinclude(conftools/ac_c_bigendian_cross.m4)
+AM_PROG_AR
+AC_PROG_INSTALL
+AC_PROG_LN_S
+AC_PROG_MAKE_SET
+AC_PROG_MKDIR_P
 
-AC_LIBTOOL_WIN32_DLL
-AC_PROG_LIBTOOL
+LT_PREREQ([2.4])
+LT_INIT([win32-dll])
 
 AC_SUBST(LIBCURRENT)
 AC_SUBST(LIBREVISION)
 AC_SUBST(LIBAGE)
 
-dnl Checks for programs.
 AC_PROG_CC_C99
 AC_PROG_CXX
-AC_PROG_INSTALL
 
 if test "$GCC" = yes ; then
     dnl

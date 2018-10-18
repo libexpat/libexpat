@@ -8,3 +8,4 @@ ltconfig
 ltmain.sh
 missing
 test-driver
+ar-lib

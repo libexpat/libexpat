@@ -1,2 +1,2 @@
 #! /bin/sh
-exec autoreconf -i -f
+exec autoreconf --warnings=all --install --verbose "$@"
