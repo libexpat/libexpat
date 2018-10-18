@@ -66,23 +66,29 @@ AC_SUBST(LIBCURRENT)
 AC_SUBST(LIBREVISION)
 AC_SUBST(LIBAGE)
 
+AC_LANG([C])
 AC_PROG_CC_C99
-AC_PROG_CXX
-
 AS_IF([test "$GCC" = yes],
   [AX_APPEND_COMPILE_FLAGS([-Wall], [CFLAGS])
-
    dnl Be careful about adding the -fexceptions option; some versions of
    dnl GCC don't support it and it causes extra warnings that are only
    dnl distracting; avoid.
    AX_APPEND_COMPILE_FLAGS([-fexceptions], [CFLAGS])
+   AX_APPEND_COMPILE_FLAGS([-fno-strict-aliasing -Wmissing-prototypes -Wstrict-prototypes], [CFLAGS])])
 
-   AS_IF([test "x$CXXFLAGS" = x],
-     [AS_VAR_COPY(CXXFLAGS, CFLAGS)])
+AC_LANG_PUSH([C++])
+AC_PROG_CXX
+AS_IF([test "$GCC" = yes],
+  [AX_APPEND_COMPILE_FLAGS([-Wall], [CXXFLAGS])
+   dnl Be careful about adding the -fexceptions option; some versions of
+   dnl GCC don't support it and it causes extra warnings that are only
+   dnl distracting; avoid.
+   AX_APPEND_COMPILE_FLAGS([-fexceptions], [CXXFLAGS])
+   AX_APPEND_COMPILE_FLAGS([-fno-strict-aliasing], [CXXFLAGS])])
+AC_LANG_POP([C++])
 
-   AX_APPEND_COMPILE_FLAGS([-fno-strict-aliasing -Wmissing-prototypes -Wstrict-prototypes], [CFLAGS])
-   AS_VAR_APPEND(CXXFLAGS, " -fno-strict-aliasing")
-   AS_VAR_APPEND(LDFLAGS,  " -fno-strict-aliasing")])
+AS_IF([test "$GCC" = yes],
+  [AS_VAR_APPEND(LDFLAGS,  " -fno-strict-aliasing")])
 
 AC_MSG_CHECKING(whether compiler supports visibility)
 AS_VAR_COPY(OLDCFLAGS,CFLAGS)
