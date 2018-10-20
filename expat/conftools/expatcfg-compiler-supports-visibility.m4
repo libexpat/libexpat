@@ -1,4 +1,4 @@
-dnl expat-compiler-supports-visibility.mp4
+dnl expatcfg-compiler-supports-visibility.m4 --
 dnl
 dnl SYNOPSIS
 dnl
