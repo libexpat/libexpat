@@ -103,12 +103,16 @@ AC_HEADER_STDC
 dnl Checks for typedefs, structures, and compiler characteristics.
 
 dnl We define BYTEORDER to 1234 when the platform is little endian; it
-dnl defines it to 4321 when the platform is big endian.
+dnl defines it to 4321 when the  platform is big endian.  We also define
+dnl WORDS_BIGENDIAN to 1 when the platform is big endian.
 dnl
-dnl A long time ago (early 2000 years) AC_C_BIGENDIAN was considered wrong
-dnl when cross compiling, now (2018, GNU Autoconf 2.69) we assume it is fine.
-AC_C_BIGENDIAN([BYTEORDER=4321],[BYTEORDER=1234])
-AC_DEFINE_UNQUOTED(BYTEORDER, $BYTEORDER, [1234 = LILENDIAN, 4321 = BIGENDIAN])
+dnl A  long time  ago (early 2000  years) AC_C_BIGENDIAN  was considered
+dnl wrong when cross compiling, now (2018, GNU Autoconf 2.69) we assume
+dnl it is fine.
+AC_C_BIGENDIAN([AC_DEFINE([WORDS_BIGENDIAN], 1)
+                AS_VAR_SET([BYTEORDER], 4321)],
+               [AS_VAR_SET([BYTEORDER], 1234)])
+AC_DEFINE_UNQUOTED([BYTEORDER], $BYTEORDER, [1234 = LILENDIAN, 4321 = BIGENDIAN])
 
 AC_C_CONST
 AC_TYPE_SIZE_T
