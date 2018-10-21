@@ -123,11 +123,11 @@ AC_ARG_WITH([xmlwf],
 AM_CONDITIONAL([WITH_XMLWF], [test x${with_xmlwf} = xyes])
 
 AC_ARG_WITH([examples], [
-AS_HELP_STRING([--without-examples], [do not build examples, default build examples])], [], [with_examples=yes])
+AS_HELP_STRING([--without-examples], [do not build examples @<:@default=included@:>@])], [], [with_examples=yes])
 AM_CONDITIONAL([WITH_EXAMPLES], [test x${with_examples} = xyes])
 
 AC_ARG_WITH([tests], [
-AS_HELP_STRING([--without-tests], [do not build tests, default build tests])], [], [with_tests=yes])
+AS_HELP_STRING([--without-tests], [do not build tests @<:@default=included@:>@])], [], [with_tests=yes])
 AM_CONDITIONAL([WITH_TESTS], [test x${with_tests} = xyes])
 
 AM_CONDITIONAL([MINGW], [echo -- "${host}" | ${FGREP} mingw >/dev/null])
