@@ -3010,7 +3010,6 @@ doContent(XML_Parser parser,
         enum XML_Error result;
         if (parser->m_startCdataSectionHandler)
           parser->m_startCdataSectionHandler(parser->m_handlerArg);
-#if 0
         /* Suppose you doing a transformation on a document that involves
            changing only the character data.  You set up a defaultHandler
            and a characterDataHandler.  The defaultHandler simply copies
@@ -3023,9 +3022,8 @@ doContent(XML_Parser parser,
            However, now we have a start/endCdataSectionHandler, so it seems
            easier to let the user deal with this.
         */
-        else if (parser->m_characterDataHandler)
+        else if (0 && parser->m_characterDataHandler)
           parser->m_characterDataHandler(parser->m_handlerArg, parser->m_dataBuf, 0);
-#endif
         else if (parser->m_defaultHandler)
           reportDefault(parser, enc, s, next);
         result = doCdataSection(parser, enc, &next, end, nextPtr, haveMore);
@@ -3722,11 +3720,9 @@ doCdataSection(XML_Parser parser,
     case XML_TOK_CDATA_SECT_CLOSE:
       if (parser->m_endCdataSectionHandler)
         parser->m_endCdataSectionHandler(parser->m_handlerArg);
-#if 0
       /* see comment under XML_TOK_CDATA_SECT_OPEN */
-      else if (parser->m_characterDataHandler)
+      else if (0 && parser->m_characterDataHandler)
         parser->m_characterDataHandler(parser->m_handlerArg, parser->m_dataBuf, 0);
-#endif
       else if (parser->m_defaultHandler)
         reportDefault(parser, enc, s, next);
       *startPtr = next;
