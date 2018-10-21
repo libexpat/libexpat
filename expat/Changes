@@ -8,9 +8,11 @@ Release x.x.x XXX XXXXXX XX XXXX
                     exporting non-API symbols
             #212  CMake: Make libdir of pkgconfig expat.pc support multilib
             #219  Remove fallback to bcopy, assume that memmove(3) exists
+            #228  Autotools: Modernize configure.ac
 
         Special thanks to:
             Benjamin Peterson
+            Marco Maggi
             @userwithuid
             Yury Gribov
 
