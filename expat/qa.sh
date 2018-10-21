@@ -35,7 +35,6 @@ main() {
     local mode="${1:-}"
     shift
 
-    local RUNENV
     local BASE_COMPILE_FLAGS="${BASE_COMPILE_FLAGS}"
 
     case "${mode}" in
