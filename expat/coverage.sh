@@ -110,8 +110,8 @@ _run() {
         cd "${build_dir}"
 
         _configure \
-                CFLAGS="${BASE_FLAGS}" \
-                CXXFLAGS="${BASE_FLAGS}"
+                CFLAGS="${CFLAGS}" \
+                CXXFLAGS="${CXXFLAGS}"
 
         (
             set -x
