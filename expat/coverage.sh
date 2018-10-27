@@ -227,7 +227,7 @@ _main() {
 
     echo 'Rendering HTML report...'
     _render_html_report "${coverage_dir}"
-    echo "--> ${coverage_dir}/index.html"
+    printf '--> %s/index.html\n' "${coverage_dir}"
 
     echo
     _show_summary "${coverage_dir}"
