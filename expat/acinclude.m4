@@ -9,5 +9,6 @@ m4_include(conftools/ax-append-compile-flags.m4)
 m4_include(conftools/ax-append-link-flags.m4)
 m4_include(conftools/expatcfg-compiler-supports-visibility.m4)
 m4_include(conftools/expatcfg-support-arc4random-through-libbsd.m4)
+m4_include(conftools/expatcfg-support-getrandom.m4)
 
 ### end of file

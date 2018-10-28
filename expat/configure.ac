@@ -134,33 +134,7 @@ AM_CONDITIONAL([MINGW], [echo -- "${host}" | ${FGREP} mingw >/dev/null])
 AM_CONDITIONAL([UNICODE], [echo -- "${CPPFLAGS}${CFLAGS}" | ${FGREP} XML_UNICODE >/dev/null])
 
 EXPATCFG_SUPPORT_ARC4RANDOM_THROUGH_LIBBSD
-
-AC_MSG_CHECKING([for getrandom (Linux 3.17+, glibc 2.25+)])
-AC_LINK_IFELSE([AC_LANG_SOURCE([
-  #include <stdlib.h>  /* for NULL */
-  #include <sys/random.h>
-  int main() {
-    return getrandom(NULL, 0U, 0U);
-  }
-  ])],
-  [AC_DEFINE([HAVE_GETRANDOM], [1], [Define to 1 if you have the `getrandom' function.])
-   AC_MSG_RESULT([yes])],
-  [AC_MSG_RESULT([no])
-
-   AC_MSG_CHECKING([for syscall SYS_getrandom (Linux 3.17+)])
-   AC_LINK_IFELSE([AC_LANG_SOURCE([
-      #include <stdlib.h>  /* for NULL */
-      #include <unistd.h>  /* for syscall */
-      #include <sys/syscall.h>  /* for SYS_getrandom */
-      int main() {
-        syscall(SYS_getrandom, NULL, 0, 0);
-        return 0;
-      }
-   ])],
-   [AC_DEFINE([HAVE_SYSCALL_GETRANDOM], [1], [Define to 1 if you have `syscall' and `SYS_getrandom'.])
-    AC_MSG_RESULT([yes])],
-   [AC_MSG_RESULT([no])])])
-
+EXPATCFG_SUPPORT_GETRANDOM
 
 dnl Only needed for xmlwf:
 AC_CHECK_HEADERS(fcntl.h unistd.h)
