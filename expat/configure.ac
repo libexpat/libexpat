@@ -133,48 +133,7 @@ AM_CONDITIONAL([WITH_TESTS], [test x${with_tests} = xyes])
 AM_CONDITIONAL([MINGW], [echo -- "${host}" | ${FGREP} mingw >/dev/null])
 AM_CONDITIONAL([UNICODE], [echo -- "${CPPFLAGS}${CFLAGS}" | ${FGREP} XML_UNICODE >/dev/null])
 
-
-AC_ARG_WITH([libbsd],
-  [AS_HELP_STRING([--with-libbsd], [utilize libbsd (for arc4random_buf)])],
-  [],
-  [with_libbsd=no])
-AS_IF([test "x${with_libbsd}" != xno],
-  [AC_CHECK_LIB([bsd],
-     [arc4random_buf],
-     [],
-     [AS_IF([test "x${with_libbsd}" = xyes],
-            [AC_MSG_ERROR([Enforced use of libbsd cannot be satisfied.])])])])
-AC_MSG_CHECKING([for arc4random_buf (BSD or libbsd)])
-AC_LINK_IFELSE([AC_LANG_SOURCE([
-  #include <stdlib.h>  /* for arc4random_buf on BSD, for NULL */
-  #if defined(HAVE_LIBBSD)
-  # include <bsd/stdlib.h>
-  #endif
-  int main() {
-    arc4random_buf(NULL, 0U);
-    return 0;
-  }
-])],
-  [AC_DEFINE([HAVE_ARC4RANDOM_BUF], [1], [Define to 1 if you have the `arc4random_buf' function.])
-   AC_MSG_RESULT([yes])],
-  [AC_MSG_RESULT([no])
-
-   AC_MSG_CHECKING([for arc4random (BSD, macOS or libbsd)])
-   AC_LINK_IFELSE([AC_LANG_SOURCE([
-      #if defined(HAVE_LIBBSD)
-      # include <bsd/stdlib.h>
-      #else
-      # include <stdlib.h>
-      #endif
-      int main() {
-          arc4random();
-          return 0;
-      }
-     ])],
-     [AC_DEFINE([HAVE_ARC4RANDOM], [1], [Define to 1 if you have the `arc4random' function.])
-      AC_MSG_RESULT([yes])],
-     [AC_MSG_RESULT([no])])])
-
+EXPATCFG_SUPPORT_ARC4RANDOM_THROUGH_LIBBSD
 
 AC_MSG_CHECKING([for getrandom (Linux 3.17+, glibc 2.25+)])
 AC_LINK_IFELSE([AC_LANG_SOURCE([
