@@ -33,6 +33,7 @@ m4_undefine([expat_version])
 AC_CONFIG_SRCDIR([Makefile.in])
 AC_CONFIG_AUX_DIR([conftools])
 AC_CONFIG_MACRO_DIR([m4])
+AC_CANONICAL_HOST
 AM_INIT_AUTOMAKE
 
 
@@ -130,7 +131,14 @@ AC_ARG_WITH([tests], [
 AS_HELP_STRING([--without-tests], [do not build tests @<:@default=included@:>@])], [], [with_tests=yes])
 AM_CONDITIONAL([WITH_TESTS], [test x${with_tests} = xyes])
 
-AM_CONDITIONAL([MINGW], [echo -- "${host}" | ${FGREP} mingw >/dev/null])
+
+AS_VAR_SET([EXPATCFG_ON_MINGW],[no])
+AS_CASE("$host_os",
+  [mingw*],
+  [AS_VAR_SET([EXPATCFG_ON_MINGW],[yes])
+   AC_MSG_NOTICE([detected OS: MINGW])])
+AM_CONDITIONAL([MINGW], [test x$EXPATCFG_ON_MINGW = xyes])
+
 AM_CONDITIONAL([UNICODE], [echo -- "${CPPFLAGS}${CFLAGS}" | ${FGREP} XML_UNICODE >/dev/null])
 
 
