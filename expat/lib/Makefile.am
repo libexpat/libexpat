@@ -33,17 +33,25 @@ include_HEADERS = \
     expat.h \
     expat_external.h
 
-lib_LTLIBRARIES = libexpat.la
-
-libexpat_la_LDFLAGS = \
+EXPAT_LDFLAGS = \
     -no-undefined \
     -version-info @LIBCURRENT@:@LIBREVISION@:@LIBAGE@
 
-libexpat_la_SOURCES = \
+EXPAT_SOURCES = \
     loadlibrary.c \
     xmlparse.c \
     xmltok.c \
     xmlrole.c
+
+if UNICODE
+lib_LTLIBRARIES = libexpatw.la
+libexpatw_la_LDFLAGS = $(EXPAT_LDFLAGS)
+libexpatw_la_SOURCES = $(EXPAT_SOURCES)
+else
+lib_LTLIBRARIES = libexpat.la
+libexpat_la_LDFLAGS = $(EXPAT_LDFLAGS)
+libexpat_la_SOURCES = $(EXPAT_SOURCES)
+endif
 
 doc_DATA = \
     ../AUTHORS \

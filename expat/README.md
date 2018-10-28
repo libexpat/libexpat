@@ -80,13 +80,6 @@ these instructions (after having run `make distclean`).
 Please note that we configure with `--without-xmlwf` as xmlwf does not
 support this mode of compilation (yet):
 
-1. Mass-patch `Makefile.am` files to use `libexpatw.la` for a library name:
-   <br/>
-   `find -name Makefile.am -exec sed
-       -e 's,libexpat\.la,libexpatw.la,'
-       -e 's,libexpat_la,libexpatw_la,'
-       -i {} +`
-
 1. Run `automake` to re-write `Makefile.in` files:<br/>
    `automake`
 

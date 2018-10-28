@@ -42,7 +42,7 @@ if WITH_EXAMPLES
 SUBDIRS += examples
 endif
 if WITH_TESTS
-SUBDIRS += tests  
+SUBDIRS += tests
 endif
 if WITH_XMLWF
 SUBDIRS += xmlwf doc
@@ -100,26 +100,6 @@ EXTRA_DIST = \
     Changes \
     README.md \
     test-driver-wrapper.sh
-
-
-.PHONY: buildlib
-buildlib:
-	@echo 'ERROR: Running "make buildlib LIBRARY=libexpatw.la"' >&2
-	@echo 'ERROR: is no longer supported.  INSTEAD please:' >&2
-	@echo 'ERROR:' >&2
-	@echo 'ERROR:  * Mass-patch Makefile.am, e.g.' >&2
-	@echo 'ERROR:    # find -name Makefile.am -exec sed \' >&2
-	@echo 'ERROR:          -e "s,libexpat\.la,libexpatw.la," \' >&2
-	@echo 'ERROR:          -e "s,libexpat_la,libexpatw_la," \' >&2
-	@echo 'ERROR:          -i {} +' >&2
-	@echo 'ERROR:' >&2
-	@echo 'ERROR:  * Run automake to re-generate Makefile.in files' >&2
-	@echo 'ERROR:' >&2
-	@echo 'ERROR:  * Use "./configure --without-xmlwf" and/or' >&2
-	@echo 'ERROR:    "make -C lib all install" to bypass compilation' >&2
-	@echo 'ERROR:    of xmlwf (e.g. with -DXML_UNICODE)' >&2
-	@echo 'ERROR:' >&2
-	@false
 
 
 .PHONY: run-benchmark

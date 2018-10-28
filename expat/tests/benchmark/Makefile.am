@@ -34,7 +34,11 @@ noinst_PROGRAMS = benchmark
 
 benchmark_SOURCES = benchmark.c
 
+if UNICODE
+benchmark_LDADD = ../../lib/libexpatw.la
+else
 benchmark_LDADD = ../../lib/libexpat.la
+endif
 
 EXTRA_DIST = \
     README.txt
