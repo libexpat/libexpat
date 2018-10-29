@@ -68,7 +68,7 @@ AC_SUBST(LIBAGE)
 
 AC_LANG([C])
 AC_PROG_CC_C99
-AS_IF([test "$GCC" = yes],
+AS_VAR_IF([GCC],[yes],
   [AX_APPEND_COMPILE_FLAGS([-Wall -Wextra], [CFLAGS])
    dnl Be careful about adding the -fexceptions option; some versions of
    dnl GCC don't support it and it causes extra warnings that are only
@@ -81,7 +81,7 @@ AS_IF([test "$GCC" = yes],
 
 AC_LANG_PUSH([C++])
 AC_PROG_CXX
-AS_IF([test "$GCC" = yes],
+AS_VAR_IF([GCC],[yes],
   [AX_APPEND_COMPILE_FLAGS([-Wall -Wextra], [CXXFLAGS])
    dnl Be careful about adding the -fexceptions option; some versions of
    dnl GCC don't support it and it causes extra warnings that are only
@@ -90,7 +90,7 @@ AS_IF([test "$GCC" = yes],
    AX_APPEND_COMPILE_FLAGS([-fno-strict-aliasing], [CXXFLAGS])])
 AC_LANG_POP([C++])
 
-AS_IF([test "$GCC" = yes],
+AS_VAR_IF([GCC],[yes],
   [AX_APPEND_LINK_FLAGS([-fno-strict-aliasing],[LDFLAGS])])
 
 EXPATCFG_COMPILER_SUPPORTS_VISIBILITY([
