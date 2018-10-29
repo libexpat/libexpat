@@ -135,7 +135,7 @@ AM_CONDITIONAL([WITH_TESTS], [test x${with_tests} = xyes])
 AS_VAR_SET([EXPATCFG_ON_MINGW],[no])
 AS_CASE("$host_os",
   [mingw*],
-  [AS_VAR_SET([EXPATCFG_ON_MINGW],[1])
+  [AS_VAR_SET([EXPATCFG_ON_MINGW],[yes])
    AC_MSG_NOTICE([detected OS: MINGW])])
 AM_CONDITIONAL([MINGW], [test x$EXPATCFG_ON_MINGW = xyes])
 
