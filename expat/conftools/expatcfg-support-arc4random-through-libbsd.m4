@@ -50,27 +50,27 @@ AC_DEFUN([EXPATCFG_SUPPORT_ARC4RANDOM_THROUGH_LIBBSD],[
      # link with "arc4random_buf", if successful we are done.  Otherwise
      # try to link with "arc4random".
      AC_LINK_IFELSE([AC_LANG_SOURCE([
-         #include <stdlib.h>  /* for arc4random_buf on BSD, for NULL */
-         #if defined(HAVE_LIBBSD)
-         # include <bsd/stdlib.h>
-         #endif
-         int main() {
-           arc4random_buf(NULL, 0U);
-           return 0;
-         }
-       ])],
+#include <stdlib.h>  /* for arc4random_buf on BSD, for NULL */
+#if defined(HAVE_LIBBSD)
+# include <bsd/stdlib.h>
+#endif
+int main() {
+  arc4random_buf(NULL, 0U);
+  return 0;
+}
+])],
        [AS_VAR_SET([expatcfg_cv_support_arc4random],[arc4random_buf])],
        [AC_LINK_IFELSE([AC_LANG_SOURCE([
-           #if defined(HAVE_LIBBSD)
-           # include <bsd/stdlib.h>
-           #else
-           # include <stdlib.h>
-           #endif
-           int main() {
-               arc4random();
-               return 0;
-           }
-          ])],
+#if defined(HAVE_LIBBSD)
+# include <bsd/stdlib.h>
+#else
+# include <stdlib.h>
+#endif
+int main() {
+    arc4random();
+    return 0;
+}
+])],
           [AS_VAR_SET([expatcfg_cv_support_arc4random],[arc4random])])])
 
     # End of cached variable definition.
