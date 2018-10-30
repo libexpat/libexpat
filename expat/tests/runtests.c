@@ -135,36 +135,36 @@ basic_teardown(void)
    expecting.
 */
 static void
-_xml_failure(XML_Parser parser, const char *file, int line)
+_xml_failure(XML_Parser the_parser, const char *file, int line)
 {
     char buffer[1024];
-    enum XML_Error err = XML_GetErrorCode(parser);
+    enum XML_Error err = XML_GetErrorCode(the_parser);
     sprintf(buffer,
             "    %d: %" XML_FMT_STR " (line %"
                 XML_FMT_INT_MOD "u, offset %"
                 XML_FMT_INT_MOD "u)\n    reported from %s, line %d\n",
             err,
             XML_ErrorString(err),
-            XML_GetCurrentLineNumber(parser),
-            XML_GetCurrentColumnNumber(parser),
+            XML_GetCurrentLineNumber(the_parser),
+            XML_GetCurrentColumnNumber(the_parser),
             file, line);
     _fail_unless(0, file, line, buffer);
 }
 
 static enum XML_Status
-_XML_Parse_SINGLE_BYTES(XML_Parser parser, const char *s, int len, int isFinal)
+_XML_Parse_SINGLE_BYTES(XML_Parser the_parser, const char *s, int len, int isFinal)
 {
     enum XML_Status res = XML_STATUS_ERROR;
     int offset = 0;
 
     if (len == 0) {
-        return XML_Parse(parser, s, len, isFinal);
+        return XML_Parse(the_parser, s, len, isFinal);
     }
 
     for (; offset < len; offset++) {
         const int innerIsFinal = (offset == len - 1) && isFinal;
         const char c = s[offset]; /* to help out-of-bounds detection */
-        res = XML_Parse(parser, &c, sizeof(char), innerIsFinal);
+        res = XML_Parse(the_parser, &c, sizeof(char), innerIsFinal);
         if (res != XML_STATUS_OK) {
             return res;
         }
@@ -393,20 +393,20 @@ typedef struct ExtOption {
 } ExtOption;
 
 static int XMLCALL
-external_entity_optioner(XML_Parser parser,
+external_entity_optioner(XML_Parser the_parser,
                          const XML_Char *context,
                          const XML_Char *UNUSED_P(base),
                          const XML_Char *systemId,
                          const XML_Char *UNUSED_P(publicId))
 {
-    ExtOption *options = (ExtOption *)XML_GetUserData(parser);
+    ExtOption *options = (ExtOption *)XML_GetUserData(the_parser);
     XML_Parser ext_parser;
 
     while (options->parse_text != NULL) {
         if (!xcstrcmp(systemId, options->system_id)) {
             enum XML_Status rc;
             ext_parser =
-                XML_ExternalEntityParserCreate(parser, context, NULL);
+                XML_ExternalEntityParserCreate(the_parser, context, NULL);
             if (ext_parser == NULL)
                 return XML_STATUS_ERROR;
             rc = _XML_Parse_SINGLE_BYTES(ext_parser, options->parse_text,
@@ -878,7 +878,7 @@ END_TEST
 START_TEST(test_utf16_le_epilog_newline)
 {
     unsigned int first_chunk_bytes = 17;
-    char text[] = 
+    char text[] =
         "\xFF\xFE"                      /* BOM */
         "<\000e\000/\000>\000"          /* document element */
         "\r\000\n\000\r\000\n\000";     /* epilog */
@@ -1099,7 +1099,7 @@ END_TEST
 
 /* Regression test #1 for SF bug #653180. */
 START_TEST(test_line_number_after_parse)
-{  
+{
     const char *text =
         "<tag>\n"
         "\n"
@@ -1111,7 +1111,7 @@ START_TEST(test_line_number_after_parse)
     lineno = XML_GetCurrentLineNumber(parser);
     if (lineno != 4) {
         char buffer[100];
-        sprintf(buffer, 
+        sprintf(buffer,
             "expected 4 lines, saw %" XML_FMT_INT_MOD "u", lineno);
         fail(buffer);
     }
@@ -1129,7 +1129,7 @@ START_TEST(test_column_number_after_parse)
     colno = XML_GetCurrentColumnNumber(parser);
     if (colno != 11) {
         char buffer[100];
-        sprintf(buffer, 
+        sprintf(buffer,
             "expected 11 columns, saw %" XML_FMT_INT_MOD "u", colno);
         fail(buffer);
     }
@@ -1217,7 +1217,7 @@ START_TEST(test_line_number_after_error)
     }
 }
 END_TEST
-    
+
 /* Regression test #5 for SF bug #653180. */
 START_TEST(test_column_number_after_error)
 {
@@ -1230,9 +1230,9 @@ START_TEST(test_column_number_after_error)
         fail("Expected a parse error");
 
     colno = XML_GetCurrentColumnNumber(parser);
-    if (colno != 4) { 
+    if (colno != 4) {
         char buffer[100];
-        sprintf(buffer, 
+        sprintf(buffer,
             "expected 4 columns, saw %" XML_FMT_INT_MOD "u", colno);
         fail(buffer);
     }
@@ -1569,16 +1569,16 @@ END_TEST
 
 /* Regression test for SF bug #620106. */
 static int XMLCALL
-external_entity_loader(XML_Parser parser,
+external_entity_loader(XML_Parser the_parser,
                        const XML_Char *context,
                        const XML_Char *UNUSED_P(base),
                        const XML_Char *UNUSED_P(systemId),
                        const XML_Char *UNUSED_P(publicId))
 {
-    ExtTest *test_data = (ExtTest *)XML_GetUserData(parser);
+    ExtTest *test_data = (ExtTest *)XML_GetUserData(the_parser);
     XML_Parser extparser;
 
-    extparser = XML_ExternalEntityParserCreate(parser, context, NULL);
+    extparser = XML_ExternalEntityParserCreate(the_parser, context, NULL);
     if (extparser == NULL)
         fail("Could not create external entity parser.");
     if (test_data->encoding != NULL) {
@@ -1674,16 +1674,16 @@ typedef struct ext_faults
 } ExtFaults;
 
 static int XMLCALL
-external_entity_faulter(XML_Parser parser,
+external_entity_faulter(XML_Parser the_parser,
                         const XML_Char *context,
                         const XML_Char *UNUSED_P(base),
                         const XML_Char *UNUSED_P(systemId),
                         const XML_Char *UNUSED_P(publicId))
 {
     XML_Parser ext_parser;
-    ExtFaults *fault = (ExtFaults *)XML_GetUserData(parser);
+    ExtFaults *fault = (ExtFaults *)XML_GetUserData(the_parser);
 
-    ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
+    ext_parser = XML_ExternalEntityParserCreate(the_parser, context, NULL);
     if (ext_parser == NULL)
         fail("Could not create external entity parser");
     if (fault->encoding != NULL) {
@@ -3242,7 +3242,7 @@ END_TEST
 
 /* Test resetting a subordinate parser does exactly nothing */
 static int XMLCALL
-external_entity_resetter(XML_Parser parser,
+external_entity_resetter(XML_Parser the_parser,
                          const XML_Char *context,
                          const XML_Char *UNUSED_P(base),
                          const XML_Char *UNUSED_P(systemId),
@@ -3252,7 +3252,7 @@ external_entity_resetter(XML_Parser parser,
     XML_Parser ext_parser;
     XML_ParsingStatus status;
 
-    ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
+    ext_parser = XML_ExternalEntityParserCreate(the_parser, context, NULL);
     if (ext_parser == NULL)
         fail("Could not create external entity parser");
     XML_GetParsingStatus(ext_parser, &status);
@@ -3262,7 +3262,7 @@ external_entity_resetter(XML_Parser parser,
     }
     if (_XML_Parse_SINGLE_BYTES(ext_parser, text, (int)strlen(text),
                                 XML_TRUE) == XML_STATUS_ERROR) {
-        xml_failure(parser);
+        xml_failure(the_parser);
         return XML_STATUS_ERROR;
     }
     XML_GetParsingStatus(ext_parser, &status);
@@ -3319,7 +3319,7 @@ entity_suspending_decl_handler(void *userData,
 }
 
 static int XMLCALL
-external_entity_suspender(XML_Parser parser,
+external_entity_suspender(XML_Parser the_parser,
                           const XML_Char *context,
                           const XML_Char *UNUSED_P(base),
                           const XML_Char *UNUSED_P(systemId),
@@ -3328,7 +3328,7 @@ external_entity_suspender(XML_Parser parser,
     const char *text = "<!ELEMENT doc (#PCDATA)*>";
     XML_Parser ext_parser;
 
-    ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
+    ext_parser = XML_ExternalEntityParserCreate(the_parser, context, NULL);
     if (ext_parser == NULL)
         fail("Could not create external entity parser");
     XML_SetElementDeclHandler(ext_parser, entity_suspending_decl_handler);
@@ -3371,7 +3371,7 @@ entity_suspending_xdecl_handler(void *userData,
 }
 
 static int XMLCALL
-external_entity_suspend_xmldecl(XML_Parser parser,
+external_entity_suspend_xmldecl(XML_Parser the_parser,
                                 const XML_Char *context,
                                 const XML_Char *UNUSED_P(base),
                                 const XML_Char *UNUSED_P(systemId),
@@ -3382,7 +3382,7 @@ external_entity_suspend_xmldecl(XML_Parser parser,
     XML_ParsingStatus status;
     enum XML_Status rc;
 
-    ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
+    ext_parser = XML_ExternalEntityParserCreate(the_parser, context, NULL);
     if (ext_parser == NULL)
         fail("Could not create external entity parser");
     XML_SetXmlDeclHandler(ext_parser, entity_suspending_xdecl_handler);
@@ -3445,18 +3445,18 @@ END_TEST
 
 /* Test external entity fault handling with suspension */
 static int XMLCALL
-external_entity_suspending_faulter(XML_Parser parser,
+external_entity_suspending_faulter(XML_Parser the_parser,
                                    const XML_Char *context,
                                    const XML_Char *UNUSED_P(base),
                                    const XML_Char *UNUSED_P(systemId),
                                    const XML_Char *UNUSED_P(publicId))
 {
     XML_Parser ext_parser;
-    ExtFaults *fault = (ExtFaults *)XML_GetUserData(parser);
+    ExtFaults *fault = (ExtFaults *)XML_GetUserData(the_parser);
     void *buffer;
     int parse_len = (int)strlen(fault->parse_text);
 
-    ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
+    ext_parser = XML_ExternalEntityParserCreate(the_parser, context, NULL);
     if (ext_parser == NULL)
         fail("Could not create external entity parser");
     XML_SetXmlDeclHandler(ext_parser, entity_suspending_xdecl_handler);
@@ -3591,7 +3591,7 @@ END_TEST
 
 /* Test trailing CR in an external entity parse */
 static int XMLCALL
-external_entity_cr_catcher(XML_Parser parser,
+external_entity_cr_catcher(XML_Parser the_parser,
                            const XML_Char *context,
                            const XML_Char *UNUSED_P(base),
                            const XML_Char *UNUSED_P(systemId),
@@ -3600,7 +3600,7 @@ external_entity_cr_catcher(XML_Parser parser,
     const char *text = "\r";
     XML_Parser ext_parser;
 
-    ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
+    ext_parser = XML_ExternalEntityParserCreate(the_parser, context, NULL);
     if (ext_parser == NULL)
         fail("Could not create external entity parser");
     XML_SetCharacterDataHandler(ext_parser, cr_cdata_handler);
@@ -3612,7 +3612,7 @@ external_entity_cr_catcher(XML_Parser parser,
 }
 
 static int XMLCALL
-external_entity_bad_cr_catcher(XML_Parser parser,
+external_entity_bad_cr_catcher(XML_Parser the_parser,
                                const XML_Char *context,
                                const XML_Char *UNUSED_P(base),
                                const XML_Char *UNUSED_P(systemId),
@@ -3621,7 +3621,7 @@ external_entity_bad_cr_catcher(XML_Parser parser,
     const char *text = "<tag>\r";
     XML_Parser ext_parser;
 
-    ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
+    ext_parser = XML_ExternalEntityParserCreate(the_parser, context, NULL);
     if (ext_parser == NULL)
         fail("Could not create external entity parser");
     XML_SetCharacterDataHandler(ext_parser, cr_cdata_handler);
@@ -3719,7 +3719,7 @@ END_TEST
 
 /* Test trailing right square bracket in an external entity parse */
 static int XMLCALL
-external_entity_rsqb_catcher(XML_Parser parser,
+external_entity_rsqb_catcher(XML_Parser the_parser,
                              const XML_Char *context,
                              const XML_Char *UNUSED_P(base),
                              const XML_Char *UNUSED_P(systemId),
@@ -3728,7 +3728,7 @@ external_entity_rsqb_catcher(XML_Parser parser,
     const char *text = "<tag>]";
     XML_Parser ext_parser;
 
-    ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
+    ext_parser = XML_ExternalEntityParserCreate(the_parser, context, NULL);
     if (ext_parser == NULL)
         fail("Could not create external entity parser");
     XML_SetCharacterDataHandler(ext_parser, rsqb_handler);
@@ -3764,7 +3764,7 @@ END_TEST
 
 /* Test CDATA handling in an external entity */
 static int XMLCALL
-external_entity_good_cdata_ascii(XML_Parser parser,
+external_entity_good_cdata_ascii(XML_Parser the_parser,
                                  const XML_Char *context,
                                  const XML_Char *UNUSED_P(base),
                                  const XML_Char *UNUSED_P(systemId),
@@ -3777,7 +3777,7 @@ external_entity_good_cdata_ascii(XML_Parser parser,
     XML_Parser ext_parser;
 
     CharData_Init(&storage);
-    ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
+    ext_parser = XML_ExternalEntityParserCreate(the_parser, context, NULL);
     if (ext_parser == NULL)
         fail("Could not create external entity parser");
     XML_SetUserData(ext_parser, &storage);
@@ -3855,7 +3855,7 @@ data_check_comment_handler(void *userData, const XML_Char *UNUSED_P(data))
 }
 
 static int XMLCALL
-external_entity_param_checker(XML_Parser parser,
+external_entity_param_checker(XML_Parser the_parser,
                               const XML_Char *context,
                               const XML_Char *UNUSED_P(base),
                               const XML_Char *UNUSED_P(systemId),
@@ -3866,16 +3866,16 @@ external_entity_param_checker(XML_Parser parser,
         "<!ELEMENT doc (#PCDATA)*>";
     XML_Parser ext_parser;
 
-    ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
+    ext_parser = XML_ExternalEntityParserCreate(the_parser, context, NULL);
     if (ext_parser == NULL)
         fail("Could not create external entity parser");
     handler_data = ext_parser;
     if (_XML_Parse_SINGLE_BYTES(ext_parser, text, (int)strlen(text),
                                 XML_TRUE) == XML_STATUS_ERROR) {
-        xml_failure(parser);
+        xml_failure(the_parser);
         return XML_STATUS_ERROR;
     }
-    handler_data = parser;
+    handler_data = the_parser;
     XML_ParserFree(ext_parser);
     return XML_STATUS_OK;
 }
@@ -4263,7 +4263,7 @@ END_TEST
  * error on encountering it.
  */
 static int XMLCALL
-external_entity_param(XML_Parser parser,
+external_entity_param(XML_Parser the_parser,
                       const XML_Char *context,
                       const XML_Char *UNUSED_P(base),
                       const XML_Char *systemId,
@@ -4282,7 +4282,7 @@ external_entity_param(XML_Parser parser,
     if (systemId == NULL)
         return XML_STATUS_OK;
 
-    ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
+    ext_parser = XML_ExternalEntityParserCreate(the_parser, context, NULL);
     if (ext_parser == NULL)
         fail("Could not create external entity parser");
 
@@ -4343,7 +4343,7 @@ END_TEST
 
 /* Test conditional inclusion (IGNORE) */
 static int XMLCALL
-external_entity_load_ignore(XML_Parser parser,
+external_entity_load_ignore(XML_Parser the_parser,
                             const XML_Char *context,
                             const XML_Char *UNUSED_P(base),
                             const XML_Char *UNUSED_P(systemId),
@@ -4352,12 +4352,12 @@ external_entity_load_ignore(XML_Parser parser,
     const char *text = "<![IGNORE[<!ELEMENT e (#PCDATA)*>]]>";
     XML_Parser ext_parser;
 
-    ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
+    ext_parser = XML_ExternalEntityParserCreate(the_parser, context, NULL);
     if (ext_parser == NULL)
         fail("Could not create external entity parser");
     if (_XML_Parse_SINGLE_BYTES(ext_parser, text, (int)strlen(text),
                                 XML_TRUE) == XML_STATUS_ERROR)
-        xml_failure(parser);
+        xml_failure(the_parser);
 
     XML_ParserFree(ext_parser);
     return XML_STATUS_OK;
@@ -4390,7 +4390,7 @@ START_TEST(test_ignore_section)
 END_TEST
 
 static int XMLCALL
-external_entity_load_ignore_utf16(XML_Parser parser,
+external_entity_load_ignore_utf16(XML_Parser the_parser,
                                   const XML_Char *context,
                                   const XML_Char *UNUSED_P(base),
                                   const XML_Char *UNUSED_P(systemId),
@@ -4403,12 +4403,12 @@ external_entity_load_ignore_utf16(XML_Parser parser,
         "(\0#\0P\0C\0D\0A\0T\0A\0)\0*\0>\0]\0]\0>\0";
     XML_Parser ext_parser;
 
-    ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
+    ext_parser = XML_ExternalEntityParserCreate(the_parser, context, NULL);
     if (ext_parser == NULL)
         fail("Could not create external entity parser");
     if (_XML_Parse_SINGLE_BYTES(ext_parser, text, (int)sizeof(text)-1,
                                 XML_TRUE) == XML_STATUS_ERROR)
-        xml_failure(parser);
+        xml_failure(the_parser);
 
     XML_ParserFree(ext_parser);
     return XML_STATUS_OK;
@@ -4445,7 +4445,7 @@ START_TEST(test_ignore_section_utf16)
 END_TEST
 
 static int XMLCALL
-external_entity_load_ignore_utf16_be(XML_Parser parser,
+external_entity_load_ignore_utf16_be(XML_Parser the_parser,
                                      const XML_Char *context,
                                      const XML_Char *UNUSED_P(base),
                                      const XML_Char *UNUSED_P(systemId),
@@ -4458,12 +4458,12 @@ external_entity_load_ignore_utf16_be(XML_Parser parser,
         "\0(\0#\0P\0C\0D\0A\0T\0A\0)\0*\0>\0]\0]\0>";
     XML_Parser ext_parser;
 
-    ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
+    ext_parser = XML_ExternalEntityParserCreate(the_parser, context, NULL);
     if (ext_parser == NULL)
         fail("Could not create external entity parser");
     if (_XML_Parse_SINGLE_BYTES(ext_parser, text, (int)sizeof(text)-1,
                                 XML_TRUE) == XML_STATUS_ERROR)
-        xml_failure(parser);
+        xml_failure(the_parser);
 
     XML_ParserFree(ext_parser);
     return XML_STATUS_OK;
@@ -4542,7 +4542,7 @@ END_TEST
 
 /* Test recursive parsing */
 static int XMLCALL
-external_entity_valuer(XML_Parser parser,
+external_entity_valuer(XML_Parser the_parser,
                        const XML_Char *context,
                        const XML_Char *UNUSED_P(base),
                        const XML_Char *systemId,
@@ -4557,7 +4557,7 @@ external_entity_valuer(XML_Parser parser,
 
     if (systemId == NULL)
         return XML_STATUS_OK;
-    ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
+    ext_parser = XML_ExternalEntityParserCreate(the_parser, context, NULL);
     if (ext_parser == NULL)
         fail("Could not create external entity parser");
     if (!xcstrcmp(systemId, XCS("004-1.ent"))) {
@@ -4566,7 +4566,7 @@ external_entity_valuer(XML_Parser parser,
             xml_failure(ext_parser);
     }
     else if (!xcstrcmp(systemId, XCS("004-2.ent"))) {
-        ExtFaults *fault = (ExtFaults *)XML_GetUserData(parser);
+        ExtFaults *fault = (ExtFaults *)XML_GetUserData(the_parser);
         enum XML_Status status;
         enum XML_Error error;
 
@@ -4683,7 +4683,7 @@ END_TEST
 
 /* Test the recursive parse interacts with a not standalone handler */
 static int XMLCALL
-external_entity_not_standalone(XML_Parser parser,
+external_entity_not_standalone(XML_Parser the_parser,
                                const XML_Char *context,
                                const XML_Char *UNUSED_P(base),
                                const XML_Char *systemId,
@@ -4698,7 +4698,7 @@ external_entity_not_standalone(XML_Parser parser,
 
     if (systemId == NULL)
         return XML_STATUS_OK;
-    ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
+    ext_parser = XML_ExternalEntityParserCreate(the_parser, context, NULL);
     if (ext_parser == NULL)
         fail("Could not create external entity parser");
     if (!xcstrcmp(systemId, XCS("foo"))) {
@@ -4737,7 +4737,7 @@ START_TEST(test_ext_entity_not_standalone)
 END_TEST
 
 static int XMLCALL
-external_entity_value_aborter(XML_Parser parser,
+external_entity_value_aborter(XML_Parser the_parser,
                               const XML_Char *context,
                               const XML_Char *UNUSED_P(base),
                               const XML_Char *systemId,
@@ -4754,7 +4754,7 @@ external_entity_value_aborter(XML_Parser parser,
 
     if (systemId == NULL)
         return XML_STATUS_OK;
-    ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
+    ext_parser = XML_ExternalEntityParserCreate(the_parser, context, NULL);
     if (ext_parser == NULL)
         fail("Could not create external entity parser");
     if (!xcstrcmp(systemId, XCS("004-1.ent"))) {
@@ -4950,19 +4950,19 @@ START_TEST(test_group_choice)
 END_TEST
 
 static int XMLCALL
-external_entity_public(XML_Parser parser,
+external_entity_public(XML_Parser the_parser,
                        const XML_Char *context,
                        const XML_Char *UNUSED_P(base),
                        const XML_Char *systemId,
                        const XML_Char *publicId)
 {
-    const char *text1 = (const char *)XML_GetUserData(parser);
+    const char *text1 = (const char *)XML_GetUserData(the_parser);
     const char *text2 = "<!ATTLIST doc a CDATA 'value'>";
     const char *text = NULL;
     XML_Parser ext_parser;
     int parse_res;
 
-    ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
+    ext_parser = XML_ExternalEntityParserCreate(the_parser, context, NULL);
     if (ext_parser == NULL)
         return XML_STATUS_ERROR;
     if (systemId != NULL && !xcstrcmp(systemId, XCS("http://example.org/"))) {
@@ -5052,7 +5052,7 @@ END_TEST
 
 /* Test undefined parameter entity in external entity handler */
 static int XMLCALL
-external_entity_devaluer(XML_Parser parser,
+external_entity_devaluer(XML_Parser the_parser,
                          const XML_Char *context,
                          const XML_Char *UNUSED_P(base),
                          const XML_Char *systemId,
@@ -5063,13 +5063,13 @@ external_entity_devaluer(XML_Parser parser,
         "<!ENTITY % e1 SYSTEM 'bar'>\n"
         "%e1;\n";
     XML_Parser ext_parser;
-    intptr_t clear_handler = (intptr_t)XML_GetUserData(parser);
+    intptr_t clear_handler = (intptr_t)XML_GetUserData(the_parser);
 
     if (systemId == NULL || !xcstrcmp(systemId, XCS("bar")))
         return XML_STATUS_OK;
     if (xcstrcmp(systemId, XCS("foo")))
         fail("Unexpected system ID");
-    ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
+    ext_parser = XML_ExternalEntityParserCreate(the_parser, context, NULL);
     if (ext_parser == NULL)
         fail("Could note create external entity parser");
     if (clear_handler)
@@ -5477,16 +5477,16 @@ typedef struct ext_hdlr_data {
 } ExtHdlrData;
 
 static int XMLCALL
-external_entity_oneshot_loader(XML_Parser parser,
+external_entity_oneshot_loader(XML_Parser the_parser,
                                const XML_Char *context,
                                const XML_Char *UNUSED_P(base),
                                const XML_Char *UNUSED_P(systemId),
                                const XML_Char *UNUSED_P(publicId))
 {
-    ExtHdlrData *test_data = (ExtHdlrData *)XML_GetUserData(parser);
+    ExtHdlrData *test_data = (ExtHdlrData *)XML_GetUserData(the_parser);
     XML_Parser ext_parser;
 
-    ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
+    ext_parser = XML_ExternalEntityParserCreate(the_parser, context, NULL);
     if (ext_parser == NULL)
         fail("Could not create external entity parser.");
     /* Use the requested entity parser for further externals */
@@ -6149,16 +6149,16 @@ typedef struct ExtTest2 {
 } ExtTest2;
 
 static int XMLCALL
-external_entity_loader2(XML_Parser parser,
+external_entity_loader2(XML_Parser the_parser,
                         const XML_Char *context,
                         const XML_Char *UNUSED_P(base),
                         const XML_Char *UNUSED_P(systemId),
                         const XML_Char *UNUSED_P(publicId))
 {
-    ExtTest2 *test_data = (ExtTest2 *)XML_GetUserData(parser);
+    ExtTest2 *test_data = (ExtTest2 *)XML_GetUserData(the_parser);
     XML_Parser extparser;
 
-    extparser = XML_ExternalEntityParserCreate(parser, context, NULL);
+    extparser = XML_ExternalEntityParserCreate(the_parser, context, NULL);
     if (extparser == NULL)
         fail("Coulr not create external entity parser");
     if (test_data->encoding != NULL) {
@@ -6443,16 +6443,16 @@ typedef struct ExtFaults2 {
 } ExtFaults2;
 
 static int XMLCALL
-external_entity_faulter2(XML_Parser parser,
+external_entity_faulter2(XML_Parser the_parser,
                          const XML_Char *context,
                          const XML_Char *UNUSED_P(base),
                          const XML_Char *UNUSED_P(systemId),
                          const XML_Char *UNUSED_P(publicId))
 {
-    ExtFaults2 *test_data = (ExtFaults2 *)XML_GetUserData(parser);
+    ExtFaults2 *test_data = (ExtFaults2 *)XML_GetUserData(the_parser);
     XML_Parser extparser;
 
-    extparser = XML_ExternalEntityParserCreate(parser, context, NULL);
+    extparser = XML_ExternalEntityParserCreate(the_parser, context, NULL);
     if (extparser == NULL)
         fail("Could not create external entity parser");
     if (test_data->encoding != NULL) {
@@ -7326,13 +7326,13 @@ END_TEST
 
 /* Regression test for SF bug #616863. */
 static int XMLCALL
-external_entity_handler(XML_Parser parser,
+external_entity_handler(XML_Parser the_parser,
                         const XML_Char *context,
                         const XML_Char *UNUSED_P(base),
                         const XML_Char *UNUSED_P(systemId),
                         const XML_Char *UNUSED_P(publicId))
 {
-    intptr_t callno = 1 + (intptr_t)XML_GetUserData(parser);
+    intptr_t callno = 1 + (intptr_t)XML_GetUserData(the_parser);
     const char *text;
     XML_Parser p2;
 
@@ -7344,8 +7344,8 @@ external_entity_handler(XML_Parser parser,
         text = ("<?xml version='1.0' encoding='us-ascii'?>"
                 "<e/>");
 
-    XML_SetUserData(parser, (void *) callno);
-    p2 = XML_ExternalEntityParserCreate(parser, context, NULL);
+    XML_SetUserData(the_parser, (void *) callno);
+    p2 = XML_ExternalEntityParserCreate(the_parser, context, NULL);
     if (_XML_Parse_SINGLE_BYTES(p2, text, (int)strlen(text), XML_TRUE) == XML_STATUS_ERROR) {
         xml_failure(p2);
         return XML_STATUS_ERROR;
@@ -8422,7 +8422,7 @@ START_TEST(test_alloc_parse_comment_2)
 END_TEST
 
 static int XMLCALL
-external_entity_duff_loader(XML_Parser parser,
+external_entity_duff_loader(XML_Parser the_parser,
                             const XML_Char *context,
                             const XML_Char *UNUSED_P(base),
                             const XML_Char *UNUSED_P(systemId),
@@ -8436,7 +8436,7 @@ external_entity_duff_loader(XML_Parser parser,
     for (i = 0; i < max_alloc_count; i++)
     {
         allocation_count = i;
-        new_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
+        new_parser = XML_ExternalEntityParserCreate(the_parser, context, NULL);
         if (new_parser != NULL)
         {
             XML_ParserFree(new_parser);
@@ -8511,13 +8511,13 @@ END_TEST
 
 
 static int XMLCALL
-external_entity_dbl_handler(XML_Parser parser,
+external_entity_dbl_handler(XML_Parser the_parser,
                             const XML_Char *context,
                             const XML_Char *UNUSED_P(base),
                             const XML_Char *UNUSED_P(systemId),
                             const XML_Char *UNUSED_P(publicId))
 {
-    intptr_t callno = (intptr_t)XML_GetUserData(parser);
+    intptr_t callno = (intptr_t)XML_GetUserData(the_parser);
     const char *text;
     XML_Parser new_parser;
     int i;
@@ -8529,20 +8529,20 @@ external_entity_dbl_handler(XML_Parser parser,
                 "<!ATTLIST doc xmlns CDATA #IMPLIED>\n"
                 "<!ELEMENT e EMPTY>\n");
         allocation_count = 10000;
-        new_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
+        new_parser = XML_ExternalEntityParserCreate(the_parser, context, NULL);
         if (new_parser == NULL) {
             fail("Unable to allocate first external parser");
             return XML_STATUS_ERROR;
         }
         /* Stash the number of calls in the user data */
-        XML_SetUserData(parser, (void *)(intptr_t)(10000 - allocation_count));
+        XML_SetUserData(the_parser, (void *)(intptr_t)(10000 - allocation_count));
     } else {
         text = ("<?xml version='1.0' encoding='us-ascii'?>"
                 "<e/>");
         /* Try at varying levels to exercise more code paths */
         for (i = 0; i < max_alloc_count; i++) {
             allocation_count = callno + i;
-            new_parser = XML_ExternalEntityParserCreate(parser,
+            new_parser = XML_ExternalEntityParserCreate(the_parser,
                                                         context,
                                                         NULL);
             if (new_parser != NULL)
@@ -8593,13 +8593,13 @@ END_TEST
 
 
 static int XMLCALL
-external_entity_dbl_handler_2(XML_Parser parser,
+external_entity_dbl_handler_2(XML_Parser the_parser,
                               const XML_Char *context,
                               const XML_Char *UNUSED_P(base),
                               const XML_Char *UNUSED_P(systemId),
                               const XML_Char *UNUSED_P(publicId))
 {
-    intptr_t callno = (intptr_t)XML_GetUserData(parser);
+    intptr_t callno = (intptr_t)XML_GetUserData(the_parser);
     const char *text;
     XML_Parser new_parser;
     enum XML_Status rv;
@@ -8609,8 +8609,8 @@ external_entity_dbl_handler_2(XML_Parser parser,
         text = ("<!ELEMENT doc (e+)>\n"
                 "<!ATTLIST doc xmlns CDATA #IMPLIED>\n"
                 "<!ELEMENT e EMPTY>\n");
-        XML_SetUserData(parser, (void *)(intptr_t)1);
-        new_parser = XML_ExternalEntityParserCreate(parser,
+        XML_SetUserData(the_parser, (void *)(intptr_t)1);
+        new_parser = XML_ExternalEntityParserCreate(the_parser,
                                                     context,
                                                     NULL);
         if (new_parser == NULL)
@@ -8621,7 +8621,7 @@ external_entity_dbl_handler_2(XML_Parser parser,
         /* Just run through once */
         text = ("<?xml version='1.0' encoding='us-ascii'?>"
                 "<e/>");
-        new_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
+        new_parser = XML_ExternalEntityParserCreate(the_parser, context, NULL);
         if (new_parser == NULL)
             return XML_STATUS_ERROR;
         rv =_XML_Parse_SINGLE_BYTES(new_parser, text, (int)strlen(text),
@@ -8671,7 +8671,7 @@ END_TEST
 
 /* Test more allocation failure paths */
 static int XMLCALL
-external_entity_alloc_set_encoding(XML_Parser parser,
+external_entity_alloc_set_encoding(XML_Parser the_parser,
                                    const XML_Char *context,
                                    const XML_Char *UNUSED_P(base),
                                    const XML_Char *UNUSED_P(systemId),
@@ -8684,7 +8684,7 @@ external_entity_alloc_set_encoding(XML_Parser parser,
     XML_Parser ext_parser;
     enum XML_Status status;
 
-    ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
+    ext_parser = XML_ExternalEntityParserCreate(the_parser, context, NULL);
     if (ext_parser == NULL)
         return XML_STATUS_ERROR;
     if (!XML_SetEncoding(ext_parser, XCS("utf-8"))) {
@@ -8916,7 +8916,7 @@ END_TEST
 
 /* Same test for external entity parsers */
 static int XMLCALL
-external_entity_reallocator(XML_Parser parser,
+external_entity_reallocator(XML_Parser the_parser,
                             const XML_Char *context,
                             const XML_Char *UNUSED_P(base),
                             const XML_Char *UNUSED_P(systemId),
@@ -8927,11 +8927,11 @@ external_entity_reallocator(XML_Parser parser,
     void *buffer;
     enum XML_Status status;
 
-    ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
+    ext_parser = XML_ExternalEntityParserCreate(the_parser, context, NULL);
     if (ext_parser == NULL)
         fail("Could not create external entity parser");
 
-    reallocation_count = (intptr_t)XML_GetUserData(parser);
+    reallocation_count = (intptr_t)XML_GetUserData(the_parser);
     buffer = XML_GetBuffer(ext_parser, 1536);
     if (buffer == NULL)
         fail("Buffer allocation failed");
@@ -9234,17 +9234,17 @@ START_TEST(test_alloc_parse_public_doctype_long_name)
 END_TEST
 
 static int XMLCALL
-external_entity_alloc(XML_Parser parser,
+external_entity_alloc(XML_Parser the_parser,
                       const XML_Char *context,
                       const XML_Char *UNUSED_P(base),
                       const XML_Char *UNUSED_P(systemId),
                       const XML_Char *UNUSED_P(publicId))
 {
-    const char *text = (const char *)XML_GetUserData(parser);
+    const char *text = (const char *)XML_GetUserData(the_parser);
     XML_Parser ext_parser;
     int parse_res;
 
-    ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
+    ext_parser = XML_ExternalEntityParserCreate(the_parser, context, NULL);
     if (ext_parser == NULL)
         return XML_STATUS_ERROR;
     parse_res = _XML_Parse_SINGLE_BYTES(ext_parser, text, (int)strlen(text),
