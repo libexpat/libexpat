@@ -4986,11 +4986,11 @@ doProlog(XML_Parser parser,
           }
           parser->m_groupConnector = temp;
           if (dtd->scaffIndex) {
-            int *temp = (int *)REALLOC(parser, dtd->scaffIndex,
+            int *temp1 = (int *)REALLOC(parser, dtd->scaffIndex,
                           parser->m_groupSize * sizeof(int));
-            if (temp == NULL)
+            if (temp1 == NULL)
               return XML_ERROR_NO_MEMORY;
-            dtd->scaffIndex = temp;
+            dtd->scaffIndex = temp1;
           }
         }
         else {
