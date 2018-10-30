@@ -165,12 +165,12 @@ void
 srunner_run_all(SRunner *runner, int verbosity)
 {
     Suite *suite;
-    TCase *tc;
+    TCase * volatile tc;
     assert(runner != NULL);
     suite = runner->suite;
     tc = suite->tests;
     while (tc != NULL) {
-        int i;
+        volatile int i;
         for (i = 0; i < tc->ntests; ++i) {
             runner->nchecks++;
 
