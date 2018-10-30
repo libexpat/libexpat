@@ -8084,23 +8084,25 @@ START_TEST(test_misc_features)
 
     /* Prevent problems with double-freeing parsers */
     g_parser = NULL;
-    if (features == NULL)
+    if (features == NULL) {
         fail("Failed to get feature information");
-    /* Loop through the features checking what we can */
-    while (features->feature != XML_FEATURE_END) {
-        switch(features->feature) {
-            case XML_FEATURE_SIZEOF_XML_CHAR:
-                if (features->value != sizeof(XML_Char))
-                    fail("Incorrect size of XML_Char");
-                break;
-            case XML_FEATURE_SIZEOF_XML_LCHAR:
-                if (features->value != sizeof(XML_LChar))
-                    fail("Incorrect size of XML_LChar");
-                break;
-            default:
-                break;
+    } else {
+        /* Loop through the features checking what we can */
+        while (features->feature != XML_FEATURE_END) {
+            switch(features->feature) {
+                case XML_FEATURE_SIZEOF_XML_CHAR:
+                    if (features->value != sizeof(XML_Char))
+                        fail("Incorrect size of XML_Char");
+                    break;
+                case XML_FEATURE_SIZEOF_XML_LCHAR:
+                    if (features->value != sizeof(XML_LChar))
+                        fail("Incorrect size of XML_LChar");
+                    break;
+                default:
+                    break;
+            }
+            features++;
         }
-        features++;
     }
 }
 END_TEST
