@@ -64,7 +64,7 @@ tcase_create(const char *name)
 }
 
 void
-suite_add_tcase(Suite *suite, TCase *tc) 
+suite_add_tcase(Suite *suite, TCase *tc)
 {
     assert(suite != NULL);
     assert(tc != NULL);
@@ -165,12 +165,12 @@ void
 srunner_run_all(SRunner *runner, int verbosity)
 {
     Suite *suite;
-    TCase *tc;
+    TCase * volatile tc;
     assert(runner != NULL);
     suite = runner->suite;
     tc = suite->tests;
     while (tc != NULL) {
-        int i;
+        volatile int i;
         for (i = 0; i < tc->ntests; ++i) {
             runner->nchecks++;
 
