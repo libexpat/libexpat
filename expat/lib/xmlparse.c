@@ -2080,16 +2080,16 @@ XML_GetBuffer(XML_Parser parser, int len)
       parser->m_bufferLim = newBuf + bufferSize;
 #ifdef XML_CONTEXT_BYTES
       if (parser->m_bufferPtr) {
-        int keep = (int)EXPAT_SAFE_PTR_DIFF(parser->m_bufferPtr, parser->m_buffer);
-        if (keep > XML_CONTEXT_BYTES)
-          keep = XML_CONTEXT_BYTES;
-        memcpy(newBuf, &parser->m_bufferPtr[-keep],
-               EXPAT_SAFE_PTR_DIFF(parser->m_bufferEnd, parser->m_bufferPtr) + keep);
+        int keep1 = (int)EXPAT_SAFE_PTR_DIFF(parser->m_bufferPtr, parser->m_buffer);
+        if (keep1 > XML_CONTEXT_BYTES)
+          keep1 = XML_CONTEXT_BYTES;
+        memcpy(newBuf, &parser->m_bufferPtr[-keep1],
+               EXPAT_SAFE_PTR_DIFF(parser->m_bufferEnd, parser->m_bufferPtr) + keep1);
         FREE(parser, parser->m_buffer);
         parser->m_buffer = newBuf;
         parser->m_bufferEnd = parser->m_buffer +
-            EXPAT_SAFE_PTR_DIFF(parser->m_bufferEnd, parser->m_bufferPtr) + keep;
-        parser->m_bufferPtr = parser->m_buffer + keep;
+            EXPAT_SAFE_PTR_DIFF(parser->m_bufferEnd, parser->m_bufferPtr) + keep1;
+        parser->m_bufferPtr = parser->m_buffer + keep1;
       }
       else {
         /* This must be a brand new buffer with no data in it yet */
