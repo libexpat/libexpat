@@ -17,12 +17,27 @@
 #
 # LICENSE
 #
-#   Copyright (c) 2018 The Expat Authors.
+# Copyright (c) 1998-2000 Thai Open Source Software Center Ltd and Clark Cooper
+# Copyright (c) 2001-2018 Expat maintainers
 #
-#   Copying and distribution of this file, with or without modification,
-#   are permitted in  any medium without royalty  provided the copyright
-#   notice and this  notice are preserved.  This file  is offered as-is,
-#   without any warranty.
+# Permission is hereby granted, free  of charge, to any person obtaining
+# a  copy  of this  software  and  associated documentation  files  (the
+# "Software"), to  deal in  the Software without  restriction, including
+# without limitation  the rights to  use, copy, modify,  merge, publish,
+# distribute, sublicense,  and/or sell  copies of  the Software,  and to
+# permit persons to whom the Software  is furnished to do so, subject to
+# the following conditions:
+#
+# The  above  copyright  notice  and this  permission  notice  shall  be
+# included in all copies or substantial portions of the Software.
+#
+# THE  SOFTWARE IS  PROVIDED  "AS  IS", WITHOUT  WARRANTY  OF ANY  KIND,
+# EXPRESS OR  IMPLIED, INCLUDING  BUT NOT LIMITED  TO THE  WARRANTIES OF
+# MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+# IN NO EVENT  SHALL THE AUTHORS OR COPYRIGHT HOLDERS  BE LIABLE FOR ANY
+# CLAIM, DAMAGES OR  OTHER LIABILITY, WHETHER IN AN  ACTION OF CONTRACT,
+# TORT OR  OTHERWISE, ARISING  FROM, OUT  OF OR  IN CONNECTION  WITH THE
+# SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 AC_DEFUN([EXPATCFG_SUPPORT_GETRANDOM],[
   AC_CACHE_CHECK([enable support for function getrandom (Linux 3.17+, glibc 2.25+) or syscall SYS_getrandom (Linux 3.17+)],
