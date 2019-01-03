@@ -45,7 +45,8 @@ if WITH_TESTS
 SUBDIRS += tests  
 endif
 if WITH_XMLWF
-SUBDIRS += xmlwf doc
+#[OS] SUBDIRS += xmlwf doc
+SUBDIRS += xmlwf
 endif
 
 pkgconfig_DATA = expat.pc
