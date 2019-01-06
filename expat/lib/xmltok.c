@@ -38,6 +38,11 @@
 # define bool   int
 # define false  0
 # define true   1
+#elif defined(_POSIX_SOURCE)
+  /* for Plan 9 APE pcc */
+# define bool   int
+# define false  0
+# define true   1
 #else
 # include <stdbool.h>
 #endif

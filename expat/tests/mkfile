@@ -1,0 +1,25 @@
+</sys/src/ape/config
+
+CFLAGS=-c -FV\
+	-I../lib\
+	-D_POSIX_SOURCE\
+	-D_SUSV2_SOURCE\
+	-D_PLAN9_SOURCE\
+	-D__func__="<unknown>"\
+
+OFILES=\
+	chardata.$O\
+	structdata.$O\
+	memcheck.$O\
+	minicheck.$O\
+	runtests.$O\
+
+LIB=../lib/libexpat.a
+
+HFILES=\
+	chardata.h\
+	structdata.h\
+	memcheck.h\
+	minicheck.h\
+
+</sys/src/cmd/mkone

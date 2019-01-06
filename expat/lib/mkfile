@@ -1,0 +1,36 @@
+</sys/src/ape/config
+
+CFLAGS=-c -FTV\
+	-D_POSIX_SOURCE\
+	-D_SUSV2_SOURCE\
+	-D_PLAN9_SOURCE\
+	-DHAVE_ARC4RANDOM_BUF\
+
+OFILES=\
+	loadlibrary.$O\
+	xmlparse.$O\
+	xmlparse_plan9.$O\
+	xmltok.$O\
+	xmlrole.$O\
+
+HFILES=\
+	ascii.h\
+	asciitab.h\
+	expat.h\
+	expat_external.h\
+	iasciitab.h\
+	internal.h\
+	latin1tab.h\
+	nametab.h\
+	siphash.h\
+	utf8tab.h\
+	winconfig.h\
+	xmlrole.h\
+	xmltok.h\
+	xmltok_impl.h\
+
+LIB=libexpat.a
+
+</sys/src/cmd/mklib
+
+xmltok.$O: xmltok.c xmltok_impl.c xmltok_ns.c

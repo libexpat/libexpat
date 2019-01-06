@@ -841,6 +841,7 @@ generate_hash_secret_salt(XML_Parser parser)
 
   /* "Failproof" high quality providers: */
 #if defined(HAVE_ARC4RANDOM_BUF)
+  extern void arc4random_buf(void *buf, size_t nbytes);
   arc4random_buf(&entropy, sizeof(entropy));
   return ENTROPY_DEBUG("arc4random_buf", entropy);
 #elif defined(HAVE_ARC4RANDOM)
