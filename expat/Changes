@@ -10,11 +10,13 @@ Release x.x.x XXX XXXXXX XX XXXX
             #219  Remove fallback to bcopy, assume that memmove(3) exists
             #227  Autotools: Add --without-examples and --without-tests
             #228  Autotools: Modernize configure.ac
+            #243  Windows: Fix syntax of .def module definition files
 
         Special thanks to:
             Benjamin Peterson
             @KangLin
             Marco Maggi
+            Sebastian Dröge
             @userwithuid
             Yury Gribov
 
