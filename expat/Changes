@@ -11,9 +11,11 @@ Release x.x.x XXX XXXXXX XX XXXX
             #227  Autotools: Add --without-examples and --without-tests
             #228  Autotools: Modernize configure.ac
             #243  Windows: Fix syntax of .def module definition files
+       #245 #246  Autotools: Fix check for -fvisibility=hidden for Clang
 
         Special thanks to:
             Benjamin Peterson
+            Hanno Böck
             @KangLin
             Marco Maggi
             Sebastian Dröge

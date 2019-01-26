@@ -27,7 +27,7 @@ AC_DEFUN([EXPATCFG_COMPILER_SUPPORTS_VISIBILITY],
      [expatcfg_cv_compiler_supports_visibility],
      [AS_VAR_SET([expatcfg_cv_compiler_supports_visibility],[no])
       AS_VAR_COPY([OLDFLAGS],[CFLAGS])
-      AS_VAR_APPEND([CFLAGS],[" -fvisibility=hidden -Wall -Werror"])
+      AS_VAR_APPEND([CFLAGS],[" -fvisibility=hidden -Wall -Werror -Wno-unknown-warning-option"])
       AC_COMPILE_IFELSE([AC_LANG_SOURCE([[
           void __attribute__((visibility("default"))) foo(void);
           void foo(void) {}
