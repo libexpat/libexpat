@@ -28,7 +28,10 @@ AC_DEFUN([EXPATCFG_COMPILER_SUPPORTS_VISIBILITY],
      [AS_VAR_SET([expatcfg_cv_compiler_supports_visibility],[no])
       AS_VAR_COPY([OLDFLAGS],[CFLAGS])
       AS_VAR_APPEND([CFLAGS],[" -fvisibility=hidden -Wall -Werror"])
-      AC_COMPILE_IFELSE([AC_LANG_SOURCE([[void __attribute__((visibility("default"))) foo(void); void foo(void) {}]])],
+      AC_COMPILE_IFELSE([AC_LANG_SOURCE([[
+          void __attribute__((visibility("default"))) foo(void);
+          void foo(void) {}
+        ]])],
         [AS_VAR_SET([expatcfg_cv_compiler_supports_visibility],[yes])])
       AS_VAR_COPY([CFLAGS],[OLDFLAGS])])
    AS_IF([test "$expatcfg_cv_compiler_supports_visibility" = yes],[$1],[$2])])
