@@ -12,6 +12,7 @@ Release x.x.x XXX XXXXXX XX XXXX
             #228  Autotools: Modernize configure.ac
             #243  Windows: Fix syntax of .def module definition files
        #245 #246  Autotools: Fix check for -fvisibility=hidden for Clang
+       #247 #248  Autotools: Fix compilation for lack of docbook2x-man
 
         Special thanks to:
             Benjamin Peterson
