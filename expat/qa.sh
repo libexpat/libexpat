@@ -16,6 +16,7 @@ set -o nounset
 : ${MAKE:=make}
 
 : ${BASE_COMPILE_FLAGS:="-pipe -Wall -Wextra -pedantic -Wno-overlength-strings -Wno-long-long"}
+: ${BASE_LINK_FLAGS:=}
 
 ANNOUNCE() {
     local open='\e[1m'
@@ -43,7 +44,9 @@ main() {
         # http://clang.llvm.org/docs/AddressSanitizer.html
         local CC="${CLANG_CC}"
         local CXX="${CLANG_CXX}"
+        local LD="${CLANG_CXX}"
         BASE_COMPILE_FLAGS+=" -g -fsanitize=address -fno-omit-frame-pointer"
+        BASE_LINK_FLAGS+=" -g -Wc,-fsanitize=address"  # "-Wc," is for libtool
         ;;
     coverage | lib-coverage | app-coverage)
         local CC="${GCC_CC}"
@@ -78,6 +81,7 @@ main() {
 
     local CFLAGS="-std=c89 ${BASE_COMPILE_FLAGS} ${CFLAGS:-}"
     local CXXFLAGS="-std=c++98 ${BASE_COMPILE_FLAGS} ${CXXFLAGS:-}"
+    local LDFLAGS="${BASE_LINK_FLAGS} ${LDFLAGS:-}"
 
     (
         set -e
@@ -85,8 +89,9 @@ main() {
         RUN CC="${CC}" CFLAGS="${CFLAGS}" \
                 CXX="${CXX}" CXXFLAGS="${CXXFLAGS}" \
                 AR="${AR}" \
-                LD="${LD}" \
-                ./configure "$@"
+                LD="${LD}" LDFLAGS="${LDFLAGS}" \
+                ./configure "$@" \
+            || { RUN cat config.log ; false ; }
 
         RUN "${MAKE}" \
                 CFLAGS="${CFLAGS} -Werror" \
