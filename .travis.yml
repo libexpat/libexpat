@@ -17,7 +17,7 @@ git:
 
 env:
   global:
-    - CFLAGS='-g -pipe' PATH="/usr/local/opt/coreutils/libexec/gnubin:$PATH"
+    - CFLAGS='-g -pipe'
   matrix:
     - MODE=address
     - MODE=cmake

@@ -30,6 +30,10 @@
 
 set -e
 
+if [[ ${TRAVIS_OS_NAME} = osx ]]; then
+    export PATH="/usr/local/opt/coreutils/libexec/gnubin${PATH:+:}${PATH}"
+fi
+
 PS4='# '
 set -x
 
