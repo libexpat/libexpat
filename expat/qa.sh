@@ -44,6 +44,7 @@ main() {
         # http://clang.llvm.org/docs/AddressSanitizer.html
         local CC="${CLANG_CC}"
         local CXX="${CLANG_CXX}"
+        local LD="${CLANG_CXX}"
         BASE_COMPILE_FLAGS+=" -g -fsanitize=address -fno-omit-frame-pointer"
         BASE_LINK_FLAGS+=" -g -Wc,-fsanitize=address"  # "-Wc," is for libtool
         ;;
