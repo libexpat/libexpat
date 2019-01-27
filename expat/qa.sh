@@ -89,7 +89,8 @@ main() {
                 CXX="${CXX}" CXXFLAGS="${CXXFLAGS}" \
                 AR="${AR}" \
                 LD="${LD}" LDFLAGS="${LDFLAGS}" \
-                ./configure "$@"
+                ./configure "$@" \
+            || { RUN cat config.log ; false ; }
 
         RUN "${MAKE}" \
                 CFLAGS="${CFLAGS} -Werror" \
