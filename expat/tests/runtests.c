@@ -38,6 +38,9 @@
 # include <expat_config.h>
 #endif
 
+/* For snprintf and glibc */
+#define _XOPEN_SOURCE 500
+
 #include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
