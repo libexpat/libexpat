@@ -7165,7 +7165,8 @@ triplet_end_checker(void *userData, const XML_Char *name)
     XML_Char **elemstr = (XML_Char **)userData;
     if (xcstrcmp(elemstr[0], name) != 0) {
         char buffer[1024];
-        sprintf(buffer, "unexpected end string: '%" XML_FMT_STR "'", name);
+        snprintf(buffer, sizeof(buffer), "unexpected end string: '%" XML_FMT_STR "'", name);
+	buffer[sizeof(buffer)-1] = '\0';
         fail(buffer);
     }
     triplet_end_flag = XML_TRUE;
