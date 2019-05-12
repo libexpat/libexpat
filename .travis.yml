@@ -39,6 +39,7 @@ addons:
       - cmake
       - docbook2x
       - dos2unix
+      - lzip
       - rpm
 
 script:
