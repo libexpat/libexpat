@@ -10,11 +10,20 @@ PS4='# '
 set -x
 
 version="$(./conftools/get-version.sh lib/expat.h)"
-archive=expat-${version}.tar.bz2
 
 ./buildconf.sh
 ./configure
 make distcheck
 
-gpg --armor --output ${archive}.asc --detach-sign ${archive}
-gpg --verify ${archive}.asc ${archive}
+extensions=(
+    gz
+    bz2
+    lz
+    xz
+)
+
+for ext in ${extensions[@]} ; do
+    archive=expat-${version}.tar.${ext}
+    gpg --armor --output ${archive}.asc --detach-sign ${archive}
+    gpg --verify ${archive}.asc ${archive}
+done

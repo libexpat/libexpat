@@ -30,8 +30,9 @@
 
 AUTOMAKE_OPTIONS = \
     dist-bzip2 \
+    dist-lzip \
+    dist-xz \
     foreign \
-    no-dist-gzip \
     subdir-objects
 
 ACLOCAL_AMFLAGS = -I m4
