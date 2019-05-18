@@ -14,6 +14,7 @@ Release x.x.x XXX XXXXXX XX XXXX
        #245 #246  Autotools: Fix check for -fvisibility=hidden for Clang
        #247 #248  Autotools: Fix compilation for lack of docbook2x-man
        #236 #258  Autotools: Produce .tar.{gz,lz,xz} release archives
+            #257  Use portable "/usr/bin/env bash" shebang (e.g. for OpenBSD)
 
         Special thanks to:
             Benjamin Peterson

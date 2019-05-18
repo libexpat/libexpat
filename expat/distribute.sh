@@ -1,4 +1,4 @@
-#! /bin/bash
+#! /usr/bin/env bash
 # Copyright (C) 2018 Sebastian Pipping <sebastian@pipping.org>
 # Licensed under the MIT license
 #
