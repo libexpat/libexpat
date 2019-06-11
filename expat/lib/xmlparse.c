@@ -6051,15 +6051,19 @@ static int
 setElementTypePrefix(XML_Parser parser, ELEMENT_TYPE *elementType)
 {
   DTD * const dtd = parser->m_dtd;  /* save one level of indirection */
-  const XML_Char *name;
+  const XML_Char *name,*lastcol = NULL;
   for (name = elementType->name; *name; name++) {
     if (*name == XML_T(ASCII_COLON)) {
       PREFIX *prefix;
       const XML_Char *s;
+      if(lastcol != NULL && lastcol == (name - sizeof(XML_Char)))
+	continue;
       for (s = elementType->name; s != name; s++) {
         if (!poolAppendChar(&dtd->pool, *s))
           return 0;
       }
+      if(s == name)
+	lastcol = name;
       if (!poolAppendChar(&dtd->pool, XML_T('\0')))
         return 0;
       prefix = (PREFIX *)lookup(parser, &dtd->prefixes, poolStart(&dtd->pool),
