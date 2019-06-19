@@ -169,7 +169,7 @@ if(USE_libbsd)
 endif()
 
 set(LIBCURRENT 7)   # sync
-set(LIBREVISION 8)  # with
+set(LIBREVISION 9)  # with
 set(LIBAGE 6)       # configure.ac!
 math(EXPR LIBCURRENT_MINUS_AGE "${LIBCURRENT} - ${LIBAGE}")
 
