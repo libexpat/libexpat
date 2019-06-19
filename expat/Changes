@@ -23,6 +23,7 @@ Release x.x.x XXX XXXXXX XX XXXX
             #219  Remove fallback to bcopy, assume that memmove(3) exists
             #257  Use portable "/usr/bin/env bash" shebang (e.g. for OpenBSD)
             #243  Windows: Fix syntax of .def module definition files
+                  Version info bumped from 7:8:6 to 7:9:6
 
         Special thanks to:
             Benjamin Peterson
