@@ -99,6 +99,9 @@
 /* Define to use wchar_t as UTF-16 char type instead of unsigned short. */
 #cmakedefine XML_UNICODE_WCHAR_T
 
+/* Define to allow retrieving the byte offsets for attribute names and values. */
+#cmakedefine XML_ATTR_INFO
+
 /* Define to __FUNCTION__ or "" if `__func__' does not conform to ANSI C. */
 #ifdef _MSC_VER
 # define __func__ __FUNCTION__

@@ -41,6 +41,10 @@ _configure() {
     ${unicode_enabled} \
             && configure_args+=( CPPFLAGS='-DXML_UNICODE -DXML_UNICODE_WCHAR_T' )
 
+    if [[ "${xml_attr_info}" = true ]]; then
+        configure_args+=( --enable-xml-attr-info )
+    fi
+
     if [[ ${xml_context} -eq 0 ]]; then
         configure_args+=( --disable-xml-context )
     else
@@ -211,8 +215,10 @@ _main() {
                 continue
             fi
 
-            for xml_context in 0 1024 ; do
-                _build_case
+            for xml_attr_info in true false ; do
+                for xml_context in 0 1024 ; do
+                    _build_case
+                done
             done
         done
     done
