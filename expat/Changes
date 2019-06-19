@@ -14,6 +14,7 @@ Release x.x.x XXX XXXXXX XX XXXX
        #195 #197  Autotools/CMake: Utilize -fvisibility=hidden to stop
                     exporting non-API symbols
             #212  CMake: Make libdir of pkgconfig expat.pc support multilib
+       #158 #263  CMake: Build man page in PROJECT_BINARY_DIR not _SOURCE_DIR
             #219  Remove fallback to bcopy, assume that memmove(3) exists
             #227  Autotools: Add --without-examples and --without-tests
             #228  Autotools: Modernize configure.ac
@@ -28,6 +29,7 @@ Release x.x.x XXX XXXXXX XX XXXX
             Caolán McNamara
             Hanno Böck
             KangLin
+            Kishore Kunche
             Marco Maggi
             Rhodri James
             Sebastian Dröge
