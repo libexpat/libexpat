@@ -153,9 +153,9 @@ set(expat_SRCS
 
 if(BUILD_shared)
     set(_SHARED SHARED)
-    if(WIN32)
+    if(MSVC)
         set(expat_SRCS ${expat_SRCS} lib/libexpat.def)
-    endif(WIN32)
+    endif(MSVC)
 else(BUILD_shared)
     set(_SHARED STATIC)
     if(WIN32)
