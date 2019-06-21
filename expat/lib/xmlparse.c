@@ -2875,8 +2875,10 @@ doContent(XML_Parser parser,
         tag->name.str = (XML_Char *)tag->buf;
         *toPtr = XML_T('\0');
         result = storeAtts(parser, enc, s, &(tag->name), &(tag->bindings));
-        if (result)
+        if (result != XML_ERROR_NONE) {
+          freeBindings(parser, tag->bindings);
           return result;
+        }
         if (parser->m_startElementHandler)
           parser->m_startElementHandler(parser->m_handlerArg, tag->name.str,
                               (const XML_Char **)parser->m_atts);
