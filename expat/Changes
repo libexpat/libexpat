@@ -11,9 +11,9 @@ Release x.x.x xxx xxx xx xxxx
 
 Release 2.2.7 Wed June 19 2019
         Security fixes:
-       #186 #262  Fix extraction of namespace prefixes from XML names;
-                    XML names with multiple colons could end up in the
-                    wrong namespace, and take a high amount of RAM and CPU
+       #186 #262  CVE-2018-20843 -- Fix extraction of namespace prefixes from
+                    XML names; XML names with multiple colons could end up in
+                    the wrong namespace, and take a high amount of RAM and CPU
                     resources while processing, opening the door to
                     use for denial-of-service attacks
 
