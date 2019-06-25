@@ -2080,7 +2080,7 @@ XML_GetBuffer(XML_Parser parser, int len)
       parser->m_bufferLim = newBuf + bufferSize;
 #ifdef XML_CONTEXT_BYTES
       if (parser->m_bufferPtr) {
-        int keep = (int)EXPAT_SAFE_PTR_DIFF(parser->m_bufferPtr, parser->m_buffer);
+        keep = (int)EXPAT_SAFE_PTR_DIFF(parser->m_bufferPtr, parser->m_buffer);
         if (keep > XML_CONTEXT_BYTES)
           keep = XML_CONTEXT_BYTES;
         memcpy(newBuf, &parser->m_bufferPtr[-keep],
@@ -4979,18 +4979,18 @@ doProlog(XML_Parser parser,
     case XML_ROLE_GROUP_OPEN:
       if (parser->m_prologState.level >= parser->m_groupSize) {
         if (parser->m_groupSize) {
-          char *temp = (char *)REALLOC(parser, parser->m_groupConnector, parser->m_groupSize *= 2);
+          void *temp = REALLOC(parser, parser->m_groupConnector, parser->m_groupSize *= 2);
           if (temp == NULL) {
             parser->m_groupSize /= 2;
             return XML_ERROR_NO_MEMORY;
           }
-          parser->m_groupConnector = temp;
+          parser->m_groupConnector = (char*)temp;
           if (dtd->scaffIndex) {
-            int *temp = (int *)REALLOC(parser, dtd->scaffIndex,
+            temp = REALLOC(parser, dtd->scaffIndex,
                           parser->m_groupSize * sizeof(int));
             if (temp == NULL)
               return XML_ERROR_NO_MEMORY;
-            dtd->scaffIndex = temp;
+            dtd->scaffIndex = (int*)temp;
           }
         }
         else {
