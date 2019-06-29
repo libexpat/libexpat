@@ -4979,18 +4979,19 @@ doProlog(XML_Parser parser,
     case XML_ROLE_GROUP_OPEN:
       if (parser->m_prologState.level >= parser->m_groupSize) {
         if (parser->m_groupSize) {
-          char *temp = (char *)REALLOC(parser, parser->m_groupConnector, parser->m_groupSize *= 2);
-          if (temp == NULL) {
+          char * const new_connector = (char *)REALLOC(parser,
+              parser->m_groupConnector, parser->m_groupSize *= 2);
+          if (new_connector == NULL) {
             parser->m_groupSize /= 2;
             return XML_ERROR_NO_MEMORY;
           }
-          parser->m_groupConnector = temp;
+          parser->m_groupConnector = new_connector;
           if (dtd->scaffIndex) {
-            int *temp = (int *)REALLOC(parser, dtd->scaffIndex,
-                          parser->m_groupSize * sizeof(int));
-            if (temp == NULL)
+            int * const new_scaff_index = (int *)REALLOC(parser,
+                dtd->scaffIndex, parser->m_groupSize * sizeof(int));
+            if (new_scaff_index == NULL)
               return XML_ERROR_NO_MEMORY;
-            dtd->scaffIndex = temp;
+            dtd->scaffIndex = new_scaff_index;
           }
         }
         else {
