@@ -4976,13 +4976,16 @@ doProlog(XML_Parser parser,
     case XML_ROLE_GROUP_OPEN:
       if (parser->m_prologState.level >= parser->m_groupSize) {
         if (parser->m_groupSize) {
-          char * const new_connector = (char *)REALLOC(parser,
-              parser->m_groupConnector, parser->m_groupSize *= 2);
-          if (new_connector == NULL) {
-            parser->m_groupSize /= 2;
-            return XML_ERROR_NO_MEMORY;
+          {
+            char * const new_connector = (char *)REALLOC(parser,
+                parser->m_groupConnector, parser->m_groupSize *= 2);
+            if (new_connector == NULL) {
+                parser->m_groupSize /= 2;
+                return XML_ERROR_NO_MEMORY;
+            }
+            parser->m_groupConnector = new_connector;
           }
-          parser->m_groupConnector = new_connector;
+
           if (dtd->scaffIndex) {
             int * const new_scaff_index = (int *)REALLOC(parser,
                 dtd->scaffIndex, parser->m_groupSize * sizeof(int));
