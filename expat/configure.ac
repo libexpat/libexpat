@@ -222,6 +222,15 @@ AC_DEFINE([XML_DTD], 1,
 AC_DEFINE([XML_DEV_URANDOM], 1,
           [Define to include code reading entropy from `/dev/urandom'.])
 
+AC_ARG_ENABLE([xml-attr-info],
+  [AS_HELP_STRING([--enable-xml-attr-info],
+                 [Enable retrieving the byte offsets for attribute names and values
+                  @<:@default=no@:>@])], ,
+                 [enable_xml_attr_info=no])
+AS_IF([test "x${enable_xml_attr_info}" = "xyes"],
+      [AC_DEFINE([XML_ATTR_INFO], 1,
+         [Define to allow retrieving the byte offsets for attribute names and values.])])
+
 AC_ARG_ENABLE([xml-context],
   AS_HELP_STRING([--enable-xml-context @<:@COUNT@:>@],
     [Retain context around the current parse point;
