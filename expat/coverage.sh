@@ -41,9 +41,8 @@ _configure() {
     ${unicode_enabled} \
             && configure_args+=( CPPFLAGS='-DXML_UNICODE -DXML_UNICODE_WCHAR_T' )
 
-    if [[ "${xml_attr_info_enabled}" = true ]]; then
-        configure_args+=( --enable-xml-attr-info )
-    fi
+    ${xml_attr_info_enabled} \
+            && configure_args+=( --enable-xml-attr-info )
 
     if [[ ${xml_context} -eq 0 ]]; then
         configure_args+=( --disable-xml-context )
