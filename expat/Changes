@@ -4,9 +4,12 @@ NOTE: We are looking for help with a few things:
 
 Release x.x.x xxx xxx xx xxxx
         Other changes:
+            #264  Autotools: Add argument --enable-xml-attr-info
+            #264  CMake: Add argument -DXML_ATTR_INFO=ON
             #265  CMake: Fix linking with MinGW
 
         Special thanks to:
+            Khajapasha Mohammed
             xantares
 
 Release 2.2.7 Wed June 19 2019
