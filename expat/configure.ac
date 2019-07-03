@@ -225,7 +225,7 @@ AC_DEFINE([XML_DEV_URANDOM], 1,
 AC_ARG_ENABLE([xml-attr-info],
   [AS_HELP_STRING([--enable-xml-attr-info],
                  [Enable retrieving the byte offsets for attribute names and values
-                  (default is disabled)])], ,
+                  @<:@default=no@:>@])], ,
                  [enable_xml_attr_info=no])
 AS_IF([test "x${enable_xml_attr_info}" = "xyes"],
       [AC_DEFINE([XML_ATTR_INFO], 1,
