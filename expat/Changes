@@ -5,6 +5,7 @@ NOTE: We are looking for help with a few things:
 Release x.x.x xxx xxx xx xxxx
         Other changes:
             #265  CMake: Fix linking with MinGW
+       #268 #270  Address compiler warnings
 
         Special thanks to:
             xantares
