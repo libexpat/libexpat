@@ -7,6 +7,7 @@ Release x.x.x xxx xxx xx xxxx
        #244 #264  Autotools: Add argument --enable-xml-attr-info
        #244 #264  CMake: Add argument -DXML_ATTR_INFO=ON
             #265  CMake: Fix linking with MinGW
+       #268 #270  Address compiler warnings
 
         Special thanks to:
             Khajapasha Mohammed
