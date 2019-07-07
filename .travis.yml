@@ -18,6 +18,8 @@ git:
 env:
   global:
     - CFLAGS='-g -pipe'
+    - ENABLE_ATTR_INFO=true
+
   matrix:
     - MODE=address
     - MODE=cmake
