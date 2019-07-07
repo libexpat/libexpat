@@ -6,7 +6,7 @@ project(expat)
 cmake_minimum_required(VERSION 2.8.10)
 set(PACKAGE_BUGREPORT "expat-bugs@libexpat.org")
 set(PACKAGE_NAME "expat")
-set(PACKAGE_VERSION "2.2.6")
+set(PACKAGE_VERSION "2.2.7")
 set(PACKAGE_STRING "${PACKAGE_NAME} ${PACKAGE_VERSION}")
 set(PACKAGE_TARNAME "${PACKAGE_NAME}")
 
@@ -60,6 +60,7 @@ if(NOT WIN32)
 endif()
 option(XML_UNICODE "Use UTF-16 encoded chars (two bytes) instead of UTF-8" OFF)
 option(XML_UNICODE_WCHAR_T "Use wchar_t to represent UTF-16 instead of unsigned short" OFF)
+option(XML_ATTR_INFO "Define to allow retrieving the byte offsets for attribute names and values" OFF)
 
 if(XML_DTD)
     set(XML_DTD 1)
@@ -81,6 +82,11 @@ if(XML_UNICODE_WCHAR_T)
 else(XML_UNICODE_WCHAR_T)
     set(XML_UNICODE_WCHAR_T 0)
 endif(XML_UNICODE_WCHAR_T)
+if(XML_ATTR_INFO)
+    set(XML_ATTR_INFO 1)
+else(XML_ATTR_INFO)
+    set(XML_ATTR_INFO 0)
+endif(XML_ATTR_INFO)
 
 if(XML_UNICODE_WCHAR_T AND NOT XML_UNICODE)
     message(SEND_ERROR "Option XML_UNICODE_WCHAR_T=ON may not be used without XML_UNICODE=ON.")
@@ -153,9 +159,9 @@ set(expat_SRCS
 
 if(BUILD_shared)
     set(_SHARED SHARED)
-    if(WIN32)
+    if(MSVC)
         set(expat_SRCS ${expat_SRCS} lib/libexpat.def)
-    endif(WIN32)
+    endif(MSVC)
 else(BUILD_shared)
     set(_SHARED STATIC)
     if(WIN32)
@@ -169,7 +175,7 @@ if(USE_libbsd)
 endif()
 
 set(LIBCURRENT 7)   # sync
-set(LIBREVISION 8)  # with
+set(LIBREVISION 9)  # with
 set(LIBAGE 6)       # configure.ac!
 math(EXPR LIBCURRENT_MINUS_AGE "${LIBCURRENT} - ${LIBAGE}")
 

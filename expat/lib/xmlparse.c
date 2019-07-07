@@ -1,4 +1,4 @@
-/* 19ac4776051591216f1874e34ee99b6a43a3784c8bd7d70efeb9258dd22b906a (2.2.6+)
+/* 69df5be70289a11fb834869ce4a91c23c1d9dd04baffcbd10e86742d149a080c (2.2.7+)
                             __  __            _
                          ___\ \/ /_ __   __ _| |_
                         / _ \\  /| '_ \ / _` | __|
@@ -2080,9 +2080,6 @@ XML_GetBuffer(XML_Parser parser, int len)
       parser->m_bufferLim = newBuf + bufferSize;
 #ifdef XML_CONTEXT_BYTES
       if (parser->m_bufferPtr) {
-        int keep = (int)EXPAT_SAFE_PTR_DIFF(parser->m_bufferPtr, parser->m_buffer);
-        if (keep > XML_CONTEXT_BYTES)
-          keep = XML_CONTEXT_BYTES;
         memcpy(newBuf, &parser->m_bufferPtr[-keep],
                EXPAT_SAFE_PTR_DIFF(parser->m_bufferEnd, parser->m_bufferPtr) + keep);
         FREE(parser, parser->m_buffer);
@@ -4981,18 +4978,22 @@ doProlog(XML_Parser parser,
     case XML_ROLE_GROUP_OPEN:
       if (parser->m_prologState.level >= parser->m_groupSize) {
         if (parser->m_groupSize) {
-          char *temp = (char *)REALLOC(parser, parser->m_groupConnector, parser->m_groupSize *= 2);
-          if (temp == NULL) {
-            parser->m_groupSize /= 2;
-            return XML_ERROR_NO_MEMORY;
+          {
+            char * const new_connector = (char *)REALLOC(parser,
+                parser->m_groupConnector, parser->m_groupSize *= 2);
+            if (new_connector == NULL) {
+                parser->m_groupSize /= 2;
+                return XML_ERROR_NO_MEMORY;
+            }
+            parser->m_groupConnector = new_connector;
           }
-          parser->m_groupConnector = temp;
+
           if (dtd->scaffIndex) {
-            int *temp = (int *)REALLOC(parser, dtd->scaffIndex,
-                          parser->m_groupSize * sizeof(int));
-            if (temp == NULL)
+            int * const new_scaff_index = (int *)REALLOC(parser,
+                dtd->scaffIndex, parser->m_groupSize * sizeof(int));
+            if (new_scaff_index == NULL)
               return XML_ERROR_NO_MEMORY;
-            dtd->scaffIndex = temp;
+            dtd->scaffIndex = new_scaff_index;
           }
         }
         else {

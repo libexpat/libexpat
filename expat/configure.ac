@@ -48,7 +48,7 @@ dnl If the API changes incompatibly set LIBAGE back to 0
 dnl
 
 LIBCURRENT=7   # sync
-LIBREVISION=8  # with
+LIBREVISION=9  # with
 LIBAGE=6       # CMakeLists.txt!
 
 AX_APPEND_FLAG([-DHAVE_EXPAT_CONFIG_H], [CPPFLAGS])
@@ -221,6 +221,15 @@ AC_DEFINE([XML_DTD], 1,
           [Define to make parameter entity parsing functionality available.])
 AC_DEFINE([XML_DEV_URANDOM], 1,
           [Define to include code reading entropy from `/dev/urandom'.])
+
+AC_ARG_ENABLE([xml-attr-info],
+  [AS_HELP_STRING([--enable-xml-attr-info],
+                 [Enable retrieving the byte offsets for attribute names and values
+                  @<:@default=no@:>@])], ,
+                 [enable_xml_attr_info=no])
+AS_IF([test "x${enable_xml_attr_info}" = "xyes"],
+      [AC_DEFINE([XML_ATTR_INFO], 1,
+         [Define to allow retrieving the byte offsets for attribute names and values.])])
 
 AC_ARG_ENABLE([xml-context],
   AS_HELP_STRING([--enable-xml-context @<:@COUNT@:>@],
