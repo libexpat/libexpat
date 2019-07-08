@@ -72,9 +72,5 @@ elif [[ ${MODE} = cmake-oos ]]; then
     make DESTDIR="${PWD}"/ROOT install
     find ROOT -printf "%P\n" | sort
 else
-    if [[ ${ENABLE_ATTR_INFO} = true ]]; then
-        ./qa.sh "${MODE}" "--enable-xml-attr-info"
-    else
-        ./qa.sh
-    fi
+    ./qa.sh
 fi
