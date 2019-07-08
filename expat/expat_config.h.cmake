@@ -91,6 +91,8 @@
 #if ! defined(_WIN32)
 /* Define to extract entropy from /dev/urandom. */
 #cmakedefine XML_DEV_URANDOM
+/* Define for auto detection of getrandom function from include <sys/random.h> for glibc >=2.225. */
+#cmakedefine AUTODETECT_GETRANDOM
 #endif
 
 /* Define to use UTF-16 chars (two bytes). */
