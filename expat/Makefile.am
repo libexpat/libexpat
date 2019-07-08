@@ -154,7 +154,7 @@ endif
 
 .PHONY: qa
 qa:
-	./qa.sh address
-	./qa.sh memory
-	./qa.sh undefined
-	./qa.sh coverage
+	QA_COMPILER=clang QA_SANITIZER=address   ./qa.sh
+	QA_COMPILER=clang QA_SANITIZER=memory    ./qa.sh
+	QA_COMPILER=clang QA_SANITIZER=undefined ./qa.sh
+	QA_COMPILER=gcc   QA_PROCESSOR=gcov      ./qa.sh

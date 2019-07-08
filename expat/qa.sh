@@ -2,125 +2,123 @@
 # Copyright (C) 2016 Sebastian Pipping <sebastian@pipping.org>
 # Licensed under MIT license
 
+set -e
 set -o nounset
 
-: ${GCC_CC:=gcc}
-: ${GCC_CXX:=g++}
-: ${CLANG_CC:=clang}
-: ${CLANG_CXX:=clang++}
-
-: ${AR:=ar}
-: ${CC:="${CLANG_CC}"}
-: ${CXX:="${CLANG_CXX}"}
-: ${LD:=ld}
-: ${MAKE:=make}
-
-: ${BASE_COMPILE_FLAGS:="-pipe -Wall -Wextra -pedantic -Wno-overlength-strings -Wno-long-long"}
-: ${BASE_LINK_FLAGS:=}
 
 ANNOUNCE() {
     local open='\e[1m'
     local close='\e[0m'
 
-    echo -e -n "${open}"
-    echo -n "# $*"
-    echo -e "${close}"
+    echo -e -n "${open}" >&2
+    echo -n "# $*" >&2
+    echo -e "${close}" >&2
 }
+
+
+WARNING() {
+    local open='\e[1;33m'
+    local close='\e[0m'
+
+    echo -e -n "${open}" >&2
+    echo -n "WARNING: $*" >&2
+    echo -e "${close}" >&2
+}
+
 
 RUN() {
     ANNOUNCE "$@"
     env "$@"
 }
 
-main() {
-    local mode="${1:-}"
-    shift
 
-    local RUNENV
-    local BASE_COMPILE_FLAGS="${BASE_COMPILE_FLAGS}"
+populate_environment() {
+    : ${LD:=ld}
+    : ${MAKE:=make}
 
-    case "${mode}" in
-    address)
-        # http://clang.llvm.org/docs/AddressSanitizer.html
-        local CC="${CLANG_CC}"
-        local CXX="${CLANG_CXX}"
-        local LD="${CLANG_CXX}"
-        BASE_COMPILE_FLAGS+=" -g -fsanitize=address -fno-omit-frame-pointer"
-        BASE_LINK_FLAGS+=" -g -Wc,-fsanitize=address"  # "-Wc," is for libtool
-        ;;
-    coverage | lib-coverage | app-coverage)
-        local CC="${GCC_CC}"
-        local CXX="${GCC_CXX}"
-        BASE_COMPILE_FLAGS+=" --coverage --no-inline"
-        ;;
-    egypt)
-        BASE_COMPILE_FLAGS+=" -fdump-rtl-expand"
-        ;;
-    memory)
-        # http://clang.llvm.org/docs/MemorySanitizer.html
-        BASE_COMPILE_FLAGS+=" -fsanitize=memory -fno-omit-frame-pointer -g -O2 -fsanitize-memory-track-origins -fsanitize-blacklist=$PWD/memory-sanitizer-blacklist.txt"
-        ;;
-    ncc)
-        # http://students.ceid.upatras.gr/~sxanth/ncc/
-        local CC="ncc -ncgcc -ncld -ncfabs"
-        local AR=nccar
-        local LD=nccld
-        BASE_COMPILE_FLAGS+=" -fPIC"
-        ;;
-    undefined)
-        # http://clang.llvm.org/docs/UndefinedBehaviorSanitizer.html
-        BASE_COMPILE_FLAGS+=" -fsanitize=undefined"
-        export UBSAN_OPTIONS=print_stacktrace=1
-        ;;
-    *)
-        echo "Usage:" 1>&2
-        echo "  ${0##*/} (address|coverage|lib-coverage|app-coverage|egypt|memory|ncc|undefined)" 1>&2
-        exit 1
-        ;;
+    case "${QA_COMPILER}" in
+        clang)
+            : ${CC:=clang}
+            : ${CXX:=clang++}
+            ;;
+        gcc)
+            : ${CC:=gcc}
+            : ${CXX:=g++}
+            ;;
     esac
 
-    local CFLAGS="-std=c89 ${BASE_COMPILE_FLAGS} ${CFLAGS:-}"
-    local CXXFLAGS="-std=c++98 ${BASE_COMPILE_FLAGS} ${CXXFLAGS:-}"
-    local LDFLAGS="${BASE_LINK_FLAGS} ${LDFLAGS:-}"
+    : ${BASE_COMPILE_FLAGS:="-pipe -Wall -Wextra -pedantic -Wno-overlength-strings -Wno-long-long"}
+    : ${BASE_LINK_FLAGS:=}
 
-    (
-        set -e
-
-        RUN CC="${CC}" CFLAGS="${CFLAGS}" \
-                CXX="${CXX}" CXXFLAGS="${CXXFLAGS}" \
-                AR="${AR}" \
-                LD="${LD}" LDFLAGS="${LDFLAGS}" \
-                ./configure "$@" \
-            || { RUN cat config.log ; false ; }
-
-        RUN "${MAKE}" \
-                CFLAGS="${CFLAGS} -Werror" \
-                CXXFLAGS="${CXXFLAGS} -Werror" \
-                clean all
-
-        case "${mode}" in
-        egypt|ncc)
-            ;;
-        *)
-            RUN "${MAKE}" \
-                    CFLAGS="${CFLAGS} -Werror" \
-                    CXXFLAGS="${CXXFLAGS} -Werror" \
-                    check run-xmltest
-            ;;
+    if [[ ${QA_COMPILER} = clang ]]; then
+        case "${QA_SANITIZER}" in
+            address)
+                # http://clang.llvm.org/docs/AddressSanitizer.html
+                BASE_COMPILE_FLAGS+=" -g -fsanitize=address -fno-omit-frame-pointer"
+                BASE_LINK_FLAGS+=" -g -Wc,-fsanitize=address"  # "-Wc," is for libtool
+                ;;
+            memory)
+                # http://clang.llvm.org/docs/MemorySanitizer.html
+                BASE_COMPILE_FLAGS+=" -fsanitize=memory -fno-omit-frame-pointer -g -O2 -fsanitize-memory-track-origins -fsanitize-blacklist=$PWD/memory-sanitizer-blacklist.txt"
+                ;;
+            undefined)
+                # http://clang.llvm.org/docs/UndefinedBehaviorSanitizer.html
+                BASE_COMPILE_FLAGS+=" -fsanitize=undefined"
+                export UBSAN_OPTIONS=print_stacktrace=1
+                ;;
         esac
-    )
-    [[ $? -ne 0 ]] && exit 1
+    fi
 
-    case "${mode}" in
-    coverage)
-        find -name '*.gcda' | sort | xargs gcov
-        ;;
-    lib-coverage)
-        find lib -name '*.gcda' | sort | xargs gcov
-        ;;
-    app-coverage)
-        find lib xmlwf -name '*.gcda' | sort | xargs gcov
-        ;;
+
+    if [[ ${QA_COMPILER} = gcc ]]; then
+        case "${QA_PROCESSOR}" in
+            egypt) BASE_COMPILE_FLAGS+=" -fdump-rtl-expand" ;;
+            gcov) BASE_COMPILE_FLAGS+=" --coverage --no-inline" ;;
+        esac
+    fi
+
+
+    CFLAGS="-std=c99 ${BASE_COMPILE_FLAGS} ${CFLAGS:-}"
+    CXXFLAGS="-std=c++98 ${BASE_COMPILE_FLAGS} ${CXXFLAGS:-}"
+    LDFLAGS="${BASE_LINK_FLAGS} ${LDFLAGS:-}"
+}
+
+
+run_configure() {
+    RUN CC="${CC}" CFLAGS="${CFLAGS}" \
+            CXX="${CXX}" CXXFLAGS="${CXXFLAGS}" \
+            LD="${LD}" LDFLAGS="${LDFLAGS}" \
+            ./configure "$@" \
+        || { RUN cat config.log ; false ; }
+}
+
+
+run_compile() {
+    RUN "${MAKE}" \
+            CFLAGS="${CFLAGS} -Werror" \
+            CXXFLAGS="${CXXFLAGS} -Werror" \
+            clean all
+}
+
+
+run_tests() {
+    case "${QA_PROCESSOR}" in
+        egypt) return 0 ;;
+    esac
+
+    RUN "${MAKE}" \
+            CFLAGS="${CFLAGS} -Werror" \
+            CXXFLAGS="${CXXFLAGS} -Werror" \
+            check run-xmltest
+}
+
+
+run_processor() {
+    if [[ ${QA_COMPILER} != gcc ]]; then
+        return 0
+    fi
+
+    case "${QA_PROCESSOR}" in
     egypt)
         local DOT_FORMAT="${DOT_FORMAT:-svg}"
         local o="callgraph.${DOT_FORMAT}"
@@ -132,10 +130,104 @@ main() {
                 | dot -T${DOT_FORMAT} -Grankdir=LR \
                 > "${o}"
         ;;
-    ncc)
-        RUN nccnav ./.libs/libexpat.a.nccout
+    gcov)
+        for gcov_dir in lib xmlwf ; do
+        (
+            cd "${gcov_dir}" || exit 1
+            for gcda_file in $(find . -name '*.gcda' | sort) ; do
+                RUN gcov -s .libs/ ${gcda_file}
+            done
+        )
+        done
+
+        RUN find -name '*.gcov' | sort
         ;;
     esac
 }
+
+
+run() {
+    populate_environment
+    dump_config
+
+    run_configure
+    run_compile
+    run_tests
+    run_processor
+}
+
+
+dump_config() {
+    cat <<EOF
+Configuration:
+  QA_COMPILER=${QA_COMPILER}
+  QA_PROCESSOR=${QA_PROCESSOR}  # GCC only
+  QA_SANITIZER=${QA_SANITIZER}  # Clang only
+
+  CFLAGS=${CFLAGS}
+  CXXFLAGS=${CXXFLAGS}
+  LDFLAGS=${LDFLAGS}
+
+  CC=${CC}
+  CXX=${CXX}
+  LD=${LD}
+  MAKE=${MAKE}
+
+EOF
+}
+
+
+process_config() {
+    case "${QA_COMPILER:=gcc}" in
+        clang|gcc) ;;
+        *) usage; exit 1 ;;
+    esac
+
+
+    if [[ ${QA_COMPILER} != gcc && -n ${QA_PROCESSOR:-} ]]; then
+        WARNING "QA_COMPILER=${QA_COMPILER} is not 'gcc' -- ignoring QA_PROCESSOR=${QA_PROCESSOR}"
+    fi
+
+    case "${QA_PROCESSOR:=gcov}" in
+        egypt|gcov) ;;
+        *) usage; exit 1 ;;
+    esac
+
+
+    if [[ ${QA_COMPILER} != clang && -n ${QA_SANITIZER:-} ]]; then
+        WARNING "QA_COMPILER=${QA_COMPILER} is not 'clang' -- ignoring QA_SANITIZER=${QA_SANITIZER}" >&2
+    fi
+
+    case "${QA_SANITIZER:=address}" in
+        address|memory|undefined) ;;
+        *) usage; exit 1 ;;
+    esac
+}
+
+
+usage() {
+    cat <<"EOF"
+Usage:
+  $ ./qa.sh [ARG ..]
+
+Environment variables
+  QA_COMPILER=(clang|gcc)                  # default: gcc
+  QA_PROCESSOR=(egypt|gcov)                # default: gcov
+  QA_SANITIZER=(address|memory|undefined)  # default: address
+
+EOF
+}
+
+
+main() {
+    if [[ ${1:-} = --help ]]; then
+        usage; exit 0
+    fi
+
+    process_config
+
+    run
+}
+
 
 main "$@"

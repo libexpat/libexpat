@@ -19,16 +19,16 @@ env:
   global:
     - CFLAGS='-g -pipe'
   matrix:
-    - MODE=address
     - MODE=cmake
     - MODE=cmake-oos
     - MODE=distcheck
-    - MODE=lib-coverage
+    - MODE=qa-sh QA_COMPILER=clang CC=clang CXX=clang++ QA_SANITIZER=address
+    - MODE=qa-sh QA_COMPILER=gcc   CC=gcc   CXX=g++     QA_PROCESSOR=gcov
 
 matrix:
   exclude:
     - os: osx
-      env: MODE=lib-coverage
+      env: QA_PROCESSOR=gcov
 
 addons:
   homebrew:

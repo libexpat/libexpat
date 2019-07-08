@@ -60,5 +60,5 @@ elif [[ ${MODE} = cmake-oos ]]; then
     make DESTDIR="${PWD}"/ROOT install
     find ROOT -printf "%P\n" | sort
 else
-    ./qa.sh "${MODE}"
+    ./qa.sh
 fi
