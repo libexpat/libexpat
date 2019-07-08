@@ -102,6 +102,9 @@
 /* Define to allow retrieving the byte offsets for attribute names and values. */
 #cmakedefine XML_ATTR_INFO
 
+/* Define for auto detection of getrandom function from include <sys/random.h> for glibc >=2.225. */
+#cmakedefine HAVE_GETRANDOM
+
 /* Define to __FUNCTION__ or "" if `__func__' does not conform to ANSI C. */
 #ifdef _MSC_VER
 # define __func__ __FUNCTION__

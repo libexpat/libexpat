@@ -19,7 +19,8 @@ check_include_file("unistd.h" HAVE_UNISTD_H)
 
 check_symbol_exists("getpagesize" "unistd.h" HAVE_GETPAGESIZE)
 check_symbol_exists("mmap" "sys/mman.h" HAVE_MMAP)
-check_symbol_exists("getrandom" "sys/random.h" HAVE_GETRANDOM)
+#/* Bypassing autodetetion of getrandom function. We need to pass -DHAVE_GETRANDOM (for Cmake) to detect the function */
+#/* check_symbol_exists("getrandom" "sys/random.h" HAVE_GETRANDOM) */
 
 if(USE_libbsd)
     set(CMAKE_REQUIRED_LIBRARIES "${LIB_BSD}")
