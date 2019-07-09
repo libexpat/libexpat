@@ -65,6 +65,7 @@ populate_environment() {
             undefined)
                 # http://clang.llvm.org/docs/UndefinedBehaviorSanitizer.html
                 BASE_COMPILE_FLAGS+=" -fsanitize=undefined"
+                BASE_LINK_FLAGS+=" -fsanitize=undefined"
                 export UBSAN_OPTIONS=print_stacktrace=1
                 ;;
         esac
