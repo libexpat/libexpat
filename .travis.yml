@@ -22,10 +22,10 @@ env:
     - MODE=cmake
     - MODE=cmake-oos
     - MODE=distcheck
-    - MODE=qa-sh QA_COMPILER=clang CC=clang CXX=clang++ QA_SANITIZER=address
-    - MODE=qa-sh QA_COMPILER=clang CC=clang CXX=clang++ QA_SANITIZER=memory
-    - MODE=qa-sh QA_COMPILER=clang CC=clang CXX=clang++ QA_SANITIZER=undefined
-    - MODE=qa-sh QA_COMPILER=gcc   CC=gcc   CXX=g++     QA_PROCESSOR=gcov
+    - MODE=qa-sh QA_COMPILER=clang CC=clang CXX=clang++ LD=clang++ QA_SANITIZER=address
+    - MODE=qa-sh QA_COMPILER=clang CC=clang CXX=clang++ LD=clang++ QA_SANITIZER=memory
+    - MODE=qa-sh QA_COMPILER=clang CC=clang CXX=clang++ LD=clang++ QA_SANITIZER=undefined
+    - MODE=qa-sh QA_COMPILER=gcc   CC=gcc   CXX=g++     LD=ld      QA_PROCESSOR=gcov
 
 matrix:
   exclude:
