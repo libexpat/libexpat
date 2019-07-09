@@ -73,7 +73,7 @@ populate_environment() {
     if [[ ${QA_COMPILER} = gcc ]]; then
         case "${QA_PROCESSOR}" in
             egypt) BASE_COMPILE_FLAGS+=" -fdump-rtl-expand" ;;
-            gcov) BASE_COMPILE_FLAGS+=" --coverage --no-inline" ;;
+            gcov) BASE_COMPILE_FLAGS+=" --coverage -O0" ;;
         esac
     fi
 
