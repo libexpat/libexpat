@@ -59,7 +59,8 @@ if(NOT WIN32)
     endif(XML_DEV_URANDOM)
 endif()
 if (NOT WIN32)
-    option(AUTODETECT_GETRANDOM "Define to bypass auto-detection of getrandom function" ON)
+    set(USE_GETRANDOM "AUTO" CACHE STRING
+            "Make use of getrandom function (ON|OFF|AUTO) [default=AUTO]")
 endif()
 option(XML_UNICODE "Use UTF-16 encoded chars (two bytes) instead of UTF-8" OFF)
 option(XML_UNICODE_WCHAR_T "Use wchar_t to represent UTF-16 instead of unsigned short" OFF)
@@ -107,8 +108,11 @@ endif(BUILD_tests)
 include(${CMAKE_CURRENT_LIST_DIR}/ConfigureChecks.cmake)
 
 if(NOT WIN32)
-    # Reset potential HAVE_GETRANDOM=1 from ConfigureChecks.cmake above
-    if(NOT AUTODETECT_GETRANDOM)
+    if(USE_GETRANDOM AND NOT (USE_GETRANDOM STREQUAL "AUTO") AND NOT HAVE_GETRANDOM)
+        message(SEND_ERROR
+                "Use of function getrandom was enforced by USE_GETRANDOM=ON but it could not be found.")
+    elseif(NOT USE_GETRANDOM AND HAVE_GETRANDOM)
+        message("Function getrandom was found but it will not be used due to USE_GETRANDOM=OFF.")
         set(HAVE_GETRANDOM 0)
     endif()
 endif()
