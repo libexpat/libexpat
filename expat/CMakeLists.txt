@@ -109,23 +109,19 @@ endif(BUILD_tests)
 
 include(${CMAKE_CURRENT_LIST_DIR}/ConfigureChecks.cmake)
 
+macro(evaluate_detection_results use_ref have_ref thing_lower thing_title)
+    if(${use_ref} AND NOT (${use_ref} STREQUAL "AUTO") AND NOT ${have_ref})
+        message(SEND_ERROR
+                "Use of ${thing_lower} was enforced by ${use_ref}=ON but it could not be found.")
+    elseif(NOT ${use_ref} AND ${have_ref})
+        message("${thing_title} was found but it will not be used due to ${use_ref}=OFF.")
+        set(${have_ref} 0)
+    endif()
+endmacro()
+
 if(NOT WIN32)
-    if(USE_GETRANDOM AND NOT (USE_GETRANDOM STREQUAL "AUTO") AND NOT HAVE_GETRANDOM)
-        message(SEND_ERROR
-                "Use of function getrandom was enforced by USE_GETRANDOM=ON but it could not be found.")
-    elseif(NOT USE_GETRANDOM AND HAVE_GETRANDOM)
-        message("Function getrandom was found but it will not be used due to USE_GETRANDOM=OFF.")
-        set(HAVE_GETRANDOM 0)
-    endif()
-
-
-    if(USE_SYS_GETRANDOM AND NOT (USE_SYS_GETRANDOM STREQUAL "AUTO") AND NOT HAVE_SYSCALL_GETRANDOM)
-        message(SEND_ERROR
-                "Use of syscall SYS_getrandom was enforced by USE_SYS_GETRANDOM=ON but it could not be found.")
-    elseif(NOT USE_SYS_GETRANDOM AND HAVE_SYSCALL_GETRANDOM)
-        message("Syscall SYS_getrandom was found but it will not be used due to USE_SYS_GETRANDOM=OFF.")
-        set(HAVE_SYSCALL_GETRANDOM 0)
-    endif()
+    evaluate_detection_results(USE_GETRANDOM HAVE_GETRANDOM "function getrandom" "Function getrandom")
+    evaluate_detection_results(USE_SYS_GETRANDOM HAVE_SYSCALL_GETRANDOM "syscall SYS_getrandom" "Syscall SYS_getrandom")
 endif()
 
 
