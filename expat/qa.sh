@@ -33,17 +33,18 @@ RUN() {
 
 
 populate_environment() {
-    : ${LD:=ld}
     : ${MAKE:=make}
 
     case "${QA_COMPILER}" in
         clang)
             : ${CC:=clang}
             : ${CXX:=clang++}
+            : ${LD:=clang++}
             ;;
         gcc)
             : ${CC:=gcc}
             : ${CXX:=g++}
+            : ${LD:=ld}
             ;;
     esac
 
