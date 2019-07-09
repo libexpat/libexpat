@@ -107,6 +107,7 @@ if(BUILD_tests)
     enable_testing()
 endif(BUILD_tests)
 
+
 include(${CMAKE_CURRENT_LIST_DIR}/ConfigureChecks.cmake)
 
 macro(evaluate_detection_results use_ref have_ref thing_lower thing_title)
@@ -123,6 +124,9 @@ if(NOT WIN32)
     evaluate_detection_results(USE_GETRANDOM HAVE_GETRANDOM "function getrandom" "Function getrandom")
     evaluate_detection_results(USE_SYS_GETRANDOM HAVE_SYSCALL_GETRANDOM "syscall SYS_getrandom" "Syscall SYS_getrandom")
 endif()
+
+configure_file(expat_config.h.cmake "${CMAKE_CURRENT_BINARY_DIR}/expat_config.h")
+add_definitions(-DHAVE_EXPAT_CONFIG_H)
 
 
 set(EXTRA_COMPILE_FLAGS)
