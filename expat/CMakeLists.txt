@@ -61,6 +61,8 @@ endif()
 if (NOT WIN32)
     set(USE_GETRANDOM "AUTO" CACHE STRING
             "Make use of getrandom function (ON|OFF|AUTO) [default=AUTO]")
+    set(USE_SYS_GETRANDOM "AUTO" CACHE STRING
+            "Make use of syscall SYS_getrandom (ON|OFF|AUTO) [default=AUTO]")
 endif()
 option(XML_UNICODE "Use UTF-16 encoded chars (two bytes) instead of UTF-8" OFF)
 option(XML_UNICODE_WCHAR_T "Use wchar_t to represent UTF-16 instead of unsigned short" OFF)
@@ -114,6 +116,15 @@ if(NOT WIN32)
     elseif(NOT USE_GETRANDOM AND HAVE_GETRANDOM)
         message("Function getrandom was found but it will not be used due to USE_GETRANDOM=OFF.")
         set(HAVE_GETRANDOM 0)
+    endif()
+
+
+    if(USE_SYS_GETRANDOM AND NOT (USE_SYS_GETRANDOM STREQUAL "AUTO") AND NOT HAVE_SYSCALL_GETRANDOM)
+        message(SEND_ERROR
+                "Use of syscall SYS_getrandom was enforced by USE_SYS_GETRANDOM=ON but it could not be found.")
+    elseif(NOT USE_SYS_GETRANDOM AND HAVE_SYSCALL_GETRANDOM)
+        message("Syscall SYS_getrandom was found but it will not be used due to USE_SYS_GETRANDOM=OFF.")
+        set(HAVE_SYSCALL_GETRANDOM 0)
     endif()
 endif()
 
