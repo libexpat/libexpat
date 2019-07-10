@@ -19,16 +19,19 @@ env:
   global:
     - CFLAGS='-g -pipe'
   matrix:
-    - MODE=address
     - MODE=cmake
     - MODE=cmake-oos
     - MODE=distcheck
-    - MODE=lib-coverage
+    - MODE=qa-sh QA_COMPILER=clang CC=clang CXX=clang++ LD=clang++ QA_SANITIZER=address
 
 matrix:
-  exclude:
-    - os: osx
-      env: MODE=lib-coverage
+  include:
+    - os: linux
+      env: MODE=qa-sh QA_COMPILER=clang CC=clang CXX=clang++ LD=clang++ QA_SANITIZER=memory
+    - os: linux
+      env: MODE=qa-sh QA_COMPILER=clang CC=clang CXX=clang++ LD=clang++ QA_SANITIZER=undefined
+    - os: linux
+      env: MODE=qa-sh QA_COMPILER=gcc   CC=gcc   CXX=g++     LD=ld      QA_PROCESSOR=gcov
 
 addons:
   homebrew:
