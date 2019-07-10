@@ -32,6 +32,8 @@ matrix:
     - os: osx
       env: MODE=qa-sh QA_COMPILER=clang CC=clang CXX=clang++ LD=clang++ QA_SANITIZER=memory
     - os: osx
+      env: MODE=qa-sh QA_COMPILER=clang CC=clang CXX=clang++ LD=clang++ QA_SANITIZER=undefined
+    - os: osx
       env: MODE=qa-sh QA_COMPILER=gcc   CC=gcc   CXX=g++     LD=ld      QA_PROCESSOR=gcov
 
 addons:
