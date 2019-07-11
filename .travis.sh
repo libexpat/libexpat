@@ -41,33 +41,21 @@ cd expat
 ./buildconf.sh
 
 if [[ ${MODE} = distcheck ]]; then
-    if [[ ${ENABLE_ATTR_INFO} = true ]]; then
-        ./configure --enable-xml-attr-info
-    else
-        ./configure
-    fi
+    ./configure ${CONFIGURE_ARGS}
     make distcheck
 
     mkdir -p ~/rpmbuild/{BUILD,BUILDROOT,RPMS,SOURCES,SPECS,SRPMS}
     ln -v -s "$PWD"/expat-*.tar.bz2 ~/rpmbuild/SOURCES/
     rpmbuild -ba expat.spec
 elif [[ ${MODE} = cmake ]]; then
-    if [[ ${ENABLE_ATTR_INFO} = true ]]; then
-        cmake -DXML_ATTR_INFO=ON .
-    else
-        cmake .
-    fi
+    cmake ${CMAKE_ARGS} .
     make all test
     make DESTDIR="${PWD}"/ROOT install
     find ROOT -printf "%P\n" | sort
 elif [[ ${MODE} = cmake-oos ]]; then
     mkdir build
     cd build
-    if [[ ${ENABLE_ATTR_INFO} = true ]]; then
-        cmake .. -DXML_ATTR_INFO=ON
-    else
-        cmake ..
-    fi
+    cmake ${CMAKE_ARGS} ..
     make all test
     make DESTDIR="${PWD}"/ROOT install
     find ROOT -printf "%P\n" | sort
