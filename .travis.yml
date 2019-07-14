@@ -19,15 +19,12 @@ env:
   global:
     - CFLAGS='-g -pipe'
   matrix:
-    - MODE=cmake
     - MODE=cmake-oos
     - MODE=distcheck
     - MODE=qa-sh QA_COMPILER=clang CC=clang CXX=clang++ LD=clang++ QA_SANITIZER=address
 
 matrix:
   include:
-    - os: linux
-      env: MODE=cmake CMAKE_ARGS=-DXML_ATTR_INFO=ON
     - os: linux
       env: MODE=cmake-oos CMAKE_ARGS=-DXML_ATTR_INFO=ON
     - os: linux
