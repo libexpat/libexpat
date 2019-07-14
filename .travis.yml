@@ -28,8 +28,6 @@ matrix:
     - os: linux
       env: MODE=cmake-oos CMAKE_ARGS=-DXML_ATTR_INFO=ON
     - os: linux
-      env: MODE=distcheck CONFIGURE_ARGS=--enable-xml-attr-info
-    - os: linux
       env: MODE=qa-sh QA_COMPILER=clang CC=clang CXX=clang++ LD=clang++ QA_SANITIZER=address CONFIGURE_ARGS=--enable-xml-attr-info
     - os: linux
       env: MODE=qa-sh QA_COMPILER=clang CC=clang CXX=clang++ LD=clang++ QA_SANITIZER=memory
