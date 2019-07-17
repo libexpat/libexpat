@@ -42,6 +42,11 @@
 #include "xmlurl.h"
 #include "xmlmime.h"
 
+// Make cppcheck happy:
+#ifndef STDMETHODIMP_
+# define STDMETHODIMP_(x)  x
+#endif
+
 static int
 processURL(XML_Parser parser, IMoniker *baseMoniker, const XML_Char *url);
 
