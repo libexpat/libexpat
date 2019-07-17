@@ -36,9 +36,6 @@ init:
 # version format
 version: libexpat-{build}
 
-# set clone depth, clone entire repository history if not defined
-clone_depth: 1
-
 # clone directory
 clone_folder: c:\projects\libexpat
 
