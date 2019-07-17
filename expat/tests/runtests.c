@@ -4973,6 +4973,7 @@ external_entity_public(XML_Parser parser,
     }
     else
         fail("Unexpected parameters to external entity parser");
+    assert(text != NULL);
     parse_res = _XML_Parse_SINGLE_BYTES(ext_parser, text, (int)strlen(text),
                                    XML_TRUE);
     XML_ParserFree(ext_parser);
