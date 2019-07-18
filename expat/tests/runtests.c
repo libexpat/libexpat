@@ -641,16 +641,18 @@ _run_ext_character_check(const char *text,
                          const XML_Char *expected,
                          const char *file, int line)
 {
-    CharData storage;
+    CharData * const storage = (CharData *)malloc(sizeof(CharData));
 
-    CharData_Init(&storage);
-    test_data->storage = &storage;
+    CharData_Init(storage);
+    test_data->storage = storage;
     XML_SetUserData(parser, test_data);
     XML_SetCharacterDataHandler(parser, ext_accumulate_characters);
     if (_XML_Parse_SINGLE_BYTES(parser, text, (int)strlen(text),
                                 XML_TRUE) == XML_STATUS_ERROR)
         _xml_failure(parser, file, line);
-    CharData_CheckXMLChars(&storage, expected);
+    CharData_CheckXMLChars(storage, expected);
+
+    free(storage);
 }
 
 #define run_ext_character_check(text, test_data, expected)               \
@@ -4973,6 +4975,7 @@ external_entity_public(XML_Parser parser,
     }
     else
         fail("Unexpected parameters to external entity parser");
+    assert(text != NULL);
     parse_res = _XML_Parse_SINGLE_BYTES(ext_parser, text, (int)strlen(text),
                                    XML_TRUE);
     XML_ParserFree(ext_parser);

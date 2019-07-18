@@ -59,12 +59,10 @@ if(NOT WIN32)
     endif(XML_DEV_URANDOM)
 endif()
 if (NOT WIN32)
-    option(HAVE_GETRANDOM "Define to bypass auto-detection of getrandom function from include <sys/random.h> ." OFF)
-    if(HAVE_GETRANDOM)
-        set(HAVE_GETRANDOM 1)
-    else(HAVE_GETRANDOM)
-        set(HAVE_GETRANDOM 0)
-    endif(HAVE_GETRANDOM)
+    set(USE_GETRANDOM "AUTO" CACHE STRING
+            "Make use of getrandom function (ON|OFF|AUTO) [default=AUTO]")
+    set(USE_SYS_GETRANDOM "AUTO" CACHE STRING
+            "Make use of syscall SYS_getrandom (ON|OFF|AUTO) [default=AUTO]")
 endif()
 option(XML_UNICODE "Use UTF-16 encoded chars (two bytes) instead of UTF-8" OFF)
 option(XML_UNICODE_WCHAR_T "Use wchar_t to represent UTF-16 instead of unsigned short" OFF)
@@ -109,7 +107,27 @@ if(BUILD_tests)
     enable_testing()
 endif(BUILD_tests)
 
+
 include(${CMAKE_CURRENT_LIST_DIR}/ConfigureChecks.cmake)
+
+macro(evaluate_detection_results use_ref have_ref thing_lower thing_title)
+    if(${use_ref} AND NOT (${use_ref} STREQUAL "AUTO") AND NOT ${have_ref})
+        message(SEND_ERROR
+                "Use of ${thing_lower} was enforced by ${use_ref}=ON but it could not be found.")
+    elseif(NOT ${use_ref} AND ${have_ref})
+        message("${thing_title} was found but it will not be used due to ${use_ref}=OFF.")
+        set(${have_ref} 0)
+    endif()
+endmacro()
+
+if(NOT WIN32)
+    evaluate_detection_results(USE_GETRANDOM HAVE_GETRANDOM "function getrandom" "Function getrandom")
+    evaluate_detection_results(USE_SYS_GETRANDOM HAVE_SYSCALL_GETRANDOM "syscall SYS_getrandom" "Syscall SYS_getrandom")
+endif()
+
+configure_file(expat_config.h.cmake "${CMAKE_CURRENT_BINARY_DIR}/expat_config.h")
+add_definitions(-DHAVE_EXPAT_CONFIG_H)
+
 
 set(EXTRA_COMPILE_FLAGS)
 if(FLAG_NO_STRICT_ALIASING)
