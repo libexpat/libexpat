@@ -231,6 +231,18 @@ AS_IF([test "x${enable_xml_attr_info}" = "xyes"],
       [AC_DEFINE([XML_ATTR_INFO], 1,
          [Define to allow retrieving the byte offsets for attribute names and values.])])
 
+AC_ARG_WITH(use-getrandom,
+           [--without-use-getrandom           disable to make use of getrandom function])
+   if test "x${with_use_getrandom}" = "xno"; then
+      AC_DEFINE([HAVE_GETRANDOM], 0)
+   fi
+
+AC_ARG_WITH(use-sys-getrandom,
+           [--without-use-sys-getrandom           disable to make use of SYS-getrandom function])
+   if test "x${with_use_sys_getrandom}" = "xno"; then
+      AC_DEFINE([HAVE_SYSCALL_GETRANDOM], 0)
+   fi
+
 AC_ARG_ENABLE([xml-context],
   AS_HELP_STRING([--enable-xml-context @<:@COUNT@:>@],
     [Retain context around the current parse point;
