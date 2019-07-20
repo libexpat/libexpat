@@ -32,8 +32,14 @@ AM_CPPFLAGS = -I$(srcdir)/../lib
 
 noinst_PROGRAMS = elements outline
 
+if UNICODE
+EXPAT_EXAMPLES_COMMON_LDADD = ../lib/libexpatw.la
+else
+EXPAT_EXAMPLES_COMMON_LDADD = ../lib/libexpat.la
+endif
+
 elements_SOURCES = elements.c
-elements_LDADD = ../lib/libexpat.la
+elements_LDADD = $(EXPAT_EXAMPLES_COMMON_LDADD)
 
 outline_SOURCES = outline.c
-outline_LDADD = ../lib/libexpat.la
+outline_LDADD = $(EXPAT_EXAMPLES_COMMON_LDADD)

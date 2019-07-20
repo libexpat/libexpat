@@ -81,22 +81,14 @@ these instructions (after having run `make distclean`).
 Please note that we configure with `--without-xmlwf` as xmlwf does not
 support this mode of compilation (yet):
 
-1. Mass-patch `Makefile.am` files to use `libexpatw.la` for a library name:
-   <br/>
-   `find -name Makefile.am -exec sed
-       -e 's,libexpat\.la,libexpatw.la,'
-       -e 's,libexpat_la,libexpatw_la,'
-       -i {} +`
-
 1. Run `automake` to re-write `Makefile.in` files:<br/>
    `automake`
 
 1. For UTF-16 output as unsigned short (and version/error strings as char),
    run:<br/>
-   `./configure CPPFLAGS=-DXML_UNICODE --without-xmlwf`<br/>
+   `./configure --enable-xml-unicode --without-xmlwf`<br/>
    For UTF-16 output as `wchar_t` (incl. version/error strings), run:<br/>
-   `./configure CFLAGS="-g -O2 -fshort-wchar" CPPFLAGS=-DXML_UNICODE_WCHAR_T
-       --without-xmlwf`
+   `./configure --enable-xml-unicode-wchar --without-xmlwf`
    <br/>Note: The latter requires libc compiled with `-fshort-wchar`, as well.
 
 1. Run `make` (which excludes xmlwf).

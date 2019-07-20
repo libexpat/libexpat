@@ -30,7 +30,11 @@
 
 bin_PROGRAMS = xmlwf
 
+if UNICODE
+xmlwf_LDADD = ../lib/libexpatw.la
+else
 xmlwf_LDADD = ../lib/libexpat.la
+endif
 xmlwf_SOURCES = \
     xmlwf.c \
     xmlfile.c \

@@ -52,8 +52,13 @@ runtests_SOURCES = \
 runtestspp_SOURCES = \
     runtestspp.cpp
 
-runtests_LDADD = libruntests.a ../lib/libexpat.la
+if UNICODE
+runtests_LDADD   = libruntests.a ../lib/libexpatw.la
+runtestspp_LDADD = libruntests.a ../lib/libexpatw.la
+else
+runtests_LDADD   = libruntests.a ../lib/libexpat.la
 runtestspp_LDADD = libruntests.a ../lib/libexpat.la
+endif
 
 EXTRA_DIST = \
     chardata.h \
