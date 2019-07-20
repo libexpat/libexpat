@@ -102,7 +102,7 @@
 #endif
 
 #ifndef UNUSED_P
-# ifdef __GNUC__
+# if defined(__GNUC__) && (__GNUC__ >= 4)
 #  define UNUSED_P(p) UNUSED_ ## p __attribute__((__unused__))
 # else
 #  define UNUSED_P(p) UNUSED_ ## p
