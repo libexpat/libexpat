@@ -32,6 +32,8 @@ set -e
 
 if [[ ${TRAVIS_OS_NAME} = osx ]]; then
     export PATH="/usr/local/opt/coreutils/libexec/gnubin${PATH:+:}${PATH}"
+elif [[ ${TRAVIS_OS_NAME} = linux ]]; then
+    export PATH="/usr/lib/llvm-9/bin:${PATH}"
 fi
 
 PS4='# '
