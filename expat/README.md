@@ -125,3 +125,5 @@ information.
 
 A reference manual is available in the file `doc/reference.html` in this
 distribution.
+
+More information about libexpat fuzzing can be found in `tests/fuzz/README.md`

@@ -268,12 +268,23 @@ AS_IF([test "x${DOCBOOK_TO_MAN}" != x -a "x$with_docbook" != xno],
 
 AM_CONDITIONAL(WITH_DOCBOOK, [test "x${DOCBOOK_TO_MAN}" != x])
 
+AC_CHECK_LIB(FuzzingEngine, main,, LIBFUZZINGENGINE="no")
+if test "$LIBFUZZINGENGINE" = "no"; then
+    libfuzzingengine=no
+fi
+AM_CONDITIONAL([HAVE_LIBFUZZINGENGINE], [test "x$libfuzzingengine" != "xno"])
+
+AC_ARG_ENABLE(fuzztargets,
+    AS_HELP_STRING([--enable-fuzztargets], [Enable fuzz targets]),[enable_fuzztargets=$enableval],[enable_fuzztargets=no])
+AM_CONDITIONAL([BUILD_FUZZTARGETS], [test "x$enable_fuzztargets" = "xyes"])
+
 AC_CONFIG_FILES([Makefile]
   [expat.pc]
   [doc/Makefile]
   [examples/Makefile]
   [lib/Makefile]
   [tests/Makefile]
+  [tests/fuzz/Makefile]
   [tests/benchmark/Makefile]
   [xmlwf/Makefile])
 AC_CONFIG_FILES([run.sh], [chmod +x run.sh])
