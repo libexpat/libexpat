@@ -41,7 +41,11 @@ addons:
     update: true
     brewfile: true
   apt:
+    sources:
+      - llvm-toolchain-trusty
+      - ubuntu-toolchain-r-test
     packages:
+      - clang-9
       - cmake
       - docbook2x
       - dos2unix
