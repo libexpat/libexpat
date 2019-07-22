@@ -175,7 +175,10 @@ Configuration:
   LD=${LD}
   MAKE=${MAKE}
 
+Compiler (\$CC):
 EOF
+    "${CC}" --version | sed 's,^,  ,'
+    echo
 }
 
 
