@@ -54,6 +54,8 @@ elif [[ ${MODE} = cmake-oos ]]; then
     make all test
     make DESTDIR="${PWD}"/ROOT install
     find ROOT -printf "%P\n" | sort
+elif [[ ${MODE} = cppcheck ]]; then
+    cppcheck --quiet --error-exitcode=1 .
 else
     ./qa.sh
 fi
