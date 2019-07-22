@@ -41,21 +41,16 @@ cd expat
 ./buildconf.sh
 
 if [[ ${MODE} = distcheck ]]; then
-    ./configure
+    ./configure ${CONFIGURE_ARGS}
     make distcheck
 
     mkdir -p ~/rpmbuild/{BUILD,BUILDROOT,RPMS,SOURCES,SPECS,SRPMS}
     ln -v -s "$PWD"/expat-*.tar.bz2 ~/rpmbuild/SOURCES/
     rpmbuild -ba expat.spec
-elif [[ ${MODE} = cmake ]]; then
-    cmake .
-    make all test
-    make DESTDIR="${PWD}"/ROOT install
-    find ROOT -printf "%P\n" | sort
 elif [[ ${MODE} = cmake-oos ]]; then
     mkdir build
     cd build
-    cmake ..
+    cmake ${CMAKE_ARGS} ..
     make all test
     make DESTDIR="${PWD}"/ROOT install
     find ROOT -printf "%P\n" | sort
