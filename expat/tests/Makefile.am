@@ -64,3 +64,7 @@ EXTRA_DIST = \
     udiffer.py \
     xmltest.log.expected \
     xmltest.sh
+
+if BUILD_FUZZTARGETS
+    SUBDIRS += fuzz
+endif

@@ -26,11 +26,11 @@ matrix:
     - os: linux
       env: MODE=cmake-oos CMAKE_ARGS=-DXML_ATTR_INFO=ON
     - os: linux
-      env: MODE=qa-sh QA_COMPILER=clang CC=clang CXX=clang++ LD=clang++ QA_SANITIZER=address CONFIGURE_ARGS=--enable-xml-attr-info
+      env: MODE=qa-sh QA_COMPILER=clang CC=clang CXX=clang++ LD=clang++ QA_SANITIZER=address CONFIGURE_ARGS="--enable-xml-attr-info --enable-fuzztargets"
     - os: linux
-      env: MODE=qa-sh QA_COMPILER=clang CC=clang CXX=clang++ LD=clang++ QA_SANITIZER=memory
+      env: MODE=qa-sh QA_COMPILER=clang CC=clang CXX=clang++ LD=clang++ QA_SANITIZER=memory CONFIGURE_ARGS=--enable-fuzztargets
     - os: linux
-      env: MODE=qa-sh QA_COMPILER=clang CC=clang CXX=clang++ LD=clang++ QA_SANITIZER=undefined
+      env: MODE=qa-sh QA_COMPILER=clang CC=clang CXX=clang++ LD=clang++ QA_SANITIZER=undefined CONFIGURE_ARGS=--enable-fuzztargets
     - os: linux
       env: MODE=qa-sh QA_COMPILER=gcc CC=gcc CXX=g++ LD=ld QA_PROCESSOR=gcov
     - os: linux

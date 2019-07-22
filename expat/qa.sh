@@ -51,22 +51,27 @@ populate_environment() {
     : ${BASE_COMPILE_FLAGS:="-pipe -Wall -Wextra -pedantic -Wno-overlength-strings -Wno-long-long"}
     : ${BASE_LINK_FLAGS:=}
 
+    export QA_FUZZIT=""
     if [[ ${QA_COMPILER} = clang ]]; then
+        export UBSAN_OPTIONS=""
         case "${QA_SANITIZER}" in
             address)
                 # http://clang.llvm.org/docs/AddressSanitizer.html
                 BASE_COMPILE_FLAGS+=" -g -fsanitize=address -fno-omit-frame-pointer"
                 BASE_LINK_FLAGS+=" -g -Wc,-fsanitize=address"  # "-Wc," is for libtool
+                export QA_FUZZIT="asan"
                 ;;
             memory)
                 # http://clang.llvm.org/docs/MemorySanitizer.html
                 BASE_COMPILE_FLAGS+=" -fsanitize=memory -fno-omit-frame-pointer -g -O2 -fsanitize-memory-track-origins -fsanitize-blacklist=$PWD/memory-sanitizer-blacklist.txt"
+                export QA_FUZZIT="msan"
                 ;;
             undefined)
                 # http://clang.llvm.org/docs/UndefinedBehaviorSanitizer.html
                 BASE_COMPILE_FLAGS+=" -fsanitize=undefined"
                 BASE_LINK_FLAGS+=" -fsanitize=undefined"
                 export UBSAN_OPTIONS=print_stacktrace=1
+                export QA_FUZZIT="ubsan"
                 ;;
         esac
     fi
@@ -81,7 +86,7 @@ populate_environment() {
 
 
     CFLAGS="-std=c99 ${BASE_COMPILE_FLAGS} ${CFLAGS:-}"
-    CXXFLAGS="-std=c++98 ${BASE_COMPILE_FLAGS} ${CXXFLAGS:-}"
+    CXXFLAGS="${BASE_COMPILE_FLAGS} ${CXXFLAGS:-}"
     LDFLAGS="${BASE_LINK_FLAGS} ${LDFLAGS:-}"
 }
 
@@ -90,18 +95,47 @@ run_configure() {
     RUN CC="${CC}" CFLAGS="${CFLAGS}" \
             CXX="${CXX}" CXXFLAGS="${CXXFLAGS}" \
             LD="${LD}" LDFLAGS="${LDFLAGS}" \
-            ./configure "$@" \
+            ./configure "--enable-stdcxx=c++98" "$@" \
         || { RUN cat config.log ; false ; }
 }
 
 
 run_compile() {
-    RUN "${MAKE}" \
-            CFLAGS="${CFLAGS} -Werror" \
+    RUN CFLAGS="${CFLAGS} -Werror" \
             CXXFLAGS="${CXXFLAGS} -Werror" \
-            clean all
+            "${MAKE}" clean all
 }
 
+
+run_fuzzit() {
+    FUZZIT_API_KEY=e59b073a8ddfe3686de10624accf111b90c67da08d8d86768da623724be054f820dda54b1e140519c5608c92bcc8d327
+    if [ ${TRAVIS_EVENT_TYPE} -eq 'cron' ]; then
+        FUZZING_TYPE=fuzzing
+    else
+        FUZZING_TYPE=sanity
+    fi
+    if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then
+        FUZZIT_BRANCH="${TRAVIS_BRANCH}"
+    else
+        FUZZIT_BRANCH="PR-${TRAVIS_PULL_REQUEST}"
+    fi
+    FUZZIT_ARGS="--type ${FUZZING_TYPE} --branch ${FUZZIT_BRANCH} --revision ${TRAVIS_COMMIT}"
+    if [ -n "$UBSAN_OPTIONS" ]; then
+        FUZZIT_ARGS+=" --ubsan_options ${UBSAN_OPTIONS}"
+    fi
+    wget -O fuzzit https://github.com/fuzzitdev/fuzzit/releases/download/v1.2.5/fuzzit_1.2.5_Linux_x86_64
+    chmod +x fuzzit
+    ./fuzzit auth ${FUZZIT_API_KEY}
+    set -x
+    grep "$QA_FUZZIT" tests/fuzz/fuzzitid.txt | cut -d" " -f2-3 | while read i; do
+        # id is the second and last word after space
+        targetid=${i##* }
+        # binary is the first word before space
+        targetbin=${i%% *}
+        ./fuzzit c job ${FUZZIT_ARGS} ${targetid} ./tests/fuzz/${targetbin}
+    done
+    set +x
+}
 
 run_tests() {
     case "${QA_PROCESSOR}" in
@@ -129,6 +163,11 @@ run_tests() {
             RUN cat tests/runtestspp.log
             false
         }
+
+    if [[ -n "$QA_FUZZIT" && `ls tests/fuzz/*fuzzer | wc -l` -gt 1 ]]; then
+        run_fuzzit
+    fi
+
 }
 
 
