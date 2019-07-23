@@ -22,6 +22,7 @@ env:
     - MODE=cmake-oos
     - MODE=distcheck
     - MODE=qa-sh QA_COMPILER=clang CC=clang CXX=clang++ LD=clang++ QA_SANITIZER=address
+    - MODE=cppcheck
 
 matrix:
   include:
@@ -51,6 +52,7 @@ addons:
       - dos2unix
       - lzip
       - rpm
+      - cppcheck
 
 script:
   - ./.travis.sh
