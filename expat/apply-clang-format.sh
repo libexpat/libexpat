@@ -1,4 +1,4 @@
-#! /bin/bash
+#! /usr/bin/env bash
 #                          __  __            _
 #                       ___\ \/ /_ __   __ _| |_
 #                      / _ \\  /| '_ \ / _` | __|
@@ -6,7 +6,7 @@
 #                      \___/_/\_\ .__/ \__,_|\__|
 #                               |_| XML parser
 #
-# Copyright (c) 2017 Expat development team
+# Copyright (c) 2019 Expat development team
 # Licensed under the MIT license:
 #
 # Permission is  hereby granted,  free of charge,  to any  person obtaining
@@ -29,38 +29,21 @@
 # USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 set -e
+set -u
+set -o pipefail
 
-if [[ ${TRAVIS_OS_NAME} = osx ]]; then
-    export PATH="/usr/local/opt/coreutils/libexec/gnubin${PATH:+:}${PATH}"
-elif [[ ${TRAVIS_OS_NAME} = linux ]]; then
-    export PATH="/usr/lib/llvm-9/bin:${PATH}"
-fi
+find \
+        -name '*.[ch]' \
+        -o -name '*.cpp' \
+        -o -name '*.cxx' \
+        -o -name '*.h.cmake' \
+    | sort \
+    | xargs clang-format -i -style=file -verbose
 
-PS4='# '
-set -x
-
-cd expat
-./buildconf.sh
-
-if [[ ${MODE} = distcheck ]]; then
-    ./configure ${CONFIGURE_ARGS}
-    make distcheck
-
-    mkdir -p ~/rpmbuild/{BUILD,BUILDROOT,RPMS,SOURCES,SPECS,SRPMS}
-    ln -v -s "$PWD"/expat-*.tar.bz2 ~/rpmbuild/SOURCES/
-    rpmbuild -ba expat.spec
-elif [[ ${MODE} = cmake-oos ]]; then
-    mkdir build
-    cd build
-    cmake ${CMAKE_ARGS} ..
-    make all test
-    make DESTDIR="${PWD}"/ROOT install
-    find ROOT -printf "%P\n" | sort
-elif [[ ${MODE} = cppcheck ]]; then
-    cppcheck --quiet --error-exitcode=1 .
-elif [[ ${MODE} = clang-format ]]; then
-    ./apply-clang-format.sh
-    git diff --exit-code
-else
-    ./qa.sh ${CONFIGURE_ARGS}
-fi
+dos2unix expat_config.h.cmake
+sed \
+        -e 's, @$,@,' \
+        -e 's,#\( \+\)cmakedefine,\1#cmakedefine,' \
+        -i \
+        expat_config.h.cmake
+unix2dos expat_config.h.cmake

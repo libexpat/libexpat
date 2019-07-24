@@ -22,6 +22,8 @@ env:
 matrix:
   include:
     - os: linux
+      env: MODE=clang-format
+    - os: linux
       env: MODE=cmake-oos CMAKE_ARGS=-DXML_ATTR_INFO=ON
     - os: linux
       env: MODE=qa-sh QA_COMPILER=clang CC=clang CXX=clang++ LD=clang++ QA_SANITIZER=address CONFIGURE_ARGS=--enable-xml-attr-info
@@ -46,6 +48,7 @@ addons:
       - ubuntu-toolchain-r-test
     packages:
       - clang-9
+      - clang-format-9
       - cmake
       - cppcheck
       - docbook2x
