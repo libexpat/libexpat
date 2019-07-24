@@ -7,11 +7,6 @@ os:
   - osx
 dist: trusty
 
-# Unbreak clang address sanitizer, needs SYS_PTRACE
-# https://github.com/google/sanitizers/issues/764#issuecomment-276663297
-# https://github.com/travis-ci/travis-ci/issues/9033
-sudo: required
-
 git:
   depth: 50
 
