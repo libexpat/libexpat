@@ -396,7 +396,9 @@ PREFIX(cdataSectionTok)(const ENCODING *enc, const char *ptr,
       } \
       ptr += n; \
       break;
-    LEAD_CASE(2) LEAD_CASE(3) LEAD_CASE(4)
+    LEAD_CASE(2)
+    LEAD_CASE(3)
+    LEAD_CASE(4)
 #undef LEAD_CASE
     case BT_NONXML:
     case BT_MALFORM:
@@ -868,7 +870,9 @@ PREFIX(contentTok)(const ENCODING *enc, const char *ptr, const char *end,
       } \
       ptr += n; \
       break;
-    LEAD_CASE(2) LEAD_CASE(3) LEAD_CASE(4)
+    LEAD_CASE(2)
+    LEAD_CASE(3)
+    LEAD_CASE(4)
 #undef LEAD_CASE
     case BT_RSQB:
       if (HAS_CHARS(enc, ptr, end, 2)) {
@@ -1131,7 +1135,9 @@ PREFIX(prologTok)(const ENCODING *enc, const char *ptr, const char *end,
     } \
     *nextTokPtr = ptr; \
     return XML_TOK_INVALID;
-    LEAD_CASE(2) LEAD_CASE(3) LEAD_CASE(4)
+  LEAD_CASE(2)
+  LEAD_CASE(3)
+  LEAD_CASE(4)
 #undef LEAD_CASE
   case BT_NMSTRT:
   case BT_HEX:
@@ -1240,7 +1246,9 @@ PREFIX(attributeValueTok)(const ENCODING *enc, const char *ptr,
     switch (BYTE_TYPE(enc, ptr)) {
 #define LEAD_CASE(n) \
     case BT_LEAD ## n: ptr += n; break;
-    LEAD_CASE(2) LEAD_CASE(3) LEAD_CASE(4)
+    LEAD_CASE(2)
+    LEAD_CASE(3)
+    LEAD_CASE(4)
 #undef LEAD_CASE
     case BT_AMP:
       if (ptr == start)
@@ -1306,7 +1314,9 @@ PREFIX(entityValueTok)(const ENCODING *enc, const char *ptr,
     switch (BYTE_TYPE(enc, ptr)) {
 #define LEAD_CASE(n) \
     case BT_LEAD ## n: ptr += n; break;
-    LEAD_CASE(2) LEAD_CASE(3) LEAD_CASE(4)
+    LEAD_CASE(2)
+    LEAD_CASE(3)
+    LEAD_CASE(4)
 #undef LEAD_CASE
     case BT_AMP:
       if (ptr == start)
@@ -1486,7 +1496,9 @@ PREFIX(getAtts)(const ENCODING *enc, const char *ptr,
       }
 #define LEAD_CASE(n) \
     case BT_LEAD ## n: START_NAME ptr += (n - MINBPC(enc)); break;
-    LEAD_CASE(2) LEAD_CASE(3) LEAD_CASE(4)
+    LEAD_CASE(2)
+    LEAD_CASE(3)
+    LEAD_CASE(4)
 #undef LEAD_CASE
     case BT_NONASCII:
     case BT_NMSTRT:
@@ -1683,7 +1695,9 @@ PREFIX(nameLength)(const ENCODING *enc, const char *ptr)
     switch (BYTE_TYPE(enc, ptr)) {
 #define LEAD_CASE(n) \
     case BT_LEAD ## n: ptr += n; break;
-    LEAD_CASE(2) LEAD_CASE(3) LEAD_CASE(4)
+    LEAD_CASE(2)
+    LEAD_CASE(3)
+    LEAD_CASE(4)
 #undef LEAD_CASE
     case BT_NONASCII:
     case BT_NMSTRT:
@@ -1730,7 +1744,9 @@ PREFIX(updatePosition)(const ENCODING *enc,
     case BT_LEAD ## n: \
       ptr += n; \
       break;
-    LEAD_CASE(2) LEAD_CASE(3) LEAD_CASE(4)
+    LEAD_CASE(2)
+    LEAD_CASE(3)
+    LEAD_CASE(4)
 #undef LEAD_CASE
     case BT_LF:
       pos->columnNumber = (XML_Size)-1;
