@@ -1005,6 +1005,7 @@ START_TEST(test_long_latin1_attribute)
 
     const XML_Char *expected =
         /* 64 characters per line */
+        /* clang-format off */
         XCS("ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP")
         XCS("ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP")
         XCS("ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP")
@@ -1021,6 +1022,7 @@ START_TEST(test_long_latin1_attribute)
         XCS("ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP")
         XCS("ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP")
         XCS("ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNO")
+        /* clang-format on */
 #ifdef XML_UNICODE
         XCS("\x00e4");
 #else
@@ -1060,6 +1062,7 @@ START_TEST(test_long_ascii_attribute)
         "01234'>\n</doc>";
     const XML_Char *expected =
         /* 64 characters per line */
+        /* clang-format off */
         XCS("ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP")
         XCS("ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP")
         XCS("ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP")
@@ -1077,6 +1080,7 @@ START_TEST(test_long_ascii_attribute)
         XCS("ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP")
         XCS("ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP")
         XCS("01234");
+        /* clang-format on */
 
     run_attribute_check(text, expected);
 }
@@ -2365,6 +2369,7 @@ START_TEST(test_long_cdata_utf16)
         "\0e\0n\0c\0o\0d\0i\0n\0g\0=\0'\0u\0t\0f\0-\0\x31\0\x36\0'\0?\0>"
         "\0<\0a\0>\0<\0!\0[\0C\0D\0A\0T\0A\0["
         /* 64 characters per line */
+        /* clang-format off */
         A_TO_P_IN_UTF16  A_TO_P_IN_UTF16  A_TO_P_IN_UTF16  A_TO_P_IN_UTF16
         A_TO_P_IN_UTF16  A_TO_P_IN_UTF16  A_TO_P_IN_UTF16  A_TO_P_IN_UTF16
         A_TO_P_IN_UTF16  A_TO_P_IN_UTF16  A_TO_P_IN_UTF16  A_TO_P_IN_UTF16
@@ -2382,8 +2387,10 @@ START_TEST(test_long_cdata_utf16)
         A_TO_P_IN_UTF16  A_TO_P_IN_UTF16  A_TO_P_IN_UTF16  A_TO_P_IN_UTF16
         A_TO_P_IN_UTF16  A_TO_P_IN_UTF16  A_TO_P_IN_UTF16  A_TO_P_IN_UTF16
         A_TO_P_IN_UTF16
+        /* clang-format on */
         "\0]\0]\0>\0<\0/\0a\0>";
     const XML_Char *expected =
+        /* clang-format off */
         XCS("ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP")
         XCS("ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP")
         XCS("ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP")
@@ -2401,6 +2408,7 @@ START_TEST(test_long_cdata_utf16)
         XCS("ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP")
         XCS("ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP")
         XCS("ABCDEFGHIJKLMNOP");
+        /* clang-format on */
     CharData storage;
     void *buffer;
 
@@ -10270,6 +10278,7 @@ START_TEST(test_alloc_long_base)
     char entity_text[] = "Hello world";
     const XML_Char *base =
         /* 64 characters per line */
+        /* clang-format off */
         XCS("LongBaseURI/that/will/overflow/an/internal/buffer/and/cause/it/t")
         XCS("o/have/to/grow/PQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789A/")
         XCS("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789A/")
@@ -10286,6 +10295,7 @@ START_TEST(test_alloc_long_base)
         XCS("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789A/")
         XCS("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789A/")
         XCS("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789A/");
+        /* clang-format on */
     int i;
     const int max_alloc_count = 25;
 
@@ -10826,6 +10836,7 @@ START_TEST(test_nsalloc_long_attr_prefix)
         "='http://example.org/'>"
         "</foo:e>";
     const XML_Char *elemstr[] = {
+        /* clang-format off */
         XCS("http://example.org/ e foo"),
         XCS("http://example.org/ a ")
         XCS("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ")
@@ -10844,6 +10855,7 @@ START_TEST(test_nsalloc_long_attr_prefix)
         XCS("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ")
         XCS("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ")
         XCS("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ")
+        /* clang-format on */
     };
     int i;
     const int max_alloc_count = 40;
@@ -11891,6 +11903,7 @@ START_TEST(test_nsalloc_long_systemid_in_ext)
     ExtOption options[] = {
         { XCS("foo"), "<!ELEMENT e EMPTY>" },
         {
+            /* clang-format off */
             XCS("ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/")
             XCS("ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/")
             XCS("ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/")
@@ -11907,6 +11920,7 @@ START_TEST(test_nsalloc_long_systemid_in_ext)
             XCS("ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/")
             XCS("ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/")
             XCS("ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"),
+            /* clang-format on */
             "<e/>"
         },
         { NULL, NULL }
