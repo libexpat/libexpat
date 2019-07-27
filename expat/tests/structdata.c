@@ -125,27 +125,32 @@ StructData_CheckItems(StructData *storage,
                 storage->count, count);
         StructData_Dispose(storage);
         fail(buffer);
-    }
-    for (i = 0; i < count; i++)
-    {
-        const StructDataEntry *got = &storage->entries[i];
-        const StructDataEntry *want = &expected[i];
+    } else {
+        for (i = 0; i < count; i++)
+        {
+            const StructDataEntry *got = &storage->entries[i];
+            const StructDataEntry *want = &expected[i];
 
-        if (xcstrcmp(got->str, want->str) != 0) {
-            StructData_Dispose(storage);
-            fail("structure got bad string");
-        }
-        if (got->data0 != want->data0 ||
-            got->data1 != want->data1 ||
-            got->data2 != want->data2) {
-            sprintf(buffer,
-                    "struct '%" XML_FMT_STR
-                    "' expected (%d,%d,%d), got (%d,%d,%d)",
-                    got->str,
-                    want->data0, want->data1, want->data2,
-                    got->data0, got->data1, got->data2);
-            StructData_Dispose(storage);
-            fail(buffer);
+            assert(got != NULL);
+            assert(want != NULL);
+
+            if (xcstrcmp(got->str, want->str) != 0) {
+                StructData_Dispose(storage);
+                fail("structure got bad string");
+            } else {
+                if (got->data0 != want->data0 ||
+                    got->data1 != want->data1 ||
+                    got->data2 != want->data2) {
+                    sprintf(buffer,
+                            "struct '%" XML_FMT_STR
+                            "' expected (%d,%d,%d), got (%d,%d,%d)",
+                            got->str,
+                            want->data0, want->data1, want->data2,
+                            got->data0, got->data1, got->data2);
+                    StructData_Dispose(storage);
+                    fail(buffer);
+                }
+            }
         }
     }
 }
@@ -159,4 +164,7 @@ StructData_Dispose(StructData *storage)
     for (i = 0; i < storage->count; i++)
         free((void *)storage->entries[i].str);
     free(storage->entries);
+
+    storage->count = 0;
+    storage->entries = NULL;
 }

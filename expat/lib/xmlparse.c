@@ -5007,6 +5007,7 @@ doProlog(XML_Parser parser,
         int myindex = nextScaffoldPart(parser);
         if (myindex < 0)
           return XML_ERROR_NO_MEMORY;
+        assert(dtd->scaffIndex != NULL);
         dtd->scaffIndex[dtd->scaffLevel] = myindex;
         dtd->scaffLevel++;
         dtd->scaffold[myindex].type = XML_CTYPE_SEQ;
