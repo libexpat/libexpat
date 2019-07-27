@@ -1297,6 +1297,7 @@ START_TEST(test_really_long_encoded_lines)
     buffer = XML_GetBuffer(g_parser, parse_len);
     if (buffer == NULL)
         fail("Could not allocate parse buffer");
+    assert(buffer != NULL);
     memcpy(buffer, text, parse_len);
     if (XML_ParseBuffer(g_parser, parse_len, XML_TRUE) == XML_STATUS_ERROR)
         xml_failure(g_parser);
@@ -2409,6 +2410,7 @@ START_TEST(test_long_cdata_utf16)
     buffer = XML_GetBuffer(g_parser, sizeof(text) - 1);
     if (buffer == NULL)
         fail("Could not allocate parse buffer");
+    assert(buffer != NULL);
     memcpy(buffer, text, sizeof(text) - 1);
     if (XML_ParseBuffer(g_parser,
                         sizeof(text) - 1,
@@ -3450,6 +3452,7 @@ external_entity_suspending_faulter(XML_Parser parser,
     buffer = XML_GetBuffer(ext_parser, parse_len);
     if (buffer == NULL)
         fail("Could not allocate parse buffer");
+    assert(buffer != NULL);
     memcpy(buffer, fault->parse_text, parse_len);
     if (XML_ParseBuffer(ext_parser, parse_len,
                         XML_FALSE) != XML_STATUS_SUSPENDED)
@@ -4065,6 +4068,7 @@ START_TEST(test_get_buffer_1)
     buffer = XML_GetBuffer(g_parser, 1536);
     if (buffer == NULL)
         fail("1.5K buffer failed");
+    assert(buffer != NULL);
     memcpy(buffer, text, strlen(text));
     if (XML_ParseBuffer(g_parser, (int)strlen(text), XML_FALSE) == XML_STATUS_ERROR)
         xml_failure(g_parser);
@@ -4103,6 +4107,7 @@ START_TEST(test_get_buffer_2)
     buffer = XML_GetBuffer(g_parser, 1536);
     if (buffer == NULL)
         fail("1.5K buffer failed");
+    assert(buffer != NULL);
     memcpy(buffer, text, strlen(text));
     if (XML_ParseBuffer(g_parser, (int)strlen(text), XML_FALSE) == XML_STATUS_ERROR)
         xml_failure(g_parser);
@@ -7987,6 +7992,9 @@ static int
 parse_version(const XML_LChar *version_text,
               XML_Expat_Version *version_struct)
 {
+    if (! version_text)
+        return XML_FALSE;
+
     while (*version_text != 0x00) {
         if (*version_text >= ASCII_0 && *version_text <= ASCII_9)
             break;
@@ -8042,6 +8050,7 @@ START_TEST(test_misc_version)
 
     if (version_text == NULL)
         fail("Could not obtain version text");
+    assert(version_text != NULL);
     if (!parse_version(version_text, &parsed_version))
         fail("Unable to parse version text");
     if (!versions_equal(&read_version, &parsed_version))
@@ -8886,6 +8895,7 @@ START_TEST(test_alloc_realloc_buffer)
         buffer = XML_GetBuffer(g_parser, 1536);
         if (buffer == NULL)
             fail("1.5K buffer reallocation failed");
+        assert(buffer != NULL);
         memcpy(buffer, text, strlen(text));
         if (XML_ParseBuffer(g_parser, (int)strlen(text),
                             XML_FALSE) == XML_STATUS_OK)
@@ -8923,6 +8933,7 @@ external_entity_reallocator(XML_Parser parser,
     buffer = XML_GetBuffer(ext_parser, 1536);
     if (buffer == NULL)
         fail("Buffer allocation failed");
+    assert(buffer != NULL);
     memcpy(buffer, text, strlen(text));
     status = XML_ParseBuffer(ext_parser, (int)strlen(text), XML_FALSE);
     reallocation_count = -1;
@@ -10562,6 +10573,7 @@ START_TEST(test_nsalloc_parse_buffer)
     buffer = XML_GetBuffer(g_parser, (int)strlen(text));
     if (buffer == NULL)
         fail("Could not acquire parse buffer");
+    assert(buffer != NULL);
     memcpy(buffer, text, strlen(text));
     if (XML_ParseBuffer(g_parser, (int)strlen(text),
                         XML_TRUE) != XML_STATUS_SUSPENDED)
