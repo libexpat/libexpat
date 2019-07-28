@@ -152,7 +152,7 @@ run() {
     populate_environment
     dump_config
 
-    run_configure
+    run_configure "$@"
     run_compile
     run_tests
     run_processor
@@ -231,7 +231,7 @@ main() {
 
     process_config
 
-    run
+    run "$@"
 }
 
 
