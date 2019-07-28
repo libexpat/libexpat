@@ -111,7 +111,12 @@ run_tests() {
     RUN "${MAKE}" \
             CFLAGS="${CFLAGS} -Werror" \
             CXXFLAGS="${CXXFLAGS} -Werror" \
-            check run-xmltest
+            check run-xmltest \
+        || {
+            RUN cat tests/runtests.log
+            RUN cat tests/runtestspp.log
+            false
+        }
 }
 
 
