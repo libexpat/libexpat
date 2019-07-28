@@ -9,6 +9,7 @@ Release x.x.x xxx xxx xx xxxx
             #265  CMake: Fix linking with MinGW
        #239 #277  CMake: Add argument -DUSE_GETRANDOM=(ON|OFF|AUTO)
        #239 #277  CMake: Add argument -DUSE_SYS_GETRANDOM=(ON|OFF|AUTO)
+             #14  Drop an OpenVMS support leftover
   #235 #268 #270  Address compiler warnings
     #282 #283 ..
        #284 #285  Address cppcheck warnings

@@ -33,15 +33,6 @@
 #ifndef Expat_INCLUDED
 #define Expat_INCLUDED 1
 
-#ifdef __VMS
-/*      0        1         2         3      0        1         2         3
-        1234567890123456789012345678901     1234567890123456789012345678901 */
-#define XML_SetProcessingInstructionHandler XML_SetProcessingInstrHandler
-#define XML_SetUnparsedEntityDeclHandler    XML_SetUnparsedEntDeclHandler
-#define XML_SetStartNamespaceDeclHandler    XML_SetStartNamespcDeclHandler
-#define XML_SetExternalEntityRefHandlerArg  XML_SetExternalEntRefHandlerArg
-#endif
-
 #include <stdlib.h>
 #include "expat_external.h"
 
