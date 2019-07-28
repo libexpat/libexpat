@@ -11,6 +11,10 @@
  * --------------------------------------------------------------------------
  * HISTORY:
  *
+ * 2019-08-03  (Sebastian Pipping)
+ *   - Mark part of sip24_valid as to be excluded from clang-format
+ *   - Re-format code using clang-format 9
+ *
  * 2018-07-08  (Anton Maklakov)
  *   - Add "fall through" markers for GCC's -Wimplicit-fallthrough
  *
@@ -286,6 +290,7 @@ static uint64_t siphash24(const void *src, size_t len,
  * in = 00 01 02 ... 3e (63 bytes)
  */
 static int sip24_valid(void) {
+	/* clang-format off */
 	static const unsigned char vectors[64][8] = {
 		{ 0x31, 0x0e, 0x0e, 0xdd, 0x47, 0xdb, 0x6f, 0x72, },
 		{ 0xfd, 0x67, 0xdc, 0x93, 0xc5, 0x39, 0xf8, 0x74, },
@@ -352,6 +357,8 @@ static int sip24_valid(void) {
 		{ 0x57, 0x5f, 0xf2, 0x8e, 0x60, 0x38, 0x1b, 0xe5, },
 		{ 0x72, 0x45, 0x06, 0xeb, 0x4c, 0x32, 0x8a, 0x95, }
 	};
+	/* clang-format on */
+
 	unsigned char in[64];
 	struct sipkey k;
 	size_t i;

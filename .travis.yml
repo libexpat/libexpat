@@ -55,6 +55,7 @@ addons:
       - dos2unix
       - lzip
       - mingw-w64
+      - moreutils
       - rpm
       - wine
 

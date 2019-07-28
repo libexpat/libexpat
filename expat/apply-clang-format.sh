@@ -32,6 +32,8 @@ set -e
 set -u
 set -o pipefail
 
+expand --tabs=2 --initial lib/siphash.h | sponge lib/siphash.h
+
 find \
         -name '*.[ch]' \
         -o -name '*.cpp' \
