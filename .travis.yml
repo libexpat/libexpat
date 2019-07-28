@@ -15,9 +15,9 @@ env:
     - CFLAGS='-g -pipe'
   matrix:
     - MODE=cmake-oos
+    - MODE=cppcheck
     - MODE=distcheck
     - MODE=qa-sh QA_COMPILER=clang CC=clang CXX=clang++ LD=clang++ QA_SANITIZER=address
-    - MODE=cppcheck
 
 matrix:
   include:
@@ -43,11 +43,11 @@ addons:
     packages:
       - clang-9
       - cmake
+      - cppcheck
       - docbook2x
       - dos2unix
       - lzip
       - rpm
-      - cppcheck
 
 script:
   - ./.travis.sh
