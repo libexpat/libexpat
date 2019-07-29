@@ -59,5 +59,5 @@ elif [[ ${MODE} = cmake-oos ]]; then
 elif [[ ${MODE} = cppcheck ]]; then
     cppcheck --quiet --error-exitcode=1 .
 else
-    ./qa.sh
+    ./qa.sh ${CONFIGURE_ARGS}
 fi
