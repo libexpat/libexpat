@@ -51,27 +51,26 @@ populate_environment() {
     : ${BASE_COMPILE_FLAGS:="-pipe -Wall -Wextra -pedantic -Wno-overlength-strings -Wno-long-long"}
     : ${BASE_LINK_FLAGS:=}
 
-    export QA_FUZZIT=""
+    QA_FUZZIT=""
     if [[ ${QA_COMPILER} = clang ]]; then
-        export UBSAN_OPTIONS=""
         case "${QA_SANITIZER}" in
             address)
                 # http://clang.llvm.org/docs/AddressSanitizer.html
                 BASE_COMPILE_FLAGS+=" -g -fsanitize=address -fno-omit-frame-pointer"
                 BASE_LINK_FLAGS+=" -g -Wc,-fsanitize=address"  # "-Wc," is for libtool
-                export QA_FUZZIT="asan"
+                QA_FUZZIT="asan"
                 ;;
             memory)
                 # http://clang.llvm.org/docs/MemorySanitizer.html
                 BASE_COMPILE_FLAGS+=" -fsanitize=memory -fno-omit-frame-pointer -g -O2 -fsanitize-memory-track-origins -fsanitize-blacklist=$PWD/memory-sanitizer-blacklist.txt"
-                export QA_FUZZIT="msan"
+                QA_FUZZIT="msan"
                 ;;
             undefined)
                 # http://clang.llvm.org/docs/UndefinedBehaviorSanitizer.html
                 BASE_COMPILE_FLAGS+=" -fsanitize=undefined"
                 BASE_LINK_FLAGS+=" -fsanitize=undefined"
                 export UBSAN_OPTIONS=print_stacktrace=1
-                export QA_FUZZIT="ubsan"
+                QA_FUZZIT="ubsan"
                 ;;
         esac
     fi
@@ -164,7 +163,7 @@ run_tests() {
             false
         }
 
-    if [[ -n "$QA_FUZZIT" && `ls tests/fuzz/*fuzzer | wc -l` -gt 1 ]]; then
+    if [[ -n "$QA_FUZZIT" && `ls tests/fuzz/*fuzzer | wc -l` -ge 1 ]]; then
         run_fuzzit
     fi
 

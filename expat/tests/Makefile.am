@@ -29,6 +29,9 @@
 # USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 SUBDIRS = . benchmark
+if BUILD_FUZZTARGETS
+    SUBDIRS += fuzz
+endif
 
 AM_CPPFLAGS = -I$(srcdir)/../lib
 
@@ -64,7 +67,3 @@ EXTRA_DIST = \
     udiffer.py \
     xmltest.log.expected \
     xmltest.sh
-
-if BUILD_FUZZTARGETS
-    SUBDIRS += fuzz
-endif
