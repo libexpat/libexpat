@@ -108,10 +108,27 @@ run_tests() {
         egypt) return 0 ;;
     esac
 
+    if [[ ${CC} =~ mingw ]]; then
+        # NOTE: Filenames are hardcoded for Travis Ubuntu trusty, as of now
+        for i in tests xmlwf xmlwf/.libs ; do
+            RUN ln -s \
+                    /usr/i686-w64-mingw32/lib/libwinpthread-1.dll \
+                    /usr/lib/gcc/i686-w64-mingw32/4.8/libgcc_s_sjlj-1.dll \
+                    /usr/lib/gcc/i686-w64-mingw32/4.8/libstdc++-6.dll \
+                    ../lib/.libs/libexpat-1.dll \
+                    ${i}/
+        done
+    fi
+
     RUN "${MAKE}" \
             CFLAGS="${CFLAGS} -Werror" \
             CXXFLAGS="${CXXFLAGS} -Werror" \
-            check run-xmltest
+            check run-xmltest \
+        || {
+            RUN cat tests/runtests.log
+            RUN cat tests/runtestspp.log
+            false
+        }
 }
 
 

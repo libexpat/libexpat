@@ -100,6 +100,8 @@ EXTRA_DIST = \
     \
     Changes \
     README.md \
+    \
+    fix-xmltest-log.sh \
     test-driver-wrapper.sh
 
 
@@ -144,7 +146,7 @@ run-xmltest: tests/xmlconf
 if WITH_XMLWF
 	$(MAKE) -C xmlwf
 	tests/xmltest.sh "$(PWD)/run.sh $(PWD)/xmlwf/xmlwf@EXEEXT@" 2>&1 | tee tests/xmltest.log
-	dos2unix tests/xmltest.log
+	./fix-xmltest-log.sh tests/xmltest.log
 	diff -u tests/xmltest.log.expected tests/xmltest.log
 else
 	@echo 'ERROR: xmlwf is needed for "make run-xmltest".' >&2
