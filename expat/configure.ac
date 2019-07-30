@@ -286,8 +286,8 @@ AM_CONDITIONAL([BUILD_FUZZTARGETS], [test "x$enable_fuzztargets" = "xyes"])
 AS_IF([test "x$enable_fuzztargets" = "xyes"], [
     AC_MSG_CHECKING([whether $CXX accepts -fsanitize=fuzzer])
     AC_LANG_PUSH(C++)
-    tmp_saved_flags=$[]_AC_LANG_PREFIX[]FLAGS
-    _AC_LANG_PREFIX[]FLAGS="$[]_AC_LANG_PREFIX[]FLAGS -std=c++11 -fsanitize=fuzzer"
+    AS_VAR_COPY([OLDFLAGS], [CXXFLAGS])
+    AX_APPEND_FLAG([-fsanitize=fuzzer], [CXXFLAGS])
     AC_LINK_IFELSE([AC_LANG_SOURCE([[
 #include <sys/types.h>
 extern "C" int LLVMFuzzerTestOneInput(const unsigned char *Data, size_t Size);
@@ -301,10 +301,10 @@ return 0;
           AX_APPEND_COMPILE_FLAGS([-fsanitize=fuzzer-no-link], [CFLAGS])
           AX_APPEND_COMPILE_FLAGS([-fsanitize=fuzzer-no-link], [CXXFLAGS])
           has_sanitizefuzzer=yes],
-        AC_MSG_RESULT(no)
-        AC_MSG_ERROR([Fuzz targets require a compiler accepting option -fsanitize=fuzzer])
-    ])
-    _AC_LANG_PREFIX[]FLAGS=$tmp_saved_flags, []
+        [ AC_MSG_RESULT(no)
+          AC_MSG_ERROR([Fuzz targets require a compiler accepting option -fsanitize=fuzzer])]
+    )
+    AS_VAR_COPY([CXXFLAGS], [OLDFLAGS])
     AC_LANG_POP()
 ])
 AM_CONDITIONAL([HAS_SANITIZEFUZZER], [test "x$has_sanitizefuzzer" = "xyes"])
