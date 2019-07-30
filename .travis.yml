@@ -31,6 +31,10 @@ matrix:
       env: MODE=qa-sh QA_COMPILER=clang CC=clang CXX=clang++ LD=clang++ QA_SANITIZER=undefined
     - os: linux
       env: MODE=qa-sh QA_COMPILER=gcc CC=gcc CXX=g++ LD=ld QA_PROCESSOR=gcov
+    - os: linux
+      env: MODE=qa-sh QA_COMPILER=gcc CC=i686-w64-mingw32-gcc CXX=i686-w64-mingw32-g++ LD=i686-w64-mingw32-ld QA_PROCESSOR=gcov CONFIGURE_ARGS="--host=i686-w64-mingw32 --enable-xml-attr-info"
+    - os: linux
+      env: MODE=qa-sh QA_COMPILER=gcc CC=i686-w64-mingw32-gcc CXX=i686-w64-mingw32-g++ LD=i686-w64-mingw32-ld QA_PROCESSOR=gcov CONFIGURE_ARGS="--host=i686-w64-mingw32 --enable-xml-attr-info CPPFLAGS=-DXML_UNICODE_WCHAR_T"
 
 addons:
   homebrew:
@@ -47,7 +51,9 @@ addons:
       - docbook2x
       - dos2unix
       - lzip
+      - mingw-w64
       - rpm
+      - wine
 
 script:
   - ./.travis.sh
