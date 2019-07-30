@@ -53,8 +53,7 @@ populate_environment() {
 
     QA_FUZZIT=""
     if [[ ${QA_COMPILER} = clang ]]; then
-        # set variable if unbound so far
-        UBSAN_OPTIONS=${UBSAN_OPTIONS:-}
+        UBSAN_OPTIONS=${UBSAN_OPTIONS:=}
         case "${QA_SANITIZER}" in
             address)
                 # http://clang.llvm.org/docs/AddressSanitizer.html
