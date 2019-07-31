@@ -7259,6 +7259,69 @@ START_TEST(test_misc_utf16le) {
 }
 END_TEST
 
+typedef struct {
+  XML_Parser parser;
+  int deep;
+} DataIssue240;
+
+static void
+start_element_issue_240(void *userData, const XML_Char *UNUSED_P(name),
+                        const XML_Char **UNUSED_P(atts)) {
+  DataIssue240 *mydata = (DataIssue240 *)userData;
+  mydata->deep++;
+}
+
+static void
+end_element_issue_240(void *userData, const XML_Char *UNUSED_P(name)) {
+  DataIssue240 *mydata = (DataIssue240 *)userData;
+  mydata->deep--;
+  if (mydata->deep == 0) {
+    XML_StopParser(mydata->parser, 0);
+  }
+}
+
+START_TEST(test_misc_stop_during_end_handler_issue_240_1) {
+  XML_Parser parser;
+  DataIssue240 *mydata;
+  enum XML_Status result;
+  const char *const doc1 = "<doc><e1/><e><foo/></e></doc>";
+
+  parser = XML_ParserCreate(NULL);
+  XML_SetElementHandler(parser, start_element_issue_240, end_element_issue_240);
+  mydata = (DataIssue240 *)malloc(sizeof(DataIssue240));
+  mydata->parser = parser;
+  mydata->deep = 0;
+  XML_SetUserData(parser, mydata);
+
+  result = XML_Parse(parser, doc1, (int)strlen(doc1), 1);
+  XML_ParserFree(parser);
+  free(mydata);
+  if (result != XML_STATUS_ERROR)
+    fail("Stopping the parser did not work as expected");
+}
+END_TEST
+
+START_TEST(test_misc_stop_during_end_handler_issue_240_2) {
+  XML_Parser parser;
+  DataIssue240 *mydata;
+  enum XML_Status result;
+  const char *const doc2 = "<doc><elem/></doc>";
+
+  parser = XML_ParserCreate(NULL);
+  XML_SetElementHandler(parser, start_element_issue_240, end_element_issue_240);
+  mydata = (DataIssue240 *)malloc(sizeof(DataIssue240));
+  mydata->parser = parser;
+  mydata->deep = 0;
+  XML_SetUserData(parser, mydata);
+
+  result = XML_Parse(parser, doc2, (int)strlen(doc2), 1);
+  XML_ParserFree(parser);
+  free(mydata);
+  if (result != XML_STATUS_ERROR)
+    fail("Stopping the parser did not work as expected");
+}
+END_TEST
+
 static void
 alloc_setup(void) {
   XML_Memory_Handling_Suite memsuite = {duff_allocator, duff_reallocator, free};
@@ -11170,6 +11233,8 @@ make_suite(void) {
   tcase_add_test(tc_misc, test_misc_features);
   tcase_add_test(tc_misc, test_misc_attribute_leak);
   tcase_add_test(tc_misc, test_misc_utf16le);
+  tcase_add_test(tc_misc, test_misc_stop_during_end_handler_issue_240_1);
+  tcase_add_test(tc_misc, test_misc_stop_during_end_handler_issue_240_2);
 
   suite_add_tcase(s, tc_alloc);
   tcase_add_checked_fixture(tc_alloc, alloc_setup, alloc_teardown);
