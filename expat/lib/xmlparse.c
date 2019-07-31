@@ -2853,8 +2853,13 @@ doContent(XML_Parser parser, int startTagLevel, const ENCODING *enc,
           parser->m_freeBindingList = b;
           b->prefix->binding = b->prevPrefixBinding;
         }
-        if (parser->m_tagLevel == 0)
-          return epilogProcessor(parser, next, end, nextPtr);
+        if ((parser->m_tagLevel == 0)
+            && (parser->m_parsingStatus.parsing != XML_FINISHED)) {
+          if (parser->m_parsingStatus.parsing == XML_SUSPENDED)
+            parser->m_processor = epilogProcessor;
+          else
+            return epilogProcessor(parser, next, end, nextPtr);
+        }
       }
       break;
     case XML_TOK_CHAR_REF: {
