@@ -59,7 +59,7 @@ enum {
   BT_DIGIT,
   BT_NAME,
   BT_MINUS,
-  BT_OTHER, /* known not to be a name or name start character */
+  BT_OTHER,    /* known not to be a name or name start character */
   BT_NONASCII, /* might be a name or name start character */
   BT_PERCNT,
   BT_LPAR,
