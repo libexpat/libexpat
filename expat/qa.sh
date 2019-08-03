@@ -57,6 +57,7 @@ populate_environment() {
                 # http://clang.llvm.org/docs/AddressSanitizer.html
                 BASE_COMPILE_FLAGS+=" -g -fsanitize=address -fno-omit-frame-pointer"
                 BASE_LINK_FLAGS+=" -g -Wc,-fsanitize=address"  # "-Wc," is for libtool
+                export ASAN_OPTIONS=detect_leaks=1
                 ;;
             memory)
                 # http://clang.llvm.org/docs/MemorySanitizer.html
