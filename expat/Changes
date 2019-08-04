@@ -17,6 +17,7 @@ Release x.x.x xxx xxx xx xxxx
     #282 #283 ..
        #284 #285  Address cppcheck warnings
        #294 #295  Address Clang Static Analyzer warnings
+        #24 #293  Mass-apply clang-format 9 (and ensure conformance during CI)
 
         Special thanks to:
             Khajapasha Mohammed
