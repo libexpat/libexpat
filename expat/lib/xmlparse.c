@@ -643,6 +643,25 @@ static const XML_Char implicitContext[]
        ASCII_s,     ASCII_p,     ASCII_a,      ASCII_c,      ASCII_e,
        '\0'};
 
+#define RANDOM_BYTES_LOOP_FUNCTION(FUNCTION_NAME, INNER_VAR_NAME, INNER_CODE)  \
+  static int FUNCTION_NAME(void *target, size_t count) {                       \
+    size_t bytesWrittenTotal = 0;                                              \
+                                                                               \
+    while (bytesWrittenTotal < count) {                                        \
+      size_t bytesRead = 0;                                                    \
+                                                                               \
+      INNER_CODE;                                                              \
+                                                                               \
+      for (; (bytesRead < sizeof(INNER_VAR_NAME))                              \
+             && (bytesWrittenTotal < count);                                   \
+           bytesRead++, bytesWrittenTotal++) {                                 \
+        const uint8_t random8 = (uint8_t)(INNER_VAR_NAME >> (bytesRead * 8));  \
+        ((uint8_t *)target)[bytesWrittenTotal] = random8;                      \
+      }                                                                        \
+    }                                                                          \
+    return 1; /* success */                                                    \
+  }
+
 /* To avoid warnings about unused functions: */
 #if ! defined(HAVE_ARC4RANDOM_BUF) && ! defined(HAVE_ARC4RANDOM)
 
@@ -714,21 +733,8 @@ writeRandomBytes_dev_urandom(void *target, size_t count) {
 
 #if defined(HAVE_ARC4RANDOM) && ! defined(HAVE_ARC4RANDOM_BUF)
 
-static void
-writeRandomBytes_arc4random(void *target, size_t count) {
-  size_t bytesWrittenTotal = 0;
-
-  while (bytesWrittenTotal < count) {
-    const uint32_t random32 = arc4random();
-    size_t i = 0;
-
-    for (; (i < sizeof(random32)) && (bytesWrittenTotal < count);
-         i++, bytesWrittenTotal++) {
-      const uint8_t random8 = (uint8_t)(random32 >> (i * 8));
-      ((uint8_t *)target)[bytesWrittenTotal] = random8;
-    }
-  }
-}
+RANDOM_BYTES_LOOP_FUNCTION(writeRandomBytes_arc4random, random32,
+                           const uint32_t random32 = arc4random())
 
 #endif /* defined(HAVE_ARC4RANDOM) && ! defined(HAVE_ARC4RANDOM_BUF) */
 
@@ -738,25 +744,11 @@ writeRandomBytes_arc4random(void *target, size_t count) {
  * generates cryptographically secure random numbers.  Internally it
  * uses RtlGenRandom API which is present in Windows XP and later.
  */
-static int
-writeRandomBytes_rand_s(void *target, size_t count) {
-  size_t bytesWrittenTotal = 0;
-
-  while (bytesWrittenTotal < count) {
-    unsigned int random32 = 0;
-    size_t i = 0;
-
-    if (rand_s(&random32))
+RANDOM_BYTES_LOOP_FUNCTION(
+    writeRandomBytes_rand_s, random_uint, unsigned int random_uint;
+    if (rand_s(&random_uint)) {
       return 0; /* failure */
-
-    for (; (i < sizeof(random32)) && (bytesWrittenTotal < count);
-         i++, bytesWrittenTotal++) {
-      const uint8_t random8 = (uint8_t)(random32 >> (i * 8));
-      ((uint8_t *)target)[bytesWrittenTotal] = random8;
-    }
-  }
-  return 1; /* success */
-}
+    })
 
 #endif /* _WIN32 */
 
