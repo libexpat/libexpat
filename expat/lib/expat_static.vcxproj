@@ -121,7 +121,6 @@
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="loadlibrary.c" />
     <ClCompile Include="xmlparse.c" />
     <ClCompile Include="xmlrole.c" />
     <ClCompile Include="xmltok.c" />
