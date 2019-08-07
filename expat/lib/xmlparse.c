@@ -44,7 +44,7 @@
 #include <assert.h>
 #include <limits.h> /* UINT_MAX */
 #include <stdio.h>  /* fprintf */
-#include <stdlib.h> /* getenv */
+#include <stdlib.h> /* getenv, rand_s */
 
 #ifdef _WIN32
 #  define getpid GetCurrentProcessId
