@@ -175,7 +175,6 @@ if(WIN32)
 endif(WIN32)
 
 set(expat_SRCS
-    lib/loadlibrary.c
     lib/xmlparse.c
     lib/xmlrole.c
     lib/xmltok.c

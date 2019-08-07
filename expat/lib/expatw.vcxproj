@@ -148,7 +148,6 @@
     <CustomBuild Include="libexpatw.def" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="loadlibrary.c" />
     <ClCompile Include="xmlparse.c">
       <ExceptionHandling Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
       </ExceptionHandling>

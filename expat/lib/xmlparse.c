@@ -34,12 +34,17 @@
 #  define _GNU_SOURCE 1 /* syscall prototype */
 #endif
 
+#ifdef _WIN32
+/* force stdlib to define rand_s() */
+#  define _CRT_RAND_S
+#endif
+
 #include <stddef.h>
 #include <string.h> /* memset(), memcpy() */
 #include <assert.h>
 #include <limits.h> /* UINT_MAX */
 #include <stdio.h>  /* fprintf */
-#include <stdlib.h> /* getenv */
+#include <stdlib.h> /* getenv, rand_s */
 
 #ifdef _WIN32
 #  define getpid GetCurrentProcessId
@@ -99,7 +104,7 @@
       * libbsd (arc4random_buf): HAVE_ARC4RANDOM_BUF + HAVE_LIBBSD, \
       * libbsd (arc4random): HAVE_ARC4RANDOM + HAVE_LIBBSD, \
       * Linux / BSD / macOS (/dev/urandom): XML_DEV_URANDOM \
-      * Windows (RtlGenRandom): _WIN32. \
+      * Windows (rand_s): _WIN32. \
     \
     If insist on not using any of these, bypass this error by defining \
     XML_POOR_ENTROPY; you have been warned. \
@@ -729,33 +734,28 @@ writeRandomBytes_arc4random(void *target, size_t count) {
 
 #ifdef _WIN32
 
-typedef BOOLEAN(APIENTRY *RTLGENRANDOM_FUNC)(PVOID, ULONG);
-HMODULE _Expat_LoadLibrary(LPCTSTR filename); /* see loadlibrary.c */
-
-/* Obtain entropy on Windows XP / Windows Server 2003 and later.
- * Hint on RtlGenRandom and the following article from libsodium.
- *
- * Michael Howard: Cryptographically Secure Random number on Windows without
- * using CryptoAPI
- * https://blogs.msdn.microsoft.com/michael_howard/2005/01/14/cryptographically-secure-random-number-on-windows-without-using-cryptoapi/
+/* Obtain entropy on Windows using the rand_s() function which
+ * generates cryptographically secure random numbers.  Internally it
+ * uses RtlGenRandom API which is present in Windows XP and later.
  */
 static int
-writeRandomBytes_RtlGenRandom(void *target, size_t count) {
-  int success = 0; /* full count bytes written? */
-  const HMODULE advapi32 = _Expat_LoadLibrary(TEXT("ADVAPI32.DLL"));
+writeRandomBytes_rand_s(void *target, size_t count) {
+  size_t bytesWrittenTotal = 0;
 
-  if (advapi32) {
-    const RTLGENRANDOM_FUNC RtlGenRandom
-        = (RTLGENRANDOM_FUNC)GetProcAddress(advapi32, "SystemFunction036");
-    if (RtlGenRandom) {
-      if (RtlGenRandom((PVOID)target, (ULONG)count) == TRUE) {
-        success = 1;
-      }
+  while (bytesWrittenTotal < count) {
+    unsigned int random32 = 0;
+    size_t i = 0;
+
+    if (rand_s(&random32))
+      return 0; /* failure */
+
+    for (; (i < sizeof(random32)) && (bytesWrittenTotal < count);
+         i++, bytesWrittenTotal++) {
+      const uint8_t random8 = (uint8_t)(random32 >> (i * 8));
+      ((uint8_t *)target)[bytesWrittenTotal] = random8;
     }
-    FreeLibrary(advapi32);
   }
-
-  return success;
+  return 1; /* success */
 }
 
 #endif /* _WIN32 */
@@ -812,8 +812,8 @@ generate_hash_secret_salt(XML_Parser parser) {
 #else
   /* Try high quality providers first .. */
 #  ifdef _WIN32
-  if (writeRandomBytes_RtlGenRandom((void *)&entropy, sizeof(entropy))) {
-    return ENTROPY_DEBUG("RtlGenRandom", entropy);
+  if (writeRandomBytes_rand_s((void *)&entropy, sizeof(entropy))) {
+    return ENTROPY_DEBUG("rand_s", entropy);
   }
 #  elif defined(HAVE_GETRANDOM) || defined(HAVE_SYSCALL_GETRANDOM)
   if (writeRandomBytes_getrandom_nonblock((void *)&entropy, sizeof(entropy))) {
