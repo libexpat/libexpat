@@ -34,6 +34,11 @@
 #  define _GNU_SOURCE 1 /* syscall prototype */
 #endif
 
+#ifdef _WIN32
+/* force stdlib to define rand_s() */
+#  define _CRT_RAND_S
+#endif
+
 #include <stddef.h>
 #include <string.h> /* memset(), memcpy() */
 #include <assert.h>
@@ -728,6 +733,31 @@ writeRandomBytes_arc4random(void *target, size_t count) {
 #endif /* defined(HAVE_ARC4RANDOM) && ! defined(HAVE_ARC4RANDOM_BUF) */
 
 #ifdef _WIN32
+
+/* Obtain entropy on Windows using the rand_s() function which
+ * generates cryptographically secure random numbers.  Internally it
+ * uses RtlGenRandom API which is present in Windows XP and later.
+ */
+static int
+writeRandomBytes_rand_s(void *target, size_t count) {
+  size_t bytesWrittenTotal = 0;
+
+  while (bytesWrittenTotal < count) {
+    unsigned int random32 = 0;
+    size_t i = 0;
+
+    if (rand_s(&random32))
+      return 0; /* failure */
+
+    for (; (i < sizeof(random32)) && (bytesWrittenTotal < count);
+         i++, bytesWrittenTotal++) {
+      const uint8_t random8 = (uint8_t)(random32 >> (i * 8));
+      ((uint8_t *)target)[bytesWrittenTotal] = random8;
+    }
+  }
+  return 1; /* success */
+}
+
 
 typedef BOOLEAN(APIENTRY *RTLGENRANDOM_FUNC)(PVOID, ULONG);
 HMODULE _Expat_LoadLibrary(LPCTSTR filename); /* see loadlibrary.c */
