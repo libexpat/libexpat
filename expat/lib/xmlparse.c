@@ -104,7 +104,7 @@
       * libbsd (arc4random_buf): HAVE_ARC4RANDOM_BUF + HAVE_LIBBSD, \
       * libbsd (arc4random): HAVE_ARC4RANDOM + HAVE_LIBBSD, \
       * Linux / BSD / macOS (/dev/urandom): XML_DEV_URANDOM \
-      * Windows (RtlGenRandom): _WIN32. \
+      * Windows (rand_s): _WIN32. \
     \
     If insist on not using any of these, bypass this error by defining \
     XML_POOR_ENTROPY; you have been warned. \
@@ -758,36 +758,6 @@ writeRandomBytes_rand_s(void *target, size_t count) {
   return 1; /* success */
 }
 
-
-typedef BOOLEAN(APIENTRY *RTLGENRANDOM_FUNC)(PVOID, ULONG);
-HMODULE _Expat_LoadLibrary(LPCTSTR filename); /* see loadlibrary.c */
-
-/* Obtain entropy on Windows XP / Windows Server 2003 and later.
- * Hint on RtlGenRandom and the following article from libsodium.
- *
- * Michael Howard: Cryptographically Secure Random number on Windows without
- * using CryptoAPI
- * https://blogs.msdn.microsoft.com/michael_howard/2005/01/14/cryptographically-secure-random-number-on-windows-without-using-cryptoapi/
- */
-static int
-writeRandomBytes_RtlGenRandom(void *target, size_t count) {
-  int success = 0; /* full count bytes written? */
-  const HMODULE advapi32 = _Expat_LoadLibrary(TEXT("ADVAPI32.DLL"));
-
-  if (advapi32) {
-    const RTLGENRANDOM_FUNC RtlGenRandom
-        = (RTLGENRANDOM_FUNC)GetProcAddress(advapi32, "SystemFunction036");
-    if (RtlGenRandom) {
-      if (RtlGenRandom((PVOID)target, (ULONG)count) == TRUE) {
-        success = 1;
-      }
-    }
-    FreeLibrary(advapi32);
-  }
-
-  return success;
-}
-
 #endif /* _WIN32 */
 
 #if ! defined(HAVE_ARC4RANDOM_BUF) && ! defined(HAVE_ARC4RANDOM)
@@ -842,8 +812,8 @@ generate_hash_secret_salt(XML_Parser parser) {
 #else
   /* Try high quality providers first .. */
 #  ifdef _WIN32
-  if (writeRandomBytes_RtlGenRandom((void *)&entropy, sizeof(entropy))) {
-    return ENTROPY_DEBUG("RtlGenRandom", entropy);
+  if (writeRandomBytes_rand_s((void *)&entropy, sizeof(entropy))) {
+    return ENTROPY_DEBUG("rand_s", entropy);
   }
 #  elif defined(HAVE_GETRANDOM) || defined(HAVE_SYSCALL_GETRANDOM)
   if (writeRandomBytes_getrandom_nonblock((void *)&entropy, sizeof(entropy))) {
