@@ -214,8 +214,12 @@ sip24_update(struct siphash *H, const void *src, size_t len) {
   uint64_t m;
 
   do {
-    while (p < pe && H->p < sip_endof(H->buf))
-      *H->p++ = *p++;
+    while (p < pe && H->p < sip_endof(H->buf)) {
+      //*H->p++ = *p++;
+      *H->p = *p;
+      H->p++;
+      p++;
+    }
 
     if (H->p < sip_endof(H->buf))
       break;
