@@ -16,6 +16,9 @@ Release x.x.x xxx xxx xx xxxx
             #265  CMake: Fix linking with MinGW
        #239 #277  CMake: Add argument -DUSE_GETRANDOM=(ON|OFF|AUTO)
        #239 #277  CMake: Add argument -DUSE_SYS_GETRANDOM=(ON|OFF|AUTO)
+       #299 #302  Windows: Replace LoadLibrary hack to access
+                    unofficial API function SystemFunction036 (RtlGenRandom)
+                    by using official API function rand_s (needs WinXP+)
              #14  Drop an OpenVMS support leftover
   #235 #268 #270  Address compiler warnings
     #282 #283 ..
@@ -24,6 +27,7 @@ Release x.x.x xxx xxx xx xxxx
         #24 #293  Mass-apply clang-format 9 (and ensure conformance during CI)
 
         Special thanks to:
+            David Loffredo
             Khajapasha Mohammed
             Kishore Kunche
             Marco Maggi
