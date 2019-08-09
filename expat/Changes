@@ -3,6 +3,10 @@ NOTE: We are looking for help with a few things:
       If you can help, please get in touch.  Thanks!
 
 Release x.x.x xxx xxx xx xxxx
+        Bug fixes:
+            #240  Fix cases where XML_StopParser did not have any effect
+                    when called from inside of an end element handler
+
         Other changes:
             #286  Windows: Remove COM code from xmlwf; in case it turns
                     out needed later, there will be a dedicated repository
@@ -12,16 +16,22 @@ Release x.x.x xxx xxx xx xxxx
             #265  CMake: Fix linking with MinGW
        #239 #277  CMake: Add argument -DUSE_GETRANDOM=(ON|OFF|AUTO)
        #239 #277  CMake: Add argument -DUSE_SYS_GETRANDOM=(ON|OFF|AUTO)
+       #299 #302  Windows: Replace LoadLibrary hack to access
+                    unofficial API function SystemFunction036 (RtlGenRandom)
+                    by using official API function rand_s (needs WinXP+)
              #14  Drop an OpenVMS support leftover
   #235 #268 #270  Address compiler warnings
     #282 #283 ..
        #284 #285  Address cppcheck warnings
        #294 #295  Address Clang Static Analyzer warnings
+        #24 #293  Mass-apply clang-format 9 (and ensure conformance during CI)
 
         Special thanks to:
+            David Loffredo
             Khajapasha Mohammed
             Kishore Kunche
             Marco Maggi
+            Rolf Ade
             xantares
 
 Release 2.2.7 Wed June 19 2019

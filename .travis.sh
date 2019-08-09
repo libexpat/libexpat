@@ -58,6 +58,9 @@ elif [[ ${MODE} = cmake-oos ]]; then
     find ROOT -printf "%P\n" | sort
 elif [[ ${MODE} = cppcheck ]]; then
     cppcheck --quiet --error-exitcode=1 .
+elif [[ ${MODE} = clang-format ]]; then
+    ./apply-clang-format.sh
+    git diff --exit-code
 else
     ./qa.sh ${CONFIGURE_ARGS}
 fi
