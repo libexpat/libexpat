@@ -145,9 +145,9 @@ tests/xmlconf: tests/xmlts.zip
 run-xmltest: tests/xmlconf
 if WITH_XMLWF
 	$(MAKE) -C xmlwf
-	tests/xmltest.sh "$(PWD)/run.sh $(PWD)/xmlwf/xmlwf@EXEEXT@" 2>&1 | tee tests/xmltest.log
-	./fix-xmltest-log.sh tests/xmltest.log
-	diff -u tests/xmltest.log.expected tests/xmltest.log
+	$(srcdir)/tests/xmltest.sh "$(abs_builddir)/run.sh $(abs_builddir)/xmlwf/xmlwf@EXEEXT@" 2>&1 | tee $(builddir)/tests/xmltest.log
+	$(srcdir)/fix-xmltest-log.sh $(builddir)/tests/xmltest.log
+	diff -u $(srcdir)/tests/xmltest.log.expected $(builddir)/tests/xmltest.log
 else
 	@echo 'ERROR: xmlwf is needed for "make run-xmltest".' >&2
 	@echo 'ERROR: Please re-configure without --without-xmlwf.' >&2
