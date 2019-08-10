@@ -144,6 +144,7 @@ tests/xmlconf: tests/xmlts.zip
 .PHONY: run-xmltest
 run-xmltest: tests/xmlconf
 if WITH_XMLWF
+	$(MAKE) -C lib
 	$(MAKE) -C xmlwf
 	$(srcdir)/tests/xmltest.sh "$(abs_builddir)/run.sh $(abs_builddir)/xmlwf/xmlwf@EXEEXT@" 2>&1 | tee $(builddir)/tests/xmltest.log
 	$(srcdir)/fix-xmltest-log.sh $(builddir)/tests/xmltest.log
