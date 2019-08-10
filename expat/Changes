@@ -18,9 +18,10 @@ Release x.x.x xxx xxx xx xxxx
                     --with-sys-getrandom
                     --without-sys-getrandom
        #244 #264  CMake: Add argument -DXML_ATTR_INFO=ON
+       #239 #277  CMake: Add arguments
+                    -DUSE_GETRANDOM=(ON|OFF|AUTO)
+                    -DUSE_SYS_GETRANDOM=(ON|OFF|AUTO)
             #265  CMake: Fix linking with MinGW
-       #239 #277  CMake: Add argument -DUSE_GETRANDOM=(ON|OFF|AUTO)
-       #239 #277  CMake: Add argument -DUSE_SYS_GETRANDOM=(ON|OFF|AUTO)
        #299 #302  Windows: Replace LoadLibrary hack to access
                     unofficial API function SystemFunction036 (RtlGenRandom)
                     by using official API function rand_s (needs WinXP+)
