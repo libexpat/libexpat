@@ -12,6 +12,11 @@ Release x.x.x xxx xxx xx xxxx
                     out needed later, there will be a dedicated repository
                     below https://github.com/libexpat/ for that code
        #244 #264  Autotools: Add argument --enable-xml-attr-info
+       #239 #301  Autotools: Add arguments
+                    --with-getrandom
+                    --without-getrandom
+                    --with-sys-getrandom
+                    --without-sys-getrandom
        #244 #264  CMake: Add argument -DXML_ATTR_INFO=ON
             #265  CMake: Fix linking with MinGW
        #239 #277  CMake: Add argument -DUSE_GETRANDOM=(ON|OFF|AUTO)
