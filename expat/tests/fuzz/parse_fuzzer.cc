@@ -7,7 +7,7 @@
 
 #include "expat.h"
 
-#include <functional>
+#include <functional> // This is for std:::hash
 #include <string>
 
 const char* kEncoding =

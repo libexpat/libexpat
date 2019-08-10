@@ -6,6 +6,8 @@ os:
   - linux
   - osx
 dist: trusty
+services:
+  - docker
 
 git:
   depth: 50
@@ -13,6 +15,8 @@ git:
 env:
   global:
     - CFLAGS='-g -pipe'
+    # This is FUZZIT_API_KEY
+    - secure: "vG1NQmbuRFtWs8t2TzjgwoFjlLu97Z4chzzN7oUndnOm0tf4dQHSpgP9IjlQb6vpC9NSrwuzfPP0q0E1VOcT+X6wTytG4MhdZAJq6rJidOXaKRE359q3TBNt55P/VwY9ZE2DI6DoRw+1HnyLK5jWWWw8RtrmNY39gfE6A6uTYQrpFi3pL9KIa6hIZq1+rQhrb7mKKt69sjqbXlj9mN/DVVyqLq1m1ONIdqsGHv+8LKK0KDiexhqj7Nyazs2ZPZ9PBZKhOYm01Wq3F3ef0JAdPM9pJbxwUU1JhTqGtRs5ErWZrO4AZe5KNm1xH2+VeZl3xDxRN+7IqUwujHFcFT4kWXTb16GJ+UVNtTj6v5zbB3OCmPYMg1dXwzzW+Am0K2FFfS4A9QeMM+9vcHi2LVA/foOD2LS6ohCtCJc1kmIDJqBmSNCYliTGhSBOWJ30gqxWiMzw0UGP2ZttEBqns6PzRsHImPFRAEFelgz8nR6Ubuuj/kas6npO5oVMKkH8Kb7f/Y4PQuerTksrRY6GNYmFqvVeW1X0XmfAlKWzLcJY0g3B+FunTss06CxcWMiyZBNS/3IJLIJ1u60jxINWvqCu/xGPD9a+qkeKZNCw8rsBvNv6gX2wpmu23qQxCm6T/LN1tYTDhe6oV5QQzQAQAl1UcH7CCePar/TdcvKXqfXVeUI="
   matrix:
     - MODE=cmake-oos
     - MODE=cppcheck
@@ -30,7 +34,7 @@ matrix:
     - os: linux
       env: MODE=qa-sh QA_COMPILER=clang CC=clang CXX=clang++ LD=clang++ QA_SANITIZER=memory CONFIGURE_ARGS=--enable-fuzztargets
     - os: linux
-      env: MODE=qa-sh QA_COMPILER=clang CC=clang CXX=clang++ LD=clang++ QA_SANITIZER=undefined CONFIGURE_ARGS=--enable-fuzztargets
+      env: MODE=qa-sh QA_COMPILER=clang CC=clang CXX=clang++ LD=clang++ QA_SANITIZER=undefined
     - os: linux
       env: MODE=qa-sh QA_COMPILER=gcc CC=gcc CXX=g++ LD=ld QA_PROCESSOR=gcov
     - os: linux

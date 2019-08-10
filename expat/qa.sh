@@ -64,14 +64,12 @@ populate_environment() {
             memory)
                 # http://clang.llvm.org/docs/MemorySanitizer.html
                 BASE_COMPILE_FLAGS+=" -fsanitize=memory -fno-omit-frame-pointer -g -O2 -fsanitize-memory-track-origins -fsanitize-blacklist=$PWD/memory-sanitizer-blacklist.txt"
-                QA_FUZZIT="msan"
                 ;;
             undefined)
                 # http://clang.llvm.org/docs/UndefinedBehaviorSanitizer.html
                 BASE_COMPILE_FLAGS+=" -fsanitize=undefined"
                 BASE_LINK_FLAGS+=" -fsanitize=undefined"
                 export UBSAN_OPTIONS=print_stacktrace=1
-                QA_FUZZIT="ubsan"
                 ;;
         esac
     fi
@@ -108,31 +106,21 @@ run_compile() {
 
 
 run_fuzzit() {
-    FUZZIT_API_KEY=e59b073a8ddfe3686de10624accf111b90c67da08d8d86768da623724be054f820dda54b1e140519c5608c92bcc8d327
-    if [ ${TRAVIS_EVENT_TYPE} -eq 'cron' ]; then
-        FUZZING_TYPE=fuzzing
-    else
-        FUZZING_TYPE=sanity
-    fi
     if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then
         FUZZIT_BRANCH="${TRAVIS_BRANCH}"
+        FUZZING_TYPE=fuzzing
     else
         FUZZIT_BRANCH="PR-${TRAVIS_PULL_REQUEST}"
+        FUZZING_TYPE="regression --local"
     fi
     FUZZIT_ARGS="--type ${FUZZING_TYPE} --branch ${FUZZIT_BRANCH} --revision ${TRAVIS_COMMIT}"
-    if [ -n "$UBSAN_OPTIONS" ]; then
-        FUZZIT_ARGS+=" --ubsan_options ${UBSAN_OPTIONS}"
-    fi
-    wget -O fuzzit https://github.com/fuzzitdev/fuzzit/releases/download/v1.2.5/fuzzit_1.2.5_Linux_x86_64
+    wget -O fuzzit https://github.com/fuzzitdev/fuzzit/releases/download/v2.4.19/fuzzit_Linux_x86_64
     chmod +x fuzzit
-    ./fuzzit auth ${FUZZIT_API_KEY}
     set -x
-    grep "$QA_FUZZIT" tests/fuzz/fuzzitid.txt | cut -d" " -f2-3 | while read i; do
-        # id is the second and last word after space
-        targetid=${i##* }
-        # binary is the first word before space
-        targetbin=${i%% *}
-        ./fuzzit c job ${FUZZIT_ARGS} ${targetid} ./tests/fuzz/${targetbin}
+    TARGETS="parse-iso-8859-1-fuzzer parse-us-ascii-fuzzer parse-utf-16-fuzzer parse-utf-16be-fuzzer parse-utf-16le-fuzzer parse-utf-8-fuzzer"
+    for target in $TARGETS
+    do
+       ./fuzzit create job ${FUZZIT_ARGS} libexpat/$target-$QA_FUZZIT ./tests/fuzz/$target
     done
     set +x
 }
@@ -167,7 +155,6 @@ run_tests() {
     if [[ -n "$QA_FUZZIT" && `ls tests/fuzz/*fuzzer | wc -l` -ge 1 ]]; then
         run_fuzzit
     fi
-
 }
 
 

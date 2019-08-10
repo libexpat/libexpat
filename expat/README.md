@@ -1,7 +1,7 @@
 [![Travis CI Build Status](https://travis-ci.org/libexpat/libexpat.svg?branch=master)](https://travis-ci.org/libexpat/libexpat)
 [![AppVeyor Build Status](https://ci.appveyor.com/api/projects/status/github/libexpat/libexpat?svg=true)](https://ci.appveyor.com/project/libexpat/libexpat)
+[![Fuzzit Status](https://app.fuzzit.dev/badge?org_id=libexpat&branch=master)](https://app.fuzzit.dev/admin/hmh0ESFlEs7rAVlKpvZl/dashboard)
 [![Packaging status](https://repology.org/badge/tiny-repos/expat.svg)](https://repology.org/metapackage/expat/versions)
-[![Fuzzit Status](https://app.fuzzit.dev/badge?org_id=hmh0ESFlEs7rAVlKpvZl&branch=master)](https://app.fuzzit.dev/admin/hmh0ESFlEs7rAVlKpvZl/dashboard)<br/>
 
 
 # Expat, Release 2.2.7
