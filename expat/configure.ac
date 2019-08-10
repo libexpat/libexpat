@@ -183,33 +183,53 @@ AC_LINK_IFELSE([AC_LANG_SOURCE([
       AC_MSG_RESULT([yes])],
      [AC_MSG_RESULT([no])])])
 
+AC_ARG_WITH([getrandom],
+  [AS_HELP_STRING([--with-getrandom],
+                  [enforce the use of getrandom function in the system @<:@default=check@:>@])
+AS_HELP_STRING([--without-getrandom],
+               [skip auto detect of getrandom @<:@default=check@:>@])],
+  [],
+  [with_getrandom=check])
 
-AC_MSG_CHECKING([for getrandom (Linux 3.17+, glibc 2.25+)])
-AC_LINK_IFELSE([AC_LANG_SOURCE([
-  #include <stdlib.h>  /* for NULL */
-  #include <sys/random.h>
-  int main() {
-    return getrandom(NULL, 0U, 0U);
-  }
-  ])],
-  [AC_DEFINE([HAVE_GETRANDOM], [1], [Define to 1 if you have the `getrandom' function.])
-   AC_MSG_RESULT([yes])],
-  [AC_MSG_RESULT([no])
-
-   AC_MSG_CHECKING([for syscall SYS_getrandom (Linux 3.17+)])
+AS_IF([test "x$with_getrandom" != xno],
+  [AC_MSG_CHECKING([for getrandom (Linux 3.17+, glibc 2.25+)])
    AC_LINK_IFELSE([AC_LANG_SOURCE([
-      #include <stdlib.h>  /* for NULL */
-      #include <unistd.h>  /* for syscall */
-      #include <sys/syscall.h>  /* for SYS_getrandom */
-      int main() {
-        syscall(SYS_getrandom, NULL, 0, 0);
-        return 0;
-      }
-   ])],
-   [AC_DEFINE([HAVE_SYSCALL_GETRANDOM], [1], [Define to 1 if you have `syscall' and `SYS_getrandom'.])
-    AC_MSG_RESULT([yes])],
-   [AC_MSG_RESULT([no])])])
+       #include <stdlib.h>  /* for NULL */
+       #include <sys/random.h>
+       int main() {
+         return getrandom(NULL, 0U, 0U);
+       }
+     ])],
+     [AC_DEFINE([HAVE_GETRANDOM], [1], [Define to 1 if you have the `getrandom' function.])
+      AC_MSG_RESULT([yes])],
+     [AC_MSG_RESULT([no])
+      AS_IF([test "x$with_getrandom" = xyes],
+        [AC_MSG_ERROR([enforced the use of getrandom --with-getrandom, but not detected])])])])
 
+AC_ARG_WITH([sys_getrandom],
+  [AS_HELP_STRING([--with-sys-getrandom],
+                  [enforce the use of syscall SYS_getrandom function in the system @<:@default=check@:>@])
+AS_HELP_STRING([--without-sys-getrandom],
+               [skip auto detect of syscall SYS_getrandom @<:@default=check@:>@])],
+  [],
+  [with_sys_getrandom=check])
+
+AS_IF([test "x$with_sys_getrandom" != xno],
+  [AC_MSG_CHECKING([for syscall SYS_getrandom (Linux 3.17+)])
+   AC_LINK_IFELSE([AC_LANG_SOURCE([
+       #include <stdlib.h>  /* for NULL */
+       #include <unistd.h>  /* for syscall */
+       #include <sys/syscall.h>  /* for SYS_getrandom */
+       int main() {
+         syscall(SYS_getrandom, NULL, 0, 0);
+         return 0;
+     }
+   ])],
+     [AC_DEFINE([HAVE_SYSCALL_GETRANDOM], [1], [Define to 1 if you have `syscall' and `SYS_getrandom'.])
+      AC_MSG_RESULT([yes])],
+     [AC_MSG_RESULT([no])
+      AS_IF([test "x$with_sys_getrandom" = xyes],
+        [AC_MSG_ERROR([enforced the use of syscall SYS_getrandom --with-sys-getrandom, but not detected])])])])
 
 dnl Only needed for xmlwf:
 AC_CHECK_HEADERS(fcntl.h unistd.h)
