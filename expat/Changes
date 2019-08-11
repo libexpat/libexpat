@@ -22,6 +22,7 @@ Release x.x.x xxx xxx xx xxxx
        #239 #277  CMake: Add arguments
                     -DUSE_GETRANDOM=(ON|OFF|AUTO)
                     -DUSE_SYS_GETRANDOM=(ON|OFF|AUTO)
+                  CMake: Now produces a summary of applied configuration
             #265  CMake: Fix linking with MinGW
                   CMake: Migrate files from Windows to Unix line endings
        #299 #302  Windows: Replace LoadLibrary hack to access
