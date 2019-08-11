@@ -130,7 +130,8 @@ run-benchmark:
 	$(MAKE) -C tests/benchmark
 	./run.sh tests/benchmark/benchmark@EXEEXT@ -n $(top_srcdir)/../testdata/largefiles/recset.xml 65535 3
 
-tests/xmlts.zip:
+.PHONY: download-xmlts-zip
+download-xmlts-zip:
 	if test "$(XMLTS_ZIP)" = ""; then \
 		wget --output-document=tests/xmlts.zip \
 			https://www.w3.org/XML/Test/xmlts20080827.zip; \
@@ -138,12 +139,21 @@ tests/xmlts.zip:
 		cp $(XMLTS_ZIP) tests/xmlts.zip; \
 	fi
 
-tests/xmlconf: tests/xmlts.zip
+tests/xmlts.zip:
+	$(MAKE) download-xmlts-zip
+
+.PHONY: extract-xmlts-zip
+extract-xmlts-zip: tests/xmlts.zip
+	[ -f $(builddir)/tests/xmlts.zip ] || $(MAKE) download-xmlts-zip  # vpath workaround
 	cd tests && unzip -q xmlts.zip
+
+tests/xmlconf: tests/xmlts.zip
+	$(MAKE) extract-xmlts-zip
 
 .PHONY: run-xmltest
 run-xmltest: tests/xmlconf
 if WITH_XMLWF
+	[ -d $(builddir)/tests/xmlconf ] || $(MAKE) extract-xmlts-zip  # vpath workaround
 	$(MAKE) -C lib
 	$(MAKE) -C xmlwf
 	$(srcdir)/tests/xmltest.sh "$(abs_builddir)/run.sh $(abs_builddir)/xmlwf/xmlwf@EXEEXT@" 2>&1 | tee $(builddir)/tests/xmltest.log
