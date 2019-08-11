@@ -260,12 +260,19 @@ endif(BUILD_examples)
 
 if(BUILD_tests)
     ## these are unittests that can be run on any platform
-    add_executable(runtests tests/runtests.c tests/chardata.c tests/structdata.c tests/minicheck.c tests/memcheck.c)
+    set(test_SRCS
+        tests/chardata.c
+        tests/memcheck.c
+        tests/minicheck.c
+        tests/structdata.c
+    )
+
+    add_executable(runtests tests/runtests.c ${test_SRCS})
     set_property(TARGET runtests PROPERTY RUNTIME_OUTPUT_DIRECTORY tests)
     target_link_libraries(runtests expat)
     add_test(runtests tests/runtests)
 
-    add_executable(runtestspp tests/runtestspp.cpp tests/chardata.c tests/structdata.c tests/minicheck.c tests/memcheck.c)
+    add_executable(runtestspp tests/runtestspp.cpp ${test_SRCS})
     set_property(TARGET runtestspp PROPERTY RUNTIME_OUTPUT_DIRECTORY tests)
     target_link_libraries(runtestspp expat)
     add_test(runtestspp tests/runtestspp)
