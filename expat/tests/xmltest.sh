@@ -30,7 +30,6 @@ MYDIR="`dirname \"$0\"`"
 cd "$MYDIR"
 MYDIR="`pwd`"
 XMLWF="${1:-`dirname \"$MYDIR\"`/xmlwf/xmlwf}"
-# XMLWF=/usr/local/bin/xmlwf
 # Unicode-aware diff utility
 DIFF="${MYDIR}/udiffer.py"
 
