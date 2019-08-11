@@ -119,16 +119,21 @@ AC_C_CONST
 AC_TYPE_SIZE_T
 
 AC_ARG_WITH([xmlwf],
-  [AS_HELP_STRING([--without-xmlwf], [do not build xmlwf])], [],
+  [AS_HELP_STRING([--without-xmlwf], [do not build xmlwf])],
+  [],
   [with_xmlwf=yes])
 AM_CONDITIONAL([WITH_XMLWF], [test x${with_xmlwf} = xyes])
 
-AC_ARG_WITH([examples], [
-AS_HELP_STRING([--without-examples], [do not build examples @<:@default=included@:>@])], [], [with_examples=yes])
+AC_ARG_WITH([examples],
+  [AS_HELP_STRING([--without-examples], [do not build examples @<:@default=included@:>@])],
+  [],
+  [with_examples=yes])
 AM_CONDITIONAL([WITH_EXAMPLES], [test x${with_examples} = xyes])
 
-AC_ARG_WITH([tests], [
-AS_HELP_STRING([--without-tests], [do not build tests @<:@default=included@:>@])], [], [with_tests=yes])
+AC_ARG_WITH([tests],
+  [AS_HELP_STRING([--without-tests], [do not build tests @<:@default=included@:>@])],
+  [],
+  [with_tests=yes])
 AM_CONDITIONAL([WITH_TESTS], [test x${with_tests} = xyes])
 
 
@@ -151,33 +156,33 @@ AS_IF([test "x${with_libbsd}" != xno],
      [arc4random_buf],
      [],
      [AS_IF([test "x${with_libbsd}" = xyes],
-            [AC_MSG_ERROR([Enforced use of libbsd cannot be satisfied.])])])])
+        [AC_MSG_ERROR([Enforced use of libbsd cannot be satisfied.])])])])
 AC_MSG_CHECKING([for arc4random_buf (BSD or libbsd)])
 AC_LINK_IFELSE([AC_LANG_SOURCE([
-  #include <stdlib.h>  /* for arc4random_buf on BSD, for NULL */
-  #if defined(HAVE_LIBBSD)
-  # include <bsd/stdlib.h>
-  #endif
-  int main() {
-    arc4random_buf(NULL, 0U);
-    return 0;
-  }
-])],
+    #include <stdlib.h>  /* for arc4random_buf on BSD, for NULL */
+    #if defined(HAVE_LIBBSD)
+    # include <bsd/stdlib.h>
+    #endif
+    int main() {
+      arc4random_buf(NULL, 0U);
+      return 0;
+    }
+  ])],
   [AC_DEFINE([HAVE_ARC4RANDOM_BUF], [1], [Define to 1 if you have the `arc4random_buf' function.])
    AC_MSG_RESULT([yes])],
   [AC_MSG_RESULT([no])
 
    AC_MSG_CHECKING([for arc4random (BSD, macOS or libbsd)])
    AC_LINK_IFELSE([AC_LANG_SOURCE([
-      #if defined(HAVE_LIBBSD)
-      # include <bsd/stdlib.h>
-      #else
-      # include <stdlib.h>
-      #endif
-      int main() {
+       #if defined(HAVE_LIBBSD)
+       # include <bsd/stdlib.h>
+       #else
+       # include <stdlib.h>
+       #endif
+       int main() {
           arc4random();
           return 0;
-      }
+       }
      ])],
      [AC_DEFINE([HAVE_ARC4RANDOM], [1], [Define to 1 if you have the `arc4random' function.])
       AC_MSG_RESULT([yes])],
@@ -252,9 +257,9 @@ AC_DEFINE([XML_DEV_URANDOM], 1,
 
 AC_ARG_ENABLE([xml-attr-info],
   [AS_HELP_STRING([--enable-xml-attr-info],
-                 [Enable retrieving the byte offsets for attribute names and values
-                  @<:@default=no@:>@])], ,
-                 [enable_xml_attr_info=no])
+     [Enable retrieving the byte offsets for attribute names and values @<:@default=no@:>@])],
+  [],
+  [enable_xml_attr_info=no])
 AS_IF([test "x${enable_xml_attr_info}" = "xyes"],
       [AC_DEFINE([XML_ATTR_INFO], 1,
          [Define to allow retrieving the byte offsets for attribute names and values.])])
@@ -277,8 +282,9 @@ AC_ARG_WITH([docbook],
   [AS_HELP_STRING([--with-docbook],
                   [enforce XML to man page compilation @<:@default=check@:>@])
 AS_HELP_STRING([--without-docbook],
-               [skip XML to man page compilation @<:@default=check@:>@])], [],
-               [with_docbook=check])
+               [skip XML to man page compilation @<:@default=check@:>@])],
+  [],
+  [with_docbook=check])
 
 AC_ARG_VAR([DOCBOOK_TO_MAN], [docbook2x-man command])
 AS_IF([test "x$with_docbook" != xno],
