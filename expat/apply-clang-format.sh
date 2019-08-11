@@ -42,10 +42,8 @@ find \
     | sort \
     | xargs clang-format -i -style=file -verbose
 
-dos2unix expat_config.h.cmake
 sed \
         -e 's, @$,@,' \
         -e 's,#\( \+\)cmakedefine,\1#cmakedefine,' \
         -i \
         expat_config.h.cmake
-unix2dos expat_config.h.cmake
