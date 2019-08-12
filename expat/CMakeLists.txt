@@ -3,11 +3,14 @@
 
 cmake_minimum_required(VERSION 3.0.2)
 
-project(expat)
+project(expat
+    VERSION
+        2.2.7
+)
 
 set(PACKAGE_BUGREPORT "expat-bugs@libexpat.org")
 set(PACKAGE_NAME "expat")
-set(PACKAGE_VERSION "2.2.7")
+set(PACKAGE_VERSION "${PROJECT_VERSION}")
 set(PACKAGE_STRING "${PACKAGE_NAME} ${PACKAGE_VERSION}")
 set(PACKAGE_TARNAME "${PACKAGE_NAME}")
 
