@@ -6,6 +6,8 @@ cmake_minimum_required(VERSION 3.0.2)
 project(expat
     VERSION
         2.2.7
+    LANGUAGES
+        C
 )
 
 set(PACKAGE_BUGREPORT "expat-bugs@libexpat.org")
@@ -284,6 +286,7 @@ endif(BUILD_examples)
 #
 if(BUILD_tests)
     ## these are unittests that can be run on any platform
+    enable_language(CXX)
     enable_testing()
 
     set(test_SRCS
