@@ -33,6 +33,7 @@ option(BUILD_examples "build the examples for expat library" ON)
 option(BUILD_tests "build the tests for expat library" ON)
 option(BUILD_shared "build a shared expat library" ON)
 option(BUILD_doc "build man page for xmlwf" ${BUILD_doc_default})
+option(BUILD_fuzz "build fuzzers for the expat library" OFF)
 option(USE_libbsd "utilize libbsd (for arc4random_buf)" OFF)
 option(INSTALL "install expat files in cmake install target" ON)
 
@@ -270,3 +271,32 @@ if(BUILD_tests)
     target_link_libraries(runtestspp expat)
     add_test(runtestspp tests/runtestspp)
 endif(BUILD_tests)
+
+if(BUILD_fuzz)
+    if(NOT "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+        message(FATAL_ERROR
+            "Building fuzz targets without clang is not supported. Please set "
+            "-DCMAKE_C_COMPILER=clang.")
+    endif()
+
+    string(FIND "${CMAKE_EXE_LINKER_FLAGS}" "-fsanitize" sanitizer_present)
+    if(${sanitizer_present} EQUAL "-1")
+        message(WARNING
+            "There was no sanitizer present when building the fuzz targets. "
+            "This is likely in error - consider adding "
+            "-DCMAKE_C_FLAGS='-fsanitize=<sanitizer>' and "
+            "-DCMAKE_EXE_LINKER_FLAGS='-fsanitize=<sanitizer>' to your cmake "
+            "execution.")
+    endif()
+
+    add_library(expat.fuzzable STATIC ${expat_SRCS})
+    target_compile_options(expat.fuzzable PUBLIC -fsanitize=fuzzer-no-link -g)
+    set(fuzz_targets xml_parse_fuzzer xml_parsebuffer_fuzzer)
+    foreach(fuzz_target ${fuzz_targets})
+        add_executable(${fuzz_target} fuzz/${fuzz_target}.cpp)
+        target_compile_options(${fuzz_target} PUBLIC -g)
+        set_property(TARGET ${fuzz_target} PROPERTY LINK_FLAGS -fsanitize=fuzzer)
+        set_property(TARGET ${fuzz_target} PROPERTY RUNTIME_OUTPUT_DIRECTORY fuzz)
+        target_link_libraries(${fuzz_target} expat.fuzzable)
+    endforeach()
+endif(BUILD_fuzz)
