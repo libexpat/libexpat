@@ -1,9 +1,10 @@
 # This file is copyrighted under the BSD-license for buildsystem files of KDE
 # copyright 2010, Patrick Spendrin <ps_ml@gmx.de>
 
+cmake_minimum_required(VERSION 2.8.10)
+
 project(expat)
 
-cmake_minimum_required(VERSION 2.8.10)
 set(PACKAGE_BUGREPORT "expat-bugs@libexpat.org")
 set(PACKAGE_NAME "expat")
 set(PACKAGE_VERSION "2.2.7")
