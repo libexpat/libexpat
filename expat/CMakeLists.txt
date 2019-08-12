@@ -114,11 +114,6 @@ if(BUILD_tools AND (XML_UNICODE AND NOT XML_UNICODE_WCHAR_T))
     message(SEND_ERROR "The xmlwf tool can not be built with option XML_UNICODE_WCHAR_T=OFF and XML_UNICODE=ON. Either set XML_UNICODE_WCHAR_T=ON or BUILD_tools=OFF.")
 endif()
 
-if(BUILD_tests)
-    enable_testing()
-endif(BUILD_tests)
-
-
 include(${CMAKE_CURRENT_LIST_DIR}/ConfigureChecks.cmake)
 
 macro(evaluate_detection_results use_ref have_ref thing_lower thing_title)
@@ -285,6 +280,8 @@ endif(BUILD_examples)
 #
 if(BUILD_tests)
     ## these are unittests that can be run on any platform
+    enable_testing()
+
     set(test_SRCS
         tests/chardata.c
         tests/memcheck.c
