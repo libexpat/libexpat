@@ -14,22 +14,27 @@
  * limitations under the License.
  */
 
-#include <stdint.h>
-#include <assert.h>
-#include <initializer_list>
 #include "expat.h"
+#include <assert.h>
+#include <memory.h>
+#include <stdint.h>
 
-static void XMLCALL start(void *, const char *, const char **) {}
-static void XMLCALL end(void *, const char *) {}
+static void XMLCALL start(void *userData, const char *name, const char **atts) {
+}
+static void XMLCALL end(void *userData, const char *name) {}
 
-extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
-  for (auto enc : {"UTF-16", "UTF-8", "ISO_8859_1", "US_ASCII", "UTF_16BE",
-                   "UTF_16LE", (const char *)nullptr}) {
-    XML_Parser p = XML_ParserCreate(enc);
+int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
+  char *encoders[7] = {"UTF-16",   "UTF-8",    "ISO_8859_1", "US_ASCII",
+                       "UTF_16BE", "UTF_16LE", NULL};
+
+  for (int i = 0; i < sizeof(encoders) / sizeof(char *); ++i) {
+    XML_Parser p = XML_ParserCreate(encoders[i]);
     assert(p);
     XML_SetElementHandler(p, start, end);
-    XML_Parse(p, reinterpret_cast<const char*>(data), size, false);
-    XML_Parse(p, reinterpret_cast<const char*>(data), size, true);
+
+    void *buf = XML_GetBuffer(p, size);
+    memcpy(buf, data, size);
+    XML_ParseBuffer(p, size, size == 0);
     XML_ParserFree(p);
   }
   return 0;
