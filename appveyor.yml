@@ -60,14 +60,20 @@ environment:
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
 
 before_build:
-  - echo Running cmake...
-  - cd c:\projects\libexpat
-  - cmake -G"%GENERATOR%" -DCMAKE_BUILD_TYPE=%CONFIGURATION% -DEXPAT_WARNINGS_AS_ERRORS=ON %CMAKE_ARGS% expat
+  - cd c:\projects\libexpat\expat
+  - set PATH=%PATH%;C:\Program Files (x86)\Inno Setup 6
 
-build:
-  parallel: true                  # enable MSBuild parallel builds
-  project: expat.sln              # path to Visual Studio solution or project
+build_script:
+  - echo "PATH=%PATH%"
+  - dir win32
+  - cmd /c win32\build_expat_iss.bat
+  - copy /b win32\expat-win32bin-*.*.*.exe win32\expat-installer.exe
+  - win32\expat-installer.exe /VERYSILENT /SUPPRESSMSGBOXES /NORESTART
+  - cd C:\Program Files (x86)\Expat *\
+  - md Build
+  - cd Build
+  - cmake %CMAKE_ARGS% -G"%GENERATOR%" -DCMAKE_BUILD_TYPE=%CONFIGURATION% -DEXPAT_WARNINGS_AS_ERRORS=ON ..\Source\
+  - msbuild "expat.sln" /m /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll"
 
-test_script:
-  - cp %CONFIGURATION%\\%EXPAT_DLL% tests\\%CONFIGURATION%\\
-  - ctest --build-config %CONFIGURATION% --output-on-failure --parallel 2
+artifacts:
+  - path: 'expat\win32\expat-win32bin-*.exe'
