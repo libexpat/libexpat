@@ -81,6 +81,7 @@ _EXTRA_DIST_WINDOWS = \
     tests/runtests.vcxproj \
     tests/runtests.vcxproj.filters \
     \
+    win32/build_expat_iss.bat \
     win32/expat.iss \
     win32/MANIFEST.txt \
     win32/README.txt \
