@@ -197,12 +197,14 @@ srunner_run_all(SRunner *runner, int verbosity) {
 }
 
 void
-_fail_unless(int UNUSED_P(condition), const char *UNUSED_P(file),
-             int UNUSED_P(line), const char *msg) {
+_fail_unless(int condition, const char *file, int line, const char *msg) {
   /* Always print the error message so it isn't lost.  In this case,
      we have a failure, so there's no reason to be quiet about what
      it is.
   */
+  UNUSED_P(condition);
+  UNUSED_P(file);
+  UNUSED_P(line);
   if (msg != NULL) {
     const int has_newline = (msg[strlen(msg) - 1] == '\n');
     fprintf(stderr, "ERROR: %s%s", msg, has_newline ? "" : "\n");
