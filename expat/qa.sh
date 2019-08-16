@@ -55,7 +55,7 @@ populate_environment() {
         case "${QA_SANITIZER}" in
             address)
                 # http://clang.llvm.org/docs/AddressSanitizer.html
-                BASE_COMPILE_FLAGS+=" -g -fsanitize=address -fno-omit-frame-pointer"
+                BASE_COMPILE_FLAGS+=" -g -fsanitize=address -fno-omit-frame-pointer -fno-common"
                 BASE_LINK_FLAGS+=" -g -Wc,-fsanitize=address"  # "-Wc," is for libtool
                 ;;
             memory)
