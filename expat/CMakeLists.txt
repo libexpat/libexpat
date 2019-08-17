@@ -377,6 +377,7 @@ message(STATUS "================================================================
 message(STATUS "")
 message(STATUS "Configuration")
 message(STATUS "  Prefix ..................... ${CMAKE_INSTALL_PREFIX}")
+message(STATUS "  Build type ................. ${CMAKE_BUILD_TYPE}")
 message(STATUS "  Shared libraries ........... ${BUILD_shared}")
 if(WIN32)
     message(STATUS "  Static CRT ................. ${MSVC_USE_STATIC_CRT}")
