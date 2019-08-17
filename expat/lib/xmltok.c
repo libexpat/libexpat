@@ -655,7 +655,7 @@ unicode_byte_type(char hi, char lo) {
           return XML_CONVERT_INPUT_INCOMPLETE;                                 \
         }                                                                      \
         plane = (((hi & 0x3) << 2) | ((lo >> 6) & 0x3)) + 1;                   \
-        *(*toP)++ = ((plane >> 2) | UTF8_cval4);                               \
+        *(*toP)++ = (char)((plane >> 2) | UTF8_cval4);                         \
         *(*toP)++ = (((lo >> 2) & 0xF) | ((plane & 0x3) << 4) | 0x80);         \
         from += 2;                                                             \
         lo2 = GET_LO(from);                                                    \
