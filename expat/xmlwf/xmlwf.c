@@ -298,10 +298,12 @@ xcsdup(const XML_Char *s) {
 
 static void XMLCALL
 startDoctypeDecl(void *userData, const XML_Char *doctypeName,
-                 const XML_Char *UNUSED_P(sysid),
-                 const XML_Char *UNUSED_P(publid),
-                 int UNUSED_P(has_internal_subset)) {
+                 const XML_Char *sysid, const XML_Char *publid,
+                 int has_internal_subset) {
   XmlwfUserData *data = (XmlwfUserData *)userData;
+  UNUSED_P(sysid);
+  UNUSED_P(publid);
+  UNUSED_P(has_internal_subset);
   data->currentDoctypeName = xcsdup(doctypeName);
 }
 
@@ -413,13 +415,13 @@ endDoctypeDecl(void *userData) {
 }
 
 static void XMLCALL
-notationDecl(void *userData, const XML_Char *notationName,
-             const XML_Char *UNUSED_P(base), const XML_Char *systemId,
-             const XML_Char *publicId) {
+notationDecl(void *userData, const XML_Char *notationName, const XML_Char *base,
+             const XML_Char *systemId, const XML_Char *publicId) {
   XmlwfUserData *data = (XmlwfUserData *)userData;
   NotationList *entry = malloc(sizeof(NotationList));
   const char *errorMessage = "Unable to store NOTATION for output\n";
 
+  UNUSED_P(base);
   if (entry == NULL) {
     fputs(errorMessage, stderr);
     return; /* Nothing we can really do about this */
@@ -461,46 +463,60 @@ notationDecl(void *userData, const XML_Char *notationName,
 #endif /* not W3C14N */
 
 static void XMLCALL
-defaultCharacterData(void *userData, const XML_Char *UNUSED_P(s),
-                     int UNUSED_P(len)) {
+defaultCharacterData(void *userData, const XML_Char *s, int len) {
+  UNUSED_P(s);
+  UNUSED_P(len);
   XML_DefaultCurrent((XML_Parser)userData);
 }
 
 static void XMLCALL
-defaultStartElement(void *userData, const XML_Char *UNUSED_P(name),
-                    const XML_Char **UNUSED_P(atts)) {
+defaultStartElement(void *userData, const XML_Char *name,
+                    const XML_Char **atts) {
+  UNUSED_P(name);
+  UNUSED_P(atts);
   XML_DefaultCurrent((XML_Parser)userData);
 }
 
 static void XMLCALL
-defaultEndElement(void *userData, const XML_Char *UNUSED_P(name)) {
+defaultEndElement(void *userData, const XML_Char *name) {
+  UNUSED_P(name);
   XML_DefaultCurrent((XML_Parser)userData);
 }
 
 static void XMLCALL
-defaultProcessingInstruction(void *userData, const XML_Char *UNUSED_P(target),
-                             const XML_Char *UNUSED_P(data)) {
+defaultProcessingInstruction(void *userData, const XML_Char *target,
+                             const XML_Char *data) {
+  UNUSED_P(target);
+  UNUSED_P(data);
   XML_DefaultCurrent((XML_Parser)userData);
 }
 
 static void XMLCALL
-nopCharacterData(void *UNUSED_P(userData), const XML_Char *UNUSED_P(s),
-                 int UNUSED_P(len)) {
+nopCharacterData(void *userData, const XML_Char *s, int len) {
+  UNUSED_P(userData);
+  UNUSED_P(s);
+  UNUSED_P(len);
 }
 
 static void XMLCALL
-nopStartElement(void *UNUSED_P(userData), const XML_Char *UNUSED_P(name),
-                const XML_Char **UNUSED_P(atts)) {
+nopStartElement(void *userData, const XML_Char *name, const XML_Char **atts) {
+  UNUSED_P(userData);
+  UNUSED_P(name);
+  UNUSED_P(atts);
 }
 
 static void XMLCALL
-nopEndElement(void *UNUSED_P(userData), const XML_Char *UNUSED_P(name)) {
+nopEndElement(void *userData, const XML_Char *name) {
+  UNUSED_P(userData);
+  UNUSED_P(name);
 }
 
 static void XMLCALL
-nopProcessingInstruction(void *UNUSED_P(userData),
-                         const XML_Char *UNUSED_P(target),
-                         const XML_Char *UNUSED_P(data)) {
+nopProcessingInstruction(void *userData, const XML_Char *target,
+                         const XML_Char *data) {
+  UNUSED_P(userData);
+  UNUSED_P(target);
+  UNUSED_P(data);
 }
 
 static void XMLCALL
@@ -639,12 +655,14 @@ metaCharacterData(void *userData, const XML_Char *s, int len) {
 
 static void XMLCALL
 metaStartDoctypeDecl(void *userData, const XML_Char *doctypeName,
-                     const XML_Char *UNUSED_P(sysid),
-                     const XML_Char *UNUSED_P(pubid),
-                     int UNUSED_P(has_internal_subset)) {
+                     const XML_Char *sysid, const XML_Char *pubid,
+                     int has_internal_subset) {
   XML_Parser parser = (XML_Parser)userData;
   XmlwfUserData *data = (XmlwfUserData *)XML_GetUserData(parser);
   FILE *fp = data->fp;
+  UNUSED_P(sysid);
+  UNUSED_P(pubid);
+  UNUSED_P(has_internal_subset);
   ftprintf(fp, T("<startdoctype name=\"%s\""), doctypeName);
   metaLocation(parser);
   fputts(T("/>\n"), fp);
@@ -662,11 +680,12 @@ metaEndDoctypeDecl(void *userData) {
 
 static void XMLCALL
 metaNotationDecl(void *userData, const XML_Char *notationName,
-                 const XML_Char *UNUSED_P(base), const XML_Char *systemId,
+                 const XML_Char *base, const XML_Char *systemId,
                  const XML_Char *publicId) {
   XML_Parser parser = (XML_Parser)userData;
   XmlwfUserData *data = (XmlwfUserData *)XML_GetUserData(parser);
   FILE *fp = data->fp;
+  UNUSED_P(base);
   ftprintf(fp, T("<notation name=\"%s\""), notationName);
   if (publicId)
     ftprintf(fp, T(" public=\"%s\""), publicId);
@@ -680,14 +699,16 @@ metaNotationDecl(void *userData, const XML_Char *notationName,
 }
 
 static void XMLCALL
-metaEntityDecl(void *userData, const XML_Char *entityName,
-               int UNUSED_P(is_param), const XML_Char *value, int value_length,
-               const XML_Char *UNUSED_P(base), const XML_Char *systemId,
-               const XML_Char *publicId, const XML_Char *notationName) {
+metaEntityDecl(void *userData, const XML_Char *entityName, int is_param,
+               const XML_Char *value, int value_length, const XML_Char *base,
+               const XML_Char *systemId, const XML_Char *publicId,
+               const XML_Char *notationName) {
   XML_Parser parser = (XML_Parser)userData;
   XmlwfUserData *data = (XmlwfUserData *)XML_GetUserData(parser);
   FILE *fp = data->fp;
 
+  UNUSED_P(is_param);
+  UNUSED_P(base);
   if (value) {
     ftprintf(fp, T("<entity name=\"%s\""), entityName);
     metaLocation(parser);
@@ -750,13 +771,13 @@ unknownEncodingConvert(void *data, const char *p) {
 }
 
 static int XMLCALL
-unknownEncoding(void *UNUSED_P(userData), const XML_Char *name,
-                XML_Encoding *info) {
+unknownEncoding(void *userData, const XML_Char *name, XML_Encoding *info) {
   int cp;
   static const XML_Char prefixL[] = T("windows-");
   static const XML_Char prefixU[] = T("WINDOWS-");
   int i;
 
+  UNUSED_P(userData);
   for (i = 0; prefixU[i]; i++)
     if (name[i] != prefixU[i] && name[i] != prefixL[i])
       return 0;
@@ -786,7 +807,8 @@ unknownEncoding(void *UNUSED_P(userData), const XML_Char *name,
 }
 
 static int XMLCALL
-notStandalone(void *UNUSED_P(userData)) {
+notStandalone(void *userData) {
+  UNUSED_P(userData);
   return 0;
 }
 
