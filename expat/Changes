@@ -30,7 +30,8 @@ Release x.x.x xxx xxx xx xxxx
                     unofficial API function SystemFunction036 (RtlGenRandom)
                     by using official API function rand_s (needs WinXP+)
              #14  Drop an OpenVMS support leftover
-  #235 #268 #270  Address compiler warnings
+    #235 #268 ..
+       #270 #310  Address compiler warnings
     #282 #283 ..
        #284 #285  Address cppcheck warnings
        #294 #295  Address Clang Static Analyzer warnings
