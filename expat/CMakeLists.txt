@@ -1,7 +1,7 @@
 # This file is copyrighted under the BSD-license for buildsystem files of KDE
 # copyright 2010, Patrick Spendrin <ps_ml@gmx.de>
 
-cmake_minimum_required(VERSION 3.0.2)
+cmake_minimum_required(VERSION 3.1.3)
 
 project(expat
     VERSION
@@ -182,7 +182,28 @@ if(MSVC)
     add_definitions(-D_CRT_SECURE_NO_WARNINGS -wd4996)
 endif(MSVC)
 if(WIN32)
-    set(CMAKE_DEBUG_POSTFIX "d" CACHE STRING "Add a suffix, usually d on Windows")
+    if(XML_UNICODE_WCHAR_T)
+        set(_POSTFIX_WIDE "w")
+    endif()
+
+    if(MSVC_USE_STATIC_CRT)
+        set(_POSTFIX_CRT "MT")
+    endif()
+
+    foreach(postfix_var
+            CMAKE_DEBUG_POSTFIX
+            CMAKE_RELEASE_POSTFIX
+            CMAKE_MINSIZEREL_POSTFIX
+            CMAKE_RELWITHDEBINFO_POSTFIX
+            )
+        if(postfix_var STREQUAL "CMAKE_DEBUG_POSTFIX")
+            set(_POSTFIX_DEBUG "d")
+        else()
+            set(_POSTFIX_DEBUG "")
+        endif()
+
+        set(${postfix_var} "${_POSTFIX_WIDE}${_POSTFIX_DEBUG}${_POSTFIX_CRT}" CACHE STRING "Windows binary postfix, e.g. expat<postfix=[w][d][MT]>.dll")
+    endforeach()
 endif(WIN32)
 
 #
@@ -319,6 +340,7 @@ if(XML_UNICODE)
 else()
     set(_EXPAT_CHAR_TYPE "char")
 endif()
+string(TOUPPER "${CMAKE_BUILD_TYPE}" _EXPAT_BUILD_TYPE_UPPER)
 
 message(STATUS "===========================================================================")
 message(STATUS "")
@@ -329,6 +351,9 @@ if(WIN32)
     message(STATUS "  Static CRT ................. ${MSVC_USE_STATIC_CRT}")
 endif()
 message(STATUS "  Character type ............. ${_EXPAT_CHAR_TYPE}")
+if(WIN32)
+    message(STATUS "  Binary postfix ............. ${CMAKE_${_EXPAT_BUILD_TYPE_UPPER}_POSTFIX}")
+endif()
 message(STATUS "")
 message(STATUS "  Build documentation ........ ${BUILD_doc}")
 message(STATUS "  Build examples ............. ${BUILD_examples}")
