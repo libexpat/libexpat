@@ -186,10 +186,6 @@ if(WIN32)
         set(_POSTFIX_WIDE "w")
     endif()
 
-    if(MSVC_USE_STATIC_CRT)
-        set(_POSTFIX_CRT "MT")
-    endif()
-
     foreach(postfix_var
             CMAKE_DEBUG_POSTFIX
             CMAKE_RELEASE_POSTFIX
@@ -202,7 +198,7 @@ if(WIN32)
             set(_POSTFIX_DEBUG "")
         endif()
 
-        set(${postfix_var} "${_POSTFIX_WIDE}${_POSTFIX_DEBUG}${_POSTFIX_CRT}" CACHE STRING "Windows binary postfix, e.g. expat<postfix=[w][d][MT]>.dll")
+        set(${postfix_var} "${_POSTFIX_WIDE}${_POSTFIX_DEBUG}" CACHE STRING "Windows binary postfix, e.g. expat<postfix=[w][d]>.dll")
     endforeach()
 endif(WIN32)
 

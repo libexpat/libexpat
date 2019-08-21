@@ -27,7 +27,7 @@ Release x.x.x xxx xxx xx xxxx
             #265  CMake: Fix linking with MinGW
             #316  CMake: Windows: Make binary postfix match MSVC
                     Old: expat[d].lib
-                    New: expat[w][d][MT].lib
+                    New: expat[w][d].lib
                   CMake: Migrate files from Windows to Unix line endings
        #299 #302  Windows: Replace LoadLibrary hack to access
                     unofficial API function SystemFunction036 (RtlGenRandom)
