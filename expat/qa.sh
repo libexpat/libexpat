@@ -55,7 +55,7 @@ populate_environment() {
         case "${QA_SANITIZER}" in
             address)
                 # http://clang.llvm.org/docs/AddressSanitizer.html
-                BASE_COMPILE_FLAGS+=" -g -fsanitize=address -fno-omit-frame-pointer"
+                BASE_COMPILE_FLAGS+=" -g -fsanitize=address -fno-omit-frame-pointer -fno-common"
                 BASE_LINK_FLAGS+=" -g -Wc,-fsanitize=address"  # "-Wc," is for libtool
                 ;;
             memory)
@@ -66,7 +66,7 @@ populate_environment() {
                 # http://clang.llvm.org/docs/UndefinedBehaviorSanitizer.html
                 BASE_COMPILE_FLAGS+=" -fsanitize=undefined"
                 BASE_LINK_FLAGS+=" -fsanitize=undefined"
-                export UBSAN_OPTIONS=print_stacktrace=1
+                export UBSAN_OPTIONS="print_stacktrace=1:halt_on_error=1:abort_on_error=1"
                 ;;
         esac
     fi

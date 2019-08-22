@@ -131,46 +131,55 @@
                  || ((*p) == 0xF4 ? (p)[1] > 0x8F : ((p)[1] & 0xC0) == 0xC0)))
 
 static int PTRFASTCALL
-isNever(const ENCODING *UNUSED_P(enc), const char *UNUSED_P(p)) {
+isNever(const ENCODING *enc, const char *p) {
+  UNUSED_P(enc);
+  UNUSED_P(p);
   return 0;
 }
 
 static int PTRFASTCALL
-utf8_isName2(const ENCODING *UNUSED_P(enc), const char *p) {
+utf8_isName2(const ENCODING *enc, const char *p) {
+  UNUSED_P(enc);
   return UTF8_GET_NAMING2(namePages, (const unsigned char *)p);
 }
 
 static int PTRFASTCALL
-utf8_isName3(const ENCODING *UNUSED_P(enc), const char *p) {
+utf8_isName3(const ENCODING *enc, const char *p) {
+  UNUSED_P(enc);
   return UTF8_GET_NAMING3(namePages, (const unsigned char *)p);
 }
 
 #define utf8_isName4 isNever
 
 static int PTRFASTCALL
-utf8_isNmstrt2(const ENCODING *UNUSED_P(enc), const char *p) {
+utf8_isNmstrt2(const ENCODING *enc, const char *p) {
+  UNUSED_P(enc);
   return UTF8_GET_NAMING2(nmstrtPages, (const unsigned char *)p);
 }
 
 static int PTRFASTCALL
-utf8_isNmstrt3(const ENCODING *UNUSED_P(enc), const char *p) {
+utf8_isNmstrt3(const ENCODING *enc, const char *p) {
+  UNUSED_P(enc);
   return UTF8_GET_NAMING3(nmstrtPages, (const unsigned char *)p);
 }
 
 #define utf8_isNmstrt4 isNever
 
 static int PTRFASTCALL
-utf8_isInvalid2(const ENCODING *UNUSED_P(enc), const char *p) {
+utf8_isInvalid2(const ENCODING *enc, const char *p) {
+  UNUSED_P(enc);
   return UTF8_INVALID2((const unsigned char *)p);
 }
 
 static int PTRFASTCALL
-utf8_isInvalid3(const ENCODING *UNUSED_P(enc), const char *p) {
+utf8_isInvalid3(const ENCODING *enc, const char *p) {
+  UNUSED_P(enc);
   return UTF8_INVALID3((const unsigned char *)p);
 }
 
 static int PTRFASTCALL
-utf8_isInvalid4(const ENCODING *UNUSED_P(enc), const char *p) {
+utf8_isInvalid4(const ENCODING *enc, const char *p) {
+  UNUSED_P(enc);
   return UTF8_INVALID4((const unsigned char *)p);
 }
 
@@ -346,14 +355,15 @@ _INTERNAL_trim_to_complete_utf8_characters(const char *from,
 }
 
 static enum XML_Convert_Result PTRCALL
-utf8_toUtf8(const ENCODING *UNUSED_P(enc), const char **fromP,
-            const char *fromLim, char **toP, const char *toLim) {
+utf8_toUtf8(const ENCODING *enc, const char **fromP, const char *fromLim,
+            char **toP, const char *toLim) {
   bool input_incomplete = false;
   bool output_exhausted = false;
 
   /* Avoid copying partial characters (due to limited space). */
   const ptrdiff_t bytesAvailable = fromLim - *fromP;
   const ptrdiff_t bytesStorable = toLim - *toP;
+  UNUSED_P(enc);
   if (bytesAvailable > bytesStorable) {
     fromLim = *fromP + bytesStorable;
     output_exhausted = true;
@@ -482,8 +492,9 @@ static const struct normal_encoding internal_utf8_encoding
        STANDARD_VTABLE(sb_) NORMAL_VTABLE(utf8_)};
 
 static enum XML_Convert_Result PTRCALL
-latin1_toUtf8(const ENCODING *UNUSED_P(enc), const char **fromP,
-              const char *fromLim, char **toP, const char *toLim) {
+latin1_toUtf8(const ENCODING *enc, const char **fromP, const char *fromLim,
+              char **toP, const char *toLim) {
+  UNUSED_P(enc);
   for (;;) {
     unsigned char c;
     if (*fromP == fromLim)
@@ -504,9 +515,9 @@ latin1_toUtf8(const ENCODING *UNUSED_P(enc), const char **fromP,
 }
 
 static enum XML_Convert_Result PTRCALL
-latin1_toUtf16(const ENCODING *UNUSED_P(enc), const char **fromP,
-               const char *fromLim, unsigned short **toP,
-               const unsigned short *toLim) {
+latin1_toUtf16(const ENCODING *enc, const char **fromP, const char *fromLim,
+               unsigned short **toP, const unsigned short *toLim) {
+  UNUSED_P(enc);
   while (*fromP < fromLim && *toP < toLim)
     *(*toP)++ = (unsigned char)*(*fromP)++;
 
@@ -539,8 +550,9 @@ static const struct normal_encoding latin1_encoding
        STANDARD_VTABLE(sb_) NULL_VTABLE};
 
 static enum XML_Convert_Result PTRCALL
-ascii_toUtf8(const ENCODING *UNUSED_P(enc), const char **fromP,
-             const char *fromLim, char **toP, const char *toLim) {
+ascii_toUtf8(const ENCODING *enc, const char **fromP, const char *fromLim,
+             char **toP, const char *toLim) {
+  UNUSED_P(enc);
   while (*fromP < fromLim && *toP < toLim)
     *(*toP)++ = *(*fromP)++;
 
@@ -598,9 +610,10 @@ unicode_byte_type(char hi, char lo) {
 
 #define DEFINE_UTF16_TO_UTF8(E)                                                \
   static enum XML_Convert_Result PTRCALL E##toUtf8(                            \
-      const ENCODING *UNUSED_P(enc), const char **fromP, const char *fromLim,  \
+      const ENCODING *enc, const char **fromP, const char *fromLim,            \
       char **toP, const char *toLim) {                                         \
     const char *from = *fromP;                                                 \
+    UNUSED_P(enc);                                                             \
     fromLim = from + (((fromLim - from) >> 1) << 1); /* shrink to even */      \
     for (; from < fromLim; from += 2) {                                        \
       int plane;                                                               \
@@ -655,7 +668,7 @@ unicode_byte_type(char hi, char lo) {
           return XML_CONVERT_INPUT_INCOMPLETE;                                 \
         }                                                                      \
         plane = (((hi & 0x3) << 2) | ((lo >> 6) & 0x3)) + 1;                   \
-        *(*toP)++ = ((plane >> 2) | UTF8_cval4);                               \
+        *(*toP)++ = (char)((plane >> 2) | UTF8_cval4);                         \
         *(*toP)++ = (((lo >> 2) & 0xF) | ((plane & 0x3) << 4) | 0x80);         \
         from += 2;                                                             \
         lo2 = GET_LO(from);                                                    \
@@ -674,9 +687,10 @@ unicode_byte_type(char hi, char lo) {
 
 #define DEFINE_UTF16_TO_UTF16(E)                                               \
   static enum XML_Convert_Result PTRCALL E##toUtf16(                           \
-      const ENCODING *UNUSED_P(enc), const char **fromP, const char *fromLim,  \
+      const ENCODING *enc, const char **fromP, const char *fromLim,            \
       unsigned short **toP, const unsigned short *toLim) {                     \
     enum XML_Convert_Result res = XML_CONVERT_COMPLETED;                       \
+    UNUSED_P(enc);                                                             \
     fromLim = *fromP + (((fromLim - *fromP) >> 1) << 1); /* shrink to even */  \
     /* Avoid copying first half only of surrogate */                           \
     if (fromLim - *fromP > ((toLim - *toP) << 1)                               \
@@ -999,8 +1013,9 @@ streqci(const char *s1, const char *s2) {
 }
 
 static void PTRCALL
-initUpdatePosition(const ENCODING *UNUSED_P(enc), const char *ptr,
-                   const char *end, POSITION *pos) {
+initUpdatePosition(const ENCODING *enc, const char *ptr, const char *end,
+                   POSITION *pos) {
+  UNUSED_P(enc);
   normal_updatePosition(&utf8_encoding.enc, ptr, end, pos);
 }
 

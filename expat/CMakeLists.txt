@@ -1,17 +1,26 @@
 # This file is copyrighted under the BSD-license for buildsystem files of KDE
 # copyright 2010, Patrick Spendrin <ps_ml@gmx.de>
 
-project(expat)
+cmake_minimum_required(VERSION 3.1.3)
 
-cmake_minimum_required(VERSION 2.8.10)
+project(expat
+    VERSION
+        2.2.7
+    LANGUAGES
+        C
+)
+
 set(PACKAGE_BUGREPORT "expat-bugs@libexpat.org")
 set(PACKAGE_NAME "expat")
-set(PACKAGE_VERSION "2.2.7")
+set(PACKAGE_VERSION "${PROJECT_VERSION}")
 set(PACKAGE_STRING "${PACKAGE_NAME} ${PACKAGE_VERSION}")
 set(PACKAGE_TARNAME "${PACKAGE_NAME}")
 
 include(GNUInstallDirs)
 
+#
+# Configuration defaults
+#
 if(WINCE)
     set(BUILD_tools_default OFF)
 else()
@@ -28,6 +37,9 @@ else()
     endif()
 endif()
 
+#
+# Configuration
+#
 option(BUILD_tools "build the xmlwf tool for expat library" ${BUILD_tools_default})
 option(BUILD_examples "build the examples for expat library" ON)
 option(BUILD_tests "build the tests for expat library" ON)
@@ -36,30 +48,12 @@ option(BUILD_doc "build man page for xmlwf" ${BUILD_doc_default})
 option(BUILD_fuzzers "build fuzzers for the expat library" OFF)
 option(USE_libbsd "utilize libbsd (for arc4random_buf)" OFF)
 option(INSTALL "install expat files in cmake install target" ON)
-
-if(USE_libbsd)
-    find_library(LIB_BSD NAMES bsd)
-    if(NOT LIB_BSD)
-        message(FATAL_ERROR "USE_libbsd option is enabled, but libbsd was not found")
-    else()
-        set(HAVE_LIBBSD TRUE)
-    endif()
-endif()
-
-# configuration options
 set(XML_CONTEXT_BYTES 1024 CACHE STRING "Define to specify how much context to retain around the current parse point")
 option(XML_DTD "Define to make parameter entity parsing functionality available" ON)
 option(XML_NS "Define to make XML Namespaces functionality available" ON)
 option(WARNINGS_AS_ERRORS "Treat all compiler warnings as errors" OFF)
 if(NOT WIN32)
     option(XML_DEV_URANDOM "Define to include code reading entropy from `/dev/urandom'." ON)
-    if(XML_DEV_URANDOM)
-        set(XML_DEV_URANDOM 1)
-    else(XML_DEV_URANDOM)
-        set(XML_DEV_URANDOM 0)
-    endif(XML_DEV_URANDOM)
-endif()
-if (NOT WIN32)
     set(USE_GETRANDOM "AUTO" CACHE STRING
             "Make use of getrandom function (ON|OFF|AUTO) [default=AUTO]")
     set(USE_SYS_GETRANDOM "AUTO" CACHE STRING
@@ -68,6 +62,29 @@ endif()
 option(XML_UNICODE "Use UTF-16 encoded chars (two bytes) instead of UTF-8" OFF)
 option(XML_UNICODE_WCHAR_T "Use wchar_t to represent UTF-16 instead of unsigned short" OFF)
 option(XML_ATTR_INFO "Define to allow retrieving the byte offsets for attribute names and values" OFF)
+if(MSVC)
+    set(MSVC_USE_STATIC_CRT OFF CACHE BOOL "Use /MT flag (static CRT) when compiling in MSVC")
+endif()
+
+#
+# Environment checks
+#
+if(USE_libbsd)
+    find_library(LIB_BSD NAMES bsd)
+    if(NOT LIB_BSD)
+        message(SEND_ERROR "USE_libbsd option is enabled, but libbsd was not found")
+    else()
+        set(HAVE_LIBBSD TRUE)
+    endif()
+endif()
+
+if(NOT WIN32)
+    if(XML_DEV_URANDOM)
+        set(XML_DEV_URANDOM 1)
+    else(XML_DEV_URANDOM)
+        set(XML_DEV_URANDOM 0)
+    endif(XML_DEV_URANDOM)
+endif()
 
 if(XML_DTD)
     set(XML_DTD 1)
@@ -103,11 +120,6 @@ endif(XML_UNICODE_WCHAR_T AND NOT XML_UNICODE)
 if(BUILD_tools AND (XML_UNICODE AND NOT XML_UNICODE_WCHAR_T))
     message(SEND_ERROR "The xmlwf tool can not be built with option XML_UNICODE_WCHAR_T=OFF and XML_UNICODE=ON. Either set XML_UNICODE_WCHAR_T=ON or BUILD_tools=OFF.")
 endif()
-
-if(BUILD_tests)
-    enable_testing()
-endif(BUILD_tests)
-
 
 include(${CMAKE_CURRENT_LIST_DIR}/ConfigureChecks.cmake)
 
@@ -148,7 +160,6 @@ endif(WARNINGS_AS_ERRORS)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${EXTRA_COMPILE_FLAGS}")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${EXTRA_COMPILE_FLAGS}")
 
-set(MSVC_USE_STATIC_CRT OFF CACHE BOOL "Use /MT flag (static CRT) when compiling in MSVC")
 if (MSVC)
     if (MSVC_USE_STATIC_CRT)
         message("-- Using static CRT ${MSVC_USE_STATIC_CRT}")
@@ -172,9 +183,29 @@ if(MSVC)
     add_definitions(-D_CRT_SECURE_NO_WARNINGS -wd4996)
 endif(MSVC)
 if(WIN32)
-    set(CMAKE_DEBUG_POSTFIX "d" CACHE STRING "Add a suffix, usually d on Windows")
+    if(XML_UNICODE_WCHAR_T)
+        set(_POSTFIX_WIDE "w")
+    endif()
+
+    foreach(postfix_var
+            CMAKE_DEBUG_POSTFIX
+            CMAKE_RELEASE_POSTFIX
+            CMAKE_MINSIZEREL_POSTFIX
+            CMAKE_RELWITHDEBINFO_POSTFIX
+            )
+        if(postfix_var STREQUAL "CMAKE_DEBUG_POSTFIX")
+            set(_POSTFIX_DEBUG "d")
+        else()
+            set(_POSTFIX_DEBUG "")
+        endif()
+
+        set(${postfix_var} "${_POSTFIX_WIDE}${_POSTFIX_DEBUG}" CACHE STRING "Windows binary postfix, e.g. expat<postfix=[w][d]>.dll")
+    endforeach()
 endif(WIN32)
 
+#
+# C library
+#
 set(expat_SRCS
     lib/xmlparse.c
     lib/xmlrole.c
@@ -221,15 +252,21 @@ expat_install(TARGETS expat RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
                       LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
                       ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
+expat_install(FILES lib/expat.h lib/expat_external.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+
+#
+# pkg-config file
+#
 set(prefix ${CMAKE_INSTALL_PREFIX})
 set(exec_prefix "\${prefix}")
 set(libdir "\${exec_prefix}/${CMAKE_INSTALL_LIBDIR}")
 set(includedir "\${prefix}/${CMAKE_INSTALL_INCLUDEDIR}")
 configure_file(expat.pc.in ${CMAKE_CURRENT_BINARY_DIR}/expat.pc @ONLY)
-
-expat_install(FILES lib/expat.h lib/expat_external.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 expat_install(FILES ${CMAKE_CURRENT_BINARY_DIR}/expat.pc DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
 
+#
+# C command line tool xmlwf
+#
 if(BUILD_tools)
     set(xmlwf_SRCS
         xmlwf/xmlwf.c
@@ -249,6 +286,9 @@ if(BUILD_tools)
      endif()
 endif()
 
+#
+# C code examples
+#
 if(BUILD_examples)
     add_executable(elements examples/elements.c)
     set_property(TARGET elements PROPERTY RUNTIME_OUTPUT_DIRECTORY examples)
@@ -259,14 +299,27 @@ if(BUILD_examples)
     target_link_libraries(outline expat)
 endif(BUILD_examples)
 
+#
+# C/C++ test runners
+#
 if(BUILD_tests)
     ## these are unittests that can be run on any platform
-    add_executable(runtests tests/runtests.c tests/chardata.c tests/structdata.c tests/minicheck.c tests/memcheck.c)
+    enable_language(CXX)
+    enable_testing()
+
+    set(test_SRCS
+        tests/chardata.c
+        tests/memcheck.c
+        tests/minicheck.c
+        tests/structdata.c
+    )
+
+    add_executable(runtests tests/runtests.c ${test_SRCS})
     set_property(TARGET runtests PROPERTY RUNTIME_OUTPUT_DIRECTORY tests)
     target_link_libraries(runtests expat)
     add_test(runtests tests/runtests)
 
-    add_executable(runtestspp tests/runtestspp.cpp tests/chardata.c tests/structdata.c tests/minicheck.c tests/memcheck.c)
+    add_executable(runtestspp tests/runtestspp.cpp ${test_SRCS})
     set_property(TARGET runtestspp PROPERTY RUNTIME_OUTPUT_DIRECTORY tests)
     target_link_libraries(runtestspp expat)
     add_test(runtestspp tests/runtestspp)
@@ -305,3 +358,65 @@ if(BUILD_fuzzers)
         endforeach()
     endforeach()
 endif(BUILD_fuzzers)
+
+#
+# Summary
+#
+if(XML_UNICODE)
+    if(XML_UNICODE_WCHAR_T)
+        set(_EXPAT_CHAR_TYPE "wchar_t")
+    else()
+        set(_EXPAT_CHAR_TYPE "unsigned short")
+    endif()
+else()
+    set(_EXPAT_CHAR_TYPE "char")
+endif()
+string(TOUPPER "${CMAKE_BUILD_TYPE}" _EXPAT_BUILD_TYPE_UPPER)
+
+message(STATUS "===========================================================================")
+message(STATUS "")
+message(STATUS "Configuration")
+message(STATUS "  Prefix ..................... ${CMAKE_INSTALL_PREFIX}")
+message(STATUS "  Shared libraries ........... ${BUILD_shared}")
+if(WIN32)
+    message(STATUS "  Static CRT ................. ${MSVC_USE_STATIC_CRT}")
+endif()
+message(STATUS "  Character type ............. ${_EXPAT_CHAR_TYPE}")
+if(WIN32)
+    message(STATUS "  Binary postfix ............. ${CMAKE_${_EXPAT_BUILD_TYPE_UPPER}_POSTFIX}")
+endif()
+message(STATUS "")
+message(STATUS "  Build documentation ........ ${BUILD_doc}")
+message(STATUS "  Build examples ............. ${BUILD_examples}")
+message(STATUS "  Build tests ................ ${BUILD_tests}")
+message(STATUS "  Build tools (xmlwf) ........ ${BUILD_tools}")
+message(STATUS "  Install files .............. ${INSTALL}")
+message(STATUS "")
+message(STATUS "  Features")
+message(STATUS "    Attributes info .......... ${XML_ATTR_INFO}")
+message(STATUS "    Context bytes ............ ${XML_CONTEXT_BYTES}")
+message(STATUS "    DTD support .............. ${XML_DTD}")
+message(STATUS "    Namespace support ........ ${XML_NS}")
+message(STATUS "")
+message(STATUS "  Entropy sources")
+if(WIN32)
+    message(STATUS "    rand_s ................... ON")
+else()
+    message(STATUS "    getrandom ................ ${HAVE_GETRANDOM}")
+    message(STATUS "    syscall SYS_getrandom .... ${HAVE_SYSCALL_GETRANDOM}")
+    message(STATUS "    libbsd ................... ${USE_libbsd}")
+    message(STATUS "    /dev/random .............. ${XML_DEV_URANDOM}")
+endif()
+message(STATUS "")
+if(CMAKE_GENERATOR STREQUAL "Unix Makefiles")
+    message(STATUS "Continue with")
+    message(STATUS "  make")
+    if(BUILD_tests)
+        message(STATUS "  make test")
+    endif()
+    if(INSTALL)
+        message(STATUS "  sudo make install")
+    endif()
+    message(STATUS "")
+endif()
+message(STATUS "===========================================================================")

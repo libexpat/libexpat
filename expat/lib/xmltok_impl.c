@@ -218,9 +218,10 @@ PREFIX(scanDecl)(const ENCODING *enc, const char *ptr, const char *end,
 }
 
 static int PTRCALL
-PREFIX(checkPiTarget)(const ENCODING *UNUSED_P(enc), const char *ptr,
-                      const char *end, int *tokPtr) {
+PREFIX(checkPiTarget)(const ENCODING *enc, const char *ptr, const char *end,
+                      int *tokPtr) {
   int upper = 0;
+  UNUSED_P(enc);
   *tokPtr = XML_TOK_PI;
   if (end - ptr != MINBPC(enc) * 3)
     return 1;
@@ -322,11 +323,12 @@ PREFIX(scanPi)(const ENCODING *enc, const char *ptr, const char *end,
 }
 
 static int PTRCALL
-PREFIX(scanCdataSection)(const ENCODING *UNUSED_P(enc), const char *ptr,
-                         const char *end, const char **nextTokPtr) {
+PREFIX(scanCdataSection)(const ENCODING *enc, const char *ptr, const char *end,
+                         const char **nextTokPtr) {
   static const char CDATA_LSQB[]
       = {ASCII_C, ASCII_D, ASCII_A, ASCII_T, ASCII_A, ASCII_LSQB};
   int i;
+  UNUSED_P(enc);
   /* CDATA[ */
   REQUIRE_CHARS(enc, ptr, end, 6);
   for (i = 0; i < 6; i++, ptr += MINBPC(enc)) {
@@ -1583,9 +1585,10 @@ PREFIX(getAtts)(const ENCODING *enc, const char *ptr, int attsMax,
 }
 
 static int PTRFASTCALL
-PREFIX(charRefNumber)(const ENCODING *UNUSED_P(enc), const char *ptr) {
+PREFIX(charRefNumber)(const ENCODING *enc, const char *ptr) {
   int result = 0;
   /* skip &# */
+  UNUSED_P(enc);
   ptr += 2 * MINBPC(enc);
   if (CHAR_MATCHES(enc, ptr, ASCII_x)) {
     for (ptr += MINBPC(enc); ! CHAR_MATCHES(enc, ptr, ASCII_SEMI);
@@ -1640,8 +1643,9 @@ PREFIX(charRefNumber)(const ENCODING *UNUSED_P(enc), const char *ptr) {
 }
 
 static int PTRCALL
-PREFIX(predefinedEntityName)(const ENCODING *UNUSED_P(enc), const char *ptr,
+PREFIX(predefinedEntityName)(const ENCODING *enc, const char *ptr,
                              const char *end) {
+  UNUSED_P(enc);
   switch ((end - ptr) / MINBPC(enc)) {
   case 2:
     if (CHAR_MATCHES(enc, ptr + MINBPC(enc), ASCII_t)) {
@@ -1693,8 +1697,9 @@ PREFIX(predefinedEntityName)(const ENCODING *UNUSED_P(enc), const char *ptr,
 }
 
 static int PTRCALL
-PREFIX(nameMatchesAscii)(const ENCODING *UNUSED_P(enc), const char *ptr1,
+PREFIX(nameMatchesAscii)(const ENCODING *enc, const char *ptr1,
                          const char *end1, const char *ptr2) {
+  UNUSED_P(enc);
   for (; *ptr2; ptr1 += MINBPC(enc), ptr2++) {
     if (end1 - ptr1 < MINBPC(enc)) {
       /* This line cannot be executed.  The incoming data has already
