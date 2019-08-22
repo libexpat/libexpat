@@ -14,28 +14,46 @@
  * limitations under the License.
  */
 
-#include "expat.h"
 #include <assert.h>
 #include <memory.h>
 #include <stdint.h>
 
-static void XMLCALL start(void *userData, const char *name, const char **atts) {
-}
-static void XMLCALL end(void *userData, const char *name) {}
+#include "expat.h"
+#include "siphash.h"
+
+// Macros to convert preprocessor macros to string literals. See
+// https://gcc.gnu.org/onlinedocs/gcc-3.4.3/cpp/Stringification.html
+#define xstr(s) str(s)
+#define str(s) #s
+
+// The encoder type that we wish to fuzz should come from the compile-time
+// definition `ENCODER_FOR_FUZZING`. This allows us to have a separate fuzzer
+// binary for
+#ifndef ENCODER_FOR_FUZZING
+#error "ENCODER_FOR_FUZZING was not provided to this fuzz target."
+#endif
+
+// 16-byte determinstic hash key.
+unsigned char hash_key[16] = "FUZZING IS FUN!";
+
+static void XMLCALL start(void *userData, const XML_Char *name,
+                          const XML_Char **atts) {}
+static void XMLCALL end(void *userData, const XML_Char *name) {}
 
 int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
-  char *encoders[7] = {"UTF-16",   "UTF-8",    "ISO_8859_1", "US_ASCII",
-                       "UTF_16BE", "UTF_16LE", NULL};
+  XML_Parser p = XML_ParserCreate(xstr(ENCODER_FOR_FUZZING));
+  assert(p);
+  XML_SetElementHandler(p, start, end);
 
-  for (int i = 0; i < sizeof(encoders) / sizeof(char *); ++i) {
-    XML_Parser p = XML_ParserCreate(encoders[i]);
-    assert(p);
-    XML_SetElementHandler(p, start, end);
+  // Set the hash salt using siphash to generate a deterministic hash.
+  struct sipkey *key = sip_keyof(hash_key);
+  XML_SetHashSalt(p, siphash24(data, size, key));
 
-    void *buf = XML_GetBuffer(p, size);
-    memcpy(buf, data, size);
-    XML_ParseBuffer(p, size, size == 0);
-    XML_ParserFree(p);
-  }
+  void *buf = XML_GetBuffer(p, size);
+  assert(buf);
+
+  memcpy(buf, data, size);
+  XML_ParseBuffer(p, size, size == 0);
+  XML_ParserFree(p);
   return 0;
 }

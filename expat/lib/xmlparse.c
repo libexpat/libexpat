@@ -802,10 +802,6 @@ generate_hash_secret_salt(XML_Parser parser) {
   unsigned long entropy;
   (void)parser;
 
-#ifdef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
-  return 0;
-#endif // FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
-
   /* "Failproof" high quality providers: */
 #if defined(HAVE_ARC4RANDOM_BUF)
   arc4random_buf(&entropy, sizeof(entropy));
