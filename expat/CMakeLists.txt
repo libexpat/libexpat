@@ -342,7 +342,7 @@ if(BUILD_fuzzers)
             "execution.")
     endif()
 
-    set(encoding_types UTF-16 UTF-8 ISO_8859_1 US_ASCII UTF_16BE UTF_16LE)
+    set(encoding_types UTF-16 UTF-8 ISO-8859-1 US-ASCII UTF-16BE UTF-16LE)
     set(fuzz_targets xml_parse_fuzzer xml_parsebuffer_fuzzer)
 
     foreach(fuzz_target ${fuzz_targets})
@@ -350,7 +350,7 @@ if(BUILD_fuzzers)
             set(target_name ${fuzz_target}_${encoding_type})
             add_executable(${target_name} fuzz/${fuzz_target}.c ${expat_SRCS})
             target_compile_definitions(${target_name}
-                PRIVATE ENCODER_FOR_FUZZING=${encoding_type})
+                PRIVATE ENCODING_FOR_FUZZING=${encoding_type})
             target_compile_options(${target_name} PRIVATE -fsanitize=fuzzer-no-link)
             target_link_options(${target_name} PRIVATE -fsanitize=fuzzer)
             set_property(

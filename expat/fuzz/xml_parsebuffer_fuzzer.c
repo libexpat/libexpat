@@ -27,27 +27,31 @@
 #define str(s) #s
 
 // The encoder type that we wish to fuzz should come from the compile-time
-// definition `ENCODER_FOR_FUZZING`. This allows us to have a separate fuzzer
+// definition `ENCODING_FOR_FUZZING`. This allows us to have a separate fuzzer
 // binary for
-#ifndef ENCODER_FOR_FUZZING
-#error "ENCODER_FOR_FUZZING was not provided to this fuzz target."
+#ifndef ENCODING_FOR_FUZZING
+#  error "ENCODING_FOR_FUZZING was not provided to this fuzz target."
 #endif
 
 // 16-byte determinstic hash key.
-unsigned char hash_key[16] = "FUZZING IS FUN!";
+static unsigned char hash_key[16] = "FUZZING IS FUN!";
 
-static void XMLCALL start(void *userData, const XML_Char *name,
-                          const XML_Char **atts) {}
-static void XMLCALL end(void *userData, const XML_Char *name) {}
+static void XMLCALL
+start(void *userData, const XML_Char *name, const XML_Char **atts) {
+}
+static void XMLCALL
+end(void *userData, const XML_Char *name) {
+}
 
-int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
-  XML_Parser p = XML_ParserCreate(xstr(ENCODER_FOR_FUZZING));
+int
+LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
+  XML_Parser p = XML_ParserCreate(xstr(ENCODING_FOR_FUZZING));
   assert(p);
   XML_SetElementHandler(p, start, end);
 
   // Set the hash salt using siphash to generate a deterministic hash.
   struct sipkey *key = sip_keyof(hash_key);
-  XML_SetHashSalt(p, siphash24(data, size, key));
+  XML_SetHashSalt(p, (unsigned long)siphash24(data, size, key));
 
   void *buf = XML_GetBuffer(p, size);
   assert(buf);
