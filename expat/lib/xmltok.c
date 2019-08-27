@@ -587,11 +587,13 @@ static const struct normal_encoding ascii_encoding
 static int PTRFASTCALL
 unicode_byte_type(char hi, char lo) {
   switch ((unsigned char)hi) {
+  /* 0xD800–0xDBFF first 16-bit code unit or high surrogate (W1) */
   case 0xD8:
   case 0xD9:
   case 0xDA:
   case 0xDB:
     return BT_LEAD4;
+  /* 0xDC00–0xDFFF second 16-bit code unit or low surrogate (W2) */
   case 0xDC:
   case 0xDD:
   case 0xDE:
@@ -599,8 +601,8 @@ unicode_byte_type(char hi, char lo) {
     return BT_TRAIL;
   case 0xFF:
     switch ((unsigned char)lo) {
-    case 0xFF:
-    case 0xFE:
+    case 0xFF: /* noncharacter-FFFF */
+    case 0xFE: /* noncharacter-FFFE */
       return BT_NONXML;
     }
     break;
