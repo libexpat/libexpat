@@ -45,6 +45,7 @@ option(BUILD_examples "build the examples for expat library" ON)
 option(BUILD_tests "build the tests for expat library" ON)
 option(BUILD_shared "build a shared expat library" ON)
 option(BUILD_doc "build man page for xmlwf" ${BUILD_doc_default})
+option(BUILD_fuzzers "build fuzzers for the expat library" OFF)
 option(USE_libbsd "utilize libbsd (for arc4random_buf)" OFF)
 option(INSTALL "install expat files in cmake install target" ON)
 set(XML_CONTEXT_BYTES 1024 CACHE STRING "Define to specify how much context to retain around the current parse point")
@@ -323,6 +324,40 @@ if(BUILD_tests)
     target_link_libraries(runtestspp expat)
     add_test(runtestspp tests/runtestspp)
 endif(BUILD_tests)
+
+if(BUILD_fuzzers)
+    if(NOT "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+        message(SEND_ERROR
+            "Building fuzz targets without clang is not supported. Please set "
+            "-DCMAKE_C_COMPILER=clang.")
+    endif()
+
+    string(FIND "${CMAKE_EXE_LINKER_FLAGS}" "-fsanitize" sanitizer_present)
+    if(${sanitizer_present} EQUAL "-1")
+        message(WARNING
+            "There was no sanitizer present when building the fuzz targets. "
+            "This is likely in error - consider adding "
+            "-DCMAKE_C_FLAGS='-fsanitize=<sanitizer>' and "
+            "-DCMAKE_EXE_LINKER_FLAGS='-fsanitize=<sanitizer>' to your cmake "
+            "execution.")
+    endif()
+
+    set(encoding_types UTF-16 UTF-8 ISO-8859-1 US-ASCII UTF-16BE UTF-16LE)
+    set(fuzz_targets xml_parse_fuzzer xml_parsebuffer_fuzzer)
+
+    foreach(fuzz_target ${fuzz_targets})
+        foreach(encoding_type ${encoding_types})
+            set(target_name ${fuzz_target}_${encoding_type})
+            add_executable(${target_name} fuzz/${fuzz_target}.c ${expat_SRCS})
+            target_compile_definitions(${target_name}
+                PRIVATE ENCODING_FOR_FUZZING=${encoding_type})
+            target_compile_options(${target_name} PRIVATE -fsanitize=fuzzer-no-link)
+            target_link_options(${target_name} PRIVATE -fsanitize=fuzzer)
+            set_property(
+                TARGET ${target_name} PROPERTY RUNTIME_OUTPUT_DIRECTORY fuzz)
+        endforeach()
+    endforeach()
+endif(BUILD_fuzzers)
 
 #
 # Summary
