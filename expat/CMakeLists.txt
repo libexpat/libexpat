@@ -352,7 +352,8 @@ if(BUILD_fuzzers)
             target_compile_definitions(${target_name}
                 PRIVATE ENCODING_FOR_FUZZING=${encoding_type})
             target_compile_options(${target_name} PRIVATE -fsanitize=fuzzer-no-link)
-            target_link_options(${target_name} PRIVATE -fsanitize=fuzzer)
+            # NOTE: Avoiding target_link_options here only because it needs CMake >=3.13
+            set_target_properties(${target_name} PROPERTIES LINK_FLAGS -fsanitize=fuzzer)
             set_property(
                 TARGET ${target_name} PROPERTY RUNTIME_OUTPUT_DIRECTORY fuzz)
         endforeach()
