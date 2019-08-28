@@ -326,7 +326,7 @@ if(BUILD_tests)
 endif(BUILD_tests)
 
 if(BUILD_fuzzers)
-    if(NOT "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+    if(NOT "${CMAKE_C_COMPILER_ID}" STREQUAL "Clang")
         message(SEND_ERROR
             "Building fuzz targets without clang is not supported. Please set "
             "-DCMAKE_C_COMPILER=clang.")
