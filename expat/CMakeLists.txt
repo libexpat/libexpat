@@ -328,8 +328,8 @@ endif(BUILD_tests)
 if(BUILD_fuzzers)
     if(NOT "${CMAKE_C_COMPILER_ID}" STREQUAL "Clang")
         message(SEND_ERROR
-            "Building fuzz targets without clang is not supported. Please set "
-            "-DCMAKE_C_COMPILER=clang.")
+            "Building fuzz targets without Clang (but ${CMAKE_C_COMPILER_ID}) "
+            "is not supported. Please set -DCMAKE_C_COMPILER=clang.")
     endif()
 
     string(FIND "${CMAKE_EXE_LINKER_FLAGS}" "-fsanitize" sanitizer_present)
