@@ -7480,6 +7480,69 @@ START_TEST(test_misc_stop_during_end_handler_issue_240_2) {
 }
 END_TEST
 
+#ifdef XML_DTD
+START_TEST(test_misc_deny_internal_entity_closing_doctype_issue_317) {
+  const char *const inputOne = "<!DOCTYPE d [\n"
+                               "<!ENTITY % e ']><d/>'>\n"
+                               "\n"
+                               "%e;";
+  const char *const inputTwo = "<!DOCTYPE d [\n"
+                               "<!ENTITY % e1 ']><d/>'><!ENTITY % e2 '&e1;'>\n"
+                               "\n"
+                               "%e2;";
+  const char *const inputThree = "<!DOCTYPE d [\n"
+                                 "<!ENTITY % e ']><d'>\n"
+                                 "\n"
+                                 "%e;";
+  const char *const inputIssue317 = "<!DOCTYPE doc [\n"
+                                    "<!ENTITY % foo ']>\n"
+                                    "<doc>Hell<oc (#PCDATA)*>'>\n"
+                                    "%foo;\n"
+                                    "]>\n"
+                                    "<doc>Hello, world</dVc>";
+
+  const char *const inputs[] = {inputOne, inputTwo, inputThree, inputIssue317};
+  size_t inputIndex = 0;
+
+  for (; inputIndex < sizeof(inputs) / sizeof(inputs[0]); inputIndex++) {
+    XML_Parser parser;
+    enum XML_Status parseResult;
+    int setParamEntityResult;
+    XML_Size lineNumber;
+    XML_Size columnNumber;
+    const char *const input = inputs[inputIndex];
+
+    parser = XML_ParserCreate(NULL);
+    setParamEntityResult
+        = XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+    if (setParamEntityResult != 1)
+      fail("Failed to set XML_PARAM_ENTITY_PARSING_ALWAYS.");
+
+    parseResult = XML_Parse(parser, input, (int)strlen(input), 0);
+    if (parseResult != XML_STATUS_ERROR) {
+      parseResult = XML_Parse(parser, "", 0, 1);
+      if (parseResult != XML_STATUS_ERROR) {
+        fail("Parsing was expected to fail but succeeded.");
+      }
+    }
+
+    if (XML_GetErrorCode(parser) != XML_ERROR_INVALID_TOKEN)
+      fail("Error code does not match XML_ERROR_INVALID_TOKEN");
+
+    lineNumber = XML_GetCurrentLineNumber(parser);
+    if (lineNumber != 4)
+      fail("XML_GetCurrentLineNumber does not work as expected.");
+
+    columnNumber = XML_GetCurrentColumnNumber(parser);
+    if (columnNumber != 0)
+      fail("XML_GetCurrentColumnNumber does not work as expected.");
+
+    XML_ParserFree(parser);
+  }
+}
+END_TEST
+#endif
+
 static void
 alloc_setup(void) {
   XML_Memory_Handling_Suite memsuite = {duff_allocator, duff_reallocator, free};
@@ -11408,6 +11471,10 @@ make_suite(void) {
   tcase_add_test(tc_misc, test_misc_utf16le);
   tcase_add_test(tc_misc, test_misc_stop_during_end_handler_issue_240_1);
   tcase_add_test(tc_misc, test_misc_stop_during_end_handler_issue_240_2);
+#ifdef XML_DTD
+  tcase_add_test(tc_misc,
+                 test_misc_deny_internal_entity_closing_doctype_issue_317);
+#endif
 
   suite_add_tcase(s, tc_alloc);
   tcase_add_checked_fixture(tc_alloc, alloc_setup, alloc_teardown);
