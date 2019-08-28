@@ -11,6 +11,9 @@ Release x.x.x xxx xxx xx xxxx
             #286  Windows: Remove COM code from xmlwf; in case it turns
                     out needed later, there will be a dedicated repository
                     below https://github.com/libexpat/ for that code
+                  Windows: Remove explicit MSVC solution and project files.
+                    You can generate Visual Studio solution files through
+                    CMake, e.g.: cmake -G"Visual Studio 15 2017" .
        #244 #264  Autotools: Add argument --enable-xml-attr-info
        #239 #301  Autotools: Add arguments
                     --with-getrandom

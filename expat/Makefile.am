@@ -60,36 +60,10 @@ _EXTRA_DIST_CMAKE = \
     expat_config.h.cmake
 
 _EXTRA_DIST_WINDOWS = \
-    examples/elements.vcxproj \
-    examples/elements.vcxproj.filters \
-    examples/outline.vcxproj \
-    examples/outline.vcxproj.filters \
-    \
-    lib/expat_static.vcxproj \
-    lib/expat_static.vcxproj.filters \
-    lib/expat.vcxproj \
-    lib/expat.vcxproj.filters \
-    lib/expatw_static.vcxproj \
-    lib/expatw_static.vcxproj.filters \
-    lib/expatw.vcxproj \
-    lib/expatw.vcxproj.filters \
-    \
-    tests/benchmark/benchmark.sln \
-    tests/benchmark/benchmark.vcxproj \
-    \
-    tests/runtests.sln \
-    tests/runtests.vcxproj \
-    tests/runtests.vcxproj.filters \
-    \
     win32/build_expat_iss.bat \
     win32/expat.iss \
     win32/MANIFEST.txt \
-    win32/README.txt \
-    \
-    xmlwf/xmlwf.vcxproj \
-    xmlwf/xmlwf.vcxproj.filters \
-    \
-    expat.sln
+    win32/README.txt
 
 EXTRA_DIST = \
     $(_EXTRA_DIST_CMAKE) \
