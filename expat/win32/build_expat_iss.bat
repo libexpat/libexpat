@@ -57,7 +57,7 @@ CD build_static_char || EXIT /b 1
     msbuild /m expat.sln || EXIT /b 1
     DIR %CONFIGURATION% || EXIT /b 1
     CD .. || EXIT /b 1
-COPY build_static_char\%CONFIGURATION%\expat.lib %BINDIR%\expatMT.lib || EXIT /b 1
+COPY build_static_char\%CONFIGURATION%\expatMT.lib %BINDIR%\ || EXIT /b 1
 COPY build_static_char\xmlwf\%CONFIGURATION%\xmlwf.exe %BINDIR%\ || EXIT /b 1
 
 
@@ -77,7 +77,7 @@ CD build_static_wchar_t || EXIT /b 1
     msbuild /m expat.sln || EXIT /b 1
     DIR %CONFIGURATION% || EXIT /b 1
     CD .. || EXIT /b 1
-COPY build_static_wchar_t\%CONFIGURATION%\expatw.lib %BINDIR%\expatwMT.lib || EXIT /b 1
+COPY build_static_wchar_t\%CONFIGURATION%\expatwMT.lib %BINDIR%\ || EXIT /b 1
 
 
 DIR %BINDIR% || EXIT /b 1
