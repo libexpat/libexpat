@@ -329,7 +329,8 @@ if(BUILD_fuzzers)
     if(NOT "${CMAKE_C_COMPILER_ID}" STREQUAL "Clang")
         message(SEND_ERROR
             "Building fuzz targets without Clang (but ${CMAKE_C_COMPILER_ID}) "
-            "is not supported. Please set -DCMAKE_C_COMPILER=clang.")
+            "is not supported. Please set "
+            "-DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++.")
     endif()
 
     string(FIND "${CMAKE_EXE_LINKER_FLAGS}" "-fsanitize" sanitizer_present)
@@ -338,6 +339,7 @@ if(BUILD_fuzzers)
             "There was no sanitizer present when building the fuzz targets. "
             "This is likely in error - consider adding "
             "-DCMAKE_C_FLAGS='-fsanitize=<sanitizer>' and "
+            "-DCMAKE_CXX_FLAGS='-fsanitize=<sanitizer>' and "
             "-DCMAKE_EXE_LINKER_FLAGS='-fsanitize=<sanitizer>' to your cmake "
             "execution.")
     endif()
