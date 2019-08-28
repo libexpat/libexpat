@@ -33,7 +33,7 @@
 #endif
 
 // 16-byte determinstic hash key.
-static char hash_key[16] = "FUZZING IS FUN!";
+static unsigned char hash_key[16] = "FUZZING IS FUN!";
 
 static void XMLCALL
 start(void *userData, const XML_Char *name, const XML_Char **atts) {

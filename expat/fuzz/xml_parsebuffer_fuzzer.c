@@ -15,8 +15,8 @@
  */
 
 #include <assert.h>
-#include <memory.h>
 #include <stdint.h>
+#include <string.h>
 
 #include "expat.h"
 #include "siphash.h"
