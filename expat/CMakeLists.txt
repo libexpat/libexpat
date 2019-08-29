@@ -372,6 +372,17 @@ if(BUILD_fuzzers)
 endif(BUILD_fuzzers)
 
 #
+# Documentation
+#
+configure_file(Changes changelog COPYONLY)
+expat_install(
+    FILES
+        AUTHORS
+        ${CMAKE_CURRENT_BINARY_DIR}/changelog
+    DESTINATION
+        ${CMAKE_INSTALL_DOCDIR})
+
+#
 # Summary
 #
 if(XML_UNICODE)
