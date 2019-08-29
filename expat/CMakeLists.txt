@@ -326,10 +326,11 @@ if(BUILD_tests)
 endif(BUILD_tests)
 
 if(BUILD_fuzzers)
-    if(NOT "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+    if(NOT "${CMAKE_C_COMPILER_ID}" STREQUAL "Clang")
         message(SEND_ERROR
-            "Building fuzz targets without clang is not supported. Please set "
-            "-DCMAKE_C_COMPILER=clang.")
+            "Building fuzz targets without Clang (but ${CMAKE_C_COMPILER_ID}) "
+            "is not supported. Please set "
+            "-DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++.")
     endif()
 
     string(FIND "${CMAKE_EXE_LINKER_FLAGS}" "-fsanitize" sanitizer_present)
@@ -338,6 +339,7 @@ if(BUILD_fuzzers)
             "There was no sanitizer present when building the fuzz targets. "
             "This is likely in error - consider adding "
             "-DCMAKE_C_FLAGS='-fsanitize=<sanitizer>' and "
+            "-DCMAKE_CXX_FLAGS='-fsanitize=<sanitizer>' and "
             "-DCMAKE_EXE_LINKER_FLAGS='-fsanitize=<sanitizer>' to your cmake "
             "execution.")
     endif()
@@ -352,7 +354,8 @@ if(BUILD_fuzzers)
             target_compile_definitions(${target_name}
                 PRIVATE ENCODING_FOR_FUZZING=${encoding_type})
             target_compile_options(${target_name} PRIVATE -fsanitize=fuzzer-no-link)
-            target_link_options(${target_name} PRIVATE -fsanitize=fuzzer)
+            # NOTE: Avoiding target_link_options here only because it needs CMake >=3.13
+            set_target_properties(${target_name} PROPERTIES LINK_FLAGS -fsanitize=fuzzer)
             set_property(
                 TARGET ${target_name} PROPERTY RUNTIME_OUTPUT_DIRECTORY fuzz)
         endforeach()
@@ -388,6 +391,7 @@ endif()
 message(STATUS "")
 message(STATUS "  Build documentation ........ ${BUILD_doc}")
 message(STATUS "  Build examples ............. ${BUILD_examples}")
+message(STATUS "  Build fuzzers .............. ${BUILD_fuzzers}")
 message(STATUS "  Build tests ................ ${BUILD_tests}")
 message(STATUS "  Build tools (xmlwf) ........ ${BUILD_tools}")
 message(STATUS "  Install files .............. ${INSTALL}")
