@@ -27,6 +27,7 @@ Release x.x.x xxx xxx xx xxxx
        #239 #277  CMake: Add arguments
                     -DUSE_GETRANDOM=(ON|OFF|AUTO)
                     -DUSE_SYS_GETRANDOM=(ON|OFF|AUTO)
+                  CMake: Install expat_config.h to include directory
                   CMake: Now produces a summary of applied configuration
                   CMake: Require C++ compiler only when tests are enabled
             #265  CMake: Fix linking with MinGW
