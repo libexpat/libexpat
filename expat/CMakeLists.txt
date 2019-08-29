@@ -16,6 +16,7 @@ set(PACKAGE_VERSION "${PROJECT_VERSION}")
 set(PACKAGE_STRING "${PACKAGE_NAME} ${PACKAGE_VERSION}")
 set(PACKAGE_TARNAME "${PACKAGE_NAME}")
 
+include(CMakePackageConfigHelpers)
 include(GNUInstallDirs)
 
 #
@@ -251,7 +252,8 @@ if(NOT WIN32)
     set_property(TARGET expat PROPERTY NO_SONAME ${NO_SONAME})
 endif(NOT WIN32)
 
-expat_install(TARGETS expat RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+expat_install(TARGETS expat EXPORT expat
+                      RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
                       LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
                       ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
@@ -375,6 +377,41 @@ expat_install(
         ${CMAKE_CURRENT_BINARY_DIR}/changelog
     DESTINATION
         ${CMAKE_INSTALL_DOCDIR})
+
+#
+# CMake files for find_package(expat [..] CONFIG [..])
+#
+configure_package_config_file(
+        cmake/expat-config.cmake.in
+        cmake/expat-config.cmake
+    INSTALL_DESTINATION
+        ${CMAKE_INSTALL_LIBDIR}/cmake/expat-${PROJECT_VERSION}/
+)
+write_basic_package_version_file(
+    cmake/expat-config-version.cmake
+    COMPATIBILITY SameMajorVersion  # i.e. semver
+)
+export(
+    TARGETS
+        expat
+    FILE
+        cmake/expat-targets.cmake  # not going to be installed
+)
+expat_install(
+    FILES
+        ${CMAKE_CURRENT_BINARY_DIR}/cmake/expat-config.cmake
+        ${CMAKE_CURRENT_BINARY_DIR}/cmake/expat-config-version.cmake
+    DESTINATION
+        ${CMAKE_INSTALL_LIBDIR}/cmake/expat-${PROJECT_VERSION}/
+)
+expat_install(
+    EXPORT
+        expat
+    DESTINATION
+        ${CMAKE_INSTALL_LIBDIR}/cmake/expat-${PROJECT_VERSION}/
+    NAMESPACE
+        expat::
+)
 
 #
 # Summary

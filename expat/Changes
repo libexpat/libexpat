@@ -29,6 +29,8 @@ Release x.x.x xxx xxx xx xxxx
                     -DUSE_SYS_GETRANDOM=(ON|OFF|AUTO)
                   CMake: Add argument -DXML_LARGE_SIZE=ON
                   CMake: Install expat_config.h to include directory
+                  CMake: Generate and install configuration files for
+                    future find_package(expat [..] CONFIG [..])
                   CMake: Now produces a summary of applied configuration
                   CMake: Require C++ compiler only when tests are enabled
             #265  CMake: Fix linking with MinGW
