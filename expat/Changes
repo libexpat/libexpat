@@ -31,7 +31,6 @@ Release x.x.x xxx xxx xx xxxx
             #316  CMake: Windows: Make binary postfix match MSVC
                     Old: expat[d].lib
                     New: expat[w][d][MD|MT].lib
-                  CMake: Windows: Make -DMSVC_USE_STATIC_CRT=ON the default
                   CMake: Migrate files from Windows to Unix line endings
             #308  CMake: Integrate OSS-Fuzz fuzzers
        #299 #302  Windows: Replace LoadLibrary hack to access
