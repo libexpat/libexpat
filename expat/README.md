@@ -13,6 +13,11 @@ are called when the parser discovers the associated structures in the
 document being parsed.  A start tag is an example of the kind of
 structures for which you may register handlers.
 
+Expat supports the following compilers:
+- GNU GCC >=4.5
+- LLVM Clang >=3.5
+- Microsoft Visual Studio >=8.0/2005
+
 Windows users should use the
 [`expat_win32` package](https://sourceforge.net/projects/expat/files/expat_win32/),
 which includes both precompiled libraries and executables, and source code for

@@ -8,6 +8,8 @@ Release x.x.x xxx xxx xx xxxx
                     when called from inside of an end element handler
 
         Other changes:
+            #325  Windows: Drop support for Visual Studio <=7.1/2003
+                    and document supported compilers in README.md
             #286  Windows: Remove COM code from xmlwf; in case it turns
                     out needed later, there will be a dedicated repository
                     below https://github.com/libexpat/ for that code
