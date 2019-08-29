@@ -138,6 +138,12 @@ if(NOT WIN32)
     evaluate_detection_results(USE_SYS_GETRANDOM HAVE_SYSCALL_GETRANDOM "syscall SYS_getrandom" "Syscall SYS_getrandom")
 endif()
 
+macro(expat_install)
+    if(INSTALL)
+        install(${ARGN})
+    endif()
+endmacro()
+
 configure_file(expat_config.h.cmake "${CMAKE_CURRENT_BINARY_DIR}/expat_config.h")
 add_definitions(-DHAVE_EXPAT_CONFIG_H)
 
@@ -249,12 +255,6 @@ if(NOT WIN32)
     set_property(TARGET expat PROPERTY SOVERSION ${LIBCURRENT_MINUS_AGE})
     set_property(TARGET expat PROPERTY NO_SONAME ${NO_SONAME})
 endif(NOT WIN32)
-
-macro(expat_install)
-    if(INSTALL)
-        install(${ARGN})
-    endif()
-endmacro()
 
 expat_install(TARGETS expat RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
                       LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
