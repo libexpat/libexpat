@@ -63,7 +63,7 @@ option(XML_UNICODE "Use UTF-16 encoded chars (two bytes) instead of UTF-8" OFF)
 option(XML_UNICODE_WCHAR_T "Use wchar_t to represent UTF-16 instead of unsigned short" OFF)
 option(XML_ATTR_INFO "Define to allow retrieving the byte offsets for attribute names and values" OFF)
 if(MSVC)
-    set(MSVC_USE_STATIC_CRT OFF CACHE BOOL "Use /MT flag (static CRT) when compiling in MSVC")
+    set(MSVC_USE_STATIC_CRT ON CACHE BOOL "Use /MT flag (static CRT) when compiling in MSVC")
 endif()
 
 #
@@ -187,6 +187,14 @@ if(WIN32)
         set(_POSTFIX_WIDE "w")
     endif()
 
+    if(NOT BUILD_shared)
+        if(MSVC_USE_STATIC_CRT)
+            set(_POSTFIX_CRT "MT")
+        else()
+            set(_POSTFIX_CRT "MD")
+        endif()
+    endif()
+
     foreach(postfix_var
             CMAKE_DEBUG_POSTFIX
             CMAKE_RELEASE_POSTFIX
@@ -199,7 +207,7 @@ if(WIN32)
             set(_POSTFIX_DEBUG "")
         endif()
 
-        set(${postfix_var} "${_POSTFIX_WIDE}${_POSTFIX_DEBUG}" CACHE STRING "Windows binary postfix, e.g. expat<postfix=[w][d]>.dll")
+        set(${postfix_var} "${_POSTFIX_WIDE}${_POSTFIX_DEBUG}${_POSTFIX_CRT}" CACHE STRING "Windows binary postfix, e.g. expat<postfix=[w][d][MD|MT]>.lib")
     endforeach()
 endif(WIN32)
 
@@ -380,6 +388,7 @@ message(STATUS "================================================================
 message(STATUS "")
 message(STATUS "Configuration")
 message(STATUS "  Prefix ..................... ${CMAKE_INSTALL_PREFIX}")
+message(STATUS "  Build type ................. ${CMAKE_BUILD_TYPE}")
 message(STATUS "  Shared libraries ........... ${BUILD_shared}")
 if(WIN32)
     message(STATUS "  Static CRT ................. ${MSVC_USE_STATIC_CRT}")
