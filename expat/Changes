@@ -23,13 +23,13 @@ Release x.x.x xxx xxx xx xxxx
                     --with-sys-getrandom
                     --without-sys-getrandom
                   Autotools: Fix "make run-xmltest" for out-of-source builds
-       #244 #264  CMake: Add argument -DXML_ATTR_INFO=ON
+       #244 #264  CMake: Add argument -DXML_ATTR_INFO=(ON|OFF), default OFF
        #239 #277  CMake: Add arguments
-                    -DUSE_GETRANDOM=(ON|OFF|AUTO)
-                    -DUSE_SYS_GETRANDOM=(ON|OFF|AUTO)
-                  CMake: Add argument -DXML_LARGE_SIZE=ON
-                  CMake: Install expat_config.h to include directory
-                  CMake: Generate and install configuration files for
+                    -DUSE_GETRANDOM=(ON|OFF|AUTO), default AUTO
+                    -DUSE_SYS_GETRANDOM=(ON|OFF|AUTO), default AUTO
+            #326  CMake: Add argument -DXML_LARGE_SIZE=(ON|OFF), default OFF
+            #326  CMake: Install expat_config.h to include directory
+            #326  CMake: Generate and install configuration files for
                     future find_package(expat [..] CONFIG [..])
                   CMake: Now produces a summary of applied configuration
                   CMake: Require C++ compiler only when tests are enabled
