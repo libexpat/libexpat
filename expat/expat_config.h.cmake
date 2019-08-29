@@ -57,20 +57,26 @@
 /* Define to 1 if you have the <unistd.h> header file. */
 #cmakedefine HAVE_UNISTD_H
 
+/* Name of package */
+#define PACKAGE "@PACKAGE_NAME@"
+
 /* Define to the address where bug reports for this package should be sent. */
-#cmakedefine PACKAGE_BUGREPORT
+#cmakedefine PACKAGE_BUGREPORT "@PACKAGE_BUGREPORT@"
 
 /* Define to the full name of this package. */
-#cmakedefine PACKAGE_NAME
+#cmakedefine PACKAGE_NAME "@PACKAGE_NAME@"
 
 /* Define to the full name and version of this package. */
-#cmakedefine PACKAGE_STRING
+#cmakedefine PACKAGE_STRING "@PACKAGE_STRING@"
 
 /* Define to the one symbol short name of this package. */
-#cmakedefine PACKAGE_TARNAME
+#cmakedefine PACKAGE_TARNAME "@PACKAGE_TARNAME@"
+
+/* Define to the home page for this package. */
+#define PACKAGE_URL ""
 
 /* Define to the version of this package. */
-#cmakedefine PACKAGE_VERSION
+#cmakedefine PACKAGE_VERSION "@PACKAGE_VERSION@"
 
 /* Define to 1 if you have the ANSI C header files. */
 #cmakedefine STDC_HEADERS
