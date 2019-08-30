@@ -48,7 +48,7 @@ Expat can be built on Windows in two ways:
   Versions that are statically linking with the multi-threaded run-time library
   can be built with -DEXPAT_MSVC_STATIC_CRT=ON.
 
-  Static Linking:  (through -DBUILD_shared=OFF)
+  Static Linking:  (through -DEXPAT_SHARED_LIBS=OFF)
 
   The libraries should be named like this:
   Multi-threaded:     libexpat(w)MT.lib
