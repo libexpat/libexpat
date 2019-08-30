@@ -28,7 +28,7 @@ Release x.x.x xxx xxx xx xxxx
             #326  CMake: Add argument -DXML_MIN_SIZE=(ON|OFF), default OFF
        #239 #277  CMake: Add arguments
                     -DEXPAT_WITH_GETRANDOM=(ON|OFF|AUTO), default AUTO
-                    -DUSE_SYS_GETRANDOM=(ON|OFF|AUTO), default AUTO
+                    -DEXPAT_WITH_SYS_GETRANDOM=(ON|OFF|AUTO), default AUTO
             #326  CMake: Install expat_config.h to include directory
             #326  CMake: Generate and install configuration files for
                     future find_package(expat [..] CONFIG [..])

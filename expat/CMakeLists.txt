@@ -57,7 +57,7 @@ if(NOT WIN32)
     option(XML_DEV_URANDOM "Define to include code reading entropy from `/dev/urandom'." ON)
     set(EXPAT_WITH_GETRANDOM "AUTO" CACHE STRING
             "Make use of getrandom function (ON|OFF|AUTO) [default=AUTO]")
-    set(USE_SYS_GETRANDOM "AUTO" CACHE STRING
+    set(EXPAT_WITH_SYS_GETRANDOM "AUTO" CACHE STRING
             "Make use of syscall SYS_getrandom (ON|OFF|AUTO) [default=AUTO]")
 endif()
 option(XML_UNICODE "Use UTF-16 encoded chars (two bytes) instead of UTF-8" OFF)
@@ -136,7 +136,7 @@ endmacro()
 
 if(NOT WIN32)
     evaluate_detection_results(EXPAT_WITH_GETRANDOM HAVE_GETRANDOM "function getrandom" "Function getrandom")
-    evaluate_detection_results(USE_SYS_GETRANDOM HAVE_SYSCALL_GETRANDOM "syscall SYS_getrandom" "Syscall SYS_getrandom")
+    evaluate_detection_results(EXPAT_WITH_SYS_GETRANDOM HAVE_SYSCALL_GETRANDOM "syscall SYS_getrandom" "Syscall SYS_getrandom")
 endif()
 
 macro(expat_install)
