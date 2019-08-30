@@ -54,6 +54,8 @@ pkgconfigdir = $(libdir)/pkgconfig
 
 
 _EXTRA_DIST_CMAKE = \
+    cmake/expat-config.cmake.in \
+    \
     CMakeLists.txt \
     CMake.README \
     ConfigureChecks.cmake \

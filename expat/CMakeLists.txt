@@ -16,6 +16,7 @@ set(PACKAGE_VERSION "${PROJECT_VERSION}")
 set(PACKAGE_STRING "${PACKAGE_NAME} ${PACKAGE_VERSION}")
 set(PACKAGE_TARNAME "${PACKAGE_NAME}")
 
+include(CMakePackageConfigHelpers)
 include(GNUInstallDirs)
 
 #
@@ -62,6 +63,7 @@ endif()
 option(XML_UNICODE "Use UTF-16 encoded chars (two bytes) instead of UTF-8" OFF)
 option(XML_UNICODE_WCHAR_T "Use wchar_t to represent UTF-16 instead of unsigned short" OFF)
 option(XML_ATTR_INFO "Define to allow retrieving the byte offsets for attribute names and values" OFF)
+option(XML_LARGE_SIZE "Make XML_GetCurrent* functions return <(unsigned) long long> rather than <(unsigned) long>" OFF)
 if(MSVC)
     set(MSVC_USE_STATIC_CRT OFF CACHE BOOL "Use /MT flag (static CRT) when compiling in MSVC")
 endif()
@@ -86,31 +88,24 @@ if(NOT WIN32)
     endif(XML_DEV_URANDOM)
 endif()
 
-if(XML_DTD)
-    set(XML_DTD 1)
-else(XML_DTD)
-    set(XML_DTD 0)
-endif(XML_DTD)
-if(XML_NS)
-    set(XML_NS 1)
-else(XML_NS)
-    set(XML_NS 0)
-endif(XML_NS)
-if(XML_UNICODE)
-    set(XML_UNICODE 1)
-else(XML_UNICODE)
-    set(XML_UNICODE 0)
-endif(XML_UNICODE)
-if(XML_UNICODE_WCHAR_T)
-    set(XML_UNICODE_WCHAR_T 1)
-else(XML_UNICODE_WCHAR_T)
-    set(XML_UNICODE_WCHAR_T 0)
-endif(XML_UNICODE_WCHAR_T)
-if(XML_ATTR_INFO)
-    set(XML_ATTR_INFO 1)
-else(XML_ATTR_INFO)
-    set(XML_ATTR_INFO 0)
-endif(XML_ATTR_INFO)
+macro(expat_bool_to_int var_ref)
+    if(${var_ref})
+        set(${var_ref} 1)
+    else()
+        set(${var_ref} 0)
+    endif()
+endmacro()
+
+expat_bool_to_int(XML_ATTR_INFO)
+expat_bool_to_int(XML_DTD)
+expat_bool_to_int(XML_LARGE_SIZE)
+expat_bool_to_int(XML_NS)
+expat_bool_to_int(XML_UNICODE)
+expat_bool_to_int(XML_UNICODE_WCHAR_T)
+
+if(XML_LARGE_SIZE)
+    add_definitions(-DXML_LARGE_SIZE)
+endif()
 
 if(XML_UNICODE_WCHAR_T AND NOT XML_UNICODE)
     message(SEND_ERROR "Option XML_UNICODE_WCHAR_T=ON may not be used without XML_UNICODE=ON.")
@@ -138,8 +133,15 @@ if(NOT WIN32)
     evaluate_detection_results(USE_SYS_GETRANDOM HAVE_SYSCALL_GETRANDOM "syscall SYS_getrandom" "Syscall SYS_getrandom")
 endif()
 
+macro(expat_install)
+    if(INSTALL)
+        install(${ARGN})
+    endif()
+endmacro()
+
 configure_file(expat_config.h.cmake "${CMAKE_CURRENT_BINARY_DIR}/expat_config.h")
 add_definitions(-DHAVE_EXPAT_CONFIG_H)
+expat_install(FILES "${CMAKE_CURRENT_BINARY_DIR}/expat_config.h" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
 
 set(EXTRA_COMPILE_FLAGS)
@@ -250,13 +252,8 @@ if(NOT WIN32)
     set_property(TARGET expat PROPERTY NO_SONAME ${NO_SONAME})
 endif(NOT WIN32)
 
-macro(expat_install)
-    if(INSTALL)
-        install(${ARGN})
-    endif()
-endmacro()
-
-expat_install(TARGETS expat RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+expat_install(TARGETS expat EXPORT expat
+                      RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
                       LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
                       ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
@@ -371,6 +368,52 @@ if(BUILD_fuzzers)
 endif(BUILD_fuzzers)
 
 #
+# Documentation
+#
+configure_file(Changes changelog COPYONLY)
+expat_install(
+    FILES
+        AUTHORS
+        ${CMAKE_CURRENT_BINARY_DIR}/changelog
+    DESTINATION
+        ${CMAKE_INSTALL_DOCDIR})
+
+#
+# CMake files for find_package(expat [..] CONFIG [..])
+#
+configure_package_config_file(
+        cmake/expat-config.cmake.in
+        cmake/expat-config.cmake
+    INSTALL_DESTINATION
+        ${CMAKE_INSTALL_LIBDIR}/cmake/expat-${PROJECT_VERSION}/
+)
+write_basic_package_version_file(
+    cmake/expat-config-version.cmake
+    COMPATIBILITY SameMajorVersion  # i.e. semver
+)
+export(
+    TARGETS
+        expat
+    FILE
+        cmake/expat-targets.cmake  # not going to be installed
+)
+expat_install(
+    FILES
+        ${CMAKE_CURRENT_BINARY_DIR}/cmake/expat-config.cmake
+        ${CMAKE_CURRENT_BINARY_DIR}/cmake/expat-config-version.cmake
+    DESTINATION
+        ${CMAKE_INSTALL_LIBDIR}/cmake/expat-${PROJECT_VERSION}/
+)
+expat_install(
+    EXPORT
+        expat
+    DESTINATION
+        ${CMAKE_INSTALL_LIBDIR}/cmake/expat-${PROJECT_VERSION}/
+    NAMESPACE
+        expat::
+)
+
+#
 # Summary
 #
 if(XML_UNICODE)
@@ -409,6 +452,7 @@ message(STATUS "  Features")
 message(STATUS "    Attributes info .......... ${XML_ATTR_INFO}")
 message(STATUS "    Context bytes ............ ${XML_CONTEXT_BYTES}")
 message(STATUS "    DTD support .............. ${XML_DTD}")
+message(STATUS "    Large size ............... ${XML_LARGE_SIZE}")
 message(STATUS "    Namespace support ........ ${XML_NS}")
 message(STATUS "")
 message(STATUS "  Entropy sources")
