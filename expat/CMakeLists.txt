@@ -41,7 +41,7 @@ endif()
 #
 # Configuration
 #
-option(BUILD_tools "build the xmlwf tool for expat library" ${_EXPAT_BUILD_TOOLS_DEFAULT})
+option(EXPAT_BUILD_TOOLS "build the xmlwf tool for expat library" ${_EXPAT_BUILD_TOOLS_DEFAULT})
 option(BUILD_examples "build the examples for expat library" ON)
 option(BUILD_tests "build the tests for expat library" ON)
 option(BUILD_shared "build a shared expat library" ON)
@@ -118,8 +118,8 @@ if(XML_UNICODE_WCHAR_T AND NOT XML_UNICODE)
     set(XML_UNICODE 1)
 endif(XML_UNICODE_WCHAR_T AND NOT XML_UNICODE)
 
-if(BUILD_tools AND (XML_UNICODE AND NOT XML_UNICODE_WCHAR_T))
-    message(SEND_ERROR "The xmlwf tool can not be built with option XML_UNICODE_WCHAR_T=OFF and XML_UNICODE=ON. Either set XML_UNICODE_WCHAR_T=ON or BUILD_tools=OFF.")
+if(EXPAT_BUILD_TOOLS AND (XML_UNICODE AND NOT XML_UNICODE_WCHAR_T))
+    message(SEND_ERROR "The xmlwf tool can not be built with option XML_UNICODE_WCHAR_T=OFF and XML_UNICODE=ON. Either set XML_UNICODE_WCHAR_T=ON or EXPAT_BUILD_TOOLS=OFF.")
 endif()
 
 include(${CMAKE_CURRENT_LIST_DIR}/ConfigureChecks.cmake)
@@ -278,7 +278,7 @@ expat_install(FILES ${CMAKE_CURRENT_BINARY_DIR}/expat.pc DESTINATION ${CMAKE_INS
 #
 # C command line tool xmlwf
 #
-if(BUILD_tools)
+if(EXPAT_BUILD_TOOLS)
     set(xmlwf_SRCS
         xmlwf/xmlwf.c
         xmlwf/xmlfile.c
@@ -451,7 +451,7 @@ message(STATUS "  Build documentation ........ ${BUILD_doc}")
 message(STATUS "  Build examples ............. ${BUILD_examples}")
 message(STATUS "  Build fuzzers .............. ${BUILD_fuzzers}")
 message(STATUS "  Build tests ................ ${BUILD_tests}")
-message(STATUS "  Build tools (xmlwf) ........ ${BUILD_tools}")
+message(STATUS "  Build tools (xmlwf) ........ ${EXPAT_BUILD_TOOLS}")
 message(STATUS "  Install files .............. ${INSTALL}")
 message(STATUS "")
 message(STATUS "  Features")
