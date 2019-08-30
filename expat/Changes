@@ -27,7 +27,7 @@ Release x.x.x xxx xxx xx xxxx
                     default OFF
             #326  CMake: Add argument -DEXPAT_LARGE_SIZE=(ON|OFF),
                     default OFF
-            #326  CMake: Add argument -DEXPAT_MIN_SIZE=(ON|OFF),
+            #328  CMake: Add argument -DEXPAT_MIN_SIZE=(ON|OFF),
                     default OFF
        #239 #277  CMake: Add arguments
                     -DEXPAT_WITH_GETRANDOM=(ON|OFF|AUTO), default AUTO
