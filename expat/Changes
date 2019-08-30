@@ -23,9 +23,12 @@ Release x.x.x xxx xxx xx xxxx
                     --with-sys-getrandom
                     --without-sys-getrandom
                   Autotools: Fix "make run-xmltest" for out-of-source builds
-       #244 #264  CMake: Add argument -DXML_ATTR_INFO=(ON|OFF), default OFF
-            #326  CMake: Add argument -DXML_LARGE_SIZE=(ON|OFF), default OFF
-            #326  CMake: Add argument -DXML_MIN_SIZE=(ON|OFF), default OFF
+       #244 #264  CMake: Add argument -DEXPAT_ATTR_INFO=(ON|OFF),
+                    default OFF
+            #326  CMake: Add argument -DEXPAT_LARGE_SIZE=(ON|OFF),
+                    default OFF
+            #326  CMake: Add argument -DEXPAT_MIN_SIZE=(ON|OFF),
+                    default OFF
        #239 #277  CMake: Add arguments
                     -DEXPAT_WITH_GETRANDOM=(ON|OFF|AUTO), default AUTO
                     -DEXPAT_WITH_SYS_GETRANDOM=(ON|OFF|AUTO), default AUTO
