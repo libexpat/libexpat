@@ -23,6 +23,24 @@ Release x.x.x xxx xxx xx xxxx
                     --with-sys-getrandom
                     --without-sys-getrandom
                   Autotools: Fix "make run-xmltest" for out-of-source builds
+                  CMake: Pull all options from Expat <=2.2.7 into namespace
+                    prefix EXPAT_ with the exception of DOCBOOK_TO_MAN:
+                    - BUILD_doc            -> EXPAT_BUILD_DOCS (plural)
+                    - BUILD_examples       -> EXPAT_BUILD_EXAMPLES
+                    - BUILD_shared         -> EXPAT_SHARED_LIBS
+                    - BUILD_tests          -> EXPAT_BUILD_TESTS
+                    - BUILD_tools          -> EXPAT_BUILD_TOOLS
+                    - DOCBOOK_TO_MAN       -> DOCBOOK_TO_MAN (unchanged)
+                    - INSTALL              -> EXPAT_ENABLE_INSTALL
+                    - MSVC_USE_STATIC_CRT  -> EXPAT_MSVC_STATIC_CRT
+                    - USE_libbsd           -> EXPAT_WITH_LIBBSD
+                    - WARNINGS_AS_ERRORS   -> EXPAT_WARNINGS_AS_ERRORS
+                    - XML_CONTEXT_BYTES    -> EXPAT_CONTEXT_BYTES
+                    - XML_DEV_URANDOM      -> EXPAT_DEV_URANDOM
+                    - XML_DTD              -> EXPAT_DTD
+                    - XML_NS               -> EXPAT_NS
+                    - XML_UNICODE          -> EXPAT_UNICODE
+                    - XML_UNICODE_WCHAR_T  -> EXPAT_UNICODE_WCHAR_T
        #244 #264  CMake: Add argument -DEXPAT_ATTR_INFO=(ON|OFF),
                     default OFF
             #326  CMake: Add argument -DEXPAT_LARGE_SIZE=(ON|OFF),
