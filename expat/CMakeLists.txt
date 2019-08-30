@@ -23,11 +23,11 @@ include(GNUInstallDirs)
 # Configuration defaults
 #
 if(WINCE)
-    set(BUILD_tools_default OFF)
+    set(_EXPAT_BUILD_TOOLS_DEFAULT OFF)
 else()
-    set(BUILD_tools_default ON)
+    set(_EXPAT_BUILD_TOOLS_DEFAULT ON)
 endif()
-if(MSVC OR NOT BUILD_tools_default)
+if(MSVC OR NOT _EXPAT_BUILD_TOOLS_DEFAULT)
     set(BUILD_doc_default OFF)
 else()
     find_program(DOCBOOK_TO_MAN NAMES docbook2x-man db2x_docbook2man docbook2man docbook-to-man)
@@ -41,7 +41,7 @@ endif()
 #
 # Configuration
 #
-option(BUILD_tools "build the xmlwf tool for expat library" ${BUILD_tools_default})
+option(BUILD_tools "build the xmlwf tool for expat library" ${_EXPAT_BUILD_TOOLS_DEFAULT})
 option(BUILD_examples "build the examples for expat library" ON)
 option(BUILD_tests "build the tests for expat library" ON)
 option(BUILD_shared "build a shared expat library" ON)
