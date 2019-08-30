@@ -53,7 +53,7 @@ set(EXPAT_CONTEXT_BYTES 1024 CACHE STRING "Define to specify how much context to
 option(EXPAT_DTD "Define to make parameter entity parsing functionality available" ON)
 option(EXPAT_NS "Define to make XML Namespaces functionality available" ON)
 option(EXPAT_WARNINGS_AS_ERRORS "Treat all compiler warnings as errors" OFF)
-if(NOT WIN32)
+if(NOT WIN32 OR _EXPAT_HELP)
     option(EXPAT_DEV_URANDOM "Define to include code reading entropy from `/dev/urandom'." ON)
     set(EXPAT_WITH_GETRANDOM "AUTO" CACHE STRING
             "Make use of getrandom function (ON|OFF|AUTO) [default=AUTO]")
@@ -65,7 +65,7 @@ option(EXPAT_UNICODE_WCHAR_T "Use wchar_t to represent UTF-16 instead of unsigne
 option(EXPAT_ATTR_INFO "Define to allow retrieving the byte offsets for attribute names and values" OFF)
 option(EXPAT_LARGE_SIZE "Make XML_GetCurrent* functions return <(unsigned) long long> rather than <(unsigned) long>" OFF)
 option(EXPAT_MIN_SIZE "Get a smaller (but slower) parser (in particular avoid multiple copies of the tokenizer)" OFF)
-if(MSVC)
+if(MSVC OR _EXPAT_HELP)
     set(EXPAT_MSVC_STATIC_CRT OFF CACHE BOOL "Use /MT flag (static CRT) when compiling in MSVC")
 endif()
 
