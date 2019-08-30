@@ -42,7 +42,7 @@ endif()
 # Configuration
 #
 option(EXPAT_BUILD_TOOLS "build the xmlwf tool for expat library" ${_EXPAT_BUILD_TOOLS_DEFAULT})
-option(BUILD_examples "build the examples for expat library" ON)
+option(EXPAT_BUILD_EXAMPLES "build the examples for expat library" ON)
 option(BUILD_tests "build the tests for expat library" ON)
 option(BUILD_shared "build a shared expat library" ON)
 option(BUILD_doc "build man page for xmlwf" ${BUILD_doc_default})
@@ -300,7 +300,7 @@ endif()
 #
 # C code examples
 #
-if(BUILD_examples)
+if(EXPAT_BUILD_EXAMPLES)
     add_executable(elements examples/elements.c)
     set_property(TARGET elements PROPERTY RUNTIME_OUTPUT_DIRECTORY examples)
     target_link_libraries(elements expat)
@@ -308,7 +308,7 @@ if(BUILD_examples)
     add_executable(outline examples/outline.c)
     set_property(TARGET outline PROPERTY RUNTIME_OUTPUT_DIRECTORY examples)
     target_link_libraries(outline expat)
-endif(BUILD_examples)
+endif(EXPAT_BUILD_EXAMPLES)
 
 #
 # C/C++ test runners
@@ -448,7 +448,7 @@ if(WIN32)
 endif()
 message(STATUS "")
 message(STATUS "  Build documentation ........ ${BUILD_doc}")
-message(STATUS "  Build examples ............. ${BUILD_examples}")
+message(STATUS "  Build examples ............. ${EXPAT_BUILD_EXAMPLES}")
 message(STATUS "  Build fuzzers .............. ${BUILD_fuzzers}")
 message(STATUS "  Build tests ................ ${BUILD_tests}")
 message(STATUS "  Build tools (xmlwf) ........ ${EXPAT_BUILD_TOOLS}")
