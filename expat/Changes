@@ -25,6 +25,7 @@ Release x.x.x xxx xxx xx xxxx
                   Autotools: Fix "make run-xmltest" for out-of-source builds
        #244 #264  CMake: Add argument -DXML_ATTR_INFO=(ON|OFF), default OFF
             #326  CMake: Add argument -DXML_LARGE_SIZE=(ON|OFF), default OFF
+            #326  CMake: Add argument -DXML_MIN_SIZE=(ON|OFF), default OFF
        #239 #277  CMake: Add arguments
                     -DUSE_GETRANDOM=(ON|OFF|AUTO), default AUTO
                     -DUSE_SYS_GETRANDOM=(ON|OFF|AUTO), default AUTO
