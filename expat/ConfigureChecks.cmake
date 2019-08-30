@@ -21,7 +21,7 @@ check_symbol_exists("getpagesize" "unistd.h" HAVE_GETPAGESIZE)
 check_symbol_exists("mmap" "sys/mman.h" HAVE_MMAP)
 check_symbol_exists("getrandom" "sys/random.h" HAVE_GETRANDOM)
 
-if(USE_libbsd)
+if(EXPAT_WITH_LIBBSD)
     set(CMAKE_REQUIRED_LIBRARIES "${LIB_BSD}")
     set(_bsd "bsd/")
 else()
