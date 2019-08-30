@@ -66,7 +66,7 @@ option(XML_ATTR_INFO "Define to allow retrieving the byte offsets for attribute 
 option(XML_LARGE_SIZE "Make XML_GetCurrent* functions return <(unsigned) long long> rather than <(unsigned) long>" OFF)
 option(XML_MIN_SIZE "Get a smaller (but slower) parser (in particular avoid multiple copies of the tokenizer)" OFF)
 if(MSVC)
-    set(MSVC_USE_STATIC_CRT OFF CACHE BOOL "Use /MT flag (static CRT) when compiling in MSVC")
+    set(EXPAT_MSVC_STATIC_CRT OFF CACHE BOOL "Use /MT flag (static CRT) when compiling in MSVC")
 endif()
 
 #
@@ -169,8 +169,8 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${EXTRA_COMPILE_FLAGS}")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${EXTRA_COMPILE_FLAGS}")
 
 if (MSVC)
-    if (MSVC_USE_STATIC_CRT)
-        message("-- Using static CRT ${MSVC_USE_STATIC_CRT}")
+    if (EXPAT_MSVC_STATIC_CRT)
+        message("-- Using static CRT ${EXPAT_MSVC_STATIC_CRT}")
         foreach(flag_var
                 CMAKE_CXX_FLAGS_DEBUG
                 CMAKE_CXX_FLAGS_RELEASE
@@ -196,7 +196,7 @@ if(WIN32)
     endif()
 
     if(NOT BUILD_shared)
-        if(MSVC_USE_STATIC_CRT)
+        if(EXPAT_MSVC_STATIC_CRT)
             set(_POSTFIX_CRT "MT")
         else()
             set(_POSTFIX_CRT "MD")
@@ -440,7 +440,7 @@ message(STATUS "  Prefix ..................... ${CMAKE_INSTALL_PREFIX}")
 message(STATUS "  Build type ................. ${CMAKE_BUILD_TYPE}")
 message(STATUS "  Shared libraries ........... ${BUILD_shared}")
 if(WIN32)
-    message(STATUS "  Static CRT ................. ${MSVC_USE_STATIC_CRT}")
+    message(STATUS "  Static CRT ................. ${EXPAT_MSVC_STATIC_CRT}")
 endif()
 message(STATUS "  Character type ............. ${_EXPAT_CHAR_TYPE}")
 if(WIN32)
