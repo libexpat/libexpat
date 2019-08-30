@@ -55,7 +55,7 @@ option(XML_NS "Define to make XML Namespaces functionality available" ON)
 option(EXPAT_WARNINGS_AS_ERRORS "Treat all compiler warnings as errors" OFF)
 if(NOT WIN32)
     option(XML_DEV_URANDOM "Define to include code reading entropy from `/dev/urandom'." ON)
-    set(USE_GETRANDOM "AUTO" CACHE STRING
+    set(EXPAT_WITH_GETRANDOM "AUTO" CACHE STRING
             "Make use of getrandom function (ON|OFF|AUTO) [default=AUTO]")
     set(USE_SYS_GETRANDOM "AUTO" CACHE STRING
             "Make use of syscall SYS_getrandom (ON|OFF|AUTO) [default=AUTO]")
@@ -135,7 +135,7 @@ macro(evaluate_detection_results use_ref have_ref thing_lower thing_title)
 endmacro()
 
 if(NOT WIN32)
-    evaluate_detection_results(USE_GETRANDOM HAVE_GETRANDOM "function getrandom" "Function getrandom")
+    evaluate_detection_results(EXPAT_WITH_GETRANDOM HAVE_GETRANDOM "function getrandom" "Function getrandom")
     evaluate_detection_results(USE_SYS_GETRANDOM HAVE_SYSCALL_GETRANDOM "syscall SYS_getrandom" "Syscall SYS_getrandom")
 endif()
 
