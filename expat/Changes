@@ -23,12 +23,33 @@ Release x.x.x xxx xxx xx xxxx
                     --with-sys-getrandom
                     --without-sys-getrandom
                   Autotools: Fix "make run-xmltest" for out-of-source builds
-       #244 #264  CMake: Add argument -DXML_ATTR_INFO=(ON|OFF), default OFF
-            #326  CMake: Add argument -DXML_LARGE_SIZE=(ON|OFF), default OFF
-            #326  CMake: Add argument -DXML_MIN_SIZE=(ON|OFF), default OFF
+                  CMake: Pull all options from Expat <=2.2.7 into namespace
+                    prefix EXPAT_ with the exception of DOCBOOK_TO_MAN:
+                    - BUILD_doc            -> EXPAT_BUILD_DOCS (plural)
+                    - BUILD_examples       -> EXPAT_BUILD_EXAMPLES
+                    - BUILD_shared         -> EXPAT_SHARED_LIBS
+                    - BUILD_tests          -> EXPAT_BUILD_TESTS
+                    - BUILD_tools          -> EXPAT_BUILD_TOOLS
+                    - DOCBOOK_TO_MAN       -> DOCBOOK_TO_MAN (unchanged)
+                    - INSTALL              -> EXPAT_ENABLE_INSTALL
+                    - MSVC_USE_STATIC_CRT  -> EXPAT_MSVC_STATIC_CRT
+                    - USE_libbsd           -> EXPAT_WITH_LIBBSD
+                    - WARNINGS_AS_ERRORS   -> EXPAT_WARNINGS_AS_ERRORS
+                    - XML_CONTEXT_BYTES    -> EXPAT_CONTEXT_BYTES
+                    - XML_DEV_URANDOM      -> EXPAT_DEV_URANDOM
+                    - XML_DTD              -> EXPAT_DTD
+                    - XML_NS               -> EXPAT_NS
+                    - XML_UNICODE          -> EXPAT_UNICODE
+                    - XML_UNICODE_WCHAR_T  -> EXPAT_UNICODE_WCHAR_T
+       #244 #264  CMake: Add argument -DEXPAT_ATTR_INFO=(ON|OFF),
+                    default OFF
+            #326  CMake: Add argument -DEXPAT_LARGE_SIZE=(ON|OFF),
+                    default OFF
+            #328  CMake: Add argument -DEXPAT_MIN_SIZE=(ON|OFF),
+                    default OFF
        #239 #277  CMake: Add arguments
-                    -DUSE_GETRANDOM=(ON|OFF|AUTO), default AUTO
-                    -DUSE_SYS_GETRANDOM=(ON|OFF|AUTO), default AUTO
+                    -DEXPAT_WITH_GETRANDOM=(ON|OFF|AUTO), default AUTO
+                    -DEXPAT_WITH_SYS_GETRANDOM=(ON|OFF|AUTO), default AUTO
             #326  CMake: Install expat_config.h to include directory
             #326  CMake: Generate and install configuration files for
                     future find_package(expat [..] CONFIG [..])
@@ -39,7 +60,8 @@ Release x.x.x xxx xxx xx xxxx
                     Old: expat[d].lib
                     New: expat[w][d][MD|MT].lib
                   CMake: Migrate files from Windows to Unix line endings
-            #308  CMake: Integrate OSS-Fuzz fuzzers
+            #308  CMake: Integrate OSS-Fuzz fuzzers, option
+                    -DEXPAT_BUILD_FUZZERS=(ON|OFF), default OFF
        #299 #302  Windows: Replace LoadLibrary hack to access
                     unofficial API function SystemFunction036 (RtlGenRandom)
                     by using official API function rand_s (needs WinXP+)

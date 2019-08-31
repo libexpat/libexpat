@@ -46,9 +46,9 @@ Expat can be built on Windows in two ways:
   The "w" indicates the UTF-16 version of the library.
 
   Versions that are statically linking with the multi-threaded run-time library
-  can be built with -DMSVC_USE_STATIC_CRT=ON.
+  can be built with -DEXPAT_MSVC_STATIC_CRT=ON.
 
-  Static Linking:  (through -DBUILD_shared=OFF)
+  Static Linking:  (through -DEXPAT_SHARED_LIBS=OFF)
 
   The libraries should be named like this:
   Multi-threaded:     libexpat(w)MT.lib
