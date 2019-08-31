@@ -137,55 +137,55 @@ build system based on GNU Autotools at some point when its ready.
 For an idea of the available (non-advanced) options for building with CMake:
 
 ```console
-# rm -f CMakeCache.txt ; cmake -D_EXPAT_HELP=ON -LH . | grep -B1 ':.*='
+# rm -f CMakeCache.txt ; cmake -D_EXPAT_HELP=ON -LH . | grep -B1 ':.*=' | sed 's,^--$,,'
 // Choose the type of build, options are: None Debug Release RelWithDebInfo MinSizeRel ...
 CMAKE_BUILD_TYPE:STRING=
---
+
 // Install path prefix, prepended onto install directories.
 CMAKE_INSTALL_PREFIX:PATH=/usr/local
---
+
 // Path to a program.
 DOCBOOK_TO_MAN:FILEPATH=/usr/bin/docbook2x-man
---
+
 // build man page for xmlwf
 EXPAT_BUILD_DOCS:BOOL=ON
---
+
 // build the examples for expat library
 EXPAT_BUILD_EXAMPLES:BOOL=ON
---
+
 // build fuzzers for the expat library
 EXPAT_BUILD_FUZZERS:BOOL=OFF
---
+
 // build the tests for expat library
 EXPAT_BUILD_TESTS:BOOL=ON
---
+
 // build the xmlwf tool for expat library
 EXPAT_BUILD_TOOLS:BOOL=ON
---
+
 // install expat files in cmake install target
 EXPAT_ENABLE_INSTALL:BOOL=ON
---
+
 // Use /MT flag (static CRT) when compiling in MSVC
 EXPAT_MSVC_STATIC_CRT:BOOL=OFF
---
+
 // build a shared expat library
 EXPAT_SHARED_LIBS:BOOL=ON
---
+
 // Use UTF-16 encoded chars (two bytes) instead of UTF-8
 EXPAT_UNICODE:BOOL=OFF
---
+
 // Use wchar_t to represent UTF-16 instead of unsigned short
 EXPAT_UNICODE_WCHAR_T:BOOL=OFF
---
+
 // Treat all compiler warnings as errors
 EXPAT_WARNINGS_AS_ERRORS:BOOL=OFF
---
+
 // Make use of getrandom function (ON|OFF|AUTO) [default=AUTO]
 EXPAT_WITH_GETRANDOM:STRING=AUTO
---
+
 // utilize libbsd (for arc4random_buf)
 EXPAT_WITH_LIBBSD:BOOL=OFF
---
+
 // Make use of syscall SYS_getrandom (ON|OFF|AUTO) [default=AUTO]
 EXPAT_WITH_SYS_GETRANDOM:STRING=AUTO
 ```
