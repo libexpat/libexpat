@@ -67,7 +67,8 @@ Release x.x.x xxx xxx xx xxxx
                     by using official API function rand_s (needs WinXP+)
              #14  Drop an OpenVMS support leftover
     #235 #268 ..
-  #270 #310 #313  Address compiler warnings
+    #270 #310 ..
+  #313 #331 #333  Address compiler warnings
     #282 #283 ..
        #284 #285  Address cppcheck warnings
        #294 #295  Address Clang Static Analyzer warnings
