@@ -260,6 +260,7 @@ sb_byteType(const ENCODING *enc, const char *p) {
 #  define BYTE_TO_ASCII(enc, p) (AS_NORMAL_ENCODING(enc)->byteToAscii(enc, p))
 static int PTRFASTCALL
 sb_byteToAscii(const ENCODING *enc, const char *p) {
+  UNUSED_P(enc);
   return *p;
 }
 #else
@@ -286,6 +287,7 @@ sb_byteToAscii(const ENCODING *enc, const char *p) {
     (AS_NORMAL_ENCODING(enc)->charMatches(enc, p, c))
 static int PTRCALL
 sb_charMatches(const ENCODING *enc, const char *p, int c) {
+  UNUSED_P(enc);
   return *p == c;
 }
 #else
@@ -733,11 +735,11 @@ DEFINE_UTF16_TO_UTF16(big2_)
 #define LITTLE2_BYTE_TYPE(enc, p)                                              \
   ((p)[1] == 0 ? ((struct normal_encoding *)(enc))->type[(unsigned char)*(p)]  \
                : unicode_byte_type((p)[1], (p)[0]))
-#define LITTLE2_BYTE_TO_ASCII(enc, p) ((p)[1] == 0 ? (p)[0] : -1)
-#define LITTLE2_CHAR_MATCHES(enc, p, c) ((p)[1] == 0 && (p)[0] == c)
-#define LITTLE2_IS_NAME_CHAR_MINBPC(enc, p)                                    \
+#define LITTLE2_BYTE_TO_ASCII(p) ((p)[1] == 0 ? (p)[0] : -1)
+#define LITTLE2_CHAR_MATCHES(p, c) ((p)[1] == 0 && (p)[0] == c)
+#define LITTLE2_IS_NAME_CHAR_MINBPC(p)                                         \
   UCS2_GET_NAMING(namePages, (unsigned char)p[1], (unsigned char)p[0])
-#define LITTLE2_IS_NMSTRT_CHAR_MINBPC(enc, p)                                  \
+#define LITTLE2_IS_NMSTRT_CHAR_MINBPC(p)                                       \
   UCS2_GET_NAMING(nmstrtPages, (unsigned char)p[1], (unsigned char)p[0])
 
 #ifdef XML_MIN_SIZE
@@ -749,22 +751,26 @@ little2_byteType(const ENCODING *enc, const char *p) {
 
 static int PTRFASTCALL
 little2_byteToAscii(const ENCODING *enc, const char *p) {
-  return LITTLE2_BYTE_TO_ASCII(enc, p);
+  UNUSED_P(enc);
+  return LITTLE2_BYTE_TO_ASCII(p);
 }
 
 static int PTRCALL
 little2_charMatches(const ENCODING *enc, const char *p, int c) {
-  return LITTLE2_CHAR_MATCHES(enc, p, c);
+  UNUSED_P(enc);
+  return LITTLE2_CHAR_MATCHES(p, c);
 }
 
 static int PTRFASTCALL
 little2_isNameMin(const ENCODING *enc, const char *p) {
-  return LITTLE2_IS_NAME_CHAR_MINBPC(enc, p);
+  UNUSED_P(enc);
+  return LITTLE2_IS_NAME_CHAR_MINBPC(p);
 }
 
 static int PTRFASTCALL
 little2_isNmstrtMin(const ENCODING *enc, const char *p) {
-  return LITTLE2_IS_NMSTRT_CHAR_MINBPC(enc, p);
+  UNUSED_P(enc);
+  return LITTLE2_IS_NMSTRT_CHAR_MINBPC(p);
 }
 
 #  undef VTABLE
@@ -777,12 +783,12 @@ little2_isNmstrtMin(const ENCODING *enc, const char *p) {
 #  define MINBPC(enc) 2
 /* CHAR_MATCHES is guaranteed to have MINBPC bytes available. */
 #  define BYTE_TYPE(enc, p) LITTLE2_BYTE_TYPE(enc, p)
-#  define BYTE_TO_ASCII(enc, p) LITTLE2_BYTE_TO_ASCII(enc, p)
-#  define CHAR_MATCHES(enc, p, c) LITTLE2_CHAR_MATCHES(enc, p, c)
+#  define BYTE_TO_ASCII(enc, p) LITTLE2_BYTE_TO_ASCII(p)
+#  define CHAR_MATCHES(enc, p, c) LITTLE2_CHAR_MATCHES(p, c)
 #  define IS_NAME_CHAR(enc, p, n) 0
-#  define IS_NAME_CHAR_MINBPC(enc, p) LITTLE2_IS_NAME_CHAR_MINBPC(enc, p)
+#  define IS_NAME_CHAR_MINBPC(enc, p) LITTLE2_IS_NAME_CHAR_MINBPC(p)
 #  define IS_NMSTRT_CHAR(enc, p, n) (0)
-#  define IS_NMSTRT_CHAR_MINBPC(enc, p) LITTLE2_IS_NMSTRT_CHAR_MINBPC(enc, p)
+#  define IS_NMSTRT_CHAR_MINBPC(enc, p) LITTLE2_IS_NMSTRT_CHAR_MINBPC(p)
 
 #  define XML_TOK_IMPL_C
 #  include "xmltok_impl.c"
@@ -864,11 +870,11 @@ static const struct normal_encoding internal_little2_encoding
   ((p)[0] == 0                                                                 \
        ? ((struct normal_encoding *)(enc))->type[(unsigned char)(p)[1]]        \
        : unicode_byte_type((p)[0], (p)[1]))
-#define BIG2_BYTE_TO_ASCII(enc, p) ((p)[0] == 0 ? (p)[1] : -1)
-#define BIG2_CHAR_MATCHES(enc, p, c) ((p)[0] == 0 && (p)[1] == c)
-#define BIG2_IS_NAME_CHAR_MINBPC(enc, p)                                       \
+#define BIG2_BYTE_TO_ASCII(p) ((p)[0] == 0 ? (p)[1] : -1)
+#define BIG2_CHAR_MATCHES(p, c) ((p)[0] == 0 && (p)[1] == c)
+#define BIG2_IS_NAME_CHAR_MINBPC(p)                                            \
   UCS2_GET_NAMING(namePages, (unsigned char)p[0], (unsigned char)p[1])
-#define BIG2_IS_NMSTRT_CHAR_MINBPC(enc, p)                                     \
+#define BIG2_IS_NMSTRT_CHAR_MINBPC(p)                                          \
   UCS2_GET_NAMING(nmstrtPages, (unsigned char)p[0], (unsigned char)p[1])
 
 #ifdef XML_MIN_SIZE
@@ -880,22 +886,26 @@ big2_byteType(const ENCODING *enc, const char *p) {
 
 static int PTRFASTCALL
 big2_byteToAscii(const ENCODING *enc, const char *p) {
-  return BIG2_BYTE_TO_ASCII(enc, p);
+  UNUSED_P(enc);
+  return BIG2_BYTE_TO_ASCII(p);
 }
 
 static int PTRCALL
 big2_charMatches(const ENCODING *enc, const char *p, int c) {
-  return BIG2_CHAR_MATCHES(enc, p, c);
+  UNUSED_P(enc);
+  return BIG2_CHAR_MATCHES(p, c);
 }
 
 static int PTRFASTCALL
 big2_isNameMin(const ENCODING *enc, const char *p) {
-  return BIG2_IS_NAME_CHAR_MINBPC(enc, p);
+  UNUSED_P(enc);
+  return BIG2_IS_NAME_CHAR_MINBPC(p);
 }
 
 static int PTRFASTCALL
 big2_isNmstrtMin(const ENCODING *enc, const char *p) {
-  return BIG2_IS_NMSTRT_CHAR_MINBPC(enc, p);
+  UNUSED_P(enc);
+  return BIG2_IS_NMSTRT_CHAR_MINBPC(p);
 }
 
 #  undef VTABLE
@@ -908,12 +918,12 @@ big2_isNmstrtMin(const ENCODING *enc, const char *p) {
 #  define MINBPC(enc) 2
 /* CHAR_MATCHES is guaranteed to have MINBPC bytes available. */
 #  define BYTE_TYPE(enc, p) BIG2_BYTE_TYPE(enc, p)
-#  define BYTE_TO_ASCII(enc, p) BIG2_BYTE_TO_ASCII(enc, p)
-#  define CHAR_MATCHES(enc, p, c) BIG2_CHAR_MATCHES(enc, p, c)
+#  define BYTE_TO_ASCII(enc, p) BIG2_BYTE_TO_ASCII(p)
+#  define CHAR_MATCHES(enc, p, c) BIG2_CHAR_MATCHES(p, c)
 #  define IS_NAME_CHAR(enc, p, n) 0
-#  define IS_NAME_CHAR_MINBPC(enc, p) BIG2_IS_NAME_CHAR_MINBPC(enc, p)
+#  define IS_NAME_CHAR_MINBPC(enc, p) BIG2_IS_NAME_CHAR_MINBPC(p)
 #  define IS_NMSTRT_CHAR(enc, p, n) (0)
-#  define IS_NMSTRT_CHAR_MINBPC(enc, p) BIG2_IS_NMSTRT_CHAR_MINBPC(enc, p)
+#  define IS_NMSTRT_CHAR_MINBPC(enc, p) BIG2_IS_NMSTRT_CHAR_MINBPC(p)
 
 #  define XML_TOK_IMPL_C
 #  include "xmltok_impl.c"
