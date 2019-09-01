@@ -392,6 +392,55 @@ if(EXPAT_BUILD_FUZZERS)
 endif(EXPAT_BUILD_FUZZERS)
 
 #
+# Custom target "run-xmltest"
+#
+if(EXPAT_BUILD_TOOLS AND NOT MSVC)
+    add_custom_target(
+        xmlts-zip-downloaded
+        COMMAND
+            sh -c 'test -f xmlts.zip || wget --output-document=xmlts.zip https://www.w3.org/XML/Test/xmlts20080827.zip'
+        BYPRODUCTS
+            tests/xmlts.zip
+        WORKING_DIRECTORY
+            tests/)
+
+    add_custom_target(
+        xmlts-zip-extracted
+        COMMAND
+            sh -c 'test -d xmlconf || unzip -q xmlts.zip'
+        BYPRODUCTS
+            tests/xmlconf
+        WORKING_DIRECTORY
+            tests/)
+    add_dependencies(xmlts-zip-extracted xmlts-zip-downloaded)
+
+    add_custom_target(
+        xmltest-sh-been-run
+        COMMAND
+            sh -c '${CMAKE_CURRENT_SOURCE_DIR}/tests/xmltest.sh "bash ${CMAKE_CURRENT_BINARY_DIR}/run.sh $<TARGET_FILE:xmlwf>" 2>&1 | tee tests/xmltest.log'
+        BYPRODUCTS
+            tests/xmltest.log)
+    add_dependencies(xmltest-sh-been-run xmlts-zip-extracted xmlwf)
+
+    add_custom_target(
+        xmltest-log-fixed
+        COMMAND
+            ${CMAKE_CURRENT_SOURCE_DIR}/fix-xmltest-log.sh tests/xmltest.log
+        DEPENDS
+            tests/xmltest.log)
+    add_dependencies(xmltest-log-fixed xmltest-sh-been-run)
+
+    add_custom_target(
+        xmltest-log-verified
+        COMMAND
+            diff -u ${CMAKE_CURRENT_SOURCE_DIR}/tests/xmltest.log.expected tests/xmltest.log)
+    add_dependencies(xmltest-log-verified xmltest-log-fixed)
+
+    add_custom_target(run-xmltest)
+    add_dependencies(run-xmltest xmltest-log-verified)
+endif()
+
+#
 # Documentation
 #
 configure_file(Changes changelog COPYONLY)
