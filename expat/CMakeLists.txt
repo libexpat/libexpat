@@ -328,15 +328,30 @@ if(EXPAT_BUILD_TESTS)
         tests/structdata.c
     )
 
+    if(NOT MSVC)
+        if(MINGW)
+            set(host whatever-mingw32)  # for nothing but run.sh
+        endif()
+        configure_file(${CMAKE_CURRENT_SOURCE_DIR}/run.sh.in run.sh @ONLY)
+    endif()
+
+    function(expat_add_test _name _file)
+        if(MSVC)
+            add_test(NAME ${_name} COMMAND ${_file})
+        else()
+            add_test(NAME ${_name} COMMAND bash run.sh ${_file})
+        endif()
+    endfunction()
+
     add_executable(runtests tests/runtests.c ${test_SRCS})
     set_property(TARGET runtests PROPERTY RUNTIME_OUTPUT_DIRECTORY tests)
     target_link_libraries(runtests expat)
-    add_test(runtests tests/runtests)
+    expat_add_test(runtests $<TARGET_FILE:runtests>)
 
     add_executable(runtestspp tests/runtestspp.cpp ${test_SRCS})
     set_property(TARGET runtestspp PROPERTY RUNTIME_OUTPUT_DIRECTORY tests)
     target_link_libraries(runtestspp expat)
-    add_test(runtestspp tests/runtestspp)
+    expat_add_test(runtestspp $<TARGET_FILE:runtestspp>)
 endif(EXPAT_BUILD_TESTS)
 
 if(EXPAT_BUILD_FUZZERS)
