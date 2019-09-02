@@ -229,8 +229,9 @@ set(expat_SRCS
     lib/xmlparse.c
     lib/xmlrole.c
     lib/xmltok.c
-    lib/xmltok_impl.c
-    lib/xmltok_ns.c
+# NOTE: ISO C forbids an empty translation unit
+#   lib/xmltok_impl.c
+#   lib/xmltok_ns.c
 )
 
 if(EXPAT_SHARED_LIBS)
