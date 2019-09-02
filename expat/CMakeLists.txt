@@ -113,6 +113,14 @@ if(EXPAT_BUILD_TOOLS AND (EXPAT_UNICODE AND NOT EXPAT_UNICODE_WCHAR_T))
     message(SEND_ERROR "The xmlwf tool can not be built with option EXPAT_UNICODE_WCHAR_T=OFF and EXPAT_UNICODE=ON. Either set EXPAT_UNICODE_WCHAR_T=ON or EXPAT_BUILD_TOOLS=OFF.")
 endif()
 
+if(EXPAT_UNICODE)
+    if(EXPAT_UNICODE_WCHAR_T)
+        add_definitions(-DXML_UNICODE_WCHAR_T)  # for wchar_t
+    else()
+        add_definitions(-DXML_UNICODE)          # for unsigned short
+    endif()
+endif()
+
 include(${CMAKE_CURRENT_LIST_DIR}/ConfigureChecks.cmake)
 
 macro(evaluate_detection_results use_ref have_ref thing_lower thing_title)
@@ -135,8 +143,6 @@ _expat_copy_bool_int(EXPAT_DTD              XML_DTD)
 _expat_copy_bool_int(EXPAT_LARGE_SIZE       XML_LARGE_SIZE)
 _expat_copy_bool_int(EXPAT_MIN_SIZE         XML_MIN_SIZE)
 _expat_copy_bool_int(EXPAT_NS               XML_NS)
-_expat_copy_bool_int(EXPAT_UNICODE          XML_UNICODE)
-_expat_copy_bool_int(EXPAT_UNICODE_WCHAR_T  XML_UNICODE_WCHAR_T)
 if(NOT WIN32)
     _expat_copy_bool_int(EXPAT_DEV_URANDOM  XML_DEV_URANDOM)
 endif()

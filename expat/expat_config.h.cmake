@@ -103,12 +103,6 @@
 /* Define to make XML Namespaces functionality available. */
 #cmakedefine XML_NS
 
-/* Define to use UTF-16 chars (two bytes). */
-#cmakedefine XML_UNICODE
-
-/* Define to use wchar_t as UTF-16 char type instead of unsigned short. */
-#cmakedefine XML_UNICODE_WCHAR_T
-
 /* Define to __FUNCTION__ or "" if `__func__' does not conform to ANSI C. */
 #ifdef _MSC_VER
 #  define __func__ __FUNCTION__
