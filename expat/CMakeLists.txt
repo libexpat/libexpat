@@ -302,6 +302,12 @@ if(EXPAT_BUILD_TOOLS)
     set_property(TARGET xmlwf PROPERTY RUNTIME_OUTPUT_DIRECTORY xmlwf)
     target_link_libraries(xmlwf expat)
     expat_install(TARGETS xmlwf DESTINATION ${CMAKE_INSTALL_BINDIR})
+
+    if(MINGW AND EXPAT_UNICODE_WCHAR_T)
+        # https://gcc.gnu.org/onlinedocs/gcc/x86-Windows-Options.html
+        set_target_properties(xmlwf PROPERTIES LINK_FLAGS -municode)
+    endif()
+
     if(EXPAT_BUILD_DOCS)
         file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/doc)
         add_custom_command(TARGET expat PRE_BUILD COMMAND "${DOCBOOK_TO_MAN}" "${PROJECT_SOURCE_DIR}/doc/xmlwf.xml" && mv "XMLWF.1" "${PROJECT_BINARY_DIR}/doc/xmlwf.1")
