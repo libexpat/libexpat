@@ -62,5 +62,5 @@ elif [[ ${MODE} = clang-format ]]; then
     ./apply-clang-format.sh
     git diff --exit-code
 else
-    ./qa.sh ${CONFIGURE_ARGS}
+    ./qa.sh ${CMAKE_ARGS}
 fi
