@@ -56,7 +56,7 @@ populate_environment() {
             address)
                 # http://clang.llvm.org/docs/AddressSanitizer.html
                 BASE_COMPILE_FLAGS+=" -g -fsanitize=address -fno-omit-frame-pointer -fno-common"
-                BASE_LINK_FLAGS+=" -g -Wc,-fsanitize=address"  # "-Wc," is for libtool
+                BASE_LINK_FLAGS+=" -g -fsanitize=address"
                 ;;
             memory)
                 # http://clang.llvm.org/docs/MemorySanitizer.html
@@ -86,20 +86,31 @@ populate_environment() {
 }
 
 
-run_configure() {
-    RUN CC="${CC}" CFLAGS="${CFLAGS}" \
-            CXX="${CXX}" CXXFLAGS="${CXXFLAGS}" \
-            LD="${LD}" LDFLAGS="${LDFLAGS}" \
-            ./configure "$@" \
-        || { RUN cat config.log ; false ; }
+run_cmake() {
+    local cmake_args=(
+        -DCMAKE_C_COMPILER="${CC}"
+        -DCMAKE_C_FLAGS="${CFLAGS}"
+
+        -DCMAKE_CXX_COMPILER="${CXX}"
+        -DCMAKE_CXX_FLAGS="${CXXFLAGS}"
+
+        -DCMAKE_LINKER="${LD}"
+        -DCMAKE_EXE_LINKER_FLAGS="${LDFLAGS}"
+        -DCMAKE_SHARED_LINKER_FLAGS="${LDFLAGS}"
+
+        -DEXPAT_WARNINGS_AS_ERRORS=ON
+    )
+    RUN cmake "${cmake_args[@]}" "$@" .
 }
 
 
 run_compile() {
-    RUN "${MAKE}" \
-            CFLAGS="${CFLAGS} -Werror" \
-            CXXFLAGS="${CXXFLAGS} -Werror" \
-            clean all
+    local make_args=(
+        VERBOSE=1
+        -j2
+    )
+
+    RUN "${MAKE}" "${make_args[@]}" clean all
 }
 
 
@@ -110,25 +121,23 @@ run_tests() {
 
     if [[ ${CC} =~ mingw ]]; then
         # NOTE: Filenames are hardcoded for Travis Ubuntu trusty, as of now
-        for i in tests xmlwf xmlwf/.libs ; do
+        for i in tests xmlwf ; do
             RUN ln -s \
                     /usr/i686-w64-mingw32/lib/libwinpthread-1.dll \
-                    /usr/lib/gcc/i686-w64-mingw32/4.8/libgcc_s_sjlj-1.dll \
-                    /usr/lib/gcc/i686-w64-mingw32/4.8/libstdc++-6.dll \
-                    ../lib/.libs/libexpat-1.dll \
+                    /usr/lib/gcc/i686-w64-mingw32/*/libgcc_s_sjlj-1.dll \
+                    /usr/lib/gcc/i686-w64-mingw32/*/libstdc++-6.dll \
+                    "$PWD"/libexpat.dll \
                     ${i}/
         done
     fi
 
-    RUN "${MAKE}" \
-            CFLAGS="${CFLAGS} -Werror" \
-            CXXFLAGS="${CXXFLAGS} -Werror" \
-            check run-xmltest \
-        || {
-            RUN cat tests/runtests.log
-            RUN cat tests/runtestspp.log
-            false
-        }
+    local make_env_args=(
+        CTEST_OUTPUT_ON_FAILURE=1
+        CTEST_PARALLEL_LEVEL=2
+        VERBOSE=1
+    )
+
+    RUN "${MAKE}" "${make_env_args[@]}" test run-xmltest
 }
 
 
@@ -169,7 +178,7 @@ run() {
     populate_environment
     dump_config
 
-    run_configure "$@"
+    run_cmake "$@"
     run_compile
     run_tests
     run_processor
