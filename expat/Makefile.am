@@ -55,6 +55,7 @@ pkgconfigdir = $(libdir)/pkgconfig
 
 _EXTRA_DIST_CMAKE = \
     cmake/expat-config.cmake.in \
+    cmake/mingw-toolchain.cmake \
     \
     CMakeLists.txt \
     CMake.README \

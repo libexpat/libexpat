@@ -113,6 +113,14 @@ if(EXPAT_BUILD_TOOLS AND (EXPAT_UNICODE AND NOT EXPAT_UNICODE_WCHAR_T))
     message(SEND_ERROR "The xmlwf tool can not be built with option EXPAT_UNICODE_WCHAR_T=OFF and EXPAT_UNICODE=ON. Either set EXPAT_UNICODE_WCHAR_T=ON or EXPAT_BUILD_TOOLS=OFF.")
 endif()
 
+if(EXPAT_UNICODE)
+    if(EXPAT_UNICODE_WCHAR_T)
+        add_definitions(-DXML_UNICODE_WCHAR_T)  # for wchar_t
+    else()
+        add_definitions(-DXML_UNICODE)          # for unsigned short
+    endif()
+endif()
+
 include(${CMAKE_CURRENT_LIST_DIR}/ConfigureChecks.cmake)
 
 macro(evaluate_detection_results use_ref have_ref thing_lower thing_title)
@@ -135,8 +143,6 @@ _expat_copy_bool_int(EXPAT_DTD              XML_DTD)
 _expat_copy_bool_int(EXPAT_LARGE_SIZE       XML_LARGE_SIZE)
 _expat_copy_bool_int(EXPAT_MIN_SIZE         XML_MIN_SIZE)
 _expat_copy_bool_int(EXPAT_NS               XML_NS)
-_expat_copy_bool_int(EXPAT_UNICODE          XML_UNICODE)
-_expat_copy_bool_int(EXPAT_UNICODE_WCHAR_T  XML_UNICODE_WCHAR_T)
 if(NOT WIN32)
     _expat_copy_bool_int(EXPAT_DEV_URANDOM  XML_DEV_URANDOM)
 endif()
@@ -229,8 +235,9 @@ set(expat_SRCS
     lib/xmlparse.c
     lib/xmlrole.c
     lib/xmltok.c
-    lib/xmltok_impl.c
-    lib/xmltok_ns.c
+# NOTE: ISO C forbids an empty translation unit
+#   lib/xmltok_impl.c
+#   lib/xmltok_ns.c
 )
 
 if(EXPAT_SHARED_LIBS)
@@ -271,12 +278,14 @@ expat_install(FILES lib/expat.h lib/expat_external.h DESTINATION ${CMAKE_INSTALL
 #
 # pkg-config file
 #
-set(prefix ${CMAKE_INSTALL_PREFIX})
-set(exec_prefix "\${prefix}")
-set(libdir "\${exec_prefix}/${CMAKE_INSTALL_LIBDIR}")
-set(includedir "\${prefix}/${CMAKE_INSTALL_INCLUDEDIR}")
-configure_file(expat.pc.in ${CMAKE_CURRENT_BINARY_DIR}/expat.pc @ONLY)
-expat_install(FILES ${CMAKE_CURRENT_BINARY_DIR}/expat.pc DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
+if(NOT MSVC)
+    set(prefix ${CMAKE_INSTALL_PREFIX})
+    set(exec_prefix "\${prefix}")
+    set(libdir "\${exec_prefix}/${CMAKE_INSTALL_LIBDIR}")
+    set(includedir "\${prefix}/${CMAKE_INSTALL_INCLUDEDIR}")
+    configure_file(expat.pc.in ${CMAKE_CURRENT_BINARY_DIR}/expat.pc @ONLY)
+    expat_install(FILES ${CMAKE_CURRENT_BINARY_DIR}/expat.pc DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
+endif()
 
 #
 # C command line tool xmlwf
@@ -293,11 +302,17 @@ if(EXPAT_BUILD_TOOLS)
     set_property(TARGET xmlwf PROPERTY RUNTIME_OUTPUT_DIRECTORY xmlwf)
     target_link_libraries(xmlwf expat)
     expat_install(TARGETS xmlwf DESTINATION ${CMAKE_INSTALL_BINDIR})
+
+    if(MINGW AND EXPAT_UNICODE_WCHAR_T)
+        # https://gcc.gnu.org/onlinedocs/gcc/x86-Windows-Options.html
+        set_target_properties(xmlwf PROPERTIES LINK_FLAGS -municode)
+    endif()
+
     if(EXPAT_BUILD_DOCS)
         file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/doc)
         add_custom_command(TARGET expat PRE_BUILD COMMAND "${DOCBOOK_TO_MAN}" "${PROJECT_SOURCE_DIR}/doc/xmlwf.xml" && mv "XMLWF.1" "${PROJECT_BINARY_DIR}/doc/xmlwf.1")
         expat_install(FILES "${PROJECT_BINARY_DIR}/doc/xmlwf.1" DESTINATION ${CMAKE_INSTALL_MANDIR}/man1)
-     endif()
+    endif()
 endif()
 
 #
@@ -328,15 +343,30 @@ if(EXPAT_BUILD_TESTS)
         tests/structdata.c
     )
 
+    if(NOT MSVC)
+        if(MINGW)
+            set(host whatever-mingw32)  # for nothing but run.sh
+        endif()
+        configure_file(${CMAKE_CURRENT_SOURCE_DIR}/run.sh.in run.sh @ONLY)
+    endif()
+
+    function(expat_add_test _name _file)
+        if(MSVC)
+            add_test(NAME ${_name} COMMAND ${_file})
+        else()
+            add_test(NAME ${_name} COMMAND bash run.sh ${_file})
+        endif()
+    endfunction()
+
     add_executable(runtests tests/runtests.c ${test_SRCS})
     set_property(TARGET runtests PROPERTY RUNTIME_OUTPUT_DIRECTORY tests)
     target_link_libraries(runtests expat)
-    add_test(runtests tests/runtests)
+    expat_add_test(runtests $<TARGET_FILE:runtests>)
 
     add_executable(runtestspp tests/runtestspp.cpp ${test_SRCS})
     set_property(TARGET runtestspp PROPERTY RUNTIME_OUTPUT_DIRECTORY tests)
     target_link_libraries(runtestspp expat)
-    add_test(runtestspp tests/runtestspp)
+    expat_add_test(runtestspp $<TARGET_FILE:runtestspp>)
 endif(EXPAT_BUILD_TESTS)
 
 if(EXPAT_BUILD_FUZZERS)
@@ -375,6 +405,55 @@ if(EXPAT_BUILD_FUZZERS)
         endforeach()
     endforeach()
 endif(EXPAT_BUILD_FUZZERS)
+
+#
+# Custom target "run-xmltest"
+#
+if(EXPAT_BUILD_TOOLS AND NOT MSVC)
+    add_custom_target(
+        xmlts-zip-downloaded
+        COMMAND
+            sh -c 'test -f xmlts.zip || wget --output-document=xmlts.zip https://www.w3.org/XML/Test/xmlts20080827.zip'
+        BYPRODUCTS
+            tests/xmlts.zip
+        WORKING_DIRECTORY
+            tests/)
+
+    add_custom_target(
+        xmlts-zip-extracted
+        COMMAND
+            sh -c 'test -d xmlconf || unzip -q xmlts.zip'
+        BYPRODUCTS
+            tests/xmlconf
+        WORKING_DIRECTORY
+            tests/)
+    add_dependencies(xmlts-zip-extracted xmlts-zip-downloaded)
+
+    add_custom_target(
+        xmltest-sh-been-run
+        COMMAND
+            sh -c '${CMAKE_CURRENT_SOURCE_DIR}/tests/xmltest.sh "bash ${CMAKE_CURRENT_BINARY_DIR}/run.sh $<TARGET_FILE:xmlwf>" 2>&1 | tee tests/xmltest.log'
+        BYPRODUCTS
+            tests/xmltest.log)
+    add_dependencies(xmltest-sh-been-run xmlts-zip-extracted xmlwf)
+
+    add_custom_target(
+        xmltest-log-fixed
+        COMMAND
+            ${CMAKE_CURRENT_SOURCE_DIR}/fix-xmltest-log.sh tests/xmltest.log
+        DEPENDS
+            tests/xmltest.log)
+    add_dependencies(xmltest-log-fixed xmltest-sh-been-run)
+
+    add_custom_target(
+        xmltest-log-verified
+        COMMAND
+            diff -u ${CMAKE_CURRENT_SOURCE_DIR}/tests/xmltest.log.expected tests/xmltest.log)
+    add_dependencies(xmltest-log-verified xmltest-log-fixed)
+
+    add_custom_target(run-xmltest)
+    add_dependencies(run-xmltest xmltest-log-verified)
+endif()
 
 #
 # Documentation

@@ -49,7 +49,7 @@ Flags: ignoreversion; Source: CMake.README;                 DestDir: "{app}\Sour
 Flags: ignoreversion; Source: CMakeLists.txt;               DestDir: "{app}\Source"
 Flags: ignoreversion; Source: ConfigureChecks.cmake;        DestDir: "{app}\Source"
 Flags: ignoreversion; Source: expat_config.h.cmake;         DestDir: "{app}\Source"
-Flags: ignoreversion; Source: cmake/expat-config.cmake.in;  DestDir: "{app}\Source\cmake"
+Flags: ignoreversion; Source: cmake\expat-config.cmake.in;  DestDir: "{app}\Source\cmake"
 Flags: ignoreversion; Source: lib\*.c;                      DestDir: "{app}\Source\lib"
 Flags: ignoreversion; Source: lib\*.h;                      DestDir: "{app}\Source\lib"
 Flags: ignoreversion; Source: lib\*.def;                    DestDir: "{app}\Source\lib"

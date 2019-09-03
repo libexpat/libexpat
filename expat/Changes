@@ -56,6 +56,11 @@ Release x.x.x xxx xxx xx xxxx
                   CMake: Now produces a summary of applied configuration
                   CMake: Require C++ compiler only when tests are enabled
             #265  CMake: Fix linking with MinGW
+            #330  CMake: Fix compilation for 16bit character types,
+                    i.e. ex -DXML_UNICODE=ON (and ex -DXML_UNICODE_WCHAR_T=ON)
+            #330  CMake: Add full support for MinGW; to enable, use
+                    -DCMAKE_TOOLCHAIN_FILE=[expat]/cmake/mingw-toolchain.cmake
+            #330  CMake: Port "make run-xmltest" from GNU Autotools to CMake
             #316  CMake: Windows: Make binary postfix match MSVC
                     Old: expat[d].lib
                     New: expat[w][d][MD|MT].lib
