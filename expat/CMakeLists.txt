@@ -384,6 +384,7 @@ if(EXPAT_BUILD_FUZZERS)
             "This is likely in error - consider adding "
             "-DCMAKE_C_FLAGS='-fsanitize=<sanitizer>' and "
             "-DCMAKE_CXX_FLAGS='-fsanitize=<sanitizer>' and "
+            "-DCMAKE_STATIC_LINKER_FLAGS='-fsanitize=<sanitizer>' and "
             "-DCMAKE_EXE_LINKER_FLAGS='-fsanitize=<sanitizer>' to your cmake "
             "execution.")
     endif()
@@ -391,10 +392,14 @@ if(EXPAT_BUILD_FUZZERS)
     set(encoding_types UTF-16 UTF-8 ISO-8859-1 US-ASCII UTF-16BE UTF-16LE)
     set(fuzz_targets xml_parse_fuzzer xml_parsebuffer_fuzzer)
 
+    add_library(fuzzpat STATIC ${expat_SRCS})
+    target_compile_options(fuzzpat PRIVATE -fsanitize=fuzzer-no-link)
+
     foreach(fuzz_target ${fuzz_targets})
         foreach(encoding_type ${encoding_types})
             set(target_name ${fuzz_target}_${encoding_type})
-            add_executable(${target_name} fuzz/${fuzz_target}.c ${expat_SRCS})
+            add_executable(${target_name} fuzz/${fuzz_target}.c)
+            target_link_libraries(${target_name} fuzzpat)
             target_compile_definitions(${target_name}
                 PRIVATE ENCODING_FOR_FUZZING=${encoding_type})
             target_compile_options(${target_name} PRIVATE -fsanitize=fuzzer-no-link)
