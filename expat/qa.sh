@@ -188,7 +188,7 @@ run() {
 dump_config() {
     cat <<EOF
 Configuration:
-  QA_COMPILER=${QA_COMPILER}
+  QA_COMPILER=${QA_COMPILER}  # auto-detected from \$CC and \$CXX
   QA_PROCESSOR=${QA_PROCESSOR}  # GCC only
   QA_SANITIZER=${QA_SANITIZER}  # Clang only
 
@@ -208,8 +208,17 @@ EOF
 }
 
 
+classify_compiler() {
+    local i
+    for i in "${CC:-}" "${CXX:-}"; do
+        [[ "$i" =~ clang ]] && { echo clang ; return ; }
+    done
+    echo gcc
+}
+
+
 process_config() {
-    case "${QA_COMPILER:=gcc}" in
+    case "${QA_COMPILER:=$(classify_compiler)}" in
         clang|gcc) ;;
         *) usage; exit 1 ;;
     esac
@@ -242,7 +251,7 @@ Usage:
   $ ./qa.sh [ARG ..]
 
 Environment variables
-  QA_COMPILER=(clang|gcc)                  # default: gcc
+  QA_COMPILER=(clang|gcc)                  # default: auto-detected
   QA_PROCESSOR=(egypt|gcov)                # default: gcov
   QA_SANITIZER=(address|memory|undefined)  # default: address
 
