@@ -53,8 +53,8 @@ _register_component(dtd                @EXPAT_DTD@)
 _register_component(large_size         @EXPAT_LARGE_SIZE@)
 _register_component(min_size           @EXPAT_MIN_SIZE@)
 _register_component(ns                 @EXPAT_NS@)
-_register_component(unicode            @EXPAT_UNICODE@)
-_register_component(unicode_wchar_t    @EXPAT_UNICODE_WCHAR_T@)
+_register_component(unicode            @_EXPAT_UNICODE@)
+_register_component(unicode_wchar_t    @_EXPAT_UNICODE_WCHAR_T@)
 
 check_required_components(expat)
 

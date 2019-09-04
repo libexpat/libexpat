@@ -162,6 +162,9 @@ EXPAT_BUILD_TESTS:BOOL=ON
 // build the xmlwf tool for expat library
 EXPAT_BUILD_TOOLS:BOOL=ON
 
+// Character type to use (char|ushort|wchar_t) [default=char]
+EXPAT_CHAR_TYPE:STRING=char
+
 // install expat files in cmake install target
 EXPAT_ENABLE_INSTALL:BOOL=ON
 
@@ -170,12 +173,6 @@ EXPAT_MSVC_STATIC_CRT:BOOL=OFF
 
 // build a shared expat library
 EXPAT_SHARED_LIBS:BOOL=ON
-
-// Use UTF-16 encoded chars (two bytes) instead of UTF-8
-EXPAT_UNICODE:BOOL=OFF
-
-// Use wchar_t to represent UTF-16 instead of unsigned short
-EXPAT_UNICODE_WCHAR_T:BOOL=OFF
 
 // Treat all compiler warnings as errors
 EXPAT_WARNINGS_AS_ERRORS:BOOL=OFF
