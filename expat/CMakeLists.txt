@@ -120,10 +120,9 @@ else()
 endif()
 
 if(_EXPAT_UNICODE)
+    add_definitions(-DXML_UNICODE)              # for unsigned short
     if(_EXPAT_UNICODE_WCHAR_T)
         add_definitions(-DXML_UNICODE_WCHAR_T)  # for wchar_t
-    else()
-        add_definitions(-DXML_UNICODE)          # for unsigned short
     endif()
 endif()
 
