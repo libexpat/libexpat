@@ -4,9 +4,10 @@ NOTE: We are looking for help with a few things:
 
 Release x.x.x xxx xxx xx xxxx
         Security fixes:
-       #317 #318  Fix heap overflow triggered by XML_GetCurrentLineNumber
-                    (or XML_GetCurrentColumnNumber), and deny internal entities
-                    closing the doctype
+       #317 #318  CVE-2019-15903 -- Fix heap overflow triggered by
+                    XML_GetCurrentLineNumber (or XML_GetCurrentColumnNumber),
+                    and deny internal entities closing the doctype;
+                    fixed in commit c20b758c332d9a13afbbb276d30db1d183a85d43
 
         Bug fixes:
             #240  Fix cases where XML_StopParser did not have any effect
