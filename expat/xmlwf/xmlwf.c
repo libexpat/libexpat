@@ -846,7 +846,42 @@ static void
 usage(const XML_Char *prog, int rc) {
   ftprintf(
       stderr,
-      T("usage: %s [-s] [-n] [-p] [-x] [-e encoding] [-w] [-d output-dir] [-c] [-m] [-r] [-t] [-N] [file ...]\n"),
+      /* Generated with:
+       * $ xmlwf/xmlwf_helpgen.sh
+       */
+      /* clang-format off */
+      T("usage: %s [-s] [-n] [-p] [-x] [-e ENCODING] [-w] [-r] [-d DIRECTORY]\n")
+      T("             [-c | -m | -t] [-N] [-h | -v]\n")
+      T("             [FILE [FILE ...]]\n")
+      T("\n")
+      T("xmlwf - Determines if an XML document is well-formed\n")
+      T("\n")
+      T("positional arguments:\n")
+      T("  FILE          files to process (default: STDIN)\n")
+      T("\n")
+      T("input control arguments:\n")
+      T("  -s            print an error if the document is not [s]tandalone\n")
+      T("  -n            enable [n]amespace processing\n")
+      T("  -p            enable processing external DTDs and [p]arameter entities\n")
+      T("  -x            enable processing of e[x]ternal entities\n")
+      T("  -e ENCODING   override any in-document [e]ncoding declaration\n")
+      T("  -w            enable support for [W]indows code pages\n")
+      T("  -r            disable memory-mapping and use normal file [r]ead IO calls instead\n")
+      T("\n")
+      T("output control arguments:\n")
+      T("  -d DIRECTORY  output [d]estination directory\n")
+      T("  -c            write a [c]opy of input XML, not canonical XML\n")
+      T("  -m            write [m]eta XML, not canonical XML\n")
+      T("  -t            write no XML output for [t]iming of plain parsing\n")
+      T("  -N            enable adding doctype and [n]otation declarations\n")
+      T("\n")
+      T("info arguments:\n")
+      T("  -h            show this [h]elp message and exit\n")
+      T("  -v            show program's [v]ersion number and exit\n")
+      T("\n")
+      T("libexpat is software libre, licensed under the MIT license.\n")
+      T("Please report bugs at https://github.com/libexpat/libexpat/issues.  Thank you!\n")
+      , /* clang-format on */
       prog);
   exit(rc);
 }
