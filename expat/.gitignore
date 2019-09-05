@@ -37,3 +37,5 @@ source__R*
 /expat-*.tar.bz2
 /expat-*.tar.bz2.asc
 /stamp-h1
+/libexpat*.dll
+/changelog
