@@ -76,7 +76,7 @@ Release x.x.x xxx xxx xx xxxx
        #299 #302  Windows: Replace LoadLibrary hack to access
                     unofficial API function SystemFunction036 (RtlGenRandom)
                     by using official API function rand_s (needs WinXP+)
-                  xmlwf: Make "xmlwf -h" help output more friendly
+            #338  xmlwf: Make "xmlwf -h" help output more friendly
             #339  examples: Improve elements.c
              #14  Drop an OpenVMS support leftover
     #235 #268 ..
