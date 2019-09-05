@@ -77,6 +77,7 @@ Release x.x.x xxx xxx xx xxxx
                     unofficial API function SystemFunction036 (RtlGenRandom)
                     by using official API function rand_s (needs WinXP+)
                   xmlwf: Make "xmlwf -h" help output more friendly
+            #339  examples: Improve elements.c
              #14  Drop an OpenVMS support leftover
     #235 #268 ..
     #270 #310 ..
@@ -95,6 +96,7 @@ Release x.x.x xxx xxx xx xxxx
             Mitch Phillips
             Rolf Ade
             xantares
+            Zhongyuan Zhou
 
 Release 2.2.7 Wed June 19 2019
         Security fixes:
