@@ -29,7 +29,7 @@ Release x.x.x xxx xxx xx xxxx
                     --with-sys-getrandom
                     --without-sys-getrandom
                   Autotools: Fix "make run-xmltest" for out-of-source builds
-            #329  CMake: Pull all options from Expat <=2.2.7 into namespace
+       #329 #336  CMake: Pull all options from Expat <=2.2.7 into namespace
                     prefix EXPAT_ with the exception of DOCBOOK_TO_MAN:
                     - BUILD_doc            -> EXPAT_BUILD_DOCS (plural)
                     - BUILD_examples       -> EXPAT_BUILD_EXAMPLES
