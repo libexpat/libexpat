@@ -17,7 +17,7 @@ env:
     - MODE=cmake-oos
     - MODE=cppcheck
     - MODE=distcheck
-    - MODE=qa-sh QA_COMPILER=clang CC=clang CXX=clang++ LD=clang++ QA_SANITIZER=address
+    - MODE=qa-sh CC=clang CXX=clang++ LD=clang++ QA_SANITIZER=address
 
 matrix:
   include:
@@ -26,17 +26,17 @@ matrix:
     - os: linux
       env: MODE=cmake-oos CMAKE_ARGS="-DEXPAT_ATTR_INFO=ON -DEXPAT_BUILD_FUZZERS=ON -DCMAKE_C_FLAGS=-fsanitize=address -DCMAKE_CXX_FLAGS=-fsanitize=address -DCMAKE_EXE_LINKER_FLAGS=-fsanitize=address -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++"
     - os: linux
-      env: MODE=qa-sh QA_COMPILER=clang CC=clang CXX=clang++ LD=clang++ QA_SANITIZER=address CMAKE_ARGS=-DEXPAT_ATTR_INFO=ON
+      env: MODE=qa-sh CC=clang CXX=clang++ LD=clang++ QA_SANITIZER=address CMAKE_ARGS=-DEXPAT_ATTR_INFO=ON
     - os: linux
-      env: MODE=qa-sh QA_COMPILER=clang CC=clang CXX=clang++ LD=clang++ QA_SANITIZER=memory
+      env: MODE=qa-sh CC=clang CXX=clang++ LD=clang++ QA_SANITIZER=memory
     - os: linux
-      env: MODE=qa-sh QA_COMPILER=clang CC=clang CXX=clang++ LD=clang++ QA_SANITIZER=undefined
+      env: MODE=qa-sh CC=clang CXX=clang++ LD=clang++ QA_SANITIZER=undefined
     - os: linux
-      env: MODE=qa-sh QA_COMPILER=gcc CC=gcc CXX=g++ LD=ld QA_PROCESSOR=gcov
+      env: MODE=qa-sh CC=gcc CXX=g++ LD=ld QA_PROCESSOR=gcov
     - os: linux
-      env: MODE=qa-sh QA_COMPILER=gcc CC=i686-w64-mingw32-gcc CXX=i686-w64-mingw32-g++ LD=i686-w64-mingw32-ld QA_PROCESSOR=gcov CMAKE_ARGS="-DCMAKE_SYSTEM_NAME=Windows -DWIN32=ON -DMINGW=ON -DEXPAT_ATTR_INFO=ON"
+      env: MODE=qa-sh CC=i686-w64-mingw32-gcc CXX=i686-w64-mingw32-g++ LD=i686-w64-mingw32-ld QA_PROCESSOR=gcov CMAKE_ARGS="-DCMAKE_SYSTEM_NAME=Windows -DWIN32=ON -DMINGW=ON -DEXPAT_ATTR_INFO=ON"
     - os: linux
-      env: MODE=qa-sh QA_COMPILER=gcc CC=i686-w64-mingw32-gcc CXX=i686-w64-mingw32-g++ LD=i686-w64-mingw32-ld QA_PROCESSOR=gcov CMAKE_ARGS="-DCMAKE_SYSTEM_NAME=Windows -DWIN32=ON -DMINGW=ON -DEXPAT_ATTR_INFO=ON -DEXPAT_UNICODE=ON -DEXPAT_UNICODE_WCHAR_T=ON"
+      env: MODE=qa-sh CC=i686-w64-mingw32-gcc CXX=i686-w64-mingw32-g++ LD=i686-w64-mingw32-ld QA_PROCESSOR=gcov CMAKE_ARGS="-DCMAKE_SYSTEM_NAME=Windows -DWIN32=ON -DMINGW=ON -DEXPAT_ATTR_INFO=ON -DEXPAT_UNICODE=ON -DEXPAT_UNICODE_WCHAR_T=ON"
 
 addons:
   homebrew:
