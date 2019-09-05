@@ -88,6 +88,7 @@ main(int argc, char *argv[]) {
       fprintf(stderr, "%" XML_FMT_STR " at line %" XML_FMT_INT_MOD "u\n",
               XML_ErrorString(XML_GetErrorCode(parser)),
               XML_GetCurrentLineNumber(parser));
+      XML_ParserFree(parser);
       return 1;
     }
   } while (! done);
