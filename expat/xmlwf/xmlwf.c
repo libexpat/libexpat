@@ -851,7 +851,7 @@ usage(const XML_Char *prog, int rc) {
        */
       /* clang-format off */
       T("usage: %s [-s] [-n] [-p] [-x] [-e ENCODING] [-w] [-r] [-d DIRECTORY]\n")
-      T("             [-c | -m | -t] [-N] [-h | -v]\n")
+      T("             [-c | -m | -t] [-N]\n")
       T("             [FILE [FILE ...]]\n")
       T("\n")
       T("xmlwf - Determines if an XML document is well-formed\n")

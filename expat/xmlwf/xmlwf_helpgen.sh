@@ -30,5 +30,6 @@
 
 ./xmlwf/xmlwf_helpgen.py | sed \
         -e 's,usage: xmlwf,usage: %s,' \
+        -e 's, \[-h | -v\],,' \
         -e 's,^,      T(",' \
         -e 's,$,\\n"),'
