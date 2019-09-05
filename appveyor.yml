@@ -60,7 +60,7 @@ environment:
     # Visual Studio 2010 Win32 XML_UNICODE_WCHAR_T
     - GENERATOR: Visual Studio 10 2010
       PLATFORM: Win32
-      CMAKE_ARGS: -DEXPAT_UNICODE=ON -DEXPAT_UNICODE_WCHAR_T=ON
+      CMAKE_ARGS: -DEXPAT_CHAR_TYPE=wchar_t
       EXPAT_DLL: expatwd.dll
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
 
@@ -73,7 +73,7 @@ environment:
     # Visual Studio 2010 x64 XML_UNICODE_WCHAR_T
     - GENERATOR: Visual Studio 10 2010 Win64
       PLATFORM: x64
-      CMAKE_ARGS: -DEXPAT_UNICODE=ON -DEXPAT_UNICODE_WCHAR_T=ON
+      CMAKE_ARGS: -DEXPAT_CHAR_TYPE=wchar_t
       EXPAT_DLL: expatwd.dll
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
 
@@ -86,7 +86,7 @@ environment:
     # Visual Studio 2012 Win32 XML_UNICODE_WCHAR_T
     - GENERATOR: Visual Studio 11 2012
       PLATFORM: Win32
-      CMAKE_ARGS: -DEXPAT_UNICODE=ON -DEXPAT_UNICODE_WCHAR_T=ON
+      CMAKE_ARGS: -DEXPAT_CHAR_TYPE=wchar_t
       EXPAT_DLL: expatwd.dll
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
 
@@ -99,7 +99,7 @@ environment:
     # Visual Studio 2012 x64 XML_UNICODE_WCHAR_T
     - GENERATOR: Visual Studio 11 2012 Win64
       PLATFORM: x64
-      CMAKE_ARGS: -DEXPAT_UNICODE=ON -DEXPAT_UNICODE_WCHAR_T=ON
+      CMAKE_ARGS: -DEXPAT_CHAR_TYPE=wchar_t
       EXPAT_DLL: expatwd.dll
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
 
@@ -112,7 +112,7 @@ environment:
     # Visual Studio 2013 Win32 XML_UNICODE_WCHAR_T
     - GENERATOR: Visual Studio 12 2013
       PLATFORM: Win32
-      CMAKE_ARGS: -DEXPAT_UNICODE=ON -DEXPAT_UNICODE_WCHAR_T=ON
+      CMAKE_ARGS: -DEXPAT_CHAR_TYPE=wchar_t
       EXPAT_DLL: expatwd.dll
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
 
@@ -125,7 +125,7 @@ environment:
     # Visual Studio 2013 x64 XML_UNICODE_WCHAR_T
     - GENERATOR: Visual Studio 12 2013 Win64
       PLATFORM: x64
-      CMAKE_ARGS: -DEXPAT_UNICODE=ON -DEXPAT_UNICODE_WCHAR_T=ON
+      CMAKE_ARGS: -DEXPAT_CHAR_TYPE=wchar_t
       EXPAT_DLL: expatwd.dll
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
 
@@ -138,7 +138,7 @@ environment:
     # Visual Studio 2015 Win32 XML_UNICODE_WCHAR_T
     - GENERATOR: Visual Studio 14 2015
       PLATFORM: Win32
-      CMAKE_ARGS: -DEXPAT_UNICODE=ON -DEXPAT_UNICODE_WCHAR_T=ON
+      CMAKE_ARGS: -DEXPAT_CHAR_TYPE=wchar_t
       EXPAT_DLL: expatwd.dll
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
 
@@ -151,7 +151,7 @@ environment:
     # Visual Studio 2015 x64 XML_UNICODE_WCHAR_T
     - GENERATOR: Visual Studio 14 2015 Win64
       PLATFORM: x64
-      CMAKE_ARGS: -DEXPAT_UNICODE=ON -DEXPAT_UNICODE_WCHAR_T=ON
+      CMAKE_ARGS: -DEXPAT_CHAR_TYPE=wchar_t
       EXPAT_DLL: expatwd.dll
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
 
@@ -164,7 +164,7 @@ environment:
     # Visual Studio 2017 Win32 XML_UNICODE_WCHAR_T
     - GENERATOR: Visual Studio 15 2017
       PLATFORM: Win32
-      CMAKE_ARGS: -DEXPAT_UNICODE=ON -DEXPAT_UNICODE_WCHAR_T=ON
+      CMAKE_ARGS: -DEXPAT_CHAR_TYPE=wchar_t
       EXPAT_DLL: expatwd.dll
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
 
@@ -177,7 +177,7 @@ environment:
     # Visual Studio 2017 x64 XML_UNICODE_WCHAR_T
     - GENERATOR: Visual Studio 15 2017 Win64
       PLATFORM: x64
-      CMAKE_ARGS: -DEXPAT_UNICODE=ON -DEXPAT_UNICODE_WCHAR_T=ON
+      CMAKE_ARGS: -DEXPAT_CHAR_TYPE=wchar_t
       EXPAT_DLL: expatwd.dll
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
 
