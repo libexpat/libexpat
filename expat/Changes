@@ -12,6 +12,14 @@ Release x.x.x xxx xxx xx xxxx
         Bug fixes:
             #240  Fix cases where XML_StopParser did not have any effect
                     when called from inside of an end element handler
+            #341  xmlwf: Fix exit code for operation without "-d DIRECTORY";
+                    previously, only "-d DIRECTORY" would give you a proper
+                    exit code:
+                      # xmlwf -d . <<<'<not well-formed>' 2>/dev/null ; echo $?
+                      2
+                      # xmlwf <<<'<not well-formed>' 2>/dev/null ; echo $?
+                      0
+                    Now both cases return exit code 2.
 
         Other changes:
             #325  Windows: Drop support for Visual Studio <=7.1/2003

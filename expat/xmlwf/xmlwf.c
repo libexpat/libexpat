@@ -1114,11 +1114,13 @@ tmain(int argc, XML_Char **argv) {
       fclose(userData.fp);
       if (! result) {
         tremove(outName);
-        exit(2);
       }
       free(outName);
     }
     XML_ParserFree(parser);
+    if (! result) {
+      exit(2);
+    }
   }
   return 0;
 }

@@ -39,9 +39,7 @@ DIFF="${MYDIR}/udiffer.py"
 RunXmlwfNotWF() {
   file="$1"
   reldir="$2"
-  $XMLWF -p "$file" > outfile || return $?
-  read outdata < outfile
-  if test "$outdata" = "" ; then
+  if $XMLWF -p "$file" > /dev/null; then
       echo "Expected not well-formed: $reldir$file"
       return 1
   else
@@ -132,7 +130,6 @@ for xmldir in ibm/not-wf/P* \
       RunXmlwfNotWF "$xmlfile" "$xmldir/"
       UpdateStatus $?
   done
-  rm outfile
 done
 
 cd "$TS/xmlconf/oasis"
@@ -140,7 +137,6 @@ for xmlfile in *fail*.xml ; do
     RunXmlwfNotWF "$xmlfile" "oasis/"
     UpdateStatus $?
 done
-rm outfile
 
 echo "Passed: $SUCCESS"
 echo "Failed: $ERROR"
