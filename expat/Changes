@@ -22,6 +22,9 @@ Release x.x.x xxx xxx xx xxxx
                     Now both cases return exit code 2.
 
         Other changes:
+       #299 #302  Windows: Replace LoadLibrary hack to access
+                    unofficial API function SystemFunction036 (RtlGenRandom)
+                    by using official API function rand_s (needs WinXP+)
             #325  Windows: Drop support for Visual Studio <=7.1/2003
                     and document supported compilers in README.md
             #286  Windows: Remove COM code from xmlwf; in case it turns
@@ -30,6 +33,8 @@ Release x.x.x xxx xxx xx xxxx
             #322  Windows: Remove explicit MSVC solution and project files.
                     You can generate Visual Studio solution files through
                     CMake, e.g.: cmake -G"Visual Studio 15 2017" .
+            #338  xmlwf: Make "xmlwf -h" help output more friendly
+            #339  examples: Improve elements.c
        #244 #264  Autotools: Add argument --enable-xml-attr-info
        #239 #301  Autotools: Add arguments
                     --with-getrandom
@@ -69,9 +74,9 @@ Release x.x.x xxx xxx xx xxxx
                     future find_package(expat [..] CONFIG [..])
                   CMake: Now produces a summary of applied configuration
                   CMake: Require C++ compiler only when tests are enabled
-            #265  CMake: Fix linking with MinGW
             #330  CMake: Fix compilation for 16bit character types,
                     i.e. ex -DXML_UNICODE=ON (and ex -DXML_UNICODE_WCHAR_T=ON)
+            #265  CMake: Fix linking with MinGW
             #330  CMake: Add full support for MinGW; to enable, use
                     -DCMAKE_TOOLCHAIN_FILE=[expat]/cmake/mingw-toolchain.cmake
             #330  CMake: Port "make run-xmltest" from GNU Autotools to CMake
@@ -81,11 +86,6 @@ Release x.x.x xxx xxx xx xxxx
                   CMake: Migrate files from Windows to Unix line endings
             #308  CMake: Integrate OSS-Fuzz fuzzers, option
                     -DEXPAT_BUILD_FUZZERS=(ON|OFF), default OFF
-       #299 #302  Windows: Replace LoadLibrary hack to access
-                    unofficial API function SystemFunction036 (RtlGenRandom)
-                    by using official API function rand_s (needs WinXP+)
-            #338  xmlwf: Make "xmlwf -h" help output more friendly
-            #339  examples: Improve elements.c
              #14  Drop an OpenVMS support leftover
     #235 #268 ..
     #270 #310 ..
