@@ -5,7 +5,7 @@ cmake_minimum_required(VERSION 3.1.3)
 
 project(expat
     VERSION
-        2.2.7
+        2.2.8
     LANGUAGES
         C
 )
