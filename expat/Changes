@@ -41,6 +41,7 @@ Release x.x.x xxx xxx xx xxxx
                     --without-getrandom
                     --with-sys-getrandom
                     --without-sys-getrandom
+       #312 #343  Autotools: Fix linking issues with "./configure LD=clang"
                   Autotools: Fix "make run-xmltest" for out-of-source builds
        #329 #336  CMake: Pull all options from Expat <=2.2.7 into namespace
                     prefix EXPAT_ with the exception of DOCBOOK_TO_MAN:
