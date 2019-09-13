@@ -262,9 +262,9 @@ if(EXPAT_WITH_LIBBSD)
     target_link_libraries(expat ${LIB_BSD})
 endif()
 
-set(LIBCURRENT 7)   # sync
-set(LIBREVISION 9)  # with
-set(LIBAGE 6)       # configure.ac!
+set(LIBCURRENT 7)    # sync
+set(LIBREVISION 10)  # with
+set(LIBAGE 6)        # configure.ac!
 math(EXPR LIBCURRENT_MINUS_AGE "${LIBCURRENT} - ${LIBAGE}")
 
 if(NOT WIN32)
