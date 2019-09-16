@@ -1,8 +1,5 @@
 /* expat_config.h.cmake.  Based upon generated expat_config.h.in.  */
 
-/* 1234 = LIL_ENDIAN, 4321 = BIGENDIAN */
-#cmakedefine BYTEORDER @BYTEORDER@
-
 /* Define to 1 if you have the `arc4random' function. */
 #cmakedefine HAVE_ARC4RANDOM
 
@@ -80,9 +77,6 @@
 
 /* Define to 1 if you have the ANSI C header files. */
 #cmakedefine STDC_HEADERS
-
-/* whether byteorder is bigendian */
-#cmakedefine WORDS_BIGENDIAN
 
 /* Define to allow retrieving the byte offsets for attribute names and values.
  */
