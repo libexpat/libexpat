@@ -36,7 +36,9 @@
 
 #ifdef _WIN32
 /* force stdlib to define rand_s() */
-#  define _CRT_RAND_S
+#  if ! defined(_CRT_RAND_S)
+#    define _CRT_RAND_S
+#  endif
 #endif
 
 #include <stddef.h>
