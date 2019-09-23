@@ -5,6 +5,12 @@ NOTE: We are looking for help with a few things:
 Release x.x.x xxx xxxxxxxxx xx xxxx
         Other changes:
                   examples: Drop executable bits from elements.c
+            #349  Windows: Change the name of the Windows DLLs from expat*.dll
+                    to libexpat*.dll once more (regression from 2.2.8, first
+                    fixed in 1.95.3, issue #61 on SourceForge today,
+                    was issue #432456 back then); needs a fix due
+                    case-insensitive file systems on Windows and the fact that
+                    Perl's XML::Parser::Expat compiles into Expat.dll.
 
 Release 2.2.8 Fri Septemper 13 2019
         Security fixes:
