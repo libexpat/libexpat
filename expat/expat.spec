@@ -42,6 +42,10 @@ install -D xmlwf/xmlwf $RPM_BUILD_ROOT/usr/bin/xmlwf
 /usr/share/man/man1/xmlwf.1.gz
 
 %changelog
+* Wed Sep 25 2019 Sebastian Pipping <sebastian@pipping.org>
+[Release 2.2.9-1]
+- Update for the 2.2.9 release.
+
 * Fri Sep 13 2019 Sebastian Pipping <sebastian@pipping.org>
 [Release 2.2.8-1]
 - Update for the 2.2.8 release.

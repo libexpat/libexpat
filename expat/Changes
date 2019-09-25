@@ -2,7 +2,7 @@ NOTE: We are looking for help with a few things:
       https://github.com/libexpat/libexpat/labels/help%20wanted
       If you can help, please get in touch.  Thanks!
 
-Release x.x.x xxx xxxxxxxxx xx xxxx
+Release 2.2.9 Wed Septemper 25 2019
         Other changes:
                   examples: Drop executable bits from elements.c
             #349  Windows: Change the name of the Windows DLLs from expat*.dll
