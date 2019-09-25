@@ -11,6 +11,10 @@ Release x.x.x xxx xxxxxxxxx xx xxxx
                     was issue #432456 back then); needs a fix due
                     case-insensitive file systems on Windows and the fact that
                     Perl's XML::Parser::Expat compiles into Expat.dll.
+            #347  Windows: Only define _CRT_RAND_S if not defined
+
+        Special thanks to:
+            Ben Wagner
 
 Release 2.2.8 Fri Septemper 13 2019
         Security fixes:
