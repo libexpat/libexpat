@@ -2,7 +2,7 @@ NOTE: We are looking for help with a few things:
       https://github.com/libexpat/libexpat/labels/help%20wanted
       If you can help, please get in touch.  Thanks!
 
-Release 2.2.9 Wed Septemper 25 2019
+Release 2.2.9 Wed September 25 2019
         Other changes:
                   examples: Drop executable bits from elements.c
             #349  Windows: Change the name of the Windows DLLs from expat*.dll
@@ -17,7 +17,7 @@ Release 2.2.9 Wed Septemper 25 2019
         Special thanks to:
             Ben Wagner
 
-Release 2.2.8 Fri Septemper 13 2019
+Release 2.2.8 Fri September 13 2019
         Security fixes:
        #317 #318  CVE-2019-15903 -- Fix heap overflow triggered by
                     XML_GetCurrentLineNumber (or XML_GetCurrentColumnNumber),
