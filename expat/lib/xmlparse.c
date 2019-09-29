@@ -1782,7 +1782,7 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal) {
     int nLeftOver;
     enum XML_Status result;
     /* Detect overflow (a+b > MAX <==> b > MAX-a) */
-    if (len > ((XML_Size)-1) / 2 - parser->m_parseEndByteIndex) {
+    if ((XML_Size)len > ((XML_Size)-1) / 2 - parser->m_parseEndByteIndex) {
       parser->m_errorCode = XML_ERROR_NO_MEMORY;
       parser->m_eventPtr = parser->m_eventEndPtr = NULL;
       parser->m_processor = errorProcessor;
