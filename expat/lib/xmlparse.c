@@ -1401,6 +1401,7 @@ XML_UseForeignDTD(XML_Parser parser, XML_Bool useDTD) {
   parser->m_useForeignDTD = useDTD;
   return XML_ERROR_NONE;
 #else
+  UNUSED_P(useDTD);
   return XML_ERROR_FEATURE_REQUIRES_XML_DTD;
 #endif
 }
