@@ -7053,17 +7053,39 @@ END_TEST
 /* Test that too many colons are rejected */
 START_TEST(test_ns_double_colon) {
   const char *text = "<foo:e xmlns:foo='http://example.org/' foo:a:b='bar' />";
-
-  expect_failure(text, XML_ERROR_INVALID_TOKEN,
-                 "Double colon in attribute name not faulted");
+  const enum XML_Status status
+      = _XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE);
+#ifdef XML_NS
+  if ((status == XML_STATUS_OK)
+      || (XML_GetErrorCode(g_parser) != XML_ERROR_INVALID_TOKEN)) {
+    fail("Double colon in attribute name not faulted"
+         " (despite active namespace support)");
+  }
+#else
+  if (status != XML_STATUS_OK) {
+    fail("Double colon in attribute name faulted"
+         " (despite inactive namespace support");
+  }
+#endif
 }
 END_TEST
 
 START_TEST(test_ns_double_colon_element) {
   const char *text = "<foo:bar:e xmlns:foo='http://example.org/' />";
-
-  expect_failure(text, XML_ERROR_INVALID_TOKEN,
-                 "Double colon in element name not faulted");
+  const enum XML_Status status
+      = _XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE);
+#ifdef XML_NS
+  if ((status == XML_STATUS_OK)
+      || (XML_GetErrorCode(g_parser) != XML_ERROR_INVALID_TOKEN)) {
+    fail("Double colon in element name not faulted"
+         " (despite active namespace support)");
+  }
+#else
+  if (status != XML_STATUS_OK) {
+    fail("Double colon in element name faulted"
+         " (despite inactive namespace support");
+  }
+#endif
 }
 END_TEST
 
