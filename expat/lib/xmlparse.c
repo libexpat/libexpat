@@ -1401,6 +1401,7 @@ XML_UseForeignDTD(XML_Parser parser, XML_Bool useDTD) {
   parser->m_useForeignDTD = useDTD;
   return XML_ERROR_NONE;
 #else
+  UNUSED_P(useDTD);
   return XML_ERROR_FEATURE_REQUIRES_XML_DTD;
 #endif
 }
@@ -1782,7 +1783,7 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal) {
     int nLeftOver;
     enum XML_Status result;
     /* Detect overflow (a+b > MAX <==> b > MAX-a) */
-    if (len > ((XML_Size)-1) / 2 - parser->m_parseEndByteIndex) {
+    if ((XML_Size)len > ((XML_Size)-1) / 2 - parser->m_parseEndByteIndex) {
       parser->m_errorCode = XML_ERROR_NO_MEMORY;
       parser->m_eventPtr = parser->m_eventEndPtr = NULL;
       parser->m_processor = errorProcessor;

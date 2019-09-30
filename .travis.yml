@@ -28,6 +28,16 @@ matrix:
     - os: linux
       env: MODE=qa-sh CC=clang CXX=clang++ LD=clang++ QA_SANITIZER=address CMAKE_ARGS=-DEXPAT_ATTR_INFO=ON
     - os: linux
+      env: MODE=qa-sh CC=clang CXX=clang++ LD=clang++ QA_SANITIZER=address CMAKE_ARGS=-DEXPAT_CONTEXT_BYTES=OFF
+    - os: linux
+      env: MODE=qa-sh CC=clang CXX=clang++ LD=clang++ QA_SANITIZER=address CMAKE_ARGS=-DEXPAT_DTD=OFF
+    - os: linux
+      env: MODE=qa-sh CC=clang CXX=clang++ LD=clang++ QA_SANITIZER=address CMAKE_ARGS=-DEXPAT_LARGE_SIZE=ON
+    - os: linux
+      env: MODE=qa-sh CC=clang CXX=clang++ LD=clang++ QA_SANITIZER=address CMAKE_ARGS=-DEXPAT_MIN_SIZE=ON
+    - os: linux
+      env: MODE=qa-sh CC=clang CXX=clang++ LD=clang++ QA_SANITIZER=address CMAKE_ARGS=-DEXPAT_NS=OFF
+    - os: linux
       env: MODE=qa-sh CC=clang CXX=clang++ LD=clang++ QA_SANITIZER=memory
     - os: linux
       env: MODE=qa-sh CC=clang CXX=clang++ LD=clang++ QA_SANITIZER=undefined

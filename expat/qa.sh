@@ -131,13 +131,15 @@ run_tests() {
         done
     fi
 
-    local make_env_args=(
+    local make_args=(
         CTEST_OUTPUT_ON_FAILURE=1
         CTEST_PARALLEL_LEVEL=2
         VERBOSE=1
+        test
     )
+    [[ $* =~ -DEXPAT_DTD=OFF ]] || make_args+=( run-xmltest )
 
-    RUN "${MAKE}" "${make_env_args[@]}" test run-xmltest
+    RUN "${MAKE}" "${make_args[@]}"
 }
 
 
@@ -180,7 +182,7 @@ run() {
 
     run_cmake "$@"
     run_compile
-    run_tests
+    run_tests "$@"
     run_processor
 }
 
