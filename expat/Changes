@@ -5,7 +5,10 @@ NOTE: We are looking for help with a few things:
 Release x.x.x xxx xxxxxxxxx xx xxxx
         Other changes:
             #354  Fix testsuite for -DEXPAT_DTD=OFF and -DEXPAT_NS=OFF, each
-            #354  Address compiler warnings
+       #354 #355  Address compiler warnings
+
+        Special thanks to:
+            Ma Lin
 
 Release 2.2.9 Wed September 25 2019
         Other changes:
