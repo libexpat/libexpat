@@ -736,6 +736,13 @@ writeRandomBytes_arc4random(void *target, size_t count) {
 
 #ifdef _WIN32
 
+/* Provide declaration of rand_s() for MinGW-32 (not 64, which has it),
+   as it doesn't declare it in its header up to at least 5.2.2 version
+   of its runtime package (mingwrt, containing stdlib.h). */
+#  if defined(__MINGW32__) && ! defined(__MINGW64_VERSION_MAJOR)
+__declspec(dllimport) int rand_s(unsigned int *);
+#  endif
+
 /* Obtain entropy on Windows using the rand_s() function which
  * generates cryptographically secure random numbers.  Internally it
  * uses RtlGenRandom API which is present in Windows XP and later.
