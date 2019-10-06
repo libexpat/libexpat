@@ -61,6 +61,8 @@ elif [[ ${MODE} = cppcheck ]]; then
 elif [[ ${MODE} = clang-format ]]; then
     ./apply-clang-format.sh
     git diff --exit-code
+elif [[ ${MODE} = coverage-sh ]]; then
+    ./coverage.sh
 else
     ./qa.sh ${CMAKE_ARGS}
 fi
