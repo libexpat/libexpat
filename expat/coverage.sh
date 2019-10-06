@@ -211,6 +211,11 @@ _main() {
         echo "[${build_dir}]"
         _copy_to "${build_dir}"
 
+        # Make sure we don't need to download xmlts.zip over and over again
+        if [[ ${#build_dirs[*]} -gt 0 ]]; then
+            ln -s "$PWD/${build_dirs[0]}/tests/xmlts.zip" "${build_dir}"/tests/
+        fi
+
         _run "${source_dir}" "${build_dir}"
 
         build_dirs+=( "${build_dir}" )
