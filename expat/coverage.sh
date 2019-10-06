@@ -35,28 +35,27 @@ _get_coverage_dir() {
 }
 
 
-_configure() {
-    local configure_args=()
+_call_cmake() {
+    local cmake_args=()
 
     ${unicode_enabled} \
-            && configure_args+=( CPPFLAGS='-DXML_UNICODE -DXML_UNICODE_WCHAR_T' )
+            && cmake_args+=( -DEXPAT_CHAR_TYPE=wchar_t )
 
     ${xml_attr_info_enabled} \
-            && configure_args+=( --enable-xml-attr-info )
+            && cmake_args+=( -DEXPAT_ATTR_INFO=ON )
 
     if [[ ${xml_context} -eq 0 ]]; then
-        configure_args+=( --disable-xml-context )
+        cmake_args+=( -DEXPAT_CONTEXT_BYTES=OFF )
     else
-        configure_args+=( --enable-xml-context=${xml_context} )
+        cmake_args+=( -DEXPAT_CONTEXT_BYTES=${xml_context} )
     fi
 
-    ${with_libbsd} && configure_args+=( --with-libbsd )
-    ${with_mingw} && configure_args+=( --host=i686-w64-mingw32 )
+    ${with_libbsd} && cmake_args+=( -DEXPAT_WITH_LIBBSD=ON )
+    ${with_mingw} && cmake_args+=( -DCMAKE_TOOLCHAIN_FILE="${abs_source_dir}"/cmake/mingw-toolchain.cmake )
 
     (
         set -x
-        ./buildconf.sh &> configure.log
-        ./configure "${configure_args[@]}" "$@" &>> configure.log
+        cmake "${cmake_args[@]}" "$@" . &>> cmake.log
     )
 }
 
@@ -109,7 +108,7 @@ _run() {
     local build_dir="$2"
     local abs_source_dir="${PWD}/${source_dir}"
     local abs_build_dir="${PWD}/${build_dir}"
-    local capture_dir=lib
+    local capture_dir=.
 
     local BASE_FLAGS='-pipe -Wall -Wextra -pedantic -Wno-overlength-strings'
     BASE_FLAGS+=' --coverage --no-inline'
@@ -123,26 +122,26 @@ _run() {
         set -e
         cd "${build_dir}"
 
-        _configure \
-                CFLAGS="${CFLAGS}" \
-                CXXFLAGS="${CXXFLAGS}"
+        _call_cmake \
+                -DCMAKE_C_FLAGS="${CFLAGS}" \
+                -DCMAKE_CXX_FLAGS="${CXXFLAGS}"
 
         (
             set -x
-            make -C lib &> build.log
+            make &> build.log
 
             lcov -c -d "${capture_dir}" -i -o "${coverage_info}-zero" &> run.log
         )
 
         if ${with_mingw}; then
-            for d in {tests,xmlwf}/.libs ; do
+            for d in tests xmlwf ; do
                 mkdir -p "${d}"
                 _copy_missing_mingw_libaries "${d}"
             done
         fi
 
         set -x
-        make all check run-xmltest
+        make CTEST_OUTPUT_ON_FAILURE=1 test run-xmltest
 
         lcov -c -d "${capture_dir}" -o "${coverage_info}-test" &>> run.log
         lcov \
@@ -211,6 +210,7 @@ _main() {
 
         echo "[${build_dir}]"
         _copy_to "${build_dir}"
+
         _run "${source_dir}" "${build_dir}"
 
         build_dirs+=( "${build_dir}" )
