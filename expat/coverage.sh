@@ -83,15 +83,17 @@ _copy_missing_mingw_libaries() {
         )
     done
 
-    local mingw_pthread_dll_dir="$(dirname "$(ls -1 /usr/i686-w64-mingw32/lib*/libwinpthread-1.dll | head -n1)")"
-    for dll in libwinpthread-1.dll; do
-        source="${mingw_pthread_dll_dir}"/${dll}
-        [[ -e "${source}" ]] || continue
-        (
-            set -x
-            ln -s "${source}" "${target}"/${dll}
-        )
-    done
+    local mingw_pthread_dll="$(ls -1 /usr/i686-w64-mingw32/lib*/libwinpthread-1.dll 2>/dev/null | head -n1)"
+    if [[ -n ${mingw_pthread_dll} ]]; then
+        local mingw_pthread_dll_dir="$(dirname "${mingw_pthread_dll}")"
+        for dll in libwinpthread-1.dll; do
+            source="${mingw_pthread_dll_dir}"/${dll}
+            (
+                set -x
+                ln -s "${source}" "${target}"/${dll}
+            )
+        done
+    fi
 }
 
 
