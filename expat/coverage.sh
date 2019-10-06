@@ -94,12 +94,21 @@ _copy_missing_mingw_libaries() {
             )
         done
     fi
+
+    for dll in libexpat.dll; do
+        (
+            set -x
+            ln -s "${abs_build_dir}"/${dll} "${target}"/${dll}
+        )
+    done
 }
 
 
 _run() {
     local source_dir="$1"
     local build_dir="$2"
+    local abs_source_dir="${PWD}/${source_dir}"
+    local abs_build_dir="${PWD}/${build_dir}"
     local capture_dir=lib
 
     local BASE_FLAGS='-pipe -Wall -Wextra -pedantic -Wno-overlength-strings'
