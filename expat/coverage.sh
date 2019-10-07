@@ -176,7 +176,7 @@ _merge_coverage_info() {
 
     mkdir -p "${coverage_dir}"
     (
-        local lcov_merge_args=()
+        local lcov_merge_args=( -q )
         for build_dir in "${build_dirs[@]}"; do
             lcov_merge_args+=( -a "${build_dir}/${coverage_info}" )
         done
@@ -184,19 +184,25 @@ _merge_coverage_info() {
 
         set -x
         lcov "${lcov_merge_args[@]}"
-    ) &> "${coverage_dir}/merge.log"
+    ) |& tee "${coverage_dir}/merge.log"
 }
 
 
 _render_html_report() {
     local coverage_dir="$1"
-    genhtml -o "${coverage_dir}" "${coverage_dir}/${coverage_info}" &> "${coverage_dir}/render.log"
+    (
+        set -x
+        genhtml -o "${coverage_dir}" "${coverage_dir}/${coverage_info}" &> "${coverage_dir}/render.log"
+    )
 }
 
 
 _show_summary() {
     local coverage_dir="$1"
-    lcov -q -l "${coverage_dir}/${coverage_info}" | grep -v '^\['
+    (
+        set -x
+        lcov -q -l "${coverage_dir}/${coverage_info}"
+    ) | grep -v '^\['
 }
 
 
@@ -256,6 +262,7 @@ _main() {
     echo "--> ${coverage_dir}/index.html"
 
     echo
+    echo 'Rendering ASCII report...'
     _show_summary "${coverage_dir}"
 }
 
