@@ -188,6 +188,19 @@ _merge_coverage_info() {
 }
 
 
+_clean_coverage_info() {
+    local coverage_dir="$1"
+    local dir
+    for dir in CMakeFiles examples tests ; do
+        local pattern="*/${dir}/*"
+        (
+            set -x
+            lcov -q -o "${coverage_dir}/${coverage_info}" -r "${coverage_dir}/${coverage_info}" "${pattern}"
+        ) |& tee "${coverage_dir}/clean.log"
+    done
+}
+
+
 _render_html_report() {
     local coverage_dir="$1"
     (
@@ -257,6 +270,11 @@ _main() {
     echo 'Merging coverage files...'
     _merge_coverage_info "${coverage_dir}" "${build_dirs[@]}"
 
+    echo
+    echo 'Cleaning coverage files...'
+    _clean_coverage_info "${coverage_dir}"
+
+    echo
     echo 'Rendering HTML report...'
     _render_html_report "${coverage_dir}"
     echo "--> ${coverage_dir}/index.html"
