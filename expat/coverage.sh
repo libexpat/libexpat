@@ -26,7 +26,12 @@ _get_build_dir() {
         char_part=__unsigned_char
     fi
 
-    echo "build__${version}__unicode_${unicode_enabled}__xml_context_${xml_context}${libbsd_part}${mingw_part}${char_part}"
+    local xml_attr_part=
+    if ${xml_attr_info_enabled}; then
+        xml_attr_part=__attr_info
+    fi
+
+    echo "build__${version}__unicode_${unicode_enabled}__xml_context_${xml_context}${libbsd_part}${mingw_part}${char_part}${xml_attr_part}"
 }
 
 
