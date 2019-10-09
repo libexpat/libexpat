@@ -11,15 +11,14 @@ set -x
 
 version="$(./conftools/get-version.sh lib/expat.h)"
 
-./buildconf.sh
-./configure
-make distcheck
+./make-distcheck.sh
 
 extensions=(
     gz
     bz2
     lz
     xz
+    zip
 )
 
 for ext in ${extensions[@]} ; do
