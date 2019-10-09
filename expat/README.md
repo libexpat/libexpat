@@ -30,83 +30,73 @@ contained in the file
 distributed with this package.
 This license is the same as the MIT/X Consortium license.
 
-If you are building Expat from a check-out from the
-[Git repository](https://github.com/libexpat/libexpat/),
-you need to run a script that generates the configure script using the
-GNU autoconf and libtool tools.  To do this, you need to have
-autoconf 2.58 or newer. Run the script like this:
+
+## Build and install
+
+To build Expat from a source distribution, you first run CMake
+in the top level distribution directory:
 
 ```console
-./buildconf.sh
+cmake .
 ```
 
-Once this has been done, follow the same instructions as for building
-from a source distribution.
-
-To build Expat from a source distribution, you first run the
-configuration shell script in the top level distribution directory:
-
-```console
-./configure
-```
-
-There are many options which you may provide to configure (which you
-can discover by running configure with the `--help` option).  But the
+There are many options which you may provide to CMake (which you
+can discover by running `cmake -LH .`).  But the
 one of most interest is the one that sets the installation directory.
-By default, the configure script will set things up to install
+By default, CMake will set things up to install
 libexpat into `/usr/local/lib`, `expat.h` into `/usr/local/include`, and
 `xmlwf` into `/usr/local/bin`.  If, for example, you'd prefer to install
 into `/home/me/mystuff/lib`, `/home/me/mystuff/include`, and
-`/home/me/mystuff/bin`, you can tell `configure` about that with:
+`/home/me/mystuff/bin`, you can tell CMake about that with:
 
 ```console
-./configure --prefix=/home/me/mystuff
+cmake -DCMAKE_INSTALL_PREFIX=/home/me/mystuff .
 ```
 
 Another interesting option is to enable 64-bit integer support for
 line and column numbers and the over-all byte index:
 
 ```console
-./configure CPPFLAGS=-DXML_LARGE_SIZE
+cmake -DEXPAT_LARGE_SIZE=ON .
 ```
 
 However, such a modification would be a breaking change to the ABI
 and is therefore not recommended for general use &mdash; e.g. as part of
 a Linux distribution &mdash; but rather for builds with special requirements.
 
-After running the configure script, the `make` command will build
+After running CMake, the `make` command will build
 things and `make install` will install things into their proper
-location.  Have a look at the `Makefile` to learn about additional
-`make` options.  Note that you need to have write permission into
+location. Note that you need to have write permission into
 the directories into which things will be installed.
 
+
+### Building with support for wide characters
+
 If you are interested in building Expat to provide document
-information in UTF-16 encoding rather than the default UTF-8, follow
-these instructions (after having run `make distclean`).
-Please note that we configure with `--without-xmlwf` as xmlwf does not
-support this mode of compilation (yet):
+information in UTF-16 encoding rather than the default UTF-8,
+pass `-DEXPAT_CHAR_TYPE=ushort` or `-DEXPAT_CHAR_TYPE=wchar_t` to CMake.
+Version and error strings remain to be `char`.
 
-1. Mass-patch `Makefile.am` files to use `libexpatw.la` for a library name:
-   <br/>
-   `find -name Makefile.am -exec sed
-       -e 's,libexpat\.la,libexpatw.la,'
-       -e 's,libexpat_la,libexpatw_la,'
-       -i {} +`
+Please note that `-DEXPAT_CHAR_TYPE=ushort` will also need
 
-1. Run `automake` to re-write `Makefile.in` files:<br/>
-   `automake`
+- `-DEXPAT_BUILD_EXAMPLES=OFF`
+- `-DEXPAT_BUILD_TESTS=OFF`
+- `-DEXPAT_BUILD_TOOLS=OFF`
 
-1. For UTF-16 output as unsigned short (and version/error strings as char),
-   run:<br/>
-   `./configure CPPFLAGS=-DXML_UNICODE --without-xmlwf`<br/>
-   For UTF-16 output as `wchar_t` (incl. version/error strings), run:<br/>
-   `./configure CFLAGS="-g -O2 -fshort-wchar" CPPFLAGS=-DXML_UNICODE_WCHAR_T
-       --without-xmlwf`
-   <br/>Note: The latter requires libc compiled with `-fshort-wchar`, as well.
+because `unsigned short` based strings are not supported in these contexts.
 
-1. Run `make` (which excludes xmlwf).
+For `-DEXPAT_CHAR_TYPE=wchar_t`, please note that `wchar_t` takes 2 bytes on
+Windows &mdash; a *good* fit for UTF-16 &mdash; but 4 bytes on Unix &mdash;
+a *bad* fit for UTF-16.
+As a result, on Unix you will need to
 
-1. Run `make install` (again, excludes xmlwf).
+- have a libc compiled with `-fshort-wchar` around(!),
+- pass `-DCMAKE_{C,CXX}_FLAGS=-fshort-wchar` to CMake, and
+- pass `-DEXPAT_BUILD_TOOLS=OFF` to CMake
+  (because xmlwf does not support to be compiled this way).
+
+
+### Installation with DESTDIR
 
 Using `DESTDIR` is supported.  It works as follows:
 
@@ -132,8 +122,8 @@ A reference manual is available in the file `doc/reference.html` in this
 distribution.
 
 
-The CMake build system is still *experimental* and will replace the primary
-build system based on GNU Autotools at some point when it is ready.
+### CMake build options
+
 For an idea of the available (non-advanced) options for building with CMake:
 
 ```console
