@@ -47,11 +47,11 @@ PS4='# '
 set -x
 
 cd expat
-./buildconf.sh
 
 if [[ ${MODE} = distcheck ]]; then
-    ./configure ${CONFIGURE_ARGS}
-    make distcheck
+    cmake .
+    make xmlwf-manpage
+    ./make-distcheck.sh
 elif [[ ${MODE} = cmake-oos ]]; then
     mkdir build
     cd build
