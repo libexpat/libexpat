@@ -70,7 +70,6 @@ addons:
       - lzip
       - mingw-w64
       - moreutils
-      - rpm
       - wine
 
 script:
