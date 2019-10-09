@@ -261,9 +261,13 @@ endif(EXPAT_SHARED_LIBS)
 
 # Avoid colliding with Expat.dll of Perl's XML::Parser::Expat
 if(WIN32 AND NOT MINGW)
-    set(_EXPAT_TARGET libexpat)
+    set(_EXPAT_TARGET libexpat)  # CMAKE_*_POSTFIX applies, see above
 else()
-    set(_EXPAT_TARGET expat)
+    if(_EXPAT_UNICODE)
+        set(_EXPAT_TARGET expatw)
+    else()
+        set(_EXPAT_TARGET expat)
+    endif()
 endif()
 
 add_library(${_EXPAT_TARGET} ${_SHARED} ${expat_SRCS})
@@ -297,8 +301,8 @@ if(NOT MSVC)
     set(exec_prefix "\${prefix}")
     set(libdir "\${exec_prefix}/${CMAKE_INSTALL_LIBDIR}")
     set(includedir "\${prefix}/${CMAKE_INSTALL_INCLUDEDIR}")
-    configure_file(expat.pc.in ${CMAKE_CURRENT_BINARY_DIR}/expat.pc @ONLY)
-    expat_install(FILES ${CMAKE_CURRENT_BINARY_DIR}/expat.pc DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
+    configure_file(expat.pc.in ${CMAKE_CURRENT_BINARY_DIR}/${_EXPAT_TARGET}.pc @ONLY)
+    expat_install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${_EXPAT_TARGET}.pc DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
 endif()
 
 #
