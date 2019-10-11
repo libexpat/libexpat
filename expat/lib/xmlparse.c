@@ -737,9 +737,11 @@ writeRandomBytes_arc4random(void *target, size_t count) {
 #ifdef _WIN32
 
 /* Provide declaration of rand_s() for MinGW-32 (not 64, which has it),
-   as it doesn't declare it in its header up to at least 5.2.2 version
-   of its runtime package (mingwrt, containing stdlib.h). */
-#  if defined(__MINGW32__) && ! defined(__MINGW64_VERSION_MAJOR)
+   as it didn't declare it in its header prior to version 5.3.0 of its
+   runtime package (mingwrt, containing stdlib.h).  The upstream fix
+   was introduced at https://osdn.net/projects/mingw/ticket/39658 . */
+#  if defined(__MINGW32__) && defined(__MINGW32_VERSION)                       \
+      && __MINGW32_VERSION < 5003000L && ! defined(__MINGW64_VERSION_MAJOR)
 __declspec(dllimport) int rand_s(unsigned int *);
 #  endif
 
