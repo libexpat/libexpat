@@ -15,6 +15,7 @@ Release x.x.x xxx xxxxxxxxx xx xxxx
                     to parent scope for use by means of add_subdirectory
             #385  CMake: Fix compilation with -DEXPAT_SHARED_LIBS=OFF for
                     Windows
+                  CMake: Expose man page compilation as target "xmlwf-manpage"
             #354  Fix testsuite for -DEXPAT_DTD=OFF and -DEXPAT_NS=OFF, each
   #354 #355 #356  Address compiler warnings
 
