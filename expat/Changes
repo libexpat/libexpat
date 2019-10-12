@@ -4,6 +4,12 @@ NOTE: We are looking for help with a few things:
 
 Release x.x.x xxx xxxxxxxxx xx xxxx
         Other changes:
+            #360  CMake: Create libexpatw.{dll,so} and expatw.pc (with emphasis
+                    on suffix "w") with -DEXPAT_CHAR_TYPE=(ushort|wchar_t)
+            #360  CMake: Detect and deny unsupported build combinations
+                    involving -DEXPAT_CHAR_TYPE=(ushort|wchar_t)
+            #360  CMake: Install pre-compiled shipped xmlwf.1 manpage in case
+                    of -DEXPAT_BUILD_DOCS=OFF
             #354  Fix testsuite for -DEXPAT_DTD=OFF and -DEXPAT_NS=OFF, each
   #354 #355 #356  Address compiler warnings
 
