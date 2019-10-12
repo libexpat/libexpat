@@ -345,6 +345,8 @@ if(EXPAT_BUILD_TOOLS)
         file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/doc)
         add_custom_command(TARGET ${_EXPAT_TARGET} PRE_BUILD COMMAND "${DOCBOOK_TO_MAN}" "${PROJECT_SOURCE_DIR}/doc/xmlwf.xml" && mv "XMLWF.1" "${PROJECT_BINARY_DIR}/doc/xmlwf.1")
         expat_install(FILES "${PROJECT_BINARY_DIR}/doc/xmlwf.1" DESTINATION ${CMAKE_INSTALL_MANDIR}/man1)
+    elseif(EXISTS ${PROJECT_SOURCE_DIR}/doc/xmlwf.1)
+        expat_install(FILES "${PROJECT_SOURCE_DIR}/doc/xmlwf.1" DESTINATION ${CMAKE_INSTALL_MANDIR}/man1)
     endif()
 endif()
 
