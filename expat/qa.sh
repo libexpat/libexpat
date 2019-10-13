@@ -126,7 +126,7 @@ run_tests() {
                     /usr/i686-w64-mingw32/lib/libwinpthread-1.dll \
                     /usr/lib/gcc/i686-w64-mingw32/*/libgcc_s_sjlj-1.dll \
                     /usr/lib/gcc/i686-w64-mingw32/*/libstdc++-6.dll \
-                    "$PWD"/libexpat.dll \
+                    "$PWD"/libexpat{,w}.dll \
                     ${i}/
         done
     fi
