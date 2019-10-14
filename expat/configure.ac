@@ -307,6 +307,9 @@ AS_IF([test "x${DOCBOOK_TO_MAN}" != x -a "x$with_docbook" != xno],
 
 AM_CONDITIONAL(WITH_DOCBOOK, [test "x${DOCBOOK_TO_MAN}" != x])
 
+dnl updating _EXPAT_TARGET variable to effect the package name in expat.pc file (issue #361)
+AC_SUBST(_EXPAT_TARGET, ["$PACKAGE_NAME"])
+
 AC_CONFIG_FILES([Makefile]
   [expat.pc]
   [doc/Makefile]
