@@ -307,6 +307,12 @@ AS_IF([test "x${DOCBOOK_TO_MAN}" != x -a "x$with_docbook" != xno],
 
 AM_CONDITIONAL(WITH_DOCBOOK, [test "x${DOCBOOK_TO_MAN}" != x])
 
+dnl This allows use of @_EXPAT_TARGET@ inside expat.pc.in.
+dnl CMake makes use of expat.pc.in as well: it interpolates @_EXPAT_TARGET@
+dnl with "expat" for -DEXPAT_CHAR_TYPE=char
+dnl or "expatw" for -DEXPAT_CHAR_TYPE=(ushort|wchar_t)
+AC_SUBST([_EXPAT_TARGET], [expat])
+
 AC_CONFIG_FILES([Makefile]
   [expat.pc]
   [doc/Makefile]
