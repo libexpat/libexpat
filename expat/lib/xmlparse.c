@@ -99,14 +99,14 @@
     enabled.  For end user security, that is probably not what you want. \
     \
     Your options include: \
-      * Linux + glibc >=2.25 (getrandom): HAVE_GETRANDOM, \
-      * Linux + glibc <2.25 (syscall SYS_getrandom): HAVE_SYSCALL_GETRANDOM, \
+      * Linux >=3.17 + glibc >=2.25 (getrandom): HAVE_GETRANDOM, \
+      * Linux >=3.17 + glibc (including <2.25) (syscall SYS_getrandom): HAVE_SYSCALL_GETRANDOM, \
       * BSD / macOS >=10.7 (arc4random_buf): HAVE_ARC4RANDOM_BUF, \
-      * BSD / macOS <10.7 (arc4random): HAVE_ARC4RANDOM, \
+      * BSD / macOS (including <10.7) (arc4random): HAVE_ARC4RANDOM, \
       * libbsd (arc4random_buf): HAVE_ARC4RANDOM_BUF + HAVE_LIBBSD, \
       * libbsd (arc4random): HAVE_ARC4RANDOM + HAVE_LIBBSD, \
-      * Linux / BSD / macOS (/dev/urandom): XML_DEV_URANDOM \
-      * Windows (rand_s): _WIN32. \
+      * Linux (including <3.17) / BSD / macOS (including <10.7) (/dev/urandom): XML_DEV_URANDOM, \
+      * Windows >=Vista (rand_s): _WIN32. \
     \
     If insist on not using any of these, bypass this error by defining \
     XML_POOR_ENTROPY; you have been warned. \
