@@ -6,7 +6,7 @@ Version `2019.08.09.21.54`
 ## Purpose
 
 Define a small set of rules for style used in Expat's `configure.ac`
-so that we have a commen ground and something documented to refer to
+so that we have a common ground and something documented to refer to
 in pull requests, when style is off.
 
 
