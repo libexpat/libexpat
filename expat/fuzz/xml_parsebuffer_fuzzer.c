@@ -45,6 +45,9 @@ end(void *userData, const XML_Char *name) {
 
 int
 LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
+  if (size == 0)
+    return 0;
+
   XML_Parser p = XML_ParserCreate(xstr(ENCODING_FOR_FUZZING));
   assert(p);
   XML_SetElementHandler(p, start, end);
