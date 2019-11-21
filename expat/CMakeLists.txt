@@ -47,6 +47,7 @@ option(EXPAT_BUILD_TESTS "build the tests for expat library" ON)
 option(EXPAT_SHARED_LIBS "build a shared expat library" ON)
 option(EXPAT_BUILD_DOCS "build man page for xmlwf" ${_EXPAT_BUILD_DOCS_DEFAULT})
 option(EXPAT_BUILD_FUZZERS "build fuzzers for the expat library" OFF)
+option(EXPAT_OSSFUZZ_BUILD "build fuzzers via ossfuzz for the expat library" OFF)
 if(UNIX OR _EXPAT_HELP)
     option(EXPAT_WITH_LIBBSD "utilize libbsd (for arc4random_buf)" OFF)
 endif()
@@ -412,7 +413,7 @@ if(EXPAT_BUILD_FUZZERS)
             "-DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++.")
     endif()
 
-    string(FIND "${CMAKE_EXE_LINKER_FLAGS}" "-fsanitize" sanitizer_present)
+    string(FIND "${CMAKE_C_FLAGS}" "-fsanitize" sanitizer_present)
     if(${sanitizer_present} EQUAL "-1")
         message(WARNING
             "There was no sanitizer present when building the fuzz targets. "
@@ -424,11 +425,21 @@ if(EXPAT_BUILD_FUZZERS)
             "execution.")
     endif()
 
+    if(EXPAT_OSSFUZZ_BUILD AND NOT DEFINED ENV{LIB_FUZZING_ENGINE})
+        message(SEND_ERROR
+            "OSS-Fuzz builds require the environment variable "
+            "LIB_FUZZING_ENGINE to be set. If you are seeing this "
+            "warning, it points to a deeper problem in the ossfuzz "
+            "build setup.")
+    endif(EXPAT_OSSFUZZ_BUILD AND NOT DEFINED ENV{LIB_FUZZING_ENGINE})
+
     set(encoding_types UTF-16 UTF-8 ISO-8859-1 US-ASCII UTF-16BE UTF-16LE)
     set(fuzz_targets xml_parse_fuzzer xml_parsebuffer_fuzzer)
 
     add_library(fuzzpat STATIC ${expat_SRCS})
-    target_compile_options(fuzzpat PRIVATE -fsanitize=fuzzer-no-link)
+    if(NOT EXPAT_OSSFUZZ_BUILD)
+        target_compile_options(fuzzpat PRIVATE -fsanitize=fuzzer-no-link)
+    endif(NOT EXPAT_OSSFUZZ_BUILD)
 
     foreach(fuzz_target ${fuzz_targets})
         foreach(encoding_type ${encoding_types})
@@ -437,13 +448,27 @@ if(EXPAT_BUILD_FUZZERS)
             target_link_libraries(${target_name} fuzzpat)
             target_compile_definitions(${target_name}
                 PRIVATE ENCODING_FOR_FUZZING=${encoding_type})
-            target_compile_options(${target_name} PRIVATE -fsanitize=fuzzer-no-link)
+            if(NOT EXPAT_OSSFUZZ_BUILD)
+                target_compile_options(${target_name} PRIVATE -fsanitize=fuzzer-no-link)
+            endif(NOT EXPAT_OSSFUZZ_BUILD)
             # NOTE: Avoiding target_link_options here only because it needs CMake >=3.13
-            set_target_properties(${target_name} PROPERTIES LINK_FLAGS -fsanitize=fuzzer)
+            if(EXPAT_OSSFUZZ_BUILD)
+                set_target_properties(${target_name} PROPERTIES LINK_FLAGS $ENV{LIB_FUZZING_ENGINE})
+                set_target_properties(${target_name} PROPERTIES LINKER_LANGUAGE "CXX")
+            else()
+                set_target_properties(${target_name} PROPERTIES LINK_FLAGS -fsanitize=fuzzer)
+            endif(NOT EXPAT_OSSFUZZ_BUILD)
             set_property(
                 TARGET ${target_name} PROPERTY RUNTIME_OUTPUT_DIRECTORY fuzz)
         endforeach()
     endforeach()
+else()
+    if(EXPAT_OSSFUZZ_BUILD)
+        message(SEND_ERROR
+                "Attempting to perform an ossfuzz build without turning on the fuzzer build. "
+                "This is likely in error - consider adding "
+                "-DEXPAT_BUILD_FUZZERS=ON to your cmake execution.")
+    endif(EXPAT_OSSFUZZ_BUILD)
 endif(EXPAT_BUILD_FUZZERS)
 
 #
