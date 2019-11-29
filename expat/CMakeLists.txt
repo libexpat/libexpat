@@ -457,7 +457,7 @@ if(EXPAT_BUILD_FUZZERS)
                 set_target_properties(${target_name} PROPERTIES LINKER_LANGUAGE "CXX")
             else()
                 set_target_properties(${target_name} PROPERTIES LINK_FLAGS -fsanitize=fuzzer)
-            endif(NOT EXPAT_OSSFUZZ_BUILD)
+            endif(EXPAT_OSSFUZZ_BUILD)
             set_property(
                 TARGET ${target_name} PROPERTY RUNTIME_OUTPUT_DIRECTORY fuzz)
         endforeach()
