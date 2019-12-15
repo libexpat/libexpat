@@ -736,14 +736,34 @@ writeRandomBytes_arc4random(void *target, size_t count) {
 
 #ifdef _WIN32
 
-/* Provide declaration of rand_s() for MinGW-32 (not 64, which has it),
-   as it didn't declare it in its header prior to version 5.3.0 of its
-   runtime package (mingwrt, containing stdlib.h).  The upstream fix
-   was introduced at https://osdn.net/projects/mingw/ticket/39658 . */
+/* All supported non-MinGW-32 compilers, including MinGW-64, have both rand_s()
+   definition and declaration, but the situation is more complicated for
+   MinGW-32, which only provides it since version 5.3.0 of its runtime package
+   (mingwrt, containing stdlib.h), see the details about the upstream fix at
+   https://osdn.net/projects/mingw/ticket/39658. Until the version 3.22.0, it
+   didn't provide even the definition of this function in its libraries, and so
+   it can't be used at all in this case. And for the intermediate versions,
+   between 3.22 and 5.3, it didn't provide the declaration of the function in
+   its headers -- that we can work around ourselves by providing it here.
+*/
 #  if defined(__MINGW32__) && defined(__MINGW32_VERSION)                       \
-      && __MINGW32_VERSION < 5003000L && ! defined(__MINGW64_VERSION_MAJOR)
+      && ! defined(__MINGW64_VERSION_MAJOR)
+#    if __MINGW32_MAJOR_VERSION < 3                                            \
+        || (__MINGW32_MAJOR_VERSION == 3 && __MINGW32_MINOR_VERSION < 22)
+#      define EXPAT_DISABLE_RAND_S
+#    elif __MINGW32_VERSION < 5003000L
 __declspec(dllimport) int rand_s(unsigned int *);
+#    endif
 #  endif
+
+#  ifdef EXPAT_DISABLE_RAND_S
+
+static int
+writeRandomBytes_rand_s(void *target, size_t count) {
+  return 0; /* unconditional failure */
+}
+
+#  else /* ! EXPAT_DISABLE_RAND_S */
 
 /* Obtain entropy on Windows using the rand_s() function which
  * generates cryptographically secure random numbers.  Internally it
@@ -768,6 +788,8 @@ writeRandomBytes_rand_s(void *target, size_t count) {
   }
   return 1; /* success */
 }
+
+#  endif /* EXPAT_DISABLE_RAND_S / ! EXPAT_DISABLE_RAND_S */
 
 #endif /* _WIN32 */
 
