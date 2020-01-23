@@ -18,7 +18,7 @@ Expat supports the following compilers:
 - LLVM Clang >=3.5
 - Microsoft Visual Studio >=8.0/2005
 
-Windows users should use the
+Windows users can use the
 [`expat_win32` package](https://sourceforge.net/projects/expat/files/expat_win32/),
 which includes both precompiled libraries and executables, and source code for
 developers.
