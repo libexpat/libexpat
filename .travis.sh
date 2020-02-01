@@ -36,6 +36,10 @@ elif [[ ${TRAVIS_OS_NAME} = linux ]]; then
     export PATH="/usr/lib/llvm-9/bin:${PATH}"
 fi
 
+echo "New \${PATH}:"
+tr : '\n' <<<"${PATH}" | sed 's,^,- ,'
+echo
+
 PS4='# '
 set -x
 
