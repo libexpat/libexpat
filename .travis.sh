@@ -31,10 +31,16 @@
 set -e
 
 if [[ ${TRAVIS_OS_NAME} = osx ]]; then
+    latest_brew_python3_bin="$(ls -1d /usr/local/Cellar/python/3.*/bin | sort -n | tail -n1)"
+    export PATH="${latest_brew_python3_bin}${PATH:+:}${PATH}"
     export PATH="/usr/local/opt/coreutils/libexec/gnubin${PATH:+:}${PATH}"
 elif [[ ${TRAVIS_OS_NAME} = linux ]]; then
     export PATH="/usr/lib/llvm-9/bin:${PATH}"
 fi
+
+echo "New \${PATH}:"
+tr : '\n' <<<"${PATH}" | sed 's,^,- ,'
+echo
 
 PS4='# '
 set -x
