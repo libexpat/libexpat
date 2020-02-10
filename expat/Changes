@@ -10,12 +10,14 @@ Release x.x.x xxx xxxxxxxxx xx xxxx
                     involving -DEXPAT_CHAR_TYPE=(ushort|wchar_t)
             #360  CMake: Install pre-compiled shipped xmlwf.1 manpage in case
                     of -DEXPAT_BUILD_DOCS=OFF
+       #375 #380  CMake: Fix use of Expat by means of add_subdirectory
             #354  Fix testsuite for -DEXPAT_DTD=OFF and -DEXPAT_NS=OFF, each
   #354 #355 #356  Address compiler warnings
 
         Special thanks to:
             asavah
             Ma Lin
+            Maciej Sroczyński
             Mohammed Khajapasha
             Vadim Zeitlin
 
