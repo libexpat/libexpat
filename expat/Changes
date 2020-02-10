@@ -11,6 +11,8 @@ Release x.x.x xxx xxxxxxxxx xx xxxx
             #360  CMake: Install pre-compiled shipped xmlwf.1 manpage in case
                     of -DEXPAT_BUILD_DOCS=OFF
        #375 #380  CMake: Fix use of Expat by means of add_subdirectory
+                  CMake: Expose ${EXPAT_TARGET}(="libexpat"/"expatw"/"expat")
+                    to parent scope for use by means of add_subdirectory
             #354  Fix testsuite for -DEXPAT_DTD=OFF and -DEXPAT_NS=OFF, each
   #354 #355 #356  Address compiler warnings
 
