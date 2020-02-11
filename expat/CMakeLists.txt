@@ -20,6 +20,18 @@ include(CMakePackageConfigHelpers)
 include(GNUInstallDirs)
 
 #
+# Detect use by means of add_subdirectory
+#
+get_directory_property(_EXPAT_PARENT_DIRECTORY PARENT_DIRECTORY)
+if(_EXPAT_PARENT_DIRECTORY)
+    # NOTE: We cannot set(_EXPAT_PARENT_SCOPE "PARENT_SCOPE") because
+    #       that would end up as set(_EXPAT_PARENT_SCOPE "" PARENT_SCOPE)
+    string(CONCAT _EXPAT_PARENT_SCOPE "PARENT" "_" "SCOPE")
+else()
+    set(_EXPAT_PARENT_SCOPE "")
+endif()
+
+#
 # Configuration defaults
 #
 if(WINCE)
@@ -277,18 +289,18 @@ endif(EXPAT_SHARED_LIBS)
 
 # Avoid colliding with Expat.dll of Perl's XML::Parser::Expat
 if(WIN32 AND NOT MINGW)
-    set(_EXPAT_TARGET libexpat)  # CMAKE_*_POSTFIX applies, see above
+    set(EXPAT_TARGET libexpat ${_EXPAT_PARENT_SCOPE})  # CMAKE_*_POSTFIX applies, see above
 else()
     if(_EXPAT_UNICODE)
-        set(_EXPAT_TARGET expatw)
+        set(EXPAT_TARGET expatw ${_EXPAT_PARENT_SCOPE})
     else()
-        set(_EXPAT_TARGET expat)
+        set(EXPAT_TARGET expat ${_EXPAT_PARENT_SCOPE})
     endif()
 endif()
 
-add_library(${_EXPAT_TARGET} ${_SHARED} ${expat_SRCS})
+add_library(${EXPAT_TARGET} ${_SHARED} ${expat_SRCS})
 if(EXPAT_WITH_LIBBSD)
-    target_link_libraries(${_EXPAT_TARGET} ${LIB_BSD})
+    target_link_libraries(${EXPAT_TARGET} ${LIB_BSD})
 endif()
 
 set(LIBCURRENT 7)    # sync
@@ -297,19 +309,19 @@ set(LIBAGE 6)        # configure.ac!
 math(EXPR LIBCURRENT_MINUS_AGE "${LIBCURRENT} - ${LIBAGE}")
 
 if(NOT WIN32)
-    set_property(TARGET ${_EXPAT_TARGET} PROPERTY VERSION ${LIBCURRENT_MINUS_AGE}.${LIBAGE}.${LIBREVISION})
-    set_property(TARGET ${_EXPAT_TARGET} PROPERTY SOVERSION ${LIBCURRENT_MINUS_AGE})
-    set_property(TARGET ${_EXPAT_TARGET} PROPERTY NO_SONAME ${NO_SONAME})
+    set_property(TARGET ${EXPAT_TARGET} PROPERTY VERSION ${LIBCURRENT_MINUS_AGE}.${LIBAGE}.${LIBREVISION})
+    set_property(TARGET ${EXPAT_TARGET} PROPERTY SOVERSION ${LIBCURRENT_MINUS_AGE})
+    set_property(TARGET ${EXPAT_TARGET} PROPERTY NO_SONAME ${NO_SONAME})
 endif(NOT WIN32)
 
-target_include_directories(${_EXPAT_TARGET}
+target_include_directories(${EXPAT_TARGET}
     INTERFACE
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/lib>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
-expat_install(TARGETS ${_EXPAT_TARGET} EXPORT expat
+expat_install(TARGETS ${EXPAT_TARGET} EXPORT expat
                       RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
                       LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
                       ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
@@ -324,8 +336,8 @@ if(NOT MSVC)
     set(exec_prefix "\${prefix}")
     set(libdir "\${exec_prefix}/${CMAKE_INSTALL_LIBDIR}")
     set(includedir "\${prefix}/${CMAKE_INSTALL_INCLUDEDIR}")
-    configure_file(expat.pc.in ${CMAKE_CURRENT_BINARY_DIR}/${_EXPAT_TARGET}.pc @ONLY)
-    expat_install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${_EXPAT_TARGET}.pc DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
+    configure_file(expat.pc.in ${CMAKE_CURRENT_BINARY_DIR}/${EXPAT_TARGET}.pc @ONLY)
+    expat_install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${EXPAT_TARGET}.pc DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
 endif()
 
 #
@@ -341,7 +353,7 @@ if(EXPAT_BUILD_TOOLS)
 
     add_executable(xmlwf ${xmlwf_SRCS})
     set_property(TARGET xmlwf PROPERTY RUNTIME_OUTPUT_DIRECTORY xmlwf)
-    target_link_libraries(xmlwf ${_EXPAT_TARGET})
+    target_link_libraries(xmlwf ${EXPAT_TARGET})
     expat_install(TARGETS xmlwf DESTINATION ${CMAKE_INSTALL_BINDIR})
 
     if(MINGW AND _EXPAT_UNICODE_WCHAR_T)
@@ -351,7 +363,7 @@ if(EXPAT_BUILD_TOOLS)
 
     if(EXPAT_BUILD_DOCS)
         file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/doc)
-        add_custom_command(TARGET ${_EXPAT_TARGET} PRE_BUILD COMMAND "${DOCBOOK_TO_MAN}" "${PROJECT_SOURCE_DIR}/doc/xmlwf.xml" && mv "XMLWF.1" "${PROJECT_BINARY_DIR}/doc/xmlwf.1")
+        add_custom_command(TARGET ${EXPAT_TARGET} PRE_BUILD COMMAND "${DOCBOOK_TO_MAN}" "${PROJECT_SOURCE_DIR}/doc/xmlwf.xml" && mv "XMLWF.1" "${PROJECT_BINARY_DIR}/doc/xmlwf.1")
         expat_install(FILES "${PROJECT_BINARY_DIR}/doc/xmlwf.1" DESTINATION ${CMAKE_INSTALL_MANDIR}/man1)
     elseif(EXISTS ${PROJECT_SOURCE_DIR}/doc/xmlwf.1)
         expat_install(FILES "${PROJECT_SOURCE_DIR}/doc/xmlwf.1" DESTINATION ${CMAKE_INSTALL_MANDIR}/man1)
@@ -364,11 +376,11 @@ endif()
 if(EXPAT_BUILD_EXAMPLES)
     add_executable(elements examples/elements.c)
     set_property(TARGET elements PROPERTY RUNTIME_OUTPUT_DIRECTORY examples)
-    target_link_libraries(elements ${_EXPAT_TARGET})
+    target_link_libraries(elements ${EXPAT_TARGET})
 
     add_executable(outline examples/outline.c)
     set_property(TARGET outline PROPERTY RUNTIME_OUTPUT_DIRECTORY examples)
-    target_link_libraries(outline ${_EXPAT_TARGET})
+    target_link_libraries(outline ${EXPAT_TARGET})
 endif(EXPAT_BUILD_EXAMPLES)
 
 #
@@ -403,12 +415,12 @@ if(EXPAT_BUILD_TESTS)
 
     add_executable(runtests tests/runtests.c ${test_SRCS})
     set_property(TARGET runtests PROPERTY RUNTIME_OUTPUT_DIRECTORY tests)
-    target_link_libraries(runtests ${_EXPAT_TARGET})
+    target_link_libraries(runtests ${EXPAT_TARGET})
     expat_add_test(runtests $<TARGET_FILE:runtests>)
 
     add_executable(runtestspp tests/runtestspp.cpp ${test_SRCS})
     set_property(TARGET runtestspp PROPERTY RUNTIME_OUTPUT_DIRECTORY tests)
-    target_link_libraries(runtestspp ${_EXPAT_TARGET})
+    target_link_libraries(runtestspp ${EXPAT_TARGET})
     expat_add_test(runtestspp $<TARGET_FILE:runtestspp>)
 endif(EXPAT_BUILD_TESTS)
 
@@ -553,7 +565,7 @@ write_basic_package_version_file(
 )
 export(
     TARGETS
-        ${_EXPAT_TARGET}
+        ${EXPAT_TARGET}
     FILE
         cmake/expat-targets.cmake  # not going to be installed
 )
