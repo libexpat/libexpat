@@ -282,9 +282,6 @@ if(EXPAT_SHARED_LIBS)
     endif(MSVC)
 else(EXPAT_SHARED_LIBS)
     set(_SHARED STATIC)
-    if(WIN32)
-        add_definitions(-DXML_STATIC)
-    endif(WIN32)
 endif(EXPAT_SHARED_LIBS)
 
 # Avoid colliding with Expat.dll of Perl's XML::Parser::Expat
@@ -320,6 +317,10 @@ target_include_directories(${EXPAT_TARGET}
         $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
+
+if(NOT EXPAT_SHARED_LIBS AND WIN32)
+    target_compile_definitions(${EXPAT_TARGET} PUBLIC -DXML_STATIC)
+endif()
 
 expat_install(TARGETS ${EXPAT_TARGET} EXPORT expat
                       RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
