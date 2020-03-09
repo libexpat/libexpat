@@ -12,7 +12,7 @@ git:
 
 env:
   global:
-    - CFLAGS='-g -pipe'
+    - CFLAGS='-g3 -pipe'
   matrix:
     - MODE=cmake-oos
     - MODE=cppcheck

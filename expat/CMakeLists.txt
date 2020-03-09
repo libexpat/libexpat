@@ -23,13 +23,6 @@ include(GNUInstallDirs)
 # Detect use by means of add_subdirectory
 #
 get_directory_property(_EXPAT_PARENT_DIRECTORY PARENT_DIRECTORY)
-if(_EXPAT_PARENT_DIRECTORY)
-    # NOTE: We cannot set(_EXPAT_PARENT_SCOPE "PARENT_SCOPE") because
-    #       that would end up as set(_EXPAT_PARENT_SCOPE "" PARENT_SCOPE)
-    string(CONCAT _EXPAT_PARENT_SCOPE "PARENT" "_" "SCOPE")
-else()
-    set(_EXPAT_PARENT_SCOPE "")
-endif()
 
 #
 # Configuration defaults
@@ -289,13 +282,17 @@ endif(EXPAT_SHARED_LIBS)
 
 # Avoid colliding with Expat.dll of Perl's XML::Parser::Expat
 if(WIN32 AND NOT MINGW)
-    set(EXPAT_TARGET libexpat ${_EXPAT_PARENT_SCOPE})  # CMAKE_*_POSTFIX applies, see above
+    set(EXPAT_TARGET libexpat)  # CMAKE_*_POSTFIX applies, see above
 else()
     if(_EXPAT_UNICODE)
-        set(EXPAT_TARGET expatw ${_EXPAT_PARENT_SCOPE})
+        set(EXPAT_TARGET expatw)
     else()
-        set(EXPAT_TARGET expat ${_EXPAT_PARENT_SCOPE})
+        set(EXPAT_TARGET expat)
     endif()
+endif()
+
+if(_EXPAT_PARENT_DIRECTORY)
+    set(EXPAT_TARGET "${EXPAT_TARGET}" PARENT_SCOPE)
 endif()
 
 add_library(${EXPAT_TARGET} ${_SHARED} ${expat_SRCS})
