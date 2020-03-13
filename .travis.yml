@@ -49,6 +49,30 @@ matrix:
       env: MODE=qa-sh CC=i686-w64-mingw32-gcc CXX=i686-w64-mingw32-g++ LD=i686-w64-mingw32-ld QA_PROCESSOR=gcov CMAKE_ARGS="-DCMAKE_SYSTEM_NAME=Windows -DWIN32=ON -DMINGW=ON -DEXPAT_ATTR_INFO=ON"
     - os: linux
       env: MODE=qa-sh CC=i686-w64-mingw32-gcc CXX=i686-w64-mingw32-g++ LD=i686-w64-mingw32-ld QA_PROCESSOR=gcov CMAKE_ARGS="-DCMAKE_SYSTEM_NAME=Windows -DWIN32=ON -DMINGW=ON -DEXPAT_ATTR_INFO=ON -DEXPAT_CHAR_TYPE=wchar_t"
+    - name: Android, Linux, armv7a
+      os: linux
+      env: MODE=android ANDROID_NDK_ROOT="$HOME/ndk" ANDROID_SDK_ROOT="$HOME/sdk" ANDROID_API=26 ANDROID_CPU=armv7a AUTOTOOLS_HOST=armv7a-linux-androideabi
+    - name: Android, Linux, arm64
+      os: linux
+      env: MODE=android ANDROID_NDK_ROOT="$HOME/ndk" ANDROID_SDK_ROOT="$HOME/sdk" ANDROID_API=26 ANDROID_CPU=arm64 AUTOTOOLS_HOST=aarch64-linux-android
+    - name: Android, Linux, x86
+      os: linux
+      env: MODE=android ANDROID_NDK_ROOT="$HOME/ndk" ANDROID_SDK_ROOT="$HOME/sdk" ANDROID_API=26 ANDROID_CPU=x86 AUTOTOOLS_HOST=i686-linux-android
+    - name: Android, Linux, x86_64
+      os: linux
+      env: MODE=android ANDROID_NDK_ROOT="$HOME/ndk" ANDROID_SDK_ROOT="$HOME/sdk" ANDROID_API=26 ANDROID_CPU=x86_64 AUTOTOOLS_HOST=x86_64-linux-android
+    - name: Android, OS X, armv7a
+      os: osx
+      env: MODE=android ANDROID_NDK_ROOT="$HOME/ndk" ANDROID_SDK_ROOT="$HOME/sdk" ANDROID_API=26 ANDROID_CPU=armv7a AUTOTOOLS_HOST=armv7a-linux-androideabi
+    - name: Android, OS X, arm64
+      os: osx
+      env: MODE=android ANDROID_NDK_ROOT="$HOME/ndk" ANDROID_SDK_ROOT="$HOME/sdk" ANDROID_API=26 ANDROID_CPU=arm64 AUTOTOOLS_HOST=aarch64-linux-android
+    - name: Android, OS X, x86
+      os: osx
+      env: MODE=android ANDROID_NDK_ROOT="$HOME/ndk" ANDROID_SDK_ROOT="$HOME/sdk" ANDROID_API=26 ANDROID_CPU=x86 AUTOTOOLS_HOST=i686-linux-android
+    - name: Android, OS X, x86_64
+      os: osx
+      env: MODE=android ANDROID_NDK_ROOT="$HOME/ndk" ANDROID_SDK_ROOT="$HOME/sdk" ANDROID_API=26 ANDROID_CPU=x86_64 AUTOTOOLS_HOST=x86_64-linux-android
 
 addons:
   homebrew:

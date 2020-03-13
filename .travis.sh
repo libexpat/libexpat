@@ -1,4 +1,4 @@
-#! /bin/bash
+#! /usr/bin/env bash
 #                          __  __            _
 #                       ___\ \/ /_ __   __ _| |_
 #                      / _ \\  /| '_ \ / _` | __|
@@ -30,11 +30,11 @@
 
 set -e
 
-if [[ ${TRAVIS_OS_NAME} = osx ]]; then
+if [[ ${TRAVIS_OS_NAME} == osx ]] && [[ ${MODE} != android ]]; then
     latest_brew_python3_bin="$(ls -1d /usr/local/Cellar/python/3.*/bin | sort -n | tail -n1)"
     export PATH="${latest_brew_python3_bin}${PATH:+:}${PATH}"
     export PATH="/usr/local/opt/coreutils/libexec/gnubin${PATH:+:}${PATH}"
-elif [[ ${TRAVIS_OS_NAME} = linux ]]; then
+elif [[ ${TRAVIS_OS_NAME} == linux ]] && [[ ${MODE} != android ]]; then
     export PATH="/usr/lib/llvm-9/bin:${PATH}"
 fi
 
@@ -48,23 +48,31 @@ set -x
 cd expat
 ./buildconf.sh
 
-if [[ ${MODE} = distcheck ]]; then
+if [[ ${MODE} == distcheck ]]; then
     ./configure ${CONFIGURE_ARGS}
     make distcheck
-elif [[ ${MODE} = cmake-oos ]]; then
+elif [[ ${MODE} == cmake-oos ]]; then
     mkdir build
     cd build
     cmake ${CMAKE_ARGS} ..
     make VERBOSE=1 all test
     make DESTDIR="${PWD}"/ROOT install
     find ROOT -printf "%P\n" | sort
-elif [[ ${MODE} = cppcheck ]]; then
+elif [[ ${MODE} == cppcheck ]]; then
     cppcheck --quiet --error-exitcode=1 .
-elif [[ ${MODE} = clang-format ]]; then
+elif [[ ${MODE} == clang-format ]]; then
     ./apply-clang-format.sh
     git diff --exit-code
-elif [[ ${MODE} = coverage-sh ]]; then
+elif [[ ${MODE} == coverage-sh ]]; then
     ./coverage.sh
+elif [[ ${MODE} == android ]]; then
+    ./contrib/install_ndk.sh
+    source ./contrib/setenv_android.sh
+    ./configure \
+      --build=$(./config.guess) --host="$AUTOTOOLS_HOST" \
+      --prefix="$HOME/android$ANDROID_API-$ANDROID_CPU"
+    make -j 3
+    make install
 else
     ./qa.sh ${CMAKE_ARGS}
 fi
