@@ -52,7 +52,7 @@ LIBCURRENT=7    # sync
 LIBREVISION=11  # with
 LIBAGE=6        # CMakeLists.txt!
 
-AX_APPEND_FLAG([-DHAVE_EXPAT_CONFIG_H], [CPPFLAGS])
+AX_APPEND_FLAG([-DHAVE_EXPAT_CONFIG_H], [AM_CPPFLAGS])
 AC_CONFIG_HEADER([expat_config.h])
 
 AM_PROG_AR
@@ -69,39 +69,71 @@ AC_SUBST(LIBAGE)
 
 AC_LANG([C])
 AC_PROG_CC_C99
+
+dnl ##############################
+dnl ########## C FLAGS ###########
+dnl ##############################
+
+OLD_CFLAGS="$CFLAGS"
+CFLAGS="-Werror"
+
 AS_IF([test "$GCC" = yes],
-  [AX_APPEND_COMPILE_FLAGS([-Wall -Wextra], [CFLAGS])
+  [AX_APPEND_COMPILE_FLAGS([-Wall -Wextra], [AM_CFLAGS])
    dnl Be careful about adding the -fexceptions option; some versions of
    dnl GCC don't support it and it causes extra warnings that are only
    dnl distracting; avoid.
-   AX_APPEND_COMPILE_FLAGS([-fexceptions], [CFLAGS])
-   AX_APPEND_COMPILE_FLAGS([-fno-strict-aliasing -Wmissing-prototypes -Wstrict-prototypes], [CFLAGS])
-   AX_APPEND_COMPILE_FLAGS([-pedantic -Wduplicated-cond -Wduplicated-branches -Wlogical-op], [CFLAGS])
-   AX_APPEND_COMPILE_FLAGS([-Wrestrict -Wnull-dereference -Wjump-misses-init -Wdouble-promotion], [CFLAGS])
-   AX_APPEND_COMPILE_FLAGS([-Wshadow -Wformat=2 -Wmisleading-indentation], [CFLAGS])])
+   AX_APPEND_COMPILE_FLAGS([-fexceptions], [AM_CFLAGS])
+   AX_APPEND_COMPILE_FLAGS([-fno-strict-aliasing -Wmissing-prototypes -Wstrict-prototypes], [AM_CFLAGS])
+   AX_APPEND_COMPILE_FLAGS([-pedantic -Wduplicated-cond -Wduplicated-branches -Wlogical-op], [AM_CFLAGS])
+   AX_APPEND_COMPILE_FLAGS([-Wrestrict -Wnull-dereference -Wjump-misses-init -Wdouble-promotion], [AM_CFLAGS])
+   AX_APPEND_COMPILE_FLAGS([-Wshadow -Wformat=2 -Wmisleading-indentation], [AM_CFLAGS])])
+
+EXPATCFG_COMPILER_SUPPORTS_VISIBILITY([
+  AX_APPEND_FLAG([-fvisibility=hidden],       [AM_CFLAGS])
+  AX_APPEND_FLAG([-DXML_ENABLE_VISIBILITY=1], [AM_CPPFLAGS])])
+
+CFLAGS="$OLD_CFLAGS"
+
+dnl ################################
+dnl ########### C++ FLAGS ##########
+dnl ################################
 
 AC_LANG_PUSH([C++])
 AC_PROG_CXX
+
+OLD_CXXFLAGS="$CXXFLAGS"
+CXXFLAGS="-Werror"
+
 AS_IF([test "$GCC" = yes],
-  [AX_APPEND_COMPILE_FLAGS([-Wall -Wextra], [CXXFLAGS])
+  [AX_APPEND_COMPILE_FLAGS([-Wall -Wextra], [AM_CXXFLAGS])
    dnl Be careful about adding the -fexceptions option; some versions of
    dnl GCC don't support it and it causes extra warnings that are only
    dnl distracting; avoid.
-   AX_APPEND_COMPILE_FLAGS([-fexceptions], [CXXFLAGS])
-   AX_APPEND_COMPILE_FLAGS([-fno-strict-aliasing], [CXXFLAGS])])
+   AX_APPEND_COMPILE_FLAGS([-fexceptions], [AM_CXXFLAGS])
+   AX_APPEND_COMPILE_FLAGS([-fno-strict-aliasing], [AM_CXXFLAGS])])
 AC_LANG_POP([C++])
 
+CXXFLAGS="$OLD_CXXFLAGS"
+
+dnl ################################
+dnl ######### Linker FLAGS #########
+dnl ################################
+
+OLD_LDFLAGS="$LDFLAGS"
+
 AS_IF([test "$GCC" = yes],
-  [AX_APPEND_LINK_FLAGS([-fno-strict-aliasing],[LDFLAGS])])
+  [AX_APPEND_LINK_FLAGS([-fno-strict-aliasing],[AM_LDFLAGS])])
 
 dnl patching ${archive_cmds} to affect generation of file "libtool" to fix linking with clang (issue #312)
 AS_CASE(["$LD"],[*clang*],
   [AS_CASE(["${host_os}"],
      [*linux*],[archive_cmds='$CC -shared $pic_flag $libobjs $deplibs $compiler_flags $wl-soname $wl$soname -o $lib'])])
 
-EXPATCFG_COMPILER_SUPPORTS_VISIBILITY([
-  AX_APPEND_FLAG([-fvisibility=hidden],       [CFLAGS])
-  AX_APPEND_FLAG([-DXML_ENABLE_VISIBILITY=1], [CFLAGS])])
+LDFLAGS="$OLD_LDFLAGS"
+
+dnl ################################
+dnl ########### Features ###########
+dnl ################################
 
 dnl Checks for header files.
 AC_HEADER_STDC
@@ -307,6 +339,12 @@ AS_IF([test "x${DOCBOOK_TO_MAN}" != x -a "x$with_docbook" != xno],
 
 AM_CONDITIONAL(WITH_DOCBOOK, [test "x${DOCBOOK_TO_MAN}" != x])
 
+dnl write the Automake flags we set
+AC_SUBST([AM_CPPFLAGS])
+AC_SUBST([AM_CFLAGS])
+AC_SUBST([AM_CXXFLAGS])
+AC_SUBST([AM_LDFLAGS])
+
 dnl updating EXPAT_TARGET variable to effect the package name in expat.pc file (issue #361)
 AC_SUBST(EXPAT_TARGET, ["$PACKAGE_NAME"])
 
@@ -320,3 +358,21 @@ AC_CONFIG_FILES([Makefile]
   [xmlwf/Makefile])
 AC_CONFIG_FILES([run.sh], [chmod +x run.sh])
 AC_OUTPUT
+
+dnl ##############################
+dnl ########## Summary ###########
+dnl ##############################
+
+echo ""
+echo "Automake flags (can be overridden by user flags):"
+echo "AM_CPPFLAGS: $AM_CPPFLAGS"
+echo "AM_CFLAGS: $AM_CFLAGS"
+echo "AM_CXXFLAGS: $AM_CXXFLAGS"
+echo "AM_LDFLAGS: $AM_LDFLAGS"
+
+echo ""
+echo "User flags (overrides Automake flags on conflict):"
+echo "CPPFLAGS: $CPPFLAGS"
+echo "CFLAGS: $CFLAGS"
+echo "CXXFLAGS: $CXXFLAGS"
+echo "LDFLAGS: $LDFLAGS"
