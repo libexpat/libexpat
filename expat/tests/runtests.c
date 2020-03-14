@@ -543,7 +543,7 @@ END_TEST
 
 START_TEST(test_bom_utf8) {
   /* This test is really just making sure we don't core on a UTF-8 BOM. */
-  const char *text = "\357\273\277<e/>";
+  const char text[] = "\357\273\277<e/>";
 
   if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
       == XML_STATUS_ERROR)
@@ -667,8 +667,8 @@ _run_ext_character_check(const char *text, ExtTest *test_data,
 
 /* Regression test for SF bug #491986. */
 START_TEST(test_danish_latin1) {
-  const char *text = "<?xml version='1.0' encoding='iso-8859-1'?>\n"
-                     "<e>J\xF8rgen \xE6\xF8\xE5\xC6\xD8\xC5</e>";
+  const char text[] = "<?xml version='1.0' encoding='iso-8859-1'?>\n"
+                      "<e>J\xF8rgen \xE6\xF8\xE5\xC6\xD8\xC5</e>";
 #ifdef XML_UNICODE
   const XML_Char *expected
       = XCS("J\x00f8rgen \x00e6\x00f8\x00e5\x00c6\x00d8\x00c5");
@@ -682,8 +682,8 @@ END_TEST
 
 /* Regression test for SF bug #514281. */
 START_TEST(test_french_charref_hexidecimal) {
-  const char *text = "<?xml version='1.0' encoding='iso-8859-1'?>\n"
-                     "<doc>&#xE9;&#xE8;&#xE0;&#xE7;&#xEA;&#xC8;</doc>";
+  const char text[] = "<?xml version='1.0' encoding='iso-8859-1'?>\n"
+                      "<doc>&#xE9;&#xE8;&#xE0;&#xE7;&#xEA;&#xC8;</doc>";
 #ifdef XML_UNICODE
   const XML_Char *expected = XCS("\x00e9\x00e8\x00e0\x00e7\x00ea\x00c8");
 #else
@@ -695,8 +695,8 @@ START_TEST(test_french_charref_hexidecimal) {
 END_TEST
 
 START_TEST(test_french_charref_decimal) {
-  const char *text = "<?xml version='1.0' encoding='iso-8859-1'?>\n"
-                     "<doc>&#233;&#232;&#224;&#231;&#234;&#200;</doc>";
+  const char text[] = "<?xml version='1.0' encoding='iso-8859-1'?>\n"
+                      "<doc>&#233;&#232;&#224;&#231;&#234;&#200;</doc>";
 #ifdef XML_UNICODE
   const XML_Char *expected = XCS("\x00e9\x00e8\x00e0\x00e7\x00ea\x00c8");
 #else
@@ -708,8 +708,8 @@ START_TEST(test_french_charref_decimal) {
 END_TEST
 
 START_TEST(test_french_latin1) {
-  const char *text = "<?xml version='1.0' encoding='iso-8859-1'?>\n"
-                     "<doc>\xE9\xE8\xE0\xE7\xEa\xC8</doc>";
+  const char text[] = "<?xml version='1.0' encoding='iso-8859-1'?>\n"
+                      "<doc>\xE9\xE8\xE0\xE7\xEa\xC8</doc>";
 #ifdef XML_UNICODE
   const XML_Char *expected = XCS("\x00e9\x00e8\x00e0\x00e7\x00ea\x00c8");
 #else
@@ -721,8 +721,8 @@ START_TEST(test_french_latin1) {
 END_TEST
 
 START_TEST(test_french_utf8) {
-  const char *text = "<?xml version='1.0' encoding='utf-8'?>\n"
-                     "<doc>\xC3\xA9</doc>";
+  const char text[] = "<?xml version='1.0' encoding='utf-8'?>\n"
+                      "<doc>\xC3\xA9</doc>";
 #ifdef XML_UNICODE
   const XML_Char *expected = XCS("\x00e9");
 #else
@@ -738,7 +738,7 @@ END_TEST
    characters as part of element and attribute names.
 */
 START_TEST(test_utf8_false_rejection) {
-  const char *text = "<doc>\xEF\xBA\xBF</doc>";
+  const char text[] = "<doc>\xEF\xBA\xBF</doc>";
 #ifdef XML_UNICODE
   const XML_Char *expected = XCS("\xfebf");
 #else
@@ -888,8 +888,8 @@ END_TEST
 
 /* Test that an outright lie in the encoding is faulted */
 START_TEST(test_not_utf16) {
-  const char *text = "<?xml version='1.0' encoding='utf-16'?>"
-                     "<doc>Hi</doc>";
+  const char text[] = "<?xml version='1.0' encoding='utf-16'?>"
+                      "<doc>Hi</doc>";
 
   /* Use a handler to provoke the appropriate code paths */
   XML_SetXmlDeclHandler(g_parser, dummy_xdecl_handler);
@@ -900,7 +900,7 @@ END_TEST
 
 /* Test that an unknown encoding is rejected */
 START_TEST(test_bad_encoding) {
-  const char *text = "<doc>Hi</doc>";
+  const char text[] = "<doc>Hi</doc>";
 
   if (! XML_SetEncoding(g_parser, XCS("unknown-encoding")))
     fail("XML_SetEncoding failed");
@@ -911,7 +911,7 @@ END_TEST
 
 /* Regression test for SF bug #481609, #774028. */
 START_TEST(test_latin1_umlauts) {
-  const char *text
+  const char text[]
       = "<?xml version='1.0' encoding='iso-8859-1'?>\n"
         "<e a='\xE4 \xF6 \xFC &#228; &#246; &#252; &#x00E4; &#x0F6; &#xFC; >'\n"
         "  >\xE4 \xF6 \xFC &#228; &#246; &#252; &#x00E4; &#x0F6; &#xFC; ></e>";
@@ -940,7 +940,7 @@ END_TEST
 
 /* Test that an element name with a 4-byte UTF-8 character is rejected */
 START_TEST(test_long_utf8_character) {
-  const char *text
+  const char text[]
       = "<?xml version='1.0' encoding='utf-8'?>\n"
         /* 0xf0 0x90 0x80 0x80 = U+10000, the first Linear B character */
         "<do\xf0\x90\x80\x80/>";
@@ -953,7 +953,7 @@ END_TEST
  * is correctly converted
  */
 START_TEST(test_long_latin1_attribute) {
-  const char *text
+  const char text[]
       = "<?xml version='1.0' encoding='iso-8859-1'?>\n"
         "<doc att='"
         /* 64 characters per line */
@@ -1010,7 +1010,7 @@ END_TEST
  * is correctly converted
  */
 START_TEST(test_long_ascii_attribute) {
-  const char *text
+  const char text[]
       = "<?xml version='1.0' encoding='us-ascii'?>\n"
         "<doc att='"
         /* 64 characters per line */
@@ -1059,9 +1059,9 @@ END_TEST
 
 /* Regression test #1 for SF bug #653180. */
 START_TEST(test_line_number_after_parse) {
-  const char *text = "<tag>\n"
-                     "\n"
-                     "\n</tag>";
+  const char text[] = "<tag>\n"
+                      "\n"
+                      "\n</tag>";
   XML_Size lineno;
 
   if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_FALSE)
@@ -1078,7 +1078,7 @@ END_TEST
 
 /* Regression test #2 for SF bug #653180. */
 START_TEST(test_column_number_after_parse) {
-  const char *text = "<tag></tag>";
+  const char text[] = "<tag></tag>";
   XML_Size colno;
 
   if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_FALSE)
@@ -1113,14 +1113,14 @@ end_element_event_handler2(void *userData, const XML_Char *name) {
 
 /* Regression test #3 for SF bug #653180. */
 START_TEST(test_line_and_column_numbers_inside_handlers) {
-  const char *text = "<a>\n"      /* Unix end-of-line */
-                     "  <b>\r\n"  /* Windows end-of-line */
-                     "    <c/>\r" /* Mac OS end-of-line */
-                     "  </b>\n"
-                     "  <d>\n"
-                     "    <f/>\n"
-                     "  </d>\n"
-                     "</a>";
+  const char text[] = "<a>\n"      /* Unix end-of-line */
+                      "  <b>\r\n"  /* Windows end-of-line */
+                      "    <c/>\r" /* Mac OS end-of-line */
+                      "  </b>\n"
+                      "  <d>\n"
+                      "    <f/>\n"
+                      "  </d>\n"
+                      "</a>";
   const StructDataEntry expected[]
       = {{XCS("a"), 0, 1, STRUCT_START_TAG}, {XCS("b"), 2, 2, STRUCT_START_TAG},
          {XCS("c"), 4, 3, STRUCT_START_TAG}, {XCS("c"), 8, 3, STRUCT_END_TAG},
@@ -1145,9 +1145,9 @@ END_TEST
 
 /* Regression test #4 for SF bug #653180. */
 START_TEST(test_line_number_after_error) {
-  const char *text = "<a>\n"
-                     "  <b>\n"
-                     "  </a>"; /* missing </b> */
+  const char text[] = "<a>\n"
+                      "  <b>\n"
+                      "  </a>"; /* missing </b> */
   XML_Size lineno;
   if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_FALSE)
       != XML_STATUS_ERROR)
@@ -1164,9 +1164,9 @@ END_TEST
 
 /* Regression test #5 for SF bug #653180. */
 START_TEST(test_column_number_after_error) {
-  const char *text = "<a>\n"
-                     "  <b>\n"
-                     "  </a>"; /* missing </b> */
+  const char text[] = "<a>\n"
+                      "  <b>\n"
+                      "  </a>"; /* missing </b> */
   XML_Size colno;
   if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_FALSE)
       != XML_STATUS_ERROR)
@@ -1188,7 +1188,7 @@ START_TEST(test_really_long_lines) {
      really cheesy approach to building the input buffer, because
      this avoids writing bugs in buffer-filling code.
   */
-  const char *text
+  const char text[]
       = "<e>"
         /* 64 chars */
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-+"
@@ -1223,7 +1223,7 @@ START_TEST(test_really_long_encoded_lines) {
    * the whole cdata in one go, not byte-by-byte.
    */
   void *buffer;
-  const char *text
+  const char text[]
       = "<?xml version='1.0' encoding='iso-8859-1'?>"
         "<e>"
         /* 64 chars */
@@ -1279,7 +1279,7 @@ end_element_event_handler(void *userData, const XML_Char *name) {
 }
 
 START_TEST(test_end_element_events) {
-  const char *text = "<a><b><c/></b><d><f/></d></a>";
+  const char text[] = "<a><b><c/></b><d><f/></d></a>";
   const XML_Char *expected = XCS("/c/b/f/d/a");
   CharData storage;
 
@@ -1381,7 +1381,7 @@ check_attr_contains_normalized_whitespace(void *userData, const XML_Char *name,
 }
 
 START_TEST(test_attr_whitespace_normalization) {
-  const char *text
+  const char text[]
       = "<!DOCTYPE doc [\n"
         "  <!ATTLIST doc\n"
         "            attr NMTOKENS #REQUIRED\n"
@@ -1454,9 +1454,9 @@ UnknownEncodingHandler(void *data, const XML_Char *encoding,
 }
 
 START_TEST(test_unknown_encoding_internal_entity) {
-  const char *text = "<?xml version='1.0' encoding='unsupported-encoding'?>\n"
-                     "<!DOCTYPE test [<!ENTITY foo 'bar'>]>\n"
-                     "<test a='&foo;'/>";
+  const char text[] = "<?xml version='1.0' encoding='unsupported-encoding'?>\n"
+                      "<!DOCTYPE test [<!ENTITY foo 'bar'>]>\n"
+                      "<test a='&foo;'/>";
 
   XML_SetUnknownEncodingHandler(g_parser, UnknownEncodingHandler, NULL);
   if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
@@ -1483,9 +1483,9 @@ UnrecognisedEncodingHandler(void *data, const XML_Char *encoding,
 }
 
 START_TEST(test_unrecognised_encoding_internal_entity) {
-  const char *text = "<?xml version='1.0' encoding='unsupported-encoding'?>\n"
-                     "<!DOCTYPE test [<!ENTITY foo 'bar'>]>\n"
-                     "<test a='&foo;'/>";
+  const char text[] = "<?xml version='1.0' encoding='unsupported-encoding'?>\n"
+                      "<!DOCTYPE test [<!ENTITY foo 'bar'>]>\n"
+                      "<test a='&foo;'/>";
 
   XML_SetUnknownEncodingHandler(g_parser, UnrecognisedEncodingHandler, NULL);
   if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
@@ -1523,10 +1523,10 @@ external_entity_loader(XML_Parser parser, const XML_Char *context,
 }
 
 START_TEST(test_ext_entity_set_encoding) {
-  const char *text = "<!DOCTYPE doc [\n"
-                     "  <!ENTITY en SYSTEM 'http://example.org/dummy.ent'>\n"
-                     "]>\n"
-                     "<doc>&en;</doc>";
+  const char text[] = "<!DOCTYPE doc [\n"
+                      "  <!ENTITY en SYSTEM 'http://example.org/dummy.ent'>\n"
+                      "]>\n"
+                      "<doc>&en;</doc>";
   ExtTest test_data
       = {/* This text says it's an unsupported encoding, but it's really
             UTF-8, which we tell Expat using XML_SetEncoding().
@@ -1545,10 +1545,10 @@ END_TEST
 
 /* Test external entities with no handler */
 START_TEST(test_ext_entity_no_handler) {
-  const char *text = "<!DOCTYPE doc [\n"
-                     "  <!ENTITY en SYSTEM 'http://example.org/dummy.ent'>\n"
-                     "]>\n"
-                     "<doc>&en;</doc>";
+  const char text[] = "<!DOCTYPE doc [\n"
+                      "  <!ENTITY en SYSTEM 'http://example.org/dummy.ent'>\n"
+                      "]>\n"
+                      "<doc>&en;</doc>";
 
   XML_SetDefaultHandler(g_parser, dummy_default_handler);
   run_character_check(text, XCS(""));
@@ -1557,10 +1557,10 @@ END_TEST
 
 /* Test UTF-8 BOM is accepted */
 START_TEST(test_ext_entity_set_bom) {
-  const char *text = "<!DOCTYPE doc [\n"
-                     "  <!ENTITY en SYSTEM 'http://example.org/dummy.ent'>\n"
-                     "]>\n"
-                     "<doc>&en;</doc>";
+  const char text[] = "<!DOCTYPE doc [\n"
+                      "  <!ENTITY en SYSTEM 'http://example.org/dummy.ent'>\n"
+                      "]>\n"
+                      "<doc>&en;</doc>";
   ExtTest test_data = {"\xEF\xBB\xBF" /* BOM */
                        "<?xml encoding='iso-8859-3'?>"
                        "\xC3\xA9",
@@ -1613,10 +1613,10 @@ external_entity_faulter(XML_Parser parser, const XML_Char *context,
 }
 
 START_TEST(test_ext_entity_bad_encoding) {
-  const char *text = "<!DOCTYPE doc [\n"
-                     "  <!ENTITY en SYSTEM 'http://example.org/dummy.ent'>\n"
-                     "]>\n"
-                     "<doc>&en;</doc>";
+  const char text[] = "<!DOCTYPE doc [\n"
+                      "  <!ENTITY en SYSTEM 'http://example.org/dummy.ent'>\n"
+                      "]>\n"
+                      "<doc>&en;</doc>";
   ExtFaults fault
       = {"<?xml encoding='iso-8859-3'?>u", "Unsupported encoding not faulted",
          XCS("unknown"), XML_ERROR_UNKNOWN_ENCODING};
@@ -1630,9 +1630,9 @@ END_TEST
 
 /* Try handing an invalid encoding to an external entity parser */
 START_TEST(test_ext_entity_bad_encoding_2) {
-  const char *text = "<?xml version='1.0' encoding='us-ascii'?>\n"
-                     "<!DOCTYPE doc SYSTEM 'foo'>\n"
-                     "<doc>&entity;</doc>";
+  const char text[] = "<?xml version='1.0' encoding='us-ascii'?>\n"
+                      "<!DOCTYPE doc SYSTEM 'foo'>\n"
+                      "<doc>&entity;</doc>";
   ExtFaults fault
       = {"<!ELEMENT doc (#PCDATA)*>", "Unknown encoding not faulted",
          XCS("unknown-encoding"), XML_ERROR_UNKNOWN_ENCODING};
@@ -1649,8 +1649,8 @@ END_TEST
    read an external subset.  This was fixed in Expat 1.95.5.
 */
 START_TEST(test_wfc_undeclared_entity_unread_external_subset) {
-  const char *text = "<!DOCTYPE doc SYSTEM 'foo'>\n"
-                     "<doc>&entity;</doc>";
+  const char text[] = "<!DOCTYPE doc SYSTEM 'foo'>\n"
+                      "<doc>&entity;</doc>";
 
   if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
       == XML_STATUS_ERROR)
@@ -1671,7 +1671,7 @@ END_TEST
    read an external subset, but have been declared standalone.
 */
 START_TEST(test_wfc_undeclared_entity_standalone) {
-  const char *text
+  const char text[]
       = "<?xml version='1.0' encoding='us-ascii' standalone='yes'?>\n"
         "<!DOCTYPE doc SYSTEM 'foo'>\n"
         "<doc>&entity;</doc>";
@@ -1685,7 +1685,7 @@ END_TEST
    an external subset, and standalone is true.
 */
 START_TEST(test_wfc_undeclared_entity_with_external_subset_standalone) {
-  const char *text
+  const char text[]
       = "<?xml version='1.0' encoding='us-ascii' standalone='yes'?>\n"
         "<!DOCTYPE doc SYSTEM 'foo'>\n"
         "<doc>&entity;</doc>";
@@ -1703,7 +1703,7 @@ END_TEST
  * is set to UNLESS_STANDALONE
  */
 START_TEST(test_entity_with_external_subset_unless_standalone) {
-  const char *text
+  const char text[]
       = "<?xml version='1.0' encoding='us-ascii' standalone='yes'?>\n"
         "<!DOCTYPE doc SYSTEM 'foo'>\n"
         "<doc>&entity;</doc>";
@@ -1722,9 +1722,9 @@ END_TEST
    an external subset, and standalone is false.
 */
 START_TEST(test_wfc_undeclared_entity_with_external_subset) {
-  const char *text = "<?xml version='1.0' encoding='us-ascii'?>\n"
-                     "<!DOCTYPE doc SYSTEM 'foo'>\n"
-                     "<doc>&entity;</doc>";
+  const char text[] = "<?xml version='1.0' encoding='us-ascii'?>\n"
+                      "<!DOCTYPE doc SYSTEM 'foo'>\n"
+                      "<doc>&entity;</doc>";
   ExtTest test_data = {"<!ELEMENT doc (#PCDATA)*>", NULL, NULL};
 
   XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
@@ -1741,9 +1741,9 @@ reject_not_standalone_handler(void *userData) {
 }
 
 START_TEST(test_not_standalone_handler_reject) {
-  const char *text = "<?xml version='1.0' encoding='us-ascii'?>\n"
-                     "<!DOCTYPE doc SYSTEM 'foo'>\n"
-                     "<doc>&entity;</doc>";
+  const char text[] = "<?xml version='1.0' encoding='us-ascii'?>\n"
+                      "<!DOCTYPE doc SYSTEM 'foo'>\n"
+                      "<doc>&entity;</doc>";
   ExtTest test_data = {"<!ELEMENT doc (#PCDATA)*>", NULL, NULL};
 
   XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
@@ -1769,9 +1769,9 @@ accept_not_standalone_handler(void *userData) {
 }
 
 START_TEST(test_not_standalone_handler_accept) {
-  const char *text = "<?xml version='1.0' encoding='us-ascii'?>\n"
-                     "<!DOCTYPE doc SYSTEM 'foo'>\n"
-                     "<doc>&entity;</doc>";
+  const char text[] = "<?xml version='1.0' encoding='us-ascii'?>\n"
+                      "<!DOCTYPE doc SYSTEM 'foo'>\n"
+                      "<doc>&entity;</doc>";
   ExtTest test_data = {"<!ELEMENT doc (#PCDATA)*>", NULL, NULL};
 
   XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
@@ -1787,10 +1787,10 @@ START_TEST(test_not_standalone_handler_accept) {
 END_TEST
 
 START_TEST(test_wfc_no_recursive_entity_refs) {
-  const char *text = "<!DOCTYPE doc [\n"
-                     "  <!ENTITY entity '&#38;entity;'>\n"
-                     "]>\n"
-                     "<doc>&entity;</doc>";
+  const char text[] = "<!DOCTYPE doc [\n"
+                      "  <!ENTITY entity '&#38;entity;'>\n"
+                      "]>\n"
+                      "<doc>&entity;</doc>";
 
   expect_failure(text, XML_ERROR_RECURSIVE_ENTITY_REF,
                  "Parser did not report recursive entity reference.");
@@ -1799,10 +1799,10 @@ END_TEST
 
 /* Test incomplete external entities are faulted */
 START_TEST(test_ext_entity_invalid_parse) {
-  const char *text = "<!DOCTYPE doc [\n"
-                     "  <!ENTITY en SYSTEM 'http://example.org/dummy.ent'>\n"
-                     "]>\n"
-                     "<doc>&en;</doc>";
+  const char text[] = "<!DOCTYPE doc [\n"
+                      "  <!ENTITY en SYSTEM 'http://example.org/dummy.ent'>\n"
+                      "]>\n"
+                      "<doc>&en;</doc>";
   const ExtFaults faults[]
       = {{"<", "Incomplete element declaration not faulted", NULL,
           XML_ERROR_UNCLOSED_TOKEN},
@@ -1826,14 +1826,14 @@ END_TEST
 
 /* Regression test for SF bug #483514. */
 START_TEST(test_dtd_default_handling) {
-  const char *text = "<!DOCTYPE doc [\n"
-                     "<!ENTITY e SYSTEM 'http://example.org/e'>\n"
-                     "<!NOTATION n SYSTEM 'http://example.org/n'>\n"
-                     "<!ELEMENT doc EMPTY>\n"
-                     "<!ATTLIST doc a CDATA #IMPLIED>\n"
-                     "<?pi in dtd?>\n"
-                     "<!--comment in dtd-->\n"
-                     "]><doc/>";
+  const char text[] = "<!DOCTYPE doc [\n"
+                      "<!ENTITY e SYSTEM 'http://example.org/e'>\n"
+                      "<!NOTATION n SYSTEM 'http://example.org/n'>\n"
+                      "<!ELEMENT doc EMPTY>\n"
+                      "<!ATTLIST doc a CDATA #IMPLIED>\n"
+                      "<?pi in dtd?>\n"
+                      "<!--comment in dtd-->\n"
+                      "]><doc/>";
 
   XML_SetDefaultHandler(g_parser, accumulate_characters);
   XML_SetStartDoctypeDeclHandler(g_parser, dummy_start_doctype_handler);
@@ -1882,8 +1882,8 @@ verify_attlist_decl_handler(void *userData, const XML_Char *element_name,
 }
 
 START_TEST(test_dtd_attr_handling) {
-  const char *prolog = "<!DOCTYPE doc [\n"
-                       "<!ELEMENT doc EMPTY>\n";
+  const char prolog[] = "<!DOCTYPE doc [\n"
+                        "<!ELEMENT doc EMPTY>\n";
   AttTest attr_data[]
       = {{"<!ATTLIST doc a ( one | two | three ) #REQUIRED>\n"
           "]>"
@@ -1936,9 +1936,9 @@ END_TEST
    (See Namespaces in XML, section 2.)
 */
 START_TEST(test_empty_ns_without_namespaces) {
-  const char *text = "<doc xmlns:prefix='http://example.org/'>\n"
-                     "  <e xmlns:prefix=''/>\n"
-                     "</doc>";
+  const char text[] = "<doc xmlns:prefix='http://example.org/'>\n"
+                      "  <e xmlns:prefix=''/>\n"
+                      "</doc>";
 
   if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
       == XML_STATUS_ERROR)
@@ -1951,11 +1951,11 @@ END_TEST
    value isn't misinterpreted.
 */
 START_TEST(test_ns_in_attribute_default_without_namespaces) {
-  const char *text = "<!DOCTYPE e:element [\n"
-                     "  <!ATTLIST e:element\n"
-                     "    xmlns:e CDATA 'http://example.org/'>\n"
-                     "      ]>\n"
-                     "<e:element/>";
+  const char text[] = "<!DOCTYPE e:element [\n"
+                      "  <!ATTLIST e:element\n"
+                      "    xmlns:e CDATA 'http://example.org/'>\n"
+                      "      ]>\n"
+                      "<e:element/>";
 
   if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
       == XML_STATUS_ERROR)
@@ -1963,7 +1963,7 @@ START_TEST(test_ns_in_attribute_default_without_namespaces) {
 }
 END_TEST
 
-static const char *long_character_data_text
+static const char long_character_data_text[]
     = "<?xml version='1.0' encoding='iso-8859-1'?><s>"
       "012345678901234567890123456789012345678901234567890123456789"
       "012345678901234567890123456789012345678901234567890123456789"
@@ -2105,8 +2105,8 @@ START_TEST(test_repeated_stop_parser_between_char_data_calls) {
 END_TEST
 
 START_TEST(test_good_cdata_ascii) {
-  const char *text = "<a><![CDATA[<greeting>Hello, world!</greeting>]]></a>";
-  const XML_Char *expected = XCS("<greeting>Hello, world!</greeting>");
+  const char text[] = "<a><![CDATA[<greeting>Hello, world!</greeting>]]></a>";
+  const XML_Char expected[] = XCS("<greeting>Hello, world!</greeting>");
 
   CharData storage;
   CharData_Init(&storage);
@@ -2582,7 +2582,7 @@ record_skip_handler(void *userData, const XML_Char *entityName,
 
 /* Test XML_DefaultCurrent() passes handling on correctly */
 START_TEST(test_default_current) {
-  const char *text = "<doc>hell]</doc>";
+  const char text[] = "<doc>hell]</doc>";
   const char *entity_text = "<!DOCTYPE doc [\n"
                             "<!ENTITY entity '&#37;'>\n"
                             "]>\n"
@@ -2664,11 +2664,11 @@ END_TEST
 
 /* Test DTD element parsing code paths */
 START_TEST(test_dtd_elements) {
-  const char *text = "<!DOCTYPE doc [\n"
-                     "<!ELEMENT doc (chapter)>\n"
-                     "<!ELEMENT chapter (#PCDATA)>\n"
-                     "]>\n"
-                     "<doc><chapter>Wombats are go</chapter></doc>";
+  const char text[] = "<!DOCTYPE doc [\n"
+                      "<!ELEMENT doc (chapter)>\n"
+                      "<!ELEMENT chapter (#PCDATA)>\n"
+                      "]>\n"
+                      "<doc><chapter>Wombats are go</chapter></doc>";
 
   XML_SetElementDeclHandler(g_parser, dummy_element_decl_handler);
   if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
@@ -2679,8 +2679,8 @@ END_TEST
 
 /* Test foreign DTD handling */
 START_TEST(test_set_foreign_dtd) {
-  const char *text1 = "<?xml version='1.0' encoding='us-ascii'?>\n";
-  const char *text2 = "<doc>&entity;</doc>";
+  const char text1[] = "<?xml version='1.0' encoding='us-ascii'?>\n";
+  const char text2[] = "<doc>&entity;</doc>";
   ExtTest test_data = {"<!ELEMENT doc (#PCDATA)*>", NULL, NULL};
 
   /* Check hash salt is passed through too */
@@ -2715,8 +2715,8 @@ END_TEST
 
 /* Test foreign DTD handling with a failing NotStandalone handler */
 START_TEST(test_foreign_dtd_not_standalone) {
-  const char *text = "<?xml version='1.0' encoding='us-ascii'?>\n"
-                     "<doc>&entity;</doc>";
+  const char text[] = "<?xml version='1.0' encoding='us-ascii'?>\n"
+                      "<doc>&entity;</doc>";
   ExtTest test_data = {"<!ELEMENT doc (#PCDATA)*>", NULL, NULL};
 
   XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
@@ -2732,8 +2732,8 @@ END_TEST
 
 /* Test invalid character in a foreign DTD is faulted */
 START_TEST(test_invalid_foreign_dtd) {
-  const char *text = "<?xml version='1.0' encoding='us-ascii'?>\n"
-                     "<doc>&entity;</doc>";
+  const char text[] = "<?xml version='1.0' encoding='us-ascii'?>\n"
+                      "<doc>&entity;</doc>";
   ExtFaults test_data
       = {"$", "Dollar not faulted", NULL, XML_ERROR_INVALID_TOKEN};
 
@@ -2748,9 +2748,9 @@ END_TEST
 
 /* Test foreign DTD use with a doctype */
 START_TEST(test_foreign_dtd_with_doctype) {
-  const char *text1 = "<?xml version='1.0' encoding='us-ascii'?>\n"
-                      "<!DOCTYPE doc [<!ENTITY entity 'hello world'>]>\n";
-  const char *text2 = "<doc>&entity;</doc>";
+  const char text1[] = "<?xml version='1.0' encoding='us-ascii'?>\n"
+                       "<!DOCTYPE doc [<!ENTITY entity 'hello world'>]>\n";
+  const char text2[] = "<doc>&entity;</doc>";
   ExtTest test_data = {"<!ELEMENT doc (#PCDATA)*>", NULL, NULL};
 
   /* Check hash salt is passed through too */
@@ -2797,8 +2797,8 @@ external_entity_null_loader(XML_Parser parser, const XML_Char *context,
 }
 
 START_TEST(test_foreign_dtd_without_external_subset) {
-  const char *text = "<!DOCTYPE doc [<!ENTITY foo 'bar'>]>\n"
-                     "<doc>&foo;</doc>";
+  const char text[] = "<!DOCTYPE doc [<!ENTITY foo 'bar'>]>\n"
+                      "<doc>&foo;</doc>";
 
   XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
   XML_SetUserData(g_parser, NULL);
@@ -2811,8 +2811,8 @@ START_TEST(test_foreign_dtd_without_external_subset) {
 END_TEST
 
 START_TEST(test_empty_foreign_dtd) {
-  const char *text = "<?xml version='1.0' encoding='us-ascii'?>\n"
-                     "<doc>&entity;</doc>";
+  const char text[] = "<?xml version='1.0' encoding='us-ascii'?>\n"
+                      "<doc>&entity;</doc>";
 
   XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
   XML_SetExternalEntityRefHandler(g_parser, external_entity_null_loader);
@@ -2908,13 +2908,13 @@ counting_start_element_handler(void *userData, const XML_Char *name,
 }
 
 START_TEST(test_attributes) {
-  const char *text = "<!DOCTYPE doc [\n"
-                     "<!ELEMENT doc (tag)>\n"
-                     "<!ATTLIST doc id ID #REQUIRED>\n"
-                     "]>"
-                     "<doc a='1' id='one' b='2'>"
-                     "<tag c='3'/>"
-                     "</doc>";
+  const char text[] = "<!DOCTYPE doc [\n"
+                      "<!ELEMENT doc (tag)>\n"
+                      "<!ATTLIST doc id ID #REQUIRED>\n"
+                      "]>"
+                      "<doc a='1' id='one' b='2'>"
+                      "<tag c='3'/>"
+                      "</doc>";
   AttrInfo doc_info[] = {{XCS("a"), XCS("1")},
                          {XCS("b"), XCS("2")},
                          {XCS("id"), XCS("one")},
@@ -2938,11 +2938,11 @@ END_TEST
  * entity.  Exercises some obscure code in XML_ParserReset().
  */
 START_TEST(test_reset_in_entity) {
-  const char *text = "<!DOCTYPE doc [\n"
-                     "<!ENTITY wombat 'wom'>\n"
-                     "<!ENTITY entity 'hi &wom; there'>\n"
-                     "]>\n"
-                     "<doc>&entity;</doc>";
+  const char text[] = "<!DOCTYPE doc [\n"
+                      "<!ENTITY wombat 'wom'>\n"
+                      "<!ENTITY entity 'hi &wom; there'>\n"
+                      "]>\n"
+                      "<doc>&entity;</doc>";
   XML_ParsingStatus status;
 
   resumable = XML_TRUE;
@@ -2962,7 +2962,7 @@ END_TEST
 
 /* Test that resume correctly passes through parse errors */
 START_TEST(test_resume_invalid_parse) {
-  const char *text = "<doc>Hello</doc"; /* Missing closing wedge */
+  const char text[] = "<doc>Hello</doc"; /* Missing closing wedge */
 
   resumable = XML_TRUE;
   XML_SetCharacterDataHandler(g_parser, clearing_aborting_character_handler);
@@ -2978,7 +2978,7 @@ END_TEST
 
 /* Test that re-suspended parses are correctly passed through */
 START_TEST(test_resume_resuspended) {
-  const char *text = "<doc>Hello<meep/>world</doc>";
+  const char text[] = "<doc>Hello<meep/>world</doc>";
 
   resumable = XML_TRUE;
   XML_SetCharacterDataHandler(g_parser, clearing_aborting_character_handler);
@@ -2997,7 +2997,7 @@ END_TEST
 
 /* Test that CDATA shows up correctly through a default handler */
 START_TEST(test_cdata_default) {
-  const char *text = "<doc><![CDATA[Hello\nworld]]></doc>";
+  const char text[] = "<doc><![CDATA[Hello\nworld]]></doc>";
   const XML_Char *expected = XCS("<doc><![CDATA[Hello\nworld]]></doc>");
   CharData storage;
 
@@ -3017,7 +3017,7 @@ static int XMLCALL
 external_entity_resetter(XML_Parser parser, const XML_Char *context,
                          const XML_Char *base, const XML_Char *systemId,
                          const XML_Char *publicId) {
-  const char *text = "<!ELEMENT doc (#PCDATA)*>";
+  const char text[] = "<!ELEMENT doc (#PCDATA)*>";
   XML_Parser ext_parser;
   XML_ParsingStatus status;
 
@@ -3059,9 +3059,9 @@ external_entity_resetter(XML_Parser parser, const XML_Char *context,
 }
 
 START_TEST(test_subordinate_reset) {
-  const char *text = "<?xml version='1.0' encoding='us-ascii'?>\n"
-                     "<!DOCTYPE doc SYSTEM 'foo'>\n"
-                     "<doc>&entity;</doc>";
+  const char text[] = "<?xml version='1.0' encoding='us-ascii'?>\n"
+                      "<!DOCTYPE doc SYSTEM 'foo'>\n"
+                      "<doc>&entity;</doc>";
 
   XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
   XML_SetExternalEntityRefHandler(g_parser, external_entity_resetter);
@@ -3091,7 +3091,7 @@ static int XMLCALL
 external_entity_suspender(XML_Parser parser, const XML_Char *context,
                           const XML_Char *base, const XML_Char *systemId,
                           const XML_Char *publicId) {
-  const char *text = "<!ELEMENT doc (#PCDATA)*>";
+  const char text[] = "<!ELEMENT doc (#PCDATA)*>";
   XML_Parser ext_parser;
 
   UNUSED_P(base);
@@ -3112,9 +3112,9 @@ external_entity_suspender(XML_Parser parser, const XML_Char *context,
 }
 
 START_TEST(test_subordinate_suspend) {
-  const char *text = "<?xml version='1.0' encoding='us-ascii'?>\n"
-                     "<!DOCTYPE doc SYSTEM 'foo'>\n"
-                     "<doc>&entity;</doc>";
+  const char text[] = "<?xml version='1.0' encoding='us-ascii'?>\n"
+                      "<!DOCTYPE doc SYSTEM 'foo'>\n"
+                      "<doc>&entity;</doc>";
 
   XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
   XML_SetExternalEntityRefHandler(g_parser, external_entity_suspender);
@@ -3142,7 +3142,7 @@ static int XMLCALL
 external_entity_suspend_xmldecl(XML_Parser parser, const XML_Char *context,
                                 const XML_Char *base, const XML_Char *systemId,
                                 const XML_Char *publicId) {
-  const char *text = "<?xml version='1.0' encoding='us-ascii'?>";
+  const char text[] = "<?xml version='1.0' encoding='us-ascii'?>";
   XML_Parser ext_parser;
   XML_ParsingStatus status;
   enum XML_Status rc;
@@ -3176,7 +3176,7 @@ external_entity_suspend_xmldecl(XML_Parser parser, const XML_Char *context,
 }
 
 START_TEST(test_subordinate_xdecl_suspend) {
-  const char *text
+  const char text[]
       = "<!DOCTYPE doc [\n"
         "  <!ENTITY entity SYSTEM 'http://example.org/dummy.ent'>\n"
         "]>\n"
@@ -3192,7 +3192,7 @@ START_TEST(test_subordinate_xdecl_suspend) {
 END_TEST
 
 START_TEST(test_subordinate_xdecl_abort) {
-  const char *text
+  const char text[]
       = "<!DOCTYPE doc [\n"
         "  <!ENTITY entity SYSTEM 'http://example.org/dummy.ent'>\n"
         "]>\n"
@@ -3246,10 +3246,10 @@ external_entity_suspending_faulter(XML_Parser parser, const XML_Char *context,
 }
 
 START_TEST(test_ext_entity_invalid_suspended_parse) {
-  const char *text = "<!DOCTYPE doc [\n"
-                     "  <!ENTITY en SYSTEM 'http://example.org/dummy.ent'>\n"
-                     "]>\n"
-                     "<doc>&en;</doc>";
+  const char text[] = "<!DOCTYPE doc [\n"
+                      "  <!ENTITY en SYSTEM 'http://example.org/dummy.ent'>\n"
+                      "]>\n"
+                      "<doc>&en;</doc>";
   ExtFaults faults[]
       = {{"<?xml version='1.0' encoding='us-ascii'?><",
           "Incomplete element declaration not faulted", NULL,
@@ -3274,8 +3274,8 @@ END_TEST
 
 /* Test setting an explicit encoding */
 START_TEST(test_explicit_encoding) {
-  const char *text1 = "<doc>Hello ";
-  const char *text2 = " World</doc>";
+  const char text1[] = "<doc>Hello ";
+  const char text2[] = " World</doc>";
 
   /* Just check that we can set the encoding to NULL before starting */
   if (XML_SetEncoding(g_parser, NULL) != XML_STATUS_OK)
@@ -3311,7 +3311,7 @@ cr_cdata_handler(void *userData, const XML_Char *s, int len) {
 }
 
 START_TEST(test_trailing_cr) {
-  const char *text = "<doc>\r";
+  const char text[] = "<doc>\r";
   int found_cr;
 
   /* Try with a character handler, for code coverage */
@@ -3342,7 +3342,7 @@ static int XMLCALL
 external_entity_cr_catcher(XML_Parser parser, const XML_Char *context,
                            const XML_Char *base, const XML_Char *systemId,
                            const XML_Char *publicId) {
-  const char *text = "\r";
+  const char text[] = "\r";
   XML_Parser ext_parser;
 
   UNUSED_P(base);
@@ -3363,7 +3363,7 @@ static int XMLCALL
 external_entity_bad_cr_catcher(XML_Parser parser, const XML_Char *context,
                                const XML_Char *base, const XML_Char *systemId,
                                const XML_Char *publicId) {
-  const char *text = "<tag>\r";
+  const char text[] = "<tag>\r";
   XML_Parser ext_parser;
 
   UNUSED_P(base);
@@ -3383,10 +3383,10 @@ external_entity_bad_cr_catcher(XML_Parser parser, const XML_Char *context,
 }
 
 START_TEST(test_ext_entity_trailing_cr) {
-  const char *text = "<!DOCTYPE doc [\n"
-                     "  <!ENTITY en SYSTEM 'http://example.org/dummy.ent'>\n"
-                     "]>\n"
-                     "<doc>&en;</doc>";
+  const char text[] = "<!DOCTYPE doc [\n"
+                      "  <!ENTITY en SYSTEM 'http://example.org/dummy.ent'>\n"
+                      "]>\n"
+                      "<doc>&en;</doc>";
   int found_cr;
 
   XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
@@ -3423,7 +3423,7 @@ rsqb_handler(void *userData, const XML_Char *s, int len) {
 }
 
 START_TEST(test_trailing_rsqb) {
-  const char *text8 = "<doc>]";
+  const char text8[] = "<doc>]";
   const char text16[] = "\xFF\xFE<\000d\000o\000c\000>\000]\000";
   int found_rsqb;
   int text8_len = (int)strlen(text8);
@@ -3468,7 +3468,7 @@ static int XMLCALL
 external_entity_rsqb_catcher(XML_Parser parser, const XML_Char *context,
                              const XML_Char *base, const XML_Char *systemId,
                              const XML_Char *publicId) {
-  const char *text = "<tag>]";
+  const char text[] = "<tag>]";
   XML_Parser ext_parser;
 
   UNUSED_P(base);
@@ -3488,10 +3488,10 @@ external_entity_rsqb_catcher(XML_Parser parser, const XML_Char *context,
 }
 
 START_TEST(test_ext_entity_trailing_rsqb) {
-  const char *text = "<!DOCTYPE doc [\n"
-                     "  <!ENTITY en SYSTEM 'http://example.org/dummy.ent'>\n"
-                     "]>\n"
-                     "<doc>&en;</doc>";
+  const char text[] = "<!DOCTYPE doc [\n"
+                      "  <!ENTITY en SYSTEM 'http://example.org/dummy.ent'>\n"
+                      "]>\n"
+                      "<doc>&en;</doc>";
   int found_rsqb;
 
   XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
@@ -3511,7 +3511,7 @@ static int XMLCALL
 external_entity_good_cdata_ascii(XML_Parser parser, const XML_Char *context,
                                  const XML_Char *base, const XML_Char *systemId,
                                  const XML_Char *publicId) {
-  const char *text = "<a><![CDATA[<greeting>Hello, world!</greeting>]]></a>";
+  const char text[] = "<a><![CDATA[<greeting>Hello, world!</greeting>]]></a>";
   const XML_Char *expected = XCS("<greeting>Hello, world!</greeting>");
   CharData storage;
   XML_Parser ext_parser;
@@ -3536,10 +3536,10 @@ external_entity_good_cdata_ascii(XML_Parser parser, const XML_Char *context,
 }
 
 START_TEST(test_ext_entity_good_cdata) {
-  const char *text = "<!DOCTYPE doc [\n"
-                     "  <!ENTITY en SYSTEM 'http://example.org/dummy.ent'>\n"
-                     "]>\n"
-                     "<doc>&en;</doc>";
+  const char text[] = "<!DOCTYPE doc [\n"
+                      "  <!ENTITY en SYSTEM 'http://example.org/dummy.ent'>\n"
+                      "]>\n"
+                      "<doc>&en;</doc>";
 
   XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
   XML_SetExternalEntityRefHandler(g_parser, external_entity_good_cdata_ascii);
@@ -3597,8 +3597,8 @@ static int XMLCALL
 external_entity_param_checker(XML_Parser parser, const XML_Char *context,
                               const XML_Char *base, const XML_Char *systemId,
                               const XML_Char *publicId) {
-  const char *text = "<!-- Subordinate parser -->\n"
-                     "<!ELEMENT doc (#PCDATA)*>";
+  const char text[] = "<!-- Subordinate parser -->\n"
+                      "<!ELEMENT doc (#PCDATA)*>";
   XML_Parser ext_parser;
 
   UNUSED_P(base);
@@ -3619,12 +3619,12 @@ external_entity_param_checker(XML_Parser parser, const XML_Char *context,
 }
 
 START_TEST(test_user_parameters) {
-  const char *text = "<?xml version='1.0' encoding='us-ascii'?>\n"
-                     "<!-- Primary parse -->\n"
-                     "<!DOCTYPE doc SYSTEM 'foo'>\n"
-                     "<doc>&entity;";
-  const char *epilog = "<!-- Back to primary parser -->\n"
-                       "</doc>";
+  const char text[] = "<?xml version='1.0' encoding='us-ascii'?>\n"
+                      "<!-- Primary parse -->\n"
+                      "<!DOCTYPE doc SYSTEM 'foo'>\n"
+                      "<doc>&entity;";
+  const char epilog[] = "<!-- Back to primary parser -->\n"
+                        "</doc>";
 
   comment_count = 0;
   skip_count = 0;
@@ -3671,7 +3671,7 @@ external_entity_ref_param_checker(XML_Parser parameter, const XML_Char *context,
                                   const XML_Char *base,
                                   const XML_Char *systemId,
                                   const XML_Char *publicId) {
-  const char *text = "<!ELEMENT doc (#PCDATA)*>";
+  const char text[] = "<!ELEMENT doc (#PCDATA)*>";
   XML_Parser ext_parser;
 
   UNUSED_P(base);
@@ -3693,9 +3693,9 @@ external_entity_ref_param_checker(XML_Parser parameter, const XML_Char *context,
 }
 
 START_TEST(test_ext_entity_ref_parameter) {
-  const char *text = "<?xml version='1.0' encoding='us-ascii'?>\n"
-                     "<!DOCTYPE doc SYSTEM 'foo'>\n"
-                     "<doc>&entity;</doc>";
+  const char text[] = "<?xml version='1.0' encoding='us-ascii'?>\n"
+                      "<!DOCTYPE doc SYSTEM 'foo'>\n"
+                      "<doc>&entity;</doc>";
 
   XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
   XML_SetExternalEntityRefHandler(g_parser, external_entity_ref_param_checker);
@@ -3722,8 +3722,8 @@ END_TEST
 
 /* Test the parsing of an empty string */
 START_TEST(test_empty_parse) {
-  const char *text = "<doc></doc>";
-  const char *partial = "<doc>";
+  const char text[] = "<doc></doc>";
+  const char partial[] = "<doc>";
 
   if (XML_Parse(g_parser, NULL, 0, XML_FALSE) == XML_STATUS_ERROR)
     fail("Parsing empty string faulted");
@@ -3772,7 +3772,7 @@ get_feature(enum XML_FeatureEnum feature_id, long *presult) {
  * get executed.  The count at the end of the line is the number of
  * characters (bytes) in the element name by that point.x
  */
-static const char *get_buffer_test_text
+static const char get_buffer_test_text[]
     = "<documentwitharidiculouslylongelementnametotease"  /* 0x030 */
       "aparticularcorneroftheallocationinXML_GetBuffers"  /* 0x060 */
       "othatwecanimprovethecoverageyetagain012345678901"  /* 0x090 */
@@ -3862,7 +3862,7 @@ END_TEST
 
 /* Test position information macros */
 START_TEST(test_byte_info_at_end) {
-  const char *text = "<doc></doc>";
+  const char text[] = "<doc></doc>";
 
   if (XML_GetCurrentByteIndex(g_parser) != -1
       || XML_GetCurrentByteCount(g_parser) != 0)
@@ -3882,7 +3882,7 @@ END_TEST
 #define PRE_ERROR_STR "<doc></"
 #define POST_ERROR_STR "wombat></doc>"
 START_TEST(test_byte_info_at_error) {
-  const char *text = PRE_ERROR_STR POST_ERROR_STR;
+  const char text[] = PRE_ERROR_STR POST_ERROR_STR;
 
   if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
       == XML_STATUS_OK)
@@ -3935,7 +3935,7 @@ byte_character_handler(void *userData, const XML_Char *s, int len) {
 #define CDATA_TEXT "Hello"
 #define END_ELEMENT "</e>"
 START_TEST(test_byte_info_at_cdata) {
-  const char *text = START_ELEMENT CDATA_TEXT END_ELEMENT;
+  const char text[] = START_ELEMENT CDATA_TEXT END_ELEMENT;
   int offset, size;
   ByteTestData data;
 
@@ -3958,7 +3958,7 @@ END_TEST
 
 /* Test predefined entities are correctly recognised */
 START_TEST(test_predefined_entities) {
-  const char *text = "<doc>&lt;&gt;&amp;&quot;&apos;</doc>";
+  const char text[] = "<doc>&lt;&gt;&amp;&quot;&apos;</doc>";
   const XML_Char *expected = XCS("<doc>&lt;&gt;&amp;&quot;&apos;</doc>");
   const XML_Char *result = XCS("<>&\"'");
   CharData storage;
@@ -3993,12 +3993,12 @@ static int XMLCALL
 external_entity_param(XML_Parser parser, const XML_Char *context,
                       const XML_Char *base, const XML_Char *systemId,
                       const XML_Char *publicId) {
-  const char *text1 = "<!ELEMENT doc EMPTY>\n"
-                      "<!ENTITY % e1 SYSTEM '004-2.ent'>\n"
-                      "<!ENTITY % e2 '%e1;'>\n"
-                      "%e1;\n";
-  const char *text2 = "<!ELEMENT el EMPTY>\n"
-                      "<el/>\n";
+  const char text1[] = "<!ELEMENT doc EMPTY>\n"
+                       "<!ENTITY % e1 SYSTEM '004-2.ent'>\n"
+                       "<!ENTITY % e2 '%e1;'>\n"
+                       "%e1;\n";
+  const char text2[] = "<!ELEMENT el EMPTY>\n"
+                       "<el/>\n";
   XML_Parser ext_parser;
 
   UNUSED_P(base);
@@ -4031,8 +4031,8 @@ external_entity_param(XML_Parser parser, const XML_Char *context,
 }
 
 START_TEST(test_invalid_tag_in_dtd) {
-  const char *text = "<!DOCTYPE doc SYSTEM '004-1.ent'>\n"
-                     "<doc></doc>\n";
+  const char text[] = "<!DOCTYPE doc SYSTEM '004-1.ent'>\n"
+                      "<doc></doc>\n";
 
   XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
   XML_SetExternalEntityRefHandler(g_parser, external_entity_param);
@@ -4061,7 +4061,7 @@ static int XMLCALL
 external_entity_load_ignore(XML_Parser parser, const XML_Char *context,
                             const XML_Char *base, const XML_Char *systemId,
                             const XML_Char *publicId) {
-  const char *text = "<![IGNORE[<!ELEMENT e (#PCDATA)*>]]>";
+  const char text[] = "<![IGNORE[<!ELEMENT e (#PCDATA)*>]]>";
   XML_Parser ext_parser;
 
   UNUSED_P(base);
@@ -4079,8 +4079,8 @@ external_entity_load_ignore(XML_Parser parser, const XML_Char *context,
 }
 
 START_TEST(test_ignore_section) {
-  const char *text = "<!DOCTYPE doc SYSTEM 'foo'>\n"
-                     "<doc><e>&entity;</e></doc>";
+  const char text[] = "<!DOCTYPE doc SYSTEM 'foo'>\n"
+                      "<doc><e>&entity;</e></doc>";
   const XML_Char *expected
       = XCS("<![IGNORE[<!ELEMENT e (#PCDATA)*>]]>\n&entity;");
   CharData storage;
@@ -4211,8 +4211,8 @@ END_TEST
 
 /* Test mis-formatted conditional exclusion */
 START_TEST(test_bad_ignore_section) {
-  const char *text = "<!DOCTYPE doc SYSTEM 'foo'>\n"
-                     "<doc><e>&entity;</e></doc>";
+  const char text[] = "<!DOCTYPE doc SYSTEM 'foo'>\n"
+                      "<doc><e>&entity;</e></doc>";
   ExtFaults faults[]
       = {{"<![IGNORE[<!ELEM", "Broken-off declaration not faulted", NULL,
           XML_ERROR_SYNTAX},
@@ -4240,10 +4240,10 @@ static int XMLCALL
 external_entity_valuer(XML_Parser parser, const XML_Char *context,
                        const XML_Char *base, const XML_Char *systemId,
                        const XML_Char *publicId) {
-  const char *text1 = "<!ELEMENT doc EMPTY>\n"
-                      "<!ENTITY % e1 SYSTEM '004-2.ent'>\n"
-                      "<!ENTITY % e2 '%e1;'>\n"
-                      "%e1;\n";
+  const char text1[] = "<!ELEMENT doc EMPTY>\n"
+                       "<!ENTITY % e1 SYSTEM '004-2.ent'>\n"
+                       "<!ENTITY % e2 '%e1;'>\n"
+                       "%e1;\n";
   XML_Parser ext_parser;
 
   UNUSED_P(base);
@@ -4283,8 +4283,8 @@ external_entity_valuer(XML_Parser parser, const XML_Char *context,
 }
 
 START_TEST(test_external_entity_values) {
-  const char *text = "<!DOCTYPE doc SYSTEM '004-1.ent'>\n"
-                     "<doc></doc>\n";
+  const char text[] = "<!DOCTYPE doc SYSTEM '004-1.ent'>\n"
+                      "<doc></doc>\n";
   ExtFaults data_004_2[] = {
       {"<!ATTLIST doc a1 CDATA 'value'>", NULL, NULL, XML_ERROR_NONE},
       {"<!ATTLIST $doc a1 CDATA 'value'>", "Invalid token not faulted", NULL,
@@ -4330,10 +4330,10 @@ static int XMLCALL
 external_entity_not_standalone(XML_Parser parser, const XML_Char *context,
                                const XML_Char *base, const XML_Char *systemId,
                                const XML_Char *publicId) {
-  const char *text1 = "<!ELEMENT doc EMPTY>\n"
-                      "<!ENTITY % e1 SYSTEM 'bar'>\n"
-                      "%e1;\n";
-  const char *text2 = "<!ATTLIST doc a1 CDATA 'value'>";
+  const char text1[] = "<!ELEMENT doc EMPTY>\n"
+                       "<!ENTITY % e1 SYSTEM 'bar'>\n"
+                       "%e1;\n";
+  const char text2[] = "<!ATTLIST doc a1 CDATA 'value'>";
   XML_Parser ext_parser;
 
   UNUSED_P(base);
@@ -4364,8 +4364,8 @@ external_entity_not_standalone(XML_Parser parser, const XML_Char *context,
 }
 
 START_TEST(test_ext_entity_not_standalone) {
-  const char *text = "<!DOCTYPE doc SYSTEM 'foo'>\n"
-                     "<doc></doc>";
+  const char text[] = "<!DOCTYPE doc SYSTEM 'foo'>\n"
+                      "<doc></doc>";
 
   XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
   XML_SetExternalEntityRefHandler(g_parser, external_entity_not_standalone);
@@ -4378,11 +4378,11 @@ static int XMLCALL
 external_entity_value_aborter(XML_Parser parser, const XML_Char *context,
                               const XML_Char *base, const XML_Char *systemId,
                               const XML_Char *publicId) {
-  const char *text1 = "<!ELEMENT doc EMPTY>\n"
-                      "<!ENTITY % e1 SYSTEM '004-2.ent'>\n"
-                      "<!ENTITY % e2 '%e1;'>\n"
-                      "%e1;\n";
-  const char *text2 = "<?xml version='1.0' encoding='utf-8'?>";
+  const char text1[] = "<!ELEMENT doc EMPTY>\n"
+                       "<!ENTITY % e1 SYSTEM '004-2.ent'>\n"
+                       "<!ENTITY % e2 '%e1;'>\n"
+                       "%e1;\n";
+  const char text2[] = "<?xml version='1.0' encoding='utf-8'?>";
   XML_Parser ext_parser;
 
   UNUSED_P(base);
@@ -4412,8 +4412,8 @@ external_entity_value_aborter(XML_Parser parser, const XML_Char *context,
 }
 
 START_TEST(test_ext_entity_value_abort) {
-  const char *text = "<!DOCTYPE doc SYSTEM '004-1.ent'>\n"
-                     "<doc></doc>\n";
+  const char text[] = "<!DOCTYPE doc SYSTEM '004-1.ent'>\n"
+                      "<doc></doc>\n";
 
   XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
   XML_SetExternalEntityRefHandler(g_parser, external_entity_value_aborter);
@@ -4425,9 +4425,9 @@ START_TEST(test_ext_entity_value_abort) {
 END_TEST
 
 START_TEST(test_bad_public_doctype) {
-  const char *text = "<?xml version='1.0' encoding='utf-8'?>\n"
-                     "<!DOCTYPE doc PUBLIC '{BadName}' 'test'>\n"
-                     "<doc></doc>";
+  const char text[] = "<?xml version='1.0' encoding='utf-8'?>\n"
+                      "<!DOCTYPE doc PUBLIC '{BadName}' 'test'>\n"
+                      "<doc></doc>";
 
   /* Setting a handler provokes a particular code path */
   XML_SetDoctypeDeclHandler(g_parser, dummy_start_doctype_handler,
@@ -4438,9 +4438,9 @@ END_TEST
 
 /* Test based on ibm/valid/P32/ibm32v04.xml */
 START_TEST(test_attribute_enum_value) {
-  const char *text = "<?xml version='1.0' standalone='no'?>\n"
-                     "<!DOCTYPE animal SYSTEM 'test.dtd'>\n"
-                     "<animal>This is a \n    <a/>  \n\nyellow tiger</animal>";
+  const char text[] = "<?xml version='1.0' standalone='no'?>\n"
+                      "<!DOCTYPE animal SYSTEM 'test.dtd'>\n"
+                      "<animal>This is a \n    <a/>  \n\nyellow tiger</animal>";
   ExtTest dtd_data
       = {"<!ELEMENT animal (#PCDATA|a)*>\n"
          "<!ELEMENT a EMPTY>\n"
@@ -4463,10 +4463,10 @@ END_TEST
  * to happen, so this is currently treated as acceptable.
  */
 START_TEST(test_predefined_entity_redefinition) {
-  const char *text = "<!DOCTYPE doc [\n"
-                     "<!ENTITY apos 'foo'>\n"
-                     "]>\n"
-                     "<doc>&apos;</doc>";
+  const char text[] = "<!DOCTYPE doc [\n"
+                      "<!ENTITY apos 'foo'>\n"
+                      "]>\n"
+                      "<doc>&apos;</doc>";
   run_character_check(text, XCS("'"));
 }
 END_TEST
@@ -4475,10 +4475,10 @@ END_TEST
  * parameter entity is encountered.
  */
 START_TEST(test_dtd_stop_processing) {
-  const char *text = "<!DOCTYPE doc [\n"
-                     "%foo;\n"
-                     "<!ENTITY bar 'bas'>\n"
-                     "]><doc/>";
+  const char text[] = "<!DOCTYPE doc [\n"
+                      "%foo;\n"
+                      "<!ENTITY bar 'bas'>\n"
+                      "]><doc/>";
 
   XML_SetEntityDeclHandler(g_parser, dummy_entity_decl_handler);
   dummy_handler_flags = 0;
@@ -4492,10 +4492,10 @@ END_TEST
 
 /* Test public notations with no system ID */
 START_TEST(test_public_notation_no_sysid) {
-  const char *text = "<!DOCTYPE doc [\n"
-                     "<!NOTATION note PUBLIC 'foo'>\n"
-                     "<!ELEMENT doc EMPTY>\n"
-                     "]>\n<doc/>";
+  const char text[] = "<!DOCTYPE doc [\n"
+                      "<!NOTATION note PUBLIC 'foo'>\n"
+                      "<!ELEMENT doc EMPTY>\n"
+                      "]>\n<doc/>";
 
   dummy_handler_flags = 0;
   XML_SetNotationDeclHandler(g_parser, dummy_notation_decl_handler);
@@ -4515,7 +4515,7 @@ record_element_start_handler(void *userData, const XML_Char *name,
 }
 
 START_TEST(test_nested_groups) {
-  const char *text
+  const char text[]
       = "<!DOCTYPE doc [\n"
         "<!ELEMENT doc "
         /* Sixteen elements per line */
@@ -4542,17 +4542,17 @@ START_TEST(test_nested_groups) {
 END_TEST
 
 START_TEST(test_group_choice) {
-  const char *text = "<!DOCTYPE doc [\n"
-                     "<!ELEMENT doc (a|b|c)+>\n"
-                     "<!ELEMENT a EMPTY>\n"
-                     "<!ELEMENT b (#PCDATA)>\n"
-                     "<!ELEMENT c ANY>\n"
-                     "]>\n"
-                     "<doc>\n"
-                     "<a/>\n"
-                     "<b attr='foo'>This is a foo</b>\n"
-                     "<c></c>\n"
-                     "</doc>\n";
+  const char text[] = "<!DOCTYPE doc [\n"
+                      "<!ELEMENT doc (a|b|c)+>\n"
+                      "<!ELEMENT a EMPTY>\n"
+                      "<!ELEMENT b (#PCDATA)>\n"
+                      "<!ELEMENT c ANY>\n"
+                      "]>\n"
+                      "<doc>\n"
+                      "<a/>\n"
+                      "<b attr='foo'>This is a foo</b>\n"
+                      "<c></c>\n"
+                      "</doc>\n";
 
   XML_SetElementDeclHandler(g_parser, dummy_element_decl_handler);
   dummy_handler_flags = 0;
@@ -4569,7 +4569,7 @@ external_entity_public(XML_Parser parser, const XML_Char *context,
                        const XML_Char *base, const XML_Char *systemId,
                        const XML_Char *publicId) {
   const char *text1 = (const char *)XML_GetUserData(parser);
-  const char *text2 = "<!ATTLIST doc a CDATA 'value'>";
+  const char text2[] = "<!ATTLIST doc a CDATA 'value'>";
   const char *text = NULL;
   XML_Parser ext_parser;
   int parse_res;
@@ -4592,12 +4592,12 @@ external_entity_public(XML_Parser parser, const XML_Char *context,
 }
 
 START_TEST(test_standalone_parameter_entity) {
-  const char *text = "<?xml version='1.0' standalone='yes'?>\n"
-                     "<!DOCTYPE doc SYSTEM 'http://example.org/' [\n"
-                     "<!ENTITY % entity '<!ELEMENT doc (#PCDATA)>'>\n"
-                     "%entity;\n"
-                     "]>\n"
-                     "<doc></doc>";
+  const char text[] = "<?xml version='1.0' standalone='yes'?>\n"
+                      "<!DOCTYPE doc SYSTEM 'http://example.org/' [\n"
+                      "<!ENTITY % entity '<!ELEMENT doc (#PCDATA)>'>\n"
+                      "%entity;\n"
+                      "]>\n"
+                      "<doc></doc>";
   char dtd_data[] = "<!ENTITY % e1 'foo'>\n";
 
   XML_SetUserData(g_parser, dtd_data);
@@ -4612,11 +4612,11 @@ END_TEST
 /* Test skipping of parameter entity in an external DTD */
 /* Derived from ibm/invalid/P69/ibm69i01.xml */
 START_TEST(test_skipped_parameter_entity) {
-  const char *text = "<?xml version='1.0'?>\n"
-                     "<!DOCTYPE root SYSTEM 'http://example.org/dtd.ent' [\n"
-                     "<!ELEMENT root (#PCDATA|a)* >\n"
-                     "]>\n"
-                     "<root></root>";
+  const char text[] = "<?xml version='1.0'?>\n"
+                      "<!DOCTYPE root SYSTEM 'http://example.org/dtd.ent' [\n"
+                      "<!ELEMENT root (#PCDATA|a)* >\n"
+                      "]>\n"
+                      "<root></root>";
   ExtTest dtd_data = {"%pe2;", NULL, NULL};
 
   XML_SetExternalEntityRefHandler(g_parser, external_entity_loader);
@@ -4634,11 +4634,11 @@ END_TEST
 
 /* Test recursive parameter entity definition rejected in external DTD */
 START_TEST(test_recursive_external_parameter_entity) {
-  const char *text = "<?xml version='1.0'?>\n"
-                     "<!DOCTYPE root SYSTEM 'http://example.org/dtd.ent' [\n"
-                     "<!ELEMENT root (#PCDATA|a)* >\n"
-                     "]>\n"
-                     "<root></root>";
+  const char text[] = "<?xml version='1.0'?>\n"
+                      "<!DOCTYPE root SYSTEM 'http://example.org/dtd.ent' [\n"
+                      "<!ELEMENT root (#PCDATA|a)* >\n"
+                      "]>\n"
+                      "<root></root>";
   ExtFaults dtd_data = {"<!ENTITY % pe2 '&#37;pe2;'>\n%pe2;",
                         "Recursive external parameter entity not faulted", NULL,
                         XML_ERROR_RECURSIVE_ENTITY_REF};
@@ -4656,9 +4656,9 @@ static int XMLCALL
 external_entity_devaluer(XML_Parser parser, const XML_Char *context,
                          const XML_Char *base, const XML_Char *systemId,
                          const XML_Char *publicId) {
-  const char *text = "<!ELEMENT doc EMPTY>\n"
-                     "<!ENTITY % e1 SYSTEM 'bar'>\n"
-                     "%e1;\n";
+  const char text[] = "<!ELEMENT doc EMPTY>\n"
+                      "<!ENTITY % e1 SYSTEM 'bar'>\n"
+                      "%e1;\n";
   XML_Parser ext_parser;
   intptr_t clear_handler = (intptr_t)XML_GetUserData(parser);
 
@@ -4682,8 +4682,8 @@ external_entity_devaluer(XML_Parser parser, const XML_Char *context,
 }
 
 START_TEST(test_undefined_ext_entity_in_external_dtd) {
-  const char *text = "<!DOCTYPE doc SYSTEM 'foo'>\n"
-                     "<doc></doc>\n";
+  const char text[] = "<!DOCTYPE doc SYSTEM 'foo'>\n"
+                      "<doc></doc>\n";
 
   XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
   XML_SetExternalEntityRefHandler(g_parser, external_entity_devaluer);
@@ -4749,7 +4749,7 @@ selective_aborting_default_handler(void *userData, const XML_Char *s, int len) {
 }
 
 START_TEST(test_abort_epilog) {
-  const char *text = "<doc></doc>\n\r\n";
+  const char text[] = "<doc></doc>\n\r\n";
   XML_Char match[] = XCS("\r");
 
   XML_SetDefaultHandler(g_parser, selective_aborting_default_handler);
@@ -4765,7 +4765,7 @@ END_TEST
 
 /* Test a different code path for abort in the epilog */
 START_TEST(test_abort_epilog_2) {
-  const char *text = "<doc></doc>\n";
+  const char text[] = "<doc></doc>\n";
   XML_Char match[] = XCS("\n");
 
   XML_SetDefaultHandler(g_parser, selective_aborting_default_handler);
@@ -4777,7 +4777,7 @@ END_TEST
 
 /* Test suspension from the epilog */
 START_TEST(test_suspend_epilog) {
-  const char *text = "<doc></doc>\n";
+  const char text[] = "<doc></doc>\n";
   XML_Char match[] = XCS("\n");
 
   XML_SetDefaultHandler(g_parser, selective_aborting_default_handler);
@@ -4796,7 +4796,7 @@ suspending_end_handler(void *userData, const XML_Char *s) {
 }
 
 START_TEST(test_suspend_in_sole_empty_tag) {
-  const char *text = "<doc/>";
+  const char text[] = "<doc/>";
   enum XML_Status rc;
 
   XML_SetEndElementHandler(g_parser, suspending_end_handler);
@@ -4815,7 +4815,7 @@ START_TEST(test_suspend_in_sole_empty_tag) {
 END_TEST
 
 START_TEST(test_unfinished_epilog) {
-  const char *text = "<doc></doc><";
+  const char text[] = "<doc></doc><";
 
   expect_failure(text, XML_ERROR_UNCLOSED_TOKEN,
                  "Incomplete epilog entry not faulted");
@@ -4823,7 +4823,7 @@ START_TEST(test_unfinished_epilog) {
 END_TEST
 
 START_TEST(test_partial_char_in_epilog) {
-  const char *text = "<doc></doc>\xe2\x82";
+  const char text[] = "<doc></doc>\xe2\x82";
 
   /* First check that no fault is raised if the parse is not finished */
   if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_FALSE)
@@ -4847,7 +4847,7 @@ START_TEST(test_hash_collision) {
    * not always.  This is an attempt to provide insurance.
    */
 #define COLLIDING_HASH_SALT (unsigned long)_SIP_ULL(0xffffffffU, 0xff99fc90U)
-  const char *text
+  const char text[]
       = "<doc>\n"
         "<a1/><a2/><a3/><a4/><a5/><a6/><a7/><a8/>\n"
         "<b1></b1><b2 attr='foo'>This is a foo</b2><b3></b3><b4></b4>\n"
@@ -4878,7 +4878,7 @@ start_element_suspender(void *userData, const XML_Char *name,
 }
 
 START_TEST(test_suspend_resume_internal_entity) {
-  const char *text
+  const char text[]
       = "<!DOCTYPE doc [\n"
         "<!ENTITY foo '<suspend>Hi<suspend>Ho</suspend></suspend>'>\n"
         "]>\n"
@@ -4906,10 +4906,10 @@ END_TEST
 
 /* Test syntax error is caught at parse resumption */
 START_TEST(test_resume_entity_with_syntax_error) {
-  const char *text = "<!DOCTYPE doc [\n"
-                     "<!ENTITY foo '<suspend>Hi</wombat>'>\n"
-                     "]>\n"
-                     "<doc>&foo;</doc>\n";
+  const char text[] = "<!DOCTYPE doc [\n"
+                      "<!ENTITY foo '<suspend>Hi</wombat>'>\n"
+                      "]>\n"
+                      "<doc>&foo;</doc>\n";
 
   XML_SetStartElementHandler(g_parser, start_element_suspender);
   if (XML_Parse(g_parser, text, (int)strlen(text), XML_TRUE)
@@ -4933,11 +4933,11 @@ element_decl_suspender(void *userData, const XML_Char *name,
 }
 
 START_TEST(test_suspend_resume_parameter_entity) {
-  const char *text = "<!DOCTYPE doc [\n"
-                     "<!ENTITY % foo '<!ELEMENT doc (#PCDATA)*>'>\n"
-                     "%foo;\n"
-                     "]>\n"
-                     "<doc>Hello, world</doc>";
+  const char text[] = "<!DOCTYPE doc [\n"
+                      "<!ENTITY % foo '<!ELEMENT doc (#PCDATA)*>'>\n"
+                      "%foo;\n"
+                      "]>\n"
+                      "<doc>Hello, world</doc>";
   const XML_Char *expected = XCS("Hello, world");
   CharData storage;
 
@@ -4958,7 +4958,7 @@ END_TEST
 
 /* Test attempting to use parser after an error is faulted */
 START_TEST(test_restart_on_error) {
-  const char *text = "<$doc><doc></doc>";
+  const char text[] = "<$doc><doc></doc>";
 
   if (XML_Parse(g_parser, text, (int)strlen(text), XML_TRUE)
       != XML_STATUS_ERROR)
@@ -4974,8 +4974,8 @@ END_TEST
 
 /* Test that angle brackets in an attribute default value are faulted */
 START_TEST(test_reject_lt_in_attribute_value) {
-  const char *text = "<!DOCTYPE doc [<!ATTLIST doc a CDATA '<bar>'>]>\n"
-                     "<doc></doc>";
+  const char text[] = "<!DOCTYPE doc [<!ATTLIST doc a CDATA '<bar>'>]>\n"
+                      "<doc></doc>";
 
   expect_failure(text, XML_ERROR_INVALID_TOKEN,
                  "Bad attribute default not faulted");
@@ -4983,8 +4983,8 @@ START_TEST(test_reject_lt_in_attribute_value) {
 END_TEST
 
 START_TEST(test_reject_unfinished_param_in_att_value) {
-  const char *text = "<!DOCTYPE doc [<!ATTLIST doc a CDATA '&foo'>]>\n"
-                     "<doc></doc>";
+  const char text[] = "<!DOCTYPE doc [<!ATTLIST doc a CDATA '&foo'>]>\n"
+                      "<doc></doc>";
 
   expect_failure(text, XML_ERROR_INVALID_TOKEN,
                  "Bad attribute default not faulted");
@@ -4992,7 +4992,7 @@ START_TEST(test_reject_unfinished_param_in_att_value) {
 END_TEST
 
 START_TEST(test_trailing_cr_in_att_value) {
-  const char *text = "<doc a='value\r'/>";
+  const char text[] = "<doc a='value\r'/>";
 
   if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
       == XML_STATUS_ERROR)
@@ -5004,14 +5004,14 @@ END_TEST
  * standalone internal DTD.  Covers a corner case in the parser.
  */
 START_TEST(test_standalone_internal_entity) {
-  const char *text = "<?xml version='1.0' standalone='yes' ?>\n"
-                     "<!DOCTYPE doc [\n"
-                     "  <!ELEMENT doc (#PCDATA)>\n"
-                     "  <!ENTITY % pe '<!ATTLIST doc att2 CDATA \"&ge;\">'>\n"
-                     "  <!ENTITY ge 'AttDefaultValue'>\n"
-                     "  %pe;\n"
-                     "]>\n"
-                     "<doc att2='any'/>";
+  const char text[] = "<?xml version='1.0' standalone='yes' ?>\n"
+                      "<!DOCTYPE doc [\n"
+                      "  <!ELEMENT doc (#PCDATA)>\n"
+                      "  <!ENTITY % pe '<!ATTLIST doc att2 CDATA \"&ge;\">'>\n"
+                      "  <!ENTITY ge 'AttDefaultValue'>\n"
+                      "  %pe;\n"
+                      "]>\n"
+                      "<doc att2='any'/>";
 
   XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
   if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
@@ -5022,8 +5022,8 @@ END_TEST
 
 /* Test that a reference to an unknown external entity is skipped */
 START_TEST(test_skipped_external_entity) {
-  const char *text = "<!DOCTYPE doc SYSTEM 'http://example.org/'>\n"
-                     "<doc></doc>\n";
+  const char text[] = "<!DOCTYPE doc SYSTEM 'http://example.org/'>\n"
+                      "<doc></doc>\n";
   ExtTest test_data = {"<!ELEMENT doc EMPTY>\n"
                        "<!ENTITY % e2 '%e1;'>\n",
                        NULL, NULL};
@@ -5069,8 +5069,8 @@ external_entity_oneshot_loader(XML_Parser parser, const XML_Char *context,
 }
 
 START_TEST(test_skipped_null_loaded_ext_entity) {
-  const char *text = "<!DOCTYPE doc SYSTEM 'http://example.org/one.ent'>\n"
-                     "<doc />";
+  const char text[] = "<!DOCTYPE doc SYSTEM 'http://example.org/one.ent'>\n"
+                      "<doc />";
   ExtHdlrData test_data
       = {"<!ENTITY % pe1 SYSTEM 'http://example.org/two.ent'>\n"
          "<!ENTITY % pe2 '%pe1;'>\n"
@@ -5087,8 +5087,8 @@ START_TEST(test_skipped_null_loaded_ext_entity) {
 END_TEST
 
 START_TEST(test_skipped_unloaded_ext_entity) {
-  const char *text = "<!DOCTYPE doc SYSTEM 'http://example.org/one.ent'>\n"
-                     "<doc />";
+  const char text[] = "<!DOCTYPE doc SYSTEM 'http://example.org/one.ent'>\n"
+                      "<doc />";
   ExtHdlrData test_data
       = {"<!ENTITY % pe1 SYSTEM 'http://example.org/two.ent'>\n"
          "<!ENTITY % pe2 '%pe1;'>\n"
@@ -5110,8 +5110,8 @@ END_TEST
 START_TEST(test_param_entity_with_trailing_cr) {
 #define PARAM_ENTITY_NAME "pe"
 #define PARAM_ENTITY_CORE_VALUE "<!ATTLIST doc att CDATA \"default\">"
-  const char *text = "<!DOCTYPE doc SYSTEM 'http://example.org/'>\n"
-                     "<doc/>";
+  const char text[] = "<!DOCTYPE doc SYSTEM 'http://example.org/'>\n"
+                      "<doc/>";
   ExtTest test_data
       = {"<!ENTITY % " PARAM_ENTITY_NAME " '" PARAM_ENTITY_CORE_VALUE "\r'>\n"
          "%" PARAM_ENTITY_NAME ";\n",
@@ -5137,10 +5137,10 @@ START_TEST(test_param_entity_with_trailing_cr) {
 END_TEST
 
 START_TEST(test_invalid_character_entity) {
-  const char *text = "<!DOCTYPE doc [\n"
-                     "  <!ENTITY entity '&#x110000;'>\n"
-                     "]>\n"
-                     "<doc>&entity;</doc>";
+  const char text[] = "<!DOCTYPE doc [\n"
+                      "  <!ENTITY entity '&#x110000;'>\n"
+                      "]>\n"
+                      "<doc>&entity;</doc>";
 
   expect_failure(text, XML_ERROR_BAD_CHAR_REF,
                  "Out of range character reference not faulted");
@@ -5148,10 +5148,10 @@ START_TEST(test_invalid_character_entity) {
 END_TEST
 
 START_TEST(test_invalid_character_entity_2) {
-  const char *text = "<!DOCTYPE doc [\n"
-                     "  <!ENTITY entity '&#xg0;'>\n"
-                     "]>\n"
-                     "<doc>&entity;</doc>";
+  const char text[] = "<!DOCTYPE doc [\n"
+                      "  <!ENTITY entity '&#xg0;'>\n"
+                      "]>\n"
+                      "<doc>&entity;</doc>";
 
   expect_failure(text, XML_ERROR_INVALID_TOKEN,
                  "Out of range character reference not faulted");
@@ -5181,10 +5181,10 @@ START_TEST(test_invalid_character_entity_3) {
 END_TEST
 
 START_TEST(test_invalid_character_entity_4) {
-  const char *text = "<!DOCTYPE doc [\n"
-                     "  <!ENTITY entity '&#1114112;'>\n" /* = &#x110000 */
-                     "]>\n"
-                     "<doc>&entity;</doc>";
+  const char text[] = "<!DOCTYPE doc [\n"
+                      "  <!ENTITY entity '&#1114112;'>\n" /* = &#x110000 */
+                      "]>\n"
+                      "<doc>&entity;</doc>";
 
   expect_failure(text, XML_ERROR_BAD_CHAR_REF,
                  "Out of range character reference not faulted");
@@ -5193,7 +5193,7 @@ END_TEST
 
 /* Test that processing instructions are picked up by a default handler */
 START_TEST(test_pi_handled_in_default) {
-  const char *text = "<?test processing instruction?>\n<doc/>";
+  const char text[] = "<?test processing instruction?>\n<doc/>";
   const XML_Char *expected = XCS("<?test processing instruction?>\n<doc/>");
   CharData storage;
 
@@ -5209,7 +5209,7 @@ END_TEST
 
 /* Test that comments are picked up by a default handler */
 START_TEST(test_comment_handled_in_default) {
-  const char *text = "<!-- This is a comment -->\n<doc/>";
+  const char text[] = "<!-- This is a comment -->\n<doc/>";
   const XML_Char *expected = XCS("<!-- This is a comment -->\n<doc/>");
   CharData storage;
 
@@ -5236,7 +5236,7 @@ accumulate_pi_characters(void *userData, const XML_Char *target,
 }
 
 START_TEST(test_pi_yml) {
-  const char *text = "<?yml something like data?><doc/>";
+  const char text[] = "<?yml something like data?><doc/>";
   const XML_Char *expected = XCS("yml: something like data\n");
   CharData storage;
 
@@ -5251,7 +5251,7 @@ START_TEST(test_pi_yml) {
 END_TEST
 
 START_TEST(test_pi_xnl) {
-  const char *text = "<?xnl nothing like data?><doc/>";
+  const char text[] = "<?xnl nothing like data?><doc/>";
   const XML_Char *expected = XCS("xnl: nothing like data\n");
   CharData storage;
 
@@ -5266,7 +5266,7 @@ START_TEST(test_pi_xnl) {
 END_TEST
 
 START_TEST(test_pi_xmm) {
-  const char *text = "<?xmm everything like data?><doc/>";
+  const char text[] = "<?xmm everything like data?><doc/>";
   const XML_Char *expected = XCS("xmm: everything like data\n");
   CharData storage;
 
@@ -5447,8 +5447,8 @@ MiscEncodingHandler(void *data, const XML_Char *encoding, XML_Encoding *info) {
 }
 
 START_TEST(test_missing_encoding_conversion_fn) {
-  const char *text = "<?xml version='1.0' encoding='no-conv'?>\n"
-                     "<doc>\x81</doc>";
+  const char text[] = "<?xml version='1.0' encoding='no-conv'?>\n"
+                      "<doc>\x81</doc>";
 
   XML_SetUnknownEncodingHandler(g_parser, MiscEncodingHandler, NULL);
   /* MiscEncodingHandler sets up an encoding with every top-bit-set
@@ -5463,8 +5463,8 @@ START_TEST(test_missing_encoding_conversion_fn) {
 END_TEST
 
 START_TEST(test_failing_encoding_conversion_fn) {
-  const char *text = "<?xml version='1.0' encoding='failing-conv'?>\n"
-                     "<doc>\x81</doc>";
+  const char text[] = "<?xml version='1.0' encoding='failing-conv'?>\n"
+                      "<doc>\x81</doc>";
 
   XML_SetUnknownEncodingHandler(g_parser, MiscEncodingHandler, NULL);
   /* BadEncodingHandler sets up an encoding with every top-bit-set
@@ -5479,9 +5479,9 @@ END_TEST
 
 /* Test unknown encoding conversions */
 START_TEST(test_unknown_encoding_success) {
-  const char *text = "<?xml version='1.0' encoding='prefix-conv'?>\n"
-                     /* Equivalent to <eoc>Hello, world</eoc> */
-                     "<\x81\x64\x80oc>Hello, world</\x81\x64\x80oc>";
+  const char text[] = "<?xml version='1.0' encoding='prefix-conv'?>\n"
+                      /* Equivalent to <eoc>Hello, world</eoc> */
+                      "<\x81\x64\x80oc>Hello, world</\x81\x64\x80oc>";
 
   XML_SetUnknownEncodingHandler(g_parser, MiscEncodingHandler, NULL);
   run_character_check(text, XCS("Hello, world"));
@@ -5490,8 +5490,8 @@ END_TEST
 
 /* Test bad name character in unknown encoding */
 START_TEST(test_unknown_encoding_bad_name) {
-  const char *text = "<?xml version='1.0' encoding='prefix-conv'?>\n"
-                     "<\xff\x64oc>Hello, world</\xff\x64oc>";
+  const char text[] = "<?xml version='1.0' encoding='prefix-conv'?>\n"
+                      "<\xff\x64oc>Hello, world</\xff\x64oc>";
 
   XML_SetUnknownEncodingHandler(g_parser, MiscEncodingHandler, NULL);
   expect_failure(text, XML_ERROR_INVALID_TOKEN,
@@ -5501,8 +5501,8 @@ END_TEST
 
 /* Test bad mid-name character in unknown encoding */
 START_TEST(test_unknown_encoding_bad_name_2) {
-  const char *text = "<?xml version='1.0' encoding='prefix-conv'?>\n"
-                     "<d\xffoc>Hello, world</d\xffoc>";
+  const char text[] = "<?xml version='1.0' encoding='prefix-conv'?>\n"
+                      "<d\xffoc>Hello, world</d\xffoc>";
 
   XML_SetUnknownEncodingHandler(g_parser, MiscEncodingHandler, NULL);
   expect_failure(text, XML_ERROR_INVALID_TOKEN,
@@ -5514,10 +5514,10 @@ END_TEST
  * in an unknown encoding, finishing with an encoded character.
  */
 START_TEST(test_unknown_encoding_long_name_1) {
-  const char *text = "<?xml version='1.0' encoding='prefix-conv'?>\n"
-                     "<abcdefghabcdefghabcdefghijkl\x80m\x80n\x80o\x80p>"
-                     "Hi"
-                     "</abcdefghabcdefghabcdefghijkl\x80m\x80n\x80o\x80p>";
+  const char text[] = "<?xml version='1.0' encoding='prefix-conv'?>\n"
+                      "<abcdefghabcdefghabcdefghijkl\x80m\x80n\x80o\x80p>"
+                      "Hi"
+                      "</abcdefghabcdefghabcdefghijkl\x80m\x80n\x80o\x80p>";
   const XML_Char *expected = XCS("abcdefghabcdefghabcdefghijklmnop");
   CharData storage;
 
@@ -5536,10 +5536,10 @@ END_TEST
  * in an unknown encoding, finishing with an simple character.
  */
 START_TEST(test_unknown_encoding_long_name_2) {
-  const char *text = "<?xml version='1.0' encoding='prefix-conv'?>\n"
-                     "<abcdefghabcdefghabcdefghijklmnop>"
-                     "Hi"
-                     "</abcdefghabcdefghabcdefghijklmnop>";
+  const char text[] = "<?xml version='1.0' encoding='prefix-conv'?>\n"
+                      "<abcdefghabcdefghabcdefghijklmnop>"
+                      "Hi"
+                      "</abcdefghabcdefghabcdefghijklmnop>";
   const XML_Char *expected = XCS("abcdefghabcdefghabcdefghijklmnop");
   CharData storage;
 
@@ -5555,8 +5555,8 @@ START_TEST(test_unknown_encoding_long_name_2) {
 END_TEST
 
 START_TEST(test_invalid_unknown_encoding) {
-  const char *text = "<?xml version='1.0' encoding='invalid-9'?>\n"
-                     "<doc>Hello world</doc>";
+  const char text[] = "<?xml version='1.0' encoding='invalid-9'?>\n"
+                      "<doc>Hello world</doc>";
 
   XML_SetUnknownEncodingHandler(g_parser, MiscEncodingHandler, NULL);
   expect_failure(text, XML_ERROR_UNKNOWN_ENCODING,
@@ -5565,8 +5565,8 @@ START_TEST(test_invalid_unknown_encoding) {
 END_TEST
 
 START_TEST(test_unknown_ascii_encoding_ok) {
-  const char *text = "<?xml version='1.0' encoding='ascii-like'?>\n"
-                     "<doc>Hello, world</doc>";
+  const char text[] = "<?xml version='1.0' encoding='ascii-like'?>\n"
+                      "<doc>Hello, world</doc>";
 
   XML_SetUnknownEncodingHandler(g_parser, MiscEncodingHandler, NULL);
   run_character_check(text, XCS("Hello, world"));
@@ -5574,8 +5574,8 @@ START_TEST(test_unknown_ascii_encoding_ok) {
 END_TEST
 
 START_TEST(test_unknown_ascii_encoding_fail) {
-  const char *text = "<?xml version='1.0' encoding='ascii-like'?>\n"
-                     "<doc>Hello, \x80 world</doc>";
+  const char text[] = "<?xml version='1.0' encoding='ascii-like'?>\n"
+                      "<doc>Hello, \x80 world</doc>";
 
   XML_SetUnknownEncodingHandler(g_parser, MiscEncodingHandler, NULL);
   expect_failure(text, XML_ERROR_INVALID_TOKEN,
@@ -5584,8 +5584,8 @@ START_TEST(test_unknown_ascii_encoding_fail) {
 END_TEST
 
 START_TEST(test_unknown_encoding_invalid_length) {
-  const char *text = "<?xml version='1.0' encoding='invalid-len'?>\n"
-                     "<doc>Hello, world</doc>";
+  const char text[] = "<?xml version='1.0' encoding='invalid-len'?>\n"
+                      "<doc>Hello, world</doc>";
 
   XML_SetUnknownEncodingHandler(g_parser, MiscEncodingHandler, NULL);
   expect_failure(text, XML_ERROR_UNKNOWN_ENCODING,
@@ -5594,8 +5594,8 @@ START_TEST(test_unknown_encoding_invalid_length) {
 END_TEST
 
 START_TEST(test_unknown_encoding_invalid_topbit) {
-  const char *text = "<?xml version='1.0' encoding='invalid-a'?>\n"
-                     "<doc>Hello, world</doc>";
+  const char text[] = "<?xml version='1.0' encoding='invalid-a'?>\n"
+                      "<doc>Hello, world</doc>";
 
   XML_SetUnknownEncodingHandler(g_parser, MiscEncodingHandler, NULL);
   expect_failure(text, XML_ERROR_UNKNOWN_ENCODING,
@@ -5604,8 +5604,8 @@ START_TEST(test_unknown_encoding_invalid_topbit) {
 END_TEST
 
 START_TEST(test_unknown_encoding_invalid_surrogate) {
-  const char *text = "<?xml version='1.0' encoding='invalid-surrogate'?>\n"
-                     "<doc>Hello, \x82 world</doc>";
+  const char text[] = "<?xml version='1.0' encoding='invalid-surrogate'?>\n"
+                      "<doc>Hello, \x82 world</doc>";
 
   XML_SetUnknownEncodingHandler(g_parser, MiscEncodingHandler, NULL);
   expect_failure(text, XML_ERROR_INVALID_TOKEN,
@@ -5614,8 +5614,8 @@ START_TEST(test_unknown_encoding_invalid_surrogate) {
 END_TEST
 
 START_TEST(test_unknown_encoding_invalid_high) {
-  const char *text = "<?xml version='1.0' encoding='invalid-high'?>\n"
-                     "<doc>Hello, world</doc>";
+  const char text[] = "<?xml version='1.0' encoding='invalid-high'?>\n"
+                      "<doc>Hello, world</doc>";
 
   XML_SetUnknownEncodingHandler(g_parser, MiscEncodingHandler, NULL);
   expect_failure(text, XML_ERROR_UNKNOWN_ENCODING,
@@ -5624,8 +5624,8 @@ START_TEST(test_unknown_encoding_invalid_high) {
 END_TEST
 
 START_TEST(test_unknown_encoding_invalid_attr_value) {
-  const char *text = "<?xml version='1.0' encoding='prefix-conv'?>\n"
-                     "<doc attr='\xff\x30'/>";
+  const char text[] = "<?xml version='1.0' encoding='prefix-conv'?>\n"
+                      "<doc attr='\xff\x30'/>";
 
   XML_SetUnknownEncodingHandler(g_parser, MiscEncodingHandler, NULL);
   expect_failure(text, XML_ERROR_INVALID_TOKEN,
@@ -5687,10 +5687,10 @@ ext2_accumulate_characters(void *userData, const XML_Char *s, int len) {
 }
 
 START_TEST(test_ext_entity_latin1_utf16le_bom) {
-  const char *text = "<!DOCTYPE doc [\n"
-                     "  <!ENTITY en SYSTEM 'http://example.org/dummy.ent'>\n"
-                     "]>\n"
-                     "<doc>&en;</doc>";
+  const char text[] = "<!DOCTYPE doc [\n"
+                      "  <!ENTITY en SYSTEM 'http://example.org/dummy.ent'>\n"
+                      "]>\n"
+                      "<doc>&en;</doc>";
   ExtTest2 test_data
       = {/* If UTF-16, 0xfeff is the BOM and 0x204c is black left bullet */
          /* If Latin-1, 0xff = Y-diaeresis, 0xfe = lowercase thorn,
@@ -5718,10 +5718,10 @@ START_TEST(test_ext_entity_latin1_utf16le_bom) {
 END_TEST
 
 START_TEST(test_ext_entity_latin1_utf16be_bom) {
-  const char *text = "<!DOCTYPE doc [\n"
-                     "  <!ENTITY en SYSTEM 'http://example.org/dummy.ent'>\n"
-                     "]>\n"
-                     "<doc>&en;</doc>";
+  const char text[] = "<!DOCTYPE doc [\n"
+                      "  <!ENTITY en SYSTEM 'http://example.org/dummy.ent'>\n"
+                      "]>\n"
+                      "<doc>&en;</doc>";
   ExtTest2 test_data
       = {/* If UTF-16, 0xfeff is the BOM and 0x204c is black left bullet */
          /* If Latin-1, 0xff = Y-diaeresis, 0xfe = lowercase thorn,
@@ -5753,10 +5753,10 @@ END_TEST
  * without breaking them down by byte.
  */
 START_TEST(test_ext_entity_latin1_utf16le_bom2) {
-  const char *text = "<!DOCTYPE doc [\n"
-                     "  <!ENTITY en SYSTEM 'http://example.org/dummy.ent'>\n"
-                     "]>\n"
-                     "<doc>&en;</doc>";
+  const char text[] = "<!DOCTYPE doc [\n"
+                      "  <!ENTITY en SYSTEM 'http://example.org/dummy.ent'>\n"
+                      "]>\n"
+                      "<doc>&en;</doc>";
   ExtTest2 test_data
       = {/* If UTF-16, 0xfeff is the BOM and 0x204c is black left bullet */
          /* If Latin-1, 0xff = Y-diaeresis, 0xfe = lowercase thorn,
@@ -5784,10 +5784,10 @@ START_TEST(test_ext_entity_latin1_utf16le_bom2) {
 END_TEST
 
 START_TEST(test_ext_entity_latin1_utf16be_bom2) {
-  const char *text = "<!DOCTYPE doc [\n"
-                     "  <!ENTITY en SYSTEM 'http://example.org/dummy.ent'>\n"
-                     "]>\n"
-                     "<doc>&en;</doc>";
+  const char text[] = "<!DOCTYPE doc [\n"
+                      "  <!ENTITY en SYSTEM 'http://example.org/dummy.ent'>\n"
+                      "]>\n"
+                      "<doc>&en;</doc>";
   ExtTest2 test_data
       = {/* If UTF-16, 0xfeff is the BOM and 0x204c is black left bullet */
          /* If Latin-1, 0xff = Y-diaeresis, 0xfe = lowercase thorn,
@@ -5816,10 +5816,10 @@ END_TEST
 
 /* Test little-endian UTF-16 given an explicit big-endian encoding */
 START_TEST(test_ext_entity_utf16_be) {
-  const char *text = "<!DOCTYPE doc [\n"
-                     "  <!ENTITY en SYSTEM 'http://example.org/dummy.ent'>\n"
-                     "]>\n"
-                     "<doc>&en;</doc>";
+  const char text[] = "<!DOCTYPE doc [\n"
+                      "  <!ENTITY en SYSTEM 'http://example.org/dummy.ent'>\n"
+                      "]>\n"
+                      "<doc>&en;</doc>";
   ExtTest2 test_data
       = {"<\0e\0/\0>\0", 8, XCS("utf-16be"), NULL, EE_PARSE_NONE};
 #ifdef XML_UNICODE
@@ -5846,10 +5846,10 @@ END_TEST
 
 /* Test big-endian UTF-16 given an explicit little-endian encoding */
 START_TEST(test_ext_entity_utf16_le) {
-  const char *text = "<!DOCTYPE doc [\n"
-                     "  <!ENTITY en SYSTEM 'http://example.org/dummy.ent'>\n"
-                     "]>\n"
-                     "<doc>&en;</doc>";
+  const char text[] = "<!DOCTYPE doc [\n"
+                      "  <!ENTITY en SYSTEM 'http://example.org/dummy.ent'>\n"
+                      "]>\n"
+                      "<doc>&en;</doc>";
   ExtTest2 test_data
       = {"\0<\0e\0/\0>", 8, XCS("utf-16le"), NULL, EE_PARSE_NONE};
 #ifdef XML_UNICODE
@@ -5918,10 +5918,10 @@ external_entity_faulter2(XML_Parser parser, const XML_Char *context,
 }
 
 START_TEST(test_ext_entity_utf16_unknown) {
-  const char *text = "<!DOCTYPE doc [\n"
-                     "  <!ENTITY en SYSTEM 'http://example.org/dummy.ent'>\n"
-                     "]>\n"
-                     "<doc>&en;</doc>";
+  const char text[] = "<!DOCTYPE doc [\n"
+                      "  <!ENTITY en SYSTEM 'http://example.org/dummy.ent'>\n"
+                      "]>\n"
+                      "<doc>&en;</doc>";
   ExtFaults2 test_data
       = {"a\0b\0c\0", 6, "Invalid character in entity not faulted", NULL,
          XML_ERROR_INVALID_TOKEN};
@@ -5935,10 +5935,10 @@ END_TEST
 
 /* Test not-quite-UTF-8 BOM (0xEF 0xBB 0xBF) */
 START_TEST(test_ext_entity_utf8_non_bom) {
-  const char *text = "<!DOCTYPE doc [\n"
-                     "  <!ENTITY en SYSTEM 'http://example.org/dummy.ent'>\n"
-                     "]>\n"
-                     "<doc>&en;</doc>";
+  const char text[] = "<!DOCTYPE doc [\n"
+                      "  <!ENTITY en SYSTEM 'http://example.org/dummy.ent'>\n"
+                      "]>\n"
+                      "<doc>&en;</doc>";
   ExtTest2 test_data
       = {"\xef\xbb\x80", /* Arabic letter DAD medial form, U+FEC0 */
          3, NULL, NULL, EE_PARSE_NONE};
@@ -5963,7 +5963,7 @@ END_TEST
 
 /* Test that UTF-8 in a CDATA section is correctly passed through */
 START_TEST(test_utf8_in_cdata_section) {
-  const char *text = "<doc><![CDATA[one \xc3\xa9 two]]></doc>";
+  const char text[] = "<doc><![CDATA[one \xc3\xa9 two]]></doc>";
 #ifdef XML_UNICODE
   const XML_Char *expected = XCS("one \x00e9 two");
 #else
@@ -5976,7 +5976,7 @@ END_TEST
 
 /* Test that little-endian UTF-16 in a CDATA section is handled */
 START_TEST(test_utf8_in_cdata_section_2) {
-  const char *text = "<doc><![CDATA[\xc3\xa9]\xc3\xa9two]]></doc>";
+  const char text[] = "<doc><![CDATA[\xc3\xa9]\xc3\xa9two]]></doc>";
 #ifdef XML_UNICODE
   const XML_Char *expected = XCS("\x00e9]\x00e9two");
 #else
@@ -5997,7 +5997,7 @@ record_element_end_handler(void *userData, const XML_Char *name) {
 }
 
 START_TEST(test_trailing_spaces_in_elements) {
-  const char *text = "<doc   >Hi</doc >";
+  const char text[] = "<doc   >Hi</doc >";
   const XML_Char *expected = XCS("doc/doc");
   CharData storage;
 
@@ -6053,7 +6053,7 @@ START_TEST(test_utf16_second_attr) {
 END_TEST
 
 START_TEST(test_attr_after_solidus) {
-  const char *text = "<doc attr1='a' / attr2='b'>";
+  const char text[] = "<doc attr1='a' / attr2='b'>";
 
   expect_failure(text, XML_ERROR_INVALID_TOKEN, "Misplaced / not faulted");
 }
@@ -6115,10 +6115,10 @@ END_TEST
 
 /* Test that duff attribute description keywords are rejected */
 START_TEST(test_bad_attr_desc_keyword) {
-  const char *text = "<!DOCTYPE doc [\n"
-                     "  <!ATTLIST doc attr CDATA #!IMPLIED>\n"
-                     "]>\n"
-                     "<doc />";
+  const char text[] = "<!DOCTYPE doc [\n"
+                      "  <!ATTLIST doc attr CDATA #!IMPLIED>\n"
+                      "]>\n"
+                      "<doc />";
 
   expect_failure(text, XML_ERROR_INVALID_TOKEN,
                  "Bad keyword !IMPLIED not faulted");
@@ -6155,8 +6155,8 @@ END_TEST
  * using prefix-encoding (see above) to trigger specific code paths
  */
 START_TEST(test_bad_doctype) {
-  const char *text = "<?xml version='1.0' encoding='prefix-conv'?>\n"
-                     "<!DOCTYPE doc [ \x80\x44 ]><doc/>";
+  const char text[] = "<?xml version='1.0' encoding='prefix-conv'?>\n"
+                      "<!DOCTYPE doc [ \x80\x44 ]><doc/>";
 
   XML_SetUnknownEncodingHandler(g_parser, MiscEncodingHandler, NULL);
   expect_failure(text, XML_ERROR_SYNTAX,
@@ -6184,8 +6184,8 @@ START_TEST(test_bad_doctype_utf16) {
 END_TEST
 
 START_TEST(test_bad_doctype_plus) {
-  const char *text = "<!DOCTYPE 1+ [ <!ENTITY foo 'bar'> ]>\n"
-                     "<1+>&foo;</1+>";
+  const char text[] = "<!DOCTYPE 1+ [ <!ENTITY foo 'bar'> ]>\n"
+                      "<1+>&foo;</1+>";
 
   expect_failure(text, XML_ERROR_INVALID_TOKEN,
                  "'+' in document name not faulted");
@@ -6193,8 +6193,8 @@ START_TEST(test_bad_doctype_plus) {
 END_TEST
 
 START_TEST(test_bad_doctype_star) {
-  const char *text = "<!DOCTYPE 1* [ <!ENTITY foo 'bar'> ]>\n"
-                     "<1*>&foo;</1*>";
+  const char text[] = "<!DOCTYPE 1* [ <!ENTITY foo 'bar'> ]>\n"
+                      "<1*>&foo;</1*>";
 
   expect_failure(text, XML_ERROR_INVALID_TOKEN,
                  "'*' in document name not faulted");
@@ -6202,8 +6202,8 @@ START_TEST(test_bad_doctype_star) {
 END_TEST
 
 START_TEST(test_bad_doctype_query) {
-  const char *text = "<!DOCTYPE 1? [ <!ENTITY foo 'bar'> ]>\n"
-                     "<1?>&foo;</1?>";
+  const char text[] = "<!DOCTYPE 1? [ <!ENTITY foo 'bar'> ]>\n"
+                      "<1?>&foo;</1?>";
 
   expect_failure(text, XML_ERROR_INVALID_TOKEN,
                  "'?' in document name not faulted");
@@ -6211,9 +6211,9 @@ START_TEST(test_bad_doctype_query) {
 END_TEST
 
 START_TEST(test_unknown_encoding_bad_ignore) {
-  const char *text = "<?xml version='1.0' encoding='prefix-conv'?>"
-                     "<!DOCTYPE doc SYSTEM 'foo'>"
-                     "<doc><e>&entity;</e></doc>";
+  const char text[] = "<?xml version='1.0' encoding='prefix-conv'?>"
+                      "<!DOCTYPE doc SYSTEM 'foo'>"
+                      "<doc><e>&entity;</e></doc>";
   ExtFaults fault = {"<![IGNORE[<!ELEMENT \xffG (#PCDATA)*>]]>",
                      "Invalid character not faulted", XCS("prefix-conv"),
                      XML_ERROR_INVALID_TOKEN};
@@ -6339,37 +6339,37 @@ END_TEST
  * faulted
  */
 START_TEST(test_short_doctype) {
-  const char *text = "<!DOCTYPE doc></doc>";
+  const char text[] = "<!DOCTYPE doc></doc>";
   expect_failure(text, XML_ERROR_INVALID_TOKEN,
                  "DOCTYPE without subset not rejected");
 }
 END_TEST
 
 START_TEST(test_short_doctype_2) {
-  const char *text = "<!DOCTYPE doc PUBLIC></doc>";
+  const char text[] = "<!DOCTYPE doc PUBLIC></doc>";
   expect_failure(text, XML_ERROR_SYNTAX,
                  "DOCTYPE without Public ID not rejected");
 }
 END_TEST
 
 START_TEST(test_short_doctype_3) {
-  const char *text = "<!DOCTYPE doc SYSTEM></doc>";
+  const char text[] = "<!DOCTYPE doc SYSTEM></doc>";
   expect_failure(text, XML_ERROR_SYNTAX,
                  "DOCTYPE without System ID not rejected");
 }
 END_TEST
 
 START_TEST(test_long_doctype) {
-  const char *text = "<!DOCTYPE doc PUBLIC 'foo' 'bar' 'baz'></doc>";
+  const char text[] = "<!DOCTYPE doc PUBLIC 'foo' 'bar' 'baz'></doc>";
   expect_failure(text, XML_ERROR_SYNTAX, "DOCTYPE with extra ID not rejected");
 }
 END_TEST
 
 START_TEST(test_bad_entity) {
-  const char *text = "<!DOCTYPE doc [\n"
-                     "  <!ENTITY foo PUBLIC>\n"
-                     "]>\n"
-                     "<doc/>";
+  const char text[] = "<!DOCTYPE doc [\n"
+                      "  <!ENTITY foo PUBLIC>\n"
+                      "]>\n"
+                      "<doc/>";
   expect_failure(text, XML_ERROR_SYNTAX,
                  "ENTITY without Public ID is not rejected");
 }
@@ -6377,40 +6377,40 @@ END_TEST
 
 /* Test unquoted value is faulted */
 START_TEST(test_bad_entity_2) {
-  const char *text = "<!DOCTYPE doc [\n"
-                     "  <!ENTITY % foo bar>\n"
-                     "]>\n"
-                     "<doc/>";
+  const char text[] = "<!DOCTYPE doc [\n"
+                      "  <!ENTITY % foo bar>\n"
+                      "]>\n"
+                      "<doc/>";
   expect_failure(text, XML_ERROR_SYNTAX,
                  "ENTITY without Public ID is not rejected");
 }
 END_TEST
 
 START_TEST(test_bad_entity_3) {
-  const char *text = "<!DOCTYPE doc [\n"
-                     "  <!ENTITY % foo PUBLIC>\n"
-                     "]>\n"
-                     "<doc/>";
+  const char text[] = "<!DOCTYPE doc [\n"
+                      "  <!ENTITY % foo PUBLIC>\n"
+                      "]>\n"
+                      "<doc/>";
   expect_failure(text, XML_ERROR_SYNTAX,
                  "Parameter ENTITY without Public ID is not rejected");
 }
 END_TEST
 
 START_TEST(test_bad_entity_4) {
-  const char *text = "<!DOCTYPE doc [\n"
-                     "  <!ENTITY % foo SYSTEM>\n"
-                     "]>\n"
-                     "<doc/>";
+  const char text[] = "<!DOCTYPE doc [\n"
+                      "  <!ENTITY % foo SYSTEM>\n"
+                      "]>\n"
+                      "<doc/>";
   expect_failure(text, XML_ERROR_SYNTAX,
                  "Parameter ENTITY without Public ID is not rejected");
 }
 END_TEST
 
 START_TEST(test_bad_notation) {
-  const char *text = "<!DOCTYPE doc [\n"
-                     "  <!NOTATION n SYSTEM>\n"
-                     "]>\n"
-                     "<doc/>";
+  const char text[] = "<!DOCTYPE doc [\n"
+                      "  <!NOTATION n SYSTEM>\n"
+                      "]>\n"
+                      "<doc/>";
   expect_failure(text, XML_ERROR_SYNTAX,
                  "Notation without System ID is not rejected");
 }
@@ -6438,10 +6438,10 @@ checking_default_handler(void *userData, const XML_Char *s, int len) {
 }
 
 START_TEST(test_default_doctype_handler) {
-  const char *text = "<!DOCTYPE doc PUBLIC 'pubname' 'test.dtd' [\n"
-                     "  <!ENTITY foo 'bar'>\n"
-                     "]>\n"
-                     "<doc>&foo;</doc>";
+  const char text[] = "<!DOCTYPE doc PUBLIC 'pubname' 'test.dtd' [\n"
+                      "  <!ENTITY foo 'bar'>\n"
+                      "]>\n"
+                      "<doc>&foo;</doc>";
   DefaultCheck test_data[] = {{XCS("'pubname'"), 9, XML_FALSE},
                               {XCS("'test.dtd'"), 10, XML_FALSE},
                               {NULL, 0, XML_FALSE}};
@@ -6460,7 +6460,7 @@ START_TEST(test_default_doctype_handler) {
 END_TEST
 
 START_TEST(test_empty_element_abort) {
-  const char *text = "<abort/>";
+  const char text[] = "<abort/>";
 
   XML_SetStartElementHandler(g_parser, start_element_suspender);
   if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
@@ -6525,9 +6525,9 @@ triplet_end_checker(void *userData, const XML_Char *name) {
 }
 
 START_TEST(test_return_ns_triplet) {
-  const char *text = "<foo:e xmlns:foo='http://example.org/' bar:a='12'\n"
-                     "       xmlns:bar='http://example.org/'>";
-  const char *epilog = "</foo:e>";
+  const char text[] = "<foo:e xmlns:foo='http://example.org/' bar:a='12'\n"
+                      "       xmlns:bar='http://example.org/'>";
+  const char epilog[] = "</foo:e>";
   const XML_Char *elemstr[]
       = {XCS("http://example.org/ e foo"), XCS("http://example.org/ a bar")};
   XML_SetReturnNSTriplet(g_parser, XML_TRUE);
@@ -6593,10 +6593,10 @@ run_ns_tagname_overwrite_test(const char *text, const XML_Char *result) {
 
 /* Regression test for SF bug #566334. */
 START_TEST(test_ns_tagname_overwrite) {
-  const char *text = "<n:e xmlns:n='http://example.org/'>\n"
-                     "  <n:f n:attr='foo'/>\n"
-                     "  <n:g n:attr2='bar'/>\n"
-                     "</n:e>";
+  const char text[] = "<n:e xmlns:n='http://example.org/'>\n"
+                      "  <n:f n:attr='foo'/>\n"
+                      "  <n:g n:attr2='bar'/>\n"
+                      "</n:e>";
   const XML_Char *result = XCS("start http://example.org/ e\n")
       XCS("start http://example.org/ f\n")
           XCS("attribute http://example.org/ attr\n")
@@ -6611,10 +6611,10 @@ END_TEST
 
 /* Regression test for SF bug #566334. */
 START_TEST(test_ns_tagname_overwrite_triplet) {
-  const char *text = "<n:e xmlns:n='http://example.org/'>\n"
-                     "  <n:f n:attr='foo'/>\n"
-                     "  <n:g n:attr2='bar'/>\n"
-                     "</n:e>";
+  const char text[] = "<n:e xmlns:n='http://example.org/'>\n"
+                      "  <n:f n:attr='foo'/>\n"
+                      "  <n:g n:attr2='bar'/>\n"
+                      "</n:e>";
   const XML_Char *result = XCS("start http://example.org/ e n\n")
       XCS("start http://example.org/ f n\n")
           XCS("attribute http://example.org/ attr n\n")
@@ -6653,7 +6653,7 @@ START_TEST(test_start_ns_clears_start_element) {
      syntax doesn't cause the problematic path through Expat to be
      taken.
   */
-  const char *text = "<e xmlns='http://example.org/'></e>";
+  const char text[] = "<e xmlns='http://example.org/'></e>";
 
   XML_SetStartElementHandler(g_parser, start_element_fail);
   XML_SetStartNamespaceDeclHandler(g_parser, start_ns_clearing_start_element);
@@ -6697,13 +6697,13 @@ external_entity_handler(XML_Parser parser, const XML_Char *context,
 }
 
 START_TEST(test_default_ns_from_ext_subset_and_ext_ge) {
-  const char *text = "<?xml version='1.0'?>\n"
-                     "<!DOCTYPE doc SYSTEM 'http://example.org/doc.dtd' [\n"
-                     "  <!ENTITY en SYSTEM 'http://example.org/entity.ent'>\n"
-                     "]>\n"
-                     "<doc xmlns='http://example.org/ns1'>\n"
-                     "&en;\n"
-                     "</doc>";
+  const char text[] = "<?xml version='1.0'?>\n"
+                      "<!DOCTYPE doc SYSTEM 'http://example.org/doc.dtd' [\n"
+                      "  <!ENTITY en SYSTEM 'http://example.org/entity.ent'>\n"
+                      "]>\n"
+                      "<doc xmlns='http://example.org/ns1'>\n"
+                      "&en;\n"
+                      "</doc>";
 
   XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
   XML_SetExternalEntityRefHandler(g_parser, external_entity_handler);
@@ -6718,9 +6718,9 @@ END_TEST
 
 /* Regression test #1 for SF bug #673791. */
 START_TEST(test_ns_prefix_with_empty_uri_1) {
-  const char *text = "<doc xmlns:prefix='http://example.org/'>\n"
-                     "  <e xmlns:prefix=''/>\n"
-                     "</doc>";
+  const char text[] = "<doc xmlns:prefix='http://example.org/'>\n"
+                      "  <e xmlns:prefix=''/>\n"
+                      "</doc>";
 
   expect_failure(text, XML_ERROR_UNDECLARING_PREFIX,
                  "Did not report re-setting namespace"
@@ -6730,8 +6730,8 @@ END_TEST
 
 /* Regression test #2 for SF bug #673791. */
 START_TEST(test_ns_prefix_with_empty_uri_2) {
-  const char *text = "<?xml version='1.0'?>\n"
-                     "<docelem xmlns:pre=''/>";
+  const char text[] = "<?xml version='1.0'?>\n"
+                      "<docelem xmlns:pre=''/>";
 
   expect_failure(text, XML_ERROR_UNDECLARING_PREFIX,
                  "Did not report setting namespace URI with prefix to ''.");
@@ -6740,12 +6740,12 @@ END_TEST
 
 /* Regression test #3 for SF bug #673791. */
 START_TEST(test_ns_prefix_with_empty_uri_3) {
-  const char *text = "<!DOCTYPE doc [\n"
-                     "  <!ELEMENT doc EMPTY>\n"
-                     "  <!ATTLIST doc\n"
-                     "    xmlns:prefix CDATA ''>\n"
-                     "]>\n"
-                     "<doc/>";
+  const char text[] = "<!DOCTYPE doc [\n"
+                      "  <!ELEMENT doc EMPTY>\n"
+                      "  <!ATTLIST doc\n"
+                      "    xmlns:prefix CDATA ''>\n"
+                      "]>\n"
+                      "<doc/>";
 
   expect_failure(text, XML_ERROR_UNDECLARING_PREFIX,
                  "Didn't report attr default setting NS w/ prefix to ''.");
@@ -6754,12 +6754,12 @@ END_TEST
 
 /* Regression test #4 for SF bug #673791. */
 START_TEST(test_ns_prefix_with_empty_uri_4) {
-  const char *text = "<!DOCTYPE doc [\n"
-                     "  <!ELEMENT prefix:doc EMPTY>\n"
-                     "  <!ATTLIST prefix:doc\n"
-                     "    xmlns:prefix CDATA 'http://example.org/'>\n"
-                     "]>\n"
-                     "<prefix:doc/>";
+  const char text[] = "<!DOCTYPE doc [\n"
+                      "  <!ELEMENT prefix:doc EMPTY>\n"
+                      "  <!ATTLIST prefix:doc\n"
+                      "    xmlns:prefix CDATA 'http://example.org/'>\n"
+                      "]>\n"
+                      "<prefix:doc/>";
   /* Packaged info expected by the end element handler;
      the weird structuring lets us re-use the triplet_end_checker()
      function also used for another test. */
@@ -6775,12 +6775,12 @@ END_TEST
 
 /* Test with non-xmlns prefix */
 START_TEST(test_ns_unbound_prefix) {
-  const char *text = "<!DOCTYPE doc [\n"
-                     "  <!ELEMENT prefix:doc EMPTY>\n"
-                     "  <!ATTLIST prefix:doc\n"
-                     "    notxmlns:prefix CDATA 'http://example.org/'>\n"
-                     "]>\n"
-                     "<prefix:doc/>";
+  const char text[] = "<!DOCTYPE doc [\n"
+                      "  <!ELEMENT prefix:doc EMPTY>\n"
+                      "  <!ATTLIST prefix:doc\n"
+                      "    notxmlns:prefix CDATA 'http://example.org/'>\n"
+                      "]>\n"
+                      "<prefix:doc/>";
 
   if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
       != XML_STATUS_ERROR)
@@ -6791,9 +6791,9 @@ START_TEST(test_ns_unbound_prefix) {
 END_TEST
 
 START_TEST(test_ns_default_with_empty_uri) {
-  const char *text = "<doc xmlns='http://example.org/'>\n"
-                     "  <e xmlns=''/>\n"
-                     "</doc>";
+  const char text[] = "<doc xmlns='http://example.org/'>\n"
+                      "  <e xmlns=''/>\n"
+                      "</doc>";
   /* Add some handlers to exercise extra code paths */
   XML_SetStartNamespaceDeclHandler(g_parser,
                                    dummy_start_namespace_decl_handler);
@@ -6806,9 +6806,9 @@ END_TEST
 
 /* Regression test for SF bug #692964: two prefixes for one namespace. */
 START_TEST(test_ns_duplicate_attrs_diff_prefixes) {
-  const char *text = "<doc xmlns:a='http://example.org/a'\n"
-                     "     xmlns:b='http://example.org/a'\n"
-                     "     a:a='v' b:a='v' />";
+  const char text[] = "<doc xmlns:a='http://example.org/a'\n"
+                      "     xmlns:b='http://example.org/a'\n"
+                      "     a:a='v' b:a='v' />";
   expect_failure(text, XML_ERROR_DUPLICATE_ATTRIBUTE,
                  "did not report multiple attributes with same URI+name");
 }
@@ -6831,8 +6831,8 @@ START_TEST(test_ns_duplicate_hashes) {
    * names be 8 characters apart, producing a hash which will be the
    * same modulo 8.
    */
-  const char *text = "<doc xmlns:a='http://example.org/a'\n"
-                     "     a:a='v' a:i='w' />";
+  const char text[] = "<doc xmlns:a='http://example.org/a'\n"
+                      "     a:a='v' a:i='w' />";
   if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
@@ -6841,7 +6841,7 @@ END_TEST
 
 /* Regression test for SF bug #695401: unbound prefix. */
 START_TEST(test_ns_unbound_prefix_on_attribute) {
-  const char *text = "<doc a:attr=''/>";
+  const char text[] = "<doc a:attr=''/>";
   expect_failure(text, XML_ERROR_UNBOUND_PREFIX,
                  "did not report unbound prefix on attribute");
 }
@@ -6849,7 +6849,7 @@ END_TEST
 
 /* Regression test for SF bug #695401: unbound prefix. */
 START_TEST(test_ns_unbound_prefix_on_element) {
-  const char *text = "<a:doc/>";
+  const char text[] = "<a:doc/>";
   expect_failure(text, XML_ERROR_UNBOUND_PREFIX,
                  "did not report unbound prefix on element");
 }
@@ -6878,7 +6878,7 @@ END_TEST
 
 /* Test that long element names with namespaces are handled correctly */
 START_TEST(test_ns_long_element) {
-  const char *text
+  const char text[]
       = "<foo:thisisalongenoughelementnametotriggerareallocation\n"
         " xmlns:foo='http://example.org/' bar:a='12'\n"
         " xmlns:bar='http://example.org/'>"
@@ -6899,9 +6899,9 @@ END_TEST
 
 /* Test mixed population of prefixed and unprefixed attributes */
 START_TEST(test_ns_mixed_prefix_atts) {
-  const char *text = "<e a='12' bar:b='13'\n"
-                     " xmlns:bar='http://example.org/'>"
-                     "</e>";
+  const char text[] = "<e a='12' bar:b='13'\n"
+                      " xmlns:bar='http://example.org/'>"
+                      "</e>";
 
   if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
       == XML_STATUS_ERROR)
@@ -6914,10 +6914,10 @@ END_TEST
  * across elements with the same namespace URI.
  */
 START_TEST(test_ns_extend_uri_buffer) {
-  const char *text = "<foo:e xmlns:foo='http://example.org/'>"
-                     " <foo:thisisalongenoughnametotriggerallocationaction"
-                     "   foo:a='12' />"
-                     "</foo:e>";
+  const char text[] = "<foo:e xmlns:foo='http://example.org/'>"
+                      " <foo:thisisalongenoughnametotriggerallocationaction"
+                      "   foo:a='12' />"
+                      "</foo:e>";
   if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
@@ -6928,9 +6928,9 @@ END_TEST
  * namespace, but not in other namespaces
  */
 START_TEST(test_ns_reserved_attributes) {
-  const char *text1
+  const char text1[]
       = "<foo:e xmlns:foo='http://example.org/' xmlns:xmlns='12' />";
-  const char *text2
+  const char text2[]
       = "<foo:e xmlns:foo='http://example.org/' foo:xmlns='12' />";
   expect_failure(text1, XML_ERROR_RESERVED_PREFIX_XMLNS,
                  "xmlns not rejected as an attribute");
@@ -6943,11 +6943,11 @@ END_TEST
 
 /* Test more reserved attributes */
 START_TEST(test_ns_reserved_attributes_2) {
-  const char *text1 = "<foo:e xmlns:foo='http://example.org/'"
-                      "  xmlns:xml='http://example.org/' />";
-  const char *text2
+  const char text1[] = "<foo:e xmlns:foo='http://example.org/'"
+                       "  xmlns:xml='http://example.org/' />";
+  const char text2[]
       = "<foo:e xmlns:foo='http://www.w3.org/XML/1998/namespace' />";
-  const char *text3 = "<foo:e xmlns:foo='http://www.w3.org/2000/xmlns/' />";
+  const char text3[] = "<foo:e xmlns:foo='http://www.w3.org/2000/xmlns/' />";
 
   expect_failure(text1, XML_ERROR_RESERVED_PREFIX_XML,
                  "xml not rejected as an attribute");
@@ -6967,7 +6967,7 @@ START_TEST(test_ns_extremely_long_prefix) {
    * strings, so the following needs to be split in two to be safe
    * for all compilers.
    */
-  const char *text1
+  const char text1[]
       = "<doc "
         /* 64 character on each line */
         /* ...gives a total length of 2048 */
@@ -7004,7 +7004,7 @@ START_TEST(test_ns_extremely_long_prefix) {
         "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
         "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
         ":a='12'";
-  const char *text2
+  const char text2[]
       = " xmlns:"
         "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
         "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
@@ -7052,8 +7052,8 @@ END_TEST
 
 /* Test unknown encoding handlers in namespace setup */
 START_TEST(test_ns_unknown_encoding_success) {
-  const char *text = "<?xml version='1.0' encoding='prefix-conv'?>\n"
-                     "<foo:e xmlns:foo='http://example.org/'>Hi</foo:e>";
+  const char text[] = "<?xml version='1.0' encoding='prefix-conv'?>\n"
+                      "<foo:e xmlns:foo='http://example.org/'>Hi</foo:e>";
 
   XML_SetUnknownEncodingHandler(g_parser, MiscEncodingHandler, NULL);
   run_character_check(text, XCS("Hi"));
@@ -7062,7 +7062,7 @@ END_TEST
 
 /* Test that too many colons are rejected */
 START_TEST(test_ns_double_colon) {
-  const char *text = "<foo:e xmlns:foo='http://example.org/' foo:a:b='bar' />";
+  const char text[] = "<foo:e xmlns:foo='http://example.org/' foo:a:b='bar' />";
   const enum XML_Status status
       = _XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE);
 #ifdef XML_NS
@@ -7081,7 +7081,7 @@ START_TEST(test_ns_double_colon) {
 END_TEST
 
 START_TEST(test_ns_double_colon_element) {
-  const char *text = "<foo:bar:e xmlns:foo='http://example.org/' />";
+  const char text[] = "<foo:bar:e xmlns:foo='http://example.org/' />";
   const enum XML_Status status
       = _XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE);
 #ifdef XML_NS
@@ -7101,7 +7101,7 @@ END_TEST
 
 /* Test that non-name characters after a colon are rejected */
 START_TEST(test_ns_bad_attr_leafname) {
-  const char *text = "<foo:e xmlns:foo='http://example.org/' foo:?ar='baz' />";
+  const char text[] = "<foo:e xmlns:foo='http://example.org/' foo:?ar='baz' />";
 
   expect_failure(text, XML_ERROR_INVALID_TOKEN,
                  "Invalid character in leafname not faulted");
@@ -7109,7 +7109,7 @@ START_TEST(test_ns_bad_attr_leafname) {
 END_TEST
 
 START_TEST(test_ns_bad_element_leafname) {
-  const char *text = "<foo:?oc xmlns:foo='http://example.org/' />";
+  const char text[] = "<foo:?oc xmlns:foo='http://example.org/' />";
 
   expect_failure(text, XML_ERROR_INVALID_TOKEN,
                  "Invalid character in element leafname not faulted");
@@ -7192,8 +7192,8 @@ START_TEST(test_ns_utf16_doctype) {
 END_TEST
 
 START_TEST(test_ns_invalid_doctype) {
-  const char *text = "<!DOCTYPE foo:!bad [ <!ENTITY bar 'baz' ]>\n"
-                     "<foo:!bad>&bar;</foo:!bad>";
+  const char text[] = "<!DOCTYPE foo:!bad [ <!ENTITY bar 'baz' ]>\n"
+                      "<foo:!bad>&bar;</foo:!bad>";
 
   expect_failure(text, XML_ERROR_INVALID_TOKEN,
                  "Invalid character in document local name not faulted");
@@ -7201,8 +7201,8 @@ START_TEST(test_ns_invalid_doctype) {
 END_TEST
 
 START_TEST(test_ns_double_colon_doctype) {
-  const char *text = "<!DOCTYPE foo:a:doc [ <!ENTITY bar 'baz' ]>\n"
-                     "<foo:a:doc>&bar;</foo:a:doc>";
+  const char text[] = "<!DOCTYPE foo:a:doc [ <!ENTITY bar 'baz' ]>\n"
+                      "<foo:a:doc>&bar;</foo:a:doc>";
 
   expect_failure(text, XML_ERROR_SYNTAX,
                  "Double colon in document name not faulted");
@@ -7410,7 +7410,7 @@ END_TEST
  * values with mixed bound and unbound namespaces.
  */
 START_TEST(test_misc_attribute_leak) {
-  const char *text = "<D xmlns:L=\"D\" l:a='' L:a=''/>";
+  const char text[] = "<D xmlns:L=\"D\" l:a='' L:a=''/>";
   XML_Memory_Handling_Suite memsuite
       = {tracking_malloc, tracking_realloc, tracking_free};
 
@@ -7517,24 +7517,24 @@ START_TEST(test_misc_stop_during_end_handler_issue_240_2) {
 END_TEST
 
 START_TEST(test_misc_deny_internal_entity_closing_doctype_issue_317) {
-  const char *const inputOne = "<!DOCTYPE d [\n"
-                               "<!ENTITY % e ']><d/>'>\n"
-                               "\n"
-                               "%e;";
-  const char *const inputTwo = "<!DOCTYPE d [\n"
-                               "<!ENTITY % e1 ']><d/>'><!ENTITY % e2 '&e1;'>\n"
-                               "\n"
-                               "%e2;";
-  const char *const inputThree = "<!DOCTYPE d [\n"
-                                 "<!ENTITY % e ']><d'>\n"
-                                 "\n"
-                                 "%e;";
-  const char *const inputIssue317 = "<!DOCTYPE doc [\n"
-                                    "<!ENTITY % foo ']>\n"
-                                    "<doc>Hell<oc (#PCDATA)*>'>\n"
-                                    "%foo;\n"
-                                    "]>\n"
-                                    "<doc>Hello, world</dVc>";
+  const char inputOne[] = "<!DOCTYPE d [\n"
+                          "<!ENTITY % e ']><d/>'>\n"
+                          "\n"
+                          "%e;";
+  const char inputTwo[] = "<!DOCTYPE d [\n"
+                          "<!ENTITY % e1 ']><d/>'><!ENTITY % e2 '&e1;'>\n"
+                          "\n"
+                          "%e2;";
+  const char inputThree[] = "<!DOCTYPE d [\n"
+                            "<!ENTITY % e ']><d'>\n"
+                            "\n"
+                            "%e;";
+  const char inputIssue317[] = "<!DOCTYPE doc [\n"
+                               "<!ENTITY % foo ']>\n"
+                               "<doc>Hell<oc (#PCDATA)*>'>\n"
+                               "%foo;\n"
+                               "]>\n"
+                               "<doc>Hello, world</dVc>";
 
   const char *const inputs[] = {inputOne, inputTwo, inputThree, inputIssue317};
   size_t inputIndex = 0;
@@ -7596,8 +7596,8 @@ alloc_teardown(void) {
 
 /* Test the effects of allocation failures on xml declaration processing */
 START_TEST(test_alloc_parse_xdecl) {
-  const char *text = "<?xml version='1.0' encoding='utf-8'?>\n"
-                     "<doc>Hello, world</doc>";
+  const char text[] = "<?xml version='1.0' encoding='utf-8'?>\n"
+                      "<doc>Hello, world</doc>";
   int i;
   const int max_alloc_count = 15;
 
@@ -7641,7 +7641,7 @@ long_encoding_handler(void *userData, const XML_Char *encoding,
 }
 
 START_TEST(test_alloc_parse_xdecl_2) {
-  const char *text
+  const char text[]
       = "<?xml version='1.0' encoding='"
         /* Each line is 64 characters */
         "ThisIsAStupidlyLongEncodingNameIntendedToTriggerPoolGrowth123456"
@@ -7685,11 +7685,11 @@ END_TEST
 
 /* Test the effects of allocation failures on a straightforward parse */
 START_TEST(test_alloc_parse_pi) {
-  const char *text = "<?xml version='1.0' encoding='utf-8'?>\n"
-                     "<?pi unknown?>\n"
-                     "<doc>"
-                     "Hello, world"
-                     "</doc>";
+  const char text[] = "<?xml version='1.0' encoding='utf-8'?>\n"
+                      "<?pi unknown?>\n"
+                      "<doc>"
+                      "Hello, world"
+                      "</doc>";
   int i;
   const int max_alloc_count = 15;
 
@@ -7711,11 +7711,11 @@ START_TEST(test_alloc_parse_pi) {
 END_TEST
 
 START_TEST(test_alloc_parse_pi_2) {
-  const char *text = "<?xml version='1.0' encoding='utf-8'?>\n"
-                     "<doc>"
-                     "Hello, world"
-                     "<?pi unknown?>\n"
-                     "</doc>";
+  const char text[] = "<?xml version='1.0' encoding='utf-8'?>\n"
+                      "<doc>"
+                      "Hello, world"
+                      "<?pi unknown?>\n"
+                      "</doc>";
   int i;
   const int max_alloc_count = 15;
 
@@ -7737,7 +7737,7 @@ START_TEST(test_alloc_parse_pi_2) {
 END_TEST
 
 START_TEST(test_alloc_parse_pi_3) {
-  const char *text
+  const char text[]
       = "<?"
         /* 64 characters per line */
         "This processing instruction should be long enough to ensure that"
@@ -7778,9 +7778,9 @@ START_TEST(test_alloc_parse_pi_3) {
 END_TEST
 
 START_TEST(test_alloc_parse_comment) {
-  const char *text = "<?xml version='1.0' encoding='utf-8'?>\n"
-                     "<!-- Test parsing this comment -->"
-                     "<doc>Hi</doc>";
+  const char text[] = "<?xml version='1.0' encoding='utf-8'?>\n"
+                      "<!-- Test parsing this comment -->"
+                      "<doc>Hi</doc>";
   int i;
   const int max_alloc_count = 15;
 
@@ -7802,11 +7802,11 @@ START_TEST(test_alloc_parse_comment) {
 END_TEST
 
 START_TEST(test_alloc_parse_comment_2) {
-  const char *text = "<?xml version='1.0' encoding='utf-8'?>\n"
-                     "<doc>"
-                     "Hello, world"
-                     "<!-- Parse this comment too -->"
-                     "</doc>";
+  const char text[] = "<?xml version='1.0' encoding='utf-8'?>\n"
+                      "<doc>"
+                      "Hello, world"
+                      "<!-- Parse this comment too -->"
+                      "</doc>";
   int i;
   const int max_alloc_count = 15;
 
@@ -7863,9 +7863,9 @@ external_entity_duff_loader(XML_Parser parser, const XML_Char *context,
  * correctly reported.  Based on the external entity test cases.
  */
 START_TEST(test_alloc_create_external_parser) {
-  const char *text = "<?xml version='1.0' encoding='us-ascii'?>\n"
-                     "<!DOCTYPE doc SYSTEM 'foo'>\n"
-                     "<doc>&entity;</doc>";
+  const char text[] = "<?xml version='1.0' encoding='us-ascii'?>\n"
+                      "<!DOCTYPE doc SYSTEM 'foo'>\n"
+                      "<doc>&entity;</doc>";
   char foo_text[] = "<!ELEMENT doc (#PCDATA)*>";
 
   XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
@@ -7880,9 +7880,9 @@ END_TEST
 
 /* More external parser memory allocation testing */
 START_TEST(test_alloc_run_external_parser) {
-  const char *text = "<?xml version='1.0' encoding='us-ascii'?>\n"
-                     "<!DOCTYPE doc SYSTEM 'foo'>\n"
-                     "<doc>&entity;</doc>";
+  const char text[] = "<?xml version='1.0' encoding='us-ascii'?>\n"
+                      "<!DOCTYPE doc SYSTEM 'foo'>\n"
+                      "<doc>&entity;</doc>";
   char foo_text[] = "<!ELEMENT doc (#PCDATA)*>";
   unsigned int i;
   const unsigned int max_alloc_count = 15;
@@ -7966,13 +7966,13 @@ external_entity_dbl_handler(XML_Parser parser, const XML_Char *context,
  * Based on test_default_ns_from_ext_subset_and_ext_ge()
  */
 START_TEST(test_alloc_dtd_copy_default_atts) {
-  const char *text = "<?xml version='1.0'?>\n"
-                     "<!DOCTYPE doc SYSTEM 'http://example.org/doc.dtd' [\n"
-                     "  <!ENTITY en SYSTEM 'http://example.org/entity.ent'>\n"
-                     "]>\n"
-                     "<doc xmlns='http://example.org/ns1'>\n"
-                     "&en;\n"
-                     "</doc>";
+  const char text[] = "<?xml version='1.0'?>\n"
+                      "<!DOCTYPE doc SYSTEM 'http://example.org/doc.dtd' [\n"
+                      "  <!ENTITY en SYSTEM 'http://example.org/entity.ent'>\n"
+                      "]>\n"
+                      "<doc xmlns='http://example.org/ns1'>\n"
+                      "&en;\n"
+                      "</doc>";
 
   XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
   XML_SetExternalEntityRefHandler(g_parser, external_entity_dbl_handler);
@@ -8022,13 +8022,13 @@ external_entity_dbl_handler_2(XML_Parser parser, const XML_Char *context,
 
 /* Test more external entity allocation failure paths */
 START_TEST(test_alloc_external_entity) {
-  const char *text = "<?xml version='1.0'?>\n"
-                     "<!DOCTYPE doc SYSTEM 'http://example.org/doc.dtd' [\n"
-                     "  <!ENTITY en SYSTEM 'http://example.org/entity.ent'>\n"
-                     "]>\n"
-                     "<doc xmlns='http://example.org/ns1'>\n"
-                     "&en;\n"
-                     "</doc>";
+  const char text[] = "<?xml version='1.0'?>\n"
+                      "<!DOCTYPE doc SYSTEM 'http://example.org/doc.dtd' [\n"
+                      "  <!ENTITY en SYSTEM 'http://example.org/entity.ent'>\n"
+                      "]>\n"
+                      "<doc xmlns='http://example.org/ns1'>\n"
+                      "&en;\n"
+                      "</doc>";
   int i;
   const int alloc_test_max_repeats = 50;
 
@@ -8060,8 +8060,8 @@ external_entity_alloc_set_encoding(XML_Parser parser, const XML_Char *context,
                                    const XML_Char *systemId,
                                    const XML_Char *publicId) {
   /* As for external_entity_loader() */
-  const char *text = "<?xml encoding='iso-8859-3'?>"
-                     "\xC3\xA9";
+  const char text[] = "<?xml encoding='iso-8859-3'?>"
+                      "\xC3\xA9";
   XML_Parser ext_parser;
   enum XML_Status status;
 
@@ -8084,10 +8084,10 @@ external_entity_alloc_set_encoding(XML_Parser parser, const XML_Char *context,
 }
 
 START_TEST(test_alloc_ext_entity_set_encoding) {
-  const char *text = "<!DOCTYPE doc [\n"
-                     "  <!ENTITY en SYSTEM 'http://example.org/dummy.ent'>\n"
-                     "]>\n"
-                     "<doc>&en;</doc>";
+  const char text[] = "<!DOCTYPE doc [\n"
+                      "  <!ENTITY en SYSTEM 'http://example.org/dummy.ent'>\n"
+                      "]>\n"
+                      "<doc>&en;</doc>";
   int i;
   const int max_allocation_count = 30;
 
@@ -8131,9 +8131,9 @@ unknown_released_encoding_handler(void *data, const XML_Char *encoding,
  * Based on test_unknown_encoding_internal_entity
  */
 START_TEST(test_alloc_internal_entity) {
-  const char *text = "<?xml version='1.0' encoding='unsupported-encoding'?>\n"
-                     "<!DOCTYPE test [<!ENTITY foo 'bar'>]>\n"
-                     "<test a='&foo;'/>";
+  const char text[] = "<?xml version='1.0' encoding='unsupported-encoding'?>\n"
+                      "<!DOCTYPE test [<!ENTITY foo 'bar'>]>\n"
+                      "<test a='&foo;'/>";
   unsigned int i;
   const unsigned int max_alloc_count = 20;
 
@@ -8159,16 +8159,16 @@ END_TEST
  * Based on test_dtd_default_handling().
  */
 START_TEST(test_alloc_dtd_default_handling) {
-  const char *text = "<!DOCTYPE doc [\n"
-                     "<!ENTITY e SYSTEM 'http://example.org/e'>\n"
-                     "<!NOTATION n SYSTEM 'http://example.org/n'>\n"
-                     "<!ENTITY e1 SYSTEM 'http://example.org/e' NDATA n>\n"
-                     "<!ELEMENT doc (#PCDATA)>\n"
-                     "<!ATTLIST doc a CDATA #IMPLIED>\n"
-                     "<?pi in dtd?>\n"
-                     "<!--comment in dtd-->\n"
-                     "]>\n"
-                     "<doc><![CDATA[text in doc]]></doc>";
+  const char text[] = "<!DOCTYPE doc [\n"
+                      "<!ENTITY e SYSTEM 'http://example.org/e'>\n"
+                      "<!NOTATION n SYSTEM 'http://example.org/n'>\n"
+                      "<!ENTITY e1 SYSTEM 'http://example.org/e' NDATA n>\n"
+                      "<!ELEMENT doc (#PCDATA)>\n"
+                      "<!ATTLIST doc a CDATA #IMPLIED>\n"
+                      "<?pi in dtd?>\n"
+                      "<!--comment in dtd-->\n"
+                      "]>\n"
+                      "<doc><![CDATA[text in doc]]></doc>";
   const XML_Char *expected = XCS("\n\n\n\n\n\n\n\n\n<doc>text in doc</doc>");
   CharData storage;
   int i;
@@ -8311,10 +8311,10 @@ external_entity_reallocator(XML_Parser parser, const XML_Char *context,
 }
 
 START_TEST(test_alloc_ext_entity_realloc_buffer) {
-  const char *text = "<!DOCTYPE doc [\n"
-                     "  <!ENTITY en SYSTEM 'http://example.org/dummy.ent'>\n"
-                     "]>\n"
-                     "<doc>&en;</doc>";
+  const char text[] = "<!DOCTYPE doc [\n"
+                      "  <!ENTITY en SYSTEM 'http://example.org/dummy.ent'>\n"
+                      "]>\n"
+                      "<doc>&en;</doc>";
   int i;
   const int max_realloc_count = 10;
 
@@ -8337,30 +8337,30 @@ END_TEST
 
 /* Test elements with many attributes are handled correctly */
 START_TEST(test_alloc_realloc_many_attributes) {
-  const char *text = "<!DOCTYPE doc [\n"
-                     "<!ATTLIST doc za CDATA 'default'>\n"
-                     "<!ATTLIST doc zb CDATA 'def2'>\n"
-                     "<!ATTLIST doc zc CDATA 'def3'>\n"
-                     "]>\n"
-                     "<doc a='1'"
-                     "     b='2'"
-                     "     c='3'"
-                     "     d='4'"
-                     "     e='5'"
-                     "     f='6'"
-                     "     g='7'"
-                     "     h='8'"
-                     "     i='9'"
-                     "     j='10'"
-                     "     k='11'"
-                     "     l='12'"
-                     "     m='13'"
-                     "     n='14'"
-                     "     p='15'"
-                     "     q='16'"
-                     "     r='17'"
-                     "     s='18'>"
-                     "</doc>";
+  const char text[] = "<!DOCTYPE doc [\n"
+                      "<!ATTLIST doc za CDATA 'default'>\n"
+                      "<!ATTLIST doc zb CDATA 'def2'>\n"
+                      "<!ATTLIST doc zc CDATA 'def3'>\n"
+                      "]>\n"
+                      "<doc a='1'"
+                      "     b='2'"
+                      "     c='3'"
+                      "     d='4'"
+                      "     e='5'"
+                      "     f='6'"
+                      "     g='7'"
+                      "     h='8'"
+                      "     i='9'"
+                      "     j='10'"
+                      "     k='11'"
+                      "     l='12'"
+                      "     m='13'"
+                      "     n='14'"
+                      "     p='15'"
+                      "     q='16'"
+                      "     r='17'"
+                      "     s='18'>"
+                      "</doc>";
   int i;
   const int max_realloc_count = 10;
 
@@ -8382,8 +8382,8 @@ END_TEST
 
 /* Test handling of a public entity with failing allocator */
 START_TEST(test_alloc_public_entity_value) {
-  const char *text = "<!DOCTYPE doc SYSTEM 'http://example.org/'>\n"
-                     "<doc></doc>\n";
+  const char text[] = "<!DOCTYPE doc SYSTEM 'http://example.org/'>\n"
+                      "<doc></doc>\n";
   char dtd_text[]
       = "<!ELEMENT doc EMPTY>\n"
         "<!ENTITY % e1 PUBLIC 'foo' 'bar.ent'>\n"
@@ -8435,8 +8435,8 @@ START_TEST(test_alloc_public_entity_value) {
 END_TEST
 
 START_TEST(test_alloc_realloc_subst_public_entity_value) {
-  const char *text = "<!DOCTYPE doc SYSTEM 'http://example.org/'>\n"
-                     "<doc></doc>\n";
+  const char text[] = "<!DOCTYPE doc SYSTEM 'http://example.org/'>\n"
+                      "<doc></doc>\n";
   char dtd_text[]
       = "<!ELEMENT doc EMPTY>\n"
         "<!ENTITY % "
@@ -8497,7 +8497,7 @@ START_TEST(test_alloc_realloc_subst_public_entity_value) {
 END_TEST
 
 START_TEST(test_alloc_parse_public_doctype) {
-  const char *text
+  const char text[]
       = "<?xml version='1.0' encoding='utf-8'?>\n"
         "<!DOCTYPE doc PUBLIC '"
         /* 64 characters per line */
@@ -8546,7 +8546,7 @@ START_TEST(test_alloc_parse_public_doctype) {
 END_TEST
 
 START_TEST(test_alloc_parse_public_doctype_long_name) {
-  const char *text
+  const char text[]
       = "<?xml version='1.0' encoding='utf-8'?>\n"
         "<!DOCTYPE doc PUBLIC 'http://example.com/foo' '"
         /* 64 characters per line */
@@ -8611,8 +8611,8 @@ external_entity_alloc(XML_Parser parser, const XML_Char *context,
 
 /* Test foreign DTD handling */
 START_TEST(test_alloc_set_foreign_dtd) {
-  const char *text1 = "<?xml version='1.0' encoding='us-ascii'?>\n"
-                      "<doc>&entity;</doc>";
+  const char text1[] = "<?xml version='1.0' encoding='us-ascii'?>\n"
+                       "<doc>&entity;</doc>";
   char text2[] = "<!ELEMENT doc (#PCDATA)*>";
   int i;
   const int max_alloc_count = 25;
@@ -8640,9 +8640,9 @@ END_TEST
 
 /* Test based on ibm/valid/P32/ibm32v04.xml */
 START_TEST(test_alloc_attribute_enum_value) {
-  const char *text = "<?xml version='1.0' standalone='no'?>\n"
-                     "<!DOCTYPE animal SYSTEM 'test.dtd'>\n"
-                     "<animal>This is a \n    <a/>  \n\nyellow tiger</animal>";
+  const char text[] = "<?xml version='1.0' standalone='no'?>\n"
+                      "<!DOCTYPE animal SYSTEM 'test.dtd'>\n"
+                      "<animal>This is a \n    <a/>  \n\nyellow tiger</animal>";
   char dtd_text[] = "<!ELEMENT animal (#PCDATA|a)*>\n"
                     "<!ELEMENT a EMPTY>\n"
                     "<!ATTLIST animal xml:space (default|preserve) 'preserve'>";
@@ -8672,9 +8672,9 @@ END_TEST
 
 /* Test attribute enums sufficient to overflow the string pool */
 START_TEST(test_alloc_realloc_attribute_enum_value) {
-  const char *text = "<?xml version='1.0' standalone='no'?>\n"
-                     "<!DOCTYPE animal SYSTEM 'test.dtd'>\n"
-                     "<animal>This is a yellow tiger</animal>";
+  const char text[] = "<?xml version='1.0' standalone='no'?>\n"
+                      "<!DOCTYPE animal SYSTEM 'test.dtd'>\n"
+                      "<animal>This is a yellow tiger</animal>";
   /* We wish to define a collection of attribute enums that will
    * cause the string pool storing them to have to expand.  This
    * means more than 1024 bytes, including the parentheses and
@@ -8733,7 +8733,7 @@ START_TEST(test_alloc_realloc_implied_attribute) {
    * what pushes the string of enums over the 1024-byte limit,
    * otherwise a different code path will pick up the realloc.
    */
-  const char *text
+  const char text[]
       = "<!DOCTYPE doc [\n"
         "<!ELEMENT doc EMPTY>\n"
         "<!ATTLIST doc a "
@@ -8783,7 +8783,7 @@ START_TEST(test_alloc_realloc_default_attribute) {
    * what pushes the string of enums over the 1024-byte limit,
    * otherwise a different code path will pick up the realloc.
    */
-  const char *text
+  const char text[]
       = "<!DOCTYPE doc [\n"
         "<!ELEMENT doc EMPTY>\n"
         "<!ATTLIST doc a "
@@ -8828,7 +8828,7 @@ END_TEST
 
 /* Test long notation name with dodgy allocator */
 START_TEST(test_alloc_notation) {
-  const char *text
+  const char text[]
       = "<!DOCTYPE doc [\n"
         "<!NOTATION "
         /* Each line is 64 characters */
@@ -8896,7 +8896,7 @@ END_TEST
 
 /* Test public notation with dodgy allocator */
 START_TEST(test_alloc_public_notation) {
-  const char *text
+  const char text[]
       = "<!DOCTYPE doc [\n"
         "<!NOTATION note PUBLIC '"
         /* 64 characters per line */
@@ -8945,7 +8945,7 @@ END_TEST
 
 /* Test public notation with dodgy allocator */
 START_TEST(test_alloc_system_notation) {
-  const char *text
+  const char text[]
       = "<!DOCTYPE doc [\n"
         "<!NOTATION note SYSTEM '"
         /* 64 characters per line */
@@ -8993,7 +8993,7 @@ START_TEST(test_alloc_system_notation) {
 END_TEST
 
 START_TEST(test_alloc_nested_groups) {
-  const char *text
+  const char text[]
       = "<!DOCTYPE doc [\n"
         "<!ELEMENT doc "
         /* Sixteen elements per line */
@@ -9033,7 +9033,7 @@ START_TEST(test_alloc_nested_groups) {
 END_TEST
 
 START_TEST(test_alloc_realloc_nested_groups) {
-  const char *text
+  const char text[]
       = "<!DOCTYPE doc [\n"
         "<!ELEMENT doc "
         /* Sixteen elements per line */
@@ -9073,18 +9073,18 @@ START_TEST(test_alloc_realloc_nested_groups) {
 END_TEST
 
 START_TEST(test_alloc_large_group) {
-  const char *text = "<!DOCTYPE doc [\n"
-                     "<!ELEMENT doc ("
-                     "a1|a2|a3|a4|a5|a6|a7|a8|"
-                     "b1|b2|b3|b4|b5|b6|b7|b8|"
-                     "c1|c2|c3|c4|c5|c6|c7|c8|"
-                     "d1|d2|d3|d4|d5|d6|d7|d8|"
-                     "e1"
-                     ")+>\n"
-                     "]>\n"
-                     "<doc>\n"
-                     "<a1/>\n"
-                     "</doc>\n";
+  const char text[] = "<!DOCTYPE doc [\n"
+                      "<!ELEMENT doc ("
+                      "a1|a2|a3|a4|a5|a6|a7|a8|"
+                      "b1|b2|b3|b4|b5|b6|b7|b8|"
+                      "c1|c2|c3|c4|c5|c6|c7|c8|"
+                      "d1|d2|d3|d4|d5|d6|d7|d8|"
+                      "e1"
+                      ")+>\n"
+                      "]>\n"
+                      "<doc>\n"
+                      "<a1/>\n"
+                      "</doc>\n";
   int i;
   const int max_alloc_count = 50;
 
@@ -9109,20 +9109,20 @@ START_TEST(test_alloc_large_group) {
 END_TEST
 
 START_TEST(test_alloc_realloc_group_choice) {
-  const char *text = "<!DOCTYPE doc [\n"
-                     "<!ELEMENT doc ("
-                     "a1|a2|a3|a4|a5|a6|a7|a8|"
-                     "b1|b2|b3|b4|b5|b6|b7|b8|"
-                     "c1|c2|c3|c4|c5|c6|c7|c8|"
-                     "d1|d2|d3|d4|d5|d6|d7|d8|"
-                     "e1"
-                     ")+>\n"
-                     "]>\n"
-                     "<doc>\n"
-                     "<a1/>\n"
-                     "<b2 attr='foo'>This is a foo</b2>\n"
-                     "<c3></c3>\n"
-                     "</doc>\n";
+  const char text[] = "<!DOCTYPE doc [\n"
+                      "<!ELEMENT doc ("
+                      "a1|a2|a3|a4|a5|a6|a7|a8|"
+                      "b1|b2|b3|b4|b5|b6|b7|b8|"
+                      "c1|c2|c3|c4|c5|c6|c7|c8|"
+                      "d1|d2|d3|d4|d5|d6|d7|d8|"
+                      "e1"
+                      ")+>\n"
+                      "]>\n"
+                      "<doc>\n"
+                      "<a1/>\n"
+                      "<b2 attr='foo'>This is a foo</b2>\n"
+                      "<c3></c3>\n"
+                      "</doc>\n";
   int i;
   const int max_realloc_count = 10;
 
@@ -9147,8 +9147,8 @@ START_TEST(test_alloc_realloc_group_choice) {
 END_TEST
 
 START_TEST(test_alloc_pi_in_epilog) {
-  const char *text = "<doc></doc>\n"
-                     "<?pi in epilog?>";
+  const char text[] = "<doc></doc>\n"
+                      "<?pi in epilog?>";
   int i;
   const int max_alloc_count = 15;
 
@@ -9173,8 +9173,8 @@ START_TEST(test_alloc_pi_in_epilog) {
 END_TEST
 
 START_TEST(test_alloc_comment_in_epilog) {
-  const char *text = "<doc></doc>\n"
-                     "<!-- comment in epilog -->";
+  const char text[] = "<doc></doc>\n"
+                      "<!-- comment in epilog -->";
   int i;
   const int max_alloc_count = 15;
 
@@ -9199,7 +9199,7 @@ START_TEST(test_alloc_comment_in_epilog) {
 END_TEST
 
 START_TEST(test_alloc_realloc_long_attribute_value) {
-  const char *text
+  const char text[]
       = "<!DOCTYPE doc [<!ENTITY foo '"
         /* Each line is 64 characters */
         "This entity will be substituted as an attribute value, and is   "
@@ -9240,7 +9240,7 @@ START_TEST(test_alloc_realloc_long_attribute_value) {
 END_TEST
 
 START_TEST(test_alloc_attribute_whitespace) {
-  const char *text = "<doc a=' '></doc>";
+  const char text[] = "<doc a=' '></doc>";
   int i;
   const int max_alloc_count = 15;
 
@@ -9261,7 +9261,7 @@ START_TEST(test_alloc_attribute_whitespace) {
 END_TEST
 
 START_TEST(test_alloc_attribute_predefined_entity) {
-  const char *text = "<doc a='&amp;'></doc>";
+  const char text[] = "<doc a='&amp;'></doc>";
   int i;
   const int max_alloc_count = 15;
 
@@ -9286,7 +9286,7 @@ END_TEST
  * if the allocator fails on it.
  */
 START_TEST(test_alloc_long_attr_default_with_char_ref) {
-  const char *text
+  const char text[]
       = "<!DOCTYPE doc [<!ATTLIST doc a CDATA '"
         /* 64 characters per line */
         "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
@@ -9330,7 +9330,7 @@ END_TEST
  * expansion correctly for an attribute value.
  */
 START_TEST(test_alloc_long_attr_value) {
-  const char *text
+  const char text[]
       = "<!DOCTYPE test [<!ENTITY foo '\n"
         /* 64 characters per line */
         "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
@@ -9376,8 +9376,8 @@ END_TEST
  * allocation error in the right place will definitely do it.
  */
 START_TEST(test_alloc_nested_entities) {
-  const char *text = "<!DOCTYPE doc SYSTEM 'http://example.org/one.ent'>\n"
-                     "<doc />";
+  const char text[] = "<!DOCTYPE doc SYSTEM 'http://example.org/one.ent'>\n"
+                      "<doc />";
   ExtFaults test_data
       = {"<!ENTITY % pe1 '"
          /* 64 characters per line */
@@ -9413,8 +9413,8 @@ START_TEST(test_alloc_nested_entities) {
 END_TEST
 
 START_TEST(test_alloc_realloc_param_entity_newline) {
-  const char *text = "<!DOCTYPE doc SYSTEM 'http://example.org/'>\n"
-                     "<doc/>";
+  const char text[] = "<!DOCTYPE doc SYSTEM 'http://example.org/'>\n"
+                      "<doc/>";
   char dtd_text[]
       = "<!ENTITY % pe '<!ATTLIST doc att CDATA \""
         /* 64 characters per line */
@@ -9459,8 +9459,8 @@ START_TEST(test_alloc_realloc_param_entity_newline) {
 END_TEST
 
 START_TEST(test_alloc_realloc_ce_extends_pe) {
-  const char *text = "<!DOCTYPE doc SYSTEM 'http://example.org/'>\n"
-                     "<doc/>";
+  const char text[] = "<!DOCTYPE doc SYSTEM 'http://example.org/'>\n"
+                      "<doc/>";
   char dtd_text[]
       = "<!ENTITY % pe '<!ATTLIST doc att CDATA \""
         /* 64 characters per line */
@@ -9505,20 +9505,20 @@ START_TEST(test_alloc_realloc_ce_extends_pe) {
 END_TEST
 
 START_TEST(test_alloc_realloc_attributes) {
-  const char *text = "<!DOCTYPE doc [\n"
-                     "  <!ATTLIST doc\n"
-                     "    a1  (a|b|c)   'a'\n"
-                     "    a2  (foo|bar) #IMPLIED\n"
-                     "    a3  NMTOKEN   #IMPLIED\n"
-                     "    a4  NMTOKENS  #IMPLIED\n"
-                     "    a5  ID        #IMPLIED\n"
-                     "    a6  IDREF     #IMPLIED\n"
-                     "    a7  IDREFS    #IMPLIED\n"
-                     "    a8  ENTITY    #IMPLIED\n"
-                     "    a9  ENTITIES  #IMPLIED\n"
-                     "    a10 CDATA     #IMPLIED\n"
-                     "  >]>\n"
-                     "<doc>wombat</doc>\n";
+  const char text[] = "<!DOCTYPE doc [\n"
+                      "  <!ATTLIST doc\n"
+                      "    a1  (a|b|c)   'a'\n"
+                      "    a2  (foo|bar) #IMPLIED\n"
+                      "    a3  NMTOKEN   #IMPLIED\n"
+                      "    a4  NMTOKENS  #IMPLIED\n"
+                      "    a5  ID        #IMPLIED\n"
+                      "    a6  IDREF     #IMPLIED\n"
+                      "    a7  IDREFS    #IMPLIED\n"
+                      "    a8  ENTITY    #IMPLIED\n"
+                      "    a9  ENTITIES  #IMPLIED\n"
+                      "    a10 CDATA     #IMPLIED\n"
+                      "  >]>\n"
+                      "<doc>wombat</doc>\n";
   int i;
   const int max_realloc_count = 5;
 
@@ -9540,7 +9540,7 @@ START_TEST(test_alloc_realloc_attributes) {
 END_TEST
 
 START_TEST(test_alloc_long_doc_name) {
-  const char *text =
+  const char text[] =
       /* 64 characters per line */
       "<LongRootElementNameThatWillCauseTheNextAllocationToExpandTheStr"
       "ingPoolForTheDTDQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
@@ -9579,10 +9579,10 @@ START_TEST(test_alloc_long_doc_name) {
 END_TEST
 
 START_TEST(test_alloc_long_base) {
-  const char *text = "<!DOCTYPE doc [\n"
-                     "  <!ENTITY e SYSTEM 'foo'>\n"
-                     "]>\n"
-                     "<doc>&e;</doc>";
+  const char text[] = "<!DOCTYPE doc [\n"
+                      "  <!ENTITY e SYSTEM 'foo'>\n"
+                      "]>\n"
+                      "<doc>&e;</doc>";
   char entity_text[] = "Hello world";
   const XML_Char *base =
       /* 64 characters per line */
@@ -9631,7 +9631,7 @@ START_TEST(test_alloc_long_base) {
 END_TEST
 
 START_TEST(test_alloc_long_public_id) {
-  const char *text
+  const char text[]
       = "<!DOCTYPE doc [\n"
         "  <!ENTITY e PUBLIC '"
         /* 64 characters per line */
@@ -9678,7 +9678,7 @@ START_TEST(test_alloc_long_public_id) {
 END_TEST
 
 START_TEST(test_alloc_long_entity_value) {
-  const char *text
+  const char text[]
       = "<!DOCTYPE doc [\n"
         "  <!ENTITY e1 '"
         /* 64 characters per line */
@@ -9726,7 +9726,7 @@ START_TEST(test_alloc_long_entity_value) {
 END_TEST
 
 START_TEST(test_alloc_long_notation) {
-  const char *text
+  const char text[]
       = "<!DOCTYPE doc [\n"
         "  <!NOTATION note SYSTEM '"
         /* 64 characters per line */
@@ -9816,9 +9816,9 @@ nsalloc_teardown(void) {
  * Based on test_ns_default_with_empty_uri()
  */
 START_TEST(test_nsalloc_xmlns) {
-  const char *text = "<doc xmlns='http://example.org/'>\n"
-                     "  <e xmlns=''/>\n"
-                     "</doc>";
+  const char text[] = "<doc xmlns='http://example.org/'>\n"
+                      "  <e xmlns=''/>\n"
+                      "</doc>";
   unsigned int i;
   const unsigned int max_alloc_count = 30;
 
@@ -9846,7 +9846,7 @@ END_TEST
 
 /* Test XML_ParseBuffer interface with namespace and a dicky allocator */
 START_TEST(test_nsalloc_parse_buffer) {
-  const char *text = "<doc>Hello</doc>";
+  const char text[] = "<doc>Hello</doc>";
   void *buffer;
 
   /* Try a parse before the start of the world */
@@ -9905,7 +9905,7 @@ END_TEST
 
 /* Check handling of long prefix names (pool growth) */
 START_TEST(test_nsalloc_long_prefix) {
-  const char *text
+  const char text[]
       = "<"
         /* 64 characters per line */
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
@@ -9981,7 +9981,7 @@ END_TEST
 
 /* Check handling of long uri names (pool growth) */
 START_TEST(test_nsalloc_long_uri) {
-  const char *text
+  const char text[]
       = "<foo:e xmlns:foo='http://example.org/"
         /* 64 characters per line */
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789A/"
@@ -10041,7 +10041,7 @@ END_TEST
 
 /* Test handling of long attribute names with prefixes */
 START_TEST(test_nsalloc_long_attr) {
-  const char *text
+  const char text[]
       = "<foo:e xmlns:foo='http://example.org/' bar:"
         /* 64 characters per line */
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
@@ -10084,7 +10084,7 @@ END_TEST
 
 /* Test handling of an attribute name with a long namespace prefix */
 START_TEST(test_nsalloc_long_attr_prefix) {
-  const char *text
+  const char text[]
       = "<foo:e xmlns:foo='http://example.org/' "
         /* 64 characters per line */
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
@@ -10170,9 +10170,9 @@ END_TEST
 
 /* Test attribute handling in the face of a dodgy reallocator */
 START_TEST(test_nsalloc_realloc_attributes) {
-  const char *text = "<foo:e xmlns:foo='http://example.org/' bar:a='12'\n"
-                     "       xmlns:bar='http://example.org/'>"
-                     "</foo:e>";
+  const char text[] = "<foo:e xmlns:foo='http://example.org/' bar:a='12'\n"
+                      "       xmlns:bar='http://example.org/'>"
+                      "</foo:e>";
   int i;
   const int max_realloc_count = 10;
 
@@ -10194,7 +10194,7 @@ END_TEST
 
 /* Test long element names with namespaces under a failing allocator */
 START_TEST(test_nsalloc_long_element) {
-  const char *text
+  const char text[]
       = "<foo:thisisalongenoughelementnametotriggerareallocation\n"
         " xmlns:foo='http://example.org/' bar:a='12'\n"
         " xmlns:bar='http://example.org/'>"
@@ -10236,10 +10236,10 @@ END_TEST
  * provokes that reallocation, and tests the control path if it fails.
  */
 START_TEST(test_nsalloc_realloc_binding_uri) {
-  const char *first = "<doc xmlns='http://example.org/'>\n"
-                      "  <e xmlns='' />\n"
-                      "</doc>";
-  const char *second
+  const char first[] = "<doc xmlns='http://example.org/'>\n"
+                       "  <e xmlns='' />\n"
+                       "</doc>";
+  const char second[]
       = "<doc xmlns='http://example.org/long/enough/URI/to/reallocate/'>\n"
         "  <e xmlns='' />\n"
         "</doc>";
@@ -10268,7 +10268,7 @@ END_TEST
 
 /* Check handling of long prefix names (pool growth) */
 START_TEST(test_nsalloc_realloc_long_prefix) {
-  const char *text
+  const char text[]
       = "<"
         /* 64 characters per line */
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
@@ -10344,7 +10344,7 @@ END_TEST
 
 /* Check handling of even long prefix names (different code path) */
 START_TEST(test_nsalloc_realloc_longer_prefix) {
-  const char *text
+  const char text[]
       = "<"
         /* 64 characters per line */
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
@@ -10419,7 +10419,7 @@ START_TEST(test_nsalloc_realloc_longer_prefix) {
 END_TEST
 
 START_TEST(test_nsalloc_long_namespace) {
-  const char *text1
+  const char text1[]
       = "<"
         /* 64 characters per line */
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
@@ -10456,7 +10456,7 @@ START_TEST(test_nsalloc_long_namespace) {
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
         "='http://example.org/'>\n";
-  const char *text2
+  const char text2[]
       = "<"
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
@@ -10536,7 +10536,7 @@ END_TEST
  * slightly different places in the code.
  */
 START_TEST(test_nsalloc_less_long_namespace) {
-  const char *text
+  const char text[]
       = "<"
         /* 64 characters per line */
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AZ"
@@ -10606,7 +10606,7 @@ START_TEST(test_nsalloc_less_long_namespace) {
 END_TEST
 
 START_TEST(test_nsalloc_long_context) {
-  const char *text
+  const char text[]
       = "<!DOCTYPE doc SYSTEM 'foo' [\n"
         "  <!ATTLIST doc baz ID #REQUIRED>\n"
         "  <!ENTITY en SYSTEM 'bar'>\n"
@@ -10686,7 +10686,7 @@ context_realloc_test(const char *text) {
 }
 
 START_TEST(test_nsalloc_realloc_long_context) {
-  const char *text
+  const char text[]
       = "<!DOCTYPE doc SYSTEM 'foo' [\n"
         "  <!ENTITY en SYSTEM 'bar'>\n"
         "]>\n"
@@ -10717,7 +10717,7 @@ START_TEST(test_nsalloc_realloc_long_context) {
 END_TEST
 
 START_TEST(test_nsalloc_realloc_long_context_2) {
-  const char *text
+  const char text[]
       = "<!DOCTYPE doc SYSTEM 'foo' [\n"
         "  <!ENTITY en SYSTEM 'bar'>\n"
         "]>\n"
@@ -10748,7 +10748,7 @@ START_TEST(test_nsalloc_realloc_long_context_2) {
 END_TEST
 
 START_TEST(test_nsalloc_realloc_long_context_3) {
-  const char *text
+  const char text[]
       = "<!DOCTYPE doc SYSTEM 'foo' [\n"
         "  <!ENTITY en SYSTEM 'bar'>\n"
         "]>\n"
@@ -10779,7 +10779,7 @@ START_TEST(test_nsalloc_realloc_long_context_3) {
 END_TEST
 
 START_TEST(test_nsalloc_realloc_long_context_4) {
-  const char *text
+  const char text[]
       = "<!DOCTYPE doc SYSTEM 'foo' [\n"
         "  <!ENTITY en SYSTEM 'bar'>\n"
         "]>\n"
@@ -10810,7 +10810,7 @@ START_TEST(test_nsalloc_realloc_long_context_4) {
 END_TEST
 
 START_TEST(test_nsalloc_realloc_long_context_5) {
-  const char *text
+  const char text[]
       = "<!DOCTYPE doc SYSTEM 'foo' [\n"
         "  <!ENTITY en SYSTEM 'bar'>\n"
         "]>\n"
@@ -10841,7 +10841,7 @@ START_TEST(test_nsalloc_realloc_long_context_5) {
 END_TEST
 
 START_TEST(test_nsalloc_realloc_long_context_6) {
-  const char *text
+  const char text[]
       = "<!DOCTYPE doc SYSTEM 'foo' [\n"
         "  <!ENTITY en SYSTEM 'bar'>\n"
         "]>\n"
@@ -10871,7 +10871,7 @@ START_TEST(test_nsalloc_realloc_long_context_6) {
 END_TEST
 
 START_TEST(test_nsalloc_realloc_long_context_7) {
-  const char *text
+  const char text[]
       = "<!DOCTYPE doc SYSTEM 'foo' [\n"
         "  <!ENTITY en SYSTEM 'bar'>\n"
         "]>\n"
@@ -10902,7 +10902,7 @@ START_TEST(test_nsalloc_realloc_long_context_7) {
 END_TEST
 
 START_TEST(test_nsalloc_realloc_long_ge_name) {
-  const char *text
+  const char text[]
       = "<!DOCTYPE doc SYSTEM 'foo' [\n"
         "  <!ENTITY "
         /* 64 characters per line */
@@ -10975,7 +10975,7 @@ END_TEST
  * provoke particular uncommon code paths.
  */
 START_TEST(test_nsalloc_realloc_long_context_in_dtd) {
-  const char *text1
+  const char text1[]
       = "<!DOCTYPE "
         /* 64 characters per line */
         "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
@@ -11032,7 +11032,7 @@ START_TEST(test_nsalloc_realloc_long_context_in_dtd) {
         "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
         "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
         "='foo/Second'>&First;";
-  const char *text2
+  const char text2[]
       = "</"
         "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
         "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
@@ -11078,7 +11078,7 @@ START_TEST(test_nsalloc_realloc_long_context_in_dtd) {
 END_TEST
 
 START_TEST(test_nsalloc_long_default_in_ext) {
-  const char *text
+  const char text[]
       = "<!DOCTYPE doc [\n"
         "  <!ATTLIST e a1 CDATA '"
         /* 64 characters per line */
@@ -11127,7 +11127,7 @@ START_TEST(test_nsalloc_long_default_in_ext) {
 END_TEST
 
 START_TEST(test_nsalloc_long_systemid_in_ext) {
-  const char *text
+  const char text[]
       = "<!DOCTYPE doc SYSTEM 'foo' [\n"
         "  <!ENTITY en SYSTEM '"
         /* 64 characters per line */
@@ -11199,13 +11199,13 @@ END_TEST
  * namespace.  Based on test_nsalloc_long_context.
  */
 START_TEST(test_nsalloc_prefixed_element) {
-  const char *text = "<!DOCTYPE pfx:element SYSTEM 'foo' [\n"
-                     "  <!ATTLIST pfx:element baz ID #REQUIRED>\n"
-                     "  <!ENTITY en SYSTEM 'bar'>\n"
-                     "]>\n"
-                     "<pfx:element xmlns:pfx='http://example.org/' baz='2'>\n"
-                     "&en;"
-                     "</pfx:element>";
+  const char text[] = "<!DOCTYPE pfx:element SYSTEM 'foo' [\n"
+                      "  <!ATTLIST pfx:element baz ID #REQUIRED>\n"
+                      "  <!ENTITY en SYSTEM 'bar'>\n"
+                      "]>\n"
+                      "<pfx:element xmlns:pfx='http://example.org/' baz='2'>\n"
+                      "&en;"
+                      "</pfx:element>";
   ExtOption options[] = {
       {XCS("foo"), "<!ELEMENT e EMPTY>"}, {XCS("bar"), "<e/>"}, {NULL, NULL}};
   int i;
