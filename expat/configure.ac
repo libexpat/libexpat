@@ -329,16 +329,18 @@ AC_CONFIG_FILES([Makefile]
 AC_CONFIG_FILES([run.sh], [chmod +x run.sh])
 AC_OUTPUT
 
-echo ""
-echo "Automake flags (can be overridden by user flags):"
-echo "AM_CPPFLAGS: $AM_CPPFLAGS"
-echo "AM_CFLAGS: $AM_CFLAGS"
-echo "AM_CXXFLAGS: $AM_CXXFLAGS"
-echo "AM_LDFLAGS: $AM_LDFLAGS"
 
-echo ""
-echo "User flags (overrides Automake flags on conflict):"
-echo "CPPFLAGS: $CPPFLAGS"
-echo "CFLAGS: $CFLAGS"
-echo "CXXFLAGS: $CXXFLAGS"
-echo "LDFLAGS: $LDFLAGS"
+cat <<EOF
+
+Automake flags (can be overridden by user flags):
+  AM_CPPFLAGS: ${AM_CPPFLAGS}
+    AM_CFLAGS: ${AM_CFLAGS}
+  AM_CXXFLAGS: ${AM_CXXFLAGS}
+   AM_LDFLAGS: ${AM_LDFLAGS}
+
+User flags (override Automake flags on conflict):
+     CPPFLAGS: ${CPPFLAGS}
+       CFLAGS: ${CFLAGS}
+     CXXFLAGS: ${CXXFLAGS}
+      LDFLAGS: ${LDFLAGS}
+EOF
