@@ -333,10 +333,10 @@ AC_OUTPUT
 cat <<EOF
 
 Automake flags (can be overridden by user flags):
-  AM_CPPFLAGS: ${AM_CPPFLAGS}
-    AM_CFLAGS: ${AM_CFLAGS}
-  AM_CXXFLAGS: ${AM_CXXFLAGS}
-   AM_LDFLAGS: ${AM_LDFLAGS}
+  [AM_CPPFLAGS]: ${AM_CPPFLAGS}
+    [AM_CFLAGS]: ${AM_CFLAGS}
+  [AM_CXXFLAGS]: ${AM_CXXFLAGS}
+   [AM_LDFLAGS]: ${AM_LDFLAGS}
 
 User flags (override Automake flags on conflict):
      CPPFLAGS: ${CPPFLAGS}
