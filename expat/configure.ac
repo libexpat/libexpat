@@ -342,5 +342,4 @@ User flags (override Automake flags on conflict):
      CPPFLAGS: ${CPPFLAGS}
        CFLAGS: ${CFLAGS}
      CXXFLAGS: ${CXXFLAGS}
-      LDFLAGS: ${LDFLAGS}
-])
+      LDFLAGS: ${LDFLAGS}])
