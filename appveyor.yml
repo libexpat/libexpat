@@ -51,6 +51,21 @@ configuration: Debug
 # https://cmake.org/cmake/help/latest/manual/cmake-generators.7.html#visual-studio-generators
 environment:
   matrix:
+    # Visual Studio 2008 Win32
+    - GENERATOR: Visual Studio 9 2008
+      PLATFORM: Win32
+      EXPAT_DLL: libexpatd.dll
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
+      PREPEND_TO_PATH: C:\Windows\Microsoft.NET\Framework\v3.5;
+
+    # Visual Studio 2008 Win32 XML_UNICODE_WCHAR_T
+    - GENERATOR: Visual Studio 9 2008
+      PLATFORM: Win32
+      CMAKE_ARGS: -DEXPAT_CHAR_TYPE=wchar_t
+      EXPAT_DLL: libexpatwd.dll
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
+      PREPEND_TO_PATH: C:\Windows\Microsoft.NET\Framework\v3.5;
+
     # Visual Studio 2010 Win32
     - GENERATOR: Visual Studio 10 2010
       PLATFORM: Win32
@@ -184,11 +199,11 @@ environment:
 before_build:
   - echo Running cmake...
   - cd c:\projects\libexpat
+  - set path=%PREPEND_TO_PATH%%path%
   - cmake -G"%GENERATOR%" -DCMAKE_BUILD_TYPE=%CONFIGURATION% -DEXPAT_WARNINGS_AS_ERRORS=ON %CMAKE_ARGS% expat
 
-build:
-  parallel: true                  # enable MSBuild parallel builds
-  project: expat.sln              # path to Visual Studio solution or project
+build_script:
+  - msbuild "c:\projects\libexpat\expat.sln" /m /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll"
 
 test_script:
   - cp %CONFIGURATION%\\%EXPAT_DLL% tests\\%CONFIGURATION%\\
