@@ -9,6 +9,8 @@ Release x.x.x xxx xxxxxxxxx xx xxxx
 
         Other changes:
             #396  Windows: Drop support for Visual Studio <=8.0/2005
+       #383 #392  Autotools: Use -Werror while configure tests the compiler
+                    for supported compile flags to avoid false positives
        #383 #393  Autotools: Improve handling of user (C|CPP|CXX|LD)FLAGS,
                     e.g. ensure that they have the last word over flags added
                     while running ./configure
