@@ -4,8 +4,8 @@ NOTE: We are looking for help with a few things:
 
 Release x.x.x xxx xxxxxxxxx xx xxxx
         Bug fixes:
-       #390 #395  Fix undefined behavior during parsing when compiled with
-                    -DXML_UNICODE that was introduced with Expat 2.0.1
+  #390 #395 #398  Fix undefined behavior during parsing caused by
+                    pointer arithmetic with NULL pointers
 
         Other changes:
             #396  Windows: Drop support for Visual Studio <=8.0/2005
@@ -31,6 +31,7 @@ Release x.x.x xxx xxxxxxxxx xx xxxx
 
         Special thanks to:
             asavah
+            Ben Wagner
             Jeffrey Walton
             Ma Lin
             Maciej Sroczyński

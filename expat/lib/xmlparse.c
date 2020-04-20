@@ -6506,7 +6506,7 @@ hashTableInit(HASH_TABLE *p, const XML_Memory_Handling_Suite *ms) {
 static void FASTCALL
 hashTableIterInit(HASH_TABLE_ITER *iter, const HASH_TABLE *table) {
   iter->p = table->v;
-  iter->end = iter->p + table->size;
+  iter->end = iter->p ? iter->p + table->size : NULL;
 }
 
 static NAMED *FASTCALL
