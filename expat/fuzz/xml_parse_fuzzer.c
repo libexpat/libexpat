@@ -53,6 +53,12 @@ LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
 
   XML_SetElementHandler(p, start, end);
   XML_Parse(p, (const XML_Char *)data, size, 0);
+  #ifdef A
+    int var;
+    if(var > 15){
+      printf("estou usando uma variavel sem inicializa-la");
+    }
+  #endif
   XML_Parse(p, (const XML_Char *)data, size, 1);
   XML_ParserFree(p);
   return 0;
