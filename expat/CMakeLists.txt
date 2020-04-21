@@ -322,7 +322,8 @@ endif()
 expat_install(TARGETS ${EXPAT_TARGET} EXPORT expat
                       RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
                       LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-                      ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
+                      ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+                      INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
 expat_install(FILES lib/expat.h lib/expat_external.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
