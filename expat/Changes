@@ -4,6 +4,9 @@ NOTE: We are looking for help with a few things:
 
 Release x.x.x xxx xxxxxxxxx xx xxxx
         Other changes:
+            #403  xmlwf: Document exit codes in xmlwf manpage and
+                    exit with code 3 (rather than code 1) for output errors
+                    when used with "-d DIRECTORY"
        #383 #393  Autotools: Improve handling of user (C|CPP|CXX|LD)FLAGS,
                     e.g. ensure that they have the last word over flags added
                     while running ./configure
@@ -25,6 +28,7 @@ Release x.x.x xxx xxxxxxxxx xx xxxx
         Special thanks to:
             asavah
             Jeffrey Walton
+            Joe Orton
             Ma Lin
             Maciej Sroczyński
             Mohammed Khajapasha
