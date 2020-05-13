@@ -9,6 +9,9 @@ Release x.x.x xxx xxxxxxxxx xx xxxx
 
         Other changes:
             #396  Windows: Drop support for Visual Studio <=8.0/2005
+            #403  xmlwf: Document exit codes in xmlwf manpage and
+                    exit with code 3 (rather than code 1) for output errors
+                    when used with "-d DIRECTORY"
        #383 #392  Autotools: Use -Werror while configure tests the compiler
                     for supported compile flags to avoid false positives
        #383 #393  Autotools: Improve handling of user (C|CPP|CXX|LD)FLAGS,
@@ -33,6 +36,7 @@ Release x.x.x xxx xxxxxxxxx xx xxxx
             asavah
             Ben Wagner
             Jeffrey Walton
+            Joe Orton
             Ma Lin
             Maciej Sroczyński
             Mohammed Khajapasha

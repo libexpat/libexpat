@@ -1057,7 +1057,7 @@ tmain(int argc, XML_Char **argv) {
       userData.fp = tfopen(outName, T("wb"));
       if (! userData.fp) {
         tperror(outName);
-        exit(1);
+        exit(3);
       }
       setvbuf(userData.fp, NULL, _IOFBF, 16384);
 #ifdef XML_UNICODE
