@@ -388,7 +388,7 @@ supports both.
 
   <refsect1>
   <title>EXIT STATUS</title>
-    <para>The following exit status codes are returned:
+    <para>For option <option>-v</option> or <option>-h</option>, <command>&dhpackage;</command> always exits with status code 0.  For other cases, the following exit status codes are returned:
     <variablelist>
       <varlistentry>
         <term><option>0</option></term>
@@ -403,6 +403,11 @@ supports both.
       <varlistentry>
         <term><option>2</option></term>
         <listitem><para>An input file was not well-formed or could not be parsed.</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>3</option></term>
+        <listitem><para>If using the <option>-d</option> option, an error occurred opening an output file.</para>
         </listitem>
       </varlistentry>
     </variablelist>
