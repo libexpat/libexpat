@@ -6,6 +6,7 @@ Release x.x.x xxx xxxxxxxxx xx xxxx
         Bug fixes:
   #390 #395 #398  Fix undefined behavior during parsing caused by
                     pointer arithmetic with NULL pointers
+            #404  Fix reading uninitialized variable during parsing
 
         Other changes:
             #396  Windows: Drop support for Visual Studio <=8.0/2005
@@ -41,6 +42,8 @@ Release x.x.x xxx xxxxxxxxx xx xxxx
             Maciej Sroczyński
             Mohammed Khajapasha
             Vadim Zeitlin
+                 and
+            Cppcheck 2.0 and the Cppcheck team
 
 Release 2.2.9 Wed September 25 2019
         Other changes:

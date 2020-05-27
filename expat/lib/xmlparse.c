@@ -3592,7 +3592,7 @@ doCdataSection(XML_Parser parser, const ENCODING *enc, const char **startPtr,
   *startPtr = NULL;
 
   for (;;) {
-    const char *next;
+    const char *next = s; /* in case of XML_TOK_NONE or XML_TOK_PARTIAL */
     int tok = XmlCdataSectionTok(enc, s, end, &next);
     *eventEndPP = next;
     switch (tok) {
@@ -3710,7 +3710,7 @@ ignoreSectionProcessor(XML_Parser parser, const char *start, const char *end,
 static enum XML_Error
 doIgnoreSection(XML_Parser parser, const ENCODING *enc, const char **startPtr,
                 const char *end, const char **nextPtr, XML_Bool haveMore) {
-  const char *next;
+  const char *next = *startPtr; /* in case of XML_TOK_NONE or XML_TOK_PARTIAL */
   int tok;
   const char *s = *startPtr;
   const char **eventPP;
