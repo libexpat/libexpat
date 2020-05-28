@@ -15,12 +15,13 @@ env:
     - CFLAGS='-g3 -pipe'
   matrix:
     - MODE=cmake-oos
-    - MODE=cppcheck
     - MODE=distcheck
     - MODE=qa-sh CC=clang CXX=clang++ LD=clang++ QA_SANITIZER=address
 
 matrix:
   include:
+    - os: osx
+      env: MODE=cppcheck
     - os: linux
       env: MODE=clang-format
     - os: linux
