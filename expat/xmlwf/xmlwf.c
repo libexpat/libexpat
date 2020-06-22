@@ -1054,7 +1054,7 @@ tmain(int argc, XML_Char **argv) {
       if (! outName) {
         tperror(T("Could not allocate memory"));
         exit(1);
-      }                                   
+      }
       tcscpy(outName, outputDir);
       tcscat(outName, delim);
       tcscat(outName, file);
