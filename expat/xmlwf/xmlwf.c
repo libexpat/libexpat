@@ -1051,6 +1051,10 @@ tmain(int argc, XML_Char **argv) {
       }
       outName = (XML_Char *)malloc((tcslen(outputDir) + tcslen(file) + 2)
                                    * sizeof(XML_Char));
+      if (! outName) {
+        tperror(T("Could not allocate memory"));
+        exit(1);
+      }                                   
       tcscpy(outName, outputDir);
       tcscat(outName, delim);
       tcscat(outName, file);
