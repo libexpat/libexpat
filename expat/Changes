@@ -7,6 +7,7 @@ Release x.x.x xxx xxxxxxxxx xx xxxx
   #390 #395 #398  Fix undefined behavior during parsing caused by
                     pointer arithmetic with NULL pointers
             #404  Fix reading uninitialized variable during parsing
+            #406  xmlwf: Add missing check for malloc NULL return
 
         Other changes:
             #396  Windows: Drop support for Visual Studio <=8.0/2005
@@ -38,6 +39,7 @@ Release x.x.x xxx xxxxxxxxx xx xxxx
             Ben Wagner
             Jeffrey Walton
             Joe Orton
+            Kleber Tarcísio
             Ma Lin
             Maciej Sroczyński
             Mohammed Khajapasha
