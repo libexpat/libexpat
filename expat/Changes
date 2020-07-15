@@ -26,7 +26,7 @@ Release x.x.x xxx xxxxxxxxx xx xxxx
             #360  CMake: Install pre-compiled shipped xmlwf.1 manpage in case
                     of -DEXPAT_BUILD_DOCS=OFF
        #375 #380  CMake: Fix use of Expat by means of add_subdirectory
-            #407  CMake: Keep expat target name constant at "expat"
+       #407 #408  CMake: Keep expat target name constant at "expat"
                     (i.e. refrain from using the target name to control
                     build artifact filenames)
             #385  CMake: Fix compilation with -DEXPAT_SHARED_LIBS=OFF for
