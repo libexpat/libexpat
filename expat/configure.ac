@@ -315,8 +315,8 @@ AC_SUBST([AM_CFLAGS])
 AC_SUBST([AM_CXXFLAGS])
 AC_SUBST([AM_LDFLAGS])
 
-dnl updating EXPAT_TARGET variable to effect the package name in expat.pc file (issue #361)
-AC_SUBST(EXPAT_TARGET, ["$PACKAGE_NAME"])
+dnl updating _EXPAT_OUTPUT_NAME variable to effect the package name in expat.pc file (issue #361)
+AC_SUBST(_EXPAT_OUTPUT_NAME, ["$PACKAGE_NAME"])
 
 AC_CONFIG_FILES([Makefile]
   [expat.pc]
