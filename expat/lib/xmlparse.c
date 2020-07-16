@@ -2176,7 +2176,7 @@ XML_GetInputContext(XML_Parser parser, int *offset, int *size) {
   (void)offset;
   (void)size;
 #endif /* defined XML_CONTEXT_BYTES */
-  return (char *)0;
+  return (const char *)0;
 }
 
 XML_Size XMLCALL
@@ -5191,8 +5191,8 @@ processInternalEntity(XML_Parser parser, ENTITY *entity, XML_Bool betweenDecl) {
   openEntity->betweenDecl = betweenDecl;
   openEntity->internalEventPtr = NULL;
   openEntity->internalEventEndPtr = NULL;
-  textStart = (char *)entity->textPtr;
-  textEnd = (char *)(entity->textPtr + entity->textLen);
+  textStart = (const char *)entity->textPtr;
+  textEnd = (const char *)(entity->textPtr + entity->textLen);
   /* Set a safe default value in case 'next' does not get set */
   next = textStart;
 
@@ -5234,8 +5234,8 @@ internalEntityProcessor(XML_Parser parser, const char *s, const char *end,
     return XML_ERROR_UNEXPECTED_STATE;
 
   entity = openEntity->entity;
-  textStart = ((char *)entity->textPtr) + entity->processed;
-  textEnd = (char *)(entity->textPtr + entity->textLen);
+  textStart = ((const char *)entity->textPtr) + entity->processed;
+  textEnd = (const char *)(entity->textPtr + entity->textLen);
   /* Set a safe default value in case 'next' does not get set */
   next = textStart;
 
@@ -5255,7 +5255,7 @@ internalEntityProcessor(XML_Parser parser, const char *s, const char *end,
     return result;
   else if (textEnd != next
            && parser->m_parsingStatus.parsing == XML_SUSPENDED) {
-    entity->processed = (int)(next - (char *)entity->textPtr);
+    entity->processed = (int)(next - (const char *)entity->textPtr);
     return result;
   } else {
     entity->open = XML_FALSE;
@@ -5450,8 +5450,8 @@ appendAttributeValue(XML_Parser parser, const ENCODING *enc, XML_Bool isCdata,
         const XML_Char *textEnd = entity->textPtr + entity->textLen;
         entity->open = XML_TRUE;
         result = appendAttributeValue(parser, parser->m_internalEncoding,
-                                      isCdata, (char *)entity->textPtr,
-                                      (char *)textEnd, pool);
+                                      isCdata, (const char *)entity->textPtr,
+                                      (const char *)textEnd, pool);
         entity->open = XML_FALSE;
         if (result)
           return result;
@@ -5550,8 +5550,8 @@ storeEntityValue(XML_Parser parser, const ENCODING *enc,
         } else {
           entity->open = XML_TRUE;
           result = storeEntityValue(
-              parser, parser->m_internalEncoding, (char *)entity->textPtr,
-              (char *)(entity->textPtr + entity->textLen));
+              parser, parser->m_internalEncoding, (const char *)entity->textPtr,
+              (const char *)(entity->textPtr + entity->textLen));
           entity->open = XML_FALSE;
           if (result)
             goto endEntityValue;
