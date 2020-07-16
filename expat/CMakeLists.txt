@@ -440,8 +440,9 @@ if(EXPAT_BUILD_FUZZERS)
             "This is likely in error - consider adding "
             "-DCMAKE_C_FLAGS='-fsanitize=<sanitizer>' and "
             "-DCMAKE_CXX_FLAGS='-fsanitize=<sanitizer>' and "
-            "-DCMAKE_STATIC_LINKER_FLAGS='-fsanitize=<sanitizer>' and "
-            "-DCMAKE_EXE_LINKER_FLAGS='-fsanitize=<sanitizer>' to your cmake "
+            "-DCMAKE_EXE_LINKER_FLAGS='-fsanitize=<sanitizer>' and "
+            "-DCMAKE_MODULE_LINKER_FLAGS='-fsanitize=<sanitizer>' and "
+            "-DCMAKE_SHARED_LINKER_FLAGS='-fsanitize=<sanitizer>' to your cmake "
             "execution.")
     endif()
 
