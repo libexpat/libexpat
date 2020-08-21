@@ -42,6 +42,11 @@ else()
         set(_EXPAT_BUILD_DOCS_DEFAULT OFF)
     endif()
 endif()
+if(MSVC)
+    set(_EXPAT_BUILD_PKGCONFIG_DEFAULT OFF)
+else()
+    set(_EXPAT_BUILD_PKGCONFIG_DEFAULT ON)
+endif()
 
 #
 # Configuration
@@ -52,6 +57,7 @@ option(EXPAT_BUILD_TESTS "build the tests for expat library" ON)
 option(EXPAT_SHARED_LIBS "build a shared expat library" ON)
 option(EXPAT_BUILD_DOCS "build man page for xmlwf" ${_EXPAT_BUILD_DOCS_DEFAULT})
 option(EXPAT_BUILD_FUZZERS "build fuzzers for the expat library" OFF)
+option(EXPAT_BUILD_PKGCONFIG "build pkg-config file" ${_EXPAT_BUILD_PKGCONFIG_DEFAULT})
 option(EXPAT_OSSFUZZ_BUILD "build fuzzers via ossfuzz for the expat library" OFF)
 if(UNIX OR _EXPAT_HELP)
     option(EXPAT_WITH_LIBBSD "utilize libbsd (for arc4random_buf)" OFF)
@@ -326,7 +332,7 @@ expat_install(FILES lib/expat.h lib/expat_external.h DESTINATION ${CMAKE_INSTALL
 #
 # pkg-config file
 #
-if(NOT MSVC)
+if(EXPAT_BUILD_PKGCONFIG)
     set(prefix ${CMAKE_INSTALL_PREFIX})
     set(exec_prefix "\${prefix}")
     set(libdir "\${exec_prefix}/${CMAKE_INSTALL_LIBDIR}")
@@ -624,6 +630,7 @@ message(STATUS "  Build examples ............. ${EXPAT_BUILD_EXAMPLES}")
 message(STATUS "  Build fuzzers .............. ${EXPAT_BUILD_FUZZERS}")
 message(STATUS "  Build tests ................ ${EXPAT_BUILD_TESTS}")
 message(STATUS "  Build tools (xmlwf) ........ ${EXPAT_BUILD_TOOLS}")
+message(STATUS "  Build pkg-config file ...... ${EXPAT_BUILD_PKGCONFIG}")
 message(STATUS "  Install files .............. ${EXPAT_ENABLE_INSTALL}")
 message(STATUS "")
 message(STATUS "  Features")

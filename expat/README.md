@@ -156,6 +156,9 @@ EXPAT_BUILD_EXAMPLES:BOOL=ON
 // build fuzzers for the expat library
 EXPAT_BUILD_FUZZERS:BOOL=OFF
 
+// build pkg-config file
+EXPAT_BUILD_PKGCONFIG:BOOL=ON
+
 // build the tests for expat library
 EXPAT_BUILD_TESTS:BOOL=ON
 
