@@ -11,6 +11,8 @@ Release x.x.x xxx xxxxxxxxx xx xxxx
 
         Other changes:
             #396  Windows: Drop support for Visual Studio <=8.0/2005
+            #409  Windows: Add missing file "Changes" to the installer
+                    to fix compilation with CMake from installed sources
             #403  xmlwf: Document exit codes in xmlwf manpage and
                     exit with code 3 (rather than code 1) for output errors
                     when used with "-d DIRECTORY"
