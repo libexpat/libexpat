@@ -109,10 +109,6 @@ macro(_expat_copy_bool_int source_ref dest_ref)
     endif()
 endmacro()
 
-if(EXPAT_LARGE_SIZE)
-    add_definitions(-DXML_LARGE_SIZE)
-endif()
-
 if(EXPAT_MIN_SIZE)
     add_definitions(-DXML_MIN_SIZE)
 endif()
@@ -148,10 +144,13 @@ else()
     message(SEND_ERROR "Option -DEXPAT_CHAR_TYPE=(char|ushort|wchar_t) cannot be \"${EXPAT_CHAR_TYPE}\".")
 endif()
 
-if(_EXPAT_UNICODE)
-    add_definitions(-DXML_UNICODE)              # for unsigned short
+if(WIN32)
     if(_EXPAT_UNICODE_WCHAR_T)
-        add_definitions(-DXML_UNICODE_WCHAR_T)  # for wchar_t
+        set(_POSTFIX_WIDE "w")
+    endif()
+else()
+    if(_EXPAT_UNICODE)
+        set(_POSTFIX_WIDE "w")
     endif()
 endif()
 
@@ -177,6 +176,8 @@ _expat_copy_bool_int(EXPAT_DTD              XML_DTD)
 _expat_copy_bool_int(EXPAT_LARGE_SIZE       XML_LARGE_SIZE)
 _expat_copy_bool_int(EXPAT_MIN_SIZE         XML_MIN_SIZE)
 _expat_copy_bool_int(EXPAT_NS               XML_NS)
+_expat_copy_bool_int(_EXPAT_UNICODE         XML_UNICODE)
+_expat_copy_bool_int(_EXPAT_UNICODE_WCHAR_T XML_UNICODE_WCHAR_T)
 if(NOT WIN32)
     _expat_copy_bool_int(EXPAT_DEV_URANDOM  XML_DEV_URANDOM)
 endif()
@@ -190,7 +191,9 @@ endmacro()
 
 configure_file(expat_config.h.cmake "${CMAKE_CURRENT_BINARY_DIR}/expat_config.h")
 add_definitions(-DHAVE_EXPAT_CONFIG_H)
-expat_install(FILES "${CMAKE_CURRENT_BINARY_DIR}/expat_config.h" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+expat_install(FILES "${CMAKE_CURRENT_BINARY_DIR}/expat_config.h"
+                    RENAME "expat${_POSTFIX_WIDE}_config.h"
+                    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
 
 set(EXTRA_COMPILE_FLAGS)
@@ -234,10 +237,6 @@ if(MSVC)
     add_definitions(-D_CRT_SECURE_NO_WARNINGS -wd4996)
 endif(MSVC)
 if(WIN32)
-    if(_EXPAT_UNICODE_WCHAR_T)
-        set(_POSTFIX_WIDE "w")
-    endif()
-
     if(MSVC AND NOT EXPAT_SHARED_LIBS)
         if(EXPAT_MSVC_STATIC_CRT)
             set(_POSTFIX_CRT "MT")
@@ -287,11 +286,7 @@ endif(EXPAT_SHARED_LIBS)
 if(WIN32 AND NOT MINGW)
     set(_EXPAT_OUTPUT_NAME libexpat)  # CMAKE_*_POSTFIX applies, see above
 else()
-    if(_EXPAT_UNICODE)
-        set(_EXPAT_OUTPUT_NAME expatw)
-    else()
-        set(_EXPAT_OUTPUT_NAME expat)
-    endif()
+    set(_EXPAT_OUTPUT_NAME expat${_POSTFIX_WIDE})
 endif()
 
 add_library(expat ${_SHARED} ${expat_SRCS})
@@ -337,8 +332,10 @@ if(EXPAT_BUILD_PKGCONFIG)
     set(exec_prefix "\${prefix}")
     set(libdir "\${exec_prefix}/${CMAKE_INSTALL_LIBDIR}")
     set(includedir "\${prefix}/${CMAKE_INSTALL_INCLUDEDIR}")
-    configure_file(expat.pc.in ${CMAKE_CURRENT_BINARY_DIR}/expat.pc @ONLY)
-    expat_install(FILES ${CMAKE_CURRENT_BINARY_DIR}/expat.pc DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
+    configure_file(expat.pc.in "${CMAKE_CURRENT_BINARY_DIR}/expat.pc" @ONLY)
+    expat_install(FILES "${CMAKE_CURRENT_BINARY_DIR}/expat.pc"
+                        RENAME "expat${_POSTFIX_WIDE}.pc"
+                        DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
 endif()
 
 #
@@ -559,13 +556,13 @@ expat_install(
         ${CMAKE_INSTALL_DOCDIR})
 
 #
-# CMake files for find_package(expat [..] CONFIG [..])
+# CMake files for find_package(expat [..] CONFIG [..] NAMES [expat|expatw])
 #
 configure_package_config_file(
         cmake/expat-config.cmake.in
         cmake/expat-config.cmake
     INSTALL_DESTINATION
-        ${CMAKE_INSTALL_LIBDIR}/cmake/expat-${PROJECT_VERSION}/
+        "${CMAKE_INSTALL_LIBDIR}/cmake/expat${_POSTFIX_WIDE}-${PROJECT_VERSION}/"
 )
 write_basic_package_version_file(
     cmake/expat-config-version.cmake
@@ -582,13 +579,13 @@ expat_install(
         ${CMAKE_CURRENT_BINARY_DIR}/cmake/expat-config.cmake
         ${CMAKE_CURRENT_BINARY_DIR}/cmake/expat-config-version.cmake
     DESTINATION
-        ${CMAKE_INSTALL_LIBDIR}/cmake/expat-${PROJECT_VERSION}/
+        "${CMAKE_INSTALL_LIBDIR}/cmake/expat${_POSTFIX_WIDE}-${PROJECT_VERSION}/"
 )
 expat_install(
     EXPORT
         expat
     DESTINATION
-        ${CMAKE_INSTALL_LIBDIR}/cmake/expat-${PROJECT_VERSION}/
+        "${CMAKE_INSTALL_LIBDIR}/cmake/expat${_POSTFIX_WIDE}-${PROJECT_VERSION}/"
     NAMESPACE
         expat::
 )

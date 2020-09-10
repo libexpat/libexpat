@@ -100,8 +100,17 @@
 /* Define to make parameter entity parsing functionality available. */
 #cmakedefine XML_DTD
 
+/* Define to use large integers for file/stream positions. */
+#cmakedefine XML_LARGE_SIZE
+
 /* Define to make XML Namespaces functionality available. */
 #cmakedefine XML_NS
+
+/* Define to make character type `ushort' (unsigned short, UTF-16). */
+#cmakedefine XML_UNICODE
+
+/* Define to make character type `wchar_t' (UTF-32). */
+#cmakedefine XML_UNICODE_WCHAR_T
 
 /* Define to __FUNCTION__ or "" if `__func__' does not conform to ANSI C. */
 #ifdef _MSC_VER
