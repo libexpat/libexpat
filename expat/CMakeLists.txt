@@ -317,7 +317,7 @@ if(NOT EXPAT_SHARED_LIBS AND WIN32)
     target_compile_definitions(expat PUBLIC -DXML_STATIC)
 endif()
 
-expat_install(TARGETS expat EXPORT expat
+expat_install(TARGETS expat EXPORT "expat${_POSTFIX_WIDE}"
                       RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
                       LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
                       ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
@@ -592,7 +592,7 @@ expat_install(
 )
 expat_install(
     EXPORT
-        expat
+        "expat${_POSTFIX_WIDE}"
     DESTINATION
         "${CMAKE_INSTALL_LIBDIR}/cmake/expat${_POSTFIX_WIDE}-${PROJECT_VERSION}/"
     NAMESPACE
