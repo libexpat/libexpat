@@ -576,8 +576,17 @@ export(
 )
 expat_install(
     FILES
-        ${CMAKE_CURRENT_BINARY_DIR}/cmake/expat-config.cmake
-        ${CMAKE_CURRENT_BINARY_DIR}/cmake/expat-config-version.cmake
+        "${CMAKE_CURRENT_BINARY_DIR}/cmake/expat-config.cmake"
+    RENAME
+        "expat${_POSTFIX_WIDE}-config.cmake"
+    DESTINATION
+        "${CMAKE_INSTALL_LIBDIR}/cmake/expat${_POSTFIX_WIDE}-${PROJECT_VERSION}/"
+)
+expat_install(
+    FILES
+        "${CMAKE_CURRENT_BINARY_DIR}/cmake/expat-config-version.cmake"
+    RENAME
+        "expat${_POSTFIX_WIDE}-config-version.cmake"
     DESTINATION
         "${CMAKE_INSTALL_LIBDIR}/cmake/expat${_POSTFIX_WIDE}-${PROJECT_VERSION}/"
 )
