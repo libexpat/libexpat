@@ -3,6 +3,10 @@
 
 cmake_minimum_required(VERSION 3.1.3)
 
+if(POLICY CMP0077)
+    cmake_policy(SET CMP0077 NEW)
+endif()
+
 project(expat
     VERSION
         2.2.9
