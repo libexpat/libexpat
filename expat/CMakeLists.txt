@@ -611,6 +611,60 @@ else()
 endif()
 string(TOUPPER "${CMAKE_BUILD_TYPE}" _EXPAT_BUILD_TYPE_UPPER)
 
+#
+# packaging   
+#
+include(InstallRequiredSystemLibraries)
+
+set(CPACK_GENERATOR TGZ ZIP)
+if(WIN32 AND NOT CYGWIN)
+  set(CPACK_GENERATOR NSIS ${CPACK_GENERATOR})
+endif(WIN32 AND NOT CYGWIN)
+if(APPLE)
+  set(CPACK_GENERATOR DragNDrop ${CPACK_GENERATOR})
+endif(APPLE)
+if (UNIX AND NOT APPLE AND NOT WIN32)
+  set(CPACK_GENERATOR DEB ${CPACK_GENERATOR})
+endif (UNIX AND NOT APPLE AND NOT WIN32)
+
+set(CPACK_SOURCE_PACKAGE_FILE_NAME ${PROJECT_NAME}-src-${PROJECT_VERSION})
+set(CPACK_SOURCE_GENERATOR TGZ ZIP)
+set(CPACK_PACKAGE_CONTACT https://github.com/libexpat/libexpat/issues) 
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY ${PROJECT_NAME})
+set(CPACK_PACKAGE_VENDOR "expat Development Team")
+set(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
+set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/COPYING")
+set(CPACK_PACKAGE_VERSION_MAJOR "${PROJECT_VERSION_MAJOR}")
+set(CPACK_PACKAGE_VERSION_MINOR "${PROJECT_VERSION_MINOR}")
+set(CPACK_PACKAGE_VERSION_PATCH "${PROJECT_VERSION_PATCH}")
+set(CPACK_SOURCE_IGNORE_FILES "${CMAKE_CURRENT_BINARY_DIR}/;/docs/html;/autom4te.cache;/build/*;/win32/;/.svn/;/.git/;~$;${CPACK_SOURCE_IGNORE_FILES}")
+
+if(WIN32 AND NOT UNIX)
+  set(CPACK_PACKAGE_INSTALL_DIRECTORY "${PROJECT_NAME}\\\\${PROJECT_VERSION}")
+  # There is a bug in NSI that does not handle full unix paths properly. Make
+  # sure there is at least one set of four (4) backlashes.
+  # set(CPACK_PACKAGE_ICON "${CMake_SOURCE_DIR}/Utilities/Release\\\\InstallIcon.bmp")
+  set(CPACK_NSIS_INSTALLED_ICON_NAME "bin\\\\${PROJECT_NAME}.exe")
+  set(CPACK_NSIS_DISPLAY_NAME "${CPACK_PACKAGE_INSTALL_DIRECTORY} ${PROJECT_NAME}")
+  set(CPACK_NSIS_HELP_LINK "https://libexpat.github.io/")
+  set(CPACK_NSIS_URL_INFO_ABOUT "https://libexpat.github.io/")
+  set(CPACK_NSIS_CONTACT ${CPACK_PACKAGE_CONTACT})
+  set(CPACK_NSIS_MODIFY_PATH ON)
+  set(CPACK_NSIS_MENU_LINKS "doc/html/index.html;Documentation")
+else(WIN32 AND NOT UNIX)
+  set(CPACK_PACKAGE_INSTALL_DIRECTORY "${PROJECT_NAME}/${PROJECT_VERSION}")
+  set(CPACK_STRIP_FILES "bin/${PROJECT_NAME}-gen")
+  set(CPACK_SOURCE_STRIP_FILES "")
+endif(WIN32 AND NOT UNIX)
+set(CPACK_PACKAGE_EXECUTABLES xmwf)
+include(CPack)
+
+set(ARCHIVE_NAME ${CMAKE_PROJECT_NAME}-src-${PROJECT_VERSION})
+add_custom_target(dist
+    COMMAND git archive --prefix=${ARCHIVE_NAME}/ HEAD
+        | bzip2 > ${CMAKE_BINARY_DIR}/${ARCHIVE_NAME}.tar.bz2
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+
 message(STATUS "===========================================================================")
 message(STATUS "")
 message(STATUS "Configuration")
