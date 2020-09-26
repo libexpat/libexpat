@@ -3,6 +3,34 @@
 
 cmake_minimum_required(VERSION 3.1.3)
 
+# This allows controlling documented build time switches
+# when Expat is pulled in using the add_subdirectory function, e.g.
+#
+#   set(EXPAT_BUILD_DOCS OFF)
+#   set(EXPAT_BUILD_TOOLS OFF)
+#   add_subdirectory(${expat_SOURCE_DIR}/expat ${expat_BINARY_DIR})
+#
+# would disable compilation of the xmlwf CLI and its man page.
+# Without activating behaviour NEW for policy CMP0077 here,
+# a user with -Wdev enabled would see warning
+#
+#   Policy CMP0077 is not set: option() honors normal variables.  Run "cmake
+#   --help-policy CMP0077" for policy details.  Use the cmake_policy command to
+#   set the policy and suppress this warning.
+#
+#   For compatibility with older versions of CMake, option is clearing the
+#   normal variable 'EXPAT_BUILD_DOCS'.
+#
+# and effectively not be able to adjust option EXPAT_BUILD_DOCS.
+#
+# For more details please see:
+# - https://cmake.org/cmake/help/latest/policy/CMP0077.html
+# - https://github.com/libexpat/libexpat/pull/419
+#
+if(POLICY CMP0077)
+    cmake_policy(SET CMP0077 NEW)
+endif()
+
 project(expat
     VERSION
         2.2.9

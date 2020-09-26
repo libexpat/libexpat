@@ -27,7 +27,7 @@ Release x.x.x xxx xxxxxxxxx xx xxxx
                     involving -DEXPAT_CHAR_TYPE=(ushort|wchar_t)
             #360  CMake: Install pre-compiled shipped xmlwf.1 manpage in case
                     of -DEXPAT_BUILD_DOCS=OFF
-       #375 #380  CMake: Fix use of Expat by means of add_subdirectory
+  #375 #380 #419  CMake: Fix use of Expat by means of add_subdirectory
        #407 #408  CMake: Keep expat target name constant at "expat"
                     (i.e. refrain from using the target name to control
                     build artifact filenames)
@@ -42,6 +42,7 @@ Release x.x.x xxx xxxxxxxxx xx xxxx
         Special thanks to:
             asavah
             Ben Wagner
+            Frank Landgraf
             Jeffrey Walton
             Joe Orton
             Kleber Tarcísio
