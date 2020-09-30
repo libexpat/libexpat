@@ -622,6 +622,25 @@ expat_install(
 )
 
 #
+# CPack
+#
+
+# This effectively disables target "package_source".
+# That is done due to CPack's unfortunate choice of an exclusion list
+# rather than inclusion list.  An exclusion list does not protect against
+# unwanted files ending up in the resulting archive in a way that's
+# safe to run from an Expat developer's machine.
+set(CPACK_SOURCE_GENERATOR '')
+
+if(WIN32)
+    set(CPACK_GENERATOR ZIP)
+else()
+    set(CPACK_GENERATOR TGZ)
+endif()
+
+include(CPack)
+
+#
 # Summary
 #
 if(EXPAT_CHAR_TYPE STREQUAL "char")
