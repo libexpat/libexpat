@@ -36,6 +36,8 @@ Release x.x.x xxx xxxxxxxxx xx xxxx
                   CMake: Expose man page compilation as target "xmlwf-manpage"
        #413 #414  CMake: Introduce option EXPAT_BUILD_PKGCONFIG
                     to control generation of pkg-config file "expat.pc"
+            #424  CMake: Add minimalistic support for building binary packages
+                    with CMake target "package"; based on CPack
             #354  Fix testsuite for -DEXPAT_DTD=OFF and -DEXPAT_NS=OFF, each
   #354 #355 #356  Address compiler warnings
 
