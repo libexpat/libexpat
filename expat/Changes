@@ -2,7 +2,7 @@ NOTE: We are looking for help with a few things:
       https://github.com/libexpat/libexpat/labels/help%20wanted
       If you can help, please get in touch.  Thanks!
 
-Release x.x.x xxx xxxxxxxxx xx xxxx
+Release 2.2.10 Sat October 3 2020
         Bug fixes:
   #390 #395 #398  Fix undefined behavior during parsing caused by
                     pointer arithmetic with NULL pointers
