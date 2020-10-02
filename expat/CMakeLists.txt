@@ -33,7 +33,7 @@ endif()
 
 project(expat
     VERSION
-        2.2.9
+        2.2.10
     LANGUAGES
         C
 )
