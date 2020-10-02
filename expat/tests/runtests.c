@@ -108,7 +108,7 @@ typedef unsigned __int64 uint64_t;
 
 static XML_Parser g_parser = NULL;
 
-void
+static void
 tcase_add_test__ifdef_xml_dtd(TCase *tc, tcase_test_function test) {
 #ifdef XML_DTD
   tcase_add_test(tc, test);
