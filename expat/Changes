@@ -46,6 +46,7 @@ Release x.x.x xxx xxxxxxxxx xx xxxx
     #354 #355 ..
        #356 #412  Address compiler warnings
        #368 #369  Address pngcheck warnings with doc/*.png images
+                  Version info bumped from 7:11:6 to 7:12:6
 
         Special thanks to:
             asavah
