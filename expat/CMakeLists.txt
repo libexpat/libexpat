@@ -228,14 +228,14 @@ endif()
 if(FLAG_VISIBILITY)
   add_definitions(-DXML_ENABLE_VISIBILITY=1)
   set(EXTRA_COMPILE_FLAGS "${EXTRA_COMPILE_FLAGS} -fvisibility=hidden")
-endif(FLAG_VISIBILITY)
+endif()
 if (EXPAT_WARNINGS_AS_ERRORS)
     if(MSVC)
         add_definitions(/WX)
-    else(MSVC)
+    else()
         set(EXTRA_COMPILE_FLAGS "${EXTRA_COMPILE_FLAGS} -Werror")
-    endif(MSVC)
-endif(EXPAT_WARNINGS_AS_ERRORS)
+    endif()
+endif()
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${EXTRA_COMPILE_FLAGS}")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${EXTRA_COMPILE_FLAGS}")
 
@@ -260,7 +260,7 @@ endif()
 include_directories(${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/lib)
 if(MSVC)
     add_definitions(-D_CRT_SECURE_NO_WARNINGS -wd4996)
-endif(MSVC)
+endif()
 if(WIN32)
     if(_EXPAT_UNICODE_WCHAR_T)
         set(_POSTFIX_WIDE "w")
@@ -288,7 +288,7 @@ if(WIN32)
 
         set(${postfix_var} "${_POSTFIX_WIDE}${_POSTFIX_DEBUG}${_POSTFIX_CRT}" CACHE STRING "Windows binary postfix, e.g. libexpat<postfix=[w][d][MD|MT]>.lib")
     endforeach()
-endif(WIN32)
+endif()
 
 #
 # C library
@@ -306,10 +306,10 @@ if(EXPAT_SHARED_LIBS)
     set(_SHARED SHARED)
     if(MSVC)
         set(expat_SRCS ${expat_SRCS} lib/libexpat.def)
-    endif(MSVC)
-else(EXPAT_SHARED_LIBS)
+    endif()
+else()
     set(_SHARED STATIC)
-endif(EXPAT_SHARED_LIBS)
+endif()
 
 # Avoid colliding with Expat.dll of Perl's XML::Parser::Expat
 if(WIN32 AND NOT MINGW)
@@ -337,7 +337,7 @@ if(NOT WIN32)
     set_property(TARGET expat PROPERTY VERSION ${LIBCURRENT_MINUS_AGE}.${LIBAGE}.${LIBREVISION})
     set_property(TARGET expat PROPERTY SOVERSION ${LIBCURRENT_MINUS_AGE})
     set_property(TARGET expat PROPERTY NO_SONAME ${NO_SONAME})
-endif(NOT WIN32)
+endif()
 
 target_include_directories(expat
     INTERFACE
@@ -416,7 +416,7 @@ if(EXPAT_BUILD_EXAMPLES)
     add_executable(outline examples/outline.c)
     set_property(TARGET outline PROPERTY RUNTIME_OUTPUT_DIRECTORY examples)
     target_link_libraries(outline expat)
-endif(EXPAT_BUILD_EXAMPLES)
+endif()
 
 #
 # C/C++ test runners
@@ -457,7 +457,7 @@ if(EXPAT_BUILD_TESTS)
     set_property(TARGET runtestspp PROPERTY RUNTIME_OUTPUT_DIRECTORY tests)
     target_link_libraries(runtestspp expat)
     expat_add_test(runtestspp $<TARGET_FILE:runtestspp>)
-endif(EXPAT_BUILD_TESTS)
+endif()
 
 if(EXPAT_BUILD_FUZZERS)
     if(NOT "${CMAKE_C_COMPILER_ID}" STREQUAL "Clang")
@@ -486,7 +486,7 @@ if(EXPAT_BUILD_FUZZERS)
             "LIB_FUZZING_ENGINE to be set. If you are seeing this "
             "warning, it points to a deeper problem in the ossfuzz "
             "build setup.")
-    endif(EXPAT_OSSFUZZ_BUILD AND NOT DEFINED ENV{LIB_FUZZING_ENGINE})
+    endif()
 
     set(encoding_types UTF-16 UTF-8 ISO-8859-1 US-ASCII UTF-16BE UTF-16LE)
     set(fuzz_targets xml_parse_fuzzer xml_parsebuffer_fuzzer)
@@ -494,7 +494,7 @@ if(EXPAT_BUILD_FUZZERS)
     add_library(fuzzpat STATIC ${expat_SRCS})
     if(NOT EXPAT_OSSFUZZ_BUILD)
         target_compile_options(fuzzpat PRIVATE -fsanitize=fuzzer-no-link)
-    endif(NOT EXPAT_OSSFUZZ_BUILD)
+    endif()
 
     foreach(fuzz_target ${fuzz_targets})
         foreach(encoding_type ${encoding_types})
@@ -505,14 +505,14 @@ if(EXPAT_BUILD_FUZZERS)
                 PRIVATE ENCODING_FOR_FUZZING=${encoding_type})
             if(NOT EXPAT_OSSFUZZ_BUILD)
                 target_compile_options(${target_name} PRIVATE -fsanitize=fuzzer-no-link)
-            endif(NOT EXPAT_OSSFUZZ_BUILD)
+            endif()
             # NOTE: Avoiding target_link_options here only because it needs CMake >=3.13
             if(EXPAT_OSSFUZZ_BUILD)
                 set_target_properties(${target_name} PROPERTIES LINK_FLAGS $ENV{LIB_FUZZING_ENGINE})
                 set_target_properties(${target_name} PROPERTIES LINKER_LANGUAGE "CXX")
             else()
                 set_target_properties(${target_name} PROPERTIES LINK_FLAGS -fsanitize=fuzzer)
-            endif(EXPAT_OSSFUZZ_BUILD)
+            endif()
             set_property(
                 TARGET ${target_name} PROPERTY RUNTIME_OUTPUT_DIRECTORY fuzz)
         endforeach()
@@ -523,8 +523,8 @@ else()
                 "Attempting to perform an ossfuzz build without turning on the fuzzer build. "
                 "This is likely in error - consider adding "
                 "-DEXPAT_BUILD_FUZZERS=ON to your cmake execution.")
-    endif(EXPAT_OSSFUZZ_BUILD)
-endif(EXPAT_BUILD_FUZZERS)
+    endif()
+endif()
 
 #
 # Custom target "run-xmltest"
