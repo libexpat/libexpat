@@ -48,11 +48,6 @@ include(CMakePackageConfigHelpers)
 include(GNUInstallDirs)
 
 #
-# Detect use by means of add_subdirectory
-#
-get_directory_property(_EXPAT_PARENT_DIRECTORY PARENT_DIRECTORY)
-
-#
 # Configuration defaults
 #
 if(WINCE)
