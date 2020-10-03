@@ -45,28 +45,10 @@
 #include <stddef.h> /* ptrdiff_t */
 #include <ctype.h>
 #include <limits.h>
-
-#if defined(_WIN32) && defined(_MSC_VER) && (_MSC_VER < 1600)
-/* For vs2003/7.1 up to vs2008/9.0; _MSC_VER 1600 is vs2010/10.0 */
-#  if defined(_WIN64)
-typedef __int64 intptr_t;
-#  else
-typedef __int32 intptr_t;
-#  endif
-typedef unsigned __int64 uint64_t;
-#else
-#  include <stdint.h> /* intptr_t uint64_t */
-#endif
+#include <stdint.h> /* intptr_t uint64_t */
 
 #if ! defined(__cplusplus)
-#  if defined(_MSC_VER) && (_MSC_VER <= 1700)
-/* for vs2012/11.0/1700 and earlier Visual Studio compilers */
-#    define bool int
-#    define false 0
-#    define true 1
-#  else
-#    include <stdbool.h>
-#  endif
+#  include <stdbool.h>
 #endif
 
 #include "expat.h"
