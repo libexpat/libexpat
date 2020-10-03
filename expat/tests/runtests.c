@@ -108,7 +108,7 @@ typedef unsigned __int64 uint64_t;
 
 static XML_Parser g_parser = NULL;
 
-void
+static void
 tcase_add_test__ifdef_xml_dtd(TCase *tc, tcase_test_function test) {
 #ifdef XML_DTD
   tcase_add_test(tc, test);
@@ -7365,7 +7365,7 @@ START_TEST(test_misc_version) {
     fail("Version mismatch");
 
 #if ! defined(XML_UNICODE) || defined(XML_UNICODE_WCHAR_T)
-  if (xcstrcmp(version_text, XCS("expat_2.2.9"))) /* needs bump on releases */
+  if (xcstrcmp(version_text, XCS("expat_2.2.10"))) /* needs bump on releases */
     fail("XML_*_VERSION in expat.h out of sync?\n");
 #else
   /* If we have XML_UNICODE defined but not XML_UNICODE_WCHAR_T
