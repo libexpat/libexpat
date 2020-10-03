@@ -16,7 +16,7 @@ structures for which you may register handlers.
 Expat supports the following compilers:
 - GNU GCC >=4.5
 - LLVM Clang >=3.5
-- Microsoft Visual Studio >=9.0/2008
+- Microsoft Visual Studio >=12.0/2013
 
 Windows users can use the
 [`expat_win32` package](https://sourceforge.net/projects/expat/files/expat_win32/),
