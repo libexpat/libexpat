@@ -203,8 +203,8 @@ _fail_unless(int condition, const char *file, int line, const char *msg) {
      it is.
   */
   UNUSED_P(condition);
-  UNUSED_P(file);
-  UNUSED_P(line);
+  _check_current_filename = file;
+  _check_current_lineno = line;
   if (msg != NULL) {
     const int has_newline = (msg[strlen(msg) - 1] == '\n');
     fprintf(stderr, "ERROR: %s%s", msg, has_newline ? "" : "\n");
