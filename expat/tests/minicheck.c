@@ -187,7 +187,7 @@ srunner_run_all(SRunner *runner, int verbosity) {
     }
     tc = tc->next_tcase;
   }
-  if (verbosity) {
+  if (verbosity != CK_SILENT) {
     int passed = runner->nchecks - runner->nfailures;
     double percentage = ((double)passed) / runner->nchecks;
     int display = (int)(percentage * 100);
