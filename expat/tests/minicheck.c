@@ -150,7 +150,7 @@ handle_success(int verbosity) {
 static void
 handle_failure(SRunner *runner, int verbosity, const char *phase_info) {
   runner->nfailures++;
-  if (verbosity >= CK_VERBOSE) {
+  if (verbosity != CK_SILENT) {
     printf("FAIL: %s (%s at %s:%d)\n", _check_current_function, phase_info,
            _check_current_filename, _check_current_lineno);
   }
