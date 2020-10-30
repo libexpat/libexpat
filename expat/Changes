@@ -5,6 +5,13 @@ NOTE: We are looking for help with a few things:
 Release x.x.xx xxx xxxxxxx xx xxxx
         Other changes:
             #422  Windows: Drop support for Visual Studio <=11.0/2012
+       #382 #428  testrunner: Make verbose mode (argument "-v") report
+                    about passed tests, and make default mode report about
+                    failures, as well.
+
+        Special thanks to:
+            Oleksandr Popovych
+
 
 Release 2.2.10 Sat October 3 2020
         Bug fixes:
