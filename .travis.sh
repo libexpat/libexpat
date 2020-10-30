@@ -56,7 +56,7 @@ elif [[ ${MODE} = cmake-oos ]]; then
     mkdir build
     cd build
     cmake ${CMAKE_ARGS} ..
-    make VERBOSE=1 all test
+    make VERBOSE=1 CTEST_OUTPUT_ON_FAILURE=1 all test
     make DESTDIR="${PWD}"/ROOT install
     find ROOT -printf "%P\n" | sort
 elif [[ ${MODE} = cppcheck ]]; then
