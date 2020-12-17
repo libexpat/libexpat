@@ -1761,7 +1761,7 @@ START_TEST(test_not_standalone_handler_accept) {
   XML_SetNotStandaloneHandler(g_parser, accept_not_standalone_handler);
   run_ext_character_check(text, &test_data, XCS(""));
 
-  /* Repeat wtihout the external entity handler */
+  /* Repeat without the external entity handler */
   XML_ParserReset(g_parser, NULL);
   XML_SetNotStandaloneHandler(g_parser, accept_not_standalone_handler);
   run_character_check(text, XCS(""));
