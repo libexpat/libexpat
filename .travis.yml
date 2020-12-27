@@ -4,7 +4,6 @@
 language: cpp
 os:
   - linux
-  - osx
 dist: trusty
 
 git:
@@ -14,14 +13,15 @@ env:
   global:
     - CFLAGS='-g3 -pipe'
   matrix:
+    # NOTE: There is a copy of this matrix at .github/workflows/macos.yml
+    #       for GitHub Actions.  While we have the matrix in two places,
+    #       please keep the two files in sync.  Thank you!
     - MODE=cmake-oos
     - MODE=distcheck
     - MODE=qa-sh CC=clang CXX=clang++ LD=clang++ QA_SANITIZER=address
 
 matrix:
   include:
-    - os: osx
-      env: MODE=cppcheck
     - os: linux
       env: MODE=clang-format
     - os: linux

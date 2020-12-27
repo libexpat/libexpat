@@ -1,0 +1,36 @@
+# Copyright (C) 2020 Sebastian Pipping <sebastian@pipping.org>
+# Licensed under the MIT license
+
+name: Run macOS Travis CI tasks
+
+on:
+- pull_request
+- push
+
+jobs:
+  checks:
+    name: Perform checks
+    strategy:
+      matrix:
+        include:
+          # NOTE: This is a quick port from .travis.yml in reaction to
+          #       Homebrew issues at Travis CI.  While we have the matrix
+          #       in two places, please keep the two files in sync.  Thank you!
+          - MODE: cmake-oos
+          - MODE: distcheck
+          - MODE: qa-sh
+            FLAT_ENV: CC=clang CXX=clang++ LD=clang++ QA_SANITIZER=address
+          - MODE: cppcheck
+    runs-on: macos-latest
+    steps:
+    - uses: actions/checkout@v2.3.4
+    - name: Install build dependencies
+      run: |
+        sudo rm /usr/local/bin/2to3  # so that "brew link" will work
+        brew bundle                  # acts upon file Brewfile
+    - name: Perform check "${{ matrix.MODE }}"
+      env:
+        MODE: ${{ matrix.MODE }}
+        TRAVIS_OS_NAME: osx
+      run: |
+        env ${{ matrix.FLAT_ENV }} ./.travis.sh
