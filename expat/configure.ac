@@ -105,9 +105,6 @@ EXPATCFG_COMPILER_SUPPORTS_VISIBILITY([
   AX_APPEND_FLAG([-fvisibility=hidden],       [AM_CFLAGS])
   AX_APPEND_FLAG([-DXML_ENABLE_VISIBILITY=1], [AM_CPPFLAGS])])
 
-dnl Checks for header files.
-AC_HEADER_STDC
-
 dnl Checks for typedefs, structures, and compiler characteristics.
 
 dnl We define BYTEORDER to 1234 when the platform is little endian; it

@@ -1,0 +1,30 @@
+# Copyright (C) 2020 Sebastian Pipping <sebastian@pipping.org>
+# Licensed under the MIT license
+
+name: Check expat_config.h.{in,cmake} for regressions
+
+on:
+- pull_request
+- push
+
+jobs:
+  checks:
+    name: Check expat_config.h.{in,cmake} for regressions
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2.3.4
+    - name: Check expat_config.h.{in,cmake} for regressions
+      run: |
+        set -v
+        # A non-empty diff indicates a change in the list of macros exported:
+        # - Removals would be trouble (because expat_config.h is installed).
+        # - Additions could use an extra check by a human
+        ( cd expat && ./buildconf.sh )  # generate expat_config.h.in
+        diff -u <(sort < ci_expat_config_h/expat_config_h_in__expected.txt) <(./ci_expat_config_h/list_exported_macros.sh expat/expat_config.h.in)
+        diff -u <(sort < ci_expat_config_h/expat_config_h_cmake__expected.txt) <(./ci_expat_config_h/list_exported_macros.sh expat/expat_config.h.cmake)
+
+        # Informational (and not an ideal state)
+        diff -u \
+            <(sort < ci_expat_config_h/expat_config_h_in__expected.txt) \
+            <(sort < ci_expat_config_h/expat_config_h_cmake__expected.txt) \
+            || true
