@@ -64,6 +64,7 @@ addons:
       # NOTE: Please note the version-specific ${PATH} extension for clang in .travis.sh
       - clang-11
       - clang-format-11
+      - llvm-11
       - cmake
       - cppcheck
       - docbook2x
