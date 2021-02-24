@@ -1883,6 +1883,12 @@ XML_ParseBuffer(XML_Parser parser, int len, int isFinal) {
     parser->m_errorCode = XML_ERROR_FINISHED;
     return XML_STATUS_ERROR;
   case XML_INITIALIZED:
+    /* Has someone called XML_GetBuffer successfully before? */
+    if (! parser->m_bufferPtr) {
+      parser->m_errorCode = XML_ERROR_NO_BUFFER;
+      return XML_STATUS_ERROR;
+    }
+
     if (parser->m_parentParser == NULL && ! startParsing(parser)) {
       parser->m_errorCode = XML_ERROR_NO_MEMORY;
       return XML_STATUS_ERROR;
@@ -2327,6 +2333,10 @@ XML_ErrorString(enum XML_Error code) {
   /* Added in 2.2.5. */
   case XML_ERROR_INVALID_ARGUMENT: /* Constant added in 2.2.1, already */
     return XML_L("invalid argument");
+    /* Added in 2.2.11. */
+  case XML_ERROR_NO_BUFFER:
+    return XML_L(
+        "a successful prior call to function XML_GetBuffer is required");
   }
   return NULL;
 }
