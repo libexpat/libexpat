@@ -3,6 +3,14 @@ NOTE: We are looking for help with a few things:
       If you can help, please get in touch.  Thanks!
 
 Release x.x.xx xxx xxxxxxx xx xxxx
+        Bug fixes:
+            #438  When calling XML_ParseBuffer without a prior successful call to
+                  XML_GetBuffer as a user, no longer trigger undefined behavior
+                  (by adding an integer to a NULL pointer) but rather return
+                  XML_STATUS_ERROR and set the error code to (new) code
+                  XML_ERROR_NO_BUFFER. Found by UBSan (UndefinedBehaviorSanitizer)
+                  of Clang 11 (but not Clang 9).
+
         Other changes:
             #422  Windows: Drop support for Visual Studio <=11.0/2012
        #382 #428  testrunner: Make verbose mode (argument "-v") report
@@ -11,6 +19,8 @@ Release x.x.xx xxx xxxxxxx xx xxxx
 
         Special thanks to:
             Oleksandr Popovych
+                 and
+            Clang 11 UBSan and the Clang team
 
 
 Release 2.2.10 Sat October 3 2020

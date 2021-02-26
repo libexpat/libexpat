@@ -9833,6 +9833,15 @@ START_TEST(test_nsalloc_parse_buffer) {
 
   /* Try a parse before the start of the world */
   /* (Exercises new code path) */
+  if (XML_ParseBuffer(g_parser, 0, XML_FALSE) != XML_STATUS_ERROR)
+    fail("Pre-init XML_ParseBuffer not faulted");
+  if (XML_GetErrorCode(g_parser) != XML_ERROR_NO_BUFFER)
+    fail("Pre-init XML_ParseBuffer faulted for wrong reason");
+
+  buffer = XML_GetBuffer(g_parser, 1 /* any small number greater than 0 */);
+  if (buffer == NULL)
+    fail("Could not acquire parse buffer");
+
   allocation_count = 0;
   if (XML_ParseBuffer(g_parser, 0, XML_FALSE) != XML_STATUS_ERROR)
     fail("Pre-init XML_ParseBuffer not faulted");
