@@ -34,15 +34,19 @@ set -o pipefail
 
 clang-format --version
 
-expand --tabs=2 --initial lib/siphash.h | sponge lib/siphash.h
-
-find \
+for filename in $(find \
         -name '*.[ch]' \
         -o -name '*.cpp' \
         -o -name '*.cxx' \
         -o -name '*.h.cmake' \
-    | sort \
-    | xargs clang-format -i -style=file -verbose
+        | sort); do
+    # We're expanding tabs here because some versions of clang-format
+    # seem to leave leading tabs untouched despite our "UseTab: Never"
+    # in file .clang-format.  The "odd" number is to increase the chance of
+    # a visual difference.
+    expand --tabs=5 --initial "${filename}" | sponge "${filename}"
+    clang-format -i -style=file -verbose "${filename}"
+done
 
 sed \
         -e 's, @$,@,' \
