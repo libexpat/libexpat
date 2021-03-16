@@ -335,9 +335,9 @@ if(EXPAT_WITH_LIBBSD)
     target_link_libraries(expat ${LIB_BSD})
 endif()
 
-set(LIBCURRENT 7)    # sync
-set(LIBREVISION 12)  # with
-set(LIBAGE 6)        # configure.ac!
+set(LIBCURRENT 8)   # sync
+set(LIBREVISION 0)  # with
+set(LIBAGE 7)       # configure.ac!
 math(EXPR LIBCURRENT_MINUS_AGE "${LIBCURRENT} - ${LIBAGE}")
 
 set_property(TARGET expat PROPERTY OUTPUT_NAME "${_EXPAT_OUTPUT_NAME}")
