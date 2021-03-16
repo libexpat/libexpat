@@ -25,7 +25,6 @@ Release x.x.xx xxx xxxxxxx xx xxxx
                  and
             Clang 11 UBSan and the Clang team
 
-
 Release 2.2.10 Sat October 3 2020
         Bug fixes:
   #390 #395 #398  Fix undefined behavior during parsing caused by
