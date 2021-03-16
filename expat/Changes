@@ -16,8 +16,11 @@ Release x.x.xx xxx xxxxxxx xx xxxx
        #382 #428  testrunner: Make verbose mode (argument "-v") report
                     about passed tests, and make default mode report about
                     failures, as well.
+            #442  CMake: Call "enable_language(CXX)" prior to tinkering
+                    with CMAKE_CXX_* variables
 
         Special thanks to:
+            Alexander Richardson
             Oleksandr Popovych
                  and
             Clang 11 UBSan and the Clang team
