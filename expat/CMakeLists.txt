@@ -112,6 +112,11 @@ if(MSVC OR _EXPAT_HELP)
     set(EXPAT_MSVC_STATIC_CRT OFF CACHE BOOL "Use /MT flag (static CRT) when compiling in MSVC")
 endif()
 
+if(EXPAT_BUILD_TESTS)
+    # We have to call enable_language() before modifying any CMAKE_CXX_* variables
+    enable_language(CXX)
+endif()
+
 #
 # Environment checks
 #
@@ -426,7 +431,6 @@ endif()
 #
 if(EXPAT_BUILD_TESTS)
     ## these are unittests that can be run on any platform
-    enable_language(CXX)
     enable_testing()
 
     set(test_SRCS
