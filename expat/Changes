@@ -12,6 +12,9 @@ Release x.x.xx xxx xxxxxxx xx xxxx
                   of Clang 11 (but not Clang 9).
 
         Other changes:
+            #439  xmlwf: Add argument -k to allow continuing after
+                    non-fatal errors
+            #439  xmlwf: Add section about exit status to the -h help output
             #422  Windows: Drop support for Visual Studio <=11.0/2012
        #382 #428  testrunner: Make verbose mode (argument "-v") report
                     about passed tests, and make default mode report about
@@ -19,8 +22,9 @@ Release x.x.xx xxx xxxxxxx xx xxxx
 
         Special thanks to:
             Oleksandr Popovych
+            Tim Bray
                  and
-            Clang 11 UBSan and the Clang team
+            Clang LeakSan, Clang 11 UBSan and the Clang team
 
 
 Release 2.2.10 Sat October 3 2020
