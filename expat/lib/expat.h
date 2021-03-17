@@ -515,7 +515,7 @@ typedef struct {
    Otherwise it must return XML_STATUS_ERROR.
 
    If info does not describe a suitable encoding, then the parser will
-   return an XML_UNKNOWN_ENCODING error.
+   return an XML_ERROR_UNKNOWN_ENCODING error.
 */
 typedef int(XMLCALL *XML_UnknownEncodingHandler)(void *encodingHandlerData,
                                                  const XML_Char *name,
