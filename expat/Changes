@@ -5,11 +5,11 @@ NOTE: We are looking for help with a few things:
 Release x.x.xx xxx xxxxxxx xx xxxx
         Bug fixes:
             #438  When calling XML_ParseBuffer without a prior successful call to
-                  XML_GetBuffer as a user, no longer trigger undefined behavior
-                  (by adding an integer to a NULL pointer) but rather return
-                  XML_STATUS_ERROR and set the error code to (new) code
-                  XML_ERROR_NO_BUFFER. Found by UBSan (UndefinedBehaviorSanitizer)
-                  of Clang 11 (but not Clang 9).
+                    XML_GetBuffer as a user, no longer trigger undefined behavior
+                    (by adding an integer to a NULL pointer) but rather return
+                    XML_STATUS_ERROR and set the error code to (new) code
+                    XML_ERROR_NO_BUFFER. Found by UBSan (UndefinedBehaviorSanitizer)
+                    of Clang 11 (but not Clang 9).
 
         Other changes:
             #439  xmlwf: Add argument -k to allow continuing after
