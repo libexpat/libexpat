@@ -10,6 +10,11 @@ Release x.x.xx xxx xxxxxxx xx xxxx
                     XML_STATUS_ERROR and set the error code to (new) code
                     XML_ERROR_NO_BUFFER. Found by UBSan (UndefinedBehaviorSanitizer)
                     of Clang 11 (but not Clang 9).
+            #444  xmlwf: Exit status 2 was used for both:
+                    - invalid command-line arguments and
+                    - malformed input files.
+                    The case of invalid command-line arguments now
+                    has its own exit status 4, resolving the ambiguity.
 
         Other changes:
             #439  xmlwf: Add argument -k to allow continuing after

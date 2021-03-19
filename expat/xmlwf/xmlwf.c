@@ -892,8 +892,9 @@ usage(const XML_Char *prog, int rc) {
       T("exit status:\n")
       T("  0             the input files are well-formed and the output (if requested) was written successfully\n")
       T("  1             could not allocate data structures, signals a serious problem with execution environment\n")
-      T("  2             command-line argument error, or one or more input files were not well-formed\n")
+      T("  2             one or more input files were not well-formed\n")
       T("  3             could not create an output file\n")
+      T("  4             command-line argument error\n")
       T("\n")
       T("xmlwf of libexpat is software libre, licensed under the MIT license.\n")
       T("Please report bugs at https://github.com/libexpat/libexpat/issues.  Thank you!\n")
@@ -985,7 +986,7 @@ tmain(int argc, XML_Char **argv) {
     case T('d'):
       if (argv[i][j + 1] == T('\0')) {
         if (++i == argc)
-          usage(argv[0], 2);
+          usage(argv[0], 4);
         outputDir = argv[i];
       } else
         outputDir = argv[i] + j + 1;
@@ -995,7 +996,7 @@ tmain(int argc, XML_Char **argv) {
     case T('e'):
       if (argv[i][j + 1] == T('\0')) {
         if (++i == argc)
-          usage(argv[0], 2);
+          usage(argv[0], 4);
         encoding = argv[i];
       } else
         encoding = argv[i] + j + 1;
@@ -1020,7 +1021,7 @@ tmain(int argc, XML_Char **argv) {
       }
       /* fall through */
     default:
-      usage(argv[0], 2);
+      usage(argv[0], 4);
     }
   }
   if (i == argc) {

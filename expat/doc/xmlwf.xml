@@ -431,6 +431,11 @@ supports both.
         <listitem><para>If using the <option>-d</option> option, an error occurred opening an output file.</para>
         </listitem>
       </varlistentry>
+      <varlistentry>
+        <term><option>4</option></term>
+        <listitem><para>There was a command-line argument error in how <command>&dhpackage;</command> was invoked.</para>
+        </listitem>
+      </varlistentry>
     </variablelist>
 	</para>
   </refsect1>
