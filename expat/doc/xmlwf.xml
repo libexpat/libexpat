@@ -423,7 +423,7 @@ supports both.
       </varlistentry>
       <varlistentry>
         <term><option>2</option></term>
-        <listitem><para>An input file was not well-formed or could not be parsed.</para>
+        <listitem><para>One or more input files were not well-formed or could not be parsed.</para>
         </listitem>
       </varlistentry>
       <varlistentry>
