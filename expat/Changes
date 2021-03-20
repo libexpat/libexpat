@@ -15,7 +15,7 @@ Release x.x.xx xxx xxxxxxx xx xxxx
             #439  xmlwf: Add argument -k to allow continuing after
                     non-fatal errors
             #439  xmlwf: Add section about exit status to the -h help output
-            #422  Windows: Drop support for Visual Studio <=11.0/2012
+       #422 #447  Windows: Drop support for Visual Studio <=14.0/2015
        #382 #428  testrunner: Make verbose mode (argument "-v") report
                     about passed tests, and make default mode report about
                     failures, as well.
