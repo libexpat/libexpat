@@ -423,12 +423,17 @@ supports both.
       </varlistentry>
       <varlistentry>
         <term><option>2</option></term>
-        <listitem><para>An input file was not well-formed or could not be parsed.</para>
+        <listitem><para>One or more input files were not well-formed or could not be parsed.</para>
         </listitem>
       </varlistentry>
       <varlistentry>
         <term><option>3</option></term>
         <listitem><para>If using the <option>-d</option> option, an error occurred opening an output file.</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>4</option></term>
+        <listitem><para>There was a command-line argument error in how <command>&dhpackage;</command> was invoked.</para>
         </listitem>
       </varlistentry>
     </variablelist>
