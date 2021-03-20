@@ -130,10 +130,10 @@ if(EXPAT_WITH_LIBBSD)
 endif()
 
 if(MSVC)
-    # Minimum supported MSVC version is 1800 = Visual Studio 12.0/2013
+    # Minimum supported MSVC version is 1910 = Visual Studio 15.0/2017
     # See also https://cmake.org/cmake/help/latest/variable/MSVC_VERSION.html
-    if(MSVC_VERSION VERSION_LESS 1800)
-        message(SEND_ERROR "MSVC_VERSION ${MSVC_VERSION} is not a supported Visual Studio compiler version. Please use Visual Studio 2013 or any later version.")
+    if(MSVC_VERSION VERSION_LESS 1910)
+        message(SEND_ERROR "MSVC_VERSION ${MSVC_VERSION} is not a supported Visual Studio compiler version. Please use Visual Studio 15.0/2017 or any later version.")
     endif()
 endif()
 
