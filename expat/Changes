@@ -20,7 +20,9 @@ Release x.x.xx xxx xxxxxxx xx xxxx
             #439  xmlwf: Add argument -k to allow continuing after
                     non-fatal errors
             #439  xmlwf: Add section about exit status to the -h help output
-       #422 #447  Windows: Drop support for Visual Studio <=14.0/2015
+  #422 #426 #447  Windows: Drop support for Visual Studio <=14.0/2015
+            #434  Windows: CMake: Detect unsupported Visual Studio at
+                    configure time (rather than at compile time)
        #382 #428  testrunner: Make verbose mode (argument "-v") report
                     about passed tests, and make default mode report about
                     failures, as well.
@@ -30,14 +32,20 @@ Release x.x.xx xxx xxxxxxx xx xxxx
                     so that users with "find_package(expat [..] CONFIG [..])"
                     are served on distributions that are *not* using the CMake
                     build system inside for libexpat packaging
+       #436 #437  Autotools: Drop obsolescent macro AC_HEADER_STDC
        #450 #452  Autotools: Resolve use of obsolete macro AC_CONFIG_HEADER
-                  Version info bumped from 7:12:6 to 8:0:7
+            #441  Address compiler warnings
+            #443  Version info bumped from 7:12:6 to 8:0:7
                     due to addition of error code XML_ERROR_NO_BUFFER
                     (see https://verbump.de/ for what these numbers do)
+
+        Infrastructure:
+       #435 #446  Replace Travis CI by GitHub Actions
 
         Special thanks to:
             Alexander Richardson
             Oleksandr Popovych
+            Thomas Beutlich
             Tim Bray
                  and
             Clang LeakSan, Clang 11 UBSan and the Clang team
@@ -86,7 +94,7 @@ Release 2.2.10 Sat October 3 2020
     #354 #355 ..
        #356 #412  Address compiler warnings
        #368 #369  Address pngcheck warnings with doc/*.png images
-                  Version info bumped from 7:11:6 to 7:12:6
+            #425  Version info bumped from 7:11:6 to 7:12:6
 
         Special thanks to:
             asavah
