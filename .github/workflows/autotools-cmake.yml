@@ -1,0 +1,55 @@
+# Copyright (C) 2021 Sebastian Pipping <sebastian@pipping.org>
+# Licensed under the MIT license
+
+name: Ensure that Autotools install identical CMake files
+
+on:
+- pull_request
+- push
+
+jobs:
+  checks:
+    name: Ensure that Autotools install identical CMake files
+    runs-on: ubuntu-20.04
+    steps:
+    - uses: actions/checkout@v2.3.4
+
+    - name: Install build dependencies
+      run: |-
+        sudo apt-get install --yes --no-install-recommends -V \
+            cmake \
+            docbook2x \
+            lzip
+
+    - name: Check for identical CMake files from both build system
+      run: |
+        set -x
+        pushd expat
+
+        ./buildconf.sh
+        ./configure
+        make dist
+        tar xf expat-*.tar.gz
+        pushd expat-*/
+
+        mkdir build_autotools
+        pushd build_autotools
+          ../configure --libdir='${exec_prefix}/lib123'
+          make install DESTDIR="${PWD}"/ROOT
+        popd
+
+        mkdir build_cmake
+        pushd build_cmake
+          cmake -DCMAKE_INSTALL_LIBDIR=lib123 ..
+          make install DESTDIR="${PWD}"/ROOT
+        popd
+
+        diff \
+            --recursive \
+            --unified \
+            --exclude=xmlwf \
+            --exclude=libexpat.a \
+            --exclude=libexpat.la \
+            --exclude='*.so*' \
+            --exclude=expat_config.h \
+            build_{autotools,cmake}/ROOT
