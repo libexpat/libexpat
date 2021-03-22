@@ -29,8 +29,8 @@ jobs:
         ./buildconf.sh
         ./configure
         make dist
-        tar xf expat-*.tar.gz
-        pushd expat-*/
+        tar xf expat-*.*.*.tar.gz
+        pushd expat-*.*.*/
 
         mkdir build_autotools
         pushd build_autotools
