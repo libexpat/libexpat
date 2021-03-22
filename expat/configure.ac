@@ -27,7 +27,7 @@ m4_define([expat_version],
   m4_ifdef([__gnu__],
            [esyscmd(conftools/get-version.sh lib/expat.h)],
            [2.2.x]))
-AC_INIT([expat],[expat_version],[expat-bugs@libexpat.org])
+AC_INIT([expat], expat_version, [expat-bugs@libexpat.org])
 m4_undefine([expat_version])
 
 AC_CONFIG_SRCDIR([Makefile.in])

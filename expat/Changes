@@ -30,7 +30,7 @@ Release x.x.xx xxx xxxxxxx xx xxxx
                     so that users with "find_package(expat [..] CONFIG [..])"
                     are served on distributions that are *not* using the CMake
                     build system inside for libexpat packaging
-            #450  Autotools: Resolve use of obsolete macro AC_CONFIG_HEADER
+       #450 #452  Autotools: Resolve use of obsolete macro AC_CONFIG_HEADER
                   Version info bumped from 7:12:6 to 8:0:7
                     due to addition of error code XML_ERROR_NO_BUFFER
                     (see https://verbump.de/ for what these numbers do)
