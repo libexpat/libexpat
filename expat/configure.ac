@@ -11,11 +11,11 @@ dnl   in the file COPYING that comes with this distribution.
 dnl
 
 dnl Ensure that Expat is configured with autoconf 2.69 or newer.
-AC_PREREQ(2.69)
+AC_PREREQ([2.69])
 
 dnl Get the version number of Expat, using m4's esyscmd() command to run
 dnl the command at m4-generation time. This allows us to create an m4
-dnl symbol holding the correct version number. AC_INIT() requires the
+dnl symbol holding the correct version number. AC_INIT requires the
 dnl version number at m4-time, rather than when ./configure is run, so
 dnl all this must happen as part of m4, not as part of the shell code
 dnl contained in ./configure.
@@ -27,7 +27,7 @@ m4_define([expat_version],
   m4_ifdef([__gnu__],
            [esyscmd(conftools/get-version.sh lib/expat.h)],
            [2.2.x]))
-AC_INIT(expat, expat_version, expat-bugs@libexpat.org)
+AC_INIT([expat],[expat_version],[expat-bugs@libexpat.org])
 m4_undefine([expat_version])
 
 AC_CONFIG_SRCDIR([Makefile.in])
@@ -53,7 +53,7 @@ LIBREVISION=0  # with
 LIBAGE=7       # CMakeLists.txt!
 
 AX_APPEND_FLAG([-DHAVE_EXPAT_CONFIG_H], [AM_CPPFLAGS])
-AC_CONFIG_HEADER([expat_config.h])
+AC_CONFIG_HEADERS([expat_config.h])
 
 AM_PROG_AR
 AC_PROG_INSTALL
