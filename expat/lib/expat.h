@@ -116,7 +116,7 @@ enum XML_Error {
   XML_ERROR_RESERVED_NAMESPACE_URI,
   /* Added in 2.2.1. */
   XML_ERROR_INVALID_ARGUMENT,
-  /* Added in 2.2.11. */
+  /* Added in 2.3.0. */
   XML_ERROR_NO_BUFFER
 };
 

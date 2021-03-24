@@ -2333,7 +2333,7 @@ XML_ErrorString(enum XML_Error code) {
   /* Added in 2.2.5. */
   case XML_ERROR_INVALID_ARGUMENT: /* Constant added in 2.2.1, already */
     return XML_L("invalid argument");
-    /* Added in 2.2.11. */
+    /* Added in 2.3.0. */
   case XML_ERROR_NO_BUFFER:
     return XML_L(
         "a successful prior call to function XML_GetBuffer is required");
