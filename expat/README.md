@@ -196,7 +196,7 @@ distribution.
 
 ### b) Building with CMake
 
-The CMake build system is still *experimental* and will replace the primary
+The CMake build system is still *experimental* and may replace the primary
 build system based on GNU Autotools at some point when it is ready.
 
 
