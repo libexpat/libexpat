@@ -14,6 +14,7 @@ document being parsed.  A start tag is an example of the kind of
 structures for which you may register handlers.
 
 Expat supports the following compilers:
+
 - GNU GCC >=4.5
 - LLVM Clang >=3.5
 - Microsoft Visual Studio >=15.0/2017 (rolling `${today} minus 5 years`)
