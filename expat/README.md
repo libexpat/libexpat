@@ -32,6 +32,59 @@ distributed with this package.
 This license is the same as the MIT/X Consortium license.
 
 
+## Using libexpat in your CMake-Based Project
+
+There are two ways of using libexpat with CMake:
+
+### a) Module Mode
+
+This approach leverages CMake's own [module `FindEXPAT`](https://cmake.org/cmake/help/latest/module/FindEXPAT.html).
+
+Notice the uppercase `EXPAT` in the following example:
+
+```cmake
+cmake_minimum_required(VERSION 3.0)
+
+project(hello VERSION 1.0.0)
+
+find_package(EXPAT 2.2.8 MODULE REQUIRED)
+
+add_executable(hello
+    hello.c
+)
+
+if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.10")
+    target_link_libraries(hello PUBLIC EXPAT::EXPAT)
+else()
+    target_include_directories(hello PRIVATE ${EXPAT_INCLUDE_DIRS})
+    target_link_libraries(hello PUBLIC ${EXPAT_LIBRARIES})
+endif()
+```
+
+### b) Config Mode
+
+This approach requires files from
+libexpat >=2.2.8 where packaging uses the CMake build system
+or
+libexpat >=2.3.0 where packaging uses the GNU Autotools build system.
+
+Notice the lowercase `expat` in the following example:
+
+```cmake
+cmake_minimum_required(VERSION 3.0)
+
+project(hello VERSION 1.0.0)
+
+find_package(expat 2.2.8 CONFIG REQUIRED char dtd ns)
+
+add_executable(hello
+    hello.c
+)
+
+target_link_libraries(hello PUBLIC expat::expat)
+```
+
+
 ## Buildung from a Git Clone
 
 If you are building Expat from a check-out from the
