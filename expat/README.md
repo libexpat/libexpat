@@ -31,6 +31,9 @@ contained in the file
 distributed with this package.
 This license is the same as the MIT/X Consortium license.
 
+
+## Buildung from a Git Clone
+
 If you are building Expat from a check-out from the
 [Git repository](https://github.com/libexpat/libexpat/),
 you need to run a script that generates the configure script using the
@@ -43,6 +46,11 @@ autoconf 2.58 or newer. Run the script like this:
 
 Once this has been done, follow the same instructions as for building
 from a source distribution.
+
+
+## Buildung from a Source Distribution
+
+### a) Building with the configure script (i.e. GNU Autotools)
 
 To build Expat from a source distribution, you first run the
 configuration shell script in the top level distribution directory:
@@ -133,8 +141,14 @@ A reference manual is available in the file `doc/reference.html` in this
 distribution.
 
 
+### b) Building with CMake
+
 The CMake build system is still *experimental* and will replace the primary
 build system based on GNU Autotools at some point when it is ready.
+
+
+#### Available Options
+
 For an idea of the available (non-advanced) options for building with CMake:
 
 ```console
