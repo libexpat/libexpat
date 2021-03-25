@@ -116,7 +116,7 @@ enum XML_Error {
   XML_ERROR_RESERVED_NAMESPACE_URI,
   /* Added in 2.2.1. */
   XML_ERROR_INVALID_ARGUMENT,
-  /* Added in 2.2.11. */
+  /* Added in 2.3.0. */
   XML_ERROR_NO_BUFFER
 };
 
@@ -1016,8 +1016,8 @@ XML_GetFeatureList(void);
    See http://semver.org.
 */
 #define XML_MAJOR_VERSION 2
-#define XML_MINOR_VERSION 2
-#define XML_MICRO_VERSION 10
+#define XML_MINOR_VERSION 3
+#define XML_MICRO_VERSION 0
 
 #ifdef __cplusplus
 }

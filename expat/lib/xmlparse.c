@@ -1,4 +1,4 @@
-/* 5cd169f2942b85c05e0b1b96f9990f91ac3d07e470ad7ce906ac8590c8ed4f35 (2.2.10+)
+/* d667b5f8e56e24fdfaf5e38596d419d924a9fadceb987d81d5613ecb7ca51b0e (2.3.0+)
                             __  __            _
                          ___\ \/ /_ __   __ _| |_
                         / _ \\  /| '_ \ / _` | __|
@@ -2333,7 +2333,7 @@ XML_ErrorString(enum XML_Error code) {
   /* Added in 2.2.5. */
   case XML_ERROR_INVALID_ARGUMENT: /* Constant added in 2.2.1, already */
     return XML_L("invalid argument");
-    /* Added in 2.2.11. */
+    /* Added in 2.3.0. */
   case XML_ERROR_NO_BUFFER:
     return XML_L(
         "a successful prior call to function XML_GetBuffer is required");
