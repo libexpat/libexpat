@@ -85,7 +85,7 @@ target_link_libraries(hello PUBLIC expat::expat)
 ```
 
 
-## Buildung from a Git Clone
+## Building from a Git Clone
 
 If you are building Expat from a check-out from the
 [Git repository](https://github.com/libexpat/libexpat/),
@@ -101,7 +101,7 @@ Once this has been done, follow the same instructions as for building
 from a source distribution.
 
 
-## Buildung from a Source Distribution
+## Building from a Source Distribution
 
 ### a) Building with the configure script (i.e. GNU Autotools)
 
