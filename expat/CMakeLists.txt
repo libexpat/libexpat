@@ -130,10 +130,22 @@ if(EXPAT_WITH_LIBBSD)
 endif()
 
 if(MSVC)
-    # Minimum supported MSVC version is 1910 = Visual Studio 15.0/2017
-    # See also https://cmake.org/cmake/help/latest/variable/MSVC_VERSION.html
-    if(MSVC_VERSION VERSION_LESS 1910)
-        message(SEND_ERROR "MSVC_VERSION ${MSVC_VERSION} is not a supported Visual Studio compiler version. Please use Visual Studio 15.0/2017 or any later version.")
+    # For the three types of MSVC version values, please see:
+    # - https://cmake.org/cmake/help/latest/variable/MSVC_VERSION.html
+    # - https://sourceforge.net/p/predef/wiki/Compilers/
+    # - https://en.wikipedia.org/wiki/Microsoft_Visual_Studio#History
+    set(_EXPAT_MSVC_REQUIRED_INT 1800)  # i.e. 12.0/2013/1800; see PR #426
+    set(_EXPAT_MSVC_SUPPORTED_INT 1910)
+    set(_EXPAT_MSVC_SUPPORTED_DISPLAY "Visual Studio 15.0/2017/${_EXPAT_MSVC_SUPPORTED_INT}")
+
+    if(MSVC_VERSION VERSION_LESS ${_EXPAT_MSVC_SUPPORTED_INT})
+        if(MSVC_VERSION VERSION_LESS ${_EXPAT_MSVC_REQUIRED_INT})
+            message(SEND_ERROR "MSVC_VERSION ${MSVC_VERSION} is TOO OLD to compile Expat without errors.")
+            message(SEND_ERROR "Please use officially supported ${_EXPAT_MSVC_SUPPORTED_DISPLAY} or later.  Thank you!")
+        else()
+            message(WARNING "MSVC_VERSION ${MSVC_VERSION} is NOT OFFICIALLY SUPPORTED by Expat.")
+            message(WARNING "Please use ${_EXPAT_MSVC_SUPPORTED_DISPLAY} or later.  Thank you!")
+        endif()
     endif()
 endif()
 
