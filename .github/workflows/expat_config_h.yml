@@ -4,8 +4,10 @@
 name: Check expat_config.h.{in,cmake} for regressions
 
 on:
-- pull_request
-- push
+  pull_request:
+  push:
+  schedule:
+    - cron: '0 2 * * 5'  # Every Friday at 2am
 
 jobs:
   checks:
