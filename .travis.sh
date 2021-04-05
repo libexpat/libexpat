@@ -70,7 +70,7 @@ elif [[ ${MODE} = cppcheck ]]; then
             -name xmltok_ns.c
             -o -name xmltok_impl.c
         \)
-        -exec cppcheck --quiet --error-exitcode=1 --force {} +
+        -exec cppcheck --quiet --error-exitcode=1 --force --suppress=objectIndex {} +
     )
     find "${find_args[@]}"
 elif [[ ${MODE} = clang-format ]]; then
