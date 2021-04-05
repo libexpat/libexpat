@@ -450,6 +450,7 @@ if(EXPAT_BUILD_TESTS)
         tests/memcheck.c
         tests/minicheck.c
         tests/structdata.c
+        ${expat_SRCS}
     )
 
     if(NOT MSVC)
@@ -469,13 +470,16 @@ if(EXPAT_BUILD_TESTS)
 
     add_executable(runtests tests/runtests.c ${test_SRCS})
     set_property(TARGET runtests PROPERTY RUNTIME_OUTPUT_DIRECTORY tests)
-    target_link_libraries(runtests expat)
     expat_add_test(runtests $<TARGET_FILE:runtests>)
 
     add_executable(runtestspp tests/runtestspp.cpp ${test_SRCS})
     set_property(TARGET runtestspp PROPERTY RUNTIME_OUTPUT_DIRECTORY tests)
-    target_link_libraries(runtestspp expat)
     expat_add_test(runtestspp $<TARGET_FILE:runtestspp>)
+
+    if(EXPAT_WITH_LIBBSD)
+        target_link_libraries(runtests ${LIB_BSD})
+        target_link_libraries(runtestspp ${LIB_BSD})
+    endif()
 endif()
 
 if(EXPAT_BUILD_FUZZERS)

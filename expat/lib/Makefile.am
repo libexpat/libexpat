@@ -34,16 +34,24 @@ include_HEADERS = \
     expat_external.h
 
 lib_LTLIBRARIES = libexpat.la
+noinst_LTLIBRARIES = libexpatinternal.la
 
 libexpat_la_LDFLAGS = \
     @AM_LDFLAGS@ \
     -no-undefined \
     -version-info @LIBCURRENT@:@LIBREVISION@:@LIBAGE@
 
-libexpat_la_SOURCES = \
+libexpat_la_SOURCES =
+
+# This layer of indirection allows
+# the test suite to access internal symbols
+# despite compiling with -fvisibility=hidden
+libexpatinternal_la_SOURCES = \
     xmlparse.c \
     xmltok.c \
     xmlrole.c
+
+libexpat_la_LIBADD = libexpatinternal.la
 
 doc_DATA = \
     ../AUTHORS \
