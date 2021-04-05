@@ -109,14 +109,8 @@
 extern "C" {
 #endif
 
-#ifdef XML_ENABLE_VISIBILITY
-#  if XML_ENABLE_VISIBILITY
-__attribute__((visibility("default")))
-#  endif
-#endif
-void
-_INTERNAL_trim_to_complete_utf8_characters(const char *from,
-                                           const char **fromLimRef);
+void _INTERNAL_trim_to_complete_utf8_characters(const char *from,
+                                                const char **fromLimRef);
 
 #ifdef __cplusplus
 }
