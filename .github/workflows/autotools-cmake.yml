@@ -1,7 +1,7 @@
 # Copyright (C) 2021 Sebastian Pipping <sebastian@pipping.org>
 # Licensed under the MIT license
 
-name: Ensure that Autotools install identical CMake files
+name: Ensure that GNU Autotools and CMake build systems agree
 
 on:
   pull_request:
@@ -11,7 +11,7 @@ on:
 
 jobs:
   checks:
-    name: Ensure that Autotools install identical CMake files
+    name: Ensure that GNU Autotools and CMake build systems agree
     runs-on: ubuntu-20.04
     steps:
     - uses: actions/checkout@v2.3.4
@@ -23,29 +23,37 @@ jobs:
             docbook2x \
             lzip
 
-    - name: Check for identical CMake files from both build system
+    - name: Produce and extract a release archive
       run: |
         set -x
-        pushd expat
-
+        cd expat
         ./buildconf.sh
         ./configure
         make dist
         tar xf expat-*.*.*.tar.gz
-        pushd expat-*.*.*/
 
+    - name: Build and install using GNU Autotools
+      run: |
+        set -x
+        cd expat/expat-*.*.*/
         mkdir build_autotools
-        pushd build_autotools
-          ../configure --libdir='${exec_prefix}/lib123'
-          make install DESTDIR="${PWD}"/ROOT
-        popd
+        cd build_autotools
+        ../configure --libdir='${exec_prefix}/lib123'
+        make install DESTDIR="${PWD}"/ROOT
 
+    - name: Build and install using CMake
+      run: |
+        set -x
+        cd expat/expat-*.*.*/
         mkdir build_cmake
-        pushd build_cmake
-          cmake -DCMAKE_INSTALL_LIBDIR=lib123 ..
-          make install DESTDIR="${PWD}"/ROOT
-        popd
+        cd build_cmake
+        cmake -DCMAKE_INSTALL_LIBDIR=lib123 ..
+        make install DESTDIR="${PWD}"/ROOT
 
+    - name: Check for identical CMake files from both build systems
+      run: |
+        set -x
+        cd expat/expat-*.*.*/
         diff \
             --recursive \
             --unified \
