@@ -383,8 +383,19 @@ expat_install(FILES lib/expat.h lib/expat_external.h DESTINATION ${CMAKE_INSTALL
 if(EXPAT_BUILD_PKGCONFIG)
     set(prefix ${CMAKE_INSTALL_PREFIX})
     set(exec_prefix "\${prefix}")
-    set(libdir "\${exec_prefix}/${CMAKE_INSTALL_LIBDIR}")
-    set(includedir "\${prefix}/${CMAKE_INSTALL_INCLUDEDIR}")
+
+    if(CMAKE_INSTALL_LIBDIR MATCHES "^/")
+        set(libdir "${CMAKE_INSTALL_LIBDIR}")
+    else()
+        set(libdir "\${exec_prefix}/${CMAKE_INSTALL_LIBDIR}")
+    endif()
+
+    if(CMAKE_INSTALL_INCLUDEDIR MATCHES "^/")
+        set(includedir "${CMAKE_INSTALL_INCLUDEDIR}")
+    else()
+        set(includedir "\${prefix}/${CMAKE_INSTALL_INCLUDEDIR}")
+    endif()
+
     configure_file(expat.pc.in ${CMAKE_CURRENT_BINARY_DIR}/expat.pc @ONLY)
     expat_install(FILES ${CMAKE_CURRENT_BINARY_DIR}/expat.pc DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
 endif()
