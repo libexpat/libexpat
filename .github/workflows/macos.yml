@@ -22,7 +22,6 @@ jobs:
           - MODE: distcheck
           - MODE: qa-sh
             FLAT_ENV: CC=clang CXX=clang++ LD=clang++ QA_SANITIZER=address
-          - MODE: cppcheck
     runs-on: macos-latest
     steps:
     - uses: actions/checkout@v2.3.4

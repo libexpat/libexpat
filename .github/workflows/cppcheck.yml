@@ -1,0 +1,23 @@
+# Copyright (C) 2021 Sebastian Pipping <sebastian@pipping.org>
+# Licensed under the MIT license
+
+name: Run Cppcheck (from macOS Homebrew)
+
+on:
+  pull_request:
+  push:
+  schedule:
+    - cron: '0 2 * * 5'  # Every Friday at 2am
+
+jobs:
+  checks:
+    name: Run Cppcheck
+    runs-on: macos-latest
+    steps:
+    - uses: actions/checkout@v2.3.4
+    - name: Install runtime dependencies
+      run: |
+        exec brew install cppcheck findutils
+    - name: Run Cppcheck
+      run: |
+        exec .github/workflows/scripts/mass-cppcheck.sh
