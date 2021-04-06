@@ -40,7 +40,7 @@ There are two ways of using libexpat with CMake:
 
 This approach leverages CMake's own [module `FindEXPAT`](https://cmake.org/cmake/help/latest/module/FindEXPAT.html).
 
-Notice the uppercase `EXPAT` in the following example:
+Notice the *uppercase* `EXPAT` in the following example:
 
 ```cmake
 cmake_minimum_required(VERSION 3.0)
@@ -68,7 +68,7 @@ libexpat >=2.2.8 where packaging uses the CMake build system
 or
 libexpat >=2.3.0 where packaging uses the GNU Autotools build system.
 
-Notice the lowercase `expat` in the following example:
+Notice the *lowercase* `expat` in the following example:
 
 ```cmake
 cmake_minimum_required(VERSION 3.0)
