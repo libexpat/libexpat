@@ -22,11 +22,11 @@ jobs:
         # - Removals would be trouble (because expat_config.h is installed).
         # - Additions could use an extra check by a human
         ( cd expat && ./buildconf.sh )  # generate expat_config.h.in
-        diff -u <(sort < ci_expat_config_h/expat_config_h_in__expected.txt) <(./ci_expat_config_h/list_exported_macros.sh expat/expat_config.h.in)
-        diff -u <(sort < ci_expat_config_h/expat_config_h_cmake__expected.txt) <(./ci_expat_config_h/list_exported_macros.sh expat/expat_config.h.cmake)
+        diff -u <(sort < .github/workflows/data/expat_config_h_in__expected.txt) <(.github/workflows/scripts/list_exported_macros.sh expat/expat_config.h.in)
+        diff -u <(sort < .github/workflows/data/expat_config_h_cmake__expected.txt) <(.github/workflows/scripts/list_exported_macros.sh expat/expat_config.h.cmake)
 
         # Informational (and not an ideal state)
         diff -u \
-            <(sort < ci_expat_config_h/expat_config_h_in__expected.txt) \
-            <(sort < ci_expat_config_h/expat_config_h_cmake__expected.txt) \
+            <(sort < .github/workflows/data/expat_config_h_in__expected.txt) \
+            <(sort < .github/workflows/data/expat_config_h_cmake__expected.txt) \
             || true
