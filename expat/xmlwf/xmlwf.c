@@ -908,6 +908,19 @@ usage(const XML_Char *prog, int rc) {
 int wmain(int argc, XML_Char **argv);
 #endif
 
+#define XMLWF_SHIFT_ARG_INTO(constCharStarTarget, argc, argv, i, j)            \
+  {                                                                            \
+    if (argv[i][j + 1] == T('\0')) {                                           \
+      if (++i == argc)                                                         \
+        usage(argv[0], 4);                                                     \
+      constCharStarTarget = argv[i];                                           \
+    } else {                                                                   \
+      constCharStarTarget = argv[i] + j + 1;                                   \
+    }                                                                          \
+    i++;                                                                       \
+    j = 0;                                                                     \
+  }
+
 int
 tmain(int argc, XML_Char **argv) {
   int i, j;
@@ -984,24 +997,10 @@ tmain(int argc, XML_Char **argv) {
       j++;
       break;
     case T('d'):
-      if (argv[i][j + 1] == T('\0')) {
-        if (++i == argc)
-          usage(argv[0], 4);
-        outputDir = argv[i];
-      } else
-        outputDir = argv[i] + j + 1;
-      i++;
-      j = 0;
+      XMLWF_SHIFT_ARG_INTO(outputDir, argc, argv, i, j);
       break;
     case T('e'):
-      if (argv[i][j + 1] == T('\0')) {
-        if (++i == argc)
-          usage(argv[0], 4);
-        encoding = argv[i];
-      } else
-        encoding = argv[i] + j + 1;
-      i++;
-      j = 0;
+      XMLWF_SHIFT_ARG_INTO(encoding, argc, argv, i, j);
       break;
     case T('h'):
       usage(argv[0], 0);
