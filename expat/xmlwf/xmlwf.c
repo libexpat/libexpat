@@ -39,6 +39,8 @@
    USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+#include <expat_config.h>
+
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
