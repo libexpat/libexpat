@@ -7357,6 +7357,20 @@ accountingDiffTolerated(XML_Parser originParser, int tok, const char *before,
   return tolerated;
 }
 
+unsigned long long
+testingAccountingGetCountBytesDirect(XML_Parser parser) {
+  if (! parser)
+    return 0;
+  return parser->m_accounting.countBytesDirect;
+}
+
+unsigned long long
+testingAccountingGetCountBytesIndirect(XML_Parser parser) {
+  if (! parser)
+    return 0;
+  return parser->m_accounting.countBytesIndirect;
+}
+
 static void
 entityTrackingReportStats(XML_Parser rootParser, ENTITY *entity,
                           const char *action, int sourceLine) {

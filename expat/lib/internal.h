@@ -139,12 +139,19 @@
   8388608 // 8 MiB, 2^23
 /* NOTE END */
 
+#include "expat.h" // so we can use type XML_Parser below
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 void _INTERNAL_trim_to_complete_utf8_characters(const char *from,
                                                 const char **fromLimRef);
+
+#if defined(XML_DTD)
+unsigned long long testingAccountingGetCountBytesDirect(XML_Parser parser);
+unsigned long long testingAccountingGetCountBytesIndirect(XML_Parser parser);
+#endif
 
 #ifdef __cplusplus
 }
