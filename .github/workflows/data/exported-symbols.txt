@@ -29,6 +29,8 @@ XML_ParserReset
 XML_ResumeParser
 XML_SetAttlistDeclHandler
 XML_SetBase
+XML_SetBillionLaughsAttackProtectionActivationThreshold
+XML_SetBillionLaughsAttackProtectionMaximumAmplification
 XML_SetCdataSectionHandler
 XML_SetCharacterDataHandler
 XML_SetCommentHandler
