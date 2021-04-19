@@ -50,6 +50,14 @@
 #  include <wchar.h>
 #endif
 
+enum ExitCode {
+  XMLWF_EXIT_SUCCESS = 0,
+  XMLWF_EXIT_INTERNAL_ERROR = 1,
+  XMLWF_EXIT_NOT_WELLFORMED = 2,
+  XMLWF_EXIT_OUTPUT_ERROR = 3,
+  XMLWF_EXIT_USAGE_ERROR = 4,
+};
+
 /* Structures for handler user data */
 typedef struct NotationList {
   struct NotationList *next;
@@ -912,7 +920,7 @@ int wmain(int argc, XML_Char **argv);
   {                                                                            \
     if (argv[i][j + 1] == T('\0')) {                                           \
       if (++i == argc)                                                         \
-        usage(argv[0], 4);                                                     \
+        usage(argv[0], XMLWF_EXIT_USAGE_ERROR);                                \
       constCharStarTarget = argv[i];                                           \
     } else {                                                                   \
       constCharStarTarget = argv[i] + j + 1;                                   \
@@ -933,7 +941,7 @@ tmain(int argc, XML_Char **argv) {
   int requireStandalone = 0;
   int requiresNotations = 0;
   int continueOnError = 0;
-  int exitCode = 0;
+  int exitCode = XMLWF_EXIT_SUCCESS;
   enum XML_ParamEntityParsing paramEntityParsing
       = XML_PARAM_ENTITY_PARSING_NEVER;
   int useStdin = 0;
@@ -1003,7 +1011,7 @@ tmain(int argc, XML_Char **argv) {
       XMLWF_SHIFT_ARG_INTO(encoding, argc, argv, i, j);
       break;
     case T('h'):
-      usage(argv[0], 0);
+      usage(argv[0], XMLWF_EXIT_SUCCESS);
       return 0;
     case T('v'):
       showVersion(argv[0]);
@@ -1020,7 +1028,7 @@ tmain(int argc, XML_Char **argv) {
       }
       /* fall through */
     default:
-      usage(argv[0], 4);
+      usage(argv[0], XMLWF_EXIT_USAGE_ERROR);
     }
   }
   if (i == argc) {
@@ -1039,7 +1047,7 @@ tmain(int argc, XML_Char **argv) {
 
     if (! parser) {
       tperror(T("Could not instantiate parser"));
-      exit(1);
+      exit(XMLWF_EXIT_INTERNAL_ERROR);
     }
 
     if (requireStandalone)
@@ -1075,7 +1083,7 @@ tmain(int argc, XML_Char **argv) {
                                    * sizeof(XML_Char));
       if (! outName) {
         tperror(T("Could not allocate memory"));
-        exit(1);
+        exit(XMLWF_EXIT_INTERNAL_ERROR);
       }
       tcscpy(outName, outputDir);
       tcscat(outName, delim);
@@ -1083,7 +1091,7 @@ tmain(int argc, XML_Char **argv) {
       userData.fp = tfopen(outName, T("wb"));
       if (! userData.fp) {
         tperror(outName);
-        exitCode = 3;
+        exitCode = XMLWF_EXIT_OUTPUT_ERROR;
         if (continueOnError) {
           free(outName);
           cleanupUserData(&userData);
@@ -1152,7 +1160,7 @@ tmain(int argc, XML_Char **argv) {
     }
     XML_ParserFree(parser);
     if (! result) {
-      exitCode = 2;
+      exitCode = XMLWF_EXIT_NOT_WELLFORMED;
       cleanupUserData(&userData);
       if (! continueOnError) {
         break;
