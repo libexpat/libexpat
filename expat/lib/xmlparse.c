@@ -887,8 +887,7 @@ gather_time_entropy(void) {
 
 static unsigned long
 ENTROPY_DEBUG(const char *label, unsigned long entropy) {
-  const char *const EXPAT_ENTROPY_DEBUG = getenv("EXPAT_ENTROPY_DEBUG");
-  if (EXPAT_ENTROPY_DEBUG && ! strcmp(EXPAT_ENTROPY_DEBUG, "1")) {
+  if (getDebugLevel("EXPAT_ENTROPY_DEBUG", 0) >= 1u) {
     fprintf(stderr, "expat: Entropy: %s --> 0x%0*lx (%lu bytes)\n", label,
             (int)sizeof(entropy) * 2, entropy, (unsigned long)sizeof(entropy));
   }
