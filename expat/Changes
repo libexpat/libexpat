@@ -3,10 +3,39 @@ NOTE: We are looking for help with a few things:
       If you can help, please get in touch.  Thanks!
 
 Release X.X.X XXX XXXXX XX XXXX
+        Security fixes:
+        #34 #466  CVE-2013-0340/CWE-776 -- Protect against billion laughs attacks
+                    (denial-of-service; flavors targeting CPU time or RAM or both,
+                    leveraging general entities or parameter entities or both)
+                    by tracking and limiting the input amplification factor
+                    (<amplification> := (<direct> + <indirect>) / <direct>).
+                    By conservative default, amplification up to a factor of 100.0
+                    is tolerated and rejection only starts after 8 MiB of output bytes
+                    (=<direct> + <indirect>) have been processed.
+                    A new error code XML_ERROR_AMPLIFICATION_LIMIT_BREACH signals
+                    this condition.
+
         Bug fixes:
        #332 #470  For (non-default) compilation with -DEXPAT_MIN_SIZE=ON (CMake)
                     or CPPFLAGS=-DXML_MIN_SIZE (GNU Autotools): Fix segfault
                     for UTF-16 payloads containing CDATA sections.
+
+        New features:
+        #34 #466  Add two new API functions to further tighten billion laughs
+                    protection parameters when desired.
+                    - XML_SetBillionLaughsAttackProtectionMaximumAmplification
+                    - XML_SetBillionLaughsAttackProtectionActivationThreshold
+                    Please see file "doc/reference.html" for more details.
+                    If you ever need to increase the defaults for non-attack XML
+                    payload, please file a bug report with libexpat.
+        #34 #466  Introduce environment switches EXPAT_ACCOUNTING_DEBUG=(0|1|2|3)
+                    and EXPAT_ENTITY_DEBUG=(0|1) for runtime debugging of accounting
+                    and entity processing; specific behavior of these values may
+                    change in the future.
+        #34 #466  xmlwf: Add arguments "-a FACTOR" and "-b BYTES" to further tighten
+                    billion laughs protection parameters when desired.
+                    If you ever need to increase the defaults for non-attack XML
+                    payload, please file a bug report with libexpat.
 
         Other changes:
             #457  Unexpose symbol _INTERNAL_trim_to_complete_utf8_characters
@@ -16,6 +45,11 @@ Release X.X.X XXX XXXXX XX XXXX
 
         Special thanks to:
             Dimitry Andric
+            Nick Wellnhofer
+            Yury Gribov
+                 and
+            Clang LeakSan
+            JetBrains
 
 Release 2.3.0 Thu March 25 2021
         Bug fixes:
