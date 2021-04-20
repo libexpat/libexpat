@@ -109,10 +109,12 @@
 
 #if defined(_WIN32) && ! defined(__USE_MINGW_ANSI_STDIO)
 #  define EXPAT_FMT_ULL(midpart) "%" midpart "I64u"
-#  if defined(_WIN64) // Note: modifier "td" does not work for MinGW
+#  if defined(_WIN64) // Note: modifiers "td" and "zu" do not work for MinGW
 #    define EXPAT_FMT_PTRDIFF_T(midpart) "%" midpart "I64d"
+#    define EXPAT_FMT_SIZE_T(midpart) "%" midpart "I64u"
 #  else
 #    define EXPAT_FMT_PTRDIFF_T(midpart) "%" midpart "d"
+#    define EXPAT_FMT_SIZE_T(midpart) "%" midpart "u"
 #  endif
 #else
 #  define EXPAT_FMT_ULL(midpart) "%" midpart "llu"
@@ -120,8 +122,10 @@
 #    error Compiler did not define ULONG_MAX for us
 #  elif ULONG_MAX == 18446744073709551615u // 2^64-1
 #    define EXPAT_FMT_PTRDIFF_T(midpart) "%" midpart "ld"
+#    define EXPAT_FMT_SIZE_T(midpart) "%" midpart "lu"
 #  else
 #    define EXPAT_FMT_PTRDIFF_T(midpart) "%" midpart "d"
+#    define EXPAT_FMT_SIZE_T(midpart) "%" midpart "u"
 #  endif
 #endif
 
