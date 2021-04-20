@@ -5581,7 +5581,8 @@ appendAttributeValue(XML_Parser parser, const ENCODING *enc, XML_Bool isCdata,
 #endif
 
   for (;;) {
-    const char *next;
+    const char *next
+        = ptr; /* XmlAttributeValueTok doesn't always set the last arg */
     int tok = XmlAttributeValueTok(enc, ptr, end, &next);
 #ifdef XML_DTD
     if (! accountingDiffTolerated(parser, tok, ptr, next, __LINE__, account)) {
@@ -5792,7 +5793,8 @@ storeEntityValue(XML_Parser parser, const ENCODING *enc,
   }
 
   for (;;) {
-    const char *next;
+    const char *next
+        = entityTextPtr; /* XmlEntityValueTok doesn't always set the last arg */
     int tok = XmlEntityValueTok(enc, entityTextPtr, entityTextEnd, &next);
 
 #ifdef XML_DTD
