@@ -111,7 +111,7 @@ AS_IF([test "$GCC" = yes],
    AX_APPEND_COMPILE_FLAGS([-fno-strict-aliasing -Wmissing-prototypes -Wstrict-prototypes], [AM_CFLAGS])
    AX_APPEND_COMPILE_FLAGS([-pedantic -Wduplicated-cond -Wduplicated-branches -Wlogical-op], [AM_CFLAGS])
    AX_APPEND_COMPILE_FLAGS([-Wrestrict -Wnull-dereference -Wjump-misses-init -Wdouble-promotion], [AM_CFLAGS])
-   AX_APPEND_COMPILE_FLAGS([-Wshadow -Wformat=2 -Wmisleading-indentation], [AM_CFLAGS])])
+   AX_APPEND_COMPILE_FLAGS([-Wshadow -Wformat=2 -Wno-pedantic-ms-format -Wmisleading-indentation], [AM_CFLAGS])])
 
 AC_LANG_PUSH([C++])
 AC_PROG_CXX
