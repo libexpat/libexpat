@@ -1111,7 +1111,7 @@ XML_StopParser(XML_Parser p,
 call-back handler, except when aborting (when <code>resumable</code>
 is <code>XML_FALSE</code>) an already suspended parser.  Some
 call-backs may still follow because they would otherwise get
-lost, including
+lost, including</p>
 <ul>
   <li> the end element handler for empty elements when stopped in the
        start element handler,</li>
@@ -1120,7 +1120,7 @@ lost, including
   <li> the character data handler when stopped in the character data handler
        while making multiple call-backs on a contiguous chunk of characters,</li>
 </ul>
-and possibly others.</p>
+<p>and possibly others.</p>
 
 <p>This can be called from most handlers, including DTD related
 call-backs, except when parsing an external parameter entity and
