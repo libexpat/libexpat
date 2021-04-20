@@ -39,6 +39,13 @@ cppcheck --version
 
 find --version | head -n1
 
+cppcheck_args=(
+    --quiet
+    --error-exitcode=1
+    --force
+    --suppress=objectIndex
+)
+
 find_args=(
     -type f \(
         -name \*.cpp
@@ -48,7 +55,7 @@ find_args=(
         -name xmltok_ns.c
         -o -name xmltok_impl.c
     \)
-    -exec cppcheck --quiet --error-exitcode=1 --force --suppress=objectIndex {} +
+    -exec cppcheck "${cppcheck_args[@]}" {} +
 )
 
 exec find "${find_args[@]}"
