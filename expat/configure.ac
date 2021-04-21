@@ -52,7 +52,6 @@ LIBCURRENT=8   # sync
 LIBREVISION=0  # with
 LIBAGE=7       # CMakeLists.txt!
 
-AX_APPEND_FLAG([-DHAVE_EXPAT_CONFIG_H], [AM_CPPFLAGS])
 AC_CONFIG_HEADERS([expat_config.h])
 
 AM_PROG_AR
