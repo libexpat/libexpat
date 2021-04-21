@@ -34,9 +34,7 @@
 #  undef NDEBUG /* because test suite relies on assert(...) at the moment */
 #endif
 
-#ifdef HAVE_EXPAT_CONFIG_H
-#  include <expat_config.h>
-#endif
+#include <expat_config.h>
 
 #include <assert.h>
 #include <stdlib.h>
