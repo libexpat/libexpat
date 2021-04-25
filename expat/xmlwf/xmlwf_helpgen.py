@@ -42,7 +42,14 @@ xmlwf of libexpat is software libre, licensed under the MIT license.
 Please report bugs at https://github.com/libexpat/libexpat/issues.  Thank you!
 """
 
+usage = """
+  %(prog)s [OPTIONS] [FILE ...]
+  %(prog)s -h
+  %(prog)s -v
+"""
+
 parser = argparse.ArgumentParser(prog='xmlwf', add_help=False,
+                                 usage=usage,
                                  description='xmlwf - Determines if an XML document is well-formed',
                                  formatter_class=argparse.RawTextHelpFormatter,
                                  epilog=epilog)

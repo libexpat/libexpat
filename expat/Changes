@@ -7,6 +7,7 @@ Release X.X.X XXX XXXXX XX XXXX
             #457  Unexpose symbol _INTERNAL_trim_to_complete_utf8_characters
        #458 #459  CMake: Support absolute paths for both CMAKE_INSTALL_LIBDIR
                     and CMAKE_INSTALL_INCLUDEDIR
+            #468  xmlwf: Simplify synopsis (in help output, and in the man page)
 
 Release 2.3.0 Thu March 25 2021
         Bug fixes:
