@@ -191,6 +191,20 @@ supports both.
       </varlistentry>
 
       <varlistentry>
+        <term><option>-k</option></term>
+        <listitem>
+          <para>
+            When processing multiple files, Expat by default halts after the
+            the first file with an error. This tells Expat to report the error
+            but to keep processing.
+            This can be useful, for example, when testing a filter that converts
+            many files to XML and you want to quickly find out which conversions
+            failed.
+          </para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
         <term><option>-m</option></term>
         <listitem>
 		<para>
@@ -282,20 +296,6 @@ supports both.
   (<option>-d</option>, <option>-m</option>, <option>-c</option>, ...).
 	   </para>
         </listitem>
-      </varlistentry>
-
-      <varlistentry>
-	<term><option>-k</option></term>
-	<listitem>
-		<para>
-  When processing multiple files, Expat by default halts after the	    
-  the first file with an error. This tells Expat to report the error
-  but to keep processing. 
-  This can be useful, for example, when testing a filter that converts
-  many files to XML and you want to quickly find out which conversions
-  failed.
-	  </para>
-	</listitem>
       </varlistentry>
       
       <varlistentry>
