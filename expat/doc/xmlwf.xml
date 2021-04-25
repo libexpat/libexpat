@@ -194,8 +194,9 @@ supports both.
         <term><option>-k</option></term>
         <listitem>
           <para>
-            When processing multiple files, Expat by default halts after the
-            the first file with an error. This tells Expat to report the error
+            When processing multiple files, <command>&dhpackage;</command>
+            by default halts after the the first file with an error.
+            This tells <command>&dhpackage;</command> to report the error
             but to keep processing.
             This can be useful, for example, when testing a filter that converts
             many files to XML and you want to quickly find out which conversions
@@ -240,7 +241,7 @@ supports both.
         <term><option>-p</option></term>
         <listitem>
 		<para>
-    Tells xmlwf to process external DTDs and parameter
+    Tells <command>&dhpackage;</command> to process external DTDs and parameter
     entities.
 	 </para>
 	 <para>
@@ -316,7 +317,7 @@ supports both.
   Enables support for Windows code pages.
   Normally, <command>&dhpackage;</command> will throw an error if it
   runs across an encoding that it is not equipped to handle itself.  With
-  <option>-w</option>, &dhpackage; will try to use a Windows code
+  <option>-w</option>, <command>&dhpackage;</command> will try to use a Windows code
   page.  See also <option>-e</option>.
 	   </para>
         </listitem>
