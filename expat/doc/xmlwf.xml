@@ -44,26 +44,16 @@
   <refsynopsisdiv>
     <cmdsynopsis>
       <command>&dhpackage;</command>
-	  <arg><option>-s</option></arg>
-	  <arg><option>-n</option></arg>
-	  <arg><option>-p</option></arg>
-	  <arg><option>-x</option></arg>
-
-	  <arg><option>-e <replaceable>encoding</replaceable></option></arg>
-	  <arg><option>-w</option></arg>
-
-	  <arg><option>-d <replaceable>output-dir</replaceable></option></arg>
-	  <arg><option>-c</option></arg>
-	  <arg><option>-m</option></arg>
-
-	  <arg><option>-r</option></arg>
-	  <arg><option>-t</option></arg>
-          <arg><option>-N</option></arg>
-
-	  <arg><option>-k</option></arg>
-	  <arg><option>-v</option></arg>
-
-	  <arg>file ...</arg>
+      <arg><replaceable>OPTIONS</replaceable></arg>
+      <arg><replaceable>FILE</replaceable> ...</arg>
+    </cmdsynopsis>
+    <cmdsynopsis>
+      <command>&dhpackage;</command>
+      <option>-h</option>
+    </cmdsynopsis>
+    <cmdsynopsis>
+      <command>&dhpackage;</command>
+      <option>-v</option>
     </cmdsynopsis>
   </refsynopsisdiv>
  

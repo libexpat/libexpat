@@ -29,7 +29,8 @@
 # USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ./xmlwf/xmlwf_helpgen.py | sed \
-        -e 's,usage: xmlwf,usage: %s,' \
+        -e 's,usage: ,usage:,' \
+        -e 's,  xmlwf,  %s,' \
         -e 's, \[-h | -v\],,' \
         -e 's,^,      T(",' \
         -e 's,$,\\n"),'
