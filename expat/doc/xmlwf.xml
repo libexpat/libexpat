@@ -450,21 +450,6 @@ supports both.
   </refsect1>
 
   <refsect1>
-    <title>ALTERNATIVES</title>
-	<para>
-	  Here are some XML validators on the web:
-
-<literallayout>
-http://www.hcrc.ed.ac.uk/~richard/xml-check.html
-http://www.stg.brown.edu/service/xmlvalid/
-http://www.scripting.com/frontier5/xml/code/xmlValidator.html
-http://www.xml.com/pub/a/tools/ruwf/check.html
-</literallayout>
-
-		 </para>
-  </refsect1>
-
-  <refsect1>
     <title>SEE ALSO</title>
 	<para>
 
