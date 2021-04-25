@@ -123,8 +123,8 @@
 
 <para>
 When an option includes an argument, you may specify the argument either
-separately ("<option>-d</option> output") or concatenated with the
-option ("<option>-d</option>output").  <command>&dhpackage;</command>
+separately ("<option>-d</option> <replaceable>output</replaceable>") or concatenated with the
+option ("<option>-d</option><replaceable>output</replaceable>").  <command>&dhpackage;</command>
 supports both.
 </para>
 
@@ -144,7 +144,7 @@ supports both.
       </varlistentry>
 
       <varlistentry>
-        <term><option>-d output-dir</option></term>
+        <term><option>-d</option> <replaceable>output-dir</replaceable></term>
         <listitem>
 		<para>
   Specifies a directory to contain transformed
@@ -175,7 +175,7 @@ supports both.
       </varlistentry>
 
       <varlistentry>
-        <term><option>-e encoding</option></term>
+        <term><option>-e</option> <replaceable>encoding</replaceable></term>
         <listitem>
 		<para>
    Specifies the character encoding for the document, overriding
