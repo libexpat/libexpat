@@ -86,7 +86,7 @@
       <listitem><para>
 	    The file begins with an XML declaration.  For instance,
 		<literal>&lt;?xml version="1.0" standalone="yes"?&gt;</literal>.
-		<emphasis>NOTE:</emphasis>
+		<emphasis>NOTE</emphasis>:
 		<command>&dhpackage;</command> does not currently
 		check for a valid XML declaration.
       </para></listitem>
