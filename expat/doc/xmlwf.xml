@@ -3,7 +3,7 @@
   <!ENTITY dhfirstname "<firstname>Scott</firstname>">
   <!ENTITY dhsurname   "<surname>Bronson</surname>">
   <!-- Please adjust the date whenever revising the manpage. -->
-  <!ENTITY dhdate      "<date>March 25, 2021</date>">
+  <!ENTITY dhdate      "<date>April 25, 2021</date>">
   <!-- SECTION should be 1-8, maybe w/ subsection other parameters are
        allowed: see man(7), man(1). -->
   <!ENTITY dhsection   "<manvolnum>1</manvolnum>">
@@ -86,7 +86,7 @@
       <listitem><para>
 	    The file begins with an XML declaration.  For instance,
 		<literal>&lt;?xml version="1.0" standalone="yes"?&gt;</literal>.
-		<emphasis>NOTE:</emphasis>
+		<emphasis>NOTE</emphasis>:
 		<command>&dhpackage;</command> does not currently
 		check for a valid XML declaration.
       </para></listitem>
@@ -123,8 +123,8 @@
 
 <para>
 When an option includes an argument, you may specify the argument either
-separately ("<option>-d</option> output") or concatenated with the
-option ("<option>-d</option>output").  <command>&dhpackage;</command>
+separately ("<option>-d</option> <replaceable>output</replaceable>") or concatenated with the
+option ("<option>-d</option><replaceable>output</replaceable>").  <command>&dhpackage;</command>
 supports both.
 </para>
 
@@ -144,7 +144,7 @@ supports both.
       </varlistentry>
 
       <varlistentry>
-        <term><option>-d output-dir</option></term>
+        <term><option>-d</option> <replaceable>output-dir</replaceable></term>
         <listitem>
 		<para>
   Specifies a directory to contain transformed
@@ -175,7 +175,7 @@ supports both.
       </varlistentry>
 
       <varlistentry>
-        <term><option>-e encoding</option></term>
+        <term><option>-e</option> <replaceable>encoding</replaceable></term>
         <listitem>
 		<para>
    Specifies the character encoding for the document, overriding
@@ -187,6 +187,21 @@ supports both.
 	<literal>ISO-8859-1</literal>.
    Also see the <option>-w</option> option.
 	   </para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-k</option></term>
+        <listitem>
+          <para>
+            When processing multiple files, <command>&dhpackage;</command>
+            by default halts after the the first file with an error.
+            This tells <command>&dhpackage;</command> to report the error
+            but to keep processing.
+            This can be useful, for example, when testing a filter that converts
+            many files to XML and you want to quickly find out which conversions
+            failed.
+          </para>
         </listitem>
       </varlistentry>
 
@@ -226,7 +241,7 @@ supports both.
         <term><option>-p</option></term>
         <listitem>
 		<para>
-    Tells xmlwf to process external DTDs and parameter
+    Tells <command>&dhpackage;</command> to process external DTDs and parameter
     entities.
 	 </para>
 	 <para>
@@ -283,20 +298,6 @@ supports both.
 	   </para>
         </listitem>
       </varlistentry>
-
-      <varlistentry>
-	<term><option>-k</option></term>
-	<listitem>
-		<para>
-  When processing multiple files, Expat by default halts after the	    
-  the first file with an error. This tells Expat to report the error
-  but to keep processing. 
-  This can be useful, for example, when testing a filter that converts
-  many files to XML and you want to quickly find out which conversions
-  failed.
-	  </para>
-	</listitem>
-      </varlistentry>
       
       <varlistentry>
         <term><option>-v</option></term>
@@ -316,7 +317,7 @@ supports both.
   Enables support for Windows code pages.
   Normally, <command>&dhpackage;</command> will throw an error if it
   runs across an encoding that it is not equipped to handle itself.  With
-  <option>-w</option>, &dhpackage; will try to use a Windows code
+  <option>-w</option>, <command>&dhpackage;</command> will try to use a Windows code
   page.  See also <option>-e</option>.
 	   </para>
         </listitem>
@@ -450,27 +451,12 @@ supports both.
   </refsect1>
 
   <refsect1>
-    <title>ALTERNATIVES</title>
-	<para>
-	  Here are some XML validators on the web:
-
-<literallayout>
-http://www.hcrc.ed.ac.uk/~richard/xml-check.html
-http://www.stg.brown.edu/service/xmlvalid/
-http://www.scripting.com/frontier5/xml/code/xmlValidator.html
-http://www.xml.com/pub/a/tools/ruwf/check.html
-</literallayout>
-
-		 </para>
-  </refsect1>
-
-  <refsect1>
     <title>SEE ALSO</title>
 	<para>
 
 <literallayout>
-The Expat home page:        http://www.libexpat.org/
-The W3 XML specification:   http://www.w3.org/TR/REC-xml
+The Expat home page:                            https://libexpat.github.io/
+The W3 XML 1.0 specification (fourth edition):  https://www.w3.org/TR/2006/REC-xml-20060816/
 </literallayout>
 
 	</para>
@@ -479,7 +465,8 @@ The W3 XML specification:   http://www.w3.org/TR/REC-xml
   <refsect1>
     <title>AUTHOR</title>
     <para>
-	  This manual page was written by &dhusername; &dhemail; for
+      This manual page was originally written by &dhusername; &dhemail;
+      in December 2001 for
       the &debian; system (but may be used by others).  Permission is
       granted to copy, distribute and/or modify this document under
       the terms of the <acronym>GNU</acronym> Free Documentation
