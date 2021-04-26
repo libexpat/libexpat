@@ -53,6 +53,7 @@
 #include <ctype.h>
 #include <limits.h>
 #include <stdint.h> /* intptr_t uint64_t */
+#include <math.h>   /* NAN, INFINITY, isnan */
 
 #if ! defined(__cplusplus)
 #  include <stdbool.h>
@@ -11513,6 +11514,70 @@ START_TEST(test_accounting_precision) {
   }
 }
 END_TEST
+
+START_TEST(test_billion_laughs_attack_protection_api) {
+  XML_Parser parserWithoutParent = XML_ParserCreate(NULL);
+  XML_Parser parserWithParent
+      = XML_ExternalEntityParserCreate(parserWithoutParent, NULL, NULL);
+  if (parserWithoutParent == NULL)
+    fail("parserWithoutParent is NULL");
+  if (parserWithParent == NULL)
+    fail("parserWithParent is NULL");
+
+  // XML_SetBillionLaughsAttackProtectionMaximumAmplification, error cases
+  if (XML_SetBillionLaughsAttackProtectionMaximumAmplification(NULL, 123.0f)
+      == XML_TRUE)
+    fail("Call with NULL parser is NOT supposed to succeed");
+  if (XML_SetBillionLaughsAttackProtectionMaximumAmplification(parserWithParent,
+                                                               123.0f)
+      == XML_TRUE)
+    fail("Call with non-root parser is NOT supposed to succeed");
+  if (XML_SetBillionLaughsAttackProtectionMaximumAmplification(
+          parserWithoutParent, NAN)
+      == XML_TRUE)
+    fail("Call with NaN limit is NOT supposed to succeed");
+  if (XML_SetBillionLaughsAttackProtectionMaximumAmplification(
+          parserWithoutParent, -1.0f)
+      == XML_TRUE)
+    fail("Call with negative limit is NOT supposed to succeed");
+  if (XML_SetBillionLaughsAttackProtectionMaximumAmplification(
+          parserWithoutParent, 0.9f)
+      == XML_TRUE)
+    fail("Call with positive limit <1.0 is NOT supposed to succeed");
+
+  // XML_SetBillionLaughsAttackProtectionMaximumAmplification, success cases
+  if (XML_SetBillionLaughsAttackProtectionMaximumAmplification(
+          parserWithoutParent, 1.0f)
+      == XML_FALSE)
+    fail("Call with positive limit >=1.0 is supposed to succeed");
+  if (XML_SetBillionLaughsAttackProtectionMaximumAmplification(
+          parserWithoutParent, 123456.789f)
+      == XML_FALSE)
+    fail("Call with positive limit >=1.0 is supposed to succeed");
+  if (XML_SetBillionLaughsAttackProtectionMaximumAmplification(
+          parserWithoutParent, INFINITY)
+      == XML_FALSE)
+    fail("Call with positive limit >=1.0 is supposed to succeed");
+
+  // XML_SetBillionLaughsAttackProtectionActivationThreshold, error cases
+  if (XML_SetBillionLaughsAttackProtectionActivationThreshold(NULL, 123)
+      == XML_TRUE)
+    fail("Call with NULL parser is NOT supposed to succeed");
+  if (XML_SetBillionLaughsAttackProtectionActivationThreshold(parserWithParent,
+                                                              123)
+      == XML_TRUE)
+    fail("Call with non-root parser is NOT supposed to succeed");
+
+  // XML_SetBillionLaughsAttackProtectionActivationThreshold, success cases
+  if (XML_SetBillionLaughsAttackProtectionActivationThreshold(
+          parserWithoutParent, 123)
+      == XML_FALSE)
+    fail("Call with non-NULL parentless parser is supposed to succeed");
+
+  XML_ParserFree(parserWithParent);
+  XML_ParserFree(parserWithoutParent);
+}
+END_TEST
 #endif // defined(XML_DTD)
 
 static Suite *
@@ -11889,6 +11954,7 @@ make_suite(void) {
 #if defined(XML_DTD)
   suite_add_tcase(s, tc_accounting);
   tcase_add_test(tc_accounting, test_accounting_precision);
+  tcase_add_test(tc_accounting, test_billion_laughs_attack_protection_api);
 #endif
 
   return s;
