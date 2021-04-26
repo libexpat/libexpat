@@ -1,4 +1,4 @@
-/* This file is included!
+/* This file is included (from xmltok.c, 1-3 times depending on XML_MIN_SIZE)!
                             __  __            _
                          ___\ \/ /_ __   __ _| |_
                         / _ \\  /| '_ \ / _` | __|
@@ -32,7 +32,7 @@
 
 #ifdef XML_TOK_IMPL_C
 
-#  ifndef IS_INVALID_CHAR
+#  ifndef IS_INVALID_CHAR // i.e. for UTF-16 and XML_MIN_SIZE not defined
 #    define IS_INVALID_CHAR(enc, ptr, n) (0)
 #  endif
 
