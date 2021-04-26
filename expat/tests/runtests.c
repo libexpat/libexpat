@@ -11578,6 +11578,25 @@ START_TEST(test_billion_laughs_attack_protection_api) {
   XML_ParserFree(parserWithoutParent);
 }
 END_TEST
+
+START_TEST(test_helper_unsigned_char_to_printable) {
+  // Smoke test
+  unsigned char uc = 0;
+  for (; uc < (unsigned char)-1; uc++) {
+    const char *const printable = unsignedCharToPrintable(uc);
+    if (printable == NULL)
+      fail("unsignedCharToPrintable returned NULL");
+    if (strlen(printable) < (size_t)1)
+      fail("unsignedCharToPrintable returned empty string");
+  }
+
+  // Two concrete samples
+  if (strcmp(unsignedCharToPrintable('A'), "A") != 0)
+    fail("unsignedCharToPrintable result mistaken");
+  if (strcmp(unsignedCharToPrintable('\\'), "\\\\") != 0)
+    fail("unsignedCharToPrintable result mistaken");
+}
+END_TEST
 #endif // defined(XML_DTD)
 
 static Suite *
@@ -11955,6 +11974,7 @@ make_suite(void) {
   suite_add_tcase(s, tc_accounting);
   tcase_add_test(tc_accounting, test_accounting_precision);
   tcase_add_test(tc_accounting, test_billion_laughs_attack_protection_api);
+  tcase_add_test(tc_accounting, test_helper_unsigned_char_to_printable);
 #endif
 
   return s;

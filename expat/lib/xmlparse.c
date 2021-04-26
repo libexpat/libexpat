@@ -580,7 +580,6 @@ static void entityTrackingOnClose(XML_Parser parser, ENTITY *entity,
 
 static XML_Parser getRootParserOf(XML_Parser parser,
                                   unsigned int *outLevelDiff);
-static const char *unsignedCharToPrintable(unsigned char c);
 #endif /* XML_DTD */
 
 static unsigned long getDebugLevel(const char *variableName,
@@ -7433,7 +7432,7 @@ getRootParserOf(XML_Parser parser, unsigned int *outLevelDiff) {
   return rootParser;
 }
 
-static const char *
+const char *
 unsignedCharToPrintable(unsigned char c) {
   switch (c) {
   case 0:
