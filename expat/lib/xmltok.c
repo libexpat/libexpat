@@ -259,8 +259,14 @@ sb_byteToAscii(const ENCODING *enc, const char *p) {
 
 #define IS_NAME_CHAR(enc, p, n) (AS_NORMAL_ENCODING(enc)->isName##n(enc, p))
 #define IS_NMSTRT_CHAR(enc, p, n) (AS_NORMAL_ENCODING(enc)->isNmstrt##n(enc, p))
-#define IS_INVALID_CHAR(enc, p, n)                                             \
-  (AS_NORMAL_ENCODING(enc)->isInvalid##n(enc, p))
+#ifdef XML_MIN_SIZE
+#  define IS_INVALID_CHAR(enc, p, n)                                           \
+    (AS_NORMAL_ENCODING(enc)->isInvalid##n                                     \
+     && AS_NORMAL_ENCODING(enc)->isInvalid##n(enc, p))
+#else
+#  define IS_INVALID_CHAR(enc, p, n)                                           \
+    (AS_NORMAL_ENCODING(enc)->isInvalid##n(enc, p))
+#endif
 
 #ifdef XML_MIN_SIZE
 #  define IS_NAME_CHAR_MINBPC(enc, p)                                          \

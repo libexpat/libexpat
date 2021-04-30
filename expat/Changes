@@ -3,11 +3,19 @@ NOTE: We are looking for help with a few things:
       If you can help, please get in touch.  Thanks!
 
 Release X.X.X XXX XXXXX XX XXXX
+        Bug fixes:
+       #332 #470  For (non-default) compilation with -DEXPAT_MIN_SIZE=ON (CMake)
+                    or CPPFLAGS=-DXML_MIN_SIZE (GNU Autotools): Fix segfault
+                    for UTF-16 payloads containing CDATA sections.
+
         Other changes:
             #457  Unexpose symbol _INTERNAL_trim_to_complete_utf8_characters
        #458 #459  CMake: Support absolute paths for both CMAKE_INSTALL_LIBDIR
                     and CMAKE_INSTALL_INCLUDEDIR
        #468 #469  xmlwf: Improve help output and the xmlwf man page
+
+        Special thanks to:
+            Dimitry Andric
 
 Release 2.3.0 Thu March 25 2021
         Bug fixes:
