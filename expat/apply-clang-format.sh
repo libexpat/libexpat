@@ -40,6 +40,10 @@ clang_format_args=(
     -verbose
 )
 
+if [[ $# -ge 1 ]]; then
+    exec clang-format "${clang_format_args[@]}" "$@"
+fi
+
 expand --tabs=2 --initial lib/siphash.h | sponge lib/siphash.h
 
 find \
