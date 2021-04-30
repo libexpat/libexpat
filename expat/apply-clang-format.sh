@@ -34,6 +34,12 @@ set -o pipefail
 
 clang-format --version
 
+clang_format_args=(
+    -i
+    -style=file
+    -verbose
+)
+
 expand --tabs=2 --initial lib/siphash.h | sponge lib/siphash.h
 
 find \
@@ -42,7 +48,7 @@ find \
         -o -name '*.cxx' \
         -o -name '*.h.cmake' \
     | sort \
-    | xargs clang-format -i -style=file -verbose
+    | xargs clang-format "${clang_format_args[@]}"
 
 sed \
         -e 's, @$,@,' \
