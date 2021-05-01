@@ -6,7 +6,9 @@
 #                      \___/_/\_\ .__/ \__,_|\__|
 #                               |_| XML parser
 #
-# Copyright (c) 2016 Sebastian Pipping <sebastian@pipping.org>
+# Copyright (c) 2016-2021 Sebastian Pipping <sebastian@pipping.org>
+# Copyright (c) 2019      Philippe Antoine <contact@catenacyber.fr>
+# Copyright (c) 2019      Hanno Böck <hanno@gentoo.org>
 # Licensed under the MIT license:
 #
 # Permission is  hereby granted,  free of charge,  to any  person obtaining

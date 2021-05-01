@@ -7,7 +7,21 @@ dnl                       |  __//  \| |_) | (_| | |_
 dnl                        \___/_/\_\ .__/ \__,_|\__|
 dnl                                 |_| XML parser
 dnl
-dnl   Copyright (c) 2000 Clark Cooper <coopercc@users.sourceforge.net>
+dnl   Copyright (c) 2000      Clark Cooper <coopercc@users.sourceforge.net>
+dnl   Copyright (c) 2000-2005 Fred L. Drake, Jr. <fdrake@users.sourceforge.net>
+dnl   Copyright (c) 2001-2003 Greg Stein <gstein@users.sourceforge.net>
+dnl   Copyright (c) 2006-2012 Karl Waclawek <karl@waclawek.net>
+dnl   Copyright (c) 2016-2021 Sebastian Pipping <sebastian@pipping.org>
+dnl   Copyright (c) 2017      S. P. Zeidler <spz@netbsd.org>
+dnl   Copyright (c) 2017      Stephen Groat <stephen@groat.us>
+dnl   Copyright (c) 2017-2020 Joe Orton <jorton@redhat.com>
+dnl   Copyright (c) 2018      Yury Gribov <tetra2005@gmail.com>
+dnl   Copyright (c) 2018      Benjamin Peterson <benjamin@python.org>
+dnl   Copyright (c) 2018      Marco Maggi <marco.maggi-ipsu@poste.it>
+dnl   Copyright (c) 2018      KangLin <kl222@126.com>
+dnl   Copyright (c) 2019      Mohammed Khajapasha <mohammed.khajapasha@intel.com>
+dnl   Copyright (c) 2019      Kishore Kunche <kishore.kunche@intel.com>
+dnl   Copyright (c) 2020      Jeffrey Walton <noloader@gmail.com>
 dnl   Licensed under the MIT license:
 dnl
 dnl   Permission is  hereby granted,  free of charge,  to any  person obtaining
