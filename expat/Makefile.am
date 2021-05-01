@@ -85,7 +85,6 @@ EXTRA_DIST = \
     \
     conftools/expat.m4 \
     conftools/get-version.sh \
-    conftools/PrintPath \
     \
     xmlwf/xmlwf_helpgen.py \
     xmlwf/xmlwf_helpgen.sh \
