@@ -1,14 +1,47 @@
 dnl   configuration script for expat
 dnl   Process this file with autoconf to produce a configure script.
+dnl                            __  __            _
+dnl                         ___\ \/ /_ __   __ _| |_
+dnl                        / _ \\  /| '_ \ / _` | __|
+dnl                       |  __//  \| |_) | (_| | |_
+dnl                        \___/_/\_\ .__/ \__,_|\__|
+dnl                                 |_| XML parser
 dnl
-dnl   Copyright 2000 Clark Cooper
+dnl   Copyright (c) 2000      Clark Cooper <coopercc@users.sourceforge.net>
+dnl   Copyright (c) 2000-2005 Fred L. Drake, Jr. <fdrake@users.sourceforge.net>
+dnl   Copyright (c) 2001-2003 Greg Stein <gstein@users.sourceforge.net>
+dnl   Copyright (c) 2006-2012 Karl Waclawek <karl@waclawek.net>
+dnl   Copyright (c) 2016-2021 Sebastian Pipping <sebastian@pipping.org>
+dnl   Copyright (c) 2017      S. P. Zeidler <spz@netbsd.org>
+dnl   Copyright (c) 2017      Stephen Groat <stephen@groat.us>
+dnl   Copyright (c) 2017-2020 Joe Orton <jorton@redhat.com>
+dnl   Copyright (c) 2018      Yury Gribov <tetra2005@gmail.com>
+dnl   Copyright (c) 2018      Benjamin Peterson <benjamin@python.org>
+dnl   Copyright (c) 2018      Marco Maggi <marco.maggi-ipsu@poste.it>
+dnl   Copyright (c) 2018      KangLin <kl222@126.com>
+dnl   Copyright (c) 2019      Mohammed Khajapasha <mohammed.khajapasha@intel.com>
+dnl   Copyright (c) 2019      Kishore Kunche <kishore.kunche@intel.com>
+dnl   Copyright (c) 2020      Jeffrey Walton <noloader@gmail.com>
+dnl   Licensed under the MIT license:
 dnl
-dnl   This file is part of EXPAT.
+dnl   Permission is  hereby granted,  free of charge,  to any  person obtaining
+dnl   a  copy  of  this  software   and  associated  documentation  files  (the
+dnl   "Software"),  to  deal in  the  Software  without restriction,  including
+dnl   without  limitation the  rights  to use,  copy,  modify, merge,  publish,
+dnl   distribute, sublicense, and/or sell copies of the Software, and to permit
+dnl   persons  to whom  the Software  is  furnished to  do so,  subject to  the
+dnl   following conditions:
 dnl
-dnl   EXPAT is free software; you can redistribute it and/or modify it
-dnl   under the terms of the License (based on the MIT/X license) contained
-dnl   in the file COPYING that comes with this distribution.
+dnl   The above copyright  notice and this permission notice  shall be included
+dnl   in all copies or substantial portions of the Software.
 dnl
+dnl   THE  SOFTWARE  IS  PROVIDED  "AS  IS",  WITHOUT  WARRANTY  OF  ANY  KIND,
+dnl   EXPRESS  OR IMPLIED,  INCLUDING  BUT  NOT LIMITED  TO  THE WARRANTIES  OF
+dnl   MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+dnl   NO EVENT SHALL THE AUTHORS OR  COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+dnl   DAMAGES OR  OTHER LIABILITY, WHETHER  IN AN  ACTION OF CONTRACT,  TORT OR
+dnl   OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
+dnl   USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 dnl Ensure that Expat is configured with autoconf 2.69 or newer.
 AC_PREREQ([2.69])

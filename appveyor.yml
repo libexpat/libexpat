@@ -6,8 +6,9 @@
 #                      \___/_/\_\ .__/ \__,_|\__|
 #                               |_| XML parser
 #
-# Copyright (C) 2017 José Gutiérrez de la Concha <jose@zeroc.com>
-# Copyright (C) 2017 Expat development team
+# Copyright (c) 2017      José Gutiérrez de la Concha <jose@zeroc.com>
+# Copyright (c) 2017-2021 Sebastian Pipping <sebastian@pipping.org>
+# Copyright (c) 2017      Franek Korta <fkorta@gmail.com>
 # Licensed under the MIT license:
 #
 # Permission is  hereby granted,  free of charge,  to any  person obtaining
