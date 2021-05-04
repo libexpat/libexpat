@@ -929,7 +929,8 @@ whether the parse can be resumed in the future.</p>
 
 <h3><a name="creation">Parser Creation</a></h3>
 
-<pre class="fcndec" id="XML_ParserCreate">
+<h4 id="XML_ParserCreate">XML_ParserCreate</h4>
+<pre class="fcndec">
 XML_Parser XMLCALL
 XML_ParserCreate(const XML_Char *encoding);
 </pre>
@@ -946,7 +947,8 @@ encoding declaration. There are four built-in encodings:
 Any other value will invoke a call to the UnknownEncodingHandler.
 </div>
 
-<pre class="fcndec" id="XML_ParserCreateNS">
+<h4 id="XML_ParserCreateNS">XML_ParserCreateNS</h4>
+<pre class="fcndec">
 XML_Parser XMLCALL
 XML_ParserCreateNS(const XML_Char *encoding,
                    XML_Char sep);
@@ -965,7 +967,8 @@ the local part will be concatenated without any separator - this is intended
 to support RDF processors. It is a programming error to use the null separator
 with <a href= "#XML_SetReturnNSTriplet">namespace triplets</a>.</div>
 
-<pre class="fcndec" id="XML_ParserCreate_MM">
+<h4 id="XML_ParserCreate_MM">XML_ParserCreate_MM</h4>
+<pre class="fcndec">
 XML_Parser XMLCALL
 XML_ParserCreate_MM(const XML_Char *encoding,
                     const XML_Memory_Handling_Suite *ms,
@@ -987,7 +990,8 @@ and the character pointed at by sep is used as the separator between
 the namespace URI and the local part of the name.</p>
 </div>
 
-<pre class="fcndec" id="XML_ExternalEntityParserCreate">
+<h4 id="XML_ExternalEntityParserCreate">XML_ExternalEntityParserCreate</h4>
+<pre class="fcndec">
 XML_Parser XMLCALL
 XML_ExternalEntityParserCreate(XML_Parser p,
                                const XML_Char *context,
@@ -1003,7 +1007,8 @@ changing functions on this parser (unless you want it to act
 differently than the parent parser).
 </div>
 
-<pre class="fcndec" id="XML_ParserFree">
+<h4 id="XML_ParserFree">XML_ParserFree</h4>
+<pre class="fcndec">
 void XMLCALL
 XML_ParserFree(XML_Parser p);
 </pre>
@@ -1012,7 +1017,8 @@ Free memory used by the parser. Your application is responsible for
 freeing any memory associated with <a href="#userdata">user data</a>.
 </div>
 
-<pre class="fcndec" id="XML_ParserReset">
+<h4 id="XML_ParserReset">XML_ParserReset</h4>
+<pre class="fcndec">
 XML_Bool XMLCALL
 XML_ParserReset(XML_Parser p,
                 const XML_Char *encoding);
@@ -1051,7 +1057,8 @@ exceed the maximum integer value. Input data at the end of a buffer
 will remain unprocessed if it is part of an XML token for which the
 end is not part of that buffer.</p>
 
-<pre class="fcndec" id="XML_Parse">
+<h4 id="XML_Parse">XML_Parse</h4>
+<pre class="fcndec">
 enum XML_Status XMLCALL
 XML_Parse(XML_Parser p,
           const char *s,
@@ -1078,7 +1085,8 @@ If a parse error occurred, it returns <code>XML_STATUS_ERROR</code>.
 Otherwise it returns <code>XML_STATUS_OK</code> value.
 </div>
 
-<pre class="fcndec" id="XML_ParseBuffer">
+<h4 id="XML_ParseBuffer">XML_ParseBuffer</h4>
+<pre class="fcndec">
 enum XML_Status XMLCALL
 XML_ParseBuffer(XML_Parser p,
                 int len,
@@ -1092,7 +1100,8 @@ buffer from Expat with the <code><a href= "#XML_GetBuffer"
 copying of the input.
 </div>
 
-<pre class="fcndec" id="XML_GetBuffer">
+<h4 id="XML_GetBuffer">XML_GetBuffer</h4>
+<pre class="fcndec">
 void * XMLCALL
 XML_GetBuffer(XML_Parser p,
               int len);
@@ -1127,7 +1136,8 @@ for (;;) {
 </pre>
 </div>
 
-<pre class="fcndec" id="XML_StopParser">
+<h4 id="XML_StopParser">XML_StopParser</h4>
+<pre class="fcndec">
 enum XML_Status XMLCALL
 XML_StopParser(XML_Parser p,
                XML_Bool resumable);
@@ -1195,7 +1205,8 @@ implementation of that handler to call <code><a href=
 <p>New in Expat 1.95.8.</p>
 </div>
 
-<pre class="fcndec" id="XML_ResumeParser">
+<h4 id="XML_ResumeParser">XML_ResumeParser</h4>
+<pre class="fcndec">
 enum XML_Status XMLCALL
 XML_ResumeParser(XML_Parser p);
 </pre>
@@ -1220,7 +1231,8 @@ appropriate moment.</p>
 <p>New in Expat 1.95.8.</p>
 </div>
 
-<pre class="fcndec" id="XML_GetParsingStatus">
+<h4 id="XML_GetParsingStatus">XML_GetParsingStatus</h4>
+<pre class="fcndec">
 void XMLCALL
 XML_GetParsingStatus(XML_Parser p,
                      XML_ParsingStatus *status);
@@ -1269,7 +1281,8 @@ Note that you'll receive them in this form independent of the original
 encoding of the document.</p>
 
 <div class="handler">
-<pre class="setter" id="XML_SetStartElementHandler">
+<h4 id="XML_SetStartElementHandler">XML_SetStartElementHandler</h4>
+<pre class="setter">
 void XMLCALL
 XML_SetStartElementHandler(XML_Parser p,
                            XML_StartElementHandler start);
@@ -1290,7 +1303,8 @@ by a null pointer.</p>
 </div>
 
 <div class="handler">
-<pre class="setter" id="XML_SetEndElementHandler">
+<h4 id="XML_SetEndElementHandler">XML_SetEndElementHandler</h4>
+<pre class="setter">
 void XMLCALL
 XML_SetEndElementHandler(XML_Parser p,
                          XML_EndElementHandler);
@@ -1305,7 +1319,8 @@ generates a call to both start and end handlers.</p>
 </div>
 
 <div class="handler">
-<pre class="setter" id="XML_SetElementHandler">
+<h4 id="XML_SetElementHandler">XML_SetElementHandler</h4>
+<pre class="setter">
 void XMLCALL
 XML_SetElementHandler(XML_Parser p,
                       XML_StartElementHandler start,
@@ -1315,7 +1330,8 @@ XML_SetElementHandler(XML_Parser p,
 </div>
 
 <div class="handler">
-<pre class="setter" id="XML_SetCharacterDataHandler">
+<h4 id="XML_SetCharacterDataHandler">XML_SetCharacterDataHandler</h4>
+<pre class="setter">
 void XMLCALL
 XML_SetCharacterDataHandler(XML_Parser p,
                             XML_CharacterDataHandler charhndl)
@@ -1338,7 +1354,8 @@ will continue calling back until the end of the block is reached.</p>
 </div>
 
 <div class="handler">
-<pre class="setter" id="XML_SetProcessingInstructionHandler">
+<h4 id="XML_SetProcessingInstructionHandler">XML_SetProcessingInstructionHandler</h4>
+<pre class="setter">
 void XMLCALL
 XML_SetProcessingInstructionHandler(XML_Parser p,
                                     XML_ProcessingInstructionHandler proc)
@@ -1356,7 +1373,8 @@ it after skipping all whitespace after the initial word.</p>
 </div>
 
 <div class="handler">
-<pre class="setter" id="XML_SetCommentHandler">
+<h4 id="XML_SetCommentHandler">XML_SetCommentHandler</h4>
+<pre class="setter">
 void XMLCALL
 XML_SetCommentHandler(XML_Parser p,
                       XML_CommentHandler cmnt)
@@ -1371,7 +1389,8 @@ delimiters.</p>
 </div>
 
 <div class="handler">
-<pre class="setter" id="XML_SetStartCdataSectionHandler">
+<h4 id="XML_SetStartCdataSectionHandler">XML_SetStartCdataSectionHandler</h4>
+<pre class="setter">
 void XMLCALL
 XML_SetStartCdataSectionHandler(XML_Parser p,
                                 XML_StartCdataSectionHandler start);
@@ -1384,7 +1403,8 @@ typedef void
 </div>
 
 <div class="handler">
-<pre class="setter" id="XML_SetEndCdataSectionHandler">
+<h4 id="XML_SetEndCdataSectionHandler">XML_SetEndCdataSectionHandler</h4>
+<pre class="setter">
 void XMLCALL
 XML_SetEndCdataSectionHandler(XML_Parser p,
                               XML_EndCdataSectionHandler end);
@@ -1397,7 +1417,8 @@ typedef void
 </div>
 
 <div class="handler">
-<pre class="setter" id="XML_SetCdataSectionHandler">
+<h4 id="XML_SetCdataSectionHandler">XML_SetCdataSectionHandler</h4>
+<pre class="setter">
 void XMLCALL
 XML_SetCdataSectionHandler(XML_Parser p,
                            XML_StartCdataSectionHandler start,
@@ -1407,7 +1428,8 @@ XML_SetCdataSectionHandler(XML_Parser p,
 </div>
 
 <div class="handler">
-<pre class="setter" id="XML_SetDefaultHandler">
+<h4 id="XML_SetDefaultHandler">XML_SetDefaultHandler</h4>
+<pre class="setter">
 void XMLCALL
 XML_SetDefaultHandler(XML_Parser p,
                       XML_DefaultHandler hndl)
@@ -1438,7 +1460,8 @@ href="#XML_DefaultCurrent">XML_DefaultCurrent</a></code>.</p>
 </div>
 
 <div class="handler">
-<pre class="setter" id="XML_SetDefaultHandlerExpand">
+<h4 id="XML_SetDefaultHandlerExpand">XML_SetDefaultHandlerExpand</h4>
+<pre class="setter">
 void XMLCALL
 XML_SetDefaultHandlerExpand(XML_Parser p,
                             XML_DefaultHandler hndl)
@@ -1458,7 +1481,8 @@ href="#XML_DefaultCurrent">XML_DefaultCurrent</a></code>.</p>
 </div>
 
 <div class="handler">
-<pre class="setter" id="XML_SetExternalEntityRefHandler">
+<h4 id="XML_SetExternalEntityRefHandler">XML_SetExternalEntityRefHandler</h4>
+<pre class="setter">
 void XMLCALL
 XML_SetExternalEntityRefHandler(XML_Parser p,
                                 XML_ExternalEntityRefHandler hndl)
@@ -1511,7 +1535,8 @@ parser, the body of the external entity can be recursively parsed.</p>
 information into global or static variables.</p>
 </div>
 
-<pre class="fcndec" id="XML_SetExternalEntityRefHandlerArg">
+<h4 id="XML_SetExternalEntityRefHandlerArg">XML_SetExternalEntityRefHandlerArg</h4>
+<pre class="fcndec">
 void XMLCALL
 XML_SetExternalEntityRefHandlerArg(XML_Parser p,
                                    void *arg)
@@ -1537,7 +1562,8 @@ properly.</p>
 </div>
 
 <div class="handler">
-<pre class="setter" id="XML_SetSkippedEntityHandler">
+<h4 id="XML_SetSkippedEntityHandler">XML_SetSkippedEntityHandler</h4>
+<pre class="setter">
 void XMLCALL
 XML_SetSkippedEntityHandler(XML_Parser p,
                             XML_SkippedEntityHandler handler)
@@ -1564,7 +1590,8 @@ sync with the reporting of the declarations or attribute values</p>
 </div>
 
 <div class="handler">
-<pre class="setter" id="XML_SetUnknownEncodingHandler">
+<h4 id="XML_SetUnknownEncodingHandler">XML_SetUnknownEncodingHandler</h4>
+<pre class="setter">
 void XMLCALL
 XML_SetUnknownEncodingHandler(XML_Parser p,
                               XML_UnknownEncodingHandler enchandler,
@@ -1613,7 +1640,8 @@ parser when it is finished with the encoding. It may be NULL.</p>
 </div>
 
 <div class="handler">
-<pre class="setter" id="XML_SetStartNamespaceDeclHandler">
+<h4 id="XML_SetStartNamespaceDeclHandler">XML_SetStartNamespaceDeclHandler</h4>
+<pre class="setter">
 void XMLCALL
 XML_SetStartNamespaceDeclHandler(XML_Parser p,
 			         XML_StartNamespaceDeclHandler start);
@@ -1631,7 +1659,8 @@ in that start tag.</p>
 </div>
 
 <div class="handler">
-<pre class="setter" id="XML_SetEndNamespaceDeclHandler">
+<h4 id="XML_SetEndNamespaceDeclHandler">XML_SetEndNamespaceDeclHandler</h4>
+<pre class="setter">
 void XMLCALL
 XML_SetEndNamespaceDeclHandler(XML_Parser p,
 			       XML_EndNamespaceDeclHandler end);
@@ -1648,7 +1677,8 @@ namespace was declared.</p>
 </div>
 
 <div class="handler">
-<pre class="setter" id="XML_SetNamespaceDeclHandler">
+<h4 id="XML_SetNamespaceDeclHandler">XML_SetNamespaceDeclHandler</h4>
+<pre class="setter">
 void XMLCALL
 XML_SetNamespaceDeclHandler(XML_Parser p,
                             XML_StartNamespaceDeclHandler start,
@@ -1658,7 +1688,8 @@ XML_SetNamespaceDeclHandler(XML_Parser p,
 </div>
 
 <div class="handler">
-<pre class="setter" id="XML_SetXmlDeclHandler">
+<h4 id="XML_SetXmlDeclHandler">XML_SetXmlDeclHandler</h4>
+<pre class="setter">
 void XMLCALL
 XML_SetXmlDeclHandler(XML_Parser p,
 		      XML_XmlDeclHandler xmldecl);
@@ -1681,7 +1712,8 @@ that it was given as yes.</p>
 </div>
 
 <div class="handler">
-<pre class="setter" id="XML_SetStartDoctypeDeclHandler">
+<h4 id="XML_SetStartDoctypeDeclHandler">XML_SetStartDoctypeDeclHandler</h4>
+<pre class="setter">
 void XMLCALL
 XML_SetStartDoctypeDeclHandler(XML_Parser p,
 			       XML_StartDoctypeDeclHandler start);
@@ -1701,7 +1733,8 @@ will be non-zero if the DOCTYPE declaration has an internal subset.</p>
 </div>
 
 <div class="handler">
-<pre class="setter" id="XML_SetEndDoctypeDeclHandler">
+<h4 id="XML_SetEndDoctypeDeclHandler">XML_SetEndDoctypeDeclHandler</h4>
+<pre class="setter">
 void XMLCALL
 XML_SetEndDoctypeDeclHandler(XML_Parser p,
 			     XML_EndDoctypeDeclHandler end);
@@ -1715,7 +1748,8 @@ after parsing any external subset.</p>
 </div>
 
 <div class="handler">
-<pre class="setter" id="XML_SetDoctypeDeclHandler">
+<h4 id="XML_SetDoctypeDeclHandler">XML_SetDoctypeDeclHandler</h4>
+<pre class="setter">
 void XMLCALL
 XML_SetDoctypeDeclHandler(XML_Parser p,
 			  XML_StartDoctypeDeclHandler start,
@@ -1725,7 +1759,8 @@ XML_SetDoctypeDeclHandler(XML_Parser p,
 </div>
 
 <div class="handler">
-<pre class="setter" id="XML_SetElementDeclHandler">
+<h4 id="XML_SetElementDeclHandler">XML_SetElementDeclHandler</h4>
+<pre class="setter">
 void XMLCALL
 XML_SetElementDeclHandler(XML_Parser p,
 			  XML_ElementDeclHandler eldecl);
@@ -1797,7 +1832,8 @@ or sequence and <code>children</code> points to the nodes.</p>
 </div>
 
 <div class="handler">
-<pre class="setter" id="XML_SetAttlistDeclHandler">
+<h4 id="XML_SetAttlistDeclHandler">XML_SetAttlistDeclHandler</h4>
+<pre class="setter">
 void XMLCALL
 XML_SetAttlistDeclHandler(XML_Parser p,
                           XML_AttlistDeclHandler attdecl);
@@ -1830,7 +1866,8 @@ in the <code>dflt</code> parameter.</p>
 </div>
 
 <div class="handler">
-<pre class="setter" id="XML_SetEntityDeclHandler">
+<h4 id="XML_SetEntityDeclHandler">XML_SetEntityDeclHandler</h4>
+<pre class="setter">
 void XMLCALL
 XML_SetEntityDeclHandler(XML_Parser p,
 			 XML_EntityDeclHandler handler);
@@ -1864,7 +1901,8 @@ declarations.</p>
 </div>
 
 <div class="handler">
-<pre class="setter" id="XML_SetUnparsedEntityDeclHandler">
+<h4 id="XML_SetUnparsedEntityDeclHandler">XML_SetUnparsedEntityDeclHandler</h4>
+<pre class="setter">
 void XMLCALL
 XML_SetUnparsedEntityDeclHandler(XML_Parser p,
                                  XML_UnparsedEntityDeclHandler h)
@@ -1890,7 +1928,8 @@ compatibility.  Use instead <a href= "#XML_SetEntityDeclHandler"
 </div>
 
 <div class="handler">
-<pre class="setter" id="XML_SetNotationDeclHandler">
+<h4 id="XML_SetNotationDeclHandler">XML_SetNotationDeclHandler</h4>
+<pre class="setter">
 void XMLCALL
 XML_SetNotationDeclHandler(XML_Parser p,
                            XML_NotationDeclHandler h)
@@ -1907,7 +1946,8 @@ typedef void
 </div>
 
 <div class="handler">
-<pre class="setter" id="XML_SetNotStandaloneHandler">
+<h4 id="XML_SetNotStandaloneHandler">XML_SetNotStandaloneHandler</h4>
+<pre class="setter">
 void XMLCALL
 XML_SetNotStandaloneHandler(XML_Parser p,
                             XML_NotStandaloneHandler h)
@@ -1942,7 +1982,8 @@ events.</p>
 DTD.  In other words, they usually return bogus information when
 called from within a DTD declaration handler.</p>
 
-<pre class="fcndec" id="XML_GetErrorCode">
+<h4 id="XML_GetErrorCode">XML_GetErrorCode</h4>
+<pre class="fcndec">
 enum XML_Error XMLCALL
 XML_GetErrorCode(XML_Parser p);
 </pre>
@@ -1950,7 +1991,8 @@ XML_GetErrorCode(XML_Parser p);
 Return what type of error has occurred.
 </div>
 
-<pre class="fcndec" id="XML_ErrorString">
+<h4 id="XML_ErrorString">XML_ErrorString</h4>
+<pre class="fcndec">
 const XML_LChar * XMLCALL
 XML_ErrorString(enum XML_Error code);
 </pre>
@@ -1960,7 +2002,8 @@ The code should be one of the enums that can be returned from
 <code><a href= "#XML_GetErrorCode" >XML_GetErrorCode</a></code>.
 </div>
 
-<pre class="fcndec" id="XML_GetCurrentByteIndex">
+<h4 id="XML_GetCurrentByteIndex">XML_GetCurrentByteIndex</h4>
+<pre class="fcndec">
 XML_Index XMLCALL
 XML_GetCurrentByteIndex(XML_Parser p);
 </pre>
@@ -1971,7 +2014,8 @@ the values returned by <code><a href= "#XML_GetCurrentLineNumber"
 "#XML_GetCurrentColumnNumber" >XML_GetCurrentColumnNumber</a></code>.
 </div>
 
-<pre class="fcndec" id="XML_GetCurrentLineNumber">
+<h4 id="XML_GetCurrentLineNumber">XML_GetCurrentLineNumber</h4>
+<pre class="fcndec">
 XML_Size XMLCALL
 XML_GetCurrentLineNumber(XML_Parser p);
 </pre>
@@ -1980,7 +2024,8 @@ Return the line number of the position.  The first line is reported as
 <code>1</code>.
 </div>
 
-<pre class="fcndec" id="XML_GetCurrentColumnNumber">
+<h4 id="XML_GetCurrentColumnNumber">XML_GetCurrentColumnNumber</h4>
+<pre class="fcndec">
 XML_Size XMLCALL
 XML_GetCurrentColumnNumber(XML_Parser p);
 </pre>
@@ -1989,7 +2034,8 @@ Return the offset, from the beginning of the current line, of
 the position.
 </div>
 
-<pre class="fcndec" id="XML_GetCurrentByteCount">
+<h4 id="XML_GetCurrentByteCount">XML_GetCurrentByteCount</h4>
+<pre class="fcndec">
 int XMLCALL
 XML_GetCurrentByteCount(XML_Parser p);
 </pre>
@@ -2001,7 +2047,8 @@ be used to distinguish empty-element tags from empty elements using
 separate start and end tags).
 </div>
 
-<pre class="fcndec" id="XML_GetInputContext">
+<h4 id="XML_GetInputContext">XML_GetInputContext</h4>
+<pre class="fcndec">
 const char * XMLCALL
 XML_GetInputContext(XML_Parser p,
                     int *offset,
@@ -2032,7 +2079,8 @@ return NULL.</p>
 <p>The functions in this section either obtain state information from
 the parser or can be used to dynamically set parser options.</p>
 
-<pre class="fcndec" id="XML_SetUserData">
+<h4 id="XML_SetUserData">XML_SetUserData</h4>
+<pre class="fcndec">
 void XMLCALL
 XML_SetUserData(XML_Parser p,
                 void *userData);
@@ -2047,7 +2095,8 @@ the memory associated with it, then you've probably just leaked
 memory.
 </div>
 
-<pre class="fcndec" id="XML_GetUserData">
+<h4 id="XML_GetUserData">XML_GetUserData</h4>
+<pre class="fcndec">
 void * XMLCALL
 XML_GetUserData(XML_Parser p);
 </pre>
@@ -2056,7 +2105,8 @@ This returns the user data pointer that gets passed to handlers.
 It is actually implemented as a macro.
 </div>
 
-<pre class="fcndec" id="XML_UseParserAsHandlerArg">
+<h4 id="XML_UseParserAsHandlerArg">XML_UseParserAsHandlerArg</h4>
+<pre class="fcndec">
 void XMLCALL
 XML_UseParserAsHandlerArg(XML_Parser p);
 </pre>
@@ -2067,7 +2117,8 @@ using the <code><a href= "#XML_GetUserData"
 >XML_GetUserData</a></code> function.
 </div>
 
-<pre class="fcndec" id="XML_SetBase">
+<h4 id="XML_SetBase">XML_SetBase</h4>
+<pre class="fcndec">
 enum XML_Status XMLCALL
 XML_SetBase(XML_Parser p,
             const XML_Char *base);
@@ -2079,7 +2130,8 @@ there's no memory to store base, otherwise it's
 <code>XML_STATUS_OK</code>.
 </div>
 
-<pre class="fcndec" id="XML_GetBase">
+<h4 id="XML_GetBase">XML_GetBase</h4>
+<pre class="fcndec">
 const XML_Char * XMLCALL
 XML_GetBase(XML_Parser p);
 </pre>
@@ -2087,7 +2139,8 @@ XML_GetBase(XML_Parser p);
 Return the base for resolving relative URIs.
 </div>
 
-<pre class="fcndec" id="XML_GetSpecifiedAttributeCount">
+<h4 id="XML_GetSpecifiedAttributeCount">XML_GetSpecifiedAttributeCount</h4>
+<pre class="fcndec">
 int XMLCALL
 XML_GetSpecifiedAttributeCount(XML_Parser p);
 </pre>
@@ -2103,7 +2156,8 @@ call to a start handler. If called inside a start handler, then that
 means the current call.
 </div>
 
-<pre class="fcndec" id="XML_GetIdAttributeIndex">
+<h4 id="XML_GetIdAttributeIndex">XML_GetIdAttributeIndex</h4>
+<pre class="fcndec">
 int XMLCALL
 XML_GetIdAttributeIndex(XML_Parser p);
 </pre>
@@ -2115,7 +2169,8 @@ attribute. If called inside a start handler, then that means the
 current call.
 </div>
 
-<pre class="fcndec" id="XML_GetAttributeInfo">
+<h4 id="XML_GetAttributeInfo">XML_GetAttributeInfo</h4>
+<pre class="fcndec">
 const XML_AttrInfo * XMLCALL
 XML_GetAttributeInfo(XML_Parser parser);
 </pre>
@@ -2136,7 +2191,8 @@ as 1; thus the number of entries in the array is
 <code>XML_GetSpecifiedAttributeCount(parser) / 2</code>.
 </div>
 
-<pre class="fcndec" id="XML_SetEncoding">
+<h4 id="XML_SetEncoding">XML_SetEncoding</h4>
+<pre class="fcndec">
 enum XML_Status XMLCALL
 XML_SetEncoding(XML_Parser p,
                 const XML_Char *encoding);
@@ -2151,7 +2207,8 @@ Returns <code>XML_STATUS_OK</code> on success or
 <code>XML_STATUS_ERROR</code> on error.
 </div>
 
-<pre class="fcndec" id="XML_SetParamEntityParsing">
+<h4 id="XML_SetParamEntityParsing">XML_SetParamEntityParsing</h4>
+<pre class="fcndec">
 int XMLCALL
 XML_SetParamEntityParsing(XML_Parser p,
                           enum XML_ParamEntityParsing code);
@@ -2171,7 +2228,8 @@ The choices for <code>code</code> are:
 no effect and will always return 0.
 </div>
 
-<pre class="fcndec" id="XML_SetHashSalt">
+<h4 id="XML_SetHashSalt">XML_SetHashSalt</h4>
+<pre class="fcndec">
 int XMLCALL
 XML_SetHashSalt(XML_Parser p,
                 unsigned long hash_salt);
@@ -2190,7 +2248,8 @@ that <code>XML_SetHashSalt</code> has <b>not</b> been called. Consequently
 such a call will have no effect, even if it returns 1.</p>
 </div>
 
-<pre class="fcndec" id="XML_UseForeignDTD">
+<h4 id="XML_UseForeignDTD">XML_UseForeignDTD</h4>
+<pre class="fcndec">
 enum XML_Error XMLCALL
 XML_UseForeignDTD(XML_Parser parser, XML_Bool useDTD);
 </pre>
@@ -2227,7 +2286,8 @@ the document had a DTD with an external subset. This holds true even if
 the external entity reference handler returns without action.</p>
 </div>
 
-<pre class="fcndec" id="XML_SetReturnNSTriplet">
+<h4 id="XML_SetReturnNSTriplet">XML_SetReturnNSTriplet</h4>
+<pre class="fcndec">
 void XMLCALL
 XML_SetReturnNSTriplet(XML_Parser parser,
                        int        do_nst);
@@ -2249,7 +2309,8 @@ default manner, URI then local_name separated by the namespace
 separator.</p>
 </div>
 
-<pre class="fcndec" id="XML_DefaultCurrent">
+<h4 id="XML_DefaultCurrent">XML_DefaultCurrent</h4>
+<pre class="fcndec">
 void XMLCALL
 XML_DefaultCurrent(XML_Parser parser);
 </pre>
@@ -2263,7 +2324,8 @@ href="#XML_SetDefaultHandler" >XML_SetDefaultHandler</a></code> or
 not a default handler.
 </div>
 
-<pre class="fcndec" id="XML_ExpatVersion">
+<h4 id="XML_ExpatVersion">XML_ExpatVersion</h4>
+<pre class="fcndec">
 XML_LChar * XMLCALL
 XML_ExpatVersion();
 </pre>
@@ -2271,7 +2333,8 @@ XML_ExpatVersion();
 Return the library version as a string (e.g. <code>"expat_1.95.1"</code>).
 </div>
 
-<pre class="fcndec" id="XML_ExpatVersionInfo">
+<h4 id="XML_ExpatVersionInfo">XML_ExpatVersionInfo</h4>
+<pre class="fcndec">
 struct XML_Expat_Version XMLCALL
 XML_ExpatVersionInfo();
 </pre>
@@ -2295,7 +2358,8 @@ Testing these constants is currently the best way to determine if
 particular parts of the Expat API are available.
 </div>
 
-<pre class="fcndec" id="XML_GetFeatureList">
+<h4 id="XML_GetFeatureList">XML_GetFeatureList</h4>
+<pre class="fcndec">
 const XML_Feature * XMLCALL
 XML_GetFeatureList();
 </pre>
@@ -2356,7 +2420,8 @@ time, the following features have been defined to have values:</p>
 </dl>
 </div>
 
-<pre class="fcndec" id="XML_FreeContentModel">
+<h4 id="XML_FreeContentModel">XML_FreeContentModel</h4>
+<pre class="fcndec">
 void XMLCALL
 XML_FreeContentModel(XML_Parser parser, XML_Content *model);
 </pre>
@@ -2375,7 +2440,8 @@ applications.  This can be essential when using dynamically loaded
 libraries which use different C standard libraries (this can happen on
 Windows, at least).</p>
 
-<pre class="fcndec" id="XML_MemMalloc">
+<h4 id="XML_MemMalloc">XML_MemMalloc</h4>
+<pre class="fcndec">
 void * XMLCALL
 XML_MemMalloc(XML_Parser parser, size_t size);
 </pre>
@@ -2387,7 +2453,8 @@ way must be freed using <code><a href="#XML_MemFree"
 >XML_MemFree</a></code>.
 </div>
 
-<pre class="fcndec" id="XML_MemRealloc">
+<h4 id="XML_MemRealloc">XML_MemRealloc</h4>
+<pre class="fcndec">
 void * XMLCALL
 XML_MemRealloc(XML_Parser parser, void *ptr, size_t size);
 </pre>
@@ -2406,7 +2473,8 @@ original block.  Memory allocated in this way must be freed using
 >XML_MemFree</a></code>.
 </div>
 
-<pre class="fcndec" id="XML_MemFree">
+<h4 id="XML_MemFree">XML_MemFree</h4>
+<pre class="fcndec">
 void XMLCALL
 XML_MemFree(XML_Parser parser, void *ptr);
 </pre>
