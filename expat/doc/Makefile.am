@@ -54,7 +54,6 @@ clean-local-check:
 	$(RM) xmlwf.1
 
 EXTRA_DIST = \
-    expat.png \
     ok.min.css \
     reference.html \
     style.css \
