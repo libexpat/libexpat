@@ -8,6 +8,7 @@
 
    Copyright (c) 2000      Clark Cooper <coopercc@users.sourceforge.net>
    Copyright (c) 2000-2004 Fred L. Drake, Jr. <fdrake@users.sourceforge.net>
+   Copyright (c) 2021      Sebastian Pipping <sebastian@pipping.org>
    Licensed under the MIT license:
 
    Permission is  hereby granted,  free of charge,  to any  person obtaining
@@ -30,104 +31,21 @@
    USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+/* Stop not using half the screen */
 body {
-  background-color: white;
-  border: 0px;
-  margin: 0px;
-  padding: 0px;
+  max-width: none; /* was: 80ch */
 }
 
-.corner {
-  width: 200px;
-  height: 80px;
-  text-align: center;
+/* Workaround OK.css issue with spacing in description lists
+   https://github.com/andrewh0/okcss/issues/4
+*/
+dt {
+  margin-bottom: 0;
 }
-
-.banner {
-  background-color: rgb(110,139,61);
-  color: rgb(255,236,176);
-  padding-left: 2em;
-}
-
-.banner h1 {
-  font-size: 200%;
-}
-
-.content {
-  padding: 0em 2em 1em 2em;
-}
-
-.releaseno {
-  background-color: rgb(110,139,61);
-  color: rgb(255,236,176);
-  padding-bottom: 0.3em;
-  padding-top: 0.5em;
-  text-align: center;
-  font-weight: bold;
-}
-
-.noborder {
-  border-width: 0px;
-}
-
-.eg {
-  padding-left: 1em;
-  padding-top: .5em;
-  padding-bottom: .5em;
-  border: solid thin;
-  margin: 1em 0;
-  background-color: tan;
-  margin-left: 2em;
-  margin-right: 10%;
-}
-
-.pseudocode {
-  padding-left: 1em;
-  padding-top: .5em;
-  padding-bottom: .5em;
-  border: solid thin;
-  margin: 1em 0;
-  background-color: rgb(250,220,180);
-  margin-left: 2em;
-  margin-right: 10%;
-}
-
-.handler {
-  width: 100%;
-  border-top-width: thin;  
-  margin-bottom: 1em;
-}
-
-.handler p {
-  margin-left: 2em;
-}
-
-.setter {
-  font-weight: bold;
-}
-
-.signature {
-  color: navy;
-}
-
-.fcndec {
-  width: 100%;
-  border-top-width: thin;
-  font-weight: bold;
-}
-
-.fcndef {
-  margin-left: 2em;
-  margin-bottom: 2em;
-}
-
-dd {
-  margin-bottom: 2em;
+dl dt:nth-child(1n+2) {
+  margin-top: 1.5ex;
 }
 
 .cpp-symbols dt {
   font-family: monospace;
-}
-.cpp-symbols dd {
-  margin-bottom: 1em;
 }
