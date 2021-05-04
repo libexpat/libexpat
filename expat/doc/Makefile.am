@@ -55,6 +55,7 @@ clean-local-check:
 
 EXTRA_DIST = \
     expat.png \
+    ok.min.css \
     reference.html \
     style.css \
     valid-xhtml10.png \
