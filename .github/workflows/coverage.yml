@@ -69,7 +69,7 @@ jobs:
     - name: Unshallow Git clone
       run: |
         git fetch --tags --unshallow origin  # for "git describe" in coverage.sh
-    - name: Perform check "${{ matrix.MODE }}"
+    - name: Collect test coverage
       env:
         MODE: coverage-sh
         TRAVIS_OS_NAME: linux
