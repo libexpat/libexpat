@@ -49,3 +49,9 @@ dl dt:nth-child(1n+2) {
 .cpp-symbols dt {
   font-family: monospace;
 }
+
+/* Resemble style of <footer> which is not part of xhtml1-strict */
+.footer {
+  font-size: var(--ok-fs-5);
+  color: var(--ok-tc-1);
+}

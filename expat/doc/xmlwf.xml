@@ -1,4 +1,5 @@
-<!DOCTYPE refentry [
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.2//EN"
+          "http://www.oasis-open.org/docbook/xml/4.2/docbookx.dtd" [
   <!-- Fill in your name for FIRSTNAME and SURNAME. -->
   <!ENTITY dhfirstname "<firstname>Scott</firstname>">
   <!ENTITY dhsurname   "<surname>Bronson</surname>">
@@ -49,11 +50,11 @@
     </cmdsynopsis>
     <cmdsynopsis>
       <command>&dhpackage;</command>
-      <option>-h</option>
+      <arg choice="plain"><option>-h</option></arg>
     </cmdsynopsis>
     <cmdsynopsis>
       <command>&dhpackage;</command>
-      <option>-v</option>
+      <arg choice="plain"><option>-v</option></arg>
     </cmdsynopsis>
   </refsynopsisdiv>
  
