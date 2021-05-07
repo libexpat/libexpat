@@ -1,4 +1,5 @@
-<!DOCTYPE refentry [
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.2//EN"
+          "http://www.oasis-open.org/docbook/xml/4.2/docbookx.dtd" [
   <!-- Fill in your name for FIRSTNAME and SURNAME. -->
   <!ENTITY dhfirstname "<firstname>Scott</firstname>">
   <!ENTITY dhsurname   "<surname>Bronson</surname>">
