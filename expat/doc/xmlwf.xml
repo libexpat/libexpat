@@ -50,11 +50,11 @@
     </cmdsynopsis>
     <cmdsynopsis>
       <command>&dhpackage;</command>
-      <option>-h</option>
+      <arg choice="plain"><option>-h</option></arg>
     </cmdsynopsis>
     <cmdsynopsis>
       <command>&dhpackage;</command>
-      <option>-v</option>
+      <arg choice="plain"><option>-v</option></arg>
     </cmdsynopsis>
   </refsynopsisdiv>
  
