@@ -36,16 +36,6 @@ body {
   max-width: none; /* was: 80ch */
 }
 
-/* Workaround OK.css issue with spacing in description lists
-   https://github.com/andrewh0/okcss/issues/4
-*/
-dt {
-  margin-bottom: 0;
-}
-dl dt:nth-child(1n+2) {
-  margin-top: 1.5ex;
-}
-
 .cpp-symbols dt {
   font-family: monospace;
 }
