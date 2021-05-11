@@ -45,15 +45,33 @@ Release X.X.X XXX XXXXX XX XXXX
                     that were introduced with release 2.3.0
 
         Other changes:
-            #457  Unexpose symbol _INTERNAL_trim_to_complete_utf8_characters
+       #468 #469  xmlwf: Improve help output and the xmlwf man page
+            #463  xmlwf: Improve maintainability through some refactoring
+            #477  xmlwf: Fix man page DocBook validity
        #458 #459  CMake: Support absolute paths for both CMAKE_INSTALL_LIBDIR
                     and CMAKE_INSTALL_INCLUDEDIR
        #471 #481  CMake: Add support for standard variable BUILD_SHARED_LIBS
-       #468 #469  xmlwf: Improve help output and the xmlwf man page
+            #457  Unexpose symbol _INTERNAL_trim_to_complete_utf8_characters
+            #467  Resolve macro HAVE_EXPAT_CONFIG_H
+            #472  Delete unused legacy helper file "conftools/PrintPath"
+       #473 #483  Improve attribution
+  #464 #465 #477  doc/reference.html: Fix XHTML validity
+       #475 #478  doc/reference.html: Replace the 90s look by OK.css
+
+        Infrastructure:
+            #456  CI: Enable periodic runs
+            #457  CI: Start covering the list of exported symbols
+            #474  CI: Isolate coverage task
+       #476 #482  CI: Adapt to breaking changes in image "ubuntu-18.04"
+            #477  CI: Cover well-formedness and DocBook/XHTML validity
+                    of doc/reference.html and doc/xmlwf.xml
 
         Special thanks to:
             Dimitry Andric
+            Eero Helenius
             Nick Wellnhofer
+            Rhodri James
+            Tomas Korbar
             Yury Gribov
                  and
             Clang LeakSan
