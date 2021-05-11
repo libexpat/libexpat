@@ -57,6 +57,9 @@ Release 2.4.0 XXX XXXXX XX XXXX
        #473 #483  Improve attribution
   #464 #465 #477  doc/reference.html: Fix XHTML validity
        #475 #478  doc/reference.html: Replace the 90s look by OK.css
+            #479  Version info bumped from 8:0:7 to 9:0:8
+                    due to addition of new symbols and error codes;
+                    see https://verbump.de/ for what these numbers do
 
         Infrastructure:
             #456  CI: Enable periodic runs
