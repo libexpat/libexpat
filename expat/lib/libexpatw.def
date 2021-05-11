@@ -75,3 +75,6 @@ EXPORTS
 ; XML_GetAttributeInfo @66
   XML_SetHashSalt @67
 ; internal @68 removed with version 2.3.1
+; added with version 2.4.0
+  XML_SetBillionLaughsAttackProtectionActivationThreshold @69
+  XML_SetBillionLaughsAttackProtectionMaximumAmplification @70

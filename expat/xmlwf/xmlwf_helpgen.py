@@ -73,6 +73,14 @@ output_mode.add_argument('-m', action='store_true', help='write [m]eta XML, not 
 output_mode.add_argument('-t', action='store_true', help='write no XML output for [t]iming of plain parsing')
 output_related.add_argument('-N', action='store_true', help='enable adding doctype and [n]otation declarations')
 
+billion_laughs = parser.add_argument_group('billion laughs attack protection',
+                                           description='NOTE: '
+                                                       'If you ever need to increase these values '
+                                                       'for non-attack payload, please file a bug report.')
+billion_laughs.add_argument('-a', metavar='FACTOR',
+                            help='set maximum tolerated [a]mplification factor (default: 100.0)')
+billion_laughs.add_argument('-b', metavar='BYTES', help='set number of output [b]ytes needed to activate (default: 8 MiB)')
+
 parser.add_argument('files', metavar='FILE', nargs='*', help='file to process (default: STDIN)')
 
 info = parser.add_argument_group('info arguments')

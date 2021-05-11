@@ -4,7 +4,7 @@
   <!ENTITY dhfirstname "<firstname>Scott</firstname>">
   <!ENTITY dhsurname   "<surname>Bronson</surname>">
   <!-- Please adjust the date whenever revising the manpage. -->
-  <!ENTITY dhdate      "<date>April 25, 2021</date>">
+  <!ENTITY dhdate      "<date>May 4, 2021</date>">
   <!-- SECTION should be 1-8, maybe w/ subsection other parameters are
        allowed: see man(7), man(1). -->
   <!ENTITY dhsection   "<manvolnum>1</manvolnum>">
@@ -130,6 +130,50 @@ supports both.
 </para>
 
     <variablelist>
+
+      <varlistentry>
+        <term><option>-a</option> <replaceable>factor</replaceable></term>
+        <listitem>
+          <para>
+            Sets the maximum tolerated amplification factor
+            for protection against billion laughs attacks (default: 100.0).
+            The amplification factor is calculated as ..
+          </para>
+          <literallayout>
+            amplification := (direct + indirect) / direct
+          </literallayout>
+          <para>
+            .. while parsing, whereas
+            &lt;direct&gt; is the number of bytes read
+              from the primary document in parsing and
+            &lt;indirect&gt; is the number of bytes
+              added by expanding entities and reading of external DTD files,
+              combined.
+          </para>
+          <para>
+            <emphasis>NOTE</emphasis>:
+            If you ever need to increase this value for non-attack payload,
+            please file a bug report.
+          </para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-b</option> <replaceable>bytes</replaceable></term>
+        <listitem>
+          <para>
+            Sets the number of output bytes (including amplification)
+            needed to activate protection against billion laughs attacks
+            (default: 8 MiB).
+            This can be thought of as an &quot;activation threshold&quot;.
+          </para>
+          <para>
+            <emphasis>NOTE</emphasis>:
+            If you ever need to increase this value for non-attack payload,
+            please file a bug report.
+          </para>
+        </listitem>
+      </varlistentry>
 
       <varlistentry>
         <term><option>-c</option></term>
@@ -458,6 +502,7 @@ supports both.
 <literallayout>
 The Expat home page:                            https://libexpat.github.io/
 The W3 XML 1.0 specification (fourth edition):  https://www.w3.org/TR/2006/REC-xml-20060816/
+Billion laughs attack:                          https://en.wikipedia.org/wiki/Billion_laughs_attack
 </literallayout>
 
 	</para>

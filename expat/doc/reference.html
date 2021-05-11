@@ -148,6 +148,13 @@ interface.</p>
       <li><a href="#XML_GetInputContext">XML_GetInputContext</a></li>
     </ul>
     </li>
+    <li>
+      <a href="#billion-laughs">Billion Laughs Attack Protection</a>
+      <ul>
+        <li><a href="#XML_SetBillionLaughsAttackProtectionMaximumAmplification">XML_SetBillionLaughsAttackProtectionMaximumAmplification</a></li>
+        <li><a href="#XML_SetBillionLaughsAttackProtectionActivationThreshold">XML_SetBillionLaughsAttackProtectionActivationThreshold</a></li>
+      </ul>
+    </li>
     <li><a href="#miscellaneous">Miscellaneous Functions</a>
     <ul>
       <li><a href="#XML_SetUserData">XML_SetUserData</a></li>
@@ -2071,6 +2078,98 @@ parse position may be before the beginning of the buffer.</p>
 
 <p>If <code>XML_CONTEXT_BYTES</code> is not defined, this will always
 return NULL.</p>
+</div>
+
+<h3><a name="billion-laughs">Billion Laughs Attack Protection</a></h3>
+
+<p>The functions in this section configure the built-in
+  protection against various forms of
+  <a href="https://en.wikipedia.org/wiki/Billion_laughs_attack">billion laughs attacks</a>.</p>
+
+<h4 id="XML_SetBillionLaughsAttackProtectionMaximumAmplification">XML_SetBillionLaughsAttackProtectionMaximumAmplification</h4>
+<pre class="fcndec">
+/* Added in Expat 2.4.0. */
+XML_Bool XMLCALL
+XML_SetBillionLaughsAttackProtectionMaximumAmplification(XML_Parser p,
+                                                         float maximumAmplificationFactor);
+</pre>
+<div class="fcndef">
+  <p>
+    Sets the maximum tolerated amplification factor
+    for protection against
+    <a href="https://en.wikipedia.org/wiki/Billion_laughs_attack">billion laughs attacks</a>
+    (default: <code>100.0</code>)
+    of parser <code>p</code> to <code>maximumAmplificationFactor</code>, and
+    returns <code>XML_TRUE</code> upon success and <code>XML_TRUE</code> upon error.
+  </p>
+
+  The amplification factor is calculated as ..
+  <pre>
+    amplification := (direct + indirect) / direct
+  </pre>
+  .. while parsing, whereas
+  <code>direct</code> is the number of bytes read from the primary document in parsing and
+  <code>indirect</code> is the number of bytes added by expanding entities and reading of external DTD files, combined.
+
+  <p>For a call to <code>XML_SetBillionLaughsAttackProtectionMaximumAmplification</code> to succeed:</p>
+  <ul>
+    <li>parser <code>p</code> must be a non-<code>NULL</code> root parser (without any parent parsers) and</li>
+    <li><code>maximumAmplificationFactor</code> must be non-<code>NaN</code> and greater than or equal to <code>1.0</code>.</li>
+  </ul>
+
+  <p>
+    <strong>Note:</strong>
+    If you ever need to increase this value for non-attack payload,
+    please <a href="https://github.com/libexpat/libexpat/issues">file a bug report</a>.
+  </p>
+
+  <p>
+    <strong>Note:</strong>
+    Peak amplifications
+    of factor 15,000 for the entire payload and
+    of factor 30,000 in the middle of parsing
+    have been observed with small benign files in practice.
+
+    So if you do reduce the maximum allowed amplification,
+    please make sure that the activation threshold is still big enough
+    to not end up with undesired false positives (i.e. benign files being rejected).
+  </p>
+</div>
+
+<h4 id="XML_SetBillionLaughsAttackProtectionActivationThreshold">XML_SetBillionLaughsAttackProtectionActivationThreshold</h4>
+<pre class="fcndec">
+/* Added in Expat 2.4.0. */
+XML_Bool XMLCALL
+XML_SetBillionLaughsAttackProtectionActivationThreshold(XML_Parser p,
+                                                        unsigned long long activationThresholdBytes);
+</pre>
+<div class="fcndef">
+  <p>
+    Sets number of output bytes (including amplification from entity expansion and reading DTD files)
+    needed to activate protection against
+    <a href="https://en.wikipedia.org/wiki/Billion_laughs_attack">billion laughs attacks</a>
+    (default: <code>8 MiB</code>)
+    of parser <code>p</code> to <code>activationThresholdBytes</code>, and
+    returns <code>XML_TRUE</code> upon success and <code>XML_TRUE</code> upon error.
+  </p>
+
+  <p>For a call to <code>XML_SetBillionLaughsAttackProtectionActivationThreshold</code> to succeed:</p>
+  <ul>
+    <li>parser <code>p</code> must be a non-<code>NULL</code> root parser (without any parent parsers).</li>
+  </ul>
+
+  <p>
+    <strong>Note:</strong>
+    If you ever need to increase this value for non-attack payload,
+    please <a href="https://github.com/libexpat/libexpat/issues">file a bug report</a>.
+  </p>
+
+  <p>
+    <strong>Note:</strong>
+    Activation thresholds below 4 MiB are known to break support for
+    <a href="https://en.wikipedia.org/wiki/Darwin_Information_Typing_Architecture">DITA</a> 1.3 payload
+    and are hence not recommended.
+  </p>
 </div>
 
 <h3><a name="miscellaneous">Miscellaneous functions</a></h3>

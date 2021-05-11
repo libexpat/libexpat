@@ -124,7 +124,9 @@ enum XML_Error {
   /* Added in 2.2.1. */
   XML_ERROR_INVALID_ARGUMENT,
   /* Added in 2.3.0. */
-  XML_ERROR_NO_BUFFER
+  XML_ERROR_NO_BUFFER,
+  /* Added in 2.4.0. */
+  XML_ERROR_AMPLIFICATION_LIMIT_BREACH
 };
 
 enum XML_Content_Type {
@@ -1006,7 +1008,10 @@ enum XML_FeatureEnum {
   XML_FEATURE_SIZEOF_XML_LCHAR,
   XML_FEATURE_NS,
   XML_FEATURE_LARGE_SIZE,
-  XML_FEATURE_ATTR_INFO
+  XML_FEATURE_ATTR_INFO,
+  /* Added in Expat 2.4.0. */
+  XML_FEATURE_BILLION_LAUGHS_ATTACK_PROTECTION_MAXIMUM_AMPLIFICATION_DEFAULT,
+  XML_FEATURE_BILLION_LAUGHS_ATTACK_PROTECTION_ACTIVATION_THRESHOLD_DEFAULT
   /* Additional features must be added to the end of this enum. */
 };
 
@@ -1018,6 +1023,18 @@ typedef struct {
 
 XMLPARSEAPI(const XML_Feature *)
 XML_GetFeatureList(void);
+
+#ifdef XML_DTD
+/* Added in Expat 2.4.0. */
+XMLPARSEAPI(XML_Bool)
+XML_SetBillionLaughsAttackProtectionMaximumAmplification(
+    XML_Parser parser, float maximumAmplificationFactor);
+
+/* Added in Expat 2.4.0. */
+XMLPARSEAPI(XML_Bool)
+XML_SetBillionLaughsAttackProtectionActivationThreshold(
+    XML_Parser parser, unsigned long long activationThresholdBytes);
+#endif
 
 /* Expat follows the semantic versioning convention.
    See http://semver.org.

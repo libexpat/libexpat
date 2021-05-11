@@ -7,7 +7,7 @@
                                  |_| XML parser
 
    Copyright (c) 1997-2000 Thai Open Source Software Center Ltd
-   Copyright (c) 2016-2017 Sebastian Pipping <sebastian@pipping.org>
+   Copyright (c) 2016-2021 Sebastian Pipping <sebastian@pipping.org>
    Copyright (c) 2017      Rhodri James <rhodri@wildebeest.org.uk>
    Licensed under the MIT license:
 
@@ -55,6 +55,8 @@
 #  define tmain wmain
 #  define tremove _wremove
 #  define tchar wchar_t
+#  define tcstof wcstof
+#  define tcstoull wcstoull
 #else /* not XML_UNICODE */
 #  define T(x) x
 #  define ftprintf fprintf
@@ -72,4 +74,6 @@
 #  define tmain main
 #  define tremove remove
 #  define tchar char
+#  define tcstof strtof
+#  define tcstoull strtoull
 #endif /* not XML_UNICODE */

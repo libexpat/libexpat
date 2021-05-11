@@ -44,6 +44,7 @@ cppcheck_args=(
     --error-exitcode=1
     --force
     --suppress=objectIndex
+    --suppress=unknownMacro
 )
 
 find_args=(
