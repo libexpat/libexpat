@@ -11,7 +11,10 @@
 ;                      \___/_/\_\ .__/ \__,_|\__|
 ;                               |_| XML parser
 ;
-; Copyright (c) 2001 Tim Peters <tim.peters@gmail.com>
+; Copyright (c) 2001      Tim Peters <tim.peters@gmail.com>
+; Copyright (c) 2001-2005 Fred L. Drake, Jr. <fdrake@users.sourceforge.net>
+; Copyright (c) 2006-2017 Karl Waclawek <karl@waclawek.net>
+; Copyright (c) 2007-2021 Sebastian Pipping <sebastian@pipping.org>
 ; Licensed under the MIT license:
 ;
 ; Permission is  hereby granted,  free of charge,  to any  person obtaining
@@ -40,7 +43,7 @@ AppName=Expat
 AppId=expat
 AppVersion={#expatVer}
 AppVerName=Expat {#expatVer}
-AppCopyright=Copyright © 1998-2017 Thai Open Source Software Center, Clark Cooper, and the Expat maintainers
+AppCopyright=Copyright © 1997-2021 Thai Open Source Software Center, Clark Cooper, and the Expat maintainers
 AppPublisher=The Expat Developers
 AppPublisherURL=http://www.libexpat.org/
 AppSupportURL=http://www.libexpat.org/

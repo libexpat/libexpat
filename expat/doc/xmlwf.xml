@@ -6,7 +6,14 @@
                         \___/_/\_\ .__/ \__,_|\__|
                                  |_| XML parser
 
-   Copyright (c) 2001 Scott Bronson <bronson@rinspin.com>
+   Copyright (c) 2001      Scott Bronson <bronson@rinspin.com>
+   Copyright (c) 2002-2003 Fred L. Drake, Jr. <fdrake@users.sourceforge.net>
+   Copyright (c) 2009      Karl Waclawek <karl@waclawek.net>
+   Copyright (c) 2016-2021 Sebastian Pipping <sebastian@pipping.org>
+   Copyright (c) 2016      Ardo van Rangelrooij <ardo@debian.org>
+   Copyright (c) 2017      Rhodri James <rhodri@wildebeest.org.uk>
+   Copyright (c) 2020      Joe Orton <jorton@redhat.com>
+   Copyright (c) 2021      Tim Bray <tbray@textuality.com>
    Unlike most of Expat,
    this file is copyrighted under the GNU Free Documentation License 1.1.
 -->
