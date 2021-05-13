@@ -1,5 +1,13 @@
-# This file is copyrighted under the BSD-license for buildsystem files of KDE
-# copyright 2010, Patrick Spendrin <ps_ml@gmx.de>
+#                          __  __            _
+#                       ___\ \/ /_ __   __ _| |_
+#                      / _ \\  /| '_ \ / _` | __|
+#                     |  __//  \| |_) | (_| | |_
+#                      \___/_/\_\ .__/ \__,_|\__|
+#                               |_| XML parser
+#
+# Copyright (c) 2010 Patrick Spendrin <ps_ml@gmx.de>
+# Unlike most of Expat,
+# this file is copyrighted under the BSD-license for buildsystem files of KDE.
 
 cmake_minimum_required(VERSION 3.1.3)
 
