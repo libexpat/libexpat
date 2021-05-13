@@ -51,8 +51,6 @@ jobs:
       # NOTE: Please note the version-specific ${PATH} extension for Clang in .travis.sh
       run: |-
         sudo dpkg --add-architecture i386  # for wine32
-        # See https://github.com/actions/virtual-environments/issues/3339#issuecomment-834355074
-        sudo apt-add-repository --yes "ppa:ondrej/php"  # for wine32, not kidding
         sudo apt-get update
         sudo apt-get install --yes --no-install-recommends -V \
             clang-11 \
