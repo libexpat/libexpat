@@ -1,3 +1,15 @@
+<!--
+                            __  __            _
+                         ___\ \/ /_ __   __ _| |_
+                        / _ \\  /| '_ \ / _` | __|
+                       |  __//  \| |_) | (_| | |_
+                        \___/_/\_\ .__/ \__,_|\__|
+                                 |_| XML parser
+
+   Copyright (c) 2001 Scott Bronson <bronson@rinspin.com>
+   Unlike most of Expat,
+   this file is copyrighted under the GNU Free Documentation License 1.1.
+-->
 <!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.2//EN"
           "http://www.oasis-open.org/docbook/xml/4.2/docbookx.dtd" [
   <!-- Fill in your name for FIRSTNAME and SURNAME. -->
