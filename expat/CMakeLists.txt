@@ -1,5 +1,36 @@
-# This file is copyrighted under the BSD-license for buildsystem files of KDE
-# copyright 2010, Patrick Spendrin <ps_ml@gmx.de>
+#                          __  __            _
+#                       ___\ \/ /_ __   __ _| |_
+#                      / _ \\  /| '_ \ / _` | __|
+#                     |  __//  \| |_) | (_| | |_
+#                      \___/_/\_\ .__/ \__,_|\__|
+#                               |_| XML parser
+#
+# Copyright (c) 2010      Patrick Spendrin <ps_ml@gmx.de>
+# Copyright (c) 2012      Karl Waclawek <karl@waclawek.net>
+# Copyright (c) 2016-2021 Sebastian Pipping <sebastian@pipping.org>
+# Copyright (c) 2016      Sergei Nikulov <sergey.nikulov@gmail.com>
+# Copyright (c) 2016      Björn Lindahl <bjorn.lindahl@foi.se>
+# Copyright (c) 2016      Tobias Taschner <github@tc84.de>
+# Copyright (c) 2016      Ben Boeckel <ben.boeckel@kitware.com>
+# Copyright (c) 2017      Rhodri James <rhodri@wildebeest.org.uk>
+# Copyright (c) 2017      Rolf Eike Beer <eike@sf-mail.de>
+# Copyright (c) 2017      Stephen Groat <stephen@groat.us>
+# Copyright (c) 2017      Franek Korta <fkorta@gmail.com>
+# Copyright (c) 2018      pedro-vicente <pedro.vicente@space-research.org>
+# Copyright (c) 2018      Frank Rast <frank.rast@gefeg.com>
+# Copyright (c) 2018      userwithuid <userwithuid@gmail.com>
+# Copyright (c) 2018      Yury Gribov <tetra2005@gmail.com>
+# Copyright (c) 2019      Kishore Kunche <kishore.kunche@intel.com>
+# Copyright (c) 2019      xantares <xantares09@hotmail.com>
+# Copyright (c) 2019      Mohammed Khajapasha <mohammed.khajapasha@intel.com>
+# Copyright (c) 2019      David Loffredo <loffredo@steptools.com>
+# Copyright (c) 2019      Bhargava Shastry <bhargava.shastry@ethereum.org>
+# Copyright (c) 2020      Maciej Sroczyński <macieksroczynski@poczta.fm>
+# Copyright (c) 2020      Gulliver <gulliver@traumkristalle.net>
+# Copyright (c) 2020      Thomas Beutlich <tc@tbeu.de>
+# Copyright (c) 2021      Alex Richardson <Alexander.Richardson@cl.cam.ac.uk>
+# Unlike most of Expat,
+# this file is copyrighted under the BSD-license for buildsystem files of KDE.
 
 cmake_minimum_required(VERSION 3.1.3)
 
