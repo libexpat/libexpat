@@ -462,7 +462,8 @@ static enum XML_Error doContent(XML_Parser parser, int startTagLevel,
                                 XML_Bool haveMore, enum XML_Account account);
 static enum XML_Error doCdataSection(XML_Parser parser, const ENCODING *,
                                      const char **startPtr, const char *end,
-                                     const char **nextPtr, XML_Bool haveMore);
+                                     const char **nextPtr, XML_Bool haveMore,
+                                     enum XML_Account account);
 #ifdef XML_DTD
 static enum XML_Error doIgnoreSection(XML_Parser parser, const ENCODING *,
                                       const char **startPtr, const char *end,
@@ -3096,7 +3097,8 @@ doContent(XML_Parser parser, int startTagLevel, const ENCODING *enc,
       /* END disabled code */
       else if (parser->m_defaultHandler)
         reportDefault(parser, enc, s, next);
-      result = doCdataSection(parser, enc, &next, end, nextPtr, haveMore);
+      result
+          = doCdataSection(parser, enc, &next, end, nextPtr, haveMore, account);
       if (result != XML_ERROR_NONE)
         return result;
       else if (! next) {
@@ -3725,9 +3727,9 @@ addBinding(XML_Parser parser, PREFIX *prefix, const ATTRIBUTE_ID *attId,
 static enum XML_Error PTRCALL
 cdataSectionProcessor(XML_Parser parser, const char *start, const char *end,
                       const char **endPtr) {
-  enum XML_Error result
-      = doCdataSection(parser, parser->m_encoding, &start, end, endPtr,
-                       (XML_Bool)! parser->m_parsingStatus.finalBuffer);
+  enum XML_Error result = doCdataSection(
+      parser, parser->m_encoding, &start, end, endPtr,
+      (XML_Bool)! parser->m_parsingStatus.finalBuffer, XML_ACCOUNT_DIRECT);
   if (result != XML_ERROR_NONE)
     return result;
   if (start) {
@@ -3747,7 +3749,8 @@ cdataSectionProcessor(XML_Parser parser, const char *start, const char *end,
 */
 static enum XML_Error
 doCdataSection(XML_Parser parser, const ENCODING *enc, const char **startPtr,
-               const char *end, const char **nextPtr, XML_Bool haveMore) {
+               const char *end, const char **nextPtr, XML_Bool haveMore,
+               enum XML_Account account) {
   const char *s = *startPtr;
   const char **eventPP;
   const char **eventEndPP;
@@ -3766,11 +3769,12 @@ doCdataSection(XML_Parser parser, const ENCODING *enc, const char **startPtr,
     const char *next = s; /* in case of XML_TOK_NONE or XML_TOK_PARTIAL */
     int tok = XmlCdataSectionTok(enc, s, end, &next);
 #ifdef XML_DTD
-    if (! accountingDiffTolerated(parser, tok, s, next, __LINE__,
-                                  XML_ACCOUNT_DIRECT)) {
+    if (! accountingDiffTolerated(parser, tok, s, next, __LINE__, account)) {
       accountingOnAbort(parser);
       return XML_ERROR_AMPLIFICATION_LIMIT_BREACH;
     }
+#else
+    UNUSED_P(account);
 #endif
     *eventEndPP = next;
     switch (tok) {

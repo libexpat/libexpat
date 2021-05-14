@@ -11318,6 +11318,16 @@ START_TEST(test_accounting_precision) {
 
       /* CDATA */
       {"<e><![CDATA[one two three]]></e>", NULL, NULL, 0, filled_later},
+      /* The following is the essence of this OSS-Fuzz finding:
+         https://bugs.chromium.org/p/oss-fuzz/issues/detail?id=34302
+         https://oss-fuzz.com/testcase-detail/4860575394955264
+      */
+      {"<!DOCTYPE r [\n"
+       "<!ENTITY e \"111<![CDATA[2 <= 2]]>333\">\n"
+       "]>\n"
+       "<r>&e;</r>\n",
+       NULL, NULL, sizeof(XML_Char) * strlen("111<![CDATA[2 <= 2]]>333"),
+       filled_later},
 
       /* Conditional sections */
       {"<!DOCTYPE r [\n"
