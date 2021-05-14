@@ -4,7 +4,7 @@ NOTE: We are looking for help with a few things:
 
 Release X.X.X XXX XXXXX XX XXXX
         Security fixes:
-        #34 #466  CVE-2013-0340/CWE-776 -- Protect against billion laughs attacks
+   #34 #466 #484  CVE-2013-0340/CWE-776 -- Protect against billion laughs attacks
                     (denial-of-service; flavors targeting CPU time or RAM or both,
                     leveraging general entities or parameter entities or both)
                     by tracking and limiting the input amplification factor
@@ -21,18 +21,18 @@ Release X.X.X XXX XXXXX XX XXXX
                     for UTF-16 payloads containing CDATA sections.
 
         New features:
-        #34 #466  Add two new API functions to further tighten billion laughs
+   #34 #466 #484  Add two new API functions to further tighten billion laughs
                     protection parameters when desired.
                     - XML_SetBillionLaughsAttackProtectionMaximumAmplification
                     - XML_SetBillionLaughsAttackProtectionActivationThreshold
                     Please see file "doc/reference.html" for more details.
                     If you ever need to increase the defaults for non-attack XML
                     payload, please file a bug report with libexpat.
-        #34 #466  Introduce environment switches EXPAT_ACCOUNTING_DEBUG=(0|1|2|3)
+   #34 #466 #484  Introduce environment switches EXPAT_ACCOUNTING_DEBUG=(0|1|2|3)
                     and EXPAT_ENTITY_DEBUG=(0|1) for runtime debugging of accounting
                     and entity processing; specific behavior of these values may
                     change in the future.
-        #34 #466  xmlwf: Add arguments "-a FACTOR" and "-b BYTES" to further tighten
+   #34 #466 #484  xmlwf: Add arguments "-a FACTOR" and "-b BYTES" to further tighten
                     billion laughs protection parameters when desired.
                     If you ever need to increase the defaults for non-attack XML
                     payload, please file a bug report with libexpat.
@@ -51,6 +51,7 @@ Release X.X.X XXX XXXXX XX XXXX
                  and
             Clang LeakSan
             JetBrains
+            OSS-Fuzz
 
 Release 2.3.0 Thu March 25 2021
         Bug fixes:
