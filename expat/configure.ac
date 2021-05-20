@@ -372,6 +372,7 @@ LIBDIR_BASENAME="$(basename "${libdir}")"
 SO_MAJOR="$(expr "${LIBCURRENT}" - "${LIBAGE}")"
 SO_MINOR="${LIBAGE}"
 SO_PATCH="${LIBREVISION}"
+AC_CHECK_SIZEOF([void *])  # sets ac_cv_sizeof_void_p
 AC_SUBST([EXPAT_ATTR_INFO])
 AC_SUBST([EXPAT_DTD])
 AC_SUBST([EXPAT_LARGE_SIZE])
@@ -384,6 +385,7 @@ AC_SUBST([LIBDIR_BASENAME])
 AC_SUBST([SO_MAJOR])
 AC_SUBST([SO_MINOR])
 AC_SUBST([SO_PATCH])
+AC_SUBST([ac_cv_sizeof_void_p])
 
 
 dnl write the Automake flags we set
