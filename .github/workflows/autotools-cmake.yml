@@ -38,15 +38,43 @@ on:
 jobs:
   checks:
     name: Ensure that GNU Autotools and CMake build systems agree
-    runs-on: ubuntu-20.04
+    strategy:
+      matrix:
+        include:
+          - os: macos-10.15
+            configure_args:
+            cmake_args:
+          - os: ubuntu-20.04
+            configure_args:
+            cmake_args:
+          - os: ubuntu-20.04
+            configure_args: --host=i686-w64-mingw32
+            cmake_args: -DCMAKE_TOOLCHAIN_FILE=cmake/mingw-toolchain.cmake
+    defaults:
+      run:
+        shell: bash
+    runs-on: "${{ matrix.os }}"
     steps:
     - uses: actions/checkout@v2.3.4
 
-    - name: Install build dependencies
+    - name: (Linux) Install build dependencies
+      if: "${{ runner.os == 'Linux' }}"
       run: |-
         sudo apt-get install --yes --no-install-recommends -V \
             cmake \
             docbook2x \
+            lzip \
+            mingw-w64
+
+    - name: (macOS) Install build dependencies
+      if: "${{ runner.os == 'macOS' }}"
+      run: |
+        brew install \
+            autoconf \
+            automake \
+            cmake \
+            docbook2x \
+            libtool \
             lzip
 
     - name: Produce and extract a release archive
@@ -64,8 +92,11 @@ jobs:
         cd expat/expat-*.*.*/
         mkdir build_autotools
         cd build_autotools
-        ../configure --libdir='${exec_prefix}/lib123'
+        ../configure \
+            --libdir='${exec_prefix}/lib123' \
+            ${{matrix.configure_args}}
         make install DESTDIR="${PWD}"/ROOT
+        find ROOT | sort | xargs ls -ld
 
     - name: Build and install using CMake
       run: |
@@ -73,24 +104,46 @@ jobs:
         cd expat/expat-*.*.*/
         mkdir build_cmake
         cd build_cmake
-        cmake -DCMAKE_INSTALL_LIBDIR=lib123 ..
+        cmake \
+            -DCMAKE_INSTALL_LIBDIR=lib123 \
+            ${{matrix.cmake_args}} \
+            ..
         make install DESTDIR="${PWD}"/ROOT
+        find ROOT | sort | xargs ls -ld
 
     - name: Check for identical CMake files from both build systems
       run: |
         set -x
         cd expat/expat-*.*.*/
+
+        if [[ "${{ matrix.configure_args }}" == *mingw* ]]; then
+          # There is one known difference between Autotools and CMake for MinGW:
+          #   Autotools: usr/local/bin/libexpat-<major>.dll
+          #   CMake:     usr/local/bin/libexpat.dll
+          # We patch the Autotools side in line here to get the differ below to empty
+          mv build_autotools/ROOT/usr/local/bin/libexpat{-*,}.dll
+          ( cd build_autotools/ROOT/usr/local/lib*/cmake/expat-*/ \
+              && sed 's,libexpat-[0-9]\+\.dll,libexpat.dll,g' expat-noconfig.cmake > expat-noconfig-patched.cmake \
+              && ! diff -u0 expat-noconfig{,-patched}.cmake \
+              && mv expat-noconfig{-patched,}.cmake )
+        fi
+
         diff \
             --recursive \
             --unified \
             --exclude=xmlwf \
+            --exclude=xmlwf.exe \
             --exclude=libexpat.a \
+            --exclude=libexpat.dll \
+            --exclude=libexpat.dll.a \
             --exclude=libexpat.la \
-            --exclude='*.so*' \
+            --exclude=libexpat.so\* \
+            --exclude=libexpat.\*dylib \
             --exclude=expat_config.h \
             build_{autotools,cmake}/ROOT
 
-    - name: Check for identical exported symbols from both build systems
+    - name: (Linux except MinGW) Check for identical exported symbols from both build systems
+      if: "${{ runner.os == 'Linux' && ! contains(matrix.configure_args, 'mingw') }}"
       run: |
         list_shared_library_symbols_sh="${GITHUB_WORKSPACE}"/.github/workflows/scripts/list-shared-library-symbols.sh
         exported_symbols_txt="${GITHUB_WORKSPACE}"/.github/workflows/data/exported-symbols.txt
