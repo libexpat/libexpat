@@ -397,11 +397,15 @@ AC_SUBST([AM_LDFLAGS])
 dnl updating _EXPAT_OUTPUT_NAME variable to effect the package name in expat.pc file (issue #361)
 AC_SUBST(_EXPAT_OUTPUT_NAME, ["$PACKAGE_NAME"])
 
+AS_CASE("${host_os}",
+  [darwin*], [CMAKE_NOCONFIG_SOURCE=cmake/autotools/expat-noconfig__macos.cmake.in],
+  [mingw*], [CMAKE_NOCONFIG_SOURCE=cmake/autotools/expat-noconfig__windows.cmake.in],
+  [CMAKE_NOCONFIG_SOURCE=cmake/autotools/expat-noconfig__linux.cmake.in])
 AC_CONFIG_FILES([Makefile]
   [expat.pc]
   [cmake/expat-config.cmake]
   [cmake/autotools/expat-config-version.cmake]
-  [cmake/autotools/expat-noconfig.cmake]
+  [cmake/autotools/expat-noconfig.cmake:${CMAKE_NOCONFIG_SOURCE}]
   [doc/Makefile]
   [examples/Makefile]
   [lib/Makefile]
