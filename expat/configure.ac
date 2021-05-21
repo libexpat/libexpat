@@ -372,6 +372,7 @@ LIBDIR_BASENAME="$(basename "${libdir}")"
 SO_MAJOR="$(expr "${LIBCURRENT}" - "${LIBAGE}")"
 SO_MINOR="${LIBAGE}"
 SO_PATCH="${LIBREVISION}"
+AC_CHECK_SIZEOF([void *])  # sets ac_cv_sizeof_void_p
 AC_SUBST([EXPAT_ATTR_INFO])
 AC_SUBST([EXPAT_DTD])
 AC_SUBST([EXPAT_LARGE_SIZE])
@@ -384,6 +385,7 @@ AC_SUBST([LIBDIR_BASENAME])
 AC_SUBST([SO_MAJOR])
 AC_SUBST([SO_MINOR])
 AC_SUBST([SO_PATCH])
+AC_SUBST([ac_cv_sizeof_void_p])
 
 
 dnl write the Automake flags we set
@@ -395,11 +397,15 @@ AC_SUBST([AM_LDFLAGS])
 dnl updating _EXPAT_OUTPUT_NAME variable to effect the package name in expat.pc file (issue #361)
 AC_SUBST(_EXPAT_OUTPUT_NAME, ["$PACKAGE_NAME"])
 
+AS_CASE("${host_os}",
+  [darwin*], [CMAKE_NOCONFIG_SOURCE=cmake/autotools/expat-noconfig__macos.cmake.in],
+  [mingw*], [CMAKE_NOCONFIG_SOURCE=cmake/autotools/expat-noconfig__windows.cmake.in],
+  [CMAKE_NOCONFIG_SOURCE=cmake/autotools/expat-noconfig__linux.cmake.in])
 AC_CONFIG_FILES([Makefile]
   [expat.pc]
   [cmake/expat-config.cmake]
   [cmake/autotools/expat-config-version.cmake]
-  [cmake/autotools/expat-noconfig.cmake]
+  [cmake/autotools/expat-noconfig.cmake:${CMAKE_NOCONFIG_SOURCE}]
   [doc/Makefile]
   [examples/Makefile]
   [lib/Makefile]

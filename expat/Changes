@@ -19,6 +19,9 @@ Release X.X.X XXX XXXXX XX XXXX
        #332 #470  For (non-default) compilation with -DEXPAT_MIN_SIZE=ON (CMake)
                     or CPPFLAGS=-DXML_MIN_SIZE (GNU Autotools): Fix segfault
                     for UTF-16 payloads containing CDATA sections.
+       #485 #486  Autotools: Fix generated CMake files for non-64bit and
+                    non-Linux platforms (e.g. macOS and MinGW in particular)
+                    that were introduced with release 2.3.0
 
         New features:
    #34 #466 #484  Add two new API functions to further tighten billion laughs
