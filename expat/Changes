@@ -12,8 +12,26 @@ Release X.X.X XXX XXXXX XX XXXX
                     By conservative default, amplification up to a factor of 100.0
                     is tolerated and rejection only starts after 8 MiB of output bytes
                     (=<direct> + <indirect>) have been processed.
-                    A new error code XML_ERROR_AMPLIFICATION_LIMIT_BREACH signals
-                    this condition.
+                    The fix adds the following to the API:
+                    - A new error code XML_ERROR_AMPLIFICATION_LIMIT_BREACH to
+                      signals this specific condition.
+                    - Two new API functions ..
+                      - XML_SetBillionLaughsAttackProtectionMaximumAmplification and
+                      - XML_SetBillionLaughsAttackProtectionActivationThreshold
+                      .. to further tighten billion laughs protection parameters
+                      when desired.  Please see file "doc/reference.html" for details.
+                      If you ever need to increase the defaults for non-attack XML
+                      payload, please file a bug report with libexpat.
+                    - Two new environment variable switches ..
+                      - EXPAT_ACCOUNTING_DEBUG=(0|1|2|3) and
+                      - EXPAT_ENTITY_DEBUG=(0|1)
+                      .. for runtime debugging of accounting and entity processing.
+                      Specific behavior of these values may change in the future.
+                    - Two new command line arguments "-a FACTOR" and "-b BYTES"
+                      for xmlwf to further tighten billion laughs protection
+                      parameters when desired.
+                      If you ever need to increase the defaults for non-attack XML
+                      payload, please file a bug report with libexpat.
 
         Bug fixes:
        #332 #470  For (non-default) compilation with -DEXPAT_MIN_SIZE=ON (CMake)
@@ -22,23 +40,6 @@ Release X.X.X XXX XXXXX XX XXXX
        #485 #486  Autotools: Fix generated CMake files for non-64bit and
                     non-Linux platforms (e.g. macOS and MinGW in particular)
                     that were introduced with release 2.3.0
-
-        New features:
-   #34 #466 #484  Add two new API functions to further tighten billion laughs
-                    protection parameters when desired.
-                    - XML_SetBillionLaughsAttackProtectionMaximumAmplification
-                    - XML_SetBillionLaughsAttackProtectionActivationThreshold
-                    Please see file "doc/reference.html" for more details.
-                    If you ever need to increase the defaults for non-attack XML
-                    payload, please file a bug report with libexpat.
-   #34 #466 #484  Introduce environment switches EXPAT_ACCOUNTING_DEBUG=(0|1|2|3)
-                    and EXPAT_ENTITY_DEBUG=(0|1) for runtime debugging of accounting
-                    and entity processing; specific behavior of these values may
-                    change in the future.
-   #34 #466 #484  xmlwf: Add arguments "-a FACTOR" and "-b BYTES" to further tighten
-                    billion laughs protection parameters when desired.
-                    If you ever need to increase the defaults for non-attack XML
-                    payload, please file a bug report with libexpat.
 
         Other changes:
             #457  Unexpose symbol _INTERNAL_trim_to_complete_utf8_characters
