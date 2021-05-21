@@ -22,6 +22,9 @@ Release X.X.X XXX XXXXX XX XXXX
                       when desired.  Please see file "doc/reference.html" for details.
                       If you ever need to increase the defaults for non-attack XML
                       payload, please file a bug report with libexpat.
+                    - Two new XML_FEATURE_* constants ..
+                      - that can be queried using the XML_GetFeatureList function, and
+                      - that are shown in "xmlwf -v" output.
                     - Two new environment variable switches ..
                       - EXPAT_ACCOUNTING_DEBUG=(0|1|2|3) and
                       - EXPAT_ENTITY_DEBUG=(0|1)
