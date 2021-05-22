@@ -64,7 +64,7 @@ endif()
 
 project(expat
     VERSION
-        2.3.0
+        2.4.0
     LANGUAGES
         C
 )
@@ -386,9 +386,9 @@ if(EXPAT_WITH_LIBBSD)
     target_link_libraries(expat ${LIB_BSD})
 endif()
 
-set(LIBCURRENT 8)   # sync
+set(LIBCURRENT 9)   # sync
 set(LIBREVISION 0)  # with
-set(LIBAGE 7)       # configure.ac!
+set(LIBAGE 8)       # configure.ac!
 math(EXPR LIBCURRENT_MINUS_AGE "${LIBCURRENT} - ${LIBAGE}")
 
 set_property(TARGET expat PROPERTY OUTPUT_NAME "${_EXPAT_OUTPUT_NAME}")

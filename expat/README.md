@@ -5,10 +5,10 @@
 [![Downloads GitHub](https://img.shields.io/github/downloads/libexpat/libexpat/total?label=Downloads%20GitHub)](https://github.com/libexpat/libexpat/releases)
 
 
-# Expat, Release 2.3.0
+# Expat, Release 2.4.0
 
 This is Expat, a C library for parsing XML, started by
-[James Clark](https://en.wikipedia.org/wiki/James_Clark_(programmer)) in 1997.
+[James Clark](https://en.wikipedia.org/wiki/James_Clark_%28programmer%29) in 1997.
 Expat is a stream-oriented XML parser.  This means that you register
 handlers with the parser before starting the parse.  These handlers
 are called when the parser discovers the associated structures in the
@@ -22,7 +22,7 @@ Expat supports the following compilers:
 - Microsoft Visual Studio >=15.0/2017 (rolling `${today} minus 5 years`)
 
 Windows users can use the
-[`expat-win32bin-*.*.*.exe` installer download](https://github.com/libexpat/libexpat/releases),
+[`expat-win32bin-*.*.*.{exe,zip}` download](https://github.com/libexpat/libexpat/releases),
 which includes both pre-compiled libraries and executables, and source code for
 developers.
 
@@ -45,7 +45,7 @@ This approach leverages CMake's own [module `FindEXPAT`](https://cmake.org/cmake
 Notice the *uppercase* `EXPAT` in the following example:
 
 ```cmake
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.0)  # or 3.10, see below
 
 project(hello VERSION 1.0.0)
 
@@ -55,12 +55,12 @@ add_executable(hello
     hello.c
 )
 
-if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.10")
-    target_link_libraries(hello PUBLIC EXPAT::EXPAT)
-else()
-    target_include_directories(hello PRIVATE ${EXPAT_INCLUDE_DIRS})
-    target_link_libraries(hello PUBLIC ${EXPAT_LIBRARIES})
-endif()
+# a) for CMake >=3.10 (see CMake's FindEXPAT docs)
+target_link_libraries(hello PUBLIC EXPAT::EXPAT)
+
+# b) for CMake >=3.0
+target_include_directories(hello PRIVATE ${EXPAT_INCLUDE_DIRS})
+target_link_libraries(hello PUBLIC ${EXPAT_LIBRARIES})
 ```
 
 ### b) Config Mode
@@ -69,7 +69,11 @@ This approach requires files from…
 
 - libexpat >=2.2.8 where packaging uses the CMake build system
 or
-- libexpat >=2.3.0 where packaging uses the GNU Autotools build system.
+- libexpat >=2.3.0 where packaging uses the GNU Autotools build system
+  on Linux
+or
+- libexpat >=2.4.0 where packaging uses the GNU Autotools build system
+  on macOS or MinGW.
 
 Notice the *lowercase* `expat` in the following example:
 
