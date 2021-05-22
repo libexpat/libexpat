@@ -22,7 +22,7 @@ Expat supports the following compilers:
 - Microsoft Visual Studio >=15.0/2017 (rolling `${today} minus 5 years`)
 
 Windows users can use the
-[`expat-win32bin-*.*.*.exe` installer download](https://github.com/libexpat/libexpat/releases),
+[`expat-win32bin-*.*.*.{exe,zip}` download](https://github.com/libexpat/libexpat/releases),
 which includes both pre-compiled libraries and executables, and source code for
 developers.
 
