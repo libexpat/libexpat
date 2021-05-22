@@ -69,7 +69,11 @@ This approach requires files from…
 
 - libexpat >=2.2.8 where packaging uses the CMake build system
 or
-- libexpat >=2.3.0 where packaging uses the GNU Autotools build system.
+- libexpat >=2.3.0 where packaging uses the GNU Autotools build system
+  on Linux
+or
+- libexpat >=2.4.0 where packaging uses the GNU Autotools build system
+  on macOS or MinGW.
 
 Notice the *lowercase* `expat` in the following example:
 
