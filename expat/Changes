@@ -7,6 +7,10 @@ Release 2.4.1 xxx xxx xx xxxx
        #488 #490  Autotools: Fix installed header expat_config.h for multilib
                     systems; regression introduced in 2.4.0 by pull request #486
 
+        Other changes:
+       #491 #492  Version info bumped from 9:0:8 to 9:1:8;
+                    see https://verbump.de/ for what these numbers do
+
         Special thanks to:
             Gentoo's QA check "multilib_check_headers"
 
