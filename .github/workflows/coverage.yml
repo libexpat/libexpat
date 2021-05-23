@@ -68,7 +68,7 @@ jobs:
             wine32
     - name: Unshallow Git clone
       run: |
-        git fetch --tags --unshallow origin  # for "git describe" in coverage.sh
+        git fetch --force --tags --unshallow origin  # for "git describe" in coverage.sh
     - name: Collect test coverage
       env:
         MODE: coverage-sh
