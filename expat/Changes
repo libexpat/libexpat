@@ -2,7 +2,7 @@ NOTE: We are looking for help with a few things:
       https://github.com/libexpat/libexpat/labels/help%20wanted
       If you can help, please get in touch.  Thanks!
 
-Release 2.4.1 xxx xxx xx xxxx
+Release 2.4.1 Sun May 23 2021
         Bug fixes:
        #488 #490  Autotools: Fix installed header expat_config.h for multilib
                     systems; regression introduced in 2.4.0 by pull request #486
