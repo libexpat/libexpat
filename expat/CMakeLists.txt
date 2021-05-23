@@ -64,7 +64,7 @@ endif()
 
 project(expat
     VERSION
-        2.4.0
+        2.4.1
     LANGUAGES
         C
 )
@@ -387,7 +387,7 @@ if(EXPAT_WITH_LIBBSD)
 endif()
 
 set(LIBCURRENT 9)   # sync
-set(LIBREVISION 0)  # with
+set(LIBREVISION 1)  # with
 set(LIBAGE 8)       # configure.ac!
 math(EXPR LIBCURRENT_MINUS_AGE "${LIBCURRENT} - ${LIBAGE}")
 
