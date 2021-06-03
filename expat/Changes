@@ -7,6 +7,11 @@ Release 2.4.2 xxx xxx xx xxxx
             #497  Autotools: Include files with release archives:
                     - buildconf.sh
                     - fuzz/*.c
+            #495  CMake: MinGW: Fix pkg-config section "Libs" for non-release
+                    build types (e.g. -DCMAKE_BUILD_TYPE=Debug)
+
+        Special thanks to:
+            Kai Pastor
 
 Release 2.4.1 Sun May 23 2021
         Bug fixes:

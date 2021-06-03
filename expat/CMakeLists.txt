@@ -326,34 +326,37 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/lib)
 if(MSVC)
     add_definitions(-D_CRT_SECURE_NO_WARNINGS -wd4996)
 endif()
-if(WIN32)
-    if(_EXPAT_UNICODE_WCHAR_T)
-        set(_POSTFIX_WIDE "w")
-    endif()
 
-    if(MSVC AND NOT EXPAT_SHARED_LIBS)
-        if(EXPAT_MSVC_STATIC_CRT)
-            set(_POSTFIX_CRT "MT")
-        else()
-            set(_POSTFIX_CRT "MD")
-        endif()
-    endif()
-
-    foreach(postfix_var
-            CMAKE_DEBUG_POSTFIX
-            CMAKE_RELEASE_POSTFIX
-            CMAKE_MINSIZEREL_POSTFIX
-            CMAKE_RELWITHDEBINFO_POSTFIX
-            )
-        if(postfix_var STREQUAL "CMAKE_DEBUG_POSTFIX")
-            set(_POSTFIX_DEBUG "d")
-        else()
-            set(_POSTFIX_DEBUG "")
-        endif()
-
-        set(${postfix_var} "${_POSTFIX_WIDE}${_POSTFIX_DEBUG}${_POSTFIX_CRT}" CACHE STRING "Windows binary postfix, e.g. libexpat<postfix=[w][d][MD|MT]>.lib")
-    endforeach()
+#
+# Library filename postfix
+#
+if(_EXPAT_UNICODE)
+    set(_POSTFIX_WIDE "w")
 endif()
+
+if(MSVC AND NOT EXPAT_SHARED_LIBS)
+    if(EXPAT_MSVC_STATIC_CRT)
+        set(_POSTFIX_CRT "MT")
+    else()
+        set(_POSTFIX_CRT "MD")
+    endif()
+endif()
+
+foreach(postfix_var
+        CMAKE_${_EXPAT_BUILD_TYPE_UPPER}_POSTFIX
+        CMAKE_DEBUG_POSTFIX
+        CMAKE_RELEASE_POSTFIX
+        CMAKE_MINSIZEREL_POSTFIX
+        CMAKE_RELWITHDEBINFO_POSTFIX
+        )
+    if(WIN32 AND postfix_var STREQUAL "CMAKE_DEBUG_POSTFIX")
+        set(_POSTFIX_DEBUG "d")
+    else()
+        set(_POSTFIX_DEBUG "")  # needs a reset because of being looped
+    endif()
+
+    set(${postfix_var} "${_POSTFIX_WIDE}${_POSTFIX_DEBUG}${_POSTFIX_CRT}" CACHE STRING "Library filename postfix, e.g. libexpat<postfix=[w][d][MD|MT]>.lib")
+endforeach()
 
 #
 # C library
@@ -376,17 +379,6 @@ else()
     set(_SHARED STATIC)
 endif()
 
-# Avoid colliding with Expat.dll of Perl's XML::Parser::Expat
-if(WIN32 AND NOT MINGW)
-    set(_EXPAT_OUTPUT_NAME libexpat)  # CMAKE_*_POSTFIX applies, see above
-else()
-    if(_EXPAT_UNICODE)
-        set(_EXPAT_OUTPUT_NAME expatw)
-    else()
-        set(_EXPAT_OUTPUT_NAME expat)
-    endif()
-endif()
-
 add_library(expat ${_SHARED} ${expat_SRCS})
 if(EXPAT_WITH_LIBBSD)
     target_link_libraries(expat ${LIB_BSD})
@@ -397,11 +389,16 @@ set(LIBREVISION 1)  # with
 set(LIBAGE 8)       # configure.ac!
 math(EXPR LIBCURRENT_MINUS_AGE "${LIBCURRENT} - ${LIBAGE}")
 
-set_property(TARGET expat PROPERTY OUTPUT_NAME "${_EXPAT_OUTPUT_NAME}")
 if(NOT WIN32)
     set_property(TARGET expat PROPERTY VERSION ${LIBCURRENT_MINUS_AGE}.${LIBAGE}.${LIBREVISION})
     set_property(TARGET expat PROPERTY SOVERSION ${LIBCURRENT_MINUS_AGE})
     set_property(TARGET expat PROPERTY NO_SONAME ${NO_SONAME})
+endif()
+if(WIN32 AND NOT MINGW)
+    # NOTE: This avoids a name collision with Expat.dll of Perl's XML::Parser::Expat
+    #       on Windows by resorting to filename libexpat.dll since Expat 1.95.3.
+    #       Everything but MSVC is already adding prefix "lib", automatically.
+    set_property(TARGET expat PROPERTY PREFIX lib)
 endif()
 
 target_include_directories(expat
@@ -428,6 +425,7 @@ expat_install(FILES lib/expat.h lib/expat_external.h DESTINATION ${CMAKE_INSTALL
 if(EXPAT_BUILD_PKGCONFIG)
     set(prefix ${CMAKE_INSTALL_PREFIX})
     set(exec_prefix "\${prefix}")
+    set(_EXPAT_LIBRARY_NAME "expat${CMAKE_${_EXPAT_BUILD_TYPE_UPPER}_POSTFIX}")
 
     if(CMAKE_INSTALL_LIBDIR MATCHES "^/")
         set(libdir "${CMAKE_INSTALL_LIBDIR}")
@@ -746,9 +744,7 @@ if(MSVC)
     message(STATUS "  Static CRT ................. ${EXPAT_MSVC_STATIC_CRT}")
 endif()
 message(STATUS "  Character type ............. ${_EXPAT_CHAR_TYPE_SUMMARY}")
-if(WIN32)
-    message(STATUS "  Binary postfix ............. ${CMAKE_${_EXPAT_BUILD_TYPE_UPPER}_POSTFIX}")
-endif()
+message(STATUS "  Library name postfix ....... ${CMAKE_${_EXPAT_BUILD_TYPE_UPPER}_POSTFIX}")
 message(STATUS "")
 message(STATUS "  Build documentation ........ ${EXPAT_BUILD_DOCS}")
 message(STATUS "  Build examples ............. ${EXPAT_BUILD_EXAMPLES}")
