@@ -372,15 +372,24 @@ else()
     set(_SHARED STATIC)
 endif()
 
-# Avoid colliding with Expat.dll of Perl's XML::Parser::Expat
-if(WIN32 AND NOT MINGW)
-    set(_EXPAT_OUTPUT_NAME libexpat)  # CMAKE_*_POSTFIX applies, see above
+if(WIN32)
+    # NOTE: On WIN32, CMake effectively auto-applies
+    #       CMAKE_*_POSTFIX to OUTPUT_NAME
+    if (MINGW)
+        set(_EXPAT_OUTPUT_NAME expat)
+    else()
+        # Avoid colliding with Expat.dll of Perl's XML::Parser::Expat
+        # Everything but MSVC is already adding prefix "lib" automatically.
+        set(_EXPAT_OUTPUT_NAME libexpat)
+    endif()
+    set(_EXPAT_LIBRARY_NAME ${_EXPAT_OUTPUT_NAME}${CMAKE_${_EXPAT_BUILD_TYPE_UPPER}_POSTFIX})
 else()
     if(_EXPAT_UNICODE)
         set(_EXPAT_OUTPUT_NAME expatw)
     else()
         set(_EXPAT_OUTPUT_NAME expat)
     endif()
+    set(_EXPAT_LIBRARY_NAME ${_EXPAT_OUTPUT_NAME})
 endif()
 
 add_library(expat ${_SHARED} ${expat_SRCS})
