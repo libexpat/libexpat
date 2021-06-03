@@ -372,25 +372,17 @@ else()
     set(_SHARED STATIC)
 endif()
 
-if(WIN32)
-    # NOTE: On WIN32, CMake effectively auto-applies
-    #       CMAKE_*_POSTFIX to OUTPUT_NAME
-    if (MINGW)
-        set(_EXPAT_OUTPUT_NAME expat)
-    else()
-        # Avoid colliding with Expat.dll of Perl's XML::Parser::Expat
-        # Everything but MSVC is already adding prefix "lib" automatically.
-        set(_EXPAT_OUTPUT_NAME libexpat)
-    endif()
-    set(_EXPAT_LIBRARY_NAME ${_EXPAT_OUTPUT_NAME}${CMAKE_${_EXPAT_BUILD_TYPE_UPPER}_POSTFIX})
+if(WIN32 AND NOT MINGW)
+    # Avoid colliding with Expat.dll of Perl's XML::Parser::Expat
+    # Everything but MSVC is already adding prefix "lib" automatically.
+    set(_EXPAT_OUTPUT_NAME libexpat)
+elseif(_EXPAT_UNICODE AND NOT MINGW)
+    set(_EXPAT_OUTPUT_NAME expatw)
 else()
-    if(_EXPAT_UNICODE)
-        set(_EXPAT_OUTPUT_NAME expatw)
-    else()
-        set(_EXPAT_OUTPUT_NAME expat)
-    endif()
-    set(_EXPAT_LIBRARY_NAME ${_EXPAT_OUTPUT_NAME})
+    set(_EXPAT_OUTPUT_NAME expat)
 endif()
+# NOTE: ${CMAKE_${_EXPAT_BUILD_TYPE_UPPER}_POSTFIX} is potentially unset
+set(_EXPAT_LIBRARY_NAME ${_EXPAT_OUTPUT_NAME}${CMAKE_${_EXPAT_BUILD_TYPE_UPPER}_POSTFIX})
 
 add_library(expat ${_SHARED} ${expat_SRCS})
 if(EXPAT_WITH_LIBBSD)
