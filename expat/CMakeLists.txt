@@ -106,6 +106,7 @@ if(DEFINED BUILD_SHARED_LIBS)
 else()
     set(_EXPAT_SHARED_LIBS_DEFAULT ON)
 endif()
+string(TOUPPER "${CMAKE_BUILD_TYPE}" _EXPAT_BUILD_TYPE_UPPER)
 
 #
 # Configuration
@@ -729,7 +730,6 @@ elseif(EXPAT_CHAR_TYPE STREQUAL "wchar_t")
 else()
     set(_EXPAT_CHAR_TYPE_SUMMARY "ERROR")
 endif()
-string(TOUPPER "${CMAKE_BUILD_TYPE}" _EXPAT_BUILD_TYPE_UPPER)
 
 message(STATUS "===========================================================================")
 message(STATUS "")
