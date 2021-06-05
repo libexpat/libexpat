@@ -90,9 +90,13 @@ EXTRA_DIST = \
     conftools/expat.m4 \
     conftools/get-version.sh \
     \
+    fuzz/xml_parsebuffer_fuzzer.c \
+    fuzz/xml_parse_fuzzer.c \
+    \
     xmlwf/xmlwf_helpgen.py \
     xmlwf/xmlwf_helpgen.sh \
     \
+    buildconf.sh \
     Changes \
     README.md \
     \
