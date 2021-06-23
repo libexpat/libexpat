@@ -75,6 +75,7 @@ _EXTRA_DIST_CMAKE = \
     CMakeLists.txt \
     CMake.README \
     ConfigureChecks.cmake \
+    expat.pc.cmake \
     expat_config.h.cmake
 
 _EXTRA_DIST_WINDOWS = \

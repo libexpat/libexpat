@@ -423,24 +423,37 @@ expat_install(FILES lib/expat.h lib/expat_external.h DESTINATION ${CMAKE_INSTALL
 # pkg-config file
 #
 if(EXPAT_BUILD_PKGCONFIG)
-    set(prefix ${CMAKE_INSTALL_PREFIX})
-    set(exec_prefix "\${prefix}")
-    set(_EXPAT_LIBRARY_NAME "expat${CMAKE_${_EXPAT_BUILD_TYPE_UPPER}_POSTFIX}")
-
     if(CMAKE_INSTALL_LIBDIR MATCHES "^/")
-        set(libdir "${CMAKE_INSTALL_LIBDIR}")
+        set(_expat_pkgconfig_libdir "${CMAKE_INSTALL_LIBDIR}")
     else()
-        set(libdir "\${exec_prefix}/${CMAKE_INSTALL_LIBDIR}")
+        set(_expat_pkgconfig_libdir "\${exec_prefix}/${CMAKE_INSTALL_LIBDIR}")
     endif()
 
     if(CMAKE_INSTALL_INCLUDEDIR MATCHES "^/")
-        set(includedir "${CMAKE_INSTALL_INCLUDEDIR}")
+        set(_expat_pkgconfig_includedir "${CMAKE_INSTALL_INCLUDEDIR}")
     else()
-        set(includedir "\${prefix}/${CMAKE_INSTALL_INCLUDEDIR}")
+        set(_expat_pkgconfig_includedir "\${prefix}/${CMAKE_INSTALL_INCLUDEDIR}")
     endif()
 
-    configure_file(expat.pc.in ${CMAKE_CURRENT_BINARY_DIR}/expat.pc @ONLY)
-    expat_install(FILES ${CMAKE_CURRENT_BINARY_DIR}/expat.pc DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
+    set_target_properties(expat PROPERTIES
+        pkgconfig_prefix "${CMAKE_INSTALL_PREFIX}"
+        pkgconfig_exec_prefix "\${prefix}"
+        pkgconfig_libdir "${_expat_pkgconfig_libdir}"
+        pkgconfig_includedir "${_expat_pkgconfig_includedir}"
+        pkgconfig_version "${PACKAGE_VERSION}")
+
+    foreach(_build_type ${CMAKE_BUILD_TYPE} Debug Release RelWithDebInfo MinSizeRel)
+        string(TOLOWER "${_build_type}" _build_type_lower)
+        string(TOUPPER "${_build_type}" _build_type_upper)
+        set_property(TARGET expat PROPERTY "pkgconfig_${_build_type_lower}_name" "expat${CMAKE_${_build_type_upper}_POSTFIX}")
+    endforeach()
+
+    file(GENERATE
+        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/expat.pc
+        INPUT ${PROJECT_SOURCE_DIR}/expat.pc.cmake
+        TARGET expat)
+
+    expat_install(FILES ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/expat.pc DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
 endif()
 
 #
