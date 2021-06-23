@@ -394,9 +394,6 @@ AC_SUBST([AM_CFLAGS])
 AC_SUBST([AM_CXXFLAGS])
 AC_SUBST([AM_LDFLAGS])
 
-dnl updating _EXPAT_LIBRARY_NAME variable to effect the package name in expat.pc file (issues #361 and #495)
-AC_SUBST(_EXPAT_LIBRARY_NAME, ["$PACKAGE_NAME"])
-
 AS_CASE("${host_os}",
   [darwin*], [CMAKE_NOCONFIG_SOURCE=cmake/autotools/expat-noconfig__macos.cmake.in],
   [mingw*], [CMAKE_NOCONFIG_SOURCE=cmake/autotools/expat-noconfig__windows.cmake.in],
