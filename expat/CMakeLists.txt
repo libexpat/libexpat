@@ -306,10 +306,12 @@ if (MSVC)
     if (EXPAT_MSVC_STATIC_CRT)
         message("-- Using static CRT ${EXPAT_MSVC_STATIC_CRT}")
         foreach(flag_var
+                CMAKE_CXX_FLAGS_${_EXPAT_BUILD_TYPE_UPPER}
                 CMAKE_CXX_FLAGS_DEBUG
                 CMAKE_CXX_FLAGS_RELEASE
                 CMAKE_CXX_FLAGS_MINSIZEREL
                 CMAKE_CXX_FLAGS_RELWITHDEBINFO
+                CMAKE_C_FLAGS_${_EXPAT_BUILD_TYPE_UPPER}
                 CMAKE_C_FLAGS_DEBUG
                 CMAKE_C_FLAGS_RELEASE
                 CMAKE_C_FLAGS_MINSIZEREL
