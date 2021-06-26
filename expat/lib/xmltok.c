@@ -20,6 +20,7 @@
    Copyright (c) 2017      Benbuck Nason <bnason@netflix.com>
    Copyright (c) 2017      José Gutiérrez de la Concha <jose@zeroc.com>
    Copyright (c) 2019      David Loffredo <loffredo@steptools.com>
+   Copyright (c) 2021      Peter Kasting <pkasting@chromium.org>
    Licensed under the MIT license:
 
    Permission is  hereby granted,  free of charge,  to any  person obtaining
@@ -303,6 +304,9 @@ sb_charMatches(const ENCODING *enc, const char *p, int c) {
 #  define CHAR_MATCHES(enc, p, c) (*(p) == c)
 #endif
 
+/* Fallthrough statements are unreachable. */
+#define MAYBE_FALLTHROUGH
+
 #define PREFIX(ident) normal_##ident
 #define XML_TOK_IMPL_C
 #include "xmltok_impl.c"
@@ -317,6 +321,7 @@ sb_charMatches(const ENCODING *enc, const char *p, int c) {
 #undef IS_NMSTRT_CHAR
 #undef IS_NMSTRT_CHAR_MINBPC
 #undef IS_INVALID_CHAR
+#undef MAYBE_FALLTHROUGH
 
 enum { /* UTF8_cvalN is value of masked first byte of N byte sequence */
        UTF8_cval1 = 0x00,
@@ -642,7 +647,7 @@ unicode_byte_type(char hi, char lo) {
           *(*toP)++ = lo;                                                      \
           break;                                                               \
         }                                                                      \
-        /* fall through */                                                     \
+        FALLTHROUGH;                                                           \
       case 0x1:                                                                \
       case 0x2:                                                                \
       case 0x3:                                                                \
@@ -797,6 +802,8 @@ little2_isNmstrtMin(const ENCODING *enc, const char *p) {
 #  define IS_NAME_CHAR_MINBPC(enc, p) LITTLE2_IS_NAME_CHAR_MINBPC(p)
 #  define IS_NMSTRT_CHAR(enc, p, n) (0)
 #  define IS_NMSTRT_CHAR_MINBPC(enc, p) LITTLE2_IS_NMSTRT_CHAR_MINBPC(p)
+/* Fallthrough statements are reachable. */
+#  define MAYBE_FALLTHROUGH FALLTHROUGH
 
 #  define XML_TOK_IMPL_C
 #  include "xmltok_impl.c"
@@ -811,6 +818,7 @@ little2_isNmstrtMin(const ENCODING *enc, const char *p) {
 #  undef IS_NMSTRT_CHAR
 #  undef IS_NMSTRT_CHAR_MINBPC
 #  undef IS_INVALID_CHAR
+#  undef MAYBE_FALLTHROUGH
 
 #endif /* not XML_MIN_SIZE */
 
@@ -932,6 +940,8 @@ big2_isNmstrtMin(const ENCODING *enc, const char *p) {
 #  define IS_NAME_CHAR_MINBPC(enc, p) BIG2_IS_NAME_CHAR_MINBPC(p)
 #  define IS_NMSTRT_CHAR(enc, p, n) (0)
 #  define IS_NMSTRT_CHAR_MINBPC(enc, p) BIG2_IS_NMSTRT_CHAR_MINBPC(p)
+/* Fallthrough statements are reachable. */
+#  define MAYBE_FALLTHROUGH FALLTHROUGH
 
 #  define XML_TOK_IMPL_C
 #  include "xmltok_impl.c"
@@ -946,6 +956,7 @@ big2_isNmstrtMin(const ENCODING *enc, const char *p) {
 #  undef IS_NMSTRT_CHAR
 #  undef IS_NMSTRT_CHAR_MINBPC
 #  undef IS_INVALID_CHAR
+#  undef MAYBE_FALLTHROUGH
 
 #endif /* not XML_MIN_SIZE */
 
@@ -1565,7 +1576,7 @@ initScan(const ENCODING *const *encodingTable, const INIT_ENCODING *enc,
     case 0xEF: /* possibly first byte of UTF-8 BOM */
       if (INIT_ENC_INDEX(enc) == ISO_8859_1_ENC && state == XML_CONTENT_STATE)
         break;
-      /* fall through */
+      FALLTHROUGH;
     case 0x00:
     case 0x3C:
       return XML_TOK_PARTIAL;
