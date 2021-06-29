@@ -102,6 +102,7 @@ populate_environment() {
                 export UBSAN_OPTIONS="print_stacktrace=1:halt_on_error=1:abort_on_error=1"
                 ;;
         esac
+        BASE_COMPILE_FLAGS+=" -Wimplicit-fallthrough"
     fi
 
 

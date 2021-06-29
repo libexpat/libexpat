@@ -305,7 +305,7 @@ sb_charMatches(const ENCODING *enc, const char *p, int c) {
 #endif
 
 /* Fallthrough statements are unreachable. */
-#define MAYBE_FALLTHROUGH
+#define FALLTHROUGH_IF_REACHABLE
 
 #define PREFIX(ident) normal_##ident
 #define XML_TOK_IMPL_C
@@ -321,7 +321,7 @@ sb_charMatches(const ENCODING *enc, const char *p, int c) {
 #undef IS_NMSTRT_CHAR
 #undef IS_NMSTRT_CHAR_MINBPC
 #undef IS_INVALID_CHAR
-#undef MAYBE_FALLTHROUGH
+#undef FALLTHROUGH_IF_REACHABLE
 
 enum { /* UTF8_cvalN is value of masked first byte of N byte sequence */
        UTF8_cval1 = 0x00,
@@ -803,7 +803,7 @@ little2_isNmstrtMin(const ENCODING *enc, const char *p) {
 #  define IS_NMSTRT_CHAR(enc, p, n) (0)
 #  define IS_NMSTRT_CHAR_MINBPC(enc, p) LITTLE2_IS_NMSTRT_CHAR_MINBPC(p)
 /* Fallthrough statements are reachable. */
-#  define MAYBE_FALLTHROUGH FALLTHROUGH
+#  define FALLTHROUGH_IF_REACHABLE FALLTHROUGH
 
 #  define XML_TOK_IMPL_C
 #  include "xmltok_impl.c"
@@ -818,7 +818,7 @@ little2_isNmstrtMin(const ENCODING *enc, const char *p) {
 #  undef IS_NMSTRT_CHAR
 #  undef IS_NMSTRT_CHAR_MINBPC
 #  undef IS_INVALID_CHAR
-#  undef MAYBE_FALLTHROUGH
+#  undef FALLTHROUGH_IF_REACHABLE
 
 #endif /* not XML_MIN_SIZE */
 
@@ -941,7 +941,7 @@ big2_isNmstrtMin(const ENCODING *enc, const char *p) {
 #  define IS_NMSTRT_CHAR(enc, p, n) (0)
 #  define IS_NMSTRT_CHAR_MINBPC(enc, p) BIG2_IS_NMSTRT_CHAR_MINBPC(p)
 /* Fallthrough statements are reachable. */
-#  define MAYBE_FALLTHROUGH FALLTHROUGH
+#  define FALLTHROUGH_IF_REACHABLE FALLTHROUGH
 
 #  define XML_TOK_IMPL_C
 #  include "xmltok_impl.c"
@@ -956,7 +956,7 @@ big2_isNmstrtMin(const ENCODING *enc, const char *p) {
 #  undef IS_NMSTRT_CHAR
 #  undef IS_NMSTRT_CHAR_MINBPC
 #  undef IS_INVALID_CHAR
-#  undef MAYBE_FALLTHROUGH
+#  undef FALLTHROUGH_IF_REACHABLE
 
 #endif /* not XML_MIN_SIZE */
 

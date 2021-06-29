@@ -104,7 +104,15 @@
 #include <stddef.h> /* size_t */
 #include <stdint.h> /* uint64_t uint32_t uint8_t */
 
-#include <expat_config.h>
+#ifndef __has_attribute
+#  define __has_attribute(x) 0
+#endif
+
+#if __has_attribute(fallthrough)
+#  define SIPHASH_FALLTHROUGH __attribute__((fallthrough))
+#else
+#  define SIPHASH_FALLTHROUGH
+#endif
 
 /*
  * Workaround to not require a C++11 compiler for using ULL suffix
@@ -240,25 +248,25 @@ sip24_final(struct siphash *H) {
   switch (left) {
   case 7:
     b |= (uint64_t)H->buf[6] << 48;
-    FALLTHROUGH;
+    SIPHASH_FALLTHROUGH;
   case 6:
     b |= (uint64_t)H->buf[5] << 40;
-    FALLTHROUGH;
+    SIPHASH_FALLTHROUGH;
   case 5:
     b |= (uint64_t)H->buf[4] << 32;
-    FALLTHROUGH;
+    SIPHASH_FALLTHROUGH;
   case 4:
     b |= (uint64_t)H->buf[3] << 24;
-    FALLTHROUGH;
+    SIPHASH_FALLTHROUGH;
   case 3:
     b |= (uint64_t)H->buf[2] << 16;
-    FALLTHROUGH;
+    SIPHASH_FALLTHROUGH;
   case 2:
     b |= (uint64_t)H->buf[1] << 8;
-    FALLTHROUGH;
+    SIPHASH_FALLTHROUGH;
   case 1:
     b |= (uint64_t)H->buf[0] << 0;
-    FALLTHROUGH;
+    SIPHASH_FALLTHROUGH;
   case 0:
     break;
   }

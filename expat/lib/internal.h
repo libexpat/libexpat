@@ -31,6 +31,7 @@
    Copyright (c) 2016-2021 Sebastian Pipping <sebastian@pipping.org>
    Copyright (c) 2018      Yury Gribov <tetra2005@gmail.com>
    Copyright (c) 2019      David Loffredo <loffredo@steptools.com>
+   Copyright (c) 2021      Peter Kasting <pkasting@chromium.org>
    Licensed under the MIT license:
 
    Permission is  hereby granted,  free of charge,  to any  person obtaining
@@ -127,6 +128,16 @@
 #    define EXPAT_FMT_PTRDIFF_T(midpart) "%" midpart "d"
 #    define EXPAT_FMT_SIZE_T(midpart) "%" midpart "u"
 #  endif
+#endif
+
+#ifndef __has_attribute
+#  define __has_attribute(x) 0
+#endif
+
+#if __has_attribute(fallthrough)
+#  define FALLTHROUGH __attribute__((fallthrough))
+#else
+#  define FALLTHROUGH
 #endif
 
 #ifndef UNUSED_P
