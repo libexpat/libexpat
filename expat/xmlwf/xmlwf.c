@@ -17,6 +17,7 @@
    Copyright (c) 2020      Joe Orton <jorton@redhat.com>
    Copyright (c) 2020      Kleber Tarcísio <klebertarcisio@yahoo.com.br>
    Copyright (c) 2021      Tim Bray <tbray@textuality.com>
+   Copyright (c) 2021      Peter Kasting <pkasting@chromium.org>
    Licensed under the MIT license:
 
    Permission is  hereby granted,  free of charge,  to any  person obtaining
@@ -51,7 +52,7 @@
 
 #include "expat.h"
 #include "codepage.h"
-#include "internal.h" /* for UNUSED_P only */
+#include "internal.h"
 #include "xmlfile.h"
 #include "xmltchar.h"
 
@@ -1003,7 +1004,7 @@ tmain(int argc, XML_Char **argv) {
       break;
     case T('p'):
       paramEntityParsing = XML_PARAM_ENTITY_PARSING_ALWAYS;
-      /* fall through */
+      FALLTHROUGH;
     case T('x'):
       processFlags |= XML_EXTERNAL_ENTITIES;
       j++;
@@ -1094,7 +1095,7 @@ tmain(int argc, XML_Char **argv) {
         j = 0;
         break;
       }
-      /* fall through */
+      FALLTHROUGH;
     default:
       usage(argv[0], XMLWF_EXIT_USAGE_ERROR);
     }

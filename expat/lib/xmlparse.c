@@ -1919,7 +1919,7 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal) {
           parser->m_parsingStatus.parsing = XML_FINISHED;
           return XML_STATUS_OK;
         }
-      /* fall through */
+        FALLTHROUGH;
       default:
         result = XML_STATUS_OK;
       }
