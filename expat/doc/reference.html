@@ -1115,7 +1115,8 @@ XML_GetBuffer(XML_Parser p,
 <div class="fcndef">
 Obtain a buffer of size <code>len</code> to read a piece of the document
 into. A NULL value is returned if Expat can't allocate enough memory for
-this buffer. This has to be called prior to every call to
+this buffer. A NULL value may also be returned if <code>len</code> is zero.
+This has to be called prior to every call to
 <code><a href= "#XML_ParseBuffer" >XML_ParseBuffer</a></code>. A
 typical use would look like this:
 
