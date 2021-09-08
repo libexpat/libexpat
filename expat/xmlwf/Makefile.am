@@ -38,7 +38,7 @@ xmlwf_SOURCES = \
     @FILEMAP@.c
 
 xmlwf_CPPFLAGS = @AM_CPPFLAGS@ -I$(srcdir)/../lib
-xmlwf_LDFLAGS = @AM_LDFLAGS@
+xmlwf_LDFLAGS = @AM_LDFLAGS@ @LIBM@
 
 if MINGW
 if UNICODE

@@ -4,6 +4,7 @@ NOTE: We are looking for help with a few things:
 
 Release 2.4.2 xxx xxx xx xxxx
         Other changes:
+       #509 #510  Link againgst libm for function "isnan"
             #497  Autotools: Include files with release archives:
                     - buildconf.sh
                     - fuzz/*.c

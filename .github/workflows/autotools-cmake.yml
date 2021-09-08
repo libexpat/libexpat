@@ -74,6 +74,7 @@ jobs:
             automake \
             cmake \
             docbook2x \
+            gnu-sed \
             libtool \
             lzip
 
@@ -126,6 +127,14 @@ jobs:
               && sed 's,libexpat-[0-9]\+\.dll,libexpat.dll,g' expat-noconfig.cmake > expat-noconfig-patched.cmake \
               && ! diff -u0 expat-noconfig{,-patched}.cmake \
               && mv expat-noconfig{-patched,}.cmake )
+        fi
+
+        if [[ "${{ runner.os }}" == macOS ]]; then
+          # Autotools' LT_LIB_M has a hardcoded exclude for "*-*-darwin*" hosts,
+          # while macOS does have libm and is successfully found by CMake.
+          # We patch the CMake side in line here to get the differ below to empty.
+          export PATH="$(brew --prefix)/opt/gnu-sed/libexec/gnubin:${PATH}"
+          sed 's,-lm,,' -i build_cmake/ROOT/usr/local/lib*/pkgconfig/expat.pc
         fi
 
         diff \

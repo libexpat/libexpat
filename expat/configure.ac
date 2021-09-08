@@ -186,6 +186,7 @@ AM_CONDITIONAL([_INTERNAL_UNICODE_WCHAR_T], [echo -- "${CPPFLAGS}${CFLAGS}" | ${
 AM_CONDITIONAL([_INTERNAL_MIN_SIZE], [echo -- "${CPPFLAGS}${CFLAGS}" | ${FGREP} XML_MIN_SIZE >/dev/null])
 AM_CONDITIONAL([_INTERNAL_LARGE_SIZE], [echo -- "${CPPFLAGS}${CFLAGS}" | ${FGREP} XML_LARGE_SIZE >/dev/null])
 
+LT_LIB_M
 
 AC_ARG_WITH([libbsd],
   [AS_HELP_STRING([--with-libbsd], [utilize libbsd (for arc4random_buf)])],
