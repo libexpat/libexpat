@@ -39,11 +39,11 @@
    USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+#include <expat_config.h>
+
 #if defined(NDEBUG)
 #  undef NDEBUG /* because test suite relies on assert(...) at the moment */
 #endif
-
-#include <expat_config.h>
 
 #include <assert.h>
 #include <stdlib.h>

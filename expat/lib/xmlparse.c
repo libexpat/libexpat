@@ -54,6 +54,10 @@
    USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+#define XML_BUILDING_EXPAT 1
+
+#include <expat_config.h>
+
 #if ! defined(_GNU_SOURCE)
 #  define _GNU_SOURCE 1 /* syscall prototype */
 #endif
@@ -84,13 +88,9 @@
 #  include <errno.h>
 #endif
 
-#define XML_BUILDING_EXPAT 1
-
 #ifdef _WIN32
 #  include "winconfig.h"
 #endif
-
-#include <expat_config.h>
 
 #include "ascii.h"
 #include "expat.h"

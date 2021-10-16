@@ -36,6 +36,8 @@
    USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+#include <expat_config.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stddef.h>
@@ -45,8 +47,6 @@
 #ifdef _WIN32
 #  include "winconfig.h"
 #endif
-
-#include <expat_config.h>
 
 #include "expat.h"
 #include "internal.h" /* for UNUSED_P only */
