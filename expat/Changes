@@ -5,6 +5,7 @@ NOTE: We are looking for help with a few things:
 Release 2.4.2 xxx xxx xx xxxx
         Other changes:
        #509 #510  Link againgst libm for function "isnan"
+       #513 #514  Include expat_config.h as early as possible
             #497  Autotools: Include files with release archives:
                     - buildconf.sh
                     - fuzz/*.c
@@ -13,6 +14,7 @@ Release 2.4.2 xxx xxx xx xxxx
                     - multi-config CMake generators (e.g. Ninja Multi-Config)
 
         Special thanks to:
+            Dong-hee Na
             Joergen Ibsen
             Kai Pastor
 
