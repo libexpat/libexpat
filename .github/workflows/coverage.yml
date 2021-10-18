@@ -42,7 +42,7 @@ jobs:
     env:
       CFLAGS: -g3 -pipe
     steps:
-    - uses: actions/checkout@v2.3.4
+    - uses: actions/checkout@v2.3.5
     - name: Add Clang/LLVM repositories
       run: |-
         wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
