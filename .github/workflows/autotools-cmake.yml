@@ -55,7 +55,7 @@ jobs:
         shell: bash
     runs-on: "${{ matrix.os }}"
     steps:
-    - uses: actions/checkout@v2.3.4
+    - uses: actions/checkout@v2.3.5
 
     - name: (Linux) Install build dependencies
       if: "${{ runner.os == 'Linux' }}"
