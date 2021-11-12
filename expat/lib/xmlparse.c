@@ -638,6 +638,7 @@ struct XML_ParserStruct {
   XML_ElementDeclHandler m_elementDeclHandler;
   XML_AttlistDeclHandler m_attlistDeclHandler;
   XML_EntityDeclHandler m_entityDeclHandler;
+  XML_BulkXMLEndHandler m_bulkXMLEndHandler;
   XML_XmlDeclHandler m_xmlDeclHandler;
   const ENCODING *m_encoding;
   INIT_ENCODING m_initEncoding;
@@ -1113,6 +1114,7 @@ parserInit(XML_Parser parser, const XML_Char *encodingName) {
   parser->m_elementDeclHandler = NULL;
   parser->m_attlistDeclHandler = NULL;
   parser->m_entityDeclHandler = NULL;
+  parser->m_bulkXMLEndHandler = NULL;
   parser->m_xmlDeclHandler = NULL;
   parser->m_bufferPtr = parser->m_buffer;
   parser->m_bufferEnd = parser->m_buffer;
@@ -1269,6 +1271,7 @@ XML_ExternalEntityParserCreate(XML_Parser oldParser, const XML_Char *context,
   XML_ElementDeclHandler oldElementDeclHandler;
   XML_AttlistDeclHandler oldAttlistDeclHandler;
   XML_EntityDeclHandler oldEntityDeclHandler;
+  XML_BulkXMLEndHandler oldBulkXMLEndHandler;
   XML_XmlDeclHandler oldXmlDeclHandler;
   ELEMENT_TYPE *oldDeclElementType;
 
@@ -1313,6 +1316,7 @@ XML_ExternalEntityParserCreate(XML_Parser oldParser, const XML_Char *context,
   oldElementDeclHandler = parser->m_elementDeclHandler;
   oldAttlistDeclHandler = parser->m_attlistDeclHandler;
   oldEntityDeclHandler = parser->m_entityDeclHandler;
+  oldBulkXMLEndHandler = parser->m_bulkXMLEndHandler;
   oldXmlDeclHandler = parser->m_xmlDeclHandler;
   oldDeclElementType = parser->m_declElementType;
 
@@ -1372,6 +1376,7 @@ XML_ExternalEntityParserCreate(XML_Parser oldParser, const XML_Char *context,
   parser->m_elementDeclHandler = oldElementDeclHandler;
   parser->m_attlistDeclHandler = oldAttlistDeclHandler;
   parser->m_entityDeclHandler = oldEntityDeclHandler;
+  parser->m_bulkXMLEndHandler = oldBulkXMLEndHandler;
   parser->m_xmlDeclHandler = oldXmlDeclHandler;
   parser->m_declElementType = oldDeclElementType;
   parser->m_userData = oldUserData;
@@ -1775,6 +1780,14 @@ void XMLCALL
 XML_SetEntityDeclHandler(XML_Parser parser, XML_EntityDeclHandler handler) {
   if (parser != NULL)
     parser->m_entityDeclHandler = handler;
+}
+
+typedef void(XMLCALL *XML_BulkXMLEndHandler)(void *userData);
+
+void XMLCALL
+XML_SetBulkXMLEndHandler(XML_Parser parser, XML_BulkXMLEndHandler handler) {
+  if (parser != NULL)
+    parser->m_bulkXMLEndHandler = handler;
 }
 
 void XMLCALL
@@ -5307,6 +5320,11 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
       case XML_TOK_BOM:
         handleDefault = XML_FALSE;
         break;
+#if 0 /* todo: avoid infinite loop on certain (wrong) conditions */
+      default:
+        /* unexpected role token combination retrieved */
+        return XML_ERROR_SYNTAX;
+#endif
       }
       break;
     case XML_ROLE_DOCTYPE_NONE:
@@ -5329,6 +5347,11 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
       if (parser->m_elementDeclHandler)
         handleDefault = XML_FALSE;
       break;
+#if 0 /* todo: avoid infinite loop on certain (wrong) conditions */
+    default:
+      /* unexpected role retrieved */
+      return XML_ERROR_SYNTAX;
+#endif
     } /* end of big switch */
 
     if (handleDefault && parser->m_defaultHandler)
@@ -5376,6 +5399,10 @@ epilogProcessor(XML_Parser parser, const char *s, const char *end,
       return XML_ERROR_NONE;
     case XML_TOK_NONE:
       *nextPtr = s;
+      if (parser->m_bulkXMLEndHandler) {
+        /* bulk mode - call XML-end handler */
+        parser->m_bulkXMLEndHandler(parser->m_handlerArg);
+      }
       return XML_ERROR_NONE;
     case XML_TOK_PROLOG_S:
       if (parser->m_defaultHandler)
@@ -5405,7 +5432,17 @@ epilogProcessor(XML_Parser parser, const char *s, const char *end,
       }
       return XML_ERROR_PARTIAL_CHAR;
     default:
-      return XML_ERROR_JUNK_AFTER_DOC_ELEMENT;
+      /* if not bulk mode - error with junk after document element */
+      if (!parser->m_bulkXMLEndHandler) {
+        return XML_ERROR_JUNK_AFTER_DOC_ELEMENT;
+      }
+      /* bulk mode - call XML-end handler */
+      parser->m_bulkXMLEndHandler(parser->m_handlerArg);
+      /* continue processing of next XML chunk
+       * todo: check what additionally we'd need to reset or reinitialize here properly */
+      XmlPrologStateInit(&parser->m_prologState);
+      return prologInitProcessor(parser, s, end, nextPtr);
+      
     }
     parser->m_eventPtr = s = next;
     switch (parser->m_parsingStatus.parsing) {

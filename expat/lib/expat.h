@@ -350,6 +350,16 @@ typedef void(XMLCALL *XML_EntityDeclHandler)(
 XMLPARSEAPI(void)
 XML_SetEntityDeclHandler(XML_Parser parser, XML_EntityDeclHandler handler);
 
+
+/* This is called for the end of the XML when the parser is working
+   in bulk mode (parse data or stream containing multiple XML chunks).
+*/
+typedef void(XMLCALL *XML_BulkXMLEndHandler)(void *userData);
+XMLPARSEAPI(void)
+
+XML_SetBulkXMLEndHandler(XML_Parser parser, XML_BulkXMLEndHandler handler);
+
+
 /* OBSOLETE -- OBSOLETE -- OBSOLETE
    This handler has been superseded by the EntityDeclHandler above.
    It is provided here for backward compatibility.
