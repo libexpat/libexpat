@@ -5328,11 +5328,6 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
       case XML_TOK_BOM:
         handleDefault = XML_FALSE;
         break;
-#if 0 /* todo: avoid infinite loop on certain (wrong) conditions */
-      default:
-        /* unexpected role token combination retrieved */
-        return XML_ERROR_SYNTAX;
-#endif
       }
       break;
     case XML_ROLE_DOCTYPE_NONE:
@@ -5355,11 +5350,6 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
       if (parser->m_elementDeclHandler)
         handleDefault = XML_FALSE;
       break;
-#if 0 /* todo: avoid infinite loop on certain (wrong) conditions */
-    default:
-      /* unexpected role retrieved */
-      return XML_ERROR_SYNTAX;
-#endif
     } /* end of big switch */
 
     if (handleDefault && parser->m_defaultHandler)
