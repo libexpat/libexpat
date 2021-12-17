@@ -17,6 +17,8 @@ Release 2.4.2 xxx xxx xx xxxx
                     when asking for a buffer of 0 (zero) bytes size
        #522 #523  docs: Fix return value docs for both
                     XML_SetBillionLaughsAttackProtection* functions
+       #525 #526  Version info bumped from 9:1:8 to 9:2:8;
+                    see https://verbump.de/ for what these numbers do
 
         Special thanks to:
             Dong-hee Na
