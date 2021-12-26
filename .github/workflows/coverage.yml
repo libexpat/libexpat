@@ -59,6 +59,8 @@ jobs:
             cmake \
             docbook2x \
             dos2unix \
+            gcc-multilib \
+            g++-multilib \
             lcov \
             libbsd-dev \
             lzip \
