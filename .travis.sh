@@ -39,7 +39,7 @@ if [[ ${TRAVIS_OS_NAME} = osx ]]; then
     export PATH="/usr/local/opt/coreutils/libexec/gnubin${PATH:+:}${PATH}"
     export PATH="/usr/local/opt/findutils/libexec/gnubin${PATH:+:}${PATH}"
 elif [[ ${TRAVIS_OS_NAME} = linux ]]; then
-    export PATH="/usr/lib/llvm-11/bin:${PATH}"
+    export PATH="/usr/lib/llvm-13/bin:${PATH}"
 fi
 
 echo "New \${PATH}:"
