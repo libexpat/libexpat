@@ -4,7 +4,7 @@ NOTE: We are looking for help with a few things:
 
 Release x.x.x xxx xxxxxxxx xx xxxx
         Other changes:
-            #527  Address compiler warnings
+       #527 #528  Address compiler warnings
 
 Release 2.4.2 Sun December 19 2021
         Other changes:
