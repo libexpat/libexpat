@@ -50,8 +50,14 @@ _get_build_dir() {
     fi
 
     local char_part=
-    if ${with_unsigned_char}; then
-        char_part=__unsigned_char
+    if ${unicode_enabled}; then
+        if ${with_unsigned_char}; then
+            char_part=__ushort
+        else
+            char_part=__wchar_t
+        fi
+    else
+        char_part=__char
     fi
 
     local xml_attr_part=
@@ -64,7 +70,7 @@ _get_build_dir() {
         m32_part=__m32
     fi
 
-    echo "build__${version}__unicode_${unicode_enabled}__xml_context_${xml_context}${libbsd_part}${mingw_part}${char_part}${xml_attr_part}${m32_part}"
+    echo "build__${version}__xml_context_${xml_context}${libbsd_part}${mingw_part}${char_part}${xml_attr_part}${m32_part}"
 }
 
 
