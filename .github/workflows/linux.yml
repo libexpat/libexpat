@@ -69,6 +69,8 @@ jobs:
           - MODE: qa-sh
             FLAT_ENV: CC=gcc CXX=g++ LD=ld QA_PROCESSOR=gcov
           - MODE: qa-sh
+            FLAT_ENV: CC=gcc CXX=g++ LD=ld QA_PROCESSOR=gcov CMAKE_ARGS=-D_EXPAT_M32=ON
+          - MODE: qa-sh
             FLAT_ENV: CC=i686-w64-mingw32-gcc CXX=i686-w64-mingw32-g++ LD=i686-w64-mingw32-ld QA_PROCESSOR=gcov CMAKE_ARGS="-DCMAKE_SYSTEM_NAME=Windows -DWIN32=ON -DMINGW=ON -DEXPAT_ATTR_INFO=ON"
           - MODE: qa-sh
             FLAT_ENV: CC=i686-w64-mingw32-gcc CXX=i686-w64-mingw32-g++ LD=i686-w64-mingw32-ld QA_PROCESSOR=gcov CMAKE_ARGS="-DCMAKE_SYSTEM_NAME=Windows -DWIN32=ON -DMINGW=ON -DEXPAT_ATTR_INFO=ON -DEXPAT_CHAR_TYPE=wchar_t"
@@ -93,6 +95,8 @@ jobs:
             cmake \
             docbook2x \
             dos2unix \
+            gcc-multilib \
+            g++-multilib \
             lcov \
             libbsd-dev \
             lzip \

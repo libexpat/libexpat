@@ -151,6 +151,9 @@ mark_as_advanced(EXPAT_MIN_SIZE)
 if(MSVC OR _EXPAT_HELP)
     set(EXPAT_MSVC_STATIC_CRT OFF CACHE BOOL "Use /MT flag (static CRT) when compiling in MSVC")
 endif()
+if(NOT _EXPAT_HELP)
+    set(_EXPAT_M32 OFF CACHE BOOL "(Unofficial!) Produce 32bit code with -m32")
+endif()
 
 if(EXPAT_BUILD_TESTS)
     # We have to call enable_language() before modifying any CMAKE_CXX_* variables
@@ -320,6 +323,23 @@ if (MSVC)
             string(REPLACE "/MD" "/MT" ${flag_var} "${${flag_var}}")
         endforeach()
     endif()
+endif()
+
+if(_EXPAT_M32 AND NOT MSVC)
+    foreach(flag_var
+            CMAKE_CXX_FLAGS_${_EXPAT_BUILD_TYPE_UPPER}
+            CMAKE_CXX_FLAGS_DEBUG
+            CMAKE_CXX_FLAGS_RELEASE
+            CMAKE_CXX_FLAGS_MINSIZEREL
+            CMAKE_CXX_FLAGS_RELWITHDEBINFO
+            CMAKE_C_FLAGS_${_EXPAT_BUILD_TYPE_UPPER}
+            CMAKE_C_FLAGS_DEBUG
+            CMAKE_C_FLAGS_RELEASE
+            CMAKE_C_FLAGS_MINSIZEREL
+            CMAKE_C_FLAGS_RELWITHDEBINFO
+            )
+        set(${flag_var} "${${flag_var}} -m32")
+    endforeach()
 endif()
 
 include_directories(${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/lib)
