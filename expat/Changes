@@ -4,6 +4,7 @@ NOTE: We are looking for help with a few things:
 
 Release x.x.x xxx xxxxxxxx xx xxxx
         Other changes:
+            #535  CMake: Make call to file(GENERATE [..]) work for CMake <3.19
        #527 #528  Address compiler warnings
 
 Release 2.4.2 Sun December 19 2021

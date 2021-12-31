@@ -481,8 +481,7 @@ if(EXPAT_BUILD_PKGCONFIG)
 
     file(GENERATE
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/expat.pc
-        INPUT ${PROJECT_SOURCE_DIR}/expat.pc.cmake
-        TARGET expat)
+        INPUT ${PROJECT_SOURCE_DIR}/expat.pc.cmake)
 
     expat_install(FILES ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/expat.pc DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
 endif()
