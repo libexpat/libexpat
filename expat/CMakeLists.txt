@@ -408,7 +408,7 @@ if(EXPAT_WITH_LIBBSD)
 endif()
 
 set(LIBCURRENT 9)   # sync
-set(LIBREVISION 2)  # with
+set(LIBREVISION 3)  # with
 set(LIBAGE 8)       # configure.ac!
 math(EXPR LIBCURRENT_MINUS_AGE "${LIBCURRENT} - ${LIBAGE}")
 
