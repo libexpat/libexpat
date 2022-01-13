@@ -41,6 +41,9 @@ Release x.x.x xxx xxxxxxxx xx xxxx
 
         Infrastructure:
             #536  CI: Check for realistic minimum CMake version
+       #529 #539  CI: Cover compilation with -m32
+            #529  CI: Store coverage reports as artifacts for download
+            #528  CI: Upgrade Clang from 11 to 13
 
         Special thanks to:
             An anonymous whitehat
