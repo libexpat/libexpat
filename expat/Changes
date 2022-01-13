@@ -33,9 +33,9 @@ Release x.x.x xxx xxxxxxxx xx xxxx
 
         Other changes:
             #535  CMake: Make call to file(GENERATE [..]) work for CMake <3.19
-       #527 #528  Address compiler warnings
             #541  Autotools|CMake: MinGW: Make run.sh(.in) work for Cygwin
                     and MSYS2 by not going through Wine on these platforms
+       #527 #528  Address compiler warnings
        #533 #543  Version info bumped from 9:2:8 to 9:3:8;
                     see https://verbump.de/ for what these numbers do
 
