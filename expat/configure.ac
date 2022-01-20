@@ -395,6 +395,10 @@ AC_SUBST([AM_CFLAGS])
 AC_SUBST([AM_CXXFLAGS])
 AC_SUBST([AM_LDFLAGS])
 
+dnl Force the use of CMAKE_SHARED_LIBRARY_PREFIX under CMake
+CMAKE_SHARED_LIBRARY_PREFIX="\${CMAKE_SHARED_LIBRARY_PREFIX}"
+AC_SUBST([CMAKE_SHARED_LIBRARY_PREFIX])
+
 AS_CASE("${host_os}",
   [darwin*], [CMAKE_NOCONFIG_SOURCE=cmake/autotools/expat-noconfig__macos.cmake.in],
   [mingw*|cygwin*], [CMAKE_NOCONFIG_SOURCE=cmake/autotools/expat-noconfig__windows.cmake.in],
