@@ -397,7 +397,7 @@ AC_SUBST([AM_LDFLAGS])
 
 AS_CASE("${host_os}",
   [darwin*], [CMAKE_NOCONFIG_SOURCE=cmake/autotools/expat-noconfig__macos.cmake.in],
-  [mingw*], [CMAKE_NOCONFIG_SOURCE=cmake/autotools/expat-noconfig__windows.cmake.in],
+  [mingw*|cygwin*], [CMAKE_NOCONFIG_SOURCE=cmake/autotools/expat-noconfig__windows.cmake.in],
   [CMAKE_NOCONFIG_SOURCE=cmake/autotools/expat-noconfig__linux.cmake.in])
 AC_CONFIG_FILES([Makefile]
   [expat.pc]
