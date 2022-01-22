@@ -4092,7 +4092,7 @@ initializeEncoding(XML_Parser parser) {
   const char *s;
 #ifdef XML_UNICODE
   char encodingBuf[128];
-  /* See comments abount `protoclEncodingName` in parserInit() */
+  /* See comments about `protocolEncodingName` in parserInit() */
   if (! parser->m_protocolEncodingName)
     s = NULL;
   else {
