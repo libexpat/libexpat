@@ -11286,7 +11286,7 @@ START_TEST(test_accounting_precision) {
       {"<p:e xmlns:p=\"https://domain.invalid/\" />", NULL, NULL, 0,
        filled_later},
       {"<e k=\"&amp;&apos;&gt;&lt;&quot;\" />", NULL, NULL,
-       sizeof(XML_Char) * 5 /* number of predefined entites */, filled_later},
+       sizeof(XML_Char) * 5 /* number of predefined entities */, filled_later},
       {"<e1 xmlns='https://example.org/'>\n"
        "  <e2 xmlns=''/>\n"
        "</e1>",
@@ -11296,7 +11296,7 @@ START_TEST(test_accounting_precision) {
       {"<e>text</e>", NULL, NULL, 0, filled_later},
       {"<e1><e2>text1<e3/>text2</e2></e1>", NULL, NULL, 0, filled_later},
       {"<e>&amp;&apos;&gt;&lt;&quot;</e>", NULL, NULL,
-       sizeof(XML_Char) * 5 /* number of predefined entites */, filled_later},
+       sizeof(XML_Char) * 5 /* number of predefined entities */, filled_later},
       {"<e>&#65;&#41;</e>", NULL, NULL, 0, filled_later},
 
       /* Prolog */
