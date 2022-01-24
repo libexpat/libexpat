@@ -2,6 +2,18 @@ NOTE: We are looking for help with a few things:
       https://github.com/libexpat/libexpat/labels/help%20wanted
       If you can help, please get in touch.  Thanks!
 
+Release x.x.x xxx xxxxxxx xx xxxx
+        Security fixes:
+            #550  CVE-2022-23852 -- Fix signed integer overflow
+                    (undefined behavior) in function XML_GetBuffer
+                    (that is also called by function XML_Parse internally)
+                    for when XML_CONTEXT_BYTES is defined to >0 (which is both
+                    common and default).
+                    Impact is denial of service or more.
+
+        Special thanks to:
+            Samanta Navarro
+
 Release 2.4.3 Sun January 16 2022
         Security fixes:
        #531 #534  CVE-2021-45960 -- Fix issues with left shifts by >=29 places
