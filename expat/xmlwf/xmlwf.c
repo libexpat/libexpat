@@ -1175,9 +1175,9 @@ tmain(int argc, XML_Char **argv) {
       if (! userData.fp) {
         tperror(outName);
         exitCode = XMLWF_EXIT_OUTPUT_ERROR;
+        free(outName);
+        XML_ParserFree(parser);
         if (continueOnError) {
-          free(outName);
-          cleanupUserData(&userData);
           continue;
         } else {
           break;

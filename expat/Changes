@@ -11,8 +11,14 @@ Release x.x.x xxx xxxxxxx xx xxxx
                     common and default).
                     Impact is denial of service or more.
 
+        Bug fixes:
+       #544 #545  xmlwf: Fix a memory leak on output file opening error
+
         Special thanks to:
+            hwt0415
             Samanta Navarro
+                 and
+            Clang LeakSan and the Clang team
 
 Release 2.4.3 Sun January 16 2022
         Security fixes:
