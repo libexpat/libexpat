@@ -974,7 +974,7 @@ parserCreate(const XML_Char *encodingName,
 
   if (memsuite) {
     XML_Memory_Handling_Suite *mtemp;
-    parser = (XML_Parser)memsuite->malloc_fcn(sizeof(struct XML_ParserStruct));
+    parser = memsuite->malloc_fcn(sizeof(struct XML_ParserStruct));
     if (parser != NULL) {
       mtemp = (XML_Memory_Handling_Suite *)&(parser->m_mem);
       mtemp->malloc_fcn = memsuite->malloc_fcn;
@@ -6547,7 +6547,7 @@ normalizePublicId(XML_Char *publicId) {
 
 static DTD *
 dtdCreate(const XML_Memory_Handling_Suite *ms) {
-  DTD *p = (DTD *)ms->malloc_fcn(sizeof(DTD));
+  DTD *p = ms->malloc_fcn(sizeof(DTD));
   if (p == NULL)
     return p;
   poolInit(&(p->pool), ms);
@@ -6720,7 +6720,7 @@ dtdCopy(XML_Parser oldParser, DTD *newDtd, const DTD *oldDtd,
     if (! newE)
       return 0;
     if (oldE->nDefaultAtts) {
-      newE->defaultAtts = (DEFAULT_ATTRIBUTE *)ms->malloc_fcn(
+      newE->defaultAtts = ms->malloc_fcn(
           oldE->nDefaultAtts * sizeof(DEFAULT_ATTRIBUTE));
       if (! newE->defaultAtts) {
         return 0;
@@ -6883,7 +6883,7 @@ lookup(XML_Parser parser, HASH_TABLE *table, KEY name, size_t createSize) {
     /* table->size is a power of 2 */
     table->size = (size_t)1 << INIT_POWER;
     tsize = table->size * sizeof(NAMED *);
-    table->v = (NAMED **)table->mem->malloc_fcn(tsize);
+    table->v = table->mem->malloc_fcn(tsize);
     if (! table->v) {
       table->size = 0;
       return NULL;
@@ -6923,7 +6923,7 @@ lookup(XML_Parser parser, HASH_TABLE *table, KEY name, size_t createSize) {
       }
 
       size_t tsize = newSize * sizeof(NAMED *);
-      NAMED **newV = (NAMED **)table->mem->malloc_fcn(tsize);
+      NAMED **newV = table->mem->malloc_fcn(tsize);
       if (! newV)
         return NULL;
       memset(newV, 0, tsize);
@@ -6952,7 +6952,7 @@ lookup(XML_Parser parser, HASH_TABLE *table, KEY name, size_t createSize) {
       }
     }
   }
-  table->v[i] = (NAMED *)table->mem->malloc_fcn(createSize);
+  table->v[i] = table->mem->malloc_fcn(createSize);
   if (! table->v[i])
     return NULL;
   memset(table->v[i], 0, createSize);
@@ -7240,7 +7240,7 @@ poolGrow(STRING_POOL *pool) {
     if (bytesToAllocate == 0)
       return XML_FALSE;
 
-    tem = (BLOCK *)pool->mem->malloc_fcn(bytesToAllocate);
+    tem = pool->mem->malloc_fcn(bytesToAllocate);
     if (! tem)
       return XML_FALSE;
     tem->size = blockSize;
@@ -7422,7 +7422,7 @@ copyString(const XML_Char *s, const XML_Memory_Handling_Suite *memsuite) {
   charsRequired++;
 
   /* Now allocate space for the copy */
-  result = (XML_Char *)memsuite->malloc_fcn(charsRequired * sizeof(XML_Char));
+  result = memsuite->malloc_fcn(charsRequired * sizeof(XML_Char));
   if (result == NULL)
     return NULL;
   /* Copy the original into place */
