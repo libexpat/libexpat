@@ -21,6 +21,8 @@ Release x.x.x xxx xxxxxxx xx xxxx
 
         Other changes:
             #546  Autotools: Fix broken CMake support under Cygwin
+       #552 #554  Version info bumped from 9:3:8 to 9:4:8;
+                    see https://verbump.de/ for what these numbers do
 
         Special thanks to:
             Carlo Bramini
