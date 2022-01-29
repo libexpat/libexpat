@@ -73,7 +73,6 @@ Flags: ignoreversion; Source: COPYING;                      DestDir: "{app}"; De
 Flags: ignoreversion; Source: README.md;                    DestDir: "{app}"; DestName: README.txt
 Flags: ignoreversion; Source: doc\*.html;                   DestDir: "{app}\Doc"
 Flags: ignoreversion; Source: doc\*.css;                    DestDir: "{app}\Doc"
-Flags: ignoreversion; Source: doc\*.png;                    DestDir: "{app}\Doc"
 Flags: ignoreversion; Source: win32\bin\Release\*.dll;      DestDir: "{app}\Bin"
 Flags: ignoreversion; Source: win32\bin\Release\*.lib;      DestDir: "{app}\Bin"
 Flags: ignoreversion; Source: win32\README.txt;             DestDir: "{app}\Source"
