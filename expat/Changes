@@ -21,6 +21,8 @@ Release 2.4.4 Sun January 30 2022
 
         Other changes:
             #546  Autotools: Fix broken CMake support under Cygwin
+            #554  Windows: Add missing files to the installer to fix
+                    compilation with CMake from installed sources
        #552 #554  Version info bumped from 9:3:8 to 9:4:8;
                     see https://verbump.de/ for what these numbers do
 
