@@ -19,7 +19,11 @@ Release x.x.x xxx xxxxxxx xx xxxx
         Bug fixes:
        #544 #545  xmlwf: Fix a memory leak on output file opening error
 
+        Other changes:
+            #546  Autotools: Fix broken CMake support under Cygwin
+
         Special thanks to:
+            Carlo Bramini
             hwt0415
             Roland Illig
             Samanta Navarro
