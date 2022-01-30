@@ -1,4 +1,4 @@
-/* 9ca2a2fedc35bcb13ba9a134ba5e173020bc2ff5f5a311abf742cec7da1ff26a (2.4.3+)
+/* 2e2c8ce5f11a473d65ec313ab20ceee6afefb355f5405afc06e7204e2e41c8c0 (2.4.4+)
                             __  __            _
                          ___\ \/ /_ __   __ _| |_
                         / _ \\  /| '_ \ / _` | __|
@@ -33,6 +33,7 @@
    Copyright (c) 2019-2020 Ben Wagner <bungeman@chromium.org>
    Copyright (c) 2019      Vadim Zeitlin <vadim@zeitlins.org>
    Copyright (c) 2021      Dong-hee Na <donghee.na@python.org>
+   Copyright (c) 2022      Samanta Navarro <ferivoz@riseup.net>
    Licensed under the MIT license:
 
    Permission is  hereby granted,  free of charge,  to any  person obtaining

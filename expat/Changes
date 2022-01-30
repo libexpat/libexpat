@@ -2,7 +2,7 @@ NOTE: We are looking for help with a few things:
       https://github.com/libexpat/libexpat/labels/help%20wanted
       If you can help, please get in touch.  Thanks!
 
-Release x.x.x xxx xxxxxxx xx xxxx
+Release 2.4.4 Sun January 30 2022
         Security fixes:
             #550  CVE-2022-23852 -- Fix signed integer overflow
                     (undefined behavior) in function XML_GetBuffer
@@ -19,7 +19,15 @@ Release x.x.x xxx xxxxxxx xx xxxx
         Bug fixes:
        #544 #545  xmlwf: Fix a memory leak on output file opening error
 
+        Other changes:
+            #546  Autotools: Fix broken CMake support under Cygwin
+            #554  Windows: Add missing files to the installer to fix
+                    compilation with CMake from installed sources
+       #552 #554  Version info bumped from 9:3:8 to 9:4:8;
+                    see https://verbump.de/ for what these numbers do
+
         Special thanks to:
+            Carlo Bramini
             hwt0415
             Roland Illig
             Samanta Navarro
