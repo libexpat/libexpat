@@ -572,6 +572,7 @@ static XML_Char *poolAppend(STRING_POOL *pool, const ENCODING *enc,
 static XML_Char *poolStoreString(STRING_POOL *pool, const ENCODING *enc,
                                  const char *ptr, const char *end);
 static XML_Bool FASTCALL poolGrow(STRING_POOL *pool);
+static XML_Bool FASTCALL poolGrowUntil(STRING_POOL *pool, size_t needed);
 static const XML_Char *FASTCALL poolCopyString(STRING_POOL *pool,
                                                const XML_Char *s);
 static const XML_Char *FASTCALL poolCopyStringNoFinish(STRING_POOL *pool,
@@ -636,6 +637,11 @@ static unsigned long getDebugLevel(const char *variableName,
   (((pool)->ptr == (pool)->end && ! poolGrow(pool))                            \
        ? 0                                                                     \
        : ((*((pool)->ptr)++ = c), 1))
+#define poolAppendChars(pool, s, len)                                          \
+  (! poolGrowUntil((pool), (len))                                              \
+       ? 0                                                                     \
+       : (memcpy((pool)->ptr, (s), (len) * sizeof(XML_Char)),                  \
+          (pool)->ptr += (len), 1))
 
 #if ! defined(XML_TESTING)
 const
@@ -8146,6 +8152,19 @@ poolGrow(STRING_POOL *pool) {
     pool->end = tem->s + blockSize;
   }
   return XML_TRUE;
+}
+
+static XML_Bool FASTCALL
+poolGrowUntil(STRING_POOL *pool, size_t needed) {
+  for (;;) {
+    const size_t available = pool->end - pool->ptr;
+    if (available >= needed) {
+      return XML_TRUE;
+    }
+    if (! poolGrow(pool)) {
+      return XML_FALSE;
+    }
+  }
 }
 
 static int FASTCALL
