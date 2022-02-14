@@ -7422,10 +7422,18 @@ copyEntityTable(XML_Parser oldParser, HASH_TABLE *newTable,
 
 static XML_Bool FASTCALL
 keyeq(KEY s1, KEY s2) {
+#ifdef XML_UNICODE
+#  ifdef XML_UNICODE_WCHAR_T
+  return (wcscmp(s1, s2) == 0) ? XML_TRUE : XML_FALSE;
+#  else
   for (; *s1 == *s2; s1++, s2++)
     if (*s1 == 0)
       return XML_TRUE;
   return XML_FALSE;
+#  endif
+#else
+  return (strcmp(s1, s2) == 0) ? XML_TRUE : XML_FALSE;
+#endif
 }
 
 static size_t
