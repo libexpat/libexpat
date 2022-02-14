@@ -120,6 +120,7 @@ EXTRA_DIST = \
     siphash.h \
     utf8tab.h \
     winconfig.h \
+    xcsinc.c \
     xmlrole.h \
     xmltok.h \
     xmltok_impl.c \
