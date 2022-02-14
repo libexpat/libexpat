@@ -393,6 +393,7 @@ set(_EXPAT_C_SOURCES
     lib/xmlrole.c
     lib/xmltok.c
 # NOTE: ISO C forbids an empty translation unit
+#   lib/xcsinc.c
 #   lib/xmltok_impl.c
 #   lib/xmltok_ns.c
 )
