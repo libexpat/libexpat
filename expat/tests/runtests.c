@@ -8,7 +8,7 @@
 
    Copyright (c) 2001-2006 Fred L. Drake, Jr. <fdrake@users.sourceforge.net>
    Copyright (c) 2003      Greg Stein <gstein@users.sourceforge.net>
-   Copyright (c) 2005-2007 Steven Solie <ssolie@users.sourceforge.net>
+   Copyright (c) 2005-2007 Steven Solie <steven@solie.ca>
    Copyright (c) 2005-2012 Karl Waclawek <karl@waclawek.net>
    Copyright (c) 2016-2022 Sebastian Pipping <sebastian@pipping.org>
    Copyright (c) 2017-2018 Rhodri James <rhodri@wildebeest.org.uk>
