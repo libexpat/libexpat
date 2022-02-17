@@ -19,11 +19,27 @@ Release X.X.X XXX XXXXXXX XX XXXX
                     on such unexpectable cases are handled inside the XML
                     processor; validation was not their job but Expat's.
                     Exploits with code execution are known to exist.
+            #558  CVE-2022-25313 -- Fix stack exhaustion in doctype parsing
+                    that could be triggered by e.g. a 2 megabytes
+                    file with a large number of opening braces.
+                    Expected impact is denial of service or potentially
+                    arbitrary code execution.
+            #560  CVE-2022-25314 -- Fix integer overflow in function copyString;
+                    only affects the encoding name parameter at parser creation
+                    time which is often hardcoded (rather than user input),
+                    takes a value in the gigabytes to trigger, and a 64-bit
+                    machine.  Expected impact is denial of service.
+            #559  CVE-2022-25315 -- Fix integer overflow in function storeRawNames;
+                    needs input in the gigabytes and a 64-bit machine.
+                    Expected impact is denial of service or potentially
+                    arbitrary code execution.
 
         Special thanks to:
             Ivan Fratric
+            Samanta Navarro
                  and
             Google Project Zero
+            JetBrains
 
 Release 2.4.4 Sun January 30 2022
         Security fixes:
