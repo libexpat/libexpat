@@ -2,7 +2,7 @@ NOTE: We are looking for help with a few things:
       https://github.com/libexpat/libexpat/labels/help%20wanted
       If you can help, please get in touch.  Thanks!
 
-Release X.X.X XXX XXXXXXX XX XXXX
+Release 2.4.5 Fri February 18 2022
         Security fixes:
             #562  CVE-2022-25235 -- Passing malformed 2- and 3-byte UTF-8
                     sequences (e.g. from start tag names) to the XML
@@ -19,11 +19,31 @@ Release X.X.X XXX XXXXXXX XX XXXX
                     on such unexpectable cases are handled inside the XML
                     processor; validation was not their job but Expat's.
                     Exploits with code execution are known to exist.
+            #558  CVE-2022-25313 -- Fix stack exhaustion in doctype parsing
+                    that could be triggered by e.g. a 2 megabytes
+                    file with a large number of opening braces.
+                    Expected impact is denial of service or potentially
+                    arbitrary code execution.
+            #560  CVE-2022-25314 -- Fix integer overflow in function copyString;
+                    only affects the encoding name parameter at parser creation
+                    time which is often hardcoded (rather than user input),
+                    takes a value in the gigabytes to trigger, and a 64-bit
+                    machine.  Expected impact is denial of service.
+            #559  CVE-2022-25315 -- Fix integer overflow in function storeRawNames;
+                    needs input in the gigabytes and a 64-bit machine.
+                    Expected impact is denial of service or potentially
+                    arbitrary code execution.
+
+        Other changes:
+       #557 #564  Version info bumped from 9:4:8 to 9:5:8;
+                    see https://verbump.de/ for what these numbers do
 
         Special thanks to:
             Ivan Fratric
+            Samanta Navarro
                  and
             Google Project Zero
+            JetBrains
 
 Release 2.4.4 Sun January 30 2022
         Security fixes:
