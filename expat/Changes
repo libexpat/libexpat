@@ -2,7 +2,7 @@ NOTE: We are looking for help with a few things:
       https://github.com/libexpat/libexpat/labels/help%20wanted
       If you can help, please get in touch.  Thanks!
 
-Release X.X.X XXX XXXXXXX XX XXXX
+Release 2.4.5 Fri February 18 2022
         Security fixes:
             #562  CVE-2022-25235 -- Passing malformed 2- and 3-byte UTF-8
                     sequences (e.g. from start tag names) to the XML
