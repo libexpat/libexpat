@@ -98,11 +98,6 @@
         + ((((byte)[1]) & 3) << 1) + ((((byte)[2]) >> 5) & 1)]                 \
    & (1u << (((byte)[2]) & 0x1F)))
 
-#define UTF8_GET_NAMING(pages, p, n)                                           \
-  ((n) == 2                                                                    \
-       ? UTF8_GET_NAMING2(pages, (const unsigned char *)(p))                   \
-       : ((n) == 3 ? UTF8_GET_NAMING3(pages, (const unsigned char *)(p)) : 0))
-
 /* Detection of invalid UTF-8 sequences is based on Table 3.1B
    of Unicode 3.2: http://www.unicode.org/unicode/reports/tr28/
    with the additional restriction of not allowing the Unicode
