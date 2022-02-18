@@ -34,6 +34,10 @@ Release X.X.X XXX XXXXXXX XX XXXX
                     Expected impact is denial of service or potentially
                     arbitrary code execution.
 
+        Other changes:
+       #557 #564  Version info bumped from 9:4:8 to 9:5:8;
+                    see https://verbump.de/ for what these numbers do
+
         Special thanks to:
             Ivan Fratric
             Samanta Navarro
