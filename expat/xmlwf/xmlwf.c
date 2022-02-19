@@ -65,6 +65,8 @@
 #  include <wchar.h>
 #endif
 
+#include "../lib/xcsinc.c"
+
 enum ExitCode {
   XMLWF_EXIT_SUCCESS = 0,
   XMLWF_EXIT_INTERNAL_ERROR = 1,
@@ -303,16 +305,9 @@ processingInstruction(void *userData, const XML_Char *target,
 
 static XML_Char *
 xcsdup(const XML_Char *s) {
-  XML_Char *result;
-  int count = 0;
-  int numBytes;
-
-  /* Get the length of the string, including terminator */
-  while (s[count++] != 0) {
-    /* Do nothing */
-  }
-  numBytes = count * sizeof(XML_Char);
-  result = malloc(numBytes);
+  const size_t numBytes
+      = (xcslen(s) + /* null terminator */ 1) * sizeof(XML_Char);
+  XML_Char *const result = malloc(numBytes);
   if (result == NULL)
     return NULL;
   memcpy(result, s, numBytes);
