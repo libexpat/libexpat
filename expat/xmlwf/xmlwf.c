@@ -68,6 +68,8 @@
 #  include <wchar.h>
 #endif
 
+#include "../lib/xcsinc.c"
+
 enum ExitCode {
   XMLWF_EXIT_SUCCESS = 0,
   XMLWF_EXIT_INTERNAL_ERROR = 1,
@@ -306,21 +308,14 @@ processingInstruction(void *userData, const XML_Char *target,
 
 static XML_Char *
 xcsdup(const XML_Char *s) {
-  XML_Char *result;
-  size_t count = 0;
-  size_t numBytes;
-
-  /* Get the length of the string, including terminator */
-  while (s[count++] != 0) {
-    /* Do nothing */
-  }
+  const size_t count = xcslen(s) + /* null terminator */ 1;
 
   // Detect and prevent integer overflow
   if (count > SIZE_MAX / sizeof(XML_Char))
     return NULL;
 
-  numBytes = count * sizeof(XML_Char);
-  result = malloc(numBytes);
+  const size_t numBytes = count * sizeof(XML_Char);
+  XML_Char *const result = malloc(numBytes);
   if (result == NULL)
     return NULL;
   memcpy(result, s, numBytes);
