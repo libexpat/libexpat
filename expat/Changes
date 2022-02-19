@@ -29,6 +29,10 @@
 !! THANK YOU!                        Sebastian Pipping -- Berlin, 2026-03-17 !!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
+Release 2.8.1 XXX XXXXX XX XXXX
+        Other changes:
+            #565  Replace some loops by use of `memcpy`, `strlen`, `wcslen`
+
 Release 2.8.0 Fri April 24 2026
         Security fixes:
        #47 #1183  CVE-2026-41080 -- The existing hash flooding protection
