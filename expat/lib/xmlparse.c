@@ -6504,11 +6504,10 @@ storeEntityValue(XML_Parser parser, const ENCODING *enc,
       next = entityTextPtr + enc->minBytesPerChar;
       /* fall through */
     case XML_TOK_DATA_NEWLINE:
-      if (pool->end == pool->ptr && ! poolGrow(pool)) {
+      if (! poolAppendChar(pool, 0xA)) {
         result = XML_ERROR_NO_MEMORY;
         goto endEntityValue;
       }
-      *(pool->ptr)++ = 0xA;
       break;
     case XML_TOK_CHAR_REF: {
       XML_Char buf[XML_ENCODE_MAX];
@@ -7703,9 +7702,8 @@ poolStoreString(STRING_POOL *pool, const ENCODING *enc, const char *ptr,
                 const char *end) {
   if (! poolAppend(pool, enc, ptr, end))
     return NULL;
-  if (pool->ptr == pool->end && ! poolGrow(pool))
+  if (! poolAppendChar(pool, 0))
     return NULL;
-  *(pool->ptr)++ = 0;
   return pool->start;
 }
 
