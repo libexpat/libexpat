@@ -8328,12 +8328,21 @@ build_model(XML_Parser parser) {
       const XML_Char *src;
       dest->name = str;
       src = dtd->scaffold[src_node].name;
-      for (;;) {
-        *str++ = *src;
-        if (! *src)
-          break;
-        src++;
+
+      const size_t nameLen = xcslen(src) + /* null terminator*/ 1;
+
+      // Detect and prevent integer overflow
+      if (nameLen > SIZE_MAX / sizeof(XML_Char)) {
+        // NOTE: We are avoiding FREE(..) here because the model
+        //       is not being allocated with MALLOC(..) but with plain
+        //       .malloc_fcn(..).
+        parser->m_mem.free_fcn(ret);
+        return NULL;
       }
+
+      memcpy(str, src, nameLen * sizeof(XML_Char));
+      str += nameLen;
+
       dest->numchildren = 0;
       dest->children = NULL;
     } else {
