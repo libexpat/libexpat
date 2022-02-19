@@ -35,6 +35,7 @@ Release 2.7.6 XXX XXXXX XX XXXX
                     this helps with protecting against hash flooding attacks,
                     in particular with WASI SDK (where none of the other
                     entropy sources supported by libexpat are available).
+            #565  Replace some loops by use of `memcpy`, `strlen`, `wcslen`
 
         Special thanks to:
             Jérôme Duval
