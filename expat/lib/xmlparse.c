@@ -8010,12 +8010,9 @@ build_model(XML_Parser parser) {
       const XML_Char *src;
       dest->name = str;
       src = dtd->scaffold[src_node].name;
-      for (;;) {
-        *str++ = *src;
-        if (! *src)
-          break;
-        src++;
-      }
+      const size_t nameLen = xcslen(src) + /* null terminator*/ 1;
+      memcpy(str, src, nameLen * sizeof(XML_Char));
+      str += nameLen;
       dest->numchildren = 0;
       dest->children = NULL;
     } else {
