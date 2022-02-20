@@ -2,6 +2,22 @@ NOTE: We are looking for help with a few things:
       https://github.com/libexpat/libexpat/labels/help%20wanted
       If you can help, please get in touch.  Thanks!
 
+Release x.x.x xxx xxxxxxxx xx xxxx
+        Bug fixes:
+            #???  Fix a regression intruced by the fix for CVE-2022-25313
+                    in release 2.4.5 that affects applications that (1)
+                    call function XML_SetElementDeclHandler and (2) are
+                    parsing XML that contains nested element declarations
+                    (e.g. "<!ELEMENT junk ((bar|foo|xyz+), zebra*)>").
+
+        Special thanks to:
+            Matt Sergeant
+            Samanta Navarro
+            Sergei Trofimovich
+                 and
+            NixOS
+            Perl XML::Parser
+
 Release 2.4.5 Fri February 18 2022
         Security fixes:
             #562  CVE-2022-25235 -- Passing malformed 2- and 3-byte UTF-8
