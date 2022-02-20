@@ -10,6 +10,10 @@ Release x.x.x xxx xxxxxxxx xx xxxx
                     parsing XML that contains nested element declarations
                     (e.g. "<!ELEMENT junk ((bar|foo|xyz+), zebra*)>").
 
+        Other changes:
+       #567 #568  Version info bumped from 9:5:8 to 9:6:8;
+                    see https://verbump.de/ for what these numbers do
+
         Special thanks to:
             Matt Sergeant
             Samanta Navarro
