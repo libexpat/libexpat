@@ -2,13 +2,17 @@ NOTE: We are looking for help with a few things:
       https://github.com/libexpat/libexpat/labels/help%20wanted
       If you can help, please get in touch.  Thanks!
 
-Release x.x.x xxx xxxxxxxx xx xxxx
+Release 2.4.6 Sun February 20 2022
         Bug fixes:
-            #???  Fix a regression intruced by the fix for CVE-2022-25313
+            #566  Fix a regression introduced by the fix for CVE-2022-25313
                     in release 2.4.5 that affects applications that (1)
                     call function XML_SetElementDeclHandler and (2) are
                     parsing XML that contains nested element declarations
                     (e.g. "<!ELEMENT junk ((bar|foo|xyz+), zebra*)>").
+
+        Other changes:
+       #567 #568  Version info bumped from 9:5:8 to 9:6:8;
+                    see https://verbump.de/ for what these numbers do
 
         Special thanks to:
             Matt Sergeant
