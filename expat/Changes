@@ -4,7 +4,7 @@ NOTE: We are looking for help with a few things:
 
 Release x.x.x xxx xxxxxxxx xx xxxx
         Bug fixes:
-            #???  Fix a regression intruced by the fix for CVE-2022-25313
+            #566  Fix a regression introduced by the fix for CVE-2022-25313
                     in release 2.4.5 that affects applications that (1)
                     call function XML_SetElementDeclHandler and (2) are
                     parsing XML that contains nested element declarations
