@@ -2,6 +2,11 @@ NOTE: We are looking for help with a few things:
       https://github.com/libexpat/libexpat/labels/help%20wanted
       If you can help, please get in touch.  Thanks!
 
+Release x.x.x xxx xxxxxxxx xx xxxx
+        Other changes:
+       #569 #571  tests: Resolve use of macros NAN and INFINITY for GNU G++
+                    4.8.2 on Solaris.
+
 Release 2.4.6 Sun February 20 2022
         Bug fixes:
             #566  Fix a regression introduced by the fix for CVE-2022-25313
