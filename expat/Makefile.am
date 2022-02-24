@@ -82,7 +82,8 @@ _EXTRA_DIST_WINDOWS = \
     win32/build_expat_iss.bat \
     win32/expat.iss \
     win32/MANIFEST.txt \
-    win32/README.txt
+    win32/README.txt \
+    win32/version.rc
 
 EXTRA_DIST = \
     $(_EXTRA_DIST_CMAKE) \
