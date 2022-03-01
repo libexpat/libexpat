@@ -239,6 +239,11 @@ XML_ParserCreate(const XML_Char *encoding);
    and the local part will be concatenated without any separator.
    It is a programming error to use the separator '\0' with namespace
    triplets (see XML_SetReturnNSTriplet).
+   If a namespace separator is chosen that can be part of a URI or
+   part of an XML name, splitting an expanded name back into its
+   1, 2 or 3 original parts on application level in the element handler
+   may end up vulnerable, so these are advised against;  sane choices for
+   a namespace separator are e.g. '\n' (line feed) and '|' (pipe).
 */
 XMLPARSEAPI(XML_Parser)
 XML_ParserCreateNS(const XML_Char *encoding, XML_Char namespaceSeparator);
