@@ -974,6 +974,14 @@ the local part will be concatenated without any separator - this is intended
 to support RDF processors. It is a programming error to use the null separator
 with <a href= "#XML_SetReturnNSTriplet">namespace triplets</a>.</div>
 
+<p><strong>Note:</strong>
+Expat does not validate namespace URIs (beyond encoding)
+against RFC 3986 today (and is not required to do so with regard to
+the XML 1.0 namespaces specification) but it may start doing that
+in future releases.  Before that, an application using Expat must
+be ready to receive namespace URIs containing non-URI characters.
+</p>
+
 <h4 id="XML_ParserCreate_MM">XML_ParserCreate_MM</h4>
 <pre class="fcndec">
 XML_Parser XMLCALL

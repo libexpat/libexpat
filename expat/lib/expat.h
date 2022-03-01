@@ -244,6 +244,12 @@ XML_ParserCreate(const XML_Char *encoding);
    1, 2 or 3 original parts on application level in the element handler
    may end up vulnerable, so these are advised against;  sane choices for
    a namespace separator are e.g. '\n' (line feed) and '|' (pipe).
+
+   Note that Expat does not validate namespace URIs (beyond encoding)
+   against RFC 3986 today (and is not required to do so with regard to
+   the XML 1.0 namespaces specification) but it may start doing that
+   in future releases.  Before that, an application using Expat must
+   be ready to receive namespace URIs containing non-URI characters.
 */
 XMLPARSEAPI(XML_Parser)
 XML_ParserCreateNS(const XML_Char *encoding, XML_Char namespaceSeparator);
