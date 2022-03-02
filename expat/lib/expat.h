@@ -175,7 +175,7 @@ struct XML_cp {
 
 /* This is called for an element declaration. See above for
    description of the model argument. It's the user code's responsibility
-   to free model when finished with it. See XML_FreeContentModel().
+   to free model when finished with it. See XML_FreeContentModel.
    There is no need to free the model from the handler, it can be kept
    around and freed at a later stage.
 */
