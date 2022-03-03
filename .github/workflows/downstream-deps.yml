@@ -1,0 +1,23 @@
+name: "Build Downstream Packages"
+
+permissions: read-all
+
+on:
+  pull_request_target:
+    branches:
+      - master
+
+jobs:
+  nixpkgs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: cachix/install-nix-action@v16
+        with:
+          # explicitly enable sandbox
+          extra_nix_config: sandbox = true
+      - name: Building python3 xmltodict
+        run: nix-build -A python3Packages.xmltodict
+      - name: Building python3 jxmlease
+        run: nix-build -A python3Packages.jxmlease
+      - name: Building python3 moto
+        run: nix-build -A python3Packages.moto
