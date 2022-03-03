@@ -7406,16 +7406,18 @@ START_TEST(test_ns_separator_in_uri) {
   struct test_case {
     enum XML_Status expectedStatus;
     const char *doc;
+    XML_Char namesep;
   };
   struct test_case cases[] = {
-      {XML_STATUS_OK, "<doc xmlns='one_two' />"},
-      {XML_STATUS_ERROR, "<doc xmlns='one&#x0A;two' />"},
+      {XML_STATUS_OK, "<doc xmlns='one_two' />", XCS('\n')},
+      {XML_STATUS_ERROR, "<doc xmlns='one&#x0A;two' />", XCS('\n')},
+      {XML_STATUS_OK, "<doc xmlns='one:two' />", XCS(':')},
   };
 
   size_t i = 0;
   size_t failCount = 0;
   for (; i < sizeof(cases) / sizeof(cases[0]); i++) {
-    XML_Parser parser = XML_ParserCreateNS(NULL, '\n');
+    XML_Parser parser = XML_ParserCreateNS(NULL, cases[i].namesep);
     XML_SetElementHandler(parser, dummy_start_element, dummy_end_element);
     if (XML_Parse(parser, cases[i].doc, (int)strlen(cases[i].doc),
                   /*isFinal*/ XML_TRUE)
