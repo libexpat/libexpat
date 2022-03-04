@@ -11,6 +11,7 @@ Release x.x.x xxx xxxxxxxx xx xxxx
                     0123456789 % -._~ :/?#[]@ !$&'()*+,;=
 
         Other changes:
+       #555 #570  CMake|Windows: Store Expat version in the DLL
             #577  Document consequences of namespace separator choices not just
                     in doc/reference.html but also in header <expat.h>
             #577  Document Expat's lack of validation of namespace URIs against
@@ -20,10 +21,20 @@ Release x.x.x xxx xxxxxxxx xx xxxx
                     If you find need for strict RFC 3986 URI validation on
                     application level today, https://uriparser.github.io/ may
                     be of interest.
+            #579  Fix documentation of XML_EndDoctypeDeclHandler in <expat.h>
+            #575  Document that a call to XML_FreeContentModel can be done at
+                    a later time from outside the element declaration handler
+            #574  Make hardcoded namespace URIs easier to find in code
+            #573  Update documentation on use of XML_POOR_ENTOPY on Solaris
        #569 #571  tests: Resolve use of macros NAN and INFINITY for GNU G++
                     4.8.2 on Solaris.
        #578 #580  Version info bumped from 9:6:8 to 9:7:8;
                     see https://verbump.de/ for what these numbers do
+
+        Special thanks to:
+            Jeffrey Walton
+            Johnny Jazeix
+            Thijs Schreijer
 
 Release 2.4.6 Sun February 20 2022
         Bug fixes:
