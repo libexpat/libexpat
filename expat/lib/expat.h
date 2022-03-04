@@ -319,7 +319,7 @@ typedef void(XMLCALL *XML_StartDoctypeDeclHandler)(void *userData,
                                                    const XML_Char *pubid,
                                                    int has_internal_subset);
 
-/* This is called for the start of the DOCTYPE declaration when the
+/* This is called for the end of the DOCTYPE declaration when the
    closing > is encountered, but after processing any external
    subset.
 */
