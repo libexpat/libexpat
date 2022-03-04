@@ -11,7 +11,7 @@ Release 2.4.7 Fri March 4 2022
                     0123456789 % -._~ :/?#[]@ !$&'()*+,;=
 
         Other changes:
-       #555 #570  CMake|Windows: Store Expat version in the DLL
+  #555 #570 #581  CMake|Windows: Store Expat version in the DLL
             #577  Document consequences of namespace separator choices not just
                     in doc/reference.html but also in header <expat.h>
             #577  Document Expat's lack of validation of namespace URIs against
