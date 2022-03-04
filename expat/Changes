@@ -2,7 +2,7 @@ NOTE: We are looking for help with a few things:
       https://github.com/libexpat/libexpat/labels/help%20wanted
       If you can help, please get in touch.  Thanks!
 
-Release x.x.x xxx xxxxxxxx xx xxxx
+Release 2.4.7 Fri March 4 2022
         Bug fixes:
        #572 #577  Relax fix to CVE-2022-25236 (introduced with release 2.4.5)
                     with regard to all valid URI characters (RFC 3986),
