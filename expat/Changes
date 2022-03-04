@@ -22,6 +22,8 @@ Release x.x.x xxx xxxxxxxx xx xxxx
                     be of interest.
        #569 #571  tests: Resolve use of macros NAN and INFINITY for GNU G++
                     4.8.2 on Solaris.
+       #578 #580  Version info bumped from 9:6:8 to 9:7:8;
+                    see https://verbump.de/ for what these numbers do
 
 Release 2.4.6 Sun February 20 2022
         Bug fixes:
