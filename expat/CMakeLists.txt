@@ -29,6 +29,7 @@
 # Copyright (c) 2020      Gulliver <gulliver@traumkristalle.net>
 # Copyright (c) 2020      Thomas Beutlich <tc@tbeu.de>
 # Copyright (c) 2021      Alex Richardson <Alexander.Richardson@cl.cam.ac.uk>
+# Copyright (c) 2022      Johnny Jazeix <jazeix@gmail.com>
 # Unlike most of Expat,
 # this file is copyrighted under the BSD-license for buildsystem files of KDE.
 
@@ -64,7 +65,7 @@ endif()
 
 project(expat
     VERSION
-        2.4.6
+        2.4.7
     LANGUAGES
         C
 )
@@ -413,7 +414,7 @@ if(EXPAT_WITH_LIBBSD)
 endif()
 
 set(LIBCURRENT 9)   # sync
-set(LIBREVISION 6)  # with
+set(LIBREVISION 7)  # with
 set(LIBAGE 8)       # configure.ac!
 math(EXPR LIBCURRENT_MINUS_AGE "${LIBCURRENT} - ${LIBAGE}")
 

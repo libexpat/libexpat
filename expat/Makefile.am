@@ -8,6 +8,7 @@
 #
 # Copyright (c) 2017-2021 Sebastian Pipping <sebastian@pipping.org>
 # Copyright (c) 2018      KangLin <kl222@126.com>
+# Copyright (c) 2022      Johnny Jazeix <jazeix@gmail.com>
 # Licensed under the MIT license:
 #
 # Permission is  hereby granted,  free of charge,  to any  person obtaining

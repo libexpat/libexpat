@@ -1,4 +1,4 @@
-/* a30d2613dcfdef81475a9d1a349134d2d42722172fdaa7d5bb12ed2aa74b9596 (2.4.6+)
+/* fcb1a62fefa945567301146eb98e3ad3413e823a41c4378e84e8b6b6f308d824 (2.4.7+)
                             __  __            _
                          ___\ \/ /_ __   __ _| |_
                         / _ \\  /| '_ \ / _` | __|
@@ -34,6 +34,7 @@
    Copyright (c) 2019      Vadim Zeitlin <vadim@zeitlins.org>
    Copyright (c) 2021      Dong-hee Na <donghee.na@python.org>
    Copyright (c) 2022      Samanta Navarro <ferivoz@riseup.net>
+   Copyright (c) 2022      Jeffrey Walton <noloader@gmail.com>
    Licensed under the MIT license:
 
    Permission is  hereby granted,  free of charge,  to any  person obtaining

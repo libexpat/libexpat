@@ -15,6 +15,7 @@
    Copyright (c) 2016      Cristian Rodríguez <crrodriguez@opensuse.org>
    Copyright (c) 2016      Thomas Beutlich <tc@tbeu.de>
    Copyright (c) 2017      Rhodri James <rhodri@wildebeest.org.uk>
+   Copyright (c) 2022      Thijs Schreijer <thijs@thijsschreijer.nl>
    Licensed under the MIT license:
 
    Permission is  hereby granted,  free of charge,  to any  person obtaining
@@ -1054,7 +1055,7 @@ XML_SetBillionLaughsAttackProtectionActivationThreshold(
 */
 #define XML_MAJOR_VERSION 2
 #define XML_MINOR_VERSION 4
-#define XML_MICRO_VERSION 6
+#define XML_MICRO_VERSION 7
 
 #ifdef __cplusplus
 }
