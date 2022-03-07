@@ -422,6 +422,18 @@ if(NOT WIN32)
     set_property(TARGET expat PROPERTY VERSION ${LIBCURRENT_MINUS_AGE}.${LIBAGE}.${LIBREVISION})
     set_property(TARGET expat PROPERTY SOVERSION ${LIBCURRENT_MINUS_AGE})
     set_property(TARGET expat PROPERTY NO_SONAME ${NO_SONAME})
+
+    if(APPLE)
+        if(NOT CMAKE_VERSION VERSION_GREATER_EQUAL 3.17)
+            message(FATAL_ERROR "Expat requires CMake >=3.17 on platform \"APPLE\".")
+        endif()
+
+        # NOTE: This intends to talk CMake into compatiblity with GNU Libtool
+        math(EXPR _EXPAT_MACHO_COMPATIBILITY_VERSION "${LIBCURRENT} + 1")
+        set(_EXPAT_MACHO_CURRENT_VERSION "${_EXPAT_MACHO_COMPATIBILITY_VERSION}.${LIBREVISION}")
+        set_property(TARGET expat PROPERTY MACHO_COMPATIBILITY_VERSION ${_EXPAT_MACHO_COMPATIBILITY_VERSION})
+        set_property(TARGET expat PROPERTY MACHO_CURRENT_VERSION ${_EXPAT_MACHO_CURRENT_VERSION})
+    endif()
 endif()
 if(WIN32 AND NOT MINGW)
     # NOTE: This avoids a name collision with Expat.dll of Perl's XML::Parser::Expat
