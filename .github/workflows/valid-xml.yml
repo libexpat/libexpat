@@ -40,7 +40,7 @@ jobs:
     name: Ensure well-formed and valid XML
     runs-on: ubuntu-20.04
     steps:
-    - uses: actions/checkout@v2.4.0
+    - uses: actions/checkout@v3
 
     - name: Install build dependencies
       run: |-
