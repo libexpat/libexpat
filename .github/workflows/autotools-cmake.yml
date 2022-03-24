@@ -60,6 +60,8 @@ jobs:
     - name: (Linux) Install build dependencies
       if: "${{ runner.os == 'Linux' }}"
       run: |-
+        set -x
+        sudo apt-get update
         sudo apt-get install --yes --no-install-recommends -V \
             cmake \
             docbook2x \
