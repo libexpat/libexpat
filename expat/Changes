@@ -9,6 +9,9 @@ Release x.x.x xxx xxxx xx xxxx
                     "-current_version <version>" in a way compatible with
                     GNU Libtool
 
+        Infrastructure:
+            #589  CI: Upgrade Clang from 13 to 14
+
         Special thanks to:
             evpobr
             Sam James

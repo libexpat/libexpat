@@ -46,16 +46,16 @@ jobs:
     - name: Add Clang/LLVM repositories
       run: |-
         wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
-        sudo add-apt-repository 'deb http://apt.llvm.org/bionic/ llvm-toolchain-bionic-13 main'
+        sudo add-apt-repository 'deb http://apt.llvm.org/bionic/ llvm-toolchain-bionic-14 main'
     - name: Install build dependencies
       # NOTE: Please note the version-specific ${PATH} extension for Clang in .travis.sh
       run: |-
         sudo dpkg --add-architecture i386  # for wine32
         sudo apt-get update
         sudo apt-get install --yes --no-install-recommends -V \
-            clang-13 \
-            clang-format-13 \
-            llvm-13 \
+            clang-14 \
+            clang-format-14 \
+            llvm-14 \
             cmake \
             docbook2x \
             dos2unix \
