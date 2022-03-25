@@ -42,7 +42,7 @@ jobs:
     env:
       CFLAGS: -g3 -pipe
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v3.0.0
     - name: Add Clang/LLVM repositories
       run: |-
         wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
@@ -79,7 +79,7 @@ jobs:
         exec ./.travis.sh
 
     - name: Store coverage .info and HTML report
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v3.0.0
       with:
         name: coverage
         path: expat/coverage__*/
