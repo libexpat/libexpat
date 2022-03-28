@@ -4,6 +4,8 @@ NOTE: We are looking for help with a few things:
 
 Release x.x.x xxx xxxx xx xxxx
         Other changes:
+            #587  pkg-config: Move "-lm" to section "Libs.private"
+            #587  CMake|MSVC: Fix pkg-config section "Libs"
         #55 #582  CMake|macOS: Start using linker arguments
                     "-compatibility_version <version>" and
                     "-current_version <version>" in a way compatible with
@@ -14,6 +16,7 @@ Release x.x.x xxx xxxx xx xxxx
 
         Special thanks to:
             evpobr
+            Kai Pastor
             Sam James
 
 Release 2.4.7 Fri March 4 2022
