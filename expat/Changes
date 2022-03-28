@@ -10,6 +10,8 @@ Release x.x.x xxx xxxx xx xxxx
                     "-compatibility_version <version>" and
                     "-current_version <version>" in a way compatible with
                     GNU Libtool
+       #590 #591  Version info bumped from 9:7:8 to 9:8:8;
+                    see https://verbump.de/ for what these numbers do
 
         Infrastructure:
             #589  CI: Upgrade Clang from 13 to 14
