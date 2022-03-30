@@ -107,7 +107,7 @@ filemap(const TCHAR *name,
 
 static void
 win32perror(const TCHAR *s) {
-  LPVOID buf;
+  LPVOID buf = NULL;
   if (FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
                     NULL, GetLastError(),
                     MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPTSTR)&buf, 0,
