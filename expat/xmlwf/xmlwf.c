@@ -217,7 +217,7 @@ nsattcmp(const void *p1, const void *p2) {
   const XML_Char *att1 = *(const XML_Char **)p1;
   const XML_Char *att2 = *(const XML_Char **)p2;
   int sep1 = (tcsrchr(att1, NSSEP) != 0);
-  int sep2 = (tcsrchr(att1, NSSEP) != 0);
+  int sep2 = (tcsrchr(att2, NSSEP) != 0);
   if (sep1 != sep2)
     return sep1 - sep2;
   return tcscmp(att1, att2);
