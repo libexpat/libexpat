@@ -455,12 +455,8 @@ target_include_directories(expat
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
-if(WIN32)
-    if(EXPAT_SHARED_LIBS)
-        target_compile_definitions(expat PRIVATE VER_FILEVERSION=${_EXPAT_DLL_VERSION})
-    else()
-        target_compile_definitions(expat PUBLIC -DXML_STATIC)
-    endif()
+if(WIN32 AND EXPAT_SHARED_LIBS)
+    target_compile_definitions(expat PRIVATE VER_FILEVERSION=${_EXPAT_DLL_VERSION})
 endif()
 
 expat_install(TARGETS expat EXPORT expat
@@ -680,6 +676,23 @@ else()
                 "This is likely in error - consider adding "
                 "-DEXPAT_BUILD_FUZZERS=ON to your cmake execution.")
     endif()
+endif()
+
+#
+# C/C++ config affecting multiple targets
+#
+if(WIN32)
+    set(_EXPAT_STATIC_TARGETS ${_EXPAT_TEST_TARGETS})
+    if(NOT EXPAT_SHARED_LIBS)
+        list(APPEND _EXPAT_STATIC_TARGETS expat)
+    endif()
+    if(EXPAT_BUILD_FUZZERS)
+        list(APPEND _EXPAT_STATIC_TARGETS fuzzpat)
+    endif()
+
+    foreach(_target ${_EXPAT_STATIC_TARGETS})
+        target_compile_definitions(${_target} PUBLIC -DXML_STATIC)
+    endforeach()
 endif()
 
 #

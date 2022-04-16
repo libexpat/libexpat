@@ -3,6 +3,10 @@ NOTE: We are looking for help with a few things:
       If you can help, please get in touch.  Thanks!
 
 Release x.x.x xxx xxxxx xx xxxx
+        Other changes:
+       #597 #599  Windows|CMake: Add missing -DXML_STATIC to test runners
+                    and fuzzers
+
         Infrastructure:
        #597 #598  CI: Windows: Start covering MSVC 2022
 
