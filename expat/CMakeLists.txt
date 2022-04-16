@@ -612,6 +612,9 @@ if(EXPAT_BUILD_TESTS)
     endforeach()
 endif()
 
+#
+# Fuzzers
+#
 if(EXPAT_BUILD_FUZZERS)
     if(NOT "${CMAKE_C_COMPILER_ID}" STREQUAL "Clang")
         message(SEND_ERROR
