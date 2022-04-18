@@ -80,7 +80,7 @@ jobs:
     env:
       CFLAGS: -g3 -pipe
     steps:
-    - uses: actions/checkout@v3.0.0
+    - uses: actions/checkout@v3.0.1
     - name: Add Clang/LLVM repositories
       run: |-
         set -x
