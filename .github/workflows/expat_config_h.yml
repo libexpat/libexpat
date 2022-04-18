@@ -40,7 +40,7 @@ jobs:
     name: Check expat_config.h.{in,cmake} for regressions
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3.0.0
+    - uses: actions/checkout@v3.0.1
     - name: Check expat_config.h.{in,cmake} for regressions
       run: |
         set -v
