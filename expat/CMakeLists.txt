@@ -455,12 +455,8 @@ target_include_directories(expat
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
-if(WIN32)
-    if(EXPAT_SHARED_LIBS)
-        target_compile_definitions(expat PRIVATE VER_FILEVERSION=${_EXPAT_DLL_VERSION})
-    else()
-        target_compile_definitions(expat PUBLIC -DXML_STATIC)
-    endif()
+if(WIN32 AND EXPAT_SHARED_LIBS)
+    target_compile_definitions(expat PRIVATE VER_FILEVERSION=${_EXPAT_DLL_VERSION})
 endif()
 
 expat_install(TARGETS expat EXPORT expat
@@ -594,25 +590,27 @@ if(EXPAT_BUILD_TESTS)
         endif()
     endfunction()
 
-    add_executable(runtests tests/runtests.c ${test_SRCS})
-    set_property(TARGET runtests PROPERTY RUNTIME_OUTPUT_DIRECTORY tests)
-    expat_add_test(runtests $<TARGET_FILE:runtests>)
-
+    set(_EXPAT_TEST_TARGETS runtests runtestspp)
+    add_executable(runtests   tests/runtests.c     ${test_SRCS})
     add_executable(runtestspp tests/runtestspp.cpp ${test_SRCS})
-    set_property(TARGET runtestspp PROPERTY RUNTIME_OUTPUT_DIRECTORY tests)
-    expat_add_test(runtestspp $<TARGET_FILE:runtestspp>)
 
-    if(_EXPAT_LIBM_FOUND)
-        target_link_libraries(runtests m)
-        target_link_libraries(runtestspp m)
-    endif()
+    foreach(_target ${_EXPAT_TEST_TARGETS})
+        set_property(TARGET ${_target} PROPERTY RUNTIME_OUTPUT_DIRECTORY tests)
+        expat_add_test(${_target} $<TARGET_FILE:${_target}>)
 
-    if(EXPAT_WITH_LIBBSD)
-        target_link_libraries(runtests ${LIB_BSD})
-        target_link_libraries(runtestspp ${LIB_BSD})
-    endif()
+        if(_EXPAT_LIBM_FOUND)
+            target_link_libraries(${_target} m)
+        endif()
+
+        if(EXPAT_WITH_LIBBSD)
+            target_link_libraries(${_target} ${LIB_BSD})
+        endif()
+    endforeach()
 endif()
 
+#
+# Fuzzers
+#
 if(EXPAT_BUILD_FUZZERS)
     if(NOT "${CMAKE_C_COMPILER_ID}" STREQUAL "Clang")
         message(SEND_ERROR
@@ -678,6 +676,23 @@ else()
                 "This is likely in error - consider adding "
                 "-DEXPAT_BUILD_FUZZERS=ON to your cmake execution.")
     endif()
+endif()
+
+#
+# C/C++ config affecting multiple targets
+#
+if(WIN32)
+    set(_EXPAT_STATIC_TARGETS ${_EXPAT_TEST_TARGETS})
+    if(NOT EXPAT_SHARED_LIBS)
+        list(APPEND _EXPAT_STATIC_TARGETS expat)
+    endif()
+    if(EXPAT_BUILD_FUZZERS)
+        list(APPEND _EXPAT_STATIC_TARGETS fuzzpat)
+    endif()
+
+    foreach(_target ${_EXPAT_STATIC_TARGETS})
+        target_compile_definitions(${_target} PUBLIC -DXML_STATIC)
+    endforeach()
 endif()
 
 #
