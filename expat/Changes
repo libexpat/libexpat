@@ -23,6 +23,10 @@ Release x.x.x xxx xxxxx xx xxxx
             #632  MinGW|CMake: Set missing variable CMAKE_RC_COMPILER in
                     toolchain file "cmake/mingw-toolchain.cmake" to avoid
                     error "windres: Command not found" on e.g. Ubuntu 20.04
+       #597 #626  CMake: Unify inconsistent use of set() and option() in
+                    context of public build time options to take need for
+                    set(.. FORCE) in projects using Expat by means of
+                    add_subdirectory(..) off Expat's users' shoulders
             #620  CMake: Make documentation on variables a bit more consistent
             #610  Address Cppcheck 2.8.1 warning
 
@@ -32,6 +36,7 @@ Release x.x.x xxx xxxxx xx xxxx
 
         Special thanks to:
             David Faure
+            Frank Bergmann
             Rosen Penev
             Vincent Torri
 
