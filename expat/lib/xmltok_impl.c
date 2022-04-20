@@ -124,7 +124,8 @@
 #    define PREFIX(ident) ident
 #  endif
 
-#  define HAS_CHARS(enc, ptr, end, count) ((end) - (ptr) >= ((count) * MINBPC(enc)))
+#  define HAS_CHARS(enc, ptr, end, count)                                      \
+    ((end) - (ptr) >= ((count)*MINBPC(enc)))
 
 #  define HAS_CHAR(enc, ptr, end) HAS_CHARS(enc, ptr, end, 1)
 
