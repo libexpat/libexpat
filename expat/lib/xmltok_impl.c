@@ -96,7 +96,7 @@
 
 #  define CHECK_NMSTRT_CASE(n, enc, ptr, end, nextTokPtr)                      \
   case BT_LEAD##n:                                                             \
-    if (end - ptr < n)                                                         \
+    if ((end) - (ptr) < (n))                                                   \
       return XML_TOK_PARTIAL_CHAR;                                             \
     if (IS_INVALID_CHAR(enc, ptr, n) || ! IS_NMSTRT_CHAR(enc, ptr, n)) {       \
       *nextTokPtr = ptr;                                                       \
@@ -124,7 +124,8 @@
 #    define PREFIX(ident) ident
 #  endif
 
-#  define HAS_CHARS(enc, ptr, end, count) (end - ptr >= count * MINBPC(enc))
+#  define HAS_CHARS(enc, ptr, end, count)                                      \
+    ((end) - (ptr) >= ((count)*MINBPC(enc)))
 
 #  define HAS_CHAR(enc, ptr, end) HAS_CHARS(enc, ptr, end, 1)
 
