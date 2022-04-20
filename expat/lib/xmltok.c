@@ -296,7 +296,7 @@ sb_charMatches(const ENCODING *enc, const char *p, int c) {
 }
 #else
 /* c is an ASCII character */
-#  define CHAR_MATCHES(enc, p, c) (*(p) == c)
+#  define CHAR_MATCHES(enc, p, c) (*(p) == (c))
 #endif
 
 #define PREFIX(ident) normal_##ident
@@ -740,7 +740,7 @@ DEFINE_UTF16_TO_UTF16(big2_)
   ((p)[1] == 0 ? ((struct normal_encoding *)(enc))->type[(unsigned char)*(p)]  \
                : unicode_byte_type((p)[1], (p)[0]))
 #define LITTLE2_BYTE_TO_ASCII(p) ((p)[1] == 0 ? (p)[0] : -1)
-#define LITTLE2_CHAR_MATCHES(p, c) ((p)[1] == 0 && (p)[0] == c)
+#define LITTLE2_CHAR_MATCHES(p, c) ((p)[1] == 0 && (p)[0] == (c))
 #define LITTLE2_IS_NAME_CHAR_MINBPC(p)                                         \
   UCS2_GET_NAMING(namePages, (unsigned char)p[1], (unsigned char)p[0])
 #define LITTLE2_IS_NMSTRT_CHAR_MINBPC(p)                                       \
@@ -875,7 +875,7 @@ static const struct normal_encoding internal_little2_encoding
        ? ((struct normal_encoding *)(enc))->type[(unsigned char)(p)[1]]        \
        : unicode_byte_type((p)[0], (p)[1]))
 #define BIG2_BYTE_TO_ASCII(p) ((p)[0] == 0 ? (p)[1] : -1)
-#define BIG2_CHAR_MATCHES(p, c) ((p)[0] == 0 && (p)[1] == c)
+#define BIG2_CHAR_MATCHES(p, c) ((p)[0] == 0 && (p)[1] == (c))
 #define BIG2_IS_NAME_CHAR_MINBPC(p)                                            \
   UCS2_GET_NAMING(namePages, (unsigned char)p[0], (unsigned char)p[1])
 #define BIG2_IS_NMSTRT_CHAR_MINBPC(p)                                          \
