@@ -40,7 +40,7 @@ jobs:
     name: Run Cppcheck
     runs-on: macos-latest
     steps:
-    - uses: actions/checkout@v3.0.1
+    - uses: actions/checkout@v3.0.2
     - name: Install runtime dependencies
       run: |
         exec brew install cppcheck findutils
