@@ -81,7 +81,7 @@ jobs:
         exec ./.travis.sh
 
     - name: Store coverage .info and HTML report
-      uses: actions/upload-artifact@v3.0.0
+      uses: actions/upload-artifact@v3.1.0
       with:
         name: coverage
         path: expat/coverage__*/
