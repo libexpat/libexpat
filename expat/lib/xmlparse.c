@@ -2528,10 +2528,10 @@ XML_GetFeatureList(void) {
   return features;
 }
 
-#ifdef XML_DTD
 XML_Bool XMLCALL
 XML_SetBillionLaughsAttackProtectionMaximumAmplification(
     XML_Parser parser, float maximumAmplificationFactor) {
+#ifdef XML_DTD
   if ((parser == NULL) || (parser->m_parentParser != NULL)
       || isnan(maximumAmplificationFactor)
       || (maximumAmplificationFactor < 1.0f)) {
@@ -2539,18 +2539,24 @@ XML_SetBillionLaughsAttackProtectionMaximumAmplification(
   }
   parser->m_accounting.maximumAmplificationFactor = maximumAmplificationFactor;
   return XML_TRUE;
+#else
+  return XML_FALSE;
+#endif /* XML_DTD */
 }
 
 XML_Bool XMLCALL
 XML_SetBillionLaughsAttackProtectionActivationThreshold(
     XML_Parser parser, unsigned long long activationThresholdBytes) {
+#ifdef XML_DTD
   if ((parser == NULL) || (parser->m_parentParser != NULL)) {
     return XML_FALSE;
   }
   parser->m_accounting.activationThresholdBytes = activationThresholdBytes;
   return XML_TRUE;
-}
+#else
+  return XML_FALSE;
 #endif /* XML_DTD */
+}
 
 /* Initially tag->rawName always points into the parse buffer;
    for those TAG instances opened while the current parse buffer was
