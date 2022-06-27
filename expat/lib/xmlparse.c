@@ -2542,6 +2542,7 @@ XML_SetBillionLaughsAttackProtectionMaximumAmplification(
   parser->m_accounting.maximumAmplificationFactor = maximumAmplificationFactor;
   return XML_TRUE;
 #else
+  UNUSED_P(maximumAmplificationFactor);
   if (parser != NULL)
     parser->m_errorCode = XML_ERROR_FEATURE_REQUIRES_XML_DTD;
   return XML_FALSE;
@@ -2560,6 +2561,7 @@ XML_SetBillionLaughsAttackProtectionActivationThreshold(
   parser->m_accounting.activationThresholdBytes = activationThresholdBytes;
   return XML_TRUE;
 #else
+  UNUSED_P(activationThresholdBytes);
   if (parser != NULL)
     parser->m_errorCode = XML_ERROR_FEATURE_REQUIRES_XML_DTD;
   return XML_FALSE;
