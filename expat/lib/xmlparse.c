@@ -2535,11 +2535,15 @@ XML_SetBillionLaughsAttackProtectionMaximumAmplification(
   if ((parser == NULL) || (parser->m_parentParser != NULL)
       || isnan(maximumAmplificationFactor)
       || (maximumAmplificationFactor < 1.0f)) {
+    if (parser != NULL)
+      parser->m_errorCode = XML_ERROR_INVALID_ARGUMENT;
     return XML_FALSE;
   }
   parser->m_accounting.maximumAmplificationFactor = maximumAmplificationFactor;
   return XML_TRUE;
 #else
+  if (parser != NULL)
+    parser->m_errorCode = XML_ERROR_FEATURE_REQUIRES_XML_DTD;
   return XML_FALSE;
 #endif /* XML_DTD */
 }
@@ -2549,11 +2553,15 @@ XML_SetBillionLaughsAttackProtectionActivationThreshold(
     XML_Parser parser, unsigned long long activationThresholdBytes) {
 #ifdef XML_DTD
   if ((parser == NULL) || (parser->m_parentParser != NULL)) {
+    if (parser != NULL)
+      parser->m_errorCode = XML_ERROR_INVALID_ARGUMENT;
     return XML_FALSE;
   }
   parser->m_accounting.activationThresholdBytes = activationThresholdBytes;
   return XML_TRUE;
 #else
+  if (parser != NULL)
+    parser->m_errorCode = XML_ERROR_FEATURE_REQUIRES_XML_DTD;
   return XML_FALSE;
 #endif /* XML_DTD */
 }
