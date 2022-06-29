@@ -349,37 +349,6 @@ if(MSVC)
 endif()
 
 #
-# Library filename postfix
-#
-if(_EXPAT_UNICODE)
-    set(_POSTFIX_WIDE "w")
-endif()
-
-if(MSVC AND NOT EXPAT_SHARED_LIBS)
-    if(EXPAT_MSVC_STATIC_CRT)
-        set(_POSTFIX_CRT "MT")
-    else()
-        set(_POSTFIX_CRT "MD")
-    endif()
-endif()
-
-foreach(postfix_var
-        CMAKE_${_EXPAT_BUILD_TYPE_UPPER}_POSTFIX
-        CMAKE_DEBUG_POSTFIX
-        CMAKE_RELEASE_POSTFIX
-        CMAKE_MINSIZEREL_POSTFIX
-        CMAKE_RELWITHDEBINFO_POSTFIX
-        )
-    if(WIN32 AND postfix_var STREQUAL "CMAKE_DEBUG_POSTFIX")
-        set(_POSTFIX_DEBUG "d")
-    else()
-        set(_POSTFIX_DEBUG "")  # needs a reset because of being looped
-    endif()
-
-    set(${postfix_var} "${_POSTFIX_WIDE}${_POSTFIX_DEBUG}${_POSTFIX_CRT}" CACHE STRING "Library filename postfix, e.g. libexpat<postfix=[w][d][MD|MT]>.lib")
-endforeach()
-
-#
 # C library
 #
 set(_EXPAT_C_SOURCES
@@ -412,6 +381,38 @@ endif()
 if(EXPAT_WITH_LIBBSD)
     target_link_libraries(expat ${LIB_BSD})
 endif()
+
+#
+# Library filename postfix
+#
+if(_EXPAT_UNICODE)
+    set(_POSTFIX_WIDE "w")
+endif()
+
+if(MSVC AND NOT EXPAT_SHARED_LIBS)
+    if(EXPAT_MSVC_STATIC_CRT)
+        set(_POSTFIX_CRT "MT")
+    else()
+        set(_POSTFIX_CRT "MD")
+    endif()
+endif()
+
+foreach(postfix_var
+        ${_EXPAT_BUILD_TYPE_UPPER}_POSTFIX
+        DEBUG_POSTFIX
+        RELEASE_POSTFIX
+        MINSIZEREL_POSTFIX
+        RELWITHDEBINFO_POSTFIX
+        )
+    if(WIN32 AND postfix_var STREQUAL "CMAKE_DEBUG_POSTFIX")
+        set(_POSTFIX_DEBUG "d")
+    else()
+        set(_POSTFIX_DEBUG "")  # needs a reset because of being looped
+    endif()
+
+    set(EXPAT_${postfix_var} "${_POSTFIX_WIDE}${_POSTFIX_DEBUG}${_POSTFIX_CRT}" CACHE STRING "Library filename postfix, e.g. libexpat<postfix=[w][d][MD|MT]>.lib")
+    set_property(TARGET expat PROPERTY ${postfix_var} ${EXPAT_${postfix_var}})
+endforeach()
 
 set(LIBCURRENT 9)   # sync
 set(LIBREVISION 8)  # with
@@ -849,7 +850,7 @@ if(MSVC)
 endif()
 message(STATUS "  Character type ............. ${_EXPAT_CHAR_TYPE_SUMMARY}")
 if(NOT _EXPAT_GENERATOR_IS_MULTI_CONFIG)
-    message(STATUS "  Library name postfix ....... ${CMAKE_${_EXPAT_BUILD_TYPE_UPPER}_POSTFIX}")
+    message(STATUS "  Library name postfix ....... ${EXPAT_${_EXPAT_BUILD_TYPE_UPPER}_POSTFIX}")
 endif()
 message(STATUS "")
 message(STATUS "  Build documentation ........ ${EXPAT_BUILD_DOCS}")
