@@ -6,6 +6,7 @@ Release x.x.x xxx xxxxx xx xxxx
         Other changes:
        #597 #599  Windows|CMake: Add missing -DXML_STATIC to test runners
                     and fuzzers
+            #610  Address Cppcheck 2.8.1 warning
 
         Infrastructure:
        #597 #598  CI: Windows: Start covering MSVC 2022
