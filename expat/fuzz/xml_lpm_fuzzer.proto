@@ -53,4 +53,5 @@ message Action {
 message Testcase {
   required Encoding encoding = 1;
   repeated Action actions = 2;
+  repeated int32 fail_allocations = 3;
 }

@@ -30,8 +30,8 @@
 */
 
 #include <assert.h>
-#include <malloc.h>
 #include <stdint.h>
+#include <vector>
 
 #include "expat.h"
 #include "xml_lpm_fuzzer.pb.h"
@@ -68,6 +68,37 @@ void SetEncoding(const xml_lpm_fuzzer::Encoding& e) {
       break;
   }
 }
+
+static int allocation_count = 0;
+static std::vector<int> fail_allocations = {};
+
+void* MallocHook(size_t size) {
+  for (auto index : fail_allocations) {
+    if (index == allocation_count) {
+      return NULL;
+    }
+  }
+  allocation_count += 1;
+  return malloc(size);
+}
+
+void* ReallocHook(void* ptr, size_t size) {
+  for (auto index : fail_allocations) {
+    if (index == allocation_count) {
+      return NULL;
+    }
+  }
+  allocation_count += 1;
+  return realloc(ptr, size);
+}
+
+void FreeHook(void* ptr) {
+  free(ptr);
+}
+
+XML_Memory_Handling_Suite memory_handling_suite = {
+  MallocHook, ReallocHook, FreeHook
+};
 
 void InitializeParser(XML_Parser parser);
 
@@ -353,8 +384,14 @@ DEFINE_TEXT_PROTO_FUZZER(const xml_lpm_fuzzer::Testcase& testcase) {
     return;
   }
 
+  allocation_count = 0;
+  fail_allocations.clear();
+  for (size_t i = 0; i < testcase.fail_allocations_size(); ++i) {
+    fail_allocations.push_back(testcase.fail_allocations(i));
+  }
+
   SetEncoding(testcase.encoding());
-  XML_Parser parser = XML_ParserCreateNS(encoding, '|');
+  XML_Parser parser = XML_ParserCreate_MM(encoding, &memory_handling_suite, "|");
   InitializeParser(parser);
 
   for (size_t i = 0; i < testcase.actions_size(); ++i) {
