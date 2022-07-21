@@ -1028,10 +1028,12 @@ parserCreate(const XML_Char *encodingName,
   }
   parser->m_dataBufEnd = parser->m_dataBuf + INIT_DATA_BUF_SIZE;
 
-  if (dtd)
+  if (dtd) {
     parser->m_dtd = dtd;
-  else {
+    parser->m_isParamEntity = XML_TRUE;
+  } else {
     parser->m_dtd = dtdCreate(&parser->m_mem);
+    parser->m_isParamEntity = XML_FALSE;
     if (parser->m_dtd == NULL) {
       FREE(parser, parser->m_dataBuf);
       FREE(parser, parser->m_atts);
@@ -1148,7 +1150,6 @@ parserInit(XML_Parser parser, const XML_Char *encodingName) {
   parser->m_parentParser = NULL;
   parser->m_parsingStatus.parsing = XML_INITIALIZED;
 #ifdef XML_DTD
-  parser->m_isParamEntity = XML_FALSE;
   parser->m_useForeignDTD = XML_FALSE;
   parser->m_paramEntityParsing = XML_PARAM_ENTITY_PARSING_NEVER;
 #endif
@@ -1406,7 +1407,6 @@ XML_ExternalEntityParserCreate(XML_Parser oldParser, const XML_Char *context,
        pointers in parser->m_dtd with ones that get destroyed with the external
        PE parser. This would leave those prefixes with dangling pointers.
     */
-    parser->m_isParamEntity = XML_TRUE;
     XmlPrologStateInitExternalEntity(&parser->m_prologState);
     parser->m_processor = externalParEntInitProcessor;
   }
