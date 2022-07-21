@@ -3018,6 +3018,8 @@ doContent(XML_Parser parser, int startTagLevel, const ENCODING *enc,
         len = XmlNameLength(enc, rawName);
         if (len != tag->rawNameLength
             || memcmp(tag->rawName, rawName, len) != 0) {
+          moveToFreeBindingList(parser, tag->bindings);
+          tag->bindings = NULL;
           *eventPP = rawName;
           return XML_ERROR_TAG_MISMATCH;
         }
