@@ -6695,12 +6695,12 @@ external_entity_unfinished_attlist(XML_Parser parser,
 
 START_TEST(test_pool_integrity_with_unfinished_attr) {
   const char *text = "<?xml version='1.0' encoding='UTF-8'?>\n"
-      "<!DOCTYPE foo [\n"
-      "<!ELEMENT foo ANY>\n"
-      "<!ENTITY % entp SYSTEM \"external.dtd\">\n"
-      "%entp;\n"
-      "]>\n"
-      "<a></a>\n";
+                     "<!DOCTYPE foo [\n"
+                     "<!ELEMENT foo ANY>\n"
+                     "<!ENTITY % entp SYSTEM \"external.dtd\">\n"
+                     "%entp;\n"
+                     "]>\n"
+                     "<a></a>\n";
   const XML_Char *expected = XCS("COMMENT");
   CharData storage;
 
