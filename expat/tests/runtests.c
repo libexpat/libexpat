@@ -6666,8 +6666,7 @@ END_TEST
  * allocation in ->m_tempPool can corrupt following allocation.
  */
 static int XMLCALL
-external_entity_unfinished_attlist(XML_Parser parser,
-                                   const XML_Char *context,
+external_entity_unfinished_attlist(XML_Parser parser, const XML_Char *context,
                                    const XML_Char *base,
                                    const XML_Char *systemId,
                                    const XML_Char *publicId) {
