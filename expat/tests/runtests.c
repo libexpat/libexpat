@@ -12149,7 +12149,8 @@ make_suite(void) {
   tcase_add_test(tc_basic, test_bad_notation);
   tcase_add_test(tc_basic, test_default_doctype_handler);
   tcase_add_test(tc_basic, test_empty_element_abort);
-  tcase_add_test(tc_basic, test_pool_integrity_with_unfinished_attr);
+  tcase_add_test__ifdef_xml_dtd(tc_basic,
+                                test_pool_integrity_with_unfinished_attr);
 
   suite_add_tcase(s, tc_namespace);
   tcase_add_checked_fixture(tc_namespace, namespace_setup, namespace_teardown);
