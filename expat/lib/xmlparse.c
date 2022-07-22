@@ -5404,6 +5404,10 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
           }
         } else if (! entity) {
           dtd->keepProcessing = dtd->standalone;
+          /* Clear out any attribute data accumulated so far.
+           * (See GitHub Issue #612)
+           */
+          poolClear(&parser->m_tempPool);
           /* cannot report skipped entities in declarations */
           if ((role == XML_ROLE_PARAM_ENTITY_REF)
               && parser->m_skippedEntityHandler) {
