@@ -590,6 +590,7 @@ if(EXPAT_BUILD_TESTS)
         tests/minicheck.c
         tests/structdata.c
         tests/common.c
+        tests/dummy.c
         ${_EXPAT_C_SOURCES}
     )
 
