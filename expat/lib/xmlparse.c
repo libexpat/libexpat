@@ -1030,10 +1030,14 @@ parserCreate(const XML_Char *encodingName,
 
   if (dtd) {
     parser->m_dtd = dtd;
+#ifdef XML_DTD
     parser->m_isParamEntity = XML_TRUE;
+#endif
   } else {
     parser->m_dtd = dtdCreate(&parser->m_mem);
+#ifdef XML_DTD
     parser->m_isParamEntity = XML_FALSE;
+#endif
     if (parser->m_dtd == NULL) {
       FREE(parser, parser->m_dataBuf);
       FREE(parser, parser->m_atts);
