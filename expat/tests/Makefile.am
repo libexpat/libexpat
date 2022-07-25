@@ -46,7 +46,8 @@ libruntests_a_SOURCES = \
     chardata.c \
     structdata.c \
     memcheck.c \
-    minicheck.c
+    minicheck.c \
+    common.c
 
 runtests_SOURCES = \
     runtests.c
@@ -65,6 +66,7 @@ EXTRA_DIST = \
     structdata.h \
     minicheck.h \
     memcheck.h \
+    common.h \
     README.txt \
     udiffer.py \
     xmltest.log.expected \

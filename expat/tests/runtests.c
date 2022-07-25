@@ -65,117 +65,12 @@
 #include "internal.h"
 #include "minicheck.h"
 #include "memcheck.h"
+#include "common.h"
 #include "siphash.h"
 #include "ascii.h" /* for ASCII_xxx */
 
-#ifdef XML_LARGE_SIZE
-#  define XML_FMT_INT_MOD "ll"
-#else
-#  define XML_FMT_INT_MOD "l"
-#endif
 
-#ifdef XML_UNICODE_WCHAR_T
-#  define XML_FMT_CHAR "lc"
-#  define XML_FMT_STR "ls"
-#  include <wchar.h>
-#  define xcstrlen(s) wcslen(s)
-#  define xcstrcmp(s, t) wcscmp((s), (t))
-#  define xcstrncmp(s, t, n) wcsncmp((s), (t), (n))
-#  define XCS(s) _XCS(s)
-#  define _XCS(s) L##s
-#else
-#  ifdef XML_UNICODE
-#    error "No support for UTF-16 character without wchar_t in tests"
-#  else
-#    define XML_FMT_CHAR "c"
-#    define XML_FMT_STR "s"
-#    define xcstrlen(s) strlen(s)
-#    define xcstrcmp(s, t) strcmp((s), (t))
-#    define xcstrncmp(s, t, n) strncmp((s), (t), (n))
-#    define XCS(s) s
-#  endif /* XML_UNICODE */
-#endif   /* XML_UNICODE_WCHAR_T */
-
-static XML_Parser g_parser = NULL;
-
-static void
-tcase_add_test__ifdef_xml_dtd(TCase *tc, tcase_test_function test) {
-#ifdef XML_DTD
-  tcase_add_test(tc, test);
-#else
-  UNUSED_P(tc);
-  UNUSED_P(test);
-#endif
-}
-
-static void
-basic_setup(void) {
-  g_parser = XML_ParserCreate(NULL);
-  if (g_parser == NULL)
-    fail("Parser not created.");
-}
-
-static void
-basic_teardown(void) {
-  if (g_parser != NULL) {
-    XML_ParserFree(g_parser);
-    g_parser = NULL;
-  }
-}
-
-/* Generate a failure using the parser state to create an error message;
-   this should be used when the parser reports an error we weren't
-   expecting.
-*/
-static void
-_xml_failure(XML_Parser parser, const char *file, int line) {
-  char buffer[1024];
-  enum XML_Error err = XML_GetErrorCode(parser);
-  sprintf(buffer,
-          "    %d: %" XML_FMT_STR " (line %" XML_FMT_INT_MOD
-          "u, offset %" XML_FMT_INT_MOD "u)\n    reported from %s, line %d\n",
-          err, XML_ErrorString(err), XML_GetCurrentLineNumber(parser),
-          XML_GetCurrentColumnNumber(parser), file, line);
-  _fail_unless(0, file, line, buffer);
-}
-
-static enum XML_Status
-_XML_Parse_SINGLE_BYTES(XML_Parser parser, const char *s, int len,
-                        int isFinal) {
-  enum XML_Status res = XML_STATUS_ERROR;
-  int offset = 0;
-
-  if (len == 0) {
-    return XML_Parse(parser, s, len, isFinal);
-  }
-
-  for (; offset < len; offset++) {
-    const int innerIsFinal = (offset == len - 1) && isFinal;
-    const char c = s[offset]; /* to help out-of-bounds detection */
-    res = XML_Parse(parser, &c, sizeof(char), innerIsFinal);
-    if (res != XML_STATUS_OK) {
-      return res;
-    }
-  }
-  return res;
-}
-
-#define xml_failure(parser) _xml_failure((parser), __FILE__, __LINE__)
-
-static void
-_expect_failure(const char *text, enum XML_Error errorCode,
-                const char *errorMessage, const char *file, int lineno) {
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
-      == XML_STATUS_OK)
-    /* Hackish use of _fail_unless() macro, but let's us report
-       the right filename and line number. */
-    _fail_unless(0, file, lineno, errorMessage);
-  if (XML_GetErrorCode(g_parser) != errorCode)
-    _xml_failure(g_parser, file, lineno);
-}
-
-#define expect_failure(text, errorCode, errorMessage)                          \
-  _expect_failure((text), (errorCode), (errorMessage), __FILE__, __LINE__)
+XML_Parser g_parser = NULL;
 
 /* Dummy handlers for when we need to set a handler to tickle a bug,
    but it doesn't need to do anything.
