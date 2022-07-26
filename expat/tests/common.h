@@ -78,6 +78,18 @@ extern "C" {
 
 extern XML_Parser g_parser;
 
+
+/* Support structure for a generic external entity handler.  The
+ * handler function external_entity_optioner() expects its userdata to
+ * be an array of these structures, terminated by a structure with all
+ * NULL pointers.
+ */
+typedef struct ExtOption {
+  const XML_Char *system_id;
+  const char *parse_text;
+} ExtOption;
+
+
 /* A variant of tcase_add_test() that only adds the test to the test case
  * if the compile-time symbol XML_DTD is defined.
  */
@@ -108,6 +120,36 @@ _expect_failure(const char *text, enum XML_Error errorCode,
 
 #define expect_failure(text, errorCode, errorMessage)                   \
   _expect_failure((text), (errorCode), (errorMessage), __FILE__, __LINE__)
+
+/* Generic simple external entity handler.  Expects an array of
+ * ExtOption structures as its userdata, terminated by an entry with
+ * NULL pointers.  It will match the systemId it is invoked with to an
+ * entry in the userdata, and parse the corresponding parse_text.
+ */
+extern int XMLCALL
+external_entity_optioner(XML_Parser parser, const XML_Char *context,
+                         const XML_Char *base, const XML_Char *systemId,
+                         const XML_Char *publicId);
+
+/*
+ * Parameter entity evaluation support.
+ */
+#define ENTITY_MATCH_FAIL (-1)
+#define ENTITY_MATCH_NOT_FOUND (0)
+#define ENTITY_MATCH_SUCCESS (1)
+
+extern void
+param_entity_match_init(const XML_Char *name, const XML_Char *value);
+
+extern void XMLCALL
+param_entity_match_handler(void *userData, const XML_Char *entityName,
+                           int is_parameter_entity, const XML_Char *value,
+                           int value_length, const XML_Char *base,
+                           const XML_Char *systemId, const XML_Char *publicId,
+                           const XML_Char *notationName);
+
+extern int
+get_param_entity_match_flag(void);
 
 
 
