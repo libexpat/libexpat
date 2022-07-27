@@ -222,37 +222,52 @@ CMAKE_INSTALL_PREFIX:PATH=/usr/local
 // Path to a program.
 DOCBOOK_TO_MAN:FILEPATH=/usr/bin/docbook2x-man
 
-// build man page for xmlwf
+// Build man page for xmlwf
 EXPAT_BUILD_DOCS:BOOL=ON
 
-// build the examples for expat library
+// Build the examples for expat library
 EXPAT_BUILD_EXAMPLES:BOOL=ON
 
-// build fuzzers for the expat library
+// Build fuzzers for the expat library
 EXPAT_BUILD_FUZZERS:BOOL=OFF
 
-// build pkg-config file
+// Build pkg-config file
 EXPAT_BUILD_PKGCONFIG:BOOL=ON
 
-// build the tests for expat library
+// Build the tests for expat library
 EXPAT_BUILD_TESTS:BOOL=ON
 
-// build the xmlwf tool for expat library
+// Build the xmlwf tool for expat library
 EXPAT_BUILD_TOOLS:BOOL=ON
 
 // Character type to use (char|ushort|wchar_t) [default=char]
 EXPAT_CHAR_TYPE:STRING=char
 
-// install expat files in cmake install target
+// Library filename postfix for build type DEBUG; yields filenames libexpat<postfix=[w][d][MD|MT]>.(dll|dylib|lib|so)
+EXPAT_DEBUG_POSTFIX:STRING=
+
+// Install expat files in cmake install target
 EXPAT_ENABLE_INSTALL:BOOL=ON
+
+// Library filename postfix for build type MINSIZEREL; yields filenames libexpat<postfix=[w][d][MD|MT]>.(dll|dylib|lib|so)
+EXPAT_MINSIZEREL_POSTFIX:STRING=
 
 // Use /MT flag (static CRT) when compiling in MSVC
 EXPAT_MSVC_STATIC_CRT:BOOL=OFF
 
-// build fuzzers via ossfuzz for the expat library
+// Library filename postfix for build type NOCONFIG; yields filenames libexpat<postfix=[w][d][MD|MT]>.(dll|dylib|lib|so)
+EXPAT_NOCONFIG_POSTFIX:STRING=
+
+// Build fuzzers via ossfuzz for the expat library
 EXPAT_OSSFUZZ_BUILD:BOOL=OFF
 
-// build a shared expat library
+// Library filename postfix for build type RELEASE; yields filenames libexpat<postfix=[w][d][MD|MT]>.(dll|dylib|lib|so)
+EXPAT_RELEASE_POSTFIX:STRING=
+
+// Library filename postfix for build type RELWITHDEBINFO; yields filenames libexpat<postfix=[w][d][MD|MT]>.(dll|dylib|lib|so)
+EXPAT_RELWITHDEBINFO_POSTFIX:STRING=
+
+// Build a shared expat library
 EXPAT_SHARED_LIBS:BOOL=ON
 
 // Treat all compiler warnings as errors
@@ -261,7 +276,7 @@ EXPAT_WARNINGS_AS_ERRORS:BOOL=OFF
 // Make use of getrandom function (ON|OFF|AUTO) [default=AUTO]
 EXPAT_WITH_GETRANDOM:STRING=AUTO
 
-// utilize libbsd (for arc4random_buf)
+// Utilize libbsd (for arc4random_buf)
 EXPAT_WITH_LIBBSD:BOOL=OFF
 
 // Make use of syscall SYS_getrandom (ON|OFF|AUTO) [default=AUTO]
