@@ -41,7 +41,7 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: macos-10.15
+          - os: macos-11
             configure_args:
             cmake_args:
           - os: ubuntu-20.04

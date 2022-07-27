@@ -38,7 +38,7 @@ on:
 jobs:
   checks:
     name: Run Cppcheck
-    runs-on: macos-latest
+    runs-on: macos-11
     steps:
     - uses: actions/checkout@v3.0.2
     - name: Install runtime dependencies
