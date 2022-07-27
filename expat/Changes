@@ -4,12 +4,19 @@ NOTE: We are looking for help with a few things:
 
 Release x.x.x xxx xxxxx xx xxxx
         Other changes:
+            #608  CMake: Migrate from use of CMAKE_*_POSTFIX to
+                    dedicated variables EXPAT_*_POSTFIX to stop affecting
+                    other projects
        #597 #599  Windows|CMake: Add missing -DXML_STATIC to test runners
                     and fuzzers
+            #620  CMake: Make documentation on variables a bit more consistent
             #610  Address Cppcheck 2.8.1 warning
 
         Infrastructure:
        #597 #598  CI: Windows: Start covering MSVC 2022
+
+        Special thanks to:
+            David Faure
 
 Release 2.4.8 Mon March 28 2022
         Other changes:
