@@ -48,7 +48,7 @@ jobs:
           - MODE: distcheck
           - MODE: qa-sh
             FLAT_ENV: CC=clang CXX=clang++ LD=clang++ QA_SANITIZER=address
-    runs-on: macos-latest
+    runs-on: macos-11
     steps:
     - uses: actions/checkout@v3.0.2
     - name: Install build dependencies
