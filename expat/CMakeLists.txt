@@ -397,21 +397,21 @@ if(MSVC AND NOT EXPAT_SHARED_LIBS)
     endif()
 endif()
 
-foreach(postfix_var
-        ${_EXPAT_BUILD_TYPE_UPPER}_POSTFIX
-        DEBUG_POSTFIX
-        RELEASE_POSTFIX
-        MINSIZEREL_POSTFIX
-        RELWITHDEBINFO_POSTFIX
+foreach(build_type_upper
+        ${_EXPAT_BUILD_TYPE_UPPER}
+        DEBUG
+        RELEASE
+        MINSIZEREL
+        RELWITHDEBINFO
         )
-    if(WIN32 AND postfix_var STREQUAL "DEBUG_POSTFIX")
+    if(WIN32 AND build_type_upper STREQUAL "DEBUG")
         set(_POSTFIX_DEBUG "d")
     else()
         set(_POSTFIX_DEBUG "")  # needs a reset because of being looped
     endif()
 
-    set(EXPAT_${postfix_var} "${_POSTFIX_WIDE}${_POSTFIX_DEBUG}${_POSTFIX_CRT}" CACHE STRING "Library filename postfix, e.g. libexpat<postfix=[w][d][MD|MT]>.lib")
-    set_property(TARGET expat PROPERTY ${postfix_var} ${EXPAT_${postfix_var}})
+    set(EXPAT_${build_type_upper}_POSTFIX "${_POSTFIX_WIDE}${_POSTFIX_DEBUG}${_POSTFIX_CRT}" CACHE STRING "Library filename postfix for build type ${build_type_upper}; yields filenames libexpat<postfix=[w][d][MD|MT]>.(dll|dylib|lib|so)")
+    set_property(TARGET expat PROPERTY ${build_type_upper}_POSTFIX ${EXPAT_${build_type_upper}_POSTFIX})
 endforeach()
 
 set(LIBCURRENT 9)   # sync
