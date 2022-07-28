@@ -108,25 +108,25 @@ else()
     set(_EXPAT_SHARED_LIBS_DEFAULT ON)
 endif()
 if(NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE NoConfig)  # so that accessing CMAKE_*_POSTFIX will be waterproof
+    set(CMAKE_BUILD_TYPE NoConfig)  # so that accessing EXPAT_*_POSTFIX will be waterproof
 endif()
 string(TOUPPER "${CMAKE_BUILD_TYPE}" _EXPAT_BUILD_TYPE_UPPER)
 
 #
 # Configuration
 #
-option(EXPAT_BUILD_TOOLS "build the xmlwf tool for expat library" ${_EXPAT_BUILD_TOOLS_DEFAULT})
-option(EXPAT_BUILD_EXAMPLES "build the examples for expat library" ON)
-option(EXPAT_BUILD_TESTS "build the tests for expat library" ON)
-option(EXPAT_SHARED_LIBS "build a shared expat library" ${_EXPAT_SHARED_LIBS_DEFAULT})
-option(EXPAT_BUILD_DOCS "build man page for xmlwf" ${_EXPAT_BUILD_DOCS_DEFAULT})
-option(EXPAT_BUILD_FUZZERS "build fuzzers for the expat library" OFF)
-option(EXPAT_BUILD_PKGCONFIG "build pkg-config file" ${_EXPAT_BUILD_PKGCONFIG_DEFAULT})
-option(EXPAT_OSSFUZZ_BUILD "build fuzzers via ossfuzz for the expat library" OFF)
+option(EXPAT_BUILD_TOOLS "Build the xmlwf tool for expat library" ${_EXPAT_BUILD_TOOLS_DEFAULT})
+option(EXPAT_BUILD_EXAMPLES "Build the examples for expat library" ON)
+option(EXPAT_BUILD_TESTS "Build the tests for expat library" ON)
+option(EXPAT_SHARED_LIBS "Build a shared expat library" ${_EXPAT_SHARED_LIBS_DEFAULT})
+option(EXPAT_BUILD_DOCS "Build man page for xmlwf" ${_EXPAT_BUILD_DOCS_DEFAULT})
+option(EXPAT_BUILD_FUZZERS "Build fuzzers for the expat library" OFF)
+option(EXPAT_BUILD_PKGCONFIG "Build pkg-config file" ${_EXPAT_BUILD_PKGCONFIG_DEFAULT})
+option(EXPAT_OSSFUZZ_BUILD "Build fuzzers via ossfuzz for the expat library" OFF)
 if(UNIX OR _EXPAT_HELP)
-    option(EXPAT_WITH_LIBBSD "utilize libbsd (for arc4random_buf)" OFF)
+    option(EXPAT_WITH_LIBBSD "Utilize libbsd (for arc4random_buf)" OFF)
 endif()
-option(EXPAT_ENABLE_INSTALL "install expat files in cmake install target" ON)
+option(EXPAT_ENABLE_INSTALL "Install expat files in cmake install target" ON)
 set(EXPAT_CONTEXT_BYTES 1024 CACHE STRING "Define to specify how much context to retain around the current parse point")
 mark_as_advanced(EXPAT_CONTEXT_BYTES)
 option(EXPAT_DTD "Define to make parameter entity parsing functionality available" ON)
@@ -397,21 +397,21 @@ if(MSVC AND NOT EXPAT_SHARED_LIBS)
     endif()
 endif()
 
-foreach(postfix_var
-        ${_EXPAT_BUILD_TYPE_UPPER}_POSTFIX
-        DEBUG_POSTFIX
-        RELEASE_POSTFIX
-        MINSIZEREL_POSTFIX
-        RELWITHDEBINFO_POSTFIX
+foreach(build_type_upper
+        ${_EXPAT_BUILD_TYPE_UPPER}
+        DEBUG
+        RELEASE
+        MINSIZEREL
+        RELWITHDEBINFO
         )
-    if(WIN32 AND postfix_var STREQUAL "DEBUG_POSTFIX")
+    if(WIN32 AND build_type_upper STREQUAL "DEBUG")
         set(_POSTFIX_DEBUG "d")
     else()
         set(_POSTFIX_DEBUG "")  # needs a reset because of being looped
     endif()
 
-    set(EXPAT_${postfix_var} "${_POSTFIX_WIDE}${_POSTFIX_DEBUG}${_POSTFIX_CRT}" CACHE STRING "Library filename postfix, e.g. libexpat<postfix=[w][d][MD|MT]>.lib")
-    set_property(TARGET expat PROPERTY ${postfix_var} ${EXPAT_${postfix_var}})
+    set(EXPAT_${build_type_upper}_POSTFIX "${_POSTFIX_WIDE}${_POSTFIX_DEBUG}${_POSTFIX_CRT}" CACHE STRING "Library filename postfix for build type ${build_type_upper}; yields filenames libexpat<postfix=[w][d][MD|MT]>.(dll|dylib|lib|so)")
+    set_property(TARGET expat PROPERTY ${build_type_upper}_POSTFIX ${EXPAT_${build_type_upper}_POSTFIX})
 endforeach()
 
 set(LIBCURRENT 9)   # sync
