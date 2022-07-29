@@ -48,7 +48,8 @@ libruntests_a_SOURCES = \
     memcheck.c \
     minicheck.c \
     common.c \
-    dummy.c
+    dummy.c \
+    basic_tests.c
 
 runtests_SOURCES = \
     runtests.c
