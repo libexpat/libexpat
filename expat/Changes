@@ -9,6 +9,8 @@ Release x.x.x xxx xxxxx xx xxxx
                     other projects
        #597 #599  Windows|CMake: Add missing -DXML_STATIC to test runners
                     and fuzzers
+       #512 #621  Windows|CMake: Render .def file from a template to fix
+                    linking with -DEXPAT_DTD=OFF and/or -DEXPAT_ATTR_INFO=ON
             #620  CMake: Make documentation on variables a bit more consistent
             #610  Address Cppcheck 2.8.1 warning
 
