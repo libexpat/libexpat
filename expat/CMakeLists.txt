@@ -362,7 +362,7 @@ set(_EXPAT_C_SOURCES
 
 if(EXPAT_SHARED_LIBS)
     set(_SHARED SHARED)
-    if(MSVC)
+    if(WIN32)
         macro(_expat_def_file_toggle source_var target_var)
             if(${source_var})
                 set(${target_var} " ")  # i.e. not commented out, a single space
@@ -376,8 +376,7 @@ if(EXPAT_SHARED_LIBS)
 
         configure_file("${CMAKE_CURRENT_SOURCE_DIR}/lib/libexpat.def.cmake" "${CMAKE_CURRENT_BINARY_DIR}/lib/libexpat.def")
         set(_EXPAT_EXTRA_SOURCES ${_EXPAT_EXTRA_SOURCES} "${CMAKE_CURRENT_BINARY_DIR}/lib/libexpat.def")
-    endif()
-    if(WIN32)
+
         # Add DLL version
         string(REPLACE "." "," _EXPAT_DLL_VERSION ${PROJECT_VERSION}.0)
         set(_EXPAT_EXTRA_SOURCES ${_EXPAT_EXTRA_SOURCES} win32/version.rc)
