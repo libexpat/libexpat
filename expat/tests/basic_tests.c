@@ -1145,6 +1145,55 @@ START_TEST(test_dtd_default_handling) {
 }
 END_TEST
 
+/* Test handling of attribute declarations */
+START_TEST(test_dtd_attr_handling) {
+  const char *prolog = "<!DOCTYPE doc [\n"
+                       "<!ELEMENT doc EMPTY>\n";
+  AttTest attr_data[]
+      = {{"<!ATTLIST doc a ( one | two | three ) #REQUIRED>\n"
+          "]>"
+          "<doc a='two'/>",
+          XCS("doc"), XCS("a"),
+          XCS("(one|two|three)"), /* Extraneous spaces will be removed */
+          NULL, XML_TRUE},
+         {"<!NOTATION foo SYSTEM 'http://example.org/foo'>\n"
+          "<!ATTLIST doc a NOTATION (foo) #IMPLIED>\n"
+          "]>"
+          "<doc/>",
+          XCS("doc"), XCS("a"), XCS("NOTATION(foo)"), NULL, XML_FALSE},
+         {"<!ATTLIST doc a NOTATION (foo) 'bar'>\n"
+          "]>"
+          "<doc/>",
+          XCS("doc"), XCS("a"), XCS("NOTATION(foo)"), XCS("bar"), XML_FALSE},
+         {"<!ATTLIST doc a CDATA '\xdb\xb2'>\n"
+          "]>"
+          "<doc/>",
+          XCS("doc"), XCS("a"), XCS("CDATA"),
+#ifdef XML_UNICODE
+          XCS("\x06f2"),
+#else
+          XCS("\xdb\xb2"),
+#endif
+          XML_FALSE},
+         {NULL, NULL, NULL, NULL, NULL, XML_FALSE}};
+  AttTest *test;
+
+  for (test = attr_data; test->definition != NULL; test++) {
+    XML_SetAttlistDeclHandler(g_parser, verify_attlist_decl_handler);
+    XML_SetUserData(g_parser, test);
+    if (_XML_Parse_SINGLE_BYTES(g_parser, prolog, (int)strlen(prolog),
+                                XML_FALSE)
+        == XML_STATUS_ERROR)
+      xml_failure(g_parser);
+    if (_XML_Parse_SINGLE_BYTES(g_parser, test->definition,
+                                (int)strlen(test->definition), XML_TRUE)
+        == XML_STATUS_ERROR)
+      xml_failure(g_parser);
+    XML_ParserReset(g_parser, NULL);
+  }
+}
+END_TEST
+
 TCase *
 make_basic_test_case(Suite *s) {
   TCase *tc_basic = tcase_create("basic tests");
@@ -1209,6 +1258,7 @@ make_basic_test_case(Suite *s) {
   tcase_add_test(tc_basic, test_wfc_no_recursive_entity_refs);
   tcase_add_test__ifdef_xml_dtd(tc_basic, test_ext_entity_invalid_parse);
   tcase_add_test(tc_basic, test_dtd_default_handling);
+  tcase_add_test(tc_basic, test_dtd_attr_handling);
 
   return tc_basic;
 }

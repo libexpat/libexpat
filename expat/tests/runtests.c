@@ -102,85 +102,6 @@ testhelper_is_whitespace_normalized(void) {
 }
 
 
-/* Test handling of attribute declarations */
-typedef struct AttTest {
-  const char *definition;
-  const XML_Char *element_name;
-  const XML_Char *attr_name;
-  const XML_Char *attr_type;
-  const XML_Char *default_value;
-  int is_required;
-} AttTest;
-
-static void XMLCALL
-verify_attlist_decl_handler(void *userData, const XML_Char *element_name,
-                            const XML_Char *attr_name,
-                            const XML_Char *attr_type,
-                            const XML_Char *default_value, int is_required) {
-  AttTest *at = (AttTest *)userData;
-
-  if (xcstrcmp(element_name, at->element_name))
-    fail("Unexpected element name in attribute declaration");
-  if (xcstrcmp(attr_name, at->attr_name))
-    fail("Unexpected attribute name in attribute declaration");
-  if (xcstrcmp(attr_type, at->attr_type))
-    fail("Unexpected attribute type in attribute declaration");
-  if ((default_value == NULL && at->default_value != NULL)
-      || (default_value != NULL && at->default_value == NULL)
-      || (default_value != NULL && xcstrcmp(default_value, at->default_value)))
-    fail("Unexpected default value in attribute declaration");
-  if (is_required != at->is_required)
-    fail("Requirement mismatch in attribute declaration");
-}
-
-START_TEST(test_dtd_attr_handling) {
-  const char *prolog = "<!DOCTYPE doc [\n"
-                       "<!ELEMENT doc EMPTY>\n";
-  AttTest attr_data[]
-      = {{"<!ATTLIST doc a ( one | two | three ) #REQUIRED>\n"
-          "]>"
-          "<doc a='two'/>",
-          XCS("doc"), XCS("a"),
-          XCS("(one|two|three)"), /* Extraneous spaces will be removed */
-          NULL, XML_TRUE},
-         {"<!NOTATION foo SYSTEM 'http://example.org/foo'>\n"
-          "<!ATTLIST doc a NOTATION (foo) #IMPLIED>\n"
-          "]>"
-          "<doc/>",
-          XCS("doc"), XCS("a"), XCS("NOTATION(foo)"), NULL, XML_FALSE},
-         {"<!ATTLIST doc a NOTATION (foo) 'bar'>\n"
-          "]>"
-          "<doc/>",
-          XCS("doc"), XCS("a"), XCS("NOTATION(foo)"), XCS("bar"), XML_FALSE},
-         {"<!ATTLIST doc a CDATA '\xdb\xb2'>\n"
-          "]>"
-          "<doc/>",
-          XCS("doc"), XCS("a"), XCS("CDATA"),
-#ifdef XML_UNICODE
-          XCS("\x06f2"),
-#else
-          XCS("\xdb\xb2"),
-#endif
-          XML_FALSE},
-         {NULL, NULL, NULL, NULL, NULL, XML_FALSE}};
-  AttTest *test;
-
-  for (test = attr_data; test->definition != NULL; test++) {
-    XML_SetAttlistDeclHandler(g_parser, verify_attlist_decl_handler);
-    XML_SetUserData(g_parser, test);
-    if (_XML_Parse_SINGLE_BYTES(g_parser, prolog, (int)strlen(prolog),
-                                XML_FALSE)
-        == XML_STATUS_ERROR)
-      xml_failure(g_parser);
-    if (_XML_Parse_SINGLE_BYTES(g_parser, test->definition,
-                                (int)strlen(test->definition), XML_TRUE)
-        == XML_STATUS_ERROR)
-      xml_failure(g_parser);
-    XML_ParserReset(g_parser, NULL);
-  }
-}
-END_TEST
-
 /* See related SF bug #673791.
    When namespace processing is enabled, setting the namespace URI for
    a prefix is not allowed; this test ensures that it *is* allowed
@@ -10117,7 +10038,6 @@ make_suite(void) {
 
   tcase_add_test__ifdef_xml_dtd(tc_basic,
                                 test_ext_entity_invalid_suspended_parse);
-  tcase_add_test(tc_basic, test_dtd_attr_handling);
   tcase_add_test(tc_basic, test_empty_ns_without_namespaces);
   tcase_add_test(tc_basic, test_ns_in_attribute_default_without_namespaces);
   tcase_add_test(tc_basic, test_stop_parser_between_char_data_calls);
