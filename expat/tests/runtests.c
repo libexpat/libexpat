@@ -102,51 +102,6 @@ testhelper_is_whitespace_normalized(void) {
 }
 
 
-/* Test XML_UseForeignDTD with no external subset present */
-START_TEST(test_foreign_dtd_without_external_subset) {
-  const char *text = "<!DOCTYPE doc [<!ENTITY foo 'bar'>]>\n"
-                     "<doc>&foo;</doc>";
-
-  XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
-  XML_SetUserData(g_parser, NULL);
-  XML_SetExternalEntityRefHandler(g_parser, external_entity_null_loader);
-  XML_UseForeignDTD(g_parser, XML_TRUE);
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
-      == XML_STATUS_ERROR)
-    xml_failure(g_parser);
-}
-END_TEST
-
-START_TEST(test_empty_foreign_dtd) {
-  const char *text = "<?xml version='1.0' encoding='us-ascii'?>\n"
-                     "<doc>&entity;</doc>";
-
-  XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
-  XML_SetExternalEntityRefHandler(g_parser, external_entity_null_loader);
-  XML_UseForeignDTD(g_parser, XML_TRUE);
-  expect_failure(text, XML_ERROR_UNDEFINED_ENTITY,
-                 "Undefined entity not faulted");
-}
-END_TEST
-
-/* Test XML Base is set and unset appropriately */
-START_TEST(test_set_base) {
-  const XML_Char *old_base;
-  const XML_Char *new_base = XCS("/local/file/name.xml");
-
-  old_base = XML_GetBase(g_parser);
-  if (XML_SetBase(g_parser, new_base) != XML_STATUS_OK)
-    fail("Unable to set base");
-  if (xcstrcmp(XML_GetBase(g_parser), new_base) != 0)
-    fail("Base setting not correct");
-  if (XML_SetBase(g_parser, NULL) != XML_STATUS_OK)
-    fail("Unable to NULL base");
-  if (XML_GetBase(g_parser) != NULL)
-    fail("Base setting not nulled");
-  XML_SetBase(g_parser, old_base);
-}
-END_TEST
-
 /* Test attribute counts, indexing, etc */
 typedef struct attrInfo {
   const XML_Char *name;
@@ -9100,10 +9055,6 @@ make_suite(void) {
 
   tcase_add_test__ifdef_xml_dtd(tc_basic,
                                 test_ext_entity_invalid_suspended_parse);
-  tcase_add_test__ifdef_xml_dtd(tc_basic,
-                                test_foreign_dtd_without_external_subset);
-  tcase_add_test__ifdef_xml_dtd(tc_basic, test_empty_foreign_dtd);
-  tcase_add_test(tc_basic, test_set_base);
   tcase_add_test(tc_basic, test_attributes);
   tcase_add_test(tc_basic, test_reset_in_entity);
   tcase_add_test(tc_basic, test_resume_invalid_parse);
