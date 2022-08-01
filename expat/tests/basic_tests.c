@@ -49,8 +49,10 @@
 #endif
 
 #include "expat.h"
+#include "internal.h"  /* For UNUSED_P() */
 #include "minicheck.h"
 #include "chardata.h"
+#include "structdata.h"
 #include "common.h"
 #include "dummy.h"
 #include "siphash.h"
@@ -545,6 +547,130 @@ START_TEST(test_long_ascii_attribute) {
 }
 END_TEST
 
+/* Regression test #1 for SF bug #653180. */
+START_TEST(test_line_number_after_parse) {
+  const char *text = "<tag>\n"
+                     "\n"
+                     "\n</tag>";
+  XML_Size lineno;
+
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_FALSE)
+      == XML_STATUS_ERROR)
+    xml_failure(g_parser);
+  lineno = XML_GetCurrentLineNumber(g_parser);
+  if (lineno != 4) {
+    char buffer[100];
+    sprintf(buffer, "expected 4 lines, saw %" XML_FMT_INT_MOD "u", lineno);
+    fail(buffer);
+  }
+}
+END_TEST
+
+/* Regression test #2 for SF bug #653180. */
+START_TEST(test_column_number_after_parse) {
+  const char *text = "<tag></tag>";
+  XML_Size colno;
+
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_FALSE)
+      == XML_STATUS_ERROR)
+    xml_failure(g_parser);
+  colno = XML_GetCurrentColumnNumber(g_parser);
+  if (colno != 11) {
+    char buffer[100];
+    sprintf(buffer, "expected 11 columns, saw %" XML_FMT_INT_MOD "u", colno);
+    fail(buffer);
+  }
+}
+END_TEST
+
+#define STRUCT_START_TAG 0
+#define STRUCT_END_TAG 1
+static void XMLCALL
+start_element_event_handler2(void *userData, const XML_Char *name,
+                             const XML_Char **attr) {
+  StructData *storage = (StructData *)userData;
+  UNUSED_P(attr);
+  StructData_AddItem(storage, name, XML_GetCurrentColumnNumber(g_parser),
+                     XML_GetCurrentLineNumber(g_parser), STRUCT_START_TAG);
+}
+
+static void XMLCALL
+end_element_event_handler2(void *userData, const XML_Char *name) {
+  StructData *storage = (StructData *)userData;
+  StructData_AddItem(storage, name, XML_GetCurrentColumnNumber(g_parser),
+                     XML_GetCurrentLineNumber(g_parser), STRUCT_END_TAG);
+}
+
+/* Regression test #3 for SF bug #653180. */
+START_TEST(test_line_and_column_numbers_inside_handlers) {
+  const char *text = "<a>\n"      /* Unix end-of-line */
+                     "  <b>\r\n"  /* Windows end-of-line */
+                     "    <c/>\r" /* Mac OS end-of-line */
+                     "  </b>\n"
+                     "  <d>\n"
+                     "    <f/>\n"
+                     "  </d>\n"
+                     "</a>";
+  const StructDataEntry expected[]
+      = {{XCS("a"), 0, 1, STRUCT_START_TAG}, {XCS("b"), 2, 2, STRUCT_START_TAG},
+         {XCS("c"), 4, 3, STRUCT_START_TAG}, {XCS("c"), 8, 3, STRUCT_END_TAG},
+         {XCS("b"), 2, 4, STRUCT_END_TAG},   {XCS("d"), 2, 5, STRUCT_START_TAG},
+         {XCS("f"), 4, 6, STRUCT_START_TAG}, {XCS("f"), 8, 6, STRUCT_END_TAG},
+         {XCS("d"), 2, 7, STRUCT_END_TAG},   {XCS("a"), 0, 8, STRUCT_END_TAG}};
+  const int expected_count = sizeof(expected) / sizeof(StructDataEntry);
+  StructData storage;
+
+  StructData_Init(&storage);
+  XML_SetUserData(g_parser, &storage);
+  XML_SetStartElementHandler(g_parser, start_element_event_handler2);
+  XML_SetEndElementHandler(g_parser, end_element_event_handler2);
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+      == XML_STATUS_ERROR)
+    xml_failure(g_parser);
+
+  StructData_CheckItems(&storage, expected, expected_count);
+  StructData_Dispose(&storage);
+}
+END_TEST
+
+/* Regression test #4 for SF bug #653180. */
+START_TEST(test_line_number_after_error) {
+  const char *text = "<a>\n"
+                     "  <b>\n"
+                     "  </a>"; /* missing </b> */
+  XML_Size lineno;
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_FALSE)
+      != XML_STATUS_ERROR)
+    fail("Expected a parse error");
+
+  lineno = XML_GetCurrentLineNumber(g_parser);
+  if (lineno != 3) {
+    char buffer[100];
+    sprintf(buffer, "expected 3 lines, saw %" XML_FMT_INT_MOD "u", lineno);
+    fail(buffer);
+  }
+}
+END_TEST
+
+/* Regression test #5 for SF bug #653180. */
+START_TEST(test_column_number_after_error) {
+  const char *text = "<a>\n"
+                     "  <b>\n"
+                     "  </a>"; /* missing </b> */
+  XML_Size colno;
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_FALSE)
+      != XML_STATUS_ERROR)
+    fail("Expected a parse error");
+
+  colno = XML_GetCurrentColumnNumber(g_parser);
+  if (colno != 4) {
+    char buffer[100];
+    sprintf(buffer, "expected 4 columns, saw %" XML_FMT_INT_MOD "u", colno);
+    fail(buffer);
+  }
+}
+END_TEST
+
 TCase *
 make_basic_test_case(Suite *s) {
   TCase *tc_basic = tcase_create("basic tests");
@@ -577,6 +703,11 @@ make_basic_test_case(Suite *s) {
   tcase_add_test(tc_basic, test_french_latin1);
   tcase_add_test(tc_basic, test_french_utf8);
   tcase_add_test(tc_basic, test_utf8_false_rejection);
+  tcase_add_test(tc_basic, test_line_number_after_parse);
+  tcase_add_test(tc_basic, test_column_number_after_parse);
+  tcase_add_test(tc_basic, test_line_and_column_numbers_inside_handlers);
+  tcase_add_test(tc_basic, test_line_number_after_error);
+  tcase_add_test(tc_basic, test_column_number_after_error);
 
   return tc_basic;
 }
