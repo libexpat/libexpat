@@ -40,6 +40,8 @@
    USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+#include <string.h>
+
 #include "expat.h"
 #include "internal.h"  /* For UNUSED_P() */
 #include "minicheck.h"
@@ -132,4 +134,33 @@ unknown_released_encoding_handler(void *data, const XML_Char *encoding,
     return XML_STATUS_OK;
   }
   return XML_STATUS_ERROR;
+}
+
+/* External Entity Handlers */
+
+int XMLCALL
+external_entity_loader(XML_Parser parser, const XML_Char *context,
+                       const XML_Char *base, const XML_Char *systemId,
+                       const XML_Char *publicId) {
+  ExtTest *test_data = (ExtTest *)XML_GetUserData(parser);
+  XML_Parser extparser;
+
+  UNUSED_P(base);
+  UNUSED_P(systemId);
+  UNUSED_P(publicId);
+  extparser = XML_ExternalEntityParserCreate(parser, context, NULL);
+  if (extparser == NULL)
+    fail("Could not create external entity parser.");
+  if (test_data->encoding != NULL) {
+    if (! XML_SetEncoding(extparser, test_data->encoding))
+      fail("XML_SetEncoding() ignored for external entity");
+  }
+  if (_XML_Parse_SINGLE_BYTES(extparser, test_data->parse_text,
+                              (int)strlen(test_data->parse_text), XML_TRUE)
+      == XML_STATUS_ERROR) {
+    xml_failure(extparser);
+    return XML_STATUS_ERROR;
+  }
+  XML_ParserFree(extparser);
+  return XML_STATUS_OK;
 }
