@@ -66,6 +66,21 @@ start_element_event_handler(void *userData, const XML_Char *name,
 extern void XMLCALL
 end_element_event_handler(void *userData, const XML_Char *name);
 
+/* Do-nothing handler for the text encoding named "unsupported-encoding" */
+extern int XMLCALL
+UnknownEncodingHandler(void *data, const XML_Char *encoding,
+                       XML_Encoding *info);
+
+/* Handler that errors for all not built-in text encodings */
+extern int XMLCALL
+UnrecognisedEncodingHandler(void *data, const XML_Char *encoding,
+                            XML_Encoding *info);
+
+/* As UnknownEncodingHandler but includes a "release" function pointer */
+extern int XMLCALL
+unknown_released_encoding_handler(void *data, const XML_Char *encoding,
+                                  XML_Encoding *info);
+
 
 
 #endif /* XML_HANDLERS_H */

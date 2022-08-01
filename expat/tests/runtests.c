@@ -101,63 +101,6 @@ testhelper_is_whitespace_normalized(void) {
   assert(! is_whitespace_normalized(XCS("abc\t def"), 1));
 }
 
-/* Regression test for SF bug #584832. */
-static int XMLCALL
-UnknownEncodingHandler(void *data, const XML_Char *encoding,
-                       XML_Encoding *info) {
-  UNUSED_P(data);
-  if (xcstrcmp(encoding, XCS("unsupported-encoding")) == 0) {
-    int i;
-    for (i = 0; i < 256; ++i)
-      info->map[i] = i;
-    info->data = NULL;
-    info->convert = NULL;
-    info->release = NULL;
-    return XML_STATUS_OK;
-  }
-  return XML_STATUS_ERROR;
-}
-
-START_TEST(test_unknown_encoding_internal_entity) {
-  const char *text = "<?xml version='1.0' encoding='unsupported-encoding'?>\n"
-                     "<!DOCTYPE test [<!ENTITY foo 'bar'>]>\n"
-                     "<test a='&foo;'/>";
-
-  XML_SetUnknownEncodingHandler(g_parser, UnknownEncodingHandler, NULL);
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
-      == XML_STATUS_ERROR)
-    xml_failure(g_parser);
-}
-END_TEST
-
-/* Test unrecognised encoding handler */
-static void
-dummy_release(void *data) {
-  UNUSED_P(data);
-}
-
-static int XMLCALL
-UnrecognisedEncodingHandler(void *data, const XML_Char *encoding,
-                            XML_Encoding *info) {
-  UNUSED_P(data);
-  UNUSED_P(encoding);
-  info->data = NULL;
-  info->convert = NULL;
-  info->release = dummy_release;
-  return XML_STATUS_ERROR;
-}
-
-START_TEST(test_unrecognised_encoding_internal_entity) {
-  const char *text = "<?xml version='1.0' encoding='unsupported-encoding'?>\n"
-                     "<!DOCTYPE test [<!ENTITY foo 'bar'>]>\n"
-                     "<test a='&foo;'/>";
-
-  XML_SetUnknownEncodingHandler(g_parser, UnrecognisedEncodingHandler, NULL);
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
-      != XML_STATUS_ERROR)
-    fail("Unrecognised encoding not rejected");
-}
-END_TEST
 
 /* Regression test for SF bug #620106. */
 static int XMLCALL
@@ -7010,23 +6953,6 @@ START_TEST(test_alloc_ext_entity_set_encoding) {
 }
 END_TEST
 
-static int XMLCALL
-unknown_released_encoding_handler(void *data, const XML_Char *encoding,
-                                  XML_Encoding *info) {
-  UNUSED_P(data);
-  if (! xcstrcmp(encoding, XCS("unsupported-encoding"))) {
-    int i;
-
-    for (i = 0; i < 256; i++)
-      info->map[i] = i;
-    info->data = NULL;
-    info->convert = NULL;
-    info->release = dummy_release;
-    return XML_STATUS_OK;
-  }
-  return XML_STATUS_ERROR;
-}
-
 /* Test the effects of allocation failure in internal entities.
  * Based on test_unknown_encoding_internal_entity
  */
@@ -10545,8 +10471,6 @@ make_suite(void) {
   TCase *tc_accounting = tcase_create("accounting tests");
 #endif
 
-  tcase_add_test(tc_basic, test_unknown_encoding_internal_entity);
-  tcase_add_test(tc_basic, test_unrecognised_encoding_internal_entity);
   tcase_add_test(tc_basic, test_wfc_undeclared_entity_unread_external_subset);
   tcase_add_test(tc_basic, test_wfc_undeclared_entity_no_external_subset);
   tcase_add_test(tc_basic, test_wfc_undeclared_entity_standalone);

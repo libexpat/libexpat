@@ -82,3 +82,54 @@ end_element_event_handler(void *userData, const XML_Char *name) {
   CharData_AppendXMLChars(storage, XCS("/"), 1);
   CharData_AppendXMLChars(storage, name, -1);
 }
+
+/* Text encoding handlers */
+
+int XMLCALL
+UnknownEncodingHandler(void *data, const XML_Char *encoding,
+                       XML_Encoding *info) {
+  UNUSED_P(data);
+  if (xcstrcmp(encoding, XCS("unsupported-encoding")) == 0) {
+    int i;
+    for (i = 0; i < 256; ++i)
+      info->map[i] = i;
+    info->data = NULL;
+    info->convert = NULL;
+    info->release = NULL;
+    return XML_STATUS_OK;
+  }
+  return XML_STATUS_ERROR;
+}
+
+static void
+dummy_release(void *data) {
+  UNUSED_P(data);
+}
+
+int XMLCALL
+UnrecognisedEncodingHandler(void *data, const XML_Char *encoding,
+                            XML_Encoding *info) {
+  UNUSED_P(data);
+  UNUSED_P(encoding);
+  info->data = NULL;
+  info->convert = NULL;
+  info->release = dummy_release;
+  return XML_STATUS_ERROR;
+}
+
+int XMLCALL
+unknown_released_encoding_handler(void *data, const XML_Char *encoding,
+                                  XML_Encoding *info) {
+  UNUSED_P(data);
+  if (! xcstrcmp(encoding, XCS("unsupported-encoding"))) {
+    int i;
+
+    for (i = 0; i < 256; i++)
+      info->map[i] = i;
+    info->data = NULL;
+    info->convert = NULL;
+    info->release = dummy_release;
+    return XML_STATUS_OK;
+  }
+  return XML_STATUS_ERROR;
+}

@@ -837,6 +837,32 @@ START_TEST(test_xmldecl_missing_value) {
 }
 END_TEST
 
+/* Regression test for SF bug #584832. */
+START_TEST(test_unknown_encoding_internal_entity) {
+  const char *text = "<?xml version='1.0' encoding='unsupported-encoding'?>\n"
+                     "<!DOCTYPE test [<!ENTITY foo 'bar'>]>\n"
+                     "<test a='&foo;'/>";
+
+  XML_SetUnknownEncodingHandler(g_parser, UnknownEncodingHandler, NULL);
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+      == XML_STATUS_ERROR)
+    xml_failure(g_parser);
+}
+END_TEST
+
+/* Test unrecognised encoding handler */
+START_TEST(test_unrecognised_encoding_internal_entity) {
+  const char *text = "<?xml version='1.0' encoding='unsupported-encoding'?>\n"
+                     "<!DOCTYPE test [<!ENTITY foo 'bar'>]>\n"
+                     "<test a='&foo;'/>";
+
+  XML_SetUnknownEncodingHandler(g_parser, UnrecognisedEncodingHandler, NULL);
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+      != XML_STATUS_ERROR)
+    fail("Unrecognised encoding not rejected");
+}
+END_TEST
+
 TCase *
 make_basic_test_case(Suite *s) {
   TCase *tc_basic = tcase_create("basic tests");
@@ -882,6 +908,8 @@ make_basic_test_case(Suite *s) {
   tcase_add_test(tc_basic, test_xmldecl_invalid);
   tcase_add_test(tc_basic, test_xmldecl_missing_attr);
   tcase_add_test(tc_basic, test_xmldecl_missing_value);
+  tcase_add_test(tc_basic, test_unknown_encoding_internal_entity);
+  tcase_add_test(tc_basic, test_unrecognised_encoding_internal_entity);
 
   return tc_basic;
 }
