@@ -1896,6 +1896,112 @@ START_TEST(test_dtd_elements_nesting) {
 }
 END_TEST
 
+/* Test foreign DTD handling */
+START_TEST(test_set_foreign_dtd) {
+  const char *text1 = "<?xml version='1.0' encoding='us-ascii'?>\n";
+  const char *text2 = "<doc>&entity;</doc>";
+  ExtTest test_data = {"<!ELEMENT doc (#PCDATA)*>", NULL, NULL};
+
+  /* Check hash salt is passed through too */
+  XML_SetHashSalt(g_parser, 0x12345678);
+  XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+  XML_SetUserData(g_parser, &test_data);
+  XML_SetExternalEntityRefHandler(g_parser, external_entity_loader);
+  /* Add a default handler to exercise more code paths */
+  XML_SetDefaultHandler(g_parser, dummy_default_handler);
+  if (XML_UseForeignDTD(g_parser, XML_TRUE) != XML_ERROR_NONE)
+    fail("Could not set foreign DTD");
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text1, (int)strlen(text1), XML_FALSE)
+      == XML_STATUS_ERROR)
+    xml_failure(g_parser);
+
+  /* Ensure that trying to set the DTD after parsing has started
+   * is faulted, even if it's the same setting.
+   */
+  if (XML_UseForeignDTD(g_parser, XML_TRUE)
+      != XML_ERROR_CANT_CHANGE_FEATURE_ONCE_PARSING)
+    fail("Failed to reject late foreign DTD setting");
+  /* Ditto for the hash salt */
+  if (XML_SetHashSalt(g_parser, 0x23456789))
+    fail("Failed to reject late hash salt change");
+
+  /* Now finish the parse */
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text2, (int)strlen(text2), XML_TRUE)
+      == XML_STATUS_ERROR)
+    xml_failure(g_parser);
+}
+END_TEST
+
+/* Test foreign DTD handling with a failing NotStandalone handler */
+START_TEST(test_foreign_dtd_not_standalone) {
+  const char *text = "<?xml version='1.0' encoding='us-ascii'?>\n"
+                     "<doc>&entity;</doc>";
+  ExtTest test_data = {"<!ELEMENT doc (#PCDATA)*>", NULL, NULL};
+
+  XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+  XML_SetUserData(g_parser, &test_data);
+  XML_SetExternalEntityRefHandler(g_parser, external_entity_loader);
+  XML_SetNotStandaloneHandler(g_parser, reject_not_standalone_handler);
+  if (XML_UseForeignDTD(g_parser, XML_TRUE) != XML_ERROR_NONE)
+    fail("Could not set foreign DTD");
+  expect_failure(text, XML_ERROR_NOT_STANDALONE,
+                 "NotStandalonehandler failed to reject");
+}
+END_TEST
+
+/* Test invalid character in a foreign DTD is faulted */
+START_TEST(test_invalid_foreign_dtd) {
+  const char *text = "<?xml version='1.0' encoding='us-ascii'?>\n"
+                     "<doc>&entity;</doc>";
+  ExtFaults test_data
+      = {"$", "Dollar not faulted", NULL, XML_ERROR_INVALID_TOKEN};
+
+  XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+  XML_SetUserData(g_parser, &test_data);
+  XML_SetExternalEntityRefHandler(g_parser, external_entity_faulter);
+  XML_UseForeignDTD(g_parser, XML_TRUE);
+  expect_failure(text, XML_ERROR_EXTERNAL_ENTITY_HANDLING,
+                 "Bad DTD should not have been accepted");
+}
+END_TEST
+
+/* Test foreign DTD use with a doctype */
+START_TEST(test_foreign_dtd_with_doctype) {
+  const char *text1 = "<?xml version='1.0' encoding='us-ascii'?>\n"
+                      "<!DOCTYPE doc [<!ENTITY entity 'hello world'>]>\n";
+  const char *text2 = "<doc>&entity;</doc>";
+  ExtTest test_data = {"<!ELEMENT doc (#PCDATA)*>", NULL, NULL};
+
+  /* Check hash salt is passed through too */
+  XML_SetHashSalt(g_parser, 0x12345678);
+  XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+  XML_SetUserData(g_parser, &test_data);
+  XML_SetExternalEntityRefHandler(g_parser, external_entity_loader);
+  /* Add a default handler to exercise more code paths */
+  XML_SetDefaultHandler(g_parser, dummy_default_handler);
+  if (XML_UseForeignDTD(g_parser, XML_TRUE) != XML_ERROR_NONE)
+    fail("Could not set foreign DTD");
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text1, (int)strlen(text1), XML_FALSE)
+      == XML_STATUS_ERROR)
+    xml_failure(g_parser);
+
+  /* Ensure that trying to set the DTD after parsing has started
+   * is faulted, even if it's the same setting.
+   */
+  if (XML_UseForeignDTD(g_parser, XML_TRUE)
+      != XML_ERROR_CANT_CHANGE_FEATURE_ONCE_PARSING)
+    fail("Failed to reject late foreign DTD setting");
+  /* Ditto for the hash salt */
+  if (XML_SetHashSalt(g_parser, 0x23456789))
+    fail("Failed to reject late hash salt change");
+
+  /* Now finish the parse */
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text2, (int)strlen(text2), XML_TRUE)
+      == XML_STATUS_ERROR)
+    xml_failure(g_parser);
+}
+END_TEST
+
 TCase *
 make_basic_test_case(Suite *s) {
   TCase *tc_basic = tcase_create("basic tests");
@@ -1980,6 +2086,10 @@ make_basic_test_case(Suite *s) {
   tcase_add_test(tc_basic, test_default_current);
   tcase_add_test(tc_basic, test_dtd_elements);
   tcase_add_test(tc_basic, test_dtd_elements_nesting);
+  tcase_add_test__ifdef_xml_dtd(tc_basic, test_set_foreign_dtd);
+  tcase_add_test__ifdef_xml_dtd(tc_basic, test_foreign_dtd_not_standalone);
+  tcase_add_test__ifdef_xml_dtd(tc_basic, test_invalid_foreign_dtd);
+  tcase_add_test__ifdef_xml_dtd(tc_basic, test_foreign_dtd_with_doctype);
 
   return tc_basic;
 }
