@@ -102,40 +102,6 @@ testhelper_is_whitespace_normalized(void) {
 }
 
 
-/* See related SF bug #673791.
-   When namespace processing is enabled, setting the namespace URI for
-   a prefix is not allowed; this test ensures that it *is* allowed
-   when namespace processing is not enabled.
-   (See Namespaces in XML, section 2.)
-*/
-START_TEST(test_empty_ns_without_namespaces) {
-  const char *text = "<doc xmlns:prefix='http://example.org/'>\n"
-                     "  <e xmlns:prefix=''/>\n"
-                     "</doc>";
-
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
-      == XML_STATUS_ERROR)
-    xml_failure(g_parser);
-}
-END_TEST
-
-/* Regression test for SF bug #824420.
-   Checks that an xmlns:prefix attribute set in an attribute's default
-   value isn't misinterpreted.
-*/
-START_TEST(test_ns_in_attribute_default_without_namespaces) {
-  const char *text = "<!DOCTYPE e:element [\n"
-                     "  <!ATTLIST e:element\n"
-                     "    xmlns:e CDATA 'http://example.org/'>\n"
-                     "      ]>\n"
-                     "<e:element/>";
-
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
-      == XML_STATUS_ERROR)
-    xml_failure(g_parser);
-}
-END_TEST
-
 static const char *long_character_data_text
     = "<?xml version='1.0' encoding='iso-8859-1'?><s>"
       "012345678901234567890123456789012345678901234567890123456789"
@@ -10038,8 +10004,6 @@ make_suite(void) {
 
   tcase_add_test__ifdef_xml_dtd(tc_basic,
                                 test_ext_entity_invalid_suspended_parse);
-  tcase_add_test(tc_basic, test_empty_ns_without_namespaces);
-  tcase_add_test(tc_basic, test_ns_in_attribute_default_without_namespaces);
   tcase_add_test(tc_basic, test_stop_parser_between_char_data_calls);
   tcase_add_test(tc_basic, test_suspend_parser_between_char_data_calls);
   tcase_add_test(tc_basic, test_repeated_stop_parser_between_char_data_calls);
