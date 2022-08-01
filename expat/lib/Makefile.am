@@ -74,8 +74,7 @@ EXTRA_DIST = \
     iasciitab.h \
     internal.h \
     latin1tab.h \
-    libexpat.def \
-    libexpatw.def \
+    libexpat.def.cmake \
     nametab.h \
     siphash.h \
     utf8tab.h \
