@@ -150,6 +150,21 @@ clearing_aborting_character_handler(void *userData, const XML_Char *s,
 extern void
 parser_stop_character_handler(void *userData, const XML_Char *s, int len);
 
+/* Handlers that record invocation with a single character.  They expect
+ * to be called with a CharData pointer as their user data.
+ */
+extern void XMLCALL
+record_default_handler(void *userData, const XML_Char *s, int len);
+
+extern void XMLCALL
+record_cdata_handler(void *userData, const XML_Char *s, int len);
+
+extern void XMLCALL
+record_cdata_nodefault_handler(void *userData, const XML_Char *s, int len);
+
+extern void XMLCALL
+record_skip_handler(void *userData, const XML_Char *entityName,
+                    int is_parameter_entity);
 
 #endif /* XML_HANDLERS_H */
 
