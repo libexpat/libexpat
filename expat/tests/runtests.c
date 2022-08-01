@@ -102,61 +102,6 @@ testhelper_is_whitespace_normalized(void) {
 }
 
 
-/* Regression test for SF bug #620106. */
-START_TEST(test_ext_entity_set_encoding) {
-  const char *text = "<!DOCTYPE doc [\n"
-                     "  <!ENTITY en SYSTEM 'http://example.org/dummy.ent'>\n"
-                     "]>\n"
-                     "<doc>&en;</doc>";
-  ExtTest test_data
-      = {/* This text says it's an unsupported encoding, but it's really
-            UTF-8, which we tell Expat using XML_SetEncoding().
-         */
-         "<?xml encoding='iso-8859-3'?>\xC3\xA9", XCS("utf-8"), NULL};
-#ifdef XML_UNICODE
-  const XML_Char *expected = XCS("\x00e9");
-#else
-  const XML_Char *expected = XCS("\xc3\xa9");
-#endif
-
-  XML_SetExternalEntityRefHandler(g_parser, external_entity_loader);
-  run_ext_character_check(text, &test_data, expected);
-}
-END_TEST
-
-/* Test external entities with no handler */
-START_TEST(test_ext_entity_no_handler) {
-  const char *text = "<!DOCTYPE doc [\n"
-                     "  <!ENTITY en SYSTEM 'http://example.org/dummy.ent'>\n"
-                     "]>\n"
-                     "<doc>&en;</doc>";
-
-  XML_SetDefaultHandler(g_parser, dummy_default_handler);
-  run_character_check(text, XCS(""));
-}
-END_TEST
-
-/* Test UTF-8 BOM is accepted */
-START_TEST(test_ext_entity_set_bom) {
-  const char *text = "<!DOCTYPE doc [\n"
-                     "  <!ENTITY en SYSTEM 'http://example.org/dummy.ent'>\n"
-                     "]>\n"
-                     "<doc>&en;</doc>";
-  ExtTest test_data = {"\xEF\xBB\xBF" /* BOM */
-                       "<?xml encoding='iso-8859-3'?>"
-                       "\xC3\xA9",
-                       XCS("utf-8"), NULL};
-#ifdef XML_UNICODE
-  const XML_Char *expected = XCS("\x00e9");
-#else
-  const XML_Char *expected = XCS("\xc3\xa9");
-#endif
-
-  XML_SetExternalEntityRefHandler(g_parser, external_entity_loader);
-  run_ext_character_check(text, &test_data, expected);
-}
-END_TEST
-
 /* Test that bad encodings are faulted */
 typedef struct ext_faults {
   const char *parse_text;
@@ -10454,9 +10399,6 @@ make_suite(void) {
                  test_wfc_undeclared_entity_with_external_subset_standalone);
   tcase_add_test(tc_basic, test_entity_with_external_subset_unless_standalone);
   tcase_add_test(tc_basic, test_wfc_no_recursive_entity_refs);
-  tcase_add_test__ifdef_xml_dtd(tc_basic, test_ext_entity_set_encoding);
-  tcase_add_test__ifdef_xml_dtd(tc_basic, test_ext_entity_no_handler);
-  tcase_add_test__ifdef_xml_dtd(tc_basic, test_ext_entity_set_bom);
   tcase_add_test__ifdef_xml_dtd(tc_basic, test_ext_entity_bad_encoding);
   tcase_add_test__ifdef_xml_dtd(tc_basic, test_ext_entity_bad_encoding_2);
   tcase_add_test__ifdef_xml_dtd(tc_basic, test_ext_entity_invalid_parse);
