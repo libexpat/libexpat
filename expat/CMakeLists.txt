@@ -591,6 +591,7 @@ if(EXPAT_BUILD_TESTS)
         tests/structdata.c
         tests/common.c
         tests/dummy.c
+        tests/handlers.c
         tests/basic_tests.c
         ${_EXPAT_C_SOURCES}
     )

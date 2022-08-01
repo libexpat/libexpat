@@ -67,6 +67,7 @@
 #include "memcheck.h"
 #include "common.h"
 #include "dummy.h"
+#include "handlers.h"
 #include "siphash.h"
 #include "ascii.h" /* for ASCII_xxx */
 
@@ -158,20 +159,6 @@ END_TEST
 /*
  * Element event tests.
  */
-
-static void XMLCALL
-start_element_event_handler(void *userData, const XML_Char *name,
-                            const XML_Char **atts) {
-  UNUSED_P(atts);
-  CharData_AppendXMLChars((CharData *)userData, name, -1);
-}
-
-static void XMLCALL
-end_element_event_handler(void *userData, const XML_Char *name) {
-  CharData *storage = (CharData *)userData;
-  CharData_AppendXMLChars(storage, XCS("/"), 1);
-  CharData_AppendXMLChars(storage, name, -1);
-}
 
 START_TEST(test_end_element_events) {
   const char *text = "<a><b><c/></b><d><f/></d></a>";

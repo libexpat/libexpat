@@ -55,6 +55,7 @@
 #include "structdata.h"
 #include "common.h"
 #include "dummy.h"
+#include "handlers.h"
 #include "siphash.h"
 #include "basic_tests.h"
 
@@ -582,24 +583,6 @@ START_TEST(test_column_number_after_parse) {
   }
 }
 END_TEST
-
-#define STRUCT_START_TAG 0
-#define STRUCT_END_TAG 1
-static void XMLCALL
-start_element_event_handler2(void *userData, const XML_Char *name,
-                             const XML_Char **attr) {
-  StructData *storage = (StructData *)userData;
-  UNUSED_P(attr);
-  StructData_AddItem(storage, name, XML_GetCurrentColumnNumber(g_parser),
-                     XML_GetCurrentLineNumber(g_parser), STRUCT_START_TAG);
-}
-
-static void XMLCALL
-end_element_event_handler2(void *userData, const XML_Char *name) {
-  StructData *storage = (StructData *)userData;
-  StructData_AddItem(storage, name, XML_GetCurrentColumnNumber(g_parser),
-                     XML_GetCurrentLineNumber(g_parser), STRUCT_END_TAG);
-}
 
 /* Regression test #3 for SF bug #653180. */
 START_TEST(test_line_and_column_numbers_inside_handlers) {
