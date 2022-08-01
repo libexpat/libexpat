@@ -76,6 +76,8 @@ extern "C" {
 #endif   /* XML_UNICODE_WCHAR_T */
 
 
+extern const char *long_character_data_text;
+
 extern XML_Parser g_parser;
 
 
