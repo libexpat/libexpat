@@ -144,6 +144,12 @@ extern void
 clearing_aborting_character_handler(void *userData, const XML_Char *s,
                                     int len);
 
+/* This handler stops the global parser as above, then attempts further
+ * variations of aborting depending on g_resumable and g_abortable.
+ */
+extern void
+parser_stop_character_handler(void *userData, const XML_Char *s, int len);
+
 
 #endif /* XML_HANDLERS_H */
 
