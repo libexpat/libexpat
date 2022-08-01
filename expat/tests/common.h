@@ -80,6 +80,8 @@ extern const char *long_character_data_text;
 
 extern XML_Parser g_parser;
 
+extern XML_Bool g_resumable;
+
 
 /* Support structure for a generic external entity handler.  The
  * handler function external_entity_optioner() expects its userdata to

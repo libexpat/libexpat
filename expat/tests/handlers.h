@@ -135,6 +135,15 @@ verify_attlist_decl_handler(void *userData, const XML_Char *element_name,
                             const XML_Char *attr_type,
                             const XML_Char *default_value, int is_required);
 
+/* Character data handlers
+ *
+ * This handler stops the (global) parser, leaving it resumable if
+ * g_resumable is True, and removes itself as the character data handler.
+ */
+extern void
+clearing_aborting_character_handler(void *userData, const XML_Char *s,
+                                    int len);
+
 
 #endif /* XML_HANDLERS_H */
 

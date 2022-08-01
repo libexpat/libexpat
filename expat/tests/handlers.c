@@ -208,6 +208,7 @@ accept_not_standalone_handler(void *userData) {
 }
 
 /* Attribute List handlers */
+
 void XMLCALL
 verify_attlist_decl_handler(void *userData, const XML_Char *element_name,
                             const XML_Char *attr_name,
@@ -227,4 +228,16 @@ verify_attlist_decl_handler(void *userData, const XML_Char *element_name,
     fail("Unexpected default value in attribute declaration");
   if (is_required != at->is_required)
     fail("Requirement mismatch in attribute declaration");
+}
+
+/* Character data handlers */
+
+void
+clearing_aborting_character_handler(void *userData, const XML_Char *s,
+                                    int len) {
+  UNUSED_P(userData);
+  UNUSED_P(s);
+  UNUSED_P(len);
+  XML_StopParser(g_parser, g_resumable);
+  XML_SetCharacterDataHandler(g_parser, NULL);
 }

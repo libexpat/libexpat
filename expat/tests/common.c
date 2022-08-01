@@ -76,6 +76,11 @@ const char *long_character_data_text
       "012345678901234567890123456789012345678901234567890123456789"
       "</s>";
 
+/* Test control globals */
+
+/* Used as the "resumable" parameter to XML_StopParser for some tests */
+XML_Bool g_resumable = XML_FALSE;
+
 
 /* Common test functions */
 

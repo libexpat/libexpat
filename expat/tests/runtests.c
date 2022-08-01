@@ -102,18 +102,6 @@ testhelper_is_whitespace_normalized(void) {
 }
 
 
-static XML_Bool resumable = XML_FALSE;
-
-static void
-clearing_aborting_character_handler(void *userData, const XML_Char *s,
-                                    int len) {
-  UNUSED_P(userData);
-  UNUSED_P(s);
-  UNUSED_P(len);
-  XML_StopParser(g_parser, resumable);
-  XML_SetCharacterDataHandler(g_parser, NULL);
-}
-
 /* Regression test for SF bug #1515266: missing check of stopped
    parser in doContext() 'for' loop. */
 START_TEST(test_stop_parser_between_char_data_calls) {
@@ -126,7 +114,7 @@ START_TEST(test_stop_parser_between_char_data_calls) {
   const char *text = long_character_data_text;
 
   XML_SetCharacterDataHandler(g_parser, clearing_aborting_character_handler);
-  resumable = XML_FALSE;
+  g_resumable = XML_FALSE;
   if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
       != XML_STATUS_ERROR)
     xml_failure(g_parser);
@@ -147,7 +135,7 @@ START_TEST(test_suspend_parser_between_char_data_calls) {
   const char *text = long_character_data_text;
 
   XML_SetCharacterDataHandler(g_parser, clearing_aborting_character_handler);
-  resumable = XML_TRUE;
+  g_resumable = XML_TRUE;
   if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
       != XML_STATUS_SUSPENDED)
     xml_failure(g_parser);
@@ -169,9 +157,9 @@ parser_stop_character_handler(void *userData, const XML_Char *s, int len) {
   UNUSED_P(userData);
   UNUSED_P(s);
   UNUSED_P(len);
-  XML_StopParser(g_parser, resumable);
+  XML_StopParser(g_parser, g_resumable);
   XML_SetCharacterDataHandler(g_parser, NULL);
-  if (! resumable) {
+  if (! g_resumable) {
     /* Check that aborting an aborted parser is faulted */
     if (XML_StopParser(g_parser, XML_FALSE) != XML_STATUS_ERROR)
       fail("Aborting aborted parser not faulted");
@@ -195,7 +183,7 @@ START_TEST(test_repeated_stop_parser_between_char_data_calls) {
   const char *text = long_character_data_text;
 
   XML_SetCharacterDataHandler(g_parser, parser_stop_character_handler);
-  resumable = XML_FALSE;
+  g_resumable = XML_FALSE;
   abortable = XML_FALSE;
   if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
       != XML_STATUS_ERROR)
@@ -203,7 +191,7 @@ START_TEST(test_repeated_stop_parser_between_char_data_calls) {
 
   XML_ParserReset(g_parser, NULL);
   XML_SetCharacterDataHandler(g_parser, parser_stop_character_handler);
-  resumable = XML_TRUE;
+  g_resumable = XML_TRUE;
   abortable = XML_FALSE;
   if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
       != XML_STATUS_SUSPENDED)
@@ -211,7 +199,7 @@ START_TEST(test_repeated_stop_parser_between_char_data_calls) {
 
   XML_ParserReset(g_parser, NULL);
   XML_SetCharacterDataHandler(g_parser, parser_stop_character_handler);
-  resumable = XML_TRUE;
+  g_resumable = XML_TRUE;
   abortable = XML_TRUE;
   if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
       != XML_STATUS_ERROR)
@@ -604,7 +592,7 @@ START_TEST(test_stop_parser_between_cdata_calls) {
   const char *text = long_cdata_text;
 
   XML_SetCharacterDataHandler(g_parser, clearing_aborting_character_handler);
-  resumable = XML_FALSE;
+  g_resumable = XML_FALSE;
   expect_failure(text, XML_ERROR_ABORTED, "Parse not aborted in CDATA handler");
 }
 END_TEST
@@ -615,7 +603,7 @@ START_TEST(test_suspend_parser_between_cdata_calls) {
   enum XML_Status result;
 
   XML_SetCharacterDataHandler(g_parser, clearing_aborting_character_handler);
-  resumable = XML_TRUE;
+  g_resumable = XML_TRUE;
   result = _XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE);
   if (result != XML_STATUS_SUSPENDED) {
     if (result == XML_STATUS_ERROR)
@@ -1132,7 +1120,7 @@ START_TEST(test_reset_in_entity) {
                      "<doc>&entity;</doc>";
   XML_ParsingStatus status;
 
-  resumable = XML_TRUE;
+  g_resumable = XML_TRUE;
   XML_SetCharacterDataHandler(g_parser, clearing_aborting_character_handler);
   if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_FALSE)
       == XML_STATUS_ERROR)
@@ -1151,7 +1139,7 @@ END_TEST
 START_TEST(test_resume_invalid_parse) {
   const char *text = "<doc>Hello</doc"; /* Missing closing wedge */
 
-  resumable = XML_TRUE;
+  g_resumable = XML_TRUE;
   XML_SetCharacterDataHandler(g_parser, clearing_aborting_character_handler);
   if (XML_Parse(g_parser, text, (int)strlen(text), XML_TRUE)
       == XML_STATUS_ERROR)
@@ -1167,12 +1155,12 @@ END_TEST
 START_TEST(test_resume_resuspended) {
   const char *text = "<doc>Hello<meep/>world</doc>";
 
-  resumable = XML_TRUE;
+  g_resumable = XML_TRUE;
   XML_SetCharacterDataHandler(g_parser, clearing_aborting_character_handler);
   if (XML_Parse(g_parser, text, (int)strlen(text), XML_TRUE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
-  resumable = XML_TRUE;
+  g_resumable = XML_TRUE;
   XML_SetCharacterDataHandler(g_parser, clearing_aborting_character_handler);
   if (XML_ResumeParser(g_parser) != XML_STATUS_SUSPENDED)
     fail("Resumption not suspended");
@@ -1321,7 +1309,7 @@ entity_suspending_xdecl_handler(void *userData, const XML_Char *version,
   UNUSED_P(version);
   UNUSED_P(encoding);
   UNUSED_P(standalone);
-  XML_StopParser(ext_parser, resumable);
+  XML_StopParser(ext_parser, g_resumable);
   XML_SetXmlDeclHandler(ext_parser, NULL);
 }
 
@@ -1344,7 +1332,7 @@ external_entity_suspend_xmldecl(XML_Parser parser, const XML_Char *context,
   XML_SetUserData(ext_parser, ext_parser);
   rc = _XML_Parse_SINGLE_BYTES(ext_parser, text, (int)strlen(text), XML_TRUE);
   XML_GetParsingStatus(ext_parser, &status);
-  if (resumable) {
+  if (g_resumable) {
     if (rc == XML_STATUS_ERROR)
       xml_failure(ext_parser);
     if (status.parsing != XML_SUSPENDED)
@@ -1371,7 +1359,7 @@ START_TEST(test_subordinate_xdecl_suspend) {
 
   XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
   XML_SetExternalEntityRefHandler(g_parser, external_entity_suspend_xmldecl);
-  resumable = XML_TRUE;
+  g_resumable = XML_TRUE;
   if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
@@ -1387,7 +1375,7 @@ START_TEST(test_subordinate_xdecl_abort) {
 
   XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
   XML_SetExternalEntityRefHandler(g_parser, external_entity_suspend_xmldecl);
-  resumable = XML_FALSE;
+  g_resumable = XML_FALSE;
   if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
@@ -1413,7 +1401,7 @@ external_entity_suspending_faulter(XML_Parser parser, const XML_Char *context,
     fail("Could not create external entity parser");
   XML_SetXmlDeclHandler(ext_parser, entity_suspending_xdecl_handler);
   XML_SetUserData(ext_parser, ext_parser);
-  resumable = XML_TRUE;
+  g_resumable = XML_TRUE;
   buffer = XML_GetBuffer(ext_parser, parse_len);
   if (buffer == NULL)
     fail("Could not allocate parse buffer");
@@ -2628,7 +2616,7 @@ START_TEST(test_ext_entity_value_abort) {
 
   XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
   XML_SetExternalEntityRefHandler(g_parser, external_entity_value_aborter);
-  resumable = XML_FALSE;
+  g_resumable = XML_FALSE;
   if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
@@ -2923,7 +2911,7 @@ aborting_xdecl_handler(void *userData, const XML_Char *version,
   UNUSED_P(version);
   UNUSED_P(encoding);
   UNUSED_P(standalone);
-  XML_StopParser(g_parser, resumable);
+  XML_StopParser(g_parser, g_resumable);
   XML_SetXmlDeclHandler(g_parser, NULL);
 }
 
@@ -2932,7 +2920,7 @@ START_TEST(test_suspend_xdecl) {
   const char *text = long_character_data_text;
 
   XML_SetXmlDeclHandler(g_parser, aborting_xdecl_handler);
-  resumable = XML_TRUE;
+  g_resumable = XML_TRUE;
   if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
       != XML_STATUS_SUSPENDED)
     xml_failure(g_parser);
@@ -2954,7 +2942,7 @@ selective_aborting_default_handler(void *userData, const XML_Char *s, int len) {
 
   if (match == NULL
       || (xcstrlen(match) == (unsigned)len && ! xcstrncmp(match, s, len))) {
-    XML_StopParser(g_parser, resumable);
+    XML_StopParser(g_parser, g_resumable);
     XML_SetDefaultHandler(g_parser, NULL);
   }
 }
@@ -2965,7 +2953,7 @@ START_TEST(test_abort_epilog) {
 
   XML_SetDefaultHandler(g_parser, selective_aborting_default_handler);
   XML_SetUserData(g_parser, match);
-  resumable = XML_FALSE;
+  g_resumable = XML_FALSE;
   if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
       != XML_STATUS_ERROR)
     fail("Abort not triggered");
@@ -2981,7 +2969,7 @@ START_TEST(test_abort_epilog_2) {
 
   XML_SetDefaultHandler(g_parser, selective_aborting_default_handler);
   XML_SetUserData(g_parser, match);
-  resumable = XML_FALSE;
+  g_resumable = XML_FALSE;
   expect_failure(text, XML_ERROR_ABORTED, "Abort not triggered");
 }
 END_TEST
@@ -2993,7 +2981,7 @@ START_TEST(test_suspend_epilog) {
 
   XML_SetDefaultHandler(g_parser, selective_aborting_default_handler);
   XML_SetUserData(g_parser, match);
-  resumable = XML_TRUE;
+  g_resumable = XML_TRUE;
   if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
       != XML_STATUS_SUSPENDED)
     xml_failure(g_parser);
@@ -8212,7 +8200,7 @@ START_TEST(test_nsalloc_parse_buffer) {
 
   /* Get the parser into suspended state */
   XML_SetCharacterDataHandler(g_parser, clearing_aborting_character_handler);
-  resumable = XML_TRUE;
+  g_resumable = XML_TRUE;
   buffer = XML_GetBuffer(g_parser, (int)strlen(text));
   if (buffer == NULL)
     fail("Could not acquire parse buffer");
