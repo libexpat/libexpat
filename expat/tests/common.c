@@ -280,3 +280,29 @@ _run_ext_character_check(const char *text, ExtTest *test_data,
 
   free(storage);
 }
+
+int
+is_whitespace_normalized(const XML_Char *s, int is_cdata) {
+  int blanks = 0;
+  int at_start = 1;
+  while (*s) {
+    if (*s == XCS(' '))
+      ++blanks;
+    else if (*s == XCS('\t') || *s == XCS('\n') || *s == XCS('\r'))
+      return 0;
+    else {
+      if (at_start) {
+        at_start = 0;
+        if (blanks && ! is_cdata)
+          /* illegal leading blanks */
+          return 0;
+      } else if (blanks > 1 && ! is_cdata)
+        return 0;
+      blanks = 0;
+    }
+    ++s;
+  }
+  if (blanks && ! is_cdata)
+    return 0;
+  return 1;
+}

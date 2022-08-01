@@ -753,6 +753,57 @@ START_TEST(test_end_element_events) {
 }
 END_TEST
 
+/*
+ * Attribute tests.
+ */
+
+static void XMLCALL
+check_attr_contains_normalized_whitespace(void *userData, const XML_Char *name,
+                                          const XML_Char **atts) {
+  int i;
+  UNUSED_P(userData);
+  UNUSED_P(name);
+  for (i = 0; atts[i] != NULL; i += 2) {
+    const XML_Char *attrname = atts[i];
+    const XML_Char *value = atts[i + 1];
+    if (xcstrcmp(XCS("attr"), attrname) == 0
+        || xcstrcmp(XCS("ents"), attrname) == 0
+        || xcstrcmp(XCS("refs"), attrname) == 0) {
+      if (! is_whitespace_normalized(value, 0)) {
+        char buffer[256];
+        sprintf(buffer,
+                "attribute value not normalized: %" XML_FMT_STR
+                "='%" XML_FMT_STR "'",
+                attrname, value);
+        fail(buffer);
+      }
+    }
+  }
+}
+
+START_TEST(test_attr_whitespace_normalization) {
+  const char *text
+      = "<!DOCTYPE doc [\n"
+        "  <!ATTLIST doc\n"
+        "            attr NMTOKENS #REQUIRED\n"
+        "            ents ENTITIES #REQUIRED\n"
+        "            refs IDREFS   #REQUIRED>\n"
+        "]>\n"
+        "<doc attr='    a  b c\t\td\te\t' refs=' id-1   \t  id-2\t\t'  \n"
+        "     ents=' ent-1   \t\r\n"
+        "            ent-2  ' >\n"
+        "  <e id='id-1'/>\n"
+        "  <e id='id-2'/>\n"
+        "</doc>";
+
+  XML_SetStartElementHandler(g_parser,
+                             check_attr_contains_normalized_whitespace);
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+      == XML_STATUS_ERROR)
+    xml_failure(g_parser);
+}
+END_TEST
+
 TCase *
 make_basic_test_case(Suite *s) {
   TCase *tc_basic = tcase_create("basic tests");
@@ -793,6 +844,7 @@ make_basic_test_case(Suite *s) {
   tcase_add_test(tc_basic, test_really_long_lines);
   tcase_add_test(tc_basic, test_really_long_encoded_lines);
   tcase_add_test(tc_basic, test_end_element_events);
+  tcase_add_test(tc_basic, test_attr_whitespace_normalization);
 
   return tc_basic;
 }

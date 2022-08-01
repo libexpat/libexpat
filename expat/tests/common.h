@@ -192,6 +192,15 @@ _run_ext_character_check(const char *text, ExtTest *test_data,
 #define run_ext_character_check(text, test_data, expected)                     \
   _run_ext_character_check(text, test_data, expected, __FILE__, __LINE__)
 
+/* Return true if whitespace has been normalized in a string, using
+   the rules for attribute value normalization.  The 'is_cdata' flag
+   is needed since CDATA attributes don't need to have multiple
+   whitespace characters collapsed to a single space, while other
+   attribute data types do.  (Section 3.3.3 of the recommendation.)
+*/
+extern int
+is_whitespace_normalized(const XML_Char *s, int is_cdata);
+
 
 #endif /* XML_COMMON_H */
 
