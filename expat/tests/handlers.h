@@ -112,6 +112,12 @@ external_entity_faulter(XML_Parser parser, const XML_Char *context,
                         const XML_Char *base, const XML_Char *systemId,
                         const XML_Char *publicId);
 
+/* This handler does nothing at all */
+extern int XMLCALL
+external_entity_null_loader(XML_Parser parser, const XML_Char *context,
+                            const XML_Char *base, const XML_Char *systemId,
+                            const XML_Char *publicId);
+
 /* NotStandalone handlers */
 extern int XMLCALL
 reject_not_standalone_handler(void *userData);

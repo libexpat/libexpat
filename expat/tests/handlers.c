@@ -193,6 +193,18 @@ external_entity_faulter(XML_Parser parser, const XML_Char *context,
   return XML_STATUS_ERROR;
 }
 
+int XMLCALL
+external_entity_null_loader(XML_Parser parser, const XML_Char *context,
+                            const XML_Char *base, const XML_Char *systemId,
+                            const XML_Char *publicId) {
+  UNUSED_P(parser);
+  UNUSED_P(context);
+  UNUSED_P(base);
+  UNUSED_P(systemId);
+  UNUSED_P(publicId);
+  return XML_STATUS_OK;
+}
+
 /* NotStandalone handlers */
 
 int XMLCALL

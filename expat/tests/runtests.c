@@ -103,18 +103,6 @@ testhelper_is_whitespace_normalized(void) {
 
 
 /* Test XML_UseForeignDTD with no external subset present */
-static int XMLCALL
-external_entity_null_loader(XML_Parser parser, const XML_Char *context,
-                            const XML_Char *base, const XML_Char *systemId,
-                            const XML_Char *publicId) {
-  UNUSED_P(parser);
-  UNUSED_P(context);
-  UNUSED_P(base);
-  UNUSED_P(systemId);
-  UNUSED_P(publicId);
-  return XML_STATUS_OK;
-}
-
 START_TEST(test_foreign_dtd_without_external_subset) {
   const char *text = "<!DOCTYPE doc [<!ENTITY foo 'bar'>]>\n"
                      "<doc>&foo;</doc>";
