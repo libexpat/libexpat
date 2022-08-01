@@ -1081,6 +1081,70 @@ START_TEST(test_not_standalone_handler_accept) {
 }
 END_TEST
 
+START_TEST(test_wfc_no_recursive_entity_refs) {
+  const char *text = "<!DOCTYPE doc [\n"
+                     "  <!ENTITY entity '&#38;entity;'>\n"
+                     "]>\n"
+                     "<doc>&entity;</doc>";
+
+  expect_failure(text, XML_ERROR_RECURSIVE_ENTITY_REF,
+                 "Parser did not report recursive entity reference.");
+}
+END_TEST
+
+/* Test incomplete external entities are faulted */
+START_TEST(test_ext_entity_invalid_parse) {
+  const char *text = "<!DOCTYPE doc [\n"
+                     "  <!ENTITY en SYSTEM 'http://example.org/dummy.ent'>\n"
+                     "]>\n"
+                     "<doc>&en;</doc>";
+  const ExtFaults faults[]
+      = {{"<", "Incomplete element declaration not faulted", NULL,
+          XML_ERROR_UNCLOSED_TOKEN},
+         {"<\xe2\x82", /* First two bytes of a three-byte char */
+          "Incomplete character not faulted", NULL, XML_ERROR_PARTIAL_CHAR},
+         {"<tag>\xe2\x82", "Incomplete character in CDATA not faulted", NULL,
+          XML_ERROR_PARTIAL_CHAR},
+         {NULL, NULL, NULL, XML_ERROR_NONE}};
+  const ExtFaults *fault = faults;
+
+  for (; fault->parse_text != NULL; fault++) {
+    XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+    XML_SetExternalEntityRefHandler(g_parser, external_entity_faulter);
+    XML_SetUserData(g_parser, (void *)fault);
+    expect_failure(text, XML_ERROR_EXTERNAL_ENTITY_HANDLING,
+                   "Parser did not report external entity error");
+    XML_ParserReset(g_parser, NULL);
+  }
+}
+END_TEST
+
+/* Regression test for SF bug #483514. */
+START_TEST(test_dtd_default_handling) {
+  const char *text = "<!DOCTYPE doc [\n"
+                     "<!ENTITY e SYSTEM 'http://example.org/e'>\n"
+                     "<!NOTATION n SYSTEM 'http://example.org/n'>\n"
+                     "<!ELEMENT doc EMPTY>\n"
+                     "<!ATTLIST doc a CDATA #IMPLIED>\n"
+                     "<?pi in dtd?>\n"
+                     "<!--comment in dtd-->\n"
+                     "]><doc/>";
+
+  XML_SetDefaultHandler(g_parser, accumulate_characters);
+  XML_SetStartDoctypeDeclHandler(g_parser, dummy_start_doctype_handler);
+  XML_SetEndDoctypeDeclHandler(g_parser, dummy_end_doctype_handler);
+  XML_SetEntityDeclHandler(g_parser, dummy_entity_decl_handler);
+  XML_SetNotationDeclHandler(g_parser, dummy_notation_decl_handler);
+  XML_SetElementDeclHandler(g_parser, dummy_element_decl_handler);
+  XML_SetAttlistDeclHandler(g_parser, dummy_attlist_decl_handler);
+  XML_SetProcessingInstructionHandler(g_parser, dummy_pi_handler);
+  XML_SetCommentHandler(g_parser, dummy_comment_handler);
+  XML_SetStartCdataSectionHandler(g_parser, dummy_start_cdata_handler);
+  XML_SetEndCdataSectionHandler(g_parser, dummy_end_cdata_handler);
+  run_character_check(text, XCS("\n\n\n\n\n\n\n<doc/>"));
+}
+END_TEST
+
 TCase *
 make_basic_test_case(Suite *s) {
   TCase *tc_basic = tcase_create("basic tests");
@@ -1142,6 +1206,9 @@ make_basic_test_case(Suite *s) {
   tcase_add_test(tc_basic, test_wfc_undeclared_entity_with_external_subset);
   tcase_add_test(tc_basic, test_not_standalone_handler_reject);
   tcase_add_test(tc_basic, test_not_standalone_handler_accept);
+  tcase_add_test(tc_basic, test_wfc_no_recursive_entity_refs);
+  tcase_add_test__ifdef_xml_dtd(tc_basic, test_ext_entity_invalid_parse);
+  tcase_add_test(tc_basic, test_dtd_default_handling);
 
   return tc_basic;
 }
