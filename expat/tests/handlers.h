@@ -107,10 +107,18 @@ typedef struct ext_faults {
  * error code in the "error" field.  If the parse succeeds, the test will be
  * failed with the message given in "fail_text".
  */
-int XMLCALL
+extern int XMLCALL
 external_entity_faulter(XML_Parser parser, const XML_Char *context,
                         const XML_Char *base, const XML_Char *systemId,
                         const XML_Char *publicId);
+
+/* NotStandalone handlers */
+extern int XMLCALL
+reject_not_standalone_handler(void *userData);
+
+extern int XMLCALL
+accept_not_standalone_handler(void *userData);
+
 
 #endif /* XML_HANDLERS_H */
 

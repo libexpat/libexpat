@@ -1040,6 +1040,47 @@ START_TEST(test_wfc_undeclared_entity_with_external_subset) {
 }
 END_TEST
 
+/* Test that an error is reported if our NotStandalone handler fails */
+START_TEST(test_not_standalone_handler_reject) {
+  const char *text = "<?xml version='1.0' encoding='us-ascii'?>\n"
+                     "<!DOCTYPE doc SYSTEM 'foo'>\n"
+                     "<doc>&entity;</doc>";
+  ExtTest test_data = {"<!ELEMENT doc (#PCDATA)*>", NULL, NULL};
+
+  XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+  XML_SetUserData(g_parser, &test_data);
+  XML_SetExternalEntityRefHandler(g_parser, external_entity_loader);
+  XML_SetNotStandaloneHandler(g_parser, reject_not_standalone_handler);
+  expect_failure(text, XML_ERROR_NOT_STANDALONE,
+                 "NotStandalone handler failed to reject");
+
+  /* Try again but without external entity handling */
+  XML_ParserReset(g_parser, NULL);
+  XML_SetNotStandaloneHandler(g_parser, reject_not_standalone_handler);
+  expect_failure(text, XML_ERROR_NOT_STANDALONE,
+                 "NotStandalone handler failed to reject");
+}
+END_TEST
+
+/* Test that no error is reported if our NotStandalone handler succeeds */
+START_TEST(test_not_standalone_handler_accept) {
+  const char *text = "<?xml version='1.0' encoding='us-ascii'?>\n"
+                     "<!DOCTYPE doc SYSTEM 'foo'>\n"
+                     "<doc>&entity;</doc>";
+  ExtTest test_data = {"<!ELEMENT doc (#PCDATA)*>", NULL, NULL};
+
+  XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+  XML_SetExternalEntityRefHandler(g_parser, external_entity_loader);
+  XML_SetNotStandaloneHandler(g_parser, accept_not_standalone_handler);
+  run_ext_character_check(text, &test_data, XCS(""));
+
+  /* Repeat without the external entity handler */
+  XML_ParserReset(g_parser, NULL);
+  XML_SetNotStandaloneHandler(g_parser, accept_not_standalone_handler);
+  run_character_check(text, XCS(""));
+}
+END_TEST
+
 TCase *
 make_basic_test_case(Suite *s) {
   TCase *tc_basic = tcase_create("basic tests");
@@ -1099,6 +1140,8 @@ make_basic_test_case(Suite *s) {
                  test_wfc_undeclared_entity_with_external_subset_standalone);
   tcase_add_test(tc_basic, test_entity_with_external_subset_unless_standalone);
   tcase_add_test(tc_basic, test_wfc_undeclared_entity_with_external_subset);
+  tcase_add_test(tc_basic, test_not_standalone_handler_reject);
+  tcase_add_test(tc_basic, test_not_standalone_handler_accept);
 
   return tc_basic;
 }
