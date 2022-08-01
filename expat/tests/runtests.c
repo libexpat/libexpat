@@ -79,96 +79,6 @@ XML_Parser g_parser = NULL;
  * Character & encoding tests.
  */
 
-START_TEST(test_nul_byte) {
-  char text[] = "<doc>\0</doc>";
-
-  /* test that a NUL byte (in US-ASCII data) is an error */
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, sizeof(text) - 1, XML_TRUE)
-      == XML_STATUS_OK)
-    fail("Parser did not report error on NUL-byte.");
-  if (XML_GetErrorCode(g_parser) != XML_ERROR_INVALID_TOKEN)
-    xml_failure(g_parser);
-}
-END_TEST
-
-START_TEST(test_u0000_char) {
-  /* test that a NUL byte (in US-ASCII data) is an error */
-  expect_failure("<doc>&#0;</doc>", XML_ERROR_BAD_CHAR_REF,
-                 "Parser did not report error on NUL-byte.");
-}
-END_TEST
-
-START_TEST(test_siphash_self) {
-  if (! sip24_valid())
-    fail("SipHash self-test failed");
-}
-END_TEST
-
-START_TEST(test_siphash_spec) {
-  /* https://131002.net/siphash/siphash.pdf (page 19, "Test values") */
-  const char message[] = "\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09"
-                         "\x0a\x0b\x0c\x0d\x0e";
-  const size_t len = sizeof(message) - 1;
-  const uint64_t expected = _SIP_ULL(0xa129ca61U, 0x49be45e5U);
-  struct siphash state;
-  struct sipkey key;
-
-  sip_tokey(&key, "\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09"
-                  "\x0a\x0b\x0c\x0d\x0e\x0f");
-  sip24_init(&state, &key);
-
-  /* Cover spread across calls */
-  sip24_update(&state, message, 4);
-  sip24_update(&state, message + 4, len - 4);
-
-  /* Cover null length */
-  sip24_update(&state, message, 0);
-
-  if (sip24_final(&state) != expected)
-    fail("sip24_final failed spec test\n");
-
-  /* Cover wrapper */
-  if (siphash24(message, len, &key) != expected)
-    fail("siphash24 failed spec test\n");
-}
-END_TEST
-
-START_TEST(test_bom_utf8) {
-  /* This test is really just making sure we don't core on a UTF-8 BOM. */
-  const char *text = "\357\273\277<e/>";
-
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
-      == XML_STATUS_ERROR)
-    xml_failure(g_parser);
-}
-END_TEST
-
-START_TEST(test_bom_utf16_be) {
-  char text[] = "\376\377\0<\0e\0/\0>";
-
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, sizeof(text) - 1, XML_TRUE)
-      == XML_STATUS_ERROR)
-    xml_failure(g_parser);
-}
-END_TEST
-
-START_TEST(test_bom_utf16_le) {
-  char text[] = "\377\376<\0e\0/\0>\0";
-
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, sizeof(text) - 1, XML_TRUE)
-      == XML_STATUS_ERROR)
-    xml_failure(g_parser);
-}
-END_TEST
-
-/* Parse whole buffer at once to exercise a different code path */
-START_TEST(test_nobom_utf16_le) {
-  char text[] = " \0<\0e\0/\0>\0";
-
-  if (XML_Parse(g_parser, text, sizeof(text) - 1, XML_TRUE) == XML_STATUS_ERROR)
-    xml_failure(g_parser);
-}
-END_TEST
 
 static void XMLCALL
 accumulate_characters(void *userData, const XML_Char *s, int len) {
@@ -11472,14 +11382,6 @@ make_suite(void) {
   TCase *tc_accounting = tcase_create("accounting tests");
 #endif
 
-  tcase_add_test(tc_basic, test_nul_byte);
-  tcase_add_test(tc_basic, test_u0000_char);
-  tcase_add_test(tc_basic, test_siphash_self);
-  tcase_add_test(tc_basic, test_siphash_spec);
-  tcase_add_test(tc_basic, test_bom_utf8);
-  tcase_add_test(tc_basic, test_bom_utf16_be);
-  tcase_add_test(tc_basic, test_bom_utf16_le);
-  tcase_add_test(tc_basic, test_nobom_utf16_le);
   tcase_add_test(tc_basic, test_illegal_utf8);
   tcase_add_test(tc_basic, test_utf8_auto_align);
   tcase_add_test(tc_basic, test_utf16);
