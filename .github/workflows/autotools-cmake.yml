@@ -119,18 +119,6 @@ jobs:
         set -x
         cd expat/expat-*.*.*/
 
-        if [[ "${{ matrix.configure_args }}" == *mingw* ]]; then
-          # There is one known difference between Autotools and CMake for MinGW:
-          #   Autotools: usr/local/bin/libexpat-<major>.dll
-          #   CMake:     usr/local/bin/libexpat.dll
-          # We patch the Autotools side in line here to get the differ below to empty.
-          mv build_autotools/ROOT/usr/local/bin/libexpat{-*,}.dll
-          ( cd build_autotools/ROOT/usr/local/lib*/cmake/expat-*/ \
-              && sed 's,libexpat-[0-9]\+\.dll,libexpat.dll,g' expat-noconfig.cmake > expat-noconfig-patched.cmake \
-              && ! diff -u0 expat-noconfig{,-patched}.cmake \
-              && mv expat-noconfig{-patched,}.cmake )
-        fi
-
         if [[ "${{ runner.os }}" == macOS ]]; then
           # Autotools' LT_LIB_M has a hardcoded exclude for "*-*-darwin*" hosts,
           # while macOS does have libm and is successfully found by CMake.
@@ -145,7 +133,7 @@ jobs:
             --exclude=xmlwf \
             --exclude=xmlwf.exe \
             --exclude=libexpat.a \
-            --exclude=libexpat.dll \
+            --exclude=libexpat-*.dll \
             --exclude=libexpat.dll.a \
             --exclude=libexpat.la \
             --exclude=libexpat.so\* \

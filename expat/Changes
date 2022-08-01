@@ -12,6 +12,9 @@ Release x.x.x xxx xxxxx xx xxxx
        #512 #621  Windows|CMake: Render .def file from a template to fix
                     linking with -DEXPAT_DTD=OFF and/or -DEXPAT_ATTR_INFO=ON
        #611 #621  MinGW|CMake: Apply MSVC .def file when linking
+       #622 #624  MinGW|CMake: Sync library name with GNU Autotools,
+                    i.e. produce libexpat-1.dll rather than libexpat.dll
+                    by default.  Filename libexpat.dll.a is unaffected.
             #620  CMake: Make documentation on variables a bit more consistent
             #610  Address Cppcheck 2.8.1 warning
 
@@ -21,6 +24,7 @@ Release x.x.x xxx xxxxx xx xxxx
         Special thanks to:
             David Faure
             Rosen Penev
+            Vincent Torri
 
 Release 2.4.8 Mon March 28 2022
         Other changes:
