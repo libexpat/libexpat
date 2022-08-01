@@ -66,6 +66,26 @@ start_element_event_handler(void *userData, const XML_Char *name,
 extern void XMLCALL
 end_element_event_handler(void *userData, const XML_Char *name);
 
+typedef struct attrInfo {
+  const XML_Char *name;
+  const XML_Char *value;
+} AttrInfo;
+
+typedef struct elementInfo {
+  const XML_Char *name;
+  int attr_count;
+  const XML_Char *id_name;
+  AttrInfo *attributes;
+} ElementInfo;
+
+/* This handler expects to be called with an ElementInfo pointer as its
+ * user data, containing details of all the attributes and their values.
+ * There is additional checking for the ID attribute, if present.
+ */
+extern void XMLCALL
+counting_start_element_handler(void *userData, const XML_Char *name,
+                               const XML_Char **atts);
+
 /* Do-nothing handler for the text encoding named "unsupported-encoding" */
 extern int XMLCALL
 UnknownEncodingHandler(void *data, const XML_Char *encoding,

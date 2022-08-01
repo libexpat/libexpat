@@ -85,6 +85,62 @@ end_element_event_handler(void *userData, const XML_Char *name) {
   CharData_AppendXMLChars(storage, name, -1);
 }
 
+/* Element handler checking attributes */
+
+void XMLCALL
+counting_start_element_handler(void *userData, const XML_Char *name,
+                               const XML_Char **atts) {
+  ElementInfo *info = (ElementInfo *)userData;
+  AttrInfo *attr;
+  int count, id, i;
+
+  while (info->name != NULL) {
+    if (! xcstrcmp(name, info->name))
+      break;
+    info++;
+  }
+  if (info->name == NULL)
+    fail("Element not recognised");
+  /* The attribute count is twice what you might expect.  It is a
+   * count of items in atts, an array which contains alternating
+   * attribute names and attribute values.  For the naive user this
+   * is possibly a little unexpected, but it is what the
+   * documentation in expat.h tells us to expect.
+   */
+  count = XML_GetSpecifiedAttributeCount(g_parser);
+  if (info->attr_count * 2 != count) {
+    fail("Not got expected attribute count");
+    return;
+  }
+  id = XML_GetIdAttributeIndex(g_parser);
+  if (id == -1 && info->id_name != NULL) {
+    fail("ID not present");
+    return;
+  }
+  if (id != -1 && xcstrcmp(atts[id], info->id_name)) {
+    fail("ID does not have the correct name");
+    return;
+  }
+  for (i = 0; i < info->attr_count; i++) {
+    attr = info->attributes;
+    while (attr->name != NULL) {
+      if (! xcstrcmp(atts[0], attr->name))
+        break;
+      attr++;
+    }
+    if (attr->name == NULL) {
+      fail("Attribute not recognised");
+      return;
+    }
+    if (xcstrcmp(atts[1], attr->value)) {
+      fail("Attribute has wrong value");
+      return;
+    }
+    /* Remember, two entries in atts per attribute (see above) */
+    atts += 2;
+  }
+}
+
 /* Text encoding handlers */
 
 int XMLCALL
