@@ -45,6 +45,7 @@
 
 #include "expat.h"
 #include "minicheck.h"
+#include "chardata.h"
 #include "common.h"
 #include "siphash.h"
 #include "basic_tests.h"

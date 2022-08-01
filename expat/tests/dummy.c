@@ -43,6 +43,7 @@
 #include "expat.h"
 #include "internal.h"  /* For UNUSED_P() */
 #include "minicheck.h"
+#include "chardata.h"
 #include "common.h"
 #include "dummy.h"
 
