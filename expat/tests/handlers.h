@@ -85,7 +85,7 @@ unknown_released_encoding_handler(void *data, const XML_Char *encoding,
  *
  * This handler expects to be passed an ExtTest structure (see common.h) as
  * its user data.  If the "encoding" field is not NULL, it will set the
- * external entity parser's encoding to that name.  Then is parses the
+ * external entity parser's encoding to that name.  Then it parses the
  * text pointed to by the "parse_text" field and returns success or failure.
  */
 extern int XMLCALL
@@ -93,7 +93,24 @@ external_entity_loader(XML_Parser parser, const XML_Char *context,
                        const XML_Char *base, const XML_Char *systemId,
                        const XML_Char *publicId);
 
+typedef struct ext_faults {
+  const char *parse_text;
+  const char *fail_text;
+  const XML_Char *encoding;
+  enum XML_Error error;
+} ExtFaults;
 
+/* This handler expects to be passed an ExtFaults structure as its user
+ * data.  If the "encoding" field is not NULL, it will set the external
+ * entity parser's encoding to that name.  Then it parses the text pointed
+ * to by the "parse_text" field.  The parse is expected to fail with the
+ * error code in the "error" field.  If the parse succeeds, the test will be
+ * failed with the message given in "fail_text".
+ */
+int XMLCALL
+external_entity_faulter(XML_Parser parser, const XML_Char *context,
+                        const XML_Char *base, const XML_Char *systemId,
+                        const XML_Char *publicId);
 
 #endif /* XML_HANDLERS_H */
 

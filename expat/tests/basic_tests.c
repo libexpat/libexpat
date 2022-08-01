@@ -918,6 +918,128 @@ START_TEST(test_ext_entity_set_bom) {
 }
 END_TEST
 
+/* Test that bad encodings are faulted */
+START_TEST(test_ext_entity_bad_encoding) {
+  const char *text = "<!DOCTYPE doc [\n"
+                     "  <!ENTITY en SYSTEM 'http://example.org/dummy.ent'>\n"
+                     "]>\n"
+                     "<doc>&en;</doc>";
+  ExtFaults fault
+      = {"<?xml encoding='iso-8859-3'?>u", "Unsupported encoding not faulted",
+         XCS("unknown"), XML_ERROR_UNKNOWN_ENCODING};
+
+  XML_SetExternalEntityRefHandler(g_parser, external_entity_faulter);
+  XML_SetUserData(g_parser, &fault);
+  expect_failure(text, XML_ERROR_EXTERNAL_ENTITY_HANDLING,
+                 "Bad encoding should not have been accepted");
+}
+END_TEST
+
+/* Try handing an invalid encoding to an external entity parser */
+START_TEST(test_ext_entity_bad_encoding_2) {
+  const char *text = "<?xml version='1.0' encoding='us-ascii'?>\n"
+                     "<!DOCTYPE doc SYSTEM 'foo'>\n"
+                     "<doc>&entity;</doc>";
+  ExtFaults fault
+      = {"<!ELEMENT doc (#PCDATA)*>", "Unknown encoding not faulted",
+         XCS("unknown-encoding"), XML_ERROR_UNKNOWN_ENCODING};
+
+  XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+  XML_SetExternalEntityRefHandler(g_parser, external_entity_faulter);
+  XML_SetUserData(g_parser, &fault);
+  expect_failure(text, XML_ERROR_EXTERNAL_ENTITY_HANDLING,
+                 "Bad encoding not faulted in external entity handler");
+}
+END_TEST
+
+/* Test that no error is reported for unknown entities if we don't
+   read an external subset.  This was fixed in Expat 1.95.5.
+*/
+START_TEST(test_wfc_undeclared_entity_unread_external_subset) {
+  const char *text = "<!DOCTYPE doc SYSTEM 'foo'>\n"
+                     "<doc>&entity;</doc>";
+
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+      == XML_STATUS_ERROR)
+    xml_failure(g_parser);
+}
+END_TEST
+
+/* Test that an error is reported for unknown entities if we don't
+   have an external subset.
+*/
+START_TEST(test_wfc_undeclared_entity_no_external_subset) {
+  expect_failure("<doc>&entity;</doc>", XML_ERROR_UNDEFINED_ENTITY,
+                 "Parser did not report undefined entity w/out a DTD.");
+}
+END_TEST
+
+/* Test that an error is reported for unknown entities if we don't
+   read an external subset, but have been declared standalone.
+*/
+START_TEST(test_wfc_undeclared_entity_standalone) {
+  const char *text
+      = "<?xml version='1.0' encoding='us-ascii' standalone='yes'?>\n"
+        "<!DOCTYPE doc SYSTEM 'foo'>\n"
+        "<doc>&entity;</doc>";
+
+  expect_failure(text, XML_ERROR_UNDEFINED_ENTITY,
+                 "Parser did not report undefined entity (standalone).");
+}
+END_TEST
+
+/* Test that an error is reported for unknown entities if we have read
+   an external subset, and standalone is true.
+*/
+START_TEST(test_wfc_undeclared_entity_with_external_subset_standalone) {
+  const char *text
+      = "<?xml version='1.0' encoding='us-ascii' standalone='yes'?>\n"
+        "<!DOCTYPE doc SYSTEM 'foo'>\n"
+        "<doc>&entity;</doc>";
+  ExtTest test_data = {"<!ELEMENT doc (#PCDATA)*>", NULL, NULL};
+
+  XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+  XML_SetUserData(g_parser, &test_data);
+  XML_SetExternalEntityRefHandler(g_parser, external_entity_loader);
+  expect_failure(text, XML_ERROR_UNDEFINED_ENTITY,
+                 "Parser did not report undefined entity (external DTD).");
+}
+END_TEST
+
+/* Test that external entity handling is not done if the parsing flag
+ * is set to UNLESS_STANDALONE
+ */
+START_TEST(test_entity_with_external_subset_unless_standalone) {
+  const char *text
+      = "<?xml version='1.0' encoding='us-ascii' standalone='yes'?>\n"
+        "<!DOCTYPE doc SYSTEM 'foo'>\n"
+        "<doc>&entity;</doc>";
+  ExtTest test_data = {"<!ENTITY entity 'bar'>", NULL, NULL};
+
+  XML_SetParamEntityParsing(g_parser,
+                            XML_PARAM_ENTITY_PARSING_UNLESS_STANDALONE);
+  XML_SetUserData(g_parser, &test_data);
+  XML_SetExternalEntityRefHandler(g_parser, external_entity_loader);
+  expect_failure(text, XML_ERROR_UNDEFINED_ENTITY,
+                 "Parser did not report undefined entity");
+}
+END_TEST
+
+/* Test that no error is reported for unknown entities if we have read
+   an external subset, and standalone is false.
+*/
+START_TEST(test_wfc_undeclared_entity_with_external_subset) {
+  const char *text = "<?xml version='1.0' encoding='us-ascii'?>\n"
+                     "<!DOCTYPE doc SYSTEM 'foo'>\n"
+                     "<doc>&entity;</doc>";
+  ExtTest test_data = {"<!ELEMENT doc (#PCDATA)*>", NULL, NULL};
+
+  XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+  XML_SetExternalEntityRefHandler(g_parser, external_entity_loader);
+  run_ext_character_check(text, &test_data, XCS(""));
+}
+END_TEST
+
 TCase *
 make_basic_test_case(Suite *s) {
   TCase *tc_basic = tcase_create("basic tests");
@@ -968,6 +1090,15 @@ make_basic_test_case(Suite *s) {
   tcase_add_test__ifdef_xml_dtd(tc_basic, test_ext_entity_set_encoding);
   tcase_add_test__ifdef_xml_dtd(tc_basic, test_ext_entity_no_handler);
   tcase_add_test__ifdef_xml_dtd(tc_basic, test_ext_entity_set_bom);
+  tcase_add_test__ifdef_xml_dtd(tc_basic, test_ext_entity_bad_encoding);
+  tcase_add_test__ifdef_xml_dtd(tc_basic, test_ext_entity_bad_encoding_2);
+  tcase_add_test(tc_basic, test_wfc_undeclared_entity_unread_external_subset);
+  tcase_add_test(tc_basic, test_wfc_undeclared_entity_no_external_subset);
+  tcase_add_test(tc_basic, test_wfc_undeclared_entity_standalone);
+  tcase_add_test(tc_basic,
+                 test_wfc_undeclared_entity_with_external_subset_standalone);
+  tcase_add_test(tc_basic, test_entity_with_external_subset_unless_standalone);
+  tcase_add_test(tc_basic, test_wfc_undeclared_entity_with_external_subset);
 
   return tc_basic;
 }
