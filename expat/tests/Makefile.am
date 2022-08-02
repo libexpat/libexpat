@@ -72,6 +72,7 @@ EXTRA_DIST = \
     common.h \
     dummy.h \
     handlers.h \
+    basic_tests.h \
     README.txt \
     udiffer.py \
     xmltest.log.expected \
