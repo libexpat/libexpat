@@ -98,48 +98,6 @@ testhelper_is_whitespace_normalized(void) {
   assert(! is_whitespace_normalized(XCS("abc\t def"), 1));
 }
 
-/* Test handling of trailing square bracket */
-START_TEST(test_trailing_rsqb) {
-  const char *text8 = "<doc>]";
-  const char text16[] = "\xFF\xFE<\000d\000o\000c\000>\000]\000";
-  int found_rsqb;
-  int text8_len = (int)strlen(text8);
-
-  XML_SetCharacterDataHandler(g_parser, rsqb_handler);
-  XML_SetUserData(g_parser, &found_rsqb);
-  found_rsqb = 0;
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text8, text8_len, XML_TRUE)
-      == XML_STATUS_OK)
-    fail("Failed to fault unclosed doc");
-  if (found_rsqb == 0)
-    fail("Did not catch the right square bracket");
-
-  /* Try again with a different encoding */
-  XML_ParserReset(g_parser, NULL);
-  XML_SetCharacterDataHandler(g_parser, rsqb_handler);
-  XML_SetUserData(g_parser, &found_rsqb);
-  found_rsqb = 0;
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text16, (int)sizeof(text16) - 1,
-                              XML_TRUE)
-      == XML_STATUS_OK)
-    fail("Failed to fault unclosed doc");
-  if (found_rsqb == 0)
-    fail("Did not catch the right square bracket");
-
-  /* And finally with a default handler */
-  XML_ParserReset(g_parser, NULL);
-  XML_SetDefaultHandler(g_parser, rsqb_handler);
-  XML_SetUserData(g_parser, &found_rsqb);
-  found_rsqb = 0;
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text16, (int)sizeof(text16) - 1,
-                              XML_TRUE)
-      == XML_STATUS_OK)
-    fail("Failed to fault unclosed doc");
-  if (found_rsqb == 0)
-    fail("Did not catch the right square bracket");
-}
-END_TEST
-
 /* Test trailing right square bracket in an external entity parse */
 static int XMLCALL
 external_entity_rsqb_catcher(XML_Parser parser, const XML_Char *context,
@@ -8440,7 +8398,6 @@ make_suite(void) {
   TCase *tc_accounting = tcase_create("accounting tests");
 #endif
 
-  tcase_add_test(tc_basic, test_trailing_rsqb);
   tcase_add_test(tc_basic, test_ext_entity_trailing_rsqb);
   tcase_add_test(tc_basic, test_ext_entity_good_cdata);
   tcase_add_test__ifdef_xml_dtd(tc_basic, test_user_parameters);
