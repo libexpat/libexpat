@@ -2476,6 +2476,46 @@ START_TEST(test_ext_entity_good_cdata) {
 }
 END_TEST
 
+/* Test user parameter settings */
+START_TEST(test_user_parameters) {
+  const char *text = "<?xml version='1.0' encoding='us-ascii'?>\n"
+                     "<!-- Primary parse -->\n"
+                     "<!DOCTYPE doc SYSTEM 'foo'>\n"
+                     "<doc>&entity;";
+  const char *epilog = "<!-- Back to primary parser -->\n"
+                       "</doc>";
+
+  g_comment_count = 0;
+  g_skip_count = 0;
+  g_xdecl_count = 0;
+  XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+  XML_SetXmlDeclHandler(g_parser, xml_decl_handler);
+  XML_SetExternalEntityRefHandler(g_parser, external_entity_param_checker);
+  XML_SetCommentHandler(g_parser, data_check_comment_handler);
+  XML_SetSkippedEntityHandler(g_parser, param_check_skip_handler);
+  XML_UseParserAsHandlerArg(g_parser);
+  XML_SetUserData(g_parser, (void *)1);
+  g_handler_data = g_parser;
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_FALSE)
+      == XML_STATUS_ERROR)
+    xml_failure(g_parser);
+  if (g_comment_count != 2)
+    fail("Comment handler not invoked enough times");
+  /* Ensure we can't change policy mid-parse */
+  if (XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_NEVER))
+    fail("Changed param entity parsing policy while parsing");
+  if (_XML_Parse_SINGLE_BYTES(g_parser, epilog, (int)strlen(epilog), XML_TRUE)
+      == XML_STATUS_ERROR)
+    xml_failure(g_parser);
+  if (g_comment_count != 3)
+    fail("Comment handler not invoked enough times");
+  if (g_skip_count != 1)
+    fail("Skip handler not invoked enough times");
+  if (g_xdecl_count != 1)
+    fail("XML declaration handler not invoked");
+}
+END_TEST
+
 TCase *
 make_basic_test_case(Suite *s) {
   TCase *tc_basic = tcase_create("basic tests");
@@ -2586,6 +2626,7 @@ make_basic_test_case(Suite *s) {
   tcase_add_test(tc_basic, test_trailing_rsqb);
   tcase_add_test(tc_basic, test_ext_entity_trailing_rsqb);
   tcase_add_test(tc_basic, test_ext_entity_good_cdata);
+  tcase_add_test__ifdef_xml_dtd(tc_basic, test_user_parameters);
 
   return tc_basic;
 }
