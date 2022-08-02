@@ -174,6 +174,18 @@ extern int XMLCALL external_entity_bad_cr_catcher(XML_Parser parser,
                                                   const XML_Char *systemId,
                                                   const XML_Char *publicId);
 
+extern int XMLCALL external_entity_rsqb_catcher(XML_Parser parser,
+                                                const XML_Char *context,
+                                                const XML_Char *base,
+                                                const XML_Char *systemId,
+                                                const XML_Char *publicId);
+
+extern int XMLCALL external_entity_good_cdata_ascii(XML_Parser parser,
+                                                    const XML_Char *context,
+                                                    const XML_Char *base,
+                                                    const XML_Char *systemId,
+                                                    const XML_Char *publicId);
+
 /* Declaration handlers for entity declarations */
 extern void XMLCALL entity_suspending_decl_handler(void *userData,
                                                    const XML_Char *name,

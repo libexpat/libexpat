@@ -99,29 +99,6 @@ testhelper_is_whitespace_normalized(void) {
 }
 
 /* Test trailing right square bracket in an external entity parse */
-static int XMLCALL
-external_entity_rsqb_catcher(XML_Parser parser, const XML_Char *context,
-                             const XML_Char *base, const XML_Char *systemId,
-                             const XML_Char *publicId) {
-  const char *text = "<tag>]";
-  XML_Parser ext_parser;
-
-  UNUSED_P(base);
-  UNUSED_P(systemId);
-  UNUSED_P(publicId);
-  ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
-  if (ext_parser == NULL)
-    fail("Could not create external entity parser");
-  XML_SetCharacterDataHandler(ext_parser, rsqb_handler);
-  if (_XML_Parse_SINGLE_BYTES(ext_parser, text, (int)strlen(text), XML_TRUE)
-      != XML_STATUS_ERROR)
-    fail("Async entity error not caught");
-  if (XML_GetErrorCode(ext_parser) != XML_ERROR_ASYNC_ENTITY)
-    xml_failure(ext_parser);
-  XML_ParserFree(ext_parser);
-  return XML_STATUS_OK;
-}
-
 START_TEST(test_ext_entity_trailing_rsqb) {
   const char *text = "<!DOCTYPE doc [\n"
                      "  <!ENTITY en SYSTEM 'http://example.org/dummy.ent'>\n"
@@ -142,34 +119,6 @@ START_TEST(test_ext_entity_trailing_rsqb) {
 END_TEST
 
 /* Test CDATA handling in an external entity */
-static int XMLCALL
-external_entity_good_cdata_ascii(XML_Parser parser, const XML_Char *context,
-                                 const XML_Char *base, const XML_Char *systemId,
-                                 const XML_Char *publicId) {
-  const char *text = "<a><![CDATA[<greeting>Hello, world!</greeting>]]></a>";
-  const XML_Char *expected = XCS("<greeting>Hello, world!</greeting>");
-  CharData storage;
-  XML_Parser ext_parser;
-
-  UNUSED_P(base);
-  UNUSED_P(systemId);
-  UNUSED_P(publicId);
-  CharData_Init(&storage);
-  ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
-  if (ext_parser == NULL)
-    fail("Could not create external entity parser");
-  XML_SetUserData(ext_parser, &storage);
-  XML_SetCharacterDataHandler(ext_parser, accumulate_characters);
-
-  if (_XML_Parse_SINGLE_BYTES(ext_parser, text, (int)strlen(text), XML_TRUE)
-      == XML_STATUS_ERROR)
-    xml_failure(ext_parser);
-  CharData_CheckXMLChars(&storage, expected);
-
-  XML_ParserFree(ext_parser);
-  return XML_STATUS_OK;
-}
-
 START_TEST(test_ext_entity_good_cdata) {
   const char *text = "<!DOCTYPE doc [\n"
                      "  <!ENTITY en SYSTEM 'http://example.org/dummy.ent'>\n"
