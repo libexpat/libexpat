@@ -521,6 +521,14 @@ cr_cdata_handler(void *userData, const XML_Char *s, int len) {
     *pfound = 1;
 }
 
+void XMLCALL
+rsqb_handler(void *userData, const XML_Char *s, int len) {
+  int *pfound = (int *)userData;
+
+  if (len == 1 && *s == XCS(']'))
+    *pfound = 1;
+}
+
 /* Handlers that record their invocation by single characters */
 
 void XMLCALL

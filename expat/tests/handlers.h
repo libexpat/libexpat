@@ -223,6 +223,9 @@ extern void parser_stop_character_handler(void *userData, const XML_Char *s,
 extern void XMLCALL cr_cdata_handler(void *userData, const XML_Char *s,
                                      int len);
 
+/* This handler waits for a single right square bracket */
+extern void XMLCALL rsqb_handler(void *userData, const XML_Char *s, int len);
+
 /* Handlers that record invocation with a single character.  They expect
  * to be called with a CharData pointer as their user data.
  */

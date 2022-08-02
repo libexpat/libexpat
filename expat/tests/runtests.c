@@ -99,14 +99,6 @@ testhelper_is_whitespace_normalized(void) {
 }
 
 /* Test handling of trailing square bracket */
-static void XMLCALL
-rsqb_handler(void *userData, const XML_Char *s, int len) {
-  int *pfound = (int *)userData;
-
-  if (len == 1 && *s == XCS(']'))
-    *pfound = 1;
-}
-
 START_TEST(test_trailing_rsqb) {
   const char *text8 = "<doc>]";
   const char text16[] = "\xFF\xFE<\000d\000o\000c\000>\000]\000";
