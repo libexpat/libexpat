@@ -2900,6 +2900,50 @@ START_TEST(test_bad_ignore_section) {
 }
 END_TEST
 
+/* Test recursive parsing */
+START_TEST(test_external_entity_values) {
+  const char *text = "<!DOCTYPE doc SYSTEM '004-1.ent'>\n"
+                     "<doc></doc>\n";
+  ExtFaults data_004_2[] = {
+      {"<!ATTLIST doc a1 CDATA 'value'>", NULL, NULL, XML_ERROR_NONE},
+      {"<!ATTLIST $doc a1 CDATA 'value'>", "Invalid token not faulted", NULL,
+       XML_ERROR_INVALID_TOKEN},
+      {"'wombat", "Unterminated string not faulted", NULL,
+       XML_ERROR_UNCLOSED_TOKEN},
+      {"\xe2\x82", "Partial UTF-8 character not faulted", NULL,
+       XML_ERROR_PARTIAL_CHAR},
+      {"<?xml version='1.0' encoding='utf-8'?>\n", NULL, NULL, XML_ERROR_NONE},
+      {"<?xml?>", "Malformed XML declaration not faulted", NULL,
+       XML_ERROR_XML_DECL},
+      {/* UTF-8 BOM */
+       "\xEF\xBB\xBF<!ATTLIST doc a1 CDATA 'value'>", NULL, NULL,
+       XML_ERROR_NONE},
+      {"<?xml version='1.0' encoding='utf-8'?>\n$",
+       "Invalid token after text declaration not faulted", NULL,
+       XML_ERROR_INVALID_TOKEN},
+      {"<?xml version='1.0' encoding='utf-8'?>\n'wombat",
+       "Unterminated string after text decl not faulted", NULL,
+       XML_ERROR_UNCLOSED_TOKEN},
+      {"<?xml version='1.0' encoding='utf-8'?>\n\xe2\x82",
+       "Partial UTF-8 character after text decl not faulted", NULL,
+       XML_ERROR_PARTIAL_CHAR},
+      {"%e1;", "Recursive parameter entity not faulted", NULL,
+       XML_ERROR_RECURSIVE_ENTITY_REF},
+      {NULL, NULL, NULL, XML_ERROR_NONE}};
+  int i;
+
+  for (i = 0; data_004_2[i].parse_text != NULL; i++) {
+    XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+    XML_SetExternalEntityRefHandler(g_parser, external_entity_valuer);
+    XML_SetUserData(g_parser, &data_004_2[i]);
+    if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+        == XML_STATUS_ERROR)
+      xml_failure(g_parser);
+    XML_ParserReset(g_parser, NULL);
+  }
+}
+END_TEST
+
 TCase *
 make_basic_test_case(Suite *s) {
   TCase *tc_basic = tcase_create("basic tests");
@@ -3028,6 +3072,7 @@ make_basic_test_case(Suite *s) {
   tcase_add_test__ifdef_xml_dtd(tc_basic, test_ignore_section_utf16);
   tcase_add_test__ifdef_xml_dtd(tc_basic, test_ignore_section_utf16_be);
   tcase_add_test__ifdef_xml_dtd(tc_basic, test_bad_ignore_section);
+  tcase_add_test__ifdef_xml_dtd(tc_basic, test_external_entity_values);
 
   return tc_basic;
 }
