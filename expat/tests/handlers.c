@@ -41,6 +41,7 @@
 */
 
 #include <string.h>
+#include <assert.h>
 
 #include "expat.h"
 #include "internal.h"  /* For UNUSED_P() */
@@ -320,6 +321,43 @@ external_entity_suspend_xmldecl(XML_Parser parser, const XML_Char *context,
 
   XML_ParserFree(ext_parser);
   return XML_STATUS_OK;
+}
+
+int XMLCALL
+external_entity_suspending_faulter(XML_Parser parser, const XML_Char *context,
+                                   const XML_Char *base,
+                                   const XML_Char *systemId,
+                                   const XML_Char *publicId) {
+  XML_Parser ext_parser;
+  ExtFaults *fault = (ExtFaults *)XML_GetUserData(parser);
+  void *buffer;
+  int parse_len = (int)strlen(fault->parse_text);
+
+  UNUSED_P(base);
+  UNUSED_P(systemId);
+  UNUSED_P(publicId);
+  ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
+  if (ext_parser == NULL)
+    fail("Could not create external entity parser");
+  XML_SetXmlDeclHandler(ext_parser, entity_suspending_xdecl_handler);
+  XML_SetUserData(ext_parser, ext_parser);
+  g_resumable = XML_TRUE;
+  buffer = XML_GetBuffer(ext_parser, parse_len);
+  if (buffer == NULL)
+    fail("Could not allocate parse buffer");
+  assert(buffer != NULL);
+  memcpy(buffer, fault->parse_text, parse_len);
+  if (XML_ParseBuffer(ext_parser, parse_len, XML_FALSE) != XML_STATUS_SUSPENDED)
+    fail("XML declaration did not suspend");
+  if (XML_ResumeParser(ext_parser) != XML_STATUS_OK)
+    xml_failure(ext_parser);
+  if (XML_ParseBuffer(ext_parser, 0, XML_TRUE) != XML_STATUS_ERROR)
+    fail(fault->fail_text);
+  if (XML_GetErrorCode(ext_parser) != fault->error)
+    xml_failure(ext_parser);
+
+  XML_ParserFree(ext_parser);
+  return XML_STATUS_ERROR;
 }
 
 /* Entity declaration handlers
