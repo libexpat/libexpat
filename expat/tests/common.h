@@ -77,6 +77,7 @@ extern "C" {
 
 extern const char *long_character_data_text;
 extern const char *long_cdata_text;
+extern const char *get_buffer_test_text;
 
 extern XML_Parser g_parser;
 

@@ -98,6 +98,35 @@ const char *long_cdata_text
       "012345678901234567890123456789012345678901234567890123456789"
       "]]></s>";
 
+/* Having an element name longer than 1024 characters exercises some
+ * of the pool allocation code in the parser that otherwise does not
+ * get executed.  The count at the end of the line is the number of
+ * characters (bytes) in the element name by that point.x
+ */
+const char *get_buffer_test_text
+    = "<documentwitharidiculouslylongelementnametotease"  /* 0x030 */
+      "aparticularcorneroftheallocationinXML_GetBuffers"  /* 0x060 */
+      "othatwecanimprovethecoverageyetagain012345678901"  /* 0x090 */
+      "123456789abcdef0123456789abcdef0123456789abcdef0"  /* 0x0c0 */
+      "123456789abcdef0123456789abcdef0123456789abcdef0"  /* 0x0f0 */
+      "123456789abcdef0123456789abcdef0123456789abcdef0"  /* 0x120 */
+      "123456789abcdef0123456789abcdef0123456789abcdef0"  /* 0x150 */
+      "123456789abcdef0123456789abcdef0123456789abcdef0"  /* 0x180 */
+      "123456789abcdef0123456789abcdef0123456789abcdef0"  /* 0x1b0 */
+      "123456789abcdef0123456789abcdef0123456789abcdef0"  /* 0x1e0 */
+      "123456789abcdef0123456789abcdef0123456789abcdef0"  /* 0x210 */
+      "123456789abcdef0123456789abcdef0123456789abcdef0"  /* 0x240 */
+      "123456789abcdef0123456789abcdef0123456789abcdef0"  /* 0x270 */
+      "123456789abcdef0123456789abcdef0123456789abcdef0"  /* 0x2a0 */
+      "123456789abcdef0123456789abcdef0123456789abcdef0"  /* 0x2d0 */
+      "123456789abcdef0123456789abcdef0123456789abcdef0"  /* 0x300 */
+      "123456789abcdef0123456789abcdef0123456789abcdef0"  /* 0x330 */
+      "123456789abcdef0123456789abcdef0123456789abcdef0"  /* 0x360 */
+      "123456789abcdef0123456789abcdef0123456789abcdef0"  /* 0x390 */
+      "123456789abcdef0123456789abcdef0123456789abcdef0"  /* 0x3c0 */
+      "123456789abcdef0123456789abcdef0123456789abcdef0"  /* 0x3f0 */
+      "123456789abcdef0123456789abcdef0123456789>\n<ef0"; /* 0x420 */
+
 /* Test control globals */
 
 /* Used as the "resumable" parameter to XML_StopParser for some tests */
