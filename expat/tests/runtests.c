@@ -103,45 +103,6 @@ testhelper_is_whitespace_normalized(void) {
 
 
 /* Test suspending a subordinate parser */
-
-static void XMLCALL
-entity_suspending_decl_handler(void *userData, const XML_Char *name,
-                               XML_Content *model) {
-  XML_Parser ext_parser = (XML_Parser)userData;
-
-  UNUSED_P(name);
-  if (XML_StopParser(ext_parser, XML_TRUE) != XML_STATUS_ERROR)
-    fail("Attempting to suspend a subordinate parser not faulted");
-  if (XML_GetErrorCode(ext_parser) != XML_ERROR_SUSPEND_PE)
-    fail("Suspending subordinate parser get wrong code");
-  XML_SetElementDeclHandler(ext_parser, NULL);
-  XML_FreeContentModel(g_parser, model);
-}
-
-static int XMLCALL
-external_entity_suspender(XML_Parser parser, const XML_Char *context,
-                          const XML_Char *base, const XML_Char *systemId,
-                          const XML_Char *publicId) {
-  const char *text = "<!ELEMENT doc (#PCDATA)*>";
-  XML_Parser ext_parser;
-
-  UNUSED_P(base);
-  UNUSED_P(systemId);
-  UNUSED_P(publicId);
-  ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
-  if (ext_parser == NULL)
-    fail("Could not create external entity parser");
-  XML_SetElementDeclHandler(ext_parser, entity_suspending_decl_handler);
-  XML_SetUserData(ext_parser, ext_parser);
-  if (_XML_Parse_SINGLE_BYTES(ext_parser, text, (int)strlen(text), XML_TRUE)
-      == XML_STATUS_ERROR) {
-    xml_failure(ext_parser);
-    return XML_STATUS_ERROR;
-  }
-  XML_ParserFree(ext_parser);
-  return XML_STATUS_OK;
-}
-
 START_TEST(test_subordinate_suspend) {
   const char *text = "<?xml version='1.0' encoding='us-ascii'?>\n"
                      "<!DOCTYPE doc SYSTEM 'foo'>\n"
