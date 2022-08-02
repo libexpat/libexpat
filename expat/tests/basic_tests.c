@@ -2768,6 +2768,57 @@ START_TEST(test_predefined_entities) {
 }
 END_TEST
 
+START_TEST(test_invalid_tag_in_dtd) {
+  const char *text = "<!DOCTYPE doc SYSTEM '004-1.ent'>\n"
+                     "<doc></doc>\n";
+
+  XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+  XML_SetExternalEntityRefHandler(g_parser, external_entity_param);
+  expect_failure(text, XML_ERROR_EXTERNAL_ENTITY_HANDLING,
+                 "Invalid tag IN DTD external param not rejected");
+}
+END_TEST
+
+/* Test entities not quite the predefined ones are not mis-recognised */
+START_TEST(test_not_predefined_entities) {
+  const char *text[] = {"<doc>&pt;</doc>", "<doc>&amo;</doc>",
+                        "<doc>&quid;</doc>", "<doc>&apod;</doc>", NULL};
+  int i = 0;
+
+  while (text[i] != NULL) {
+    expect_failure(text[i], XML_ERROR_UNDEFINED_ENTITY,
+                   "Undefined entity not rejected");
+    XML_ParserReset(g_parser, NULL);
+    i++;
+  }
+}
+END_TEST
+
+/* Test conditional inclusion (IGNORE) */
+START_TEST(test_ignore_section) {
+  const char *text = "<!DOCTYPE doc SYSTEM 'foo'>\n"
+                     "<doc><e>&entity;</e></doc>";
+  const XML_Char *expected
+      = XCS("<![IGNORE[<!ELEMENT e (#PCDATA)*>]]>\n&entity;");
+  CharData storage;
+
+  CharData_Init(&storage);
+  XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+  XML_SetUserData(g_parser, &storage);
+  XML_SetExternalEntityRefHandler(g_parser, external_entity_load_ignore);
+  XML_SetDefaultHandler(g_parser, accumulate_characters);
+  XML_SetStartDoctypeDeclHandler(g_parser, dummy_start_doctype_handler);
+  XML_SetEndDoctypeDeclHandler(g_parser, dummy_end_doctype_handler);
+  XML_SetElementDeclHandler(g_parser, dummy_element_decl_handler);
+  XML_SetStartElementHandler(g_parser, dummy_start_element);
+  XML_SetEndElementHandler(g_parser, dummy_end_element);
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+      == XML_STATUS_ERROR)
+    xml_failure(g_parser);
+  CharData_CheckXMLChars(&storage, expected);
+}
+END_TEST
+
 TCase *
 make_basic_test_case(Suite *s) {
   TCase *tc_basic = tcase_create("basic tests");
@@ -2890,6 +2941,9 @@ make_basic_test_case(Suite *s) {
   tcase_add_test(tc_basic, test_byte_info_at_error);
   tcase_add_test(tc_basic, test_byte_info_at_cdata);
   tcase_add_test(tc_basic, test_predefined_entities);
+  tcase_add_test__ifdef_xml_dtd(tc_basic, test_invalid_tag_in_dtd);
+  tcase_add_test(tc_basic, test_not_predefined_entities);
+  tcase_add_test__ifdef_xml_dtd(tc_basic, test_ignore_section);
 
   return tc_basic;
 }

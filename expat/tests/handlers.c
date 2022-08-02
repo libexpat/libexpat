@@ -554,6 +554,76 @@ external_entity_ref_param_checker(XML_Parser parameter, const XML_Char *context,
   return XML_STATUS_OK;
 }
 
+/* Regression test that an invalid tag in an external parameter
+ * reference in an external DTD is correctly faulted.
+ *
+ * Only a few specific tags are legal in DTDs ignoring comments and
+ * processing instructions, all of which begin with an exclamation
+ * mark.  "<el/>" is not one of them, so the parser should raise an
+ * error on encountering it.
+ */
+int XMLCALL
+external_entity_param(XML_Parser parser, const XML_Char *context,
+                      const XML_Char *base, const XML_Char *systemId,
+                      const XML_Char *publicId) {
+  const char *text1 = "<!ELEMENT doc EMPTY>\n"
+                      "<!ENTITY % e1 SYSTEM '004-2.ent'>\n"
+                      "<!ENTITY % e2 '%e1;'>\n"
+                      "%e1;\n";
+  const char *text2 = "<!ELEMENT el EMPTY>\n"
+                      "<el/>\n";
+  XML_Parser ext_parser;
+
+  UNUSED_P(base);
+  UNUSED_P(publicId);
+  if (systemId == NULL)
+    return XML_STATUS_OK;
+
+  ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
+  if (ext_parser == NULL)
+    fail("Could not create external entity parser");
+
+  if (! xcstrcmp(systemId, XCS("004-1.ent"))) {
+    if (_XML_Parse_SINGLE_BYTES(ext_parser, text1, (int)strlen(text1), XML_TRUE)
+        != XML_STATUS_ERROR)
+      fail("Inner DTD with invalid tag not rejected");
+    if (XML_GetErrorCode(ext_parser) != XML_ERROR_EXTERNAL_ENTITY_HANDLING)
+      xml_failure(ext_parser);
+  } else if (! xcstrcmp(systemId, XCS("004-2.ent"))) {
+    if (_XML_Parse_SINGLE_BYTES(ext_parser, text2, (int)strlen(text2), XML_TRUE)
+        != XML_STATUS_ERROR)
+      fail("Invalid tag in external param not rejected");
+    if (XML_GetErrorCode(ext_parser) != XML_ERROR_SYNTAX)
+      xml_failure(ext_parser);
+  } else {
+    fail("Unknown system ID");
+  }
+
+  XML_ParserFree(ext_parser);
+  return XML_STATUS_ERROR;
+}
+
+int XMLCALL
+external_entity_load_ignore(XML_Parser parser, const XML_Char *context,
+                            const XML_Char *base, const XML_Char *systemId,
+                            const XML_Char *publicId) {
+  const char *text = "<![IGNORE[<!ELEMENT e (#PCDATA)*>]]>";
+  XML_Parser ext_parser;
+
+  UNUSED_P(base);
+  UNUSED_P(systemId);
+  UNUSED_P(publicId);
+  ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
+  if (ext_parser == NULL)
+    fail("Could not create external entity parser");
+  if (_XML_Parse_SINGLE_BYTES(ext_parser, text, (int)strlen(text), XML_TRUE)
+      == XML_STATUS_ERROR)
+    xml_failure(parser);
+
+  XML_ParserFree(ext_parser);
+  return XML_STATUS_OK;
+}
+
 /* NotStandalone handlers */
 
 int XMLCALL
