@@ -51,6 +51,16 @@
 #include "common.h"
 #include "handlers.h"
 
+/* Global variables for user parameter settings tests */
+/* Variable holding the expected handler userData */
+void *g_handler_data = NULL;
+/* Count of the number of times the comment handler has been invoked */
+int g_comment_count = 0;
+/* Count of the number of skipped entities */
+int g_skip_count = 0;
+/* Count of the number of times the XML declaration handler is invoked */
+int g_xdecl_count = 0;
+
 /* Element handlers recording structured data */
 
 void XMLCALL
@@ -486,6 +496,31 @@ entity_suspending_xdecl_handler(void *userData, const XML_Char *version,
   XML_SetXmlDeclHandler(ext_parser, NULL);
 }
 
+int XMLCALL
+external_entity_param_checker(XML_Parser parser, const XML_Char *context,
+                              const XML_Char *base, const XML_Char *systemId,
+                              const XML_Char *publicId) {
+  const char *text = "<!-- Subordinate parser -->\n"
+                     "<!ELEMENT doc (#PCDATA)*>";
+  XML_Parser ext_parser;
+
+  UNUSED_P(base);
+  UNUSED_P(systemId);
+  UNUSED_P(publicId);
+  ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
+  if (ext_parser == NULL)
+    fail("Could not create external entity parser");
+  g_handler_data = ext_parser;
+  if (_XML_Parse_SINGLE_BYTES(ext_parser, text, (int)strlen(text), XML_TRUE)
+      == XML_STATUS_ERROR) {
+    xml_failure(parser);
+    return XML_STATUS_ERROR;
+  }
+  g_handler_data = parser;
+  XML_ParserFree(ext_parser);
+  return XML_STATUS_OK;
+}
+
 /* NotStandalone handlers */
 
 int XMLCALL
@@ -578,6 +613,40 @@ rsqb_handler(void *userData, const XML_Char *s, int len) {
 
   if (len == 1 && *s == XCS(']'))
     *pfound = 1;
+}
+
+void XMLCALL
+xml_decl_handler(void *userData, const XML_Char *version,
+                 const XML_Char *encoding, int standalone) {
+  UNUSED_P(version);
+  UNUSED_P(encoding);
+  if (userData != g_handler_data)
+    fail("User data (xml decl) not correctly set");
+  if (standalone != -1)
+    fail("Standalone not flagged as not present in XML decl");
+  g_xdecl_count++;
+}
+
+void XMLCALL
+param_check_skip_handler(void *userData, const XML_Char *entityName,
+                         int is_parameter_entity) {
+  UNUSED_P(entityName);
+  UNUSED_P(is_parameter_entity);
+  if (userData != g_handler_data)
+    fail("User data (skip) not correctly set");
+  g_skip_count++;
+}
+
+void XMLCALL
+data_check_comment_handler(void *userData, const XML_Char *data) {
+  UNUSED_P(data);
+  /* Check that the userData passed through is what we expect */
+  if (userData != g_handler_data)
+    fail("User data (parser) not correctly set");
+  /* Check that the user data in the parser is appropriate */
+  if (XML_GetUserData(userData) != (void *)1)
+    fail("User data in parser not correctly set");
+  g_comment_count++;
 }
 
 /* Handlers that record their invocation by single characters */

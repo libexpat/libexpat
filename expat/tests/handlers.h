@@ -186,6 +186,12 @@ extern int XMLCALL external_entity_good_cdata_ascii(XML_Parser parser,
                                                     const XML_Char *systemId,
                                                     const XML_Char *publicId);
 
+extern int XMLCALL external_entity_param_checker(XML_Parser parser,
+                                                 const XML_Char *context,
+                                                 const XML_Char *base,
+                                                 const XML_Char *systemId,
+                                                 const XML_Char *publicId);
+
 /* Declaration handlers for entity declarations */
 extern void XMLCALL entity_suspending_decl_handler(void *userData,
                                                    const XML_Char *name,
@@ -237,6 +243,25 @@ extern void XMLCALL cr_cdata_handler(void *userData, const XML_Char *s,
 
 /* This handler waits for a single right square bracket */
 extern void XMLCALL rsqb_handler(void *userData, const XML_Char *s, int len);
+
+/* Variable holding the expected handler userData */
+extern void *g_handler_data;
+/* Count of the number of times the comment handler has been invoked */
+extern int g_comment_count;
+/* Count of the number of skipped entities */
+extern int g_skip_count;
+/* Count of the number of times the XML declaration handler is invoked */
+extern int g_xdecl_count;
+
+extern void XMLCALL xml_decl_handler(void *userData, const XML_Char *version,
+                                     const XML_Char *encoding, int standalone);
+
+extern void XMLCALL param_check_skip_handler(void *userData,
+                                             const XML_Char *entityName,
+                                             int is_parameter_entity);
+
+extern void XMLCALL data_check_comment_handler(void *userData,
+                                               const XML_Char *data);
 
 /* Handlers that record invocation with a single character.  They expect
  * to be called with a CharData pointer as their user data.

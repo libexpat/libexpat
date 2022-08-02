@@ -99,74 +99,6 @@ testhelper_is_whitespace_normalized(void) {
 }
 
 /* Test user parameter settings */
-/* Variable holding the expected handler userData */
-static void *handler_data = NULL;
-/* Count of the number of times the comment handler has been invoked */
-static int comment_count = 0;
-/* Count of the number of skipped entities */
-static int skip_count = 0;
-/* Count of the number of times the XML declaration handler is invoked */
-static int xdecl_count = 0;
-
-static void XMLCALL
-xml_decl_handler(void *userData, const XML_Char *version,
-                 const XML_Char *encoding, int standalone) {
-  UNUSED_P(version);
-  UNUSED_P(encoding);
-  if (userData != handler_data)
-    fail("User data (xml decl) not correctly set");
-  if (standalone != -1)
-    fail("Standalone not flagged as not present in XML decl");
-  xdecl_count++;
-}
-
-static void XMLCALL
-param_check_skip_handler(void *userData, const XML_Char *entityName,
-                         int is_parameter_entity) {
-  UNUSED_P(entityName);
-  UNUSED_P(is_parameter_entity);
-  if (userData != handler_data)
-    fail("User data (skip) not correctly set");
-  skip_count++;
-}
-
-static void XMLCALL
-data_check_comment_handler(void *userData, const XML_Char *data) {
-  UNUSED_P(data);
-  /* Check that the userData passed through is what we expect */
-  if (userData != handler_data)
-    fail("User data (parser) not correctly set");
-  /* Check that the user data in the parser is appropriate */
-  if (XML_GetUserData(userData) != (void *)1)
-    fail("User data in parser not correctly set");
-  comment_count++;
-}
-
-static int XMLCALL
-external_entity_param_checker(XML_Parser parser, const XML_Char *context,
-                              const XML_Char *base, const XML_Char *systemId,
-                              const XML_Char *publicId) {
-  const char *text = "<!-- Subordinate parser -->\n"
-                     "<!ELEMENT doc (#PCDATA)*>";
-  XML_Parser ext_parser;
-
-  UNUSED_P(base);
-  UNUSED_P(systemId);
-  UNUSED_P(publicId);
-  ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
-  if (ext_parser == NULL)
-    fail("Could not create external entity parser");
-  handler_data = ext_parser;
-  if (_XML_Parse_SINGLE_BYTES(ext_parser, text, (int)strlen(text), XML_TRUE)
-      == XML_STATUS_ERROR) {
-    xml_failure(parser);
-    return XML_STATUS_ERROR;
-  }
-  handler_data = parser;
-  XML_ParserFree(ext_parser);
-  return XML_STATUS_OK;
-}
-
 START_TEST(test_user_parameters) {
   const char *text = "<?xml version='1.0' encoding='us-ascii'?>\n"
                      "<!-- Primary parse -->\n"
@@ -175,9 +107,9 @@ START_TEST(test_user_parameters) {
   const char *epilog = "<!-- Back to primary parser -->\n"
                        "</doc>";
 
-  comment_count = 0;
-  skip_count = 0;
-  xdecl_count = 0;
+  g_comment_count = 0;
+  g_skip_count = 0;
+  g_xdecl_count = 0;
   XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
   XML_SetXmlDeclHandler(g_parser, xml_decl_handler);
   XML_SetExternalEntityRefHandler(g_parser, external_entity_param_checker);
@@ -185,11 +117,11 @@ START_TEST(test_user_parameters) {
   XML_SetSkippedEntityHandler(g_parser, param_check_skip_handler);
   XML_UseParserAsHandlerArg(g_parser);
   XML_SetUserData(g_parser, (void *)1);
-  handler_data = g_parser;
+  g_handler_data = g_parser;
   if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_FALSE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
-  if (comment_count != 2)
+  if (g_comment_count != 2)
     fail("Comment handler not invoked enough times");
   /* Ensure we can't change policy mid-parse */
   if (XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_NEVER))
@@ -197,11 +129,11 @@ START_TEST(test_user_parameters) {
   if (_XML_Parse_SINGLE_BYTES(g_parser, epilog, (int)strlen(epilog), XML_TRUE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
-  if (comment_count != 3)
+  if (g_comment_count != 3)
     fail("Comment handler not invoked enough times");
-  if (skip_count != 1)
+  if (g_skip_count != 1)
     fail("Skip handler not invoked enough times");
-  if (xdecl_count != 1)
+  if (g_xdecl_count != 1)
     fail("XML declaration handler not invoked");
 }
 END_TEST
@@ -226,7 +158,7 @@ external_entity_ref_param_checker(XML_Parser parameter, const XML_Char *context,
   UNUSED_P(base);
   UNUSED_P(systemId);
   UNUSED_P(publicId);
-  if ((void *)parameter != handler_data)
+  if ((void *)parameter != g_handler_data)
     fail("External entity ref handler parameter not correct");
 
   /* Here we use the global 'parser' variable */
@@ -252,7 +184,7 @@ START_TEST(test_ext_entity_ref_parameter) {
    * what NULL would cause to be passed.
    */
   XML_SetExternalEntityRefHandlerArg(g_parser, (void *)text);
-  handler_data = (void *)text;
+  g_handler_data = (void *)text;
   if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
@@ -262,7 +194,7 @@ START_TEST(test_ext_entity_ref_parameter) {
   XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
   XML_SetExternalEntityRefHandler(g_parser, external_entity_ref_param_checker);
   XML_SetExternalEntityRefHandlerArg(g_parser, NULL);
-  handler_data = (void *)g_parser;
+  g_handler_data = (void *)g_parser;
   if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
