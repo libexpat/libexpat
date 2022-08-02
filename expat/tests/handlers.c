@@ -285,6 +285,43 @@ external_entity_suspender(XML_Parser parser, const XML_Char *context,
   return XML_STATUS_OK;
 }
 
+int XMLCALL
+external_entity_suspend_xmldecl(XML_Parser parser, const XML_Char *context,
+                                const XML_Char *base, const XML_Char *systemId,
+                                const XML_Char *publicId) {
+  const char *text = "<?xml version='1.0' encoding='us-ascii'?>";
+  XML_Parser ext_parser;
+  XML_ParsingStatus status;
+  enum XML_Status rc;
+
+  UNUSED_P(base);
+  UNUSED_P(systemId);
+  UNUSED_P(publicId);
+  ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
+  if (ext_parser == NULL)
+    fail("Could not create external entity parser");
+  XML_SetXmlDeclHandler(ext_parser, entity_suspending_xdecl_handler);
+  XML_SetUserData(ext_parser, ext_parser);
+  rc = _XML_Parse_SINGLE_BYTES(ext_parser, text, (int)strlen(text), XML_TRUE);
+  XML_GetParsingStatus(ext_parser, &status);
+  if (g_resumable) {
+    if (rc == XML_STATUS_ERROR)
+      xml_failure(ext_parser);
+    if (status.parsing != XML_SUSPENDED)
+      fail("Ext Parsing status not SUSPENDED");
+  } else {
+    if (rc != XML_STATUS_ERROR)
+      fail("Ext parsing not aborted");
+    if (XML_GetErrorCode(ext_parser) != XML_ERROR_ABORTED)
+      xml_failure(ext_parser);
+    if (status.parsing != XML_FINISHED)
+      fail("Ext Parsing status not FINISHED");
+  }
+
+  XML_ParserFree(ext_parser);
+  return XML_STATUS_OK;
+}
+
 /* Entity declaration handlers
  *
  * This handler attempts to suspend the subordinate parser, expecting
@@ -304,6 +341,18 @@ entity_suspending_decl_handler(void *userData, const XML_Char *name,
   XML_FreeContentModel(g_parser, model);
 }
 
+/* This XML declaration handler attempts to suspend the subordinate parser */
+void XMLCALL
+entity_suspending_xdecl_handler(void *userData, const XML_Char *version,
+                                const XML_Char *encoding, int standalone) {
+  XML_Parser ext_parser = (XML_Parser)userData;
+
+  UNUSED_P(version);
+  UNUSED_P(encoding);
+  UNUSED_P(standalone);
+  XML_StopParser(ext_parser, g_resumable);
+  XML_SetXmlDeclHandler(ext_parser, NULL);
+}
 
 /* NotStandalone handlers */
 
