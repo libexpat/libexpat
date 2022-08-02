@@ -650,6 +650,32 @@ external_entity_load_ignore_utf16(XML_Parser parser, const XML_Char *context,
   return XML_STATUS_OK;
 }
 
+int XMLCALL
+external_entity_load_ignore_utf16_be(XML_Parser parser, const XML_Char *context,
+                                     const XML_Char *base,
+                                     const XML_Char *systemId,
+                                     const XML_Char *publicId) {
+  const char text[] =
+      /* <![IGNORE[<!ELEMENT e (#PCDATA)*>]]> */
+      "\0<\0!\0[\0I\0G\0N\0O\0R\0E\0["
+      "\0<\0!\0E\0L\0E\0M\0E\0N\0T\0 \0e\0 "
+      "\0(\0#\0P\0C\0D\0A\0T\0A\0)\0*\0>\0]\0]\0>";
+  XML_Parser ext_parser;
+
+  UNUSED_P(base);
+  UNUSED_P(systemId);
+  UNUSED_P(publicId);
+  ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
+  if (ext_parser == NULL)
+    fail("Could not create external entity parser");
+  if (_XML_Parse_SINGLE_BYTES(ext_parser, text, (int)sizeof(text) - 1, XML_TRUE)
+      == XML_STATUS_ERROR)
+    xml_failure(parser);
+
+  XML_ParserFree(ext_parser);
+  return XML_STATUS_OK;
+}
+
 /* NotStandalone handlers */
 
 int XMLCALL

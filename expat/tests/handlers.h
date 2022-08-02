@@ -216,6 +216,13 @@ extern int XMLCALL external_entity_load_ignore_utf16(XML_Parser parser,
                                                      const XML_Char *systemId,
                                                      const XML_Char *publicId);
 
+
+extern int XMLCALL external_entity_load_ignore_utf16_be(XML_Parser parser,
+                                                        const XML_Char *context,
+                                                        const XML_Char *base,
+                                                        const XML_Char *systemId,
+                                                        const XML_Char *publicId);
+
 /* Declaration handlers for entity declarations */
 extern void XMLCALL entity_suspending_decl_handler(void *userData,
                                                    const XML_Char *name,
