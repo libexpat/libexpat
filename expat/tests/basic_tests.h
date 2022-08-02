@@ -47,8 +47,7 @@ extern "C" {
 #ifndef XML_BASIC_TESTS_H
 #  define XML_BASIC_TESTS_H
 
-extern TCase *
-make_basic_test_case(Suite *s);
+extern TCase *make_basic_test_case(Suite *s);
 
 #endif /* XML_BASIC_TESTS_H */
 

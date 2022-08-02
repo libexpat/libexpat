@@ -48,23 +48,23 @@ extern "C" {
 #  define XML_HANDLERS_H
 
 /* Event handlers storing structured data */
-#define STRUCT_START_TAG 0
-#define STRUCT_END_TAG 1
+#  define STRUCT_START_TAG 0
+#  define STRUCT_END_TAG 1
 
-extern void XMLCALL
-start_element_event_handler2(void *userData, const XML_Char *name,
-                             const XML_Char **attr);
+extern void XMLCALL start_element_event_handler2(void *userData,
+                                                 const XML_Char *name,
+                                                 const XML_Char **attr);
 
-extern void XMLCALL
-end_element_event_handler2(void *userData, const XML_Char *name);
+extern void XMLCALL end_element_event_handler2(void *userData,
+                                               const XML_Char *name);
 
 /* Event handlers storing character data */
-extern void XMLCALL
-start_element_event_handler(void *userData, const XML_Char *name,
-                            const XML_Char **atts);
+extern void XMLCALL start_element_event_handler(void *userData,
+                                                const XML_Char *name,
+                                                const XML_Char **atts);
 
-extern void XMLCALL
-end_element_event_handler(void *userData, const XML_Char *name);
+extern void XMLCALL end_element_event_handler(void *userData,
+                                              const XML_Char *name);
 
 typedef struct attrInfo {
   const XML_Char *name;
@@ -82,24 +82,23 @@ typedef struct elementInfo {
  * user data, containing details of all the attributes and their values.
  * There is additional checking for the ID attribute, if present.
  */
-extern void XMLCALL
-counting_start_element_handler(void *userData, const XML_Char *name,
-                               const XML_Char **atts);
+extern void XMLCALL counting_start_element_handler(void *userData,
+                                                   const XML_Char *name,
+                                                   const XML_Char **atts);
 
 /* Do-nothing handler for the text encoding named "unsupported-encoding" */
-extern int XMLCALL
-UnknownEncodingHandler(void *data, const XML_Char *encoding,
-                       XML_Encoding *info);
+extern int XMLCALL UnknownEncodingHandler(void *data, const XML_Char *encoding,
+                                          XML_Encoding *info);
 
 /* Handler that errors for all not built-in text encodings */
-extern int XMLCALL
-UnrecognisedEncodingHandler(void *data, const XML_Char *encoding,
-                            XML_Encoding *info);
+extern int XMLCALL UnrecognisedEncodingHandler(void *data,
+                                               const XML_Char *encoding,
+                                               XML_Encoding *info);
 
 /* As UnknownEncodingHandler but includes a "release" function pointer */
-extern int XMLCALL
-unknown_released_encoding_handler(void *data, const XML_Char *encoding,
-                                  XML_Encoding *info);
+extern int XMLCALL unknown_released_encoding_handler(void *data,
+                                                     const XML_Char *encoding,
+                                                     XML_Encoding *info);
 
 /* External Entity Handlers
  *
@@ -108,10 +107,11 @@ unknown_released_encoding_handler(void *data, const XML_Char *encoding,
  * external entity parser's encoding to that name.  Then it parses the
  * text pointed to by the "parse_text" field and returns success or failure.
  */
-extern int XMLCALL
-external_entity_loader(XML_Parser parser, const XML_Char *context,
-                       const XML_Char *base, const XML_Char *systemId,
-                       const XML_Char *publicId);
+extern int XMLCALL external_entity_loader(XML_Parser parser,
+                                          const XML_Char *context,
+                                          const XML_Char *base,
+                                          const XML_Char *systemId,
+                                          const XML_Char *publicId);
 
 typedef struct ext_faults {
   const char *parse_text;
@@ -127,62 +127,67 @@ typedef struct ext_faults {
  * error code in the "error" field.  If the parse succeeds, the test will be
  * failed with the message given in "fail_text".
  */
-extern int XMLCALL
-external_entity_faulter(XML_Parser parser, const XML_Char *context,
-                        const XML_Char *base, const XML_Char *systemId,
-                        const XML_Char *publicId);
+extern int XMLCALL external_entity_faulter(XML_Parser parser,
+                                           const XML_Char *context,
+                                           const XML_Char *base,
+                                           const XML_Char *systemId,
+                                           const XML_Char *publicId);
 
 /* This handler does nothing at all */
-extern int XMLCALL
-external_entity_null_loader(XML_Parser parser, const XML_Char *context,
-                            const XML_Char *base, const XML_Char *systemId,
-                            const XML_Char *publicId);
+extern int XMLCALL external_entity_null_loader(XML_Parser parser,
+                                               const XML_Char *context,
+                                               const XML_Char *base,
+                                               const XML_Char *systemId,
+                                               const XML_Char *publicId);
 
 /* This handler attempts to suspend while processing a <!ELEMENT ...> */
-extern int XMLCALL
-external_entity_suspender(XML_Parser parser, const XML_Char *context,
-                          const XML_Char *base, const XML_Char *systemId,
-                          const XML_Char *publicId);
+extern int XMLCALL external_entity_suspender(XML_Parser parser,
+                                             const XML_Char *context,
+                                             const XML_Char *base,
+                                             const XML_Char *systemId,
+                                             const XML_Char *publicId);
 
 /* This handler attempts to suspend while processing an <?xml ...?> */
-extern int XMLCALL
-external_entity_suspend_xmldecl(XML_Parser parser, const XML_Char *context,
-                                const XML_Char *base, const XML_Char *systemId,
-                                const XML_Char *publicId);
+extern int XMLCALL external_entity_suspend_xmldecl(XML_Parser parser,
+                                                   const XML_Char *context,
+                                                   const XML_Char *base,
+                                                   const XML_Char *systemId,
+                                                   const XML_Char *publicId);
 
 /* This handler suspends the parser, expecting to provoke errors */
-extern int XMLCALL
-external_entity_suspending_faulter(XML_Parser parser, const XML_Char *context,
-                                   const XML_Char *base,
-                                   const XML_Char *systemId,
-                                   const XML_Char *publicId);
+extern int XMLCALL external_entity_suspending_faulter(XML_Parser parser,
+                                                      const XML_Char *context,
+                                                      const XML_Char *base,
+                                                      const XML_Char *systemId,
+                                                      const XML_Char *publicId);
 
 /* This handler tests for trailing Carriage Return characters */
-extern int XMLCALL
-external_entity_cr_catcher(XML_Parser parser, const XML_Char *context,
-                           const XML_Char *base, const XML_Char *systemId,
-                           const XML_Char *publicId);
+extern int XMLCALL external_entity_cr_catcher(XML_Parser parser,
+                                              const XML_Char *context,
+                                              const XML_Char *base,
+                                              const XML_Char *systemId,
+                                              const XML_Char *publicId);
 
-extern int XMLCALL
-external_entity_bad_cr_catcher(XML_Parser parser, const XML_Char *context,
-                               const XML_Char *base, const XML_Char *systemId,
-                               const XML_Char *publicId);
+extern int XMLCALL external_entity_bad_cr_catcher(XML_Parser parser,
+                                                  const XML_Char *context,
+                                                  const XML_Char *base,
+                                                  const XML_Char *systemId,
+                                                  const XML_Char *publicId);
 
 /* Declaration handlers for entity declarations */
-extern void XMLCALL
-entity_suspending_decl_handler(void *userData, const XML_Char *name,
-                               XML_Content *model);
+extern void XMLCALL entity_suspending_decl_handler(void *userData,
+                                                   const XML_Char *name,
+                                                   XML_Content *model);
 
-extern void XMLCALL
-entity_suspending_xdecl_handler(void *userData, const XML_Char *version,
-                                const XML_Char *encoding, int standalone);
+extern void XMLCALL entity_suspending_xdecl_handler(void *userData,
+                                                    const XML_Char *version,
+                                                    const XML_Char *encoding,
+                                                    int standalone);
 
 /* NotStandalone handlers */
-extern int XMLCALL
-reject_not_standalone_handler(void *userData);
+extern int XMLCALL reject_not_standalone_handler(void *userData);
 
-extern int XMLCALL
-accept_not_standalone_handler(void *userData);
+extern int XMLCALL accept_not_standalone_handler(void *userData);
 
 /* Attribute List handlers */
 typedef struct AttTest {
@@ -194,48 +199,45 @@ typedef struct AttTest {
   int is_required;
 } AttTest;
 
-extern void XMLCALL
-verify_attlist_decl_handler(void *userData, const XML_Char *element_name,
-                            const XML_Char *attr_name,
-                            const XML_Char *attr_type,
-                            const XML_Char *default_value, int is_required);
+extern void XMLCALL verify_attlist_decl_handler(
+    void *userData, const XML_Char *element_name, const XML_Char *attr_name,
+    const XML_Char *attr_type, const XML_Char *default_value, int is_required);
 
 /* Character data handlers
  *
  * This handler stops the (global) parser, leaving it resumable if
  * g_resumable is True, and removes itself as the character data handler.
  */
-extern void
-clearing_aborting_character_handler(void *userData, const XML_Char *s,
-                                    int len);
+extern void clearing_aborting_character_handler(void *userData,
+                                                const XML_Char *s, int len);
 
 /* This handler stops the global parser as above, then attempts further
  * variations of aborting depending on g_resumable and g_abortable.
  */
-extern void
-parser_stop_character_handler(void *userData, const XML_Char *s, int len);
+extern void parser_stop_character_handler(void *userData, const XML_Char *s,
+                                          int len);
 
 /* This handler expects a pointer to an int as its user data, and sets
  * the int to 1 if a single '\n' or '\r' character is seen.
  */
-extern void XMLCALL
-cr_cdata_handler(void *userData, const XML_Char *s, int len);
+extern void XMLCALL cr_cdata_handler(void *userData, const XML_Char *s,
+                                     int len);
 
 /* Handlers that record invocation with a single character.  They expect
  * to be called with a CharData pointer as their user data.
  */
-extern void XMLCALL
-record_default_handler(void *userData, const XML_Char *s, int len);
+extern void XMLCALL record_default_handler(void *userData, const XML_Char *s,
+                                           int len);
 
-extern void XMLCALL
-record_cdata_handler(void *userData, const XML_Char *s, int len);
+extern void XMLCALL record_cdata_handler(void *userData, const XML_Char *s,
+                                         int len);
 
-extern void XMLCALL
-record_cdata_nodefault_handler(void *userData, const XML_Char *s, int len);
+extern void XMLCALL record_cdata_nodefault_handler(void *userData,
+                                                   const XML_Char *s, int len);
 
-extern void XMLCALL
-record_skip_handler(void *userData, const XML_Char *entityName,
-                    int is_parameter_entity);
+extern void XMLCALL record_skip_handler(void *userData,
+                                        const XML_Char *entityName,
+                                        int is_parameter_entity);
 
 #endif /* XML_HANDLERS_H */
 

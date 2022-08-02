@@ -72,9 +72,7 @@
 
 #include "basic_tests.h"
 
-
 XML_Parser g_parser = NULL;
-
 
 /* Check the attribute whitespace checker: */
 static void

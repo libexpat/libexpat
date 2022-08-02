@@ -41,12 +41,11 @@
 */
 
 #include "expat.h"
-#include "internal.h"  /* For UNUSED_P() */
+#include "internal.h" /* For UNUSED_P() */
 #include "minicheck.h"
 #include "chardata.h"
 #include "common.h"
 #include "dummy.h"
-
 
 /* Dummy handlers for when we need to set a handler to tickle a bug,
    but it doesn't need to do anything.
@@ -54,15 +53,13 @@
 static unsigned long dummy_handler_flags = 0;
 
 void
-init_dummy_handlers(void)
-{
-    dummy_handler_flags = 0;
+init_dummy_handlers(void) {
+  dummy_handler_flags = 0;
 }
 
 unsigned long
-get_dummy_handler_flags(void)
-{
-    return dummy_handler_flags;
+get_dummy_handler_flags(void) {
+  return dummy_handler_flags;
 }
 
 void XMLCALL

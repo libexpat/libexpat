@@ -44,13 +44,12 @@
 #include <assert.h>
 
 #include "expat.h"
-#include "internal.h"  /* For UNUSED_P() */
+#include "internal.h" /* For UNUSED_P() */
 #include "minicheck.h"
 #include "chardata.h"
 #include "structdata.h"
 #include "common.h"
 #include "handlers.h"
-
 
 /* Element handlers recording structured data */
 

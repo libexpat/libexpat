@@ -40,7 +40,6 @@
    USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
@@ -50,7 +49,7 @@
 #endif
 
 #include "expat.h"
-#include "internal.h"  /* For UNUSED_P() */
+#include "internal.h" /* For UNUSED_P() */
 #include "minicheck.h"
 #include "chardata.h"
 #include "structdata.h"
@@ -60,11 +59,9 @@
 #include "siphash.h"
 #include "basic_tests.h"
 
-
 /*
  * Character & encoding tests.
  */
-
 
 START_TEST(test_nul_byte) {
   char text[] = "<doc>\0</doc>";
@@ -2512,4 +2509,3 @@ make_basic_test_case(Suite *s) {
 
   return tc_basic;
 }
-

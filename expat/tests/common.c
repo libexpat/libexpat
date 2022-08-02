@@ -40,7 +40,6 @@
    USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-
 #include <stdio.h>
 #include <string.h>
 
@@ -49,7 +48,6 @@
 #include "minicheck.h"
 #include "chardata.h"
 #include "common.h"
-
 
 /* Common test data */
 const char *long_character_data_text
@@ -107,8 +105,6 @@ XML_Bool g_resumable = XML_FALSE;
 
 /* Used to control abort checks in for some tests */
 XML_Bool g_abortable = XML_FALSE;
-
-
 
 /* Common test functions */
 
@@ -186,7 +182,6 @@ _expect_failure(const char *text, enum XML_Error errorCode,
     _xml_failure(g_parser, file, lineno);
 }
 
-
 int XMLCALL
 external_entity_optioner(XML_Parser parser, const XML_Char *context,
                          const XML_Char *base, const XML_Char *systemId,
@@ -212,7 +207,6 @@ external_entity_optioner(XML_Parser parser, const XML_Char *context,
   fail("No suitable option found");
   return XML_STATUS_ERROR;
 }
-
 
 /*
  * Parameter entity evaluation support.
@@ -253,17 +247,15 @@ param_entity_match_handler(void *userData, const XML_Char *entityName,
 }
 
 void
-param_entity_match_init(const XML_Char *name, const XML_Char *value)
-{
-    entity_name_to_match = name;
-    entity_value_to_match = value;
-    entity_match_flag = ENTITY_MATCH_NOT_FOUND;
+param_entity_match_init(const XML_Char *name, const XML_Char *value) {
+  entity_name_to_match = name;
+  entity_value_to_match = value;
+  entity_match_flag = ENTITY_MATCH_NOT_FOUND;
 }
 
 int
-get_param_entity_match_flag(void)
-{
-    return entity_match_flag;
+get_param_entity_match_flag(void) {
+  return entity_match_flag;
 }
 
 /*
