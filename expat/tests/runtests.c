@@ -101,61 +101,6 @@ testhelper_is_whitespace_normalized(void) {
   assert(! is_whitespace_normalized(XCS("abc\t def"), 1));
 }
 
-
-/* Test external entity fault handling with suspension */
-START_TEST(test_ext_entity_invalid_suspended_parse) {
-  const char *text = "<!DOCTYPE doc [\n"
-                     "  <!ENTITY en SYSTEM 'http://example.org/dummy.ent'>\n"
-                     "]>\n"
-                     "<doc>&en;</doc>";
-  ExtFaults faults[]
-      = {{"<?xml version='1.0' encoding='us-ascii'?><",
-          "Incomplete element declaration not faulted", NULL,
-          XML_ERROR_UNCLOSED_TOKEN},
-         {/* First two bytes of a three-byte char */
-          "<?xml version='1.0' encoding='utf-8'?>\xe2\x82",
-          "Incomplete character not faulted", NULL, XML_ERROR_PARTIAL_CHAR},
-         {NULL, NULL, NULL, XML_ERROR_NONE}};
-  ExtFaults *fault;
-
-  for (fault = &faults[0]; fault->parse_text != NULL; fault++) {
-    XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
-    XML_SetExternalEntityRefHandler(g_parser,
-                                    external_entity_suspending_faulter);
-    XML_SetUserData(g_parser, fault);
-    expect_failure(text, XML_ERROR_EXTERNAL_ENTITY_HANDLING,
-                   "Parser did not report external entity error");
-    XML_ParserReset(g_parser, NULL);
-  }
-}
-END_TEST
-
-/* Test setting an explicit encoding */
-START_TEST(test_explicit_encoding) {
-  const char *text1 = "<doc>Hello ";
-  const char *text2 = " World</doc>";
-
-  /* Just check that we can set the encoding to NULL before starting */
-  if (XML_SetEncoding(g_parser, NULL) != XML_STATUS_OK)
-    fail("Failed to initialise encoding to NULL");
-  /* Say we are UTF-8 */
-  if (XML_SetEncoding(g_parser, XCS("utf-8")) != XML_STATUS_OK)
-    fail("Failed to set explicit encoding");
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text1, (int)strlen(text1), XML_FALSE)
-      == XML_STATUS_ERROR)
-    xml_failure(g_parser);
-  /* Try to switch encodings mid-parse */
-  if (XML_SetEncoding(g_parser, XCS("us-ascii")) != XML_STATUS_ERROR)
-    fail("Allowed encoding change");
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text2, (int)strlen(text2), XML_TRUE)
-      == XML_STATUS_ERROR)
-    xml_failure(g_parser);
-  /* Try now the parse is over */
-  if (XML_SetEncoding(g_parser, NULL) != XML_STATUS_OK)
-    fail("Failed to unset encoding");
-}
-END_TEST
-
 /* Test handling of trailing CR (rather than newline) */
 static void XMLCALL
 cr_cdata_handler(void *userData, const XML_Char *s, int len) {
@@ -8649,9 +8594,6 @@ make_suite(void) {
   TCase *tc_accounting = tcase_create("accounting tests");
 #endif
 
-  tcase_add_test__ifdef_xml_dtd(tc_basic,
-                                test_ext_entity_invalid_suspended_parse);
-  tcase_add_test(tc_basic, test_explicit_encoding);
   tcase_add_test(tc_basic, test_trailing_cr);
   tcase_add_test(tc_basic, test_ext_entity_trailing_cr);
   tcase_add_test(tc_basic, test_trailing_rsqb);
