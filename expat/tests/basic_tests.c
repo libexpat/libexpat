@@ -2944,6 +2944,18 @@ START_TEST(test_external_entity_values) {
 }
 END_TEST
 
+/* Test the recursive parse interacts with a not standalone handler */
+START_TEST(test_ext_entity_not_standalone) {
+  const char *text = "<!DOCTYPE doc SYSTEM 'foo'>\n"
+                     "<doc></doc>";
+
+  XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+  XML_SetExternalEntityRefHandler(g_parser, external_entity_not_standalone);
+  expect_failure(text, XML_ERROR_EXTERNAL_ENTITY_HANDLING,
+                 "Standalone rejection not caught");
+}
+END_TEST
+
 TCase *
 make_basic_test_case(Suite *s) {
   TCase *tc_basic = tcase_create("basic tests");
@@ -3073,6 +3085,7 @@ make_basic_test_case(Suite *s) {
   tcase_add_test__ifdef_xml_dtd(tc_basic, test_ignore_section_utf16_be);
   tcase_add_test__ifdef_xml_dtd(tc_basic, test_bad_ignore_section);
   tcase_add_test__ifdef_xml_dtd(tc_basic, test_external_entity_values);
+  tcase_add_test__ifdef_xml_dtd(tc_basic, test_ext_entity_not_standalone);
 
   return tc_basic;
 }
