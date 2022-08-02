@@ -983,3 +983,10 @@ record_skip_handler(void *userData, const XML_Char *entityName,
   CharData_AppendXMLChars((CharData *)userData,
                           is_parameter_entity ? XCS("E") : XCS("e"), 1);
 }
+
+void XMLCALL
+record_element_start_handler(void *userData, const XML_Char *name,
+                             const XML_Char **atts) {
+  UNUSED_P(atts);
+  CharData_AppendXMLChars((CharData *)userData, name, (int)xcstrlen(name));
+}

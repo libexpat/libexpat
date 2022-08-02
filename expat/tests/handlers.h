@@ -337,6 +337,10 @@ extern void XMLCALL record_skip_handler(void *userData,
                                         const XML_Char *entityName,
                                         int is_parameter_entity);
 
+extern void XMLCALL record_element_start_handler(void *userData,
+                                                 const XML_Char *name,
+                                                 const XML_Char **atts);
+
 #endif /* XML_HANDLERS_H */
 
 #ifdef __cplusplus
