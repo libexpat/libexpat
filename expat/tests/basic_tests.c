@@ -2212,6 +2212,54 @@ START_TEST(test_subordinate_reset) {
 }
 END_TEST
 
+/* Test suspending a subordinate parser */
+START_TEST(test_subordinate_suspend) {
+  const char *text = "<?xml version='1.0' encoding='us-ascii'?>\n"
+                     "<!DOCTYPE doc SYSTEM 'foo'>\n"
+                     "<doc>&entity;</doc>";
+
+  XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+  XML_SetExternalEntityRefHandler(g_parser, external_entity_suspender);
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+      == XML_STATUS_ERROR)
+    xml_failure(g_parser);
+}
+END_TEST
+
+/* Test suspending a subordinate parser from an XML declaration */
+/* Increases code coverage of the tests */
+START_TEST(test_subordinate_xdecl_suspend) {
+  const char *text
+      = "<!DOCTYPE doc [\n"
+        "  <!ENTITY entity SYSTEM 'http://example.org/dummy.ent'>\n"
+        "]>\n"
+        "<doc>&entity;</doc>";
+
+  XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+  XML_SetExternalEntityRefHandler(g_parser, external_entity_suspend_xmldecl);
+  g_resumable = XML_TRUE;
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+      == XML_STATUS_ERROR)
+    xml_failure(g_parser);
+}
+END_TEST
+
+START_TEST(test_subordinate_xdecl_abort) {
+  const char *text
+      = "<!DOCTYPE doc [\n"
+        "  <!ENTITY entity SYSTEM 'http://example.org/dummy.ent'>\n"
+        "]>\n"
+        "<doc>&entity;</doc>";
+
+  XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+  XML_SetExternalEntityRefHandler(g_parser, external_entity_suspend_xmldecl);
+  g_resumable = XML_FALSE;
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+      == XML_STATUS_ERROR)
+    xml_failure(g_parser);
+}
+END_TEST
+
 TCase *
 make_basic_test_case(Suite *s) {
   TCase *tc_basic = tcase_create("basic tests");
@@ -2310,6 +2358,9 @@ make_basic_test_case(Suite *s) {
   tcase_add_test(tc_basic, test_resume_resuspended);
   tcase_add_test(tc_basic, test_cdata_default);
   tcase_add_test(tc_basic, test_subordinate_reset);
+  tcase_add_test(tc_basic, test_subordinate_suspend);
+  tcase_add_test(tc_basic, test_subordinate_xdecl_suspend);
+  tcase_add_test(tc_basic, test_subordinate_xdecl_abort);
 
   return tc_basic;
 }
