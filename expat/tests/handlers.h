@@ -157,6 +157,17 @@ external_entity_suspending_faulter(XML_Parser parser, const XML_Char *context,
                                    const XML_Char *systemId,
                                    const XML_Char *publicId);
 
+/* This handler tests for trailing Carriage Return characters */
+extern int XMLCALL
+external_entity_cr_catcher(XML_Parser parser, const XML_Char *context,
+                           const XML_Char *base, const XML_Char *systemId,
+                           const XML_Char *publicId);
+
+extern int XMLCALL
+external_entity_bad_cr_catcher(XML_Parser parser, const XML_Char *context,
+                               const XML_Char *base, const XML_Char *systemId,
+                               const XML_Char *publicId);
+
 /* Declaration handlers for entity declarations */
 extern void XMLCALL
 entity_suspending_decl_handler(void *userData, const XML_Char *name,
@@ -203,6 +214,12 @@ clearing_aborting_character_handler(void *userData, const XML_Char *s,
  */
 extern void
 parser_stop_character_handler(void *userData, const XML_Char *s, int len);
+
+/* This handler expects a pointer to an int as its user data, and sets
+ * the int to 1 if a single '\n' or '\r' character is seen.
+ */
+extern void XMLCALL
+cr_cdata_handler(void *userData, const XML_Char *s, int len);
 
 /* Handlers that record invocation with a single character.  They expect
  * to be called with a CharData pointer as their user data.
