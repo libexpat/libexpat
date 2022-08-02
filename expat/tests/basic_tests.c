@@ -2441,6 +2441,41 @@ START_TEST(test_trailing_rsqb) {
 }
 END_TEST
 
+/* Test trailing right square bracket in an external entity parse */
+START_TEST(test_ext_entity_trailing_rsqb) {
+  const char *text = "<!DOCTYPE doc [\n"
+                     "  <!ENTITY en SYSTEM 'http://example.org/dummy.ent'>\n"
+                     "]>\n"
+                     "<doc>&en;</doc>";
+  int found_rsqb;
+
+  XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+  XML_SetExternalEntityRefHandler(g_parser, external_entity_rsqb_catcher);
+  XML_SetUserData(g_parser, &found_rsqb);
+  found_rsqb = 0;
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+      != XML_STATUS_OK)
+    xml_failure(g_parser);
+  if (found_rsqb == 0)
+    fail("No right square bracket found");
+}
+END_TEST
+
+/* Test CDATA handling in an external entity */
+START_TEST(test_ext_entity_good_cdata) {
+  const char *text = "<!DOCTYPE doc [\n"
+                     "  <!ENTITY en SYSTEM 'http://example.org/dummy.ent'>\n"
+                     "]>\n"
+                     "<doc>&en;</doc>";
+
+  XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+  XML_SetExternalEntityRefHandler(g_parser, external_entity_good_cdata_ascii);
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+      != XML_STATUS_OK)
+    xml_failure(g_parser);
+}
+END_TEST
+
 TCase *
 make_basic_test_case(Suite *s) {
   TCase *tc_basic = tcase_create("basic tests");
@@ -2549,6 +2584,8 @@ make_basic_test_case(Suite *s) {
   tcase_add_test(tc_basic, test_trailing_cr);
   tcase_add_test(tc_basic, test_ext_entity_trailing_cr);
   tcase_add_test(tc_basic, test_trailing_rsqb);
+  tcase_add_test(tc_basic, test_ext_entity_trailing_rsqb);
+  tcase_add_test(tc_basic, test_ext_entity_good_cdata);
 
   return tc_basic;
 }
