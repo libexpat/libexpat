@@ -98,93 +98,6 @@ testhelper_is_whitespace_normalized(void) {
   assert(! is_whitespace_normalized(XCS("abc\t def"), 1));
 }
 
-static int XMLCALL
-external_entity_public(XML_Parser parser, const XML_Char *context,
-                       const XML_Char *base, const XML_Char *systemId,
-                       const XML_Char *publicId) {
-  const char *text1 = (const char *)XML_GetUserData(parser);
-  const char *text2 = "<!ATTLIST doc a CDATA 'value'>";
-  const char *text = NULL;
-  XML_Parser ext_parser;
-  int parse_res;
-
-  UNUSED_P(base);
-  ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
-  if (ext_parser == NULL)
-    return XML_STATUS_ERROR;
-  if (systemId != NULL && ! xcstrcmp(systemId, XCS("http://example.org/"))) {
-    text = text1;
-  } else if (publicId != NULL && ! xcstrcmp(publicId, XCS("foo"))) {
-    text = text2;
-  } else
-    fail("Unexpected parameters to external entity parser");
-  assert(text != NULL);
-  parse_res
-      = _XML_Parse_SINGLE_BYTES(ext_parser, text, (int)strlen(text), XML_TRUE);
-  XML_ParserFree(ext_parser);
-  return parse_res;
-}
-
-START_TEST(test_standalone_parameter_entity) {
-  const char *text = "<?xml version='1.0' standalone='yes'?>\n"
-                     "<!DOCTYPE doc SYSTEM 'http://example.org/' [\n"
-                     "<!ENTITY % entity '<!ELEMENT doc (#PCDATA)>'>\n"
-                     "%entity;\n"
-                     "]>\n"
-                     "<doc></doc>";
-  char dtd_data[] = "<!ENTITY % e1 'foo'>\n";
-
-  XML_SetUserData(g_parser, dtd_data);
-  XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
-  XML_SetExternalEntityRefHandler(g_parser, external_entity_public);
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
-      == XML_STATUS_ERROR)
-    xml_failure(g_parser);
-}
-END_TEST
-
-/* Test skipping of parameter entity in an external DTD */
-/* Derived from ibm/invalid/P69/ibm69i01.xml */
-START_TEST(test_skipped_parameter_entity) {
-  const char *text = "<?xml version='1.0'?>\n"
-                     "<!DOCTYPE root SYSTEM 'http://example.org/dtd.ent' [\n"
-                     "<!ELEMENT root (#PCDATA|a)* >\n"
-                     "]>\n"
-                     "<root></root>";
-  ExtTest dtd_data = {"%pe2;", NULL, NULL};
-
-  XML_SetExternalEntityRefHandler(g_parser, external_entity_loader);
-  XML_SetUserData(g_parser, &dtd_data);
-  XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
-  XML_SetSkippedEntityHandler(g_parser, dummy_skip_handler);
-  init_dummy_handlers();
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
-      == XML_STATUS_ERROR)
-    xml_failure(g_parser);
-  if (get_dummy_handler_flags() != DUMMY_SKIP_HANDLER_FLAG)
-    fail("Skip handler not executed");
-}
-END_TEST
-
-/* Test recursive parameter entity definition rejected in external DTD */
-START_TEST(test_recursive_external_parameter_entity) {
-  const char *text = "<?xml version='1.0'?>\n"
-                     "<!DOCTYPE root SYSTEM 'http://example.org/dtd.ent' [\n"
-                     "<!ELEMENT root (#PCDATA|a)* >\n"
-                     "]>\n"
-                     "<root></root>";
-  ExtFaults dtd_data = {"<!ENTITY % pe2 '&#37;pe2;'>\n%pe2;",
-                        "Recursive external parameter entity not faulted", NULL,
-                        XML_ERROR_RECURSIVE_ENTITY_REF};
-
-  XML_SetExternalEntityRefHandler(g_parser, external_entity_faulter);
-  XML_SetUserData(g_parser, &dtd_data);
-  XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
-  expect_failure(text, XML_ERROR_EXTERNAL_ENTITY_HANDLING,
-                 "Recursive external parameter not spotted");
-}
-END_TEST
-
 /* Test undefined parameter entity in external entity handler */
 static int XMLCALL
 external_entity_devaluer(XML_Parser parser, const XML_Char *context,
@@ -7273,10 +7186,6 @@ make_suite(void) {
   TCase *tc_accounting = tcase_create("accounting tests");
 #endif
 
-  tcase_add_test(tc_basic, test_standalone_parameter_entity);
-  tcase_add_test__ifdef_xml_dtd(tc_basic, test_skipped_parameter_entity);
-  tcase_add_test__ifdef_xml_dtd(tc_basic,
-                                test_recursive_external_parameter_entity);
   tcase_add_test(tc_basic, test_undefined_ext_entity_in_external_dtd);
   tcase_add_test(tc_basic, test_suspend_xdecl);
   tcase_add_test(tc_basic, test_abort_epilog);

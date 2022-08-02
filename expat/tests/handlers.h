@@ -251,6 +251,12 @@ extern void XMLCALL entity_suspending_xdecl_handler(void *userData,
                                                     const XML_Char *encoding,
                                                     int standalone);
 
+extern int XMLCALL external_entity_public(XML_Parser parser,
+                                          const XML_Char *context,
+                                          const XML_Char *base,
+                                          const XML_Char *systemId,
+                                          const XML_Char *publicId);
+
 /* NotStandalone handlers */
 extern int XMLCALL reject_not_standalone_handler(void *userData);
 

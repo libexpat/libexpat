@@ -3102,6 +3102,66 @@ START_TEST(test_group_choice) {
 }
 END_TEST
 
+START_TEST(test_standalone_parameter_entity) {
+  const char *text = "<?xml version='1.0' standalone='yes'?>\n"
+                     "<!DOCTYPE doc SYSTEM 'http://example.org/' [\n"
+                     "<!ENTITY % entity '<!ELEMENT doc (#PCDATA)>'>\n"
+                     "%entity;\n"
+                     "]>\n"
+                     "<doc></doc>";
+  char dtd_data[] = "<!ENTITY % e1 'foo'>\n";
+
+  XML_SetUserData(g_parser, dtd_data);
+  XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+  XML_SetExternalEntityRefHandler(g_parser, external_entity_public);
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+      == XML_STATUS_ERROR)
+    xml_failure(g_parser);
+}
+END_TEST
+
+/* Test skipping of parameter entity in an external DTD */
+/* Derived from ibm/invalid/P69/ibm69i01.xml */
+START_TEST(test_skipped_parameter_entity) {
+  const char *text = "<?xml version='1.0'?>\n"
+                     "<!DOCTYPE root SYSTEM 'http://example.org/dtd.ent' [\n"
+                     "<!ELEMENT root (#PCDATA|a)* >\n"
+                     "]>\n"
+                     "<root></root>";
+  ExtTest dtd_data = {"%pe2;", NULL, NULL};
+
+  XML_SetExternalEntityRefHandler(g_parser, external_entity_loader);
+  XML_SetUserData(g_parser, &dtd_data);
+  XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+  XML_SetSkippedEntityHandler(g_parser, dummy_skip_handler);
+  init_dummy_handlers();
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+      == XML_STATUS_ERROR)
+    xml_failure(g_parser);
+  if (get_dummy_handler_flags() != DUMMY_SKIP_HANDLER_FLAG)
+    fail("Skip handler not executed");
+}
+END_TEST
+
+/* Test recursive parameter entity definition rejected in external DTD */
+START_TEST(test_recursive_external_parameter_entity) {
+  const char *text = "<?xml version='1.0'?>\n"
+                     "<!DOCTYPE root SYSTEM 'http://example.org/dtd.ent' [\n"
+                     "<!ELEMENT root (#PCDATA|a)* >\n"
+                     "]>\n"
+                     "<root></root>";
+  ExtFaults dtd_data = {"<!ENTITY % pe2 '&#37;pe2;'>\n%pe2;",
+                        "Recursive external parameter entity not faulted", NULL,
+                        XML_ERROR_RECURSIVE_ENTITY_REF};
+
+  XML_SetExternalEntityRefHandler(g_parser, external_entity_faulter);
+  XML_SetUserData(g_parser, &dtd_data);
+  XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+  expect_failure(text, XML_ERROR_EXTERNAL_ENTITY_HANDLING,
+                 "Recursive external parameter not spotted");
+}
+END_TEST
+
 TCase *
 make_basic_test_case(Suite *s) {
   TCase *tc_basic = tcase_create("basic tests");
@@ -3240,6 +3300,10 @@ make_basic_test_case(Suite *s) {
   tcase_add_test(tc_basic, test_public_notation_no_sysid);
   tcase_add_test(tc_basic, test_nested_groups);
   tcase_add_test(tc_basic, test_group_choice);
+  tcase_add_test(tc_basic, test_standalone_parameter_entity);
+  tcase_add_test__ifdef_xml_dtd(tc_basic, test_skipped_parameter_entity);
+  tcase_add_test__ifdef_xml_dtd(tc_basic,
+                                test_recursive_external_parameter_entity);
 
   return tc_basic;
 }
