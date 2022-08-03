@@ -310,6 +310,10 @@ typedef struct ByteTestData {
 
 extern void byte_character_handler(void *userData, const XML_Char *s, int len);
 
+extern void XMLCALL selective_aborting_default_handler(void *userData,
+                                                       const XML_Char *s,
+                                                       int len);
+
 /* Variable holding the expected handler userData */
 extern void *g_handler_data;
 /* Count of the number of times the comment handler has been invoked */

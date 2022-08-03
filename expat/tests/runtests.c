@@ -98,59 +98,6 @@ testhelper_is_whitespace_normalized(void) {
   assert(! is_whitespace_normalized(XCS("abc\t def"), 1));
 }
 
-/* Test aborting the parse in an epilog works */
-static void XMLCALL
-selective_aborting_default_handler(void *userData, const XML_Char *s, int len) {
-  const XML_Char *match = (const XML_Char *)userData;
-
-  if (match == NULL
-      || (xcstrlen(match) == (unsigned)len && ! xcstrncmp(match, s, len))) {
-    XML_StopParser(g_parser, g_resumable);
-    XML_SetDefaultHandler(g_parser, NULL);
-  }
-}
-
-START_TEST(test_abort_epilog) {
-  const char *text = "<doc></doc>\n\r\n";
-  XML_Char match[] = XCS("\r");
-
-  XML_SetDefaultHandler(g_parser, selective_aborting_default_handler);
-  XML_SetUserData(g_parser, match);
-  g_resumable = XML_FALSE;
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
-      != XML_STATUS_ERROR)
-    fail("Abort not triggered");
-  if (XML_GetErrorCode(g_parser) != XML_ERROR_ABORTED)
-    xml_failure(g_parser);
-}
-END_TEST
-
-/* Test a different code path for abort in the epilog */
-START_TEST(test_abort_epilog_2) {
-  const char *text = "<doc></doc>\n";
-  XML_Char match[] = XCS("\n");
-
-  XML_SetDefaultHandler(g_parser, selective_aborting_default_handler);
-  XML_SetUserData(g_parser, match);
-  g_resumable = XML_FALSE;
-  expect_failure(text, XML_ERROR_ABORTED, "Abort not triggered");
-}
-END_TEST
-
-/* Test suspension from the epilog */
-START_TEST(test_suspend_epilog) {
-  const char *text = "<doc></doc>\n";
-  XML_Char match[] = XCS("\n");
-
-  XML_SetDefaultHandler(g_parser, selective_aborting_default_handler);
-  XML_SetUserData(g_parser, match);
-  g_resumable = XML_TRUE;
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
-      != XML_STATUS_SUSPENDED)
-    xml_failure(g_parser);
-}
-END_TEST
-
 static void XMLCALL
 suspending_end_handler(void *userData, const XML_Char *s) {
   UNUSED_P(s);
@@ -7101,9 +7048,6 @@ make_suite(void) {
   TCase *tc_accounting = tcase_create("accounting tests");
 #endif
 
-  tcase_add_test(tc_basic, test_abort_epilog);
-  tcase_add_test(tc_basic, test_abort_epilog_2);
-  tcase_add_test(tc_basic, test_suspend_epilog);
   tcase_add_test(tc_basic, test_suspend_in_sole_empty_tag);
   tcase_add_test(tc_basic, test_unfinished_epilog);
   tcase_add_test(tc_basic, test_partial_char_in_epilog);

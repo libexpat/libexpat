@@ -3214,6 +3214,48 @@ START_TEST(test_suspend_xdecl) {
 }
 END_TEST
 
+/* Test aborting the parse in an epilog works */
+START_TEST(test_abort_epilog) {
+  const char *text = "<doc></doc>\n\r\n";
+  XML_Char match[] = XCS("\r");
+
+  XML_SetDefaultHandler(g_parser, selective_aborting_default_handler);
+  XML_SetUserData(g_parser, match);
+  g_resumable = XML_FALSE;
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+      != XML_STATUS_ERROR)
+    fail("Abort not triggered");
+  if (XML_GetErrorCode(g_parser) != XML_ERROR_ABORTED)
+    xml_failure(g_parser);
+}
+END_TEST
+
+/* Test a different code path for abort in the epilog */
+START_TEST(test_abort_epilog_2) {
+  const char *text = "<doc></doc>\n";
+  XML_Char match[] = XCS("\n");
+
+  XML_SetDefaultHandler(g_parser, selective_aborting_default_handler);
+  XML_SetUserData(g_parser, match);
+  g_resumable = XML_FALSE;
+  expect_failure(text, XML_ERROR_ABORTED, "Abort not triggered");
+}
+END_TEST
+
+/* Test suspension from the epilog */
+START_TEST(test_suspend_epilog) {
+  const char *text = "<doc></doc>\n";
+  XML_Char match[] = XCS("\n");
+
+  XML_SetDefaultHandler(g_parser, selective_aborting_default_handler);
+  XML_SetUserData(g_parser, match);
+  g_resumable = XML_TRUE;
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+      != XML_STATUS_SUSPENDED)
+    xml_failure(g_parser);
+}
+END_TEST
+
 TCase *
 make_basic_test_case(Suite *s) {
   TCase *tc_basic = tcase_create("basic tests");
@@ -3358,6 +3400,9 @@ make_basic_test_case(Suite *s) {
                                 test_recursive_external_parameter_entity);
   tcase_add_test(tc_basic, test_undefined_ext_entity_in_external_dtd);
   tcase_add_test(tc_basic, test_suspend_xdecl);
+  tcase_add_test(tc_basic, test_abort_epilog);
+  tcase_add_test(tc_basic, test_abort_epilog_2);
+  tcase_add_test(tc_basic, test_suspend_epilog);
 
   return tc_basic;
 }
