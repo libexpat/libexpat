@@ -86,6 +86,8 @@ extern void XMLCALL counting_start_element_handler(void *userData,
                                                    const XML_Char *name,
                                                    const XML_Char **atts);
 
+extern void XMLCALL suspending_end_handler(void *userData, const XML_Char *s);
+
 /* Do-nothing handler for the text encoding named "unsupported-encoding" */
 extern int XMLCALL UnknownEncodingHandler(void *data, const XML_Char *encoding,
                                           XML_Encoding *info);

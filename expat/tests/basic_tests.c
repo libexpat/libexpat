@@ -3256,6 +3256,48 @@ START_TEST(test_suspend_epilog) {
 }
 END_TEST
 
+START_TEST(test_suspend_in_sole_empty_tag) {
+  const char *text = "<doc/>";
+  enum XML_Status rc;
+
+  XML_SetEndElementHandler(g_parser, suspending_end_handler);
+  XML_SetUserData(g_parser, g_parser);
+  rc = _XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE);
+  if (rc == XML_STATUS_ERROR)
+    xml_failure(g_parser);
+  else if (rc != XML_STATUS_SUSPENDED)
+    fail("Suspend not triggered");
+  rc = XML_ResumeParser(g_parser);
+  if (rc == XML_STATUS_ERROR)
+    xml_failure(g_parser);
+  else if (rc != XML_STATUS_OK)
+    fail("Resume failed");
+}
+END_TEST
+
+START_TEST(test_unfinished_epilog) {
+  const char *text = "<doc></doc><";
+
+  expect_failure(text, XML_ERROR_UNCLOSED_TOKEN,
+                 "Incomplete epilog entry not faulted");
+}
+END_TEST
+
+START_TEST(test_partial_char_in_epilog) {
+  const char *text = "<doc></doc>\xe2\x82";
+
+  /* First check that no fault is raised if the parse is not finished */
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_FALSE)
+      == XML_STATUS_ERROR)
+    xml_failure(g_parser);
+  /* Now check that it is faulted once we finish */
+  if (XML_ParseBuffer(g_parser, 0, XML_TRUE) != XML_STATUS_ERROR)
+    fail("Partial character in epilog not faulted");
+  if (XML_GetErrorCode(g_parser) != XML_ERROR_PARTIAL_CHAR)
+    xml_failure(g_parser);
+}
+END_TEST
+
 TCase *
 make_basic_test_case(Suite *s) {
   TCase *tc_basic = tcase_create("basic tests");
@@ -3403,6 +3445,9 @@ make_basic_test_case(Suite *s) {
   tcase_add_test(tc_basic, test_abort_epilog);
   tcase_add_test(tc_basic, test_abort_epilog_2);
   tcase_add_test(tc_basic, test_suspend_epilog);
+  tcase_add_test(tc_basic, test_suspend_in_sole_empty_tag);
+  tcase_add_test(tc_basic, test_unfinished_epilog);
+  tcase_add_test(tc_basic, test_partial_char_in_epilog);
 
   return tc_basic;
 }
