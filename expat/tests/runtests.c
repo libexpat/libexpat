@@ -98,31 +98,6 @@ testhelper_is_whitespace_normalized(void) {
   assert(! is_whitespace_normalized(XCS("abc\t def"), 1));
 }
 
-/* Test undefined parameter entity in external entity handler */
-START_TEST(test_undefined_ext_entity_in_external_dtd) {
-  const char *text = "<!DOCTYPE doc SYSTEM 'foo'>\n"
-                     "<doc></doc>\n";
-
-  XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
-  XML_SetExternalEntityRefHandler(g_parser, external_entity_devaluer);
-  XML_SetUserData(g_parser, (void *)(intptr_t)XML_FALSE);
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
-      == XML_STATUS_ERROR)
-    xml_failure(g_parser);
-
-  /* Now repeat without the external entity ref handler invoking
-   * another copy of itself.
-   */
-  XML_ParserReset(g_parser, NULL);
-  XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
-  XML_SetExternalEntityRefHandler(g_parser, external_entity_devaluer);
-  XML_SetUserData(g_parser, (void *)(intptr_t)XML_TRUE);
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
-      == XML_STATUS_ERROR)
-    xml_failure(g_parser);
-}
-END_TEST
-
 static void XMLCALL
 aborting_xdecl_handler(void *userData, const XML_Char *version,
                        const XML_Char *encoding, int standalone) {
@@ -7157,7 +7132,6 @@ make_suite(void) {
   TCase *tc_accounting = tcase_create("accounting tests");
 #endif
 
-  tcase_add_test(tc_basic, test_undefined_ext_entity_in_external_dtd);
   tcase_add_test(tc_basic, test_suspend_xdecl);
   tcase_add_test(tc_basic, test_abort_epilog);
   tcase_add_test(tc_basic, test_abort_epilog_2);
