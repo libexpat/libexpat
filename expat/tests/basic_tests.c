@@ -3193,6 +3193,27 @@ START_TEST(test_undefined_ext_entity_in_external_dtd) {
 }
 END_TEST
 
+/* Test suspending the parse on receiving an XML declaration works */
+START_TEST(test_suspend_xdecl) {
+  const char *text = long_character_data_text;
+
+  XML_SetXmlDeclHandler(g_parser, entity_suspending_xdecl_handler);
+  XML_SetUserData(g_parser, g_parser);
+  g_resumable = XML_TRUE;
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+      != XML_STATUS_SUSPENDED)
+    xml_failure(g_parser);
+  if (XML_GetErrorCode(g_parser) != XML_ERROR_NONE)
+    xml_failure(g_parser);
+  /* Attempt to start a new parse while suspended */
+  if (XML_Parse(g_parser, text, (int)strlen(text), XML_TRUE)
+      != XML_STATUS_ERROR)
+    fail("Attempt to parse while suspended not faulted");
+  if (XML_GetErrorCode(g_parser) != XML_ERROR_SUSPENDED)
+    fail("Suspended parse not faulted with correct error");
+}
+END_TEST
+
 TCase *
 make_basic_test_case(Suite *s) {
   TCase *tc_basic = tcase_create("basic tests");
@@ -3336,6 +3357,7 @@ make_basic_test_case(Suite *s) {
   tcase_add_test__ifdef_xml_dtd(tc_basic,
                                 test_recursive_external_parameter_entity);
   tcase_add_test(tc_basic, test_undefined_ext_entity_in_external_dtd);
+  tcase_add_test(tc_basic, test_suspend_xdecl);
 
   return tc_basic;
 }
