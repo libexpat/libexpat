@@ -553,6 +553,42 @@ external_entity_good_cdata_ascii(XML_Parser parser, const XML_Char *context,
   return XML_STATUS_OK;
 }
 
+/* Test an external entity parser set to use latin-1 detects UTF-16
+ * BOMs correctly.
+ */
+int XMLCALL
+external_entity_loader2(XML_Parser parser, const XML_Char *context,
+                        const XML_Char *base, const XML_Char *systemId,
+                        const XML_Char *publicId) {
+  ExtTest2 *test_data = (ExtTest2 *)XML_GetUserData(parser);
+  XML_Parser extparser;
+
+  UNUSED_P(base);
+  UNUSED_P(systemId);
+  UNUSED_P(publicId);
+  extparser = XML_ExternalEntityParserCreate(parser, context, NULL);
+  if (extparser == NULL)
+    fail("Coulr not create external entity parser");
+  if (test_data->encoding != NULL) {
+    if (! XML_SetEncoding(extparser, test_data->encoding))
+      fail("XML_SetEncoding() ignored for external entity");
+  }
+  if (test_data->flags & EE_PARSE_FULL_BUFFER) {
+    if (XML_Parse(extparser, test_data->parse_text, test_data->parse_len,
+                  XML_TRUE)
+        == XML_STATUS_ERROR) {
+      xml_failure(extparser);
+    }
+  } else if (_XML_Parse_SINGLE_BYTES(extparser, test_data->parse_text,
+                                     test_data->parse_len, XML_TRUE)
+             == XML_STATUS_ERROR) {
+    xml_failure(extparser);
+  }
+
+  XML_ParserFree(extparser);
+  return XML_STATUS_OK;
+}
+
 /* Entity declaration handlers
  *
  * This handler attempts to suspend the subordinate parser, expecting
@@ -1095,6 +1131,12 @@ byte_character_handler(void *userData, const XML_Char *s, int len) {
   UNUSED_P(userData);
   UNUSED_P(len);
 #endif
+}
+
+void XMLCALL
+ext2_accumulate_characters(void *userData, const XML_Char *s, int len) {
+  ExtTest2 *test_data = (ExtTest2 *)userData;
+  accumulate_characters(test_data->storage, s, len);
 }
 
 void XMLCALL

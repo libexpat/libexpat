@@ -270,6 +270,22 @@ extern int XMLCALL external_entity_oneshot_loader(XML_Parser parser,
                                                   const XML_Char *systemId,
                                                   const XML_Char *publicId);
 
+enum ee_parse_flags { EE_PARSE_NONE = 0x00, EE_PARSE_FULL_BUFFER = 0x01 };
+
+typedef struct ExtTest2 {
+  const char *parse_text;
+  int parse_len;
+  const XML_Char *encoding;
+  CharData *storage;
+  enum ee_parse_flags flags;
+} ExtTest2;
+
+extern int XMLCALL external_entity_loader2(XML_Parser parser,
+                                           const XML_Char *context,
+                                           const XML_Char *base,
+                                           const XML_Char *systemId,
+                                           const XML_Char *publicId);
+
 /* Declaration handlers for entity declarations */
 extern void XMLCALL entity_suspending_decl_handler(void *userData,
                                                    const XML_Char *name,
@@ -334,6 +350,10 @@ typedef struct ByteTestData {
 } ByteTestData;
 
 extern void byte_character_handler(void *userData, const XML_Char *s, int len);
+
+extern  void XMLCALL ext2_accumulate_characters(void *userData,
+                                                const XML_Char *s,
+                                                int len);
 
 extern void XMLCALL accumulate_pi_characters(void *userData,
                                              const XML_Char *target,
