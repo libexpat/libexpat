@@ -3744,6 +3744,196 @@ START_TEST(test_utf16_le_comment) {
 }
 END_TEST
 
+/* Test that the unknown encoding handler with map entries that expect
+ * conversion but no conversion function is faulted
+ */
+START_TEST(test_missing_encoding_conversion_fn) {
+  const char *text = "<?xml version='1.0' encoding='no-conv'?>\n"
+                     "<doc>\x81</doc>";
+
+  XML_SetUnknownEncodingHandler(g_parser, MiscEncodingHandler, NULL);
+  /* MiscEncodingHandler sets up an encoding with every top-bit-set
+   * character introducing a two-byte sequence.  For this, it
+   * requires a convert function.  The above function call doesn't
+   * pass one through, so when BadEncodingHandler actually gets
+   * called it should supply an invalid encoding.
+   */
+  expect_failure(text, XML_ERROR_UNKNOWN_ENCODING,
+                 "Encoding with missing convert() not faulted");
+}
+END_TEST
+
+START_TEST(test_failing_encoding_conversion_fn) {
+  const char *text = "<?xml version='1.0' encoding='failing-conv'?>\n"
+                     "<doc>\x81</doc>";
+
+  XML_SetUnknownEncodingHandler(g_parser, MiscEncodingHandler, NULL);
+  /* BadEncodingHandler sets up an encoding with every top-bit-set
+   * character introducing a two-byte sequence.  For this, it
+   * requires a convert function.  The above function call passes
+   * one that insists all possible sequences are invalid anyway.
+   */
+  expect_failure(text, XML_ERROR_INVALID_TOKEN,
+                 "Encoding with failing convert() not faulted");
+}
+END_TEST
+
+/* Test unknown encoding conversions */
+START_TEST(test_unknown_encoding_success) {
+  const char *text = "<?xml version='1.0' encoding='prefix-conv'?>\n"
+                     /* Equivalent to <eoc>Hello, world</eoc> */
+                     "<\x81\x64\x80oc>Hello, world</\x81\x64\x80oc>";
+
+  XML_SetUnknownEncodingHandler(g_parser, MiscEncodingHandler, NULL);
+  run_character_check(text, XCS("Hello, world"));
+}
+END_TEST
+
+/* Test bad name character in unknown encoding */
+START_TEST(test_unknown_encoding_bad_name) {
+  const char *text = "<?xml version='1.0' encoding='prefix-conv'?>\n"
+                     "<\xff\x64oc>Hello, world</\xff\x64oc>";
+
+  XML_SetUnknownEncodingHandler(g_parser, MiscEncodingHandler, NULL);
+  expect_failure(text, XML_ERROR_INVALID_TOKEN,
+                 "Bad name start in unknown encoding not faulted");
+}
+END_TEST
+
+/* Test bad mid-name character in unknown encoding */
+START_TEST(test_unknown_encoding_bad_name_2) {
+  const char *text = "<?xml version='1.0' encoding='prefix-conv'?>\n"
+                     "<d\xffoc>Hello, world</d\xffoc>";
+
+  XML_SetUnknownEncodingHandler(g_parser, MiscEncodingHandler, NULL);
+  expect_failure(text, XML_ERROR_INVALID_TOKEN,
+                 "Bad name in unknown encoding not faulted");
+}
+END_TEST
+
+/* Test element name that is long enough to fill the conversion buffer
+ * in an unknown encoding, finishing with an encoded character.
+ */
+START_TEST(test_unknown_encoding_long_name_1) {
+  const char *text = "<?xml version='1.0' encoding='prefix-conv'?>\n"
+                     "<abcdefghabcdefghabcdefghijkl\x80m\x80n\x80o\x80p>"
+                     "Hi"
+                     "</abcdefghabcdefghabcdefghijkl\x80m\x80n\x80o\x80p>";
+  const XML_Char *expected = XCS("abcdefghabcdefghabcdefghijklmnop");
+  CharData storage;
+
+  CharData_Init(&storage);
+  XML_SetUnknownEncodingHandler(g_parser, MiscEncodingHandler, NULL);
+  XML_SetStartElementHandler(g_parser, record_element_start_handler);
+  XML_SetUserData(g_parser, &storage);
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+      == XML_STATUS_ERROR)
+    xml_failure(g_parser);
+  CharData_CheckXMLChars(&storage, expected);
+}
+END_TEST
+
+/* Test element name that is long enough to fill the conversion buffer
+ * in an unknown encoding, finishing with an simple character.
+ */
+START_TEST(test_unknown_encoding_long_name_2) {
+  const char *text = "<?xml version='1.0' encoding='prefix-conv'?>\n"
+                     "<abcdefghabcdefghabcdefghijklmnop>"
+                     "Hi"
+                     "</abcdefghabcdefghabcdefghijklmnop>";
+  const XML_Char *expected = XCS("abcdefghabcdefghabcdefghijklmnop");
+  CharData storage;
+
+  CharData_Init(&storage);
+  XML_SetUnknownEncodingHandler(g_parser, MiscEncodingHandler, NULL);
+  XML_SetStartElementHandler(g_parser, record_element_start_handler);
+  XML_SetUserData(g_parser, &storage);
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+      == XML_STATUS_ERROR)
+    xml_failure(g_parser);
+  CharData_CheckXMLChars(&storage, expected);
+}
+END_TEST
+
+START_TEST(test_invalid_unknown_encoding) {
+  const char *text = "<?xml version='1.0' encoding='invalid-9'?>\n"
+                     "<doc>Hello world</doc>";
+
+  XML_SetUnknownEncodingHandler(g_parser, MiscEncodingHandler, NULL);
+  expect_failure(text, XML_ERROR_UNKNOWN_ENCODING,
+                 "Invalid unknown encoding not faulted");
+}
+END_TEST
+
+START_TEST(test_unknown_ascii_encoding_ok) {
+  const char *text = "<?xml version='1.0' encoding='ascii-like'?>\n"
+                     "<doc>Hello, world</doc>";
+
+  XML_SetUnknownEncodingHandler(g_parser, MiscEncodingHandler, NULL);
+  run_character_check(text, XCS("Hello, world"));
+}
+END_TEST
+
+START_TEST(test_unknown_ascii_encoding_fail) {
+  const char *text = "<?xml version='1.0' encoding='ascii-like'?>\n"
+                     "<doc>Hello, \x80 world</doc>";
+
+  XML_SetUnknownEncodingHandler(g_parser, MiscEncodingHandler, NULL);
+  expect_failure(text, XML_ERROR_INVALID_TOKEN,
+                 "Invalid character not faulted");
+}
+END_TEST
+
+START_TEST(test_unknown_encoding_invalid_length) {
+  const char *text = "<?xml version='1.0' encoding='invalid-len'?>\n"
+                     "<doc>Hello, world</doc>";
+
+  XML_SetUnknownEncodingHandler(g_parser, MiscEncodingHandler, NULL);
+  expect_failure(text, XML_ERROR_UNKNOWN_ENCODING,
+                 "Invalid unknown encoding not faulted");
+}
+END_TEST
+
+START_TEST(test_unknown_encoding_invalid_topbit) {
+  const char *text = "<?xml version='1.0' encoding='invalid-a'?>\n"
+                     "<doc>Hello, world</doc>";
+
+  XML_SetUnknownEncodingHandler(g_parser, MiscEncodingHandler, NULL);
+  expect_failure(text, XML_ERROR_UNKNOWN_ENCODING,
+                 "Invalid unknown encoding not faulted");
+}
+END_TEST
+
+START_TEST(test_unknown_encoding_invalid_surrogate) {
+  const char *text = "<?xml version='1.0' encoding='invalid-surrogate'?>\n"
+                     "<doc>Hello, \x82 world</doc>";
+
+  XML_SetUnknownEncodingHandler(g_parser, MiscEncodingHandler, NULL);
+  expect_failure(text, XML_ERROR_INVALID_TOKEN,
+                 "Invalid unknown encoding not faulted");
+}
+END_TEST
+
+START_TEST(test_unknown_encoding_invalid_high) {
+  const char *text = "<?xml version='1.0' encoding='invalid-high'?>\n"
+                     "<doc>Hello, world</doc>";
+
+  XML_SetUnknownEncodingHandler(g_parser, MiscEncodingHandler, NULL);
+  expect_failure(text, XML_ERROR_UNKNOWN_ENCODING,
+                 "Invalid unknown encoding not faulted");
+}
+END_TEST
+
+START_TEST(test_unknown_encoding_invalid_attr_value) {
+  const char *text = "<?xml version='1.0' encoding='prefix-conv'?>\n"
+                     "<doc attr='\xff\x30'/>";
+
+  XML_SetUnknownEncodingHandler(g_parser, MiscEncodingHandler, NULL);
+  expect_failure(text, XML_ERROR_INVALID_TOKEN,
+                 "Invalid attribute valid not faulted");
+}
+END_TEST
+
 TCase *
 make_basic_test_case(Suite *s) {
   TCase *tc_basic = tcase_create("basic tests");
@@ -3919,6 +4109,21 @@ make_basic_test_case(Suite *s) {
   tcase_add_test(tc_basic, test_utf16_be_pi);
   tcase_add_test(tc_basic, test_utf16_be_comment);
   tcase_add_test(tc_basic, test_utf16_le_comment);
+  tcase_add_test(tc_basic, test_missing_encoding_conversion_fn);
+  tcase_add_test(tc_basic, test_failing_encoding_conversion_fn);
+  tcase_add_test(tc_basic, test_unknown_encoding_success);
+  tcase_add_test(tc_basic, test_unknown_encoding_bad_name);
+  tcase_add_test(tc_basic, test_unknown_encoding_bad_name_2);
+  tcase_add_test(tc_basic, test_unknown_encoding_long_name_1);
+  tcase_add_test(tc_basic, test_unknown_encoding_long_name_2);
+  tcase_add_test(tc_basic, test_invalid_unknown_encoding);
+  tcase_add_test(tc_basic, test_unknown_ascii_encoding_ok);
+  tcase_add_test(tc_basic, test_unknown_ascii_encoding_fail);
+  tcase_add_test(tc_basic, test_unknown_encoding_invalid_length);
+  tcase_add_test(tc_basic, test_unknown_encoding_invalid_topbit);
+  tcase_add_test(tc_basic, test_unknown_encoding_invalid_surrogate);
+  tcase_add_test(tc_basic, test_unknown_encoding_invalid_high);
+  tcase_add_test(tc_basic, test_unknown_encoding_invalid_attr_value);
 
   return tc_basic;
 }

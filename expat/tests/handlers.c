@@ -226,6 +226,71 @@ unknown_released_encoding_handler(void *data, const XML_Char *encoding,
   return XML_STATUS_ERROR;
 }
 
+static int XMLCALL
+failing_converter(void *data, const char *s) {
+  UNUSED_P(data);
+  UNUSED_P(s);
+  /* Always claim to have failed */
+  return -1;
+}
+
+static int XMLCALL
+prefix_converter(void *data, const char *s) {
+  UNUSED_P(data);
+  /* If the first byte is 0xff, raise an error */
+  if (s[0] == (char)-1)
+    return -1;
+  /* Just add the low bits of the first byte to the second */
+  return (s[1] + (s[0] & 0x7f)) & 0x01ff;
+}
+
+int XMLCALL
+MiscEncodingHandler(void *data, const XML_Char *encoding, XML_Encoding *info) {
+  int i;
+  int high_map = -2; /* Assume a 2-byte sequence */
+
+  if (! xcstrcmp(encoding, XCS("invalid-9"))
+      || ! xcstrcmp(encoding, XCS("ascii-like"))
+      || ! xcstrcmp(encoding, XCS("invalid-len"))
+      || ! xcstrcmp(encoding, XCS("invalid-a"))
+      || ! xcstrcmp(encoding, XCS("invalid-surrogate"))
+      || ! xcstrcmp(encoding, XCS("invalid-high")))
+    high_map = -1;
+
+  for (i = 0; i < 128; ++i)
+    info->map[i] = i;
+  for (; i < 256; ++i)
+    info->map[i] = high_map;
+
+  /* If required, put an invalid value in the ASCII entries */
+  if (! xcstrcmp(encoding, XCS("invalid-9")))
+    info->map[9] = 5;
+  /* If required, have a top-bit set character starts a 5-byte sequence */
+  if (! xcstrcmp(encoding, XCS("invalid-len")))
+    info->map[0x81] = -5;
+  /* If required, make a top-bit set character a valid ASCII character */
+  if (! xcstrcmp(encoding, XCS("invalid-a")))
+    info->map[0x82] = 'a';
+  /* If required, give a top-bit set character a forbidden value,
+   * what would otherwise be the first of a surrogate pair.
+   */
+  if (! xcstrcmp(encoding, XCS("invalid-surrogate")))
+    info->map[0x83] = 0xd801;
+  /* If required, give a top-bit set character too high a value */
+  if (! xcstrcmp(encoding, XCS("invalid-high")))
+    info->map[0x84] = 0x010101;
+
+  info->data = data;
+  info->release = NULL;
+  if (! xcstrcmp(encoding, XCS("failing-conv")))
+    info->convert = failing_converter;
+  else if (! xcstrcmp(encoding, XCS("prefix-conv")))
+    info->convert = prefix_converter;
+  else
+    info->convert = NULL;
+  return XML_STATUS_OK;
+}
+
 /* External Entity Handlers */
 
 int XMLCALL

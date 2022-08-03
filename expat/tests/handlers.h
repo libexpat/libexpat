@@ -106,6 +106,9 @@ extern int XMLCALL unknown_released_encoding_handler(void *data,
                                                      const XML_Char *encoding,
                                                      XML_Encoding *info);
 
+extern int XMLCALL MiscEncodingHandler(void *data, const XML_Char *encoding,
+                                       XML_Encoding *info);
+
 /* External Entity Handlers
  *
  * This handler expects to be passed an ExtTest structure (see common.h) as
