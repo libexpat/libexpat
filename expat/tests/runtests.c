@@ -98,63 +98,6 @@ testhelper_is_whitespace_normalized(void) {
   assert(! is_whitespace_normalized(XCS("abc\t def"), 1));
 }
 
-/* Test resuming a parse suspended in entity substitution */
-static void XMLCALL
-start_element_suspender(void *userData, const XML_Char *name,
-                        const XML_Char **atts) {
-  UNUSED_P(userData);
-  UNUSED_P(atts);
-  if (! xcstrcmp(name, XCS("suspend")))
-    XML_StopParser(g_parser, XML_TRUE);
-  if (! xcstrcmp(name, XCS("abort")))
-    XML_StopParser(g_parser, XML_FALSE);
-}
-
-START_TEST(test_suspend_resume_internal_entity) {
-  const char *text
-      = "<!DOCTYPE doc [\n"
-        "<!ENTITY foo '<suspend>Hi<suspend>Ho</suspend></suspend>'>\n"
-        "]>\n"
-        "<doc>&foo;</doc>\n";
-  const XML_Char *expected1 = XCS("Hi");
-  const XML_Char *expected2 = XCS("HiHo");
-  CharData storage;
-
-  CharData_Init(&storage);
-  XML_SetStartElementHandler(g_parser, start_element_suspender);
-  XML_SetCharacterDataHandler(g_parser, accumulate_characters);
-  XML_SetUserData(g_parser, &storage);
-  if (XML_Parse(g_parser, text, (int)strlen(text), XML_TRUE)
-      != XML_STATUS_SUSPENDED)
-    xml_failure(g_parser);
-  CharData_CheckXMLChars(&storage, XCS(""));
-  if (XML_ResumeParser(g_parser) != XML_STATUS_SUSPENDED)
-    xml_failure(g_parser);
-  CharData_CheckXMLChars(&storage, expected1);
-  if (XML_ResumeParser(g_parser) != XML_STATUS_OK)
-    xml_failure(g_parser);
-  CharData_CheckXMLChars(&storage, expected2);
-}
-END_TEST
-
-/* Test syntax error is caught at parse resumption */
-START_TEST(test_resume_entity_with_syntax_error) {
-  const char *text = "<!DOCTYPE doc [\n"
-                     "<!ENTITY foo '<suspend>Hi</wombat>'>\n"
-                     "]>\n"
-                     "<doc>&foo;</doc>\n";
-
-  XML_SetStartElementHandler(g_parser, start_element_suspender);
-  if (XML_Parse(g_parser, text, (int)strlen(text), XML_TRUE)
-      != XML_STATUS_SUSPENDED)
-    xml_failure(g_parser);
-  if (XML_ResumeParser(g_parser) != XML_STATUS_ERROR)
-    fail("Syntax error in entity not faulted");
-  if (XML_GetErrorCode(g_parser) != XML_ERROR_TAG_MISMATCH)
-    xml_failure(g_parser);
-}
-END_TEST
-
 /* Test suspending and resuming in a parameter entity substitution */
 static void XMLCALL
 element_decl_suspender(void *userData, const XML_Char *name,
@@ -7000,8 +6943,6 @@ make_suite(void) {
   TCase *tc_accounting = tcase_create("accounting tests");
 #endif
 
-  tcase_add_test__ifdef_xml_dtd(tc_basic, test_suspend_resume_internal_entity);
-  tcase_add_test__ifdef_xml_dtd(tc_basic, test_resume_entity_with_syntax_error);
   tcase_add_test__ifdef_xml_dtd(tc_basic, test_suspend_resume_parameter_entity);
   tcase_add_test(tc_basic, test_restart_on_error);
   tcase_add_test(tc_basic, test_reject_lt_in_attribute_value);
