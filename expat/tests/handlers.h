@@ -332,6 +332,10 @@ typedef struct ByteTestData {
 
 extern void byte_character_handler(void *userData, const XML_Char *s, int len);
 
+extern void XMLCALL accumulate_pi_characters(void *userData,
+                                             const XML_Char *target,
+                                             const XML_Char *data);
+
 extern void XMLCALL selective_aborting_default_handler(void *userData,
                                                        const XML_Char *s,
                                                        int len);

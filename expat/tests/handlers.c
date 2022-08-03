@@ -1033,6 +1033,17 @@ byte_character_handler(void *userData, const XML_Char *s, int len) {
 }
 
 void XMLCALL
+accumulate_pi_characters(void *userData, const XML_Char *target,
+                         const XML_Char *data) {
+  CharData *storage = (CharData *)userData;
+
+  CharData_AppendXMLChars(storage, target, -1);
+  CharData_AppendXMLChars(storage, XCS(": "), 2);
+  CharData_AppendXMLChars(storage, data, -1);
+  CharData_AppendXMLChars(storage, XCS("\n"), 1);
+}
+
+void XMLCALL
 selective_aborting_default_handler(void *userData, const XML_Char *s, int len) {
   const XML_Char *match = (const XML_Char *)userData;
 
