@@ -3450,6 +3450,163 @@ START_TEST(test_skipped_external_entity) {
 }
 END_TEST
 
+/* Test a different form of unknown external entity */
+START_TEST(test_skipped_null_loaded_ext_entity) {
+  const char *text = "<!DOCTYPE doc SYSTEM 'http://example.org/one.ent'>\n"
+                     "<doc />";
+  ExtHdlrData test_data
+      = {"<!ENTITY % pe1 SYSTEM 'http://example.org/two.ent'>\n"
+         "<!ENTITY % pe2 '%pe1;'>\n"
+         "%pe2;\n",
+         external_entity_null_loader};
+
+  XML_SetUserData(g_parser, &test_data);
+  XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+  XML_SetExternalEntityRefHandler(g_parser, external_entity_oneshot_loader);
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+      == XML_STATUS_ERROR)
+    xml_failure(g_parser);
+}
+END_TEST
+
+START_TEST(test_skipped_unloaded_ext_entity) {
+  const char *text = "<!DOCTYPE doc SYSTEM 'http://example.org/one.ent'>\n"
+                     "<doc />";
+  ExtHdlrData test_data
+      = {"<!ENTITY % pe1 SYSTEM 'http://example.org/two.ent'>\n"
+         "<!ENTITY % pe2 '%pe1;'>\n"
+         "%pe2;\n",
+         NULL};
+
+  XML_SetUserData(g_parser, &test_data);
+  XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+  XML_SetExternalEntityRefHandler(g_parser, external_entity_oneshot_loader);
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+      == XML_STATUS_ERROR)
+    xml_failure(g_parser);
+}
+END_TEST
+
+/* Test that a parameter entity value ending with a carriage return
+ * has it translated internally into a newline.
+ */
+START_TEST(test_param_entity_with_trailing_cr) {
+#define PARAM_ENTITY_NAME "pe"
+#define PARAM_ENTITY_CORE_VALUE "<!ATTLIST doc att CDATA \"default\">"
+  const char *text = "<!DOCTYPE doc SYSTEM 'http://example.org/'>\n"
+                     "<doc/>";
+  ExtTest test_data
+      = {"<!ENTITY % " PARAM_ENTITY_NAME " '" PARAM_ENTITY_CORE_VALUE "\r'>\n"
+         "%" PARAM_ENTITY_NAME ";\n",
+         NULL, NULL};
+  int entity_match_flag;
+
+  XML_SetUserData(g_parser, &test_data);
+  XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+  XML_SetExternalEntityRefHandler(g_parser, external_entity_loader);
+  XML_SetEntityDeclHandler(g_parser, param_entity_match_handler);
+  param_entity_match_init(XCS(PARAM_ENTITY_NAME),
+                          XCS(PARAM_ENTITY_CORE_VALUE) XCS("\n"));
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+      == XML_STATUS_ERROR)
+    xml_failure(g_parser);
+  entity_match_flag = get_param_entity_match_flag();
+  if (entity_match_flag == ENTITY_MATCH_FAIL)
+    fail("Parameter entity CR->NEWLINE conversion failed");
+  else if (entity_match_flag == ENTITY_MATCH_NOT_FOUND)
+    fail("Parameter entity not parsed");
+}
+#undef PARAM_ENTITY_NAME
+#undef PARAM_ENTITY_CORE_VALUE
+END_TEST
+
+START_TEST(test_invalid_character_entity) {
+  const char *text = "<!DOCTYPE doc [\n"
+                     "  <!ENTITY entity '&#x110000;'>\n"
+                     "]>\n"
+                     "<doc>&entity;</doc>";
+
+  expect_failure(text, XML_ERROR_BAD_CHAR_REF,
+                 "Out of range character reference not faulted");
+}
+END_TEST
+
+START_TEST(test_invalid_character_entity_2) {
+  const char *text = "<!DOCTYPE doc [\n"
+                     "  <!ENTITY entity '&#xg0;'>\n"
+                     "]>\n"
+                     "<doc>&entity;</doc>";
+
+  expect_failure(text, XML_ERROR_INVALID_TOKEN,
+                 "Out of range character reference not faulted");
+}
+END_TEST
+
+START_TEST(test_invalid_character_entity_3) {
+  const char text[] =
+      /* <!DOCTYPE doc [\n */
+      "\0<\0!\0D\0O\0C\0T\0Y\0P\0E\0 \0d\0o\0c\0 \0[\0\n"
+      /* U+0E04 = KHO KHWAI
+       * U+0E08 = CHO CHAN */
+      /* <!ENTITY entity '&\u0e04\u0e08;'>\n */
+      "\0<\0!\0E\0N\0T\0I\0T\0Y\0 \0e\0n\0t\0i\0t\0y\0 "
+      "\0'\0&\x0e\x04\x0e\x08\0;\0'\0>\0\n"
+      /* ]>\n */
+      "\0]\0>\0\n"
+      /* <doc>&entity;</doc> */
+      "\0<\0d\0o\0c\0>\0&\0e\0n\0t\0i\0t\0y\0;\0<\0/\0d\0o\0c\0>";
+
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)sizeof(text) - 1, XML_TRUE)
+      != XML_STATUS_ERROR)
+    fail("Invalid start of entity name not faulted");
+  if (XML_GetErrorCode(g_parser) != XML_ERROR_UNDEFINED_ENTITY)
+    xml_failure(g_parser);
+}
+END_TEST
+
+START_TEST(test_invalid_character_entity_4) {
+  const char *text = "<!DOCTYPE doc [\n"
+                     "  <!ENTITY entity '&#1114112;'>\n" /* = &#x110000 */
+                     "]>\n"
+                     "<doc>&entity;</doc>";
+
+  expect_failure(text, XML_ERROR_BAD_CHAR_REF,
+                 "Out of range character reference not faulted");
+}
+END_TEST
+
+/* Test that processing instructions are picked up by a default handler */
+START_TEST(test_pi_handled_in_default) {
+  const char *text = "<?test processing instruction?>\n<doc/>";
+  const XML_Char *expected = XCS("<?test processing instruction?>\n<doc/>");
+  CharData storage;
+
+  CharData_Init(&storage);
+  XML_SetDefaultHandler(g_parser, accumulate_characters);
+  XML_SetUserData(g_parser, &storage);
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+      == XML_STATUS_ERROR)
+    xml_failure(g_parser);
+  CharData_CheckXMLChars(&storage, expected);
+}
+END_TEST
+
+/* Test that comments are picked up by a default handler */
+START_TEST(test_comment_handled_in_default) {
+  const char *text = "<!-- This is a comment -->\n<doc/>";
+  const XML_Char *expected = XCS("<!-- This is a comment -->\n<doc/>");
+  CharData storage;
+
+  CharData_Init(&storage);
+  XML_SetDefaultHandler(g_parser, accumulate_characters);
+  XML_SetUserData(g_parser, &storage);
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+      == XML_STATUS_ERROR)
+    xml_failure(g_parser);
+  CharData_CheckXMLChars(&storage, expected);
+}
+END_TEST
+
 TCase *
 make_basic_test_case(Suite *s) {
   TCase *tc_basic = tcase_create("basic tests");
@@ -3609,6 +3766,15 @@ make_basic_test_case(Suite *s) {
   tcase_add_test(tc_basic, test_trailing_cr_in_att_value);
   tcase_add_test(tc_basic, test_standalone_internal_entity);
   tcase_add_test(tc_basic, test_skipped_external_entity);
+  tcase_add_test(tc_basic, test_skipped_null_loaded_ext_entity);
+  tcase_add_test(tc_basic, test_skipped_unloaded_ext_entity);
+  tcase_add_test__ifdef_xml_dtd(tc_basic, test_param_entity_with_trailing_cr);
+  tcase_add_test(tc_basic, test_invalid_character_entity);
+  tcase_add_test(tc_basic, test_invalid_character_entity_2);
+  tcase_add_test(tc_basic, test_invalid_character_entity_3);
+  tcase_add_test(tc_basic, test_invalid_character_entity_4);
+  tcase_add_test(tc_basic, test_pi_handled_in_default);
+  tcase_add_test(tc_basic, test_comment_handled_in_default);
 
   return tc_basic;
 }

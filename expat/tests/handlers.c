@@ -885,6 +885,31 @@ external_entity_devaluer(XML_Parser parser, const XML_Char *context,
   return XML_STATUS_OK;
 }
 
+int XMLCALL
+external_entity_oneshot_loader(XML_Parser parser, const XML_Char *context,
+                               const XML_Char *base, const XML_Char *systemId,
+                               const XML_Char *publicId) {
+  ExtHdlrData *test_data = (ExtHdlrData *)XML_GetUserData(parser);
+  XML_Parser ext_parser;
+
+  UNUSED_P(base);
+  UNUSED_P(systemId);
+  UNUSED_P(publicId);
+  ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
+  if (ext_parser == NULL)
+    fail("Could not create external entity parser.");
+  /* Use the requested entity parser for further externals */
+  XML_SetExternalEntityRefHandler(ext_parser, test_data->handler);
+  if (_XML_Parse_SINGLE_BYTES(ext_parser, test_data->parse_text,
+                              (int)strlen(test_data->parse_text), XML_TRUE)
+      == XML_STATUS_ERROR) {
+    xml_failure(ext_parser);
+  }
+
+  XML_ParserFree(ext_parser);
+  return XML_STATUS_OK;
+}
+
 /* NotStandalone handlers */
 
 int XMLCALL

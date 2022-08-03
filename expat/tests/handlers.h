@@ -249,11 +249,23 @@ extern int XMLCALL external_entity_public(XML_Parser parser,
                                           const XML_Char *base,
                                           const XML_Char *systemId,
                                           const XML_Char *publicId);
+
 extern int XMLCALL external_entity_devaluer(XML_Parser parser,
                                             const XML_Char *context,
                                             const XML_Char *base,
                                             const XML_Char *systemId,
                                             const XML_Char *publicId);
+
+typedef struct ext_hdlr_data {
+  const char *parse_text;
+  XML_ExternalEntityRefHandler handler;
+} ExtHdlrData;
+
+extern int XMLCALL external_entity_oneshot_loader(XML_Parser parser,
+                                                  const XML_Char *context,
+                                                  const XML_Char *base,
+                                                  const XML_Char *systemId,
+                                                  const XML_Char *publicId);
 
 /* Declaration handlers for entity declarations */
 extern void XMLCALL entity_suspending_decl_handler(void *userData,
