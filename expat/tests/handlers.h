@@ -286,6 +286,20 @@ extern int XMLCALL external_entity_loader2(XML_Parser parser,
                                            const XML_Char *systemId,
                                            const XML_Char *publicId);
 
+typedef struct ExtFaults2 {
+  const char *parse_text;
+  int parse_len;
+  const char *fail_text;
+  const XML_Char *encoding;
+  enum XML_Error error;
+} ExtFaults2;
+
+extern int XMLCALL external_entity_faulter2(XML_Parser parser,
+                                            const XML_Char *context,
+                                            const XML_Char *base,
+                                            const XML_Char *systemId,
+                                            const XML_Char *publicId);
+
 /* Declaration handlers for entity declarations */
 extern void XMLCALL entity_suspending_decl_handler(void *userData,
                                                    const XML_Char *name,
