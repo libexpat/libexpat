@@ -507,6 +507,15 @@ entity_suspending_decl_handler(void *userData, const XML_Char *name,
   XML_FreeContentModel(g_parser, model);
 }
 
+void XMLCALL
+element_decl_suspender(void *userData, const XML_Char *name,
+                       XML_Content *model) {
+  UNUSED_P(userData);
+  UNUSED_P(name);
+  XML_StopParser(g_parser, XML_TRUE);
+  XML_FreeContentModel(g_parser, model);
+}
+
 /* This XML declaration handler attempts to suspend the subordinate parser */
 void XMLCALL
 entity_suspending_xdecl_handler(void *userData, const XML_Char *version,
