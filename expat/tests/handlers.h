@@ -309,6 +309,16 @@ extern void XMLCALL element_decl_suspender(void *userData,
                                            const XML_Char *name,
                                            XML_Content *model);
 
+extern void XMLCALL accumulate_entity_decl(void *userData,
+                                           const XML_Char *entityName,
+                                           int is_parameter_entity,
+                                           const XML_Char *value,
+                                           int value_length,
+                                           const XML_Char *base,
+                                           const XML_Char *systemId,
+                                           const XML_Char *publicId,
+                                           const XML_Char *notationName);
+
 extern void XMLCALL entity_suspending_xdecl_handler(void *userData,
                                                     const XML_Char *version,
                                                     const XML_Char *encoding,
@@ -376,6 +386,16 @@ extern void XMLCALL accumulate_pi_characters(void *userData,
 extern void XMLCALL selective_aborting_default_handler(void *userData,
                                                        const XML_Char *s,
                                                        int len);
+
+typedef struct default_check {
+  const XML_Char *expected;
+  const int expectedLen;
+  XML_Bool seen;
+} DefaultCheck;
+
+extern void XMLCALL checking_default_handler(void *userData,
+                                             const XML_Char *s,
+                                             int len);
 
 /* Variable holding the expected handler userData */
 extern void *g_handler_data;

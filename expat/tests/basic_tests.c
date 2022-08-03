@@ -4363,6 +4363,385 @@ START_TEST(test_attr_after_solidus) {
 }
 END_TEST
 
+START_TEST(test_utf16_pe) {
+  /* <!DOCTYPE doc [
+   * <!ENTITY % {KHO KHWAI}{CHO CHAN} '<!ELEMENT doc (#PCDATA)>'>
+   * %{KHO KHWAI}{CHO CHAN};
+   * ]>
+   * <doc></doc>
+   *
+   * where {KHO KHWAI} = U+0E04 = 0xe0 0xb8 0x84 in UTF-8
+   * and   {CHO CHAN}  = U+0E08 = 0xe0 0xb8 0x88 in UTF-8
+   */
+  const char text[] = "\0<\0!\0D\0O\0C\0T\0Y\0P\0E\0 \0d\0o\0c\0 \0[\0\n"
+                      "\0<\0!\0E\0N\0T\0I\0T\0Y\0 \0%\0 \x0e\x04\x0e\x08\0 "
+                      "\0'\0<\0!\0E\0L\0E\0M\0E\0N\0T\0 "
+                      "\0d\0o\0c\0 \0(\0#\0P\0C\0D\0A\0T\0A\0)\0>\0'\0>\0\n"
+                      "\0%\x0e\x04\x0e\x08\0;\0\n"
+                      "\0]\0>\0\n"
+                      "\0<\0d\0o\0c\0>\0<\0/\0d\0o\0c\0>";
+#ifdef XML_UNICODE
+  const XML_Char *expected = XCS("\x0e04\x0e08=<!ELEMENT doc (#PCDATA)>\n");
+#else
+  const XML_Char *expected
+      = XCS("\xe0\xb8\x84\xe0\xb8\x88=<!ELEMENT doc (#PCDATA)>\n");
+#endif
+  CharData storage;
+
+  CharData_Init(&storage);
+  XML_SetUserData(g_parser, &storage);
+  XML_SetEntityDeclHandler(g_parser, accumulate_entity_decl);
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)sizeof(text) - 1, XML_TRUE)
+      == XML_STATUS_ERROR)
+    xml_failure(g_parser);
+  CharData_CheckXMLChars(&storage, expected);
+}
+END_TEST
+
+/* Test that duff attribute description keywords are rejected */
+START_TEST(test_bad_attr_desc_keyword) {
+  const char *text = "<!DOCTYPE doc [\n"
+                     "  <!ATTLIST doc attr CDATA #!IMPLIED>\n"
+                     "]>\n"
+                     "<doc />";
+
+  expect_failure(text, XML_ERROR_INVALID_TOKEN,
+                 "Bad keyword !IMPLIED not faulted");
+}
+END_TEST
+
+/* Test that an invalid attribute description keyword consisting of
+ * UTF-16 characters with their top bytes non-zero are correctly
+ * faulted
+ */
+START_TEST(test_bad_attr_desc_keyword_utf16) {
+  /* <!DOCTYPE d [
+   * <!ATTLIST d a CDATA #{KHO KHWAI}{CHO CHAN}>
+   * ]><d/>
+   *
+   * where {KHO KHWAI} = U+0E04 = 0xe0 0xb8 0x84 in UTF-8
+   * and   {CHO CHAN}  = U+0E08 = 0xe0 0xb8 0x88 in UTF-8
+   */
+  const char text[]
+      = "\0<\0!\0D\0O\0C\0T\0Y\0P\0E\0 \0d\0 \0[\0\n"
+        "\0<\0!\0A\0T\0T\0L\0I\0S\0T\0 \0d\0 \0a\0 \0C\0D\0A\0T\0A\0 "
+        "\0#\x0e\x04\x0e\x08\0>\0\n"
+        "\0]\0>\0<\0d\0/\0>";
+
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)sizeof(text) - 1, XML_TRUE)
+      != XML_STATUS_ERROR)
+    fail("Invalid UTF16 attribute keyword not faulted");
+  if (XML_GetErrorCode(g_parser) != XML_ERROR_SYNTAX)
+    xml_failure(g_parser);
+}
+END_TEST
+
+/* Test that invalid syntax in a <!DOCTYPE> is rejected.  Do this
+ * using prefix-encoding (see above) to trigger specific code paths
+ */
+START_TEST(test_bad_doctype) {
+  const char *text = "<?xml version='1.0' encoding='prefix-conv'?>\n"
+                     "<!DOCTYPE doc [ \x80\x44 ]><doc/>";
+
+  XML_SetUnknownEncodingHandler(g_parser, MiscEncodingHandler, NULL);
+  expect_failure(text, XML_ERROR_SYNTAX,
+                 "Invalid bytes in DOCTYPE not faulted");
+}
+END_TEST
+
+START_TEST(test_bad_doctype_utf8) {
+  const char *text = "<!DOCTYPE \xDB\x25"
+                     "doc><doc/>"; // [1101 1011] [<0>010 0101]
+  expect_failure(text, XML_ERROR_INVALID_TOKEN,
+                 "Invalid UTF-8 in DOCTYPE not faulted");
+}
+END_TEST
+
+START_TEST(test_bad_doctype_utf16) {
+  const char text[] =
+      /* <!DOCTYPE doc [ \x06f2 ]><doc/>
+       *
+       * U+06F2 = EXTENDED ARABIC-INDIC DIGIT TWO, a valid number
+       * (name character) but not a valid letter (name start character)
+       */
+      "\0<\0!\0D\0O\0C\0T\0Y\0P\0E\0 \0d\0o\0c\0 \0[\0 "
+      "\x06\xf2"
+      "\0 \0]\0>\0<\0d\0o\0c\0/\0>";
+
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)sizeof(text) - 1, XML_TRUE)
+      != XML_STATUS_ERROR)
+    fail("Invalid bytes in DOCTYPE not faulted");
+  if (XML_GetErrorCode(g_parser) != XML_ERROR_SYNTAX)
+    xml_failure(g_parser);
+}
+END_TEST
+
+START_TEST(test_bad_doctype_plus) {
+  const char *text = "<!DOCTYPE 1+ [ <!ENTITY foo 'bar'> ]>\n"
+                     "<1+>&foo;</1+>";
+
+  expect_failure(text, XML_ERROR_INVALID_TOKEN,
+                 "'+' in document name not faulted");
+}
+END_TEST
+
+START_TEST(test_bad_doctype_star) {
+  const char *text = "<!DOCTYPE 1* [ <!ENTITY foo 'bar'> ]>\n"
+                     "<1*>&foo;</1*>";
+
+  expect_failure(text, XML_ERROR_INVALID_TOKEN,
+                 "'*' in document name not faulted");
+}
+END_TEST
+
+START_TEST(test_bad_doctype_query) {
+  const char *text = "<!DOCTYPE 1? [ <!ENTITY foo 'bar'> ]>\n"
+                     "<1?>&foo;</1?>";
+
+  expect_failure(text, XML_ERROR_INVALID_TOKEN,
+                 "'?' in document name not faulted");
+}
+END_TEST
+
+START_TEST(test_unknown_encoding_bad_ignore) {
+  const char *text = "<?xml version='1.0' encoding='prefix-conv'?>"
+                     "<!DOCTYPE doc SYSTEM 'foo'>"
+                     "<doc><e>&entity;</e></doc>";
+  ExtFaults fault = {"<![IGNORE[<!ELEMENT \xffG (#PCDATA)*>]]>",
+                     "Invalid character not faulted", XCS("prefix-conv"),
+                     XML_ERROR_INVALID_TOKEN};
+
+  XML_SetUnknownEncodingHandler(g_parser, MiscEncodingHandler, NULL);
+  XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+  XML_SetExternalEntityRefHandler(g_parser, external_entity_faulter);
+  XML_SetUserData(g_parser, &fault);
+  expect_failure(text, XML_ERROR_EXTERNAL_ENTITY_HANDLING,
+                 "Bad IGNORE section with unknown encoding not failed");
+}
+END_TEST
+
+START_TEST(test_entity_in_utf16_be_attr) {
+  const char text[] =
+      /* <e a='&#228; &#x00E4;'></e> */
+      "\0<\0e\0 \0a\0=\0'\0&\0#\0\x32\0\x32\0\x38\0;\0 "
+      "\0&\0#\0x\0\x30\0\x30\0E\0\x34\0;\0'\0>\0<\0/\0e\0>";
+#ifdef XML_UNICODE
+  const XML_Char *expected = XCS("\x00e4 \x00e4");
+#else
+  const XML_Char *expected = XCS("\xc3\xa4 \xc3\xa4");
+#endif
+  CharData storage;
+
+  CharData_Init(&storage);
+  XML_SetUserData(g_parser, &storage);
+  XML_SetStartElementHandler(g_parser, accumulate_attribute);
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)sizeof(text) - 1, XML_TRUE)
+      == XML_STATUS_ERROR)
+    xml_failure(g_parser);
+  CharData_CheckXMLChars(&storage, expected);
+}
+END_TEST
+
+START_TEST(test_entity_in_utf16_le_attr) {
+  const char text[] =
+      /* <e a='&#228; &#x00E4;'></e> */
+      "<\0e\0 \0a\0=\0'\0&\0#\0\x32\0\x32\0\x38\0;\0 \0"
+      "&\0#\0x\0\x30\0\x30\0E\0\x34\0;\0'\0>\0<\0/\0e\0>\0";
+#ifdef XML_UNICODE
+  const XML_Char *expected = XCS("\x00e4 \x00e4");
+#else
+  const XML_Char *expected = XCS("\xc3\xa4 \xc3\xa4");
+#endif
+  CharData storage;
+
+  CharData_Init(&storage);
+  XML_SetUserData(g_parser, &storage);
+  XML_SetStartElementHandler(g_parser, accumulate_attribute);
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)sizeof(text) - 1, XML_TRUE)
+      == XML_STATUS_ERROR)
+    xml_failure(g_parser);
+  CharData_CheckXMLChars(&storage, expected);
+}
+END_TEST
+
+START_TEST(test_entity_public_utf16_be) {
+  const char text[] =
+      /* <!DOCTYPE d [ */
+      "\0<\0!\0D\0O\0C\0T\0Y\0P\0E\0 \0d\0 \0[\0\n"
+      /* <!ENTITY % e PUBLIC 'foo' 'bar.ent'> */
+      "\0<\0!\0E\0N\0T\0I\0T\0Y\0 \0%\0 \0e\0 \0P\0U\0B\0L\0I\0C\0 "
+      "\0'\0f\0o\0o\0'\0 \0'\0b\0a\0r\0.\0e\0n\0t\0'\0>\0\n"
+      /* %e; */
+      "\0%\0e\0;\0\n"
+      /* ]> */
+      "\0]\0>\0\n"
+      /* <d>&j;</d> */
+      "\0<\0d\0>\0&\0j\0;\0<\0/\0d\0>";
+  ExtTest2 test_data = {/* <!ENTITY j 'baz'> */
+                        "\0<\0!\0E\0N\0T\0I\0T\0Y\0 \0j\0 \0'\0b\0a\0z\0'\0>",
+                        34, NULL, NULL, EE_PARSE_NONE};
+  const XML_Char *expected = XCS("baz");
+  CharData storage;
+
+  CharData_Init(&storage);
+  test_data.storage = &storage;
+  XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+  XML_SetExternalEntityRefHandler(g_parser, external_entity_loader2);
+  XML_SetUserData(g_parser, &test_data);
+  XML_SetCharacterDataHandler(g_parser, ext2_accumulate_characters);
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)sizeof(text) - 1, XML_TRUE)
+      == XML_STATUS_ERROR)
+    xml_failure(g_parser);
+  CharData_CheckXMLChars(&storage, expected);
+}
+END_TEST
+
+START_TEST(test_entity_public_utf16_le) {
+  const char text[] =
+      /* <!DOCTYPE d [ */
+      "<\0!\0D\0O\0C\0T\0Y\0P\0E\0 \0d\0 \0[\0\n\0"
+      /* <!ENTITY % e PUBLIC 'foo' 'bar.ent'> */
+      "<\0!\0E\0N\0T\0I\0T\0Y\0 \0%\0 \0e\0 \0P\0U\0B\0L\0I\0C\0 \0"
+      "'\0f\0o\0o\0'\0 \0'\0b\0a\0r\0.\0e\0n\0t\0'\0>\0\n\0"
+      /* %e; */
+      "%\0e\0;\0\n\0"
+      /* ]> */
+      "]\0>\0\n\0"
+      /* <d>&j;</d> */
+      "<\0d\0>\0&\0j\0;\0<\0/\0d\0>\0";
+  ExtTest2 test_data = {/* <!ENTITY j 'baz'> */
+                        "<\0!\0E\0N\0T\0I\0T\0Y\0 \0j\0 \0'\0b\0a\0z\0'\0>\0",
+                        34, NULL, NULL, EE_PARSE_NONE};
+  const XML_Char *expected = XCS("baz");
+  CharData storage;
+
+  CharData_Init(&storage);
+  test_data.storage = &storage;
+  XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+  XML_SetExternalEntityRefHandler(g_parser, external_entity_loader2);
+  XML_SetUserData(g_parser, &test_data);
+  XML_SetCharacterDataHandler(g_parser, ext2_accumulate_characters);
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)sizeof(text) - 1, XML_TRUE)
+      == XML_STATUS_ERROR)
+    xml_failure(g_parser);
+  CharData_CheckXMLChars(&storage, expected);
+}
+END_TEST
+
+/* Test that a doctype with neither an internal nor external subset is
+ * faulted
+ */
+START_TEST(test_short_doctype) {
+  const char *text = "<!DOCTYPE doc></doc>";
+  expect_failure(text, XML_ERROR_INVALID_TOKEN,
+                 "DOCTYPE without subset not rejected");
+}
+END_TEST
+
+START_TEST(test_short_doctype_2) {
+  const char *text = "<!DOCTYPE doc PUBLIC></doc>";
+  expect_failure(text, XML_ERROR_SYNTAX,
+                 "DOCTYPE without Public ID not rejected");
+}
+END_TEST
+
+START_TEST(test_short_doctype_3) {
+  const char *text = "<!DOCTYPE doc SYSTEM></doc>";
+  expect_failure(text, XML_ERROR_SYNTAX,
+                 "DOCTYPE without System ID not rejected");
+}
+END_TEST
+
+START_TEST(test_long_doctype) {
+  const char *text = "<!DOCTYPE doc PUBLIC 'foo' 'bar' 'baz'></doc>";
+  expect_failure(text, XML_ERROR_SYNTAX, "DOCTYPE with extra ID not rejected");
+}
+END_TEST
+
+START_TEST(test_bad_entity) {
+  const char *text = "<!DOCTYPE doc [\n"
+                     "  <!ENTITY foo PUBLIC>\n"
+                     "]>\n"
+                     "<doc/>";
+  expect_failure(text, XML_ERROR_SYNTAX,
+                 "ENTITY without Public ID is not rejected");
+}
+END_TEST
+
+/* Test unquoted value is faulted */
+START_TEST(test_bad_entity_2) {
+  const char *text = "<!DOCTYPE doc [\n"
+                     "  <!ENTITY % foo bar>\n"
+                     "]>\n"
+                     "<doc/>";
+  expect_failure(text, XML_ERROR_SYNTAX,
+                 "ENTITY without Public ID is not rejected");
+}
+END_TEST
+
+START_TEST(test_bad_entity_3) {
+  const char *text = "<!DOCTYPE doc [\n"
+                     "  <!ENTITY % foo PUBLIC>\n"
+                     "]>\n"
+                     "<doc/>";
+  expect_failure(text, XML_ERROR_SYNTAX,
+                 "Parameter ENTITY without Public ID is not rejected");
+}
+END_TEST
+
+START_TEST(test_bad_entity_4) {
+  const char *text = "<!DOCTYPE doc [\n"
+                     "  <!ENTITY % foo SYSTEM>\n"
+                     "]>\n"
+                     "<doc/>";
+  expect_failure(text, XML_ERROR_SYNTAX,
+                 "Parameter ENTITY without Public ID is not rejected");
+}
+END_TEST
+
+START_TEST(test_bad_notation) {
+  const char *text = "<!DOCTYPE doc [\n"
+                     "  <!NOTATION n SYSTEM>\n"
+                     "]>\n"
+                     "<doc/>";
+  expect_failure(text, XML_ERROR_SYNTAX,
+                 "Notation without System ID is not rejected");
+}
+END_TEST
+
+/* Test for issue #11, wrongly suppressed default handler */
+START_TEST(test_default_doctype_handler) {
+  const char *text = "<!DOCTYPE doc PUBLIC 'pubname' 'test.dtd' [\n"
+                     "  <!ENTITY foo 'bar'>\n"
+                     "]>\n"
+                     "<doc>&foo;</doc>";
+  DefaultCheck test_data[] = {{XCS("'pubname'"), 9, XML_FALSE},
+                              {XCS("'test.dtd'"), 10, XML_FALSE},
+                              {NULL, 0, XML_FALSE}};
+  int i;
+
+  XML_SetUserData(g_parser, &test_data);
+  XML_SetDefaultHandler(g_parser, checking_default_handler);
+  XML_SetEntityDeclHandler(g_parser, dummy_entity_decl_handler);
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+      == XML_STATUS_ERROR)
+    xml_failure(g_parser);
+  for (i = 0; test_data[i].expected != NULL; i++)
+    if (! test_data[i].seen)
+      fail("Default handler not run for public !DOCTYPE");
+}
+END_TEST
+
+START_TEST(test_empty_element_abort) {
+  const char *text = "<abort/>";
+
+  XML_SetStartElementHandler(g_parser, start_element_suspender);
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+      != XML_STATUS_ERROR)
+    fail("Expected to error on abort");
+}
+END_TEST
+
 TCase *
 make_basic_test_case(Suite *s) {
   TCase *tc_basic = tcase_create("basic tests");
@@ -4568,6 +4947,31 @@ make_basic_test_case(Suite *s) {
   tcase_add_test(tc_basic, test_utf16_attribute);
   tcase_add_test(tc_basic, test_utf16_second_attr);
   tcase_add_test(tc_basic, test_attr_after_solidus);
+  tcase_add_test__ifdef_xml_dtd(tc_basic, test_utf16_pe);
+  tcase_add_test(tc_basic, test_bad_attr_desc_keyword);
+  tcase_add_test(tc_basic, test_bad_attr_desc_keyword_utf16);
+  tcase_add_test(tc_basic, test_bad_doctype);
+  tcase_add_test(tc_basic, test_bad_doctype_utf8);
+  tcase_add_test(tc_basic, test_bad_doctype_utf16);
+  tcase_add_test(tc_basic, test_bad_doctype_plus);
+  tcase_add_test(tc_basic, test_bad_doctype_star);
+  tcase_add_test(tc_basic, test_bad_doctype_query);
+  tcase_add_test__ifdef_xml_dtd(tc_basic, test_unknown_encoding_bad_ignore);
+  tcase_add_test(tc_basic, test_entity_in_utf16_be_attr);
+  tcase_add_test(tc_basic, test_entity_in_utf16_le_attr);
+  tcase_add_test__ifdef_xml_dtd(tc_basic, test_entity_public_utf16_be);
+  tcase_add_test__ifdef_xml_dtd(tc_basic, test_entity_public_utf16_le);
+  tcase_add_test(tc_basic, test_short_doctype);
+  tcase_add_test(tc_basic, test_short_doctype_2);
+  tcase_add_test(tc_basic, test_short_doctype_3);
+  tcase_add_test(tc_basic, test_long_doctype);
+  tcase_add_test(tc_basic, test_bad_entity);
+  tcase_add_test(tc_basic, test_bad_entity_2);
+  tcase_add_test(tc_basic, test_bad_entity_3);
+  tcase_add_test(tc_basic, test_bad_entity_4);
+  tcase_add_test(tc_basic, test_bad_notation);
+  tcase_add_test(tc_basic, test_default_doctype_handler);
+  tcase_add_test(tc_basic, test_empty_element_abort);
 
   return tc_basic;
 }

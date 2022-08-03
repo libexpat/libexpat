@@ -645,6 +645,25 @@ element_decl_suspender(void *userData, const XML_Char *name,
   XML_FreeContentModel(g_parser, model);
 }
 
+void XMLCALL
+accumulate_entity_decl(void *userData, const XML_Char *entityName,
+                       int is_parameter_entity, const XML_Char *value,
+                       int value_length, const XML_Char *base,
+                       const XML_Char *systemId, const XML_Char *publicId,
+                       const XML_Char *notationName) {
+  CharData *storage = (CharData *)userData;
+
+  UNUSED_P(is_parameter_entity);
+  UNUSED_P(base);
+  UNUSED_P(systemId);
+  UNUSED_P(publicId);
+  UNUSED_P(notationName);
+  CharData_AppendXMLChars(storage, entityName, -1);
+  CharData_AppendXMLChars(storage, XCS("="), 1);
+  CharData_AppendXMLChars(storage, value, value_length);
+  CharData_AppendXMLChars(storage, XCS("\n"), 1);
+}
+
 /* This XML declaration handler attempts to suspend the subordinate parser */
 void XMLCALL
 entity_suspending_xdecl_handler(void *userData, const XML_Char *version,
@@ -1186,6 +1205,20 @@ selective_aborting_default_handler(void *userData, const XML_Char *s, int len) {
       || (xcstrlen(match) == (unsigned)len && ! xcstrncmp(match, s, len))) {
     XML_StopParser(g_parser, g_resumable);
     XML_SetDefaultHandler(g_parser, NULL);
+  }
+}
+
+void XMLCALL
+checking_default_handler(void *userData, const XML_Char *s, int len) {
+  DefaultCheck *data = (DefaultCheck *)userData;
+  int i;
+
+  for (i = 0; data[i].expected != NULL; i++) {
+    if (data[i].expectedLen == len
+        && ! memcmp(data[i].expected, s, len * sizeof(XML_Char))) {
+      data[i].seen = XML_TRUE;
+      break;
+    }
   }
 }
 
