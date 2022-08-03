@@ -3705,6 +3705,45 @@ START_TEST(test_utf16_be_pi) {
 }
 END_TEST
 
+/* Test that comments can be picked up and translated */
+START_TEST(test_utf16_be_comment) {
+  const char text[] =
+      /* <!-- Comment A --> */
+      "\0<\0!\0-\0-\0 \0C\0o\0m\0m\0e\0n\0t\0 \0A\0 \0-\0-\0>\0\n"
+      /* <doc/> */
+      "\0<\0d\0o\0c\0/\0>";
+  const XML_Char *expected = XCS(" Comment A ");
+  CharData storage;
+
+  CharData_Init(&storage);
+  XML_SetCommentHandler(g_parser, accumulate_comment);
+  XML_SetUserData(g_parser, &storage);
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)sizeof(text) - 1, XML_TRUE)
+      == XML_STATUS_ERROR)
+    xml_failure(g_parser);
+  CharData_CheckXMLChars(&storage, expected);
+}
+END_TEST
+
+START_TEST(test_utf16_le_comment) {
+  const char text[] =
+      /* <!-- Comment B --> */
+      "<\0!\0-\0-\0 \0C\0o\0m\0m\0e\0n\0t\0 \0B\0 \0-\0-\0>\0\n\0"
+      /* <doc/> */
+      "<\0d\0o\0c\0/\0>\0";
+  const XML_Char *expected = XCS(" Comment B ");
+  CharData storage;
+
+  CharData_Init(&storage);
+  XML_SetCommentHandler(g_parser, accumulate_comment);
+  XML_SetUserData(g_parser, &storage);
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)sizeof(text) - 1, XML_TRUE)
+      == XML_STATUS_ERROR)
+    xml_failure(g_parser);
+  CharData_CheckXMLChars(&storage, expected);
+}
+END_TEST
+
 TCase *
 make_basic_test_case(Suite *s) {
   TCase *tc_basic = tcase_create("basic tests");
@@ -3878,6 +3917,8 @@ make_basic_test_case(Suite *s) {
   tcase_add_test(tc_basic, test_pi_xmm);
   tcase_add_test(tc_basic, test_utf16_pi);
   tcase_add_test(tc_basic, test_utf16_be_pi);
+  tcase_add_test(tc_basic, test_utf16_be_comment);
+  tcase_add_test(tc_basic, test_utf16_le_comment);
 
   return tc_basic;
 }

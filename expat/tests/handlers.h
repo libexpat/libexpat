@@ -359,6 +359,8 @@ extern void XMLCALL param_check_skip_handler(void *userData,
 extern void XMLCALL data_check_comment_handler(void *userData,
                                                const XML_Char *data);
 
+extern void XMLCALL accumulate_comment(void *userData, const XML_Char *data);
+
 /* Handlers that record invocation with a single character.  They expect
  * to be called with a CharData pointer as their user data.
  */

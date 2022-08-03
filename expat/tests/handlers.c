@@ -1088,6 +1088,13 @@ data_check_comment_handler(void *userData, const XML_Char *data) {
   g_comment_count++;
 }
 
+void XMLCALL
+accumulate_comment(void *userData, const XML_Char *data) {
+  CharData *storage = (CharData *)userData;
+
+  CharData_AppendXMLChars(storage, data, -1);
+}
+
 /* Handlers that record their invocation by single characters */
 
 void XMLCALL
