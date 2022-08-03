@@ -4299,6 +4299,70 @@ START_TEST(test_utf8_in_start_tags) {
 }
 END_TEST
 
+/* Test trailing spaces in elements are accepted */
+START_TEST(test_trailing_spaces_in_elements) {
+  const char *text = "<doc   >Hi</doc >";
+  const XML_Char *expected = XCS("doc/doc");
+  CharData storage;
+
+  CharData_Init(&storage);
+  XML_SetElementHandler(g_parser, record_element_start_handler,
+                        record_element_end_handler);
+  XML_SetUserData(g_parser, &storage);
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+      == XML_STATUS_ERROR)
+    xml_failure(g_parser);
+  CharData_CheckXMLChars(&storage, expected);
+}
+END_TEST
+
+START_TEST(test_utf16_attribute) {
+  const char text[] =
+      /* <d {KHO KHWAI}{CHO CHAN}='a'/>
+       * where {KHO KHWAI} = U+0E04 = 0xe0 0xb8 0x84 in UTF-8
+       * and   {CHO CHAN}  = U+0E08 = 0xe0 0xb8 0x88 in UTF-8
+       */
+      "<\0d\0 \0\x04\x0e\x08\x0e=\0'\0a\0'\0/\0>\0";
+  const XML_Char *expected = XCS("a");
+  CharData storage;
+
+  CharData_Init(&storage);
+  XML_SetStartElementHandler(g_parser, accumulate_attribute);
+  XML_SetUserData(g_parser, &storage);
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)sizeof(text) - 1, XML_TRUE)
+      == XML_STATUS_ERROR)
+    xml_failure(g_parser);
+  CharData_CheckXMLChars(&storage, expected);
+}
+END_TEST
+
+START_TEST(test_utf16_second_attr) {
+  /* <d a='1' {KHO KHWAI}{CHO CHAN}='2'/>
+   * where {KHO KHWAI} = U+0E04 = 0xe0 0xb8 0x84 in UTF-8
+   * and   {CHO CHAN}  = U+0E08 = 0xe0 0xb8 0x88 in UTF-8
+   */
+  const char text[] = "<\0d\0 \0a\0=\0'\0\x31\0'\0 \0"
+                      "\x04\x0e\x08\x0e=\0'\0\x32\0'\0/\0>\0";
+  const XML_Char *expected = XCS("1");
+  CharData storage;
+
+  CharData_Init(&storage);
+  XML_SetStartElementHandler(g_parser, accumulate_attribute);
+  XML_SetUserData(g_parser, &storage);
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)sizeof(text) - 1, XML_TRUE)
+      == XML_STATUS_ERROR)
+    xml_failure(g_parser);
+  CharData_CheckXMLChars(&storage, expected);
+}
+END_TEST
+
+START_TEST(test_attr_after_solidus) {
+  const char *text = "<doc attr1='a' / attr2='b'>";
+
+  expect_failure(text, XML_ERROR_INVALID_TOKEN, "Misplaced / not faulted");
+}
+END_TEST
+
 TCase *
 make_basic_test_case(Suite *s) {
   TCase *tc_basic = tcase_create("basic tests");
@@ -4500,6 +4564,10 @@ make_basic_test_case(Suite *s) {
   tcase_add_test(tc_basic, test_utf8_in_cdata_section);
   tcase_add_test(tc_basic, test_utf8_in_cdata_section_2);
   tcase_add_test(tc_basic, test_utf8_in_start_tags);
+  tcase_add_test(tc_basic, test_trailing_spaces_in_elements);
+  tcase_add_test(tc_basic, test_utf16_attribute);
+  tcase_add_test(tc_basic, test_utf16_second_attr);
+  tcase_add_test(tc_basic, test_attr_after_solidus);
 
   return tc_basic;
 }
