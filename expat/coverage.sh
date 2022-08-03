@@ -139,7 +139,7 @@ _copy_missing_mingw_libaries() {
         done
     fi
 
-    for dll in libexpat{,w}.dll; do
+    for dll in libexpat{,w}-*.dll; do
         (
             set -x
             ln -s "${abs_build_dir}"/${dll} "${target}"/${dll}
