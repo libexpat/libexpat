@@ -102,18 +102,6 @@ testhelper_is_whitespace_normalized(void) {
  * Namespaces tests.
  */
 
-static void
-namespace_setup(void) {
-  g_parser = XML_ParserCreateNS(NULL, XCS(' '));
-  if (g_parser == NULL)
-    fail("Parser not created.");
-}
-
-static void
-namespace_teardown(void) {
-  basic_teardown();
-}
-
 /* Check that an element name and attribute name match the expected values.
    The expected values are passed as an array reference of string pointers
    provided as the userData argument; the first is the expected
@@ -5296,7 +5284,6 @@ make_suite(void) {
   tc_accounting = tcase_create("accounting tests");
 #endif
 
-  suite_add_tcase(s, tc_namespace);
   tcase_add_checked_fixture(tc_namespace, namespace_setup, namespace_teardown);
   tcase_add_test(tc_namespace, test_return_ns_triplet);
   tcase_add_test(tc_namespace, test_ns_tagname_overwrite);

@@ -101,6 +101,8 @@ extern void tcase_add_test__ifdef_xml_dtd(TCase *tc, tcase_test_function test);
 
 extern void basic_setup(void);
 extern void basic_teardown(void);
+extern void namespace_setup(void);
+extern void namespace_teardown(void);
 
 /* Generate a failure using the parser state to create an error message;
    this should be used when the parser reports an error we weren't

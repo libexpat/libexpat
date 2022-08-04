@@ -162,6 +162,18 @@ basic_teardown(void) {
   }
 }
 
+void
+namespace_setup(void) {
+  g_parser = XML_ParserCreateNS(NULL, XCS(' '));
+  if (g_parser == NULL)
+    fail("Parser not created.");
+}
+
+void
+namespace_teardown(void) {
+  basic_teardown();
+}
+
 /* Generate a failure using the parser state to create an error message;
    this should be used when the parser reports an error we weren't
    expecting.
