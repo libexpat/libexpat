@@ -214,6 +214,28 @@ triplet_end_checker(void *userData, const XML_Char *name) {
   g_triplet_end_flag = XML_TRUE;
 }
 
+void XMLCALL
+overwrite_start_checker(void *userData, const XML_Char *name,
+                        const XML_Char **atts) {
+  CharData *storage = (CharData *)userData;
+  CharData_AppendXMLChars(storage, XCS("start "), 6);
+  CharData_AppendXMLChars(storage, name, -1);
+  while (*atts != NULL) {
+    CharData_AppendXMLChars(storage, XCS("\nattribute "), 11);
+    CharData_AppendXMLChars(storage, *atts, -1);
+    atts += 2;
+  }
+  CharData_AppendXMLChars(storage, XCS("\n"), 1);
+}
+
+void XMLCALL
+overwrite_end_checker(void *userData, const XML_Char *name) {
+  CharData *storage = (CharData *)userData;
+  CharData_AppendXMLChars(storage, XCS("end "), 4);
+  CharData_AppendXMLChars(storage, name, -1);
+  CharData_AppendXMLChars(storage, XCS("\n"), 1);
+}
+
 /* Text encoding handlers */
 
 int XMLCALL

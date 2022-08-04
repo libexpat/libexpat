@@ -46,6 +46,7 @@
 #  undef NDEBUG /* because test suite relies on assert(...) at the moment */
 #endif
 #include <assert.h>
+#include <string.h>
 
 #if ! defined(__cplusplus)
 #  include <stdbool.h>
@@ -115,6 +116,56 @@ START_TEST(test_ns_parser_reset) {
 }
 END_TEST
 
+static void
+run_ns_tagname_overwrite_test(const char *text, const XML_Char *result) {
+  CharData storage;
+  CharData_Init(&storage);
+  XML_SetUserData(g_parser, &storage);
+  XML_SetElementHandler(g_parser, overwrite_start_checker,
+                        overwrite_end_checker);
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+      == XML_STATUS_ERROR)
+    xml_failure(g_parser);
+  CharData_CheckXMLChars(&storage, result);
+}
+
+/* Regression test for SF bug #566334. */
+START_TEST(test_ns_tagname_overwrite) {
+  const char *text = "<n:e xmlns:n='http://example.org/'>\n"
+                     "  <n:f n:attr='foo'/>\n"
+                     "  <n:g n:attr2='bar'/>\n"
+                     "</n:e>";
+  const XML_Char *result = XCS("start http://example.org/ e\n")
+      XCS("start http://example.org/ f\n")
+          XCS("attribute http://example.org/ attr\n")
+              XCS("end http://example.org/ f\n")
+                  XCS("start http://example.org/ g\n")
+                      XCS("attribute http://example.org/ attr2\n")
+                          XCS("end http://example.org/ g\n")
+                              XCS("end http://example.org/ e\n");
+  run_ns_tagname_overwrite_test(text, result);
+}
+END_TEST
+
+/* Regression test for SF bug #566334. */
+START_TEST(test_ns_tagname_overwrite_triplet) {
+  const char *text = "<n:e xmlns:n='http://example.org/'>\n"
+                     "  <n:f n:attr='foo'/>\n"
+                     "  <n:g n:attr2='bar'/>\n"
+                     "</n:e>";
+  const XML_Char *result = XCS("start http://example.org/ e n\n")
+      XCS("start http://example.org/ f n\n")
+          XCS("attribute http://example.org/ attr n\n")
+              XCS("end http://example.org/ f n\n")
+                  XCS("start http://example.org/ g n\n")
+                      XCS("attribute http://example.org/ attr2 n\n")
+                          XCS("end http://example.org/ g n\n")
+                              XCS("end http://example.org/ e n\n");
+  XML_SetReturnNSTriplet(g_parser, XML_TRUE);
+  run_ns_tagname_overwrite_test(text, result);
+}
+END_TEST
+
 TCase *
 make_namespace_test_case(Suite *s) {
   TCase *tc_namespace = tcase_create("XML namespaces");
@@ -122,6 +173,8 @@ make_namespace_test_case(Suite *s) {
   suite_add_tcase(s, tc_namespace);
   tcase_add_checked_fixture(tc_namespace, namespace_setup, namespace_teardown);
   tcase_add_test(tc_namespace, test_return_ns_triplet);
+  tcase_add_test(tc_namespace, test_ns_tagname_overwrite);
+  tcase_add_test(tc_namespace, test_ns_tagname_overwrite_triplet);
 
   tcase_add_test(tc_namespace, test_ns_parser_reset);
 

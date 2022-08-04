@@ -103,78 +103,6 @@ testhelper_is_whitespace_normalized(void) {
  * Namespaces tests.
  */
 
-static void XMLCALL
-overwrite_start_checker(void *userData, const XML_Char *name,
-                        const XML_Char **atts) {
-  CharData *storage = (CharData *)userData;
-  CharData_AppendXMLChars(storage, XCS("start "), 6);
-  CharData_AppendXMLChars(storage, name, -1);
-  while (*atts != NULL) {
-    CharData_AppendXMLChars(storage, XCS("\nattribute "), 11);
-    CharData_AppendXMLChars(storage, *atts, -1);
-    atts += 2;
-  }
-  CharData_AppendXMLChars(storage, XCS("\n"), 1);
-}
-
-static void XMLCALL
-overwrite_end_checker(void *userData, const XML_Char *name) {
-  CharData *storage = (CharData *)userData;
-  CharData_AppendXMLChars(storage, XCS("end "), 4);
-  CharData_AppendXMLChars(storage, name, -1);
-  CharData_AppendXMLChars(storage, XCS("\n"), 1);
-}
-
-static void
-run_ns_tagname_overwrite_test(const char *text, const XML_Char *result) {
-  CharData storage;
-  CharData_Init(&storage);
-  XML_SetUserData(g_parser, &storage);
-  XML_SetElementHandler(g_parser, overwrite_start_checker,
-                        overwrite_end_checker);
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
-      == XML_STATUS_ERROR)
-    xml_failure(g_parser);
-  CharData_CheckXMLChars(&storage, result);
-}
-
-/* Regression test for SF bug #566334. */
-START_TEST(test_ns_tagname_overwrite) {
-  const char *text = "<n:e xmlns:n='http://example.org/'>\n"
-                     "  <n:f n:attr='foo'/>\n"
-                     "  <n:g n:attr2='bar'/>\n"
-                     "</n:e>";
-  const XML_Char *result = XCS("start http://example.org/ e\n")
-      XCS("start http://example.org/ f\n")
-          XCS("attribute http://example.org/ attr\n")
-              XCS("end http://example.org/ f\n")
-                  XCS("start http://example.org/ g\n")
-                      XCS("attribute http://example.org/ attr2\n")
-                          XCS("end http://example.org/ g\n")
-                              XCS("end http://example.org/ e\n");
-  run_ns_tagname_overwrite_test(text, result);
-}
-END_TEST
-
-/* Regression test for SF bug #566334. */
-START_TEST(test_ns_tagname_overwrite_triplet) {
-  const char *text = "<n:e xmlns:n='http://example.org/'>\n"
-                     "  <n:f n:attr='foo'/>\n"
-                     "  <n:g n:attr2='bar'/>\n"
-                     "</n:e>";
-  const XML_Char *result = XCS("start http://example.org/ e n\n")
-      XCS("start http://example.org/ f n\n")
-          XCS("attribute http://example.org/ attr n\n")
-              XCS("end http://example.org/ f n\n")
-                  XCS("start http://example.org/ g n\n")
-                      XCS("attribute http://example.org/ attr2 n\n")
-                          XCS("end http://example.org/ g n\n")
-                              XCS("end http://example.org/ e n\n");
-  XML_SetReturnNSTriplet(g_parser, XML_TRUE);
-  run_ns_tagname_overwrite_test(text, result);
-}
-END_TEST
-
 /* Regression test for SF bug #620343. */
 static void XMLCALL
 start_element_fail(void *userData, const XML_Char *name,
@@ -5193,8 +5121,6 @@ make_suite(void) {
   tc_accounting = tcase_create("accounting tests");
 #endif
 
-  tcase_add_test(tc_namespace, test_ns_tagname_overwrite);
-  tcase_add_test(tc_namespace, test_ns_tagname_overwrite_triplet);
   tcase_add_test(tc_namespace, test_start_ns_clears_start_element);
   tcase_add_test__ifdef_xml_dtd(tc_namespace,
                                 test_default_ns_from_ext_subset_and_ext_ge);

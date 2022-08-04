@@ -102,6 +102,13 @@ extern void XMLCALL triplet_start_checker(void *userData,
 extern void XMLCALL triplet_end_checker(void *userData,
                                         const XML_Char *name);
 
+extern void XMLCALL overwrite_start_checker(void *userData,
+                                            const XML_Char *name,
+                                            const XML_Char **atts);
+
+extern void XMLCALL overwrite_end_checker(void *userData,
+                                          const XML_Char *name);
+
 /* Do-nothing handler for the text encoding named "unsupported-encoding" */
 extern int XMLCALL UnknownEncodingHandler(void *data, const XML_Char *encoding,
                                           XML_Encoding *info);
