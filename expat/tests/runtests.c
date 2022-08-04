@@ -71,6 +71,7 @@
 #include "ascii.h" /* for ASCII_xxx */
 
 #include "basic_tests.h"
+#include "ns_tests.h"
 
 XML_Parser g_parser = NULL;
 
@@ -101,77 +102,6 @@ testhelper_is_whitespace_normalized(void) {
 /*
  * Namespaces tests.
  */
-
-/* Check that an element name and attribute name match the expected values.
-   The expected values are passed as an array reference of string pointers
-   provided as the userData argument; the first is the expected
-   element name, and the second is the expected attribute name.
-*/
-static int triplet_start_flag = XML_FALSE;
-static int triplet_end_flag = XML_FALSE;
-
-static void XMLCALL
-triplet_start_checker(void *userData, const XML_Char *name,
-                      const XML_Char **atts) {
-  XML_Char **elemstr = (XML_Char **)userData;
-  char buffer[1024];
-  if (xcstrcmp(elemstr[0], name) != 0) {
-    sprintf(buffer, "unexpected start string: '%" XML_FMT_STR "'", name);
-    fail(buffer);
-  }
-  if (xcstrcmp(elemstr[1], atts[0]) != 0) {
-    sprintf(buffer, "unexpected attribute string: '%" XML_FMT_STR "'", atts[0]);
-    fail(buffer);
-  }
-  triplet_start_flag = XML_TRUE;
-}
-
-/* Check that the element name passed to the end-element handler matches
-   the expected value.  The expected value is passed as the first element
-   in an array of strings passed as the userData argument.
-*/
-static void XMLCALL
-triplet_end_checker(void *userData, const XML_Char *name) {
-  XML_Char **elemstr = (XML_Char **)userData;
-  if (xcstrcmp(elemstr[0], name) != 0) {
-    char buffer[1024];
-    sprintf(buffer, "unexpected end string: '%" XML_FMT_STR "'", name);
-    fail(buffer);
-  }
-  triplet_end_flag = XML_TRUE;
-}
-
-START_TEST(test_return_ns_triplet) {
-  const char *text = "<foo:e xmlns:foo='http://example.org/' bar:a='12'\n"
-                     "       xmlns:bar='http://example.org/'>";
-  const char *epilog = "</foo:e>";
-  const XML_Char *elemstr[]
-      = {XCS("http://example.org/ e foo"), XCS("http://example.org/ a bar")};
-  XML_SetReturnNSTriplet(g_parser, XML_TRUE);
-  XML_SetUserData(g_parser, (void *)elemstr);
-  XML_SetElementHandler(g_parser, triplet_start_checker, triplet_end_checker);
-  XML_SetNamespaceDeclHandler(g_parser, dummy_start_namespace_decl_handler,
-                              dummy_end_namespace_decl_handler);
-  triplet_start_flag = XML_FALSE;
-  triplet_end_flag = XML_FALSE;
-  init_dummy_handlers();
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_FALSE)
-      == XML_STATUS_ERROR)
-    xml_failure(g_parser);
-  if (! triplet_start_flag)
-    fail("triplet_start_checker not invoked");
-  /* Check that unsetting "return triplets" fails while still parsing */
-  XML_SetReturnNSTriplet(g_parser, XML_FALSE);
-  if (_XML_Parse_SINGLE_BYTES(g_parser, epilog, (int)strlen(epilog), XML_TRUE)
-      == XML_STATUS_ERROR)
-    xml_failure(g_parser);
-  if (! triplet_end_flag)
-    fail("triplet_end_checker not invoked");
-  if (get_dummy_handler_flags()
-      != (DUMMY_START_NS_DECL_HANDLER_FLAG | DUMMY_END_NS_DECL_HANDLER_FLAG))
-    fail("Namespace handlers not called");
-}
-END_TEST
 
 static void XMLCALL
 overwrite_start_checker(void *userData, const XML_Char *name,
@@ -469,27 +399,6 @@ START_TEST(test_ns_unbound_prefix_on_element) {
   const char *text = "<a:doc/>";
   expect_failure(text, XML_ERROR_UNBOUND_PREFIX,
                  "did not report unbound prefix on element");
-}
-END_TEST
-
-/* Test that the parsing status is correctly reset by XML_ParserReset().
- * We usE test_return_ns_triplet() for our example parse to improve
- * coverage of tidying up code executed.
- */
-START_TEST(test_ns_parser_reset) {
-  XML_ParsingStatus status;
-
-  XML_GetParsingStatus(g_parser, &status);
-  if (status.parsing != XML_INITIALIZED)
-    fail("parsing status doesn't start INITIALIZED");
-  test_return_ns_triplet();
-  XML_GetParsingStatus(g_parser, &status);
-  if (status.parsing != XML_FINISHED)
-    fail("parsing status doesn't end FINISHED");
-  XML_ParserReset(g_parser, NULL);
-  XML_GetParsingStatus(g_parser, &status);
-  if (status.parsing != XML_INITIALIZED)
-    fail("parsing status doesn't reset to INITIALIZED");
 }
 END_TEST
 
@@ -5276,7 +5185,7 @@ make_suite(void) {
 #endif
 
   make_basic_test_case(s);
-  tc_namespace = tcase_create("XML namespaces");
+  tc_namespace = make_namespace_test_case(s);
   tc_misc = tcase_create("miscellaneous tests");
   tc_alloc = tcase_create("allocation tests");
   tc_nsalloc = tcase_create("namespace allocation tests");
@@ -5284,8 +5193,6 @@ make_suite(void) {
   tc_accounting = tcase_create("accounting tests");
 #endif
 
-  tcase_add_checked_fixture(tc_namespace, namespace_setup, namespace_teardown);
-  tcase_add_test(tc_namespace, test_return_ns_triplet);
   tcase_add_test(tc_namespace, test_ns_tagname_overwrite);
   tcase_add_test(tc_namespace, test_ns_tagname_overwrite_triplet);
   tcase_add_test(tc_namespace, test_start_ns_clears_start_element);
@@ -5301,7 +5208,7 @@ make_suite(void) {
   tcase_add_test(tc_namespace, test_ns_duplicate_hashes);
   tcase_add_test(tc_namespace, test_ns_unbound_prefix_on_attribute);
   tcase_add_test(tc_namespace, test_ns_unbound_prefix_on_element);
-  tcase_add_test(tc_namespace, test_ns_parser_reset);
+
   tcase_add_test(tc_namespace, test_ns_long_element);
   tcase_add_test(tc_namespace, test_ns_mixed_prefix_atts);
   tcase_add_test(tc_namespace, test_ns_extend_uri_buffer);
@@ -5460,4 +5367,5 @@ main(int argc, char *argv[]) {
   srunner_free(sr);
 
   return (nf == 0) ? EXIT_SUCCESS : EXIT_FAILURE;
+
 }

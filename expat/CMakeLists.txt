@@ -593,6 +593,7 @@ if(EXPAT_BUILD_TESTS)
         tests/dummy.c
         tests/handlers.c
         tests/basic_tests.c
+        tests/ns_tests.c
         ${_EXPAT_C_SOURCES}
     )
 

@@ -175,6 +175,45 @@ start_element_suspender(void *userData, const XML_Char *name,
     XML_StopParser(g_parser, XML_FALSE);
 }
 
+/* Check that an element name and attribute name match the expected values.
+   The expected values are passed as an array reference of string pointers
+   provided as the userData argument; the first is the expected
+   element name, and the second is the expected attribute name.
+*/
+int g_triplet_start_flag = XML_FALSE;
+int g_triplet_end_flag = XML_FALSE;
+
+void XMLCALL
+triplet_start_checker(void *userData, const XML_Char *name,
+                      const XML_Char **atts) {
+  XML_Char **elemstr = (XML_Char **)userData;
+  char buffer[1024];
+  if (xcstrcmp(elemstr[0], name) != 0) {
+    sprintf(buffer, "unexpected start string: '%" XML_FMT_STR "'", name);
+    fail(buffer);
+  }
+  if (xcstrcmp(elemstr[1], atts[0]) != 0) {
+    sprintf(buffer, "unexpected attribute string: '%" XML_FMT_STR "'", atts[0]);
+    fail(buffer);
+  }
+  g_triplet_start_flag = XML_TRUE;
+}
+
+/* Check that the element name passed to the end-element handler matches
+   the expected value.  The expected value is passed as the first element
+   in an array of strings passed as the userData argument.
+*/
+void XMLCALL
+triplet_end_checker(void *userData, const XML_Char *name) {
+  XML_Char **elemstr = (XML_Char **)userData;
+  if (xcstrcmp(elemstr[0], name) != 0) {
+    char buffer[1024];
+    sprintf(buffer, "unexpected end string: '%" XML_FMT_STR "'", name);
+    fail(buffer);
+  }
+  g_triplet_end_flag = XML_TRUE;
+}
+
 /* Text encoding handlers */
 
 int XMLCALL
