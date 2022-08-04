@@ -46,6 +46,7 @@
 #  undef NDEBUG /* because test suite relies on assert(...) at the moment */
 #endif
 
+#include <stdio.h>
 #include <stdint.h> /* For intptr_t, uint64_t */
 #include <string.h>
 #include <assert.h>
@@ -687,6 +688,36 @@ external_entity_faulter2(XML_Parser parser, const XML_Char *context,
 
   XML_ParserFree(extparser);
   return XML_STATUS_ERROR;
+}
+
+int XMLCALL
+external_entity_handler(XML_Parser parser, const XML_Char *context,
+                        const XML_Char *base, const XML_Char *systemId,
+                        const XML_Char *publicId) {
+  intptr_t callno = 1 + (intptr_t)XML_GetUserData(parser);
+  const char *text;
+  XML_Parser p2;
+
+  UNUSED_P(base);
+  UNUSED_P(systemId);
+  UNUSED_P(publicId);
+  if (callno == 1)
+    text = ("<!ELEMENT doc (e+)>\n"
+            "<!ATTLIST doc xmlns CDATA #IMPLIED>\n"
+            "<!ELEMENT e EMPTY>\n");
+  else
+    text = ("<?xml version='1.0' encoding='us-ascii'?>"
+            "<e/>");
+
+  XML_SetUserData(parser, (void *)callno);
+  p2 = XML_ExternalEntityParserCreate(parser, context, NULL);
+  if (_XML_Parse_SINGLE_BYTES(p2, text, (int)strlen(text), XML_TRUE)
+      == XML_STATUS_ERROR) {
+    xml_failure(p2);
+    return XML_STATUS_ERROR;
+  }
+  XML_ParserFree(p2);
+  return XML_STATUS_OK;
 }
 
 /* Entity declaration handlers
