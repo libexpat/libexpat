@@ -62,7 +62,6 @@
 #include "handlers.h"
 #include "ns_tests.h"
 
-
 START_TEST(test_return_ns_triplet) {
   const char *text = "<foo:e xmlns:foo='http://example.org/' bar:a='12'\n"
                      "       xmlns:bar='http://example.org/'>";
