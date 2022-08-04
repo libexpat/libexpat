@@ -236,6 +236,17 @@ overwrite_end_checker(void *userData, const XML_Char *name) {
   CharData_AppendXMLChars(storage, XCS("\n"), 1);
 }
 
+void XMLCALL
+start_element_fail(void *userData, const XML_Char *name,
+                   const XML_Char **atts) {
+  UNUSED_P(userData);
+  UNUSED_P(name);
+  UNUSED_P(atts);
+
+  /* We should never get here. */
+  fail("should never reach start_element_fail()");
+}
+
 /* Text encoding handlers */
 
 int XMLCALL
