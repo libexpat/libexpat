@@ -197,7 +197,7 @@ START_TEST(test_misc_version) {
   /* If we have XML_UNICODE defined but not XML_UNICODE_WCHAR_T
    * then XML_LChar is defined as char, for some reason.
    */
-  if (strcmp(version_text, "expat_2.2.5")) /* needs bump on releases */
+  if (strcmp(version_text, "expat_2.4.8")) /* needs bump on releases */
     fail("XML_*_VERSION in expat.h out of sync?\n");
 #endif /* ! defined(XML_UNICODE) || defined(XML_UNICODE_WCHAR_T) */
 }
