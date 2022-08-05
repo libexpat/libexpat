@@ -51,7 +51,8 @@ libruntests_a_SOURCES = \
     dummy.c \
     handlers.c \
     basic_tests.c \
-    ns_tests.c
+    ns_tests.c \
+    misc_tests.c
 
 runtests_SOURCES = \
     runtests.c
@@ -75,6 +76,7 @@ EXTRA_DIST = \
     handlers.h \
     basic_tests.h \
     ns_tests.h \
+    misc_tests.h \
     README.txt \
     udiffer.py \
     xmltest.log.expected \

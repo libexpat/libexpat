@@ -72,6 +72,7 @@
 
 #include "basic_tests.h"
 #include "ns_tests.h"
+#include "misc_tests.h"
 
 XML_Parser g_parser = NULL;
 
@@ -98,10 +99,6 @@ testhelper_is_whitespace_normalized(void) {
   assert(! is_whitespace_normalized(XCS("\r"), 1));
   assert(! is_whitespace_normalized(XCS("abc\t def"), 1));
 }
-
-/*
- * Namespaces tests.
- */
 
 /* Test that a failure to allocate the parser structure fails gracefully */
 START_TEST(test_misc_alloc_create_parser) {
@@ -4494,14 +4491,13 @@ make_suite(void) {
 
   make_basic_test_case(s);
   make_namespace_test_case(s);
-  tc_misc = tcase_create("miscellaneous tests");
+  tc_misc = make_miscellaneous_test_case(s);
   tc_alloc = tcase_create("allocation tests");
   tc_nsalloc = tcase_create("namespace allocation tests");
 #if defined(XML_DTD)
   tc_accounting = tcase_create("accounting tests");
 #endif
 
-  suite_add_tcase(s, tc_misc);
   tcase_add_checked_fixture(tc_misc, NULL, basic_teardown);
   tcase_add_test(tc_misc, test_misc_alloc_create_parser);
   tcase_add_test(tc_misc, test_misc_alloc_create_parser_with_encoding);
