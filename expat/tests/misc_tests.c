@@ -62,12 +62,74 @@
 #include "handlers.h"
 #include "misc_tests.h"
 
+/* Test that a failure to allocate the parser structure fails gracefully */
+START_TEST(test_misc_alloc_create_parser) {
+  XML_Memory_Handling_Suite memsuite = {duff_allocator, realloc, free};
+  unsigned int i;
+  const unsigned int max_alloc_count = 10;
+
+  /* Something this simple shouldn't need more than 10 allocations */
+  for (i = 0; i < max_alloc_count; i++) {
+    g_allocation_count = i;
+    g_parser = XML_ParserCreate_MM(NULL, &memsuite, NULL);
+    if (g_parser != NULL)
+      break;
+  }
+  if (i == 0)
+    fail("Parser unexpectedly ignored failing allocator");
+  else if (i == max_alloc_count)
+    fail("Parser not created with max allocation count");
+}
+END_TEST
+
+/* Test memory allocation failures for a parser with an encoding */
+START_TEST(test_misc_alloc_create_parser_with_encoding) {
+  XML_Memory_Handling_Suite memsuite = {duff_allocator, realloc, free};
+  unsigned int i;
+  const unsigned int max_alloc_count = 10;
+
+  /* Try several levels of allocation */
+  for (i = 0; i < max_alloc_count; i++) {
+    g_allocation_count = i;
+    g_parser = XML_ParserCreate_MM(XCS("us-ascii"), &memsuite, NULL);
+    if (g_parser != NULL)
+      break;
+  }
+  if (i == 0)
+    fail("Parser ignored failing allocator");
+  else if (i == max_alloc_count)
+    fail("Parser not created with max allocation count");
+}
+END_TEST
+
+/* Test that freeing a NULL parser doesn't cause an explosion.
+ * (Not actually tested anywhere else)
+ */
+START_TEST(test_misc_null_parser) {
+  XML_ParserFree(NULL);
+}
+END_TEST
+
+/* Test that XML_ErrorString rejects out-of-range codes */
+START_TEST(test_misc_error_string) {
+  if (XML_ErrorString((enum XML_Error) - 1) != NULL)
+    fail("Negative error code not rejected");
+  if (XML_ErrorString((enum XML_Error)100) != NULL)
+    fail("Large error code not rejected");
+}
+END_TEST
+
 TCase *
 make_miscellaneous_test_case(Suite *s) {
   TCase *tc_misc = tcase_create("miscellaneous tests");
 
   suite_add_tcase(s, tc_misc);
   tcase_add_checked_fixture(tc_misc, NULL, basic_teardown);
+
+  tcase_add_test(tc_misc, test_misc_alloc_create_parser);
+  tcase_add_test(tc_misc, test_misc_alloc_create_parser_with_encoding);
+  tcase_add_test(tc_misc, test_misc_null_parser);
+  tcase_add_test(tc_misc, test_misc_error_string);
 
   return tc_misc;
 }
