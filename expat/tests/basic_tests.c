@@ -49,6 +49,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
+#include <stdint.h>
 
 #if ! defined(__cplusplus)
 #  include <stdbool.h>

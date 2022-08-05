@@ -84,6 +84,14 @@ extern XML_Parser g_parser;
 extern XML_Bool g_resumable;
 extern XML_Bool g_abortable;
 
+/* Control variable; the number of times duff_allocator() will successfully
+ * allocate */
+#define ALLOC_ALWAYS_SUCCEED (-1)
+#define REALLOC_ALWAYS_SUCCEED (-1)
+
+extern intptr_t g_allocation_count;
+extern intptr_t g_reallocation_count;
+
 /* Support structure for a generic external entity handler.  The
  * handler function external_entity_optioner() expects its userdata to
  * be an array of these structures, terminated by a structure with all
@@ -200,6 +208,9 @@ extern void _run_ext_character_check(const char *text, ExtTest *test_data,
    attribute data types do.  (Section 3.3.3 of the recommendation.)
 */
 extern int is_whitespace_normalized(const XML_Char *s, int is_cdata);
+
+extern void *duff_allocator(size_t size);
+extern void *duff_reallocator(void *ptr, size_t size);
 
 #endif /* XML_COMMON_H */
 

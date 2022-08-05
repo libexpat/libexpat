@@ -40,6 +40,8 @@
    USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+#include <stdint.h>
+
 #include "expat.h"
 #include "internal.h" /* For UNUSED_P() */
 #include "minicheck.h"

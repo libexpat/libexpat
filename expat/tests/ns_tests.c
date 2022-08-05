@@ -47,6 +47,7 @@
 #endif
 #include <assert.h>
 #include <string.h>
+#include <stdint.h>
 
 #if ! defined(__cplusplus)
 #  include <stdbool.h>

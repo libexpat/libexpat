@@ -42,6 +42,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <stdint.h>
 
 #include "expat.h"
 #include "internal.h" /* for UNUSED_P */
@@ -399,4 +400,27 @@ is_whitespace_normalized(const XML_Char *s, int is_cdata) {
   if (blanks && ! is_cdata)
     return 0;
   return 1;
+}
+
+intptr_t g_allocation_count = ALLOC_ALWAYS_SUCCEED;
+intptr_t g_reallocation_count = REALLOC_ALWAYS_SUCCEED;
+
+/* Crocked allocator for allocation failure tests */
+void *
+duff_allocator(size_t size) {
+  if (g_allocation_count == 0)
+    return NULL;
+  if (g_allocation_count != ALLOC_ALWAYS_SUCCEED)
+    g_allocation_count--;
+  return malloc(size);
+}
+
+/* Crocked reallocator for allocation failure tests */
+void *
+duff_reallocator(void *ptr, size_t size) {
+  if (g_reallocation_count == 0)
+    return NULL;
+  if (g_reallocation_count != REALLOC_ALWAYS_SUCCEED)
+    g_reallocation_count--;
+  return realloc(ptr, size);
 }
