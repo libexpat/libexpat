@@ -68,7 +68,6 @@
 #include "common.h"
 #include "dummy.h"
 #include "handlers.h"
-#include "ascii.h" /* for ASCII_xxx */
 
 #include "basic_tests.h"
 #include "ns_tests.h"
@@ -99,89 +98,6 @@ testhelper_is_whitespace_normalized(void) {
   assert(! is_whitespace_normalized(XCS("\r"), 1));
   assert(! is_whitespace_normalized(XCS("abc\t def"), 1));
 }
-
-/* Test the version information is consistent */
-
-/* Since we are working in XML_LChars (potentially 16-bits), we
- * can't use the standard C library functions for character
- * manipulation and have to roll our own.
- */
-static int
-parse_version(const XML_LChar *version_text,
-              XML_Expat_Version *version_struct) {
-  if (! version_text)
-    return XML_FALSE;
-
-  while (*version_text != 0x00) {
-    if (*version_text >= ASCII_0 && *version_text <= ASCII_9)
-      break;
-    version_text++;
-  }
-  if (*version_text == 0x00)
-    return XML_FALSE;
-
-  /* version_struct->major = strtoul(version_text, 10, &version_text) */
-  version_struct->major = 0;
-  while (*version_text >= ASCII_0 && *version_text <= ASCII_9) {
-    version_struct->major
-        = 10 * version_struct->major + (*version_text++ - ASCII_0);
-  }
-  if (*version_text++ != ASCII_PERIOD)
-    return XML_FALSE;
-
-  /* Now for the minor version number */
-  version_struct->minor = 0;
-  while (*version_text >= ASCII_0 && *version_text <= ASCII_9) {
-    version_struct->minor
-        = 10 * version_struct->minor + (*version_text++ - ASCII_0);
-  }
-  if (*version_text++ != ASCII_PERIOD)
-    return XML_FALSE;
-
-  /* Finally the micro version number */
-  version_struct->micro = 0;
-  while (*version_text >= ASCII_0 && *version_text <= ASCII_9) {
-    version_struct->micro
-        = 10 * version_struct->micro + (*version_text++ - ASCII_0);
-  }
-  if (*version_text != 0x00)
-    return XML_FALSE;
-  return XML_TRUE;
-}
-
-static int
-versions_equal(const XML_Expat_Version *first,
-               const XML_Expat_Version *second) {
-  return (first->major == second->major && first->minor == second->minor
-          && first->micro == second->micro);
-}
-
-START_TEST(test_misc_version) {
-  XML_Expat_Version read_version = XML_ExpatVersionInfo();
-  /* Silence compiler warning with the following assignment */
-  XML_Expat_Version parsed_version = {0, 0, 0};
-  const XML_LChar *version_text = XML_ExpatVersion();
-
-  if (version_text == NULL)
-    fail("Could not obtain version text");
-  assert(version_text != NULL);
-  if (! parse_version(version_text, &parsed_version))
-    fail("Unable to parse version text");
-  if (! versions_equal(&read_version, &parsed_version))
-    fail("Version mismatch");
-
-#if ! defined(XML_UNICODE) || defined(XML_UNICODE_WCHAR_T)
-  if (xcstrcmp(version_text, XCS("expat_2.4.8"))) /* needs bump on releases */
-    fail("XML_*_VERSION in expat.h out of sync?\n");
-#else
-  /* If we have XML_UNICODE defined but not XML_UNICODE_WCHAR_T
-   * then XML_LChar is defined as char, for some reason.
-   */
-  if (strcmp(version_text, "expat_2.2.5")) /* needs bump on releases */
-    fail("XML_*_VERSION in expat.h out of sync?\n");
-#endif /* ! defined(XML_UNICODE) || defined(XML_UNICODE_WCHAR_T) */
-}
-END_TEST
 
 /* Test feature information */
 START_TEST(test_misc_features) {
@@ -4441,7 +4357,6 @@ make_suite(void) {
   tc_accounting = tcase_create("accounting tests");
 #endif
 
-  tcase_add_test(tc_misc, test_misc_version);
   tcase_add_test(tc_misc, test_misc_features);
   tcase_add_test(tc_misc, test_misc_attribute_leak);
   tcase_add_test(tc_misc, test_misc_utf16le);
