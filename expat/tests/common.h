@@ -86,8 +86,8 @@ extern XML_Bool g_abortable;
 
 /* Control variable; the number of times duff_allocator() will successfully
  * allocate */
-#define ALLOC_ALWAYS_SUCCEED (-1)
-#define REALLOC_ALWAYS_SUCCEED (-1)
+#  define ALLOC_ALWAYS_SUCCEED (-1)
+#  define REALLOC_ALWAYS_SUCCEED (-1)
 
 extern intptr_t g_allocation_count;
 extern intptr_t g_reallocation_count;
