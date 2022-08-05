@@ -248,6 +248,26 @@ start_element_fail(void *userData, const XML_Char *name,
   fail("should never reach start_element_fail()");
 }
 
+void
+start_element_issue_240(void *userData, const XML_Char *name,
+                        const XML_Char **atts) {
+  DataIssue240 *mydata = (DataIssue240 *)userData;
+  UNUSED_P(name);
+  UNUSED_P(atts);
+  mydata->deep++;
+}
+
+void
+end_element_issue_240(void *userData, const XML_Char *name) {
+  DataIssue240 *mydata = (DataIssue240 *)userData;
+
+  UNUSED_P(name);
+  mydata->deep--;
+  if (mydata->deep == 0) {
+    XML_StopParser(mydata->parser, 0);
+  }
+}
+
 /* Text encoding handlers */
 
 int XMLCALL

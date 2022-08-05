@@ -276,6 +276,109 @@ START_TEST(test_misc_utf16le) {
 }
 END_TEST
 
+START_TEST(test_misc_stop_during_end_handler_issue_240_1) {
+  XML_Parser parser;
+  DataIssue240 *mydata;
+  enum XML_Status result;
+  const char *const doc1 = "<doc><e1/><e><foo/></e></doc>";
+
+  parser = XML_ParserCreate(NULL);
+  XML_SetElementHandler(parser, start_element_issue_240, end_element_issue_240);
+  mydata = (DataIssue240 *)malloc(sizeof(DataIssue240));
+  mydata->parser = parser;
+  mydata->deep = 0;
+  XML_SetUserData(parser, mydata);
+
+  result = XML_Parse(parser, doc1, (int)strlen(doc1), 1);
+  XML_ParserFree(parser);
+  free(mydata);
+  if (result != XML_STATUS_ERROR)
+    fail("Stopping the parser did not work as expected");
+}
+END_TEST
+
+START_TEST(test_misc_stop_during_end_handler_issue_240_2) {
+  XML_Parser parser;
+  DataIssue240 *mydata;
+  enum XML_Status result;
+  const char *const doc2 = "<doc><elem/></doc>";
+
+  parser = XML_ParserCreate(NULL);
+  XML_SetElementHandler(parser, start_element_issue_240, end_element_issue_240);
+  mydata = (DataIssue240 *)malloc(sizeof(DataIssue240));
+  mydata->parser = parser;
+  mydata->deep = 0;
+  XML_SetUserData(parser, mydata);
+
+  result = XML_Parse(parser, doc2, (int)strlen(doc2), 1);
+  XML_ParserFree(parser);
+  free(mydata);
+  if (result != XML_STATUS_ERROR)
+    fail("Stopping the parser did not work as expected");
+}
+END_TEST
+
+START_TEST(test_misc_deny_internal_entity_closing_doctype_issue_317) {
+  const char *const inputOne = "<!DOCTYPE d [\n"
+                               "<!ENTITY % e ']><d/>'>\n"
+                               "\n"
+                               "%e;";
+  const char *const inputTwo = "<!DOCTYPE d [\n"
+                               "<!ENTITY % e1 ']><d/>'><!ENTITY % e2 '&e1;'>\n"
+                               "\n"
+                               "%e2;";
+  const char *const inputThree = "<!DOCTYPE d [\n"
+                                 "<!ENTITY % e ']><d'>\n"
+                                 "\n"
+                                 "%e;";
+  const char *const inputIssue317 = "<!DOCTYPE doc [\n"
+                                    "<!ENTITY % foo ']>\n"
+                                    "<doc>Hell<oc (#PCDATA)*>'>\n"
+                                    "%foo;\n"
+                                    "]>\n"
+                                    "<doc>Hello, world</dVc>";
+
+  const char *const inputs[] = {inputOne, inputTwo, inputThree, inputIssue317};
+  size_t inputIndex = 0;
+
+  for (; inputIndex < sizeof(inputs) / sizeof(inputs[0]); inputIndex++) {
+    XML_Parser parser;
+    enum XML_Status parseResult;
+    int setParamEntityResult;
+    XML_Size lineNumber;
+    XML_Size columnNumber;
+    const char *const input = inputs[inputIndex];
+
+    parser = XML_ParserCreate(NULL);
+    setParamEntityResult
+        = XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+    if (setParamEntityResult != 1)
+      fail("Failed to set XML_PARAM_ENTITY_PARSING_ALWAYS.");
+
+    parseResult = XML_Parse(parser, input, (int)strlen(input), 0);
+    if (parseResult != XML_STATUS_ERROR) {
+      parseResult = XML_Parse(parser, "", 0, 1);
+      if (parseResult != XML_STATUS_ERROR) {
+        fail("Parsing was expected to fail but succeeded.");
+      }
+    }
+
+    if (XML_GetErrorCode(parser) != XML_ERROR_INVALID_TOKEN)
+      fail("Error code does not match XML_ERROR_INVALID_TOKEN");
+
+    lineNumber = XML_GetCurrentLineNumber(parser);
+    if (lineNumber != 4)
+      fail("XML_GetCurrentLineNumber does not work as expected.");
+
+    columnNumber = XML_GetCurrentColumnNumber(parser);
+    if (columnNumber != 0)
+      fail("XML_GetCurrentColumnNumber does not work as expected.");
+
+    XML_ParserFree(parser);
+  }
+}
+END_TEST
+
 TCase *
 make_miscellaneous_test_case(Suite *s) {
   TCase *tc_misc = tcase_create("miscellaneous tests");
@@ -291,6 +394,10 @@ make_miscellaneous_test_case(Suite *s) {
   tcase_add_test(tc_misc, test_misc_features);
   tcase_add_test(tc_misc, test_misc_attribute_leak);
   tcase_add_test(tc_misc, test_misc_utf16le);
+  tcase_add_test(tc_misc, test_misc_stop_during_end_handler_issue_240_1);
+  tcase_add_test(tc_misc, test_misc_stop_during_end_handler_issue_240_2);
+  tcase_add_test__ifdef_xml_dtd(
+      tc_misc, test_misc_deny_internal_entity_closing_doctype_issue_317);
 
   return tc_misc;
 }
