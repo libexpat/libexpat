@@ -111,6 +111,8 @@ extern void basic_setup(void);
 extern void basic_teardown(void);
 extern void namespace_setup(void);
 extern void namespace_teardown(void);
+extern void alloc_setup(void);
+extern void alloc_teardown(void);
 
 /* Generate a failure using the parser state to create an error message;
    this should be used when the parser reports an error we weren't

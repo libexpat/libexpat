@@ -99,23 +99,6 @@ testhelper_is_whitespace_normalized(void) {
   assert(! is_whitespace_normalized(XCS("abc\t def"), 1));
 }
 
-static void
-alloc_setup(void) {
-  XML_Memory_Handling_Suite memsuite = {duff_allocator, duff_reallocator, free};
-
-  /* Ensure the parser creation will go through */
-  g_allocation_count = ALLOC_ALWAYS_SUCCEED;
-  g_reallocation_count = REALLOC_ALWAYS_SUCCEED;
-  g_parser = XML_ParserCreate_MM(NULL, &memsuite, NULL);
-  if (g_parser == NULL)
-    fail("Parser not created");
-}
-
-static void
-alloc_teardown(void) {
-  basic_teardown();
-}
-
 /* Test the effects of allocation failures on xml declaration processing */
 START_TEST(test_alloc_parse_xdecl) {
   const char *text = "<?xml version='1.0' encoding='utf-8'?>\n"
