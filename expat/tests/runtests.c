@@ -101,83 +101,6 @@ testhelper_is_whitespace_normalized(void) {
 }
 
 static int XMLCALL
-external_entity_dbl_handler(XML_Parser parser, const XML_Char *context,
-                            const XML_Char *base, const XML_Char *systemId,
-                            const XML_Char *publicId) {
-  intptr_t callno = (intptr_t)XML_GetUserData(parser);
-  const char *text;
-  XML_Parser new_parser;
-  int i;
-  const int max_alloc_count = 20;
-
-  UNUSED_P(base);
-  UNUSED_P(systemId);
-  UNUSED_P(publicId);
-  if (callno == 0) {
-    /* First time through, check how many calls to malloc occur */
-    text = ("<!ELEMENT doc (e+)>\n"
-            "<!ATTLIST doc xmlns CDATA #IMPLIED>\n"
-            "<!ELEMENT e EMPTY>\n");
-    g_allocation_count = 10000;
-    new_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
-    if (new_parser == NULL) {
-      fail("Unable to allocate first external parser");
-      return XML_STATUS_ERROR;
-    }
-    /* Stash the number of calls in the user data */
-    XML_SetUserData(parser, (void *)(intptr_t)(10000 - g_allocation_count));
-  } else {
-    text = ("<?xml version='1.0' encoding='us-ascii'?>"
-            "<e/>");
-    /* Try at varying levels to exercise more code paths */
-    for (i = 0; i < max_alloc_count; i++) {
-      g_allocation_count = callno + i;
-      new_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
-      if (new_parser != NULL)
-        break;
-    }
-    if (i == 0) {
-      fail("Second external parser unexpectedly created");
-      XML_ParserFree(new_parser);
-      return XML_STATUS_ERROR;
-    } else if (i == max_alloc_count) {
-      fail("Second external parser not created");
-      return XML_STATUS_ERROR;
-    }
-  }
-
-  g_allocation_count = ALLOC_ALWAYS_SUCCEED;
-  if (_XML_Parse_SINGLE_BYTES(new_parser, text, (int)strlen(text), XML_TRUE)
-      == XML_STATUS_ERROR) {
-    xml_failure(new_parser);
-    return XML_STATUS_ERROR;
-  }
-  XML_ParserFree(new_parser);
-  return XML_STATUS_OK;
-}
-
-/* Test that running out of memory in dtdCopy is correctly reported.
- * Based on test_default_ns_from_ext_subset_and_ext_ge()
- */
-START_TEST(test_alloc_dtd_copy_default_atts) {
-  const char *text = "<?xml version='1.0'?>\n"
-                     "<!DOCTYPE doc SYSTEM 'http://example.org/doc.dtd' [\n"
-                     "  <!ENTITY en SYSTEM 'http://example.org/entity.ent'>\n"
-                     "]>\n"
-                     "<doc xmlns='http://example.org/ns1'>\n"
-                     "&en;\n"
-                     "</doc>";
-
-  XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
-  XML_SetExternalEntityRefHandler(g_parser, external_entity_dbl_handler);
-  XML_SetUserData(g_parser, NULL);
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
-      == XML_STATUS_ERROR)
-    xml_failure(g_parser);
-}
-END_TEST
-
-static int XMLCALL
 external_entity_dbl_handler_2(XML_Parser parser, const XML_Char *context,
                               const XML_Char *base, const XML_Char *systemId,
                               const XML_Char *publicId) {
@@ -3828,7 +3751,6 @@ make_suite(void) {
   tc_accounting = tcase_create("accounting tests");
 #endif
 
-  tcase_add_test__ifdef_xml_dtd(tc_alloc, test_alloc_dtd_copy_default_atts);
   tcase_add_test__ifdef_xml_dtd(tc_alloc, test_alloc_external_entity);
   tcase_add_test__ifdef_xml_dtd(tc_alloc, test_alloc_ext_entity_set_encoding);
   tcase_add_test__ifdef_xml_dtd(tc_alloc, test_alloc_internal_entity);
