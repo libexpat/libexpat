@@ -755,6 +755,38 @@ external_entity_handler(XML_Parser parser, const XML_Char *context,
   return XML_STATUS_OK;
 }
 
+int XMLCALL
+external_entity_duff_loader(XML_Parser parser, const XML_Char *context,
+                            const XML_Char *base, const XML_Char *systemId,
+                            const XML_Char *publicId) {
+  XML_Parser new_parser;
+  unsigned int i;
+  const unsigned int max_alloc_count = 10;
+
+  UNUSED_P(base);
+  UNUSED_P(systemId);
+  UNUSED_P(publicId);
+  /* Try a few different allocation levels */
+  for (i = 0; i < max_alloc_count; i++) {
+    g_allocation_count = i;
+    new_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
+    if (new_parser != NULL) {
+      XML_ParserFree(new_parser);
+      break;
+    }
+  }
+  if (i == 0)
+    fail("External parser creation ignored failing allocator");
+  else if (i == max_alloc_count)
+    fail("Extern parser not created with max allocation count");
+
+  /* Make sure other random allocation doesn't now fail */
+  g_allocation_count = ALLOC_ALWAYS_SUCCEED;
+
+  /* Make sure the failure code path is executed too */
+  return XML_STATUS_ERROR;
+}
+
 /* Entity declaration handlers
  *
  * This handler attempts to suspend the subordinate parser, expecting
