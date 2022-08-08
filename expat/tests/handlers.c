@@ -843,6 +843,43 @@ external_entity_dbl_handler(XML_Parser parser, const XML_Char *context,
   return XML_STATUS_OK;
 }
 
+int XMLCALL
+external_entity_dbl_handler_2(XML_Parser parser, const XML_Char *context,
+                              const XML_Char *base, const XML_Char *systemId,
+                              const XML_Char *publicId) {
+  intptr_t callno = (intptr_t)XML_GetUserData(parser);
+  const char *text;
+  XML_Parser new_parser;
+  enum XML_Status rv;
+
+  UNUSED_P(base);
+  UNUSED_P(systemId);
+  UNUSED_P(publicId);
+  if (callno == 0) {
+    /* Try different allocation levels for whole exercise */
+    text = ("<!ELEMENT doc (e+)>\n"
+            "<!ATTLIST doc xmlns CDATA #IMPLIED>\n"
+            "<!ELEMENT e EMPTY>\n");
+    XML_SetUserData(parser, (void *)(intptr_t)1);
+    new_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
+    if (new_parser == NULL)
+      return XML_STATUS_ERROR;
+    rv = _XML_Parse_SINGLE_BYTES(new_parser, text, (int)strlen(text), XML_TRUE);
+  } else {
+    /* Just run through once */
+    text = ("<?xml version='1.0' encoding='us-ascii'?>"
+            "<e/>");
+    new_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
+    if (new_parser == NULL)
+      return XML_STATUS_ERROR;
+    rv = _XML_Parse_SINGLE_BYTES(new_parser, text, (int)strlen(text), XML_TRUE);
+  }
+  XML_ParserFree(new_parser);
+  if (rv == XML_STATUS_ERROR)
+    return XML_STATUS_ERROR;
+  return XML_STATUS_OK;
+}
+
 /* Entity declaration handlers
  *
  * This handler attempts to suspend the subordinate parser, expecting
