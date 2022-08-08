@@ -384,6 +384,188 @@ START_TEST(test_alloc_external_entity) {
 }
 END_TEST
 
+/* Test more allocation failure paths */
+START_TEST(test_alloc_ext_entity_set_encoding) {
+  const char *text = "<!DOCTYPE doc [\n"
+                     "  <!ENTITY en SYSTEM 'http://example.org/dummy.ent'>\n"
+                     "]>\n"
+                     "<doc>&en;</doc>";
+  int i;
+  const int max_allocation_count = 30;
+
+  for (i = 0; i < max_allocation_count; i++) {
+    XML_SetExternalEntityRefHandler(g_parser,
+                                    external_entity_alloc_set_encoding);
+    g_allocation_count = i;
+    if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+        == XML_STATUS_OK)
+      break;
+    g_allocation_count = -1;
+    /* See comment in test_alloc_parse_xdecl() */
+    alloc_teardown();
+    alloc_setup();
+  }
+  if (i == 0)
+    fail("Encoding check succeeded despite failing allocator");
+  if (i == max_allocation_count)
+    fail("Encoding failed at max allocation count");
+}
+END_TEST
+
+/* Test the effects of allocation failure in internal entities.
+ * Based on test_unknown_encoding_internal_entity
+ */
+START_TEST(test_alloc_internal_entity) {
+  const char *text = "<?xml version='1.0' encoding='unsupported-encoding'?>\n"
+                     "<!DOCTYPE test [<!ENTITY foo 'bar'>]>\n"
+                     "<test a='&foo;'/>";
+  unsigned int i;
+  const unsigned int max_alloc_count = 20;
+
+  for (i = 0; i < max_alloc_count; i++) {
+    g_allocation_count = i;
+    XML_SetUnknownEncodingHandler(g_parser, unknown_released_encoding_handler,
+                                  NULL);
+    if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+        != XML_STATUS_ERROR)
+      break;
+    /* See comment in test_alloc_parse_xdecl() */
+    alloc_teardown();
+    alloc_setup();
+  }
+  if (i == 0)
+    fail("Internal entity worked despite failing allocations");
+  else if (i == max_alloc_count)
+    fail("Internal entity failed at max allocation count");
+}
+END_TEST
+
+/* Test the robustness against allocation failure of element handling
+ * Based on test_dtd_default_handling().
+ */
+START_TEST(test_alloc_dtd_default_handling) {
+  const char *text = "<!DOCTYPE doc [\n"
+                     "<!ENTITY e SYSTEM 'http://example.org/e'>\n"
+                     "<!NOTATION n SYSTEM 'http://example.org/n'>\n"
+                     "<!ENTITY e1 SYSTEM 'http://example.org/e' NDATA n>\n"
+                     "<!ELEMENT doc (#PCDATA)>\n"
+                     "<!ATTLIST doc a CDATA #IMPLIED>\n"
+                     "<?pi in dtd?>\n"
+                     "<!--comment in dtd-->\n"
+                     "]>\n"
+                     "<doc><![CDATA[text in doc]]></doc>";
+  const XML_Char *expected = XCS("\n\n\n\n\n\n\n\n\n<doc>text in doc</doc>");
+  CharData storage;
+  int i;
+  const int max_alloc_count = 25;
+
+  for (i = 0; i < max_alloc_count; i++) {
+    g_allocation_count = i;
+    init_dummy_handlers();
+    XML_SetDefaultHandler(g_parser, accumulate_characters);
+    XML_SetDoctypeDeclHandler(g_parser, dummy_start_doctype_handler,
+                              dummy_end_doctype_handler);
+    XML_SetEntityDeclHandler(g_parser, dummy_entity_decl_handler);
+    XML_SetNotationDeclHandler(g_parser, dummy_notation_decl_handler);
+    XML_SetElementDeclHandler(g_parser, dummy_element_decl_handler);
+    XML_SetAttlistDeclHandler(g_parser, dummy_attlist_decl_handler);
+    XML_SetProcessingInstructionHandler(g_parser, dummy_pi_handler);
+    XML_SetCommentHandler(g_parser, dummy_comment_handler);
+    XML_SetCdataSectionHandler(g_parser, dummy_start_cdata_handler,
+                               dummy_end_cdata_handler);
+    XML_SetUnparsedEntityDeclHandler(g_parser,
+                                     dummy_unparsed_entity_decl_handler);
+    CharData_Init(&storage);
+    XML_SetUserData(g_parser, &storage);
+    XML_SetCharacterDataHandler(g_parser, accumulate_characters);
+    if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+        != XML_STATUS_ERROR)
+      break;
+    /* See comment in test_alloc_parse_xdecl() */
+    alloc_teardown();
+    alloc_setup();
+  }
+  if (i == 0)
+    fail("Default DTD parsed despite allocation failures");
+  if (i == max_alloc_count)
+    fail("Default DTD not parsed with maximum alloc count");
+  CharData_CheckXMLChars(&storage, expected);
+  if (get_dummy_handler_flags()
+      != (DUMMY_START_DOCTYPE_HANDLER_FLAG | DUMMY_END_DOCTYPE_HANDLER_FLAG
+          | DUMMY_ENTITY_DECL_HANDLER_FLAG | DUMMY_NOTATION_DECL_HANDLER_FLAG
+          | DUMMY_ELEMENT_DECL_HANDLER_FLAG | DUMMY_ATTLIST_DECL_HANDLER_FLAG
+          | DUMMY_COMMENT_HANDLER_FLAG | DUMMY_PI_HANDLER_FLAG
+          | DUMMY_START_CDATA_HANDLER_FLAG | DUMMY_END_CDATA_HANDLER_FLAG
+          | DUMMY_UNPARSED_ENTITY_DECL_HANDLER_FLAG))
+    fail("Not all handlers were called");
+}
+END_TEST
+
+/* Test robustness of XML_SetEncoding() with a failing allocator */
+START_TEST(test_alloc_explicit_encoding) {
+  int i;
+  const int max_alloc_count = 5;
+
+  for (i = 0; i < max_alloc_count; i++) {
+    g_allocation_count = i;
+    if (XML_SetEncoding(g_parser, XCS("us-ascii")) == XML_STATUS_OK)
+      break;
+  }
+  if (i == 0)
+    fail("Encoding set despite failing allocator");
+  else if (i == max_alloc_count)
+    fail("Encoding not set at max allocation count");
+}
+END_TEST
+
+/* Test robustness of XML_SetBase against a failing allocator */
+START_TEST(test_alloc_set_base) {
+  const XML_Char *new_base = XCS("/local/file/name.xml");
+  int i;
+  const int max_alloc_count = 5;
+
+  for (i = 0; i < max_alloc_count; i++) {
+    g_allocation_count = i;
+    if (XML_SetBase(g_parser, new_base) == XML_STATUS_OK)
+      break;
+  }
+  if (i == 0)
+    fail("Base set despite failing allocator");
+  else if (i == max_alloc_count)
+    fail("Base not set with max allocation count");
+}
+END_TEST
+
+/* Test buffer extension in the face of a duff reallocator */
+START_TEST(test_alloc_realloc_buffer) {
+  const char *text = get_buffer_test_text;
+  void *buffer;
+  int i;
+  const int max_realloc_count = 10;
+
+  /* Get a smallish buffer */
+  for (i = 0; i < max_realloc_count; i++) {
+    g_reallocation_count = i;
+    buffer = XML_GetBuffer(g_parser, 1536);
+    if (buffer == NULL)
+      fail("1.5K buffer reallocation failed");
+    assert(buffer != NULL);
+    memcpy(buffer, text, strlen(text));
+    if (XML_ParseBuffer(g_parser, (int)strlen(text), XML_FALSE)
+        == XML_STATUS_OK)
+      break;
+    /* See comment in test_alloc_parse_xdecl() */
+    alloc_teardown();
+    alloc_setup();
+  }
+  g_reallocation_count = -1;
+  if (i == 0)
+    fail("Parse succeeded with no reallocation");
+  else if (i == max_realloc_count)
+    fail("Parse failed with max reallocation count");
+}
+END_TEST
+
 TCase *
 make_allocation_test_case(Suite *s) {
   TCase *tc_alloc = tcase_create("allocation tests");
@@ -402,6 +584,12 @@ make_allocation_test_case(Suite *s) {
   tcase_add_test__ifdef_xml_dtd(tc_alloc, test_alloc_run_external_parser);
   tcase_add_test__ifdef_xml_dtd(tc_alloc, test_alloc_dtd_copy_default_atts);
   tcase_add_test__ifdef_xml_dtd(tc_alloc, test_alloc_external_entity);
+  tcase_add_test__ifdef_xml_dtd(tc_alloc, test_alloc_ext_entity_set_encoding);
+  tcase_add_test__ifdef_xml_dtd(tc_alloc, test_alloc_internal_entity);
+  tcase_add_test__ifdef_xml_dtd(tc_alloc, test_alloc_dtd_default_handling);
+  tcase_add_test(tc_alloc, test_alloc_explicit_encoding);
+  tcase_add_test(tc_alloc, test_alloc_set_base);
+  tcase_add_test(tc_alloc, test_alloc_realloc_buffer);
 
   return tc_alloc;
 }
