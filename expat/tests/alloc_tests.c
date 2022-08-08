@@ -283,6 +283,53 @@ START_TEST(test_alloc_parse_comment_2) {
 }
 END_TEST
 
+/* Test that external parser creation running out of memory is
+ * correctly reported.  Based on the external entity test cases.
+ */
+START_TEST(test_alloc_create_external_parser) {
+  const char *text = "<?xml version='1.0' encoding='us-ascii'?>\n"
+                     "<!DOCTYPE doc SYSTEM 'foo'>\n"
+                     "<doc>&entity;</doc>";
+  char foo_text[] = "<!ELEMENT doc (#PCDATA)*>";
+
+  XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+  XML_SetUserData(g_parser, foo_text);
+  XML_SetExternalEntityRefHandler(g_parser, external_entity_duff_loader);
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+      != XML_STATUS_ERROR) {
+    fail("External parser allocator returned success incorrectly");
+  }
+}
+END_TEST
+
+/* More external parser memory allocation testing */
+START_TEST(test_alloc_run_external_parser) {
+  const char *text = "<?xml version='1.0' encoding='us-ascii'?>\n"
+                     "<!DOCTYPE doc SYSTEM 'foo'>\n"
+                     "<doc>&entity;</doc>";
+  char foo_text[] = "<!ELEMENT doc (#PCDATA)*>";
+  unsigned int i;
+  const unsigned int max_alloc_count = 15;
+
+  for (i = 0; i < max_alloc_count; i++) {
+    XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+    XML_SetUserData(g_parser, foo_text);
+    XML_SetExternalEntityRefHandler(g_parser, external_entity_null_loader);
+    g_allocation_count = i;
+    if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+        != XML_STATUS_ERROR)
+      break;
+    /* See comment in test_alloc_parse_xdecl() */
+    alloc_teardown();
+    alloc_setup();
+  }
+  if (i == 0)
+    fail("Parsing ignored failing allocator");
+  else if (i == max_alloc_count)
+    fail("Parsing failed with allocation count 10");
+}
+END_TEST
+
 TCase *
 make_allocation_test_case(Suite *s) {
   TCase *tc_alloc = tcase_create("allocation tests");
@@ -297,6 +344,8 @@ make_allocation_test_case(Suite *s) {
   tcase_add_test(tc_alloc, test_alloc_parse_pi_3);
   tcase_add_test(tc_alloc, test_alloc_parse_comment);
   tcase_add_test(tc_alloc, test_alloc_parse_comment_2);
+  tcase_add_test__ifdef_xml_dtd(tc_alloc, test_alloc_create_external_parser);
+  tcase_add_test__ifdef_xml_dtd(tc_alloc, test_alloc_run_external_parser);
 
   return tc_alloc;
 }
