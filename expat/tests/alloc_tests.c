@@ -93,6 +93,196 @@ START_TEST(test_alloc_parse_xdecl) {
 }
 END_TEST
 
+/* As above, but with an encoding big enough to cause storing the
+ * version information to expand the string pool being used.
+ */
+START_TEST(test_alloc_parse_xdecl_2) {
+  const char *text
+      = "<?xml version='1.0' encoding='"
+        /* Each line is 64 characters */
+        "ThisIsAStupidlyLongEncodingNameIntendedToTriggerPoolGrowth123456"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMN"
+        "'?>"
+        "<doc>Hello, world</doc>";
+  int i;
+  const int max_alloc_count = 20;
+
+  for (i = 0; i < max_alloc_count; i++) {
+    g_allocation_count = i;
+    XML_SetXmlDeclHandler(g_parser, dummy_xdecl_handler);
+    XML_SetUnknownEncodingHandler(g_parser, long_encoding_handler, NULL);
+    if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+        != XML_STATUS_ERROR)
+      break;
+    /* See comment in test_alloc_parse_xdecl() */
+    alloc_teardown();
+    alloc_setup();
+  }
+  if (i == 0)
+    fail("Parse succeeded despite failing allocator");
+  if (i == max_alloc_count)
+    fail("Parse failed with max allocations");
+}
+END_TEST
+
+/* Test the effects of allocation failures on a straightforward parse */
+START_TEST(test_alloc_parse_pi) {
+  const char *text = "<?xml version='1.0' encoding='utf-8'?>\n"
+                     "<?pi unknown?>\n"
+                     "<doc>"
+                     "Hello, world"
+                     "</doc>";
+  int i;
+  const int max_alloc_count = 15;
+
+  for (i = 0; i < max_alloc_count; i++) {
+    g_allocation_count = i;
+    XML_SetProcessingInstructionHandler(g_parser, dummy_pi_handler);
+    if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+        != XML_STATUS_ERROR)
+      break;
+    /* See comment in test_alloc_parse_xdecl() */
+    alloc_teardown();
+    alloc_setup();
+  }
+  if (i == 0)
+    fail("Parse succeeded despite failing allocator");
+  if (i == max_alloc_count)
+    fail("Parse failed with max allocations");
+}
+END_TEST
+
+START_TEST(test_alloc_parse_pi_2) {
+  const char *text = "<?xml version='1.0' encoding='utf-8'?>\n"
+                     "<doc>"
+                     "Hello, world"
+                     "<?pi unknown?>\n"
+                     "</doc>";
+  int i;
+  const int max_alloc_count = 15;
+
+  for (i = 0; i < max_alloc_count; i++) {
+    g_allocation_count = i;
+    XML_SetProcessingInstructionHandler(g_parser, dummy_pi_handler);
+    if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+        != XML_STATUS_ERROR)
+      break;
+    /* See comment in test_alloc_parse_xdecl() */
+    alloc_teardown();
+    alloc_setup();
+  }
+  if (i == 0)
+    fail("Parse succeeded despite failing allocator");
+  if (i == max_alloc_count)
+    fail("Parse failed with max allocations");
+}
+END_TEST
+
+START_TEST(test_alloc_parse_pi_3) {
+  const char *text
+      = "<?"
+        /* 64 characters per line */
+        "This processing instruction should be long enough to ensure that"
+        "it triggers the growth of an internal string pool when the      "
+        "allocator fails at a cruicial moment FGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "Q?><doc/>";
+  int i;
+  const int max_alloc_count = 20;
+
+  for (i = 0; i < max_alloc_count; i++) {
+    g_allocation_count = i;
+    XML_SetProcessingInstructionHandler(g_parser, dummy_pi_handler);
+    if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+        != XML_STATUS_ERROR)
+      break;
+    /* See comment in test_alloc_parse_xdecl() */
+    alloc_teardown();
+    alloc_setup();
+  }
+  if (i == 0)
+    fail("Parse succeeded despite failing allocator");
+  if (i == max_alloc_count)
+    fail("Parse failed with max allocations");
+}
+END_TEST
+
+START_TEST(test_alloc_parse_comment) {
+  const char *text = "<?xml version='1.0' encoding='utf-8'?>\n"
+                     "<!-- Test parsing this comment -->"
+                     "<doc>Hi</doc>";
+  int i;
+  const int max_alloc_count = 15;
+
+  for (i = 0; i < max_alloc_count; i++) {
+    g_allocation_count = i;
+    XML_SetCommentHandler(g_parser, dummy_comment_handler);
+    if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+        != XML_STATUS_ERROR)
+      break;
+    /* See comment in test_alloc_parse_xdecl() */
+    alloc_teardown();
+    alloc_setup();
+  }
+  if (i == 0)
+    fail("Parse succeeded despite failing allocator");
+  if (i == max_alloc_count)
+    fail("Parse failed with max allocations");
+}
+END_TEST
+
+START_TEST(test_alloc_parse_comment_2) {
+  const char *text = "<?xml version='1.0' encoding='utf-8'?>\n"
+                     "<doc>"
+                     "Hello, world"
+                     "<!-- Parse this comment too -->"
+                     "</doc>";
+  int i;
+  const int max_alloc_count = 15;
+
+  for (i = 0; i < max_alloc_count; i++) {
+    g_allocation_count = i;
+    XML_SetCommentHandler(g_parser, dummy_comment_handler);
+    if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+        != XML_STATUS_ERROR)
+      break;
+    /* See comment in test_alloc_parse_xdecl() */
+    alloc_teardown();
+    alloc_setup();
+  }
+  if (i == 0)
+    fail("Parse succeeded despite failing allocator");
+  if (i == max_alloc_count)
+    fail("Parse failed with max allocations");
+}
+END_TEST
+
 TCase *
 make_allocation_test_case(Suite *s) {
   TCase *tc_alloc = tcase_create("allocation tests");
@@ -101,6 +291,12 @@ make_allocation_test_case(Suite *s) {
   tcase_add_checked_fixture(tc_alloc, alloc_setup, alloc_teardown);
 
   tcase_add_test(tc_alloc, test_alloc_parse_xdecl);
+  tcase_add_test(tc_alloc, test_alloc_parse_xdecl_2);
+  tcase_add_test(tc_alloc, test_alloc_parse_pi);
+  tcase_add_test(tc_alloc, test_alloc_parse_pi_2);
+  tcase_add_test(tc_alloc, test_alloc_parse_pi_3);
+  tcase_add_test(tc_alloc, test_alloc_parse_comment);
+  tcase_add_test(tc_alloc, test_alloc_parse_comment_2);
 
   return tc_alloc;
 }

@@ -384,6 +384,21 @@ MiscEncodingHandler(void *data, const XML_Char *encoding, XML_Encoding *info) {
   return XML_STATUS_OK;
 }
 
+int XMLCALL
+long_encoding_handler(void *userData, const XML_Char *encoding,
+                      XML_Encoding *info) {
+  int i;
+
+  UNUSED_P(userData);
+  UNUSED_P(encoding);
+  for (i = 0; i < 256; i++)
+    info->map[i] = i;
+  info->data = NULL;
+  info->convert = NULL;
+  info->release = NULL;
+  return XML_STATUS_OK;
+}
+
 /* External Entity Handlers */
 
 int XMLCALL
