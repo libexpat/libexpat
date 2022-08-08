@@ -72,6 +72,7 @@
 #include "basic_tests.h"
 #include "ns_tests.h"
 #include "misc_tests.h"
+#include "alloc_tests.h"
 
 XML_Parser g_parser = NULL;
 
@@ -4133,14 +4134,12 @@ make_suite(void) {
   make_basic_test_case(s);
   make_namespace_test_case(s);
   make_miscellaneous_test_case(s);
-  tc_alloc = tcase_create("allocation tests");
+  tc_alloc = make_allocation_test_case(s);
   tc_nsalloc = tcase_create("namespace allocation tests");
 #if defined(XML_DTD)
   tc_accounting = tcase_create("accounting tests");
 #endif
 
-  suite_add_tcase(s, tc_alloc);
-  tcase_add_checked_fixture(tc_alloc, alloc_setup, alloc_teardown);
   tcase_add_test(tc_alloc, test_alloc_parse_xdecl);
   tcase_add_test(tc_alloc, test_alloc_parse_xdecl_2);
   tcase_add_test(tc_alloc, test_alloc_parse_pi);
