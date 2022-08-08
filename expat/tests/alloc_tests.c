@@ -566,6 +566,286 @@ START_TEST(test_alloc_realloc_buffer) {
 }
 END_TEST
 
+/* Same test for external entity parsers */
+START_TEST(test_alloc_ext_entity_realloc_buffer) {
+  const char *text = "<!DOCTYPE doc [\n"
+                     "  <!ENTITY en SYSTEM 'http://example.org/dummy.ent'>\n"
+                     "]>\n"
+                     "<doc>&en;</doc>";
+  int i;
+  const int max_realloc_count = 10;
+
+  for (i = 0; i < max_realloc_count; i++) {
+    XML_SetExternalEntityRefHandler(g_parser, external_entity_reallocator);
+    XML_SetUserData(g_parser, (void *)(intptr_t)i);
+    if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+        == XML_STATUS_OK)
+      break;
+    /* See comment in test_alloc_parse_xdecl() */
+    alloc_teardown();
+    alloc_setup();
+  }
+  if (i == 0)
+    fail("Succeeded with no reallocations");
+  if (i == max_realloc_count)
+    fail("Failed with max reallocations");
+}
+END_TEST
+
+/* Test elements with many attributes are handled correctly */
+START_TEST(test_alloc_realloc_many_attributes) {
+  const char *text = "<!DOCTYPE doc [\n"
+                     "<!ATTLIST doc za CDATA 'default'>\n"
+                     "<!ATTLIST doc zb CDATA 'def2'>\n"
+                     "<!ATTLIST doc zc CDATA 'def3'>\n"
+                     "]>\n"
+                     "<doc a='1'"
+                     "     b='2'"
+                     "     c='3'"
+                     "     d='4'"
+                     "     e='5'"
+                     "     f='6'"
+                     "     g='7'"
+                     "     h='8'"
+                     "     i='9'"
+                     "     j='10'"
+                     "     k='11'"
+                     "     l='12'"
+                     "     m='13'"
+                     "     n='14'"
+                     "     p='15'"
+                     "     q='16'"
+                     "     r='17'"
+                     "     s='18'>"
+                     "</doc>";
+  int i;
+  const int max_realloc_count = 10;
+
+  for (i = 0; i < max_realloc_count; i++) {
+    g_reallocation_count = i;
+    if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+        != XML_STATUS_ERROR)
+      break;
+    /* See comment in test_alloc_parse_xdecl() */
+    alloc_teardown();
+    alloc_setup();
+  }
+  if (i == 0)
+    fail("Parse succeeded despite no reallocations");
+  if (i == max_realloc_count)
+    fail("Parse failed at max reallocations");
+}
+END_TEST
+
+/* Test handling of a public entity with failing allocator */
+START_TEST(test_alloc_public_entity_value) {
+  const char *text = "<!DOCTYPE doc SYSTEM 'http://example.org/'>\n"
+                     "<doc></doc>\n";
+  char dtd_text[]
+      = "<!ELEMENT doc EMPTY>\n"
+        "<!ENTITY % e1 PUBLIC 'foo' 'bar.ent'>\n"
+        "<!ENTITY % "
+        /* Each line is 64 characters */
+        "ThisIsAStupidlyLongParameterNameIntendedToTriggerPoolGrowth12345"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        " '%e1;'>\n"
+        "%e1;\n";
+  int i;
+  const int max_alloc_count = 50;
+
+  for (i = 0; i < max_alloc_count; i++) {
+    g_allocation_count = i;
+    init_dummy_handlers();
+    XML_SetUserData(g_parser, dtd_text);
+    XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+    XML_SetExternalEntityRefHandler(g_parser, external_entity_public);
+    /* Provoke a particular code path */
+    XML_SetEntityDeclHandler(g_parser, dummy_entity_decl_handler);
+    if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+        != XML_STATUS_ERROR)
+      break;
+    /* See comment in test_alloc_parse_xdecl() */
+    alloc_teardown();
+    alloc_setup();
+  }
+  if (i == 0)
+    fail("Parsing worked despite failing allocation");
+  if (i == max_alloc_count)
+    fail("Parsing failed at max allocation count");
+  if (get_dummy_handler_flags() != DUMMY_ENTITY_DECL_HANDLER_FLAG)
+    fail("Entity declaration handler not called");
+}
+END_TEST
+
+START_TEST(test_alloc_realloc_subst_public_entity_value) {
+  const char *text = "<!DOCTYPE doc SYSTEM 'http://example.org/'>\n"
+                     "<doc></doc>\n";
+  char dtd_text[]
+      = "<!ELEMENT doc EMPTY>\n"
+        "<!ENTITY % "
+        /* Each line is 64 characters */
+        "ThisIsAStupidlyLongParameterNameIntendedToTriggerPoolGrowth12345"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        " PUBLIC 'foo' 'bar.ent'>\n"
+        "%ThisIsAStupidlyLongParameterNameIntendedToTriggerPoolGrowth12345"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP;";
+  int i;
+  const int max_realloc_count = 10;
+
+  for (i = 0; i < max_realloc_count; i++) {
+    g_reallocation_count = i;
+    XML_SetUserData(g_parser, dtd_text);
+    XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+    XML_SetExternalEntityRefHandler(g_parser, external_entity_public);
+    if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+        != XML_STATUS_ERROR)
+      break;
+    /* See comment in test_alloc_parse_xdecl() */
+    alloc_teardown();
+    alloc_setup();
+  }
+  if (i == 0)
+    fail("Parsing worked despite failing reallocation");
+  if (i == max_realloc_count)
+    fail("Parsing failed at max reallocation count");
+}
+END_TEST
+
+START_TEST(test_alloc_parse_public_doctype) {
+  const char *text
+      = "<?xml version='1.0' encoding='utf-8'?>\n"
+        "<!DOCTYPE doc PUBLIC '"
+        /* 64 characters per line */
+        "http://example.com/a/long/enough/name/to/trigger/pool/growth/zz/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/"
+        "' 'test'>\n"
+        "<doc></doc>";
+  int i;
+  const int max_alloc_count = 25;
+
+  for (i = 0; i < max_alloc_count; i++) {
+    g_allocation_count = i;
+    init_dummy_handlers();
+    XML_SetDoctypeDeclHandler(g_parser, dummy_start_doctype_decl_handler,
+                              dummy_end_doctype_decl_handler);
+    if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+        != XML_STATUS_ERROR)
+      break;
+    /* See comment in test_alloc_parse_xdecl() */
+    alloc_teardown();
+    alloc_setup();
+  }
+  if (i == 0)
+    fail("Parse succeeded despite failing allocator");
+  if (i == max_alloc_count)
+    fail("Parse failed at maximum allocation count");
+  if (get_dummy_handler_flags()
+      != (DUMMY_START_DOCTYPE_DECL_HANDLER_FLAG
+          | DUMMY_END_DOCTYPE_DECL_HANDLER_FLAG))
+    fail("Doctype handler functions not called");
+}
+END_TEST
+
+START_TEST(test_alloc_parse_public_doctype_long_name) {
+  const char *text
+      = "<?xml version='1.0' encoding='utf-8'?>\n"
+        "<!DOCTYPE doc PUBLIC 'http://example.com/foo' '"
+        /* 64 characters per line */
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNO/ABCDEFGHIJKLMNOP"
+        "'>\n"
+        "<doc></doc>";
+  int i;
+  const int max_alloc_count = 25;
+
+  for (i = 0; i < max_alloc_count; i++) {
+    g_allocation_count = i;
+    XML_SetDoctypeDeclHandler(g_parser, dummy_start_doctype_decl_handler,
+                              dummy_end_doctype_decl_handler);
+    if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+        != XML_STATUS_ERROR)
+      break;
+    /* See comment in test_alloc_parse_xdecl() */
+    alloc_teardown();
+    alloc_setup();
+  }
+  if (i == 0)
+    fail("Parse succeeded despite failing allocator");
+  if (i == max_alloc_count)
+    fail("Parse failed at maximum allocation count");
+}
+END_TEST
+
 TCase *
 make_allocation_test_case(Suite *s) {
   TCase *tc_alloc = tcase_create("allocation tests");
@@ -590,6 +870,13 @@ make_allocation_test_case(Suite *s) {
   tcase_add_test(tc_alloc, test_alloc_explicit_encoding);
   tcase_add_test(tc_alloc, test_alloc_set_base);
   tcase_add_test(tc_alloc, test_alloc_realloc_buffer);
+  tcase_add_test(tc_alloc, test_alloc_ext_entity_realloc_buffer);
+  tcase_add_test(tc_alloc, test_alloc_realloc_many_attributes);
+  tcase_add_test__ifdef_xml_dtd(tc_alloc, test_alloc_public_entity_value);
+  tcase_add_test__ifdef_xml_dtd(tc_alloc,
+                                test_alloc_realloc_subst_public_entity_value);
+  tcase_add_test(tc_alloc, test_alloc_parse_public_doctype);
+  tcase_add_test(tc_alloc, test_alloc_parse_public_doctype_long_name);
 
   return tc_alloc;
 }
