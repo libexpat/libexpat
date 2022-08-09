@@ -216,6 +216,10 @@ extern int is_whitespace_normalized(const XML_Char *s, int is_cdata);
 extern void *duff_allocator(size_t size);
 extern void *duff_reallocator(void *ptr, size_t size);
 
+#if defined(XML_DTD)
+typedef enum XML_Status (*XmlParseFunction)(XML_Parser, const char *, int, int);
+#endif
+
 #endif /* XML_COMMON_H */
 
 #ifdef __cplusplus

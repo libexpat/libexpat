@@ -374,6 +374,23 @@ extern int XMLCALL external_entity_alloc(XML_Parser parser,
                                          const XML_Char *systemId,
                                          const XML_Char *publicId);
 
+struct AccountingTestCase {
+  const char *primaryText;
+  const char *firstExternalText;  /* often NULL */
+  const char *secondExternalText; /* often NULL */
+  const unsigned long long expectedCountBytesIndirectExtra;
+  XML_Bool singleBytesWanted;
+};
+
+#if defined(XML_DTD)
+extern int accounting_external_entity_ref_handler(XML_Parser parser,
+                                                  const XML_Char *context,
+                                                  const XML_Char *base,
+                                                  const XML_Char *systemId,
+                                                  const XML_Char
+                                                  *publicId);
+#endif
+
 /* Declaration handlers for entity declarations */
 extern void XMLCALL entity_suspending_decl_handler(void *userData,
                                                    const XML_Char *name,
