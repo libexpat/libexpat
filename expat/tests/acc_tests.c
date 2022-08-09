@@ -319,12 +319,12 @@ START_TEST(test_accounting_precision) {
 END_TEST
 
 static float
-portableNAN() {
+portableNAN(void) {
   return strtof("nan", NULL);
 }
 
 static float
-portableINFINITY() {
+portableINFINITY(void) {
   return strtof("infinity", NULL);
 }
 
