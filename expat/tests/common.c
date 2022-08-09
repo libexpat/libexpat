@@ -192,6 +192,24 @@ alloc_teardown(void) {
   basic_teardown();
 }
 
+void
+nsalloc_setup(void) {
+  XML_Memory_Handling_Suite memsuite = {duff_allocator, duff_reallocator, free};
+  XML_Char ns_sep[2] = {' ', '\0'};
+
+  /* Ensure the parser creation will go through */
+  g_allocation_count = ALLOC_ALWAYS_SUCCEED;
+  g_reallocation_count = REALLOC_ALWAYS_SUCCEED;
+  g_parser = XML_ParserCreate_MM(NULL, &memsuite, ns_sep);
+  if (g_parser == NULL)
+    fail("Parser not created");
+}
+
+void
+nsalloc_teardown(void) {
+  basic_teardown();
+}
+
 /* Generate a failure using the parser state to create an error message;
    this should be used when the parser reports an error we weren't
    expecting.

@@ -73,6 +73,7 @@
 #include "ns_tests.h"
 #include "misc_tests.h"
 #include "alloc_tests.h"
+#include "nsalloc_tests.h"
 
 XML_Parser g_parser = NULL;
 
@@ -98,24 +99,6 @@ testhelper_is_whitespace_normalized(void) {
   assert(! is_whitespace_normalized(XCS("\r"), 0));
   assert(! is_whitespace_normalized(XCS("\r"), 1));
   assert(! is_whitespace_normalized(XCS("abc\t def"), 1));
-}
-
-static void
-nsalloc_setup(void) {
-  XML_Memory_Handling_Suite memsuite = {duff_allocator, duff_reallocator, free};
-  XML_Char ns_sep[2] = {' ', '\0'};
-
-  /* Ensure the parser creation will go through */
-  g_allocation_count = ALLOC_ALWAYS_SUCCEED;
-  g_reallocation_count = REALLOC_ALWAYS_SUCCEED;
-  g_parser = XML_ParserCreate_MM(NULL, &memsuite, ns_sep);
-  if (g_parser == NULL)
-    fail("Parser not created");
-}
-
-static void
-nsalloc_teardown(void) {
-  basic_teardown();
 }
 
 /* Test the effects of allocation failure in simple namespace parsing.
@@ -1951,13 +1934,11 @@ make_suite(void) {
   make_namespace_test_case(s);
   make_miscellaneous_test_case(s);
   make_allocation_test_case(s);
-  tc_nsalloc = tcase_create("namespace allocation tests");
+  tc_nsalloc = make_namespace_allocation_test_case(s);
 #if defined(XML_DTD)
   tc_accounting = tcase_create("accounting tests");
 #endif
 
-  suite_add_tcase(s, tc_nsalloc);
-  tcase_add_checked_fixture(tc_nsalloc, nsalloc_setup, nsalloc_teardown);
   tcase_add_test(tc_nsalloc, test_nsalloc_xmlns);
   tcase_add_test(tc_nsalloc, test_nsalloc_parse_buffer);
   tcase_add_test(tc_nsalloc, test_nsalloc_long_prefix);

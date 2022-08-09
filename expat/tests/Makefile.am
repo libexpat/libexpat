@@ -53,7 +53,8 @@ libruntests_a_SOURCES = \
     basic_tests.c \
     ns_tests.c \
     misc_tests.c \
-    alloc_tests.c
+    alloc_tests.c \
+    nsalloc_tests.c
 
 runtests_SOURCES = \
     runtests.c
@@ -79,6 +80,7 @@ EXTRA_DIST = \
     ns_tests.h \
     misc_tests.h \
     alloc_tests.h \
+    nsalloc_tests.h \
     README.txt \
     udiffer.py \
     xmltest.log.expected \
