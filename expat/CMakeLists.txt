@@ -597,6 +597,7 @@ if(EXPAT_BUILD_TESTS)
         tests/misc_tests.c
         tests/alloc_tests.c
         tests/nsalloc_tests.c
+        tests/acc_tests.c
         ${_EXPAT_C_SOURCES}
     )
 
