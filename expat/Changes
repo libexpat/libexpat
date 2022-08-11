@@ -4,6 +4,7 @@ NOTE: We are looking for help with a few things:
 
 Release x.x.x xxx xxxxx xx xxxx
         Other changes:
+            #625  Autotools: Sync CMake templates with CMake 3.22
             #608  CMake: Migrate from use of CMAKE_*_POSTFIX to
                     dedicated variables EXPAT_*_POSTFIX to stop affecting
                     other projects
