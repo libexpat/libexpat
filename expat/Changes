@@ -4,6 +4,7 @@ NOTE: We are looking for help with a few things:
 
 Release x.x.x xxx xxxxx xx xxxx
         Other changes:
+       #596 #625  Autotools: Sync CMake templates with CMake 3.22
             #608  CMake: Migrate from use of CMAKE_*_POSTFIX to
                     dedicated variables EXPAT_*_POSTFIX to stop affecting
                     other projects
@@ -233,7 +234,7 @@ Release 2.4.2 Sun December 19 2021
             #498  Autotools: Include files with release archives:
                     - buildconf.sh
                     - fuzz/*.c
-       #507 #519  Autotools: Sync CMake templates
+       #507 #519  Autotools: Sync CMake templates with CMake 3.20
        #495 #524  CMake: MinGW: Fix pkg-config section "Libs" for
                     - non-release build types (e.g. -DCMAKE_BUILD_TYPE=Debug)
                     - multi-config CMake generators (e.g. Ninja Multi-Config)
@@ -307,6 +308,7 @@ Release 2.4.0 Sun May 23 2021
        #468 #469  xmlwf: Improve help output and the xmlwf man page
             #463  xmlwf: Improve maintainability through some refactoring
             #477  xmlwf: Fix man page DocBook validity
+            #456  Autotools: Sync CMake templates with CMake 3.18
        #458 #459  CMake: Support absolute paths for both CMAKE_INSTALL_LIBDIR
                     and CMAKE_INSTALL_INCLUDEDIR
        #471 #481  CMake: Add support for standard variable BUILD_SHARED_LIBS
