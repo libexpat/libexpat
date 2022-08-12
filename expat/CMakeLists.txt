@@ -160,6 +160,7 @@ if(MSVC OR _EXPAT_HELP)
 endif()
 if(NOT _EXPAT_HELP)
     expat_shy_set(_EXPAT_M32 OFF CACHE BOOL "(Unofficial!) Produce 32bit code with -m32")
+    mark_as_advanced(_EXPAT_M32)
 endif()
 
 if(EXPAT_BUILD_TESTS)
@@ -428,6 +429,7 @@ foreach(build_type_upper
     endif()
 
     expat_shy_set(EXPAT_${build_type_upper}_POSTFIX "${_POSTFIX_WIDE}${_POSTFIX_DEBUG}${_POSTFIX_CRT}" CACHE STRING "Library filename postfix for build type ${build_type_upper}; yields filenames libexpat<postfix=[w][d][MD|MT]>.(dll|dylib|lib|so)")
+    mark_as_advanced(EXPAT_${build_type_upper}_POSTFIX)
     set_property(TARGET expat PROPERTY ${build_type_upper}_POSTFIX ${EXPAT_${build_type_upper}_POSTFIX})
 endforeach()
 
