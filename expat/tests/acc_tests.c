@@ -424,6 +424,7 @@ make_accounting_test_case(Suite *s) {
 
   return tc_accounting;
 #else
+  UNUSED_P(s);
   return NULL;
 #endif
 }
