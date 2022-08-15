@@ -382,14 +382,13 @@ struct AccountingTestCase {
   XML_Bool singleBytesWanted;
 };
 
-#if defined(XML_DTD)
+#  if defined(XML_DTD)
 extern int accounting_external_entity_ref_handler(XML_Parser parser,
                                                   const XML_Char *context,
                                                   const XML_Char *base,
                                                   const XML_Char *systemId,
-                                                  const XML_Char
-                                                  *publicId);
-#endif
+                                                  const XML_Char *publicId);
+#  endif
 
 /* Declaration handlers for entity declarations */
 extern void XMLCALL entity_suspending_decl_handler(void *userData,
