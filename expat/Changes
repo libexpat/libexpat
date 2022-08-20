@@ -28,6 +28,7 @@ Release x.x.x xxx xxxxx xx xxxx
 
         Infrastructure:
        #597 #598  CI: Windows: Start covering MSVC 2022
+            #632  CI: Linux: Make migration off deprecated Ubuntu 18.04 work
 
         Special thanks to:
             David Faure
