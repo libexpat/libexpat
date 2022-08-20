@@ -7,6 +7,7 @@ Release x.x.x xxx xxxxx xx xxxx
             #634  MinGW: Fix mis-compilation for -D__USE_MINGW_ANSI_STDIO=0
 
         Other changes:
+            #638  MinGW: Make fix-xmltest-log.sh drop more Wine bug output
        #596 #625  Autotools: Sync CMake templates with CMake 3.22
             #608  CMake: Migrate from use of CMAKE_*_POSTFIX to
                     dedicated variables EXPAT_*_POSTFIX to stop affecting
