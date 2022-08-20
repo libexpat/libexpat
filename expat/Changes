@@ -3,6 +3,9 @@ NOTE: We are looking for help with a few things:
       If you can help, please get in touch.  Thanks!
 
 Release x.x.x xxx xxxxx xx xxxx
+        Bug fixes:
+            #634  MinGW: Fix mis-compilation for -D__USE_MINGW_ANSI_STDIO=0
+
         Other changes:
        #596 #625  Autotools: Sync CMake templates with CMake 3.22
             #608  CMake: Migrate from use of CMAKE_*_POSTFIX to
