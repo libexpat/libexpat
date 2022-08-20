@@ -1,1 +1,3 @@
 /xml_parse*
+!/xml_parsebuffer_fuzzer.c
+!/xml_parse_fuzzer.c
