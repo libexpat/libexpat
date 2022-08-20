@@ -43,23 +43,13 @@ jobs:
       CFLAGS: -g3 -pipe
     steps:
     - uses: actions/checkout@v3.0.2
-    - name: Add Clang/LLVM repositories
-      run: |-
-        set -x
-        source /etc/os-release
-        wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
-        sudo add-apt-repository "deb http://apt.llvm.org/${UBUNTU_CODENAME}/ llvm-toolchain-${UBUNTU_CODENAME}-14 main"
     - name: Install build dependencies
-      # NOTE: Please note the version-specific ${PATH} extension for Clang in .travis.sh
       run: |-
         set -x -u -o pipefail
         source /etc/os-release
 
         sudo apt-get update
         sudo apt-get install --yes --no-install-recommends -V \
-            clang-14 \
-            clang-format-14 \
-            llvm-14 \
             cmake \
             docbook2x \
             dos2unix \
