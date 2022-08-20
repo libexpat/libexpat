@@ -90,7 +90,6 @@ jobs:
     - name: Install build dependencies
       # NOTE: Please note the version-specific ${PATH} extension for Clang in .travis.sh
       run: |-
-        sudo dpkg --add-architecture i386  # for wine32
         sudo apt-get update
         sudo apt-get install --yes --no-install-recommends -V \
             clang-14 \
@@ -104,10 +103,32 @@ jobs:
             lcov \
             libbsd-dev \
             lzip \
+            moreutils
+    - name: Install build dependencies (MinGW)
+      if: "${{ contains(matrix.FLAT_ENV, 'mingw') }}"
+      run: |-
+        set -x -u -o pipefail
+        source /etc/os-release
+
+        # Get rid of packages installed from ppa:ondrej/php so that we will be able to install wine32:i386 without conflicts
+        # (see issue https://github.com/actions/virtual-environments/issues/4589)
+        # In detail we:
+        #   1. Remove all packages that ppa:ondrej/php has but plain Ubuntu doesn't, e.g. everything PHP
+        #   2. Revert (remaining) packages that ppa:ondrej/php and plain Ubuntu share, back to the plain Ubuntu version
+        #   3. Assert that no packages from ppa:ondrej/php are left installed
+        dpkg -l | grep '^ii' | fgrep deb.sury.org | awk '{print $2}' | grep '^php' \
+          | xargs -r -t sudo apt-get remove --yes libpcre2-posix3 libzip4
+        dpkg -l | grep '^ii' | fgrep deb.sury.org | awk '{print $2}' | sed "s,\$,/${UBUNTU_CODENAME}," \
+          | xargs -r -t sudo apt-get install --yes --no-install-recommends --allow-downgrades -V
+        ! dpkg -l | grep '^ii' | fgrep deb.sury.org
+
+        # Install 32bit Wine
+        sudo dpkg --add-architecture i386  # for wine32
+        sudo apt-get update  # due to new architecture
+        sudo apt-get install --yes --no-install-recommends -V \
             mingw-w64 \
-            moreutils \
             wine-stable \
-            wine32
+            wine32:i386
     - name: Perform check "${{ matrix.MODE }}"
       env:
         MODE: ${{ matrix.MODE }}
