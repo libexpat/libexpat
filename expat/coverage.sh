@@ -230,9 +230,12 @@ _merge_coverage_info() {
 
 _clean_coverage_info() {
     local coverage_dir="$1"
-    local dir
-    for dir in CMakeFiles examples tests ; do
-        local pattern="*/${dir}/*"
+    local pattern
+    for pattern in \
+            '*/CMakeFiles/*' \
+            '*/examples/*' \
+            '*/tests/*' \
+        ; do
         (
             set -x
             lcov -q -o "${coverage_dir}/${coverage_info}" -r "${coverage_dir}/${coverage_info}" "${pattern}"
