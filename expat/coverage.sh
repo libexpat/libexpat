@@ -51,11 +51,9 @@ _get_build_dir() {
 
     local char_part=
     if ${unicode_enabled}; then
-        if ${with_unsigned_char}; then
-            char_part=__ushort
-        else
-            char_part=__wchar_t
-        fi
+        char_part=__wchar_t
+    elif ${with_unsigned_char}; then
+        char_part=__uchar
     else
         char_part=__char
     fi
