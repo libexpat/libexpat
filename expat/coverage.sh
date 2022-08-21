@@ -232,6 +232,7 @@ _clean_coverage_info() {
     local coverage_dir="$1"
     local pattern
     for pattern in \
+            '/usr/**mingw**/include/*' \
             '*/CMakeFiles/*' \
             '*/examples/*' \
             '*/tests/*' \
