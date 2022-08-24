@@ -40,6 +40,8 @@
    USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+#include <expat_config.h>
+
 #include <stdint.h>
 
 #include "expat.h"
