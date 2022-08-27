@@ -107,7 +107,9 @@
 
 #include <limits.h> // ULONG_MAX
 
-#if defined(_WIN32) && ! defined(__USE_MINGW_ANSI_STDIO)
+#if defined(_WIN32)                                                            \
+    && (! defined(__USE_MINGW_ANSI_STDIO)                                      \
+        || (1 - __USE_MINGW_ANSI_STDIO - 1 == 0))
 #  define EXPAT_FMT_ULL(midpart) "%" midpart "I64u"
 #  if defined(_WIN64) // Note: modifiers "td" and "zu" do not work for MinGW
 #    define EXPAT_FMT_PTRDIFF_T(midpart) "%" midpart "I64d"
