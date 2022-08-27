@@ -46,7 +46,7 @@ fi
 
 expand --tabs=2 --initial lib/siphash.h | sponge lib/siphash.h
 
-find \
+find . \
         -name '*.[ch]' \
         -o -name '*.cpp' \
         -o -name '*.cxx' \
