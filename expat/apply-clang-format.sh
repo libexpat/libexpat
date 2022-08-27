@@ -56,6 +56,6 @@ find \
 
 sed \
         -e 's, @$,@,' \
-        -e 's,#\( \+\)cmakedefine,\1#cmakedefine,' \
+        -e 's,#\( \+\)cmakedefine,#cmakedefine,' \
         -i \
         expat_config.h.cmake
