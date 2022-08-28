@@ -42,6 +42,8 @@ sed \
         -e '/^Application tried to create a window, but no driver could be loaded.$/d' \
         -e '/^Make sure that your X server is running and that $DISPLAY is set correctly.$/d' \
         -e '/^err:systray:initialize_systray Could not create tray window$/d' \
+        -e '/^[0-9a-f]\+:err:/d' \
+        -e '/^wine client error:/d' \
         -e '/^In ibm\/invalid\/P49\/: Unhandled exception: unimplemented .\+/d' \
         \
         "${filename}" > "${tempfile}"
