@@ -165,7 +165,7 @@ endif()
 # Environment checks
 #
 if(EXPAT_WITH_LIBBSD)
-    find_library(LIB_BSD NAMES bsd)
+    find_library(LIB_BSD NAMES bsd-overlay)
     if(NOT LIB_BSD)
         message(SEND_ERROR "EXPAT_WITH_LIBBSD option is enabled, but libbsd was not found")
     else()

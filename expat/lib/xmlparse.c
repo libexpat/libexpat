@@ -111,11 +111,6 @@
 #  endif /* defined(GRND_NONBLOCK) */
 #endif   /* defined(HAVE_GETRANDOM) || defined(HAVE_SYSCALL_GETRANDOM) */
 
-#if defined(HAVE_LIBBSD)                                                       \
-    && (defined(HAVE_ARC4RANDOM_BUF) || defined(HAVE_ARC4RANDOM))
-#  include <bsd/stdlib.h>
-#endif
-
 #if defined(_WIN32) && ! defined(LOAD_LIBRARY_SEARCH_SYSTEM32)
 #  define LOAD_LIBRARY_SEARCH_SYSTEM32 0x00000800
 #endif

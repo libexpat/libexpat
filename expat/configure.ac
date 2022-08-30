@@ -193,7 +193,7 @@ AC_ARG_WITH([libbsd],
   [],
   [with_libbsd=no])
 AS_IF([test "x${with_libbsd}" != xno],
-  [AC_CHECK_LIB([bsd],
+  [AC_CHECK_LIB([bsd-overlay],
      [arc4random_buf],
      [],
      [AS_IF([test "x${with_libbsd}" = xyes],
@@ -201,9 +201,6 @@ AS_IF([test "x${with_libbsd}" != xno],
 AC_MSG_CHECKING([for arc4random_buf (BSD or libbsd)])
 AC_LINK_IFELSE([AC_LANG_SOURCE([
     #include <stdlib.h>  /* for arc4random_buf on BSD, for NULL */
-    #if defined(HAVE_LIBBSD)
-    # include <bsd/stdlib.h>
-    #endif
     int main() {
       arc4random_buf(NULL, 0U);
       return 0;
@@ -215,11 +212,7 @@ AC_LINK_IFELSE([AC_LANG_SOURCE([
 
    AC_MSG_CHECKING([for arc4random (BSD, macOS or libbsd)])
    AC_LINK_IFELSE([AC_LANG_SOURCE([
-       #if defined(HAVE_LIBBSD)
-       # include <bsd/stdlib.h>
-       #else
-       # include <stdlib.h>
-       #endif
+       #include <stdlib.h>
        int main() {
           arc4random();
           return 0;
