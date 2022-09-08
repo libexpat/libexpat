@@ -117,8 +117,8 @@ _copy_missing_mingw_libaries() {
     # * coverage GCC flags make them needed
     # * With WINEDLLPATH Wine looks for .dll.so in these folders, not .dll
     local target="$1"
-    local mingw_gcc_dll_dir="$(dirname "$(ls -1 /usr/lib*/gcc/i686-w64-mingw32/*/libgcc_s_sjlj-1.dll | head -n1)")"
-    for dll in libgcc_s_sjlj-1.dll libstdc++-6.dll; do
+    local mingw_gcc_dll_dir="$(dirname "$(ls -1 /usr/lib*/gcc/i686-w64-mingw32/*/{libgcc_s_sjlj-1.dll,libstdc++-6.dll} | head -n1)")"
+    for dll in libgcc_s_dw2-1.dll libgcc_s_sjlj-1.dll libstdc++-6.dll; do
         (
             set -x
             ln -s "${mingw_gcc_dll_dir}"/${dll} "${target}"/${dll}

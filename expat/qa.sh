@@ -154,11 +154,11 @@ run_tests() {
     esac
 
     if [[ ${CC} =~ mingw ]]; then
-        # NOTE: Filenames are hardcoded for Travis' Ubuntu Bionic, as of now
         for i in tests xmlwf ; do
-            mingw32_dir="$(ls -1d /usr/lib/gcc/i686-w64-mingw32/* | head -n1)"
+            mingw32_dir="$(dirname "$(ls -1 /usr/lib*/gcc/i686-w64-mingw32/*/{libgcc_s_sjlj-1.dll,libstdc++-6.dll} | head -n1)")"
             RUN ln -s \
                     /usr/i686-w64-mingw32/lib/libwinpthread-1.dll \
+                    "${mingw32_dir}"/libgcc_s_dw2-1.dll \
                     "${mingw32_dir}"/libgcc_s_sjlj-1.dll \
                     "${mingw32_dir}"/libstdc++-6.dll \
                     "$PWD"/libexpat{,w}-*.dll \
