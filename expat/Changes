@@ -20,6 +20,9 @@ Release x.x.x xxx xxxxx xx xxxx
        #622 #624  MinGW|CMake: Sync library name with GNU Autotools,
                     i.e. produce libexpat-1.dll rather than libexpat.dll
                     by default.  Filename libexpat.dll.a is unaffected.
+            #632  MinGW|CMake: Set missing variable CMAKE_RC_COMPILER in
+                    toolchain file "cmake/mingw-toolchain.cmake" to avoid
+                    error "windres: Command not found" on e.g. Ubuntu 20.04
             #620  CMake: Make documentation on variables a bit more consistent
             #610  Address Cppcheck 2.8.1 warning
 
