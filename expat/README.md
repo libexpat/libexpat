@@ -243,29 +243,14 @@ EXPAT_BUILD_TOOLS:BOOL=ON
 // Character type to use (char|ushort|wchar_t) [default=char]
 EXPAT_CHAR_TYPE:STRING=char
 
-// Library filename postfix for build type DEBUG; yields filenames libexpat<postfix=[w][d][MD|MT]>.(dll|dylib|lib|so)
-EXPAT_DEBUG_POSTFIX:STRING=
-
 // Install expat files in cmake install target
 EXPAT_ENABLE_INSTALL:BOOL=ON
-
-// Library filename postfix for build type MINSIZEREL; yields filenames libexpat<postfix=[w][d][MD|MT]>.(dll|dylib|lib|so)
-EXPAT_MINSIZEREL_POSTFIX:STRING=
 
 // Use /MT flag (static CRT) when compiling in MSVC
 EXPAT_MSVC_STATIC_CRT:BOOL=OFF
 
-// Library filename postfix for build type NOCONFIG; yields filenames libexpat<postfix=[w][d][MD|MT]>.(dll|dylib|lib|so)
-EXPAT_NOCONFIG_POSTFIX:STRING=
-
 // Build fuzzers via ossfuzz for the expat library
 EXPAT_OSSFUZZ_BUILD:BOOL=OFF
-
-// Library filename postfix for build type RELEASE; yields filenames libexpat<postfix=[w][d][MD|MT]>.(dll|dylib|lib|so)
-EXPAT_RELEASE_POSTFIX:STRING=
-
-// Library filename postfix for build type RELWITHDEBINFO; yields filenames libexpat<postfix=[w][d][MD|MT]>.(dll|dylib|lib|so)
-EXPAT_RELWITHDEBINFO_POSTFIX:STRING=
 
 // Build a shared expat library
 EXPAT_SHARED_LIBS:BOOL=ON

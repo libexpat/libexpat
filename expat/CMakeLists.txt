@@ -35,34 +35,6 @@
 
 cmake_minimum_required(VERSION 3.1.3)
 
-# This allows controlling documented build time switches
-# when Expat is pulled in using the add_subdirectory function, e.g.
-#
-#   set(EXPAT_BUILD_DOCS OFF)
-#   set(EXPAT_BUILD_TOOLS OFF)
-#   add_subdirectory(${expat_SOURCE_DIR}/expat ${expat_BINARY_DIR})
-#
-# would disable compilation of the xmlwf CLI and its man page.
-# Without activating behaviour NEW for policy CMP0077 here,
-# a user with -Wdev enabled would see warning
-#
-#   Policy CMP0077 is not set: option() honors normal variables.  Run "cmake
-#   --help-policy CMP0077" for policy details.  Use the cmake_policy command to
-#   set the policy and suppress this warning.
-#
-#   For compatibility with older versions of CMake, option is clearing the
-#   normal variable 'EXPAT_BUILD_DOCS'.
-#
-# and effectively not be able to adjust option EXPAT_BUILD_DOCS.
-#
-# For more details please see:
-# - https://cmake.org/cmake/help/latest/policy/CMP0077.html
-# - https://github.com/libexpat/libexpat/pull/419
-#
-if(POLICY CMP0077)
-    cmake_policy(SET CMP0077 NEW)
-endif()
-
 project(expat
     VERSION
         2.4.8
@@ -115,45 +87,80 @@ string(TOUPPER "${CMAKE_BUILD_TYPE}" _EXPAT_BUILD_TYPE_UPPER)
 #
 # Configuration
 #
-option(EXPAT_BUILD_TOOLS "Build the xmlwf tool for expat library" ${_EXPAT_BUILD_TOOLS_DEFAULT})
-option(EXPAT_BUILD_EXAMPLES "Build the examples for expat library" ON)
-option(EXPAT_BUILD_TESTS "Build the tests for expat library" ON)
-option(EXPAT_SHARED_LIBS "Build a shared expat library" ${_EXPAT_SHARED_LIBS_DEFAULT})
-option(EXPAT_BUILD_DOCS "Build man page for xmlwf" ${_EXPAT_BUILD_DOCS_DEFAULT})
-option(EXPAT_BUILD_FUZZERS "Build fuzzers for the expat library" OFF)
-option(EXPAT_BUILD_PKGCONFIG "Build pkg-config file" ${_EXPAT_BUILD_PKGCONFIG_DEFAULT})
-option(EXPAT_OSSFUZZ_BUILD "Build fuzzers via ossfuzz for the expat library" OFF)
+
+macro(expat_shy_set var default cache type desc)
+    # Macro expat_shy_set came into life because:
+    # - Expat was previously using an inconsistent mix of CMake's native set()
+    #   and option() to define public build time options.
+    # - option() is more friendly than set() with regard to configuring an
+    #   external project that is pulled in by means of add_subdirectory() --
+    #   see comments in issue #597 -- so we wanted to get away from set().
+    # - option() auto-converts non-bool values to bool when writing to the CMake
+    #   cache, so we needed something that supports non-bool better and hence
+    #   wanted to get away from plain option(), too.
+    #
+    # As a result, this function serves as a hybrid between CMake's regular set()
+    # and option(): from set() it takes support for non-bool types and the function
+    # name and signature whereas from option() (with policy CMP0077 mode NEW) it
+    # takes being shy when a value has previously been defined for that variable.
+    #
+    # So that resolves all need for set(.. FORCE) when pulling in Expat by means of
+    # add_subdirectory().
+    #
+    if(NOT ${cache} STREQUAL "CACHE")
+        message(SEND_ERROR "Macro usage is: expat_shy_set(var default CACHE type desc)")
+    endif()
+
+    if(DEFINED ${var})
+        # NOTE: The idea is to (ideally) only add to the cache if
+        #       there is no cache entry, yet.  "if(DEFINED CACHE{var})"
+        #       requires CMake >=3.14.
+        if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.14" AND NOT DEFINED "CACHE{${var}}")
+            set("${var}" "${${var}}" CACHE "${type}" "${desc}")
+        endif()
+    else()
+        set("${var}" "${default}" CACHE "${type}" "${desc}")
+    endif()
+endmacro()
+
+expat_shy_set(EXPAT_BUILD_TOOLS ${_EXPAT_BUILD_TOOLS_DEFAULT} CACHE BOOL "Build the xmlwf tool for expat library")
+expat_shy_set(EXPAT_BUILD_EXAMPLES ON CACHE BOOL "Build the examples for expat library")
+expat_shy_set(EXPAT_BUILD_TESTS ON CACHE BOOL "Build the tests for expat library")
+expat_shy_set(EXPAT_SHARED_LIBS ${_EXPAT_SHARED_LIBS_DEFAULT} CACHE BOOL "Build a shared expat library")
+expat_shy_set(EXPAT_BUILD_DOCS ${_EXPAT_BUILD_DOCS_DEFAULT} CACHE BOOL "Build man page for xmlwf")
+expat_shy_set(EXPAT_BUILD_FUZZERS OFF CACHE BOOL "Build fuzzers for the expat library")
+expat_shy_set(EXPAT_BUILD_PKGCONFIG ${_EXPAT_BUILD_PKGCONFIG_DEFAULT} CACHE BOOL "Build pkg-config file")
+expat_shy_set(EXPAT_OSSFUZZ_BUILD OFF CACHE BOOL "Build fuzzers via ossfuzz for the expat library")
 if(UNIX OR _EXPAT_HELP)
-    option(EXPAT_WITH_LIBBSD "Utilize libbsd (for arc4random_buf)" OFF)
+    expat_shy_set(EXPAT_WITH_LIBBSD OFF CACHE BOOL "Utilize libbsd (for arc4random_buf)")
 endif()
-option(EXPAT_ENABLE_INSTALL "Install expat files in cmake install target" ON)
-set(EXPAT_CONTEXT_BYTES 1024 CACHE STRING "Define to specify how much context to retain around the current parse point")
+expat_shy_set(EXPAT_ENABLE_INSTALL ON CACHE BOOL "Install expat files in cmake install target")
+expat_shy_set(EXPAT_CONTEXT_BYTES 1024 CACHE STRING "Define to specify how much context to retain around the current parse point")
 mark_as_advanced(EXPAT_CONTEXT_BYTES)
-option(EXPAT_DTD "Define to make parameter entity parsing functionality available" ON)
+expat_shy_set(EXPAT_DTD ON CACHE BOOL "Define to make parameter entity parsing functionality available")
 mark_as_advanced(EXPAT_DTD)
-option(EXPAT_NS "Define to make XML Namespaces functionality available" ON)
+expat_shy_set(EXPAT_NS ON CACHE BOOL "Define to make XML Namespaces functionality available")
 mark_as_advanced(EXPAT_NS)
-option(EXPAT_WARNINGS_AS_ERRORS "Treat all compiler warnings as errors" OFF)
+expat_shy_set(EXPAT_WARNINGS_AS_ERRORS OFF CACHE BOOL "Treat all compiler warnings as errors")
 if(UNIX OR _EXPAT_HELP)
-    option(EXPAT_DEV_URANDOM "Define to include code reading entropy from `/dev/urandom'." ON)
-    set(EXPAT_WITH_GETRANDOM "AUTO" CACHE STRING
-            "Make use of getrandom function (ON|OFF|AUTO) [default=AUTO]")
-    set(EXPAT_WITH_SYS_GETRANDOM "AUTO" CACHE STRING
-            "Make use of syscall SYS_getrandom (ON|OFF|AUTO) [default=AUTO]")
+    expat_shy_set(EXPAT_DEV_URANDOM ON CACHE BOOL "Define to include code reading entropy from `/dev/urandom'.")
+    expat_shy_set(EXPAT_WITH_GETRANDOM "AUTO" CACHE STRING "Make use of getrandom function (ON|OFF|AUTO) [default=AUTO]")
+    expat_shy_set(EXPAT_WITH_SYS_GETRANDOM "AUTO" CACHE STRING "Make use of syscall SYS_getrandom (ON|OFF|AUTO) [default=AUTO]")
     mark_as_advanced(EXPAT_DEV_URANDOM)
 endif()
-set(EXPAT_CHAR_TYPE "char" CACHE STRING "Character type to use (char|ushort|wchar_t) [default=char]")
-option(EXPAT_ATTR_INFO "Define to allow retrieving the byte offsets for attribute names and values" OFF)
+expat_shy_set(EXPAT_CHAR_TYPE "char" CACHE STRING "Character type to use (char|ushort|wchar_t) [default=char]")
+expat_shy_set(EXPAT_ATTR_INFO OFF CACHE BOOL "Define to allow retrieving the byte offsets for attribute names and values")
 mark_as_advanced(EXPAT_ATTR_INFO)
-option(EXPAT_LARGE_SIZE "Make XML_GetCurrent* functions return <(unsigned) long long> rather than <(unsigned) long>" OFF)
+expat_shy_set(EXPAT_LARGE_SIZE OFF CACHE BOOL "Make XML_GetCurrent* functions return <(unsigned) long long> rather than <(unsigned) long>")
 mark_as_advanced(EXPAT_LARGE_SIZE)
-option(EXPAT_MIN_SIZE "Get a smaller (but slower) parser (in particular avoid multiple copies of the tokenizer)" OFF)
+expat_shy_set(EXPAT_MIN_SIZE OFF CACHE BOOL "Get a smaller (but slower) parser (in particular avoid multiple copies of the tokenizer)")
 mark_as_advanced(EXPAT_MIN_SIZE)
 if(MSVC OR _EXPAT_HELP)
-    set(EXPAT_MSVC_STATIC_CRT OFF CACHE BOOL "Use /MT flag (static CRT) when compiling in MSVC")
+    expat_shy_set(EXPAT_MSVC_STATIC_CRT OFF CACHE BOOL "Use /MT flag (static CRT) when compiling in MSVC")
 endif()
 if(NOT _EXPAT_HELP)
-    set(_EXPAT_M32 OFF CACHE BOOL "(Unofficial!) Produce 32bit code with -m32")
+    expat_shy_set(_EXPAT_M32 OFF CACHE BOOL "(Unofficial!) Produce 32bit code with -m32")
+    mark_as_advanced(_EXPAT_M32)
 endif()
 
 if(EXPAT_BUILD_TESTS)
@@ -421,7 +428,8 @@ foreach(build_type_upper
         set(_POSTFIX_DEBUG "")  # needs a reset because of being looped
     endif()
 
-    set(EXPAT_${build_type_upper}_POSTFIX "${_POSTFIX_WIDE}${_POSTFIX_DEBUG}${_POSTFIX_CRT}" CACHE STRING "Library filename postfix for build type ${build_type_upper}; yields filenames libexpat<postfix=[w][d][MD|MT]>.(dll|dylib|lib|so)")
+    expat_shy_set(EXPAT_${build_type_upper}_POSTFIX "${_POSTFIX_WIDE}${_POSTFIX_DEBUG}${_POSTFIX_CRT}" CACHE STRING "Library filename postfix for build type ${build_type_upper}; yields filenames libexpat<postfix=[w][d][MD|MT]>.(dll|dylib|lib|so)")
+    mark_as_advanced(EXPAT_${build_type_upper}_POSTFIX)
     set_property(TARGET expat PROPERTY ${build_type_upper}_POSTFIX ${EXPAT_${build_type_upper}_POSTFIX})
 endforeach()
 
