@@ -27,6 +27,7 @@ Release x.x.x xxx xxxxx xx xxxx
                     context of public build time options to take need for
                     set(.. FORCE) in projects using Expat by means of
                     add_subdirectory(..) off Expat's users' shoulders
+       #626 #641  Stop exporting API symbols when building a static library
             #620  CMake: Make documentation on variables a bit more consistent
             #610  Address Cppcheck 2.8.1 warning
 
