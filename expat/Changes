@@ -35,6 +35,7 @@ Release x.x.x xxx xxxxx xx xxxx
        #626 #641  Stop exporting API symbols when building a static library
             #620  CMake: Make documentation on variables a bit more consistent
             #610  Address Cppcheck 2.8.1 warning
+            #643  Address Clang 15 compiler warnings
 
         Infrastructure:
        #597 #598  CI: Windows: Start covering MSVC 2022
