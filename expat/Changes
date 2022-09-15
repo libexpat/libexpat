@@ -2,7 +2,7 @@ NOTE: We are looking for help with a few things:
       https://github.com/libexpat/libexpat/labels/help%20wanted
       If you can help, please get in touch.  Thanks!
 
-Release x.x.x xxx xxxxx xx xxxx
+Release 2.4.9 Tue September 20 2022
         Security fixes:
        #629 #640  CVE-2022-40674 -- Heap use-after-free vulnerability in
                     function doContent. Expected impact is denial of service
