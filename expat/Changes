@@ -35,10 +35,12 @@ Release x.x.x xxx xxxxx xx xxxx
        #626 #641  Stop exporting API symbols when building a static library
             #620  CMake: Make documentation on variables a bit more consistent
             #610  Address Cppcheck 2.8.1 warning
+            #643  Address Clang 15 compiler warnings
 
         Infrastructure:
        #597 #598  CI: Windows: Start covering MSVC 2022
             #632  CI: Linux: Make migration off deprecated Ubuntu 18.04 work
+            #643  CI: Upgrade Clang from 14 to 15
 
         Special thanks to:
             David Faure
