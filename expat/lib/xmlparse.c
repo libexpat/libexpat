@@ -19,7 +19,7 @@
    Copyright (c) 2016      Gustavo Grieco <gustavo.grieco@imag.fr>
    Copyright (c) 2016      Pascal Cuoq <cuoq@trust-in-soft.com>
    Copyright (c) 2016      Ed Schouten <ed@nuxi.nl>
-   Copyright (c) 2017-2018 Rhodri James <rhodri@wildebeest.org.uk>
+   Copyright (c) 2017-2022 Rhodri James <rhodri@wildebeest.org.uk>
    Copyright (c) 2017      Václav Slavík <vaclav@slavik.io>
    Copyright (c) 2017      Viktor Szakats <commit@vsz.me>
    Copyright (c) 2017      Chanho Park <chanho61.park@samsung.com>
