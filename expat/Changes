@@ -42,6 +42,8 @@ Release x.x.x xxx xxxxx xx xxxx
             #594  xmlwf: Fix harmless variable mix-up in function nsattcmp
   #592 #593 #610  Address Cppcheck warnings
             #643  Address Clang 15 compiler warnings
+       #642 #644  Version info bumped from 9:8:8 to 9:9:8;
+                    see https://verbump.de/ for what these numbers do
 
         Infrastructure:
        #597 #598  CI: Windows: Start covering MSVC 2022
