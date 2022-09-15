@@ -40,7 +40,7 @@ set -e
 # not put SIZEOF_VOID_P in the eventual expat_config.h.
 patch_expat_config_h_in() {
     local filename="$1"
-    local sizeof_void_p_line_number="$(fgrep -n SIZEOF_VOID_P "${filename}" | awk -F: '{print $1}')"
+    local sizeof_void_p_line_number="$(grep -F -n SIZEOF_VOID_P "${filename}" | awk -F: '{print $1}')"
     [[ ${sizeof_void_p_line_number} =~ ^[0-9]+$ ]]  # cheap assert
     local first_line_to_delete=$(( sizeof_void_p_line_number - 1 ))
     local last_line_to_delete=$(( sizeof_void_p_line_number + 1 ))

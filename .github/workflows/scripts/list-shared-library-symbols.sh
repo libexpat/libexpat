@@ -33,4 +33,4 @@ if [[ $# -ne 1 ]]; then
     echo "usage: $(basename "$0") SO_FILE_PATH" >&2
     exit 1
 fi
-nm -D -p "${1}" | fgrep ' T ' | awk '{print $3}' | sort -f -d
+nm -D -p "${1}" | grep -F ' T ' | awk '{print $3}' | sort -f -d
