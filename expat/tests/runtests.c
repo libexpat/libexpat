@@ -4990,7 +4990,7 @@ START_TEST(test_suspend_resume_internal_entity) {
 }
 END_TEST
 
-void
+static void XMLCALL
 suspending_comment_handler(void *userData, const XML_Char *data) {
   UNUSED_P(data);
   XML_Parser parser = (XML_Parser)userData;
