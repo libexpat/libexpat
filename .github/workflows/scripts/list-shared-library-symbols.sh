@@ -6,7 +6,7 @@
 #                      \___/_/\_\ .__/ \__,_|\__|
 #                               |_| XML parser
 #
-# Copyright (c) 2021 Sebastian Pipping <sebastian@pipping.org>
+# Copyright (c) 2021-2022 Sebastian Pipping <sebastian@pipping.org>
 # Licensed under the MIT license:
 #
 # Permission is  hereby granted,  free of charge,  to any  person obtaining
@@ -33,4 +33,4 @@ if [[ $# -ne 1 ]]; then
     echo "usage: $(basename "$0") SO_FILE_PATH" >&2
     exit 1
 fi
-nm -D -p "${1}" | fgrep ' T ' | awk '{print $3}' | sort -f -d
+nm -D -p "${1}" | grep -F ' T ' | awk '{print $3}' | sort -f -d

@@ -1,4 +1,4 @@
-/* 2722de33b8d95adcfb16db05afdec6ed1d40d51565cda2176c61806b5350eafe (2.4.8+)
+/* 90815a2b2c80c03b2b889fe1d427bb2b9e3282aa065e42784e001db4f23de324 (2.4.9+)
                             __  __            _
                          ___\ \/ /_ __   __ _| |_
                         / _ \\  /| '_ \ / _` | __|
@@ -19,7 +19,7 @@
    Copyright (c) 2016      Gustavo Grieco <gustavo.grieco@imag.fr>
    Copyright (c) 2016      Pascal Cuoq <cuoq@trust-in-soft.com>
    Copyright (c) 2016      Ed Schouten <ed@nuxi.nl>
-   Copyright (c) 2017-2018 Rhodri James <rhodri@wildebeest.org.uk>
+   Copyright (c) 2017-2022 Rhodri James <rhodri@wildebeest.org.uk>
    Copyright (c) 2017      Václav Slavík <vaclav@slavik.io>
    Copyright (c) 2017      Viktor Szakats <commit@vsz.me>
    Copyright (c) 2017      Chanho Park <chanho61.park@samsung.com>

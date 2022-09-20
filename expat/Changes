@@ -2,7 +2,7 @@ NOTE: We are looking for help with a few things:
       https://github.com/libexpat/libexpat/labels/help%20wanted
       If you can help, please get in touch.  Thanks!
 
-Release x.x.x xxx xxxxx xx xxxx
+Release 2.4.9 Tue September 20 2022
         Security fixes:
        #629 #640  CVE-2022-40674 -- Heap use-after-free vulnerability in
                     function doContent. Expected impact is denial of service
@@ -10,6 +10,8 @@ Release x.x.x xxx xxxxx xx xxxx
 
         Bug fixes:
             #634  MinGW: Fix mis-compilation for -D__USE_MINGW_ANSI_STDIO=0
+            #614  docs: Fix documentation on effect of switch XML_DTD on
+                    symbol visibility in doc/reference.html
 
         Other changes:
             #638  MinGW: Make fix-xmltest-log.sh drop more Wine bug output
@@ -28,19 +30,29 @@ Release x.x.x xxx xxxxx xx xxxx
             #632  MinGW|CMake: Set missing variable CMAKE_RC_COMPILER in
                     toolchain file "cmake/mingw-toolchain.cmake" to avoid
                     error "windres: Command not found" on e.g. Ubuntu 20.04
-       #597 #626  CMake: Unify inconsistent use of set() and option() in
+       #597 #627  CMake: Unify inconsistent use of set() and option() in
                     context of public build time options to take need for
                     set(.. FORCE) in projects using Expat by means of
                     add_subdirectory(..) off Expat's users' shoulders
        #626 #641  Stop exporting API symbols when building a static library
+            #644  Resolve use of deprecated "fgrep" by "grep -F"
             #620  CMake: Make documentation on variables a bit more consistent
-            #610  Address Cppcheck 2.8.1 warning
+            #636  CMake: Drop leading whitespace from a #cmakedefine line in
+                    file expat_config.h.cmake
+            #594  xmlwf: Fix harmless variable mix-up in function nsattcmp
+  #592 #593 #610  Address Cppcheck warnings
             #643  Address Clang 15 compiler warnings
+       #642 #644  Version info bumped from 9:8:8 to 9:9:8;
+                    see https://verbump.de/ for what these numbers do
 
         Infrastructure:
        #597 #598  CI: Windows: Start covering MSVC 2022
+            #619  CI: macOS: Migrate off deprecated macOS 10.15
             #632  CI: Linux: Make migration off deprecated Ubuntu 18.04 work
             #643  CI: Upgrade Clang from 14 to 15
+            #637  apply-clang-format.sh: Add support for BSD find
+            #633  coverage.sh: Exclude MinGW headers
+            #635  coverage.sh: Fix name collision for -funsigned-char
 
         Special thanks to:
             David Faure
@@ -48,6 +60,7 @@ Release x.x.x xxx xxxxx xx xxxx
             Frank Bergmann
             Rhodri James
             Rosen Penev
+            Thijs Schreijer
             Vincent Torri
                  and
             Google Project Zero
