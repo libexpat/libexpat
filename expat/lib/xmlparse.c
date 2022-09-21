@@ -5485,6 +5485,7 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
           parser->m_elementDeclHandler(
               parser->m_handlerArg, parser->m_declElementType->name, content);
           handleDefault = XML_FALSE;
+          FREE(parser,content);
         }
         dtd->in_eldecl = XML_FALSE;
       }
