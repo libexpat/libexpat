@@ -5,12 +5,16 @@ NOTE: We are looking for help with a few things:
 Release x.x.x xxx xxxxxxxxxxxx xx xxxx
         Bug fixes:
        #612 #645  Fix curruption from undefined entities
+  #616 #652 #653  Stop leaking opening tag bindings after a closing tag
+                    mismatch error where a parser is reset through
+                    XML_ParserReset and then reused to parse
 
         Other changes:
             #648  Address compiler warnings
 
         Special thanks to:
             Jann Horn
+            Mark Brand
             Rhodri James
                  and
             Google Project Zero
