@@ -5386,7 +5386,7 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
              *
              * If 'standalone' is false, the DTD must have no
              * parameter entities or we wouldn't have passed the outer
-             * 'if' statement.  That measn the only entity in the hash
+             * 'if' statement.  That means the only entity in the hash
              * table is the external subset name "#" which cannot be
              * given as a parameter entity name in XML syntax, so the
              * lookup must have returned NULL and we don't even reach
