@@ -5813,6 +5813,14 @@ internalEntityProcessor(XML_Parser parser, const char *s, const char *end,
   openEntity->next = parser->m_freeInternalEntities;
   parser->m_freeInternalEntities = openEntity;
 
+  // If there are more open entities we want to stop right here and have the
+  // upcoming call to XML_ResumeParser continue with entity content, or it would
+  // be ignored altogether.
+  if (parser->m_openInternalEntities != NULL
+      && parser->m_parsingStatus.parsing == XML_SUSPENDED) {
+    return XML_ERROR_NONE;
+  }
+
 #ifdef XML_DTD
   if (entity->is_param) {
     int tok;
