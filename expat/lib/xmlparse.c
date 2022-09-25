@@ -5798,20 +5798,20 @@ internalEntityProcessor(XML_Parser parser, const char *s, const char *end,
 
   if (result != XML_ERROR_NONE)
     return result;
-  else if (textEnd != next
-           && parser->m_parsingStatus.parsing == XML_SUSPENDED) {
+
+  if (textEnd != next && parser->m_parsingStatus.parsing == XML_SUSPENDED) {
     entity->processed = (int)(next - (const char *)entity->textPtr);
     return result;
-  } else {
-#ifdef XML_DTD
-    entityTrackingOnClose(parser, entity, __LINE__);
-#endif
-    entity->open = XML_FALSE;
-    parser->m_openInternalEntities = openEntity->next;
-    /* put openEntity back in list of free instances */
-    openEntity->next = parser->m_freeInternalEntities;
-    parser->m_freeInternalEntities = openEntity;
   }
+
+#ifdef XML_DTD
+  entityTrackingOnClose(parser, entity, __LINE__);
+#endif
+  entity->open = XML_FALSE;
+  parser->m_openInternalEntities = openEntity->next;
+  /* put openEntity back in list of free instances */
+  openEntity->next = parser->m_freeInternalEntities;
+  parser->m_freeInternalEntities = openEntity;
 
 #ifdef XML_DTD
   if (entity->is_param) {
