@@ -469,7 +469,7 @@ if(WIN32 AND NOT MINGW)
     #       Everything but MSVC is already adding prefix "lib", automatically.
     # NOTE: "set_property(TARGET expat PROPERTY PREFIX lib)" would only affect *.dll
     #       files but not *.lib files, so we have to rely on property OUTPUT_NAME, instead.
-    #       Property EXPAT_*_POSTFIX still applies.
+    #       Target property <CONFIG>_POSTFIX still applies.
     set(_EXPAT_OUTPUT_NAME libexpat)
     set_property(TARGET expat PROPERTY OUTPUT_NAME ${_EXPAT_OUTPUT_NAME})
 else()
