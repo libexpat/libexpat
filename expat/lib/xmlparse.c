@@ -4975,10 +4975,10 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
               parser->m_handlerArg, parser->m_declElementType->name,
               parser->m_declAttributeId->name, parser->m_declAttributeType, 0,
               role == XML_ROLE_REQUIRED_ATTRIBUTE_VALUE);
-          poolClear(&parser->m_tempPool);
           handleDefault = XML_FALSE;
         }
       }
+      poolClear(&parser->m_tempPool);
       break;
     case XML_ROLE_DEFAULT_ATTRIBUTE_VALUE:
     case XML_ROLE_FIXED_ATTRIBUTE_VALUE:

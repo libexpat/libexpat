@@ -3,8 +3,17 @@ NOTE: We are looking for help with a few things:
       If you can help, please get in touch.  Thanks!
 
 Release x.x.x xxx xxxxxxxxxxxx xx xxxx
+        Bug fixes:
+       #612 #645  Fix curruption from undefined entities
+
         Other changes:
             #648  Address compiler warnings
+
+        Special thanks to:
+            Jann Horn
+            Rhodri James
+                 and
+            Google Project Zero
 
 Release 2.4.9 Tue September 20 2022
         Security fixes:

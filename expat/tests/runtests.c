@@ -6734,6 +6734,60 @@ START_TEST(test_empty_element_abort) {
 }
 END_TEST
 
+/* Regression test for GH issue #612: unfinished m_declAttributeType
+ * allocation in ->m_tempPool can corrupt following allocation.
+ */
+static int XMLCALL
+external_entity_unfinished_attlist(XML_Parser parser, const XML_Char *context,
+                                   const XML_Char *base,
+                                   const XML_Char *systemId,
+                                   const XML_Char *publicId) {
+  const char *text = "<!ELEMENT barf ANY>\n"
+                     "<!ATTLIST barf my_attr (blah|%blah;a|foo) #REQUIRED>\n"
+                     "<!--COMMENT-->\n";
+  XML_Parser ext_parser;
+
+  UNUSED_P(base);
+  UNUSED_P(publicId);
+  if (systemId == NULL)
+    return XML_STATUS_OK;
+
+  ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
+  if (ext_parser == NULL)
+    fail("Could not create external entity parser");
+
+  if (_XML_Parse_SINGLE_BYTES(ext_parser, text, (int)strlen(text), XML_TRUE)
+      == XML_STATUS_ERROR)
+    xml_failure(ext_parser);
+
+  XML_ParserFree(ext_parser);
+  return XML_STATUS_OK;
+}
+
+START_TEST(test_pool_integrity_with_unfinished_attr) {
+  const char *text = "<?xml version='1.0' encoding='UTF-8'?>\n"
+                     "<!DOCTYPE foo [\n"
+                     "<!ELEMENT foo ANY>\n"
+                     "<!ENTITY % entp SYSTEM \"external.dtd\">\n"
+                     "%entp;\n"
+                     "]>\n"
+                     "<a></a>\n";
+  const XML_Char *expected = XCS("COMMENT");
+  CharData storage;
+
+  CharData_Init(&storage);
+  XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+  XML_SetExternalEntityRefHandler(g_parser, external_entity_unfinished_attlist);
+  XML_SetAttlistDeclHandler(g_parser, dummy_attlist_decl_handler);
+  XML_SetCommentHandler(g_parser, accumulate_comment);
+  XML_SetUserData(g_parser, &storage);
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+      == XML_STATUS_ERROR)
+    xml_failure(g_parser);
+  CharData_CheckXMLChars(&storage, expected);
+}
+END_TEST
+
 /*
  * Namespaces tests.
  */
@@ -12169,6 +12223,8 @@ make_suite(void) {
   tcase_add_test(tc_basic, test_bad_notation);
   tcase_add_test(tc_basic, test_default_doctype_handler);
   tcase_add_test(tc_basic, test_empty_element_abort);
+  tcase_add_test__ifdef_xml_dtd(tc_basic,
+                                test_pool_integrity_with_unfinished_attr);
 
   suite_add_tcase(s, tc_namespace);
   tcase_add_checked_fixture(tc_namespace, namespace_setup, namespace_teardown);
