@@ -50,7 +50,7 @@ jobs:
             FLAT_ENV: CC=clang CXX=clang++ LD=clang++ QA_SANITIZER=address
     runs-on: macos-11
     steps:
-    - uses: actions/checkout@v3.0.2
+    - uses: actions/checkout@v3.1.0
     - name: Install build dependencies
       run: |
         sudo rm /usr/local/bin/2to3  # so that "brew link" will work
