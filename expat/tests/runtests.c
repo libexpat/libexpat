@@ -6788,6 +6788,48 @@ START_TEST(test_pool_integrity_with_unfinished_attr) {
 }
 END_TEST
 
+typedef struct {
+  XML_Parser parser;
+  CharData *storage;
+} ParserPlusStorage;
+
+static void XMLCALL
+accumulate_and_suspend_comment_handler(void *userData, const XML_Char *data) {
+  ParserPlusStorage *const parserPlusStorage = (ParserPlusStorage *)userData;
+  accumulate_comment(parserPlusStorage->storage, data);
+  XML_StopParser(parserPlusStorage->parser, XML_TRUE);
+}
+
+START_TEST(test_nested_entity_suspend) {
+  const char *const text = "<!DOCTYPE a [\n"
+                           "  <!ENTITY e1 '<!--e1-->'>\n"
+                           "  <!ENTITY e2 '<!--e2 head-->&e1;<!--e2 tail-->'>\n"
+                           "  <!ENTITY e3 '<!--e3 head-->&e2;<!--e3 tail-->'>\n"
+                           "]>\n"
+                           "<a><!--start-->&e3;<!--end--></a>";
+  const XML_Char *const expected = XCS("start") XCS("e3 head") XCS("e2 head")
+      XCS("e1") XCS("e2 tail") XCS("e3 tail") XCS("end");
+  CharData storage;
+  XML_Parser parser = XML_ParserCreate(NULL);
+  ParserPlusStorage parserPlusStorage = {parser, &storage};
+
+  CharData_Init(&storage);
+  XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+  XML_SetCommentHandler(parser, accumulate_and_suspend_comment_handler);
+  XML_SetUserData(parser, &parserPlusStorage);
+
+  enum XML_Status status = XML_Parse(parser, text, (int)strlen(text), XML_TRUE);
+  while (status == XML_STATUS_SUSPENDED) {
+    status = XML_ResumeParser(parser);
+  }
+  if (status != XML_STATUS_OK)
+    xml_failure(parser);
+
+  CharData_CheckXMLChars(&storage, expected);
+  XML_ParserFree(parser);
+}
+END_TEST
+
 /*
  * Namespaces tests.
  */
@@ -12247,6 +12289,7 @@ make_suite(void) {
   tcase_add_test(tc_basic, test_empty_element_abort);
   tcase_add_test__ifdef_xml_dtd(tc_basic,
                                 test_pool_integrity_with_unfinished_attr);
+  tcase_add_test(tc_basic, test_nested_entity_suspend);
 
   suite_add_tcase(s, tc_namespace);
   tcase_add_checked_fixture(tc_namespace, namespace_setup, namespace_teardown);
