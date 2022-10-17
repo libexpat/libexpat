@@ -7927,6 +7927,28 @@ START_TEST(test_misc_deny_internal_entity_closing_doctype_issue_317) {
 }
 END_TEST
 
+START_TEST(test_misc_tag_mismatch_reset_leak) {
+#ifdef XML_NS
+  const char *const text = "<open xmlns='https://namespace1.test'></close>";
+  XML_Parser parser = XML_ParserCreateNS(NULL, XCS('\n'));
+
+  if (XML_Parse(parser, text, (int)strlen(text), XML_TRUE) != XML_STATUS_ERROR)
+    fail("Call to parse was expected to fail");
+  if (XML_GetErrorCode(parser) != XML_ERROR_TAG_MISMATCH)
+    fail("Call to parse was expected to fail from a closing tag mismatch");
+
+  XML_ParserReset(parser, NULL);
+
+  if (XML_Parse(parser, text, (int)strlen(text), XML_TRUE) != XML_STATUS_ERROR)
+    fail("Call to parse was expected to fail");
+  if (XML_GetErrorCode(parser) != XML_ERROR_TAG_MISMATCH)
+    fail("Call to parse was expected to fail from a closing tag mismatch");
+
+  XML_ParserFree(parser);
+#endif
+}
+END_TEST
+
 static void
 alloc_setup(void) {
   XML_Memory_Handling_Suite memsuite = {duff_allocator, duff_reallocator, free};
@@ -12277,6 +12299,7 @@ make_suite(void) {
   tcase_add_test(tc_misc, test_misc_stop_during_end_handler_issue_240_2);
   tcase_add_test__ifdef_xml_dtd(
       tc_misc, test_misc_deny_internal_entity_closing_doctype_issue_317);
+  tcase_add_test(tc_misc, test_misc_tag_mismatch_reset_leak);
 
   suite_add_tcase(s, tc_alloc);
   tcase_add_checked_fixture(tc_alloc, alloc_setup, alloc_teardown);
