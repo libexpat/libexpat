@@ -590,7 +590,6 @@ static unsigned long getDebugLevel(const char *variableName,
                                    unsigned long defaultDebugLevel);
 
 #define poolStart(pool) ((pool)->start)
-#define poolEnd(pool) ((pool)->ptr)
 #define poolLength(pool) ((pool)->ptr - (pool)->start)
 #define poolChop(pool) ((void)--(pool->ptr))
 #define poolLastChar(pool) (((pool)->ptr)[-1])

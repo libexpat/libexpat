@@ -75,7 +75,6 @@
 #endif
 
 #ifdef XML_UNICODE_WCHAR_T
-#  define XML_FMT_CHAR "lc"
 #  define XML_FMT_STR "ls"
 #  include <wchar.h>
 #  define xcstrlen(s) wcslen(s)
@@ -87,7 +86,6 @@
 #  ifdef XML_UNICODE
 #    error "No support for UTF-16 character without wchar_t in tests"
 #  else
-#    define XML_FMT_CHAR "c"
 #    define XML_FMT_STR "s"
 #    define xcstrlen(s) strlen(s)
 #    define xcstrcmp(s, t) strcmp((s), (t))

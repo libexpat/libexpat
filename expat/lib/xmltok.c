@@ -715,25 +715,21 @@ unicode_byte_type(char hi, char lo) {
       return res;                                                              \
   }
 
-#define SET2(ptr, ch) (((ptr)[0] = ((ch)&0xff)), ((ptr)[1] = ((ch) >> 8)))
 #define GET_LO(ptr) ((unsigned char)(ptr)[0])
 #define GET_HI(ptr) ((unsigned char)(ptr)[1])
 
 DEFINE_UTF16_TO_UTF8(little2_)
 DEFINE_UTF16_TO_UTF16(little2_)
 
-#undef SET2
 #undef GET_LO
 #undef GET_HI
 
-#define SET2(ptr, ch) (((ptr)[0] = ((ch) >> 8)), ((ptr)[1] = ((ch)&0xFF)))
 #define GET_LO(ptr) ((unsigned char)(ptr)[1])
 #define GET_HI(ptr) ((unsigned char)(ptr)[0])
 
 DEFINE_UTF16_TO_UTF8(big2_)
 DEFINE_UTF16_TO_UTF16(big2_)
 
-#undef SET2
 #undef GET_LO
 #undef GET_HI
 
