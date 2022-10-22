@@ -8396,7 +8396,7 @@ getDebugLevel(const char *variableName, unsigned long defaultDebugLevel) {
   errno = 0;
   char *afterValue = (char *)value;
   unsigned long debugLevel = strtoul(value, &afterValue, 10);
-  if ((errno != 0) || (afterValue[0] != '\0')) {
+  if ((errno != 0) || (afterValue == value) || (afterValue[0] != '\0')) {
     errno = 0;
     return defaultDebugLevel;
   }
