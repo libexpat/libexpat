@@ -507,7 +507,7 @@ START_TEST(test_siphash_spec) {
   const char message[] = "\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09"
                          "\x0a\x0b\x0c\x0d\x0e";
   const size_t len = sizeof(message) - 1;
-  const uint64_t expected = _SIP_ULL(0xa129ca61U, 0x49be45e5U);
+  const uint64_t expected = SIP_ULL(0xa129ca61U, 0x49be45e5U);
   struct siphash state;
   struct sipkey key;
 
@@ -4932,7 +4932,7 @@ START_TEST(test_hash_collision) {
    * tests invoked from qa.sh usually provide a hash collision, but
    * not always.  This is an attempt to provide insurance.
    */
-#define COLLIDING_HASH_SALT (unsigned long)_SIP_ULL(0xffffffffU, 0xff99fc90U)
+#define COLLIDING_HASH_SALT (unsigned long)SIP_ULL(0xffffffffU, 0xff99fc90U)
   const char *text
       = "<doc>\n"
         "<a1/><a2/><a3/><a4/><a5/><a6/><a7/><a8/>\n"

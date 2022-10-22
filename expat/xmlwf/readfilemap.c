@@ -50,14 +50,14 @@
 #if defined(_MSC_VER)
 #  include <io.h>
 /* https://msdn.microsoft.com/en-us/library/wyssk1bs(v=vs.100).aspx */
-#  define _EXPAT_read _read
-#  define _EXPAT_read_count_t int
-#  define _EXPAT_read_req_t unsigned int
+#  define EXPAT_read _read
+#  define EXPAT_read_count_t int
+#  define EXPAT_read_req_t unsigned int
 #else /* POSIX */
 /* http://pubs.opengroup.org/onlinepubs/009695399/functions/read.html */
-#  define _EXPAT_read read
-#  define _EXPAT_read_count_t ssize_t
-#  define _EXPAT_read_req_t size_t
+#  define EXPAT_read read
+#  define EXPAT_read_count_t ssize_t
+#  define EXPAT_read_req_t size_t
 #endif
 
 #ifndef S_ISREG
@@ -87,7 +87,7 @@ filemap(const tchar *name,
         void *arg) {
   size_t nbytes;
   int fd;
-  _EXPAT_read_count_t n;
+  EXPAT_read_count_t n;
   struct stat sb;
   void *p;
 
@@ -125,14 +125,14 @@ filemap(const tchar *name,
     close(fd);
     return 0;
   }
-  n = _EXPAT_read(fd, p, (_EXPAT_read_req_t)nbytes);
+  n = EXPAT_read(fd, p, (EXPAT_read_req_t)nbytes);
   if (n < 0) {
     tperror(name);
     free(p);
     close(fd);
     return 0;
   }
-  if (n != (_EXPAT_read_count_t)nbytes) {
+  if (n != (EXPAT_read_count_t)nbytes) {
     ftprintf(stderr, T("%s: read unexpected number of bytes\n"), name);
     free(p);
     close(fd);
