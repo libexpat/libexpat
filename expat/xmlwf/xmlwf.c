@@ -964,7 +964,7 @@ tmain(int argc, XML_Char **argv) {
   int continueOnError = 0;
 
   float attackMaximumAmplification = -1.0f; /* signaling "not set" */
-  unsigned long long attackThresholdBytes;
+  unsigned long long attackThresholdBytes = 0;
   XML_Bool attackThresholdGiven = XML_FALSE;
 
   int exitCode = XMLWF_EXIT_SUCCESS;

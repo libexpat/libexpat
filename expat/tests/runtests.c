@@ -8326,7 +8326,7 @@ external_entity_dbl_handler(XML_Parser parser, const XML_Char *context,
                             const XML_Char *publicId) {
   intptr_t callno = (intptr_t)XML_GetUserData(parser);
   const char *text;
-  XML_Parser new_parser;
+  XML_Parser new_parser = NULL;
   int i;
   const int max_alloc_count = 20;
 
