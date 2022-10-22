@@ -49,7 +49,7 @@ typedef struct allocation_entry {
 static AllocationEntry *alloc_head = NULL;
 static AllocationEntry *alloc_tail = NULL;
 
-static AllocationEntry *find_allocation(void *ptr);
+static AllocationEntry *find_allocation(const void *ptr);
 
 /* Allocate some memory and keep track of it. */
 void *
@@ -82,7 +82,7 @@ tracking_malloc(size_t size) {
 }
 
 static AllocationEntry *
-find_allocation(void *ptr) {
+find_allocation(const void *ptr) {
   AllocationEntry *entry;
 
   for (entry = alloc_head; entry != NULL; entry = entry->next) {

@@ -103,7 +103,6 @@ void
 StructData_CheckItems(StructData *storage, const StructDataEntry *expected,
                       int count) {
   char buffer[1024];
-  int i;
 
   assert(storage != NULL);
   assert(expected != NULL);
@@ -113,7 +112,7 @@ StructData_CheckItems(StructData *storage, const StructDataEntry *expected,
     StructData_Dispose(storage);
     fail(buffer);
   } else {
-    for (i = 0; i < count; i++) {
+    for (int i = 0; i < count; i++) {
       const StructDataEntry *got = &storage->entries[i];
       const StructDataEntry *want = &expected[i];
 
