@@ -243,7 +243,7 @@ static int FASTCALL checkCharRefNumber(int);
 #endif
 
 #define SB_BYTE_TYPE(enc, p)                                                   \
-  (((struct normal_encoding *)(enc))->type[(unsigned char)*(p)])
+  (((const struct normal_encoding *)(enc))->type[(unsigned char)*(p)])
 
 #ifdef XML_MIN_SIZE
 static int PTRFASTCALL

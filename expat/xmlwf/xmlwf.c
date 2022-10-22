@@ -178,7 +178,7 @@ is equivalent to lexicographically comparing based on the character number. */
 
 static int
 attcmp(const void *att1, const void *att2) {
-  return tcscmp(*(const XML_Char **)att1, *(const XML_Char **)att2);
+  return tcscmp(*(const XML_Char *const *)att1, *(const XML_Char *const *)att2);
 }
 
 static void XMLCALL
@@ -215,8 +215,8 @@ endElement(void *userData, const XML_Char *name) {
 
 static int
 nsattcmp(const void *p1, const void *p2) {
-  const XML_Char *att1 = *(const XML_Char **)p1;
-  const XML_Char *att2 = *(const XML_Char **)p2;
+  const XML_Char *att1 = *(const XML_Char *const *)p1;
+  const XML_Char *att2 = *(const XML_Char *const *)p2;
   int sep1 = (tcsrchr(att1, NSSEP) != 0);
   int sep2 = (tcsrchr(att2, NSSEP) != 0);
   if (sep1 != sep2)
@@ -370,8 +370,8 @@ xcscmp(const XML_Char *xs, const XML_Char *xt) {
 
 static int
 notationCmp(const void *a, const void *b) {
-  const NotationList *const n1 = *(NotationList **)a;
-  const NotationList *const n2 = *(NotationList **)b;
+  const NotationList *const n1 = *(const NotationList *const *)a;
+  const NotationList *const n2 = *(const NotationList *const *)b;
 
   return xcscmp(n1->notationName, n2->notationName);
 }
