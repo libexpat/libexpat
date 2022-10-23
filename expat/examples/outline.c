@@ -53,8 +53,6 @@
 
 #define BUFFSIZE 8192
 
-char Buff[BUFFSIZE];
-
 int Depth;
 
 static void XMLCALL
@@ -85,6 +83,7 @@ end(void *data, const XML_Char *el) {
 
 int
 main(int argc, char *argv[]) {
+  char Buff[BUFFSIZE];
   XML_Parser parser = XML_ParserCreate(NULL);
   (void)argc;
   (void)argv;
