@@ -51,8 +51,6 @@
 #  define XML_FMT_STR "s"
 #endif
 
-#define BUFFSIZE 8192
-
 static void XMLCALL
 start(void *data, const XML_Char *el, const XML_Char **attr) {
   int i;
@@ -81,7 +79,7 @@ end(void *data, const XML_Char *el) {
 
 int
 main(void) {
-  char buf[BUFFSIZE];
+  char buf[BUFSIZ];
   XML_Parser parser = XML_ParserCreate(NULL);
   int depth = 0;
 
@@ -97,7 +95,7 @@ main(void) {
     int done;
     int len;
 
-    len = (int)fread(buf, 1, BUFFSIZE, stdin);
+    len = (int)fread(buf, 1, BUFSIZ, stdin);
     if (ferror(stdin)) {
       fprintf(stderr, "Read error\n");
       exit(-1);
