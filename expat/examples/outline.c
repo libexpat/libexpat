@@ -83,7 +83,7 @@ end(void *data, const XML_Char *el) {
 
 int
 main(int argc, char *argv[]) {
-  char Buff[BUFFSIZE];
+  char buf[BUFFSIZE];
   XML_Parser parser = XML_ParserCreate(NULL);
   (void)argc;
   (void)argv;
@@ -99,14 +99,14 @@ main(int argc, char *argv[]) {
     int done;
     int len;
 
-    len = (int)fread(Buff, 1, BUFFSIZE, stdin);
+    len = (int)fread(buf, 1, BUFFSIZE, stdin);
     if (ferror(stdin)) {
       fprintf(stderr, "Read error\n");
       exit(-1);
     }
     done = feof(stdin);
 
-    if (XML_Parse(parser, Buff, len, done) == XML_STATUS_ERROR) {
+    if (XML_Parse(parser, buf, len, done) == XML_STATUS_ERROR) {
       fprintf(stderr,
               "Parse error at line %" XML_FMT_INT_MOD "u:\n%" XML_FMT_STR "\n",
               XML_GetCurrentLineNumber(parser),
