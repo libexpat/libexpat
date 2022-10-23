@@ -86,6 +86,9 @@ LIBREVISION=9  # with
 LIBAGE=8       # CMakeLists.txt!
 
 AC_CONFIG_HEADERS([expat_config.h])
+AH_TOP([#ifndef EXPAT_CONFIG_H
+#define EXPAT_CONFIG_H 1])
+AH_BOTTOM([#endif // ndef EXPAT_CONFIG_H])
 
 AM_PROG_AR
 AC_PROG_INSTALL

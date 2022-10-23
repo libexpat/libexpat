@@ -12,6 +12,7 @@ Release x.x.x xxx xxxxxxxxxxxx xx xxxx
                     XML_ParserReset and then reused to parse
 
         Other changes:
+            #663  Protect header expat_config.h from multiple inclusion
             #648  Address compiler warnings
 
         Special thanks to:
