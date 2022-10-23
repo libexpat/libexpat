@@ -85,16 +85,16 @@ end(void *data, const XML_Char *el) {
 
 int
 main(int argc, char *argv[]) {
-  XML_Parser p = XML_ParserCreate(NULL);
+  XML_Parser parser = XML_ParserCreate(NULL);
   (void)argc;
   (void)argv;
 
-  if (! p) {
+  if (! parser) {
     fprintf(stderr, "Couldn't allocate memory for parser\n");
     exit(-1);
   }
 
-  XML_SetElementHandler(p, start, end);
+  XML_SetElementHandler(parser, start, end);
 
   for (;;) {
     int done;
@@ -107,17 +107,17 @@ main(int argc, char *argv[]) {
     }
     done = feof(stdin);
 
-    if (XML_Parse(p, Buff, len, done) == XML_STATUS_ERROR) {
+    if (XML_Parse(parser, Buff, len, done) == XML_STATUS_ERROR) {
       fprintf(stderr,
               "Parse error at line %" XML_FMT_INT_MOD "u:\n%" XML_FMT_STR "\n",
-              XML_GetCurrentLineNumber(p),
-              XML_ErrorString(XML_GetErrorCode(p)));
+              XML_GetCurrentLineNumber(parser),
+              XML_ErrorString(XML_GetErrorCode(parser)));
       exit(-1);
     }
 
     if (done)
       break;
   }
-  XML_ParserFree(p);
+  XML_ParserFree(parser);
   return 0;
 }
