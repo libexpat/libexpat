@@ -52,17 +52,17 @@
 #endif
 
 static void XMLCALL
-start(void *data, const XML_Char *el, const XML_Char **attr) {
+startElement(void *userData, const XML_Char *name, const XML_Char **atts) {
   int i;
-  int *const depthPtr = (int *)data;
+  int *const depthPtr = (int *)userData;
 
   for (i = 0; i < *depthPtr; i++)
     printf("  ");
 
-  printf("%" XML_FMT_STR, el);
+  printf("%" XML_FMT_STR, name);
 
-  for (i = 0; attr[i]; i += 2) {
-    printf(" %" XML_FMT_STR "='%" XML_FMT_STR "'", attr[i], attr[i + 1]);
+  for (i = 0; atts[i]; i += 2) {
+    printf(" %" XML_FMT_STR "='%" XML_FMT_STR "'", atts[i], atts[i + 1]);
   }
 
   printf("\n");
@@ -70,9 +70,9 @@ start(void *data, const XML_Char *el, const XML_Char **attr) {
 }
 
 static void XMLCALL
-end(void *data, const XML_Char *el) {
-  int *const depthPtr = (int *)data;
-  (void)el;
+endElement(void *userData, const XML_Char *name) {
+  int *const depthPtr = (int *)userData;
+  (void)name;
 
   *depthPtr -= 1;
 }
@@ -89,7 +89,7 @@ main(void) {
   }
 
   XML_SetUserData(parser, &depth);
-  XML_SetElementHandler(parser, start, end);
+  XML_SetElementHandler(parser, startElement, endElement);
 
   for (;;) {
     int done;
