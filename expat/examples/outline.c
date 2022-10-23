@@ -82,11 +82,9 @@ end(void *data, const XML_Char *el) {
 }
 
 int
-main(int argc, char *argv[]) {
+main(void) {
   char buf[BUFFSIZE];
   XML_Parser parser = XML_ParserCreate(NULL);
-  (void)argc;
-  (void)argv;
 
   if (! parser) {
     fprintf(stderr, "Couldn't allocate memory for parser\n");

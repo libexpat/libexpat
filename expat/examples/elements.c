@@ -76,13 +76,11 @@ endElement(void *userData, const XML_Char *name) {
 }
 
 int
-main(int argc, char *argv[]) {
+main(void) {
   char buf[BUFSIZ];
   XML_Parser parser = XML_ParserCreate(NULL);
   int done;
   int depth = 0;
-  (void)argc;
-  (void)argv;
 
   XML_SetUserData(parser, &depth);
   XML_SetElementHandler(parser, startElement, endElement);
