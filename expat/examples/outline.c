@@ -53,14 +53,12 @@
 
 #define BUFFSIZE 8192
 
-int Depth;
-
 static void XMLCALL
 start(void *data, const XML_Char *el, const XML_Char **attr) {
   int i;
-  (void)data;
+  int *const depthPtr = (int *)data;
 
-  for (i = 0; i < Depth; i++)
+  for (i = 0; i < *depthPtr; i++)
     printf("  ");
 
   printf("%" XML_FMT_STR, el);
@@ -70,27 +68,29 @@ start(void *data, const XML_Char *el, const XML_Char **attr) {
   }
 
   printf("\n");
-  Depth++;
+  *depthPtr += 1;
 }
 
 static void XMLCALL
 end(void *data, const XML_Char *el) {
-  (void)data;
+  int *const depthPtr = (int *)data;
   (void)el;
 
-  Depth--;
+  *depthPtr -= 1;
 }
 
 int
 main(void) {
   char buf[BUFFSIZE];
   XML_Parser parser = XML_ParserCreate(NULL);
+  int depth = 0;
 
   if (! parser) {
     fprintf(stderr, "Couldn't allocate memory for parser\n");
     exit(-1);
   }
 
+  XML_SetUserData(parser, &depth);
   XML_SetElementHandler(parser, start, end);
 
   for (;;) {
