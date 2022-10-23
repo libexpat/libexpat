@@ -88,9 +88,10 @@ main(void) {
     size_t len = fread(buf, 1, sizeof(buf), stdin);
     done = len < sizeof(buf);
     if (XML_Parse(parser, buf, (int)len, done) == XML_STATUS_ERROR) {
-      fprintf(stderr, "%" XML_FMT_STR " at line %" XML_FMT_INT_MOD "u\n",
-              XML_ErrorString(XML_GetErrorCode(parser)),
-              XML_GetCurrentLineNumber(parser));
+      fprintf(stderr,
+              "Parse error at line %" XML_FMT_INT_MOD "u:\n%" XML_FMT_STR "\n",
+              XML_GetCurrentLineNumber(parser),
+              XML_ErrorString(XML_GetErrorCode(parser)));
       XML_ParserFree(parser);
       return 1;
     }
