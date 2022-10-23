@@ -81,6 +81,7 @@ int
 main(void) {
   char buf[BUFSIZ];
   XML_Parser parser = XML_ParserCreate(NULL);
+  int done;
   int depth = 0;
 
   if (! parser) {
@@ -90,9 +91,7 @@ main(void) {
 
   XML_SetUserData(parser, &depth);
   XML_SetElementHandler(parser, startElement, endElement);
-
-  for (;;) {
-    int done;
+  do {
     int len;
 
     len = (int)fread(buf, 1, BUFSIZ, stdin);
@@ -109,10 +108,7 @@ main(void) {
               XML_ErrorString(XML_GetErrorCode(parser)));
       exit(-1);
     }
-
-    if (done)
-      break;
-  }
+  } while (! done);
   XML_ParserFree(parser);
   return 0;
 }
