@@ -86,27 +86,29 @@ main(void) {
 
   if (! parser) {
     fprintf(stderr, "Couldn't allocate memory for parser\n");
-    exit(-1);
+    return 1;
   }
 
   XML_SetUserData(parser, &depth);
   XML_SetElementHandler(parser, startElement, endElement);
   do {
-    int len;
+    const size_t len = fread(buf, 1, sizeof(buf), stdin);
 
-    len = (int)fread(buf, 1, BUFSIZ, stdin);
     if (ferror(stdin)) {
       fprintf(stderr, "Read error\n");
-      exit(-1);
+      XML_ParserFree(parser);
+      return 1;
     }
+
     done = feof(stdin);
 
-    if (XML_Parse(parser, buf, len, done) == XML_STATUS_ERROR) {
+    if (XML_Parse(parser, buf, (int)len, done) == XML_STATUS_ERROR) {
       fprintf(stderr,
               "Parse error at line %" XML_FMT_INT_MOD "u:\n%" XML_FMT_STR "\n",
               XML_GetCurrentLineNumber(parser),
               XML_ErrorString(XML_GetErrorCode(parser)));
-      exit(-1);
+      XML_ParserFree(parser);
+      return 1;
     }
   } while (! done);
   XML_ParserFree(parser);

@@ -85,8 +85,16 @@ main(void) {
   XML_SetUserData(parser, &depth);
   XML_SetElementHandler(parser, startElement, endElement);
   do {
-    size_t len = fread(buf, 1, sizeof(buf), stdin);
-    done = len < sizeof(buf);
+    const size_t len = fread(buf, 1, sizeof(buf), stdin);
+
+    if (ferror(stdin)) {
+      fprintf(stderr, "Read error\n");
+      XML_ParserFree(parser);
+      return 1;
+    }
+
+    done = feof(stdin);
+
     if (XML_Parse(parser, buf, (int)len, done) == XML_STATUS_ERROR) {
       fprintf(stderr,
               "Parse error at line %" XML_FMT_INT_MOD "u:\n%" XML_FMT_STR "\n",
