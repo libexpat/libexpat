@@ -82,6 +82,11 @@ main(void) {
   int done;
   int depth = 0;
 
+  if (! parser) {
+    fprintf(stderr, "Couldn't allocate memory for parser\n");
+    return 1;
+  }
+
   XML_SetUserData(parser, &depth);
   XML_SetElementHandler(parser, startElement, endElement);
   do {
