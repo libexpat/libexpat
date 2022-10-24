@@ -580,12 +580,12 @@ endif()
 #
 if(EXPAT_BUILD_EXAMPLES)
     add_executable(elements examples/elements.c)
-    set_property(TARGET elements PROPERTY RUNTIME_OUTPUT_DIRECTORY examples)
-    target_link_libraries(elements expat)
-
     add_executable(outline examples/outline.c)
-    set_property(TARGET outline PROPERTY RUNTIME_OUTPUT_DIRECTORY examples)
-    target_link_libraries(outline expat)
+
+    foreach(_target elements outline)
+        set_property(TARGET ${_target} PROPERTY RUNTIME_OUTPUT_DIRECTORY examples)
+        target_link_libraries(${_target} expat)
+    endforeach()
 endif()
 
 #
