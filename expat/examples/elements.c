@@ -87,6 +87,7 @@ main(void) {
 
   XML_SetUserData(parser, &depth);
   XML_SetElementHandler(parser, startElement, endElement);
+
   do {
     void *const buf = XML_GetBuffer(parser, BUFSIZ);
     if (! buf) {
@@ -114,6 +115,7 @@ main(void) {
       return 1;
     }
   } while (! done);
+
   XML_ParserFree(parser);
   return 0;
 }
