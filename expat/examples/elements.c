@@ -76,7 +76,6 @@ endElement(void *userData, const XML_Char *name) {
 
 int
 main(void) {
-  char buf[BUFSIZ];
   XML_Parser parser = XML_ParserCreate(NULL);
   int done;
   int depth = 0;
@@ -89,7 +88,14 @@ main(void) {
   XML_SetUserData(parser, &depth);
   XML_SetElementHandler(parser, startElement, endElement);
   do {
-    const size_t len = fread(buf, 1, sizeof(buf), stdin);
+    void *const buf = XML_GetBuffer(parser, BUFSIZ);
+    if (! buf) {
+      fprintf(stderr, "Couldn't allocate memory for buffer\n");
+      XML_ParserFree(parser);
+      return 1;
+    }
+
+    const size_t len = fread(buf, 1, BUFSIZ, stdin);
 
     if (ferror(stdin)) {
       fprintf(stderr, "Read error\n");
@@ -99,7 +105,7 @@ main(void) {
 
     done = feof(stdin);
 
-    if (XML_Parse(parser, buf, (int)len, done) == XML_STATUS_ERROR) {
+    if (XML_ParseBuffer(parser, (int)len, done) == XML_STATUS_ERROR) {
       fprintf(stderr,
               "Parse error at line %" XML_FMT_INT_MOD "u:\n%" XML_FMT_STR "\n",
               XML_GetCurrentLineNumber(parser),
