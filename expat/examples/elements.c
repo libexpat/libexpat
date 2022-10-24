@@ -49,7 +49,6 @@
 #endif
 
 #ifdef XML_UNICODE_WCHAR_T
-#  include <wchar.h>
 #  define XML_FMT_STR "ls"
 #else
 #  define XML_FMT_STR "s"
