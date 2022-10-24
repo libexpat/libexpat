@@ -13,6 +13,8 @@ Release x.x.x xxx xxxxxxxxxxxx xx xxxx
 
         Other changes:
             #663  Protect header expat_config.h from multiple inclusion
+            #666  examples: Make use of XML_GetBuffer and be more
+                    consistent across examples
             #648  Address compiler warnings
 
         Special thanks to:
