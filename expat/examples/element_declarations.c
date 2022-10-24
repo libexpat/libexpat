@@ -1,7 +1,5 @@
-/* This is simple demonstration of how to use expat. This program
-   reads an XML document from standard input and writes a line with
-   the name of each element to standard output indenting child
-   elements by one tab stop more than their parent element.
+/* Read an XML document from standard input and print
+   element declarations (if any) to standard output.
    It must be used with Expat compiled for UTF-8 output.
                             __  __            _
                          ___\ \/ /_ __   __ _| |_
@@ -54,39 +52,91 @@
 #  define XML_FMT_STR "s"
 #endif
 
-static void XMLCALL
-startElement(void *userData, const XML_Char *name, const XML_Char **atts) {
-  int i;
-  int *const depthPtr = (int *)userData;
-  (void)atts;
+static char *
+contentTypeName(enum XML_Content_Type contentType) {
+  switch (contentType) {
+  case XML_CTYPE_EMPTY:
+    return "EMPTY";
+  case XML_CTYPE_ANY:
+    return "ANY";
+  case XML_CTYPE_MIXED:
+    return "MIXED";
+  case XML_CTYPE_NAME:
+    return "NAME";
+  case XML_CTYPE_CHOICE:
+    return "CHOICE";
+  case XML_CTYPE_SEQ:
+    return "SEQ";
+  default:
+    return "???";
+  }
+}
 
-  for (i = 0; i < *depthPtr; i++)
-    putchar('\t');
-  printf("%" XML_FMT_STR "\n", name);
-  *depthPtr += 1;
+static char *
+contentQuantName(enum XML_Content_Quant contentQuant) {
+  switch (contentQuant) {
+  case XML_CQUANT_NONE:
+    return "NONE";
+  case XML_CQUANT_OPT:
+    return "OPT";
+  case XML_CQUANT_REP:
+    return "REP";
+  case XML_CQUANT_PLUS:
+    return "PLUS";
+  default:
+    return "???";
+  }
+}
+
+static void
+dumpContentModel(const XML_Content *model, unsigned level,
+                 const XML_Content *root) {
+  // Indent
+  unsigned u = 0;
+  for (; u < level; u++) {
+    printf("  ");
+  }
+
+  // Node
+  printf("[%u] type=%s(%d), quant=%s(%d)", (unsigned)(model - root),
+         contentTypeName(model->type), model->type,
+         contentQuantName(model->quant), model->quant);
+  if (model->name) {
+    printf(", name=\"%" XML_FMT_STR "\"", model->name);
+  } else {
+    printf(", name=NULL");
+  }
+  printf(", numchildren=%d", model->numchildren);
+  printf("\n");
+
+  // Children
+  for (u = 0; u < model->numchildren; u++) {
+    dumpContentModel(model->children + u, level + 1, root);
+  }
 }
 
 static void XMLCALL
-endElement(void *userData, const XML_Char *name) {
-  int *const depthPtr = (int *)userData;
-  (void)name;
-
-  *depthPtr -= 1;
+handleElementDeclaration(void *userData, const XML_Char *name,
+                         XML_Content *model) {
+  XML_Parser parser = (XML_Parser)userData;
+  printf("Element \"%" XML_FMT_STR "\":\n", name);
+  dumpContentModel(model, 1, model);
+  printf("\n");
+  XML_FreeContentModel(parser, model);
 }
 
 int
 main(void) {
   XML_Parser parser = XML_ParserCreate(NULL);
   int done;
-  int depth = 0;
 
   if (! parser) {
     fprintf(stderr, "Couldn't allocate memory for parser\n");
     return 1;
   }
 
-  XML_SetUserData(parser, &depth);
-  XML_SetElementHandler(parser, startElement, endElement);
+  XML_SetUserData(parser, parser);
+  XML_SetElementDeclHandler(parser, handleElementDeclaration);
 
   do {
     void *const buf = XML_GetBuffer(parser, BUFSIZ);
