@@ -31,7 +31,10 @@
 
 AM_CPPFLAGS = @AM_CPPFLAGS@ -I$(srcdir)/../lib
 
-noinst_PROGRAMS = elements outline
+noinst_PROGRAMS = element_declarations elements outline
+
+element_declarations_SOURCES = element_declarations.c
+element_declarations_LDADD = ../lib/libexpat.la
 
 elements_SOURCES = elements.c
 elements_LDADD = ../lib/libexpat.la
