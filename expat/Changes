@@ -3,6 +3,11 @@ NOTE: We are looking for help with a few things:
       If you can help, please get in touch.  Thanks!
 
 Release x.x.x xxx xxxxxxxxxxxx xx xxxx
+        Security fixes:
+  #616 #649 #650  CVE-2022-43680 -- Fix heap use-after-free after overeager
+                    destruction of a shared DTD in function
+                    XML_ExternalEntityParserCreate in out-of-memory situations
+
         Bug fixes:
        #612 #645  Fix curruption from undefined entities
        #613 #654  Fix case when parsing was suspended while processing nested

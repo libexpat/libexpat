@@ -10208,6 +10208,53 @@ START_TEST(test_alloc_long_notation) {
 }
 END_TEST
 
+static int XMLCALL
+external_entity_parser_create_alloc_fail_handler(XML_Parser parser,
+                                                 const XML_Char *context,
+                                                 const XML_Char *base,
+                                                 const XML_Char *systemId,
+                                                 const XML_Char *publicId) {
+  UNUSED_P(base);
+  UNUSED_P(systemId);
+  UNUSED_P(publicId);
+
+  if (context != NULL)
+    fail("Unexpected non-NULL context");
+
+  // The following number intends to fail the upcoming allocation in line
+  // "parser->m_protocolEncodingName = copyString(encodingName,
+  // &(parser->m_mem));" in function parserInit.
+  allocation_count = 3;
+
+  const XML_Char *const encodingName = XCS("UTF-8"); // needs something non-NULL
+  const XML_Parser ext_parser
+      = XML_ExternalEntityParserCreate(parser, context, encodingName);
+  if (ext_parser != NULL)
+    fail(
+        "Call to XML_ExternalEntityParserCreate was expected to fail out-of-memory");
+
+  allocation_count = ALLOC_ALWAYS_SUCCEED;
+  return XML_STATUS_ERROR;
+}
+
+START_TEST(test_alloc_reset_after_external_entity_parser_create_fail) {
+  const char *const text = "<!DOCTYPE doc SYSTEM 'foo'><doc/>";
+
+  XML_SetExternalEntityRefHandler(
+      g_parser, external_entity_parser_create_alloc_fail_handler);
+  XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+
+  if (XML_Parse(g_parser, text, (int)strlen(text), XML_TRUE)
+      != XML_STATUS_ERROR)
+    fail("Call to parse was expected to fail");
+
+  if (XML_GetErrorCode(g_parser) != XML_ERROR_EXTERNAL_ENTITY_HANDLING)
+    fail("Call to parse was expected to fail from the external entity handler");
+
+  XML_ParserReset(g_parser, NULL);
+}
+END_TEST
+
 static void
 nsalloc_setup(void) {
   XML_Memory_Handling_Suite memsuite = {duff_allocator, duff_reallocator, free};
@@ -12401,6 +12448,8 @@ make_suite(void) {
   tcase_add_test(tc_alloc, test_alloc_long_public_id);
   tcase_add_test(tc_alloc, test_alloc_long_entity_value);
   tcase_add_test(tc_alloc, test_alloc_long_notation);
+  tcase_add_test__ifdef_xml_dtd(
+      tc_alloc, test_alloc_reset_after_external_entity_parser_create_fail);
 
   suite_add_tcase(s, tc_nsalloc);
   tcase_add_checked_fixture(tc_nsalloc, nsalloc_setup, nsalloc_teardown);
