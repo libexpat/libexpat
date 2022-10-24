@@ -87,8 +87,9 @@ CharData_CheckXMLChars(CharData *storage, const XML_Char *expected) {
   count = (storage->count < 0) ? 0 : storage->count;
   if (len != count) {
     char buffer[1024];
-    sprintf(buffer, "wrong number of data characters: got %d, expected %d",
-            count, len);
+    snprintf(buffer, sizeof(buffer),
+             "wrong number of data characters: got %d, expected %d", count,
+             len);
     fail(buffer);
     return 0;
   }
