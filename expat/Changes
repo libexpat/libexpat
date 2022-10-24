@@ -21,6 +21,8 @@ Release x.x.x xxx xxxxxxxxxxxx xx xxxx
             #666  examples: Make use of XML_GetBuffer and be more
                     consistent across examples
             #648  Address compiler warnings
+       #667 #668  Version info bumped from 9:9:8 to 9:10:8;
+                    see https://verbump.de/ for what these numbers do
 
         Special thanks to:
             Jann Horn
