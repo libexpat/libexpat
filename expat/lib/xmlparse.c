@@ -1,4 +1,4 @@
-/* 90815a2b2c80c03b2b889fe1d427bb2b9e3282aa065e42784e001db4f23de324 (2.4.9+)
+/* 5ab094ffadd6edfc94c3eee53af44a86951f9f1f0933ada3114bbce2bfb02c99 (2.5.0+)
                             __  __            _
                          ___\ \/ /_ __   __ _| |_
                         / _ \\  /| '_ \ / _` | __|
@@ -35,6 +35,7 @@
    Copyright (c) 2021      Dong-hee Na <donghee.na@python.org>
    Copyright (c) 2022      Samanta Navarro <ferivoz@riseup.net>
    Copyright (c) 2022      Jeffrey Walton <noloader@gmail.com>
+   Copyright (c) 2022      Jann Horn <jannh@google.com>
    Licensed under the MIT license:
 
    Permission is  hereby granted,  free of charge,  to any  person obtaining
