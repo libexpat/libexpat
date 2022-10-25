@@ -6,7 +6,9 @@ Release 2.5.0 Tue October 25 2022
         Security fixes:
   #616 #649 #650  CVE-2022-43680 -- Fix heap use-after-free after overeager
                     destruction of a shared DTD in function
-                    XML_ExternalEntityParserCreate in out-of-memory situations
+                    XML_ExternalEntityParserCreate in out-of-memory situations.
+                    Expected impact is denial of service or potentially
+                    arbitrary code execution.
 
         Bug fixes:
        #612 #645  Fix curruption from undefined entities
