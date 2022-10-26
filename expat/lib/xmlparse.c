@@ -61,8 +61,10 @@
 
 #include <expat_config.h>
 
-#if ! defined(_GNU_SOURCE)
-#  define _GNU_SOURCE 1 /* syscall prototype */
+#if defined(HAVE_SYSCALL_GETRANDOM)
+#  if ! defined(_GNU_SOURCE)
+#    define _GNU_SOURCE 1 /* syscall prototype */
+#  endif
 #endif
 
 #ifdef _WIN32
