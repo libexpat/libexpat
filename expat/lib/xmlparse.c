@@ -62,8 +62,10 @@
 
 #include <expat_config.h>
 
-#if ! defined(_GNU_SOURCE)
-#  define _GNU_SOURCE 1 /* syscall prototype */
+#if defined(HAVE_SYSCALL_GETRANDOM)
+#  if ! defined(_GNU_SOURCE)
+#    define _GNU_SOURCE 1 /* syscall prototype */
+#  endif
 #endif
 
 #ifdef _WIN32
@@ -591,7 +593,6 @@ static unsigned long getDebugLevel(const char *variableName,
                                    unsigned long defaultDebugLevel);
 
 #define poolStart(pool) ((pool)->start)
-#define poolEnd(pool) ((pool)->ptr)
 #define poolLength(pool) ((pool)->ptr - (pool)->start)
 #define poolChop(pool) ((void)--(pool->ptr))
 #define poolLastChar(pool) (((pool)->ptr)[-1])

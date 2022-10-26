@@ -80,15 +80,16 @@ CharData_AppendXMLChars(CharData *storage, const XML_Char *s, int len) {
 
 int
 CharData_CheckXMLChars(CharData *storage, const XML_Char *expected) {
-  char buffer[1024];
   int len = xmlstrlen(expected);
   int count;
 
   assert(storage != NULL);
   count = (storage->count < 0) ? 0 : storage->count;
   if (len != count) {
-    sprintf(buffer, "wrong number of data characters: got %d, expected %d",
-            count, len);
+    char buffer[1024];
+    snprintf(buffer, sizeof(buffer),
+             "wrong number of data characters: got %d, expected %d", count,
+             len);
     fail(buffer);
     return 0;
   }

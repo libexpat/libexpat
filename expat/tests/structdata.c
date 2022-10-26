@@ -103,17 +103,17 @@ void
 StructData_CheckItems(StructData *storage, const StructDataEntry *expected,
                       int count) {
   char buffer[1024];
-  int i;
 
   assert(storage != NULL);
   assert(expected != NULL);
   if (count != storage->count) {
-    sprintf(buffer, "wrong number of entries: got %d, expected %d",
-            storage->count, count);
+    snprintf(buffer, sizeof(buffer),
+             "wrong number of entries: got %d, expected %d", storage->count,
+             count);
     StructData_Dispose(storage);
     fail(buffer);
   } else {
-    for (i = 0; i < count; i++) {
+    for (int i = 0; i < count; i++) {
       const StructDataEntry *got = &storage->entries[i];
       const StructDataEntry *want = &expected[i];
 
@@ -126,11 +126,11 @@ StructData_CheckItems(StructData *storage, const StructDataEntry *expected,
       } else {
         if (got->data0 != want->data0 || got->data1 != want->data1
             || got->data2 != want->data2) {
-          sprintf(buffer,
-                  "struct '%" XML_FMT_STR
-                  "' expected (%d,%d,%d), got (%d,%d,%d)",
-                  got->str, want->data0, want->data1, want->data2, got->data0,
-                  got->data1, got->data2);
+          snprintf(buffer, sizeof(buffer),
+                   "struct '%" XML_FMT_STR
+                   "' expected (%d,%d,%d), got (%d,%d,%d)",
+                   got->str, want->data0, want->data1, want->data2, got->data0,
+                   got->data1, got->data2);
           StructData_Dispose(storage);
           fail(buffer);
         }
