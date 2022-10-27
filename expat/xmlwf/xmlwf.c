@@ -1051,7 +1051,7 @@ tmain(int argc, XML_Char **argv) {
       XMLWF_SHIFT_ARG_INTO(valueText, argc, argv, i, j);
 
       errno = 0;
-      XML_Char *afterValueText = (XML_Char *)valueText;
+      XML_Char *afterValueText = NULL;
       attackMaximumAmplification = tcstof(valueText, &afterValueText);
       if ((errno != 0) || (afterValueText[0] != T('\0'))
           || isnan(attackMaximumAmplification)
