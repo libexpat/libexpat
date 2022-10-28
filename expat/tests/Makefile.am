@@ -45,6 +45,7 @@ LOG_DRIVER = $(srcdir)/../test-driver-wrapper.sh
 libruntests_a_SOURCES = \
     chardata.c \
     common.c \
+    dummy.c \
     structdata.c \
     memcheck.c \
     minicheck.c
@@ -64,6 +65,7 @@ runtestspp_LDFLAGS = @AM_LDFLAGS@ @LIBM@
 EXTRA_DIST = \
     chardata.h \
     common.h \
+    dummy.h \
     structdata.h \
     minicheck.h \
     memcheck.h \

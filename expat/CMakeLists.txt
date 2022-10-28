@@ -598,6 +598,7 @@ if(EXPAT_BUILD_TESTS)
     set(test_SRCS
         tests/chardata.c
         tests/common.c
+        tests/dummy.c
         tests/memcheck.c
         tests/minicheck.c
         tests/structdata.c
