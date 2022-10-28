@@ -152,6 +152,12 @@ extern int XMLCALL external_entity_suspend_xmldecl(XML_Parser parser,
                                                    const XML_Char *systemId,
                                                    const XML_Char *publicId);
 
+extern int XMLCALL external_entity_suspending_faulter(XML_Parser parser,
+                                                      const XML_Char *context,
+                                                      const XML_Char *base,
+                                                      const XML_Char *systemId,
+                                                      const XML_Char *publicId);
+
 /* Entity declaration handlers */
 
 extern void XMLCALL entity_suspending_decl_handler(void *userData,
