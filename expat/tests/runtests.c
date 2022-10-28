@@ -74,39 +74,6 @@
 
 XML_Parser g_parser = NULL;
 
-/*
- * XML declaration tests.
- */
-
-START_TEST(test_xmldecl_misplaced) {
-  expect_failure("\n"
-                 "<?xml version='1.0'?>\n"
-                 "<a/>",
-                 XML_ERROR_MISPLACED_XML_PI,
-                 "failed to report misplaced XML declaration");
-}
-END_TEST
-
-START_TEST(test_xmldecl_invalid) {
-  expect_failure("<?xml version='1.0' \xc3\xa7?>\n<doc/>", XML_ERROR_XML_DECL,
-                 "Failed to report invalid XML declaration");
-}
-END_TEST
-
-START_TEST(test_xmldecl_missing_attr) {
-  expect_failure("<?xml ='1.0'?>\n<doc/>\n", XML_ERROR_XML_DECL,
-                 "Failed to report missing XML declaration attribute");
-}
-END_TEST
-
-START_TEST(test_xmldecl_missing_value) {
-  expect_failure("<?xml version='1.0' encoding='us-ascii' standalone?>\n"
-                 "<doc/>",
-                 XML_ERROR_XML_DECL,
-                 "Failed to report missing attribute value");
-}
-END_TEST
-
 /* Regression test for SF bug #584832. */
 static int XMLCALL
 UnknownEncodingHandler(void *data, const XML_Char *encoding,
@@ -10763,10 +10730,6 @@ make_suite(void) {
   TCase *tc_accounting = tcase_create("accounting tests");
 #endif
 
-  tcase_add_test(tc_basic, test_xmldecl_misplaced);
-  tcase_add_test(tc_basic, test_xmldecl_invalid);
-  tcase_add_test(tc_basic, test_xmldecl_missing_attr);
-  tcase_add_test(tc_basic, test_xmldecl_missing_value);
   tcase_add_test(tc_basic, test_unknown_encoding_internal_entity);
   tcase_add_test(tc_basic, test_unrecognised_encoding_internal_entity);
   tcase_add_test(tc_basic, test_wfc_undeclared_entity_unread_external_subset);

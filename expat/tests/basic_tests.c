@@ -906,6 +906,39 @@ START_TEST(test_attr_whitespace_normalization) {
 }
 END_TEST
 
+/*
+ * XML declaration tests.
+ */
+
+START_TEST(test_xmldecl_misplaced) {
+  expect_failure("\n"
+                 "<?xml version='1.0'?>\n"
+                 "<a/>",
+                 XML_ERROR_MISPLACED_XML_PI,
+                 "failed to report misplaced XML declaration");
+}
+END_TEST
+
+START_TEST(test_xmldecl_invalid) {
+  expect_failure("<?xml version='1.0' \xc3\xa7?>\n<doc/>", XML_ERROR_XML_DECL,
+                 "Failed to report invalid XML declaration");
+}
+END_TEST
+
+START_TEST(test_xmldecl_missing_attr) {
+  expect_failure("<?xml ='1.0'?>\n<doc/>\n", XML_ERROR_XML_DECL,
+                 "Failed to report missing XML declaration attribute");
+}
+END_TEST
+
+START_TEST(test_xmldecl_missing_value) {
+  expect_failure("<?xml version='1.0' encoding='us-ascii' standalone?>\n"
+                 "<doc/>",
+                 XML_ERROR_XML_DECL,
+                 "Failed to report missing attribute value");
+}
+END_TEST
+
 TCase *
 make_basic_test_case(Suite *s) {
   TCase *tc_basic = tcase_create("basic tests");
@@ -950,6 +983,10 @@ make_basic_test_case(Suite *s) {
   tcase_add_test(tc_basic, test_end_element_events);
   tcase_add_test(tc_basic, test_helper_is_whitespace_normalized);
   tcase_add_test(tc_basic, test_attr_whitespace_normalization);
+  tcase_add_test(tc_basic, test_xmldecl_misplaced);
+  tcase_add_test(tc_basic, test_xmldecl_invalid);
+  tcase_add_test(tc_basic, test_xmldecl_missing_attr);
+  tcase_add_test(tc_basic, test_xmldecl_missing_value);
 
   return tc_basic; /* TEMPORARY: this will become a void function */
 }
