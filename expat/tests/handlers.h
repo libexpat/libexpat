@@ -68,6 +68,22 @@ extern void XMLCALL start_element_event_handler2(void *userData,
 extern void XMLCALL end_element_event_handler2(void *userData,
                                                const XML_Char *name);
 
+typedef struct attrInfo {
+  const XML_Char *name;
+  const XML_Char *value;
+} AttrInfo;
+
+typedef struct elementInfo {
+  const XML_Char *name;
+  int attr_count;
+  const XML_Char *id_name;
+  AttrInfo *attributes;
+} ElementInfo;
+
+extern void XMLCALL counting_start_element_handler(void *userData,
+                                                   const XML_Char *name,
+                                                   const XML_Char **atts);
+
 /* Text encoding handlers */
 
 extern int XMLCALL UnknownEncodingHandler(void *data, const XML_Char *encoding,

@@ -2149,6 +2149,112 @@ START_TEST(test_set_base) {
 }
 END_TEST
 
+/* Test attribute counts, indexing, etc */
+START_TEST(test_attributes) {
+  const char *text = "<!DOCTYPE doc [\n"
+                     "<!ELEMENT doc (tag)>\n"
+                     "<!ATTLIST doc id ID #REQUIRED>\n"
+                     "]>"
+                     "<doc a='1' id='one' b='2'>"
+                     "<tag c='3'/>"
+                     "</doc>";
+  AttrInfo doc_info[] = {{XCS("a"), XCS("1")},
+                         {XCS("b"), XCS("2")},
+                         {XCS("id"), XCS("one")},
+                         {NULL, NULL}};
+  AttrInfo tag_info[] = {{XCS("c"), XCS("3")}, {NULL, NULL}};
+  ElementInfo info[] = {{XCS("doc"), 3, XCS("id"), NULL},
+                        {XCS("tag"), 1, NULL, NULL},
+                        {NULL, 0, NULL, NULL}};
+  info[0].attributes = doc_info;
+  info[1].attributes = tag_info;
+
+  XML_SetStartElementHandler(g_parser, counting_start_element_handler);
+  XML_SetUserData(g_parser, info);
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+      == XML_STATUS_ERROR)
+    xml_failure(g_parser);
+}
+END_TEST
+
+/* Test reset works correctly in the middle of processing an internal
+ * entity.  Exercises some obscure code in XML_ParserReset().
+ */
+START_TEST(test_reset_in_entity) {
+  const char *text = "<!DOCTYPE doc [\n"
+                     "<!ENTITY wombat 'wom'>\n"
+                     "<!ENTITY entity 'hi &wom; there'>\n"
+                     "]>\n"
+                     "<doc>&entity;</doc>";
+  XML_ParsingStatus status;
+
+  g_resumable = XML_TRUE;
+  XML_SetCharacterDataHandler(g_parser, clearing_aborting_character_handler);
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_FALSE)
+      == XML_STATUS_ERROR)
+    xml_failure(g_parser);
+  XML_GetParsingStatus(g_parser, &status);
+  if (status.parsing != XML_SUSPENDED)
+    fail("Parsing status not SUSPENDED");
+  XML_ParserReset(g_parser, NULL);
+  XML_GetParsingStatus(g_parser, &status);
+  if (status.parsing != XML_INITIALIZED)
+    fail("Parsing status doesn't reset to INITIALIZED");
+}
+END_TEST
+
+/* Test that resume correctly passes through parse errors */
+START_TEST(test_resume_invalid_parse) {
+  const char *text = "<doc>Hello</doc"; /* Missing closing wedge */
+
+  g_resumable = XML_TRUE;
+  XML_SetCharacterDataHandler(g_parser, clearing_aborting_character_handler);
+  if (XML_Parse(g_parser, text, (int)strlen(text), XML_TRUE)
+      == XML_STATUS_ERROR)
+    xml_failure(g_parser);
+  if (XML_ResumeParser(g_parser) == XML_STATUS_OK)
+    fail("Resumed invalid parse not faulted");
+  if (XML_GetErrorCode(g_parser) != XML_ERROR_UNCLOSED_TOKEN)
+    fail("Invalid parse not correctly faulted");
+}
+END_TEST
+
+/* Test that re-suspended parses are correctly passed through */
+START_TEST(test_resume_resuspended) {
+  const char *text = "<doc>Hello<meep/>world</doc>";
+
+  g_resumable = XML_TRUE;
+  XML_SetCharacterDataHandler(g_parser, clearing_aborting_character_handler);
+  if (XML_Parse(g_parser, text, (int)strlen(text), XML_TRUE)
+      == XML_STATUS_ERROR)
+    xml_failure(g_parser);
+  g_resumable = XML_TRUE;
+  XML_SetCharacterDataHandler(g_parser, clearing_aborting_character_handler);
+  if (XML_ResumeParser(g_parser) != XML_STATUS_SUSPENDED)
+    fail("Resumption not suspended");
+  /* This one should succeed and finish up */
+  if (XML_ResumeParser(g_parser) != XML_STATUS_OK)
+    xml_failure(g_parser);
+}
+END_TEST
+
+/* Test that CDATA shows up correctly through a default handler */
+START_TEST(test_cdata_default) {
+  const char *text = "<doc><![CDATA[Hello\nworld]]></doc>";
+  const XML_Char *expected = XCS("<doc><![CDATA[Hello\nworld]]></doc>");
+  CharData storage;
+
+  CharData_Init(&storage);
+  XML_SetUserData(g_parser, &storage);
+  XML_SetDefaultHandler(g_parser, accumulate_characters);
+
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+      == XML_STATUS_ERROR)
+    xml_failure(g_parser);
+  CharData_CheckXMLChars(&storage, expected);
+}
+END_TEST
+
 TCase *
 make_basic_test_case(Suite *s) {
   TCase *tc_basic = tcase_create("basic tests");
@@ -2244,6 +2350,11 @@ make_basic_test_case(Suite *s) {
                                 test_foreign_dtd_without_external_subset);
   tcase_add_test__ifdef_xml_dtd(tc_basic, test_empty_foreign_dtd);
   tcase_add_test(tc_basic, test_set_base);
+  tcase_add_test(tc_basic, test_attributes);
+  tcase_add_test(tc_basic, test_reset_in_entity);
+  tcase_add_test(tc_basic, test_resume_invalid_parse);
+  tcase_add_test(tc_basic, test_resume_resuspended);
+  tcase_add_test(tc_basic, test_cdata_default);
 
   return tc_basic; /* TEMPORARY: this will become a void function */
 }
