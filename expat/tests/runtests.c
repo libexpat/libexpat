@@ -74,22 +74,12 @@
 
 XML_Parser g_parser = NULL;
 
-static void XMLCALL
-aborting_xdecl_handler(void *userData, const XML_Char *version,
-                       const XML_Char *encoding, int standalone) {
-  UNUSED_P(userData);
-  UNUSED_P(version);
-  UNUSED_P(encoding);
-  UNUSED_P(standalone);
-  XML_StopParser(g_parser, g_resumable);
-  XML_SetXmlDeclHandler(g_parser, NULL);
-}
-
 /* Test suspending the parse on receiving an XML declaration works */
 START_TEST(test_suspend_xdecl) {
   const char *text = long_character_data_text;
 
-  XML_SetXmlDeclHandler(g_parser, aborting_xdecl_handler);
+  XML_SetXmlDeclHandler(g_parser, entity_suspending_xdecl_handler);
+  XML_SetUserData(g_parser, g_parser);
   g_resumable = XML_TRUE;
   if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
       != XML_STATUS_SUSPENDED)
