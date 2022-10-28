@@ -49,6 +49,7 @@ extern "C" {
 
 #  include "expat_config.h"
 #  include "minicheck.h"
+#  include "chardata.h"
 
 #  ifdef XML_LARGE_SIZE
 #    define XML_FMT_INT_MOD "ll"
@@ -95,6 +96,43 @@ extern void _expect_failure(const char *text, enum XML_Error errorCode,
 
 #  define expect_failure(text, errorCode, errorMessage)                        \
     _expect_failure((text), (errorCode), (errorMessage), __FILE__, __LINE__)
+
+/* Support functions for handlers to collect up character and attribute data.
+ */
+
+extern void XMLCALL accumulate_characters(void *userData, const XML_Char *s,
+                                          int len);
+
+extern void XMLCALL accumulate_attribute(void *userData, const XML_Char *name,
+                                         const XML_Char **atts);
+
+extern void _run_character_check(const char *text, const XML_Char *expected,
+                                 const char *file, int line);
+
+#  define run_character_check(text, expected)                                  \
+    _run_character_check(text, expected, __FILE__, __LINE__)
+
+extern void _run_attribute_check(const char *text, const XML_Char *expected,
+                                 const char *file, int line);
+
+#  define run_attribute_check(text, expected)                                  \
+    _run_attribute_check(text, expected, __FILE__, __LINE__)
+
+typedef struct ExtTest {
+  const char *parse_text;
+  const XML_Char *encoding;
+  CharData *storage;
+} ExtTest;
+
+extern void XMLCALL ext_accumulate_characters(void *userData, const XML_Char *s,
+                                              int len);
+
+extern void _run_ext_character_check(const char *text, ExtTest *test_data,
+                                     const XML_Char *expected, const char *file,
+                                     int line);
+
+#  define run_ext_character_check(text, test_data, expected)                   \
+    _run_ext_character_check(text, test_data, expected, __FILE__, __LINE__)
 
 #endif /* XML_COMMON_H */
 

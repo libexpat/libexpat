@@ -46,6 +46,7 @@
 #include "expat_config.h"
 #include "expat.h"
 #include "internal.h"
+#include "chardata.h"
 #include "minicheck.h"
 #include "common.h"
 
@@ -114,4 +115,79 @@ _expect_failure(const char *text, enum XML_Error errorCode,
     _fail_unless(0, file, lineno, errorMessage);
   if (XML_GetErrorCode(g_parser) != errorCode)
     _xml_failure(g_parser, file, lineno);
+}
+
+/* Character data support for handlers, built on top of the code in
+ * chardata.c
+ */
+void XMLCALL
+accumulate_characters(void *userData, const XML_Char *s, int len) {
+  CharData_AppendXMLChars((CharData *)userData, s, len);
+}
+
+void XMLCALL
+accumulate_attribute(void *userData, const XML_Char *name,
+                     const XML_Char **atts) {
+  CharData *storage = (CharData *)userData;
+  UNUSED_P(name);
+  /* Check there are attributes to deal with */
+  if (atts == NULL)
+    return;
+
+  while (storage->count < 0 && atts[0] != NULL) {
+    /* "accumulate" the value of the first attribute we see */
+    CharData_AppendXMLChars(storage, atts[1], -1);
+    atts += 2;
+  }
+}
+
+void
+_run_character_check(const char *text, const XML_Char *expected,
+                     const char *file, int line) {
+  CharData storage;
+
+  CharData_Init(&storage);
+  XML_SetUserData(g_parser, &storage);
+  XML_SetCharacterDataHandler(g_parser, accumulate_characters);
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+      == XML_STATUS_ERROR)
+    _xml_failure(g_parser, file, line);
+  CharData_CheckXMLChars(&storage, expected);
+}
+
+void
+_run_attribute_check(const char *text, const XML_Char *expected,
+                     const char *file, int line) {
+  CharData storage;
+
+  CharData_Init(&storage);
+  XML_SetUserData(g_parser, &storage);
+  XML_SetStartElementHandler(g_parser, accumulate_attribute);
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+      == XML_STATUS_ERROR)
+    _xml_failure(g_parser, file, line);
+  CharData_CheckXMLChars(&storage, expected);
+}
+
+void XMLCALL
+ext_accumulate_characters(void *userData, const XML_Char *s, int len) {
+  ExtTest *test_data = (ExtTest *)userData;
+  accumulate_characters(test_data->storage, s, len);
+}
+
+void
+_run_ext_character_check(const char *text, ExtTest *test_data,
+                         const XML_Char *expected, const char *file, int line) {
+  CharData *const storage = (CharData *)malloc(sizeof(CharData));
+
+  CharData_Init(storage);
+  test_data->storage = storage;
+  XML_SetUserData(g_parser, test_data);
+  XML_SetCharacterDataHandler(g_parser, ext_accumulate_characters);
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+      == XML_STATUS_ERROR)
+    _xml_failure(g_parser, file, line);
+  CharData_CheckXMLChars(storage, expected);
+
+  free(storage);
 }
