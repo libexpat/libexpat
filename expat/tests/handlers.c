@@ -1372,3 +1372,36 @@ accumulate_comment(void *userData, const XML_Char *data) {
 
   CharData_AppendXMLChars(storage, data, -1);
 }
+
+void XMLCALL
+accumulate_entity_decl(void *userData, const XML_Char *entityName,
+                       int is_parameter_entity, const XML_Char *value,
+                       int value_length, const XML_Char *base,
+                       const XML_Char *systemId, const XML_Char *publicId,
+                       const XML_Char *notationName) {
+  CharData *storage = (CharData *)userData;
+
+  UNUSED_P(is_parameter_entity);
+  UNUSED_P(base);
+  UNUSED_P(systemId);
+  UNUSED_P(publicId);
+  UNUSED_P(notationName);
+  CharData_AppendXMLChars(storage, entityName, -1);
+  CharData_AppendXMLChars(storage, XCS("="), 1);
+  CharData_AppendXMLChars(storage, value, value_length);
+  CharData_AppendXMLChars(storage, XCS("\n"), 1);
+}
+
+void XMLCALL
+checking_default_handler(void *userData, const XML_Char *s, int len) {
+  DefaultCheck *data = (DefaultCheck *)userData;
+  int i;
+
+  for (i = 0; data[i].expected != NULL; i++) {
+    if (data[i].expectedLen == len
+        && ! memcmp(data[i].expected, s, len * sizeof(XML_Char))) {
+      data[i].seen = XML_TRUE;
+      break;
+    }
+  }
+}

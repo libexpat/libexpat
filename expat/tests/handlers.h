@@ -429,6 +429,21 @@ extern void XMLCALL accumulate_pi_characters(void *userData,
 
 extern void XMLCALL accumulate_comment(void *userData, const XML_Char *data);
 
+extern void XMLCALL accumulate_entity_decl(
+    void *userData, const XML_Char *entityName, int is_parameter_entity,
+    const XML_Char *value, int value_length, const XML_Char *base,
+    const XML_Char *systemId, const XML_Char *publicId,
+    const XML_Char *notationName);
+
+typedef struct default_check {
+  const XML_Char *expected;
+  const int expectedLen;
+  XML_Bool seen;
+} DefaultCheck;
+
+void XMLCALL checking_default_handler(void *userData, const XML_Char *s,
+                                      int len);
+
 #endif /* XML_HANDLERS_H */
 
 #ifdef __cplusplus
