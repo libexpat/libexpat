@@ -94,6 +94,12 @@ extern int XMLCALL external_entity_optioner(XML_Parser parser,
                                             const XML_Char *systemId,
                                             const XML_Char *publicId);
 
+extern int XMLCALL external_entity_loader(XML_Parser parser,
+                                          const XML_Char *context,
+                                          const XML_Char *base,
+                                          const XML_Char *systemId,
+                                          const XML_Char *publicId);
+
 /* Entity Declaration Handlers */
 #  define ENTITY_MATCH_FAIL (-1)
 #  define ENTITY_MATCH_NOT_FOUND (0)
