@@ -1825,6 +1825,103 @@ START_TEST(test_memory_allocation) {
 }
 END_TEST
 
+/* Test XML_DefaultCurrent() passes handling on correctly */
+START_TEST(test_default_current) {
+  const char *text = "<doc>hell]</doc>";
+  const char *entity_text = "<!DOCTYPE doc [\n"
+                            "<!ENTITY entity '&#37;'>\n"
+                            "]>\n"
+                            "<doc>&entity;</doc>";
+  CharData storage;
+
+  XML_SetDefaultHandler(g_parser, record_default_handler);
+  XML_SetCharacterDataHandler(g_parser, record_cdata_handler);
+  CharData_Init(&storage);
+  XML_SetUserData(g_parser, &storage);
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+      == XML_STATUS_ERROR)
+    xml_failure(g_parser);
+  CharData_CheckXMLChars(&storage, XCS("DCDCDCDCDCDD"));
+
+  /* Again, without the defaulting */
+  XML_ParserReset(g_parser, NULL);
+  XML_SetDefaultHandler(g_parser, record_default_handler);
+  XML_SetCharacterDataHandler(g_parser, record_cdata_nodefault_handler);
+  CharData_Init(&storage);
+  XML_SetUserData(g_parser, &storage);
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+      == XML_STATUS_ERROR)
+    xml_failure(g_parser);
+  CharData_CheckXMLChars(&storage, XCS("DcccccD"));
+
+  /* Now with an internal entity to complicate matters */
+  XML_ParserReset(g_parser, NULL);
+  XML_SetDefaultHandler(g_parser, record_default_handler);
+  XML_SetCharacterDataHandler(g_parser, record_cdata_handler);
+  CharData_Init(&storage);
+  XML_SetUserData(g_parser, &storage);
+  if (_XML_Parse_SINGLE_BYTES(g_parser, entity_text, (int)strlen(entity_text),
+                              XML_TRUE)
+      == XML_STATUS_ERROR)
+    xml_failure(g_parser);
+  /* The default handler suppresses the entity */
+  CharData_CheckXMLChars(&storage, XCS("DDDDDDDDDDDDDDDDDDD"));
+
+  /* Again, with a skip handler */
+  XML_ParserReset(g_parser, NULL);
+  XML_SetDefaultHandler(g_parser, record_default_handler);
+  XML_SetCharacterDataHandler(g_parser, record_cdata_handler);
+  XML_SetSkippedEntityHandler(g_parser, record_skip_handler);
+  CharData_Init(&storage);
+  XML_SetUserData(g_parser, &storage);
+  if (_XML_Parse_SINGLE_BYTES(g_parser, entity_text, (int)strlen(entity_text),
+                              XML_TRUE)
+      == XML_STATUS_ERROR)
+    xml_failure(g_parser);
+  /* The default handler suppresses the entity */
+  CharData_CheckXMLChars(&storage, XCS("DDDDDDDDDDDDDDDDDeD"));
+
+  /* This time, allow the entity through */
+  XML_ParserReset(g_parser, NULL);
+  XML_SetDefaultHandlerExpand(g_parser, record_default_handler);
+  XML_SetCharacterDataHandler(g_parser, record_cdata_handler);
+  CharData_Init(&storage);
+  XML_SetUserData(g_parser, &storage);
+  if (_XML_Parse_SINGLE_BYTES(g_parser, entity_text, (int)strlen(entity_text),
+                              XML_TRUE)
+      == XML_STATUS_ERROR)
+    xml_failure(g_parser);
+  CharData_CheckXMLChars(&storage, XCS("DDDDDDDDDDDDDDDDDCDD"));
+
+  /* Finally, without passing the cdata to the default handler */
+  XML_ParserReset(g_parser, NULL);
+  XML_SetDefaultHandlerExpand(g_parser, record_default_handler);
+  XML_SetCharacterDataHandler(g_parser, record_cdata_nodefault_handler);
+  CharData_Init(&storage);
+  XML_SetUserData(g_parser, &storage);
+  if (_XML_Parse_SINGLE_BYTES(g_parser, entity_text, (int)strlen(entity_text),
+                              XML_TRUE)
+      == XML_STATUS_ERROR)
+    xml_failure(g_parser);
+  CharData_CheckXMLChars(&storage, XCS("DDDDDDDDDDDDDDDDDcD"));
+}
+END_TEST
+
+/* Test DTD element parsing code paths */
+START_TEST(test_dtd_elements) {
+  const char *text = "<!DOCTYPE doc [\n"
+                     "<!ELEMENT doc (chapter)>\n"
+                     "<!ELEMENT chapter (#PCDATA)>\n"
+                     "]>\n"
+                     "<doc><chapter>Wombats are go</chapter></doc>";
+
+  XML_SetElementDeclHandler(g_parser, dummy_element_decl_handler);
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+      == XML_STATUS_ERROR)
+    xml_failure(g_parser);
+}
+END_TEST
+
 TCase *
 make_basic_test_case(Suite *s) {
   TCase *tc_basic = tcase_create("basic tests");
@@ -1909,6 +2006,8 @@ make_basic_test_case(Suite *s) {
   tcase_add_test(tc_basic, test_stop_parser_between_cdata_calls);
   tcase_add_test(tc_basic, test_suspend_parser_between_cdata_calls);
   tcase_add_test(tc_basic, test_memory_allocation);
+  tcase_add_test(tc_basic, test_default_current);
+  tcase_add_test(tc_basic, test_dtd_elements);
 
   return tc_basic; /* TEMPORARY: this will become a void function */
 }
