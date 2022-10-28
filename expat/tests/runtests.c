@@ -75,17 +75,6 @@
 XML_Parser g_parser = NULL;
 
 /* Test handling of trailing CR (rather than newline) */
-static void XMLCALL
-cr_cdata_handler(void *userData, const XML_Char *s, int len) {
-  int *pfound = (int *)userData;
-
-  /* Internal processing turns the CR into a newline for the
-   * character data handler, but not for the default handler
-   */
-  if (len == 1 && (*s == XCS('\n') || *s == XCS('\r')))
-    *pfound = 1;
-}
-
 START_TEST(test_trailing_cr) {
   const char *text = "<doc>\r";
   int found_cr;
@@ -114,50 +103,6 @@ START_TEST(test_trailing_cr) {
 END_TEST
 
 /* Test trailing CR in an external entity parse */
-static int XMLCALL
-external_entity_cr_catcher(XML_Parser parser, const XML_Char *context,
-                           const XML_Char *base, const XML_Char *systemId,
-                           const XML_Char *publicId) {
-  const char *text = "\r";
-  XML_Parser ext_parser;
-
-  UNUSED_P(base);
-  UNUSED_P(systemId);
-  UNUSED_P(publicId);
-  ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
-  if (ext_parser == NULL)
-    fail("Could not create external entity parser");
-  XML_SetCharacterDataHandler(ext_parser, cr_cdata_handler);
-  if (_XML_Parse_SINGLE_BYTES(ext_parser, text, (int)strlen(text), XML_TRUE)
-      == XML_STATUS_ERROR)
-    xml_failure(ext_parser);
-  XML_ParserFree(ext_parser);
-  return XML_STATUS_OK;
-}
-
-static int XMLCALL
-external_entity_bad_cr_catcher(XML_Parser parser, const XML_Char *context,
-                               const XML_Char *base, const XML_Char *systemId,
-                               const XML_Char *publicId) {
-  const char *text = "<tag>\r";
-  XML_Parser ext_parser;
-
-  UNUSED_P(base);
-  UNUSED_P(systemId);
-  UNUSED_P(publicId);
-  ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
-  if (ext_parser == NULL)
-    fail("Could not create external entity parser");
-  XML_SetCharacterDataHandler(ext_parser, cr_cdata_handler);
-  if (_XML_Parse_SINGLE_BYTES(ext_parser, text, (int)strlen(text), XML_TRUE)
-      == XML_STATUS_OK)
-    fail("Async entity error not caught");
-  if (XML_GetErrorCode(ext_parser) != XML_ERROR_ASYNC_ENTITY)
-    xml_failure(ext_parser);
-  XML_ParserFree(ext_parser);
-  return XML_STATUS_OK;
-}
-
 START_TEST(test_ext_entity_trailing_cr) {
   const char *text = "<!DOCTYPE doc [\n"
                      "  <!ENTITY en SYSTEM 'http://example.org/dummy.ent'>\n"
