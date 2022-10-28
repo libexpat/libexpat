@@ -74,82 +74,6 @@
 
 XML_Parser g_parser = NULL;
 
-static void XMLCALL
-element_decl_check_model(void *userData, const XML_Char *name,
-                         XML_Content *model) {
-  UNUSED_P(userData);
-  uint32_t errorFlags = 0;
-
-  /* Expected model array structure is this:
-   * [0] (type 6, quant 0)
-   *   [1] (type 5, quant 0)
-   *     [3] (type 4, quant 0, name "bar")
-   *     [4] (type 4, quant 0, name "foo")
-   *     [5] (type 4, quant 3, name "xyz")
-   *   [2] (type 4, quant 2, name "zebra")
-   */
-  errorFlags |= ((xcstrcmp(name, XCS("junk")) == 0) ? 0 : (1u << 0));
-  errorFlags |= ((model != NULL) ? 0 : (1u << 1));
-
-  errorFlags |= ((model[0].type == XML_CTYPE_SEQ) ? 0 : (1u << 2));
-  errorFlags |= ((model[0].quant == XML_CQUANT_NONE) ? 0 : (1u << 3));
-  errorFlags |= ((model[0].numchildren == 2) ? 0 : (1u << 4));
-  errorFlags |= ((model[0].children == &model[1]) ? 0 : (1u << 5));
-  errorFlags |= ((model[0].name == NULL) ? 0 : (1u << 6));
-
-  errorFlags |= ((model[1].type == XML_CTYPE_CHOICE) ? 0 : (1u << 7));
-  errorFlags |= ((model[1].quant == XML_CQUANT_NONE) ? 0 : (1u << 8));
-  errorFlags |= ((model[1].numchildren == 3) ? 0 : (1u << 9));
-  errorFlags |= ((model[1].children == &model[3]) ? 0 : (1u << 10));
-  errorFlags |= ((model[1].name == NULL) ? 0 : (1u << 11));
-
-  errorFlags |= ((model[2].type == XML_CTYPE_NAME) ? 0 : (1u << 12));
-  errorFlags |= ((model[2].quant == XML_CQUANT_REP) ? 0 : (1u << 13));
-  errorFlags |= ((model[2].numchildren == 0) ? 0 : (1u << 14));
-  errorFlags |= ((model[2].children == NULL) ? 0 : (1u << 15));
-  errorFlags |= ((xcstrcmp(model[2].name, XCS("zebra")) == 0) ? 0 : (1u << 16));
-
-  errorFlags |= ((model[3].type == XML_CTYPE_NAME) ? 0 : (1u << 17));
-  errorFlags |= ((model[3].quant == XML_CQUANT_NONE) ? 0 : (1u << 18));
-  errorFlags |= ((model[3].numchildren == 0) ? 0 : (1u << 19));
-  errorFlags |= ((model[3].children == NULL) ? 0 : (1u << 20));
-  errorFlags |= ((xcstrcmp(model[3].name, XCS("bar")) == 0) ? 0 : (1u << 21));
-
-  errorFlags |= ((model[4].type == XML_CTYPE_NAME) ? 0 : (1u << 22));
-  errorFlags |= ((model[4].quant == XML_CQUANT_NONE) ? 0 : (1u << 23));
-  errorFlags |= ((model[4].numchildren == 0) ? 0 : (1u << 24));
-  errorFlags |= ((model[4].children == NULL) ? 0 : (1u << 25));
-  errorFlags |= ((xcstrcmp(model[4].name, XCS("foo")) == 0) ? 0 : (1u << 26));
-
-  errorFlags |= ((model[5].type == XML_CTYPE_NAME) ? 0 : (1u << 27));
-  errorFlags |= ((model[5].quant == XML_CQUANT_PLUS) ? 0 : (1u << 28));
-  errorFlags |= ((model[5].numchildren == 0) ? 0 : (1u << 29));
-  errorFlags |= ((model[5].children == NULL) ? 0 : (1u << 30));
-  errorFlags |= ((xcstrcmp(model[5].name, XCS("xyz")) == 0) ? 0 : (1u << 31));
-
-  XML_SetUserData(g_parser, (void *)(uintptr_t)errorFlags);
-  XML_FreeContentModel(g_parser, model);
-}
-
-START_TEST(test_dtd_elements_nesting) {
-  // Payload inspired by a test in Perl's XML::Parser
-  const char *text = "<!DOCTYPE foo [\n"
-                     "<!ELEMENT junk ((bar|foo|xyz+), zebra*)>\n"
-                     "]>\n"
-                     "<foo/>";
-
-  XML_SetUserData(g_parser, (void *)(uintptr_t)-1);
-
-  XML_SetElementDeclHandler(g_parser, element_decl_check_model);
-  if (XML_Parse(g_parser, text, (int)strlen(text), XML_TRUE)
-      == XML_STATUS_ERROR)
-    xml_failure(g_parser);
-
-  if ((uint32_t)(uintptr_t)XML_GetUserData(g_parser) != 0)
-    fail("Element declaration model regression detected");
-}
-END_TEST
-
 /* Test foreign DTD handling */
 START_TEST(test_set_foreign_dtd) {
   const char *text1 = "<?xml version='1.0' encoding='us-ascii'?>\n";
@@ -9478,7 +9402,6 @@ make_suite(void) {
 
   tcase_add_test__ifdef_xml_dtd(tc_basic,
                                 test_ext_entity_invalid_suspended_parse);
-  tcase_add_test(tc_basic, test_dtd_elements_nesting);
   tcase_add_test__ifdef_xml_dtd(tc_basic, test_set_foreign_dtd);
   tcase_add_test__ifdef_xml_dtd(tc_basic, test_foreign_dtd_not_standalone);
   tcase_add_test__ifdef_xml_dtd(tc_basic, test_invalid_foreign_dtd);
