@@ -74,54 +74,6 @@
 
 XML_Parser g_parser = NULL;
 
-/* Regression test for SF bug #1515266: missing check of stopped
-   parser in doContext() 'for' loop. */
-START_TEST(test_stop_parser_between_char_data_calls) {
-  /* The sample data must be big enough that there are two calls to
-     the character data handler from within the inner "for" loop of
-     the XML_TOK_DATA_CHARS case in doContent(), and the character
-     handler must stop the parser and clear the character data
-     handler.
-  */
-  const char *text = long_character_data_text;
-
-  XML_SetCharacterDataHandler(g_parser, clearing_aborting_character_handler);
-  g_resumable = XML_FALSE;
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
-      != XML_STATUS_ERROR)
-    xml_failure(g_parser);
-  if (XML_GetErrorCode(g_parser) != XML_ERROR_ABORTED)
-    xml_failure(g_parser);
-}
-END_TEST
-
-/* Regression test for SF bug #1515266: missing check of stopped
-   parser in doContext() 'for' loop. */
-START_TEST(test_suspend_parser_between_char_data_calls) {
-  /* The sample data must be big enough that there are two calls to
-     the character data handler from within the inner "for" loop of
-     the XML_TOK_DATA_CHARS case in doContent(), and the character
-     handler must stop the parser and clear the character data
-     handler.
-  */
-  const char *text = long_character_data_text;
-
-  XML_SetCharacterDataHandler(g_parser, clearing_aborting_character_handler);
-  g_resumable = XML_TRUE;
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
-      != XML_STATUS_SUSPENDED)
-    xml_failure(g_parser);
-  if (XML_GetErrorCode(g_parser) != XML_ERROR_NONE)
-    xml_failure(g_parser);
-  /* Try parsing directly */
-  if (XML_Parse(g_parser, text, (int)strlen(text), XML_TRUE)
-      != XML_STATUS_ERROR)
-    fail("Attempt to continue parse while suspended not faulted");
-  if (XML_GetErrorCode(g_parser) != XML_ERROR_SUSPENDED)
-    fail("Suspended parse not faulted with correct error");
-}
-END_TEST
-
 static XML_Bool abortable = XML_FALSE;
 
 static void
@@ -10152,8 +10104,6 @@ make_suite(void) {
 
   tcase_add_test__ifdef_xml_dtd(tc_basic,
                                 test_ext_entity_invalid_suspended_parse);
-  tcase_add_test(tc_basic, test_stop_parser_between_char_data_calls);
-  tcase_add_test(tc_basic, test_suspend_parser_between_char_data_calls);
   tcase_add_test(tc_basic, test_repeated_stop_parser_between_char_data_calls);
   tcase_add_test(tc_basic, test_good_cdata_ascii);
   tcase_add_test(tc_basic, test_good_cdata_utf16);
