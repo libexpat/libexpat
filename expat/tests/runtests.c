@@ -74,99 +74,6 @@
 
 XML_Parser g_parser = NULL;
 
-/* Test handling of trailing square bracket */
-static void XMLCALL
-rsqb_handler(void *userData, const XML_Char *s, int len) {
-  int *pfound = (int *)userData;
-
-  if (len == 1 && *s == XCS(']'))
-    *pfound = 1;
-}
-
-START_TEST(test_trailing_rsqb) {
-  const char *text8 = "<doc>]";
-  const char text16[] = "\xFF\xFE<\000d\000o\000c\000>\000]\000";
-  int found_rsqb;
-  int text8_len = (int)strlen(text8);
-
-  XML_SetCharacterDataHandler(g_parser, rsqb_handler);
-  XML_SetUserData(g_parser, &found_rsqb);
-  found_rsqb = 0;
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text8, text8_len, XML_TRUE)
-      == XML_STATUS_OK)
-    fail("Failed to fault unclosed doc");
-  if (found_rsqb == 0)
-    fail("Did not catch the right square bracket");
-
-  /* Try again with a different encoding */
-  XML_ParserReset(g_parser, NULL);
-  XML_SetCharacterDataHandler(g_parser, rsqb_handler);
-  XML_SetUserData(g_parser, &found_rsqb);
-  found_rsqb = 0;
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text16, (int)sizeof(text16) - 1,
-                              XML_TRUE)
-      == XML_STATUS_OK)
-    fail("Failed to fault unclosed doc");
-  if (found_rsqb == 0)
-    fail("Did not catch the right square bracket");
-
-  /* And finally with a default handler */
-  XML_ParserReset(g_parser, NULL);
-  XML_SetDefaultHandler(g_parser, rsqb_handler);
-  XML_SetUserData(g_parser, &found_rsqb);
-  found_rsqb = 0;
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text16, (int)sizeof(text16) - 1,
-                              XML_TRUE)
-      == XML_STATUS_OK)
-    fail("Failed to fault unclosed doc");
-  if (found_rsqb == 0)
-    fail("Did not catch the right square bracket");
-}
-END_TEST
-
-/* Test trailing right square bracket in an external entity parse */
-static int XMLCALL
-external_entity_rsqb_catcher(XML_Parser parser, const XML_Char *context,
-                             const XML_Char *base, const XML_Char *systemId,
-                             const XML_Char *publicId) {
-  const char *text = "<tag>]";
-  XML_Parser ext_parser;
-
-  UNUSED_P(base);
-  UNUSED_P(systemId);
-  UNUSED_P(publicId);
-  ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
-  if (ext_parser == NULL)
-    fail("Could not create external entity parser");
-  XML_SetCharacterDataHandler(ext_parser, rsqb_handler);
-  if (_XML_Parse_SINGLE_BYTES(ext_parser, text, (int)strlen(text), XML_TRUE)
-      != XML_STATUS_ERROR)
-    fail("Async entity error not caught");
-  if (XML_GetErrorCode(ext_parser) != XML_ERROR_ASYNC_ENTITY)
-    xml_failure(ext_parser);
-  XML_ParserFree(ext_parser);
-  return XML_STATUS_OK;
-}
-
-START_TEST(test_ext_entity_trailing_rsqb) {
-  const char *text = "<!DOCTYPE doc [\n"
-                     "  <!ENTITY en SYSTEM 'http://example.org/dummy.ent'>\n"
-                     "]>\n"
-                     "<doc>&en;</doc>";
-  int found_rsqb;
-
-  XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
-  XML_SetExternalEntityRefHandler(g_parser, external_entity_rsqb_catcher);
-  XML_SetUserData(g_parser, &found_rsqb);
-  found_rsqb = 0;
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
-      != XML_STATUS_OK)
-    xml_failure(g_parser);
-  if (found_rsqb == 0)
-    fail("No right square bracket found");
-}
-END_TEST
-
 /* Test CDATA handling in an external entity */
 static int XMLCALL
 external_entity_good_cdata_ascii(XML_Parser parser, const XML_Char *context,
@@ -8664,8 +8571,6 @@ make_suite(void) {
   TCase *tc_accounting = tcase_create("accounting tests");
 #endif
 
-  tcase_add_test(tc_basic, test_trailing_rsqb);
-  tcase_add_test(tc_basic, test_ext_entity_trailing_rsqb);
   tcase_add_test(tc_basic, test_ext_entity_good_cdata);
   tcase_add_test__ifdef_xml_dtd(tc_basic, test_user_parameters);
   tcase_add_test__ifdef_xml_dtd(tc_basic, test_ext_entity_ref_parameter);

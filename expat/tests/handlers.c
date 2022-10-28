@@ -499,6 +499,29 @@ external_entity_bad_cr_catcher(XML_Parser parser, const XML_Char *context,
   return XML_STATUS_OK;
 }
 
+int XMLCALL
+external_entity_rsqb_catcher(XML_Parser parser, const XML_Char *context,
+                             const XML_Char *base, const XML_Char *systemId,
+                             const XML_Char *publicId) {
+  const char *text = "<tag>]";
+  XML_Parser ext_parser;
+
+  UNUSED_P(base);
+  UNUSED_P(systemId);
+  UNUSED_P(publicId);
+  ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
+  if (ext_parser == NULL)
+    fail("Could not create external entity parser");
+  XML_SetCharacterDataHandler(ext_parser, rsqb_handler);
+  if (_XML_Parse_SINGLE_BYTES(ext_parser, text, (int)strlen(text), XML_TRUE)
+      != XML_STATUS_ERROR)
+    fail("Async entity error not caught");
+  if (XML_GetErrorCode(ext_parser) != XML_ERROR_ASYNC_ENTITY)
+    xml_failure(ext_parser);
+  XML_ParserFree(ext_parser);
+  return XML_STATUS_OK;
+}
+
 /* NotStandalone handlers */
 
 int XMLCALL
@@ -581,6 +604,14 @@ cr_cdata_handler(void *userData, const XML_Char *s, int len) {
    * character data handler, but not for the default handler
    */
   if (len == 1 && (*s == XCS('\n') || *s == XCS('\r')))
+    *pfound = 1;
+}
+
+void XMLCALL
+rsqb_handler(void *userData, const XML_Char *s, int len) {
+  int *pfound = (int *)userData;
+
+  if (len == 1 && *s == XCS(']'))
     *pfound = 1;
 }
 
