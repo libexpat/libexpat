@@ -95,6 +95,10 @@ extern void XMLCALL counting_start_element_handler(void *userData,
 
 extern void XMLCALL suspending_end_handler(void *userData, const XML_Char *s);
 
+extern void XMLCALL start_element_suspender(void *userData,
+                                            const XML_Char *name,
+                                            const XML_Char **atts);
+
 /* Text encoding handlers */
 
 extern int XMLCALL UnknownEncodingHandler(void *data, const XML_Char *encoding,
@@ -362,6 +366,9 @@ extern void XMLCALL data_check_comment_handler(void *userData,
 extern void XMLCALL selective_aborting_default_handler(void *userData,
                                                        const XML_Char *s,
                                                        int len);
+
+extern void XMLCALL suspending_comment_handler(void *userData,
+                                               const XML_Char *data);
 
 #endif /* XML_HANDLERS_H */
 

@@ -158,6 +158,17 @@ suspending_end_handler(void *userData, const XML_Char *s) {
   XML_StopParser((XML_Parser)userData, 1);
 }
 
+void XMLCALL
+start_element_suspender(void *userData, const XML_Char *name,
+                        const XML_Char **atts) {
+  UNUSED_P(userData);
+  UNUSED_P(atts);
+  if (! xcstrcmp(name, XCS("suspend")))
+    XML_StopParser(g_parser, XML_TRUE);
+  if (! xcstrcmp(name, XCS("abort")))
+    XML_StopParser(g_parser, XML_FALSE);
+}
+
 /* Text encoding handlers */
 
 int XMLCALL
@@ -1161,4 +1172,11 @@ selective_aborting_default_handler(void *userData, const XML_Char *s, int len) {
     XML_StopParser(g_parser, g_resumable);
     XML_SetDefaultHandler(g_parser, NULL);
   }
+}
+
+void XMLCALL
+suspending_comment_handler(void *userData, const XML_Char *data) {
+  UNUSED_P(data);
+  XML_Parser parser = (XML_Parser)userData;
+  XML_StopParser(parser, XML_TRUE);
 }

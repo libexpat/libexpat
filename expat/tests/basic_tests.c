@@ -3340,6 +3340,117 @@ START_TEST(test_partial_char_in_epilog) {
 }
 END_TEST
 
+/* Test resuming a parse suspended in entity substitution */
+START_TEST(test_suspend_resume_internal_entity) {
+  const char *text
+      = "<!DOCTYPE doc [\n"
+        "<!ENTITY foo '<suspend>Hi<suspend>Ho</suspend></suspend>'>\n"
+        "]>\n"
+        "<doc>&foo;</doc>\n";
+  const XML_Char *expected1 = XCS("Hi");
+  const XML_Char *expected2 = XCS("HiHo");
+  CharData storage;
+
+  CharData_Init(&storage);
+  XML_SetStartElementHandler(g_parser, start_element_suspender);
+  XML_SetCharacterDataHandler(g_parser, accumulate_characters);
+  XML_SetUserData(g_parser, &storage);
+  if (XML_Parse(g_parser, text, (int)strlen(text), XML_TRUE)
+      != XML_STATUS_SUSPENDED)
+    xml_failure(g_parser);
+  CharData_CheckXMLChars(&storage, XCS(""));
+  if (XML_ResumeParser(g_parser) != XML_STATUS_SUSPENDED)
+    xml_failure(g_parser);
+  CharData_CheckXMLChars(&storage, expected1);
+  if (XML_ResumeParser(g_parser) != XML_STATUS_OK)
+    xml_failure(g_parser);
+  CharData_CheckXMLChars(&storage, expected2);
+}
+END_TEST
+
+START_TEST(test_suspend_resume_internal_entity_issue_629) {
+  const char *const text
+      = "<!DOCTYPE a [<!ENTITY e '<!--COMMENT-->a'>]><a>&e;<b>\n"
+        "<"
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        "/>"
+        "</b></a>";
+  const size_t firstChunkSizeBytes = 54;
+
+  XML_Parser parser = XML_ParserCreate(NULL);
+  XML_SetUserData(parser, parser);
+  XML_SetCommentHandler(parser, suspending_comment_handler);
+
+  if (XML_Parse(parser, text, (int)firstChunkSizeBytes, XML_FALSE)
+      != XML_STATUS_SUSPENDED)
+    xml_failure(parser);
+  if (XML_ResumeParser(parser) != XML_STATUS_OK)
+    xml_failure(parser);
+  if (XML_Parse(parser, text + firstChunkSizeBytes,
+                (int)(strlen(text) - firstChunkSizeBytes), XML_TRUE)
+      != XML_STATUS_OK)
+    xml_failure(parser);
+  XML_ParserFree(parser);
+}
+END_TEST
+
+/* Test syntax error is caught at parse resumption */
+START_TEST(test_resume_entity_with_syntax_error) {
+  const char *text = "<!DOCTYPE doc [\n"
+                     "<!ENTITY foo '<suspend>Hi</wombat>'>\n"
+                     "]>\n"
+                     "<doc>&foo;</doc>\n";
+
+  XML_SetStartElementHandler(g_parser, start_element_suspender);
+  if (XML_Parse(g_parser, text, (int)strlen(text), XML_TRUE)
+      != XML_STATUS_SUSPENDED)
+    xml_failure(g_parser);
+  if (XML_ResumeParser(g_parser) != XML_STATUS_ERROR)
+    fail("Syntax error in entity not faulted");
+  if (XML_GetErrorCode(g_parser) != XML_ERROR_TAG_MISMATCH)
+    xml_failure(g_parser);
+}
+END_TEST
+
 TCase *
 make_basic_test_case(Suite *s) {
   TCase *tc_basic = tcase_create("basic tests");
@@ -3492,6 +3603,10 @@ make_basic_test_case(Suite *s) {
   tcase_add_test(tc_basic, test_suspend_in_sole_empty_tag);
   tcase_add_test(tc_basic, test_unfinished_epilog);
   tcase_add_test(tc_basic, test_partial_char_in_epilog);
+  tcase_add_test__ifdef_xml_dtd(tc_basic, test_suspend_resume_internal_entity);
+  tcase_add_test__ifdef_xml_dtd(tc_basic,
+                                test_suspend_resume_internal_entity_issue_629);
+  tcase_add_test__ifdef_xml_dtd(tc_basic, test_resume_entity_with_syntax_error);
 
   return tc_basic; /* TEMPORARY: this will become a void function */
 }
