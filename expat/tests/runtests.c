@@ -74,102 +74,6 @@
 
 XML_Parser g_parser = NULL;
 
-/* Regression test for GH issue #612: unfinished m_declAttributeType
- * allocation in ->m_tempPool can corrupt following allocation.
- */
-static int XMLCALL
-external_entity_unfinished_attlist(XML_Parser parser, const XML_Char *context,
-                                   const XML_Char *base,
-                                   const XML_Char *systemId,
-                                   const XML_Char *publicId) {
-  const char *text = "<!ELEMENT barf ANY>\n"
-                     "<!ATTLIST barf my_attr (blah|%blah;a|foo) #REQUIRED>\n"
-                     "<!--COMMENT-->\n";
-  XML_Parser ext_parser;
-
-  UNUSED_P(base);
-  UNUSED_P(publicId);
-  if (systemId == NULL)
-    return XML_STATUS_OK;
-
-  ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
-  if (ext_parser == NULL)
-    fail("Could not create external entity parser");
-
-  if (_XML_Parse_SINGLE_BYTES(ext_parser, text, (int)strlen(text), XML_TRUE)
-      == XML_STATUS_ERROR)
-    xml_failure(ext_parser);
-
-  XML_ParserFree(ext_parser);
-  return XML_STATUS_OK;
-}
-
-START_TEST(test_pool_integrity_with_unfinished_attr) {
-  const char *text = "<?xml version='1.0' encoding='UTF-8'?>\n"
-                     "<!DOCTYPE foo [\n"
-                     "<!ELEMENT foo ANY>\n"
-                     "<!ENTITY % entp SYSTEM \"external.dtd\">\n"
-                     "%entp;\n"
-                     "]>\n"
-                     "<a></a>\n";
-  const XML_Char *expected = XCS("COMMENT");
-  CharData storage;
-
-  CharData_Init(&storage);
-  XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
-  XML_SetExternalEntityRefHandler(g_parser, external_entity_unfinished_attlist);
-  XML_SetAttlistDeclHandler(g_parser, dummy_attlist_decl_handler);
-  XML_SetCommentHandler(g_parser, accumulate_comment);
-  XML_SetUserData(g_parser, &storage);
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
-      == XML_STATUS_ERROR)
-    xml_failure(g_parser);
-  CharData_CheckXMLChars(&storage, expected);
-}
-END_TEST
-
-typedef struct {
-  XML_Parser parser;
-  CharData *storage;
-} ParserPlusStorage;
-
-static void XMLCALL
-accumulate_and_suspend_comment_handler(void *userData, const XML_Char *data) {
-  ParserPlusStorage *const parserPlusStorage = (ParserPlusStorage *)userData;
-  accumulate_comment(parserPlusStorage->storage, data);
-  XML_StopParser(parserPlusStorage->parser, XML_TRUE);
-}
-
-START_TEST(test_nested_entity_suspend) {
-  const char *const text = "<!DOCTYPE a [\n"
-                           "  <!ENTITY e1 '<!--e1-->'>\n"
-                           "  <!ENTITY e2 '<!--e2 head-->&e1;<!--e2 tail-->'>\n"
-                           "  <!ENTITY e3 '<!--e3 head-->&e2;<!--e3 tail-->'>\n"
-                           "]>\n"
-                           "<a><!--start-->&e3;<!--end--></a>";
-  const XML_Char *const expected = XCS("start") XCS("e3 head") XCS("e2 head")
-      XCS("e1") XCS("e2 tail") XCS("e3 tail") XCS("end");
-  CharData storage;
-  XML_Parser parser = XML_ParserCreate(NULL);
-  ParserPlusStorage parserPlusStorage = {parser, &storage};
-
-  CharData_Init(&storage);
-  XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
-  XML_SetCommentHandler(parser, accumulate_and_suspend_comment_handler);
-  XML_SetUserData(parser, &parserPlusStorage);
-
-  enum XML_Status status = XML_Parse(parser, text, (int)strlen(text), XML_TRUE);
-  while (status == XML_STATUS_SUSPENDED) {
-    status = XML_ResumeParser(parser);
-  }
-  if (status != XML_STATUS_OK)
-    xml_failure(parser);
-
-  CharData_CheckXMLChars(&storage, expected);
-  XML_ParserFree(parser);
-}
-END_TEST
-
 /*
  * Namespaces tests.
  */
@@ -5423,7 +5327,7 @@ END_TEST
 static Suite *
 make_suite(void) {
   Suite *s = suite_create("basic");
-  TCase *tc_basic = make_basic_test_case(s);
+  make_basic_test_case(s);
   TCase *tc_namespace = tcase_create("XML namespaces");
   TCase *tc_misc = tcase_create("miscellaneous tests");
   TCase *tc_alloc = tcase_create("allocation tests");
@@ -5431,10 +5335,6 @@ make_suite(void) {
 #if defined(XML_DTD)
   TCase *tc_accounting = tcase_create("accounting tests");
 #endif
-
-  tcase_add_test__ifdef_xml_dtd(tc_basic,
-                                test_pool_integrity_with_unfinished_attr);
-  tcase_add_test(tc_basic, test_nested_entity_suspend);
 
   suite_add_tcase(s, tc_namespace);
   tcase_add_checked_fixture(tc_namespace, namespace_setup, namespace_teardown);

@@ -1071,6 +1071,33 @@ external_entity_faulter2(XML_Parser parser, const XML_Char *context,
   return XML_STATUS_ERROR;
 }
 
+int XMLCALL
+external_entity_unfinished_attlist(XML_Parser parser, const XML_Char *context,
+                                   const XML_Char *base,
+                                   const XML_Char *systemId,
+                                   const XML_Char *publicId) {
+  const char *text = "<!ELEMENT barf ANY>\n"
+                     "<!ATTLIST barf my_attr (blah|%blah;a|foo) #REQUIRED>\n"
+                     "<!--COMMENT-->\n";
+  XML_Parser ext_parser;
+
+  UNUSED_P(base);
+  UNUSED_P(publicId);
+  if (systemId == NULL)
+    return XML_STATUS_OK;
+
+  ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
+  if (ext_parser == NULL)
+    fail("Could not create external entity parser");
+
+  if (_XML_Parse_SINGLE_BYTES(ext_parser, text, (int)strlen(text), XML_TRUE)
+      == XML_STATUS_ERROR)
+    xml_failure(ext_parser);
+
+  XML_ParserFree(ext_parser);
+  return XML_STATUS_OK;
+}
+
 /* NotStandalone handlers */
 
 int XMLCALL
@@ -1404,4 +1431,11 @@ checking_default_handler(void *userData, const XML_Char *s, int len) {
       break;
     }
   }
+}
+
+void XMLCALL
+accumulate_and_suspend_comment_handler(void *userData, const XML_Char *data) {
+  ParserPlusStorage *const parserPlusStorage = (ParserPlusStorage *)userData;
+  accumulate_comment(parserPlusStorage->storage, data);
+  XML_StopParser(parserPlusStorage->parser, XML_TRUE);
 }

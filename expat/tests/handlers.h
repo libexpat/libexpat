@@ -316,6 +316,12 @@ extern int XMLCALL external_entity_faulter2(XML_Parser parser,
                                             const XML_Char *systemId,
                                             const XML_Char *publicId);
 
+extern int XMLCALL external_entity_unfinished_attlist(XML_Parser parser,
+                                                      const XML_Char *context,
+                                                      const XML_Char *base,
+                                                      const XML_Char *systemId,
+                                                      const XML_Char *publicId);
+
 /* NotStandalone handlers */
 
 extern int XMLCALL reject_not_standalone_handler(void *userData);
@@ -443,6 +449,14 @@ typedef struct default_check {
 
 void XMLCALL checking_default_handler(void *userData, const XML_Char *s,
                                       int len);
+
+typedef struct {
+  XML_Parser parser;
+  CharData *storage;
+} ParserPlusStorage;
+
+extern void XMLCALL
+accumulate_and_suspend_comment_handler(void *userData, const XML_Char *data);
 
 #endif /* XML_HANDLERS_H */
 

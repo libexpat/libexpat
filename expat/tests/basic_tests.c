@@ -4852,7 +4852,64 @@ START_TEST(test_empty_element_abort) {
 }
 END_TEST
 
-TCase *
+/* Regression test for GH issue #612: unfinished m_declAttributeType
+ * allocation in ->m_tempPool can corrupt following allocation.
+ */
+START_TEST(test_pool_integrity_with_unfinished_attr) {
+  const char *text = "<?xml version='1.0' encoding='UTF-8'?>\n"
+                     "<!DOCTYPE foo [\n"
+                     "<!ELEMENT foo ANY>\n"
+                     "<!ENTITY % entp SYSTEM \"external.dtd\">\n"
+                     "%entp;\n"
+                     "]>\n"
+                     "<a></a>\n";
+  const XML_Char *expected = XCS("COMMENT");
+  CharData storage;
+
+  CharData_Init(&storage);
+  XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+  XML_SetExternalEntityRefHandler(g_parser, external_entity_unfinished_attlist);
+  XML_SetAttlistDeclHandler(g_parser, dummy_attlist_decl_handler);
+  XML_SetCommentHandler(g_parser, accumulate_comment);
+  XML_SetUserData(g_parser, &storage);
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+      == XML_STATUS_ERROR)
+    xml_failure(g_parser);
+  CharData_CheckXMLChars(&storage, expected);
+}
+END_TEST
+
+START_TEST(test_nested_entity_suspend) {
+  const char *const text = "<!DOCTYPE a [\n"
+                           "  <!ENTITY e1 '<!--e1-->'>\n"
+                           "  <!ENTITY e2 '<!--e2 head-->&e1;<!--e2 tail-->'>\n"
+                           "  <!ENTITY e3 '<!--e3 head-->&e2;<!--e3 tail-->'>\n"
+                           "]>\n"
+                           "<a><!--start-->&e3;<!--end--></a>";
+  const XML_Char *const expected = XCS("start") XCS("e3 head") XCS("e2 head")
+      XCS("e1") XCS("e2 tail") XCS("e3 tail") XCS("end");
+  CharData storage;
+  XML_Parser parser = XML_ParserCreate(NULL);
+  ParserPlusStorage parserPlusStorage = {parser, &storage};
+
+  CharData_Init(&storage);
+  XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+  XML_SetCommentHandler(parser, accumulate_and_suspend_comment_handler);
+  XML_SetUserData(parser, &parserPlusStorage);
+
+  enum XML_Status status = XML_Parse(parser, text, (int)strlen(text), XML_TRUE);
+  while (status == XML_STATUS_SUSPENDED) {
+    status = XML_ResumeParser(parser);
+  }
+  if (status != XML_STATUS_OK)
+    xml_failure(parser);
+
+  CharData_CheckXMLChars(&storage, expected);
+  XML_ParserFree(parser);
+}
+END_TEST
+
+void
 make_basic_test_case(Suite *s) {
   TCase *tc_basic = tcase_create("basic tests");
 
@@ -5086,6 +5143,7 @@ make_basic_test_case(Suite *s) {
   tcase_add_test(tc_basic, test_bad_notation);
   tcase_add_test(tc_basic, test_default_doctype_handler);
   tcase_add_test(tc_basic, test_empty_element_abort);
-
-  return tc_basic; /* TEMPORARY: this will become a void function */
+  tcase_add_test__ifdef_xml_dtd(tc_basic,
+                                test_pool_integrity_with_unfinished_attr);
+  tcase_add_test(tc_basic, test_nested_entity_suspend);
 }
