@@ -71,14 +71,9 @@
 #include "siphash.h"
 #include "ascii.h" /* for ASCII_xxx */
 
-XML_Parser g_parser = NULL;
+#include "basic_tests.h"
 
-static void
-basic_setup(void) {
-  g_parser = XML_ParserCreate(NULL);
-  if (g_parser == NULL)
-    fail("Parser not created.");
-}
+XML_Parser g_parser = NULL;
 
 /*
  * Character & encoding tests.
@@ -11713,7 +11708,7 @@ END_TEST
 static Suite *
 make_suite(void) {
   Suite *s = suite_create("basic");
-  TCase *tc_basic = tcase_create("basic tests");
+  TCase *tc_basic = make_basic_test_case(s);
   TCase *tc_namespace = tcase_create("XML namespaces");
   TCase *tc_misc = tcase_create("miscellaneous tests");
   TCase *tc_alloc = tcase_create("allocation tests");
@@ -11722,8 +11717,6 @@ make_suite(void) {
   TCase *tc_accounting = tcase_create("accounting tests");
 #endif
 
-  suite_add_tcase(s, tc_basic);
-  tcase_add_checked_fixture(tc_basic, basic_setup, basic_teardown);
   tcase_add_test(tc_basic, test_nul_byte);
   tcase_add_test(tc_basic, test_u0000_char);
   tcase_add_test(tc_basic, test_siphash_self);
