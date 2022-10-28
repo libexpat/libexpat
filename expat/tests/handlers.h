@@ -68,6 +68,19 @@ extern void XMLCALL start_element_event_handler2(void *userData,
 extern void XMLCALL end_element_event_handler2(void *userData,
                                                const XML_Char *name);
 
+/* Text encoding handlers */
+
+extern int XMLCALL UnknownEncodingHandler(void *data, const XML_Char *encoding,
+                                          XML_Encoding *info);
+
+extern int XMLCALL UnrecognisedEncodingHandler(void *data,
+                                               const XML_Char *encoding,
+                                               XML_Encoding *info);
+
+extern int XMLCALL unknown_released_encoding_handler(void *data,
+                                                     const XML_Char *encoding,
+                                                     XML_Encoding *info);
+
 /* External Entity Handlers */
 
 typedef struct ExtOption {
