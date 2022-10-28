@@ -74,49 +74,6 @@
 
 XML_Parser g_parser = NULL;
 
-/* Test CDATA handling in an external entity */
-static int XMLCALL
-external_entity_good_cdata_ascii(XML_Parser parser, const XML_Char *context,
-                                 const XML_Char *base, const XML_Char *systemId,
-                                 const XML_Char *publicId) {
-  const char *text = "<a><![CDATA[<greeting>Hello, world!</greeting>]]></a>";
-  const XML_Char *expected = XCS("<greeting>Hello, world!</greeting>");
-  CharData storage;
-  XML_Parser ext_parser;
-
-  UNUSED_P(base);
-  UNUSED_P(systemId);
-  UNUSED_P(publicId);
-  CharData_Init(&storage);
-  ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
-  if (ext_parser == NULL)
-    fail("Could not create external entity parser");
-  XML_SetUserData(ext_parser, &storage);
-  XML_SetCharacterDataHandler(ext_parser, accumulate_characters);
-
-  if (_XML_Parse_SINGLE_BYTES(ext_parser, text, (int)strlen(text), XML_TRUE)
-      == XML_STATUS_ERROR)
-    xml_failure(ext_parser);
-  CharData_CheckXMLChars(&storage, expected);
-
-  XML_ParserFree(ext_parser);
-  return XML_STATUS_OK;
-}
-
-START_TEST(test_ext_entity_good_cdata) {
-  const char *text = "<!DOCTYPE doc [\n"
-                     "  <!ENTITY en SYSTEM 'http://example.org/dummy.ent'>\n"
-                     "]>\n"
-                     "<doc>&en;</doc>";
-
-  XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
-  XML_SetExternalEntityRefHandler(g_parser, external_entity_good_cdata_ascii);
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
-      != XML_STATUS_OK)
-    xml_failure(g_parser);
-}
-END_TEST
-
 /* Test user parameter settings */
 /* Variable holding the expected handler userData */
 static void *handler_data = NULL;
@@ -8571,7 +8528,6 @@ make_suite(void) {
   TCase *tc_accounting = tcase_create("accounting tests");
 #endif
 
-  tcase_add_test(tc_basic, test_ext_entity_good_cdata);
   tcase_add_test__ifdef_xml_dtd(tc_basic, test_user_parameters);
   tcase_add_test__ifdef_xml_dtd(tc_basic, test_ext_entity_ref_parameter);
   tcase_add_test(tc_basic, test_empty_parse);
