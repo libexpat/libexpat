@@ -74,127 +74,6 @@
 
 XML_Parser g_parser = NULL;
 
-/* Regression test that an invalid tag in an external parameter
- * reference in an external DTD is correctly faulted.
- *
- * Only a few specific tags are legal in DTDs ignoring comments and
- * processing instructions, all of which begin with an exclamation
- * mark.  "<el/>" is not one of them, so the parser should raise an
- * error on encountering it.
- */
-static int XMLCALL
-external_entity_param(XML_Parser parser, const XML_Char *context,
-                      const XML_Char *base, const XML_Char *systemId,
-                      const XML_Char *publicId) {
-  const char *text1 = "<!ELEMENT doc EMPTY>\n"
-                      "<!ENTITY % e1 SYSTEM '004-2.ent'>\n"
-                      "<!ENTITY % e2 '%e1;'>\n"
-                      "%e1;\n";
-  const char *text2 = "<!ELEMENT el EMPTY>\n"
-                      "<el/>\n";
-  XML_Parser ext_parser;
-
-  UNUSED_P(base);
-  UNUSED_P(publicId);
-  if (systemId == NULL)
-    return XML_STATUS_OK;
-
-  ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
-  if (ext_parser == NULL)
-    fail("Could not create external entity parser");
-
-  if (! xcstrcmp(systemId, XCS("004-1.ent"))) {
-    if (_XML_Parse_SINGLE_BYTES(ext_parser, text1, (int)strlen(text1), XML_TRUE)
-        != XML_STATUS_ERROR)
-      fail("Inner DTD with invalid tag not rejected");
-    if (XML_GetErrorCode(ext_parser) != XML_ERROR_EXTERNAL_ENTITY_HANDLING)
-      xml_failure(ext_parser);
-  } else if (! xcstrcmp(systemId, XCS("004-2.ent"))) {
-    if (_XML_Parse_SINGLE_BYTES(ext_parser, text2, (int)strlen(text2), XML_TRUE)
-        != XML_STATUS_ERROR)
-      fail("Invalid tag in external param not rejected");
-    if (XML_GetErrorCode(ext_parser) != XML_ERROR_SYNTAX)
-      xml_failure(ext_parser);
-  } else {
-    fail("Unknown system ID");
-  }
-
-  XML_ParserFree(ext_parser);
-  return XML_STATUS_ERROR;
-}
-
-START_TEST(test_invalid_tag_in_dtd) {
-  const char *text = "<!DOCTYPE doc SYSTEM '004-1.ent'>\n"
-                     "<doc></doc>\n";
-
-  XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
-  XML_SetExternalEntityRefHandler(g_parser, external_entity_param);
-  expect_failure(text, XML_ERROR_EXTERNAL_ENTITY_HANDLING,
-                 "Invalid tag IN DTD external param not rejected");
-}
-END_TEST
-
-/* Test entities not quite the predefined ones are not mis-recognised */
-START_TEST(test_not_predefined_entities) {
-  const char *text[] = {"<doc>&pt;</doc>", "<doc>&amo;</doc>",
-                        "<doc>&quid;</doc>", "<doc>&apod;</doc>", NULL};
-  int i = 0;
-
-  while (text[i] != NULL) {
-    expect_failure(text[i], XML_ERROR_UNDEFINED_ENTITY,
-                   "Undefined entity not rejected");
-    XML_ParserReset(g_parser, NULL);
-    i++;
-  }
-}
-END_TEST
-
-/* Test conditional inclusion (IGNORE) */
-static int XMLCALL
-external_entity_load_ignore(XML_Parser parser, const XML_Char *context,
-                            const XML_Char *base, const XML_Char *systemId,
-                            const XML_Char *publicId) {
-  const char *text = "<![IGNORE[<!ELEMENT e (#PCDATA)*>]]>";
-  XML_Parser ext_parser;
-
-  UNUSED_P(base);
-  UNUSED_P(systemId);
-  UNUSED_P(publicId);
-  ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
-  if (ext_parser == NULL)
-    fail("Could not create external entity parser");
-  if (_XML_Parse_SINGLE_BYTES(ext_parser, text, (int)strlen(text), XML_TRUE)
-      == XML_STATUS_ERROR)
-    xml_failure(parser);
-
-  XML_ParserFree(ext_parser);
-  return XML_STATUS_OK;
-}
-
-START_TEST(test_ignore_section) {
-  const char *text = "<!DOCTYPE doc SYSTEM 'foo'>\n"
-                     "<doc><e>&entity;</e></doc>";
-  const XML_Char *expected
-      = XCS("<![IGNORE[<!ELEMENT e (#PCDATA)*>]]>\n&entity;");
-  CharData storage;
-
-  CharData_Init(&storage);
-  XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
-  XML_SetUserData(g_parser, &storage);
-  XML_SetExternalEntityRefHandler(g_parser, external_entity_load_ignore);
-  XML_SetDefaultHandler(g_parser, accumulate_characters);
-  XML_SetStartDoctypeDeclHandler(g_parser, dummy_start_doctype_handler);
-  XML_SetEndDoctypeDeclHandler(g_parser, dummy_end_doctype_handler);
-  XML_SetElementDeclHandler(g_parser, dummy_element_decl_handler);
-  XML_SetStartElementHandler(g_parser, dummy_start_element);
-  XML_SetEndElementHandler(g_parser, dummy_end_element);
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
-      == XML_STATUS_ERROR)
-    xml_failure(g_parser);
-  CharData_CheckXMLChars(&storage, expected);
-}
-END_TEST
-
 static int XMLCALL
 external_entity_load_ignore_utf16(XML_Parser parser, const XML_Char *context,
                                   const XML_Char *base,
@@ -8072,9 +7951,6 @@ make_suite(void) {
   TCase *tc_accounting = tcase_create("accounting tests");
 #endif
 
-  tcase_add_test__ifdef_xml_dtd(tc_basic, test_invalid_tag_in_dtd);
-  tcase_add_test(tc_basic, test_not_predefined_entities);
-  tcase_add_test__ifdef_xml_dtd(tc_basic, test_ignore_section);
   tcase_add_test__ifdef_xml_dtd(tc_basic, test_ignore_section_utf16);
   tcase_add_test__ifdef_xml_dtd(tc_basic, test_ignore_section_utf16_be);
   tcase_add_test__ifdef_xml_dtd(tc_basic, test_bad_ignore_section);
