@@ -100,6 +100,19 @@ extern int XMLCALL external_entity_loader(XML_Parser parser,
                                           const XML_Char *systemId,
                                           const XML_Char *publicId);
 
+typedef struct ext_faults {
+  const char *parse_text;
+  const char *fail_text;
+  const XML_Char *encoding;
+  enum XML_Error error;
+} ExtFaults;
+
+extern int XMLCALL external_entity_faulter(XML_Parser parser,
+                                           const XML_Char *context,
+                                           const XML_Char *base,
+                                           const XML_Char *systemId,
+                                           const XML_Char *publicId);
+
 /* Entity Declaration Handlers */
 #  define ENTITY_MATCH_FAIL (-1)
 #  define ENTITY_MATCH_NOT_FOUND (0)

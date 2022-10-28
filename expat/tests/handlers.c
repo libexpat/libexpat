@@ -187,6 +187,34 @@ external_entity_loader(XML_Parser parser, const XML_Char *context,
   return XML_STATUS_OK;
 }
 
+int XMLCALL
+external_entity_faulter(XML_Parser parser, const XML_Char *context,
+                        const XML_Char *base, const XML_Char *systemId,
+                        const XML_Char *publicId) {
+  XML_Parser ext_parser;
+  ExtFaults *fault = (ExtFaults *)XML_GetUserData(parser);
+
+  UNUSED_P(base);
+  UNUSED_P(systemId);
+  UNUSED_P(publicId);
+  ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
+  if (ext_parser == NULL)
+    fail("Could not create external entity parser");
+  if (fault->encoding != NULL) {
+    if (! XML_SetEncoding(ext_parser, fault->encoding))
+      fail("XML_SetEncoding failed");
+  }
+  if (_XML_Parse_SINGLE_BYTES(ext_parser, fault->parse_text,
+                              (int)strlen(fault->parse_text), XML_TRUE)
+      != XML_STATUS_ERROR)
+    fail(fault->fail_text);
+  if (XML_GetErrorCode(ext_parser) != fault->error)
+    xml_failure(ext_parser);
+
+  XML_ParserFree(ext_parser);
+  return XML_STATUS_ERROR;
+}
+
 /* Entity Declaration Handlers */
 static const XML_Char *entity_name_to_match = NULL;
 static const XML_Char *entity_value_to_match = NULL;
