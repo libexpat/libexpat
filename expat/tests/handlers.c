@@ -773,6 +773,43 @@ external_entity_valuer(XML_Parser parser, const XML_Char *context,
   return XML_STATUS_OK;
 }
 
+int XMLCALL
+external_entity_not_standalone(XML_Parser parser, const XML_Char *context,
+                               const XML_Char *base, const XML_Char *systemId,
+                               const XML_Char *publicId) {
+  const char *text1 = "<!ELEMENT doc EMPTY>\n"
+                      "<!ENTITY % e1 SYSTEM 'bar'>\n"
+                      "%e1;\n";
+  const char *text2 = "<!ATTLIST doc a1 CDATA 'value'>";
+  XML_Parser ext_parser;
+
+  UNUSED_P(base);
+  UNUSED_P(publicId);
+  if (systemId == NULL)
+    return XML_STATUS_OK;
+  ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
+  if (ext_parser == NULL)
+    fail("Could not create external entity parser");
+  if (! xcstrcmp(systemId, XCS("foo"))) {
+    XML_SetNotStandaloneHandler(ext_parser, reject_not_standalone_handler);
+    if (_XML_Parse_SINGLE_BYTES(ext_parser, text1, (int)strlen(text1), XML_TRUE)
+        != XML_STATUS_ERROR)
+      fail("Expected not standalone rejection");
+    if (XML_GetErrorCode(ext_parser) != XML_ERROR_NOT_STANDALONE)
+      xml_failure(ext_parser);
+    XML_SetNotStandaloneHandler(ext_parser, NULL);
+    XML_ParserFree(ext_parser);
+    return XML_STATUS_ERROR;
+  } else if (! xcstrcmp(systemId, XCS("bar"))) {
+    if (_XML_Parse_SINGLE_BYTES(ext_parser, text2, (int)strlen(text2), XML_TRUE)
+        == XML_STATUS_ERROR)
+      xml_failure(ext_parser);
+  }
+
+  XML_ParserFree(ext_parser);
+  return XML_STATUS_OK;
+}
+
 /* NotStandalone handlers */
 
 int XMLCALL
