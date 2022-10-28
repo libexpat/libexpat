@@ -2757,6 +2757,57 @@ END_TEST
 #undef PRE_ERROR_STR
 #undef POST_ERROR_STR
 
+/* Test position information in handler */
+#define START_ELEMENT "<e>"
+#define CDATA_TEXT "Hello"
+#define END_ELEMENT "</e>"
+START_TEST(test_byte_info_at_cdata) {
+  const char *text = START_ELEMENT CDATA_TEXT END_ELEMENT;
+  int offset, size;
+  ByteTestData data;
+
+  /* Check initial context is empty */
+  if (XML_GetInputContext(g_parser, &offset, &size) != NULL)
+    fail("Unexpected context at start of parse");
+
+  data.start_element_len = (int)strlen(START_ELEMENT);
+  data.cdata_len = (int)strlen(CDATA_TEXT);
+  data.total_string_len = (int)strlen(text);
+  XML_SetCharacterDataHandler(g_parser, byte_character_handler);
+  XML_SetUserData(g_parser, &data);
+  if (XML_Parse(g_parser, text, (int)strlen(text), XML_TRUE) != XML_STATUS_OK)
+    xml_failure(g_parser);
+}
+END_TEST
+#undef START_ELEMENT
+#undef CDATA_TEXT
+#undef END_ELEMENT
+
+/* Test predefined entities are correctly recognised */
+START_TEST(test_predefined_entities) {
+  const char *text = "<doc>&lt;&gt;&amp;&quot;&apos;</doc>";
+  const XML_Char *expected = XCS("<doc>&lt;&gt;&amp;&quot;&apos;</doc>");
+  const XML_Char *result = XCS("<>&\"'");
+  CharData storage;
+
+  XML_SetDefaultHandler(g_parser, accumulate_characters);
+  /* run_character_check uses XML_SetCharacterDataHandler(), which
+   * unfortunately heads off a code path that we need to exercise.
+   */
+  CharData_Init(&storage);
+  XML_SetUserData(g_parser, &storage);
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+      == XML_STATUS_ERROR)
+    xml_failure(g_parser);
+  /* The default handler doesn't translate the entities */
+  CharData_CheckXMLChars(&storage, expected);
+
+  /* Now try again and check the translation */
+  XML_ParserReset(g_parser, NULL);
+  run_character_check(text, result);
+}
+END_TEST
+
 TCase *
 make_basic_test_case(Suite *s) {
   TCase *tc_basic = tcase_create("basic tests");
@@ -2879,6 +2930,8 @@ make_basic_test_case(Suite *s) {
 #endif
   tcase_add_test(tc_basic, test_byte_info_at_end);
   tcase_add_test(tc_basic, test_byte_info_at_error);
+  tcase_add_test(tc_basic, test_byte_info_at_cdata);
+  tcase_add_test(tc_basic, test_predefined_entities);
 
   return tc_basic; /* TEMPORARY: this will become a void function */
 }
