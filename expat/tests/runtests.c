@@ -74,68 +74,6 @@
 
 XML_Parser g_parser = NULL;
 
-/* Test stopping the parser in cdata handler */
-START_TEST(test_stop_parser_between_cdata_calls) {
-  const char *text = long_cdata_text;
-
-  XML_SetCharacterDataHandler(g_parser, clearing_aborting_character_handler);
-  g_resumable = XML_FALSE;
-  expect_failure(text, XML_ERROR_ABORTED, "Parse not aborted in CDATA handler");
-}
-END_TEST
-
-/* Test suspending the parser in cdata handler */
-START_TEST(test_suspend_parser_between_cdata_calls) {
-  const char *text = long_cdata_text;
-  enum XML_Status result;
-
-  XML_SetCharacterDataHandler(g_parser, clearing_aborting_character_handler);
-  g_resumable = XML_TRUE;
-  result = _XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE);
-  if (result != XML_STATUS_SUSPENDED) {
-    if (result == XML_STATUS_ERROR)
-      xml_failure(g_parser);
-    fail("Parse not suspended in CDATA handler");
-  }
-  if (XML_GetErrorCode(g_parser) != XML_ERROR_NONE)
-    xml_failure(g_parser);
-}
-END_TEST
-
-/* Test memory allocation functions */
-START_TEST(test_memory_allocation) {
-  char *buffer = (char *)XML_MemMalloc(g_parser, 256);
-  char *p;
-
-  if (buffer == NULL) {
-    fail("Allocation failed");
-  } else {
-    /* Try writing to memory; some OSes try to cheat! */
-    buffer[0] = 'T';
-    buffer[1] = 'E';
-    buffer[2] = 'S';
-    buffer[3] = 'T';
-    buffer[4] = '\0';
-    if (strcmp(buffer, "TEST") != 0) {
-      fail("Memory not writable");
-    } else {
-      p = (char *)XML_MemRealloc(g_parser, buffer, 512);
-      if (p == NULL) {
-        fail("Reallocation failed");
-      } else {
-        /* Write again, just to be sure */
-        buffer = p;
-        buffer[0] = 'V';
-        if (strcmp(buffer, "VEST") != 0) {
-          fail("Reallocated memory not writable");
-        }
-      }
-    }
-    XML_MemFree(g_parser, buffer);
-  }
-}
-END_TEST
-
 static void XMLCALL
 record_default_handler(void *userData, const XML_Char *s, int len) {
   UNUSED_P(s);
@@ -9667,9 +9605,6 @@ make_suite(void) {
 
   tcase_add_test__ifdef_xml_dtd(tc_basic,
                                 test_ext_entity_invalid_suspended_parse);
-  tcase_add_test(tc_basic, test_stop_parser_between_cdata_calls);
-  tcase_add_test(tc_basic, test_suspend_parser_between_cdata_calls);
-  tcase_add_test(tc_basic, test_memory_allocation);
   tcase_add_test(tc_basic, test_default_current);
   tcase_add_test(tc_basic, test_dtd_elements);
   tcase_add_test(tc_basic, test_dtd_elements_nesting);
