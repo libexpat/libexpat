@@ -2255,6 +2255,20 @@ START_TEST(test_cdata_default) {
 }
 END_TEST
 
+/* Test resetting a subordinate parser does exactly nothing */
+START_TEST(test_subordinate_reset) {
+  const char *text = "<?xml version='1.0' encoding='us-ascii'?>\n"
+                     "<!DOCTYPE doc SYSTEM 'foo'>\n"
+                     "<doc>&entity;</doc>";
+
+  XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+  XML_SetExternalEntityRefHandler(g_parser, external_entity_resetter);
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+      == XML_STATUS_ERROR)
+    xml_failure(g_parser);
+}
+END_TEST
+
 TCase *
 make_basic_test_case(Suite *s) {
   TCase *tc_basic = tcase_create("basic tests");
@@ -2355,6 +2369,7 @@ make_basic_test_case(Suite *s) {
   tcase_add_test(tc_basic, test_resume_invalid_parse);
   tcase_add_test(tc_basic, test_resume_resuspended);
   tcase_add_test(tc_basic, test_cdata_default);
+  tcase_add_test(tc_basic, test_subordinate_reset);
 
   return tc_basic; /* TEMPORARY: this will become a void function */
 }

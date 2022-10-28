@@ -74,65 +74,6 @@
 
 XML_Parser g_parser = NULL;
 
-/* Test resetting a subordinate parser does exactly nothing */
-static int XMLCALL
-external_entity_resetter(XML_Parser parser, const XML_Char *context,
-                         const XML_Char *base, const XML_Char *systemId,
-                         const XML_Char *publicId) {
-  const char *text = "<!ELEMENT doc (#PCDATA)*>";
-  XML_Parser ext_parser;
-  XML_ParsingStatus status;
-
-  UNUSED_P(base);
-  UNUSED_P(systemId);
-  UNUSED_P(publicId);
-  ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
-  if (ext_parser == NULL)
-    fail("Could not create external entity parser");
-  XML_GetParsingStatus(ext_parser, &status);
-  if (status.parsing != XML_INITIALIZED) {
-    fail("Parsing status is not INITIALIZED");
-    return XML_STATUS_ERROR;
-  }
-  if (_XML_Parse_SINGLE_BYTES(ext_parser, text, (int)strlen(text), XML_TRUE)
-      == XML_STATUS_ERROR) {
-    xml_failure(parser);
-    return XML_STATUS_ERROR;
-  }
-  XML_GetParsingStatus(ext_parser, &status);
-  if (status.parsing != XML_FINISHED) {
-    fail("Parsing status is not FINISHED");
-    return XML_STATUS_ERROR;
-  }
-  /* Check we can't parse here */
-  if (XML_Parse(ext_parser, text, (int)strlen(text), XML_TRUE)
-      != XML_STATUS_ERROR)
-    fail("Parsing when finished not faulted");
-  if (XML_GetErrorCode(ext_parser) != XML_ERROR_FINISHED)
-    fail("Parsing when finished faulted with wrong code");
-  XML_ParserReset(ext_parser, NULL);
-  XML_GetParsingStatus(ext_parser, &status);
-  if (status.parsing != XML_FINISHED) {
-    fail("Parsing status not still FINISHED");
-    return XML_STATUS_ERROR;
-  }
-  XML_ParserFree(ext_parser);
-  return XML_STATUS_OK;
-}
-
-START_TEST(test_subordinate_reset) {
-  const char *text = "<?xml version='1.0' encoding='us-ascii'?>\n"
-                     "<!DOCTYPE doc SYSTEM 'foo'>\n"
-                     "<doc>&entity;</doc>";
-
-  XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
-  XML_SetExternalEntityRefHandler(g_parser, external_entity_resetter);
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
-      == XML_STATUS_ERROR)
-    xml_failure(g_parser);
-}
-END_TEST
-
 /* Test suspending a subordinate parser */
 
 static void XMLCALL
@@ -9067,7 +9008,6 @@ make_suite(void) {
 
   tcase_add_test__ifdef_xml_dtd(tc_basic,
                                 test_ext_entity_invalid_suspended_parse);
-  tcase_add_test(tc_basic, test_subordinate_reset);
   tcase_add_test(tc_basic, test_subordinate_suspend);
   tcase_add_test(tc_basic, test_subordinate_xdecl_suspend);
   tcase_add_test(tc_basic, test_subordinate_xdecl_abort);
