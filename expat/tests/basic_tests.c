@@ -796,6 +796,116 @@ START_TEST(test_end_element_events) {
 }
 END_TEST
 
+/*
+ * Attribute tests.
+ */
+
+/* Helper used by the following tests; this checks any "attr" and "refs"
+   attributes to make sure whitespace has been normalized.
+
+   Return true if whitespace has been normalized in a string, using
+   the rules for attribute value normalization.  The 'is_cdata' flag
+   is needed since CDATA attributes don't need to have multiple
+   whitespace characters collapsed to a single space, while other
+   attribute data types do.  (Section 3.3.3 of the recommendation.)
+*/
+static int
+is_whitespace_normalized(const XML_Char *s, int is_cdata) {
+  int blanks = 0;
+  int at_start = 1;
+  while (*s) {
+    if (*s == XCS(' '))
+      ++blanks;
+    else if (*s == XCS('\t') || *s == XCS('\n') || *s == XCS('\r'))
+      return 0;
+    else {
+      if (at_start) {
+        at_start = 0;
+        if (blanks && ! is_cdata)
+          /* illegal leading blanks */
+          return 0;
+      } else if (blanks > 1 && ! is_cdata)
+        return 0;
+      blanks = 0;
+    }
+    ++s;
+  }
+  if (blanks && ! is_cdata)
+    return 0;
+  return 1;
+}
+
+/* Check the attribute whitespace checker: */
+START_TEST(test_helper_is_whitespace_normalized) {
+  assert(is_whitespace_normalized(XCS("abc"), 0));
+  assert(is_whitespace_normalized(XCS("abc"), 1));
+  assert(is_whitespace_normalized(XCS("abc def ghi"), 0));
+  assert(is_whitespace_normalized(XCS("abc def ghi"), 1));
+  assert(! is_whitespace_normalized(XCS(" abc def ghi"), 0));
+  assert(is_whitespace_normalized(XCS(" abc def ghi"), 1));
+  assert(! is_whitespace_normalized(XCS("abc  def ghi"), 0));
+  assert(is_whitespace_normalized(XCS("abc  def ghi"), 1));
+  assert(! is_whitespace_normalized(XCS("abc def ghi "), 0));
+  assert(is_whitespace_normalized(XCS("abc def ghi "), 1));
+  assert(! is_whitespace_normalized(XCS(" "), 0));
+  assert(is_whitespace_normalized(XCS(" "), 1));
+  assert(! is_whitespace_normalized(XCS("\t"), 0));
+  assert(! is_whitespace_normalized(XCS("\t"), 1));
+  assert(! is_whitespace_normalized(XCS("\n"), 0));
+  assert(! is_whitespace_normalized(XCS("\n"), 1));
+  assert(! is_whitespace_normalized(XCS("\r"), 0));
+  assert(! is_whitespace_normalized(XCS("\r"), 1));
+  assert(! is_whitespace_normalized(XCS("abc\t def"), 1));
+}
+END_TEST
+
+static void XMLCALL
+check_attr_contains_normalized_whitespace(void *userData, const XML_Char *name,
+                                          const XML_Char **atts) {
+  int i;
+  UNUSED_P(userData);
+  UNUSED_P(name);
+  for (i = 0; atts[i] != NULL; i += 2) {
+    const XML_Char *attrname = atts[i];
+    const XML_Char *value = atts[i + 1];
+    if (xcstrcmp(XCS("attr"), attrname) == 0
+        || xcstrcmp(XCS("ents"), attrname) == 0
+        || xcstrcmp(XCS("refs"), attrname) == 0) {
+      if (! is_whitespace_normalized(value, 0)) {
+        char buffer[256];
+        snprintf(buffer, sizeof(buffer),
+                 "attribute value not normalized: %" XML_FMT_STR
+                 "='%" XML_FMT_STR "'",
+                 attrname, value);
+        fail(buffer);
+      }
+    }
+  }
+}
+
+START_TEST(test_attr_whitespace_normalization) {
+  const char *text
+      = "<!DOCTYPE doc [\n"
+        "  <!ATTLIST doc\n"
+        "            attr NMTOKENS #REQUIRED\n"
+        "            ents ENTITIES #REQUIRED\n"
+        "            refs IDREFS   #REQUIRED>\n"
+        "]>\n"
+        "<doc attr='    a  b c\t\td\te\t' refs=' id-1   \t  id-2\t\t'  \n"
+        "     ents=' ent-1   \t\r\n"
+        "            ent-2  ' >\n"
+        "  <e id='id-1'/>\n"
+        "  <e id='id-2'/>\n"
+        "</doc>";
+
+  XML_SetStartElementHandler(g_parser,
+                             check_attr_contains_normalized_whitespace);
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+      == XML_STATUS_ERROR)
+    xml_failure(g_parser);
+}
+END_TEST
+
 TCase *
 make_basic_test_case(Suite *s) {
   TCase *tc_basic = tcase_create("basic tests");
@@ -838,6 +948,8 @@ make_basic_test_case(Suite *s) {
   tcase_add_test(tc_basic, test_really_long_lines);
   tcase_add_test(tc_basic, test_really_long_encoded_lines);
   tcase_add_test(tc_basic, test_end_element_events);
+  tcase_add_test(tc_basic, test_helper_is_whitespace_normalized);
+  tcase_add_test(tc_basic, test_attr_whitespace_normalization);
 
   return tc_basic; /* TEMPORARY: this will become a void function */
 }
