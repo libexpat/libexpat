@@ -112,6 +112,11 @@ extern int XMLCALL external_entity_faulter(XML_Parser parser,
                                            const XML_Char *base,
                                            const XML_Char *systemId,
                                            const XML_Char *publicId);
+extern int XMLCALL external_entity_null_loader(XML_Parser parser,
+                                               const XML_Char *context,
+                                               const XML_Char *base,
+                                               const XML_Char *systemId,
+                                               const XML_Char *publicId);
 
 /* NotStandalone handlers */
 
