@@ -140,6 +140,29 @@ extern int XMLCALL external_entity_resetter(XML_Parser parser,
                                             const XML_Char *systemId,
                                             const XML_Char *publicId);
 
+extern int XMLCALL external_entity_suspender(XML_Parser parser,
+                                             const XML_Char *context,
+                                             const XML_Char *base,
+                                             const XML_Char *systemId,
+                                             const XML_Char *publicId);
+
+extern int XMLCALL external_entity_suspend_xmldecl(XML_Parser parser,
+                                                   const XML_Char *context,
+                                                   const XML_Char *base,
+                                                   const XML_Char *systemId,
+                                                   const XML_Char *publicId);
+
+/* Entity declaration handlers */
+
+extern void XMLCALL entity_suspending_decl_handler(void *userData,
+                                                   const XML_Char *name,
+                                                   XML_Content *model);
+
+extern void XMLCALL entity_suspending_xdecl_handler(void *userData,
+                                                    const XML_Char *version,
+                                                    const XML_Char *encoding,
+                                                    int standalone);
+
 /* NotStandalone handlers */
 
 extern int XMLCALL reject_not_standalone_handler(void *userData);
