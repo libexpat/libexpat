@@ -49,6 +49,15 @@ extern "C" {
 
 #  include "expat.h"
 
+/* Variable holding the expected handler userData */
+extern void *g_handler_data;
+/* Count of the number of times the comment handler has been invoked */
+extern int g_comment_count;
+/* Count of the number of skipped entities */
+extern int g_skip_count;
+/* Count of the number of times the XML declaration handler is invoked */
+extern int g_xdecl_count;
+
 /* Start/End Element Handlers */
 
 extern void XMLCALL start_element_event_handler(void *userData,
@@ -193,6 +202,12 @@ extern void XMLCALL entity_suspending_xdecl_handler(void *userData,
                                                     const XML_Char *encoding,
                                                     int standalone);
 
+extern int XMLCALL external_entity_param_checker(XML_Parser parser,
+                                                 const XML_Char *context,
+                                                 const XML_Char *base,
+                                                 const XML_Char *systemId,
+                                                 const XML_Char *publicId);
+
 /* NotStandalone handlers */
 
 extern int XMLCALL reject_not_standalone_handler(void *userData);
@@ -258,6 +273,18 @@ extern void param_entity_match_init(const XML_Char *name,
                                     const XML_Char *value);
 
 extern int get_param_entity_match_flag(void);
+
+/* Misc handlers */
+
+extern void XMLCALL xml_decl_handler(void *userData, const XML_Char *version,
+                                     const XML_Char *encoding, int standalone);
+
+extern void XMLCALL param_check_skip_handler(void *userData,
+                                             const XML_Char *entityName,
+                                             int is_parameter_entity);
+
+extern void XMLCALL data_check_comment_handler(void *userData,
+                                               const XML_Char *data);
 
 #endif /* XML_HANDLERS_H */
 
