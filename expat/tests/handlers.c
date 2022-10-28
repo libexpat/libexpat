@@ -1237,6 +1237,14 @@ record_element_start_handler(void *userData, const XML_Char *name,
   CharData_AppendXMLChars((CharData *)userData, name, (int)xcstrlen(name));
 }
 
+void XMLCALL
+record_element_end_handler(void *userData, const XML_Char *name) {
+  CharData *storage = (CharData *)userData;
+
+  CharData_AppendXMLChars(storage, XCS("/"), 1);
+  CharData_AppendXMLChars(storage, name, -1);
+}
+
 /* Entity Declaration Handlers */
 static const XML_Char *entity_name_to_match = NULL;
 static const XML_Char *entity_value_to_match = NULL;
