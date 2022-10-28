@@ -727,6 +727,52 @@ external_entity_load_ignore_utf16_be(XML_Parser parser, const XML_Char *context,
   return XML_STATUS_OK;
 }
 
+int XMLCALL
+external_entity_valuer(XML_Parser parser, const XML_Char *context,
+                       const XML_Char *base, const XML_Char *systemId,
+                       const XML_Char *publicId) {
+  const char *text1 = "<!ELEMENT doc EMPTY>\n"
+                      "<!ENTITY % e1 SYSTEM '004-2.ent'>\n"
+                      "<!ENTITY % e2 '%e1;'>\n"
+                      "%e1;\n";
+  XML_Parser ext_parser;
+
+  UNUSED_P(base);
+  UNUSED_P(publicId);
+  if (systemId == NULL)
+    return XML_STATUS_OK;
+  ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
+  if (ext_parser == NULL)
+    fail("Could not create external entity parser");
+  if (! xcstrcmp(systemId, XCS("004-1.ent"))) {
+    if (_XML_Parse_SINGLE_BYTES(ext_parser, text1, (int)strlen(text1), XML_TRUE)
+        == XML_STATUS_ERROR)
+      xml_failure(ext_parser);
+  } else if (! xcstrcmp(systemId, XCS("004-2.ent"))) {
+    ExtFaults *fault = (ExtFaults *)XML_GetUserData(parser);
+    enum XML_Status status;
+    enum XML_Error error;
+
+    status = _XML_Parse_SINGLE_BYTES(ext_parser, fault->parse_text,
+                                     (int)strlen(fault->parse_text), XML_TRUE);
+    if (fault->error == XML_ERROR_NONE) {
+      if (status == XML_STATUS_ERROR)
+        xml_failure(ext_parser);
+    } else {
+      if (status != XML_STATUS_ERROR)
+        fail(fault->fail_text);
+      error = XML_GetErrorCode(ext_parser);
+      if (error != fault->error
+          && (fault->error != XML_ERROR_XML_DECL
+              || error != XML_ERROR_TEXT_DECL))
+        xml_failure(ext_parser);
+    }
+  }
+
+  XML_ParserFree(ext_parser);
+  return XML_STATUS_OK;
+}
+
 /* NotStandalone handlers */
 
 int XMLCALL
