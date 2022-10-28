@@ -810,6 +810,43 @@ external_entity_not_standalone(XML_Parser parser, const XML_Char *context,
   return XML_STATUS_OK;
 }
 
+int XMLCALL
+external_entity_value_aborter(XML_Parser parser, const XML_Char *context,
+                              const XML_Char *base, const XML_Char *systemId,
+                              const XML_Char *publicId) {
+  const char *text1 = "<!ELEMENT doc EMPTY>\n"
+                      "<!ENTITY % e1 SYSTEM '004-2.ent'>\n"
+                      "<!ENTITY % e2 '%e1;'>\n"
+                      "%e1;\n";
+  const char *text2 = "<?xml version='1.0' encoding='utf-8'?>";
+  XML_Parser ext_parser;
+
+  UNUSED_P(base);
+  UNUSED_P(publicId);
+  if (systemId == NULL)
+    return XML_STATUS_OK;
+  ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
+  if (ext_parser == NULL)
+    fail("Could not create external entity parser");
+  if (! xcstrcmp(systemId, XCS("004-1.ent"))) {
+    if (_XML_Parse_SINGLE_BYTES(ext_parser, text1, (int)strlen(text1), XML_TRUE)
+        == XML_STATUS_ERROR)
+      xml_failure(ext_parser);
+  }
+  if (! xcstrcmp(systemId, XCS("004-2.ent"))) {
+    XML_SetXmlDeclHandler(ext_parser, entity_suspending_xdecl_handler);
+    XML_SetUserData(ext_parser, ext_parser);
+    if (_XML_Parse_SINGLE_BYTES(ext_parser, text2, (int)strlen(text2), XML_TRUE)
+        != XML_STATUS_ERROR)
+      fail("Aborted parse not faulted");
+    if (XML_GetErrorCode(ext_parser) != XML_ERROR_ABORTED)
+      xml_failure(ext_parser);
+  }
+
+  XML_ParserFree(ext_parser);
+  return XML_STATUS_OK;
+}
+
 /* NotStandalone handlers */
 
 int XMLCALL

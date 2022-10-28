@@ -3004,6 +3004,102 @@ START_TEST(test_ext_entity_not_standalone) {
 }
 END_TEST
 
+START_TEST(test_ext_entity_value_abort) {
+  const char *text = "<!DOCTYPE doc SYSTEM '004-1.ent'>\n"
+                     "<doc></doc>\n";
+
+  XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+  XML_SetExternalEntityRefHandler(g_parser, external_entity_value_aborter);
+  g_resumable = XML_FALSE;
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+      == XML_STATUS_ERROR)
+    xml_failure(g_parser);
+}
+END_TEST
+
+START_TEST(test_bad_public_doctype) {
+  const char *text = "<?xml version='1.0' encoding='utf-8'?>\n"
+                     "<!DOCTYPE doc PUBLIC '{BadName}' 'test'>\n"
+                     "<doc></doc>";
+
+  /* Setting a handler provokes a particular code path */
+  XML_SetDoctypeDeclHandler(g_parser, dummy_start_doctype_handler,
+                            dummy_end_doctype_handler);
+  expect_failure(text, XML_ERROR_PUBLICID, "Bad Public ID not failed");
+}
+END_TEST
+
+/* Test based on ibm/valid/P32/ibm32v04.xml */
+START_TEST(test_attribute_enum_value) {
+  const char *text = "<?xml version='1.0' standalone='no'?>\n"
+                     "<!DOCTYPE animal SYSTEM 'test.dtd'>\n"
+                     "<animal>This is a \n    <a/>  \n\nyellow tiger</animal>";
+  ExtTest dtd_data
+      = {"<!ELEMENT animal (#PCDATA|a)*>\n"
+         "<!ELEMENT a EMPTY>\n"
+         "<!ATTLIST animal xml:space (default|preserve) 'preserve'>",
+         NULL, NULL};
+  const XML_Char *expected = XCS("This is a \n      \n\nyellow tiger");
+
+  XML_SetExternalEntityRefHandler(g_parser, external_entity_loader);
+  XML_SetUserData(g_parser, &dtd_data);
+  XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+  /* An attribute list handler provokes a different code path */
+  XML_SetAttlistDeclHandler(g_parser, dummy_attlist_decl_handler);
+  run_ext_character_check(text, &dtd_data, expected);
+}
+END_TEST
+
+/* Slightly bizarrely, the library seems to silently ignore entity
+ * definitions for predefined entities, even when they are wrong.  The
+ * language of the XML 1.0 spec is somewhat unhelpful as to what ought
+ * to happen, so this is currently treated as acceptable.
+ */
+START_TEST(test_predefined_entity_redefinition) {
+  const char *text = "<!DOCTYPE doc [\n"
+                     "<!ENTITY apos 'foo'>\n"
+                     "]>\n"
+                     "<doc>&apos;</doc>";
+  run_character_check(text, XCS("'"));
+}
+END_TEST
+
+/* Test that the parser stops processing the DTD after an unresolved
+ * parameter entity is encountered.
+ */
+START_TEST(test_dtd_stop_processing) {
+  const char *text = "<!DOCTYPE doc [\n"
+                     "%foo;\n"
+                     "<!ENTITY bar 'bas'>\n"
+                     "]><doc/>";
+
+  XML_SetEntityDeclHandler(g_parser, dummy_entity_decl_handler);
+  init_dummy_handlers();
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+      == XML_STATUS_ERROR)
+    xml_failure(g_parser);
+  if (get_dummy_handler_flags() != 0)
+    fail("DTD processing still going after undefined PE");
+}
+END_TEST
+
+/* Test public notations with no system ID */
+START_TEST(test_public_notation_no_sysid) {
+  const char *text = "<!DOCTYPE doc [\n"
+                     "<!NOTATION note PUBLIC 'foo'>\n"
+                     "<!ELEMENT doc EMPTY>\n"
+                     "]>\n<doc/>";
+
+  init_dummy_handlers();
+  XML_SetNotationDeclHandler(g_parser, dummy_notation_decl_handler);
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+      == XML_STATUS_ERROR)
+    xml_failure(g_parser);
+  if (get_dummy_handler_flags() != DUMMY_NOTATION_DECL_HANDLER_FLAG)
+    fail("Notation declaration handler not called");
+}
+END_TEST
+
 TCase *
 make_basic_test_case(Suite *s) {
   TCase *tc_basic = tcase_create("basic tests");
@@ -3136,6 +3232,12 @@ make_basic_test_case(Suite *s) {
   tcase_add_test__ifdef_xml_dtd(tc_basic, test_bad_ignore_section);
   tcase_add_test__ifdef_xml_dtd(tc_basic, test_external_entity_values);
   tcase_add_test__ifdef_xml_dtd(tc_basic, test_ext_entity_not_standalone);
+  tcase_add_test__ifdef_xml_dtd(tc_basic, test_ext_entity_value_abort);
+  tcase_add_test(tc_basic, test_bad_public_doctype);
+  tcase_add_test(tc_basic, test_attribute_enum_value);
+  tcase_add_test(tc_basic, test_predefined_entity_redefinition);
+  tcase_add_test__ifdef_xml_dtd(tc_basic, test_dtd_stop_processing);
+  tcase_add_test(tc_basic, test_public_notation_no_sysid);
 
   return tc_basic; /* TEMPORARY: this will become a void function */
 }
