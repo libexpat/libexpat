@@ -113,6 +113,12 @@ extern int XMLCALL external_entity_faulter(XML_Parser parser,
                                            const XML_Char *systemId,
                                            const XML_Char *publicId);
 
+/* NotStandalone handlers */
+
+extern int XMLCALL reject_not_standalone_handler(void *userData);
+
+extern int XMLCALL accept_not_standalone_handler(void *userData);
+
 /* Entity Declaration Handlers */
 #  define ENTITY_MATCH_FAIL (-1)
 #  define ENTITY_MATCH_NOT_FOUND (0)

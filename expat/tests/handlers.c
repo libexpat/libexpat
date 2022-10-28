@@ -215,6 +215,20 @@ external_entity_faulter(XML_Parser parser, const XML_Char *context,
   return XML_STATUS_ERROR;
 }
 
+/* NotStandalone handlers */
+
+int XMLCALL
+reject_not_standalone_handler(void *userData) {
+  UNUSED_P(userData);
+  return XML_STATUS_ERROR;
+}
+
+int XMLCALL
+accept_not_standalone_handler(void *userData) {
+  UNUSED_P(userData);
+  return XML_STATUS_OK;
+}
+
 /* Entity Declaration Handlers */
 static const XML_Char *entity_name_to_match = NULL;
 static const XML_Char *entity_value_to_match = NULL;
