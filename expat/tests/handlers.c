@@ -44,8 +44,27 @@
 
 #include "expat.h"
 #include "internal.h"
+#include "structdata.h"
 #include "common.h"
 #include "handlers.h"
+
+/* Start/End Element Handlers */
+
+void XMLCALL
+start_element_event_handler2(void *userData, const XML_Char *name,
+                             const XML_Char **attr) {
+  StructData *storage = (StructData *)userData;
+  UNUSED_P(attr);
+  StructData_AddItem(storage, name, XML_GetCurrentColumnNumber(g_parser),
+                     XML_GetCurrentLineNumber(g_parser), STRUCT_START_TAG);
+}
+
+void XMLCALL
+end_element_event_handler2(void *userData, const XML_Char *name) {
+  StructData *storage = (StructData *)userData;
+  StructData_AddItem(storage, name, XML_GetCurrentColumnNumber(g_parser),
+                     XML_GetCurrentLineNumber(g_parser), STRUCT_END_TAG);
+}
 
 /* External Entity Handlers */
 

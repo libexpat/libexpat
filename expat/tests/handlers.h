@@ -49,6 +49,18 @@ extern "C" {
 
 #  include "expat.h"
 
+/* Start/End Element Handlers */
+
+#  define STRUCT_START_TAG 0
+#  define STRUCT_END_TAG 1
+
+extern void XMLCALL start_element_event_handler2(void *userData,
+                                                 const XML_Char *name,
+                                                 const XML_Char **attr);
+
+extern void XMLCALL end_element_event_handler2(void *userData,
+                                               const XML_Char *name);
+
 /* External Entity Handlers */
 
 typedef struct ExtOption {
