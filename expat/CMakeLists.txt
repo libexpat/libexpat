@@ -599,6 +599,7 @@ if(EXPAT_BUILD_TESTS)
         tests/chardata.c
         tests/common.c
         tests/dummy.c
+        tests/handlers.c
         tests/memcheck.c
         tests/minicheck.c
         tests/structdata.c

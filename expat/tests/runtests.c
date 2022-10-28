@@ -67,6 +67,7 @@
 #include "memcheck.h"
 #include "common.h"
 #include "dummy.h"
+#include "handlers.h"
 #include "siphash.h"
 #include "ascii.h" /* for ASCII_xxx */
 
@@ -77,78 +78,6 @@ basic_setup(void) {
   g_parser = XML_ParserCreate(NULL);
   if (g_parser == NULL)
     fail("Parser not created.");
-}
-
-/* Useful external entity handler */
-typedef struct ExtOption {
-  const XML_Char *system_id;
-  const char *parse_text;
-} ExtOption;
-
-static int XMLCALL
-external_entity_optioner(XML_Parser parser, const XML_Char *context,
-                         const XML_Char *base, const XML_Char *systemId,
-                         const XML_Char *publicId) {
-  ExtOption *options = (ExtOption *)XML_GetUserData(parser);
-  XML_Parser ext_parser;
-
-  UNUSED_P(base);
-  UNUSED_P(publicId);
-  while (options->parse_text != NULL) {
-    if (! xcstrcmp(systemId, options->system_id)) {
-      enum XML_Status rc;
-      ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
-      if (ext_parser == NULL)
-        return XML_STATUS_ERROR;
-      rc = _XML_Parse_SINGLE_BYTES(ext_parser, options->parse_text,
-                                   (int)strlen(options->parse_text), XML_TRUE);
-      XML_ParserFree(ext_parser);
-      return rc;
-    }
-    options++;
-  }
-  fail("No suitable option found");
-  return XML_STATUS_ERROR;
-}
-
-/*
- * Parameter entity evaluation support.
- */
-#define ENTITY_MATCH_FAIL (-1)
-#define ENTITY_MATCH_NOT_FOUND (0)
-#define ENTITY_MATCH_SUCCESS (1)
-static const XML_Char *entity_name_to_match = NULL;
-static const XML_Char *entity_value_to_match = NULL;
-static int entity_match_flag = ENTITY_MATCH_NOT_FOUND;
-
-static void XMLCALL
-param_entity_match_handler(void *userData, const XML_Char *entityName,
-                           int is_parameter_entity, const XML_Char *value,
-                           int value_length, const XML_Char *base,
-                           const XML_Char *systemId, const XML_Char *publicId,
-                           const XML_Char *notationName) {
-  UNUSED_P(userData);
-  UNUSED_P(base);
-  UNUSED_P(systemId);
-  UNUSED_P(publicId);
-  UNUSED_P(notationName);
-  if (! is_parameter_entity || entity_name_to_match == NULL
-      || entity_value_to_match == NULL) {
-    return;
-  }
-  if (! xcstrcmp(entityName, entity_name_to_match)) {
-    /* The cast here is safe because we control the horizontal and
-     * the vertical, and we therefore know our strings are never
-     * going to overflow an int.
-     */
-    if (value_length != (int)xcstrlen(entity_value_to_match)
-        || xcstrncmp(value, entity_value_to_match, value_length)) {
-      entity_match_flag = ENTITY_MATCH_FAIL;
-    } else {
-      entity_match_flag = ENTITY_MATCH_SUCCESS;
-    }
-  }
-  /* Else leave the match flag alone */
 }
 
 /*
@@ -4962,12 +4891,12 @@ START_TEST(test_param_entity_with_trailing_cr) {
   XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
   XML_SetExternalEntityRefHandler(g_parser, external_entity_loader);
   XML_SetEntityDeclHandler(g_parser, param_entity_match_handler);
-  entity_name_to_match = XCS(PARAM_ENTITY_NAME);
-  entity_value_to_match = XCS(PARAM_ENTITY_CORE_VALUE) XCS("\n");
-  entity_match_flag = ENTITY_MATCH_NOT_FOUND;
+  param_entity_match_init(XCS(PARAM_ENTITY_NAME),
+                          XCS(PARAM_ENTITY_CORE_VALUE) XCS("\n"));
   if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
+  int entity_match_flag = get_param_entity_match_flag();
   if (entity_match_flag == ENTITY_MATCH_FAIL)
     fail("Parameter entity CR->NEWLINE conversion failed");
   else if (entity_match_flag == ENTITY_MATCH_NOT_FOUND)
