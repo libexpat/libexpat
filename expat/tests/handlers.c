@@ -152,6 +152,12 @@ counting_start_element_handler(void *userData, const XML_Char *name,
   }
 }
 
+void XMLCALL
+suspending_end_handler(void *userData, const XML_Char *s) {
+  UNUSED_P(s);
+  XML_StopParser((XML_Parser)userData, 1);
+}
+
 /* Text encoding handlers */
 
 int XMLCALL
