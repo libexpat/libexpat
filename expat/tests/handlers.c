@@ -847,6 +847,33 @@ external_entity_value_aborter(XML_Parser parser, const XML_Char *context,
   return XML_STATUS_OK;
 }
 
+int XMLCALL
+external_entity_public(XML_Parser parser, const XML_Char *context,
+                       const XML_Char *base, const XML_Char *systemId,
+                       const XML_Char *publicId) {
+  const char *text1 = (const char *)XML_GetUserData(parser);
+  const char *text2 = "<!ATTLIST doc a CDATA 'value'>";
+  const char *text = NULL;
+  XML_Parser ext_parser;
+  int parse_res;
+
+  UNUSED_P(base);
+  ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
+  if (ext_parser == NULL)
+    return XML_STATUS_ERROR;
+  if (systemId != NULL && ! xcstrcmp(systemId, XCS("http://example.org/"))) {
+    text = text1;
+  } else if (publicId != NULL && ! xcstrcmp(publicId, XCS("foo"))) {
+    text = text2;
+  } else
+    fail("Unexpected parameters to external entity parser");
+  assert(text != NULL);
+  parse_res
+      = _XML_Parse_SINGLE_BYTES(ext_parser, text, (int)strlen(text), XML_TRUE);
+  XML_ParserFree(ext_parser);
+  return parse_res;
+}
+
 /* NotStandalone handlers */
 
 int XMLCALL
