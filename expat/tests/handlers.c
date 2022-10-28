@@ -1000,6 +1000,13 @@ record_skip_handler(void *userData, const XML_Char *entityName,
                           is_parameter_entity ? XCS("E") : XCS("e"), 1);
 }
 
+void XMLCALL
+record_element_start_handler(void *userData, const XML_Char *name,
+                             const XML_Char **atts) {
+  UNUSED_P(atts);
+  CharData_AppendXMLChars((CharData *)userData, name, (int)xcstrlen(name));
+}
+
 /* Entity Declaration Handlers */
 static const XML_Char *entity_name_to_match = NULL;
 static const XML_Char *entity_value_to_match = NULL;

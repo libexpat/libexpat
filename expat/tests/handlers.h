@@ -313,6 +313,10 @@ extern void XMLCALL record_skip_handler(void *userData,
                                         const XML_Char *entityName,
                                         int is_parameter_entity);
 
+extern void XMLCALL record_element_start_handler(void *userData,
+                                                 const XML_Char *name,
+                                                 const XML_Char **atts);
+
 /* Entity Declaration Handlers */
 #  define ENTITY_MATCH_FAIL (-1)
 #  define ENTITY_MATCH_NOT_FOUND (0)

@@ -74,63 +74,6 @@
 
 XML_Parser g_parser = NULL;
 
-static void XMLCALL
-record_element_start_handler(void *userData, const XML_Char *name,
-                             const XML_Char **atts) {
-  UNUSED_P(atts);
-  CharData_AppendXMLChars((CharData *)userData, name, (int)xcstrlen(name));
-}
-
-START_TEST(test_nested_groups) {
-  const char *text
-      = "<!DOCTYPE doc [\n"
-        "<!ELEMENT doc "
-        /* Sixteen elements per line */
-        "(e,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,"
-        "(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?,(e?"
-        "))))))))))))))))))))))))))))))))>\n"
-        "<!ELEMENT e EMPTY>"
-        "]>\n"
-        "<doc><e/></doc>";
-  CharData storage;
-
-  CharData_Init(&storage);
-  XML_SetElementDeclHandler(g_parser, dummy_element_decl_handler);
-  XML_SetStartElementHandler(g_parser, record_element_start_handler);
-  XML_SetUserData(g_parser, &storage);
-  init_dummy_handlers();
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
-      == XML_STATUS_ERROR)
-    xml_failure(g_parser);
-  CharData_CheckXMLChars(&storage, XCS("doce"));
-  if (get_dummy_handler_flags() != DUMMY_ELEMENT_DECL_HANDLER_FLAG)
-    fail("Element handler not fired");
-}
-END_TEST
-
-START_TEST(test_group_choice) {
-  const char *text = "<!DOCTYPE doc [\n"
-                     "<!ELEMENT doc (a|b|c)+>\n"
-                     "<!ELEMENT a EMPTY>\n"
-                     "<!ELEMENT b (#PCDATA)>\n"
-                     "<!ELEMENT c ANY>\n"
-                     "]>\n"
-                     "<doc>\n"
-                     "<a/>\n"
-                     "<b attr='foo'>This is a foo</b>\n"
-                     "<c></c>\n"
-                     "</doc>\n";
-
-  XML_SetElementDeclHandler(g_parser, dummy_element_decl_handler);
-  init_dummy_handlers();
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
-      == XML_STATUS_ERROR)
-    xml_failure(g_parser);
-  if (get_dummy_handler_flags() != DUMMY_ELEMENT_DECL_HANDLER_FLAG)
-    fail("Element handler flag not raised");
-}
-END_TEST
-
 static int XMLCALL
 external_entity_public(XML_Parser parser, const XML_Char *context,
                        const XML_Char *base, const XML_Char *systemId,
@@ -7546,8 +7489,6 @@ make_suite(void) {
   TCase *tc_accounting = tcase_create("accounting tests");
 #endif
 
-  tcase_add_test(tc_basic, test_nested_groups);
-  tcase_add_test(tc_basic, test_group_choice);
   tcase_add_test(tc_basic, test_standalone_parameter_entity);
   tcase_add_test__ifdef_xml_dtd(tc_basic, test_skipped_parameter_entity);
   tcase_add_test__ifdef_xml_dtd(tc_basic,
