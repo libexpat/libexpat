@@ -75,39 +75,6 @@
 XML_Parser g_parser = NULL;
 
 /*
- * Element event tests.
- */
-
-static void XMLCALL
-start_element_event_handler(void *userData, const XML_Char *name,
-                            const XML_Char **atts) {
-  UNUSED_P(atts);
-  CharData_AppendXMLChars((CharData *)userData, name, -1);
-}
-
-static void XMLCALL
-end_element_event_handler(void *userData, const XML_Char *name) {
-  CharData *storage = (CharData *)userData;
-  CharData_AppendXMLChars(storage, XCS("/"), 1);
-  CharData_AppendXMLChars(storage, name, -1);
-}
-
-START_TEST(test_end_element_events) {
-  const char *text = "<a><b><c/></b><d><f/></d></a>";
-  const XML_Char *expected = XCS("/c/b/f/d/a");
-  CharData storage;
-
-  CharData_Init(&storage);
-  XML_SetUserData(g_parser, &storage);
-  XML_SetEndElementHandler(g_parser, end_element_event_handler);
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
-      == XML_STATUS_ERROR)
-    xml_failure(g_parser);
-  CharData_CheckXMLChars(&storage, expected);
-}
-END_TEST
-
-/*
  * Attribute tests.
  */
 
@@ -10906,7 +10873,6 @@ make_suite(void) {
   TCase *tc_accounting = tcase_create("accounting tests");
 #endif
 
-  tcase_add_test(tc_basic, test_end_element_events);
   tcase_add_test(tc_basic, test_attr_whitespace_normalization);
   tcase_add_test(tc_basic, test_xmldecl_misplaced);
   tcase_add_test(tc_basic, test_xmldecl_invalid);

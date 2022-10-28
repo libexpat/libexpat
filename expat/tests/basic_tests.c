@@ -777,6 +777,25 @@ START_TEST(test_really_long_encoded_lines) {
 }
 END_TEST
 
+/*
+ * Element event tests.
+ */
+
+START_TEST(test_end_element_events) {
+  const char *text = "<a><b><c/></b><d><f/></d></a>";
+  const XML_Char *expected = XCS("/c/b/f/d/a");
+  CharData storage;
+
+  CharData_Init(&storage);
+  XML_SetUserData(g_parser, &storage);
+  XML_SetEndElementHandler(g_parser, end_element_event_handler);
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+      == XML_STATUS_ERROR)
+    xml_failure(g_parser);
+  CharData_CheckXMLChars(&storage, expected);
+}
+END_TEST
+
 TCase *
 make_basic_test_case(Suite *s) {
   TCase *tc_basic = tcase_create("basic tests");
@@ -818,6 +837,7 @@ make_basic_test_case(Suite *s) {
   tcase_add_test(tc_basic, test_column_number_after_error);
   tcase_add_test(tc_basic, test_really_long_lines);
   tcase_add_test(tc_basic, test_really_long_encoded_lines);
+  tcase_add_test(tc_basic, test_end_element_events);
 
   return tc_basic; /* TEMPORARY: this will become a void function */
 }

@@ -51,6 +51,13 @@ extern "C" {
 
 /* Start/End Element Handlers */
 
+extern void XMLCALL start_element_event_handler(void *userData,
+                                                const XML_Char *name,
+                                                const XML_Char **atts);
+
+extern void XMLCALL end_element_event_handler(void *userData,
+                                              const XML_Char *name);
+
 #  define STRUCT_START_TAG 0
 #  define STRUCT_END_TAG 1
 

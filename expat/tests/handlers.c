@@ -44,11 +44,26 @@
 
 #include "expat.h"
 #include "internal.h"
+#include "chardata.h"
 #include "structdata.h"
 #include "common.h"
 #include "handlers.h"
 
 /* Start/End Element Handlers */
+
+void XMLCALL
+start_element_event_handler(void *userData, const XML_Char *name,
+                            const XML_Char **atts) {
+  UNUSED_P(atts);
+  CharData_AppendXMLChars((CharData *)userData, name, -1);
+}
+
+void XMLCALL
+end_element_event_handler(void *userData, const XML_Char *name) {
+  CharData *storage = (CharData *)userData;
+  CharData_AppendXMLChars(storage, XCS("/"), 1);
+  CharData_AppendXMLChars(storage, name, -1);
+}
 
 void XMLCALL
 start_element_event_handler2(void *userData, const XML_Char *name,
