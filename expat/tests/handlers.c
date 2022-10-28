@@ -47,6 +47,8 @@
 #include <string.h>
 #include <assert.h>
 
+#include "expat_config.h"
+
 #include "expat.h"
 #include "internal.h"
 #include "chardata.h"
@@ -702,6 +704,34 @@ rsqb_handler(void *userData, const XML_Char *s, int len) {
 
   if (len == 1 && *s == XCS(']'))
     *pfound = 1;
+}
+
+void XMLCALL
+byte_character_handler(void *userData, const XML_Char *s, int len) {
+#ifdef XML_CONTEXT_BYTES
+  int offset, size;
+  const char *buffer;
+  ByteTestData *data = (ByteTestData *)userData;
+
+  UNUSED_P(s);
+  buffer = XML_GetInputContext(g_parser, &offset, &size);
+  if (buffer == NULL)
+    fail("Failed to get context buffer");
+  if (offset != data->start_element_len)
+    fail("Context offset in unexpected position");
+  if (len != data->cdata_len)
+    fail("CDATA length reported incorrectly");
+  if (size != data->total_string_len)
+    fail("Context size is not full buffer");
+  if (XML_GetCurrentByteIndex(g_parser) != offset)
+    fail("Character byte index incorrect");
+  if (XML_GetCurrentByteCount(g_parser) != len)
+    fail("Character byte count incorrect");
+#else
+  UNUSED_P(s);
+  UNUSED_P(userData);
+  UNUSED_P(len);
+#endif
 }
 
 /* Handlers that record their invocation by single characters */

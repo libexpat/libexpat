@@ -249,6 +249,15 @@ extern void XMLCALL cr_cdata_handler(void *userData, const XML_Char *s,
 
 extern void XMLCALL rsqb_handler(void *userData, const XML_Char *s, int len);
 
+typedef struct ByteTestData {
+  int start_element_len;
+  int cdata_len;
+  int total_string_len;
+} ByteTestData;
+
+extern void XMLCALL byte_character_handler(void *userData, const XML_Char *s,
+                                           int len);
+
 /* Handlers that record their invocation by single characters */
 
 extern void XMLCALL record_default_handler(void *userData, const XML_Char *s,
