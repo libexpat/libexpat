@@ -74,36 +74,6 @@
 
 XML_Parser g_parser = NULL;
 
-static void XMLCALL
-record_default_handler(void *userData, const XML_Char *s, int len) {
-  UNUSED_P(s);
-  UNUSED_P(len);
-  CharData_AppendXMLChars((CharData *)userData, XCS("D"), 1);
-}
-
-static void XMLCALL
-record_cdata_handler(void *userData, const XML_Char *s, int len) {
-  UNUSED_P(s);
-  UNUSED_P(len);
-  CharData_AppendXMLChars((CharData *)userData, XCS("C"), 1);
-  XML_DefaultCurrent(g_parser);
-}
-
-static void XMLCALL
-record_cdata_nodefault_handler(void *userData, const XML_Char *s, int len) {
-  UNUSED_P(s);
-  UNUSED_P(len);
-  CharData_AppendXMLChars((CharData *)userData, XCS("c"), 1);
-}
-
-static void XMLCALL
-record_skip_handler(void *userData, const XML_Char *entityName,
-                    int is_parameter_entity) {
-  UNUSED_P(entityName);
-  CharData_AppendXMLChars((CharData *)userData,
-                          is_parameter_entity ? XCS("E") : XCS("e"), 1);
-}
-
 /* Test XML_DefaultCurrent() passes handling on correctly */
 START_TEST(test_default_current) {
   const char *text = "<doc>hell]</doc>";

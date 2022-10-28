@@ -289,6 +289,38 @@ parser_stop_character_handler(void *userData, const XML_Char *s, int len) {
   }
 }
 
+/* Handlers that record their invocation by single characters */
+
+void XMLCALL
+record_default_handler(void *userData, const XML_Char *s, int len) {
+  UNUSED_P(s);
+  UNUSED_P(len);
+  CharData_AppendXMLChars((CharData *)userData, XCS("D"), 1);
+}
+
+void XMLCALL
+record_cdata_handler(void *userData, const XML_Char *s, int len) {
+  UNUSED_P(s);
+  UNUSED_P(len);
+  CharData_AppendXMLChars((CharData *)userData, XCS("C"), 1);
+  XML_DefaultCurrent(g_parser);
+}
+
+void XMLCALL
+record_cdata_nodefault_handler(void *userData, const XML_Char *s, int len) {
+  UNUSED_P(s);
+  UNUSED_P(len);
+  CharData_AppendXMLChars((CharData *)userData, XCS("c"), 1);
+}
+
+void XMLCALL
+record_skip_handler(void *userData, const XML_Char *entityName,
+                    int is_parameter_entity) {
+  UNUSED_P(entityName);
+  CharData_AppendXMLChars((CharData *)userData,
+                          is_parameter_entity ? XCS("E") : XCS("e"), 1);
+}
+
 /* Entity Declaration Handlers */
 static const XML_Char *entity_name_to_match = NULL;
 static const XML_Char *entity_value_to_match = NULL;

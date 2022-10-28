@@ -143,6 +143,21 @@ extern void XMLCALL clearing_aborting_character_handler(void *userData,
 extern void XMLCALL parser_stop_character_handler(void *userData,
                                                   const XML_Char *s, int len);
 
+/* Handlers that record their invocation by single characters */
+
+extern void XMLCALL record_default_handler(void *userData, const XML_Char *s,
+                                           int len);
+
+extern void XMLCALL record_cdata_handler(void *userData, const XML_Char *s,
+                                         int len);
+
+extern void XMLCALL record_cdata_nodefault_handler(void *userData,
+                                                   const XML_Char *s, int len);
+
+extern void XMLCALL record_skip_handler(void *userData,
+                                        const XML_Char *entityName,
+                                        int is_parameter_entity);
+
 /* Entity Declaration Handlers */
 #  define ENTITY_MATCH_FAIL (-1)
 #  define ENTITY_MATCH_NOT_FOUND (0)
