@@ -357,6 +357,10 @@ extern void XMLCALL param_check_skip_handler(void *userData,
 extern void XMLCALL data_check_comment_handler(void *userData,
                                                const XML_Char *data);
 
+extern void XMLCALL selective_aborting_default_handler(void *userData,
+                                                       const XML_Char *s,
+                                                       int len);
+
 #endif /* XML_HANDLERS_H */
 
 #ifdef __cplusplus
