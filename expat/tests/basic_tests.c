@@ -3713,6 +3713,104 @@ START_TEST(test_comment_handled_in_default) {
 }
 END_TEST
 
+/* Test PIs that look almost but not quite like XML declarations */
+START_TEST(test_pi_yml) {
+  const char *text = "<?yml something like data?><doc/>";
+  const XML_Char *expected = XCS("yml: something like data\n");
+  CharData storage;
+
+  CharData_Init(&storage);
+  XML_SetProcessingInstructionHandler(g_parser, accumulate_pi_characters);
+  XML_SetUserData(g_parser, &storage);
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+      == XML_STATUS_ERROR)
+    xml_failure(g_parser);
+  CharData_CheckXMLChars(&storage, expected);
+}
+END_TEST
+
+START_TEST(test_pi_xnl) {
+  const char *text = "<?xnl nothing like data?><doc/>";
+  const XML_Char *expected = XCS("xnl: nothing like data\n");
+  CharData storage;
+
+  CharData_Init(&storage);
+  XML_SetProcessingInstructionHandler(g_parser, accumulate_pi_characters);
+  XML_SetUserData(g_parser, &storage);
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+      == XML_STATUS_ERROR)
+    xml_failure(g_parser);
+  CharData_CheckXMLChars(&storage, expected);
+}
+END_TEST
+
+START_TEST(test_pi_xmm) {
+  const char *text = "<?xmm everything like data?><doc/>";
+  const XML_Char *expected = XCS("xmm: everything like data\n");
+  CharData storage;
+
+  CharData_Init(&storage);
+  XML_SetProcessingInstructionHandler(g_parser, accumulate_pi_characters);
+  XML_SetUserData(g_parser, &storage);
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+      == XML_STATUS_ERROR)
+    xml_failure(g_parser);
+  CharData_CheckXMLChars(&storage, expected);
+}
+END_TEST
+
+START_TEST(test_utf16_pi) {
+  const char text[] =
+      /* <?{KHO KHWAI}{CHO CHAN}?>
+       * where {KHO KHWAI} = U+0E04
+       * and   {CHO CHAN}  = U+0E08
+       */
+      "<\0?\0\x04\x0e\x08\x0e?\0>\0"
+      /* <q/> */
+      "<\0q\0/\0>\0";
+#ifdef XML_UNICODE
+  const XML_Char *expected = XCS("\x0e04\x0e08: \n");
+#else
+  const XML_Char *expected = XCS("\xe0\xb8\x84\xe0\xb8\x88: \n");
+#endif
+  CharData storage;
+
+  CharData_Init(&storage);
+  XML_SetProcessingInstructionHandler(g_parser, accumulate_pi_characters);
+  XML_SetUserData(g_parser, &storage);
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)sizeof(text) - 1, XML_TRUE)
+      == XML_STATUS_ERROR)
+    xml_failure(g_parser);
+  CharData_CheckXMLChars(&storage, expected);
+}
+END_TEST
+
+START_TEST(test_utf16_be_pi) {
+  const char text[] =
+      /* <?{KHO KHWAI}{CHO CHAN}?>
+       * where {KHO KHWAI} = U+0E04
+       * and   {CHO CHAN}  = U+0E08
+       */
+      "\0<\0?\x0e\x04\x0e\x08\0?\0>"
+      /* <q/> */
+      "\0<\0q\0/\0>";
+#ifdef XML_UNICODE
+  const XML_Char *expected = XCS("\x0e04\x0e08: \n");
+#else
+  const XML_Char *expected = XCS("\xe0\xb8\x84\xe0\xb8\x88: \n");
+#endif
+  CharData storage;
+
+  CharData_Init(&storage);
+  XML_SetProcessingInstructionHandler(g_parser, accumulate_pi_characters);
+  XML_SetUserData(g_parser, &storage);
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)sizeof(text) - 1, XML_TRUE)
+      == XML_STATUS_ERROR)
+    xml_failure(g_parser);
+  CharData_CheckXMLChars(&storage, expected);
+}
+END_TEST
+
 TCase *
 make_basic_test_case(Suite *s) {
   TCase *tc_basic = tcase_create("basic tests");
@@ -3885,6 +3983,11 @@ make_basic_test_case(Suite *s) {
   tcase_add_test(tc_basic, test_invalid_character_entity_4);
   tcase_add_test(tc_basic, test_pi_handled_in_default);
   tcase_add_test(tc_basic, test_comment_handled_in_default);
+  tcase_add_test(tc_basic, test_pi_yml);
+  tcase_add_test(tc_basic, test_pi_xnl);
+  tcase_add_test(tc_basic, test_pi_xmm);
+  tcase_add_test(tc_basic, test_utf16_pi);
+  tcase_add_test(tc_basic, test_utf16_be_pi);
 
   return tc_basic; /* TEMPORARY: this will become a void function */
 }

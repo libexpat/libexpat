@@ -1214,3 +1214,14 @@ element_decl_suspender(void *userData, const XML_Char *name,
   XML_StopParser(g_parser, XML_TRUE);
   XML_FreeContentModel(g_parser, model);
 }
+
+void XMLCALL
+accumulate_pi_characters(void *userData, const XML_Char *target,
+                         const XML_Char *data) {
+  CharData *storage = (CharData *)userData;
+
+  CharData_AppendXMLChars(storage, target, -1);
+  CharData_AppendXMLChars(storage, XCS(": "), 2);
+  CharData_AppendXMLChars(storage, data, -1);
+  CharData_AppendXMLChars(storage, XCS("\n"), 1);
+}
