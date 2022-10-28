@@ -78,7 +78,7 @@ XML_Parser g_parser = NULL;
  * Attribute tests.
  */
 
-/* Helpers used by the following test; this checks any "attr" and "refs"
+/* Helper used by the following tests; this checks any "attr" and "refs"
    attributes to make sure whitespace has been normalized.
 
    Return true if whitespace has been normalized in a string, using
@@ -114,8 +114,7 @@ is_whitespace_normalized(const XML_Char *s, int is_cdata) {
 }
 
 /* Check the attribute whitespace checker: */
-static void
-testhelper_is_whitespace_normalized(void) {
+START_TEST(test_helper_is_whitespace_normalized) {
   assert(is_whitespace_normalized(XCS("abc"), 0));
   assert(is_whitespace_normalized(XCS("abc"), 1));
   assert(is_whitespace_normalized(XCS("abc def ghi"), 0));
@@ -136,6 +135,7 @@ testhelper_is_whitespace_normalized(void) {
   assert(! is_whitespace_normalized(XCS("\r"), 1));
   assert(! is_whitespace_normalized(XCS("abc\t def"), 1));
 }
+END_TEST
 
 static void XMLCALL
 check_attr_contains_normalized_whitespace(void *userData, const XML_Char *name,
@@ -10873,6 +10873,7 @@ make_suite(void) {
   TCase *tc_accounting = tcase_create("accounting tests");
 #endif
 
+  tcase_add_test(tc_basic, test_helper_is_whitespace_normalized);
   tcase_add_test(tc_basic, test_attr_whitespace_normalization);
   tcase_add_test(tc_basic, test_xmldecl_misplaced);
   tcase_add_test(tc_basic, test_xmldecl_invalid);
@@ -11226,9 +11227,6 @@ main(int argc, char *argv[]) {
   int verbosity = CK_NORMAL;
   Suite *s = make_suite();
   SRunner *sr = srunner_create(s);
-
-  /* run the tests for internal helper functions */
-  testhelper_is_whitespace_normalized();
 
   for (i = 1; i < argc; ++i) {
     char *opt = argv[i];
