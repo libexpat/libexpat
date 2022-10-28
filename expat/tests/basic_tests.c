@@ -40,11 +40,19 @@
    USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+#include <stdio.h>
 #include <string.h>
+
+#if ! defined(__cplusplus)
+#  include <stdbool.h>
+#endif
+
+#include "expat_config.h"
 
 #include "expat.h"
 #include "minicheck.h"
 #include "common.h"
+#include "dummy.h"
 #include "siphash.h"
 #include "basic_tests.h"
 
@@ -178,6 +186,399 @@ START_TEST(test_hash_collision) {
 END_TEST
 #undef COLLIDING_HASH_SALT
 
+/* Regression test for SF bug #491986. */
+START_TEST(test_danish_latin1) {
+  const char *text = "<?xml version='1.0' encoding='iso-8859-1'?>\n"
+                     "<e>J\xF8rgen \xE6\xF8\xE5\xC6\xD8\xC5</e>";
+#ifdef XML_UNICODE
+  const XML_Char *expected
+      = XCS("J\x00f8rgen \x00e6\x00f8\x00e5\x00c6\x00d8\x00c5");
+#else
+  const XML_Char *expected
+      = XCS("J\xC3\xB8rgen \xC3\xA6\xC3\xB8\xC3\xA5\xC3\x86\xC3\x98\xC3\x85");
+#endif
+  run_character_check(text, expected);
+}
+END_TEST
+
+/* Regression test for SF bug #514281. */
+START_TEST(test_french_charref_hexidecimal) {
+  const char *text = "<?xml version='1.0' encoding='iso-8859-1'?>\n"
+                     "<doc>&#xE9;&#xE8;&#xE0;&#xE7;&#xEA;&#xC8;</doc>";
+#ifdef XML_UNICODE
+  const XML_Char *expected = XCS("\x00e9\x00e8\x00e0\x00e7\x00ea\x00c8");
+#else
+  const XML_Char *expected
+      = XCS("\xC3\xA9\xC3\xA8\xC3\xA0\xC3\xA7\xC3\xAA\xC3\x88");
+#endif
+  run_character_check(text, expected);
+}
+END_TEST
+
+START_TEST(test_french_charref_decimal) {
+  const char *text = "<?xml version='1.0' encoding='iso-8859-1'?>\n"
+                     "<doc>&#233;&#232;&#224;&#231;&#234;&#200;</doc>";
+#ifdef XML_UNICODE
+  const XML_Char *expected = XCS("\x00e9\x00e8\x00e0\x00e7\x00ea\x00c8");
+#else
+  const XML_Char *expected
+      = XCS("\xC3\xA9\xC3\xA8\xC3\xA0\xC3\xA7\xC3\xAA\xC3\x88");
+#endif
+  run_character_check(text, expected);
+}
+END_TEST
+
+START_TEST(test_french_latin1) {
+  const char *text = "<?xml version='1.0' encoding='iso-8859-1'?>\n"
+                     "<doc>\xE9\xE8\xE0\xE7\xEa\xC8</doc>";
+#ifdef XML_UNICODE
+  const XML_Char *expected = XCS("\x00e9\x00e8\x00e0\x00e7\x00ea\x00c8");
+#else
+  const XML_Char *expected
+      = XCS("\xC3\xA9\xC3\xA8\xC3\xA0\xC3\xA7\xC3\xAA\xC3\x88");
+#endif
+  run_character_check(text, expected);
+}
+END_TEST
+
+START_TEST(test_french_utf8) {
+  const char *text = "<?xml version='1.0' encoding='utf-8'?>\n"
+                     "<doc>\xC3\xA9</doc>";
+#ifdef XML_UNICODE
+  const XML_Char *expected = XCS("\x00e9");
+#else
+  const XML_Char *expected = XCS("\xC3\xA9");
+#endif
+  run_character_check(text, expected);
+}
+END_TEST
+
+/* Regression test for SF bug #600479.
+   XXX There should be a test that exercises all legal XML Unicode
+   characters as PCDATA and attribute value content, and XML Name
+   characters as part of element and attribute names.
+*/
+START_TEST(test_utf8_false_rejection) {
+  const char *text = "<doc>\xEF\xBA\xBF</doc>";
+#ifdef XML_UNICODE
+  const XML_Char *expected = XCS("\xfebf");
+#else
+  const XML_Char *expected = XCS("\xEF\xBA\xBF");
+#endif
+  run_character_check(text, expected);
+}
+END_TEST
+
+/* Regression test for SF bug #477667.
+   This test assures that any 8-bit character followed by a 7-bit
+   character will not be mistakenly interpreted as a valid UTF-8
+   sequence.
+*/
+START_TEST(test_illegal_utf8) {
+  char text[100];
+  int i;
+
+  for (i = 128; i <= 255; ++i) {
+    snprintf(text, sizeof(text), "<e>%ccd</e>", i);
+    if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+        == XML_STATUS_OK) {
+      snprintf(text, sizeof(text),
+               "expected token error for '%c' (ordinal %d) in UTF-8 text", i,
+               i);
+      fail(text);
+    } else if (XML_GetErrorCode(g_parser) != XML_ERROR_INVALID_TOKEN)
+      xml_failure(g_parser);
+    /* Reset the parser since we use the same parser repeatedly. */
+    XML_ParserReset(g_parser, NULL);
+  }
+}
+END_TEST
+
+/* Examples, not masks: */
+#define UTF8_LEAD_1 "\x7f" /* 0b01111111 */
+#define UTF8_LEAD_2 "\xdf" /* 0b11011111 */
+#define UTF8_LEAD_3 "\xef" /* 0b11101111 */
+#define UTF8_LEAD_4 "\xf7" /* 0b11110111 */
+#define UTF8_FOLLOW "\xbf" /* 0b10111111 */
+
+START_TEST(test_utf8_auto_align) {
+  struct TestCase {
+    ptrdiff_t expectedMovementInChars;
+    const char *input;
+  };
+
+  struct TestCase cases[] = {
+      {00, ""},
+
+      {00, UTF8_LEAD_1},
+
+      {-1, UTF8_LEAD_2},
+      {00, UTF8_LEAD_2 UTF8_FOLLOW},
+
+      {-1, UTF8_LEAD_3},
+      {-2, UTF8_LEAD_3 UTF8_FOLLOW},
+      {00, UTF8_LEAD_3 UTF8_FOLLOW UTF8_FOLLOW},
+
+      {-1, UTF8_LEAD_4},
+      {-2, UTF8_LEAD_4 UTF8_FOLLOW},
+      {-3, UTF8_LEAD_4 UTF8_FOLLOW UTF8_FOLLOW},
+      {00, UTF8_LEAD_4 UTF8_FOLLOW UTF8_FOLLOW UTF8_FOLLOW},
+  };
+
+  size_t i = 0;
+  bool success = true;
+  for (; i < sizeof(cases) / sizeof(*cases); i++) {
+    const char *fromLim = cases[i].input + strlen(cases[i].input);
+    const char *const fromLimInitially = fromLim;
+    ptrdiff_t actualMovementInChars;
+
+    _INTERNAL_trim_to_complete_utf8_characters(cases[i].input, &fromLim);
+
+    actualMovementInChars = (fromLim - fromLimInitially);
+    if (actualMovementInChars != cases[i].expectedMovementInChars) {
+      size_t j = 0;
+      success = false;
+      printf("[-] UTF-8 case %2u: Expected movement by %2d chars"
+             ", actually moved by %2d chars: \"",
+             (unsigned)(i + 1), (int)cases[i].expectedMovementInChars,
+             (int)actualMovementInChars);
+      for (; j < strlen(cases[i].input); j++) {
+        printf("\\x%02x", (unsigned char)cases[i].input[j]);
+      }
+      printf("\"\n");
+    }
+  }
+
+  if (! success) {
+    fail("UTF-8 auto-alignment is not bullet-proof\n");
+  }
+}
+END_TEST
+
+START_TEST(test_utf16) {
+  /* <?xml version="1.0" encoding="UTF-16"?>
+   *  <doc a='123'>some {A} text</doc>
+   *
+   * where {A} is U+FF21, FULLWIDTH LATIN CAPITAL LETTER A
+   */
+  char text[]
+      = "\000<\000?\000x\000m\000\154\000 \000v\000e\000r\000s\000i\000o"
+        "\000n\000=\000'\0001\000.\000\060\000'\000 \000e\000n\000c\000o"
+        "\000d\000i\000n\000g\000=\000'\000U\000T\000F\000-\0001\000\066"
+        "\000'\000?\000>\000\n"
+        "\000<\000d\000o\000c\000 \000a\000=\000'\0001\0002\0003\000'\000>"
+        "\000s\000o\000m\000e\000 \xff\x21\000 \000t\000e\000x\000t\000"
+        "<\000/\000d\000o\000c\000>";
+#ifdef XML_UNICODE
+  const XML_Char *expected = XCS("some \xff21 text");
+#else
+  const XML_Char *expected = XCS("some \357\274\241 text");
+#endif
+  CharData storage;
+
+  CharData_Init(&storage);
+  XML_SetUserData(g_parser, &storage);
+  XML_SetCharacterDataHandler(g_parser, accumulate_characters);
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, sizeof(text) - 1, XML_TRUE)
+      == XML_STATUS_ERROR)
+    xml_failure(g_parser);
+  CharData_CheckXMLChars(&storage, expected);
+}
+END_TEST
+
+START_TEST(test_utf16_le_epilog_newline) {
+  unsigned int first_chunk_bytes = 17;
+  char text[] = "\xFF\xFE"                  /* BOM */
+                "<\000e\000/\000>\000"      /* document element */
+                "\r\000\n\000\r\000\n\000"; /* epilog */
+
+  if (first_chunk_bytes >= sizeof(text) - 1)
+    fail("bad value of first_chunk_bytes");
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, first_chunk_bytes, XML_FALSE)
+      == XML_STATUS_ERROR)
+    xml_failure(g_parser);
+  else {
+    enum XML_Status rc;
+    rc = _XML_Parse_SINGLE_BYTES(g_parser, text + first_chunk_bytes,
+                                 sizeof(text) - first_chunk_bytes - 1,
+                                 XML_TRUE);
+    if (rc == XML_STATUS_ERROR)
+      xml_failure(g_parser);
+  }
+}
+END_TEST
+
+/* Test that an outright lie in the encoding is faulted */
+START_TEST(test_not_utf16) {
+  const char *text = "<?xml version='1.0' encoding='utf-16'?>"
+                     "<doc>Hi</doc>";
+
+  /* Use a handler to provoke the appropriate code paths */
+  XML_SetXmlDeclHandler(g_parser, dummy_xdecl_handler);
+  expect_failure(text, XML_ERROR_INCORRECT_ENCODING,
+                 "UTF-16 declared in UTF-8 not faulted");
+}
+END_TEST
+
+/* Test that an unknown encoding is rejected */
+START_TEST(test_bad_encoding) {
+  const char *text = "<doc>Hi</doc>";
+
+  if (! XML_SetEncoding(g_parser, XCS("unknown-encoding")))
+    fail("XML_SetEncoding failed");
+  expect_failure(text, XML_ERROR_UNKNOWN_ENCODING,
+                 "Unknown encoding not faulted");
+}
+END_TEST
+
+/* Regression test for SF bug #481609, #774028. */
+START_TEST(test_latin1_umlauts) {
+  const char *text
+      = "<?xml version='1.0' encoding='iso-8859-1'?>\n"
+        "<e a='\xE4 \xF6 \xFC &#228; &#246; &#252; &#x00E4; &#x0F6; &#xFC; >'\n"
+        "  >\xE4 \xF6 \xFC &#228; &#246; &#252; &#x00E4; &#x0F6; &#xFC; ></e>";
+#ifdef XML_UNICODE
+  /* Expected results in UTF-16 */
+  const XML_Char *expected = XCS("\x00e4 \x00f6 \x00fc ")
+      XCS("\x00e4 \x00f6 \x00fc ") XCS("\x00e4 \x00f6 \x00fc >");
+#else
+  /* Expected results in UTF-8 */
+  const XML_Char *expected = XCS("\xC3\xA4 \xC3\xB6 \xC3\xBC ")
+      XCS("\xC3\xA4 \xC3\xB6 \xC3\xBC ") XCS("\xC3\xA4 \xC3\xB6 \xC3\xBC >");
+#endif
+
+  run_character_check(text, expected);
+  XML_ParserReset(g_parser, NULL);
+  run_attribute_check(text, expected);
+  /* Repeat with a default handler */
+  XML_ParserReset(g_parser, NULL);
+  XML_SetDefaultHandler(g_parser, dummy_default_handler);
+  run_character_check(text, expected);
+  XML_ParserReset(g_parser, NULL);
+  XML_SetDefaultHandler(g_parser, dummy_default_handler);
+  run_attribute_check(text, expected);
+}
+END_TEST
+
+/* Test that an element name with a 4-byte UTF-8 character is rejected */
+START_TEST(test_long_utf8_character) {
+  const char *text
+      = "<?xml version='1.0' encoding='utf-8'?>\n"
+        /* 0xf0 0x90 0x80 0x80 = U+10000, the first Linear B character */
+        "<do\xf0\x90\x80\x80/>";
+  expect_failure(text, XML_ERROR_INVALID_TOKEN,
+                 "4-byte UTF-8 character in element name not faulted");
+}
+END_TEST
+
+/* Test that a long latin-1 attribute (too long to convert in one go)
+ * is correctly converted
+ */
+START_TEST(test_long_latin1_attribute) {
+  const char *text
+      = "<?xml version='1.0' encoding='iso-8859-1'?>\n"
+        "<doc att='"
+        /* 64 characters per line */
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNO"
+        /* Last character splits across a buffer boundary */
+        "\xe4'>\n</doc>";
+
+  const XML_Char *expected =
+      /* 64 characters per line */
+      /* clang-format off */
+        XCS("ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP")
+        XCS("ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP")
+        XCS("ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP")
+        XCS("ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP")
+        XCS("ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP")
+        XCS("ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP")
+        XCS("ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP")
+        XCS("ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP")
+        XCS("ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP")
+        XCS("ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP")
+        XCS("ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP")
+        XCS("ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP")
+        XCS("ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP")
+        XCS("ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP")
+        XCS("ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP")
+        XCS("ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNO")
+  /* clang-format on */
+#ifdef XML_UNICODE
+                                                  XCS("\x00e4");
+#else
+                                                  XCS("\xc3\xa4");
+#endif
+
+  run_attribute_check(text, expected);
+}
+END_TEST
+
+/* Test that a long ASCII attribute (too long to convert in one go)
+ * is correctly converted
+ */
+START_TEST(test_long_ascii_attribute) {
+  const char *text
+      = "<?xml version='1.0' encoding='us-ascii'?>\n"
+        "<doc att='"
+        /* 64 characters per line */
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
+        "01234'>\n</doc>";
+  const XML_Char *expected =
+      /* 64 characters per line */
+      /* clang-format off */
+        XCS("ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP")
+        XCS("ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP")
+        XCS("ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP")
+        XCS("ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP")
+        XCS("ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP")
+        XCS("ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP")
+        XCS("ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP")
+        XCS("ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP")
+        XCS("ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP")
+        XCS("ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP")
+        XCS("ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP")
+        XCS("ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP")
+        XCS("ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP")
+        XCS("ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP")
+        XCS("ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP")
+        XCS("ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP")
+        XCS("01234");
+  /* clang-format on */
+
+  run_attribute_check(text, expected);
+}
+END_TEST
+
 TCase *
 make_basic_test_case(Suite *s) {
   TCase *tc_basic = tcase_create("basic tests");
@@ -194,6 +595,24 @@ make_basic_test_case(Suite *s) {
   tcase_add_test(tc_basic, test_bom_utf16_le);
   tcase_add_test(tc_basic, test_nobom_utf16_le);
   tcase_add_test(tc_basic, test_hash_collision);
+  tcase_add_test(tc_basic, test_illegal_utf8);
+  tcase_add_test(tc_basic, test_utf8_auto_align);
+  tcase_add_test(tc_basic, test_utf16);
+  tcase_add_test(tc_basic, test_utf16_le_epilog_newline);
+  tcase_add_test(tc_basic, test_not_utf16);
+  tcase_add_test(tc_basic, test_bad_encoding);
+  tcase_add_test(tc_basic, test_latin1_umlauts);
+  tcase_add_test(tc_basic, test_long_utf8_character);
+  tcase_add_test(tc_basic, test_long_latin1_attribute);
+  tcase_add_test(tc_basic, test_long_ascii_attribute);
+  /* Regression test for SF bug #491986. */
+  tcase_add_test(tc_basic, test_danish_latin1);
+  /* Regression test for SF bug #514281. */
+  tcase_add_test(tc_basic, test_french_charref_hexidecimal);
+  tcase_add_test(tc_basic, test_french_charref_decimal);
+  tcase_add_test(tc_basic, test_french_latin1);
+  tcase_add_test(tc_basic, test_french_utf8);
+  tcase_add_test(tc_basic, test_utf8_false_rejection);
 
   return tc_basic; /* TEMPORARY: this will become a void function */
 }
