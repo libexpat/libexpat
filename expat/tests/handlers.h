@@ -388,6 +388,8 @@ extern void XMLCALL accumulate_pi_characters(void *userData,
                                              const XML_Char *target,
                                              const XML_Char *data);
 
+extern void XMLCALL accumulate_comment(void *userData, const XML_Char *data);
+
 #endif /* XML_HANDLERS_H */
 
 #ifdef __cplusplus
