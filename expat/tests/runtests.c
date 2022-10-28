@@ -74,66 +74,6 @@
 
 XML_Parser g_parser = NULL;
 
-/* Test handling of trailing CR (rather than newline) */
-START_TEST(test_trailing_cr) {
-  const char *text = "<doc>\r";
-  int found_cr;
-
-  /* Try with a character handler, for code coverage */
-  XML_SetCharacterDataHandler(g_parser, cr_cdata_handler);
-  XML_SetUserData(g_parser, &found_cr);
-  found_cr = 0;
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
-      == XML_STATUS_OK)
-    fail("Failed to fault unclosed doc");
-  if (found_cr == 0)
-    fail("Did not catch the carriage return");
-  XML_ParserReset(g_parser, NULL);
-
-  /* Now with a default handler instead */
-  XML_SetDefaultHandler(g_parser, cr_cdata_handler);
-  XML_SetUserData(g_parser, &found_cr);
-  found_cr = 0;
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
-      == XML_STATUS_OK)
-    fail("Failed to fault unclosed doc");
-  if (found_cr == 0)
-    fail("Did not catch default carriage return");
-}
-END_TEST
-
-/* Test trailing CR in an external entity parse */
-START_TEST(test_ext_entity_trailing_cr) {
-  const char *text = "<!DOCTYPE doc [\n"
-                     "  <!ENTITY en SYSTEM 'http://example.org/dummy.ent'>\n"
-                     "]>\n"
-                     "<doc>&en;</doc>";
-  int found_cr;
-
-  XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
-  XML_SetExternalEntityRefHandler(g_parser, external_entity_cr_catcher);
-  XML_SetUserData(g_parser, &found_cr);
-  found_cr = 0;
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
-      != XML_STATUS_OK)
-    xml_failure(g_parser);
-  if (found_cr == 0)
-    fail("No carriage return found");
-  XML_ParserReset(g_parser, NULL);
-
-  /* Try again with a different trailing CR */
-  XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
-  XML_SetExternalEntityRefHandler(g_parser, external_entity_bad_cr_catcher);
-  XML_SetUserData(g_parser, &found_cr);
-  found_cr = 0;
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
-      != XML_STATUS_OK)
-    xml_failure(g_parser);
-  if (found_cr == 0)
-    fail("No carriage return found");
-}
-END_TEST
-
 /* Test handling of trailing square bracket */
 static void XMLCALL
 rsqb_handler(void *userData, const XML_Char *s, int len) {
@@ -8724,8 +8664,6 @@ make_suite(void) {
   TCase *tc_accounting = tcase_create("accounting tests");
 #endif
 
-  tcase_add_test(tc_basic, test_trailing_cr);
-  tcase_add_test(tc_basic, test_ext_entity_trailing_cr);
   tcase_add_test(tc_basic, test_trailing_rsqb);
   tcase_add_test(tc_basic, test_ext_entity_trailing_rsqb);
   tcase_add_test(tc_basic, test_ext_entity_good_cdata);
