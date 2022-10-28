@@ -3210,6 +3210,31 @@ START_TEST(test_recursive_external_parameter_entity) {
 }
 END_TEST
 
+/* Test undefined parameter entity in external entity handler */
+START_TEST(test_undefined_ext_entity_in_external_dtd) {
+  const char *text = "<!DOCTYPE doc SYSTEM 'foo'>\n"
+                     "<doc></doc>\n";
+
+  XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+  XML_SetExternalEntityRefHandler(g_parser, external_entity_devaluer);
+  XML_SetUserData(g_parser, NULL);
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+      == XML_STATUS_ERROR)
+    xml_failure(g_parser);
+
+  /* Now repeat without the external entity ref handler invoking
+   * another copy of itself.
+   */
+  XML_ParserReset(g_parser, NULL);
+  XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+  XML_SetExternalEntityRefHandler(g_parser, external_entity_devaluer);
+  XML_SetUserData(g_parser, g_parser); /* Any non-NULL value will do */
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+      == XML_STATUS_ERROR)
+    xml_failure(g_parser);
+}
+END_TEST
+
 TCase *
 make_basic_test_case(Suite *s) {
   TCase *tc_basic = tcase_create("basic tests");
@@ -3354,6 +3379,7 @@ make_basic_test_case(Suite *s) {
   tcase_add_test__ifdef_xml_dtd(tc_basic, test_skipped_parameter_entity);
   tcase_add_test__ifdef_xml_dtd(tc_basic,
                                 test_recursive_external_parameter_entity);
+  tcase_add_test(tc_basic, test_undefined_ext_entity_in_external_dtd);
 
   return tc_basic; /* TEMPORARY: this will become a void function */
 }

@@ -74,60 +74,6 @@
 
 XML_Parser g_parser = NULL;
 
-/* Test undefined parameter entity in external entity handler */
-static int XMLCALL
-external_entity_devaluer(XML_Parser parser, const XML_Char *context,
-                         const XML_Char *base, const XML_Char *systemId,
-                         const XML_Char *publicId) {
-  const char *text = "<!ELEMENT doc EMPTY>\n"
-                     "<!ENTITY % e1 SYSTEM 'bar'>\n"
-                     "%e1;\n";
-  XML_Parser ext_parser;
-  intptr_t clear_handler = (intptr_t)XML_GetUserData(parser);
-
-  UNUSED_P(base);
-  UNUSED_P(publicId);
-  if (systemId == NULL || ! xcstrcmp(systemId, XCS("bar")))
-    return XML_STATUS_OK;
-  if (xcstrcmp(systemId, XCS("foo")))
-    fail("Unexpected system ID");
-  ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
-  if (ext_parser == NULL)
-    fail("Could note create external entity parser");
-  if (clear_handler)
-    XML_SetExternalEntityRefHandler(ext_parser, NULL);
-  if (_XML_Parse_SINGLE_BYTES(ext_parser, text, (int)strlen(text), XML_TRUE)
-      == XML_STATUS_ERROR)
-    xml_failure(ext_parser);
-
-  XML_ParserFree(ext_parser);
-  return XML_STATUS_OK;
-}
-
-START_TEST(test_undefined_ext_entity_in_external_dtd) {
-  const char *text = "<!DOCTYPE doc SYSTEM 'foo'>\n"
-                     "<doc></doc>\n";
-
-  XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
-  XML_SetExternalEntityRefHandler(g_parser, external_entity_devaluer);
-  XML_SetUserData(g_parser, (void *)(intptr_t)XML_FALSE);
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
-      == XML_STATUS_ERROR)
-    xml_failure(g_parser);
-
-  /* Now repeat without the external entity ref handler invoking
-   * another copy of itself.
-   */
-  XML_ParserReset(g_parser, NULL);
-  XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
-  XML_SetExternalEntityRefHandler(g_parser, external_entity_devaluer);
-  XML_SetUserData(g_parser, (void *)(intptr_t)XML_TRUE);
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
-      == XML_STATUS_ERROR)
-    xml_failure(g_parser);
-}
-END_TEST
-
 static void XMLCALL
 aborting_xdecl_handler(void *userData, const XML_Char *version,
                        const XML_Char *encoding, int standalone) {
@@ -7402,7 +7348,6 @@ make_suite(void) {
   TCase *tc_accounting = tcase_create("accounting tests");
 #endif
 
-  tcase_add_test(tc_basic, test_undefined_ext_entity_in_external_dtd);
   tcase_add_test(tc_basic, test_suspend_xdecl);
   tcase_add_test(tc_basic, test_abort_epilog);
   tcase_add_test(tc_basic, test_abort_epilog_2);

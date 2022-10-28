@@ -874,6 +874,35 @@ external_entity_public(XML_Parser parser, const XML_Char *context,
   return parse_res;
 }
 
+int XMLCALL
+external_entity_devaluer(XML_Parser parser, const XML_Char *context,
+                         const XML_Char *base, const XML_Char *systemId,
+                         const XML_Char *publicId) {
+  const char *text = "<!ELEMENT doc EMPTY>\n"
+                     "<!ENTITY % e1 SYSTEM 'bar'>\n"
+                     "%e1;\n";
+  XML_Parser ext_parser;
+  int clear_handler_flag = (XML_GetUserData(parser) != NULL);
+
+  UNUSED_P(base);
+  UNUSED_P(publicId);
+  if (systemId == NULL || ! xcstrcmp(systemId, XCS("bar")))
+    return XML_STATUS_OK;
+  if (xcstrcmp(systemId, XCS("foo")))
+    fail("Unexpected system ID");
+  ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
+  if (ext_parser == NULL)
+    fail("Could note create external entity parser");
+  if (clear_handler_flag)
+    XML_SetExternalEntityRefHandler(ext_parser, NULL);
+  if (_XML_Parse_SINGLE_BYTES(ext_parser, text, (int)strlen(text), XML_TRUE)
+      == XML_STATUS_ERROR)
+    xml_failure(ext_parser);
+
+  XML_ParserFree(ext_parser);
+  return XML_STATUS_OK;
+}
+
 /* NotStandalone handlers */
 
 int XMLCALL

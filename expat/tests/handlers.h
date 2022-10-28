@@ -260,6 +260,12 @@ extern int XMLCALL external_entity_public(XML_Parser parser,
                                           const XML_Char *systemId,
                                           const XML_Char *publicId);
 
+extern int XMLCALL external_entity_devaluer(XML_Parser parser,
+                                            const XML_Char *context,
+                                            const XML_Char *base,
+                                            const XML_Char *systemId,
+                                            const XML_Char *publicId);
+
 /* NotStandalone handlers */
 
 extern int XMLCALL reject_not_standalone_handler(void *userData);
