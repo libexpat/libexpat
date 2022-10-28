@@ -119,6 +119,21 @@ extern int XMLCALL reject_not_standalone_handler(void *userData);
 
 extern int XMLCALL accept_not_standalone_handler(void *userData);
 
+/* Attribute List handlers */
+
+typedef struct AttTest {
+  const char *definition;
+  const XML_Char *element_name;
+  const XML_Char *attr_name;
+  const XML_Char *attr_type;
+  const XML_Char *default_value;
+  int is_required;
+} AttTest;
+
+extern void XMLCALL verify_attlist_decl_handler(
+    void *userData, const XML_Char *element_name, const XML_Char *attr_name,
+    const XML_Char *attr_type, const XML_Char *default_value, int is_required);
+
 /* Entity Declaration Handlers */
 #  define ENTITY_MATCH_FAIL (-1)
 #  define ENTITY_MATCH_NOT_FOUND (0)

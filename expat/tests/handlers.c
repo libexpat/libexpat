@@ -229,6 +229,28 @@ accept_not_standalone_handler(void *userData) {
   return XML_STATUS_OK;
 }
 
+/* Attribute List handlers */
+void XMLCALL
+verify_attlist_decl_handler(void *userData, const XML_Char *element_name,
+                            const XML_Char *attr_name,
+                            const XML_Char *attr_type,
+                            const XML_Char *default_value, int is_required) {
+  AttTest *at = (AttTest *)userData;
+
+  if (xcstrcmp(element_name, at->element_name))
+    fail("Unexpected element name in attribute declaration");
+  if (xcstrcmp(attr_name, at->attr_name))
+    fail("Unexpected attribute name in attribute declaration");
+  if (xcstrcmp(attr_type, at->attr_type))
+    fail("Unexpected attribute type in attribute declaration");
+  if ((default_value == NULL && at->default_value != NULL)
+      || (default_value != NULL && at->default_value == NULL)
+      || (default_value != NULL && xcstrcmp(default_value, at->default_value)))
+    fail("Unexpected default value in attribute declaration");
+  if (is_required != at->is_required)
+    fail("Requirement mismatch in attribute declaration");
+}
+
 /* Entity Declaration Handlers */
 static const XML_Char *entity_name_to_match = NULL;
 static const XML_Char *entity_value_to_match = NULL;
