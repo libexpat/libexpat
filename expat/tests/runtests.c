@@ -74,41 +74,13 @@
 
 XML_Parser g_parser = NULL;
 
-static XML_Bool abortable = XML_FALSE;
-
-static void
-parser_stop_character_handler(void *userData, const XML_Char *s, int len) {
-  UNUSED_P(userData);
-  UNUSED_P(s);
-  UNUSED_P(len);
-  XML_StopParser(g_parser, g_resumable);
-  XML_SetCharacterDataHandler(g_parser, NULL);
-  if (! g_resumable) {
-    /* Check that aborting an aborted parser is faulted */
-    if (XML_StopParser(g_parser, XML_FALSE) != XML_STATUS_ERROR)
-      fail("Aborting aborted parser not faulted");
-    if (XML_GetErrorCode(g_parser) != XML_ERROR_FINISHED)
-      xml_failure(g_parser);
-  } else if (abortable) {
-    /* Check that aborting a suspended parser works */
-    if (XML_StopParser(g_parser, XML_FALSE) == XML_STATUS_ERROR)
-      xml_failure(g_parser);
-  } else {
-    /* Check that suspending a suspended parser works */
-    if (XML_StopParser(g_parser, XML_TRUE) != XML_STATUS_ERROR)
-      fail("Suspending suspended parser not faulted");
-    if (XML_GetErrorCode(g_parser) != XML_ERROR_SUSPENDED)
-      xml_failure(g_parser);
-  }
-}
-
 /* Test repeated calls to XML_StopParser are handled correctly */
 START_TEST(test_repeated_stop_parser_between_char_data_calls) {
   const char *text = long_character_data_text;
 
   XML_SetCharacterDataHandler(g_parser, parser_stop_character_handler);
   g_resumable = XML_FALSE;
-  abortable = XML_FALSE;
+  g_abortable = XML_FALSE;
   if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
       != XML_STATUS_ERROR)
     fail("Failed to double-stop parser");
@@ -116,7 +88,7 @@ START_TEST(test_repeated_stop_parser_between_char_data_calls) {
   XML_ParserReset(g_parser, NULL);
   XML_SetCharacterDataHandler(g_parser, parser_stop_character_handler);
   g_resumable = XML_TRUE;
-  abortable = XML_FALSE;
+  g_abortable = XML_FALSE;
   if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
       != XML_STATUS_SUSPENDED)
     fail("Failed to double-suspend parser");
@@ -124,7 +96,7 @@ START_TEST(test_repeated_stop_parser_between_char_data_calls) {
   XML_ParserReset(g_parser, NULL);
   XML_SetCharacterDataHandler(g_parser, parser_stop_character_handler);
   g_resumable = XML_TRUE;
-  abortable = XML_TRUE;
+  g_abortable = XML_TRUE;
   if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
       != XML_STATUS_ERROR)
     fail("Failed to suspend-abort parser");

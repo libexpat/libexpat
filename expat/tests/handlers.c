@@ -263,6 +263,32 @@ clearing_aborting_character_handler(void *userData, const XML_Char *s,
   XML_SetCharacterDataHandler(g_parser, NULL);
 }
 
+void XMLCALL
+parser_stop_character_handler(void *userData, const XML_Char *s, int len) {
+  UNUSED_P(userData);
+  UNUSED_P(s);
+  UNUSED_P(len);
+  XML_StopParser(g_parser, g_resumable);
+  XML_SetCharacterDataHandler(g_parser, NULL);
+  if (! g_resumable) {
+    /* Check that aborting an aborted parser is faulted */
+    if (XML_StopParser(g_parser, XML_FALSE) != XML_STATUS_ERROR)
+      fail("Aborting aborted parser not faulted");
+    if (XML_GetErrorCode(g_parser) != XML_ERROR_FINISHED)
+      xml_failure(g_parser);
+  } else if (g_abortable) {
+    /* Check that aborting a suspended parser works */
+    if (XML_StopParser(g_parser, XML_FALSE) == XML_STATUS_ERROR)
+      xml_failure(g_parser);
+  } else {
+    /* Check that suspending a suspended parser works */
+    if (XML_StopParser(g_parser, XML_TRUE) != XML_STATUS_ERROR)
+      fail("Suspending suspended parser not faulted");
+    if (XML_GetErrorCode(g_parser) != XML_ERROR_SUSPENDED)
+      xml_failure(g_parser);
+  }
+}
+
 /* Entity Declaration Handlers */
 static const XML_Char *entity_name_to_match = NULL;
 static const XML_Char *entity_value_to_match = NULL;

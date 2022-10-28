@@ -81,6 +81,9 @@ const char *long_character_data_text
 /* Used as the "resumable" parameter to XML_StopParser by some tests */
 XML_Bool g_resumable = XML_FALSE;
 
+/* Used to control abort checks in some tests */
+XML_Bool g_abortable = XML_FALSE;
+
 /* Common test functions */
 
 void

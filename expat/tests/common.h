@@ -80,6 +80,7 @@ extern "C" {
 extern XML_Parser g_parser;
 
 extern XML_Bool g_resumable;
+extern XML_Bool g_abortable;
 
 extern const char *long_character_data_text;
 
