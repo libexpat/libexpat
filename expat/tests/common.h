@@ -84,6 +84,7 @@ extern XML_Bool g_abortable;
 
 extern const char *long_character_data_text;
 extern const char *long_cdata_text;
+extern const char *get_buffer_test_text;
 
 extern void tcase_add_test__ifdef_xml_dtd(TCase *tc, tcase_test_function test);
 
