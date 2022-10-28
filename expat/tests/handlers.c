@@ -251,6 +251,18 @@ verify_attlist_decl_handler(void *userData, const XML_Char *element_name,
     fail("Requirement mismatch in attribute declaration");
 }
 
+/* Character Data handlers */
+
+void XMLCALL
+clearing_aborting_character_handler(void *userData, const XML_Char *s,
+                                    int len) {
+  UNUSED_P(userData);
+  UNUSED_P(s);
+  UNUSED_P(len);
+  XML_StopParser(g_parser, g_resumable);
+  XML_SetCharacterDataHandler(g_parser, NULL);
+}
+
 /* Entity Declaration Handlers */
 static const XML_Char *entity_name_to_match = NULL;
 static const XML_Char *entity_value_to_match = NULL;

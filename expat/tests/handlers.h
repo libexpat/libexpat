@@ -134,6 +134,12 @@ extern void XMLCALL verify_attlist_decl_handler(
     void *userData, const XML_Char *element_name, const XML_Char *attr_name,
     const XML_Char *attr_type, const XML_Char *default_value, int is_required);
 
+/* Character data handlers */
+
+extern void XMLCALL clearing_aborting_character_handler(void *userData,
+                                                        const XML_Char *s,
+                                                        int len);
+
 /* Entity Declaration Handlers */
 #  define ENTITY_MATCH_FAIL (-1)
 #  define ENTITY_MATCH_NOT_FOUND (0)
