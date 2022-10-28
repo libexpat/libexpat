@@ -79,6 +79,8 @@ extern "C" {
 
 extern XML_Parser g_parser;
 
+extern const char *long_character_data_text;
+
 extern void tcase_add_test__ifdef_xml_dtd(TCase *tc, tcase_test_function test);
 
 extern void basic_teardown(void);
