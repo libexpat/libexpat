@@ -3451,6 +3451,112 @@ START_TEST(test_resume_entity_with_syntax_error) {
 }
 END_TEST
 
+/* Test suspending and resuming in a parameter entity substitution */
+START_TEST(test_suspend_resume_parameter_entity) {
+  const char *text = "<!DOCTYPE doc [\n"
+                     "<!ENTITY % foo '<!ELEMENT doc (#PCDATA)*>'>\n"
+                     "%foo;\n"
+                     "]>\n"
+                     "<doc>Hello, world</doc>";
+  const XML_Char *expected = XCS("Hello, world");
+  CharData storage;
+
+  CharData_Init(&storage);
+  XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+  XML_SetElementDeclHandler(g_parser, element_decl_suspender);
+  XML_SetCharacterDataHandler(g_parser, accumulate_characters);
+  XML_SetUserData(g_parser, &storage);
+  if (XML_Parse(g_parser, text, (int)strlen(text), XML_TRUE)
+      != XML_STATUS_SUSPENDED)
+    xml_failure(g_parser);
+  CharData_CheckXMLChars(&storage, XCS(""));
+  if (XML_ResumeParser(g_parser) != XML_STATUS_OK)
+    xml_failure(g_parser);
+  CharData_CheckXMLChars(&storage, expected);
+}
+END_TEST
+
+/* Test attempting to use parser after an error is faulted */
+START_TEST(test_restart_on_error) {
+  const char *text = "<$doc><doc></doc>";
+
+  if (XML_Parse(g_parser, text, (int)strlen(text), XML_TRUE)
+      != XML_STATUS_ERROR)
+    fail("Invalid tag name not faulted");
+  if (XML_GetErrorCode(g_parser) != XML_ERROR_INVALID_TOKEN)
+    xml_failure(g_parser);
+  if (XML_Parse(g_parser, NULL, 0, XML_TRUE) != XML_STATUS_ERROR)
+    fail("Restarting invalid parse not faulted");
+  if (XML_GetErrorCode(g_parser) != XML_ERROR_INVALID_TOKEN)
+    xml_failure(g_parser);
+}
+END_TEST
+
+/* Test that angle brackets in an attribute default value are faulted */
+START_TEST(test_reject_lt_in_attribute_value) {
+  const char *text = "<!DOCTYPE doc [<!ATTLIST doc a CDATA '<bar>'>]>\n"
+                     "<doc></doc>";
+
+  expect_failure(text, XML_ERROR_INVALID_TOKEN,
+                 "Bad attribute default not faulted");
+}
+END_TEST
+
+START_TEST(test_reject_unfinished_param_in_att_value) {
+  const char *text = "<!DOCTYPE doc [<!ATTLIST doc a CDATA '&foo'>]>\n"
+                     "<doc></doc>";
+
+  expect_failure(text, XML_ERROR_INVALID_TOKEN,
+                 "Bad attribute default not faulted");
+}
+END_TEST
+
+START_TEST(test_trailing_cr_in_att_value) {
+  const char *text = "<doc a='value\r'/>";
+
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+      == XML_STATUS_ERROR)
+    xml_failure(g_parser);
+}
+END_TEST
+
+/* Try parsing a general entity within a parameter entity in a
+ * standalone internal DTD.  Covers a corner case in the parser.
+ */
+START_TEST(test_standalone_internal_entity) {
+  const char *text = "<?xml version='1.0' standalone='yes' ?>\n"
+                     "<!DOCTYPE doc [\n"
+                     "  <!ELEMENT doc (#PCDATA)>\n"
+                     "  <!ENTITY % pe '<!ATTLIST doc att2 CDATA \"&ge;\">'>\n"
+                     "  <!ENTITY ge 'AttDefaultValue'>\n"
+                     "  %pe;\n"
+                     "]>\n"
+                     "<doc att2='any'/>";
+
+  XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+      == XML_STATUS_ERROR)
+    xml_failure(g_parser);
+}
+END_TEST
+
+/* Test that a reference to an unknown external entity is skipped */
+START_TEST(test_skipped_external_entity) {
+  const char *text = "<!DOCTYPE doc SYSTEM 'http://example.org/'>\n"
+                     "<doc></doc>\n";
+  ExtTest test_data = {"<!ELEMENT doc EMPTY>\n"
+                       "<!ENTITY % e2 '%e1;'>\n",
+                       NULL, NULL};
+
+  XML_SetUserData(g_parser, &test_data);
+  XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+  XML_SetExternalEntityRefHandler(g_parser, external_entity_loader);
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+      == XML_STATUS_ERROR)
+    xml_failure(g_parser);
+}
+END_TEST
+
 TCase *
 make_basic_test_case(Suite *s) {
   TCase *tc_basic = tcase_create("basic tests");
@@ -3607,6 +3713,13 @@ make_basic_test_case(Suite *s) {
   tcase_add_test__ifdef_xml_dtd(tc_basic,
                                 test_suspend_resume_internal_entity_issue_629);
   tcase_add_test__ifdef_xml_dtd(tc_basic, test_resume_entity_with_syntax_error);
+  tcase_add_test__ifdef_xml_dtd(tc_basic, test_suspend_resume_parameter_entity);
+  tcase_add_test(tc_basic, test_restart_on_error);
+  tcase_add_test(tc_basic, test_reject_lt_in_attribute_value);
+  tcase_add_test(tc_basic, test_reject_unfinished_param_in_att_value);
+  tcase_add_test(tc_basic, test_trailing_cr_in_att_value);
+  tcase_add_test(tc_basic, test_standalone_internal_entity);
+  tcase_add_test(tc_basic, test_skipped_external_entity);
 
   return tc_basic; /* TEMPORARY: this will become a void function */
 }

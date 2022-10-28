@@ -1180,3 +1180,12 @@ suspending_comment_handler(void *userData, const XML_Char *data) {
   XML_Parser parser = (XML_Parser)userData;
   XML_StopParser(parser, XML_TRUE);
 }
+
+void XMLCALL
+element_decl_suspender(void *userData, const XML_Char *name,
+                       XML_Content *model) {
+  UNUSED_P(userData);
+  UNUSED_P(name);
+  XML_StopParser(g_parser, XML_TRUE);
+  XML_FreeContentModel(g_parser, model);
+}

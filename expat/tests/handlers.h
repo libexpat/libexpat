@@ -370,6 +370,9 @@ extern void XMLCALL selective_aborting_default_handler(void *userData,
 extern void XMLCALL suspending_comment_handler(void *userData,
                                                const XML_Char *data);
 
+extern void XMLCALL element_decl_suspender(void *userData, const XML_Char *name,
+                                           XML_Content *model);
+
 #endif /* XML_HANDLERS_H */
 
 #ifdef __cplusplus
