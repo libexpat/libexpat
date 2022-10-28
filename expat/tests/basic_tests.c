@@ -1378,6 +1378,391 @@ START_TEST(test_suspend_parser_between_char_data_calls) {
 }
 END_TEST
 
+/* Test repeated calls to XML_StopParser are handled correctly */
+START_TEST(test_repeated_stop_parser_between_char_data_calls) {
+  const char *text = long_character_data_text;
+
+  XML_SetCharacterDataHandler(g_parser, parser_stop_character_handler);
+  g_resumable = XML_FALSE;
+  g_abortable = XML_FALSE;
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+      != XML_STATUS_ERROR)
+    fail("Failed to double-stop parser");
+
+  XML_ParserReset(g_parser, NULL);
+  XML_SetCharacterDataHandler(g_parser, parser_stop_character_handler);
+  g_resumable = XML_TRUE;
+  g_abortable = XML_FALSE;
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+      != XML_STATUS_SUSPENDED)
+    fail("Failed to double-suspend parser");
+
+  XML_ParserReset(g_parser, NULL);
+  XML_SetCharacterDataHandler(g_parser, parser_stop_character_handler);
+  g_resumable = XML_TRUE;
+  g_abortable = XML_TRUE;
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+      != XML_STATUS_ERROR)
+    fail("Failed to suspend-abort parser");
+}
+END_TEST
+
+START_TEST(test_good_cdata_ascii) {
+  const char *text = "<a><![CDATA[<greeting>Hello, world!</greeting>]]></a>";
+  const XML_Char *expected = XCS("<greeting>Hello, world!</greeting>");
+
+  CharData storage;
+  CharData_Init(&storage);
+  XML_SetUserData(g_parser, &storage);
+  XML_SetCharacterDataHandler(g_parser, accumulate_characters);
+  /* Add start and end handlers for coverage */
+  XML_SetStartCdataSectionHandler(g_parser, dummy_start_cdata_handler);
+  XML_SetEndCdataSectionHandler(g_parser, dummy_end_cdata_handler);
+
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+      == XML_STATUS_ERROR)
+    xml_failure(g_parser);
+  CharData_CheckXMLChars(&storage, expected);
+
+  /* Try again, this time with a default handler */
+  XML_ParserReset(g_parser, NULL);
+  CharData_Init(&storage);
+  XML_SetUserData(g_parser, &storage);
+  XML_SetCharacterDataHandler(g_parser, accumulate_characters);
+  XML_SetDefaultHandler(g_parser, dummy_default_handler);
+
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+      == XML_STATUS_ERROR)
+    xml_failure(g_parser);
+  CharData_CheckXMLChars(&storage, expected);
+}
+END_TEST
+
+START_TEST(test_good_cdata_utf16) {
+  /* Test data is:
+   *   <?xml version='1.0' encoding='utf-16'?>
+   *   <a><![CDATA[hello]]></a>
+   */
+  const char text[]
+      = "\0<\0?\0x\0m\0l\0"
+        " \0v\0e\0r\0s\0i\0o\0n\0=\0'\0\x31\0.\0\x30\0'\0"
+        " \0e\0n\0c\0o\0d\0i\0n\0g\0=\0'\0u\0t\0f\0-\0"
+        "1\0"
+        "6\0'"
+        "\0?\0>\0\n"
+        "\0<\0a\0>\0<\0!\0[\0C\0D\0A\0T\0A\0[\0h\0e\0l\0l\0o\0]\0]\0>\0<\0/\0a\0>";
+  const XML_Char *expected = XCS("hello");
+
+  CharData storage;
+  CharData_Init(&storage);
+  XML_SetUserData(g_parser, &storage);
+  XML_SetCharacterDataHandler(g_parser, accumulate_characters);
+
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)sizeof(text) - 1, XML_TRUE)
+      == XML_STATUS_ERROR)
+    xml_failure(g_parser);
+  CharData_CheckXMLChars(&storage, expected);
+}
+END_TEST
+
+START_TEST(test_good_cdata_utf16_le) {
+  /* Test data is:
+   *   <?xml version='1.0' encoding='utf-16'?>
+   *   <a><![CDATA[hello]]></a>
+   */
+  const char text[]
+      = "<\0?\0x\0m\0l\0"
+        " \0v\0e\0r\0s\0i\0o\0n\0=\0'\0\x31\0.\0\x30\0'\0"
+        " \0e\0n\0c\0o\0d\0i\0n\0g\0=\0'\0u\0t\0f\0-\0"
+        "1\0"
+        "6\0'"
+        "\0?\0>\0\n"
+        "\0<\0a\0>\0<\0!\0[\0C\0D\0A\0T\0A\0[\0h\0e\0l\0l\0o\0]\0]\0>\0<\0/\0a\0>\0";
+  const XML_Char *expected = XCS("hello");
+
+  CharData storage;
+  CharData_Init(&storage);
+  XML_SetUserData(g_parser, &storage);
+  XML_SetCharacterDataHandler(g_parser, accumulate_characters);
+
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)sizeof(text) - 1, XML_TRUE)
+      == XML_STATUS_ERROR)
+    xml_failure(g_parser);
+  CharData_CheckXMLChars(&storage, expected);
+}
+END_TEST
+
+/* Test UTF16 conversion of a long cdata string */
+
+/* 16 characters: handy macro to reduce visual clutter */
+#define A_TO_P_IN_UTF16 "\0A\0B\0C\0D\0E\0F\0G\0H\0I\0J\0K\0L\0M\0N\0O\0P"
+
+START_TEST(test_long_cdata_utf16) {
+  /* Test data is:
+   * <?xlm version='1.0' encoding='utf-16'?>
+   * <a><![CDATA[
+   * ABCDEFGHIJKLMNOP
+   * ]]></a>
+   */
+  const char text[]
+      = "\0<\0?\0x\0m\0l\0 "
+        "\0v\0e\0r\0s\0i\0o\0n\0=\0'\0\x31\0.\0\x30\0'\0 "
+        "\0e\0n\0c\0o\0d\0i\0n\0g\0=\0'\0u\0t\0f\0-\0\x31\0\x36\0'\0?\0>"
+        "\0<\0a\0>\0<\0!\0[\0C\0D\0A\0T\0A\0["
+      /* 64 characters per line */
+      /* clang-format off */
+        A_TO_P_IN_UTF16  A_TO_P_IN_UTF16  A_TO_P_IN_UTF16  A_TO_P_IN_UTF16
+        A_TO_P_IN_UTF16  A_TO_P_IN_UTF16  A_TO_P_IN_UTF16  A_TO_P_IN_UTF16
+        A_TO_P_IN_UTF16  A_TO_P_IN_UTF16  A_TO_P_IN_UTF16  A_TO_P_IN_UTF16
+        A_TO_P_IN_UTF16  A_TO_P_IN_UTF16  A_TO_P_IN_UTF16  A_TO_P_IN_UTF16
+        A_TO_P_IN_UTF16  A_TO_P_IN_UTF16  A_TO_P_IN_UTF16  A_TO_P_IN_UTF16
+        A_TO_P_IN_UTF16  A_TO_P_IN_UTF16  A_TO_P_IN_UTF16  A_TO_P_IN_UTF16
+        A_TO_P_IN_UTF16  A_TO_P_IN_UTF16  A_TO_P_IN_UTF16  A_TO_P_IN_UTF16
+        A_TO_P_IN_UTF16  A_TO_P_IN_UTF16  A_TO_P_IN_UTF16  A_TO_P_IN_UTF16
+        A_TO_P_IN_UTF16  A_TO_P_IN_UTF16  A_TO_P_IN_UTF16  A_TO_P_IN_UTF16
+        A_TO_P_IN_UTF16  A_TO_P_IN_UTF16  A_TO_P_IN_UTF16  A_TO_P_IN_UTF16
+        A_TO_P_IN_UTF16  A_TO_P_IN_UTF16  A_TO_P_IN_UTF16  A_TO_P_IN_UTF16
+        A_TO_P_IN_UTF16  A_TO_P_IN_UTF16  A_TO_P_IN_UTF16  A_TO_P_IN_UTF16
+        A_TO_P_IN_UTF16  A_TO_P_IN_UTF16  A_TO_P_IN_UTF16  A_TO_P_IN_UTF16
+        A_TO_P_IN_UTF16  A_TO_P_IN_UTF16  A_TO_P_IN_UTF16  A_TO_P_IN_UTF16
+        A_TO_P_IN_UTF16  A_TO_P_IN_UTF16  A_TO_P_IN_UTF16  A_TO_P_IN_UTF16
+        A_TO_P_IN_UTF16  A_TO_P_IN_UTF16  A_TO_P_IN_UTF16  A_TO_P_IN_UTF16
+        A_TO_P_IN_UTF16
+        /* clang-format on */
+        "\0]\0]\0>\0<\0/\0a\0>";
+  const XML_Char *expected =
+      /* clang-format off */
+        XCS("ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP")
+        XCS("ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP")
+        XCS("ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP")
+        XCS("ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP")
+        XCS("ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP")
+        XCS("ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP")
+        XCS("ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP")
+        XCS("ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP")
+        XCS("ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP")
+        XCS("ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP")
+        XCS("ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP")
+        XCS("ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP")
+        XCS("ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP")
+        XCS("ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP")
+        XCS("ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP")
+        XCS("ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP")
+        XCS("ABCDEFGHIJKLMNOP");
+  /* clang-format on */
+  CharData storage;
+  void *buffer;
+
+  CharData_Init(&storage);
+  XML_SetUserData(g_parser, &storage);
+  XML_SetCharacterDataHandler(g_parser, accumulate_characters);
+  buffer = XML_GetBuffer(g_parser, sizeof(text) - 1);
+  if (buffer == NULL)
+    fail("Could not allocate parse buffer");
+  assert(buffer != NULL);
+  memcpy(buffer, text, sizeof(text) - 1);
+  if (XML_ParseBuffer(g_parser, sizeof(text) - 1, XML_TRUE) == XML_STATUS_ERROR)
+    xml_failure(g_parser);
+  CharData_CheckXMLChars(&storage, expected);
+}
+END_TEST
+
+/* Test handling of multiple unit UTF-16 characters */
+START_TEST(test_multichar_cdata_utf16) {
+  /* Test data is:
+   *   <?xml version='1.0' encoding='utf-16'?>
+   *   <a><![CDATA[{MINIM}{CROTCHET}]]></a>
+   *
+   * where {MINIM} is U+1d15e (a minim or half-note)
+   *   UTF-16: 0xd834 0xdd5e
+   *   UTF-8:  0xf0 0x9d 0x85 0x9e
+   * and {CROTCHET} is U+1d15f (a crotchet or quarter-note)
+   *   UTF-16: 0xd834 0xdd5f
+   *   UTF-8:  0xf0 0x9d 0x85 0x9f
+   */
+  const char text[] = "\0<\0?\0x\0m\0l\0"
+                      " \0v\0e\0r\0s\0i\0o\0n\0=\0'\0\x31\0.\0\x30\0'\0"
+                      " \0e\0n\0c\0o\0d\0i\0n\0g\0=\0'\0u\0t\0f\0-\0"
+                      "1\0"
+                      "6\0'"
+                      "\0?\0>\0\n"
+                      "\0<\0a\0>\0<\0!\0[\0C\0D\0A\0T\0A\0["
+                      "\xd8\x34\xdd\x5e\xd8\x34\xdd\x5f"
+                      "\0]\0]\0>\0<\0/\0a\0>";
+#ifdef XML_UNICODE
+  const XML_Char *expected = XCS("\xd834\xdd5e\xd834\xdd5f");
+#else
+  const XML_Char *expected = XCS("\xf0\x9d\x85\x9e\xf0\x9d\x85\x9f");
+#endif
+  CharData storage;
+
+  CharData_Init(&storage);
+  XML_SetUserData(g_parser, &storage);
+  XML_SetCharacterDataHandler(g_parser, accumulate_characters);
+
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)sizeof(text) - 1, XML_TRUE)
+      == XML_STATUS_ERROR)
+    xml_failure(g_parser);
+  CharData_CheckXMLChars(&storage, expected);
+}
+END_TEST
+
+/* Test that an element name with a UTF-16 surrogate pair is rejected */
+START_TEST(test_utf16_bad_surrogate_pair) {
+  /* Test data is:
+   *   <?xml version='1.0' encoding='utf-16'?>
+   *   <a><![CDATA[{BADLINB}]]></a>
+   *
+   * where {BADLINB} is U+10000 (the first Linear B character)
+   * with the UTF-16 surrogate pair in the wrong order, i.e.
+   *   0xdc00 0xd800
+   */
+  const char text[] = "\0<\0?\0x\0m\0l\0"
+                      " \0v\0e\0r\0s\0i\0o\0n\0=\0'\0\x31\0.\0\x30\0'\0"
+                      " \0e\0n\0c\0o\0d\0i\0n\0g\0=\0'\0u\0t\0f\0-\0"
+                      "1\0"
+                      "6\0'"
+                      "\0?\0>\0\n"
+                      "\0<\0a\0>\0<\0!\0[\0C\0D\0A\0T\0A\0["
+                      "\xdc\x00\xd8\x00"
+                      "\0]\0]\0>\0<\0/\0a\0>";
+
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)sizeof(text) - 1, XML_TRUE)
+      != XML_STATUS_ERROR)
+    fail("Reversed UTF-16 surrogate pair not faulted");
+  if (XML_GetErrorCode(g_parser) != XML_ERROR_INVALID_TOKEN)
+    xml_failure(g_parser);
+}
+END_TEST
+
+START_TEST(test_bad_cdata) {
+  struct CaseData {
+    const char *text;
+    enum XML_Error expectedError;
+  };
+
+  struct CaseData cases[]
+      = {{"<a><", XML_ERROR_UNCLOSED_TOKEN},
+         {"<a><!", XML_ERROR_UNCLOSED_TOKEN},
+         {"<a><![", XML_ERROR_UNCLOSED_TOKEN},
+         {"<a><![C", XML_ERROR_UNCLOSED_TOKEN},
+         {"<a><![CD", XML_ERROR_UNCLOSED_TOKEN},
+         {"<a><![CDA", XML_ERROR_UNCLOSED_TOKEN},
+         {"<a><![CDAT", XML_ERROR_UNCLOSED_TOKEN},
+         {"<a><![CDATA", XML_ERROR_UNCLOSED_TOKEN},
+
+         {"<a><![CDATA[", XML_ERROR_UNCLOSED_CDATA_SECTION},
+         {"<a><![CDATA[]", XML_ERROR_UNCLOSED_CDATA_SECTION},
+         {"<a><![CDATA[]]", XML_ERROR_UNCLOSED_CDATA_SECTION},
+
+         {"<a><!<a/>", XML_ERROR_INVALID_TOKEN},
+         {"<a><![<a/>", XML_ERROR_UNCLOSED_TOKEN},  /* ?! */
+         {"<a><![C<a/>", XML_ERROR_UNCLOSED_TOKEN}, /* ?! */
+         {"<a><![CD<a/>", XML_ERROR_INVALID_TOKEN},
+         {"<a><![CDA<a/>", XML_ERROR_INVALID_TOKEN},
+         {"<a><![CDAT<a/>", XML_ERROR_INVALID_TOKEN},
+         {"<a><![CDATA<a/>", XML_ERROR_INVALID_TOKEN},
+
+         {"<a><![CDATA[<a/>", XML_ERROR_UNCLOSED_CDATA_SECTION},
+         {"<a><![CDATA[]<a/>", XML_ERROR_UNCLOSED_CDATA_SECTION},
+         {"<a><![CDATA[]]<a/>", XML_ERROR_UNCLOSED_CDATA_SECTION}};
+
+  size_t i = 0;
+  for (; i < sizeof(cases) / sizeof(struct CaseData); i++) {
+    const enum XML_Status actualStatus = _XML_Parse_SINGLE_BYTES(
+        g_parser, cases[i].text, (int)strlen(cases[i].text), XML_TRUE);
+    const enum XML_Error actualError = XML_GetErrorCode(g_parser);
+
+    assert(actualStatus == XML_STATUS_ERROR);
+
+    if (actualError != cases[i].expectedError) {
+      char message[100];
+      snprintf(message, sizeof(message),
+               "Expected error %d but got error %d for case %u: \"%s\"\n",
+               cases[i].expectedError, actualError, (unsigned int)i + 1,
+               cases[i].text);
+      fail(message);
+    }
+
+    XML_ParserReset(g_parser, NULL);
+  }
+}
+END_TEST
+
+/* Test failures in UTF-16 CDATA */
+START_TEST(test_bad_cdata_utf16) {
+  struct CaseData {
+    size_t text_bytes;
+    const char *text;
+    enum XML_Error expected_error;
+  };
+
+  const char prolog[] = "\0<\0?\0x\0m\0l\0"
+                        " \0v\0e\0r\0s\0i\0o\0n\0=\0'\0\x31\0.\0\x30\0'\0"
+                        " \0e\0n\0c\0o\0d\0i\0n\0g\0=\0'\0u\0t\0f\0-\0"
+                        "1\0"
+                        "6\0'"
+                        "\0?\0>\0\n"
+                        "\0<\0a\0>";
+  struct CaseData cases[] = {
+      {1, "\0", XML_ERROR_UNCLOSED_TOKEN},
+      {2, "\0<", XML_ERROR_UNCLOSED_TOKEN},
+      {3, "\0<\0", XML_ERROR_UNCLOSED_TOKEN},
+      {4, "\0<\0!", XML_ERROR_UNCLOSED_TOKEN},
+      {5, "\0<\0!\0", XML_ERROR_UNCLOSED_TOKEN},
+      {6, "\0<\0!\0[", XML_ERROR_UNCLOSED_TOKEN},
+      {7, "\0<\0!\0[\0", XML_ERROR_UNCLOSED_TOKEN},
+      {8, "\0<\0!\0[\0C", XML_ERROR_UNCLOSED_TOKEN},
+      {9, "\0<\0!\0[\0C\0", XML_ERROR_UNCLOSED_TOKEN},
+      {10, "\0<\0!\0[\0C\0D", XML_ERROR_UNCLOSED_TOKEN},
+      {11, "\0<\0!\0[\0C\0D\0", XML_ERROR_UNCLOSED_TOKEN},
+      {12, "\0<\0!\0[\0C\0D\0A", XML_ERROR_UNCLOSED_TOKEN},
+      {13, "\0<\0!\0[\0C\0D\0A\0", XML_ERROR_UNCLOSED_TOKEN},
+      {14, "\0<\0!\0[\0C\0D\0A\0T", XML_ERROR_UNCLOSED_TOKEN},
+      {15, "\0<\0!\0[\0C\0D\0A\0T\0", XML_ERROR_UNCLOSED_TOKEN},
+      {16, "\0<\0!\0[\0C\0D\0A\0T\0A", XML_ERROR_UNCLOSED_TOKEN},
+      {17, "\0<\0!\0[\0C\0D\0A\0T\0A\0", XML_ERROR_UNCLOSED_TOKEN},
+      {18, "\0<\0!\0[\0C\0D\0A\0T\0A\0[", XML_ERROR_UNCLOSED_CDATA_SECTION},
+      {19, "\0<\0!\0[\0C\0D\0A\0T\0A\0[\0", XML_ERROR_UNCLOSED_CDATA_SECTION},
+      {20, "\0<\0!\0[\0C\0D\0A\0T\0A\0[\0Z", XML_ERROR_UNCLOSED_CDATA_SECTION},
+      /* Now add a four-byte UTF-16 character */
+      {21, "\0<\0!\0[\0C\0D\0A\0T\0A\0[\0Z\xd8",
+       XML_ERROR_UNCLOSED_CDATA_SECTION},
+      {22, "\0<\0!\0[\0C\0D\0A\0T\0A\0[\0Z\xd8\x34", XML_ERROR_PARTIAL_CHAR},
+      {23, "\0<\0!\0[\0C\0D\0A\0T\0A\0[\0Z\xd8\x34\xdd",
+       XML_ERROR_PARTIAL_CHAR},
+      {24, "\0<\0!\0[\0C\0D\0A\0T\0A\0[\0Z\xd8\x34\xdd\x5e",
+       XML_ERROR_UNCLOSED_CDATA_SECTION}};
+  size_t i;
+
+  for (i = 0; i < sizeof(cases) / sizeof(struct CaseData); i++) {
+    enum XML_Status actual_status;
+    enum XML_Error actual_error;
+
+    if (_XML_Parse_SINGLE_BYTES(g_parser, prolog, (int)sizeof(prolog) - 1,
+                                XML_FALSE)
+        == XML_STATUS_ERROR)
+      xml_failure(g_parser);
+    actual_status = _XML_Parse_SINGLE_BYTES(g_parser, cases[i].text,
+                                            (int)cases[i].text_bytes, XML_TRUE);
+    assert(actual_status == XML_STATUS_ERROR);
+    actual_error = XML_GetErrorCode(g_parser);
+    if (actual_error != cases[i].expected_error) {
+      char message[1024];
+
+      snprintf(message, sizeof(message),
+               "Expected error %d (%" XML_FMT_STR "), got %d (%" XML_FMT_STR
+               ") for case %lu\n",
+               cases[i].expected_error,
+               XML_ErrorString(cases[i].expected_error), actual_error,
+               XML_ErrorString(actual_error), (long unsigned)(i + 1));
+      fail(message);
+    }
+    XML_ParserReset(g_parser, NULL);
+  }
+}
+END_TEST
+
 TCase *
 make_basic_test_case(Suite *s) {
   TCase *tc_basic = tcase_create("basic tests");
@@ -1450,6 +1835,15 @@ make_basic_test_case(Suite *s) {
   tcase_add_test(tc_basic, test_ns_in_attribute_default_without_namespaces);
   tcase_add_test(tc_basic, test_stop_parser_between_char_data_calls);
   tcase_add_test(tc_basic, test_suspend_parser_between_char_data_calls);
+  tcase_add_test(tc_basic, test_repeated_stop_parser_between_char_data_calls);
+  tcase_add_test(tc_basic, test_good_cdata_ascii);
+  tcase_add_test(tc_basic, test_good_cdata_utf16);
+  tcase_add_test(tc_basic, test_good_cdata_utf16_le);
+  tcase_add_test(tc_basic, test_long_cdata_utf16);
+  tcase_add_test(tc_basic, test_multichar_cdata_utf16);
+  tcase_add_test(tc_basic, test_utf16_bad_surrogate_pair);
+  tcase_add_test(tc_basic, test_bad_cdata);
+  tcase_add_test(tc_basic, test_bad_cdata_utf16);
 
   return tc_basic; /* TEMPORARY: this will become a void function */
 }
