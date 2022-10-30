@@ -37,7 +37,9 @@
    USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+#include <stdbool.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <expat.h>
 
 #ifdef XML_LARGE_SIZE
@@ -51,6 +53,33 @@
 #else
 #  define XML_FMT_STR "s"
 #endif
+
+// While traversing the XML_Content tree, we avoid recursion
+// to not be vulnerable to a denial of service attack.
+typedef struct StackStruct {
+  const XML_Content *model;
+  unsigned level;
+  struct StackStruct *prev;
+} Stack;
+
+static Stack *
+stackPushMalloc(Stack *stackTop, const XML_Content *model, unsigned level) {
+  Stack *const newStackTop = malloc(sizeof(Stack));
+  if (! newStackTop) {
+    return NULL;
+  }
+  newStackTop->model = model;
+  newStackTop->level = level;
+  newStackTop->prev = stackTop;
+  return newStackTop;
+}
+
+static Stack *
+stackPopFree(Stack *stackTop) {
+  Stack *const newStackTop = stackTop->prev;
+  free(stackTop);
+  return newStackTop;
+}
 
 static char *
 contentTypeName(enum XML_Content_Type contentType) {
@@ -89,8 +118,8 @@ contentQuantName(enum XML_Content_Quant contentQuant) {
 }
 
 static void
-dumpContentModel(const XML_Content *model, unsigned level,
-                 const XML_Content *root) {
+dumpContentModelElement(const XML_Content *model, unsigned level,
+                        const XML_Content *root) {
   // Indent
   unsigned u = 0;
   for (; u < level; u++) {
@@ -108,21 +137,47 @@ dumpContentModel(const XML_Content *model, unsigned level,
   }
   printf(", numchildren=%d", model->numchildren);
   printf("\n");
+}
 
-  // Children
-  for (u = 0; u < model->numchildren; u++) {
-    dumpContentModel(model->children + u, level + 1, root);
+static bool
+dumpContentModel(const XML_Char *name, const XML_Content *root) {
+  printf("Element \"%" XML_FMT_STR "\":\n", name);
+  Stack *stackTop = NULL;
+  stackTop = stackPushMalloc(stackTop, root, 1);
+  if (! stackTop) {
+    return false;
   }
+
+  while (stackTop) {
+    const XML_Content *const model = stackTop->model;
+    const unsigned level = stackTop->level;
+
+    dumpContentModelElement(model, level, root);
+
+    stackTop = stackPopFree(stackTop);
+
+    for (size_t u = model->numchildren; u >= 1; u--) {
+      stackTop
+          = stackPushMalloc(stackTop, model->children + (u - 1), level + 1);
+      if (! stackTop) {
+        return false;
+      }
+    }
+  }
+
+  printf("\n");
+  return true;
 }
 
 static void XMLCALL
 handleElementDeclaration(void *userData, const XML_Char *name,
                          XML_Content *model) {
   XML_Parser parser = (XML_Parser)userData;
-  printf("Element \"%" XML_FMT_STR "\":\n", name);
-  dumpContentModel(model, 1, model);
-  printf("\n");
+  const bool success = dumpContentModel(name, model);
   XML_FreeContentModel(parser, model);
+  if (! success) {
+    XML_StopParser(parser, /* resumable= */ XML_FALSE);
+  }
 }
 
 int
@@ -157,10 +212,13 @@ main(void) {
     done = feof(stdin);
 
     if (XML_ParseBuffer(parser, (int)len, done) == XML_STATUS_ERROR) {
+      enum XML_Error errorCode = XML_GetErrorCode(parser);
+      if (errorCode == XML_ERROR_ABORTED) {
+        errorCode = XML_ERROR_NO_MEMORY;
+      }
       fprintf(stderr,
               "Parse error at line %" XML_FMT_INT_MOD "u:\n%" XML_FMT_STR "\n",
-              XML_GetCurrentLineNumber(parser),
-              XML_ErrorString(XML_GetErrorCode(parser)));
+              XML_GetCurrentLineNumber(parser), XML_ErrorString(errorCode));
       XML_ParserFree(parser);
       return 1;
     }
