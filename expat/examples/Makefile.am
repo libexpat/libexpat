@@ -6,8 +6,8 @@
 #                      \___/_/\_\ .__/ \__,_|\__|
 #                               |_| XML parser
 #
-# Copyright (c) 2017 Sebastian Pipping <sebastian@pipping.org>
-# Copyright (c) 2020 Jeffrey Walton <noloader@gmail.com>
+# Copyright (c) 2017-2022 Sebastian Pipping <sebastian@pipping.org>
+# Copyright (c) 2020      Jeffrey Walton <noloader@gmail.com>
 # Licensed under the MIT license:
 #
 # Permission is  hereby granted,  free of charge,  to any  person obtaining
