@@ -1452,6 +1452,35 @@ external_entity_alloc(XML_Parser parser, const XML_Char *context,
   return parse_res;
 }
 
+int XMLCALL
+external_entity_parser_create_alloc_fail_handler(XML_Parser parser,
+                                                 const XML_Char *context,
+                                                 const XML_Char *base,
+                                                 const XML_Char *systemId,
+                                                 const XML_Char *publicId) {
+  UNUSED_P(base);
+  UNUSED_P(systemId);
+  UNUSED_P(publicId);
+
+  if (context != NULL)
+    fail("Unexpected non-NULL context");
+
+  // The following number intends to fail the upcoming allocation in line
+  // "parser->m_protocolEncodingName = copyString(encodingName,
+  // &(parser->m_mem));" in function parserInit.
+  g_allocation_count = 3;
+
+  const XML_Char *const encodingName = XCS("UTF-8"); // needs something non-NULL
+  const XML_Parser ext_parser
+      = XML_ExternalEntityParserCreate(parser, context, encodingName);
+  if (ext_parser != NULL)
+    fail(
+        "Call to XML_ExternalEntityParserCreate was expected to fail out-of-memory");
+
+  g_allocation_count = ALLOC_ALWAYS_SUCCEED;
+  return XML_STATUS_ERROR;
+}
+
 /* NotStandalone handlers */
 
 int XMLCALL

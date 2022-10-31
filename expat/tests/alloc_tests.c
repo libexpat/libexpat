@@ -54,7 +54,7 @@
 #include "handlers.h"
 #include "alloc_tests.h"
 
-void
+static void
 alloc_setup(void) {
   XML_Memory_Handling_Suite memsuite = {duff_allocator, duff_reallocator, free};
 
@@ -66,7 +66,7 @@ alloc_setup(void) {
     fail("Parser not created");
 }
 
-void
+static void
 alloc_teardown(void) {
   basic_teardown();
 }
@@ -2040,7 +2040,25 @@ START_TEST(test_alloc_long_notation) {
 }
 END_TEST
 
-TCase *
+START_TEST(test_alloc_reset_after_external_entity_parser_create_fail) {
+  const char *const text = "<!DOCTYPE doc SYSTEM 'foo'><doc/>";
+
+  XML_SetExternalEntityRefHandler(
+      g_parser, external_entity_parser_create_alloc_fail_handler);
+  XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+
+  if (XML_Parse(g_parser, text, (int)strlen(text), XML_TRUE)
+      != XML_STATUS_ERROR)
+    fail("Call to parse was expected to fail");
+
+  if (XML_GetErrorCode(g_parser) != XML_ERROR_EXTERNAL_ENTITY_HANDLING)
+    fail("Call to parse was expected to fail from the external entity handler");
+
+  XML_ParserReset(g_parser, NULL);
+}
+END_TEST
+
+void
 make_alloc_test_case(Suite *s) {
   TCase *tc_alloc = tcase_create("allocation tests");
 
@@ -2103,5 +2121,6 @@ make_alloc_test_case(Suite *s) {
   tcase_add_test(tc_alloc, test_alloc_long_entity_value);
   tcase_add_test(tc_alloc, test_alloc_long_notation);
 
-  return tc_alloc; /* TEMPORARY: this will become a void function */
+  tcase_add_test__ifdef_xml_dtd(
+      tc_alloc, test_alloc_reset_after_external_entity_parser_create_fail);
 }

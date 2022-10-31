@@ -47,13 +47,7 @@ extern "C" {
 #ifndef XML_ALLOC_TESTS_H
 #  define XML_ALLOC_TESTS_H
 
-/* TEMPORARY: these will return to being static functions once all
- * the test cases are transferred to alloc_tests.c
- */
-extern void alloc_setup(void);
-extern void alloc_teardown(void);
-
-extern TCase *make_alloc_test_case(Suite *s);
+extern void make_alloc_test_case(Suite *s);
 
 #endif /* XML_ALLOC_TESTS_H */
 
