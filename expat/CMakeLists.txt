@@ -602,6 +602,7 @@ if(EXPAT_BUILD_TESTS)
         tests/dummy.c
         tests/handlers.c
         tests/memcheck.c
+        tests/ns_tests.c
         tests/minicheck.c
         tests/structdata.c
         ${_EXPAT_C_SOURCES}

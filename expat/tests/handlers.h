@@ -99,6 +99,20 @@ extern void XMLCALL start_element_suspender(void *userData,
                                             const XML_Char *name,
                                             const XML_Char **atts);
 
+extern int g_triplet_start_flag;
+extern int g_triplet_end_flag;
+
+extern void XMLCALL triplet_start_checker(void *userData, const XML_Char *name,
+                                          const XML_Char **atts);
+
+extern void XMLCALL triplet_end_checker(void *userData, const XML_Char *name);
+
+extern void XMLCALL overwrite_start_checker(void *userData,
+                                            const XML_Char *name,
+                                            const XML_Char **atts);
+
+extern void XMLCALL overwrite_end_checker(void *userData, const XML_Char *name);
+
 /* Text encoding handlers */
 
 extern int XMLCALL UnknownEncodingHandler(void *data, const XML_Char *encoding,
