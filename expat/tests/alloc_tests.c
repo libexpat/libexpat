@@ -40,9 +40,12 @@
    USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+#include <string.h>
+
 #include "expat.h"
 #include "common.h"
 #include "minicheck.h"
+#include "dummy.h"
 #include "alloc_tests.h"
 
 void
@@ -62,12 +65,42 @@ alloc_teardown(void) {
   basic_teardown();
 }
 
+/* Test the effects of allocation failures on xml declaration processing */
+START_TEST(test_alloc_parse_xdecl) {
+  const char *text = "<?xml version='1.0' encoding='utf-8'?>\n"
+                     "<doc>Hello, world</doc>";
+  int i;
+  const int max_alloc_count = 15;
+
+  for (i = 0; i < max_alloc_count; i++) {
+    g_allocation_count = i;
+    XML_SetXmlDeclHandler(g_parser, dummy_xdecl_handler);
+    if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+        != XML_STATUS_ERROR)
+      break;
+    /* Resetting the parser is insufficient, because some memory
+     * allocations are cached within the parser.  Instead we use
+     * the teardown and setup routines to ensure that we have the
+     * right sort of parser back in our hands.
+     */
+    alloc_teardown();
+    alloc_setup();
+  }
+  if (i == 0)
+    fail("Parse succeeded despite failing allocator");
+  if (i == max_alloc_count)
+    fail("Parse failed with max allocations");
+}
+END_TEST
+
 TCase *
 make_alloc_test_case(Suite *s) {
   TCase *tc_alloc = tcase_create("allocation tests");
 
   suite_add_tcase(s, tc_alloc);
   tcase_add_checked_fixture(tc_alloc, alloc_setup, alloc_teardown);
+
+  tcase_add_test(tc_alloc, test_alloc_parse_xdecl);
 
   return tc_alloc; /* TEMPORARY: this will become a void function */
 }

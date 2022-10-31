@@ -76,34 +76,6 @@
 
 XML_Parser g_parser = NULL;
 
-/* Test the effects of allocation failures on xml declaration processing */
-START_TEST(test_alloc_parse_xdecl) {
-  const char *text = "<?xml version='1.0' encoding='utf-8'?>\n"
-                     "<doc>Hello, world</doc>";
-  int i;
-  const int max_alloc_count = 15;
-
-  for (i = 0; i < max_alloc_count; i++) {
-    g_allocation_count = i;
-    XML_SetXmlDeclHandler(g_parser, dummy_xdecl_handler);
-    if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
-        != XML_STATUS_ERROR)
-      break;
-    /* Resetting the parser is insufficient, because some memory
-     * allocations are cached within the parser.  Instead we use
-     * the teardown and setup routines to ensure that we have the
-     * right sort of parser back in our hands.
-     */
-    alloc_teardown();
-    alloc_setup();
-  }
-  if (i == 0)
-    fail("Parse succeeded despite failing allocator");
-  if (i == max_alloc_count)
-    fail("Parse failed with max allocations");
-}
-END_TEST
-
 /* As above, but with an encoding big enough to cause storing the
  * version information to expand the string pool being used.
  */
@@ -4158,7 +4130,6 @@ make_suite(void) {
   TCase *tc_accounting = tcase_create("accounting tests");
 #endif
 
-  tcase_add_test(tc_alloc, test_alloc_parse_xdecl);
   tcase_add_test(tc_alloc, test_alloc_parse_xdecl_2);
   tcase_add_test(tc_alloc, test_alloc_parse_pi);
   tcase_add_test(tc_alloc, test_alloc_parse_pi_2);
