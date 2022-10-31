@@ -75,78 +75,6 @@
 
 XML_Parser g_parser = NULL;
 
-/* Test feature information */
-START_TEST(test_misc_features) {
-  const XML_Feature *features = XML_GetFeatureList();
-
-  /* Prevent problems with double-freeing parsers */
-  g_parser = NULL;
-  if (features == NULL) {
-    fail("Failed to get feature information");
-  } else {
-    /* Loop through the features checking what we can */
-    while (features->feature != XML_FEATURE_END) {
-      switch (features->feature) {
-      case XML_FEATURE_SIZEOF_XML_CHAR:
-        if (features->value != sizeof(XML_Char))
-          fail("Incorrect size of XML_Char");
-        break;
-      case XML_FEATURE_SIZEOF_XML_LCHAR:
-        if (features->value != sizeof(XML_LChar))
-          fail("Incorrect size of XML_LChar");
-        break;
-      default:
-        break;
-      }
-      features++;
-    }
-  }
-}
-END_TEST
-
-/* Regression test for GitHub Issue #17: memory leak parsing attribute
- * values with mixed bound and unbound namespaces.
- */
-START_TEST(test_misc_attribute_leak) {
-  const char *text = "<D xmlns:L=\"D\" l:a='' L:a=''/>";
-  XML_Memory_Handling_Suite memsuite
-      = {tracking_malloc, tracking_realloc, tracking_free};
-
-  g_parser = XML_ParserCreate_MM(XCS("UTF-8"), &memsuite, XCS("\n"));
-  expect_failure(text, XML_ERROR_UNBOUND_PREFIX, "Unbound prefixes not found");
-  XML_ParserFree(g_parser);
-  /* Prevent the teardown trying to double free */
-  g_parser = NULL;
-
-  if (! tracking_report())
-    fail("Memory leak found");
-}
-END_TEST
-
-/* Test parser created for UTF-16LE is successful */
-START_TEST(test_misc_utf16le) {
-  const char text[] =
-      /* <?xml version='1.0'?><q>Hi</q> */
-      "<\0?\0x\0m\0l\0 \0"
-      "v\0e\0r\0s\0i\0o\0n\0=\0'\0\x31\0.\0\x30\0'\0?\0>\0"
-      "<\0q\0>\0H\0i\0<\0/\0q\0>\0";
-  const XML_Char *expected = XCS("Hi");
-  CharData storage;
-
-  g_parser = XML_ParserCreate(XCS("UTF-16LE"));
-  if (g_parser == NULL)
-    fail("Parser not created");
-
-  CharData_Init(&storage);
-  XML_SetUserData(g_parser, &storage);
-  XML_SetCharacterDataHandler(g_parser, accumulate_characters);
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)sizeof(text) - 1, XML_TRUE)
-      == XML_STATUS_ERROR)
-    xml_failure(g_parser);
-  CharData_CheckXMLChars(&storage, expected);
-}
-END_TEST
-
 typedef struct {
   XML_Parser parser;
   int deep;
@@ -4396,9 +4324,6 @@ make_suite(void) {
   TCase *tc_accounting = tcase_create("accounting tests");
 #endif
 
-  tcase_add_test(tc_misc, test_misc_features);
-  tcase_add_test(tc_misc, test_misc_attribute_leak);
-  tcase_add_test(tc_misc, test_misc_utf16le);
   tcase_add_test(tc_misc, test_misc_stop_during_end_handler_issue_240_1);
   tcase_add_test(tc_misc, test_misc_stop_during_end_handler_issue_240_2);
   tcase_add_test__ifdef_xml_dtd(
