@@ -147,6 +147,10 @@ extern int XMLCALL unknown_released_encoding_handler(void *data,
 extern int XMLCALL MiscEncodingHandler(void *data, const XML_Char *encoding,
                                        XML_Encoding *info);
 
+extern int XMLCALL long_encoding_handler(void *userData,
+                                         const XML_Char *encoding,
+                                         XML_Encoding *info);
+
 /* External Entity Handlers */
 
 typedef struct ExtOption {
