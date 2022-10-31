@@ -141,6 +141,16 @@ extern void _run_ext_character_check(const char *text, ExtTest *test_data,
 #  define run_ext_character_check(text, test_data, expected)                   \
     _run_ext_character_check(text, test_data, expected, __FILE__, __LINE__)
 
+#  define ALLOC_ALWAYS_SUCCEED (-1)
+#  define REALLOC_ALWAYS_SUCCEED (-1)
+
+extern int g_allocation_count;
+extern int g_reallocation_count;
+
+extern void *duff_allocator(size_t size);
+
+extern void *duff_reallocator(void *ptr, size_t size);
+
 #endif /* XML_COMMON_H */
 
 #ifdef __cplusplus

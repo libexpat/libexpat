@@ -75,34 +75,6 @@
 
 XML_Parser g_parser = NULL;
 
-/* Control variable; the number of times duff_allocator() will successfully
- * allocate */
-#define ALLOC_ALWAYS_SUCCEED (-1)
-#define REALLOC_ALWAYS_SUCCEED (-1)
-
-static intptr_t allocation_count = ALLOC_ALWAYS_SUCCEED;
-static intptr_t reallocation_count = REALLOC_ALWAYS_SUCCEED;
-
-/* Crocked allocator for allocation failure tests */
-static void *
-duff_allocator(size_t size) {
-  if (allocation_count == 0)
-    return NULL;
-  if (allocation_count != ALLOC_ALWAYS_SUCCEED)
-    allocation_count--;
-  return malloc(size);
-}
-
-/* Crocked reallocator for allocation failure tests */
-static void *
-duff_reallocator(void *ptr, size_t size) {
-  if (reallocation_count == 0)
-    return NULL;
-  if (reallocation_count != REALLOC_ALWAYS_SUCCEED)
-    reallocation_count--;
-  return realloc(ptr, size);
-}
-
 /* Test that a failure to allocate the parser structure fails gracefully */
 START_TEST(test_misc_alloc_create_parser) {
   XML_Memory_Handling_Suite memsuite = {duff_allocator, realloc, free};
@@ -111,7 +83,7 @@ START_TEST(test_misc_alloc_create_parser) {
 
   /* Something this simple shouldn't need more than 10 allocations */
   for (i = 0; i < max_alloc_count; i++) {
-    allocation_count = i;
+    g_allocation_count = i;
     g_parser = XML_ParserCreate_MM(NULL, &memsuite, NULL);
     if (g_parser != NULL)
       break;
@@ -131,7 +103,7 @@ START_TEST(test_misc_alloc_create_parser_with_encoding) {
 
   /* Try several levels of allocation */
   for (i = 0; i < max_alloc_count; i++) {
-    allocation_count = i;
+    g_allocation_count = i;
     g_parser = XML_ParserCreate_MM(XCS("us-ascii"), &memsuite, NULL);
     if (g_parser != NULL)
       break;
@@ -470,8 +442,8 @@ alloc_setup(void) {
   XML_Memory_Handling_Suite memsuite = {duff_allocator, duff_reallocator, free};
 
   /* Ensure the parser creation will go through */
-  allocation_count = ALLOC_ALWAYS_SUCCEED;
-  reallocation_count = REALLOC_ALWAYS_SUCCEED;
+  g_allocation_count = ALLOC_ALWAYS_SUCCEED;
+  g_reallocation_count = REALLOC_ALWAYS_SUCCEED;
   g_parser = XML_ParserCreate_MM(NULL, &memsuite, NULL);
   if (g_parser == NULL)
     fail("Parser not created");
@@ -490,7 +462,7 @@ START_TEST(test_alloc_parse_xdecl) {
   const int max_alloc_count = 15;
 
   for (i = 0; i < max_alloc_count; i++) {
-    allocation_count = i;
+    g_allocation_count = i;
     XML_SetXmlDeclHandler(g_parser, dummy_xdecl_handler);
     if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
         != XML_STATUS_ERROR)
@@ -554,7 +526,7 @@ START_TEST(test_alloc_parse_xdecl_2) {
   const int max_alloc_count = 20;
 
   for (i = 0; i < max_alloc_count; i++) {
-    allocation_count = i;
+    g_allocation_count = i;
     XML_SetXmlDeclHandler(g_parser, dummy_xdecl_handler);
     XML_SetUnknownEncodingHandler(g_parser, long_encoding_handler, NULL);
     if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
@@ -582,7 +554,7 @@ START_TEST(test_alloc_parse_pi) {
   const int max_alloc_count = 15;
 
   for (i = 0; i < max_alloc_count; i++) {
-    allocation_count = i;
+    g_allocation_count = i;
     XML_SetProcessingInstructionHandler(g_parser, dummy_pi_handler);
     if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
         != XML_STATUS_ERROR)
@@ -608,7 +580,7 @@ START_TEST(test_alloc_parse_pi_2) {
   const int max_alloc_count = 15;
 
   for (i = 0; i < max_alloc_count; i++) {
-    allocation_count = i;
+    g_allocation_count = i;
     XML_SetProcessingInstructionHandler(g_parser, dummy_pi_handler);
     if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
         != XML_STATUS_ERROR)
@@ -649,7 +621,7 @@ START_TEST(test_alloc_parse_pi_3) {
   const int max_alloc_count = 20;
 
   for (i = 0; i < max_alloc_count; i++) {
-    allocation_count = i;
+    g_allocation_count = i;
     XML_SetProcessingInstructionHandler(g_parser, dummy_pi_handler);
     if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
         != XML_STATUS_ERROR)
@@ -673,7 +645,7 @@ START_TEST(test_alloc_parse_comment) {
   const int max_alloc_count = 15;
 
   for (i = 0; i < max_alloc_count; i++) {
-    allocation_count = i;
+    g_allocation_count = i;
     XML_SetCommentHandler(g_parser, dummy_comment_handler);
     if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
         != XML_STATUS_ERROR)
@@ -699,7 +671,7 @@ START_TEST(test_alloc_parse_comment_2) {
   const int max_alloc_count = 15;
 
   for (i = 0; i < max_alloc_count; i++) {
-    allocation_count = i;
+    g_allocation_count = i;
     XML_SetCommentHandler(g_parser, dummy_comment_handler);
     if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
         != XML_STATUS_ERROR)
@@ -728,7 +700,7 @@ external_entity_duff_loader(XML_Parser parser, const XML_Char *context,
   UNUSED_P(publicId);
   /* Try a few different allocation levels */
   for (i = 0; i < max_alloc_count; i++) {
-    allocation_count = i;
+    g_allocation_count = i;
     new_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
     if (new_parser != NULL) {
       XML_ParserFree(new_parser);
@@ -741,7 +713,7 @@ external_entity_duff_loader(XML_Parser parser, const XML_Char *context,
     fail("Extern parser not created with max allocation count");
 
   /* Make sure other random allocation doesn't now fail */
-  allocation_count = ALLOC_ALWAYS_SUCCEED;
+  g_allocation_count = ALLOC_ALWAYS_SUCCEED;
 
   /* Make sure the failure code path is executed too */
   return XML_STATUS_ERROR;
@@ -779,7 +751,7 @@ START_TEST(test_alloc_run_external_parser) {
     XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
     XML_SetUserData(g_parser, foo_text);
     XML_SetExternalEntityRefHandler(g_parser, external_entity_null_loader);
-    allocation_count = i;
+    g_allocation_count = i;
     if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
         != XML_STATUS_ERROR)
       break;
@@ -812,20 +784,20 @@ external_entity_dbl_handler(XML_Parser parser, const XML_Char *context,
     text = ("<!ELEMENT doc (e+)>\n"
             "<!ATTLIST doc xmlns CDATA #IMPLIED>\n"
             "<!ELEMENT e EMPTY>\n");
-    allocation_count = 10000;
+    g_allocation_count = 10000;
     new_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
     if (new_parser == NULL) {
       fail("Unable to allocate first external parser");
       return XML_STATUS_ERROR;
     }
     /* Stash the number of calls in the user data */
-    XML_SetUserData(parser, (void *)(intptr_t)(10000 - allocation_count));
+    XML_SetUserData(parser, (void *)(intptr_t)(10000 - g_allocation_count));
   } else {
     text = ("<?xml version='1.0' encoding='us-ascii'?>"
             "<e/>");
     /* Try at varying levels to exercise more code paths */
     for (i = 0; i < max_alloc_count; i++) {
-      allocation_count = callno + i;
+      g_allocation_count = callno + i;
       new_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
       if (new_parser != NULL)
         break;
@@ -840,7 +812,7 @@ external_entity_dbl_handler(XML_Parser parser, const XML_Char *context,
     }
   }
 
-  allocation_count = ALLOC_ALWAYS_SUCCEED;
+  g_allocation_count = ALLOC_ALWAYS_SUCCEED;
   if (_XML_Parse_SINGLE_BYTES(new_parser, text, (int)strlen(text), XML_TRUE)
       == XML_STATUS_ERROR) {
     xml_failure(new_parser);
@@ -921,11 +893,11 @@ START_TEST(test_alloc_external_entity) {
   const int alloc_test_max_repeats = 50;
 
   for (i = 0; i < alloc_test_max_repeats; i++) {
-    allocation_count = -1;
+    g_allocation_count = -1;
     XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
     XML_SetExternalEntityRefHandler(g_parser, external_entity_dbl_handler_2);
     XML_SetUserData(g_parser, NULL);
-    allocation_count = i;
+    g_allocation_count = i;
     if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
         == XML_STATUS_OK)
       break;
@@ -933,7 +905,7 @@ START_TEST(test_alloc_external_entity) {
     alloc_teardown();
     alloc_setup();
   }
-  allocation_count = -1;
+  g_allocation_count = -1;
   if (i == 0)
     fail("External entity parsed despite duff allocator");
   if (i == alloc_test_max_repeats)
@@ -982,11 +954,11 @@ START_TEST(test_alloc_ext_entity_set_encoding) {
   for (i = 0; i < max_allocation_count; i++) {
     XML_SetExternalEntityRefHandler(g_parser,
                                     external_entity_alloc_set_encoding);
-    allocation_count = i;
+    g_allocation_count = i;
     if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
         == XML_STATUS_OK)
       break;
-    allocation_count = -1;
+    g_allocation_count = -1;
     /* See comment in test_alloc_parse_xdecl() */
     alloc_teardown();
     alloc_setup();
@@ -1009,7 +981,7 @@ START_TEST(test_alloc_internal_entity) {
   const unsigned int max_alloc_count = 20;
 
   for (i = 0; i < max_alloc_count; i++) {
-    allocation_count = i;
+    g_allocation_count = i;
     XML_SetUnknownEncodingHandler(g_parser, unknown_released_encoding_handler,
                                   NULL);
     if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
@@ -1046,7 +1018,7 @@ START_TEST(test_alloc_dtd_default_handling) {
   const int max_alloc_count = 25;
 
   for (i = 0; i < max_alloc_count; i++) {
-    allocation_count = i;
+    g_allocation_count = i;
     init_dummy_handlers();
     XML_SetDefaultHandler(g_parser, accumulate_characters);
     XML_SetDoctypeDeclHandler(g_parser, dummy_start_doctype_handler,
@@ -1093,7 +1065,7 @@ START_TEST(test_alloc_explicit_encoding) {
   const int max_alloc_count = 5;
 
   for (i = 0; i < max_alloc_count; i++) {
-    allocation_count = i;
+    g_allocation_count = i;
     if (XML_SetEncoding(g_parser, XCS("us-ascii")) == XML_STATUS_OK)
       break;
   }
@@ -1111,7 +1083,7 @@ START_TEST(test_alloc_set_base) {
   const int max_alloc_count = 5;
 
   for (i = 0; i < max_alloc_count; i++) {
-    allocation_count = i;
+    g_allocation_count = i;
     if (XML_SetBase(g_parser, new_base) == XML_STATUS_OK)
       break;
   }
@@ -1131,7 +1103,7 @@ START_TEST(test_alloc_realloc_buffer) {
 
   /* Get a smallish buffer */
   for (i = 0; i < max_realloc_count; i++) {
-    reallocation_count = i;
+    g_reallocation_count = i;
     buffer = XML_GetBuffer(g_parser, 1536);
     if (buffer == NULL)
       fail("1.5K buffer reallocation failed");
@@ -1144,7 +1116,7 @@ START_TEST(test_alloc_realloc_buffer) {
     alloc_teardown();
     alloc_setup();
   }
-  reallocation_count = -1;
+  g_reallocation_count = -1;
   if (i == 0)
     fail("Parse succeeded with no reallocation");
   else if (i == max_realloc_count)
@@ -1169,14 +1141,14 @@ external_entity_reallocator(XML_Parser parser, const XML_Char *context,
   if (ext_parser == NULL)
     fail("Could not create external entity parser");
 
-  reallocation_count = (intptr_t)XML_GetUserData(parser);
+  g_reallocation_count = (intptr_t)XML_GetUserData(parser);
   buffer = XML_GetBuffer(ext_parser, 1536);
   if (buffer == NULL)
     fail("Buffer allocation failed");
   assert(buffer != NULL);
   memcpy(buffer, text, strlen(text));
   status = XML_ParseBuffer(ext_parser, (int)strlen(text), XML_FALSE);
-  reallocation_count = -1;
+  g_reallocation_count = -1;
   XML_ParserFree(ext_parser);
   return (status == XML_STATUS_OK) ? XML_STATUS_OK : XML_STATUS_ERROR;
 }
@@ -1236,7 +1208,7 @@ START_TEST(test_alloc_realloc_many_attributes) {
   const int max_realloc_count = 10;
 
   for (i = 0; i < max_realloc_count; i++) {
-    reallocation_count = i;
+    g_reallocation_count = i;
     if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
         != XML_STATUS_ERROR)
       break;
@@ -1282,7 +1254,7 @@ START_TEST(test_alloc_public_entity_value) {
   const int max_alloc_count = 50;
 
   for (i = 0; i < max_alloc_count; i++) {
-    allocation_count = i;
+    g_allocation_count = i;
     init_dummy_handlers();
     XML_SetUserData(g_parser, dtd_text);
     XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
@@ -1349,7 +1321,7 @@ START_TEST(test_alloc_realloc_subst_public_entity_value) {
   const int max_realloc_count = 10;
 
   for (i = 0; i < max_realloc_count; i++) {
-    reallocation_count = i;
+    g_reallocation_count = i;
     XML_SetUserData(g_parser, dtd_text);
     XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
     XML_SetExternalEntityRefHandler(g_parser, external_entity_public);
@@ -1394,7 +1366,7 @@ START_TEST(test_alloc_parse_public_doctype) {
   const int max_alloc_count = 25;
 
   for (i = 0; i < max_alloc_count; i++) {
-    allocation_count = i;
+    g_allocation_count = i;
     init_dummy_handlers();
     XML_SetDoctypeDeclHandler(g_parser, dummy_start_doctype_decl_handler,
                               dummy_end_doctype_decl_handler);
@@ -1443,7 +1415,7 @@ START_TEST(test_alloc_parse_public_doctype_long_name) {
   const int max_alloc_count = 25;
 
   for (i = 0; i < max_alloc_count; i++) {
-    allocation_count = i;
+    g_allocation_count = i;
     XML_SetDoctypeDeclHandler(g_parser, dummy_start_doctype_decl_handler,
                               dummy_end_doctype_decl_handler);
     if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
@@ -1489,7 +1461,7 @@ START_TEST(test_alloc_set_foreign_dtd) {
   const int max_alloc_count = 25;
 
   for (i = 0; i < max_alloc_count; i++) {
-    allocation_count = i;
+    g_allocation_count = i;
     XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
     XML_SetUserData(g_parser, &text2);
     XML_SetExternalEntityRefHandler(g_parser, external_entity_alloc);
@@ -1521,7 +1493,7 @@ START_TEST(test_alloc_attribute_enum_value) {
   const int max_alloc_count = 30;
 
   for (i = 0; i < max_alloc_count; i++) {
-    allocation_count = i;
+    g_allocation_count = i;
     XML_SetExternalEntityRefHandler(g_parser, external_entity_alloc);
     XML_SetUserData(g_parser, dtd_text);
     XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
@@ -1577,7 +1549,7 @@ START_TEST(test_alloc_realloc_attribute_enum_value) {
   const int max_realloc_count = 10;
 
   for (i = 0; i < max_realloc_count; i++) {
-    reallocation_count = i;
+    g_reallocation_count = i;
     XML_SetExternalEntityRefHandler(g_parser, external_entity_alloc);
     XML_SetUserData(g_parser, dtd_text);
     XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
@@ -1631,7 +1603,7 @@ START_TEST(test_alloc_realloc_implied_attribute) {
   const int max_realloc_count = 10;
 
   for (i = 0; i < max_realloc_count; i++) {
-    reallocation_count = i;
+    g_reallocation_count = i;
     XML_SetAttlistDeclHandler(g_parser, dummy_attlist_decl_handler);
     if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
         != XML_STATUS_ERROR)
@@ -1681,7 +1653,7 @@ START_TEST(test_alloc_realloc_default_attribute) {
   const int max_realloc_count = 10;
 
   for (i = 0; i < max_realloc_count; i++) {
-    reallocation_count = i;
+    g_reallocation_count = i;
     XML_SetAttlistDeclHandler(g_parser, dummy_attlist_decl_handler);
     if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
         != XML_STATUS_ERROR)
@@ -1744,7 +1716,7 @@ START_TEST(test_alloc_notation) {
   const int max_alloc_count = 20;
 
   for (i = 0; i < max_alloc_count; i++) {
-    allocation_count = i;
+    g_allocation_count = i;
     init_dummy_handlers();
     XML_SetNotationDeclHandler(g_parser, dummy_notation_decl_handler);
     XML_SetEntityDeclHandler(g_parser, dummy_entity_decl_handler);
@@ -1795,7 +1767,7 @@ START_TEST(test_alloc_public_notation) {
   const int max_alloc_count = 20;
 
   for (i = 0; i < max_alloc_count; i++) {
-    allocation_count = i;
+    g_allocation_count = i;
     init_dummy_handlers();
     XML_SetNotationDeclHandler(g_parser, dummy_notation_decl_handler);
     if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
@@ -1844,7 +1816,7 @@ START_TEST(test_alloc_system_notation) {
   const int max_alloc_count = 20;
 
   for (i = 0; i < max_alloc_count; i++) {
-    allocation_count = i;
+    g_allocation_count = i;
     init_dummy_handlers();
     XML_SetNotationDeclHandler(g_parser, dummy_notation_decl_handler);
     if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
@@ -1879,7 +1851,7 @@ START_TEST(test_alloc_nested_groups) {
   const int max_alloc_count = 20;
 
   for (i = 0; i < max_alloc_count; i++) {
-    allocation_count = i;
+    g_allocation_count = i;
     CharData_Init(&storage);
     XML_SetElementDeclHandler(g_parser, dummy_element_decl_handler);
     XML_SetStartElementHandler(g_parser, record_element_start_handler);
@@ -1919,7 +1891,7 @@ START_TEST(test_alloc_realloc_nested_groups) {
   const int max_realloc_count = 10;
 
   for (i = 0; i < max_realloc_count; i++) {
-    reallocation_count = i;
+    g_reallocation_count = i;
     CharData_Init(&storage);
     XML_SetElementDeclHandler(g_parser, dummy_element_decl_handler);
     XML_SetStartElementHandler(g_parser, record_element_start_handler);
@@ -1960,7 +1932,7 @@ START_TEST(test_alloc_large_group) {
   const int max_alloc_count = 50;
 
   for (i = 0; i < max_alloc_count; i++) {
-    allocation_count = i;
+    g_allocation_count = i;
     XML_SetElementDeclHandler(g_parser, dummy_element_decl_handler);
     init_dummy_handlers();
     if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
@@ -1998,7 +1970,7 @@ START_TEST(test_alloc_realloc_group_choice) {
   const int max_realloc_count = 10;
 
   for (i = 0; i < max_realloc_count; i++) {
-    reallocation_count = i;
+    g_reallocation_count = i;
     XML_SetElementDeclHandler(g_parser, dummy_element_decl_handler);
     init_dummy_handlers();
     if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
@@ -2024,7 +1996,7 @@ START_TEST(test_alloc_pi_in_epilog) {
   const int max_alloc_count = 15;
 
   for (i = 0; i < max_alloc_count; i++) {
-    allocation_count = i;
+    g_allocation_count = i;
     XML_SetProcessingInstructionHandler(g_parser, dummy_pi_handler);
     init_dummy_handlers();
     if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
@@ -2050,7 +2022,7 @@ START_TEST(test_alloc_comment_in_epilog) {
   const int max_alloc_count = 15;
 
   for (i = 0; i < max_alloc_count; i++) {
-    allocation_count = i;
+    g_allocation_count = i;
     XML_SetCommentHandler(g_parser, dummy_comment_handler);
     init_dummy_handlers();
     if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
@@ -2095,7 +2067,7 @@ START_TEST(test_alloc_realloc_long_attribute_value) {
   const int max_realloc_count = 10;
 
   for (i = 0; i < max_realloc_count; i++) {
-    reallocation_count = i;
+    g_reallocation_count = i;
     if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
         != XML_STATUS_ERROR)
       break;
@@ -2116,7 +2088,7 @@ START_TEST(test_alloc_attribute_whitespace) {
   const int max_alloc_count = 15;
 
   for (i = 0; i < max_alloc_count; i++) {
-    allocation_count = i;
+    g_allocation_count = i;
     if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
         != XML_STATUS_ERROR)
       break;
@@ -2137,7 +2109,7 @@ START_TEST(test_alloc_attribute_predefined_entity) {
   const int max_alloc_count = 15;
 
   for (i = 0; i < max_alloc_count; i++) {
-    allocation_count = i;
+    g_allocation_count = i;
     if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
         != XML_STATUS_ERROR)
       break;
@@ -2182,7 +2154,7 @@ START_TEST(test_alloc_long_attr_default_with_char_ref) {
   const int max_alloc_count = 20;
 
   for (i = 0; i < max_alloc_count; i++) {
-    allocation_count = i;
+    g_allocation_count = i;
     if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
         != XML_STATUS_ERROR)
       break;
@@ -2226,7 +2198,7 @@ START_TEST(test_alloc_long_attr_value) {
   const int max_alloc_count = 25;
 
   for (i = 0; i < max_alloc_count; i++) {
-    allocation_count = i;
+    g_allocation_count = i;
     if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
         != XML_STATUS_ERROR)
       break;
@@ -2274,7 +2246,7 @@ START_TEST(test_alloc_nested_entities) {
          "Memory Fail not faulted", NULL, XML_ERROR_NO_MEMORY};
 
   /* Causes an allocation error in a nested storeEntityValue() */
-  allocation_count = 12;
+  g_allocation_count = 12;
   XML_SetUserData(g_parser, &test_data);
   XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
   XML_SetExternalEntityRefHandler(g_parser, external_entity_faulter);
@@ -2311,7 +2283,7 @@ START_TEST(test_alloc_realloc_param_entity_newline) {
   const int max_realloc_count = 5;
 
   for (i = 0; i < max_realloc_count; i++) {
-    reallocation_count = i;
+    g_reallocation_count = i;
     XML_SetUserData(g_parser, dtd_text);
     XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
     XML_SetExternalEntityRefHandler(g_parser, external_entity_alloc);
@@ -2357,7 +2329,7 @@ START_TEST(test_alloc_realloc_ce_extends_pe) {
   const int max_realloc_count = 5;
 
   for (i = 0; i < max_realloc_count; i++) {
-    reallocation_count = i;
+    g_reallocation_count = i;
     XML_SetUserData(g_parser, dtd_text);
     XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
     XML_SetExternalEntityRefHandler(g_parser, external_entity_alloc);
@@ -2394,7 +2366,7 @@ START_TEST(test_alloc_realloc_attributes) {
   const int max_realloc_count = 5;
 
   for (i = 0; i < max_realloc_count; i++) {
-    reallocation_count = i;
+    g_reallocation_count = i;
     if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
         != XML_STATUS_ERROR)
       break;
@@ -2434,7 +2406,7 @@ START_TEST(test_alloc_long_doc_name) {
   const int max_alloc_count = 20;
 
   for (i = 0; i < max_alloc_count; i++) {
-    allocation_count = i;
+    g_allocation_count = i;
     if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
         != XML_STATUS_ERROR)
       break;
@@ -2479,7 +2451,7 @@ START_TEST(test_alloc_long_base) {
   const int max_alloc_count = 25;
 
   for (i = 0; i < max_alloc_count; i++) {
-    allocation_count = i;
+    g_allocation_count = i;
     XML_SetUserData(g_parser, entity_text);
     XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
     XML_SetExternalEntityRefHandler(g_parser, external_entity_alloc);
@@ -2530,7 +2502,7 @@ START_TEST(test_alloc_long_public_id) {
   const int max_alloc_count = 40;
 
   for (i = 0; i < max_alloc_count; i++) {
-    allocation_count = i;
+    g_allocation_count = i;
     XML_SetUserData(g_parser, entity_text);
     XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
     XML_SetExternalEntityRefHandler(g_parser, external_entity_alloc);
@@ -2578,7 +2550,7 @@ START_TEST(test_alloc_long_entity_value) {
   const int max_alloc_count = 40;
 
   for (i = 0; i < max_alloc_count; i++) {
-    allocation_count = i;
+    g_allocation_count = i;
     XML_SetUserData(g_parser, entity_text);
     XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
     XML_SetExternalEntityRefHandler(g_parser, external_entity_alloc);
@@ -2646,7 +2618,7 @@ START_TEST(test_alloc_long_notation) {
   const int max_alloc_count = 40;
 
   for (i = 0; i < max_alloc_count; i++) {
-    allocation_count = i;
+    g_allocation_count = i;
     XML_SetUserData(g_parser, options);
     XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
     XML_SetExternalEntityRefHandler(g_parser, external_entity_optioner);
@@ -2681,7 +2653,7 @@ external_entity_parser_create_alloc_fail_handler(XML_Parser parser,
   // The following number intends to fail the upcoming allocation in line
   // "parser->m_protocolEncodingName = copyString(encodingName,
   // &(parser->m_mem));" in function parserInit.
-  allocation_count = 3;
+  g_allocation_count = 3;
 
   const XML_Char *const encodingName = XCS("UTF-8"); // needs something non-NULL
   const XML_Parser ext_parser
@@ -2690,7 +2662,7 @@ external_entity_parser_create_alloc_fail_handler(XML_Parser parser,
     fail(
         "Call to XML_ExternalEntityParserCreate was expected to fail out-of-memory");
 
-  allocation_count = ALLOC_ALWAYS_SUCCEED;
+  g_allocation_count = ALLOC_ALWAYS_SUCCEED;
   return XML_STATUS_ERROR;
 }
 
@@ -2718,8 +2690,8 @@ nsalloc_setup(void) {
   XML_Char ns_sep[2] = {' ', '\0'};
 
   /* Ensure the parser creation will go through */
-  allocation_count = ALLOC_ALWAYS_SUCCEED;
-  reallocation_count = REALLOC_ALWAYS_SUCCEED;
+  g_allocation_count = ALLOC_ALWAYS_SUCCEED;
+  g_reallocation_count = REALLOC_ALWAYS_SUCCEED;
   g_parser = XML_ParserCreate_MM(NULL, &memsuite, ns_sep);
   if (g_parser == NULL)
     fail("Parser not created");
@@ -2741,7 +2713,7 @@ START_TEST(test_nsalloc_xmlns) {
   const unsigned int max_alloc_count = 30;
 
   for (i = 0; i < max_alloc_count; i++) {
-    allocation_count = i;
+    g_allocation_count = i;
     /* Exercise more code paths with a default handler */
     XML_SetDefaultHandler(g_parser, dummy_default_handler);
     if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
@@ -2778,14 +2750,14 @@ START_TEST(test_nsalloc_parse_buffer) {
   if (buffer == NULL)
     fail("Could not acquire parse buffer");
 
-  allocation_count = 0;
+  g_allocation_count = 0;
   if (XML_ParseBuffer(g_parser, 0, XML_FALSE) != XML_STATUS_ERROR)
     fail("Pre-init XML_ParseBuffer not faulted");
   if (XML_GetErrorCode(g_parser) != XML_ERROR_NO_MEMORY)
     fail("Pre-init XML_ParseBuffer faulted for wrong reason");
 
   /* Now with actual memory allocation */
-  allocation_count = ALLOC_ALWAYS_SUCCEED;
+  g_allocation_count = ALLOC_ALWAYS_SUCCEED;
   if (XML_ParseBuffer(g_parser, 0, XML_FALSE) != XML_STATUS_OK)
     xml_failure(g_parser);
 
@@ -2891,7 +2863,7 @@ START_TEST(test_nsalloc_long_prefix) {
   const int max_alloc_count = 40;
 
   for (i = 0; i < max_alloc_count; i++) {
-    allocation_count = i;
+    g_allocation_count = i;
     if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
         != XML_STATUS_ERROR)
       break;
@@ -2951,7 +2923,7 @@ START_TEST(test_nsalloc_long_uri) {
   const int max_alloc_count = 40;
 
   for (i = 0; i < max_alloc_count; i++) {
-    allocation_count = i;
+    g_allocation_count = i;
     if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
         != XML_STATUS_ERROR)
       break;
@@ -2994,7 +2966,7 @@ START_TEST(test_nsalloc_long_attr) {
   const int max_alloc_count = 40;
 
   for (i = 0; i < max_alloc_count; i++) {
-    allocation_count = i;
+    g_allocation_count = i;
     if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
         != XML_STATUS_ERROR)
       break;
@@ -3077,7 +3049,7 @@ START_TEST(test_nsalloc_long_attr_prefix) {
   const int max_alloc_count = 40;
 
   for (i = 0; i < max_alloc_count; i++) {
-    allocation_count = i;
+    g_allocation_count = i;
     XML_SetReturnNSTriplet(g_parser, XML_TRUE);
     XML_SetUserData(g_parser, (void *)elemstr);
     XML_SetElementHandler(g_parser, triplet_start_checker, triplet_end_checker);
@@ -3104,7 +3076,7 @@ START_TEST(test_nsalloc_realloc_attributes) {
   const int max_realloc_count = 10;
 
   for (i = 0; i < max_realloc_count; i++) {
-    reallocation_count = i;
+    g_reallocation_count = i;
     if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
         != XML_STATUS_ERROR)
       break;
@@ -3134,7 +3106,7 @@ START_TEST(test_nsalloc_long_element) {
   const int max_alloc_count = 30;
 
   for (i = 0; i < max_alloc_count; i++) {
-    allocation_count = i;
+    g_allocation_count = i;
     XML_SetReturnNSTriplet(g_parser, XML_TRUE);
     XML_SetUserData(g_parser, (void *)elemstr);
     XML_SetElementHandler(g_parser, triplet_start_checker, triplet_end_checker);
@@ -3181,7 +3153,7 @@ START_TEST(test_nsalloc_realloc_binding_uri) {
   /* Now repeat with a longer URI and a duff reallocator */
   for (i = 0; i < max_realloc_count; i++) {
     XML_ParserReset(g_parser, NULL);
-    reallocation_count = i;
+    g_reallocation_count = i;
     if (_XML_Parse_SINGLE_BYTES(g_parser, second, (int)strlen(second), XML_TRUE)
         != XML_STATUS_ERROR)
       break;
@@ -3254,7 +3226,7 @@ START_TEST(test_nsalloc_realloc_long_prefix) {
   const int max_realloc_count = 12;
 
   for (i = 0; i < max_realloc_count; i++) {
-    reallocation_count = i;
+    g_reallocation_count = i;
     if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
         != XML_STATUS_ERROR)
       break;
@@ -3330,7 +3302,7 @@ START_TEST(test_nsalloc_realloc_longer_prefix) {
   const int max_realloc_count = 12;
 
   for (i = 0; i < max_realloc_count; i++) {
-    reallocation_count = i;
+    g_reallocation_count = i;
     if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
         != XML_STATUS_ERROR)
       break;
@@ -3441,7 +3413,7 @@ START_TEST(test_nsalloc_long_namespace) {
   const int max_alloc_count = 40;
 
   for (i = 0; i < max_alloc_count; i++) {
-    allocation_count = i;
+    g_allocation_count = i;
     if (_XML_Parse_SINGLE_BYTES(g_parser, text1, (int)strlen(text1), XML_FALSE)
             != XML_STATUS_ERROR
         && _XML_Parse_SINGLE_BYTES(g_parser, text2, (int)strlen(text2),
@@ -3517,7 +3489,7 @@ START_TEST(test_nsalloc_less_long_namespace) {
   const int max_alloc_count = 40;
 
   for (i = 0; i < max_alloc_count; i++) {
-    allocation_count = i;
+    g_allocation_count = i;
     if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
         != XML_STATUS_ERROR)
       break;
@@ -3565,7 +3537,7 @@ START_TEST(test_nsalloc_long_context) {
   const int max_alloc_count = 70;
 
   for (i = 0; i < max_alloc_count; i++) {
-    allocation_count = i;
+    g_allocation_count = i;
     XML_SetUserData(g_parser, options);
     XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
     XML_SetExternalEntityRefHandler(g_parser, external_entity_optioner);
@@ -3595,7 +3567,7 @@ context_realloc_test(const char *text) {
   const int max_realloc_count = 6;
 
   for (i = 0; i < max_realloc_count; i++) {
-    reallocation_count = i;
+    g_reallocation_count = i;
     XML_SetUserData(g_parser, options);
     XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
     XML_SetExternalEntityRefHandler(g_parser, external_entity_optioner);
@@ -3878,7 +3850,7 @@ START_TEST(test_nsalloc_realloc_long_ge_name) {
   const int max_realloc_count = 10;
 
   for (i = 0; i < max_realloc_count; i++) {
-    reallocation_count = i;
+    g_reallocation_count = i;
     XML_SetUserData(g_parser, options);
     XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
     XML_SetExternalEntityRefHandler(g_parser, external_entity_optioner);
@@ -3983,7 +3955,7 @@ START_TEST(test_nsalloc_realloc_long_context_in_dtd) {
   const int max_realloc_count = 20;
 
   for (i = 0; i < max_realloc_count; i++) {
-    reallocation_count = i;
+    g_reallocation_count = i;
     XML_SetUserData(g_parser, options);
     XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
     XML_SetExternalEntityRefHandler(g_parser, external_entity_optioner);
@@ -4034,7 +4006,7 @@ START_TEST(test_nsalloc_long_default_in_ext) {
   const int max_alloc_count = 50;
 
   for (i = 0; i < max_alloc_count; i++) {
-    allocation_count = i;
+    g_allocation_count = i;
     XML_SetUserData(g_parser, options);
     XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
     XML_SetExternalEntityRefHandler(g_parser, external_entity_optioner);
@@ -4103,7 +4075,7 @@ START_TEST(test_nsalloc_long_systemid_in_ext) {
   const int max_alloc_count = 55;
 
   for (i = 0; i < max_alloc_count; i++) {
-    allocation_count = i;
+    g_allocation_count = i;
     XML_SetUserData(g_parser, options);
     XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
     XML_SetExternalEntityRefHandler(g_parser, external_entity_optioner);
@@ -4139,7 +4111,7 @@ START_TEST(test_nsalloc_prefixed_element) {
   const int max_alloc_count = 70;
 
   for (i = 0; i < max_alloc_count; i++) {
-    allocation_count = i;
+    g_allocation_count = i;
     XML_SetUserData(g_parser, options);
     XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
     XML_SetExternalEntityRefHandler(g_parser, external_entity_optioner);

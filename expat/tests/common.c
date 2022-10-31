@@ -280,3 +280,31 @@ _run_ext_character_check(const char *text, ExtTest *test_data,
 
   free(storage);
 }
+
+/* Control variable; the number of times duff_allocator() will successfully
+ * allocate */
+#define ALLOC_ALWAYS_SUCCEED (-1)
+#define REALLOC_ALWAYS_SUCCEED (-1)
+
+int g_allocation_count = ALLOC_ALWAYS_SUCCEED;
+int g_reallocation_count = REALLOC_ALWAYS_SUCCEED;
+
+/* Crocked allocator for allocation failure tests */
+void *
+duff_allocator(size_t size) {
+  if (g_allocation_count == 0)
+    return NULL;
+  if (g_allocation_count != ALLOC_ALWAYS_SUCCEED)
+    g_allocation_count--;
+  return malloc(size);
+}
+
+/* Crocked reallocator for allocation failure tests */
+void *
+duff_reallocator(void *ptr, size_t size) {
+  if (g_reallocation_count == 0)
+    return NULL;
+  if (g_reallocation_count != REALLOC_ALWAYS_SUCCEED)
+    g_reallocation_count--;
+  return realloc(ptr, size);
+}
