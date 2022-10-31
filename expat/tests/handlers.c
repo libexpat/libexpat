@@ -1432,6 +1432,26 @@ external_entity_reallocator(XML_Parser parser, const XML_Char *context,
   return (status == XML_STATUS_OK) ? XML_STATUS_OK : XML_STATUS_ERROR;
 }
 
+int XMLCALL
+external_entity_alloc(XML_Parser parser, const XML_Char *context,
+                      const XML_Char *base, const XML_Char *systemId,
+                      const XML_Char *publicId) {
+  const char *text = (const char *)XML_GetUserData(parser);
+  XML_Parser ext_parser;
+  int parse_res;
+
+  UNUSED_P(base);
+  UNUSED_P(systemId);
+  UNUSED_P(publicId);
+  ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
+  if (ext_parser == NULL)
+    return XML_STATUS_ERROR;
+  parse_res
+      = _XML_Parse_SINGLE_BYTES(ext_parser, text, (int)strlen(text), XML_TRUE);
+  XML_ParserFree(ext_parser);
+  return parse_res;
+}
+
 /* NotStandalone handlers */
 
 int XMLCALL
