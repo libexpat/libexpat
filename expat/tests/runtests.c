@@ -77,85 +77,6 @@
 XML_Parser g_parser = NULL;
 
 static int XMLCALL
-external_entity_duff_loader(XML_Parser parser, const XML_Char *context,
-                            const XML_Char *base, const XML_Char *systemId,
-                            const XML_Char *publicId) {
-  XML_Parser new_parser;
-  unsigned int i;
-  const unsigned int max_alloc_count = 10;
-
-  UNUSED_P(base);
-  UNUSED_P(systemId);
-  UNUSED_P(publicId);
-  /* Try a few different allocation levels */
-  for (i = 0; i < max_alloc_count; i++) {
-    g_allocation_count = i;
-    new_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
-    if (new_parser != NULL) {
-      XML_ParserFree(new_parser);
-      break;
-    }
-  }
-  if (i == 0)
-    fail("External parser creation ignored failing allocator");
-  else if (i == max_alloc_count)
-    fail("Extern parser not created with max allocation count");
-
-  /* Make sure other random allocation doesn't now fail */
-  g_allocation_count = ALLOC_ALWAYS_SUCCEED;
-
-  /* Make sure the failure code path is executed too */
-  return XML_STATUS_ERROR;
-}
-
-/* Test that external parser creation running out of memory is
- * correctly reported.  Based on the external entity test cases.
- */
-START_TEST(test_alloc_create_external_parser) {
-  const char *text = "<?xml version='1.0' encoding='us-ascii'?>\n"
-                     "<!DOCTYPE doc SYSTEM 'foo'>\n"
-                     "<doc>&entity;</doc>";
-  char foo_text[] = "<!ELEMENT doc (#PCDATA)*>";
-
-  XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
-  XML_SetUserData(g_parser, foo_text);
-  XML_SetExternalEntityRefHandler(g_parser, external_entity_duff_loader);
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
-      != XML_STATUS_ERROR) {
-    fail("External parser allocator returned success incorrectly");
-  }
-}
-END_TEST
-
-/* More external parser memory allocation testing */
-START_TEST(test_alloc_run_external_parser) {
-  const char *text = "<?xml version='1.0' encoding='us-ascii'?>\n"
-                     "<!DOCTYPE doc SYSTEM 'foo'>\n"
-                     "<doc>&entity;</doc>";
-  char foo_text[] = "<!ELEMENT doc (#PCDATA)*>";
-  unsigned int i;
-  const unsigned int max_alloc_count = 15;
-
-  for (i = 0; i < max_alloc_count; i++) {
-    XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
-    XML_SetUserData(g_parser, foo_text);
-    XML_SetExternalEntityRefHandler(g_parser, external_entity_null_loader);
-    g_allocation_count = i;
-    if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
-        != XML_STATUS_ERROR)
-      break;
-    /* See comment in test_alloc_parse_xdecl() */
-    alloc_teardown();
-    alloc_setup();
-  }
-  if (i == 0)
-    fail("Parsing ignored failing allocator");
-  else if (i == max_alloc_count)
-    fail("Parsing failed with allocation count 10");
-}
-END_TEST
-
-static int XMLCALL
 external_entity_dbl_handler(XML_Parser parser, const XML_Char *context,
                             const XML_Char *base, const XML_Char *systemId,
                             const XML_Char *publicId) {
@@ -3925,8 +3846,6 @@ make_suite(void) {
   TCase *tc_accounting = tcase_create("accounting tests");
 #endif
 
-  tcase_add_test__ifdef_xml_dtd(tc_alloc, test_alloc_create_external_parser);
-  tcase_add_test__ifdef_xml_dtd(tc_alloc, test_alloc_run_external_parser);
   tcase_add_test__ifdef_xml_dtd(tc_alloc, test_alloc_dtd_copy_default_atts);
   tcase_add_test__ifdef_xml_dtd(tc_alloc, test_alloc_external_entity);
   tcase_add_test__ifdef_xml_dtd(tc_alloc, test_alloc_ext_entity_set_encoding);
