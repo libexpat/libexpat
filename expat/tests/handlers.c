@@ -1375,6 +1375,35 @@ external_entity_dbl_handler_2(XML_Parser parser, const XML_Char *context,
   return XML_STATUS_OK;
 }
 
+int XMLCALL
+external_entity_alloc_set_encoding(XML_Parser parser, const XML_Char *context,
+                                   const XML_Char *base,
+                                   const XML_Char *systemId,
+                                   const XML_Char *publicId) {
+  /* As for external_entity_loader() */
+  const char *text = "<?xml encoding='iso-8859-3'?>"
+                     "\xC3\xA9";
+  XML_Parser ext_parser;
+  enum XML_Status status;
+
+  UNUSED_P(base);
+  UNUSED_P(systemId);
+  UNUSED_P(publicId);
+  ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
+  if (ext_parser == NULL)
+    return XML_STATUS_ERROR;
+  if (! XML_SetEncoding(ext_parser, XCS("utf-8"))) {
+    XML_ParserFree(ext_parser);
+    return XML_STATUS_ERROR;
+  }
+  status
+      = _XML_Parse_SINGLE_BYTES(ext_parser, text, (int)strlen(text), XML_TRUE);
+  XML_ParserFree(ext_parser);
+  if (status == XML_STATUS_ERROR)
+    return XML_STATUS_ERROR;
+  return XML_STATUS_OK;
+}
+
 /* NotStandalone handlers */
 
 int XMLCALL
