@@ -1182,6 +1182,37 @@ external_entity_unfinished_attlist(XML_Parser parser, const XML_Char *context,
   return XML_STATUS_OK;
 }
 
+int XMLCALL
+external_entity_handler(XML_Parser parser, const XML_Char *context,
+                        const XML_Char *base, const XML_Char *systemId,
+                        const XML_Char *publicId) {
+  void *user_data = XML_GetUserData(parser);
+  const char *text;
+  XML_Parser p2;
+
+  UNUSED_P(base);
+  UNUSED_P(systemId);
+  UNUSED_P(publicId);
+  if (user_data == NULL)
+    text = ("<!ELEMENT doc (e+)>\n"
+            "<!ATTLIST doc xmlns CDATA #IMPLIED>\n"
+            "<!ELEMENT e EMPTY>\n");
+  else
+    text = ("<?xml version='1.0' encoding='us-ascii'?>"
+            "<e/>");
+
+  /* Set user data to any non-NULL value */
+  XML_SetUserData(parser, parser);
+  p2 = XML_ExternalEntityParserCreate(parser, context, NULL);
+  if (_XML_Parse_SINGLE_BYTES(p2, text, (int)strlen(text), XML_TRUE)
+      == XML_STATUS_ERROR) {
+    xml_failure(p2);
+    return XML_STATUS_ERROR;
+  }
+  XML_ParserFree(p2);
+  return XML_STATUS_OK;
+}
+
 /* NotStandalone handlers */
 
 int XMLCALL

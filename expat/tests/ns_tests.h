@@ -47,7 +47,7 @@ extern "C" {
 #ifndef XML_NS_TESTS_H
 #  define XML_NS_TESTS_H
 
-extern TCase *make_namespace_test_case(Suite *s);
+extern void make_namespace_test_case(Suite *s);
 
 #endif /* XML_NS_TESTS_H */
 
