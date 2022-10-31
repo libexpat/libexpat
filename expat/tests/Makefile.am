@@ -43,6 +43,7 @@ TESTS = runtests runtestspp
 LOG_DRIVER = $(srcdir)/../test-driver-wrapper.sh
 
 libruntests_a_SOURCES = \
+    alloc_tests.c \
     basic_tests.c \
     chardata.c \
     common.c \
@@ -67,6 +68,7 @@ runtests_LDFLAGS = @AM_LDFLAGS@ @LIBM@
 runtestspp_LDFLAGS = @AM_LDFLAGS@ @LIBM@
 
 EXTRA_DIST = \
+    alloc_tests.h \
     basic_tests.h \
     chardata.h \
     common.h \

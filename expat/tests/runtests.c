@@ -72,25 +72,9 @@
 #include "basic_tests.h"
 #include "ns_tests.h"
 #include "misc_tests.h"
+#include "alloc_tests.h"
 
 XML_Parser g_parser = NULL;
-
-static void
-alloc_setup(void) {
-  XML_Memory_Handling_Suite memsuite = {duff_allocator, duff_reallocator, free};
-
-  /* Ensure the parser creation will go through */
-  g_allocation_count = ALLOC_ALWAYS_SUCCEED;
-  g_reallocation_count = REALLOC_ALWAYS_SUCCEED;
-  g_parser = XML_ParserCreate_MM(NULL, &memsuite, NULL);
-  if (g_parser == NULL)
-    fail("Parser not created");
-}
-
-static void
-alloc_teardown(void) {
-  basic_teardown();
-}
 
 /* Test the effects of allocation failures on xml declaration processing */
 START_TEST(test_alloc_parse_xdecl) {
@@ -4168,14 +4152,12 @@ make_suite(void) {
   make_basic_test_case(s);
   make_namespace_test_case(s);
   make_miscellaneous_test_case(s);
-  TCase *tc_alloc = tcase_create("allocation tests");
+  TCase *tc_alloc = make_alloc_test_case(s);
   TCase *tc_nsalloc = tcase_create("namespace allocation tests");
 #if defined(XML_DTD)
   TCase *tc_accounting = tcase_create("accounting tests");
 #endif
 
-  suite_add_tcase(s, tc_alloc);
-  tcase_add_checked_fixture(tc_alloc, alloc_setup, alloc_teardown);
   tcase_add_test(tc_alloc, test_alloc_parse_xdecl);
   tcase_add_test(tc_alloc, test_alloc_parse_xdecl_2);
   tcase_add_test(tc_alloc, test_alloc_parse_pi);
