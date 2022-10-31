@@ -1404,6 +1404,34 @@ external_entity_alloc_set_encoding(XML_Parser parser, const XML_Char *context,
   return XML_STATUS_OK;
 }
 
+int XMLCALL
+external_entity_reallocator(XML_Parser parser, const XML_Char *context,
+                            const XML_Char *base, const XML_Char *systemId,
+                            const XML_Char *publicId) {
+  const char *text = get_buffer_test_text;
+  XML_Parser ext_parser;
+  void *buffer;
+  enum XML_Status status;
+
+  UNUSED_P(base);
+  UNUSED_P(systemId);
+  UNUSED_P(publicId);
+  ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
+  if (ext_parser == NULL)
+    fail("Could not create external entity parser");
+
+  g_reallocation_count = *(int *)XML_GetUserData(parser);
+  buffer = XML_GetBuffer(ext_parser, 1536);
+  if (buffer == NULL)
+    fail("Buffer allocation failed");
+  assert(buffer != NULL);
+  memcpy(buffer, text, strlen(text));
+  status = XML_ParseBuffer(ext_parser, (int)strlen(text), XML_FALSE);
+  g_reallocation_count = -1;
+  XML_ParserFree(ext_parser);
+  return (status == XML_STATUS_OK) ? XML_STATUS_OK : XML_STATUS_ERROR;
+}
+
 /* NotStandalone handlers */
 
 int XMLCALL
