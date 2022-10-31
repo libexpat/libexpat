@@ -76,76 +76,6 @@
 
 XML_Parser g_parser = NULL;
 
-static int XMLCALL
-external_entity_dbl_handler_2(XML_Parser parser, const XML_Char *context,
-                              const XML_Char *base, const XML_Char *systemId,
-                              const XML_Char *publicId) {
-  intptr_t callno = (intptr_t)XML_GetUserData(parser);
-  const char *text;
-  XML_Parser new_parser;
-  enum XML_Status rv;
-
-  UNUSED_P(base);
-  UNUSED_P(systemId);
-  UNUSED_P(publicId);
-  if (callno == 0) {
-    /* Try different allocation levels for whole exercise */
-    text = ("<!ELEMENT doc (e+)>\n"
-            "<!ATTLIST doc xmlns CDATA #IMPLIED>\n"
-            "<!ELEMENT e EMPTY>\n");
-    XML_SetUserData(parser, (void *)(intptr_t)1);
-    new_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
-    if (new_parser == NULL)
-      return XML_STATUS_ERROR;
-    rv = _XML_Parse_SINGLE_BYTES(new_parser, text, (int)strlen(text), XML_TRUE);
-  } else {
-    /* Just run through once */
-    text = ("<?xml version='1.0' encoding='us-ascii'?>"
-            "<e/>");
-    new_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
-    if (new_parser == NULL)
-      return XML_STATUS_ERROR;
-    rv = _XML_Parse_SINGLE_BYTES(new_parser, text, (int)strlen(text), XML_TRUE);
-  }
-  XML_ParserFree(new_parser);
-  if (rv == XML_STATUS_ERROR)
-    return XML_STATUS_ERROR;
-  return XML_STATUS_OK;
-}
-
-/* Test more external entity allocation failure paths */
-START_TEST(test_alloc_external_entity) {
-  const char *text = "<?xml version='1.0'?>\n"
-                     "<!DOCTYPE doc SYSTEM 'http://example.org/doc.dtd' [\n"
-                     "  <!ENTITY en SYSTEM 'http://example.org/entity.ent'>\n"
-                     "]>\n"
-                     "<doc xmlns='http://example.org/ns1'>\n"
-                     "&en;\n"
-                     "</doc>";
-  int i;
-  const int alloc_test_max_repeats = 50;
-
-  for (i = 0; i < alloc_test_max_repeats; i++) {
-    g_allocation_count = -1;
-    XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
-    XML_SetExternalEntityRefHandler(g_parser, external_entity_dbl_handler_2);
-    XML_SetUserData(g_parser, NULL);
-    g_allocation_count = i;
-    if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
-        == XML_STATUS_OK)
-      break;
-    /* See comment in test_alloc_parse_xdecl() */
-    alloc_teardown();
-    alloc_setup();
-  }
-  g_allocation_count = -1;
-  if (i == 0)
-    fail("External entity parsed despite duff allocator");
-  if (i == alloc_test_max_repeats)
-    fail("External entity not parsed at max allocation count");
-}
-END_TEST
-
 /* Test more allocation failure paths */
 static int XMLCALL
 external_entity_alloc_set_encoding(XML_Parser parser, const XML_Char *context,
@@ -3769,7 +3699,6 @@ make_suite(void) {
   TCase *tc_accounting = tcase_create("accounting tests");
 #endif
 
-  tcase_add_test__ifdef_xml_dtd(tc_alloc, test_alloc_external_entity);
   tcase_add_test__ifdef_xml_dtd(tc_alloc, test_alloc_ext_entity_set_encoding);
   tcase_add_test__ifdef_xml_dtd(tc_alloc, test_alloc_internal_entity);
   tcase_add_test__ifdef_xml_dtd(tc_alloc, test_alloc_dtd_default_handling);

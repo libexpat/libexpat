@@ -353,6 +353,41 @@ START_TEST(test_alloc_dtd_copy_default_atts) {
 }
 END_TEST
 
+/* Test more external entity allocation failure paths */
+START_TEST(test_alloc_external_entity) {
+  const char *text = "<?xml version='1.0'?>\n"
+                     "<!DOCTYPE doc SYSTEM 'http://example.org/doc.dtd' [\n"
+                     "  <!ENTITY en SYSTEM 'http://example.org/entity.ent'>\n"
+                     "]>\n"
+                     "<doc xmlns='http://example.org/ns1'>\n"
+                     "&en;\n"
+                     "</doc>";
+  int i;
+  const int alloc_test_max_repeats = 50;
+  int callno = 0;
+
+  for (i = 0; i < alloc_test_max_repeats; i++) {
+    g_allocation_count = -1;
+    XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+    XML_SetExternalEntityRefHandler(g_parser, external_entity_dbl_handler_2);
+    callno = 0;
+    XML_SetUserData(g_parser, &callno);
+    g_allocation_count = i;
+    if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+        == XML_STATUS_OK)
+      break;
+    /* See comment in test_alloc_parse_xdecl() */
+    alloc_teardown();
+    alloc_setup();
+  }
+  g_allocation_count = -1;
+  if (i == 0)
+    fail("External entity parsed despite duff allocator");
+  if (i == alloc_test_max_repeats)
+    fail("External entity not parsed at max allocation count");
+}
+END_TEST
+
 TCase *
 make_alloc_test_case(Suite *s) {
   TCase *tc_alloc = tcase_create("allocation tests");
@@ -370,6 +405,7 @@ make_alloc_test_case(Suite *s) {
   tcase_add_test__ifdef_xml_dtd(tc_alloc, test_alloc_create_external_parser);
   tcase_add_test__ifdef_xml_dtd(tc_alloc, test_alloc_run_external_parser);
   tcase_add_test__ifdef_xml_dtd(tc_alloc, test_alloc_dtd_copy_default_atts);
+  tcase_add_test__ifdef_xml_dtd(tc_alloc, test_alloc_external_entity);
 
   return tc_alloc; /* TEMPORARY: this will become a void function */
 }
