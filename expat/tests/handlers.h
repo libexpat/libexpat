@@ -120,6 +120,17 @@ extern void XMLCALL start_ns_clearing_start_element(void *userData,
                                                     const XML_Char *prefix,
                                                     const XML_Char *uri);
 
+typedef struct {
+  XML_Parser parser;
+  int deep;
+} DataIssue240;
+
+extern void XMLCALL start_element_issue_240(void *userData,
+                                            const XML_Char *name,
+                                            const XML_Char **atts);
+
+extern void XMLCALL end_element_issue_240(void *userData, const XML_Char *name);
+
 /* Text encoding handlers */
 
 extern int XMLCALL UnknownEncodingHandler(void *data, const XML_Char *encoding,

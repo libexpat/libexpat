@@ -47,7 +47,7 @@ extern "C" {
 #ifndef XML_MISC_TESTS_H
 #  define XML_MISC_TESTS_H
 
-extern TCase *make_miscellaneous_test_case(Suite *s);
+extern void make_miscellaneous_test_case(Suite *s);
 
 #endif /* XML_MISC_TESTS_H */
 

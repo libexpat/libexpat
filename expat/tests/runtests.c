@@ -75,156 +75,6 @@
 
 XML_Parser g_parser = NULL;
 
-typedef struct {
-  XML_Parser parser;
-  int deep;
-} DataIssue240;
-
-static void
-start_element_issue_240(void *userData, const XML_Char *name,
-                        const XML_Char **atts) {
-  DataIssue240 *mydata = (DataIssue240 *)userData;
-  UNUSED_P(name);
-  UNUSED_P(atts);
-  mydata->deep++;
-}
-
-static void
-end_element_issue_240(void *userData, const XML_Char *name) {
-  DataIssue240 *mydata = (DataIssue240 *)userData;
-
-  UNUSED_P(name);
-  mydata->deep--;
-  if (mydata->deep == 0) {
-    XML_StopParser(mydata->parser, 0);
-  }
-}
-
-START_TEST(test_misc_stop_during_end_handler_issue_240_1) {
-  XML_Parser parser;
-  DataIssue240 *mydata;
-  enum XML_Status result;
-  const char *const doc1 = "<doc><e1/><e><foo/></e></doc>";
-
-  parser = XML_ParserCreate(NULL);
-  XML_SetElementHandler(parser, start_element_issue_240, end_element_issue_240);
-  mydata = (DataIssue240 *)malloc(sizeof(DataIssue240));
-  mydata->parser = parser;
-  mydata->deep = 0;
-  XML_SetUserData(parser, mydata);
-
-  result = XML_Parse(parser, doc1, (int)strlen(doc1), 1);
-  XML_ParserFree(parser);
-  free(mydata);
-  if (result != XML_STATUS_ERROR)
-    fail("Stopping the parser did not work as expected");
-}
-END_TEST
-
-START_TEST(test_misc_stop_during_end_handler_issue_240_2) {
-  XML_Parser parser;
-  DataIssue240 *mydata;
-  enum XML_Status result;
-  const char *const doc2 = "<doc><elem/></doc>";
-
-  parser = XML_ParserCreate(NULL);
-  XML_SetElementHandler(parser, start_element_issue_240, end_element_issue_240);
-  mydata = (DataIssue240 *)malloc(sizeof(DataIssue240));
-  mydata->parser = parser;
-  mydata->deep = 0;
-  XML_SetUserData(parser, mydata);
-
-  result = XML_Parse(parser, doc2, (int)strlen(doc2), 1);
-  XML_ParserFree(parser);
-  free(mydata);
-  if (result != XML_STATUS_ERROR)
-    fail("Stopping the parser did not work as expected");
-}
-END_TEST
-
-START_TEST(test_misc_deny_internal_entity_closing_doctype_issue_317) {
-  const char *const inputOne = "<!DOCTYPE d [\n"
-                               "<!ENTITY % e ']><d/>'>\n"
-                               "\n"
-                               "%e;";
-  const char *const inputTwo = "<!DOCTYPE d [\n"
-                               "<!ENTITY % e1 ']><d/>'><!ENTITY % e2 '&e1;'>\n"
-                               "\n"
-                               "%e2;";
-  const char *const inputThree = "<!DOCTYPE d [\n"
-                                 "<!ENTITY % e ']><d'>\n"
-                                 "\n"
-                                 "%e;";
-  const char *const inputIssue317 = "<!DOCTYPE doc [\n"
-                                    "<!ENTITY % foo ']>\n"
-                                    "<doc>Hell<oc (#PCDATA)*>'>\n"
-                                    "%foo;\n"
-                                    "]>\n"
-                                    "<doc>Hello, world</dVc>";
-
-  const char *const inputs[] = {inputOne, inputTwo, inputThree, inputIssue317};
-  size_t inputIndex = 0;
-
-  for (; inputIndex < sizeof(inputs) / sizeof(inputs[0]); inputIndex++) {
-    XML_Parser parser;
-    enum XML_Status parseResult;
-    int setParamEntityResult;
-    XML_Size lineNumber;
-    XML_Size columnNumber;
-    const char *const input = inputs[inputIndex];
-
-    parser = XML_ParserCreate(NULL);
-    setParamEntityResult
-        = XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
-    if (setParamEntityResult != 1)
-      fail("Failed to set XML_PARAM_ENTITY_PARSING_ALWAYS.");
-
-    parseResult = XML_Parse(parser, input, (int)strlen(input), 0);
-    if (parseResult != XML_STATUS_ERROR) {
-      parseResult = XML_Parse(parser, "", 0, 1);
-      if (parseResult != XML_STATUS_ERROR) {
-        fail("Parsing was expected to fail but succeeded.");
-      }
-    }
-
-    if (XML_GetErrorCode(parser) != XML_ERROR_INVALID_TOKEN)
-      fail("Error code does not match XML_ERROR_INVALID_TOKEN");
-
-    lineNumber = XML_GetCurrentLineNumber(parser);
-    if (lineNumber != 4)
-      fail("XML_GetCurrentLineNumber does not work as expected.");
-
-    columnNumber = XML_GetCurrentColumnNumber(parser);
-    if (columnNumber != 0)
-      fail("XML_GetCurrentColumnNumber does not work as expected.");
-
-    XML_ParserFree(parser);
-  }
-}
-END_TEST
-
-START_TEST(test_misc_tag_mismatch_reset_leak) {
-#ifdef XML_NS
-  const char *const text = "<open xmlns='https://namespace1.test'></close>";
-  XML_Parser parser = XML_ParserCreateNS(NULL, XCS('\n'));
-
-  if (XML_Parse(parser, text, (int)strlen(text), XML_TRUE) != XML_STATUS_ERROR)
-    fail("Call to parse was expected to fail");
-  if (XML_GetErrorCode(parser) != XML_ERROR_TAG_MISMATCH)
-    fail("Call to parse was expected to fail from a closing tag mismatch");
-
-  XML_ParserReset(parser, NULL);
-
-  if (XML_Parse(parser, text, (int)strlen(text), XML_TRUE) != XML_STATUS_ERROR)
-    fail("Call to parse was expected to fail");
-  if (XML_GetErrorCode(parser) != XML_ERROR_TAG_MISMATCH)
-    fail("Call to parse was expected to fail from a closing tag mismatch");
-
-  XML_ParserFree(parser);
-#endif
-}
-END_TEST
-
 static void
 alloc_setup(void) {
   XML_Memory_Handling_Suite memsuite = {duff_allocator, duff_reallocator, free};
@@ -4317,18 +4167,12 @@ make_suite(void) {
 
   make_basic_test_case(s);
   make_namespace_test_case(s);
-  TCase *tc_misc = make_miscellaneous_test_case(s);
+  make_miscellaneous_test_case(s);
   TCase *tc_alloc = tcase_create("allocation tests");
   TCase *tc_nsalloc = tcase_create("namespace allocation tests");
 #if defined(XML_DTD)
   TCase *tc_accounting = tcase_create("accounting tests");
 #endif
-
-  tcase_add_test(tc_misc, test_misc_stop_during_end_handler_issue_240_1);
-  tcase_add_test(tc_misc, test_misc_stop_during_end_handler_issue_240_2);
-  tcase_add_test__ifdef_xml_dtd(
-      tc_misc, test_misc_deny_internal_entity_closing_doctype_issue_317);
-  tcase_add_test(tc_misc, test_misc_tag_mismatch_reset_leak);
 
   suite_add_tcase(s, tc_alloc);
   tcase_add_checked_fixture(tc_alloc, alloc_setup, alloc_teardown);
