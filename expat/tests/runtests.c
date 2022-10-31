@@ -79,43 +79,6 @@ XML_Parser g_parser = NULL;
  * Namespaces tests.
  */
 
-/* Regression test for SF bug #620343. */
-static void XMLCALL
-start_element_fail(void *userData, const XML_Char *name,
-                   const XML_Char **atts) {
-  UNUSED_P(userData);
-  UNUSED_P(name);
-  UNUSED_P(atts);
-
-  /* We should never get here. */
-  fail("should never reach start_element_fail()");
-}
-
-static void XMLCALL
-start_ns_clearing_start_element(void *userData, const XML_Char *prefix,
-                                const XML_Char *uri) {
-  UNUSED_P(prefix);
-  UNUSED_P(uri);
-  XML_SetStartElementHandler((XML_Parser)userData, NULL);
-}
-
-START_TEST(test_start_ns_clears_start_element) {
-  /* This needs to use separate start/end tags; using the empty tag
-     syntax doesn't cause the problematic path through Expat to be
-     taken.
-  */
-  const char *text = "<e xmlns='http://example.org/'></e>";
-
-  XML_SetStartElementHandler(g_parser, start_element_fail);
-  XML_SetStartNamespaceDeclHandler(g_parser, start_ns_clearing_start_element);
-  XML_SetEndNamespaceDeclHandler(g_parser, dummy_end_namespace_decl_handler);
-  XML_UseParserAsHandlerArg(g_parser);
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
-      == XML_STATUS_ERROR)
-    xml_failure(g_parser);
-}
-END_TEST
-
 /* Regression test for SF bug #616863. */
 static int XMLCALL
 external_entity_handler(XML_Parser parser, const XML_Char *context,
@@ -5158,7 +5121,6 @@ make_suite(void) {
   TCase *tc_accounting = tcase_create("accounting tests");
 #endif
 
-  tcase_add_test(tc_namespace, test_start_ns_clears_start_element);
   tcase_add_test__ifdef_xml_dtd(tc_namespace,
                                 test_default_ns_from_ext_subset_and_ext_ge);
   tcase_add_test(tc_namespace, test_ns_prefix_with_empty_uri_1);

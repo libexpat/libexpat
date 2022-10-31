@@ -234,6 +234,25 @@ overwrite_end_checker(void *userData, const XML_Char *name) {
   CharData_AppendXMLChars(storage, XCS("\n"), 1);
 }
 
+void XMLCALL
+start_element_fail(void *userData, const XML_Char *name,
+                   const XML_Char **atts) {
+  UNUSED_P(userData);
+  UNUSED_P(name);
+  UNUSED_P(atts);
+
+  /* We should never get here. */
+  fail("should never reach start_element_fail()");
+}
+
+void XMLCALL
+start_ns_clearing_start_element(void *userData, const XML_Char *prefix,
+                                const XML_Char *uri) {
+  UNUSED_P(prefix);
+  UNUSED_P(uri);
+  XML_SetStartElementHandler((XML_Parser)userData, NULL);
+}
+
 /* Text encoding handlers */
 
 int XMLCALL

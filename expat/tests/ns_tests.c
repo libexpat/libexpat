@@ -165,6 +165,24 @@ START_TEST(test_ns_tagname_overwrite_triplet) {
 }
 END_TEST
 
+/* Regression test for SF bug #620343. */
+START_TEST(test_start_ns_clears_start_element) {
+  /* This needs to use separate start/end tags; using the empty tag
+     syntax doesn't cause the problematic path through Expat to be
+     taken.
+  */
+  const char *text = "<e xmlns='http://example.org/'></e>";
+
+  XML_SetStartElementHandler(g_parser, start_element_fail);
+  XML_SetStartNamespaceDeclHandler(g_parser, start_ns_clearing_start_element);
+  XML_SetEndNamespaceDeclHandler(g_parser, dummy_end_namespace_decl_handler);
+  XML_UseParserAsHandlerArg(g_parser);
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+      == XML_STATUS_ERROR)
+    xml_failure(g_parser);
+}
+END_TEST
+
 TCase *
 make_namespace_test_case(Suite *s) {
   TCase *tc_namespace = tcase_create("XML namespaces");
@@ -175,6 +193,7 @@ make_namespace_test_case(Suite *s) {
   tcase_add_test(tc_namespace, test_ns_parser_reset);
   tcase_add_test(tc_namespace, test_ns_tagname_overwrite);
   tcase_add_test(tc_namespace, test_ns_tagname_overwrite_triplet);
+  tcase_add_test(tc_namespace, test_start_ns_clears_start_element);
 
   return tc_namespace; /* TEMPORARY; this will become a void function */
 }

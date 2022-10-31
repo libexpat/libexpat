@@ -113,6 +113,13 @@ extern void XMLCALL overwrite_start_checker(void *userData,
 
 extern void XMLCALL overwrite_end_checker(void *userData, const XML_Char *name);
 
+extern void XMLCALL start_element_fail(void *userData, const XML_Char *name,
+                                       const XML_Char **atts);
+
+extern void XMLCALL start_ns_clearing_start_element(void *userData,
+                                                    const XML_Char *prefix,
+                                                    const XML_Char *uri);
+
 /* Text encoding handlers */
 
 extern int XMLCALL UnknownEncodingHandler(void *data, const XML_Char *encoding,
