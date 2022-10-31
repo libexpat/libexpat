@@ -331,6 +331,28 @@ START_TEST(test_alloc_run_external_parser) {
 }
 END_TEST
 
+/* Test that running out of memory in dtdCopy is correctly reported.
+ * Based on test_default_ns_from_ext_subset_and_ext_ge()
+ */
+START_TEST(test_alloc_dtd_copy_default_atts) {
+  const char *text = "<?xml version='1.0'?>\n"
+                     "<!DOCTYPE doc SYSTEM 'http://example.org/doc.dtd' [\n"
+                     "  <!ENTITY en SYSTEM 'http://example.org/entity.ent'>\n"
+                     "]>\n"
+                     "<doc xmlns='http://example.org/ns1'>\n"
+                     "&en;\n"
+                     "</doc>";
+  int callno = 0;
+
+  XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+  XML_SetExternalEntityRefHandler(g_parser, external_entity_dbl_handler);
+  XML_SetUserData(g_parser, &callno);
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+      == XML_STATUS_ERROR)
+    xml_failure(g_parser);
+}
+END_TEST
+
 TCase *
 make_alloc_test_case(Suite *s) {
   TCase *tc_alloc = tcase_create("allocation tests");
@@ -347,6 +369,7 @@ make_alloc_test_case(Suite *s) {
   tcase_add_test(tc_alloc, test_alloc_parse_comment_2);
   tcase_add_test__ifdef_xml_dtd(tc_alloc, test_alloc_create_external_parser);
   tcase_add_test__ifdef_xml_dtd(tc_alloc, test_alloc_run_external_parser);
+  tcase_add_test__ifdef_xml_dtd(tc_alloc, test_alloc_dtd_copy_default_atts);
 
   return tc_alloc; /* TEMPORARY: this will become a void function */
 }
