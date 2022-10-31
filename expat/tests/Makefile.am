@@ -48,6 +48,7 @@ libruntests_a_SOURCES = \
     common.c \
     dummy.c \
     handlers.c \
+    misc_tests.c \
     ns_tests.c \
     structdata.c \
     memcheck.c \
@@ -71,6 +72,7 @@ EXTRA_DIST = \
     common.h \
     dummy.h \
     handlers.h \
+    misc_tests.h \
     ns_tests.h \
     structdata.h \
     minicheck.h \
