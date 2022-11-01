@@ -73,6 +73,7 @@
 #include "misc_tests.h"
 #include "alloc_tests.h"
 #include "nsalloc_tests.h"
+#include "acc_tests.h"
 
 XML_Parser g_parser = NULL;
 
@@ -479,11 +480,10 @@ make_suite(void) {
   make_alloc_test_case(s);
   make_nsalloc_test_case(s);
 #if defined(XML_DTD)
-  TCase *tc_accounting = tcase_create("accounting tests");
+  TCase *tc_accounting = make_accounting_test_case(s);
 #endif
 
 #if defined(XML_DTD)
-  suite_add_tcase(s, tc_accounting);
   tcase_add_test(tc_accounting, test_accounting_precision);
   tcase_add_test(tc_accounting, test_billion_laughs_attack_protection_api);
   tcase_add_test(tc_accounting, test_helper_unsigned_char_to_printable);

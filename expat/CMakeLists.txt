@@ -596,6 +596,7 @@ if(EXPAT_BUILD_TESTS)
     enable_testing()
 
     set(test_SRCS
+        tests/acc_tests.c
         tests/alloc_tests.c
         tests/basic_tests.c
         tests/chardata.c
