@@ -47,13 +47,7 @@ extern "C" {
 #ifndef XML_NSALLOC_TESTS_H
 #  define XML_NSALLOC_TESTS_H
 
-/* TEMPORARY: these will return to being static functions once all
- * the test cases are transferred to nsalloc_tests.c
- */
-extern void nsalloc_setup(void);
-extern void nsalloc_teardown(void);
-
-extern TCase *make_nsalloc_test_case(Suite *s);
+extern void make_nsalloc_test_case(Suite *s);
 
 #endif /* XML_NSALLOC_TESTS_H */
 
