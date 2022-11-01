@@ -579,11 +579,8 @@ endif()
 # C code examples
 #
 if(EXPAT_BUILD_EXAMPLES)
-    add_executable(element_declarations examples/element_declarations.c)
-    add_executable(elements examples/elements.c)
-    add_executable(outline examples/outline.c)
-
     foreach(_target element_declarations elements outline)
+        add_executable(${_target} examples/${_target}.c)
         set_property(TARGET ${_target} PROPERTY RUNTIME_OUTPUT_DIRECTORY examples)
         target_link_libraries(${_target} expat)
     endforeach()
