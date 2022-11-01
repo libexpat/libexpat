@@ -2,6 +2,10 @@ NOTE: We are looking for help with a few things:
       https://github.com/libexpat/libexpat/labels/help%20wanted
       If you can help, please get in touch.  Thanks!
 
+Release 2.5.1 xxx xxxxxxx xx xxxx
+        Other changes:
+            #673  examples: Add new example "element_declarations.c"
+
 Release 2.5.0 Tue October 25 2022
         Security fixes:
   #616 #649 #650  CVE-2022-43680 -- Fix heap use-after-free after overeager
