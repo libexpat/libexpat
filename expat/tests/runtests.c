@@ -42,31 +42,13 @@
 
 #include <expat_config.h>
 
-#if defined(NDEBUG)
-#  undef NDEBUG /* because test suite relies on assert(...) at the moment */
-#endif
-
-#include <assert.h>
-#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <stddef.h> /* ptrdiff_t */
-#include <ctype.h>
-#include <limits.h>
-
-#if ! defined(__cplusplus)
-#  include <stdbool.h>
-#endif
 
 #include "expat.h"
-#include "chardata.h"
-#include "structdata.h"
 #include "internal.h"
 #include "minicheck.h"
-#include "memcheck.h"
 #include "common.h"
-#include "dummy.h"
-#include "handlers.h"
 
 #include "basic_tests.h"
 #include "ns_tests.h"
