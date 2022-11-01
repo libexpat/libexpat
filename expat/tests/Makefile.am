@@ -51,6 +51,7 @@ libruntests_a_SOURCES = \
     handlers.c \
     misc_tests.c \
     ns_tests.c \
+    nsalloc_tests.c \
     structdata.c \
     memcheck.c \
     minicheck.c
@@ -76,6 +77,7 @@ EXTRA_DIST = \
     handlers.h \
     misc_tests.h \
     ns_tests.h \
+    nsalloc_tests.h \
     structdata.h \
     minicheck.h \
     memcheck.h \

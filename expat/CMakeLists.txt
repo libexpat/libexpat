@@ -606,6 +606,7 @@ if(EXPAT_BUILD_TESTS)
         tests/minicheck.c
         tests/misc_tests.c
         tests/ns_tests.c
+        tests/nsalloc_tests.c
         tests/structdata.c
         ${_EXPAT_C_SOURCES}
     )
