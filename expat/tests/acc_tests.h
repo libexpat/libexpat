@@ -47,7 +47,7 @@ extern "C" {
 #ifndef XML_ACC_TESTS_H
 #  define XML_ACC_TESTS_H
 
-extern TCase *make_accounting_test_case(Suite *s);
+extern void make_accounting_test_case(Suite *s);
 
 #endif /* XML_ACC_TESTS_H */
 

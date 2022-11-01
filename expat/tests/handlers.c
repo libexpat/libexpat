@@ -1481,6 +1481,44 @@ external_entity_parser_create_alloc_fail_handler(XML_Parser parser,
   return XML_STATUS_ERROR;
 }
 
+#if defined(XML_DTD)
+int
+accounting_external_entity_ref_handler(XML_Parser parser,
+                                       const XML_Char *context,
+                                       const XML_Char *base,
+                                       const XML_Char *systemId,
+                                       const XML_Char *publicId) {
+  UNUSED_P(context);
+  UNUSED_P(base);
+  UNUSED_P(publicId);
+
+  const struct AccountingTestCase *const testCase
+      = (const struct AccountingTestCase *)XML_GetUserData(parser);
+
+  const char *externalText = NULL;
+  if (xcstrcmp(systemId, XCS("first.ent")) == 0) {
+    externalText = testCase->firstExternalText;
+  } else if (xcstrcmp(systemId, XCS("second.ent")) == 0) {
+    externalText = testCase->secondExternalText;
+  } else {
+    assert(! "systemId is neither \"first.ent\" nor \"second.ent\"");
+  }
+  assert(externalText);
+
+  XML_Parser entParser = XML_ExternalEntityParserCreate(parser, context, 0);
+  assert(entParser);
+
+  const XmlParseFunction xmlParseFunction
+      = testCase->singleBytesWanted ? _XML_Parse_SINGLE_BYTES : XML_Parse;
+
+  const enum XML_Status status = xmlParseFunction(
+      entParser, externalText, (int)strlen(externalText), XML_TRUE);
+
+  XML_ParserFree(entParser);
+  return status;
+}
+#endif /* XML_DTD */
+
 /* NotStandalone handlers */
 
 int XMLCALL

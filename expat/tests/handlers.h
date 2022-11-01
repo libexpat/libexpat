@@ -404,6 +404,24 @@ extern int XMLCALL external_entity_parser_create_alloc_fail_handler(
     XML_Parser parser, const XML_Char *context, const XML_Char *base,
     const XML_Char *systemId, const XML_Char *publicId);
 
+#  if defined(XML_DTD)
+typedef enum XML_Status (*XmlParseFunction)(XML_Parser, const char *, int, int);
+
+struct AccountingTestCase {
+  const char *primaryText;
+  const char *firstExternalText;  /* often NULL */
+  const char *secondExternalText; /* often NULL */
+  const unsigned long long expectedCountBytesIndirectExtra;
+  XML_Bool singleBytesWanted;
+};
+
+extern int accounting_external_entity_ref_handler(XML_Parser parser,
+                                                  const XML_Char *context,
+                                                  const XML_Char *base,
+                                                  const XML_Char *systemId,
+                                                  const XML_Char *publicId);
+#  endif /* defined(XML_DTD) */
+
 /* NotStandalone handlers */
 
 extern int XMLCALL reject_not_standalone_handler(void *userData);
