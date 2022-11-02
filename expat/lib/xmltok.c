@@ -243,7 +243,7 @@ static int FASTCALL checkCharRefNumber(int);
 #endif
 
 #define SB_BYTE_TYPE(enc, p)                                                   \
-  (((struct normal_encoding *)(enc))->type[(unsigned char)*(p)])
+  (((const struct normal_encoding *)(enc))->type[(unsigned char)*(p)])
 
 #ifdef XML_MIN_SIZE
 static int PTRFASTCALL
@@ -407,7 +407,7 @@ utf8_toUtf16(const ENCODING *enc, const char **fromP, const char *fromLim,
   unsigned short *to = *toP;
   const char *from = *fromP;
   while (from < fromLim && to < toLim) {
-    switch (((struct normal_encoding *)enc)->type[(unsigned char)*from]) {
+    switch (SB_BYTE_TYPE(enc, from)) {
     case BT_LEAD2:
       if (fromLim - from < 2) {
         res = XML_CONVERT_INPUT_INCOMPLETE;
@@ -734,8 +734,7 @@ DEFINE_UTF16_TO_UTF16(big2_)
 #undef GET_HI
 
 #define LITTLE2_BYTE_TYPE(enc, p)                                              \
-  ((p)[1] == 0 ? ((struct normal_encoding *)(enc))->type[(unsigned char)*(p)]  \
-               : unicode_byte_type((p)[1], (p)[0]))
+  ((p)[1] == 0 ? SB_BYTE_TYPE(enc, p) : unicode_byte_type((p)[1], (p)[0]))
 #define LITTLE2_BYTE_TO_ASCII(p) ((p)[1] == 0 ? (p)[0] : -1)
 #define LITTLE2_CHAR_MATCHES(p, c) ((p)[1] == 0 && (p)[0] == (c))
 #define LITTLE2_IS_NAME_CHAR_MINBPC(p)                                         \
@@ -868,9 +867,7 @@ static const struct normal_encoding internal_little2_encoding
 #endif
 
 #define BIG2_BYTE_TYPE(enc, p)                                                 \
-  ((p)[0] == 0                                                                 \
-       ? ((struct normal_encoding *)(enc))->type[(unsigned char)(p)[1]]        \
-       : unicode_byte_type((p)[0], (p)[1]))
+  ((p)[0] == 0 ? SB_BYTE_TYPE(enc, p + 1) : unicode_byte_type((p)[0], (p)[1]))
 #define BIG2_BYTE_TO_ASCII(p) ((p)[0] == 0 ? (p)[1] : -1)
 #define BIG2_CHAR_MATCHES(p, c) ((p)[0] == 0 && (p)[1] == (c))
 #define BIG2_IS_NAME_CHAR_MINBPC(p)                                            \

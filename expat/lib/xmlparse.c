@@ -3046,7 +3046,7 @@ doContent(XML_Parser parser, int startTagLevel, const ENCODING *enc,
             /* don't need to check for space - already done in storeAtts() */
             while (*localPart)
               *uri++ = *localPart++;
-            prefix = (XML_Char *)tag->name.prefix;
+            prefix = tag->name.prefix;
             if (parser->m_ns_triplets && prefix) {
               *uri++ = parser->m_namespaceSeparator;
               while (*prefix)
@@ -3142,8 +3142,8 @@ doContent(XML_Parser parser, int startTagLevel, const ENCODING *enc,
               (int)(dataPtr - (ICHAR *)parser->m_dataBuf));
         } else
           parser->m_characterDataHandler(
-              parser->m_handlerArg, (XML_Char *)s,
-              (int)((XML_Char *)end - (XML_Char *)s));
+              parser->m_handlerArg, (const XML_Char *)s,
+              (int)((const XML_Char *)end - (const XML_Char *)s));
       } else if (parser->m_defaultHandler)
         reportDefault(parser, enc, s, end);
       /* We are at the end of the final buffer, should we check for
@@ -3176,8 +3176,8 @@ doContent(XML_Parser parser, int startTagLevel, const ENCODING *enc,
             *eventPP = s;
           }
         } else
-          charDataHandler(parser->m_handlerArg, (XML_Char *)s,
-                          (int)((XML_Char *)next - (XML_Char *)s));
+          charDataHandler(parser->m_handlerArg, (const XML_Char *)s,
+                          (int)((const XML_Char *)next - (const XML_Char *)s));
       } else if (parser->m_defaultHandler)
         reportDefault(parser, enc, s, next);
     } break;
@@ -4092,8 +4092,8 @@ doCdataSection(XML_Parser parser, const ENCODING *enc, const char **startPtr,
             *eventPP = s;
           }
         } else
-          charDataHandler(parser->m_handlerArg, (XML_Char *)s,
-                          (int)((XML_Char *)next - (XML_Char *)s));
+          charDataHandler(parser->m_handlerArg, (const XML_Char *)s,
+                          (int)((const XML_Char *)next - (const XML_Char *)s));
       } else if (parser->m_defaultHandler)
         reportDefault(parser, enc, s, next);
     } break;
@@ -6376,8 +6376,9 @@ reportDefault(XML_Parser parser, const ENCODING *enc, const char *s,
     } while ((convert_res != XML_CONVERT_COMPLETED)
              && (convert_res != XML_CONVERT_INPUT_INCOMPLETE));
   } else
-    parser->m_defaultHandler(parser->m_handlerArg, (XML_Char *)s,
-                             (int)((XML_Char *)end - (XML_Char *)s));
+    parser->m_defaultHandler(
+        parser->m_handlerArg, (const XML_Char *)s,
+        (int)((const XML_Char *)end - (const XML_Char *)s));
 }
 
 static int
@@ -7221,7 +7222,7 @@ poolAppend(STRING_POOL *pool, const ENCODING *enc, const char *ptr,
     return NULL;
   for (;;) {
     const enum XML_Convert_Result convert_res = XmlConvert(
-        enc, &ptr, end, (ICHAR **)&(pool->ptr), (ICHAR *)pool->end);
+        enc, &ptr, end, (ICHAR **)&(pool->ptr), (const ICHAR *)pool->end);
     if ((convert_res == XML_CONVERT_COMPLETED)
         || (convert_res == XML_CONVERT_INPUT_INCOMPLETE))
       break;
@@ -8394,7 +8395,7 @@ getDebugLevel(const char *variableName, unsigned long defaultDebugLevel) {
   const char *const value = valueOrNull;
 
   errno = 0;
-  char *afterValue = (char *)value;
+  char *afterValue = NULL;
   unsigned long debugLevel = strtoul(value, &afterValue, 10);
   if ((errno != 0) || (afterValue == value) || (afterValue[0] != '\0')) {
     errno = 0;
