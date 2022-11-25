@@ -5,6 +5,7 @@ NOTE: We are looking for help with a few things:
 Release 2.5.1 xxx xxxxxxx xx xxxx
         Other changes:
             #673  examples: Add new example "element_declarations.c"
+            #678  Autotools: Sync CMake templates with CMake 3.23
 
 Release 2.5.0 Tue October 25 2022
         Security fixes:
