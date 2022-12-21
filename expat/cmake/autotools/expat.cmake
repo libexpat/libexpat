@@ -51,6 +51,13 @@ get_filename_component(_IMPORT_PREFIX "${CMAKE_CURRENT_LIST_FILE}" PATH)
 get_filename_component(_IMPORT_PREFIX "${_IMPORT_PREFIX}" PATH)
 get_filename_component(_IMPORT_PREFIX "${_IMPORT_PREFIX}" PATH)
 get_filename_component(_IMPORT_PREFIX "${_IMPORT_PREFIX}" PATH)
+
+# if there's no include, try again with the parent's parent.
+# This will be useful in distros where they use the triplet (e.g. x86_64-linux-gnu) in the path,
+# thus having something like /usr/lib/x86_64-linux-gnu/cmake/expat-2.4.6/expat.cmake
+if (NOT EXISTS "${_IMPORT_PREFIX}/include")
+  get_filename_component(_IMPORT_PREFIX "${_IMPORT_PREFIX}" PATH)
+endif()
 if(_IMPORT_PREFIX STREQUAL "/")
   set(_IMPORT_PREFIX "")
 endif()
