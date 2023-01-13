@@ -118,7 +118,7 @@ jobs:
         sudo apt-get install --yes --no-install-recommends -V \
             clang-15 \
             clang-format-15 \
-            llvm-15
+            libclang-rt-15-dev
     - name: Install build dependencies (common)
       run: |-
         sudo apt-get install --yes --no-install-recommends -V \
