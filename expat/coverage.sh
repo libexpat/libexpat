@@ -262,7 +262,7 @@ _show_summary() {
 
 
 _main() {
-    version="$(git describe --tags)"
+    version="$(git describe --tags 2>/dev/null || echo HEAD)"
     coverage_info=coverage.info
 
     local build_dirs=()
