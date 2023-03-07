@@ -35,6 +35,9 @@ on:
   schedule:
     - cron: '0 2 * * 5'  # Every Friday at 2am
 
+permissions:
+  contents: read
+
 jobs:
   checks:
     name: Run Cppcheck
