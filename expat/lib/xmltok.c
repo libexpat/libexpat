@@ -100,7 +100,7 @@
    & (1u << (((byte)[2]) & 0x1F)))
 
 /* Detection of invalid UTF-8 sequences is based on Table 3.1B
-   of Unicode 3.2: http://www.unicode.org/unicode/reports/tr28/
+   of Unicode 3.2: https://www.unicode.org/unicode/reports/tr28/
    with the additional restriction of not allowing the Unicode
    code points 0xFFFF and 0xFFFE (sequences EF,BF,BF and EF,BF,BE).
    Implementation details:
