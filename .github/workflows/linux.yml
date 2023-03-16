@@ -115,7 +115,7 @@ jobs:
         set -x
         source /etc/os-release
         wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
-        sudo add-apt-repository "deb http://apt.llvm.org/${UBUNTU_CODENAME}/ llvm-toolchain-${UBUNTU_CODENAME}-15 main"
+        sudo add-apt-repository "deb https://apt.llvm.org/${UBUNTU_CODENAME}/ llvm-toolchain-${UBUNTU_CODENAME}-15 main"
         sudo apt-get update  # due to new repository
         # NOTE: Please note the version-specific ${PATH} extension for Clang in .travis.sh
         sudo apt-get install --yes --no-install-recommends -V \

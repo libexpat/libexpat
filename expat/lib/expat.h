@@ -1051,7 +1051,7 @@ XML_SetBillionLaughsAttackProtectionActivationThreshold(
 #endif
 
 /* Expat follows the semantic versioning convention.
-   See http://semver.org.
+   See https://semver.org
 */
 #define XML_MAJOR_VERSION 2
 #define XML_MINOR_VERSION 5
