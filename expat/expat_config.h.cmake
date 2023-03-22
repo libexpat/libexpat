@@ -18,9 +18,6 @@
 /* Define to 1 if you have the <fcntl.h> header file. */
 #cmakedefine HAVE_FCNTL_H
 
-/* Define to 1 if you have the `getpagesize' function. */
-#cmakedefine HAVE_GETPAGESIZE
-
 /* Define to 1 if you have the `getrandom' function. */
 #cmakedefine HAVE_GETRANDOM
 

@@ -18,7 +18,6 @@ check_include_file("sys/stat.h" HAVE_SYS_STAT_H)
 check_include_file("sys/types.h" HAVE_SYS_TYPES_H)
 check_include_file("unistd.h" HAVE_UNISTD_H)
 
-check_symbol_exists("getpagesize" "unistd.h" HAVE_GETPAGESIZE)
 check_symbol_exists("mmap" "sys/mman.h" HAVE_MMAP)
 check_symbol_exists("getrandom" "sys/random.h" HAVE_GETRANDOM)
 
