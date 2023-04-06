@@ -53,7 +53,7 @@ endif()
 
 
 # if the installed or the using project don't have CMAKE_SIZEOF_VOID_P set, ignore it:
-if(CMAKE_SIZEOF_VOID_P STREQUAL "" OR "@ac_cv_sizeof_void_p@" STREQUAL "")
+if("${CMAKE_SIZEOF_VOID_P}" STREQUAL "" OR "@ac_cv_sizeof_void_p@" STREQUAL "")
   return()
 endif()
 
