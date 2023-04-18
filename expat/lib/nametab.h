@@ -33,11 +33,14 @@
 /* nameStartBitmap and nameCharBitmap are 65536 length array maps of UCS2 
    characters (see the Unicode code charts at https://www.unicode.org/charts/) 
    mapped to 1 or 0 for each character based on if that particular character 
-   is allowed by the XML 1.0r5 and XML 1.1 specifications (see nameStartChar 
-   and nameChar specifications at 
+   is allowed by the XML 1.0r5 and XML 1.1 specifications.  The data below is
+   based on the nameStartChar and nameChar specifications defined at
    https://www.w3.org/TR/xml/#sec-common-syn  (XML 1.0r5 and above)
    and 
    https://www.w3.org/TR/2006/REC-xml11-20060816/#sec-common-syn (XML 1.1)
+
+   characters > 0xFFFF are valid as both start and end characters and so 
+   use "isAlways" in xmltok.c
 */
 static const unsigned int nameStartBitmap[] = {
 	0x00000000, 0x04000000, 0x87FFFFFE, 0x07FFFFFE, //0x00
