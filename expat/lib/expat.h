@@ -293,7 +293,7 @@ typedef void(XMLCALL *XML_EndElementHandler)(void *userData,
 
 /* s is not 0 terminated. */
 typedef void(XMLCALL *XML_CharacterDataHandler)(void *userData,
-                                                const XML_Char *s, int len);
+                                                const XML_Char *s, size_t len);
 
 /* target and data are 0 terminated */
 typedef void(XMLCALL *XML_ProcessingInstructionHandler)(void *userData,
@@ -320,7 +320,7 @@ typedef void(XMLCALL *XML_EndCdataSectionHandler)(void *userData);
    multiple calls.
 */
 typedef void(XMLCALL *XML_DefaultHandler)(void *userData, const XML_Char *s,
-                                          int len);
+                                          size_t len);
 
 /* This is called for the start of the DOCTYPE declaration, before
    any DTD or internal subset is parsed.
@@ -780,13 +780,13 @@ XML_GetAttributeInfo(XML_Parser parser);
    values.
 */
 XMLPARSEAPI(enum XML_Status)
-XML_Parse(XML_Parser parser, const char *s, int len, int isFinal);
+XML_Parse(XML_Parser parser, const char *s, size_t len, int isFinal);
 
 XMLPARSEAPI(void *)
-XML_GetBuffer(XML_Parser parser, int len);
+XML_GetBuffer(XML_Parser parser, size_t len);
 
 XMLPARSEAPI(enum XML_Status)
-XML_ParseBuffer(XML_Parser parser, int len, int isFinal);
+XML_ParseBuffer(XML_Parser parser, size_t len, int isFinal);
 
 /* Stops parsing, causing XML_Parse() or XML_ParseBuffer() to return.
    Must be called from within a call-back handler, except when aborting

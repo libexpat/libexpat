@@ -91,9 +91,9 @@ typedef struct xmlwfUserData {
 #define NSSEP T('\001')
 
 static void XMLCALL
-characterData(void *userData, const XML_Char *s, int len) {
+characterData(void *userData, const XML_Char *s, size_t len) {
   FILE *fp = ((XmlwfUserData *)userData)->fp;
-  for (; len > 0; --len, ++s) {
+  for (; len; --len, ++s) {
     switch (*s) {
     case T('&'):
       fputts(T("&amp;"), fp);
@@ -492,7 +492,7 @@ notationDecl(void *userData, const XML_Char *notationName, const XML_Char *base,
 #endif /* not W3C14N */
 
 static void XMLCALL
-defaultCharacterData(void *userData, const XML_Char *s, int len) {
+defaultCharacterData(void *userData, const XML_Char *s, size_t len) {
   UNUSED_P(s);
   UNUSED_P(len);
   XML_DefaultCurrent((XML_Parser)userData);
@@ -521,7 +521,7 @@ defaultProcessingInstruction(void *userData, const XML_Char *target,
 }
 
 static void XMLCALL
-nopCharacterData(void *userData, const XML_Char *s, int len) {
+nopCharacterData(void *userData, const XML_Char *s, size_t len) {
   UNUSED_P(userData);
   UNUSED_P(s);
   UNUSED_P(len);
@@ -549,9 +549,9 @@ nopProcessingInstruction(void *userData, const XML_Char *target,
 }
 
 static void XMLCALL
-markup(void *userData, const XML_Char *s, int len) {
+markup(void *userData, const XML_Char *s, size_t len) {
   FILE *fp = ((XmlwfUserData *)XML_GetUserData((XML_Parser)userData))->fp;
-  for (; len > 0; --len, ++s)
+  for (; len; --len, ++s)
     puttc(*s, fp);
 }
 
@@ -671,7 +671,7 @@ metaEndCdataSection(void *userData) {
 }
 
 static void XMLCALL
-metaCharacterData(void *userData, const XML_Char *s, int len) {
+metaCharacterData(void *userData, const XML_Char *s, size_t len) {
   XML_Parser parser = (XML_Parser)userData;
   XmlwfUserData *data = (XmlwfUserData *)XML_GetUserData(parser);
   FILE *fp = data->fp;

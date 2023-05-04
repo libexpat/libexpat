@@ -35,7 +35,7 @@
 #include <limits.h> /* INT_MAX */
 #include <stddef.h>
 
-/* The following limit (for XML_Parse's int len) derives from
+/* The following limit (for XML_Parse's len) derives from
  * this loop in xmparse.c:
  *
  *    do {

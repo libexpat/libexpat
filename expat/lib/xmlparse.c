@@ -253,8 +253,8 @@ typedef struct binding {
   struct binding *prevPrefixBinding;
   const struct attribute_id *attId;
   XML_Char *uri;
-  int uriLen;
-  int uriAlloc;
+  size_t uriLen;
+  size_t uriAlloc;
 } BINDING;
 
 typedef struct prefix {
@@ -287,7 +287,7 @@ typedef struct {
 typedef struct tag {
   struct tag *parent;  /* parent of this element */
   const char *rawName; /* tagName in the original encoding */
-  int rawNameLength;
+  size_t rawNameLength;
   TAG_NAME name; /* tagName in the API encoding */
   char *buf;     /* buffer for name components */
   char *bufEnd;  /* end of the buffer */
@@ -297,7 +297,7 @@ typedef struct tag {
 typedef struct {
   const XML_Char *name;
   const XML_Char *textPtr;
-  int textLen;   /* length in XML_Chars */
+  size_t textLen;   /* length in XML_Chars */
   int processed; /* # of processed bytes - when suspended */
   const XML_Char *systemId;
   const XML_Char *base;
@@ -322,7 +322,7 @@ typedef struct {
 
 typedef struct block {
   struct block *next;
-  int size;
+  size_t size;
   XML_Char s[1];
 } BLOCK;
 
@@ -360,8 +360,8 @@ typedef struct {
   const XML_Char *name;
   PREFIX *prefix;
   const ATTRIBUTE_ID *idAtt;
-  int nDefaultAtts;
-  int allocDefaultAtts;
+  size_t nDefaultAtts;
+  size_t allocDefaultAtts;
   DEFAULT_ATTRIBUTE *defaultAtts;
 } ELEMENT_TYPE;
 
@@ -680,7 +680,7 @@ struct XML_ParserStruct {
   TAG *m_freeTagList;
   BINDING *m_inheritedBindings;
   BINDING *m_freeBindingList;
-  int m_attsSize;
+  size_t m_attsSize;
   int m_nSpecifiedAtts;
   int m_idAttIndex;
   ATTRIBUTE *m_atts;
@@ -1826,7 +1826,7 @@ XML_SetHashSalt(XML_Parser parser, unsigned long hash_salt) {
 }
 
 enum XML_Status XMLCALL
-XML_Parse(XML_Parser parser, const char *s, int len, int isFinal) {
+XML_Parse(XML_Parser parser, const char *s, size_t len, int isFinal) {
   if ((parser == NULL) || (len < 0) || ((s == NULL) && (len != 0))) {
     if (parser != NULL)
       parser->m_errorCode = XML_ERROR_INVALID_ARGUMENT;
@@ -1980,7 +1980,7 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal) {
 }
 
 enum XML_Status XMLCALL
-XML_ParseBuffer(XML_Parser parser, int len, int isFinal) {
+XML_ParseBuffer(XML_Parser parser, size_t len, int isFinal) {
   const char *start;
   enum XML_Status result = XML_STATUS_OK;
 
@@ -2045,7 +2045,7 @@ XML_ParseBuffer(XML_Parser parser, int len, int isFinal) {
 }
 
 void *XMLCALL
-XML_GetBuffer(XML_Parser parser, int len) {
+XML_GetBuffer(XML_Parser parser, size_t len) {
   if (parser == NULL)
     return NULL;
   if (len < 0) {
@@ -2062,35 +2062,26 @@ XML_GetBuffer(XML_Parser parser, int len) {
   default:;
   }
 
-  if (len > EXPAT_SAFE_PTR_DIFF(parser->m_bufferLim, parser->m_bufferEnd)) {
+  if (len > (size_t)EXPAT_SAFE_PTR_DIFF(parser->m_bufferLim, parser->m_bufferEnd)) {
 #ifdef XML_CONTEXT_BYTES
-    int keep;
+    size_t keep;
 #endif /* defined XML_CONTEXT_BYTES */
     /* Do not invoke signed arithmetic overflow: */
-    int neededSize = (int)((unsigned)len
-                           + (unsigned)EXPAT_SAFE_PTR_DIFF(
-                               parser->m_bufferEnd, parser->m_bufferPtr));
-    if (neededSize < 0) {
-      parser->m_errorCode = XML_ERROR_NO_MEMORY;
-      return NULL;
-    }
+    size_t neededSize = (len
+                         + (size_t)EXPAT_SAFE_PTR_DIFF(parser->m_bufferEnd,
+                                                       parser->m_bufferPtr));
 #ifdef XML_CONTEXT_BYTES
-    keep = (int)EXPAT_SAFE_PTR_DIFF(parser->m_bufferPtr, parser->m_buffer);
+    keep = EXPAT_SAFE_PTR_DIFF(parser->m_bufferPtr, parser->m_buffer);
     if (keep > XML_CONTEXT_BYTES)
       keep = XML_CONTEXT_BYTES;
-    /* Detect and prevent integer overflow */
-    if (keep > INT_MAX - neededSize) {
-      parser->m_errorCode = XML_ERROR_NO_MEMORY;
-      return NULL;
-    }
     neededSize += keep;
 #endif /* defined XML_CONTEXT_BYTES */
     if (neededSize
-        <= EXPAT_SAFE_PTR_DIFF(parser->m_bufferLim, parser->m_buffer)) {
+        <= (size_t)EXPAT_SAFE_PTR_DIFF(parser->m_bufferLim, parser->m_buffer)) {
 #ifdef XML_CONTEXT_BYTES
-      if (keep < EXPAT_SAFE_PTR_DIFF(parser->m_bufferPtr, parser->m_buffer)) {
-        int offset
-            = (int)EXPAT_SAFE_PTR_DIFF(parser->m_bufferPtr, parser->m_buffer)
+      if (keep < (size_t)EXPAT_SAFE_PTR_DIFF(parser->m_bufferPtr, parser->m_buffer)) {
+        size_t offset
+            = EXPAT_SAFE_PTR_DIFF(parser->m_bufferPtr, parser->m_buffer)
               - keep;
         /* The buffer pointers cannot be NULL here; we have at least some bytes
          * in the buffer */
@@ -2111,18 +2102,15 @@ XML_GetBuffer(XML_Parser parser, int len) {
 #endif /* not defined XML_CONTEXT_BYTES */
     } else {
       char *newBuf;
-      int bufferSize
-          = (int)EXPAT_SAFE_PTR_DIFF(parser->m_bufferLim, parser->m_bufferPtr);
+      size_t bufferSize
+          = EXPAT_SAFE_PTR_DIFF(parser->m_bufferLim, parser->m_bufferPtr);
       if (bufferSize == 0)
         bufferSize = INIT_BUFFER_SIZE;
       do {
         /* Do not invoke signed arithmetic overflow: */
-        bufferSize = (int)(2U * (unsigned)bufferSize);
+        bufferSize = (2U * bufferSize);
       } while (bufferSize < neededSize && bufferSize > 0);
-      if (bufferSize <= 0) {
-        parser->m_errorCode = XML_ERROR_NO_MEMORY;
-        return NULL;
-      }
+
       newBuf = (char *)MALLOC(parser, bufferSize);
       if (newBuf == 0) {
         parser->m_errorCode = XML_ERROR_NO_MEMORY;
@@ -3018,7 +3006,7 @@ doContent(XML_Parser parser, int startTagLevel, const ENCODING *enc,
       if (parser->m_tagLevel == startTagLevel)
         return XML_ERROR_ASYNC_ENTITY;
       else {
-        int len;
+        size_t len;
         const char *rawName;
         TAG *tag = parser->m_tagStack;
         rawName = s + enc->minBytesPerChar * 2;
@@ -3253,14 +3241,14 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
           enum XML_Account account) {
   DTD *const dtd = parser->m_dtd; /* save one level of indirection */
   ELEMENT_TYPE *elementType;
-  int nDefaultAtts;
+  size_t nDefaultAtts;
   const XML_Char **appAtts; /* the attribute list for the application */
-  int attIndex = 0;
-  int prefixLen;
-  int i;
-  int n;
+  size_t attIndex = 0;
+  size_t prefixLen;
+  size_t i;
+  size_t n;
   XML_Char *uri;
-  int nPrefixes = 0;
+  size_t nPrefixes = 0;
   BINDING *binding;
   const XML_Char *localPart;
 
@@ -3283,13 +3271,8 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
   /* get the attributes from the tokenizer */
   n = XmlGetAttributes(enc, attStr, parser->m_attsSize, parser->m_atts);
 
-  /* Detect and prevent integer overflow */
-  if (n > INT_MAX - nDefaultAtts) {
-    return XML_ERROR_NO_MEMORY;
-  }
-
   if (n + nDefaultAtts > parser->m_attsSize) {
-    int oldAttsSize = parser->m_attsSize;
+    size_t oldAttsSize = parser->m_attsSize;
     ATTRIBUTE *temp;
 #ifdef XML_ATTR_INFO
     XML_AttrInfo *temp2;
@@ -3384,7 +3367,7 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
 
       /* figure out whether declared as other than CDATA */
       if (attId->maybeTokenized) {
-        int j;
+        size_t j;
         for (j = 0; j < nDefaultAtts; j++) {
           if (attId == elementType->defaultAtts[j].id) {
             isCdata = elementType->defaultAtts[j].isCdata;
@@ -3469,7 +3452,7 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
      and clear flags that say whether attributes were specified */
   i = 0;
   if (nPrefixes) {
-    int j; /* hash table index */
+    size_t j; /* hash table index */
     unsigned long version = parser->m_nsAttsVersion;
 
     /* Detect and prevent invalid shift */
@@ -3851,15 +3834,15 @@ addBinding(XML_Parser parser, PREFIX *prefix, const ATTRIBUTE_ID *attId,
          ASCII_3,     ASCII_PERIOD, ASCII_o, ASCII_r, ASCII_g,      ASCII_SLASH,
          ASCII_2,     ASCII_0,      ASCII_0, ASCII_0, ASCII_SLASH,  ASCII_x,
          ASCII_m,     ASCII_l,      ASCII_n, ASCII_s, ASCII_SLASH,  '\0'};
-  static const int xmlnsLen
-      = (int)sizeof(xmlnsNamespace) / sizeof(XML_Char) - 1;
+  static const size_t xmlnsLen
+      = sizeof(xmlnsNamespace) / sizeof(XML_Char) - 1;
 
   XML_Bool mustBeXML = XML_FALSE;
   XML_Bool isXML = XML_TRUE;
   XML_Bool isXMLNS = XML_TRUE;
 
   BINDING *b;
-  int len;
+  size_t len;
 
   /* empty URI is only valid for default namespace per XML NS 1.0 (not 1.1) */
   if (*uri == XML_T('\0') && prefix->name)
@@ -3923,10 +3906,6 @@ addBinding(XML_Parser parser, PREFIX *prefix, const ATTRIBUTE_ID *attId,
   if (parser->m_freeBindingList) {
     b = parser->m_freeBindingList;
     if (len > b->uriAlloc) {
-      /* Detect and prevent integer overflow */
-      if (len > INT_MAX - EXPAND_SPARE) {
-        return XML_ERROR_NO_MEMORY;
-      }
 
       /* Detect and prevent integer overflow.
        * The preprocessor guard addresses the "always false" warning
@@ -3951,10 +3930,6 @@ addBinding(XML_Parser parser, PREFIX *prefix, const ATTRIBUTE_ID *attId,
     if (! b)
       return XML_ERROR_NO_MEMORY;
 
-    /* Detect and prevent integer overflow */
-    if (len > INT_MAX - EXPAND_SPARE) {
-      return XML_ERROR_NO_MEMORY;
-    }
     /* Detect and prevent integer overflow.
      * The preprocessor guard addresses the "always false" warning
      * from -Wtype-limits on platforms where
@@ -6388,7 +6363,7 @@ defineAttribute(ELEMENT_TYPE *type, ATTRIBUTE_ID *attId, XML_Bool isCdata,
   if (value || isId) {
     /* The handling of default attributes gets messed up if we have
        a default which duplicates a non-default. */
-    int i;
+    size_t i;
     for (i = 0; i < type->nDefaultAtts; i++)
       if (attId == type->defaultAtts[i].id)
         return 1;
@@ -6412,7 +6387,7 @@ defineAttribute(ELEMENT_TYPE *type, ATTRIBUTE_ID *attId, XML_Bool isCdata,
         return 0;
       }
 
-      int count = type->allocDefaultAtts * 2;
+      size_t count = type->allocDefaultAtts * 2;
 
       /* Detect and prevent integer overflow.
        * The preprocessor guard addresses the "always false" warning
@@ -6541,8 +6516,8 @@ getContext(XML_Parser parser) {
   XML_Bool needSep = XML_FALSE;
 
   if (dtd->defaultPrefix.binding) {
-    int i;
-    int len;
+    size_t i;
+    size_t len;
     if (! poolAppendChar(&parser->m_tempPool, XML_T(ASCII_EQUALS)))
       return NULL;
     len = dtd->defaultPrefix.binding->uriLen;
@@ -6578,8 +6553,8 @@ getContext(XML_Parser parser) {
 
   hashTableIterInit(&iter, &(dtd->prefixes));
   for (;;) {
-    int i;
-    int len;
+    size_t i;
+    size_t len;
     const XML_Char *s;
     PREFIX *prefix = (PREFIX *)hashTableIterNext(&iter);
     if (! prefix)
@@ -6872,7 +6847,7 @@ dtdCopy(XML_Parser oldParser, DTD *newDtd, const DTD *oldDtd,
   hashTableIterInit(&iter, &(oldDtd->elementTypes));
 
   for (;;) {
-    int i;
+    size_t i;
     ELEMENT_TYPE *newE;
     const XML_Char *name;
     const ELEMENT_TYPE *oldE = (ELEMENT_TYPE *)hashTableIterNext(&iter);
@@ -7329,7 +7304,7 @@ poolGrow(STRING_POOL *pool) {
       pool->ptr = pool->start;
       return XML_TRUE;
     }
-    if (pool->end - pool->start < pool->freeBlocks->size) {
+    if ((size_t)(pool->end - pool->start) < pool->freeBlocks->size) {
       BLOCK *tem = pool->freeBlocks->next;
       pool->freeBlocks->next = pool->blocks;
       pool->blocks = pool->freeBlocks;
@@ -7814,7 +7789,7 @@ entityTrackingReportStats(XML_Parser rootParser, ENTITY *entity,
 
   fprintf(
       stderr,
-      "expat: Entities(%p): Count %9d, depth %2d/%2d %*s%s%s; %s length %d (xmlparse.c:%d)\n",
+      "expat: Entities(%p): Count %9d, depth %2d/%2d %*s%s%s; %s length %zu (xmlparse.c:%d)\n",
       (void *)rootParser, rootParser->m_entity_stats.countEverOpened,
       rootParser->m_entity_stats.currentDepth,
       rootParser->m_entity_stats.maximumDepthSeen,

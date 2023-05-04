@@ -1082,7 +1082,7 @@ end is not part of that buffer.</p>
 enum XML_Status XMLCALL
 XML_Parse(XML_Parser p,
           const char *s,
-          int len,
+          size_t len,
           int isFinal);
 </pre>
 <pre class="signature">
@@ -1109,7 +1109,7 @@ Otherwise it returns <code>XML_STATUS_OK</code> value.
 <pre class="fcndec">
 enum XML_Status XMLCALL
 XML_ParseBuffer(XML_Parser p,
-                int len,
+                size_t len,
                 int isFinal);
 </pre>
 <div class="fcndef">
@@ -1124,7 +1124,7 @@ copying of the input.
 <pre class="fcndec">
 void * XMLCALL
 XML_GetBuffer(XML_Parser p,
-              int len);
+              size_t len);
 </pre>
 <div class="fcndef">
 Obtain a buffer of size <code>len</code> to read a piece of the document
@@ -1361,7 +1361,7 @@ XML_SetCharacterDataHandler(XML_Parser p,
 typedef void
 (XMLCALL *XML_CharacterDataHandler)(void *userData,
                                     const XML_Char *s,
-                                    int len);
+                                    size_t len);
 </pre>
 <p>Set a text handler. The string your handler receives
 is <em>NOT null-terminated</em>. You have to use the length argument
@@ -1459,7 +1459,7 @@ XML_SetDefaultHandler(XML_Parser p,
 typedef void
 (XMLCALL *XML_DefaultHandler)(void *userData,
                               const XML_Char *s,
-                              int len);
+                              size_t len);
 </pre>
 
 <p>Sets a handler for any characters in the document which wouldn't
@@ -1491,7 +1491,7 @@ XML_SetDefaultHandlerExpand(XML_Parser p,
 typedef void
 (XMLCALL *XML_DefaultHandler)(void *userData,
                               const XML_Char *s,
-                              int len);
+                              size_t len);
 </pre>
 <p>This sets a default handler, but doesn't inhibit the expansion of
 internal entity references.  The entity reference will not be passed
