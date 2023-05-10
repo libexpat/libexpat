@@ -7,7 +7,8 @@
 
 # Expat, Release 2.5.0
 
-This is Expat, a C library for parsing XML, started by
+This is Expat, a C99 library for parsing
+[XML 1.0 Fourth Edition](https://www.w3.org/TR/2006/REC-xml-20060816/), started by
 [James Clark](https://en.wikipedia.org/wiki/James_Clark_%28programmer%29) in 1997.
 Expat is a stream-oriented XML parser.  This means that you register
 handlers with the parser before starting the parse.  These handlers
