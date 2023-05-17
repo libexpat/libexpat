@@ -589,8 +589,8 @@ static XML_Parser getRootParserOf(XML_Parser parser,
                                   unsigned int *outLevelDiff);
 #endif /* XML_DTD */
 
-static unsigned long getDebugLevel(const char *variableName,
-                                   unsigned long defaultDebugLevel);
+static int getDebugLevel(const char *variableName,
+                                   int defaultDebugLevel);
 
 #define poolStart(pool) ((pool)->start)
 #define poolLength(pool) ((pool)->ptr - (pool)->start)
@@ -892,7 +892,7 @@ gather_time_entropy(void) {
 
 static unsigned long
 ENTROPY_DEBUG(const char *label, unsigned long entropy) {
-  if (getDebugLevel("EXPAT_ENTROPY_DEBUG", 0) >= 1u) {
+  if (getDebugLevel("EXPAT_ENTROPY_DEBUG", 0) > 0) {
     fprintf(stderr, "expat: Entropy: %s --> 0x%0*lx (%lu bytes)\n", label,
             (int)sizeof(entropy) * 2, entropy, (unsigned long)sizeof(entropy));
   }
@@ -1166,14 +1166,14 @@ parserInit(XML_Parser parser, const XML_Char *encodingName) {
 
 #ifdef XML_DTD
   memset(&parser->m_accounting, 0, sizeof(ACCOUNTING));
-  parser->m_accounting.debugLevel = getDebugLevel("EXPAT_ACCOUNTING_DEBUG", 0u);
+  parser->m_accounting.debugLevel = getDebugLevel("EXPAT_ACCOUNTING_DEBUG", 0);
   parser->m_accounting.maximumAmplificationFactor
       = EXPAT_BILLION_LAUGHS_ATTACK_PROTECTION_MAXIMUM_AMPLIFICATION_DEFAULT;
   parser->m_accounting.activationThresholdBytes
       = EXPAT_BILLION_LAUGHS_ATTACK_PROTECTION_ACTIVATION_THRESHOLD_DEFAULT;
 
   memset(&parser->m_entity_stats, 0, sizeof(ENTITY_STATS));
-  parser->m_entity_stats.debugLevel = getDebugLevel("EXPAT_ENTITY_DEBUG", 0u);
+  parser->m_entity_stats.debugLevel = getDebugLevel("EXPAT_ENTITY_DEBUG", 0);
 #endif
 }
 
@@ -8386,8 +8386,8 @@ unsignedCharToPrintable(unsigned char c) {
 
 #endif /* XML_DTD */
 
-static unsigned long
-getDebugLevel(const char *variableName, unsigned long defaultDebugLevel) {
+static int
+getDebugLevel(const char *variableName, int defaultDebugLevel) {
   const char *const valueOrNull = getenv(variableName);
   if (valueOrNull == NULL) {
     return defaultDebugLevel;
@@ -8396,7 +8396,7 @@ getDebugLevel(const char *variableName, unsigned long defaultDebugLevel) {
 
   errno = 0;
   char *afterValue = NULL;
-  unsigned long debugLevel = strtoul(value, &afterValue, 10);
+  int debugLevel = (int)strtol(value, &afterValue, 10);
   if ((errno != 0) || (afterValue == value) || (afterValue[0] != '\0')) {
     errno = 0;
     return defaultDebugLevel;
