@@ -23,7 +23,7 @@ Parameters to functions either go
 - (b) align vertically or
 - (c) go to the next line, with the first character indented 2 spaces more
   than the first *non-`[`*(!) parent level character,
-  i.e. 2 or [3 columns further right](https://www.gnu.org/software/autoconf/manual/autoconf-2.69/html_node/Autoconf-Language.html):
+  i.e. 2 or [3 columns further right](https://www.gnu.org/software/autoconf/manual/autoconf-2.71/html_node/Autoconf-Language.html):
 
 ```
 CALL([parameter], [parameter], [parameter])
