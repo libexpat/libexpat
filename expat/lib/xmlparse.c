@@ -287,7 +287,7 @@ typedef struct {
 typedef struct tag {
   struct tag *parent;  /* parent of this element */
   const char *rawName; /* tagName in the original encoding */
-  int rawNameLength;
+  size_t rawNameLength;
   TAG_NAME name; /* tagName in the API encoding */
   char *buf;     /* buffer for name components */
   char *bufEnd;  /* end of the buffer */
@@ -297,8 +297,8 @@ typedef struct tag {
 typedef struct {
   const XML_Char *name;
   const XML_Char *textPtr;
-  int textLen;   /* length in XML_Chars */
-  int processed; /* # of processed bytes - when suspended */
+  size_t textLen;   /* length in XML_Chars */
+  size_t processed; /* # of processed bytes - when suspended */
   const XML_Char *systemId;
   const XML_Char *base;
   const XML_Char *publicId;
@@ -3018,7 +3018,7 @@ doContent(XML_Parser parser, int startTagLevel, const ENCODING *enc,
       if (parser->m_tagLevel == startTagLevel)
         return XML_ERROR_ASYNC_ENTITY;
       else {
-        int len;
+        size_t len;
         const char *rawName;
         TAG *tag = parser->m_tagStack;
         rawName = s + enc->minBytesPerChar * 2;
@@ -5760,7 +5760,7 @@ processInternalEntity(XML_Parser parser, ENTITY *entity, XML_Bool betweenDecl) {
 
   if (result == XML_ERROR_NONE) {
     if (textEnd != next && parser->m_parsingStatus.parsing == XML_SUSPENDED) {
-      entity->processed = (int)(next - textStart);
+      entity->processed = next - textStart;
       parser->m_processor = internalEntityProcessor;
     } else {
 #ifdef XML_DTD
@@ -5810,7 +5810,7 @@ internalEntityProcessor(XML_Parser parser, const char *s, const char *end,
     return result;
 
   if (textEnd != next && parser->m_parsingStatus.parsing == XML_SUSPENDED) {
-    entity->processed = (int)(next - (const char *)entity->textPtr);
+    entity->processed = (next - (const char *)entity->textPtr);
     return result;
   }
 
@@ -7814,7 +7814,7 @@ entityTrackingReportStats(XML_Parser rootParser, ENTITY *entity,
 
   fprintf(
       stderr,
-      "expat: Entities(%p): Count %9d, depth %2d/%2d %*s%s%s; %s length %d (xmlparse.c:%d)\n",
+      "expat: Entities(%p): Count %9d, depth %2d/%2d %*s%s%s; %s length %zu (xmlparse.c:%d)\n",
       (void *)rootParser, rootParser->m_entity_stats.countEverOpened,
       rootParser->m_entity_stats.currentDepth,
       rootParser->m_entity_stats.maximumDepthSeen,
