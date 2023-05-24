@@ -63,4 +63,4 @@ jobs:
         MODE: ${{ matrix.MODE }}
         TRAVIS_OS_NAME: osx
       run: |
-        env ${{ matrix.FLAT_ENV }} ./.travis.sh
+        env ${{ matrix.FLAT_ENV }} ./.ci.sh

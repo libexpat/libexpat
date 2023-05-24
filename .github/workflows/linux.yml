@@ -117,7 +117,7 @@ jobs:
         wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
         sudo add-apt-repository "deb https://apt.llvm.org/${UBUNTU_CODENAME}/ llvm-toolchain-${UBUNTU_CODENAME}-15 main"
         sudo apt-get update  # due to new repository
-        # NOTE: Please note the version-specific ${PATH} extension for Clang in .travis.sh
+        # NOTE: Please note the version-specific ${PATH} extension for Clang in .ci.sh
         sudo apt-get install --yes --no-install-recommends -V \
             clang-15 \
             clang-format-15 \
@@ -139,4 +139,4 @@ jobs:
         MODE: ${{ matrix.MODE }}
         TRAVIS_OS_NAME: linux
       run: |
-        env ${{ matrix.FLAT_ENV }} ./.travis.sh
+        env ${{ matrix.FLAT_ENV }} ./.ci.sh
