@@ -137,6 +137,5 @@ jobs:
     - name: Perform check "${{ matrix.MODE }}"
       env:
         MODE: ${{ matrix.MODE }}
-        TRAVIS_OS_NAME: linux
       run: |
         env ${{ matrix.FLAT_ENV }} ./.ci.sh

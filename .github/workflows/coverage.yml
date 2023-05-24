@@ -79,7 +79,6 @@ jobs:
     - name: Collect test coverage
       env:
         MODE: coverage-sh
-        TRAVIS_OS_NAME: linux
       run: |
         exec ./.ci.sh
 
