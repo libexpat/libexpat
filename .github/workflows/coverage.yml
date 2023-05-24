@@ -64,9 +64,11 @@ jobs:
             lcov \
             libbsd-dev \
             lzip \
-            moreutils
+            moreutils \
+            ppa-purge
 
         # Install 32bit Wine
+        sudo ppa-purge -y ppa:ubuntu-toolchain-r/test  # to unblock
         sudo apt-get install --yes --no-install-recommends -V \
             mingw-w64 \
             wine-stable \
