@@ -27,7 +27,7 @@
 # OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 # USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-name: Run Linux Travis CI tasks
+name: Run Linux CI tasks
 
 on:
   pull_request:
