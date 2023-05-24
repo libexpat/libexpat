@@ -51,7 +51,10 @@ jobs:
         set -x -u
         source /etc/os-release
 
-        sudo apt-get update
+        # Unlock 32bit architecture (for Wine further down)
+        sudo dpkg --add-architecture i386  # for wine32
+        sudo apt-get update  # due to new architecture
+
         sudo apt-get install --yes --no-install-recommends -V \
             cmake \
             docbook2x \
@@ -61,11 +64,11 @@ jobs:
             lcov \
             libbsd-dev \
             lzip \
-            moreutils
+            moreutils \
+            ppa-purge
 
         # Install 32bit Wine
-        sudo dpkg --add-architecture i386  # for wine32
-        sudo apt-get update  # due to new architecture
+        sudo ppa-purge -y ppa:ubuntu-toolchain-r/test  # to unblock
         sudo apt-get install --yes --no-install-recommends -V \
             mingw-w64 \
             wine-stable \
