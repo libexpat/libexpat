@@ -79,9 +79,8 @@ jobs:
     - name: Collect test coverage
       env:
         MODE: coverage-sh
-        TRAVIS_OS_NAME: linux
       run: |
-        exec ./.travis.sh
+        exec ./.ci.sh
 
     - name: Store coverage .info and HTML report
       uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce  # v3.1.2

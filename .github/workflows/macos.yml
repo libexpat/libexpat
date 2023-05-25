@@ -27,7 +27,7 @@
 # OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 # USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-name: Run macOS Travis CI tasks
+name: Run macOS CI tasks
 
 on:
   pull_request:
@@ -61,6 +61,5 @@ jobs:
     - name: Perform check "${{ matrix.MODE }}"
       env:
         MODE: ${{ matrix.MODE }}
-        TRAVIS_OS_NAME: osx
       run: |
-        env ${{ matrix.FLAT_ENV }} ./.travis.sh
+        env ${{ matrix.FLAT_ENV }} ./.ci.sh

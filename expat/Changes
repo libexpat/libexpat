@@ -7,6 +7,9 @@ Release 2.5.1 xxx xxxxxxx xx xxxx
             #673  examples: Add new example "element_declarations.c"
             #678  Autotools: Sync CMake templates with CMake 3.23
 
+        Infrastructure:
+       #698 #721  CI: Resolve some Travis CI leftovers
+
 Release 2.5.0 Tue October 25 2022
         Security fixes:
   #616 #649 #650  CVE-2022-43680 -- Fix heap use-after-free after overeager
