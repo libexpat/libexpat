@@ -202,14 +202,16 @@ AS_IF([test "x${with_libbsd}" != xno],
      [],
      [AS_IF([test "x${with_libbsd}" = xyes],
         [AC_MSG_ERROR([Enforced use of libbsd cannot be satisfied.])])])])
-AC_MSG_CHECKING([for arc4random_buf (BSD or libbsd)])
+AC_MSG_CHECKING([for arc4random_buf (BSD, libbsd or glibc 2.36+)])
 AC_LINK_IFELSE([AC_LANG_SOURCE([
-    #include <stdlib.h>  /* for arc4random_buf on BSD, for NULL */
     #if defined(HAVE_LIBBSD)
     # include <bsd/stdlib.h>
+    #else
+    # include <stdlib.h>  /* for arc4random_buf on BSD */
     #endif
     int main() {
-      arc4random_buf(NULL, 0U);
+      char dummy[[123]];  // double brackets for m4
+      arc4random_buf(dummy, 0U);
       return 0;
     }
   ])],
@@ -217,7 +219,7 @@ AC_LINK_IFELSE([AC_LANG_SOURCE([
    AC_MSG_RESULT([yes])],
   [AC_MSG_RESULT([no])
 
-   AC_MSG_CHECKING([for arc4random (BSD, macOS or libbsd)])
+   AC_MSG_CHECKING([for arc4random (BSD, macOS, libbsd or glibc 2.36+)])
    AC_LINK_IFELSE([AC_LANG_SOURCE([
        #if defined(HAVE_LIBBSD)
        # include <bsd/stdlib.h>

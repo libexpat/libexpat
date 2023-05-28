@@ -133,8 +133,8 @@
     Your options include: \
       * Linux >=3.17 + glibc >=2.25 (getrandom): HAVE_GETRANDOM, \
       * Linux >=3.17 + glibc (including <2.25) (syscall SYS_getrandom): HAVE_SYSCALL_GETRANDOM, \
-      * BSD / macOS >=10.7 (arc4random_buf): HAVE_ARC4RANDOM_BUF, \
-      * BSD / macOS (including <10.7) (arc4random): HAVE_ARC4RANDOM, \
+      * BSD / macOS >=10.7 / glibc >=2.36 (arc4random_buf): HAVE_ARC4RANDOM_BUF, \
+      * BSD / macOS (including <10.7) / glibc >=2.36 (arc4random): HAVE_ARC4RANDOM, \
       * libbsd (arc4random_buf): HAVE_ARC4RANDOM_BUF + HAVE_LIBBSD, \
       * libbsd (arc4random): HAVE_ARC4RANDOM + HAVE_LIBBSD, \
       * Linux (including <3.17) / BSD / macOS (including <10.7) / Solaris >=8 (/dev/urandom): XML_DEV_URANDOM, \
