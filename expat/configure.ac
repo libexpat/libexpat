@@ -105,6 +105,9 @@ AC_SUBST(LIBAGE)
 AC_LANG([C])
 AC_PROG_CC_C99
 
+AS_IF([test "${ac_cv_prog_cc_c99}" = no],
+  [AC_MSG_ERROR([Expat requires a C99 compiler.])])
+
 AS_IF([test "$GCC" = yes],
   [AX_APPEND_COMPILE_FLAGS([-Wall -Wextra], [AM_CFLAGS])
    dnl Be careful about adding the -fexceptions option; some versions of
