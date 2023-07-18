@@ -371,7 +371,6 @@ set(_EXPAT_C_SOURCES
 )
 
 if(EXPAT_SHARED_LIBS)
-    set(_SHARED SHARED)
     if(WIN32)
         macro(_expat_def_file_toggle source_var target_var)
             if(${source_var})
