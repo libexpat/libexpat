@@ -123,6 +123,14 @@
 #  define LOAD_LIBRARY_SEARCH_SYSTEM32 0x00000800
 #endif
 
+#if defined(_WIN32) && defined(XML_USE_PROCESS_PRNG)
+/*
+ * Prototype for ProcessPrng.
+ * See: https://learn.microsoft.com/en-us/windows/win32/seccng/processprng
+ */
+typedef BOOL (WINAPI ProcessPrngFn)(PBYTE pbData, SIZE_T cbData);
+#endif
+
 #if ! defined(HAVE_GETRANDOM) && ! defined(HAVE_SYSCALL_GETRANDOM)             \
     && ! defined(HAVE_ARC4RANDOM_BUF) && ! defined(HAVE_ARC4RANDOM)            \
     && ! defined(XML_DEV_URANDOM) && ! defined(_WIN32)                         \
@@ -845,6 +853,16 @@ static int
 writeRandomBytes_rand_s(void *target, size_t count) {
   size_t bytesWrittenTotal = 0;
 
+# if defined(XML_RANDOM_PROCESSPRNG)
+  static ProcessPrngFn *process_prng_fn = NULL;
+  if (!process_prng_fn) {
+    /* This module should be loaded prior to sandbox lockdown. */
+    HMODULE hmod = LoadLibraryW(L"bcryptprimitives.dll");
+    process_prng_fn = (ProcessPrngFn*)GetProcAddress(hmod, "ProcessPrng");
+  }
+  /* ProcessPrng is documented to never fail. */
+  process_prng_fn((BYTE*)target, count);
+# else
   while (bytesWrittenTotal < count) {
     unsigned int random32 = 0;
     size_t i = 0;
@@ -858,6 +876,7 @@ writeRandomBytes_rand_s(void *target, size_t count) {
       ((uint8_t *)target)[bytesWrittenTotal] = random8;
     }
   }
+#endif
   return 1; /* success */
 }
 
