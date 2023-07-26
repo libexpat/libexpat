@@ -6814,10 +6814,11 @@ START_TEST(test_nested_entity_suspend) {
   const XML_Char *const expected = XCS("start") XCS("e3 head") XCS("e2 head")
       XCS("e1") XCS("e2 tail") XCS("e3 tail") XCS("end");
   CharData storage;
+  CharData_Init(&storage);
+
   XML_Parser parser = XML_ParserCreate(NULL);
   ParserPlusStorage parserPlusStorage = {parser, &storage};
 
-  CharData_Init(&storage);
   XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
   XML_SetCommentHandler(parser, accumulate_and_suspend_comment_handler);
   XML_SetUserData(parser, &parserPlusStorage);
