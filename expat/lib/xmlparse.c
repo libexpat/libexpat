@@ -89,6 +89,7 @@
 #  endif
 #endif
 
+#include <stdbool.h>
 #include <stddef.h>
 #include <string.h> /* memset(), memcpy() */
 #include <assert.h>
@@ -647,6 +648,7 @@ struct XML_ParserStruct {
 
   XML_Index m_parseEndByteIndex;
   const char *m_parseEndPtr;
+  size_t m_partialTokenBytesBefore; /* used in heuristic to avoid O(n^2) */
   XML_Char *m_dataBuf;
   XML_Char *m_dataBufEnd;
   XML_StartElementHandler m_startElementHandler;
@@ -978,6 +980,32 @@ get_hash_secret_salt(XML_Parser parser) {
   return parser->m_hash_secret_salt;
 }
 
+static enum XML_Error
+callProcessor(XML_Parser parser, const char *start, const char *end,
+              const char **endPtr) {
+  const size_t have_now = EXPAT_SAFE_PTR_DIFF(end, start);
+
+  if (! parser->m_parsingStatus.finalBuffer) {
+    // Heuristic: don't try to parse a partial token again until the amount of
+    // available data has increased significantly.
+    const size_t had_before = parser->m_partialTokenBytesBefore;
+    const bool enough = (have_now >= 2 * had_before);
+
+    if (! enough) {
+      *endPtr = start; // callers may expect this to be set
+      return XML_ERROR_NONE;
+    }
+  }
+  const enum XML_Error ret = parser->m_processor(parser, start, end, endPtr);
+  // if we consumed nothing, remember what we had on this parse attempt.
+  if (*endPtr == start) {
+    parser->m_partialTokenBytesBefore = have_now;
+  } else {
+    parser->m_partialTokenBytesBefore = 0;
+  }
+  return ret;
+}
+
 static XML_Bool /* only valid for root parser */
 startParsing(XML_Parser parser) {
   /* hash functions must be initialized before setContext() is called */
@@ -1159,6 +1187,7 @@ parserInit(XML_Parser parser, const XML_Char *encodingName) {
   parser->m_bufferEnd = parser->m_buffer;
   parser->m_parseEndByteIndex = 0;
   parser->m_parseEndPtr = NULL;
+  parser->m_partialTokenBytesBefore = 0;
   parser->m_declElementType = NULL;
   parser->m_declAttributeId = NULL;
   parser->m_declEntity = NULL;
@@ -1890,29 +1919,20 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal) {
        to detect errors based on that fact.
     */
     parser->m_errorCode
-        = parser->m_processor(parser, parser->m_bufferPtr,
-                              parser->m_parseEndPtr, &parser->m_bufferPtr);
+        = callProcessor(parser, parser->m_bufferPtr, parser->m_parseEndPtr,
+                        &parser->m_bufferPtr);
 
     if (parser->m_errorCode == XML_ERROR_NONE) {
       switch (parser->m_parsingStatus.parsing) {
       case XML_SUSPENDED:
-        /* It is hard to be certain, but it seems that this case
-         * cannot occur.  This code is cleaning up a previous parse
-         * with no new data (since len == 0).  Changing the parsing
-         * state requires getting to execute a handler function, and
-         * there doesn't seem to be an opportunity for that while in
-         * this circumstance.
-         *
-         * Given the uncertainty, we retain the code but exclude it
-         * from coverage tests.
-         *
-         * LCOV_EXCL_START
-         */
+        /* While we added no new data, the finalBuffer flag may have caused
+         * us to parse previously-unparsed data in the internal buffer.
+         * If that triggered a callback to the application, it would have
+         * had an opportunity to suspend parsing. */
         XmlUpdatePosition(parser->m_encoding, parser->m_positionPtr,
                           parser->m_bufferPtr, &parser->m_position);
         parser->m_positionPtr = parser->m_bufferPtr;
         return XML_STATUS_SUSPENDED;
-        /* LCOV_EXCL_STOP */
       case XML_INITIALIZED:
       case XML_PARSING:
         parser->m_parsingStatus.parsing = XML_FINISHED;
@@ -1942,7 +1962,7 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal) {
     parser->m_parsingStatus.finalBuffer = (XML_Bool)isFinal;
 
     parser->m_errorCode
-        = parser->m_processor(parser, s, parser->m_parseEndPtr = s + len, &end);
+        = callProcessor(parser, s, parser->m_parseEndPtr = s + len, &end);
 
     if (parser->m_errorCode != XML_ERROR_NONE) {
       parser->m_eventEndPtr = parser->m_eventPtr;
@@ -2044,8 +2064,8 @@ XML_ParseBuffer(XML_Parser parser, int len, int isFinal) {
   parser->m_parseEndByteIndex += len;
   parser->m_parsingStatus.finalBuffer = (XML_Bool)isFinal;
 
-  parser->m_errorCode = parser->m_processor(
-      parser, start, parser->m_parseEndPtr, &parser->m_bufferPtr);
+  parser->m_errorCode = callProcessor(parser, start, parser->m_parseEndPtr,
+                                      &parser->m_bufferPtr);
 
   if (parser->m_errorCode != XML_ERROR_NONE) {
     parser->m_eventEndPtr = parser->m_eventPtr;
@@ -2237,7 +2257,7 @@ XML_ResumeParser(XML_Parser parser) {
   }
   parser->m_parsingStatus.parsing = XML_PARSING;
 
-  parser->m_errorCode = parser->m_processor(
+  parser->m_errorCode = callProcessor(
       parser, parser->m_bufferPtr, parser->m_parseEndPtr, &parser->m_bufferPtr);
 
   if (parser->m_errorCode != XML_ERROR_NONE) {

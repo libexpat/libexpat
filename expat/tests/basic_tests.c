@@ -49,6 +49,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
 
 #if ! defined(__cplusplus)
 #  include <stdbool.h>
@@ -5180,6 +5181,87 @@ START_TEST(test_nested_entity_suspend) {
 }
 END_TEST
 
+/* Regression test for quadratic parsing on large tokens */
+START_TEST(test_big_tokens_take_linear_time) {
+  const struct {
+    const char *pre;
+    const char *post;
+  } text[] = {
+      {"<a>", "</a>"},                      // assumed good, used as baseline
+      {"<b><![CDATA[ value: ", " ]]></b>"}, // CDATA, performed OK before patch
+      {"<c attr='", "'></c>"},              // big attribute, used to be O(N²)
+      {"<d><!-- ", " --></d>"},             // long comment, used to be O(N²)
+      {"<e><", "/></e>"},                   // big elem name, used to be O(N²)
+  };
+  const int num_cases = sizeof(text) / sizeof(text[0]);
+  // For the test we need a <max_slowdown> value that is:
+  // (1) big enough that the test passes reliably (avoiding flaky tests), and
+  // (2) small enough that the test actually catches regressions.
+  const int max_slowdown = 15;
+  char aaaaaa[4096];
+  const int fillsize = (int)sizeof(aaaaaa);
+  const int fillcount = 100;
+
+  memset(aaaaaa, 'a', fillsize);
+
+#if defined(_WIN32)
+  if (CLOCKS_PER_SEC < 100000) {
+    // Skip this test if clock() doesn't have reasonably good resolution.
+    // This workaround is only applied to Windows targets, since XSI requires
+    // the value to be 1 000 000 (10x the condition here), and we want to be
+    // very sure that at least one platform in CI can catch regressions.
+    return;
+  }
+#endif
+
+  clock_t baseline = 0;
+  for (int i = 0; i < num_cases; ++i) {
+    XML_Parser parser = XML_ParserCreate(NULL);
+    assert_true(parser != NULL);
+    enum XML_Status status;
+    set_subtest("%saaaaaa%s", text[i].pre, text[i].post);
+    const clock_t start = clock();
+
+    // parse the start text
+    status = _XML_Parse_SINGLE_BYTES(parser, text[i].pre,
+                                     (int)strlen(text[i].pre), XML_FALSE);
+    if (status != XML_STATUS_OK) {
+      xml_failure(parser);
+    }
+    // parse lots of 'a', failing the test early if it takes too long
+    for (int f = 0; f < fillcount; ++f) {
+      status = _XML_Parse_SINGLE_BYTES(parser, aaaaaa, fillsize, XML_FALSE);
+      if (status != XML_STATUS_OK) {
+        xml_failure(parser);
+      }
+      // i == 0 means we're still calculating the baseline value
+      if (i > 0) {
+        const clock_t now = clock();
+        const clock_t clocks_so_far = now - start;
+        assert_true(clocks_so_far / baseline < max_slowdown);
+      }
+    }
+    // parse the end text
+    status = _XML_Parse_SINGLE_BYTES(parser, text[i].post,
+                                     (int)strlen(text[i].post), XML_TRUE);
+    if (status != XML_STATUS_OK) {
+      xml_failure(parser);
+    }
+
+    // how long did it take in total?
+    const clock_t end = clock();
+    const clock_t taken = end - start;
+    if (i == 0) {
+      assert_true(taken > 0); // just to make sure we don't div-by-0 later
+      baseline = taken;
+    }
+    assert_true(taken / baseline < max_slowdown);
+
+    XML_ParserFree(parser);
+  }
+}
+END_TEST
+
 void
 make_basic_test_case(Suite *s) {
   TCase *tc_basic = tcase_create("basic tests");
@@ -5419,4 +5501,5 @@ make_basic_test_case(Suite *s) {
   tcase_add_test__ifdef_xml_dtd(tc_basic,
                                 test_pool_integrity_with_unfinished_attr);
   tcase_add_test__if_xml_ge(tc_basic, test_nested_entity_suspend);
+  tcase_add_test(tc_basic, test_big_tokens_take_linear_time);
 }
