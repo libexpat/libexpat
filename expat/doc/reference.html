@@ -19,6 +19,7 @@
    Copyright (c) 2021      Tomas Korbar <tkorbar@redhat.com>
    Copyright (c) 2021      Nicolas Cavallari <nicolas.cavallari@green-communications.fr>
    Copyright (c) 2022      Thijs Schreijer <thijs@thijsschreijer.nl>
+   Copyright (c) 2023      Sony Corporation / Snild Dolkow <snild@sony.com>
    Licensed under the MIT license:
 
    Permission is  hereby granted,  free of charge,  to any  person obtaining
@@ -1078,6 +1079,11 @@ exceed the maximum integer value. Input data at the end of a buffer
 will remain unprocessed if it is part of an XML token for which the
 end is not part of that buffer.</p>
 
+<p><a name="isFinal"></a>The application <em>must</em> make a concluding
+<code><a href="#XML_Parse">XML_Parse</a></code> or
+<code><a href="#XML_ParseBuffer">XML_ParseBuffer</a></code> call
+with <code>isFinal</code> set to <code>XML_TRUE</code>.</p>
+
 <h4 id="XML_Parse">XML_Parse</h4>
 <pre class="fcndec">
 enum XML_Status XMLCALL
@@ -1104,6 +1110,10 @@ piece of the document. Frequently, the last piece is empty (i.e.
 <code>len</code> is zero.)
 If a parse error occurred, it returns <code>XML_STATUS_ERROR</code>.
 Otherwise it returns <code>XML_STATUS_OK</code> value.
+Note that regardless of the return value, there is no guarantee that all
+provided input has been parsed; only after <a href="#isFinal">the
+concluding call</a> will all handler callbacks and parsing errors have
+happened.
 </div>
 
 <h4 id="XML_ParseBuffer">XML_ParseBuffer</h4>
