@@ -669,8 +669,9 @@ function.  The StartNamespaceDeclHandler is called prior to the start
 tag handler and the EndNamespaceDeclHandler is called after the
 corresponding end tag that ends the namespace's scope.  The namespace
 start handler gets passed the prefix and URI for the namespace.  For a
-default namespace declaration (xmlns='...'), the prefix will be null.
-The URI will be null for the case where the default namespace is being
+default namespace declaration (xmlns='...'), the prefix will be
+<code>NULL</code>.
+The URI will be <code>NULL</code> for the case where the default namespace is being
 unset.  The namespace end handler just gets the prefix for the closing
 scope.</p>
 
@@ -947,7 +948,7 @@ XML_Parser XMLCALL
 XML_ParserCreate(const XML_Char *encoding);
 </pre>
 <div class="fcndef">
-Construct a new parser. If encoding is non-null, it specifies a
+Construct a new parser. If encoding is non-<code>NULL</code>, it specifies a
 character encoding to use for the document. This overrides the document
 encoding declaration. There are four built-in encodings:
 <ul>
@@ -1318,7 +1319,7 @@ typedef void
 handler as a pointer to a vector of char pointers. Each attribute seen in
 a start (or empty) tag occupies 2 consecutive places in this vector: the
 attribute name followed by the attribute value. These pairs are terminated
-by a null pointer.</p>
+by a <code>NULL</code> pointer.</p>
 <p>Note that an empty tag generates a call to both start and end handlers
 (in that order).</p>
 </div>
@@ -1650,7 +1651,7 @@ value is -1, then that byte is invalid as the initial byte in a sequence.
 If the value is -n, where n is an integer &gt; 1, then n is the number of
 bytes in the sequence and the actual conversion is accomplished by a
 call to the function pointed at by convert. This function may return -1
-if the sequence itself is invalid. The convert pointer may be null if
+if the sequence itself is invalid. The convert pointer may be <code>NULL</code> if
 there are only single byte codes. The data parameter passed to the convert
 function is the data pointer from <code>XML_Encoding</code>. The
 string s is <em>NOT</em> null-terminated and points at the sequence of
@@ -2313,7 +2314,7 @@ XML_SetEncoding(XML_Parser p,
 </pre>
 <div class="fcndef">
 Set the encoding to be used by the parser. It is equivalent to
-passing a non-null encoding argument to the parser creation functions.
+passing a non-<code>NULL</code> encoding argument to the parser creation functions.
 It must not be called after <code><a href= "#XML_Parse"
 >XML_Parse</a></code> or <code><a href= "#XML_ParseBuffer"
 >XML_ParseBuffer</a></code> have been called on the given parser.
