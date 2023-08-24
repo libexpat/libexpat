@@ -406,7 +406,7 @@ ensure are available for reporting via <code><a href=
 normally set to 1024, and must be set to a positive integer.  If this
 is not defined, the input context will not be available and <code><a
 href= "#XML_GetInputContext" >XML_GetInputContext</a></code> will
-always report NULL.  Without this, Expat has a smaller memory
+always report <code>NULL</code>.  Without this, Expat has a smaller memory
 footprint and can be faster.</dd>
 
 <dt>XML_STATIC</dt>
@@ -669,8 +669,9 @@ function.  The StartNamespaceDeclHandler is called prior to the start
 tag handler and the EndNamespaceDeclHandler is called after the
 corresponding end tag that ends the namespace's scope.  The namespace
 start handler gets passed the prefix and URI for the namespace.  For a
-default namespace declaration (xmlns='...'), the prefix will be null.
-The URI will be null for the case where the default namespace is being
+default namespace declaration (xmlns='...'), the prefix will be
+<code>NULL</code>.
+The URI will be <code>NULL</code> for the case where the default namespace is being
 unset.  The namespace end handler just gets the prefix for the closing
 scope.</p>
 
@@ -947,7 +948,7 @@ XML_Parser XMLCALL
 XML_ParserCreate(const XML_Char *encoding);
 </pre>
 <div class="fcndef">
-Construct a new parser. If encoding is non-null, it specifies a
+Construct a new parser. If encoding is non-<code>NULL</code>, it specifies a
 character encoding to use for the document. This overrides the document
 encoding declaration. There are four built-in encodings:
 <ul>
@@ -1003,9 +1004,9 @@ typedef struct {
 </pre>
 <div class="fcndef">
 <p>Construct a new parser using the suite of memory handling functions
-specified in <code>ms</code>. If <code>ms</code> is NULL, then use the
+specified in <code>ms</code>. If <code>ms</code> is <code>NULL</code>, then use the
 standard set of memory management functions. If <code>sep</code> is
-non NULL, then namespace processing is enabled in the created parser
+non-<code>NULL</code>, then namespace processing is enabled in the created parser
 and the character pointed at by sep is used as the separator between
 the namespace URI and the local part of the name.</p>
 </div>
@@ -1095,7 +1096,7 @@ enum XML_Status {
 Parse some more of the document. The string <code>s</code> is a buffer
 containing part (or perhaps all) of the document. The number of bytes of s
 that are part of the document is indicated by <code>len</code>. This means
-that <code>s</code> doesn't have to be null terminated. It also means that
+that <code>s</code> doesn't have to be null-terminated. It also means that
 if <code>len</code> is larger than the number of bytes in the block of
 memory that <code>s</code> points at, then a memory fault is likely. The
 <code>isFinal</code> parameter informs the parser that this is the last
@@ -1128,8 +1129,8 @@ XML_GetBuffer(XML_Parser p,
 </pre>
 <div class="fcndef">
 Obtain a buffer of size <code>len</code> to read a piece of the document
-into. A NULL value is returned if Expat can't allocate enough memory for
-this buffer. A NULL value may also be returned if <code>len</code> is zero.
+into. A <code>NULL</code> value is returned if Expat can't allocate enough memory for
+this buffer. A <code>NULL</code> value may also be returned if <code>len</code> is zero.
 This has to be called prior to every call to
 <code><a href= "#XML_ParseBuffer" >XML_ParseBuffer</a></code>. A
 typical use would look like this:
@@ -1275,7 +1276,7 @@ typedef struct {
 <p>Returns status of parser with respect to being initialized,
 parsing, finished, or suspended, and whether the final buffer is being
 processed.  The <code>status</code> parameter <em>must not</em> be
-NULL.</p>
+<code>NULL</code>.</p>
 
 <p>New in Expat 1.95.8.</p>
 </div>
@@ -1290,7 +1291,7 @@ to ignore all text not descended from a <code>para</code> element. One
 way it could do this is to set the character handler when a para start tag
 is seen, and unset it for the corresponding end tag.</p>
 
-<p>A handler may be <em>unset</em> by providing a NULL pointer to the
+<p>A handler may be <em>unset</em> by providing a <code>NULL</code> pointer to the
 appropriate handler setter. None of the handler setting functions have
 a return value.</p>
 
@@ -1318,7 +1319,7 @@ typedef void
 handler as a pointer to a vector of char pointers. Each attribute seen in
 a start (or empty) tag occupies 2 consecutive places in this vector: the
 attribute name followed by the attribute value. These pairs are terminated
-by a null pointer.</p>
+by a <code>NULL</code> pointer.</p>
 <p>Note that an empty tag generates a call to both start and end handlers
 (in that order).</p>
 </div>
@@ -1368,7 +1369,7 @@ is <em>NOT null-terminated</em>. You have to use the length argument
 to deal with the end of the string. A single block of contiguous text
 free of markup may still result in a sequence of calls to this handler.
 In other words, if you're searching for a pattern in the text, it may
-be split across calls to this handler. Note: Setting this handler to NULL
+be split across calls to this handler. Note: Setting this handler to <code>NULL</code>
 may <em>NOT immediately</em> terminate call-backs if the parser is currently
 processing such a single block of contiguous markup-free text, as the parser
 will continue calling back until the end of the block is reached.</p>
@@ -1526,16 +1527,16 @@ the format expected by the <code>context</code> argument to <code><a
 href="#XML_ExternalEntityParserCreate"
 >XML_ExternalEntityParserCreate</a></code>.  <code>code</code> is
 valid only until the handler returns, so if the referenced entity is
-to be parsed later, it must be copied.  <code>context</code> is NULL
+to be parsed later, it must be copied.  <code>context</code> is <code>NULL</code>
 only when the entity is a parameter entity, which is how one can
 differentiate between general and parameter entities.</p>
 
 <p>The <code>base</code> parameter is the base to use for relative
 system identifiers.  It is set by <code><a
-href="#XML_SetBase">XML_SetBase</a></code> and may be NULL. The
+href="#XML_SetBase">XML_SetBase</a></code> and may be <code>NULL</code>. The
 <code>publicId</code> parameter is the public id given in the entity
-declaration and may be NULL.  <code>systemId</code> is the system
-identifier specified in the entity declaration and is never NULL.</p>
+declaration and may be <code>NULL</code>.  <code>systemId</code> is the system
+identifier specified in the entity declaration and is never <code>NULL</code>.</p>
 
 <p>There are a couple of ways in which this handler differs from
 others.  First, this handler returns a status indicator (an
@@ -1564,10 +1565,10 @@ XML_SetExternalEntityRefHandlerArg(XML_Parser p,
 </pre>
 <div class="fcndef">
 <p>Set the argument passed to the ExternalEntityRefHandler.  If
-<code>arg</code> is not NULL, it is the new value passed to the
+<code>arg</code> is not <code>NULL</code>, it is the new value passed to the
 handler set using <code><a href="#XML_SetExternalEntityRefHandler"
 >XML_SetExternalEntityRefHandler</a></code>; if <code>arg</code> is
-NULL, the argument passed to the handler function will be the parser
+<code>NULL</code>, the argument passed to the handler function will be the parser
 object itself.</p>
 
 <p><strong>Note:</strong>
@@ -1650,14 +1651,14 @@ value is -1, then that byte is invalid as the initial byte in a sequence.
 If the value is -n, where n is an integer &gt; 1, then n is the number of
 bytes in the sequence and the actual conversion is accomplished by a
 call to the function pointed at by convert. This function may return -1
-if the sequence itself is invalid. The convert pointer may be null if
+if the sequence itself is invalid. The convert pointer may be <code>NULL</code> if
 there are only single byte codes. The data parameter passed to the convert
 function is the data pointer from <code>XML_Encoding</code>. The
 string s is <em>NOT</em> null-terminated and points at the sequence of
 bytes to be converted.</p>
 
 <p>The function pointed at by <code>release</code> is called by the
-parser when it is finished with the encoding. It may be NULL.</p>
+parser when it is finished with the encoding. It may be <code>NULL</code>.</p>
 </div>
 
 <div class="handler">
@@ -1724,8 +1725,8 @@ typedef void
 </pre>
 <p>Sets a handler that is called for XML declarations and also for
 text declarations discovered in external entities. The way to
-distinguish is that the <code>version</code> parameter will be NULL
-for text declarations. The <code>encoding</code> parameter may be NULL
+distinguish is that the <code>version</code> parameter will be <code>NULL</code>
+for text declarations. The <code>encoding</code> parameter may be <code>NULL</code>
 for an XML declaration. The <code>standalone</code> argument will
 contain -1, 0, or 1 indicating respectively that there was no
 standalone parameter in the declaration, that it was given as no, or
@@ -1749,7 +1750,7 @@ typedef void
 </pre>
 <p>Set a handler that is called at the start of a DOCTYPE declaration,
 before any external or internal subset is parsed. Both <code>sysid</code>
-and <code>pubid</code> may be NULL. The <code>has_internal_subset</code>
+and <code>pubid</code> may be <code>NULL</code>. The <code>has_internal_subset</code>
 will be non-zero if the DOCTYPE declaration has an internal subset.</p>
 </div>
 
@@ -1831,7 +1832,7 @@ around and freed at a later stage.</p>
 <code>XML_Content</code> nodes. If <code>type</code> equals
 <code>XML_CTYPE_EMPTY</code> or <code>XML_CTYPE_ANY</code>, then
 <code>quant</code> will be <code>XML_CQUANT_NONE</code>, and the other
-fields will be zero or NULL.  If <code>type</code> is
+fields will be zero or <code>NULL</code>.  If <code>type</code> is
 <code>XML_CTYPE_MIXED</code>, then <code>quant</code> will be
 <code>XML_CQUANT_NONE</code> or <code>XML_CQUANT_REP</code> and
 <code>numchildren</code> will contain the number of elements that are
@@ -1843,7 +1844,7 @@ XML_CTYPE_NAME with no quantification.  Only the root node can be type
 
 <p>For type <code>XML_CTYPE_NAME</code>, the <code>name</code> field
 points to the name and the <code>numchildren</code> and
-<code>children</code> fields will be zero and NULL. The
+<code>children</code> fields will be zero and <code>NULL</code>. The
 <code>quant</code> field will indicate any quantifiers placed on the
 name.</p>
 
@@ -1879,11 +1880,11 @@ is in the <code>attname</code> parameter. The attribute type is in the
 type in the declaration with whitespace removed.</p>
 
 <p>The <code>dflt</code> parameter holds the default value. It will be
-NULL in the case of "#IMPLIED" or "#REQUIRED" attributes. You can
+<code>NULL</code> in the case of "#IMPLIED" or "#REQUIRED" attributes. You can
 distinguish these two cases by checking the <code>isrequired</code>
 parameter, which will be true in the case of "#REQUIRED" attributes.
 Attributes which are "#FIXED" will have also have a true
-<code>isrequired</code>, but they will have the non-NULL fixed value
+<code>isrequired</code>, but they will have the non-<code>NULL</code> fixed value
 in the <code>dflt</code> parameter.</p>
 </div>
 
@@ -1911,14 +1912,14 @@ The <code>is_parameter_entity</code> argument will be non-zero in the
 case of parameter entities and zero otherwise.</p>
 
 <p>For internal entities (<code>&lt;!ENTITY foo "bar"&gt;</code>),
-<code>value</code> will be non-NULL and <code>systemId</code>,
-<code>publicId</code>, and <code>notationName</code> will all be NULL.
-The value string is <em>not</em> NULL terminated; the length is
+<code>value</code> will be non-<code>NULL</code> and <code>systemId</code>,
+<code>publicId</code>, and <code>notationName</code> will all be <code>NULL</code>.
+The value string is <em>not</em> null-terminated; the length is
 provided in the <code>value_length</code> parameter. Do not use
 <code>value_length</code> to test for internal entities, since it is
 legal to have zero-length values. Instead check for whether or not
-<code>value</code> is NULL.</p> <p>The <code>notationName</code>
-argument will have a non-NULL value only for unparsed entity
+<code>value</code> is <code>NULL</code>.</p> <p>The <code>notationName</code>
+argument will have a non-<code>NULL</code> value only for unparsed entity
 declarations.</p>
 </div>
 
@@ -2093,7 +2094,7 @@ triggering a call spans over a very large amount of input, the actual
 parse position may be before the beginning of the buffer.</p>
 
 <p>If <code>XML_CONTEXT_BYTES</code> is not defined, this will always
-return NULL.</p>
+return <code>NULL</code>.</p>
 </div>
 
 <h3><a name="billion-laughs">Billion Laughs Attack Protection</a></h3>
@@ -2313,7 +2314,7 @@ XML_SetEncoding(XML_Parser p,
 </pre>
 <div class="fcndef">
 Set the encoding to be used by the parser. It is equivalent to
-passing a non-null encoding argument to the parser creation functions.
+passing a non-<code>NULL</code> encoding argument to the parser creation functions.
 It must not be called after <code><a href= "#XML_Parse"
 >XML_Parse</a></code> or <code><a href= "#XML_ParseBuffer"
 >XML_ParseBuffer</a></code> have been called on the given parser.
@@ -2385,7 +2386,7 @@ called.  The setting of parameter entity parsing, controlled using
 external entity reference handler set via <code><a href=
 "#XML_SetExternalEntityRefHandler"
 >XML_SetExternalEntityRefHandler</a></code> with both
-<code>publicId</code> and <code>systemId</code> set to NULL.</p>
+<code>publicId</code> and <code>systemId</code> set to <code>NULL</code>.</p>
 
 <p>If this function is called after parsing has begun, it returns
 <code>XML_ERROR_CANT_CHANGE_FEATURE_ONCE_PARSING</code> and ignores
@@ -2506,7 +2507,7 @@ check these features to do so at runtime.</p>
 
 <p>The return value is an array of <code>XML_Feature</code>,
 terminated by a record with a <code>feature</code> of
-<code>XML_FEATURE_END</code> and <code>name</code> of NULL,
+<code>XML_FEATURE_END</code> and <code>name</code> of <code>NULL</code>,
 identifying the feature-test macros Expat was compiled with.  Since an
 application that requires this kind of information needs to determine
 the type of character the <code>name</code> points to, records for the
@@ -2562,7 +2563,7 @@ XML_MemMalloc(XML_Parser parser, size_t size);
 <div class="fcndef">
 Allocate <code>size</code> bytes of memory using the allocator the
 <code>parser</code> object has been configured to use.  Returns a
-pointer to the memory or NULL on failure.  Memory allocated in this
+pointer to the memory or <code>NULL</code> on failure.  Memory allocated in this
 way must be freed using <code><a href="#XML_MemFree"
 >XML_MemFree</a></code>.
 </div>
@@ -2577,9 +2578,9 @@ Allocate <code>size</code> bytes of memory using the allocator the
 <code>parser</code> object has been configured to use.
 <code>ptr</code> must point to a block of memory allocated by <code><a
 href="#XML_MemMalloc" >XML_MemMalloc</a></code> or
-<code>XML_MemRealloc</code>, or be NULL.  This function tries to
+<code>XML_MemRealloc</code>, or be <code>NULL</code>.  This function tries to
 expand the block pointed to by <code>ptr</code> if possible.  Returns
-a pointer to the memory or NULL on failure.  On success, the original
+a pointer to the memory or <code>NULL</code> on failure.  On success, the original
 block has either been expanded or freed.  On failure, the original
 block has not been freed; the caller is responsible for freeing the
 original block.  Memory allocated in this way must be freed using
@@ -2595,7 +2596,7 @@ XML_MemFree(XML_Parser parser, void *ptr);
 <div class="fcndef">
 Free a block of memory pointed to by <code>ptr</code>.  The block must
 have been allocated by <code><a href="#XML_MemMalloc"
->XML_MemMalloc</a></code> or <code>XML_MemRealloc</code>, or be NULL.
+>XML_MemMalloc</a></code> or <code>XML_MemRealloc</code>, or be <code>NULL</code>.
 </div>
 
 <hr />
