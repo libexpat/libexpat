@@ -1914,7 +1914,7 @@ case of parameter entities and zero otherwise.</p>
 <p>For internal entities (<code>&lt;!ENTITY foo "bar"&gt;</code>),
 <code>value</code> will be non-<code>NULL</code> and <code>systemId</code>,
 <code>publicId</code>, and <code>notationName</code> will all be <code>NULL</code>.
-The value string is <em>not</em> <code>NULL</code> terminated; the length is
+The value string is <em>not</em> null-terminated; the length is
 provided in the <code>value_length</code> parameter. Do not use
 <code>value_length</code> to test for internal entities, since it is
 legal to have zero-length values. Instead check for whether or not
