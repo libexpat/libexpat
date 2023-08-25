@@ -18,6 +18,7 @@
    Copyright (c) 2019      David Loffredo <loffredo@steptools.com>
    Copyright (c) 2020      Tim Gates <tim.gates@iress.com>
    Copyright (c) 2021      Donghee Na <donghee.na@python.org>
+   Copyright (c) 2023      Sony Corporation / Snild Dolkow <snild@sony.com>
    Licensed under the MIT license:
 
    Permission is  hereby granted,  free of charge,  to any  person obtaining
@@ -95,7 +96,14 @@ main(int argc, char *argv[]) {
   }
   if (verbosity != CK_SILENT)
     printf("Expat version: %" XML_FMT_STR "\n", XML_ExpatVersion());
-  srunner_run_all(sr, verbosity);
+
+  for (g_chunkSize = 1; g_chunkSize <= 5; g_chunkSize++) {
+    char context[100];
+    snprintf(context, sizeof(context), "chunksize=%d", g_chunkSize);
+    context[sizeof(context) - 1] = '\0';
+    srunner_run_all(sr, context, verbosity);
+  }
+  srunner_summarize(sr, verbosity);
   nf = srunner_ntests_failed(sr);
   srunner_free(sr);
 

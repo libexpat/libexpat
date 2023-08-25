@@ -18,6 +18,7 @@
    Copyright (c) 2019      David Loffredo <loffredo@steptools.com>
    Copyright (c) 2020      Tim Gates <tim.gates@iress.com>
    Copyright (c) 2021      Donghee Na <donghee.na@python.org>
+   Copyright (c) 2023      Sony Corporation / Snild Dolkow <snild@sony.com>
    Licensed under the MIT license:
 
    Permission is  hereby granted,  free of charge,  to any  person obtaining
@@ -137,6 +138,9 @@ XML_Bool g_resumable = XML_FALSE;
 /* Used to control abort checks in some tests */
 XML_Bool g_abortable = XML_FALSE;
 
+/* Used to control _XML_Parse_SINGLE_BYTES() chunk size */
+int g_chunkSize = 1;
+
 /* Common test functions */
 
 void
@@ -176,22 +180,19 @@ _xml_failure(XML_Parser parser, const char *file, int line) {
 enum XML_Status
 _XML_Parse_SINGLE_BYTES(XML_Parser parser, const char *s, int len,
                         int isFinal) {
-  enum XML_Status res = XML_STATUS_ERROR;
+  const int chunksize = g_chunkSize;
   int offset = 0;
-
-  if (len == 0) {
-    return XML_Parse(parser, s, len, isFinal);
-  }
-
-  for (; offset < len; offset++) {
-    const int innerIsFinal = (offset == len - 1) && isFinal;
-    const char c = s[offset]; /* to help out-of-bounds detection */
-    res = XML_Parse(parser, &c, sizeof(char), innerIsFinal);
-    if (res != XML_STATUS_OK) {
-      return res;
+  if (chunksize > 0) {
+    // parse in chunks of `chunksize` bytes as long as possible
+    for (; offset + chunksize < len; offset += chunksize) {
+      enum XML_Status res = XML_Parse(parser, s + offset, chunksize, XML_FALSE);
+      if (res != XML_STATUS_OK) {
+        return res;
+      }
     }
   }
-  return res;
+  // parse the final chunk, the size of which will be <= chunksize
+  return XML_Parse(parser, s + offset, len - offset, isFinal);
 }
 
 void

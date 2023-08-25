@@ -132,7 +132,8 @@ void tcase_add_checked_fixture(TCase *, tcase_setup_function,
                                tcase_teardown_function);
 void tcase_add_test(TCase *tc, tcase_test_function test);
 SRunner *srunner_create(Suite *suite);
-void srunner_run_all(SRunner *runner, int verbosity);
+void srunner_run_all(SRunner *runner, const char *context, int verbosity);
+void srunner_summarize(SRunner *runner, int verbosity);
 int srunner_ntests_failed(SRunner *runner);
 void srunner_free(SRunner *runner);
 
