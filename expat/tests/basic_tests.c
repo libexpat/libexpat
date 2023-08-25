@@ -1212,6 +1212,7 @@ START_TEST(test_ext_entity_invalid_parse) {
   const ExtFaults *fault = faults;
 
   for (; fault->parse_text != NULL; fault++) {
+    set_subtest("\"%s\"", fault->parse_text);
     XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
     XML_SetExternalEntityRefHandler(g_parser, external_entity_faulter);
     XML_SetUserData(g_parser, (void *)fault);
@@ -1282,6 +1283,7 @@ START_TEST(test_dtd_attr_handling) {
   AttTest *test;
 
   for (test = attr_data; test->definition != NULL; test++) {
+    set_subtest("%s", test->definition);
     XML_SetAttlistDeclHandler(g_parser, verify_attlist_decl_handler);
     XML_SetUserData(g_parser, test);
     if (_XML_Parse_SINGLE_BYTES(g_parser, prolog, (int)strlen(prolog),
@@ -1670,6 +1672,7 @@ START_TEST(test_bad_cdata) {
 
   size_t i = 0;
   for (; i < sizeof(cases) / sizeof(struct CaseData); i++) {
+    set_subtest("%s", cases[i].text);
     const enum XML_Status actualStatus = _XML_Parse_SINGLE_BYTES(
         g_parser, cases[i].text, (int)strlen(cases[i].text), XML_TRUE);
     const enum XML_Error actualError = XML_GetErrorCode(g_parser);
@@ -1737,6 +1740,7 @@ START_TEST(test_bad_cdata_utf16) {
   size_t i;
 
   for (i = 0; i < sizeof(cases) / sizeof(struct CaseData); i++) {
+    set_subtest("case %lu", (long unsigned)(i + 1));
     enum XML_Status actual_status;
     enum XML_Error actual_error;
 
@@ -2336,6 +2340,7 @@ START_TEST(test_ext_entity_invalid_suspended_parse) {
   ExtFaults *fault;
 
   for (fault = &faults[0]; fault->parse_text != NULL; fault++) {
+    set_subtest("%s", fault->parse_text);
     XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
     XML_SetExternalEntityRefHandler(g_parser,
                                     external_entity_suspending_faulter);
@@ -2939,6 +2944,7 @@ START_TEST(test_bad_ignore_section) {
   ExtFaults *fault;
 
   for (fault = &faults[0]; fault->parse_text != NULL; fault++) {
+    set_subtest("%s", fault->parse_text);
     XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
     XML_SetExternalEntityRefHandler(g_parser, external_entity_faulter);
     XML_SetUserData(g_parser, fault);
@@ -2982,6 +2988,7 @@ START_TEST(test_external_entity_values) {
   int i;
 
   for (i = 0; data_004_2[i].parse_text != NULL; i++) {
+    set_subtest("%s", data_004_2[i].parse_text);
     XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
     XML_SetExternalEntityRefHandler(g_parser, external_entity_valuer);
     XML_SetUserData(g_parser, &data_004_2[i]);
