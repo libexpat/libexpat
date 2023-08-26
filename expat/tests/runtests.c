@@ -3616,7 +3616,7 @@ END_TEST
 
 /* Test user parameter settings */
 /* Variable holding the expected handler userData */
-static const void *handler_data = NULL;
+static void *handler_data = NULL;
 /* Count of the number of times the comment handler has been invoked */
 static int comment_count = 0;
 /* Count of the number of skipped entities */
@@ -3768,7 +3768,7 @@ START_TEST(test_ext_entity_ref_parameter) {
    * what NULL would cause to be passed.
    */
   XML_SetExternalEntityRefHandlerArg(g_parser, (void *)text);
-  handler_data = text;
+  handler_data = (void *)text;
   if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
@@ -3778,7 +3778,7 @@ START_TEST(test_ext_entity_ref_parameter) {
   XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
   XML_SetExternalEntityRefHandler(g_parser, external_entity_ref_param_checker);
   XML_SetExternalEntityRefHandlerArg(g_parser, NULL);
-  handler_data = g_parser;
+  handler_data = (void *)g_parser;
   if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
@@ -6814,11 +6814,10 @@ START_TEST(test_nested_entity_suspend) {
   const XML_Char *const expected = XCS("start") XCS("e3 head") XCS("e2 head")
       XCS("e1") XCS("e2 tail") XCS("e3 tail") XCS("end");
   CharData storage;
-  CharData_Init(&storage);
-
   XML_Parser parser = XML_ParserCreate(NULL);
   ParserPlusStorage parserPlusStorage = {parser, &storage};
 
+  CharData_Init(&storage);
   XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
   XML_SetCommentHandler(parser, accumulate_and_suspend_comment_handler);
   XML_SetUserData(parser, &parserPlusStorage);
