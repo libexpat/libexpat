@@ -59,7 +59,7 @@
 
 /* Global variables for user parameter settings tests */
 /* Variable holding the expected handler userData */
-void *g_handler_data = NULL;
+const void *g_handler_data = NULL;
 /* Count of the number of times the comment handler has been invoked */
 int g_comment_count = 0;
 /* Count of the number of skipped entities */

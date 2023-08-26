@@ -50,7 +50,7 @@ extern "C" {
 #  include "expat.h"
 
 /* Variable holding the expected handler userData */
-extern void *g_handler_data;
+extern const void *g_handler_data;
 /* Count of the number of times the comment handler has been invoked */
 extern int g_comment_count;
 /* Count of the number of skipped entities */
