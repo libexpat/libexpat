@@ -36,6 +36,7 @@
    Copyright (c) 2022      Samanta Navarro <ferivoz@riseup.net>
    Copyright (c) 2022      Jeffrey Walton <noloader@gmail.com>
    Copyright (c) 2022      Jann Horn <jannh@google.com>
+   Copyright (c) 2023      Sony Corporation / Snild Dolkow <snild@sony.com>
    Licensed under the MIT license:
 
    Permission is  hereby granted,  free of charge,  to any  person obtaining
@@ -4483,15 +4484,15 @@ entityValueInitProcessor(XML_Parser parser, const char *s, const char *end,
       parser->m_processor = entityValueProcessor;
       return entityValueProcessor(parser, next, end, nextPtr);
     }
-    /* If we are at the end of the buffer, this would cause XmlPrologTok to
-       return XML_TOK_NONE on the next call, which would then cause the
-       function to exit with *nextPtr set to s - that is what we want for other
-       tokens, but not for the BOM - we would rather like to skip it;
-       then, when this routine is entered the next time, XmlPrologTok will
-       return XML_TOK_INVALID, since the BOM is still in the buffer
+    /* XmlPrologTok has now set the encoding based on the BOM it found, and we
+       must move s and nextPtr forward to consume the BOM.
+
+       If we didn't, and got XML_TOK_NONE from the next XmlPrologTok call, we
+       would leave the BOM in the buffer and return. On the next call to this
+       function, our XmlPrologTok call would return XML_TOK_INVALID, since it
+       is not valid to have multiple BOMs.
     */
-    else if (tok == XML_TOK_BOM && next == end
-             && ! parser->m_parsingStatus.finalBuffer) {
+    else if (tok == XML_TOK_BOM) {
 #  ifdef XML_DTD
       if (! accountingDiffTolerated(parser, tok, s, next, __LINE__,
                                     XML_ACCOUNT_DIRECT)) {
@@ -4501,7 +4502,7 @@ entityValueInitProcessor(XML_Parser parser, const char *s, const char *end,
 #  endif
 
       *nextPtr = next;
-      return XML_ERROR_NONE;
+      s = next;
     }
     /* If we get this token, we have the start of what might be a
        normal tag, but not a declaration (i.e. it doesn't begin with
