@@ -1839,6 +1839,7 @@ START_TEST(test_default_current) {
                             "<doc>&entity;</doc>";
   CharData storage;
 
+  set_subtest("with defaulting");
   XML_SetDefaultHandler(g_parser, record_default_handler);
   XML_SetCharacterDataHandler(g_parser, record_cdata_handler);
   CharData_Init(&storage);
@@ -1849,6 +1850,7 @@ START_TEST(test_default_current) {
   CharData_CheckXMLChars(&storage, XCS("DCDCDCDCDCDD"));
 
   /* Again, without the defaulting */
+  set_subtest("no defaulting");
   XML_ParserReset(g_parser, NULL);
   XML_SetDefaultHandler(g_parser, record_default_handler);
   XML_SetCharacterDataHandler(g_parser, record_cdata_nodefault_handler);
@@ -1860,6 +1862,7 @@ START_TEST(test_default_current) {
   CharData_CheckXMLChars(&storage, XCS("DcccccD"));
 
   /* Now with an internal entity to complicate matters */
+  set_subtest("with internal entity");
   XML_ParserReset(g_parser, NULL);
   XML_SetDefaultHandler(g_parser, record_default_handler);
   XML_SetCharacterDataHandler(g_parser, record_cdata_handler);
@@ -1873,6 +1876,7 @@ START_TEST(test_default_current) {
   CharData_CheckXMLChars(&storage, XCS("DDDDDDDDDDDDDDDDDDD"));
 
   /* Again, with a skip handler */
+  set_subtest("with skip handler");
   XML_ParserReset(g_parser, NULL);
   XML_SetDefaultHandler(g_parser, record_default_handler);
   XML_SetCharacterDataHandler(g_parser, record_cdata_handler);
@@ -1887,6 +1891,7 @@ START_TEST(test_default_current) {
   CharData_CheckXMLChars(&storage, XCS("DDDDDDDDDDDDDDDDDeD"));
 
   /* This time, allow the entity through */
+  set_subtest("allow entity");
   XML_ParserReset(g_parser, NULL);
   XML_SetDefaultHandlerExpand(g_parser, record_default_handler);
   XML_SetCharacterDataHandler(g_parser, record_cdata_handler);
@@ -1899,6 +1904,7 @@ START_TEST(test_default_current) {
   CharData_CheckXMLChars(&storage, XCS("DDDDDDDDDDDDDDDDDCDD"));
 
   /* Finally, without passing the cdata to the default handler */
+  set_subtest("not passing cdata");
   XML_ParserReset(g_parser, NULL);
   XML_SetDefaultHandlerExpand(g_parser, record_default_handler);
   XML_SetCharacterDataHandler(g_parser, record_cdata_nodefault_handler);
