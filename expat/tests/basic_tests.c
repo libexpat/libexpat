@@ -3474,10 +3474,10 @@ END_TEST
 /* Test aborting the parse in an epilog works */
 START_TEST(test_abort_epilog) {
   const char *text = "<doc></doc>\n\r\n";
-  XML_Char match[] = XCS("\r");
+  XML_Char trigger_char = XCS('\r');
 
   XML_SetDefaultHandler(g_parser, selective_aborting_default_handler);
-  XML_SetUserData(g_parser, match);
+  XML_SetUserData(g_parser, &trigger_char);
   g_resumable = XML_FALSE;
   if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
       != XML_STATUS_ERROR)
@@ -3490,10 +3490,10 @@ END_TEST
 /* Test a different code path for abort in the epilog */
 START_TEST(test_abort_epilog_2) {
   const char *text = "<doc></doc>\n";
-  XML_Char match[] = XCS("\n");
+  XML_Char trigger_char = XCS('\n');
 
   XML_SetDefaultHandler(g_parser, selective_aborting_default_handler);
-  XML_SetUserData(g_parser, match);
+  XML_SetUserData(g_parser, &trigger_char);
   g_resumable = XML_FALSE;
   expect_failure(text, XML_ERROR_ABORTED, "Abort not triggered");
 }
@@ -3502,10 +3502,10 @@ END_TEST
 /* Test suspension from the epilog */
 START_TEST(test_suspend_epilog) {
   const char *text = "<doc></doc>\n";
-  XML_Char match[] = XCS("\n");
+  XML_Char trigger_char = XCS('\n');
 
   XML_SetDefaultHandler(g_parser, selective_aborting_default_handler);
-  XML_SetUserData(g_parser, match);
+  XML_SetUserData(g_parser, &trigger_char);
   g_resumable = XML_TRUE;
   if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
       != XML_STATUS_SUSPENDED)

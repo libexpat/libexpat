@@ -1793,10 +1793,17 @@ data_check_comment_handler(void *userData, const XML_Char *data) {
 
 void XMLCALL
 selective_aborting_default_handler(void *userData, const XML_Char *s, int len) {
-  const XML_Char *match = (const XML_Char *)userData;
+  const XML_Char trigger_char = *(const XML_Char *)userData;
 
-  if (match == NULL
-      || (xcstrlen(match) == (unsigned)len && ! xcstrncmp(match, s, len))) {
+  int found = 0;
+  for (int i = 0; i < len; ++i) {
+    if (s[i] == trigger_char) {
+      found = 1;
+      break;
+    }
+  }
+
+  if (found) {
     XML_StopParser(g_parser, g_resumable);
     XML_SetDefaultHandler(g_parser, NULL);
   }
