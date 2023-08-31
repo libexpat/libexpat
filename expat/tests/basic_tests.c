@@ -665,7 +665,7 @@ START_TEST(test_line_number_after_error) {
                      "  <b>\n"
                      "  </a>"; /* missing </b> */
   XML_Size lineno;
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_FALSE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
       != XML_STATUS_ERROR)
     fail("Expected a parse error");
 
@@ -685,7 +685,7 @@ START_TEST(test_column_number_after_error) {
                      "  <b>\n"
                      "  </a>"; /* missing </b> */
   XML_Size colno;
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_FALSE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
       != XML_STATUS_ERROR)
     fail("Expected a parse error");
 
