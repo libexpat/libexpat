@@ -1837,84 +1837,208 @@ START_TEST(test_default_current) {
                             "<!ENTITY entity '&#37;'>\n"
                             "]>\n"
                             "<doc>&entity;</doc>";
-  CharData storage;
 
   set_subtest("with defaulting");
-  XML_SetDefaultHandler(g_parser, record_default_handler);
-  XML_SetCharacterDataHandler(g_parser, record_cdata_handler);
-  CharData_Init(&storage);
-  XML_SetUserData(g_parser, &storage);
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
-      == XML_STATUS_ERROR)
-    xml_failure(g_parser);
-  CharData_CheckXMLChars(&storage, XCS("DCDCDCDCDCDD"));
+  {
+    struct handler_record_list storage;
+    storage.count = 0;
+    XML_SetDefaultHandler(g_parser, record_default_handler);
+    XML_SetCharacterDataHandler(g_parser, record_cdata_handler);
+    XML_SetUserData(g_parser, &storage);
+    if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+        == XML_STATUS_ERROR)
+      xml_failure(g_parser);
+    int i = 0;
+    assert_record_handler_called(&storage, i++, "record_default_handler", 5);
+    // we should have gotten one or more cdata callbacks, totaling 5 chars
+    int cdata_len_remaining = 5;
+    while (cdata_len_remaining > 0) {
+      const struct handler_record_entry *c_entry
+          = handler_record_get(&storage, i++);
+      fail_unless(strcmp(c_entry->name, "record_cdata_handler") == 0);
+      fail_unless(c_entry->arg > 0);
+      fail_unless(c_entry->arg <= cdata_len_remaining);
+      cdata_len_remaining -= c_entry->arg;
+      // default handler must follow, with the exact same len argument.
+      assert_record_handler_called(&storage, i++, "record_default_handler",
+                                   c_entry->arg);
+    }
+    assert_record_handler_called(&storage, i++, "record_default_handler", 6);
+    fail_unless(storage.count == i);
+  }
 
   /* Again, without the defaulting */
   set_subtest("no defaulting");
-  XML_ParserReset(g_parser, NULL);
-  XML_SetDefaultHandler(g_parser, record_default_handler);
-  XML_SetCharacterDataHandler(g_parser, record_cdata_nodefault_handler);
-  CharData_Init(&storage);
-  XML_SetUserData(g_parser, &storage);
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
-      == XML_STATUS_ERROR)
-    xml_failure(g_parser);
-  CharData_CheckXMLChars(&storage, XCS("DcccccD"));
+  {
+    struct handler_record_list storage;
+    storage.count = 0;
+    XML_ParserReset(g_parser, NULL);
+    XML_SetDefaultHandler(g_parser, record_default_handler);
+    XML_SetCharacterDataHandler(g_parser, record_cdata_nodefault_handler);
+    XML_SetUserData(g_parser, &storage);
+    if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+        == XML_STATUS_ERROR)
+      xml_failure(g_parser);
+    int i = 0;
+    assert_record_handler_called(&storage, i++, "record_default_handler", 5);
+    // we should have gotten one or more cdata callbacks, totaling 5 chars
+    int cdata_len_remaining = 5;
+    while (cdata_len_remaining > 0) {
+      const struct handler_record_entry *c_entry
+          = handler_record_get(&storage, i++);
+      fail_unless(strcmp(c_entry->name, "record_cdata_nodefault_handler") == 0);
+      fail_unless(c_entry->arg > 0);
+      fail_unless(c_entry->arg <= cdata_len_remaining);
+      cdata_len_remaining -= c_entry->arg;
+    }
+    assert_record_handler_called(&storage, i++, "record_default_handler", 6);
+    fail_unless(storage.count == i);
+  }
 
   /* Now with an internal entity to complicate matters */
   set_subtest("with internal entity");
-  XML_ParserReset(g_parser, NULL);
-  XML_SetDefaultHandler(g_parser, record_default_handler);
-  XML_SetCharacterDataHandler(g_parser, record_cdata_handler);
-  CharData_Init(&storage);
-  XML_SetUserData(g_parser, &storage);
-  if (_XML_Parse_SINGLE_BYTES(g_parser, entity_text, (int)strlen(entity_text),
-                              XML_TRUE)
-      == XML_STATUS_ERROR)
-    xml_failure(g_parser);
-  /* The default handler suppresses the entity */
-  CharData_CheckXMLChars(&storage, XCS("DDDDDDDDDDDDDDDDDDD"));
+  {
+    struct handler_record_list storage;
+    storage.count = 0;
+    XML_ParserReset(g_parser, NULL);
+    XML_SetDefaultHandler(g_parser, record_default_handler);
+    XML_SetCharacterDataHandler(g_parser, record_cdata_handler);
+    XML_SetUserData(g_parser, &storage);
+    if (_XML_Parse_SINGLE_BYTES(g_parser, entity_text, (int)strlen(entity_text),
+                                XML_TRUE)
+        == XML_STATUS_ERROR)
+      xml_failure(g_parser);
+    /* The default handler suppresses the entity */
+    assert_record_handler_called(&storage, 0, "record_default_handler", 9);
+    assert_record_handler_called(&storage, 1, "record_default_handler", 1);
+    assert_record_handler_called(&storage, 2, "record_default_handler", 3);
+    assert_record_handler_called(&storage, 3, "record_default_handler", 1);
+    assert_record_handler_called(&storage, 4, "record_default_handler", 1);
+    assert_record_handler_called(&storage, 5, "record_default_handler", 1);
+    assert_record_handler_called(&storage, 6, "record_default_handler", 8);
+    assert_record_handler_called(&storage, 7, "record_default_handler", 1);
+    assert_record_handler_called(&storage, 8, "record_default_handler", 6);
+    assert_record_handler_called(&storage, 9, "record_default_handler", 1);
+    assert_record_handler_called(&storage, 10, "record_default_handler", 7);
+    assert_record_handler_called(&storage, 11, "record_default_handler", 1);
+    assert_record_handler_called(&storage, 12, "record_default_handler", 1);
+    assert_record_handler_called(&storage, 13, "record_default_handler", 1);
+    assert_record_handler_called(&storage, 14, "record_default_handler", 1);
+    assert_record_handler_called(&storage, 15, "record_default_handler", 1);
+    assert_record_handler_called(&storage, 16, "record_default_handler", 5);
+    assert_record_handler_called(&storage, 17, "record_default_handler", 8);
+    assert_record_handler_called(&storage, 18, "record_default_handler", 6);
+    fail_unless(storage.count == 19);
+  }
 
   /* Again, with a skip handler */
   set_subtest("with skip handler");
-  XML_ParserReset(g_parser, NULL);
-  XML_SetDefaultHandler(g_parser, record_default_handler);
-  XML_SetCharacterDataHandler(g_parser, record_cdata_handler);
-  XML_SetSkippedEntityHandler(g_parser, record_skip_handler);
-  CharData_Init(&storage);
-  XML_SetUserData(g_parser, &storage);
-  if (_XML_Parse_SINGLE_BYTES(g_parser, entity_text, (int)strlen(entity_text),
-                              XML_TRUE)
-      == XML_STATUS_ERROR)
-    xml_failure(g_parser);
-  /* The default handler suppresses the entity */
-  CharData_CheckXMLChars(&storage, XCS("DDDDDDDDDDDDDDDDDeD"));
+  {
+    struct handler_record_list storage;
+    storage.count = 0;
+    XML_ParserReset(g_parser, NULL);
+    XML_SetDefaultHandler(g_parser, record_default_handler);
+    XML_SetCharacterDataHandler(g_parser, record_cdata_handler);
+    XML_SetSkippedEntityHandler(g_parser, record_skip_handler);
+    XML_SetUserData(g_parser, &storage);
+    if (_XML_Parse_SINGLE_BYTES(g_parser, entity_text, (int)strlen(entity_text),
+                                XML_TRUE)
+        == XML_STATUS_ERROR)
+      xml_failure(g_parser);
+    /* The default handler suppresses the entity */
+    assert_record_handler_called(&storage, 0, "record_default_handler", 9);
+    assert_record_handler_called(&storage, 1, "record_default_handler", 1);
+    assert_record_handler_called(&storage, 2, "record_default_handler", 3);
+    assert_record_handler_called(&storage, 3, "record_default_handler", 1);
+    assert_record_handler_called(&storage, 4, "record_default_handler", 1);
+    assert_record_handler_called(&storage, 5, "record_default_handler", 1);
+    assert_record_handler_called(&storage, 6, "record_default_handler", 8);
+    assert_record_handler_called(&storage, 7, "record_default_handler", 1);
+    assert_record_handler_called(&storage, 8, "record_default_handler", 6);
+    assert_record_handler_called(&storage, 9, "record_default_handler", 1);
+    assert_record_handler_called(&storage, 10, "record_default_handler", 7);
+    assert_record_handler_called(&storage, 11, "record_default_handler", 1);
+    assert_record_handler_called(&storage, 12, "record_default_handler", 1);
+    assert_record_handler_called(&storage, 13, "record_default_handler", 1);
+    assert_record_handler_called(&storage, 14, "record_default_handler", 1);
+    assert_record_handler_called(&storage, 15, "record_default_handler", 1);
+    assert_record_handler_called(&storage, 16, "record_default_handler", 5);
+    assert_record_handler_called(&storage, 17, "record_skip_handler", 0);
+    assert_record_handler_called(&storage, 18, "record_default_handler", 6);
+    fail_unless(storage.count == 19);
+  }
 
   /* This time, allow the entity through */
   set_subtest("allow entity");
-  XML_ParserReset(g_parser, NULL);
-  XML_SetDefaultHandlerExpand(g_parser, record_default_handler);
-  XML_SetCharacterDataHandler(g_parser, record_cdata_handler);
-  CharData_Init(&storage);
-  XML_SetUserData(g_parser, &storage);
-  if (_XML_Parse_SINGLE_BYTES(g_parser, entity_text, (int)strlen(entity_text),
-                              XML_TRUE)
-      == XML_STATUS_ERROR)
-    xml_failure(g_parser);
-  CharData_CheckXMLChars(&storage, XCS("DDDDDDDDDDDDDDDDDCDD"));
+  {
+    struct handler_record_list storage;
+    storage.count = 0;
+    XML_ParserReset(g_parser, NULL);
+    XML_SetDefaultHandlerExpand(g_parser, record_default_handler);
+    XML_SetCharacterDataHandler(g_parser, record_cdata_handler);
+    XML_SetUserData(g_parser, &storage);
+    if (_XML_Parse_SINGLE_BYTES(g_parser, entity_text, (int)strlen(entity_text),
+                                XML_TRUE)
+        == XML_STATUS_ERROR)
+      xml_failure(g_parser);
+    assert_record_handler_called(&storage, 0, "record_default_handler", 9);
+    assert_record_handler_called(&storage, 1, "record_default_handler", 1);
+    assert_record_handler_called(&storage, 2, "record_default_handler", 3);
+    assert_record_handler_called(&storage, 3, "record_default_handler", 1);
+    assert_record_handler_called(&storage, 4, "record_default_handler", 1);
+    assert_record_handler_called(&storage, 5, "record_default_handler", 1);
+    assert_record_handler_called(&storage, 6, "record_default_handler", 8);
+    assert_record_handler_called(&storage, 7, "record_default_handler", 1);
+    assert_record_handler_called(&storage, 8, "record_default_handler", 6);
+    assert_record_handler_called(&storage, 9, "record_default_handler", 1);
+    assert_record_handler_called(&storage, 10, "record_default_handler", 7);
+    assert_record_handler_called(&storage, 11, "record_default_handler", 1);
+    assert_record_handler_called(&storage, 12, "record_default_handler", 1);
+    assert_record_handler_called(&storage, 13, "record_default_handler", 1);
+    assert_record_handler_called(&storage, 14, "record_default_handler", 1);
+    assert_record_handler_called(&storage, 15, "record_default_handler", 1);
+    assert_record_handler_called(&storage, 16, "record_default_handler", 5);
+    assert_record_handler_called(&storage, 17, "record_cdata_handler", 1);
+    assert_record_handler_called(&storage, 18, "record_default_handler", 1);
+    assert_record_handler_called(&storage, 19, "record_default_handler", 6);
+    fail_unless(storage.count == 20);
+  }
 
   /* Finally, without passing the cdata to the default handler */
   set_subtest("not passing cdata");
-  XML_ParserReset(g_parser, NULL);
-  XML_SetDefaultHandlerExpand(g_parser, record_default_handler);
-  XML_SetCharacterDataHandler(g_parser, record_cdata_nodefault_handler);
-  CharData_Init(&storage);
-  XML_SetUserData(g_parser, &storage);
-  if (_XML_Parse_SINGLE_BYTES(g_parser, entity_text, (int)strlen(entity_text),
-                              XML_TRUE)
-      == XML_STATUS_ERROR)
-    xml_failure(g_parser);
-  CharData_CheckXMLChars(&storage, XCS("DDDDDDDDDDDDDDDDDcD"));
+  {
+    struct handler_record_list storage;
+    storage.count = 0;
+    XML_ParserReset(g_parser, NULL);
+    XML_SetDefaultHandlerExpand(g_parser, record_default_handler);
+    XML_SetCharacterDataHandler(g_parser, record_cdata_nodefault_handler);
+    XML_SetUserData(g_parser, &storage);
+    if (_XML_Parse_SINGLE_BYTES(g_parser, entity_text, (int)strlen(entity_text),
+                                XML_TRUE)
+        == XML_STATUS_ERROR)
+      xml_failure(g_parser);
+    assert_record_handler_called(&storage, 0, "record_default_handler", 9);
+    assert_record_handler_called(&storage, 1, "record_default_handler", 1);
+    assert_record_handler_called(&storage, 2, "record_default_handler", 3);
+    assert_record_handler_called(&storage, 3, "record_default_handler", 1);
+    assert_record_handler_called(&storage, 4, "record_default_handler", 1);
+    assert_record_handler_called(&storage, 5, "record_default_handler", 1);
+    assert_record_handler_called(&storage, 6, "record_default_handler", 8);
+    assert_record_handler_called(&storage, 7, "record_default_handler", 1);
+    assert_record_handler_called(&storage, 8, "record_default_handler", 6);
+    assert_record_handler_called(&storage, 9, "record_default_handler", 1);
+    assert_record_handler_called(&storage, 10, "record_default_handler", 7);
+    assert_record_handler_called(&storage, 11, "record_default_handler", 1);
+    assert_record_handler_called(&storage, 12, "record_default_handler", 1);
+    assert_record_handler_called(&storage, 13, "record_default_handler", 1);
+    assert_record_handler_called(&storage, 14, "record_default_handler", 1);
+    assert_record_handler_called(&storage, 15, "record_default_handler", 1);
+    assert_record_handler_called(&storage, 16, "record_default_handler", 5);
+    assert_record_handler_called(&storage, 17, "record_cdata_nodefault_handler",
+                                 1);
+    assert_record_handler_called(&storage, 18, "record_default_handler", 6);
+    fail_unless(storage.count == 19);
+  }
 }
 END_TEST
 
