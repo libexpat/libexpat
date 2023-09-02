@@ -37,6 +37,10 @@
    USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+#if defined(NDEBUG)
+#  undef NDEBUG /* because test suite relies on assert(...) at the moment */
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <setjmp.h>
