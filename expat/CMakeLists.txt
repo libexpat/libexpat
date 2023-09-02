@@ -451,7 +451,7 @@ if(NOT WIN32)
             message(FATAL_ERROR "Expat requires CMake >=3.17 on platform \"APPLE\".")
         endif()
 
-        # NOTE: This intends to talk CMake into compatiblity with GNU Libtool
+        # NOTE: This intends to talk CMake into compatibility with GNU Libtool
         math(EXPR _EXPAT_MACHO_COMPATIBILITY_VERSION "${LIBCURRENT} + 1")
         set(_EXPAT_MACHO_CURRENT_VERSION "${_EXPAT_MACHO_COMPATIBILITY_VERSION}.${LIBREVISION}")
         set_property(TARGET expat PROPERTY MACHO_COMPATIBILITY_VERSION ${_EXPAT_MACHO_COMPATIBILITY_VERSION})
