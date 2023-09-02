@@ -41,30 +41,33 @@
 extern "C" {
 #endif
 
-#define CK_NOFORK 0
-#define CK_FORK 1
+#ifndef XML_MINICHECK_H
+#  define XML_MINICHECK_H
 
-#define CK_SILENT 0
-#define CK_NORMAL 1
-#define CK_VERBOSE 2
+#  define CK_NOFORK 0
+#  define CK_FORK 1
+
+#  define CK_SILENT 0
+#  define CK_NORMAL 1
+#  define CK_VERBOSE 2
 
 /* Workaround for Microsoft's compiler and Tru64 Unix systems where the
    C compiler has a working __func__, but the C++ compiler only has a
    working __FUNCTION__.  This could be fixed in configure.in, but it's
    not worth it right now. */
-#if defined(_MSC_VER) || (defined(__osf__) && defined(__cplusplus))
-#  define __func__ __FUNCTION__
-#endif
+#  if defined(_MSC_VER) || (defined(__osf__) && defined(__cplusplus))
+#    define __func__ __FUNCTION__
+#  endif
 
-#define START_TEST(testname)                                                   \
-  static void testname(void) {                                                 \
-    _check_set_test_info(__func__, __FILE__, __LINE__);                        \
-    {
-#define END_TEST                                                               \
-  }                                                                            \
-  }
+#  define START_TEST(testname)                                                 \
+    static void testname(void) {                                               \
+      _check_set_test_info(__func__, __FILE__, __LINE__);                      \
+      {
+#  define END_TEST                                                             \
+    }                                                                          \
+    }
 
-#define fail(msg) _fail_unless(0, __FILE__, __LINE__, msg)
+#  define fail(msg) _fail_unless(0, __FILE__, __LINE__, msg)
 
 typedef void (*tcase_setup_function)(void);
 typedef void (*tcase_teardown_function)(void);
@@ -114,6 +117,8 @@ SRunner *srunner_create(Suite *suite);
 void srunner_run_all(SRunner *runner, int verbosity);
 int srunner_ntests_failed(SRunner *runner);
 void srunner_free(SRunner *runner);
+
+#endif /* XML_MINICHECK_H */
 
 #ifdef __cplusplus
 }

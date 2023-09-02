@@ -1,4 +1,4 @@
-/* Run the Expat test suite
+/* Tests in the "accounting" test case for the Expat test suite
                             __  __            _
                          ___\ \/ /_ __   __ _| |_
                         / _ \\  /| '_ \ / _` | __|
@@ -40,64 +40,17 @@
    USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include <expat_config.h>
-
-#include <stdio.h>
-#include <string.h>
-
-#include "expat.h"
-#include "internal.h"
-#include "minicheck.h"
-#include "common.h"
-
-#include "basic_tests.h"
-#include "ns_tests.h"
-#include "misc_tests.h"
-#include "alloc_tests.h"
-#include "nsalloc_tests.h"
-#include "acc_tests.h"
-
-XML_Parser g_parser = NULL;
-
-static Suite *
-make_suite(void) {
-  Suite *s = suite_create("basic");
-
-  make_basic_test_case(s);
-  make_namespace_test_case(s);
-  make_miscellaneous_test_case(s);
-  make_alloc_test_case(s);
-  make_nsalloc_test_case(s);
-#if defined(XML_DTD)
-  make_accounting_test_case(s);
+#ifdef __cplusplus
+extern "C" {
 #endif
 
-  return s;
+#ifndef XML_ACC_TESTS_H
+#  define XML_ACC_TESTS_H
+
+extern void make_accounting_test_case(Suite *s);
+
+#endif /* XML_ACC_TESTS_H */
+
+#ifdef __cplusplus
 }
-
-int
-main(int argc, char *argv[]) {
-  int i, nf;
-  int verbosity = CK_NORMAL;
-  Suite *s = make_suite();
-  SRunner *sr = srunner_create(s);
-
-  for (i = 1; i < argc; ++i) {
-    char *opt = argv[i];
-    if (strcmp(opt, "-v") == 0 || strcmp(opt, "--verbose") == 0)
-      verbosity = CK_VERBOSE;
-    else if (strcmp(opt, "-q") == 0 || strcmp(opt, "--quiet") == 0)
-      verbosity = CK_SILENT;
-    else {
-      fprintf(stderr, "runtests: unknown option '%s'\n", opt);
-      return 2;
-    }
-  }
-  if (verbosity != CK_SILENT)
-    printf("Expat version: %" XML_FMT_STR "\n", XML_ExpatVersion());
-  srunner_run_all(sr, verbosity);
-  nf = srunner_ntests_failed(sr);
-  srunner_free(sr);
-
-  return (nf == 0) ? EXIT_SUCCESS : EXIT_FAILURE;
-}
+#endif

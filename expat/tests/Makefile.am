@@ -43,7 +43,16 @@ TESTS = runtests runtestspp
 LOG_DRIVER = $(srcdir)/../test-driver-wrapper.sh
 
 libruntests_a_SOURCES = \
+    acc_tests.c \
+    alloc_tests.c \
+    basic_tests.c \
     chardata.c \
+    common.c \
+    dummy.c \
+    handlers.c \
+    misc_tests.c \
+    ns_tests.c \
+    nsalloc_tests.c \
     structdata.c \
     memcheck.c \
     minicheck.c
@@ -61,7 +70,16 @@ runtests_LDFLAGS = @AM_LDFLAGS@ @LIBM@
 runtestspp_LDFLAGS = @AM_LDFLAGS@ @LIBM@
 
 EXTRA_DIST = \
+    acc_tests.h \
+    alloc_tests.h \
+    basic_tests.h \
     chardata.h \
+    common.h \
+    dummy.h \
+    handlers.h \
+    misc_tests.h \
+    ns_tests.h \
+    nsalloc_tests.h \
     structdata.h \
     minicheck.h \
     memcheck.h \
