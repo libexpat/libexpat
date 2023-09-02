@@ -36,7 +36,7 @@ Visual Studio Command Prompt or when using mingw, you must open a cmd.exe and
 make sure that gcc can be called. On Windows, you also might want to specify a
 special Generator for CMake:
 for Visual Studio builds do:
-cmake .. -G "Visual Studio 15 2017" && msbuild /m expat.sln
+cmake .. -G "Visual Studio 16 2019" && msbuild /m expat.sln
 for mingw builds do:
 cmake .. -G "MinGW Makefiles" -DCMAKE_INSTALL_PREFIX=D:\expat-install
     && gmake && gmake install
