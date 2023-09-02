@@ -594,9 +594,18 @@ if(EXPAT_BUILD_TESTS)
     enable_testing()
 
     set(test_SRCS
+        tests/acc_tests.c
+        tests/alloc_tests.c
+        tests/basic_tests.c
         tests/chardata.c
+        tests/common.c
+        tests/dummy.c
+        tests/handlers.c
         tests/memcheck.c
         tests/minicheck.c
+        tests/misc_tests.c
+        tests/ns_tests.c
+        tests/nsalloc_tests.c
         tests/structdata.c
         ${_EXPAT_C_SOURCES}
     )
