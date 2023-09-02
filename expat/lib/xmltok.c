@@ -75,32 +75,30 @@
 
 #define VTABLE VTABLE1, PREFIX(toUtf8), PREFIX(toUtf16)
 
-#define UCS2_GET_NAMING(pages, hi, lo)                                         \
-  (namingBitmap[(pages[hi] << 3) + ((lo) >> 5)] & (1u << ((lo)&0x1F)))
+#define UCS2_GET_NAMING(bitmap, hi, lo) \
+	(bitmap[((hi) << 3) + ((lo) >> 5)] & (1u << ((lo)& 0x1F)))
 
-/* A 2 byte UTF-8 representation splits the characters 11 bits between
-   the bottom 5 and 6 bits of the bytes.  We need 8 bits to index into
-   pages, 3 bits to add to that index and 5 bits to generate the mask.
+/* A 2 byte UTF-8 representation.  Convert to UCS2 and map to bitmap
 */
-#define UTF8_GET_NAMING2(pages, byte)                                          \
-  (namingBitmap[((pages)[(((byte)[0]) >> 2) & 7] << 3)                         \
-                + ((((byte)[0]) & 3) << 1) + ((((byte)[1]) >> 5) & 1)]         \
-   & (1u << (((byte)[1]) & 0x1F)))
+#define UTF8_GET_NAMING2(bitmap, byte) \
+		(bitmap[(((((byte)[0]) & 0x1C) >> 2) << 3) \
+			+ ((((((byte)[0]) & 0x03) << 6) \
+			+ (((byte)[1]) & 0x3F)) >> 5)] \
+		 & (1u << ((((((byte)[0]) & 0x03) << 6) \
+			+ (((byte)[1]) & 0x3F)) & 0x1F)))
 
-/* A 3 byte UTF-8 representation splits the characters 16 bits between
-   the bottom 4, 6 and 6 bits of the bytes.  We need 8 bits to index
-   into pages, 3 bits to add to that index and 5 bits to generate the
-   mask.
+/* A 3 byte UTF-8 representation.  Convert to UCS2 and map to bitmap
 */
-#define UTF8_GET_NAMING3(pages, byte)                                          \
-  (namingBitmap                                                                \
-       [((pages)[((((byte)[0]) & 0xF) << 4) + ((((byte)[1]) >> 2) & 0xF)]      \
-         << 3)                                                                 \
-        + ((((byte)[1]) & 3) << 1) + ((((byte)[2]) >> 5) & 1)]                 \
-   & (1u << (((byte)[2]) & 0x1F)))
+#define UTF8_GET_NAMING3(bitmap, byte) \
+		(bitmap[((((((byte)[0]) & 0x0F) << 4) \
+				+ ((((byte)[1]) & 0x3C) >> 2)) << 3) \
+			+ ((((((byte)[1]) & 0x03) << 6) \
+				+ (((byte)[2]) & 0x3F)) >> 5)] \
+		& (1u << ((((((byte)[1]) & 0x03) << 6) \
+			+ (((byte)[2]) & 0x3F)) & 0x1F)))
 
 /* Detection of invalid UTF-8 sequences is based on Table 3.1B
-   of Unicode 3.2: https://www.unicode.org/unicode/reports/tr28/
+   of Unicode 3.2: http://www.unicode.org/unicode/reports/tr28/
    with the additional restriction of not allowing the Unicode
    code points 0xFFFF and 0xFFFE (sequences EF,BF,BF and EF,BF,BE).
    Implementation details:
@@ -137,32 +135,43 @@ isNever(const ENCODING *enc, const char *p) {
 }
 
 static int PTRFASTCALL
-utf8_isName2(const ENCODING *enc, const char *p) {
+isAlways(const ENCODING *enc, const char *p)
+{
   UNUSED_P(enc);
-  return UTF8_GET_NAMING2(namePages, (const unsigned char *)p);
+	return 1;
 }
 
 static int PTRFASTCALL
-utf8_isName3(const ENCODING *enc, const char *p) {
+utf8_isName2(const ENCODING *enc, const char *p)
+{
   UNUSED_P(enc);
-  return UTF8_GET_NAMING3(namePages, (const unsigned char *)p);
-}
-
-#define utf8_isName4 isNever
-
-static int PTRFASTCALL
-utf8_isNmstrt2(const ENCODING *enc, const char *p) {
-  UNUSED_P(enc);
-  return UTF8_GET_NAMING2(nmstrtPages, (const unsigned char *)p);
+	return UTF8_GET_NAMING2(nameCharBitmap, (const unsigned char *)p);
 }
 
 static int PTRFASTCALL
-utf8_isNmstrt3(const ENCODING *enc, const char *p) {
+utf8_isName3(const ENCODING *enc, const char *p)
+{
   UNUSED_P(enc);
-  return UTF8_GET_NAMING3(nmstrtPages, (const unsigned char *)p);
+	return UTF8_GET_NAMING3(nameCharBitmap, (const unsigned char *)p);
 }
 
-#define utf8_isNmstrt4 isNever
+#define utf8_isName4 isAlways
+
+static int PTRFASTCALL
+utf8_isNmstrt2(const ENCODING *enc, const char *p)
+{
+  UNUSED_P(enc);
+	return UTF8_GET_NAMING2(nameStartBitmap, (const unsigned char *)p);
+}
+
+static int PTRFASTCALL
+utf8_isNmstrt3(const ENCODING *enc, const char *p)
+{
+	UNUSED_P(enc);
+	return UTF8_GET_NAMING3(nameStartBitmap, (const unsigned char *)p);
+}
+
+#define utf8_isNmstrt4 isAlways
 
 static int PTRFASTCALL
 utf8_isInvalid2(const ENCODING *enc, const char *p) {
@@ -738,9 +747,9 @@ DEFINE_UTF16_TO_UTF16(big2_)
 #define LITTLE2_BYTE_TO_ASCII(p) ((p)[1] == 0 ? (p)[0] : -1)
 #define LITTLE2_CHAR_MATCHES(p, c) ((p)[1] == 0 && (p)[0] == (c))
 #define LITTLE2_IS_NAME_CHAR_MINBPC(p)                                         \
-  UCS2_GET_NAMING(namePages, (unsigned char)p[1], (unsigned char)p[0])
+  UCS2_GET_NAMING(nameCharBitmap, (unsigned char)p[1], (unsigned char)p[0])
 #define LITTLE2_IS_NMSTRT_CHAR_MINBPC(p)                                       \
-  UCS2_GET_NAMING(nmstrtPages, (unsigned char)p[1], (unsigned char)p[0])
+  UCS2_GET_NAMING(nameStartBitmap, (unsigned char)p[1], (unsigned char)p[0])
 
 #ifdef XML_MIN_SIZE
 
@@ -871,9 +880,9 @@ static const struct normal_encoding internal_little2_encoding
 #define BIG2_BYTE_TO_ASCII(p) ((p)[0] == 0 ? (p)[1] : -1)
 #define BIG2_CHAR_MATCHES(p, c) ((p)[0] == 0 && (p)[1] == (c))
 #define BIG2_IS_NAME_CHAR_MINBPC(p)                                            \
-  UCS2_GET_NAMING(namePages, (unsigned char)p[0], (unsigned char)p[1])
+  UCS2_GET_NAMING(nameCharBitmap, (unsigned char)p[0], (unsigned char)p[1])
 #define BIG2_IS_NMSTRT_CHAR_MINBPC(p)                                          \
-  UCS2_GET_NAMING(nmstrtPages, (unsigned char)p[0], (unsigned char)p[1])
+  UCS2_GET_NAMING(nameStartBitmap, (unsigned char)p[0], (unsigned char)p[1])
 
 #ifdef XML_MIN_SIZE
 
@@ -1325,7 +1334,7 @@ unknown_isName(const ENCODING *enc, const char *p) {
   int c = uenc->convert(uenc->userData, p);
   if (c & ~0xFFFF)
     return 0;
-  return UCS2_GET_NAMING(namePages, c >> 8, c & 0xFF);
+  return UCS2_GET_NAMING(nameCharBitmap, c >> 8, c & 0xFF);
 }
 
 static int PTRFASTCALL
@@ -1334,7 +1343,7 @@ unknown_isNmstrt(const ENCODING *enc, const char *p) {
   int c = uenc->convert(uenc->userData, p);
   if (c & ~0xFFFF)
     return 0;
-  return UCS2_GET_NAMING(nmstrtPages, c >> 8, c & 0xFF);
+  return UCS2_GET_NAMING(nameStartBitmap, c >> 8, c & 0xFF);
 }
 
 static int PTRFASTCALL
@@ -1439,9 +1448,9 @@ XmlInitUnknownEncoding(void *mem, int *table, CONVERTER convert,
     } else {
       if (c > 0xFFFF)
         return 0;
-      if (UCS2_GET_NAMING(nmstrtPages, c >> 8, c & 0xff))
+	  if (UCS2_GET_NAMING(nameStartBitmap, c >> 8, c & 0xff))
         e->normal.type[i] = BT_NMSTRT;
-      else if (UCS2_GET_NAMING(namePages, c >> 8, c & 0xff))
+	  else if (UCS2_GET_NAMING(nameCharBitmap, c >> 8, c & 0xff))
         e->normal.type[i] = BT_NAME;
       else
         e->normal.type[i] = BT_OTHER;

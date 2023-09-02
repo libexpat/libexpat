@@ -927,14 +927,18 @@ START_TEST(test_latin1_umlauts) {
 }
 END_TEST
 
-/* Test that an element name with a 4-byte UTF-8 character is rejected */
+/* Test that an element name with a 4-byte UTF-8 character is accepted 
+*  In XML <= 1.0r4, 4-byte UTF-8 were rejected, but the XML 1.0r5 and 1.1
+*  specs allow them.
+*/
 START_TEST(test_long_utf8_character) {
   const char *text
       = "<?xml version='1.0' encoding='utf-8'?>\n"
         /* 0xf0 0x90 0x80 0x80 = U+10000, the first Linear B character */
         "<do\xf0\x90\x80\x80/>";
-  expect_failure(text, XML_ERROR_INVALID_TOKEN,
-                 "4-byte UTF-8 character in element name not faulted");
+  //in XML1.1, this is valid
+  ExtTest test_data = {"<!ELEMENT doc (#PCDATA)*>", NULL, NULL};
+  run_ext_character_check(text, &test_data, XCS(""));
 }
 END_TEST
 
@@ -6148,100 +6152,178 @@ START_TEST(test_utf8_in_cdata_section_2) {
 }
 END_TEST
 
+// utf8 must be at least 4 bytes
+static int
+ConvertUCS2toUTF8(int ucs, unsigned char *utf8) {
+  //based on https://www.w3.org/XML/1998/01/xmlrecode.c
+  if (!utf8 || ucs < 0x01)
+    return 0;
+  if (ucs <= 0x7F) {
+    /* Leave ASCII encoded */
+    *utf8++ = (ucs);
+    *utf8 = 0;
+    return 1;
+  } else if (ucs <= 0x07FF) {
+    /* 110xxxxx 10xxxxxx */
+    *utf8++ = (0xC0 | (ucs >> 6));
+    *utf8++ = (0x80 | (ucs & 0x3F));
+    *utf8 = 0;
+    return 2;
+  } else if (ucs <= 0xFFFF) {
+    /* 1110xxxx + 2 */
+    *utf8++ = (0xE0 | (ucs >> 12));
+    *utf8++ = (0x80 | ((ucs >> 6) & 0x3F));
+    *utf8++ = (0x80 | (ucs & 0x3F));
+    *utf8 = 0;
+    return 3;
+  }
+  //currently, only converts UCS-2 characters up to 0xFFFF
+  // 
+  // if > 0xFFFF, return 0
+  return 0;
+}
+
+static bool
+isReservedXMLChar(int ch) {
+  //characters that successfully parse as standard name chars because they are either white space or the tag closing '/'
+  //tab, NL, CR, space, /
+  return (
+      (ch == 0x09) ||
+      (ch == 0x0a) ||
+      (ch == 0x0d) ||
+      (ch == 0x20) ||
+      (ch == 0x2F)
+  );
+}
+
+static bool
+isValidStartNameChar(int ch) {
+    // collated from https://www.w3.org/TR/2006/REC-xml11-20060816/#sec-common-syn
+    return (
+        (ch == 0x3A) || 
+        (ch >= 0x41 && ch <= 0x5A) ||
+        (ch == 0x5F) ||
+        (ch >= 0x61 && ch <= 0x7A) ||
+        (ch >= 0xC0 && ch <= 0xD6) ||
+        (ch >= 0xD8 && ch <= 0xF6) ||
+        (ch >= 0xF8 && ch <= 0x2FF) ||
+        (ch >= 0x370 && ch <= 0x37D) ||
+        (ch >= 0x37F && ch <= 0x1FFF) ||
+        (ch >= 0x200C && ch <= 0x200D) ||
+        (ch >= 0x2070 && ch <= 0x218F) ||
+        (ch >= 0x2C00 && ch <= 0x2FEF) ||
+        (ch >= 0x3001 && ch <= 0xD7FF) ||
+        (ch >= 0xF900 && ch <= 0xFDCF) ||
+        (ch >= 0xFDF0 && ch <= 0xFFFD)
+    );
+}
+
+static bool
+isValidNameChar(int ch) {
+    //collated from https://www.w3.org/TR/2006/REC-xml11-20060816/#sec-common-syn
+    // since NameChar includes all of startNameChar, some ranges are combined 
+    // e.g. (startNameChar)0xF8-0x2FF, (nameChar)0x300-0x369, (startNameChar)0x370-0x37D
+    // are combined below to 0xF8-0x37D
+    return (
+        (ch >= 0x2D && ch <= 0x2E) || 
+        (ch >= 0x30 && ch <= 0x3A) || 
+        (ch == 0x3E) || 
+        (ch >= 0x41 && ch <= 0x5A) ||
+        (ch == 0x5F) ||
+        (ch >= 0x61 && ch <= 0x7A) ||
+        (ch == 0xB7) ||
+        (ch >= 0xC0 && ch <= 0xD6) ||
+        (ch >= 0xD8 && ch <= 0xF6) ||
+        (ch >= 0xF8 && ch <= 0x37D) ||  
+        (ch >= 0x37F && ch <= 0x1FFF) ||
+        (ch >= 0x200C && ch <= 0x200D) ||
+        (ch >= 0x203F && ch <= 0x2040) ||
+        (ch >= 0x2070 && ch <= 0x218F) ||
+        (ch >= 0x2C00 && ch <= 0x2FEF) ||
+        (ch >= 0x3001 && ch <= 0xD7FF) ||
+        (ch >= 0xF900 && ch <= 0xFDCF) ||
+        (ch >= 0xFDF0 && ch <= 0xFFFD)
+    );
+}
+
 START_TEST(test_utf8_in_start_tags) {
-  struct test_case {
-    bool goodName;
-    bool goodNameStart;
-    const char *tagName;
-  };
+  //we are going to loop through all characters from 0x0001 through 0xFFFF excluding
+  // certain reserved valid XML characters (tab, NL, CR, space, /) where the parsing 
+  // passes as a name char since the parser interprets the character as the termination
+  // of the tag name rather than a character in its own right.
+  // 
+  //create two documents, first with the char as a start character, then a name character
+  // <(CHAR)a><!-- 
+  //and
+  // <a(CHAR)><!--
+  // call XML_Parse for each.  Based on isValidStartNameChar() and isValidNameChar() 
+  // which are in turn based on the specifications defined in 
+  // https://www.w3.org/TR/2006/REC-xml11-20060816/#sec-common-syn
+  // the XML_Parse call should either succeed or fail with XML_ERROR_INVALID_TOKEN
+  // we compare the results, and reset the parser
 
-  // The idea with the tests below is this:
-  // We want to cover 1-, 2- and 3-byte sequences, 4-byte sequences
-  // go to isNever and are hence not a concern.
-  //
-  // We start with a character that is a valid name character
-  // (or even name-start character, see XML 1.0r4 spec) and then we flip
-  // single bits at places where (1) the result leaves the UTF-8 encoding space
-  // and (2) we stay in the same n-byte sequence family.
-  //
-  // The flipped bits are highlighted in angle brackets in comments,
-  // e.g. "[<1>011 1001]" means we had [0011 1001] but we now flipped
-  // the most significant bit to 1 to leave UTF-8 encoding space.
-  struct test_case cases[] = {
-      // 1-byte UTF-8: [0xxx xxxx]
-      {true, true, "\x3A"},   // [0011 1010] = ASCII colon ':'
-      {false, false, "\xBA"}, // [<1>011 1010]
-      {true, false, "\x39"},  // [0011 1001] = ASCII nine '9'
-      {false, false, "\xB9"}, // [<1>011 1001]
-
-      // 2-byte UTF-8: [110x xxxx] [10xx xxxx]
-      {true, true, "\xDB\xA5"},   // [1101 1011] [1010 0101] =
-                                  // Arabic small waw U+06E5
-      {false, false, "\x9B\xA5"}, // [1<0>01 1011] [1010 0101]
-      {false, false, "\xDB\x25"}, // [1101 1011] [<0>010 0101]
-      {false, false, "\xDB\xE5"}, // [1101 1011] [1<1>10 0101]
-      {true, false, "\xCC\x81"},  // [1100 1100] [1000 0001] =
-                                  // combining char U+0301
-      {false, false, "\x8C\x81"}, // [1<0>00 1100] [1000 0001]
-      {false, false, "\xCC\x01"}, // [1100 1100] [<0>000 0001]
-      {false, false, "\xCC\xC1"}, // [1100 1100] [1<1>00 0001]
-
-      // 3-byte UTF-8: [1110 xxxx] [10xx xxxx] [10xxxxxx]
-      {true, true, "\xE0\xA4\x85"},   // [1110 0000] [1010 0100] [1000 0101] =
-                                      // Devanagari Letter A U+0905
-      {false, false, "\xA0\xA4\x85"}, // [1<0>10 0000] [1010 0100] [1000 0101]
-      {false, false, "\xE0\x24\x85"}, // [1110 0000] [<0>010 0100] [1000 0101]
-      {false, false, "\xE0\xE4\x85"}, // [1110 0000] [1<1>10 0100] [1000 0101]
-      {false, false, "\xE0\xA4\x05"}, // [1110 0000] [1010 0100] [<0>000 0101]
-      {false, false, "\xE0\xA4\xC5"}, // [1110 0000] [1010 0100] [1<1>00 0101]
-      {true, false, "\xE0\xA4\x81"},  // [1110 0000] [1010 0100] [1000 0001] =
-                                      // combining char U+0901
-      {false, false, "\xA0\xA4\x81"}, // [1<0>10 0000] [1010 0100] [1000 0001]
-      {false, false, "\xE0\x24\x81"}, // [1110 0000] [<0>010 0100] [1000 0001]
-      {false, false, "\xE0\xE4\x81"}, // [1110 0000] [1<1>10 0100] [1000 0001]
-      {false, false, "\xE0\xA4\x01"}, // [1110 0000] [1010 0100] [<0>000 0001]
-      {false, false, "\xE0\xA4\xC1"}, // [1110 0000] [1010 0100] [1<1>00 0001]
-  };
   const bool atNameStart[] = {true, false};
 
-  size_t i = 0;
+  int i = 1;
   char doc[1024];
   size_t failCount = 0;
 
-  for (; i < sizeof(cases) / sizeof(cases[0]); i++) {
+  XML_Parser parser = XML_ParserCreate(NULL);
+
+  bool validNameStartChar = false;
+  bool validNameChar = false;
+
+  //every char from 0x01 through 0xFFFF
+  for (i = 1; i < 65536; i++) {
+    //skip whitespace and '/' characters
+    if (isReservedXMLChar(i))
+      continue;
+
+    validNameStartChar = isValidStartNameChar(i);
+    validNameChar = isValidNameChar(i);
+
+    unsigned char utf8char[4];
+    // convert the UCS2 character to UTF-8 to insert into the document via
+    //printf("%s", utf8char);
+    if (ConvertUCS2toUTF8(i, utf8char) == 0) {
+      // invalid utf8 character
+      continue;
+    }
+
     size_t j = 0;
     for (; j < sizeof(atNameStart) / sizeof(atNameStart[0]); j++) {
       const bool expectedSuccess
-          = atNameStart[j] ? cases[i].goodNameStart : cases[i].goodName;
-      snprintf(doc, sizeof(doc), "<%s%s><!--", atNameStart[j] ? "" : "a",
-               cases[i].tagName);
-      XML_Parser parser = XML_ParserCreate(NULL);
+          = atNameStart[j] ? isValidStartNameChar(i) : isValidNameChar(i);
+      snprintf(doc, sizeof(doc), atNameStart[j] ? "<%sa><!--" : "<a%s><!--", 
+          utf8char);
 
       const enum XML_Status status
           = XML_Parse(parser, doc, (int)strlen(doc), /*isFinal=*/XML_FALSE);
 
       bool success = true;
       if ((status == XML_STATUS_OK) != expectedSuccess) {
+        fprintf(stderr, "expectedSuccess does not match\n");
         success = false;
-      }
+      } 
+
       if ((status == XML_STATUS_ERROR)
           && (XML_GetErrorCode(parser) != XML_ERROR_INVALID_TOKEN)) {
+        fprintf(stderr, "XML_STATUS_ERROR\n");
         success = false;
       }
 
       if (! success) {
         fprintf(
             stderr,
-            "FAIL case %2u (%sat name start, %u-byte sequence, error code %d)\n",
-            (unsigned)i + 1u, atNameStart[j] ? "    " : "not ",
-            (unsigned)strlen(cases[i].tagName), XML_GetErrorCode(parser));
+            "FAIL character 0x%04x (%sat name start, expected = %s, error code %d, doc = %s)\n",
+            (unsigned)i, atNameStart[j] ? "    " : "not ",
+            expectedSuccess ? "true" : "false", XML_GetErrorCode(parser), doc);
         failCount++;
       }
-
-      XML_ParserFree(parser);
+      XML_ParserReset(parser, NULL);
     }
   }
-
+  XML_ParserFree(parser);
   if (failCount > 0) {
     fail("UTF-8 regression detected");
   }
