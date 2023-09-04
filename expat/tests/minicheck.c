@@ -244,7 +244,9 @@ _fail_unless(int condition, const char *file, int line, const char *msg) {
      we have a failure, so there's no reason to be quiet about what
      it is.
   */
-  UNUSED_P(condition);
+  if (condition) {
+    return;
+  }
   _check_current_filename = file;
   _check_current_lineno = line;
   if (msg != NULL) {
