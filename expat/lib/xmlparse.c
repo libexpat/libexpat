@@ -997,11 +997,13 @@ callProcessor(XML_Parser parser, const char *start, const char *end,
     }
   }
   const enum XML_Error ret = parser->m_processor(parser, start, end, endPtr);
-  // if we consumed nothing, remember what we had on this parse attempt.
-  if (*endPtr == start) {
-    parser->m_partialTokenBytesBefore = have_now;
-  } else {
-    parser->m_partialTokenBytesBefore = 0;
+  if (ret == XML_ERROR_NONE) {
+    // if we consumed nothing, remember what we had on this parse attempt.
+    if (*endPtr == start) {
+      parser->m_partialTokenBytesBefore = have_now;
+    } else {
+      parser->m_partialTokenBytesBefore = 0;
+    }
   }
   return ret;
 }
