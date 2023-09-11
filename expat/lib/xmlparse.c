@@ -651,6 +651,7 @@ struct XML_ParserStruct {
   XML_Index m_parseEndByteIndex;
   const char *m_parseEndPtr;
   size_t m_partialTokenBytesBefore; /* used in heuristic to avoid O(n^2) */
+  XML_Bool m_reparseDeferralEnabled;
   XML_Char *m_dataBuf;
   XML_Char *m_dataBufEnd;
   XML_StartElementHandler m_startElementHandler;
@@ -987,7 +988,7 @@ callProcessor(XML_Parser parser, const char *start, const char *end,
               const char **endPtr) {
   const size_t have_now = EXPAT_SAFE_PTR_DIFF(end, start);
 
-  if (g_reparseDeferralEnabledDefault
+  if (parser->m_reparseDeferralEnabled
       && ! parser->m_parsingStatus.finalBuffer) {
     // Heuristic: don't try to parse a partial token again until the amount of
     // available data has increased significantly.
@@ -1193,6 +1194,7 @@ parserInit(XML_Parser parser, const XML_Char *encodingName) {
   parser->m_parseEndByteIndex = 0;
   parser->m_parseEndPtr = NULL;
   parser->m_partialTokenBytesBefore = 0;
+  parser->m_reparseDeferralEnabled = g_reparseDeferralEnabledDefault;
   parser->m_declElementType = NULL;
   parser->m_declAttributeId = NULL;
   parser->m_declEntity = NULL;
@@ -2616,6 +2618,15 @@ XML_SetBillionLaughsAttackProtectionActivationThreshold(
   return XML_TRUE;
 }
 #endif /* XML_GE == 1 */
+
+XML_Bool XMLCALL
+XML_SetReparseDeferralEnabled(XML_Parser parser, XML_Bool enabled) {
+  if (parser != NULL && (enabled == XML_TRUE || enabled == XML_FALSE)) {
+    parser->m_reparseDeferralEnabled = enabled;
+    return XML_TRUE;
+  }
+  return XML_FALSE;
+}
 
 /* Initially tag->rawName always points into the parse buffer;
    for those TAG instances opened while the current parse buffer was

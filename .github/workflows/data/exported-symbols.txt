@@ -53,6 +53,7 @@ XML_SetNotationDeclHandler
 XML_SetNotStandaloneHandler
 XML_SetParamEntityParsing
 XML_SetProcessingInstructionHandler
+XML_SetReparseDeferralEnabled
 XML_SetReturnNSTriplet
 XML_SetSkippedEntityHandler
 XML_SetStartCdataSectionHandler

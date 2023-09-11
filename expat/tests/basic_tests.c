@@ -5304,6 +5304,154 @@ START_TEST(test_big_tokens_take_linear_time) {
 }
 END_TEST
 
+START_TEST(test_set_reparse_deferral) {
+  const char *const pre = "<d>";
+  const char *const start = "<x attr='";
+  const char *const end = "'></x>";
+  char eeeeee[100];
+  const int fillsize = (int)sizeof(eeeeee);
+  memset(eeeeee, 'e', fillsize);
+
+  for (int enabled = 0; enabled <= 1; enabled += 1) {
+    set_subtest("deferral=%d", enabled);
+
+    XML_Parser parser = XML_ParserCreate(NULL);
+    assert_true(parser != NULL);
+    assert_true(XML_SetReparseDeferralEnabled(parser, enabled));
+
+    CharData storage;
+    CharData_Init(&storage);
+    XML_SetUserData(parser, &storage);
+    XML_SetStartElementHandler(parser, start_element_event_handler);
+
+    enum XML_Status status;
+    // parse the start text
+    status = XML_Parse(parser, pre, (int)strlen(pre), XML_FALSE);
+    if (status != XML_STATUS_OK) {
+      xml_failure(parser);
+    }
+    CharData_CheckXMLChars(&storage, XCS("d")); // first element should be done
+
+    // ..and the start of the token
+    status = XML_Parse(parser, start, (int)strlen(start), XML_FALSE);
+    if (status != XML_STATUS_OK) {
+      xml_failure(parser);
+    }
+    CharData_CheckXMLChars(&storage, XCS("d")); // still just the first one
+
+    // try to parse lots of 'e', but the token isn't finished
+    for (int c = 0; c < 100; ++c) {
+      status = XML_Parse(parser, eeeeee, fillsize, XML_FALSE);
+      if (status != XML_STATUS_OK) {
+        xml_failure(parser);
+      }
+    }
+    CharData_CheckXMLChars(&storage, XCS("d")); // *still* just the first one
+
+    // end the <x> token.
+    status = XML_Parse(parser, end, (int)strlen(end), XML_FALSE);
+    if (status != XML_STATUS_OK) {
+      xml_failure(parser);
+    }
+
+    if (enabled) {
+      // In general, we may need to push more data to trigger a reparse attempt,
+      // but in this test, the data is constructed to always require it.
+      CharData_CheckXMLChars(&storage, XCS("d")); // or the test is incorrect
+      // 2x the token length should suffice; the +1 covers the start and end.
+      for (int c = 0; c < 101; ++c) {
+        status = XML_Parse(parser, eeeeee, fillsize, XML_FALSE);
+        if (status != XML_STATUS_OK) {
+          xml_failure(parser);
+        }
+      }
+    }
+    CharData_CheckXMLChars(&storage, XCS("dx")); // the <x> should be done
+
+    XML_ParserFree(parser);
+  }
+}
+END_TEST
+
+START_TEST(test_set_reparse_deferral_on_null_parser) {
+  assert_true(XML_SetReparseDeferralEnabled(NULL, 0) == XML_FALSE);
+  assert_true(XML_SetReparseDeferralEnabled(NULL, 1) == XML_FALSE);
+  assert_true(XML_SetReparseDeferralEnabled(NULL, 10) == XML_FALSE);
+  assert_true(XML_SetReparseDeferralEnabled(NULL, 100) == XML_FALSE);
+  assert_true(XML_SetReparseDeferralEnabled(NULL, (XML_Bool)INT_MIN)
+              == XML_FALSE);
+  assert_true(XML_SetReparseDeferralEnabled(NULL, (XML_Bool)INT_MAX)
+              == XML_FALSE);
+}
+END_TEST
+
+START_TEST(test_set_reparse_deferral_on_the_fly) {
+  const char *const pre = "<d><x attr='";
+  const char *const end = "'></x";
+  const char *const post = ">";
+  char iiiiii[100];
+  const int fillsize = (int)sizeof(iiiiii);
+  memset(iiiiii, 'i', fillsize);
+
+  XML_Parser parser = XML_ParserCreate(NULL);
+  assert_true(parser != NULL);
+  assert_true(XML_SetReparseDeferralEnabled(parser, XML_TRUE));
+
+  CharData storage;
+  CharData_Init(&storage);
+  XML_SetUserData(parser, &storage);
+  XML_SetStartElementHandler(parser, start_element_event_handler);
+
+  enum XML_Status status;
+  // parse the start text
+  status = XML_Parse(parser, pre, (int)strlen(pre), XML_FALSE);
+  if (status != XML_STATUS_OK) {
+    xml_failure(parser);
+  }
+  CharData_CheckXMLChars(&storage, XCS("d")); // first element should be done
+
+  // try to parse some 'i', but the token isn't finished
+  status = XML_Parse(parser, iiiiii, fillsize, XML_FALSE);
+  if (status != XML_STATUS_OK) {
+    xml_failure(parser);
+  }
+  CharData_CheckXMLChars(&storage, XCS("d")); // *still* just the first one
+
+  // end the <x> token.
+  status = XML_Parse(parser, end, (int)strlen(end), XML_FALSE);
+  if (status != XML_STATUS_OK) {
+    xml_failure(parser);
+  }
+  CharData_CheckXMLChars(&storage, XCS("d")); // not yet.
+
+  // now change the heuristic setting and add *no* data
+  assert_true(XML_SetReparseDeferralEnabled(parser, XML_FALSE));
+  // we avoid isFinal=XML_TRUE, because that would force-bypass the heuristic.
+  status = XML_Parse(parser, post, (int)strlen(post), XML_FALSE);
+  if (status != XML_STATUS_OK) {
+    xml_failure(parser);
+  }
+  CharData_CheckXMLChars(&storage, XCS("dx"));
+
+  XML_ParserFree(parser);
+}
+END_TEST
+
+START_TEST(test_set_bad_reparse_option) {
+  XML_Parser parser = XML_ParserCreate(NULL);
+  assert_true(XML_FALSE == XML_SetReparseDeferralEnabled(parser, 2));
+  assert_true(XML_FALSE == XML_SetReparseDeferralEnabled(parser, 3));
+  assert_true(XML_FALSE == XML_SetReparseDeferralEnabled(parser, 99));
+  assert_true(XML_FALSE == XML_SetReparseDeferralEnabled(parser, 127));
+  assert_true(XML_FALSE == XML_SetReparseDeferralEnabled(parser, 128));
+  assert_true(XML_FALSE == XML_SetReparseDeferralEnabled(parser, 129));
+  assert_true(XML_FALSE == XML_SetReparseDeferralEnabled(parser, 255));
+  assert_true(XML_TRUE == XML_SetReparseDeferralEnabled(parser, 0));
+  assert_true(XML_TRUE == XML_SetReparseDeferralEnabled(parser, 1));
+  XML_ParserFree(parser);
+}
+END_TEST
+
 void
 make_basic_test_case(Suite *s) {
   TCase *tc_basic = tcase_create("basic tests");
@@ -5545,4 +5693,8 @@ make_basic_test_case(Suite *s) {
                                 test_pool_integrity_with_unfinished_attr);
   tcase_add_test__if_xml_ge(tc_basic, test_nested_entity_suspend);
   tcase_add_test(tc_basic, test_big_tokens_take_linear_time);
+  tcase_add_test(tc_basic, test_set_reparse_deferral);
+  tcase_add_test(tc_basic, test_set_reparse_deferral_on_null_parser);
+  tcase_add_test(tc_basic, test_set_reparse_deferral_on_the_fly);
+  tcase_add_test(tc_basic, test_set_bad_reparse_option);
 }
