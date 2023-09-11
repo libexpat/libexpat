@@ -40,7 +40,7 @@ exit status:
   4             command-line argument error
 
 xmlwf of libexpat is software libre, licensed under the MIT license.
-Please report bugs at https://github.com/libexpat/libexpat/issues.  Thank you!
+Please report bugs at https://github.com/libexpat/libexpat/issues -- thank you!
 """
 
 usage = """
@@ -58,11 +58,11 @@ parser = argparse.ArgumentParser(prog='xmlwf', add_help=False,
 input_related = parser.add_argument_group('input control arguments')
 input_related.add_argument('-s', action='store_true', help='print an error if the document is not [s]tandalone')
 input_related.add_argument('-n', action='store_true', help='enable [n]amespace processing')
-input_related.add_argument('-p', action='store_true', help='enable processing external DTDs and [p]arameter entities')
+input_related.add_argument('-p', action='store_true', help='enable processing of external DTDs and [p]arameter entities')
 input_related.add_argument('-x', action='store_true', help='enable processing of e[x]ternal entities')
 input_related.add_argument('-e', action='store', metavar='ENCODING', help='override any in-document [e]ncoding declaration')
 input_related.add_argument('-w', action='store_true', help='enable support for [W]indows code pages')
-input_related.add_argument('-r', action='store_true', help='disable memory-mapping and use normal file [r]ead IO calls instead')
+input_related.add_argument('-r', action='store_true', help='disable memory-mapping and use [r]ead calls instead')
 input_related.add_argument('-k', action='store_true', help='when processing multiple files, [k]eep processing after first file with error')
 
 output_related = parser.add_argument_group('output control arguments')
