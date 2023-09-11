@@ -894,11 +894,11 @@ usage(const XML_Char *prog, int rc) {
       T("input control arguments:\n")
       T("  -s            print an error if the document is not [s]tandalone\n")
       T("  -n            enable [n]amespace processing\n")
-      T("  -p            enable processing external DTDs and [p]arameter entities\n")
+      T("  -p            enable processing of external DTDs and [p]arameter entities\n")
       T("  -x            enable processing of e[x]ternal entities\n")
       T("  -e ENCODING   override any in-document [e]ncoding declaration\n")
       T("  -w            enable support for [W]indows code pages\n")
-      T("  -r            disable memory-mapping and use normal file [r]ead IO calls instead\n")
+      T("  -r            disable memory-mapping and use [r]ead calls instead\n")
       T("  -k            when processing multiple files, [k]eep processing after first file with error\n")
       T("\n")
       T("output control arguments:\n")
@@ -926,7 +926,7 @@ usage(const XML_Char *prog, int rc) {
       T("  4             command-line argument error\n")
       T("\n")
       T("xmlwf of libexpat is software libre, licensed under the MIT license.\n")
-      T("Please report bugs at https://github.com/libexpat/libexpat/issues.  Thank you!\n")
+      T("Please report bugs at https://github.com/libexpat/libexpat/issues -- thank you!\n")
       , /* clang-format on */
       prog, prog, prog);
   exit(rc);
