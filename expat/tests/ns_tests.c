@@ -18,6 +18,7 @@
    Copyright (c) 2019      David Loffredo <loffredo@steptools.com>
    Copyright (c) 2020      Tim Gates <tim.gates@iress.com>
    Copyright (c) 2021      Dong-hee Na <donghee.na@python.org>
+   Copyright (c) 2023      Sony Corporation / Snild Dolkow <snild@sony.com>
    Licensed under the MIT license:
 
    Permission is  hereby granted,  free of charge,  to any  person obtaining
@@ -81,13 +82,13 @@ START_TEST(test_return_ns_triplet) {
   if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_FALSE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
-  if (! g_triplet_start_flag)
-    fail("triplet_start_checker not invoked");
   /* Check that unsetting "return triplets" fails while still parsing */
   XML_SetReturnNSTriplet(g_parser, XML_FALSE);
   if (_XML_Parse_SINGLE_BYTES(g_parser, epilog, (int)strlen(epilog), XML_TRUE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
+  if (! g_triplet_start_flag)
+    fail("triplet_start_checker not invoked");
   if (! g_triplet_end_flag)
     fail("triplet_end_checker not invoked");
   if (get_dummy_handler_flags()
