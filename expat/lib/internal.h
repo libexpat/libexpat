@@ -31,6 +31,7 @@
    Copyright (c) 2016-2022 Sebastian Pipping <sebastian@pipping.org>
    Copyright (c) 2018      Yury Gribov <tetra2005@gmail.com>
    Copyright (c) 2019      David Loffredo <loffredo@steptools.com>
+   Copyright (c) 2023      Sony Corporation / Snild Dolkow <snild@sony.com>
    Licensed under the MIT license:
 
    Permission is  hereby granted,  free of charge,  to any  person obtaining
@@ -159,6 +160,8 @@ unsigned long long testingAccountingGetCountBytesDirect(XML_Parser parser);
 unsigned long long testingAccountingGetCountBytesIndirect(XML_Parser parser);
 const char *unsignedCharToPrintable(unsigned char c);
 #endif
+
+extern XML_Bool g_reparseDeferralEnabledDefault; // written ONLY in runtests.c
 
 #ifdef __cplusplus
 }

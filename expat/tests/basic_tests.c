@@ -4641,6 +4641,12 @@ START_TEST(test_utf8_in_start_tags) {
   char doc[1024];
   size_t failCount = 0;
 
+  // we need all the bytes to be parsed, but we don't want the errors that can
+  // trigger on isFinal=XML_TRUE, so we skip the test if the heuristic is on.
+  if (g_reparseDeferralEnabledDefault) {
+    return;
+  }
+
   for (; i < sizeof(cases) / sizeof(cases[0]); i++) {
     size_t j = 0;
     for (; j < sizeof(atNameStart) / sizeof(atNameStart[0]); j++) {
@@ -5204,6 +5210,9 @@ START_TEST(test_big_tokens_take_linear_time) {
 
   memset(aaaaaa, 'a', fillsize);
 
+  if (! g_reparseDeferralEnabledDefault) {
+    return; // heuristic is disabled; we would get O(n^2) and fail.
+  }
 #if defined(_WIN32)
   if (CLOCKS_PER_SEC < 100000) {
     // Skip this test if clock() doesn't have reasonably good resolution.
@@ -5219,7 +5228,8 @@ START_TEST(test_big_tokens_take_linear_time) {
     XML_Parser parser = XML_ParserCreate(NULL);
     assert_true(parser != NULL);
     enum XML_Status status;
-    set_subtest("%saaaaaa%s", text[i].pre, text[i].post);
+    set_subtest("max_slowdown=%d text=\"%saaaaaa%s\"", max_slowdown,
+                text[i].pre, text[i].post);
     const clock_t start = clock();
 
     // parse the start text

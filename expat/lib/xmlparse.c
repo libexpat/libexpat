@@ -625,6 +625,8 @@ static unsigned long getDebugLevel(const char *variableName,
        ? 0                                                                     \
        : ((*((pool)->ptr)++ = c), 1))
 
+XML_Bool g_reparseDeferralEnabledDefault = XML_TRUE; // write ONLY in runtests.c
+
 struct XML_ParserStruct {
   /* The first member must be m_userData so that the XML_GetUserData
      macro works. */
@@ -985,7 +987,8 @@ callProcessor(XML_Parser parser, const char *start, const char *end,
               const char **endPtr) {
   const size_t have_now = EXPAT_SAFE_PTR_DIFF(end, start);
 
-  if (! parser->m_parsingStatus.finalBuffer) {
+  if (g_reparseDeferralEnabledDefault
+      && ! parser->m_parsingStatus.finalBuffer) {
     // Heuristic: don't try to parse a partial token again until the amount of
     // available data has increased significantly.
     const size_t had_before = parser->m_partialTokenBytesBefore;
