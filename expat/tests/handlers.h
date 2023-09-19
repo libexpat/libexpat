@@ -47,6 +47,8 @@ extern "C" {
 #ifndef XML_HANDLERS_H
 #  define XML_HANDLERS_H
 
+#  include "expat_config.h"
+
 #  include "expat.h"
 
 /* Variable holding the expected handler userData */
