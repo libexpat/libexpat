@@ -541,10 +541,10 @@ endif()
 #
 if(EXPAT_BUILD_TOOLS)
     set(xmlwf_SRCS
-        xmlwf/xmlwf.c
-        xmlwf/xmlfile.c
         xmlwf/codepage.c
         xmlwf/readfilemap.c
+        xmlwf/xmlfile.c
+        xmlwf/xmlwf.c
     )
 
     add_executable(xmlwf ${xmlwf_SRCS})
