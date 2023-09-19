@@ -82,7 +82,9 @@
 #cmakedefine PACKAGE_VERSION "@PACKAGE_VERSION@"
 
 /* Define to 1 if you have the ANSI C header files. */
+#ifndef STDC_HEADERS
 #cmakedefine STDC_HEADERS
+#endif
 
 /* whether byteorder is bigendian */
 #cmakedefine WORDS_BIGENDIAN
