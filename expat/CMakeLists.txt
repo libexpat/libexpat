@@ -167,6 +167,10 @@ endif()
 if(EXPAT_BUILD_TESTS)
     # We have to call enable_language() before modifying any CMAKE_CXX_* variables
     enable_language(CXX)
+
+    set(CMAKE_CXX_STANDARD 11)
+    set(CMAKE_CXX_STANDARD_REQUIRED ON)
+    set(CMAKE_CXX_EXTENSIONS OFF)  # i.e. -std=c++11 rather than default -std=gnu++11
 endif()
 
 #
