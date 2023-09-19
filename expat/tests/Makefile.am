@@ -50,12 +50,12 @@ libruntests_a_SOURCES = \
     common.c \
     dummy.c \
     handlers.c \
+    memcheck.c \
+    minicheck.c \
     misc_tests.c \
     ns_tests.c \
     nsalloc_tests.c \
-    structdata.c \
-    memcheck.c \
-    minicheck.c
+    structdata.c
 
 runtests_SOURCES = \
     runtests.c
