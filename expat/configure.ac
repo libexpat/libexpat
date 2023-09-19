@@ -180,6 +180,8 @@ AC_ARG_WITH([tests],
   [with_tests=yes])
 AM_CONDITIONAL([WITH_TESTS], [test x${with_tests} = xyes])
 
+AS_IF([test x${with_tests} = xyes],
+      [AX_CXX_COMPILE_STDCXX_11([noext], [mandatory])])
 
 AS_VAR_SET([EXPATCFG_ON_MINGW],[no])
 AS_CASE("${host_os}",
