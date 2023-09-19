@@ -54,7 +54,7 @@ static AllocationEntry *find_allocation(const void *ptr);
 /* Allocate some memory and keep track of it. */
 void *
 tracking_malloc(size_t size) {
-  AllocationEntry *entry = malloc(sizeof(AllocationEntry));
+  AllocationEntry *const entry = malloc(sizeof(AllocationEntry));
 
   if (entry == NULL) {
     printf("Allocator failure\n");
