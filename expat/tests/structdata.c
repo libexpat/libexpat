@@ -83,13 +83,13 @@ StructData_AddItem(StructData *storage, const XML_Char *s, int data0, int data1,
   assert(storage != NULL);
   assert(s != NULL);
   if (storage->count == storage->max_count) {
-    StructDataEntry *new;
+    StructDataEntry *new_entries;
 
     storage->max_count += STRUCT_EXTENSION_COUNT;
-    new = realloc(storage->entries,
-                  storage->max_count * sizeof(StructDataEntry));
-    assert(new != NULL);
-    storage->entries = new;
+    new_entries = realloc(storage->entries,
+                          storage->max_count * sizeof(StructDataEntry));
+    assert(new_entries != NULL);
+    storage->entries = new_entries;
   }
 
   entry = &storage->entries[storage->count];
