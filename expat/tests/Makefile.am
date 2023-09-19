@@ -34,15 +34,13 @@ SUBDIRS = . benchmark
 
 AM_CPPFLAGS = @AM_CPPFLAGS@ -I$(srcdir)/../lib
 
-noinst_LIBRARIES = libruntests.a
-
 check_PROGRAMS = runtests runtestspp
 TESTS = runtests runtestspp
 
 # To support MinGW and Non-MinGW at the same time:
 LOG_DRIVER = $(srcdir)/../test-driver-wrapper.sh
 
-libruntests_a_SOURCES = \
+runtests_SOURCES = \
     acc_tests.c \
     alloc_tests.c \
     basic_tests.c \
@@ -55,16 +53,27 @@ libruntests_a_SOURCES = \
     misc_tests.c \
     ns_tests.c \
     nsalloc_tests.c \
+    runtests.c \
     structdata.c
 
-runtests_SOURCES = \
-    runtests.c
-
 runtestspp_SOURCES = \
-    runtestspp.cpp
+    acc_tests_cxx.cpp \
+    alloc_tests_cxx.cpp \
+    basic_tests_cxx.cpp \
+    chardata_cxx.cpp \
+    common_cxx.cpp \
+    dummy_cxx.cpp \
+    handlers_cxx.cpp \
+    memcheck_cxx.cpp \
+    minicheck_cxx.cpp \
+    misc_tests_cxx.cpp \
+    nsalloc_tests_cxx.cpp \
+    ns_tests_cxx.cpp \
+    runtestspp.cpp \
+    structdata_cxx.cpp
 
-runtests_LDADD = libruntests.a ../lib/libexpatinternal.la
-runtestspp_LDADD = libruntests.a ../lib/libexpatinternal.la
+runtests_LDADD = ../lib/libexpatinternal.la
+runtestspp_LDADD = ../lib/libexpatinternal.la
 
 runtests_LDFLAGS = @AM_LDFLAGS@ @LIBM@
 runtestspp_LDFLAGS = @AM_LDFLAGS@ @LIBM@

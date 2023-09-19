@@ -593,23 +593,6 @@ if(EXPAT_BUILD_TESTS)
     ## these are unittests that can be run on any platform
     enable_testing()
 
-    set(test_SRCS
-        tests/acc_tests.c
-        tests/alloc_tests.c
-        tests/basic_tests.c
-        tests/chardata.c
-        tests/common.c
-        tests/dummy.c
-        tests/handlers.c
-        tests/memcheck.c
-        tests/minicheck.c
-        tests/misc_tests.c
-        tests/ns_tests.c
-        tests/nsalloc_tests.c
-        tests/structdata.c
-        ${_EXPAT_C_SOURCES}
-    )
-
     if(NOT MSVC)
         if(MINGW)
             set(host whatever-mingw32)  # for nothing but run.sh
@@ -626,8 +609,42 @@ if(EXPAT_BUILD_TESTS)
     endfunction()
 
     set(_EXPAT_TEST_TARGETS runtests runtestspp)
-    add_executable(runtests   tests/runtests.c     ${test_SRCS})
-    add_executable(runtestspp tests/runtestspp.cpp ${test_SRCS})
+
+    add_executable(runtests
+        tests/acc_tests.c
+        tests/alloc_tests.c
+        tests/basic_tests.c
+        tests/chardata.c
+        tests/common.c
+        tests/dummy.c
+        tests/handlers.c
+        tests/memcheck.c
+        tests/minicheck.c
+        tests/misc_tests.c
+        tests/ns_tests.c
+        tests/nsalloc_tests.c
+        tests/runtests.c
+        tests/structdata.c
+        ${_EXPAT_C_SOURCES}
+    )
+
+    add_executable(runtestspp
+        tests/acc_tests_cxx.cpp
+        tests/alloc_tests_cxx.cpp
+        tests/basic_tests_cxx.cpp
+        tests/chardata_cxx.cpp
+        tests/common_cxx.cpp
+        tests/dummy_cxx.cpp
+        tests/handlers_cxx.cpp
+        tests/memcheck_cxx.cpp
+        tests/minicheck_cxx.cpp
+        tests/misc_tests_cxx.cpp
+        tests/ns_tests_cxx.cpp
+        tests/nsalloc_tests_cxx.cpp
+        tests/runtestspp.cpp
+        tests/structdata_cxx.cpp
+        ${_EXPAT_C_SOURCES}
+    )
 
     foreach(_target ${_EXPAT_TEST_TARGETS})
         set_property(TARGET ${_target} PROPERTY RUNTIME_OUTPUT_DIRECTORY tests)
