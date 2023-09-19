@@ -608,7 +608,7 @@ if(EXPAT_BUILD_TESTS)
         endif()
     endfunction()
 
-    set(_EXPAT_TEST_TARGETS runtests runtestspp)
+    set(_EXPAT_TEST_TARGETS runtests runtests_cxx)
 
     add_executable(runtests
         tests/acc_tests.c
@@ -628,7 +628,7 @@ if(EXPAT_BUILD_TESTS)
         ${_EXPAT_C_SOURCES}
     )
 
-    add_executable(runtestspp
+    add_executable(runtests_cxx
         tests/acc_tests_cxx.cpp
         tests/alloc_tests_cxx.cpp
         tests/basic_tests_cxx.cpp
@@ -641,7 +641,7 @@ if(EXPAT_BUILD_TESTS)
         tests/misc_tests_cxx.cpp
         tests/ns_tests_cxx.cpp
         tests/nsalloc_tests_cxx.cpp
-        tests/runtestspp.cpp
+        tests/runtests_cxx.cpp
         tests/structdata_cxx.cpp
         ${_EXPAT_C_SOURCES}
     )

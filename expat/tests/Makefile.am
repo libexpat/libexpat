@@ -34,8 +34,8 @@ SUBDIRS = . benchmark
 
 AM_CPPFLAGS = @AM_CPPFLAGS@ -I$(srcdir)/../lib
 
-check_PROGRAMS = runtests runtestspp
-TESTS = runtests runtestspp
+check_PROGRAMS = runtests runtests_cxx
+TESTS = runtests runtests_cxx
 
 # To support MinGW and Non-MinGW at the same time:
 LOG_DRIVER = $(srcdir)/../test-driver-wrapper.sh
@@ -56,7 +56,7 @@ runtests_SOURCES = \
     runtests.c \
     structdata.c
 
-runtestspp_SOURCES = \
+runtests_cxx_SOURCES = \
     acc_tests_cxx.cpp \
     alloc_tests_cxx.cpp \
     basic_tests_cxx.cpp \
@@ -69,14 +69,14 @@ runtestspp_SOURCES = \
     misc_tests_cxx.cpp \
     nsalloc_tests_cxx.cpp \
     ns_tests_cxx.cpp \
-    runtestspp.cpp \
+    runtests_cxx.cpp \
     structdata_cxx.cpp
 
 runtests_LDADD = ../lib/libexpatinternal.la
-runtestspp_LDADD = ../lib/libexpatinternal.la
+runtests_cxx_LDADD = ../lib/libexpatinternal.la
 
 runtests_LDFLAGS = @AM_LDFLAGS@ @LIBM@
-runtestspp_LDFLAGS = @AM_LDFLAGS@ @LIBM@
+runtests_cxx_LDFLAGS = @AM_LDFLAGS@ @LIBM@
 
 EXTRA_DIST = \
     acc_tests.h \
