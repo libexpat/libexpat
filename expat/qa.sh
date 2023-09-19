@@ -114,7 +114,7 @@ populate_environment() {
 
 
     CFLAGS="-std=c99 ${BASE_COMPILE_FLAGS} ${CFLAGS:-}"
-    CXXFLAGS="-std=c++98 ${BASE_COMPILE_FLAGS} ${CXXFLAGS:-}"
+    CXXFLAGS="-std=c++11 ${BASE_COMPILE_FLAGS} ${CXXFLAGS:-}"
     LDFLAGS="${BASE_LINK_FLAGS} ${LDFLAGS:-}"
 }
 

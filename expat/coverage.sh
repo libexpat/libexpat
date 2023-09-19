@@ -159,7 +159,7 @@ _run() {
     ${with_unsigned_char} && BASE_FLAGS="${BASE_FLAGS} -funsigned-char"
 
     local CFLAGS="-std=c99 ${BASE_FLAGS}"
-    local CXXFLAGS="-std=c++98 ${BASE_FLAGS}"
+    local CXXFLAGS="-std=c++11 ${BASE_FLAGS}"
 
     (
         set -e
