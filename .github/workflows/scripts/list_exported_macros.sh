@@ -28,4 +28,4 @@
 # OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 # USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-grep -Eo '(define|undef) [a-zA-Z0-9_]+' "${1}" | awk '{print $2}' | sort -u
+grep -Eo '(define|undef) [a-zA-Z0-9_]+' "${1}" | awk '{print $2}' | grep -vw if | sort -u
