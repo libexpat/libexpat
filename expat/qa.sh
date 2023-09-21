@@ -76,7 +76,7 @@ populate_environment() {
             ;;
     esac
 
-    : ${BASE_COMPILE_FLAGS:="-pipe -Wall -Wextra -pedantic -Wno-overlength-strings -Wno-long-long"}
+    : ${BASE_COMPILE_FLAGS:="-pipe -Wall -Wextra -pedantic -Wno-overlength-strings"}
     : ${BASE_LINK_FLAGS:=}
 
     if [[ ${QA_COMPILER} = clang ]]; then
@@ -114,7 +114,7 @@ populate_environment() {
 
 
     CFLAGS="-std=c99 ${BASE_COMPILE_FLAGS} ${CFLAGS:-}"
-    CXXFLAGS="-std=c++98 ${BASE_COMPILE_FLAGS} ${CXXFLAGS:-}"
+    CXXFLAGS="-std=c++11 ${BASE_COMPILE_FLAGS} ${CXXFLAGS:-}"
     LDFLAGS="${BASE_LINK_FLAGS} ${LDFLAGS:-}"
 }
 
