@@ -76,7 +76,7 @@ populate_environment() {
             ;;
     esac
 
-    : ${BASE_COMPILE_FLAGS:="-pipe -Wall -Wextra -pedantic -Wno-overlength-strings -Wno-long-long"}
+    : ${BASE_COMPILE_FLAGS:="-pipe -Wall -Wextra -pedantic -Wno-overlength-strings"}
     : ${BASE_LINK_FLAGS:=}
 
     if [[ ${QA_COMPILER} = clang ]]; then
