@@ -1212,6 +1212,7 @@ START_TEST(test_ext_entity_invalid_parse) {
   const ExtFaults *fault = faults;
 
   for (; fault->parse_text != NULL; fault++) {
+    set_subtest("\"%s\"", fault->parse_text);
     XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
     XML_SetExternalEntityRefHandler(g_parser, external_entity_faulter);
     XML_SetUserData(g_parser, (void *)fault);
@@ -1282,6 +1283,7 @@ START_TEST(test_dtd_attr_handling) {
   AttTest *test;
 
   for (test = attr_data; test->definition != NULL; test++) {
+    set_subtest("%s", test->definition);
     XML_SetAttlistDeclHandler(g_parser, verify_attlist_decl_handler);
     XML_SetUserData(g_parser, test);
     if (_XML_Parse_SINGLE_BYTES(g_parser, prolog, (int)strlen(prolog),
@@ -1670,6 +1672,7 @@ START_TEST(test_bad_cdata) {
 
   size_t i = 0;
   for (; i < sizeof(cases) / sizeof(struct CaseData); i++) {
+    set_subtest("%s", cases[i].text);
     const enum XML_Status actualStatus = _XML_Parse_SINGLE_BYTES(
         g_parser, cases[i].text, (int)strlen(cases[i].text), XML_TRUE);
     const enum XML_Error actualError = XML_GetErrorCode(g_parser);
@@ -1737,6 +1740,7 @@ START_TEST(test_bad_cdata_utf16) {
   size_t i;
 
   for (i = 0; i < sizeof(cases) / sizeof(struct CaseData); i++) {
+    set_subtest("case %lu", (long unsigned)(i + 1));
     enum XML_Status actual_status;
     enum XML_Error actual_error;
 
@@ -2336,6 +2340,7 @@ START_TEST(test_ext_entity_invalid_suspended_parse) {
   ExtFaults *fault;
 
   for (fault = &faults[0]; fault->parse_text != NULL; fault++) {
+    set_subtest("%s", fault->parse_text);
     XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
     XML_SetExternalEntityRefHandler(g_parser,
                                     external_entity_suspending_faulter);
@@ -2939,12 +2944,90 @@ START_TEST(test_bad_ignore_section) {
   ExtFaults *fault;
 
   for (fault = &faults[0]; fault->parse_text != NULL; fault++) {
+    set_subtest("%s", fault->parse_text);
     XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
     XML_SetExternalEntityRefHandler(g_parser, external_entity_faulter);
     XML_SetUserData(g_parser, fault);
     expect_failure(text, XML_ERROR_EXTERNAL_ENTITY_HANDLING,
                    "Incomplete IGNORE section not failed");
     XML_ParserReset(g_parser, NULL);
+  }
+}
+END_TEST
+
+struct bom_testdata {
+  const char *external;
+  int split;
+  XML_Bool nested_callback_happened;
+};
+
+static int XMLCALL
+external_bom_checker(XML_Parser parser, const XML_Char *context,
+                     const XML_Char *base, const XML_Char *systemId,
+                     const XML_Char *publicId) {
+  const char *text = "";
+  UNUSED_P(base);
+  UNUSED_P(systemId);
+  UNUSED_P(publicId);
+
+  XML_Parser ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
+  if (ext_parser == NULL)
+    fail("Could not create external entity parser");
+
+  if (! xcstrcmp(systemId, XCS("004-2.ent"))) {
+    struct bom_testdata *const testdata
+        = (struct bom_testdata *)XML_GetUserData(parser);
+    const char *const external = testdata->external;
+    const int split = testdata->split;
+    testdata->nested_callback_happened = XML_TRUE;
+
+    if (XML_Parse(ext_parser, external, split, XML_FALSE) != XML_STATUS_OK) {
+      xml_failure(ext_parser);
+    }
+    text = external + split; // the parse below will continue where we left off.
+  } else if (! xcstrcmp(systemId, XCS("004-1.ent"))) {
+    text = "<!ELEMENT doc EMPTY>\n"
+           "<!ENTITY % e1 SYSTEM '004-2.ent'>\n"
+           "<!ENTITY % e2 '%e1;'>\n";
+  } else {
+    fail("unknown systemId");
+  }
+
+  if (XML_Parse(ext_parser, text, (int)strlen(text), XML_TRUE) != XML_STATUS_OK)
+    xml_failure(ext_parser);
+
+  XML_ParserFree(ext_parser);
+  return XML_STATUS_OK;
+}
+
+/* regression test: BOM should be consumed when followed by a partial token. */
+START_TEST(test_external_bom_consumed) {
+  const char *const text = "<!DOCTYPE doc SYSTEM '004-1.ent'>\n"
+                           "<doc></doc>\n";
+  const char *const external = "\xEF\xBB\xBF<!ATTLIST doc a1 CDATA 'value'>";
+  const int len = (int)strlen(external);
+  for (int split = 0; split <= len; ++split) {
+    set_subtest("split at byte %d", split);
+
+    struct bom_testdata testdata;
+    testdata.external = external;
+    testdata.split = split;
+    testdata.nested_callback_happened = XML_FALSE;
+
+    XML_Parser parser = XML_ParserCreate(NULL);
+    if (parser == NULL) {
+      fail("Couldn't create parser");
+    }
+    XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+    XML_SetExternalEntityRefHandler(parser, external_bom_checker);
+    XML_SetUserData(parser, &testdata);
+    if (_XML_Parse_SINGLE_BYTES(parser, text, (int)strlen(text), XML_TRUE)
+        == XML_STATUS_ERROR)
+      xml_failure(parser);
+    if (! testdata.nested_callback_happened) {
+      fail("ref handler not called");
+    }
+    XML_ParserFree(parser);
   }
 }
 END_TEST
@@ -2982,6 +3065,7 @@ START_TEST(test_external_entity_values) {
   int i;
 
   for (i = 0; data_004_2[i].parse_text != NULL; i++) {
+    set_subtest("%s", data_004_2[i].parse_text);
     XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
     XML_SetExternalEntityRefHandler(g_parser, external_entity_valuer);
     XML_SetUserData(g_parser, &data_004_2[i]);
@@ -5040,6 +5124,7 @@ make_basic_test_case(Suite *s) {
   tcase_add_test__ifdef_xml_dtd(tc_basic, test_ignore_section_utf16);
   tcase_add_test__ifdef_xml_dtd(tc_basic, test_ignore_section_utf16_be);
   tcase_add_test__ifdef_xml_dtd(tc_basic, test_bad_ignore_section);
+  tcase_add_test__ifdef_xml_dtd(tc_basic, test_external_bom_consumed);
   tcase_add_test__ifdef_xml_dtd(tc_basic, test_external_entity_values);
   tcase_add_test__ifdef_xml_dtd(tc_basic, test_ext_entity_not_standalone);
   tcase_add_test__ifdef_xml_dtd(tc_basic, test_ext_entity_value_abort);

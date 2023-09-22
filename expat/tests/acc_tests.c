@@ -18,6 +18,7 @@
    Copyright (c) 2019      David Loffredo <loffredo@steptools.com>
    Copyright (c) 2020      Tim Gates <tim.gates@iress.com>
    Copyright (c) 2021      Dong-hee Na <donghee.na@python.org>
+   Copyright (c) 2023      Sony Corporation / Snild Dolkow <snild@sony.com>
    Licensed under the MIT license:
 
    Permission is  hereby granted,  free of charge,  to any  person obtaining
@@ -384,6 +385,7 @@ START_TEST(test_helper_unsigned_char_to_printable) {
   // Smoke test
   unsigned char uc = 0;
   for (; uc < (unsigned char)-1; uc++) {
+    set_subtest("char %u", (unsigned)uc);
     const char *const printable = unsignedCharToPrintable(uc);
     if (printable == NULL)
       fail("unsignedCharToPrintable returned NULL");
@@ -392,8 +394,10 @@ START_TEST(test_helper_unsigned_char_to_printable) {
   }
 
   // Two concrete samples
+  set_subtest("char 'A'");
   if (strcmp(unsignedCharToPrintable('A'), "A") != 0)
     fail("unsignedCharToPrintable result mistaken");
+  set_subtest("char '\\'");
   if (strcmp(unsignedCharToPrintable('\\'), "\\\\") != 0)
     fail("unsignedCharToPrintable result mistaken");
 }

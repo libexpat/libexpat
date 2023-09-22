@@ -18,6 +18,7 @@
    Copyright (c) 2019      David Loffredo <loffredo@steptools.com>
    Copyright (c) 2020      Tim Gates <tim.gates@iress.com>
    Copyright (c) 2021      Dong-hee Na <donghee.na@python.org>
+   Copyright (c) 2023      Sony Corporation / Snild Dolkow <snild@sony.com>
    Licensed under the MIT license:
 
    Permission is  hereby granted,  free of charge,  to any  person obtaining
@@ -328,6 +329,7 @@ START_TEST(test_misc_deny_internal_entity_closing_doctype_issue_317) {
   size_t inputIndex = 0;
 
   for (; inputIndex < sizeof(inputs) / sizeof(inputs[0]); inputIndex++) {
+    set_subtest("%s", inputs[inputIndex]);
     XML_Parser parser;
     enum XML_Status parseResult;
     int setParamEntityResult;

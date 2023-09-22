@@ -15,6 +15,7 @@
    Copyright (c) 2004-2006 Fred L. Drake, Jr. <fdrake@users.sourceforge.net>
    Copyright (c) 2006-2012 Karl Waclawek <karl@waclawek.net>
    Copyright (c) 2016-2017 Sebastian Pipping <sebastian@pipping.org>
+   Copyright (c) 2023      Sony Corporation / Snild Dolkow <snild@sony.com>
    Licensed under the MIT license:
 
    Permission is  hereby granted,  free of charge,  to any  person obtaining
@@ -59,6 +60,19 @@ extern "C" {
 #    define __func__ __FUNCTION__
 #  endif
 
+/* PRINTF_LIKE has two effects:
+    1. Make clang's -Wformat-nonliteral stop warning about non-literal format
+       strings in annotated functions' code.
+    2. Make both clang and gcc's -Wformat-nonliteral warn about *callers* of
+       the annotated function that use a non-literal format string.
+*/
+#  if defined(__GNUC__)
+#    define PRINTF_LIKE(fmtpos, argspos)                                       \
+      __attribute__((format(printf, fmtpos, argspos)))
+#  else
+#    define PRINTF_LIKE(fmtpos, argspos)
+#  endif
+
 #  define START_TEST(testname)                                                 \
     static void testname(void) {                                               \
       _check_set_test_info(__func__, __FILE__, __LINE__);                      \
@@ -66,6 +80,8 @@ extern "C" {
 #  define END_TEST                                                             \
     }                                                                          \
     }
+
+void PRINTF_LIKE(1, 2) set_subtest(char const *fmt, ...);
 
 #  define fail(msg) _fail_unless(0, __FILE__, __LINE__, msg)
 
