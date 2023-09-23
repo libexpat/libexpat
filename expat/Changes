@@ -326,7 +326,7 @@ Release 2.4.2 Sun December 19 2021
                     see https://verbump.de/ for what these numbers do
 
         Special thanks to:
-            Dong-hee Na
+            Donghee Na
             Joergen Ibsen
             Kai Pastor
 
@@ -1088,7 +1088,7 @@ Release 2.1.0 Sat March 24 2012
         - Bug Fixes:
           #1742315: Harmful XML_ParserCreateNS suggestion.
           #1785430: Expat build fails on linux-amd64 with gcc version>=4.1 -O3.
-          #1983953, 2517952, 2517962, 2649838: 
+          #1983953, 2517952, 2517962, 2649838:
                 Build modifications using autoreconf instead of buildconf.sh.
           #2815947, #2884086: OBJEXT and EXEEXT support while building.
           #2517938: xmlwf should return non-zero exit status if not well-formed.
@@ -1114,7 +1114,7 @@ Release 2.1.0 Sat March 24 2012
                 See bug #2990652 and patch #3312568.
           Added run-benchmark target to Makefile.in - relies on testdata module
                 present in the same relative location as in the repository.
-          
+
 Release 2.0.1 Tue June 5 2007
         - Fixed bugs #1515266, #1515600: The character data handler's calling
           of XML_StopParser() was not handled properly; if the parser was
