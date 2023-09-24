@@ -1,5 +1,6 @@
 # This file is used by "git log"
 Ben Wagner <bungeman@chromium.org>
+Donghee Na <donghee.na@python.org>
 Franek Korta <fkorta@gmail.com>
 Hanno Böck <hanno@gentoo.org>
 James Clark <jjc@jclark.com> <jclark@users.sourceforge.net>
@@ -17,4 +18,3 @@ Steven Solie <steven@solie.ca> <ssolie@users.sourceforge.net>
 Thomas Beutlich <tc@tbeu.de>
 Viktor Szakats <commit@vsz.me> <vszakats@users.noreply.github.com>
 Zhongyuan Zhou <zhouzhongyuan@huawei.com>
-Donghee Na <donghee.na@python.org>
