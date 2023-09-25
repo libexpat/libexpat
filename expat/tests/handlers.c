@@ -18,6 +18,7 @@
    Copyright (c) 2019      David Loffredo <loffredo@steptools.com>
    Copyright (c) 2020      Tim Gates <tim.gates@iress.com>
    Copyright (c) 2021      Donghee Na <donghee.na@python.org>
+   Copyright (c) 2023      Sony Corporation / Snild Dolkow <snild@sony.com>
    Licensed under the MIT license:
 
    Permission is  hereby granted,  free of charge,  to any  person obtaining
@@ -1646,36 +1647,43 @@ ext2_accumulate_characters(void *userData, const XML_Char *s, int len) {
   accumulate_characters(test_data->storage, s, len);
 }
 
-/* Handlers that record their invocation by single characters */
+/* Handlers that record their function name and int arg. */
+
+static void
+record_call(struct handler_record_list *const rec, const char *funcname,
+            const int arg) {
+  const int max_entries = sizeof(rec->entries) / sizeof(rec->entries[0]);
+  fail_unless(rec->count < max_entries);
+  struct handler_record_entry *const e = &rec->entries[rec->count++];
+  e->name = funcname;
+  e->arg = arg;
+}
 
 void XMLCALL
 record_default_handler(void *userData, const XML_Char *s, int len) {
   UNUSED_P(s);
-  UNUSED_P(len);
-  CharData_AppendXMLChars((CharData *)userData, XCS("D"), 1);
+  record_call((struct handler_record_list *)userData, __func__, len);
 }
 
 void XMLCALL
 record_cdata_handler(void *userData, const XML_Char *s, int len) {
   UNUSED_P(s);
-  UNUSED_P(len);
-  CharData_AppendXMLChars((CharData *)userData, XCS("C"), 1);
+  record_call((struct handler_record_list *)userData, __func__, len);
   XML_DefaultCurrent(g_parser);
 }
 
 void XMLCALL
 record_cdata_nodefault_handler(void *userData, const XML_Char *s, int len) {
   UNUSED_P(s);
-  UNUSED_P(len);
-  CharData_AppendXMLChars((CharData *)userData, XCS("c"), 1);
+  record_call((struct handler_record_list *)userData, __func__, len);
 }
 
 void XMLCALL
 record_skip_handler(void *userData, const XML_Char *entityName,
                     int is_parameter_entity) {
   UNUSED_P(entityName);
-  CharData_AppendXMLChars((CharData *)userData,
-                          is_parameter_entity ? XCS("E") : XCS("e"), 1);
+  record_call((struct handler_record_list *)userData, __func__,
+              is_parameter_entity);
 }
 
 void XMLCALL
@@ -1691,6 +1699,13 @@ record_element_end_handler(void *userData, const XML_Char *name) {
 
   CharData_AppendXMLChars(storage, XCS("/"), 1);
   CharData_AppendXMLChars(storage, name, -1);
+}
+
+const struct handler_record_entry *
+_handler_record_get(const struct handler_record_list *storage, const int index,
+                    const char *file, const int line) {
+  _fail_unless(storage->count > index, file, line, "too few handler calls");
+  return &storage->entries[index];
 }
 
 /* Entity Declaration Handlers */
@@ -1778,10 +1793,17 @@ data_check_comment_handler(void *userData, const XML_Char *data) {
 
 void XMLCALL
 selective_aborting_default_handler(void *userData, const XML_Char *s, int len) {
-  const XML_Char *match = (const XML_Char *)userData;
+  const XML_Char trigger_char = *(const XML_Char *)userData;
 
-  if (match == NULL
-      || (xcstrlen(match) == (unsigned)len && ! xcstrncmp(match, s, len))) {
+  int found = 0;
+  for (int i = 0; i < len; ++i) {
+    if (s[i] == trigger_char) {
+      found = 1;
+      break;
+    }
+  }
+
+  if (found) {
     XML_StopParser(g_parser, g_resumable);
     XML_SetDefaultHandler(g_parser, NULL);
   }

@@ -18,6 +18,7 @@
    Copyright (c) 2019      David Loffredo <loffredo@steptools.com>
    Copyright (c) 2020      Tim Gates <tim.gates@iress.com>
    Copyright (c) 2021      Donghee Na <donghee.na@python.org>
+   Copyright (c) 2023      Sony Corporation / Snild Dolkow <snild@sony.com>
    Licensed under the MIT license:
 
    Permission is  hereby granted,  free of charge,  to any  person obtaining
@@ -81,6 +82,8 @@ extern XML_Parser g_parser;
 
 extern XML_Bool g_resumable;
 extern XML_Bool g_abortable;
+
+extern int g_chunkSize;
 
 extern const char *long_character_data_text;
 extern const char *long_cdata_text;

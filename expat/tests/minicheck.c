@@ -176,19 +176,20 @@ handle_success(int verbosity) {
 }
 
 static void
-handle_failure(SRunner *runner, int verbosity, const char *phase_info) {
+handle_failure(SRunner *runner, int verbosity, const char *context,
+               const char *phase_info) {
   runner->nfailures++;
   if (verbosity != CK_SILENT) {
     if (strlen(_check_current_subtest) != 0) {
       phase_info = _check_current_subtest;
     }
-    printf("FAIL: %s (%s at %s:%d)\n", _check_current_function, phase_info,
-           _check_current_filename, _check_current_lineno);
+    printf("FAIL [%s]: %s (%s at %s:%d)\n", context, _check_current_function,
+           phase_info, _check_current_filename, _check_current_lineno);
   }
 }
 
 void
-srunner_run_all(SRunner *runner, int verbosity) {
+srunner_run_all(SRunner *runner, const char *context, int verbosity) {
   Suite *suite;
   TCase *volatile tc;
   assert(runner != NULL);
@@ -203,14 +204,14 @@ srunner_run_all(SRunner *runner, int verbosity) {
       if (tc->setup != NULL) {
         /* setup */
         if (setjmp(env)) {
-          handle_failure(runner, verbosity, "during setup");
+          handle_failure(runner, verbosity, context, "during setup");
           continue;
         }
         tc->setup();
       }
       /* test */
       if (setjmp(env)) {
-        handle_failure(runner, verbosity, "during actual test");
+        handle_failure(runner, verbosity, context, "during actual test");
         continue;
       }
       (tc->tests[i])();
@@ -219,7 +220,7 @@ srunner_run_all(SRunner *runner, int verbosity) {
       /* teardown */
       if (tc->teardown != NULL) {
         if (setjmp(env)) {
-          handle_failure(runner, verbosity, "during teardown");
+          handle_failure(runner, verbosity, context, "during teardown");
           continue;
         }
         tc->teardown();
@@ -229,6 +230,10 @@ srunner_run_all(SRunner *runner, int verbosity) {
     }
     tc = tc->next_tcase;
   }
+}
+
+void
+srunner_summarize(SRunner *runner, int verbosity) {
   if (verbosity != CK_SILENT) {
     int passed = runner->nchecks - runner->nfailures;
     double percentage = ((double)passed) / runner->nchecks;
@@ -244,7 +249,9 @@ _fail_unless(int condition, const char *file, int line, const char *msg) {
      we have a failure, so there's no reason to be quiet about what
      it is.
   */
-  UNUSED_P(condition);
+  if (condition) {
+    return;
+  }
   _check_current_filename = file;
   _check_current_lineno = line;
   if (msg != NULL) {
