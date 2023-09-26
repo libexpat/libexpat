@@ -2325,7 +2325,7 @@ START_TEST(test_reset_in_entity) {
 
   g_resumable = XML_TRUE;
   XML_SetCharacterDataHandler(g_parser, clearing_aborting_character_handler);
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_FALSE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
   XML_GetParsingStatus(g_parser, &status);
