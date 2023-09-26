@@ -97,7 +97,7 @@ main(int argc, char *argv[]) {
   if (verbosity != CK_SILENT)
     printf("Expat version: %" XML_FMT_STR "\n", XML_ExpatVersion());
 
-  for (g_chunkSize = 1; g_chunkSize <= 5; g_chunkSize++) {
+  for (g_chunkSize = 0; g_chunkSize <= 5; g_chunkSize++) {
     char context[100];
     snprintf(context, sizeof(context), "chunksize=%d", g_chunkSize);
     context[sizeof(context) - 1] = '\0';
