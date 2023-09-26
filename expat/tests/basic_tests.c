@@ -596,7 +596,7 @@ START_TEST(test_line_number_after_parse) {
                      "\n</tag>";
   XML_Size lineno;
 
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_FALSE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
   lineno = XML_GetCurrentLineNumber(g_parser);
