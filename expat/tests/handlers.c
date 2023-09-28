@@ -1573,6 +1573,11 @@ parser_stop_character_handler(void *userData, const XML_Char *s, int len) {
   UNUSED_P(userData);
   UNUSED_P(s);
   UNUSED_P(len);
+  XML_ParsingStatus status;
+  XML_GetParsingStatus(g_parser, &status);
+  if (status.parsing == XML_FINISHED) {
+    return; // the parser was stopped by a previous call to this handler.
+  }
   XML_StopParser(g_parser, g_resumable);
   XML_SetCharacterDataHandler(g_parser, NULL);
   if (! g_resumable) {
