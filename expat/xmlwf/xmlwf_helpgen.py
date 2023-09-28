@@ -63,6 +63,7 @@ input_related.add_argument('-x', action='store_true', help='enable processing of
 input_related.add_argument('-e', action='store', metavar='ENCODING', help='override any in-document [e]ncoding declaration')
 input_related.add_argument('-w', action='store_true', help='enable support for [W]indows code pages')
 input_related.add_argument('-r', action='store_true', help='disable memory-mapping and use [r]ead calls instead')
+input_related.add_argument('-g', metavar='BYTES', help='buffer size to request per call pair to XML_[G]etBuffer and read (default: 8 KiB)')
 input_related.add_argument('-k', action='store_true', help='when processing multiple files, [k]eep processing after first file with error')
 
 output_related = parser.add_argument_group('output control arguments')

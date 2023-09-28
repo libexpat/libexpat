@@ -71,11 +71,7 @@
 #  endif
 #endif
 
-#ifdef _DEBUG
-#  define READ_SIZE 16
-#else
-#  define READ_SIZE (1024 * 8)
-#endif
+int g_read_size_bytes = 1024 * 8;
 
 typedef struct {
   XML_Parser parser;
@@ -195,7 +191,7 @@ processStream(const XML_Char *filename, XML_Parser parser) {
   }
   for (;;) {
     int nread;
-    char *buf = (char *)XML_GetBuffer(parser, READ_SIZE);
+    char *buf = (char *)XML_GetBuffer(parser, g_read_size_bytes);
     if (! buf) {
       if (filename != NULL)
         close(fd);
@@ -203,7 +199,7 @@ processStream(const XML_Char *filename, XML_Parser parser) {
                filename != NULL ? filename : T("xmlwf"));
       return 0;
     }
-    nread = read(fd, buf, READ_SIZE);
+    nread = read(fd, buf, g_read_size_bytes);
     if (nread < 0) {
       tperror(filename != NULL ? filename : T("STDIN"));
       if (filename != NULL)

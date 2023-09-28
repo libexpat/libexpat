@@ -899,6 +899,7 @@ usage(const XML_Char *prog, int rc) {
       T("  -e ENCODING   override any in-document [e]ncoding declaration\n")
       T("  -w            enable support for [W]indows code pages\n")
       T("  -r            disable memory-mapping and use [r]ead calls instead\n")
+      T("  -g BYTES      buffer size to request per call pair to XML_[G]etBuffer and read (default: 8 KiB)\n")
       T("  -k            when processing multiple files, [k]eep processing after first file with error\n")
       T("\n")
       T("output control arguments:\n")
@@ -1042,6 +1043,26 @@ tmain(int argc, XML_Char **argv) {
     case T('v'):
       showVersion(argv[0]);
       return 0;
+    case T('g'): {
+      const XML_Char *valueText = NULL;
+      XMLWF_SHIFT_ARG_INTO(valueText, argc, argv, i, j);
+
+      errno = 0;
+      XML_Char *afterValueText = (XML_Char *)valueText;
+      const long long read_size_bytes_candidate
+          = tcstoull(valueText, &afterValueText, 10);
+      if ((errno != 0) || (afterValueText[0] != T('\0'))
+          || (read_size_bytes_candidate < 1)
+          || (read_size_bytes_candidate > (INT_MAX / 2 + 1))) {
+        // This prevents tperror(..) from reporting misleading "[..]: Success"
+        errno = ERANGE;
+        tperror(T("invalid buffer size") T(
+            " (needs an integer from 1 to INT_MAX/2+1 i.e. 1,073,741,824 on most platforms)"));
+        exit(XMLWF_EXIT_USAGE_ERROR);
+      }
+      g_read_size_bytes = (int)read_size_bytes_candidate;
+      break;
+    }
     case T('k'):
       continueOnError = 1;
       j++;
