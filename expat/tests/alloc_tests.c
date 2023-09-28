@@ -18,6 +18,7 @@
    Copyright (c) 2019      David Loffredo <loffredo@steptools.com>
    Copyright (c) 2020      Tim Gates <tim.gates@iress.com>
    Copyright (c) 2021      Donghee Na <donghee.na@python.org>
+   Copyright (c) 2023      Sony Corporation / Snild Dolkow <snild@sony.com>
    Licensed under the MIT license:
 
    Permission is  hereby granted,  free of charge,  to any  person obtaining
@@ -1645,7 +1646,7 @@ START_TEST(test_alloc_nested_entities) {
          "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP"
          "'>\n"
          "<!ENTITY % pe2 '%pe1;'>\n"
-         "%pe2;",
+         "<!ENTITY % pe3 '%pe2;'>",
          "Memory Fail not faulted", NULL, XML_ERROR_NO_MEMORY};
 
   /* Causes an allocation error in a nested storeEntityValue() */
