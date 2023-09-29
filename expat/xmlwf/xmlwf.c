@@ -984,9 +984,11 @@ tmain(int argc, XML_Char **argv) {
     if (j == 0) {
       if (argv[i][0] != T('-'))
         break;
-      if (argv[i][1] == T('-') && argv[i][2] == T('\0')) {
-        i++;
-        break;
+      if (argv[i][1] == T('-')) {
+        if (argv[i][2] == T('\0')) {
+          i++;
+          break;
+        }
       }
       j++;
     }
