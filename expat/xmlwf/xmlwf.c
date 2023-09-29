@@ -871,6 +871,9 @@ showVersion(XML_Char *prog) {
   }
 }
 
+#if defined(__GNUC__)
+__attribute__((noreturn))
+#endif
 static void
 usage(const XML_Char *prog, int rc) {
   ftprintf(
@@ -883,48 +886,48 @@ usage(const XML_Char *prog, int rc) {
       /* clang-format off */
       T("usage:\n")
       T("  %s [OPTIONS] [FILE ...]\n")
-      T("  %s -h\n")
-      T("  %s -v\n")
+      T("  %s -h|--help\n")
+      T("  %s -v|--version\n")
       T("\n")
       T("xmlwf - Determines if an XML document is well-formed\n")
       T("\n")
       T("positional arguments:\n")
-      T("  FILE          file to process (default: STDIN)\n")
+      T("  FILE           file to process (default: STDIN)\n")
       T("\n")
       T("input control arguments:\n")
-      T("  -s            print an error if the document is not [s]tandalone\n")
-      T("  -n            enable [n]amespace processing\n")
-      T("  -p            enable processing of external DTDs and [p]arameter entities\n")
-      T("  -x            enable processing of e[x]ternal entities\n")
-      T("  -e ENCODING   override any in-document [e]ncoding declaration\n")
-      T("  -w            enable support for [W]indows code pages\n")
-      T("  -r            disable memory-mapping and use [r]ead calls instead\n")
-      T("  -g BYTES      buffer size to request per call pair to XML_[G]etBuffer and read (default: 8 KiB)\n")
-      T("  -k            when processing multiple files, [k]eep processing after first file with error\n")
+      T("  -s             print an error if the document is not [s]tandalone\n")
+      T("  -n             enable [n]amespace processing\n")
+      T("  -p             enable processing of external DTDs and [p]arameter entities\n")
+      T("  -x             enable processing of e[x]ternal entities\n")
+      T("  -e ENCODING    override any in-document [e]ncoding declaration\n")
+      T("  -w             enable support for [W]indows code pages\n")
+      T("  -r             disable memory-mapping and use [r]ead calls instead\n")
+      T("  -g BYTES       buffer size to request per call pair to XML_[G]etBuffer and read (default: 8 KiB)\n")
+      T("  -k             when processing multiple files, [k]eep processing after first file with error\n")
       T("\n")
       T("output control arguments:\n")
-      T("  -d DIRECTORY  output [d]estination directory\n")
-      T("  -c            write a [c]opy of input XML, not canonical XML\n")
-      T("  -m            write [m]eta XML, not canonical XML\n")
-      T("  -t            write no XML output for [t]iming of plain parsing\n")
-      T("  -N            enable adding doctype and [n]otation declarations\n")
+      T("  -d DIRECTORY   output [d]estination directory\n")
+      T("  -c             write a [c]opy of input XML, not canonical XML\n")
+      T("  -m             write [m]eta XML, not canonical XML\n")
+      T("  -t             write no XML output for [t]iming of plain parsing\n")
+      T("  -N             enable adding doctype and [n]otation declarations\n")
       T("\n")
       T("billion laughs attack protection:\n")
       T("  NOTE: If you ever need to increase these values for non-attack payload, please file a bug report.\n")
       T("\n")
-      T("  -a FACTOR     set maximum tolerated [a]mplification factor (default: 100.0)\n")
-      T("  -b BYTES      set number of output [b]ytes needed to activate (default: 8 MiB)\n")
+      T("  -a FACTOR      set maximum tolerated [a]mplification factor (default: 100.0)\n")
+      T("  -b BYTES       set number of output [b]ytes needed to activate (default: 8 MiB)\n")
       T("\n")
       T("info arguments:\n")
-      T("  -h            show this [h]elp message and exit\n")
-      T("  -v            show program's [v]ersion number and exit\n")
+      T("  -h, --help     show this [h]elp message and exit\n")
+      T("  -v, --version  show program's [v]ersion number and exit\n")
       T("\n")
       T("exit status:\n")
-      T("  0             the input files are well-formed and the output (if requested) was written successfully\n")
-      T("  1             could not allocate data structures, signals a serious problem with execution environment\n")
-      T("  2             one or more input files were not well-formed\n")
-      T("  3             could not create an output file\n")
-      T("  4             command-line argument error\n")
+      T("  0              the input files are well-formed and the output (if requested) was written successfully\n")
+      T("  1              could not allocate data structures, signals a serious problem with execution environment\n")
+      T("  2              one or more input files were not well-formed\n")
+      T("  3              could not create an output file\n")
+      T("  4              command-line argument error\n")
       T("\n")
       T("xmlwf of libexpat is software libre, licensed under the MIT license.\n")
       T("Please report bugs at https://github.com/libexpat/libexpat/issues -- thank you!\n")
@@ -941,8 +944,10 @@ int wmain(int argc, XML_Char **argv);
 #define XMLWF_SHIFT_ARG_INTO(constCharStarTarget, argc, argv, i, j)            \
   {                                                                            \
     if (argv[i][j + 1] == T('\0')) {                                           \
-      if (++i == argc)                                                         \
+      if (++i == argc) {                                                       \
         usage(argv[0], XMLWF_EXIT_USAGE_ERROR);                                \
+        /* usage called exit(..), never gets here */                           \
+      }                                                                        \
       constCharStarTarget = argv[i];                                           \
     } else {                                                                   \
       constCharStarTarget = argv[i] + j + 1;                                   \
@@ -984,9 +989,17 @@ tmain(int argc, XML_Char **argv) {
     if (j == 0) {
       if (argv[i][0] != T('-'))
         break;
-      if (argv[i][1] == T('-') && argv[i][2] == T('\0')) {
-        i++;
-        break;
+      if (argv[i][1] == T('-')) {
+        if (argv[i][2] == T('\0')) {
+          i++;
+          break;
+        } else if (tcscmp(argv[i] + 2, T("help")) == 0) {
+          usage(argv[0], XMLWF_EXIT_SUCCESS);
+          // usage called exit(..), never gets here
+        } else if (tcscmp(argv[i] + 2, T("version")) == 0) {
+          showVersion(argv[0]);
+          return XMLWF_EXIT_SUCCESS;
+        }
       }
       j++;
     }
@@ -1039,10 +1052,10 @@ tmain(int argc, XML_Char **argv) {
       break;
     case T('h'):
       usage(argv[0], XMLWF_EXIT_SUCCESS);
-      return 0;
+      // usage called exit(..), never gets here
     case T('v'):
       showVersion(argv[0]);
-      return 0;
+      return XMLWF_EXIT_SUCCESS;
     case T('g'): {
       const XML_Char *valueText = NULL;
       XMLWF_SHIFT_ARG_INTO(valueText, argc, argv, i, j);
@@ -1119,6 +1132,7 @@ tmain(int argc, XML_Char **argv) {
       /* fall through */
     default:
       usage(argv[0], XMLWF_EXIT_USAGE_ERROR);
+      // usage called exit(..), never gets here
     }
   }
   if (i == argc) {
