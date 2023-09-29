@@ -1055,7 +1055,7 @@ tmain(int argc, XML_Char **argv) {
       // usage called exit(..), never gets here
     case T('v'):
       showVersion(argv[0]);
-      return 0;
+      return XMLWF_EXIT_SUCCESS;
     case T('g'): {
       const XML_Char *valueText = NULL;
       XMLWF_SHIFT_ARG_INTO(valueText, argc, argv, i, j);
