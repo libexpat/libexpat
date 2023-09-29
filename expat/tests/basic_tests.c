@@ -5387,8 +5387,7 @@ END_TEST
 
 START_TEST(test_set_reparse_deferral_on_the_fly) {
   const char *const pre = "<d><x attr='";
-  const char *const end = "'></x";
-  const char *const post = ">";
+  const char *const end = "'></x>";
   char iiiiii[100];
   const int fillsize = (int)sizeof(iiiiii);
   memset(iiiiii, 'i', fillsize);
@@ -5427,7 +5426,7 @@ START_TEST(test_set_reparse_deferral_on_the_fly) {
   // now change the heuristic setting and add *no* data
   assert_true(XML_SetReparseDeferralEnabled(parser, XML_FALSE));
   // we avoid isFinal=XML_TRUE, because that would force-bypass the heuristic.
-  status = XML_Parse(parser, post, (int)strlen(post), XML_FALSE);
+  status = XML_Parse(parser, "", 0, XML_FALSE);
   if (status != XML_STATUS_OK) {
     xml_failure(parser);
   }

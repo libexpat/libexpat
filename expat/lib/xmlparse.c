@@ -1914,46 +1914,8 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal) {
     parser->m_parsingStatus.parsing = XML_PARSING;
   }
 
-  if (len == 0) {
-    parser->m_parsingStatus.finalBuffer = (XML_Bool)isFinal;
-    if (! isFinal)
-      return XML_STATUS_OK;
-    parser->m_positionPtr = parser->m_bufferPtr;
-    parser->m_parseEndPtr = parser->m_bufferEnd;
-
-    /* If data are left over from last buffer, and we now know that these
-       data are the final chunk of input, then we have to check them again
-       to detect errors based on that fact.
-    */
-    parser->m_errorCode
-        = callProcessor(parser, parser->m_bufferPtr, parser->m_parseEndPtr,
-                        &parser->m_bufferPtr);
-
-    if (parser->m_errorCode == XML_ERROR_NONE) {
-      switch (parser->m_parsingStatus.parsing) {
-      case XML_SUSPENDED:
-        /* While we added no new data, the finalBuffer flag may have caused
-         * us to parse previously-unparsed data in the internal buffer.
-         * If that triggered a callback to the application, it would have
-         * had an opportunity to suspend parsing. */
-        XmlUpdatePosition(parser->m_encoding, parser->m_positionPtr,
-                          parser->m_bufferPtr, &parser->m_position);
-        parser->m_positionPtr = parser->m_bufferPtr;
-        return XML_STATUS_SUSPENDED;
-      case XML_INITIALIZED:
-      case XML_PARSING:
-        parser->m_parsingStatus.parsing = XML_FINISHED;
-        /* fall through */
-      default:
-        return XML_STATUS_OK;
-      }
-    }
-    parser->m_eventEndPtr = parser->m_eventPtr;
-    parser->m_processor = errorProcessor;
-    return XML_STATUS_ERROR;
-  }
 #if XML_CONTEXT_BYTES == 0
-  else if (parser->m_bufferPtr == parser->m_bufferEnd) {
+  if (parser->m_bufferPtr == parser->m_bufferEnd) {
     const char *end;
     int nLeftOver;
     enum XML_Status result;
@@ -2023,15 +1985,14 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal) {
     return result;
   }
 #endif /* XML_CONTEXT_BYTES == 0 */
-  else {
-    void *buff = XML_GetBuffer(parser, len);
-    if (buff == NULL)
-      return XML_STATUS_ERROR;
-    else {
-      memcpy(buff, s, len);
-      return XML_ParseBuffer(parser, len, isFinal);
-    }
+  void *buff = XML_GetBuffer(parser, len);
+  if (buff == NULL)
+    return XML_STATUS_ERROR;
+  if (len > 0) {
+    assert(s != NULL); // make sure s==NULL && len!=0 was rejected above
+    memcpy(buff, s, len);
   }
+  return XML_ParseBuffer(parser, len, isFinal);
 }
 
 enum XML_Status XMLCALL
