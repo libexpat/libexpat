@@ -4267,7 +4267,7 @@ START_TEST(test_ext_entity_latin1_utf16le_bom) {
          /* If Latin-1, 0xff = Y-diaeresis, 0xfe = lowercase thorn,
           *   0x4c = L and 0x20 is a space
           */
-         "\xff\xfe\x4c\x20", 4, XCS("iso-8859-1"), NULL, EE_PARSE_NONE};
+         "\xff\xfe\x4c\x20", 4, XCS("iso-8859-1"), NULL};
 #ifdef XML_UNICODE
   const XML_Char *expected = XCS("\x00ff\x00feL ");
 #else
@@ -4298,7 +4298,7 @@ START_TEST(test_ext_entity_latin1_utf16be_bom) {
          /* If Latin-1, 0xff = Y-diaeresis, 0xfe = lowercase thorn,
           *   0x4c = L and 0x20 is a space
           */
-         "\xfe\xff\x20\x4c", 4, XCS("iso-8859-1"), NULL, EE_PARSE_NONE};
+         "\xfe\xff\x20\x4c", 4, XCS("iso-8859-1"), NULL};
 #ifdef XML_UNICODE
   const XML_Char *expected = XCS("\x00fe\x00ff L");
 #else
@@ -4333,7 +4333,7 @@ START_TEST(test_ext_entity_latin1_utf16le_bom2) {
          /* If Latin-1, 0xff = Y-diaeresis, 0xfe = lowercase thorn,
           *   0x4c = L and 0x20 is a space
           */
-         "\xff\xfe\x4c\x20", 4, XCS("iso-8859-1"), NULL, EE_PARSE_FULL_BUFFER};
+         "\xff\xfe\x4c\x20", 4, XCS("iso-8859-1"), NULL};
 #ifdef XML_UNICODE
   const XML_Char *expected = XCS("\x00ff\x00feL ");
 #else
@@ -4364,7 +4364,7 @@ START_TEST(test_ext_entity_latin1_utf16be_bom2) {
          /* If Latin-1, 0xff = Y-diaeresis, 0xfe = lowercase thorn,
           *   0x4c = L and 0x20 is a space
           */
-         "\xfe\xff\x20\x4c", 4, XCS("iso-8859-1"), NULL, EE_PARSE_FULL_BUFFER};
+         "\xfe\xff\x20\x4c", 4, XCS("iso-8859-1"), NULL};
 #ifdef XML_UNICODE
   const XML_Char *expected = XCS("\x00fe\x00ff L");
 #else
@@ -4391,8 +4391,7 @@ START_TEST(test_ext_entity_utf16_be) {
                      "  <!ENTITY en SYSTEM 'http://example.org/dummy.ent'>\n"
                      "]>\n"
                      "<doc>&en;</doc>";
-  ExtTest2 test_data
-      = {"<\0e\0/\0>\0", 8, XCS("utf-16be"), NULL, EE_PARSE_NONE};
+  ExtTest2 test_data = {"<\0e\0/\0>\0", 8, XCS("utf-16be"), NULL};
 #ifdef XML_UNICODE
   const XML_Char *expected = XCS("\x3c00\x6500\x2f00\x3e00");
 #else
@@ -4421,8 +4420,7 @@ START_TEST(test_ext_entity_utf16_le) {
                      "  <!ENTITY en SYSTEM 'http://example.org/dummy.ent'>\n"
                      "]>\n"
                      "<doc>&en;</doc>";
-  ExtTest2 test_data
-      = {"\0<\0e\0/\0>", 8, XCS("utf-16le"), NULL, EE_PARSE_NONE};
+  ExtTest2 test_data = {"\0<\0e\0/\0>", 8, XCS("utf-16le"), NULL};
 #ifdef XML_UNICODE
   const XML_Char *expected = XCS("\x3c00\x6500\x2f00\x3e00");
 #else
@@ -4476,7 +4474,7 @@ START_TEST(test_ext_entity_utf8_non_bom) {
                      "<doc>&en;</doc>";
   ExtTest2 test_data
       = {"\xef\xbb\x80", /* Arabic letter DAD medial form, U+FEC0 */
-         3, NULL, NULL, EE_PARSE_NONE};
+         3, NULL, NULL};
 #ifdef XML_UNICODE
   const XML_Char *expected = XCS("\xfec0");
 #else
@@ -4900,9 +4898,9 @@ START_TEST(test_entity_public_utf16_be) {
       "\0]\0>\0\n"
       /* <d>&j;</d> */
       "\0<\0d\0>\0&\0j\0;\0<\0/\0d\0>";
-  ExtTest2 test_data = {/* <!ENTITY j 'baz'> */
-                        "\0<\0!\0E\0N\0T\0I\0T\0Y\0 \0j\0 \0'\0b\0a\0z\0'\0>",
-                        34, NULL, NULL, EE_PARSE_NONE};
+  ExtTest2 test_data
+      = {/* <!ENTITY j 'baz'> */
+         "\0<\0!\0E\0N\0T\0I\0T\0Y\0 \0j\0 \0'\0b\0a\0z\0'\0>", 34, NULL, NULL};
   const XML_Char *expected = XCS("baz");
   CharData storage;
 
@@ -4932,9 +4930,9 @@ START_TEST(test_entity_public_utf16_le) {
       "]\0>\0\n\0"
       /* <d>&j;</d> */
       "<\0d\0>\0&\0j\0;\0<\0/\0d\0>\0";
-  ExtTest2 test_data = {/* <!ENTITY j 'baz'> */
-                        "<\0!\0E\0N\0T\0I\0T\0Y\0 \0j\0 \0'\0b\0a\0z\0'\0>\0",
-                        34, NULL, NULL, EE_PARSE_NONE};
+  ExtTest2 test_data
+      = {/* <!ENTITY j 'baz'> */
+         "<\0!\0E\0N\0T\0I\0T\0Y\0 \0j\0 \0'\0b\0a\0z\0'\0>\0", 34, NULL, NULL};
   const XML_Char *expected = XCS("baz");
   CharData storage;
 
