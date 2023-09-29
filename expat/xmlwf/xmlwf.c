@@ -886,8 +886,8 @@ usage(const XML_Char *prog, int rc) {
       /* clang-format off */
       T("usage:\n")
       T("  %s [OPTIONS] [FILE ...]\n")
-      T("  %s -h\n")
-      T("  %s -v\n")
+      T("  %s -h|--help\n")
+      T("  %s -v|--version\n")
       T("\n")
       T("xmlwf - Determines if an XML document is well-formed\n")
       T("\n")
@@ -919,8 +919,8 @@ usage(const XML_Char *prog, int rc) {
       T("  -b BYTES      set number of output [b]ytes needed to activate (default: 8 MiB)\n")
       T("\n")
       T("info arguments:\n")
-      T("  -h            show this [h]elp message and exit\n")
-      T("  -v            show program's [v]ersion number and exit\n")
+      T("  -h, --help     show this [h]elp message and exit\n")
+      T("  -v, --version  show program's [v]ersion number and exit\n")
       T("\n")
       T("exit status:\n")
       T("  0             the input files are well-formed and the output (if requested) was written successfully\n")
@@ -993,6 +993,12 @@ tmain(int argc, XML_Char **argv) {
         if (argv[i][2] == T('\0')) {
           i++;
           break;
+        } else if (tcscmp(argv[i] + 2, T("help")) == 0) {
+          usage(argv[0], XMLWF_EXIT_SUCCESS);
+          // usage called exit(..), never gets here
+        } else if (tcscmp(argv[i] + 2, T("version")) == 0) {
+          showVersion(argv[0]);
+          return XMLWF_EXIT_SUCCESS;
         }
       }
       j++;

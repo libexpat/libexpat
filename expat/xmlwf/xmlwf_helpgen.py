@@ -45,8 +45,8 @@ Please report bugs at https://github.com/libexpat/libexpat/issues -- thank you!
 
 usage = """
   %(prog)s [OPTIONS] [FILE ...]
-  %(prog)s -h
-  %(prog)s -v
+  %(prog)s -h|--help
+  %(prog)s -v|--version
 """
 
 parser = argparse.ArgumentParser(prog='xmlwf', add_help=False,
@@ -86,8 +86,8 @@ parser.add_argument('files', metavar='FILE', nargs='*', help='file to process (d
 
 info = parser.add_argument_group('info arguments')
 info = info.add_mutually_exclusive_group()
-info.add_argument('-h', action='store_true', help='show this [h]elp message and exit')
-info.add_argument('-v', action='store_true', help='show program\'s [v]ersion number and exit')
+info.add_argument('-h', '--help', action='store_true', help='show this [h]elp message and exit')
+info.add_argument('-v', '--version', action='store_true', help='show program\'s [v]ersion number and exit')
 
 
 if __name__ == '__main__':
