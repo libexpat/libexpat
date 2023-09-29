@@ -1508,10 +1508,7 @@ accounting_external_entity_ref_handler(XML_Parser parser,
   XML_Parser entParser = XML_ExternalEntityParserCreate(parser, context, 0);
   assert(entParser);
 
-  const XmlParseFunction xmlParseFunction
-      = testCase->singleBytesWanted ? _XML_Parse_SINGLE_BYTES : XML_Parse;
-
-  const enum XML_Status status = xmlParseFunction(
+  const enum XML_Status status = _XML_Parse_SINGLE_BYTES(
       entParser, externalText, (int)strlen(externalText), XML_TRUE);
 
   XML_ParserFree(entParser);

@@ -415,7 +415,6 @@ struct AccountingTestCase {
   const char *firstExternalText;  /* often NULL */
   const char *secondExternalText; /* often NULL */
   const unsigned long long expectedCountBytesIndirectExtra;
-  XML_Bool singleBytesWanted;
 };
 
 extern int accounting_external_entity_ref_handler(XML_Parser parser,
