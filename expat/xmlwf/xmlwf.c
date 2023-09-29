@@ -871,6 +871,9 @@ showVersion(XML_Char *prog) {
   }
 }
 
+#if defined(__GNUC__)
+__attribute__((noreturn))
+#endif
 static void
 usage(const XML_Char *prog, int rc) {
   ftprintf(
@@ -941,8 +944,10 @@ int wmain(int argc, XML_Char **argv);
 #define XMLWF_SHIFT_ARG_INTO(constCharStarTarget, argc, argv, i, j)            \
   {                                                                            \
     if (argv[i][j + 1] == T('\0')) {                                           \
-      if (++i == argc)                                                         \
+      if (++i == argc) {                                                       \
         usage(argv[0], XMLWF_EXIT_USAGE_ERROR);                                \
+        /* usage called exit(..), never gets here */                           \
+      }                                                                        \
       constCharStarTarget = argv[i];                                           \
     } else {                                                                   \
       constCharStarTarget = argv[i] + j + 1;                                   \
@@ -1041,7 +1046,7 @@ tmain(int argc, XML_Char **argv) {
       break;
     case T('h'):
       usage(argv[0], XMLWF_EXIT_SUCCESS);
-      return 0;
+      // usage called exit(..), never gets here
     case T('v'):
       showVersion(argv[0]);
       return 0;
@@ -1121,6 +1126,7 @@ tmain(int argc, XML_Char **argv) {
       /* fall through */
     default:
       usage(argv[0], XMLWF_EXIT_USAGE_ERROR);
+      // usage called exit(..), never gets here
     }
   }
   if (i == argc) {
