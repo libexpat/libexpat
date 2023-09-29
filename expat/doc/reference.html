@@ -949,16 +949,20 @@ XML_Parser XMLCALL
 XML_ParserCreate(const XML_Char *encoding);
 </pre>
 <div class="fcndef">
+<p>
 Construct a new parser. If encoding is non-<code>NULL</code>, it specifies a
 character encoding to use for the document. This overrides the document
 encoding declaration. There are four built-in encodings:
+</p>
 <ul>
 <li>US-ASCII</li>
 <li>UTF-8</li>
 <li>UTF-16</li>
 <li>ISO-8859-1</li>
 </ul>
+<p>
 Any other value will invoke a call to the UnknownEncodingHandler.
+</p>
 </div>
 
 <h4 id="XML_ParserCreateNS">XML_ParserCreateNS</h4>
