@@ -47,5 +47,6 @@ jobs:
     - uses: codespell-project/actions-codespell@94259cd8be02ad2903ba34a22d9c13de21a74461  # v2.0
       with:
         path: expat/
-        # This is from "[n]otation" in xmlwf help output
-        ignore_words_list: otation
+        # "arameter" is from "[p]arameter" in xmlwf help output
+        # "otation" is from "[n]otation" in xmlwf help output
+        ignore_words_list: arameter,otation
