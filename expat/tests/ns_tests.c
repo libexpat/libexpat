@@ -252,7 +252,7 @@ START_TEST(test_ns_prefix_with_empty_uri_4) {
                      "]>\n"
                      "<prefix:doc/>";
   /* Packaged info expected by the end element handler;
-     the weird structuring lets us re-use the triplet_end_checker()
+     the weird structuring lets us reuse the triplet_end_checker()
      function also used for another test. */
   const XML_Char *elemstr[] = {XCS("http://example.org/ doc prefix")};
   XML_SetReturnNSTriplet(g_parser, XML_TRUE);
