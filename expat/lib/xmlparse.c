@@ -282,7 +282,7 @@ typedef struct {
    XML_Parse()/XML_ParseBuffer(), the buffer is re-allocated to
    contain the 'raw' name as well.
 
-   A parser re-uses these structures, maintaining a list of allocated
+   A parser reuses these structures, maintaining a list of allocated
    TAG objects in a free list.
 */
 typedef struct tag {
@@ -2583,7 +2583,7 @@ storeRawNames(XML_Parser parser) {
     */
     if (tag->rawName == rawNameBuf)
       break;
-    /* For re-use purposes we need to ensure that the
+    /* For reuse purposes we need to ensure that the
        size of tag->buf is a multiple of sizeof(XML_Char).
     */
     rawNameLen = ROUND_UP(tag->rawNameLength, sizeof(XML_Char));
@@ -3041,7 +3041,7 @@ doContent(XML_Parser parser, int startTagLevel, const ENCODING *enc,
           if (parser->m_ns && localPart) {
             /* localPart and prefix may have been overwritten in
                tag->name.str, since this points to the binding->uri
-               buffer which gets re-used; so we have to add them again
+               buffer which gets reused; so we have to add them again
             */
             uri = (XML_Char *)tag->name.str + tag->name.uriLen;
             /* don't need to check for space - already done in storeAtts() */
@@ -6483,7 +6483,7 @@ getAttributeId(XML_Parser parser, const ENCODING *enc, const char *start,
   name = poolStoreString(&dtd->pool, enc, start, end);
   if (! name)
     return NULL;
-  /* skip quotation mark - its storage will be re-used (like in name[-1]) */
+  /* skip quotation mark - its storage will be reused (like in name[-1]) */
   ++name;
   id = (ATTRIBUTE_ID *)lookup(parser, &dtd->attributeIds, name,
                               sizeof(ATTRIBUTE_ID));
