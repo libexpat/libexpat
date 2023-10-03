@@ -1103,6 +1103,7 @@ enum XML_Status {
 };
 </pre>
 <div class="fcndef">
+<p>
 Parse some more of the document. The string <code>s</code> is a buffer
 containing part (or perhaps all) of the document. The number of bytes of s
 that are part of the document is indicated by <code>len</code>. This means
@@ -1112,12 +1113,16 @@ memory that <code>s</code> points at, then a memory fault is likely. The
 <code>isFinal</code> parameter informs the parser that this is the last
 piece of the document. Frequently, the last piece is empty (i.e.
 <code>len</code> is zero.)
+</p>
+
+<p>
 If a parse error occurred, it returns <code>XML_STATUS_ERROR</code>.
 Otherwise it returns <code>XML_STATUS_OK</code> value.
 Note that regardless of the return value, there is no guarantee that all
 provided input has been parsed; only after <a href="#isFinal">the
 concluding call</a> will all handler callbacks and parsing errors have
 happened.
+</p>
 </div>
 
 <h4 id="XML_ParseBuffer">XML_ParseBuffer</h4>
