@@ -213,6 +213,8 @@ typedef char ICHAR;
 /* Do safe (NULL-aware) pointer arithmetic */
 #define EXPAT_SAFE_PTR_DIFF(p, q) (((p) && (q)) ? ((p) - (q)) : 0)
 
+#define EXPAT_MIN(a, b) (((a) < (b)) ? (a) : (b))
+
 #include "internal.h"
 #include "xmltok.h"
 #include "xmlrole.h"
@@ -652,6 +654,7 @@ struct XML_ParserStruct {
   const char *m_parseEndPtr;
   size_t m_partialTokenBytesBefore; /* used in heuristic to avoid O(n^2) */
   XML_Bool m_reparseDeferralEnabled;
+  int m_lastBufferRequestSize;
   XML_Char *m_dataBuf;
   XML_Char *m_dataBufEnd;
   XML_StartElementHandler m_startElementHandler;
@@ -993,7 +996,18 @@ callProcessor(XML_Parser parser, const char *start, const char *end,
     // Heuristic: don't try to parse a partial token again until the amount of
     // available data has increased significantly.
     const size_t had_before = parser->m_partialTokenBytesBefore;
-    const bool enough = (have_now >= 2 * had_before);
+    // ...but *do* try anyway if we're close to reaching the max buffer size.
+    size_t close_to_maxbuf = INT_MAX / 2 + (INT_MAX & 1); // round up
+#if XML_CONTEXT_BYTES > 0
+    // subtract XML_CONTEXT_BYTES, but don't go below zero
+    close_to_maxbuf -= EXPAT_MIN(close_to_maxbuf, XML_CONTEXT_BYTES);
+#endif
+    // subtract the last buffer fill size, but don't go below zero
+    // m_lastBufferRequestSize is never assigned a value < 0, so the cast is ok
+    close_to_maxbuf
+        -= EXPAT_MIN(close_to_maxbuf, (size_t)parser->m_lastBufferRequestSize);
+    const bool enough
+        = (have_now >= 2 * had_before) || (have_now > close_to_maxbuf);
 
     if (! enough) {
       *endPtr = start; // callers may expect this to be set
@@ -1195,6 +1209,7 @@ parserInit(XML_Parser parser, const XML_Char *encodingName) {
   parser->m_parseEndPtr = NULL;
   parser->m_partialTokenBytesBefore = 0;
   parser->m_reparseDeferralEnabled = g_reparseDeferralEnabledDefault;
+  parser->m_lastBufferRequestSize = 0;
   parser->m_declElementType = NULL;
   parser->m_declAttributeId = NULL;
   parser->m_declEntity = NULL;
@@ -1929,6 +1944,9 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal) {
       parser->m_processor = errorProcessor;
       return XML_STATUS_ERROR;
     }
+    // though this isn't a buffer request, we assume that `len` is the app's
+    // preferred buffer fill size, and therefore save it here.
+    parser->m_lastBufferRequestSize = len;
     parser->m_parseEndByteIndex += len;
     parser->m_positionPtr = s;
     parser->m_parsingStatus.finalBuffer = (XML_Bool)isFinal;
@@ -1967,6 +1985,9 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal) {
       parser->m_parsingStatus.parsing = XML_PARSING;
       void *const temp = XML_GetBuffer(parser, nLeftOver);
       parser->m_parsingStatus.parsing = originalStatus;
+      // GetBuffer may have overwritten this, but we want to remember what the
+      // app requested, not how many bytes were left over after parsing.
+      parser->m_lastBufferRequestSize = len;
       if (temp == NULL) {
         // NOTE: parser->m_errorCode has already been set by XML_GetBuffer().
         parser->m_eventPtr = parser->m_eventEndPtr = NULL;
@@ -2081,6 +2102,9 @@ XML_GetBuffer(XML_Parser parser, int len) {
   default:;
   }
 
+  // whether or not the request succeeds, `len` seems to be the app's preferred
+  // buffer fill size; remember it.
+  parser->m_lastBufferRequestSize = len;
   if (len > EXPAT_SAFE_PTR_DIFF(parser->m_bufferLim, parser->m_bufferEnd)
       || parser->m_buffer == NULL) {
 #if XML_CONTEXT_BYTES > 0
