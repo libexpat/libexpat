@@ -61,7 +61,7 @@
 
 #define XML_BUILDING_EXPAT 1
 
-#include <expat_config.h>
+#include "expat_config.h"
 
 #if defined(HAVE_SYSCALL_GETRANDOM)
 #  if ! defined(_GNU_SOURCE)
