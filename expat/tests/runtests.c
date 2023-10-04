@@ -41,7 +41,7 @@
    USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include <expat_config.h>
+#include "expat_config.h"
 
 #include <stdio.h>
 #include <string.h>
