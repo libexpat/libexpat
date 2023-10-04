@@ -609,14 +609,22 @@ struct XML_ParserStruct {
      macro works. */
   void *m_userData;
   void *m_handlerArg;
-  char *m_buffer;
+
+  // How the four parse buffer pointers below relate in time and space:
+  //
+  //   m_buffer <= m_bufferPtr <= m_bufferEnd  <= m_bufferLim
+  //   |           |              |               |
+  //   <--parsed-->|              |               |
+  //               <---parsing--->|               |
+  //                              <--unoccupied-->|
+  //   <---------total-malloced/realloced-------->|
+
+  char *m_buffer; // malloc/realloc base pointer of parse buffer
   const XML_Memory_Handling_Suite m_mem;
-  /* first character to be parsed */
-  const char *m_bufferPtr;
-  /* past last character to be parsed */
-  char *m_bufferEnd;
-  /* allocated end of m_buffer */
-  const char *m_bufferLim;
+  const char *m_bufferPtr; // first character to be parsed
+  char *m_bufferEnd;       // past last character to be parsed
+  const char *m_bufferLim; // allocated end of m_buffer
+
   XML_Index m_parseEndByteIndex;
   const char *m_parseEndPtr;
   XML_Char *m_dataBuf;
