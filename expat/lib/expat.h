@@ -951,7 +951,7 @@ XMLPARSEAPI(XML_Index) XML_GetCurrentByteIndex(XML_Parser parser);
 XMLPARSEAPI(int)
 XML_GetCurrentByteCount(XML_Parser parser);
 
-/* If XML_CONTEXT_BYTES is defined, returns the input buffer, sets
+/* If XML_CONTEXT_BYTES is >=1, returns the input buffer, sets
    the integer pointed to by offset to the offset within this buffer
    of the current parse position, and sets the integer pointed to by size
    to the size of this buffer (the number of input bytes). Otherwise

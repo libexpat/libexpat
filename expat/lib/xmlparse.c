@@ -63,6 +63,11 @@
 
 #include "expat_config.h"
 
+#if ! defined(XML_CONTEXT_BYTES) || (1 - XML_CONTEXT_BYTES - 1 == 2)           \
+    || (XML_CONTEXT_BYTES + 0 < 0)
+#  error XML_CONTEXT_BYTES must be defined, non-empty and >=0 (0 to disable, >=1 to enable; 1024 is a common default)
+#endif
+
 #if defined(HAVE_SYSCALL_GETRANDOM)
 #  if ! defined(_GNU_SOURCE)
 #    define _GNU_SOURCE 1 /* syscall prototype */
@@ -1905,7 +1910,7 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal) {
     parser->m_processor = errorProcessor;
     return XML_STATUS_ERROR;
   }
-#ifndef XML_CONTEXT_BYTES
+#if XML_CONTEXT_BYTES == 0
   else if (parser->m_bufferPtr == parser->m_bufferEnd) {
     const char *end;
     int nLeftOver;
@@ -1976,7 +1981,7 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal) {
     parser->m_eventEndPtr = parser->m_bufferPtr;
     return result;
   }
-#endif /* not defined XML_CONTEXT_BYTES */
+#endif /* XML_CONTEXT_BYTES == 0 */
   else {
     void *buff = XML_GetBuffer(parser, len);
     if (buff == NULL)
@@ -2072,9 +2077,9 @@ XML_GetBuffer(XML_Parser parser, int len) {
   }
 
   if (len > EXPAT_SAFE_PTR_DIFF(parser->m_bufferLim, parser->m_bufferEnd)) {
-#ifdef XML_CONTEXT_BYTES
+#if XML_CONTEXT_BYTES > 0
     int keep;
-#endif /* defined XML_CONTEXT_BYTES */
+#endif /* XML_CONTEXT_BYTES > 0 */
     /* Do not invoke signed arithmetic overflow: */
     int neededSize = (int)((unsigned)len
                            + (unsigned)EXPAT_SAFE_PTR_DIFF(
@@ -2083,7 +2088,7 @@ XML_GetBuffer(XML_Parser parser, int len) {
       parser->m_errorCode = XML_ERROR_NO_MEMORY;
       return NULL;
     }
-#ifdef XML_CONTEXT_BYTES
+#if XML_CONTEXT_BYTES > 0
     keep = (int)EXPAT_SAFE_PTR_DIFF(parser->m_bufferPtr, parser->m_buffer);
     if (keep > XML_CONTEXT_BYTES)
       keep = XML_CONTEXT_BYTES;
@@ -2093,10 +2098,10 @@ XML_GetBuffer(XML_Parser parser, int len) {
       return NULL;
     }
     neededSize += keep;
-#endif /* defined XML_CONTEXT_BYTES */
+#endif /* XML_CONTEXT_BYTES > 0 */
     if (neededSize
         <= EXPAT_SAFE_PTR_DIFF(parser->m_bufferLim, parser->m_buffer)) {
-#ifdef XML_CONTEXT_BYTES
+#if XML_CONTEXT_BYTES > 0
       if (keep < EXPAT_SAFE_PTR_DIFF(parser->m_bufferPtr, parser->m_buffer)) {
         int offset
             = (int)EXPAT_SAFE_PTR_DIFF(parser->m_bufferPtr, parser->m_buffer)
@@ -2117,7 +2122,7 @@ XML_GetBuffer(XML_Parser parser, int len) {
               + EXPAT_SAFE_PTR_DIFF(parser->m_bufferEnd, parser->m_bufferPtr);
         parser->m_bufferPtr = parser->m_buffer;
       }
-#endif /* not defined XML_CONTEXT_BYTES */
+#endif /* XML_CONTEXT_BYTES > 0 */
     } else {
       char *newBuf;
       int bufferSize
@@ -2138,7 +2143,7 @@ XML_GetBuffer(XML_Parser parser, int len) {
         return NULL;
       }
       parser->m_bufferLim = newBuf + bufferSize;
-#ifdef XML_CONTEXT_BYTES
+#if XML_CONTEXT_BYTES > 0
       if (parser->m_bufferPtr) {
         memcpy(newBuf, &parser->m_bufferPtr[-keep],
                EXPAT_SAFE_PTR_DIFF(parser->m_bufferEnd, parser->m_bufferPtr)
@@ -2168,7 +2173,7 @@ XML_GetBuffer(XML_Parser parser, int len) {
         parser->m_bufferEnd = newBuf;
       }
       parser->m_bufferPtr = parser->m_buffer = newBuf;
-#endif /* not defined XML_CONTEXT_BYTES */
+#endif /* XML_CONTEXT_BYTES > 0 */
     }
     parser->m_eventPtr = parser->m_eventEndPtr = NULL;
     parser->m_positionPtr = NULL;
@@ -2282,7 +2287,7 @@ XML_GetCurrentByteCount(XML_Parser parser) {
 
 const char *XMLCALL
 XML_GetInputContext(XML_Parser parser, int *offset, int *size) {
-#ifdef XML_CONTEXT_BYTES
+#if XML_CONTEXT_BYTES > 0
   if (parser == NULL)
     return NULL;
   if (parser->m_eventPtr && parser->m_buffer) {
@@ -2296,7 +2301,7 @@ XML_GetInputContext(XML_Parser parser, int *offset, int *size) {
   (void)parser;
   (void)offset;
   (void)size;
-#endif /* defined XML_CONTEXT_BYTES */
+#endif /* XML_CONTEXT_BYTES > 0 */
   return (const char *)0;
 }
 
@@ -2516,7 +2521,7 @@ XML_GetFeatureList(void) {
 #ifdef XML_DTD
       {XML_FEATURE_DTD, XML_L("XML_DTD"), 0},
 #endif
-#ifdef XML_CONTEXT_BYTES
+#if XML_CONTEXT_BYTES > 0
       {XML_FEATURE_CONTEXT_BYTES, XML_L("XML_CONTEXT_BYTES"),
        XML_CONTEXT_BYTES},
 #endif
