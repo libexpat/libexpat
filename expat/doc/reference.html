@@ -1103,6 +1103,7 @@ enum XML_Status {
 };
 </pre>
 <div class="fcndef">
+<p>
 Parse some more of the document. The string <code>s</code> is a buffer
 containing part (or perhaps all) of the document. The number of bytes of s
 that are part of the document is indicated by <code>len</code>. This means
@@ -1112,12 +1113,40 @@ memory that <code>s</code> points at, then a memory fault is likely. The
 <code>isFinal</code> parameter informs the parser that this is the last
 piece of the document. Frequently, the last piece is empty (i.e.
 <code>len</code> is zero.)
+</p>
+
+<p>
 If a parse error occurred, it returns <code>XML_STATUS_ERROR</code>.
 Otherwise it returns <code>XML_STATUS_OK</code> value.
 Note that regardless of the return value, there is no guarantee that all
 provided input has been parsed; only after <a href="#isFinal">the
 concluding call</a> will all handler callbacks and parsing errors have
 happened.
+</p>
+
+<p>
+Simplified, <code>XML_Parse</code> can be considered a convenience wrapper
+that is pairing calls
+to <code><a href="#XML_GetBuffer">XML_GetBuffer</a></code>
+and <code><a href="#XML_ParseBuffer">XML_ParseBuffer</a></code>
+(when Expat is built with macro <code>XML_CONTEXT_BYTES</code>
+defined to a positive value, which is both common and default).
+<code>XML_Parse</code> is then functionally equivalent to calling
+<code><a href="#XML_GetBuffer">XML_GetBuffer</a></code>,
+<code>memcpy</code>, and
+<code><a href="#XML_ParseBuffer">XML_ParseBuffer</a></code>.
+</p>
+
+<p>
+To avoid double copying of the input, direct use of functions
+<code><a href="#XML_GetBuffer">XML_GetBuffer</a></code> and
+<code><a href="#XML_ParseBuffer">XML_ParseBuffer</a></code> is advised
+for most production use, e.g.
+if you're using <code>read</code> or similar functionality to fill your
+buffers, fill directly into the buffer from
+<code><a href="#XML_GetBuffer">XML_GetBuffer</a></code>,
+then parse with <code><a href="#XML_ParseBuffer">XML_ParseBuffer</a></code>.
+</p>
 </div>
 
 <h4 id="XML_ParseBuffer">XML_ParseBuffer</h4>
