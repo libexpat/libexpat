@@ -1620,7 +1620,7 @@ rsqb_handler(void *userData, const XML_Char *s, int len) {
 
 void XMLCALL
 byte_character_handler(void *userData, const XML_Char *s, int len) {
-#ifdef XML_CONTEXT_BYTES
+#if XML_CONTEXT_BYTES > 0
   int offset, size;
   const char *buffer;
   ByteTestData *data = (ByteTestData *)userData;

@@ -2796,7 +2796,7 @@ START_TEST(test_get_buffer_1) {
    * between INT_MAX and INT_MAX/2.  A gap of 1K seems comfortable,
    * with an extra byte just to ensure that the request is off any
    * boundary.  The request will be inflated internally by
-   * XML_CONTEXT_BYTES (if defined), so we subtract that from our
+   * XML_CONTEXT_BYTES (if >=1), so we subtract that from our
    * request.
    */
   if (get_feature(XML_FEATURE_CONTEXT_BYTES, &context_bytes) != XML_STATUS_OK)
@@ -2832,7 +2832,7 @@ START_TEST(test_get_buffer_2) {
 END_TEST
 
 /* Test for signed integer overflow CVE-2022-23852 */
-#if defined(XML_CONTEXT_BYTES)
+#if XML_CONTEXT_BYTES > 0
 START_TEST(test_get_buffer_3_overflow) {
   XML_Parser parser = XML_ParserCreate(NULL);
   assert(parser != NULL);
@@ -2853,7 +2853,7 @@ START_TEST(test_get_buffer_3_overflow) {
   XML_ParserFree(parser);
 }
 END_TEST
-#endif // defined(XML_CONTEXT_BYTES)
+#endif // XML_CONTEXT_BYTES > 0
 
 /* Test position information macros */
 START_TEST(test_byte_info_at_end) {
@@ -5239,7 +5239,7 @@ make_basic_test_case(Suite *s) {
   tcase_add_test(tc_basic, test_empty_parse);
   tcase_add_test(tc_basic, test_get_buffer_1);
   tcase_add_test(tc_basic, test_get_buffer_2);
-#if defined(XML_CONTEXT_BYTES)
+#if XML_CONTEXT_BYTES > 0
   tcase_add_test(tc_basic, test_get_buffer_3_overflow);
 #endif
   tcase_add_test(tc_basic, test_byte_info_at_end);
