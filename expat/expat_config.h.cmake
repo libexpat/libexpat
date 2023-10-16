@@ -111,6 +111,9 @@
 /* Define to make XML Namespaces functionality available. */
 #cmakedefine XML_NS
 
+/* Define to make debugging of entropy generation available. */
+#cmakedefine XML_ENTROPY_DEBUG
+
 /* Define to __FUNCTION__ or "" if `__func__' does not conform to ANSI C. */
 #ifdef _MSC_VER
 #  define __func__ __FUNCTION__

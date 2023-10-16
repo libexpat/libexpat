@@ -607,8 +607,10 @@ static XML_Parser getRootParserOf(XML_Parser parser,
                                   unsigned int *outLevelDiff);
 #endif /* XML_DTD */
 
+#if defined(XML_ENTROPY_DEBUG) || defined(XML_DTD_DEBUG)
 static unsigned long getDebugLevel(const char *variableName,
                                    unsigned long defaultDebugLevel);
+#endif
 
 #define poolStart(pool) ((pool)->start)
 #define poolLength(pool) ((pool)->ptr - (pool)->start)
@@ -918,6 +920,7 @@ gather_time_entropy(void) {
 
 #endif /* ! defined(HAVE_ARC4RANDOM_BUF) && ! defined(HAVE_ARC4RANDOM) */
 
+#ifdef XML_ENTROPY_DEBUG
 static unsigned long
 ENTROPY_DEBUG(const char *label, unsigned long entropy) {
   if (getDebugLevel("EXPAT_ENTROPY_DEBUG", 0) >= 1u) {
@@ -926,6 +929,9 @@ ENTROPY_DEBUG(const char *label, unsigned long entropy) {
   }
   return entropy;
 }
+#else
+#  define ENTROPY_DEBUG(label, entropy) (entropy)
+#endif
 
 static unsigned long
 generate_hash_secret_salt(XML_Parser parser) {
@@ -8423,6 +8429,7 @@ unsignedCharToPrintable(unsigned char c) {
 
 #endif /* XML_DTD */
 
+#if defined(XML_ENTROPY_DEBUG) || defined(XML_DTD_DEBUG)
 static unsigned long
 getDebugLevel(const char *variableName, unsigned long defaultDebugLevel) {
   const char *const valueOrNull = getenv(variableName);
@@ -8441,3 +8448,4 @@ getDebugLevel(const char *variableName, unsigned long defaultDebugLevel) {
 
   return debugLevel;
 }
+#endif

@@ -309,6 +309,8 @@ AC_DEFINE([XML_DTD_DEBUG], 1,
           [Define to make debugging of entity parsing available.])
 AC_DEFINE([XML_DEV_URANDOM], 1,
           [Define to include code reading entropy from `/dev/urandom'.])
+AC_DEFINE([EXPAT_ENTROPY_DEBUG], 1,
+          [Define to make debugging of entropy generation available.])
 
 AC_ARG_ENABLE([xml-attr-info],
   [AS_HELP_STRING([--enable-xml-attr-info],
