@@ -381,6 +381,7 @@ START_TEST(test_billion_laughs_attack_protection_api) {
 }
 END_TEST
 
+#  if defined(XML_DTD_DEBUG)
 START_TEST(test_helper_unsigned_char_to_printable) {
   // Smoke test
   unsigned char uc = 0;
@@ -402,6 +403,7 @@ START_TEST(test_helper_unsigned_char_to_printable) {
     fail("unsignedCharToPrintable result mistaken");
 }
 END_TEST
+#  endif
 #endif // defined(XML_DTD)
 
 void
@@ -413,7 +415,9 @@ make_accounting_test_case(Suite *s) {
 
   tcase_add_test(tc_accounting, test_accounting_precision);
   tcase_add_test(tc_accounting, test_billion_laughs_attack_protection_api);
+#  if defined(XML_DTD_DEBUG)
   tcase_add_test(tc_accounting, test_helper_unsigned_char_to_printable);
+#  endif
 #else
   UNUSED_P(s);
 #endif /* defined(XML_DTD) */

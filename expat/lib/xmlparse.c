@@ -85,7 +85,9 @@
 #include <string.h> /* memset(), memcpy() */
 #include <assert.h>
 #include <limits.h> /* UINT_MAX */
-#include <stdio.h>  /* fprintf */
+#if defined(XML_ENTROPY_DEBUG) || defined(XML_DTD_DEBUG)
+#  include <stdio.h> /* fprintf */
+#endif
 #include <stdlib.h> /* getenv, rand_s */
 #include <stdint.h> /* uintptr_t */
 #include <math.h>   /* isnan */
@@ -421,17 +423,21 @@ typedef unsigned long long XmlBigCount;
 typedef struct accounting {
   XmlBigCount countBytesDirect;
   XmlBigCount countBytesIndirect;
+#  ifdef XML_DTD_DEBUG
   unsigned long debugLevel;
+#  endif
   float maximumAmplificationFactor; // >=1.0
   unsigned long long activationThresholdBytes;
 } ACCOUNTING;
 
+#  ifdef XML_DTD_DEBUG
 typedef struct entity_stats {
   unsigned int countEverOpened;
   unsigned int currentDepth;
   unsigned int maximumDepthSeen;
   unsigned long debugLevel;
 } ENTITY_STATS;
+#  endif
 #endif /* XML_DTD */
 
 typedef enum XML_Error PTRCALL Processor(XML_Parser parser, const char *start,
@@ -572,24 +578,30 @@ static void parserInit(XML_Parser parser, const XML_Char *encodingName);
 
 #ifdef XML_DTD
 static float accountingGetCurrentAmplification(XML_Parser rootParser);
-static void accountingReportStats(XML_Parser originParser, const char *epilog);
-static void accountingOnAbort(XML_Parser originParser);
-static void accountingReportDiff(XML_Parser rootParser,
-                                 unsigned int levelsAwayFromRootParser,
-                                 const char *before, const char *after,
-                                 ptrdiff_t bytesMore, int source_line,
-                                 enum XML_Account account);
 static XML_Bool accountingDiffTolerated(XML_Parser originParser, int tok,
                                         const char *before, const char *after,
                                         int source_line,
                                         enum XML_Account account);
 
+#  ifdef XML_DTD_DEBUG
+static void accountingOnAbort(XML_Parser originParser);
+static void accountingReportStats(XML_Parser originParser, const char *epilog);
+static void accountingReportDiff(XML_Parser rootParser,
+                                 unsigned int levelsAwayFromRootParser,
+                                 const char *before, const char *after,
+                                 ptrdiff_t bytesMore, int source_line,
+                                 enum XML_Account account);
 static void entityTrackingReportStats(XML_Parser parser, ENTITY *entity,
                                       const char *action, int sourceLine);
 static void entityTrackingOnOpen(XML_Parser parser, ENTITY *entity,
                                  int sourceLine);
 static void entityTrackingOnClose(XML_Parser parser, ENTITY *entity,
                                   int sourceLine);
+#  else
+#    define accountingOnAbort(originParser) do {} while (0)
+#    define entityTrackingOnOpen(parser, entity, sourceLine) do {} while (0)
+#    define entityTrackingOnClose(parser, entity, sourceLine) do {} while (0)
+#  endif
 
 static XML_Parser getRootParserOf(XML_Parser parser,
                                   unsigned int *outLevelDiff);
@@ -720,7 +732,9 @@ struct XML_ParserStruct {
   unsigned long m_hash_secret_salt;
 #ifdef XML_DTD
   ACCOUNTING m_accounting;
+#  ifdef XML_DTD_DEBUG
   ENTITY_STATS m_entity_stats;
+#  endif
 #endif
 };
 
@@ -1180,14 +1194,16 @@ parserInit(XML_Parser parser, const XML_Char *encodingName) {
 
 #ifdef XML_DTD
   memset(&parser->m_accounting, 0, sizeof(ACCOUNTING));
-  parser->m_accounting.debugLevel = getDebugLevel("EXPAT_ACCOUNTING_DEBUG", 0u);
   parser->m_accounting.maximumAmplificationFactor
       = EXPAT_BILLION_LAUGHS_ATTACK_PROTECTION_MAXIMUM_AMPLIFICATION_DEFAULT;
   parser->m_accounting.activationThresholdBytes
       = EXPAT_BILLION_LAUGHS_ATTACK_PROTECTION_ACTIVATION_THRESHOLD_DEFAULT;
 
+#  ifdef XML_DTD_DEBUG
+  parser->m_accounting.debugLevel = getDebugLevel("EXPAT_ACCOUNTING_DEBUG", 0u);
   memset(&parser->m_entity_stats, 0, sizeof(ENTITY_STATS));
   parser->m_entity_stats.debugLevel = getDebugLevel("EXPAT_ENTITY_DEBUG", 0u);
+#  endif
 #endif
 }
 
@@ -7682,6 +7698,7 @@ accountingGetCurrentAmplification(XML_Parser rootParser) {
   return amplificationFactor;
 }
 
+#  ifdef XML_DTD_DEBUG
 static void
 accountingReportStats(XML_Parser originParser, const char *epilog) {
   const XML_Parser rootParser = getRootParserOf(originParser, NULL);
@@ -7742,6 +7759,7 @@ accountingReportDiff(XML_Parser rootParser,
   }
   fprintf(stderr, "\"\n");
 }
+#  endif
 
 static XML_Bool
 accountingDiffTolerated(XML_Parser originParser, int tok, const char *before,
@@ -7789,11 +7807,13 @@ accountingDiffTolerated(XML_Parser originParser, int tok, const char *before,
         || (amplificationFactor
             <= rootParser->m_accounting.maximumAmplificationFactor);
 
+#  ifdef XML_DTD_DEBUG
   if (rootParser->m_accounting.debugLevel >= 2u) {
     accountingReportStats(rootParser, "");
     accountingReportDiff(rootParser, levelsAwayFromRootParser, before, after,
                          bytesMore, source_line, account);
   }
+#  endif
 
   return tolerated;
 }
@@ -7812,6 +7832,7 @@ testingAccountingGetCountBytesIndirect(XML_Parser parser) {
   return parser->m_accounting.countBytesIndirect;
 }
 
+#  ifdef XML_DTD_DEBUG
 static void
 entityTrackingReportStats(XML_Parser rootParser, ENTITY *entity,
                           const char *action, int sourceLine) {
@@ -7859,6 +7880,7 @@ entityTrackingOnClose(XML_Parser originParser, ENTITY *entity, int sourceLine) {
   entityTrackingReportStats(rootParser, entity, "CLOSE", sourceLine);
   rootParser->m_entity_stats.currentDepth--;
 }
+#  endif
 
 static XML_Parser
 getRootParserOf(XML_Parser parser, unsigned int *outLevelDiff) {
@@ -7875,6 +7897,7 @@ getRootParserOf(XML_Parser parser, unsigned int *outLevelDiff) {
   return rootParser;
 }
 
+#  ifdef XML_DTD_DEBUG
 const char *
 unsignedCharToPrintable(unsigned char c) {
   switch (c) {
@@ -8396,6 +8419,7 @@ unsignedCharToPrintable(unsigned char c) {
   }
   assert(0); /* never gets here */
 }
+#  endif
 
 #endif /* XML_DTD */
 

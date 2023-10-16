@@ -157,7 +157,9 @@ void _INTERNAL_trim_to_complete_utf8_characters(const char *from,
 #if defined(XML_DTD)
 unsigned long long testingAccountingGetCountBytesDirect(XML_Parser parser);
 unsigned long long testingAccountingGetCountBytesIndirect(XML_Parser parser);
+#  if defined(XML_DTD_DEBUG)
 const char *unsignedCharToPrintable(unsigned char c);
+#endif
 #endif
 
 #ifdef __cplusplus

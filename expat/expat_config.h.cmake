@@ -105,6 +105,9 @@
 /* Define to make parameter entity parsing functionality available. */
 #cmakedefine XML_DTD
 
+/* Define to make debugging of entity parsing available. */
+#cmakedefine XML_DTD_DEBUG
+
 /* Define to make XML Namespaces functionality available. */
 #cmakedefine XML_NS
 
