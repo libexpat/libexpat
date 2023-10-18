@@ -258,6 +258,17 @@ supports both.
       </varlistentry>
 
       <varlistentry>
+        <term><option>-g</option> <replaceable>bytes</replaceable></term>
+        <listitem>
+          <para>
+            Sets the buffer size to request per call pair to
+            <function>XML_GetBuffer</function> and <function>read</function>
+            (default: 8 KiB).
+          </para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
         <term><option>-h</option></term>
         <term><option>--help</option></term>
         <listitem>
