@@ -258,6 +258,18 @@ supports both.
       </varlistentry>
 
       <varlistentry>
+        <term><option>-h</option></term>
+        <term><option>--help</option></term>
+        <listitem>
+          <para>
+            Prints short usage information on command <command>&dhpackage;</command>,
+            and then exits.
+            Similar to this man page but more concise.
+          </para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
         <term><option>-k</option></term>
         <listitem>
           <para>
