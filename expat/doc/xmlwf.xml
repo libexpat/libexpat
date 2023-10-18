@@ -66,11 +66,17 @@
     </cmdsynopsis>
     <cmdsynopsis>
       <command>&dhpackage;</command>
-      <arg choice="plain"><option>-h</option></arg>
+      <group choice="plain">
+        <arg><option>-h</option></arg>
+        <arg><option>--help</option></arg>
+      </group>
     </cmdsynopsis>
     <cmdsynopsis>
       <command>&dhpackage;</command>
-      <arg choice="plain"><option>-v</option></arg>
+      <group choice="plain">
+        <arg><option>-v</option></arg>
+        <arg><option>--version</option></arg>
+      </group>
     </cmdsynopsis>
   </refsynopsisdiv>
  
@@ -252,6 +258,29 @@ supports both.
       </varlistentry>
 
       <varlistentry>
+        <term><option>-g</option> <replaceable>bytes</replaceable></term>
+        <listitem>
+          <para>
+            Sets the buffer size to request per call pair to
+            <function>XML_GetBuffer</function> and <function>read</function>
+            (default: 8 KiB).
+          </para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-h</option></term>
+        <term><option>--help</option></term>
+        <listitem>
+          <para>
+            Prints short usage information on command <command>&dhpackage;</command>,
+            and then exits.
+            Similar to this man page but more concise.
+          </para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
         <term><option>-k</option></term>
         <listitem>
           <para>
@@ -362,6 +391,7 @@ supports both.
       
       <varlistentry>
         <term><option>-v</option></term>
+        <term><option>--version</option></term>
         <listitem>
 		<para>
   Prints the version of the Expat library being used, including some
@@ -461,7 +491,7 @@ supports both.
 
   <refsect1>
   <title>EXIT STATUS</title>
-    <para>For option <option>-v</option> or <option>-h</option>, <command>&dhpackage;</command> always exits with status code 0.  For other cases, the following exit status codes are returned:
+    <para>For options <option>-v</option>|<option>--version</option> or <option>-h</option>|<option>--help</option>, <command>&dhpackage;</command> always exits with status code 0.  For other cases, the following exit status codes are returned:
     <variablelist>
       <varlistentry>
         <term><option>0</option></term>
