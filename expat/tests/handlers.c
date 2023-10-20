@@ -1709,7 +1709,7 @@ record_element_end_handler(void *userData, const XML_Char *name) {
 const struct handler_record_entry *
 _handler_record_get(const struct handler_record_list *storage, const int index,
                     const char *file, const int line) {
-  _fail_unless(storage->count > index, file, line, "too few handler calls");
+  _assert_true(storage->count > index, file, line, "too few handler calls");
   return &storage->entries[index];
 }
 
