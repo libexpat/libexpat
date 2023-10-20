@@ -84,7 +84,7 @@ extern "C" {
 void PRINTF_LIKE(1, 2) set_subtest(char const *fmt, ...);
 
 #  define fail(msg) _assert_true(0, __FILE__, __LINE__, msg)
-#  define fail_unless(cond)                                                    \
+#  define assert_true(cond)                                                    \
     _assert_true((cond), __FILE__, __LINE__, "check failed: " #cond)
 
 typedef void (*tcase_setup_function)(void);

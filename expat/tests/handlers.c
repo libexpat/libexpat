@@ -1658,7 +1658,7 @@ static void
 record_call(struct handler_record_list *const rec, const char *funcname,
             const int arg) {
   const int max_entries = sizeof(rec->entries) / sizeof(rec->entries[0]);
-  fail_unless(rec->count < max_entries);
+  assert_true(rec->count < max_entries);
   struct handler_record_entry *const e = &rec->entries[rec->count++];
   e->name = funcname;
   e->arg = arg;
