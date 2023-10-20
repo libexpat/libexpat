@@ -163,12 +163,11 @@ tracking_realloc(void *ptr, size_t size) {
       alloc_tail = entry;
     }
   } else {
-    entry->allocation = realloc(ptr, size);
-    if (entry->allocation == NULL) {
-      /* Realloc semantics say the original is still allocated */
-      entry->allocation = ptr;
+    void *const reallocated = realloc(ptr, size);
+    if (reallocated == NULL) {
       return NULL;
     }
+    entry->allocation = reallocated;
   }
 
   entry->num_bytes = size;
