@@ -115,13 +115,13 @@ jobs:
         set -x
         source /etc/os-release
         wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
-        sudo add-apt-repository "deb https://apt.llvm.org/${UBUNTU_CODENAME}/ llvm-toolchain-${UBUNTU_CODENAME}-15 main"
+        sudo add-apt-repository "deb https://apt.llvm.org/${UBUNTU_CODENAME}/ llvm-toolchain-${UBUNTU_CODENAME}-17 main"
         sudo apt-get update  # due to new repository
-        # NOTE: Please note the version-specific ${PATH} extension for Clang in .ci.sh
+        # NOTE: Please note the version-specific ${PATH} extension for Clang adding /usr/lib/llvm-17/bin in .ci.sh
         sudo apt-get install --yes --no-install-recommends -V \
-            clang-15 \
-            clang-format-15 \
-            libclang-rt-15-dev
+            clang-17 \
+            clang-format-17 \
+            libclang-rt-17-dev
     - name: Install build dependencies (common)
       run: |-
         sudo apt-get install --yes --no-install-recommends -V \

@@ -39,7 +39,7 @@ if [[ ${RUNNER_OS} = macOS ]]; then
     export PATH="/usr/local/opt/coreutils/libexec/gnubin${PATH:+:}${PATH}"
     export PATH="/usr/local/opt/findutils/libexec/gnubin${PATH:+:}${PATH}"
 elif [[ ${RUNNER_OS} = Linux ]]; then
-    export PATH="/usr/lib/llvm-15/bin:${PATH}"
+    export PATH="/usr/lib/llvm-17/bin:${PATH}"
 else
     echo "Unsupported RUNNER_OS \"${RUNNER_OS}\"." >&2
     exit 1
