@@ -1658,7 +1658,7 @@ static void
 record_call(struct handler_record_list *const rec, const char *funcname,
             const int arg) {
   const int max_entries = sizeof(rec->entries) / sizeof(rec->entries[0]);
-  fail_unless(rec->count < max_entries);
+  assert_true(rec->count < max_entries);
   struct handler_record_entry *const e = &rec->entries[rec->count++];
   e->name = funcname;
   e->arg = arg;
@@ -1709,7 +1709,7 @@ record_element_end_handler(void *userData, const XML_Char *name) {
 const struct handler_record_entry *
 _handler_record_get(const struct handler_record_list *storage, const int index,
                     const char *file, const int line) {
-  _fail_unless(storage->count > index, file, line, "too few handler calls");
+  _assert_true(storage->count > index, file, line, "too few handler calls");
   return &storage->entries[index];
 }
 

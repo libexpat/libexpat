@@ -515,8 +515,8 @@ _handler_record_get(const struct handler_record_list *storage, const int index,
     do {                                                                       \
       const struct handler_record_entry *e                                     \
           = handler_record_get(storage, index);                                \
-      fail_unless(strcmp(e->name, expected_name) == 0);                        \
-      fail_unless(e->arg == (expected_arg));                                   \
+      assert_true(strcmp(e->name, expected_name) == 0);                        \
+      assert_true(e->arg == (expected_arg));                                   \
     } while (0)
 
 /* Entity Declaration Handlers */

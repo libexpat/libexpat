@@ -1855,16 +1855,16 @@ START_TEST(test_default_current) {
     while (cdata_len_remaining > 0) {
       const struct handler_record_entry *c_entry
           = handler_record_get(&storage, i++);
-      fail_unless(strcmp(c_entry->name, "record_cdata_handler") == 0);
-      fail_unless(c_entry->arg > 0);
-      fail_unless(c_entry->arg <= cdata_len_remaining);
+      assert_true(strcmp(c_entry->name, "record_cdata_handler") == 0);
+      assert_true(c_entry->arg > 0);
+      assert_true(c_entry->arg <= cdata_len_remaining);
       cdata_len_remaining -= c_entry->arg;
       // default handler must follow, with the exact same len argument.
       assert_record_handler_called(&storage, i++, "record_default_handler",
                                    c_entry->arg);
     }
     assert_record_handler_called(&storage, i++, "record_default_handler", 6);
-    fail_unless(storage.count == i);
+    assert_true(storage.count == i);
   }
 
   /* Again, without the defaulting */
@@ -1886,13 +1886,13 @@ START_TEST(test_default_current) {
     while (cdata_len_remaining > 0) {
       const struct handler_record_entry *c_entry
           = handler_record_get(&storage, i++);
-      fail_unless(strcmp(c_entry->name, "record_cdata_nodefault_handler") == 0);
-      fail_unless(c_entry->arg > 0);
-      fail_unless(c_entry->arg <= cdata_len_remaining);
+      assert_true(strcmp(c_entry->name, "record_cdata_nodefault_handler") == 0);
+      assert_true(c_entry->arg > 0);
+      assert_true(c_entry->arg <= cdata_len_remaining);
       cdata_len_remaining -= c_entry->arg;
     }
     assert_record_handler_called(&storage, i++, "record_default_handler", 6);
-    fail_unless(storage.count == i);
+    assert_true(storage.count == i);
   }
 
   /* Now with an internal entity to complicate matters */
@@ -1928,7 +1928,7 @@ START_TEST(test_default_current) {
     assert_record_handler_called(&storage, 16, "record_default_handler", 5);
     assert_record_handler_called(&storage, 17, "record_default_handler", 8);
     assert_record_handler_called(&storage, 18, "record_default_handler", 6);
-    fail_unless(storage.count == 19);
+    assert_true(storage.count == 19);
   }
 
   /* Again, with a skip handler */
@@ -1965,7 +1965,7 @@ START_TEST(test_default_current) {
     assert_record_handler_called(&storage, 16, "record_default_handler", 5);
     assert_record_handler_called(&storage, 17, "record_skip_handler", 0);
     assert_record_handler_called(&storage, 18, "record_default_handler", 6);
-    fail_unless(storage.count == 19);
+    assert_true(storage.count == 19);
   }
 
   /* This time, allow the entity through */
@@ -2001,7 +2001,7 @@ START_TEST(test_default_current) {
     assert_record_handler_called(&storage, 17, "record_cdata_handler", 1);
     assert_record_handler_called(&storage, 18, "record_default_handler", 1);
     assert_record_handler_called(&storage, 19, "record_default_handler", 6);
-    fail_unless(storage.count == 20);
+    assert_true(storage.count == 20);
   }
 
   /* Finally, without passing the cdata to the default handler */
@@ -2037,7 +2037,7 @@ START_TEST(test_default_current) {
     assert_record_handler_called(&storage, 17, "record_cdata_nodefault_handler",
                                  1);
     assert_record_handler_called(&storage, 18, "record_default_handler", 6);
-    fail_unless(storage.count == 19);
+    assert_true(storage.count == 19);
   }
 }
 END_TEST
