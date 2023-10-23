@@ -360,7 +360,7 @@ and the definition of character types in the case of
 <code>XML_UNICODE_WCHAR_T</code>.  The symbols are:</p>
 
 <dl class="cpp-symbols">
-<dt>XML_DTD</dt>
+<dt><a name="XML_DTD">XML_DTD</a></dt>
 <dd>Include support for using and reporting DTD-based content.  If
 this is defined, default attribute values from an external DTD subset
 are reported and attribute value normalization occurs based on the
@@ -373,24 +373,24 @@ XML_SetBillionLaughsAttackProtectionMaximumAmplification</a></code> and <code>
 <a href="#XML_SetBillionLaughsAttackProtectionActivationThreshold">
 XML_SetBillionLaughsAttackProtectionActivationThreshold</a></code> available.</dd>
 
-<dt>XML_NS</dt>
+<dt><a name="XML_NS">XML_NS</a></dt>
 <dd>When defined, support for the <cite><a href=
 "https://www.w3.org/TR/REC-xml-names/" >Namespaces in XML</a></cite>
 specification is included.</dd>
 
-<dt>XML_UNICODE</dt>
+<dt><a name="XML_UNICODE">XML_UNICODE</a></dt>
 <dd>When defined, character data reported to the application is
 encoded in UTF-16 using wide characters of the type
 <code>XML_Char</code>.  This is implied if
 <code>XML_UNICODE_WCHAR_T</code> is defined.</dd>
 
-<dt>XML_UNICODE_WCHAR_T</dt>
+<dt><a name="XML_UNICODE_WCHAR_T">XML_UNICODE_WCHAR_T</a></dt>
 <dd>If defined, causes the <code>XML_Char</code> character type to be
 defined using the <code>wchar_t</code> type; otherwise, <code>unsigned
 short</code> is used.  Defining this implies
 <code>XML_UNICODE</code>.</dd>
 
-<dt>XML_LARGE_SIZE</dt>
+<dt><a name="XML_LARGE_SIZE">XML_LARGE_SIZE</a></dt>
 <dd>If defined, causes the <code>XML_Size</code> and <code>XML_Index</code>
 integer types to be at least 64 bits in size. This is intended to support
 processing of very large input streams, where the return values of
@@ -400,7 +400,7 @@ processing of very large input streams, where the return values of
 could overflow. It may not be supported by all compilers, and is turned
 off by default.</dd>
 
-<dt>XML_CONTEXT_BYTES</dt>
+<dt><a name="XML_CONTEXT_BYTES">XML_CONTEXT_BYTES</a></dt>
 <dd>The number of input bytes of markup context which the parser will
 ensure are available for reporting via <code><a href=
 "#XML_GetInputContext" >XML_GetInputContext</a></code>.  This is
@@ -410,13 +410,13 @@ href= "#XML_GetInputContext" >XML_GetInputContext</a></code> will
 always report <code>NULL</code>.  Without this, Expat has a smaller memory
 footprint and can be faster.</dd>
 
-<dt>XML_STATIC</dt>
+<dt><a name="XML_STATIC">XML_STATIC</a></dt>
 <dd>On Windows, this should be set if Expat is going to be linked
 statically with the code that calls it; this is required to get all
 the right MSVC magic annotations correct.  This is ignored on other
 platforms.</dd>
 
-<dt>XML_ATTR_INFO</dt>
+<dt><a name="XML_ATTR_INFO">XML_ATTR_INFO</a></dt>
 <dd>If defined, makes the additional function <code><a href=
 "#XML_GetAttributeInfo" >XML_GetAttributeInfo</a></code> available
 for reporting attribute byte offsets.</dd>
