@@ -389,6 +389,23 @@ START_TEST(test_misc_tag_mismatch_reset_leak) {
 }
 END_TEST
 
+START_TEST(test_misc_create_external_entity_parser_with_null_context) {
+  // With XML_DTD undefined, the only supported case of external entities
+  // is pattern "<!ENTITY entity123 SYSTEM 'filename123'>". A NULL context
+  // was causing a segfault through a null pointer dereference in function
+  // setContext, previously.
+  XML_Parser parser = XML_ParserCreate(NULL);
+  XML_Parser ext_parser = XML_ExternalEntityParserCreate(parser, NULL, NULL);
+#ifdef XML_DTD
+  assert_true(ext_parser != NULL);
+  XML_ParserFree(ext_parser);
+#else
+  assert_true(ext_parser == NULL);
+#endif /* XML_DTD */
+  XML_ParserFree(parser);
+}
+END_TEST
+
 void
 make_miscellaneous_test_case(Suite *s) {
   TCase *tc_misc = tcase_create("miscellaneous tests");
@@ -409,4 +426,6 @@ make_miscellaneous_test_case(Suite *s) {
   tcase_add_test__ifdef_xml_dtd(
       tc_misc, test_misc_deny_internal_entity_closing_doctype_issue_317);
   tcase_add_test(tc_misc, test_misc_tag_mismatch_reset_leak);
+  tcase_add_test(tc_misc,
+                 test_misc_create_external_entity_parser_with_null_context);
 }
