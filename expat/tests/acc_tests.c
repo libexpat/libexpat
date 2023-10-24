@@ -149,6 +149,11 @@ START_TEST(test_accounting_precision) {
        "]>\n"
        "<r>&five;</r>",
        "12345", NULL, 0, filled_later},
+      {"<!DOCTYPE r [\n"
+       "  <!ENTITY five SYSTEM 'first.ent'>\n"
+       "]>\n"
+       "<r>&five;</r>",
+       "\xEF\xBB\xBF" /* UTF-8 BOM */, NULL, 0, filled_later},
 
       /* Parameter entities */
       {"<!DOCTYPE r [\n"
@@ -235,11 +240,6 @@ START_TEST(test_accounting_precision) {
        "%e1;\n",
        "\xEF\xBB\xBF<!ATTLIST doc a1 CDATA 'value'>" /* UTF-8 BOM */,
        strlen("\xEF\xBB\xBF<!ATTLIST doc a1 CDATA 'value'>"), filled_later},
-      {"<!DOCTYPE r [\n"
-       "  <!ENTITY five SYSTEM 'first.ent'>\n"
-       "]>\n"
-       "<r>&five;</r>",
-       "\xEF\xBB\xBF" /* UTF-8 BOM */, NULL, 0, filled_later},
   };
 
   const size_t countCases = sizeof(cases) / sizeof(cases[0]);
