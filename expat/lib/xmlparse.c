@@ -6645,6 +6645,10 @@ getContext(XML_Parser parser) {
 
 static XML_Bool
 setContext(XML_Parser parser, const XML_Char *context) {
+  if (context == NULL) {
+    return XML_FALSE;
+  }
+
   DTD *const dtd = parser->m_dtd; /* save one level of indirection */
   const XML_Char *s = context;
 
