@@ -1489,7 +1489,6 @@ accounting_external_entity_ref_handler(XML_Parser parser,
                                        const XML_Char *base,
                                        const XML_Char *systemId,
                                        const XML_Char *publicId) {
-  UNUSED_P(context);
   UNUSED_P(base);
   UNUSED_P(publicId);
 
