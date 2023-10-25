@@ -325,14 +325,11 @@ extern int XMLCALL external_entity_oneshot_loader(XML_Parser parser,
                                                   const XML_Char *systemId,
                                                   const XML_Char *publicId);
 
-enum ee_parse_flags { EE_PARSE_NONE = 0x00, EE_PARSE_FULL_BUFFER = 0x01 };
-
 typedef struct ExtTest2 {
   const char *parse_text;
   int parse_len;
   const XML_Char *encoding;
   CharData *storage;
-  enum ee_parse_flags flags;
 } ExtTest2;
 
 extern int XMLCALL external_entity_loader2(XML_Parser parser,
@@ -415,7 +412,6 @@ struct AccountingTestCase {
   const char *firstExternalText;  /* often NULL */
   const char *secondExternalText; /* often NULL */
   const unsigned long long expectedCountBytesIndirectExtra;
-  XML_Bool singleBytesWanted;
 };
 
 extern int accounting_external_entity_ref_handler(XML_Parser parser,

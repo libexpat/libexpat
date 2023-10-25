@@ -1147,15 +1147,9 @@ external_entity_loader2(XML_Parser parser, const XML_Char *context,
     if (! XML_SetEncoding(extparser, test_data->encoding))
       fail("XML_SetEncoding() ignored for external entity");
   }
-  if (test_data->flags & EE_PARSE_FULL_BUFFER) {
-    if (XML_Parse(extparser, test_data->parse_text, test_data->parse_len,
-                  XML_TRUE)
-        == XML_STATUS_ERROR) {
-      xml_failure(extparser);
-    }
-  } else if (_XML_Parse_SINGLE_BYTES(extparser, test_data->parse_text,
-                                     test_data->parse_len, XML_TRUE)
-             == XML_STATUS_ERROR) {
+  if (_XML_Parse_SINGLE_BYTES(extparser, test_data->parse_text,
+                              test_data->parse_len, XML_TRUE)
+      == XML_STATUS_ERROR) {
     xml_failure(extparser);
   }
 
@@ -1508,10 +1502,7 @@ accounting_external_entity_ref_handler(XML_Parser parser,
   XML_Parser entParser = XML_ExternalEntityParserCreate(parser, context, 0);
   assert(entParser);
 
-  const XmlParseFunction xmlParseFunction
-      = testCase->singleBytesWanted ? _XML_Parse_SINGLE_BYTES : XML_Parse;
-
-  const enum XML_Status status = xmlParseFunction(
+  const enum XML_Status status = _XML_Parse_SINGLE_BYTES(
       entParser, externalText, (int)strlen(externalText), XML_TRUE);
 
   XML_ParserFree(entParser);
