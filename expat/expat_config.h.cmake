@@ -105,6 +105,9 @@
 /* Define to make parameter entity parsing functionality available. */
 #cmakedefine XML_DTD
 
+/* Define as 1/0 to enable/disable support for general entities. */
+#define XML_GE @XML_GE@
+
 /* Define to make XML Namespaces functionality available. */
 #cmakedefine XML_NS
 
