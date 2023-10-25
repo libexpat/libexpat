@@ -360,6 +360,33 @@ and the definition of character types in the case of
 <code>XML_UNICODE_WCHAR_T</code>.  The symbols are:</p>
 
 <dl class="cpp-symbols">
+<dt><a name="XML_GE">XML_GE</a></dt>
+<dd>
+Added in Expat 2.6.0.
+Include support for
+<a href="https://www.w3.org/TR/2006/REC-xml-20060816/#sec-physical-struct">general entities</a>
+(syntax <code>&amp;e1;</code> to reference and
+syntax <code>&lt;!ENTITY e1 'value1'&gt;</code> (an internal general entity) or
+<code>&lt;!ENTITY e2 SYSTEM 'file2'&gt;</code> (an external general entity) to declare).
+With <code>XML_GE</code> enabled, general entities will be replaced by their declared replacement text;
+for this to work for <em>external</em> general entities, in addition an
+<code><a href="#XML_SetExternalEntityRefHandler">XML_ExternalEntityRefHandler</a></code> must be set using
+<code><a href="#XML_SetExternalEntityRefHandler">XML_SetExternalEntityRefHandler</a></code>.
+Also, enabling <code>XML_GE</code> makes
+the functions <code><a href="#XML_SetBillionLaughsAttackProtectionMaximumAmplification">
+XML_SetBillionLaughsAttackProtectionMaximumAmplification</a></code> and <code>
+<a href="#XML_SetBillionLaughsAttackProtectionActivationThreshold">
+XML_SetBillionLaughsAttackProtectionActivationThreshold</a></code> available.
+<br/>
+With <code>XML_GE</code> disabled, Expat has a smaller memory footprint and can be faster, but will
+not load external general entities and will replace all general entities
+(except the <a href="https://www.w3.org/TR/2006/REC-xml-20060816/#sec-predefined-ent">predefined five</a>:
+<code>amp</code>, <code>apos</code>, <code>gt</code>, <code>lt</code>, <code>quot</code>)
+with a self-reference:
+for example, referencing an entity <code>e1</code> via <code>&amp;e1;</code> will be replaced
+by text <code>&amp;e1;</code>.
+</dd>
+
 <dt><a name="XML_DTD">XML_DTD</a></dt>
 <dd>Include support for using and reporting DTD-based content.  If
 this is defined, default attribute values from an external DTD subset
