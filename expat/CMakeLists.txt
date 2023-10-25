@@ -403,7 +403,13 @@ if(EXPAT_SHARED_LIBS)
             endif()
         endmacro()
 
-        _expat_def_file_toggle(EXPAT_DTD _EXPAT_COMMENT_DTD)
+        if(EXPAT_DTD OR EXPAT_GE)
+            set(_EXPAT_DTD_OR_GE TRUE)
+        else()
+            set(_EXPAT_DTD_OR_GE FALSE)
+        endif()
+
+        _expat_def_file_toggle(_EXPAT_DTD_OR_GE _EXPAT_COMMENT_DTD_OR_GE)
         _expat_def_file_toggle(EXPAT_ATTR_INFO _EXPAT_COMMENT_ATTR_INFO)
 
         configure_file("${CMAKE_CURRENT_SOURCE_DIR}/lib/libexpat.def.cmake" "${CMAKE_CURRENT_BINARY_DIR}/lib/libexpat.def")

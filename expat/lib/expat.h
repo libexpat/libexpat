@@ -1038,13 +1038,15 @@ typedef struct {
 XMLPARSEAPI(const XML_Feature *)
 XML_GetFeatureList(void);
 
-#ifdef XML_DTD
-/* Added in Expat 2.4.0. */
+#if defined(XML_DTD) || XML_GE == 1
+/* Added in Expat 2.4.0 for XML_DTD defined and
+ * added in Expat 2.6.0 for XML_GE == 1. */
 XMLPARSEAPI(XML_Bool)
 XML_SetBillionLaughsAttackProtectionMaximumAmplification(
     XML_Parser parser, float maximumAmplificationFactor);
 
-/* Added in Expat 2.4.0. */
+/* Added in Expat 2.4.0 for XML_DTD defined and
+ * added in Expat 2.6.0 for XML_GE == 1. */
 XMLPARSEAPI(XML_Bool)
 XML_SetBillionLaughsAttackProtectionActivationThreshold(
     XML_Parser parser, unsigned long long activationThresholdBytes);
