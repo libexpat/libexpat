@@ -405,8 +405,6 @@ extern int XMLCALL external_entity_parser_create_alloc_fail_handler(
     const XML_Char *systemId, const XML_Char *publicId);
 
 #  if defined(XML_DTD)
-typedef enum XML_Status (*XmlParseFunction)(XML_Parser, const char *, int, int);
-
 struct AccountingTestCase {
   const char *primaryText;
   const char *firstExternalText;  /* often NULL */
