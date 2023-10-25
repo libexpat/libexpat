@@ -63,6 +63,14 @@
 
 #include "expat_config.h"
 
+#if ! defined(XML_GE) || (1 - XML_GE - 1 == 2) || (XML_GE < 0) || (XML_GE > 1)
+#  error XML_GE (for general entities) must be defined, non-empty, either 1 or 0 (0 to disable, 1 to enable; 1 is a common default)
+#endif
+
+#if defined(XML_DTD) && XML_GE == 0
+#  error Either undefine XML_DTD or define XML_GE to 1.
+#endif
+
 #if ! defined(XML_CONTEXT_BYTES) || (1 - XML_CONTEXT_BYTES - 1 == 2)           \
     || (XML_CONTEXT_BYTES + 0 < 0)
 #  error XML_CONTEXT_BYTES must be defined, non-empty and >=0 (0 to disable, >=1 to enable; 1024 is a common default)
