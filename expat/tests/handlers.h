@@ -404,7 +404,6 @@ extern int XMLCALL external_entity_parser_create_alloc_fail_handler(
     XML_Parser parser, const XML_Char *context, const XML_Char *base,
     const XML_Char *systemId, const XML_Char *publicId);
 
-#  if defined(XML_DTD)
 struct AccountingTestCase {
   const char *primaryText;
   const char *firstExternalText;  /* often NULL */
@@ -417,7 +416,6 @@ extern int accounting_external_entity_ref_handler(XML_Parser parser,
                                                   const XML_Char *base,
                                                   const XML_Char *systemId,
                                                   const XML_Char *publicId);
-#  endif /* defined(XML_DTD) */
 
 /* NotStandalone handlers */
 

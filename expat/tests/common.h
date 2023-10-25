@@ -90,6 +90,7 @@ extern const char *long_cdata_text;
 extern const char *get_buffer_test_text;
 
 extern void tcase_add_test__ifdef_xml_dtd(TCase *tc, tcase_test_function test);
+extern void tcase_add_test__if_xml_ge(TCase *tc, tcase_test_function test);
 
 extern void basic_teardown(void);
 

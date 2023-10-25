@@ -5218,7 +5218,7 @@ make_basic_test_case(Suite *s) {
   tcase_add_test(tc_basic, test_xmldecl_invalid);
   tcase_add_test(tc_basic, test_xmldecl_missing_attr);
   tcase_add_test(tc_basic, test_xmldecl_missing_value);
-  tcase_add_test(tc_basic, test_unknown_encoding_internal_entity);
+  tcase_add_test__if_xml_ge(tc_basic, test_unknown_encoding_internal_entity);
   tcase_add_test(tc_basic, test_unrecognised_encoding_internal_entity);
   tcase_add_test__ifdef_xml_dtd(tc_basic, test_ext_entity_set_encoding);
   tcase_add_test__ifdef_xml_dtd(tc_basic, test_ext_entity_no_handler);
@@ -5234,9 +5234,9 @@ make_basic_test_case(Suite *s) {
   tcase_add_test(tc_basic, test_wfc_undeclared_entity_with_external_subset);
   tcase_add_test(tc_basic, test_not_standalone_handler_reject);
   tcase_add_test(tc_basic, test_not_standalone_handler_accept);
-  tcase_add_test(tc_basic, test_wfc_no_recursive_entity_refs);
+  tcase_add_test__if_xml_ge(tc_basic, test_wfc_no_recursive_entity_refs);
   tcase_add_test__ifdef_xml_dtd(tc_basic, test_ext_entity_invalid_parse);
-  tcase_add_test(tc_basic, test_dtd_default_handling);
+  tcase_add_test__if_xml_ge(tc_basic, test_dtd_default_handling);
   tcase_add_test(tc_basic, test_dtd_attr_handling);
   tcase_add_test(tc_basic, test_empty_ns_without_namespaces);
   tcase_add_test(tc_basic, test_ns_in_attribute_default_without_namespaces);
@@ -5254,7 +5254,7 @@ make_basic_test_case(Suite *s) {
   tcase_add_test(tc_basic, test_stop_parser_between_cdata_calls);
   tcase_add_test(tc_basic, test_suspend_parser_between_cdata_calls);
   tcase_add_test(tc_basic, test_memory_allocation);
-  tcase_add_test(tc_basic, test_default_current);
+  tcase_add_test__if_xml_ge(tc_basic, test_default_current);
   tcase_add_test(tc_basic, test_dtd_elements);
   tcase_add_test(tc_basic, test_dtd_elements_nesting);
   tcase_add_test__ifdef_xml_dtd(tc_basic, test_set_foreign_dtd);
@@ -5266,22 +5266,22 @@ make_basic_test_case(Suite *s) {
   tcase_add_test__ifdef_xml_dtd(tc_basic, test_empty_foreign_dtd);
   tcase_add_test(tc_basic, test_set_base);
   tcase_add_test(tc_basic, test_attributes);
-  tcase_add_test(tc_basic, test_reset_in_entity);
+  tcase_add_test__if_xml_ge(tc_basic, test_reset_in_entity);
   tcase_add_test(tc_basic, test_resume_invalid_parse);
   tcase_add_test(tc_basic, test_resume_resuspended);
   tcase_add_test(tc_basic, test_cdata_default);
   tcase_add_test(tc_basic, test_subordinate_reset);
   tcase_add_test(tc_basic, test_subordinate_suspend);
-  tcase_add_test(tc_basic, test_subordinate_xdecl_suspend);
-  tcase_add_test(tc_basic, test_subordinate_xdecl_abort);
+  tcase_add_test__if_xml_ge(tc_basic, test_subordinate_xdecl_suspend);
+  tcase_add_test__if_xml_ge(tc_basic, test_subordinate_xdecl_abort);
   tcase_add_test__ifdef_xml_dtd(tc_basic,
                                 test_ext_entity_invalid_suspended_parse);
   tcase_add_test(tc_basic, test_explicit_encoding);
   tcase_add_test(tc_basic, test_trailing_cr);
-  tcase_add_test(tc_basic, test_ext_entity_trailing_cr);
+  tcase_add_test__if_xml_ge(tc_basic, test_ext_entity_trailing_cr);
   tcase_add_test(tc_basic, test_trailing_rsqb);
-  tcase_add_test(tc_basic, test_ext_entity_trailing_rsqb);
-  tcase_add_test(tc_basic, test_ext_entity_good_cdata);
+  tcase_add_test__if_xml_ge(tc_basic, test_ext_entity_trailing_rsqb);
+  tcase_add_test__if_xml_ge(tc_basic, test_ext_entity_good_cdata);
   tcase_add_test__ifdef_xml_dtd(tc_basic, test_user_parameters);
   tcase_add_test__ifdef_xml_dtd(tc_basic, test_ext_entity_ref_parameter);
   tcase_add_test(tc_basic, test_empty_parse);
@@ -5366,14 +5366,14 @@ make_basic_test_case(Suite *s) {
   tcase_add_test(tc_basic, test_unknown_encoding_invalid_surrogate);
   tcase_add_test(tc_basic, test_unknown_encoding_invalid_high);
   tcase_add_test(tc_basic, test_unknown_encoding_invalid_attr_value);
-  tcase_add_test(tc_basic, test_ext_entity_latin1_utf16le_bom);
-  tcase_add_test(tc_basic, test_ext_entity_latin1_utf16be_bom);
-  tcase_add_test(tc_basic, test_ext_entity_latin1_utf16le_bom2);
-  tcase_add_test(tc_basic, test_ext_entity_latin1_utf16be_bom2);
-  tcase_add_test(tc_basic, test_ext_entity_utf16_be);
-  tcase_add_test(tc_basic, test_ext_entity_utf16_le);
-  tcase_add_test(tc_basic, test_ext_entity_utf16_unknown);
-  tcase_add_test(tc_basic, test_ext_entity_utf8_non_bom);
+  tcase_add_test__if_xml_ge(tc_basic, test_ext_entity_latin1_utf16le_bom);
+  tcase_add_test__if_xml_ge(tc_basic, test_ext_entity_latin1_utf16be_bom);
+  tcase_add_test__if_xml_ge(tc_basic, test_ext_entity_latin1_utf16le_bom2);
+  tcase_add_test__if_xml_ge(tc_basic, test_ext_entity_latin1_utf16be_bom2);
+  tcase_add_test__if_xml_ge(tc_basic, test_ext_entity_utf16_be);
+  tcase_add_test__if_xml_ge(tc_basic, test_ext_entity_utf16_le);
+  tcase_add_test__if_xml_ge(tc_basic, test_ext_entity_utf16_unknown);
+  tcase_add_test__if_xml_ge(tc_basic, test_ext_entity_utf8_non_bom);
   tcase_add_test(tc_basic, test_utf8_in_cdata_section);
   tcase_add_test(tc_basic, test_utf8_in_cdata_section_2);
   tcase_add_test(tc_basic, test_utf8_in_start_tags);
@@ -5408,5 +5408,5 @@ make_basic_test_case(Suite *s) {
   tcase_add_test(tc_basic, test_empty_element_abort);
   tcase_add_test__ifdef_xml_dtd(tc_basic,
                                 test_pool_integrity_with_unfinished_attr);
-  tcase_add_test(tc_basic, test_nested_entity_suspend);
+  tcase_add_test__if_xml_ge(tc_basic, test_nested_entity_suspend);
 }

@@ -154,6 +154,16 @@ tcase_add_test__ifdef_xml_dtd(TCase *tc, tcase_test_function test) {
 }
 
 void
+tcase_add_test__if_xml_ge(TCase *tc, tcase_test_function test) {
+#if XML_GE == 1
+  tcase_add_test(tc, test);
+#else
+  UNUSED_P(tc);
+  UNUSED_P(test);
+#endif
+}
+
+void
 basic_teardown(void) {
   if (g_parser != NULL) {
     XML_ParserFree(g_parser);

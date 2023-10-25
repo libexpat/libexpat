@@ -69,7 +69,7 @@ make_suite(void) {
   make_miscellaneous_test_case(s);
   make_alloc_test_case(s);
   make_nsalloc_test_case(s);
-#if defined(XML_DTD)
+#if defined(XML_DTD) || XML_GE == 1
   make_accounting_test_case(s);
 #endif
 
