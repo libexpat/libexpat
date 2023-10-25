@@ -303,6 +303,8 @@ AC_SUBST(FILEMAP)
 dnl Some basic configuration:
 AC_DEFINE([XML_NS], 1,
           [Define to make XML Namespaces functionality available.])
+AC_DEFINE([XML_GE], 1,
+          [Define as 1/0 to enable/disable support for general entities.])
 AC_DEFINE([XML_DTD], 1,
           [Define to make parameter entity parsing functionality available.])
 AC_DEFINE([XML_DEV_URANDOM], 1,
