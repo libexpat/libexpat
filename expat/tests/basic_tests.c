@@ -5373,6 +5373,124 @@ START_TEST(test_set_reparse_deferral) {
 }
 END_TEST
 
+struct element_decl_data {
+  XML_Parser parser;
+  int count;
+};
+
+static void
+element_decl_counter(void *userData, const XML_Char *name, XML_Content *model) {
+  UNUSED_P(name);
+  struct element_decl_data *testdata = (struct element_decl_data *)userData;
+  testdata->count += 1;
+  XML_FreeContentModel(testdata->parser, model);
+}
+
+static int
+external_inherited_parser(XML_Parser p, const XML_Char *context,
+                          const XML_Char *base, const XML_Char *systemId,
+                          const XML_Char *publicId) {
+  UNUSED_P(base);
+  UNUSED_P(systemId);
+  UNUSED_P(publicId);
+  const char *const pre = "<!ELEMENT document ANY>\n";
+  const char *const start = "<!ELEMENT ";
+  const char *const end = " ANY>\n";
+  const char *const post = "<!ELEMENT xyz ANY>\n";
+  const int enabled = *(int *)XML_GetUserData(p);
+  char eeeeee[100];
+  char spaces[100];
+  const int fillsize = (int)sizeof(eeeeee);
+  assert_true(fillsize == (int)sizeof(spaces));
+  memset(eeeeee, 'e', fillsize);
+  memset(spaces, ' ', fillsize);
+
+  XML_Parser parser = XML_ExternalEntityParserCreate(p, context, NULL);
+  assert_true(parser != NULL);
+
+  struct element_decl_data testdata;
+  testdata.parser = parser;
+  testdata.count = 0;
+  XML_SetUserData(parser, &testdata);
+  XML_SetElementDeclHandler(parser, element_decl_counter);
+
+  enum XML_Status status;
+  // parse the initial text
+  status = XML_Parse(parser, pre, (int)strlen(pre), XML_FALSE);
+  if (status != XML_STATUS_OK) {
+    xml_failure(parser);
+  }
+  assert_true(testdata.count == 1); // first element should be done
+
+  // ..and the start of the big token
+  status = XML_Parse(parser, start, (int)strlen(start), XML_FALSE);
+  if (status != XML_STATUS_OK) {
+    xml_failure(parser);
+  }
+  assert_true(testdata.count == 1); // still just the first one
+
+  // try to parse lots of 'e', but the token isn't finished
+  for (int c = 0; c < 100; ++c) {
+    status = XML_Parse(parser, eeeeee, fillsize, XML_FALSE);
+    if (status != XML_STATUS_OK) {
+      xml_failure(parser);
+    }
+  }
+  assert_true(testdata.count == 1); // *still* just the first one
+
+  // end the big token.
+  status = XML_Parse(parser, end, (int)strlen(end), XML_FALSE);
+  if (status != XML_STATUS_OK) {
+    xml_failure(parser);
+  }
+
+  if (enabled) {
+    // In general, we may need to push more data to trigger a reparse attempt,
+    // but in this test, the data is constructed to always require it.
+    assert_true(testdata.count == 1); // or the test is incorrect
+    // 2x the token length should suffice; the +1 covers the start and end.
+    for (int c = 0; c < 101; ++c) {
+      status = XML_Parse(parser, spaces, fillsize, XML_FALSE);
+      if (status != XML_STATUS_OK) {
+        xml_failure(parser);
+      }
+    }
+  }
+  assert_true(testdata.count == 2); // the big token should be done
+
+  // parse the final text
+  status = XML_Parse(parser, post, (int)strlen(post), XML_TRUE);
+  if (status != XML_STATUS_OK) {
+    xml_failure(parser);
+  }
+  assert_true(testdata.count == 3); // after isFinal=XML_TRUE, all must be done
+
+  XML_ParserFree(parser);
+  return XML_STATUS_OK;
+}
+
+START_TEST(test_reparse_deferral_is_inherited) {
+  const char *const text
+      = "<!DOCTYPE document SYSTEM 'something.ext'><document/>";
+  for (int enabled = 0; enabled <= 1; ++enabled) {
+    set_subtest("deferral=%d", enabled);
+
+    XML_Parser parser = XML_ParserCreate(NULL);
+    assert_true(parser != NULL);
+    XML_SetUserData(parser, (void *)&enabled);
+    XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+    // this handler creates a sub-parser and checks that its deferral behavior
+    // is what we expected, based on the value of `enabled` (in userdata).
+    XML_SetExternalEntityRefHandler(parser, external_inherited_parser);
+    assert_true(XML_SetReparseDeferralEnabled(parser, enabled));
+    if (XML_Parse(parser, text, (int)strlen(text), XML_TRUE) != XML_STATUS_OK)
+      xml_failure(parser);
+
+    XML_ParserFree(parser);
+  }
+}
+END_TEST
+
 START_TEST(test_set_reparse_deferral_on_null_parser) {
   assert_true(XML_SetReparseDeferralEnabled(NULL, 0) == XML_FALSE);
   assert_true(XML_SetReparseDeferralEnabled(NULL, 1) == XML_FALSE);
@@ -5693,6 +5811,7 @@ make_basic_test_case(Suite *s) {
   tcase_add_test__if_xml_ge(tc_basic, test_nested_entity_suspend);
   tcase_add_test(tc_basic, test_big_tokens_take_linear_time);
   tcase_add_test(tc_basic, test_set_reparse_deferral);
+  tcase_add_test(tc_basic, test_reparse_deferral_is_inherited);
   tcase_add_test(tc_basic, test_set_reparse_deferral_on_null_parser);
   tcase_add_test(tc_basic, test_set_reparse_deferral_on_the_fly);
   tcase_add_test(tc_basic, test_set_bad_reparse_option);

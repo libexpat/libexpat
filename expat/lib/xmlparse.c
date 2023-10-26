@@ -1364,6 +1364,7 @@ XML_ExternalEntityParserCreate(XML_Parser oldParser, const XML_Char *context,
      to worry which hash secrets each table has.
   */
   unsigned long oldhash_secret_salt;
+  XML_Bool oldReparseDeferralEnabled;
 
   /* Validate the oldParser parameter before we pull everything out of it */
   if (oldParser == NULL)
@@ -1408,6 +1409,7 @@ XML_ExternalEntityParserCreate(XML_Parser oldParser, const XML_Char *context,
      to worry which hash secrets each table has.
   */
   oldhash_secret_salt = parser->m_hash_secret_salt;
+  oldReparseDeferralEnabled = parser->m_reparseDeferralEnabled;
 
 #ifdef XML_DTD
   if (! context)
@@ -1460,6 +1462,7 @@ XML_ExternalEntityParserCreate(XML_Parser oldParser, const XML_Char *context,
   parser->m_defaultExpandInternalEntities = oldDefaultExpandInternalEntities;
   parser->m_ns_triplets = oldns_triplets;
   parser->m_hash_secret_salt = oldhash_secret_salt;
+  parser->m_reparseDeferralEnabled = oldReparseDeferralEnabled;
   parser->m_parentParser = oldParser;
 #ifdef XML_DTD
   parser->m_paramEntityParsing = oldParamEntityParsing;
