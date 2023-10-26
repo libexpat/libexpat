@@ -2911,6 +2911,20 @@ START_TEST(test_buffer_can_grow_to_max) {
 }
 END_TEST
 
+START_TEST(test_getbuffer_allocates_on_zero_len) {
+  for (int first_len = 1; first_len >= 0; first_len--) {
+    set_subtest("with len=%d first", first_len);
+    XML_Parser parser = XML_ParserCreate(NULL);
+    assert_true(parser != NULL);
+    assert_true(XML_GetBuffer(parser, first_len) != NULL);
+    assert_true(XML_GetBuffer(parser, 0) != NULL);
+    if (XML_ParseBuffer(parser, 0, XML_FALSE) != XML_STATUS_OK)
+      xml_failure(parser);
+    XML_ParserFree(parser);
+  }
+}
+END_TEST
+
 /* Test position information macros */
 START_TEST(test_byte_info_at_end) {
   const char *text = "<doc></doc>";
@@ -5411,6 +5425,7 @@ make_basic_test_case(Suite *s) {
   tcase_add_test(tc_basic, test_get_buffer_3_overflow);
 #endif
   tcase_add_test(tc_basic, test_buffer_can_grow_to_max);
+  tcase_add_test(tc_basic, test_getbuffer_allocates_on_zero_len);
   tcase_add_test(tc_basic, test_byte_info_at_end);
   tcase_add_test(tc_basic, test_byte_info_at_error);
   tcase_add_test(tc_basic, test_byte_info_at_cdata);

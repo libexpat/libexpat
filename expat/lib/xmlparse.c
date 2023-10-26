@@ -2115,7 +2115,8 @@ XML_GetBuffer(XML_Parser parser, int len) {
   default:;
   }
 
-  if (len > EXPAT_SAFE_PTR_DIFF(parser->m_bufferLim, parser->m_bufferEnd)) {
+  if (len > EXPAT_SAFE_PTR_DIFF(parser->m_bufferLim, parser->m_bufferEnd)
+      || parser->m_buffer == NULL) {
 #if XML_CONTEXT_BYTES > 0
     int keep;
 #endif /* XML_CONTEXT_BYTES > 0 */
@@ -2138,8 +2139,9 @@ XML_GetBuffer(XML_Parser parser, int len) {
     }
     neededSize += keep;
 #endif /* XML_CONTEXT_BYTES > 0 */
-    if (neededSize
-        <= EXPAT_SAFE_PTR_DIFF(parser->m_bufferLim, parser->m_buffer)) {
+    if (parser->m_buffer && parser->m_bufferPtr
+        && neededSize
+               <= EXPAT_SAFE_PTR_DIFF(parser->m_bufferLim, parser->m_buffer)) {
 #if XML_CONTEXT_BYTES > 0
       if (keep < EXPAT_SAFE_PTR_DIFF(parser->m_bufferPtr, parser->m_buffer)) {
         int offset
@@ -2153,14 +2155,12 @@ XML_GetBuffer(XML_Parser parser, int len) {
         parser->m_bufferPtr -= offset;
       }
 #else
-      if (parser->m_buffer && parser->m_bufferPtr) {
-        memmove(parser->m_buffer, parser->m_bufferPtr,
-                EXPAT_SAFE_PTR_DIFF(parser->m_bufferEnd, parser->m_bufferPtr));
-        parser->m_bufferEnd
-            = parser->m_buffer
-              + EXPAT_SAFE_PTR_DIFF(parser->m_bufferEnd, parser->m_bufferPtr);
-        parser->m_bufferPtr = parser->m_buffer;
-      }
+      memmove(parser->m_buffer, parser->m_bufferPtr,
+              EXPAT_SAFE_PTR_DIFF(parser->m_bufferEnd, parser->m_bufferPtr));
+      parser->m_bufferEnd
+          = parser->m_buffer
+            + EXPAT_SAFE_PTR_DIFF(parser->m_bufferEnd, parser->m_bufferPtr);
+      parser->m_bufferPtr = parser->m_buffer;
 #endif /* XML_CONTEXT_BYTES > 0 */
     } else {
       char *newBuf;
