@@ -512,9 +512,13 @@ static enum XML_Error appendAttributeValue(XML_Parser parser, const ENCODING *,
 static ATTRIBUTE_ID *getAttributeId(XML_Parser parser, const ENCODING *enc,
                                     const char *start, const char *end);
 static int setElementTypePrefix(XML_Parser parser, ELEMENT_TYPE *);
+#if XML_GE == 1
 static enum XML_Error storeEntityValue(XML_Parser parser, const ENCODING *enc,
                                        const char *start, const char *end,
                                        enum XML_Account account);
+#else
+static enum XML_Error storeSelfEntityValue(XML_Parser parser, ENTITY *entity);
+#endif
 static int reportProcessingInstruction(XML_Parser parser, const ENCODING *enc,
                                        const char *start, const char *end);
 static int reportComment(XML_Parser parser, const ENCODING *enc,
@@ -5053,6 +5057,9 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
       break;
     case XML_ROLE_ENTITY_VALUE:
       if (dtd->keepProcessing) {
+#if defined(XML_DTD) || XML_GE == 1
+        // This will store the given replacement text in
+        // parser->m_declEntity->textPtr.
         enum XML_Error result
             = storeEntityValue(parser, enc, s + enc->minBytesPerChar,
                                next - enc->minBytesPerChar, XML_ACCOUNT_NONE);
@@ -5073,6 +5080,25 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
           poolDiscard(&dtd->entityValuePool);
         if (result != XML_ERROR_NONE)
           return result;
+#else
+        // This will store "&amp;entity123;" in parser->m_declEntity->textPtr
+        // to end up as "&entity123;" in the handler.
+        if (parser->m_declEntity != NULL) {
+          const enum XML_Error result
+              = storeSelfEntityValue(parser, parser->m_declEntity);
+          if (result != XML_ERROR_NONE)
+            return result;
+
+          if (parser->m_entityDeclHandler) {
+            *eventEndPP = s;
+            parser->m_entityDeclHandler(
+                parser->m_handlerArg, parser->m_declEntity->name,
+                parser->m_declEntity->is_param, parser->m_declEntity->textPtr,
+                parser->m_declEntity->textLen, parser->m_curBase, 0, 0, 0);
+            handleDefault = XML_FALSE;
+          }
+        }
+#endif
       }
       break;
     case XML_ROLE_DOCTYPE_SYSTEM_ID:
@@ -5131,6 +5157,16 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
       }
       break;
     case XML_ROLE_ENTITY_COMPLETE:
+#if XML_GE == 0
+      // This will store "&amp;entity123;" in entity->textPtr
+      // to end up as "&entity123;" in the handler.
+      if (parser->m_declEntity != NULL) {
+        const enum XML_Error result
+            = storeSelfEntityValue(parser, parser->m_declEntity);
+        if (result != XML_ERROR_NONE)
+          return result;
+      }
+#endif
       if (dtd->keepProcessing && parser->m_declEntity
           && parser->m_entityDeclHandler) {
         *eventEndPP = s;
@@ -6103,6 +6139,7 @@ appendAttributeValue(XML_Parser parser, const ENCODING *enc, XML_Bool isCdata,
   /* not reached */
 }
 
+#if XML_GE == 1
 static enum XML_Error
 storeEntityValue(XML_Parser parser, const ENCODING *enc,
                  const char *entityTextPtr, const char *entityTextEnd,
@@ -6110,12 +6147,12 @@ storeEntityValue(XML_Parser parser, const ENCODING *enc,
   DTD *const dtd = parser->m_dtd; /* save one level of indirection */
   STRING_POOL *pool = &(dtd->entityValuePool);
   enum XML_Error result = XML_ERROR_NONE;
-#ifdef XML_DTD
+#  ifdef XML_DTD
   int oldInEntityValue = parser->m_prologState.inEntityValue;
   parser->m_prologState.inEntityValue = 1;
-#else
+#  else
   UNUSED_P(account);
-#endif /* XML_DTD */
+#  endif /* XML_DTD */
   /* never return Null for the value argument in EntityDeclHandler,
      since this would indicate an external entity; therefore we
      have to make sure that entityValuePool.start is not null */
@@ -6129,18 +6166,18 @@ storeEntityValue(XML_Parser parser, const ENCODING *enc,
         = entityTextPtr; /* XmlEntityValueTok doesn't always set the last arg */
     int tok = XmlEntityValueTok(enc, entityTextPtr, entityTextEnd, &next);
 
-#if defined(XML_DTD) || XML_GE == 1
+#  if defined(XML_DTD) || XML_GE == 1
     if (! accountingDiffTolerated(parser, tok, entityTextPtr, next, __LINE__,
                                   account)) {
       accountingOnAbort(parser);
       result = XML_ERROR_AMPLIFICATION_LIMIT_BREACH;
       goto endEntityValue;
     }
-#endif
+#  endif
 
     switch (tok) {
     case XML_TOK_PARAM_ENTITY_REF:
-#ifdef XML_DTD
+#  ifdef XML_DTD
       if (parser->m_isParamEntity || enc != parser->m_encoding) {
         const XML_Char *name;
         ENTITY *entity;
@@ -6202,7 +6239,7 @@ storeEntityValue(XML_Parser parser, const ENCODING *enc,
         }
         break;
       }
-#endif /* XML_DTD */
+#  endif /* XML_DTD */
       /* In the internal subset, PE references are not legal
          within markup declarations, e.g entity values in this case. */
       parser->m_eventPtr = entityTextPtr;
@@ -6283,11 +6320,37 @@ storeEntityValue(XML_Parser parser, const ENCODING *enc,
     entityTextPtr = next;
   }
 endEntityValue:
-#ifdef XML_DTD
+#  ifdef XML_DTD
   parser->m_prologState.inEntityValue = oldInEntityValue;
-#endif /* XML_DTD */
+#  endif /* XML_DTD */
   return result;
 }
+
+#else /* XML_GE == 0 */
+
+static enum XML_Error
+storeSelfEntityValue(XML_Parser parser, ENTITY *entity) {
+  // This will store "&amp;entity123;" in entity->textPtr
+  // to end up as "&entity123;" in the handler.
+  const char *const entity_start = "&amp;";
+  const char *const entity_end = ";";
+
+  STRING_POOL *const pool = &(parser->m_dtd->entityValuePool);
+  if (! poolAppendString(pool, entity_start)
+      || ! poolAppendString(pool, entity->name)
+      || ! poolAppendString(pool, entity_end)) {
+    poolDiscard(pool);
+    return XML_ERROR_NO_MEMORY;
+  }
+
+  entity->textPtr = poolStart(pool);
+  entity->textLen = (int)(poolLength(pool));
+  poolFinish(pool);
+
+  return XML_ERROR_NONE;
+}
+
+#endif /* XML_GE == 0 */
 
 static void FASTCALL
 normalizeLines(XML_Char *s) {
