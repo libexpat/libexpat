@@ -670,6 +670,24 @@ external_entity_suspending_faulter(XML_Parser parser, const XML_Char *context,
 }
 
 int XMLCALL
+external_entity_failer__if_not_xml_ge(XML_Parser parser,
+                                      const XML_Char *context,
+                                      const XML_Char *base,
+                                      const XML_Char *systemId,
+                                      const XML_Char *publicId) {
+  UNUSED_P(parser);
+  UNUSED_P(context);
+  UNUSED_P(base);
+  UNUSED_P(systemId);
+  UNUSED_P(publicId);
+#if XML_GE == 0
+  fail(
+      "Function external_entity_suspending_failer was called despite XML_GE==0.");
+#endif
+  return XML_STATUS_OK;
+}
+
+int XMLCALL
 external_entity_cr_catcher(XML_Parser parser, const XML_Char *context,
                            const XML_Char *base, const XML_Char *systemId,
                            const XML_Char *publicId) {
@@ -1858,6 +1876,36 @@ accumulate_entity_decl(void *userData, const XML_Char *entityName,
   else
     CharData_AppendXMLChars(storage, value, value_length);
   CharData_AppendXMLChars(storage, XCS("\n"), 1);
+}
+
+void XMLCALL
+accumulate_char_data(void *userData, const XML_Char *s, int len) {
+  CharData *const storage = (CharData *)userData;
+  CharData_AppendXMLChars(storage, s, len);
+}
+
+void XMLCALL
+accumulate_start_element(void *userData, const XML_Char *name,
+                         const XML_Char **atts) {
+  CharData *const storage = (CharData *)userData;
+  CharData_AppendXMLChars(storage, XCS("("), 1);
+  CharData_AppendXMLChars(storage, name, -1);
+
+  if ((atts != NULL) && (atts[0] != NULL)) {
+    CharData_AppendXMLChars(storage, XCS("("), 1);
+    while (atts[0] != NULL) {
+      CharData_AppendXMLChars(storage, atts[0], -1);
+      CharData_AppendXMLChars(storage, XCS("="), 1);
+      CharData_AppendXMLChars(storage, atts[1], -1);
+      atts += 2;
+      if (atts[0] != NULL) {
+        CharData_AppendXMLChars(storage, XCS(","), 1);
+      }
+    }
+    CharData_AppendXMLChars(storage, XCS(")"), 1);
+  }
+
+  CharData_AppendXMLChars(storage, XCS(")\n"), 2);
 }
 
 void XMLCALL

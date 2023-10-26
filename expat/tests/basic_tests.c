@@ -5338,10 +5338,10 @@ make_basic_test_case(Suite *s) {
   tcase_add_test(tc_basic, test_skipped_null_loaded_ext_entity);
   tcase_add_test(tc_basic, test_skipped_unloaded_ext_entity);
   tcase_add_test__ifdef_xml_dtd(tc_basic, test_param_entity_with_trailing_cr);
-  tcase_add_test(tc_basic, test_invalid_character_entity);
-  tcase_add_test(tc_basic, test_invalid_character_entity_2);
-  tcase_add_test(tc_basic, test_invalid_character_entity_3);
-  tcase_add_test(tc_basic, test_invalid_character_entity_4);
+  tcase_add_test__if_xml_ge(tc_basic, test_invalid_character_entity);
+  tcase_add_test__if_xml_ge(tc_basic, test_invalid_character_entity_2);
+  tcase_add_test__if_xml_ge(tc_basic, test_invalid_character_entity_3);
+  tcase_add_test__if_xml_ge(tc_basic, test_invalid_character_entity_4);
   tcase_add_test(tc_basic, test_pi_handled_in_default);
   tcase_add_test(tc_basic, test_comment_handled_in_default);
   tcase_add_test(tc_basic, test_pi_yml);
