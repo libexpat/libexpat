@@ -1853,7 +1853,10 @@ accumulate_entity_decl(void *userData, const XML_Char *entityName,
   UNUSED_P(notationName);
   CharData_AppendXMLChars(storage, entityName, -1);
   CharData_AppendXMLChars(storage, XCS("="), 1);
-  CharData_AppendXMLChars(storage, value, value_length);
+  if (value == NULL)
+    CharData_AppendXMLChars(storage, XCS("(null)"), -1);
+  else
+    CharData_AppendXMLChars(storage, value, value_length);
   CharData_AppendXMLChars(storage, XCS("\n"), 1);
 }
 
