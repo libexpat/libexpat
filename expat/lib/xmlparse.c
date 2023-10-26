@@ -1954,23 +1954,22 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal) {
                       &parser->m_position);
     nLeftOver = s + len - end;
     if (nLeftOver) {
-      if (parser->m_buffer == NULL
-          || nLeftOver > parser->m_bufferLim - parser->m_buffer) {
-        /* avoid _signed_ integer overflow */
-        char *temp = NULL;
-        const int bytesToAllocate = (int)((unsigned)len * 2U);
-        if (bytesToAllocate > 0) {
-          temp = (char *)REALLOC(parser, parser->m_buffer, bytesToAllocate);
-        }
-        if (temp == NULL) {
-          parser->m_errorCode = XML_ERROR_NO_MEMORY;
-          parser->m_eventPtr = parser->m_eventEndPtr = NULL;
-          parser->m_processor = errorProcessor;
-          return XML_STATUS_ERROR;
-        }
-        parser->m_buffer = temp;
-        parser->m_bufferLim = parser->m_buffer + bytesToAllocate;
+      // Back up and restore the parsing status to avoid XML_ERROR_SUSPENDED
+      // (and XML_ERROR_FINISHED) from XML_GetBuffer.
+      const enum XML_Parsing originalStatus = parser->m_parsingStatus.parsing;
+      parser->m_parsingStatus.parsing = XML_PARSING;
+      void *const temp = XML_GetBuffer(parser, nLeftOver);
+      parser->m_parsingStatus.parsing = originalStatus;
+      if (temp == NULL) {
+        // NOTE: parser->m_errorCode has already been set by XML_GetBuffer().
+        parser->m_eventPtr = parser->m_eventEndPtr = NULL;
+        parser->m_processor = errorProcessor;
+        return XML_STATUS_ERROR;
       }
+      // Since we know that the buffer was empty and XML_CONTEXT_BYTES is 0, we
+      // don't have any data to preserve, and can copy straight into the start
+      // of the buffer rather than the GetBuffer return pointer (which may be
+      // pointing further into the allocated buffer).
       memcpy(parser->m_buffer, end, nLeftOver);
     }
     parser->m_bufferPtr = parser->m_buffer;
@@ -2126,7 +2125,7 @@ XML_GetBuffer(XML_Parser parser, int len) {
     } else {
       char *newBuf;
       int bufferSize
-          = (int)EXPAT_SAFE_PTR_DIFF(parser->m_bufferLim, parser->m_bufferPtr);
+          = (int)EXPAT_SAFE_PTR_DIFF(parser->m_bufferLim, parser->m_buffer);
       if (bufferSize == 0)
         bufferSize = INIT_BUFFER_SIZE;
       do {

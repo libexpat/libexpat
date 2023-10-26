@@ -2861,6 +2861,50 @@ START_TEST(test_get_buffer_3_overflow) {
 END_TEST
 #endif // XML_CONTEXT_BYTES > 0
 
+START_TEST(test_buffer_can_grow_to_max) {
+  const char *const prefixes[] = {
+      "",
+      "<",
+      "<x a='",
+      "<doc><x a='",
+      "<document><x a='",
+      "<averylongelementnamesuchthatitwillhopefullystretchacrossmultiplelinesand"
+      "lookprettyridiculousitsalsoveryhardtoreadandifyouredoingitihavetowonderif"
+      "youreallydonthaveanythingbettertodoofcourseiguessicouldveputsomethingbadin"
+      "herebutipromisethatididntheybtwhowgreatarespacesandpunctuationforhelping"
+      "withreadabilityprettygreatithinkanywaysthisisprobablylongenoughbye><x a='"};
+  const int num_prefixes = sizeof(prefixes) / sizeof(prefixes[0]);
+  int maxbuf = INT_MAX / 2 + (INT_MAX & 1); // round up without overflow
+  if (sizeof(void *) < 8) {
+    // Looks like we have a 32-bit system. Can we make a big allocation?
+    void *big = malloc(maxbuf);
+    if (! big) {
+      // The big allocation failed. Let's be a little lenient.
+      maxbuf = maxbuf / 2;
+    }
+    free(big);
+  }
+
+  for (int i = 0; i < num_prefixes; ++i) {
+    set_subtest("\"%s\"", prefixes[i]);
+    XML_Parser parser = XML_ParserCreate(NULL);
+    const int prefix_len = (int)strlen(prefixes[i]);
+    const enum XML_Status s
+        = _XML_Parse_SINGLE_BYTES(parser, prefixes[i], prefix_len, XML_FALSE);
+    if (s != XML_STATUS_OK)
+      xml_failure(parser);
+
+    // XML_CONTEXT_BYTES of the prefix may remain in the buffer;
+    // subtracting the whole prefix is easiest, and close enough.
+    assert_true(XML_GetBuffer(parser, maxbuf - prefix_len) != NULL);
+    // The limit should be consistent; no prefix should allow us to
+    // reach above the max buffer size.
+    assert_true(XML_GetBuffer(parser, maxbuf + 1) == NULL);
+    XML_ParserFree(parser);
+  }
+}
+END_TEST
+
 /* Test position information macros */
 START_TEST(test_byte_info_at_end) {
   const char *text = "<doc></doc>";
@@ -5246,6 +5290,7 @@ make_basic_test_case(Suite *s) {
 #if XML_CONTEXT_BYTES > 0
   tcase_add_test(tc_basic, test_get_buffer_3_overflow);
 #endif
+  tcase_add_test(tc_basic, test_buffer_can_grow_to_max);
   tcase_add_test(tc_basic, test_byte_info_at_end);
   tcase_add_test(tc_basic, test_byte_info_at_error);
   tcase_add_test(tc_basic, test_byte_info_at_cdata);
