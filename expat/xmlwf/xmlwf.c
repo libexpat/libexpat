@@ -1157,13 +1157,13 @@ tmain(int argc, XML_Char **argv) {
     }
 
     if (attackMaximumAmplification != -1.0f) {
-#if defined(XML_DTD) || XML_GE == 1
+#if XML_GE == 1
       XML_SetBillionLaughsAttackProtectionMaximumAmplification(
           parser, attackMaximumAmplification);
 #endif
     }
     if (attackThresholdGiven) {
-#if defined(XML_DTD) || XML_GE == 1
+#if XML_GE == 1
       XML_SetBillionLaughsAttackProtectionActivationThreshold(
           parser, attackThresholdBytes);
 #else

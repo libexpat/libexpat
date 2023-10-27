@@ -1038,7 +1038,7 @@ typedef struct {
 XMLPARSEAPI(const XML_Feature *)
 XML_GetFeatureList(void);
 
-#if defined(XML_DTD) || XML_GE == 1
+#if XML_GE == 1
 /* Added in Expat 2.4.0 for XML_DTD defined and
  * added in Expat 2.6.0 for XML_GE == 1. */
 XMLPARSEAPI(XML_Bool)

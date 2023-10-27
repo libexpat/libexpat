@@ -424,7 +424,7 @@ enum XML_Account {
   XML_ACCOUNT_NONE              /* i.e. do not account, was accounted already */
 };
 
-#if defined(XML_DTD) || XML_GE == 1
+#if XML_GE == 1
 typedef unsigned long long XmlBigCount;
 typedef struct accounting {
   XmlBigCount countBytesDirect;
@@ -440,7 +440,7 @@ typedef struct entity_stats {
   unsigned int maximumDepthSeen;
   unsigned long debugLevel;
 } ENTITY_STATS;
-#endif /* defined(XML_DTD) || XML_GE == 1 */
+#endif /* XML_GE == 1 */
 
 typedef enum XML_Error PTRCALL Processor(XML_Parser parser, const char *start,
                                          const char *end, const char **endPtr);
@@ -582,7 +582,7 @@ static XML_Parser parserCreate(const XML_Char *encodingName,
 
 static void parserInit(XML_Parser parser, const XML_Char *encodingName);
 
-#if defined(XML_DTD) || XML_GE == 1
+#if XML_GE == 1
 static float accountingGetCurrentAmplification(XML_Parser rootParser);
 static void accountingReportStats(XML_Parser originParser, const char *epilog);
 static void accountingOnAbort(XML_Parser originParser);
@@ -605,7 +605,7 @@ static void entityTrackingOnClose(XML_Parser parser, ENTITY *entity,
 
 static XML_Parser getRootParserOf(XML_Parser parser,
                                   unsigned int *outLevelDiff);
-#endif /* defined(XML_DTD) || XML_GE == 1 */
+#endif /* XML_GE == 1 */
 
 static unsigned long getDebugLevel(const char *variableName,
                                    unsigned long defaultDebugLevel);
@@ -730,7 +730,7 @@ struct XML_ParserStruct {
   enum XML_ParamEntityParsing m_paramEntityParsing;
 #endif
   unsigned long m_hash_secret_salt;
-#if defined(XML_DTD) || XML_GE == 1
+#if XML_GE == 1
   ACCOUNTING m_accounting;
   ENTITY_STATS m_entity_stats;
 #endif
@@ -1190,7 +1190,7 @@ parserInit(XML_Parser parser, const XML_Char *encodingName) {
 #endif
   parser->m_hash_secret_salt = 0;
 
-#if defined(XML_DTD) || XML_GE == 1
+#if XML_GE == 1
   memset(&parser->m_accounting, 0, sizeof(ACCOUNTING));
   parser->m_accounting.debugLevel = getDebugLevel("EXPAT_ACCOUNTING_DEBUG", 0u);
   parser->m_accounting.maximumAmplificationFactor
@@ -2546,7 +2546,7 @@ XML_GetFeatureList(void) {
 #ifdef XML_ATTR_INFO
     {XML_FEATURE_ATTR_INFO, XML_L("XML_ATTR_INFO"), 0},
 #endif
-#if defined(XML_DTD) || XML_GE == 1
+#if XML_GE == 1
     /* Added in Expat 2.4.0 for XML_DTD defined and
      * added in Expat 2.6.0 for XML_GE == 1. */
     {XML_FEATURE_BILLION_LAUGHS_ATTACK_PROTECTION_MAXIMUM_AMPLIFICATION_DEFAULT,
@@ -2563,7 +2563,7 @@ XML_GetFeatureList(void) {
   return features;
 }
 
-#if defined(XML_DTD) || XML_GE == 1
+#if XML_GE == 1
 XML_Bool XMLCALL
 XML_SetBillionLaughsAttackProtectionMaximumAmplification(
     XML_Parser parser, float maximumAmplificationFactor) {
@@ -2585,7 +2585,7 @@ XML_SetBillionLaughsAttackProtectionActivationThreshold(
   parser->m_accounting.activationThresholdBytes = activationThresholdBytes;
   return XML_TRUE;
 }
-#endif /* defined(XML_DTD) || XML_GE == 1 */
+#endif /* XML_GE == 1 */
 
 /* Initially tag->rawName always points into the parse buffer;
    for those TAG instances opened while the current parse buffer was
@@ -2671,13 +2671,13 @@ externalEntityInitProcessor2(XML_Parser parser, const char *start,
   int tok = XmlContentTok(parser->m_encoding, start, end, &next);
   switch (tok) {
   case XML_TOK_BOM:
-#if defined(XML_DTD) || XML_GE == 1
+#if XML_GE == 1
     if (! accountingDiffTolerated(parser, tok, start, next, __LINE__,
                                   XML_ACCOUNT_DIRECT)) {
       accountingOnAbort(parser);
       return XML_ERROR_AMPLIFICATION_LIMIT_BREACH;
     }
-#endif /* defined(XML_DTD) || XML_GE == 1 */
+#endif /* XML_GE == 1 */
 
     /* If we are at the end of the buffer, this would cause the next stage,
        i.e. externalEntityInitProcessor3, to pass control directly to
@@ -2791,7 +2791,7 @@ doContent(XML_Parser parser, int startTagLevel, const ENCODING *enc,
   for (;;) {
     const char *next = s; /* XmlContentTok doesn't always set the last arg */
     int tok = XmlContentTok(enc, s, end, &next);
-#if defined(XML_DTD) || XML_GE == 1
+#if XML_GE == 1
     const char *accountAfter
         = ((tok == XML_TOK_TRAILING_RSQB) || (tok == XML_TOK_TRAILING_CR))
               ? (haveMore ? s /* i.e. 0 bytes */ : end)
@@ -2857,14 +2857,14 @@ doContent(XML_Parser parser, int startTagLevel, const ENCODING *enc,
       XML_Char ch = (XML_Char)XmlPredefinedEntityName(
           enc, s + enc->minBytesPerChar, next - enc->minBytesPerChar);
       if (ch) {
-#if defined(XML_DTD) || XML_GE == 1
+#if XML_GE == 1
         /* NOTE: We are replacing 4-6 characters original input for 1 character
          *       so there is no amplification and hence recording without
          *       protection. */
         accountingDiffTolerated(parser, tok, (char *)&ch,
                                 ((char *)&ch) + sizeof(XML_Char), __LINE__,
                                 XML_ACCOUNT_ENTITY_EXPANSION);
-#endif /* defined(XML_DTD) || XML_GE == 1 */
+#endif /* XML_GE == 1 */
         if (parser->m_characterDataHandler)
           parser->m_characterDataHandler(parser->m_handlerArg, &ch, 1);
         else if (parser->m_defaultHandler)
@@ -4066,7 +4066,7 @@ doCdataSection(XML_Parser parser, const ENCODING *enc, const char **startPtr,
   for (;;) {
     const char *next = s; /* in case of XML_TOK_NONE or XML_TOK_PARTIAL */
     int tok = XmlCdataSectionTok(enc, s, end, &next);
-#if defined(XML_DTD) || XML_GE == 1
+#if XML_GE == 1
     if (! accountingDiffTolerated(parser, tok, s, next, __LINE__, account)) {
       accountingOnAbort(parser);
       return XML_ERROR_AMPLIFICATION_LIMIT_BREACH;
@@ -4218,7 +4218,7 @@ doIgnoreSection(XML_Parser parser, const ENCODING *enc, const char **startPtr,
   *eventPP = s;
   *startPtr = NULL;
   tok = XmlIgnoreSectionTok(enc, s, end, &next);
-#  if defined(XML_DTD) || XML_GE == 1
+#  if XML_GE == 1
   if (! accountingDiffTolerated(parser, tok, s, next, __LINE__,
                                 XML_ACCOUNT_DIRECT)) {
     accountingOnAbort(parser);
@@ -4310,7 +4310,7 @@ processXmlDecl(XML_Parser parser, int isGeneralTextEntity, const char *s,
   const XML_Char *storedversion = NULL;
   int standalone = -1;
 
-#if defined(XML_DTD) || XML_GE == 1
+#if XML_GE == 1
   if (! accountingDiffTolerated(parser, XML_TOK_XML_DECL, s, next, __LINE__,
                                 XML_ACCOUNT_DIRECT)) {
     accountingOnAbort(parser);
@@ -4517,7 +4517,7 @@ entityValueInitProcessor(XML_Parser parser, const char *s, const char *end,
        is not valid to have multiple BOMs.
     */
     else if (tok == XML_TOK_BOM) {
-#  if defined(XML_DTD) || XML_GE == 1
+#  if XML_GE == 1
       if (! accountingDiffTolerated(parser, tok, s, next, __LINE__,
                                     XML_ACCOUNT_DIRECT)) {
         accountingOnAbort(parser);
@@ -4733,7 +4733,7 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
       }
     }
     role = XmlTokenRole(&parser->m_prologState, tok, s, next, enc);
-#if defined(XML_DTD) || XML_GE == 1
+#if XML_GE == 1
     switch (role) {
     case XML_ROLE_INSTANCE_START: // bytes accounted in contentProcessor
     case XML_ROLE_XML_DECL:       // bytes accounted in processXmlDecl
@@ -5057,7 +5057,7 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
       break;
     case XML_ROLE_ENTITY_VALUE:
       if (dtd->keepProcessing) {
-#if defined(XML_DTD) || XML_GE == 1
+#if XML_GE == 1
         // This will store the given replacement text in
         // parser->m_declEntity->textPtr.
         enum XML_Error result
@@ -5708,7 +5708,7 @@ epilogProcessor(XML_Parser parser, const char *s, const char *end,
   for (;;) {
     const char *next = NULL;
     int tok = XmlPrologTok(parser->m_encoding, s, end, &next);
-#if defined(XML_DTD) || XML_GE == 1
+#if XML_GE == 1
     if (! accountingDiffTolerated(parser, tok, s, next, __LINE__,
                                   XML_ACCOUNT_DIRECT)) {
       accountingOnAbort(parser);
@@ -5788,7 +5788,7 @@ processInternalEntity(XML_Parser parser, ENTITY *entity, XML_Bool betweenDecl) {
       return XML_ERROR_NO_MEMORY;
   }
   entity->open = XML_TRUE;
-#if defined(XML_DTD) || XML_GE == 1
+#if XML_GE == 1
   entityTrackingOnOpen(parser, entity, __LINE__);
 #endif
   entity->processed = 0;
@@ -5822,9 +5822,9 @@ processInternalEntity(XML_Parser parser, ENTITY *entity, XML_Bool betweenDecl) {
       entity->processed = (int)(next - textStart);
       parser->m_processor = internalEntityProcessor;
     } else {
-#if defined(XML_DTD) || XML_GE == 1
+#if XML_GE == 1
       entityTrackingOnClose(parser, entity, __LINE__);
-#endif /* defined(XML_DTD) || XML_GE == 1 */
+#endif /* XML_GE == 1 */
       entity->open = XML_FALSE;
       parser->m_openInternalEntities = openEntity->next;
       /* put openEntity back in list of free instances */
@@ -5873,7 +5873,7 @@ internalEntityProcessor(XML_Parser parser, const char *s, const char *end,
     return result;
   }
 
-#if defined(XML_DTD) || XML_GE == 1
+#if XML_GE == 1
   entityTrackingOnClose(parser, entity, __LINE__);
 #endif
   entity->open = XML_FALSE;
@@ -5952,7 +5952,7 @@ appendAttributeValue(XML_Parser parser, const ENCODING *enc, XML_Bool isCdata,
     const char *next
         = ptr; /* XmlAttributeValueTok doesn't always set the last arg */
     int tok = XmlAttributeValueTok(enc, ptr, end, &next);
-#if defined(XML_DTD) || XML_GE == 1
+#if XML_GE == 1
     if (! accountingDiffTolerated(parser, tok, ptr, next, __LINE__, account)) {
       accountingOnAbort(parser);
       return XML_ERROR_AMPLIFICATION_LIMIT_BREACH;
@@ -6017,14 +6017,14 @@ appendAttributeValue(XML_Parser parser, const ENCODING *enc, XML_Bool isCdata,
       XML_Char ch = (XML_Char)XmlPredefinedEntityName(
           enc, ptr + enc->minBytesPerChar, next - enc->minBytesPerChar);
       if (ch) {
-#if defined(XML_DTD) || XML_GE == 1
+#if XML_GE == 1
         /* NOTE: We are replacing 4-6 characters original input for 1 character
          *       so there is no amplification and hence recording without
          *       protection. */
         accountingDiffTolerated(parser, tok, (char *)&ch,
                                 ((char *)&ch) + sizeof(XML_Char), __LINE__,
                                 XML_ACCOUNT_ENTITY_EXPANSION);
-#endif /* defined(XML_DTD) || XML_GE == 1 */
+#endif /* XML_GE == 1 */
         if (! poolAppendChar(pool, ch))
           return XML_ERROR_NO_MEMORY;
         break;
@@ -6102,14 +6102,14 @@ appendAttributeValue(XML_Parser parser, const ENCODING *enc, XML_Bool isCdata,
         enum XML_Error result;
         const XML_Char *textEnd = entity->textPtr + entity->textLen;
         entity->open = XML_TRUE;
-#if defined(XML_DTD) || XML_GE == 1
+#if XML_GE == 1
         entityTrackingOnOpen(parser, entity, __LINE__);
 #endif
         result = appendAttributeValue(parser, parser->m_internalEncoding,
                                       isCdata, (const char *)entity->textPtr,
                                       (const char *)textEnd, pool,
                                       XML_ACCOUNT_ENTITY_EXPANSION);
-#if defined(XML_DTD) || XML_GE == 1
+#if XML_GE == 1
         entityTrackingOnClose(parser, entity, __LINE__);
 #endif
         entity->open = XML_FALSE;
@@ -6166,7 +6166,7 @@ storeEntityValue(XML_Parser parser, const ENCODING *enc,
         = entityTextPtr; /* XmlEntityValueTok doesn't always set the last arg */
     int tok = XmlEntityValueTok(enc, entityTextPtr, entityTextEnd, &next);
 
-#  if defined(XML_DTD) || XML_GE == 1
+#  if XML_GE == 1
     if (! accountingDiffTolerated(parser, tok, entityTextPtr, next, __LINE__,
                                   account)) {
       accountingOnAbort(parser);
@@ -7743,7 +7743,7 @@ copyString(const XML_Char *s, const XML_Memory_Handling_Suite *memsuite) {
   return result;
 }
 
-#if defined(XML_DTD) || XML_GE == 1
+#if XML_GE == 1
 
 static float
 accountingGetCurrentAmplification(XML_Parser rootParser) {
@@ -8474,7 +8474,7 @@ unsignedCharToPrintable(unsigned char c) {
   assert(0); /* never gets here */
 }
 
-#endif /* defined(XML_DTD) || XML_GE == 1 */
+#endif /* XML_GE == 1 */
 
 static unsigned long
 getDebugLevel(const char *variableName, unsigned long defaultDebugLevel) {

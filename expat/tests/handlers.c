@@ -1494,7 +1494,7 @@ external_entity_parser_create_alloc_fail_handler(XML_Parser parser,
   return XML_STATUS_ERROR;
 }
 
-#if defined(XML_DTD) || XML_GE == 1
+#if XML_GE == 1
 int
 accounting_external_entity_ref_handler(XML_Parser parser,
                                        const XML_Char *context,
@@ -1526,7 +1526,7 @@ accounting_external_entity_ref_handler(XML_Parser parser,
   XML_ParserFree(entParser);
   return status;
 }
-#endif /* defined(XML_DTD) || XML_GE == 1 */
+#endif /* XML_GE == 1 */
 
 /* NotStandalone handlers */
 
