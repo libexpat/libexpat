@@ -105,13 +105,11 @@ START_TEST(test_accounting_precision) {
      https://bugs.chromium.org/p/oss-fuzz/issues/detail?id=34302
      https://oss-fuzz.com/testcase-detail/4860575394955264
   */
-#  if XML_GE == 1
     {"<!DOCTYPE r [\n"
      "<!ENTITY e \"111<![CDATA[2 <= 2]]>333\">\n"
      "]>\n"
      "<r>&e;</r>\n",
      NULL, NULL, sizeof(XML_Char) * strlen("111<![CDATA[2 <= 2]]>333")},
-#  endif /* XML_GE == 1 */
 
 #  ifdef XML_DTD
     /* Conditional sections */
@@ -128,7 +126,6 @@ START_TEST(test_accounting_precision) {
 #  endif /* XML_DTD */
 
   /* General entities */
-#  if XML_GE == 1
     {"<!DOCTYPE root [\n"
      "<!ENTITY nine \"123456789\">\n"
      "]>\n"
@@ -157,7 +154,6 @@ START_TEST(test_accounting_precision) {
      "]>\n"
      "<r>&five;</r>",
      "\xEF\xBB\xBF" /* UTF-8 BOM */, NULL, 0},
-#  endif /* XML_GE == 1 */
 
 #  ifdef XML_DTD
     /* Parameter entities */

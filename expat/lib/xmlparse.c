@@ -6166,14 +6166,12 @@ storeEntityValue(XML_Parser parser, const ENCODING *enc,
         = entityTextPtr; /* XmlEntityValueTok doesn't always set the last arg */
     int tok = XmlEntityValueTok(enc, entityTextPtr, entityTextEnd, &next);
 
-#  if XML_GE == 1
     if (! accountingDiffTolerated(parser, tok, entityTextPtr, next, __LINE__,
                                   account)) {
       accountingOnAbort(parser);
       result = XML_ERROR_AMPLIFICATION_LIMIT_BREACH;
       goto endEntityValue;
     }
-#  endif
 
     switch (tok) {
     case XML_TOK_PARAM_ENTITY_REF:
