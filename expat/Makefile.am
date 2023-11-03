@@ -84,7 +84,7 @@ _EXTRA_DIST_WINDOWS = \
     win32/expat.iss \
     win32/MANIFEST.txt \
     win32/README.txt \
-    win32/version.rc
+    win32/version.rc.cmake
 
 EXTRA_DIST = \
     $(_EXTRA_DIST_CMAKE) \
