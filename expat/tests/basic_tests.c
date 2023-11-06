@@ -5189,6 +5189,12 @@ END_TEST
 
 /* Regression test for quadratic parsing on large tokens */
 START_TEST(test_big_tokens_take_linear_time) {
+  const char *const too_slow_failure_message
+      = "Compared to the baseline runtime of the first test, this test has a "
+        "slowdown of more than <max_slowdown>. "
+        "Please keep increasing the value by 1 until it reliably passes the "
+        "test on your hardware and open a bug sharing that number with us. "
+        "Thanks in advance!";
   const struct {
     const char *pre;
     const char *post;
@@ -5248,7 +5254,14 @@ START_TEST(test_big_tokens_take_linear_time) {
       if (i > 0) {
         const clock_t now = clock();
         const clock_t clocks_so_far = now - start;
-        assert_true(clocks_so_far / baseline < max_slowdown);
+        const int slowdown = clocks_so_far / baseline;
+        if (slowdown >= max_slowdown) {
+          fprintf(
+              stderr,
+              "fill#%d: clocks_so_far=%d baseline=%d slowdown=%d max_slowdown=%d\n",
+              f, (int)clocks_so_far, (int)baseline, slowdown, max_slowdown);
+          fail(too_slow_failure_message);
+        }
       }
     }
     // parse the end text
@@ -5265,7 +5278,12 @@ START_TEST(test_big_tokens_take_linear_time) {
       assert_true(taken > 0); // just to make sure we don't div-by-0 later
       baseline = taken;
     }
-    assert_true(taken / baseline < max_slowdown);
+    const int slowdown = taken / baseline;
+    if (slowdown >= max_slowdown) {
+      fprintf(stderr, "taken=%d baseline=%d slowdown=%d max_slowdown=%d\n",
+              (int)taken, (int)baseline, slowdown, max_slowdown);
+      fail(too_slow_failure_message);
+    }
 
     XML_ParserFree(parser);
   }
