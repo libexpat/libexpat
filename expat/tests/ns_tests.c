@@ -697,8 +697,8 @@ START_TEST(test_ns_separator_in_uri) {
     set_subtest("%s", cases[i].doc);
     XML_Parser parser = XML_ParserCreateNS(NULL, cases[i].namesep);
     XML_SetElementHandler(parser, dummy_start_element, dummy_end_element);
-    if (XML_Parse(parser, cases[i].doc, (int)strlen(cases[i].doc),
-                  /*isFinal*/ XML_TRUE)
+    if (_XML_Parse_SINGLE_BYTES(parser, cases[i].doc, (int)strlen(cases[i].doc),
+                                /*isFinal*/ XML_TRUE)
         != cases[i].expectedStatus) {
       failCount++;
     }

@@ -1379,7 +1379,7 @@ START_TEST(test_suspend_parser_between_char_data_calls) {
   if (XML_GetErrorCode(g_parser) != XML_ERROR_NONE)
     xml_failure(g_parser);
   /* Try parsing directly */
-  if (XML_Parse(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
       != XML_STATUS_ERROR)
     fail("Attempt to continue parse while suspended not faulted");
   if (XML_GetErrorCode(g_parser) != XML_ERROR_SUSPENDED)
@@ -2130,7 +2130,7 @@ START_TEST(test_dtd_elements_nesting) {
   XML_SetUserData(g_parser, (void *)(uintptr_t)-1);
 
   XML_SetElementDeclHandler(g_parser, element_decl_check_model);
-  if (XML_Parse(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
 
@@ -2848,7 +2848,8 @@ START_TEST(test_get_buffer_3_overflow) {
 
   // After this call, variable "keep" in XML_GetBuffer will
   // have value expectedKeepValue
-  if (XML_Parse(parser, text, (int)strlen(text), XML_FALSE /* isFinal */)
+  if (_XML_Parse_SINGLE_BYTES(parser, text, (int)strlen(text),
+                              XML_FALSE /* isFinal */)
       == XML_STATUS_ERROR)
     xml_failure(parser);
 
@@ -3160,7 +3161,8 @@ external_bom_checker(XML_Parser parser, const XML_Char *context,
     const int split = testdata->split;
     testdata->nested_callback_happened = XML_TRUE;
 
-    if (XML_Parse(ext_parser, external, split, XML_FALSE) != XML_STATUS_OK) {
+    if (_XML_Parse_SINGLE_BYTES(ext_parser, external, split, XML_FALSE)
+        != XML_STATUS_OK) {
       xml_failure(ext_parser);
     }
     text = external + split; // the parse below will continue where we left off.
@@ -3172,7 +3174,8 @@ external_bom_checker(XML_Parser parser, const XML_Char *context,
     fail("unknown systemId");
   }
 
-  if (XML_Parse(ext_parser, text, (int)strlen(text), XML_TRUE) != XML_STATUS_OK)
+  if (_XML_Parse_SINGLE_BYTES(ext_parser, text, (int)strlen(text), XML_TRUE)
+      != XML_STATUS_OK)
     xml_failure(ext_parser);
 
   XML_ParserFree(ext_parser);
@@ -3512,7 +3515,7 @@ START_TEST(test_suspend_xdecl) {
   if (XML_GetErrorCode(g_parser) != XML_ERROR_NONE)
     xml_failure(g_parser);
   /* Attempt to start a new parse while suspended */
-  if (XML_Parse(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
       != XML_STATUS_ERROR)
     fail("Attempt to parse while suspended not faulted");
   if (XML_GetErrorCode(g_parser) != XML_ERROR_SUSPENDED)
@@ -3619,7 +3622,7 @@ START_TEST(test_suspend_resume_internal_entity) {
   XML_SetStartElementHandler(g_parser, start_element_suspender);
   XML_SetCharacterDataHandler(g_parser, accumulate_characters);
   XML_SetUserData(g_parser, &storage);
-  if (XML_Parse(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
       != XML_STATUS_SUSPENDED)
     xml_failure(g_parser);
   CharData_CheckXMLChars(&storage, XCS(""));
@@ -3689,8 +3692,9 @@ START_TEST(test_suspend_resume_internal_entity_issue_629) {
     xml_failure(parser);
   if (XML_ResumeParser(parser) != XML_STATUS_OK)
     xml_failure(parser);
-  if (XML_Parse(parser, text + firstChunkSizeBytes,
-                (int)(strlen(text) - firstChunkSizeBytes), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(parser, text + firstChunkSizeBytes,
+                              (int)(strlen(text) - firstChunkSizeBytes),
+                              XML_TRUE)
       != XML_STATUS_OK)
     xml_failure(parser);
   XML_ParserFree(parser);
@@ -3705,7 +3709,7 @@ START_TEST(test_resume_entity_with_syntax_error) {
                      "<doc>&foo;</doc>\n";
 
   XML_SetStartElementHandler(g_parser, start_element_suspender);
-  if (XML_Parse(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
       != XML_STATUS_SUSPENDED)
     xml_failure(g_parser);
   if (XML_ResumeParser(g_parser) != XML_STATUS_ERROR)
@@ -3744,7 +3748,7 @@ END_TEST
 START_TEST(test_restart_on_error) {
   const char *text = "<$doc><doc></doc>";
 
-  if (XML_Parse(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
       != XML_STATUS_ERROR)
     fail("Invalid tag name not faulted");
   if (XML_GetErrorCode(g_parser) != XML_ERROR_INVALID_TOKEN)
@@ -4398,7 +4402,7 @@ START_TEST(test_ext_entity_latin1_utf16le_bom2) {
   XML_SetExternalEntityRefHandler(g_parser, external_entity_loader2);
   XML_SetUserData(g_parser, &test_data);
   XML_SetCharacterDataHandler(g_parser, ext2_accumulate_characters);
-  if (XML_Parse(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
   CharData_CheckXMLChars(&storage, expected);
@@ -4429,7 +4433,7 @@ START_TEST(test_ext_entity_latin1_utf16be_bom2) {
   XML_SetExternalEntityRefHandler(g_parser, external_entity_loader2);
   XML_SetUserData(g_parser, &test_data);
   XML_SetCharacterDataHandler(g_parser, ext2_accumulate_characters);
-  if (XML_Parse(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
   CharData_CheckXMLChars(&storage, expected);
@@ -4640,8 +4644,8 @@ START_TEST(test_utf8_in_start_tags) {
                cases[i].tagName);
       XML_Parser parser = XML_ParserCreate(NULL);
 
-      const enum XML_Status status
-          = XML_Parse(parser, doc, (int)strlen(doc), /*isFinal=*/XML_FALSE);
+      const enum XML_Status status = _XML_Parse_SINGLE_BYTES(
+          parser, doc, (int)strlen(doc), /*isFinal=*/XML_FALSE);
 
       bool success = true;
       if ((status == XML_STATUS_OK) != expectedSuccess) {
