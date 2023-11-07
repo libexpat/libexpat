@@ -196,18 +196,17 @@ _XML_Parse_SINGLE_BYTES(XML_Parser parser, const char *s, int len,
   // chunking _XML_Parse_SINGLE_BYTES.
   assert((parser != NULL) && (s != NULL) && (len >= 0));
   const int chunksize = g_chunkSize;
-  int offset = 0;
   if (chunksize > 0) {
-    // parse in chunks of `chunksize` bytes as long as possible
-    for (; offset + chunksize < len; offset += chunksize) {
-      enum XML_Status res = XML_Parse(parser, s + offset, chunksize, XML_FALSE);
+    // parse in chunks of `chunksize` bytes as long as not exhausting
+    for (; len > chunksize; len -= chunksize, s += chunksize) {
+      enum XML_Status res = XML_Parse(parser, s, chunksize, XML_FALSE);
       if (res != XML_STATUS_OK) {
         return res;
       }
     }
   }
   // parse the final chunk, the size of which will be <= chunksize
-  return XML_Parse(parser, s + offset, len - offset, isFinal);
+  return XML_Parse(parser, s, len, isFinal);
 }
 
 void
