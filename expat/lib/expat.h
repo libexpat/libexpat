@@ -1025,7 +1025,9 @@ enum XML_FeatureEnum {
   XML_FEATURE_ATTR_INFO,
   /* Added in Expat 2.4.0. */
   XML_FEATURE_BILLION_LAUGHS_ATTACK_PROTECTION_MAXIMUM_AMPLIFICATION_DEFAULT,
-  XML_FEATURE_BILLION_LAUGHS_ATTACK_PROTECTION_ACTIVATION_THRESHOLD_DEFAULT
+  XML_FEATURE_BILLION_LAUGHS_ATTACK_PROTECTION_ACTIVATION_THRESHOLD_DEFAULT,
+  /* Added in Expat 2.6.0. */
+  XML_FEATURE_GE
   /* Additional features must be added to the end of this enum. */
 };
 
@@ -1038,13 +1040,15 @@ typedef struct {
 XMLPARSEAPI(const XML_Feature *)
 XML_GetFeatureList(void);
 
-#ifdef XML_DTD
-/* Added in Expat 2.4.0. */
+#if XML_GE == 1
+/* Added in Expat 2.4.0 for XML_DTD defined and
+ * added in Expat 2.6.0 for XML_GE == 1. */
 XMLPARSEAPI(XML_Bool)
 XML_SetBillionLaughsAttackProtectionMaximumAmplification(
     XML_Parser parser, float maximumAmplificationFactor);
 
-/* Added in Expat 2.4.0. */
+/* Added in Expat 2.4.0 for XML_DTD defined and
+ * added in Expat 2.6.0 for XML_GE == 1. */
 XMLPARSEAPI(XML_Bool)
 XML_SetBillionLaughsAttackProtectionActivationThreshold(
     XML_Parser parser, unsigned long long activationThresholdBytes);

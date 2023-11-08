@@ -406,6 +406,50 @@ START_TEST(test_misc_create_external_entity_parser_with_null_context) {
 }
 END_TEST
 
+START_TEST(test_misc_general_entities_support) {
+  const char *const doc
+      = "<!DOCTYPE r [\n"
+        "<!ENTITY e1 'v1'>\n"
+        "<!ENTITY e2 SYSTEM 'v2'>\n"
+        "]>\n"
+        "<r a1='[&e1;]'>[&e1;][&e2;][&amp;&apos;&gt;&lt;&quot;]</r>";
+
+  CharData storage;
+  CharData_Init(&storage);
+
+  XML_Parser parser = XML_ParserCreate(NULL);
+  XML_SetUserData(parser, &storage);
+  XML_SetStartElementHandler(parser, accumulate_start_element);
+  XML_SetExternalEntityRefHandler(parser,
+                                  external_entity_failer__if_not_xml_ge);
+  XML_SetEntityDeclHandler(parser, accumulate_entity_decl);
+  XML_SetCharacterDataHandler(parser, accumulate_char_data);
+
+  if (_XML_Parse_SINGLE_BYTES(parser, doc, (int)strlen(doc), XML_TRUE)
+      != XML_STATUS_OK) {
+    xml_failure(parser);
+  }
+
+  XML_ParserFree(parser);
+
+  CharData_CheckXMLChars(&storage,
+  /* clang-format off */
+#if XML_GE == 1
+                         XCS("e1=v1\n")
+                         XCS("e2=(null)\n")
+                         XCS("(r(a1=[v1]))\n")
+                         XCS("[v1][][&'><\"]")
+#else
+                         XCS("e1=&amp;e1;\n")
+                         XCS("e2=(null)\n")
+                         XCS("(r(a1=[&e1;]))\n")
+                         XCS("[&e1;][&e2;][&'><\"]")
+#endif
+  );
+  /* clang-format on */
+}
+END_TEST
+
 void
 make_miscellaneous_test_case(Suite *s) {
   TCase *tc_misc = tcase_create("miscellaneous tests");
@@ -428,4 +472,5 @@ make_miscellaneous_test_case(Suite *s) {
   tcase_add_test(tc_misc, test_misc_tag_mismatch_reset_leak);
   tcase_add_test(tc_misc,
                  test_misc_create_external_entity_parser_with_null_context);
+  tcase_add_test(tc_misc, test_misc_general_entities_support);
 }

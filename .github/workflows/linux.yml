@@ -58,7 +58,9 @@ jobs:
           - MODE: qa-sh
             FLAT_ENV: CC=clang CXX=clang++ LD=clang++ QA_SANITIZER=address CMAKE_ARGS=-DEXPAT_CONTEXT_BYTES=0
           - MODE: qa-sh
-            FLAT_ENV: CC=clang CXX=clang++ LD=clang++ QA_SANITIZER=address CMAKE_ARGS=-DEXPAT_DTD=OFF
+            FLAT_ENV: CC=clang CXX=clang++ LD=clang++ QA_SANITIZER=address CMAKE_ARGS="-DEXPAT_DTD=OFF -DEXPAT_GE=ON"
+          - MODE: qa-sh
+            FLAT_ENV: CC=clang CXX=clang++ LD=clang++ QA_SANITIZER=address CMAKE_ARGS="-DEXPAT_DTD=OFF -DEXPAT_GE=OFF"
           - MODE: qa-sh
             FLAT_ENV: CC=clang CXX=clang++ LD=clang++ QA_SANITIZER=address CMAKE_ARGS=-DEXPAT_LARGE_SIZE=ON
           - MODE: qa-sh

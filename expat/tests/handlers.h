@@ -185,6 +185,9 @@ extern int XMLCALL external_entity_faulter(XML_Parser parser,
                                            const XML_Char *base,
                                            const XML_Char *systemId,
                                            const XML_Char *publicId);
+extern int XMLCALL external_entity_failer__if_not_xml_ge(
+    XML_Parser parser, const XML_Char *context, const XML_Char *base,
+    const XML_Char *systemId, const XML_Char *publicId);
 extern int XMLCALL external_entity_null_loader(XML_Parser parser,
                                                const XML_Char *context,
                                                const XML_Char *base,
@@ -404,7 +407,6 @@ extern int XMLCALL external_entity_parser_create_alloc_fail_handler(
     XML_Parser parser, const XML_Char *context, const XML_Char *base,
     const XML_Char *systemId, const XML_Char *publicId);
 
-#  if defined(XML_DTD)
 struct AccountingTestCase {
   const char *primaryText;
   const char *firstExternalText;  /* often NULL */
@@ -417,7 +419,6 @@ extern int accounting_external_entity_ref_handler(XML_Parser parser,
                                                   const XML_Char *base,
                                                   const XML_Char *systemId,
                                                   const XML_Char *publicId);
-#  endif /* defined(XML_DTD) */
 
 /* NotStandalone handlers */
 
@@ -562,6 +563,13 @@ extern void XMLCALL accumulate_entity_decl(
     const XML_Char *value, int value_length, const XML_Char *base,
     const XML_Char *systemId, const XML_Char *publicId,
     const XML_Char *notationName);
+
+extern void XMLCALL accumulate_char_data(void *userData, const XML_Char *s,
+                                         int len);
+
+extern void XMLCALL accumulate_start_element(void *userData,
+                                             const XML_Char *name,
+                                             const XML_Char **atts);
 
 typedef struct default_check {
   const XML_Char *expected;

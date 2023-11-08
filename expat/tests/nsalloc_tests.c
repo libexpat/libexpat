@@ -1521,16 +1521,17 @@ make_nsalloc_test_case(Suite *s) {
   tcase_add_test(tc_nsalloc, test_nsalloc_long_namespace);
   tcase_add_test(tc_nsalloc, test_nsalloc_less_long_namespace);
   tcase_add_test(tc_nsalloc, test_nsalloc_long_context);
-  tcase_add_test(tc_nsalloc, test_nsalloc_realloc_long_context);
-  tcase_add_test(tc_nsalloc, test_nsalloc_realloc_long_context_2);
-  tcase_add_test(tc_nsalloc, test_nsalloc_realloc_long_context_3);
-  tcase_add_test(tc_nsalloc, test_nsalloc_realloc_long_context_4);
-  tcase_add_test(tc_nsalloc, test_nsalloc_realloc_long_context_5);
-  tcase_add_test(tc_nsalloc, test_nsalloc_realloc_long_context_6);
-  tcase_add_test(tc_nsalloc, test_nsalloc_realloc_long_context_7);
+  tcase_add_test__if_xml_ge(tc_nsalloc, test_nsalloc_realloc_long_context);
+  tcase_add_test__if_xml_ge(tc_nsalloc, test_nsalloc_realloc_long_context_2);
+  tcase_add_test__if_xml_ge(tc_nsalloc, test_nsalloc_realloc_long_context_3);
+  tcase_add_test__if_xml_ge(tc_nsalloc, test_nsalloc_realloc_long_context_4);
+  tcase_add_test__if_xml_ge(tc_nsalloc, test_nsalloc_realloc_long_context_5);
+  tcase_add_test__if_xml_ge(tc_nsalloc, test_nsalloc_realloc_long_context_6);
+  tcase_add_test__if_xml_ge(tc_nsalloc, test_nsalloc_realloc_long_context_7);
   tcase_add_test(tc_nsalloc, test_nsalloc_realloc_long_ge_name);
-  tcase_add_test(tc_nsalloc, test_nsalloc_realloc_long_context_in_dtd);
-  tcase_add_test(tc_nsalloc, test_nsalloc_long_default_in_ext);
+  tcase_add_test__if_xml_ge(tc_nsalloc,
+                            test_nsalloc_realloc_long_context_in_dtd);
+  tcase_add_test__if_xml_ge(tc_nsalloc, test_nsalloc_long_default_in_ext);
   tcase_add_test(tc_nsalloc, test_nsalloc_long_systemid_in_ext);
   tcase_add_test(tc_nsalloc, test_nsalloc_prefixed_element);
 }

@@ -2083,7 +2083,7 @@ make_alloc_test_case(Suite *s) {
   tcase_add_test(tc_alloc, test_alloc_explicit_encoding);
   tcase_add_test(tc_alloc, test_alloc_set_base);
   tcase_add_test(tc_alloc, test_alloc_realloc_buffer);
-  tcase_add_test(tc_alloc, test_alloc_ext_entity_realloc_buffer);
+  tcase_add_test__if_xml_ge(tc_alloc, test_alloc_ext_entity_realloc_buffer);
   tcase_add_test(tc_alloc, test_alloc_realloc_many_attributes);
   tcase_add_test__ifdef_xml_dtd(tc_alloc, test_alloc_public_entity_value);
   tcase_add_test__ifdef_xml_dtd(tc_alloc,
@@ -2096,7 +2096,7 @@ make_alloc_test_case(Suite *s) {
                                 test_alloc_realloc_attribute_enum_value);
   tcase_add_test__ifdef_xml_dtd(tc_alloc, test_alloc_realloc_implied_attribute);
   tcase_add_test__ifdef_xml_dtd(tc_alloc, test_alloc_realloc_default_attribute);
-  tcase_add_test(tc_alloc, test_alloc_notation);
+  tcase_add_test__if_xml_ge(tc_alloc, test_alloc_notation);
   tcase_add_test(tc_alloc, test_alloc_public_notation);
   tcase_add_test(tc_alloc, test_alloc_system_notation);
   tcase_add_test__ifdef_xml_dtd(tc_alloc, test_alloc_nested_groups);
@@ -2110,17 +2110,17 @@ make_alloc_test_case(Suite *s) {
   tcase_add_test(tc_alloc, test_alloc_attribute_whitespace);
   tcase_add_test(tc_alloc, test_alloc_attribute_predefined_entity);
   tcase_add_test(tc_alloc, test_alloc_long_attr_default_with_char_ref);
-  tcase_add_test(tc_alloc, test_alloc_long_attr_value);
+  tcase_add_test__if_xml_ge(tc_alloc, test_alloc_long_attr_value);
   tcase_add_test__ifdef_xml_dtd(tc_alloc, test_alloc_nested_entities);
   tcase_add_test__ifdef_xml_dtd(tc_alloc,
                                 test_alloc_realloc_param_entity_newline);
   tcase_add_test__ifdef_xml_dtd(tc_alloc, test_alloc_realloc_ce_extends_pe);
   tcase_add_test__ifdef_xml_dtd(tc_alloc, test_alloc_realloc_attributes);
   tcase_add_test(tc_alloc, test_alloc_long_doc_name);
-  tcase_add_test(tc_alloc, test_alloc_long_base);
-  tcase_add_test(tc_alloc, test_alloc_long_public_id);
-  tcase_add_test(tc_alloc, test_alloc_long_entity_value);
-  tcase_add_test(tc_alloc, test_alloc_long_notation);
+  tcase_add_test__if_xml_ge(tc_alloc, test_alloc_long_base);
+  tcase_add_test__if_xml_ge(tc_alloc, test_alloc_long_public_id);
+  tcase_add_test__if_xml_ge(tc_alloc, test_alloc_long_entity_value);
+  tcase_add_test__if_xml_ge(tc_alloc, test_alloc_long_notation);
 
   tcase_add_test__ifdef_xml_dtd(
       tc_alloc, test_alloc_reset_after_external_entity_parser_create_fail);

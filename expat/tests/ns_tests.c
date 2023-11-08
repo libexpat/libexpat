@@ -747,7 +747,7 @@ make_namespace_test_case(Suite *s) {
   tcase_add_test(tc_namespace, test_ns_bad_element_leafname);
   tcase_add_test(tc_namespace, test_ns_utf16_leafname);
   tcase_add_test(tc_namespace, test_ns_utf16_element_leafname);
-  tcase_add_test(tc_namespace, test_ns_utf16_doctype);
+  tcase_add_test__if_xml_ge(tc_namespace, test_ns_utf16_doctype);
   tcase_add_test(tc_namespace, test_ns_invalid_doctype);
   tcase_add_test(tc_namespace, test_ns_double_colon_doctype);
   tcase_add_test(tc_namespace, test_ns_separator_in_uri);

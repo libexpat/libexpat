@@ -55,7 +55,7 @@
 #include "handlers.h"
 #include "acc_tests.h"
 
-#if defined(XML_DTD)
+#if XML_GE == 1
 START_TEST(test_accounting_precision) {
   struct AccountingTestCase cases[] = {
       {"<e/>", NULL, NULL, 0},
@@ -93,9 +93,12 @@ START_TEST(test_accounting_precision) {
       /* Processing instructions */
       {"<?xml-stylesheet type=\"text/xsl\" href=\"https://domain.invalid/\" media=\"all\"?><e/>",
        NULL, NULL, 0},
+      {"<?pi0?><?pi1 ?><?pi2  ?><r/><?pi4?>", NULL, NULL, 0},
+#  ifdef XML_DTD
       {"<?pi0?><?pi1 ?><?pi2  ?><!DOCTYPE r SYSTEM 'first.ent'><r/>",
        "<?pi3?><!ENTITY % e1 SYSTEM 'second.ent'><?pi4?>%e1;<?pi5?>", "<?pi6?>",
        0},
+#  endif /* XML_DTD */
 
       /* CDATA */
       {"<e><![CDATA[one two three]]></e>", NULL, NULL, 0},
@@ -109,6 +112,7 @@ START_TEST(test_accounting_precision) {
        "<r>&e;</r>\n",
        NULL, NULL, sizeof(XML_Char) * strlen("111<![CDATA[2 <= 2]]>333")},
 
+#  ifdef XML_DTD
       /* Conditional sections */
       {"<!DOCTYPE r [\n"
        "<!ENTITY % draft 'INCLUDE'>\n"
@@ -120,6 +124,7 @@ START_TEST(test_accounting_precision) {
        "<![%draft;[<!--1-->]]>\n"
        "<![%final;[<!--22-->]]>",
        NULL, sizeof(XML_Char) * (strlen("INCLUDE") + strlen("IGNORE"))},
+#  endif /* XML_DTD */
 
       /* General entities */
       {"<!DOCTYPE root [\n"
@@ -151,6 +156,7 @@ START_TEST(test_accounting_precision) {
        "<r>&five;</r>",
        "\xEF\xBB\xBF" /* UTF-8 BOM */, NULL, 0},
 
+#  ifdef XML_DTD
       /* Parameter entities */
       {"<!DOCTYPE r [\n"
        "<!ENTITY % comment \"<!---->\">\n"
@@ -229,6 +235,7 @@ START_TEST(test_accounting_precision) {
        "%e1;\n",
        "\xEF\xBB\xBF<!ATTLIST doc a1 CDATA 'value'>" /* UTF-8 BOM */,
        strlen("\xEF\xBB\xBF<!ATTLIST doc a1 CDATA 'value'>")},
+#  endif /* XML_DTD */
   };
 
   const size_t countCases = sizeof(cases) / sizeof(cases[0]);
@@ -288,8 +295,8 @@ END_TEST
 
 START_TEST(test_billion_laughs_attack_protection_api) {
   XML_Parser parserWithoutParent = XML_ParserCreate(NULL);
-  XML_Parser parserWithParent
-      = XML_ExternalEntityParserCreate(parserWithoutParent, NULL, NULL);
+  XML_Parser parserWithParent = XML_ExternalEntityParserCreate(
+      parserWithoutParent, XCS("entity123"), NULL);
   if (parserWithoutParent == NULL)
     fail("parserWithoutParent is NULL");
   if (parserWithParent == NULL)
@@ -371,11 +378,11 @@ START_TEST(test_helper_unsigned_char_to_printable) {
     fail("unsignedCharToPrintable result mistaken");
 }
 END_TEST
-#endif // defined(XML_DTD)
+#endif // XML_GE == 1
 
 void
 make_accounting_test_case(Suite *s) {
-#if defined(XML_DTD)
+#if XML_GE == 1
   TCase *tc_accounting = tcase_create("accounting tests");
 
   suite_add_tcase(s, tc_accounting);
@@ -385,5 +392,5 @@ make_accounting_test_case(Suite *s) {
   tcase_add_test(tc_accounting, test_helper_unsigned_char_to_printable);
 #else
   UNUSED_P(s);
-#endif /* defined(XML_DTD) */
+#endif /* XML_GE == 1 */
 }
