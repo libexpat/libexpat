@@ -2875,15 +2875,16 @@ START_TEST(test_buffer_can_grow_to_max) {
       "withreadabilityprettygreatithinkanywaysthisisprobablylongenoughbye><x a='"};
   const int num_prefixes = sizeof(prefixes) / sizeof(prefixes[0]);
   int maxbuf = INT_MAX / 2 + (INT_MAX & 1); // round up without overflow
-  if (sizeof(void *) < 8) {
-    // Looks like we have a 32-bit system. Can we make a big allocation?
-    void *big = malloc(maxbuf);
-    if (! big) {
-      // The big allocation failed. Let's be a little lenient.
-      maxbuf = maxbuf / 2;
-    }
-    free(big);
+#if defined(__MINGW32__) && ! defined(__MINGW64__)
+  // workaround for mingw/wine32 on GitHub CI not being able to reach 1GiB
+  // Can we make a big allocation?
+  void *big = malloc(maxbuf);
+  if (! big) {
+    // The big allocation failed. Let's be a little lenient.
+    maxbuf = maxbuf / 2;
   }
+  free(big);
+#endif
 
   for (int i = 0; i < num_prefixes; ++i) {
     set_subtest("\"%s\"", prefixes[i]);
