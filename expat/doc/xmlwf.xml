@@ -343,6 +343,16 @@ supports both.
       </varlistentry>
 
       <varlistentry>
+        <term><option>-q</option></term>
+        <listitem>
+          <para>
+            Disable reparse deferral, and allow quadratic parse runtime
+            on large tokens (default: reparse deferral enabled).
+          </para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
         <term><option>-r</option></term>
         <listitem>
 		<para>
