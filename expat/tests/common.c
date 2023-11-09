@@ -41,6 +41,7 @@
    USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+#include <assert.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -190,6 +191,10 @@ _xml_failure(XML_Parser parser, const char *file, int line) {
 enum XML_Status
 _XML_Parse_SINGLE_BYTES(XML_Parser parser, const char *s, int len,
                         int isFinal) {
+  // This ensures that tests have to run pathological parse cases
+  // (e.g. when `s` is NULL) against plain XML_Parse rather than
+  // chunking _XML_Parse_SINGLE_BYTES.
+  assert((parser != NULL) && (s != NULL) && (len >= 0));
   const int chunksize = g_chunkSize;
   int offset = 0;
   if (chunksize > 0) {
