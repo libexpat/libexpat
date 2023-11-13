@@ -2048,7 +2048,7 @@ START_TEST(test_alloc_reset_after_external_entity_parser_create_fail) {
       g_parser, external_entity_parser_create_alloc_fail_handler);
   XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
 
-  if (XML_Parse(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
       != XML_STATUS_ERROR)
     fail("Call to parse was expected to fail");
 

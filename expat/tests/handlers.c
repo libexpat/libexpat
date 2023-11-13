@@ -530,7 +530,7 @@ external_entity_resetter(XML_Parser parser, const XML_Char *context,
     return XML_STATUS_ERROR;
   }
   /* Check we can't parse here */
-  if (XML_Parse(ext_parser, text, (int)strlen(text), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(ext_parser, text, (int)strlen(text), XML_TRUE)
       != XML_STATUS_ERROR)
     fail("Parsing when finished not faulted");
   if (XML_GetErrorCode(ext_parser) != XML_ERROR_FINISHED)
@@ -1192,8 +1192,8 @@ external_entity_faulter2(XML_Parser parser, const XML_Char *context,
     if (! XML_SetEncoding(extparser, test_data->encoding))
       fail("XML_SetEncoding() ignored for external entity");
   }
-  if (XML_Parse(extparser, test_data->parse_text, test_data->parse_len,
-                XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(extparser, test_data->parse_text,
+                              test_data->parse_len, XML_TRUE)
       != XML_STATUS_ERROR)
     fail(test_data->fail_text);
   if (XML_GetErrorCode(extparser) != test_data->error)
