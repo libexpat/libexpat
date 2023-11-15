@@ -3625,7 +3625,9 @@ START_TEST(test_suspend_resume_internal_entity) {
   XML_SetStartElementHandler(g_parser, start_element_suspender);
   XML_SetCharacterDataHandler(g_parser, accumulate_characters);
   XML_SetUserData(g_parser, &storage);
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+  // can't use SINGLE_BYTES here, because it'll return early on suspension, and
+  // we won't know exactly how much input we actually managed to give Expat.
+  if (XML_Parse(g_parser, text, (int)strlen(text), XML_TRUE)
       != XML_STATUS_SUSPENDED)
     xml_failure(g_parser);
   CharData_CheckXMLChars(&storage, XCS(""));
