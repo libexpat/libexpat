@@ -5318,6 +5318,8 @@ START_TEST(test_set_reparse_deferral) {
     XML_Parser parser = XML_ParserCreate(NULL);
     assert_true(parser != NULL);
     assert_true(XML_SetReparseDeferralEnabled(parser, enabled));
+    // pre-grow the buffer to avoid reparsing due to almost-fullness
+    assert_true(XML_GetBuffer(parser, fillsize * 10103) != NULL);
 
     CharData storage;
     CharData_Init(&storage);
@@ -5407,6 +5409,8 @@ external_inherited_parser(XML_Parser p, const XML_Char *context,
 
   XML_Parser parser = XML_ExternalEntityParserCreate(p, context, NULL);
   assert_true(parser != NULL);
+  // pre-grow the buffer to avoid reparsing due to almost-fullness
+  assert_true(XML_GetBuffer(parser, fillsize * 10103) != NULL);
 
   struct element_decl_data testdata;
   testdata.parser = parser;
@@ -5569,92 +5573,131 @@ START_TEST(test_set_bad_reparse_option) {
 }
 END_TEST
 
-START_TEST(test_bypass_heuristic_when_close_to_maxbuf) {
-  /* There used to be a test here, but one of its dependencies was removed in
-     a rebase. Since it will be replaced by test_..._when_close_to_bufsize() in
-     the next commit, it was not worth fixing.
+static size_t g_totalAlloc = 0;
+static size_t g_biggestAlloc = 0;
 
-  // this test is slow; avoid running it multiple times for no reason.
+static void *
+counting_realloc(void *ptr, size_t size) {
+  g_totalAlloc += size;
+  if (size > g_biggestAlloc) {
+    g_biggestAlloc = size;
+  }
+  return realloc(ptr, size);
+}
+
+static void *
+counting_malloc(size_t size) {
+  return counting_realloc(NULL, size);
+}
+
+START_TEST(test_bypass_heuristic_when_close_to_bufsize) {
   if (g_chunkSize != 0) {
-    return; // we don't use SINGLE_BYTES
+    // this test does not use SINGLE_BYTES, because it depends on very precise
+    // buffer fills.
+    return;
   }
   if (! g_reparseDeferralEnabledDefault) {
     return; // this test is irrelevant when the deferral heuristic is disabled.
   }
 
-  const int maxbuf = INT_MAX / 2 + (INT_MAX & 1); // round up without overflow
-  const int fillsize = 1024 * 1024;
-  // we expect to be able to fill this many times, and no more.
-  // For example, in the common case of INT_MAX == 2³¹-1:
-  //    * maxbuf will be exactly 1 GiB (1024 * 1024 * 1024 bytes)
-  //    * that means Expat should be able to handle 1024 fills
-  //    * ...but XML_CONTEXT_BYTES can steal some of it from us.
-  const int expected_fills = (maxbuf - XML_CONTEXT_BYTES) / fillsize;
-  // Just to make sure the test isn't completely broken, check that
-  // expected_fills is reasonable for a common setup where int is at
-  // least 32 bits, and XML_CONTEXT_BYTES is no more than 2 MiB.
-  if (sizeof(int) >= 4 && XML_CONTEXT_BYTES <= 2 * fillsize) {
-    assert_true(expected_fills >= 1022);
-  }
+  const int document_length = 65536;
+  char *const document = (char *)malloc(document_length);
 
-  XML_Parser parser = XML_ParserCreate(NULL);
-  assert_true(parser != NULL);
-  // make the deferral heuristic's threshold grow *extremely* quickly.
-  assert_true(XML_SetReparseDeferralRatio(parser, (float)INT_MAX));
+  const XML_Memory_Handling_Suite memfuncs = {
+      counting_malloc,
+      counting_realloc,
+      free,
+  };
 
-  // first fill, will push the heuristic threshold beyond the max buffer size
-  {
-    set_subtest("first fill");
-    char *const buf = (char *)XML_GetBuffer(parser, fillsize);
-    assert_true(buf != NULL);
-    memset(buf, 'a', fillsize);
-    buf[0] = '<';
-    if (XML_ParseBuffer(parser, fillsize, XML_FALSE) != XML_STATUS_OK)
-      xml_failure(parser);
-  }
-  // second fill, with data that is not well-formed
-  {
-    set_subtest("second fill");
-    char *const buf = (char *)XML_GetBuffer(parser, fillsize);
-    assert_true(buf != NULL);
-    strcpy(buf, "></wrongend>"); // leaving the rest of the bytes uninitialized
-    // the heuristic should defer parsing, so the error is not reported yet
-    if (XML_ParseBuffer(parser, fillsize, XML_FALSE) != XML_STATUS_OK)
-      xml_failure(parser);
-  }
-  // lots more fills, with uninitialized data (so the test goes fast)
-  // the 3 here is for the hardcoded "first"/"second"/"last" fills.
-  for (int fill = 3; fill < expected_fills; ++fill) {
-    set_subtest("fill #%d", fill);
-    void *const buf = XML_GetBuffer(parser, fillsize);
-    if (buf == NULL) {
-      XML_ParserFree(parser); // avoid leaking our many-MiB parser
-#if defined(_WIN32) && ! defined(_WIN64)
-      // workaround for win[e]32 on GitHub CI not being able to reach 1GiB
-      return;
-#else
-      fail("buffer is NULL");
-#endif
+  const int leading_list[] = {0, 3, 61, 96, 400, 401, 4000, 4010, 4099, -1};
+  const int bigtoken_list[] = {3000, 4000, 4001, 4096, 4099, 5000, 20000, -1};
+  const int fillsize_list[] = {131, 256, 399, 400, 401, 1025, 4099, 4321, -1};
+
+  for (const int *leading = leading_list; *leading >= 0; leading++) {
+    for (const int *bigtoken = bigtoken_list; *bigtoken >= 0; bigtoken++) {
+      for (const int *fillsize = fillsize_list; *fillsize >= 0; fillsize++) {
+        set_subtest("leading=%d bigtoken=%d fillsize=%d", *leading, *bigtoken,
+                    *fillsize);
+        // start by checking that the test looks reasonably valid
+        assert_true(*leading + *bigtoken <= document_length);
+
+        // put 'x' everywhere; some will be overwritten by elements.
+        memset(document, 'x', document_length);
+        // maybe add an initial tag
+        if (*leading) {
+          assert_true(*leading >= 3); // or the test case is invalid
+          memcpy(document, "<a>", 3);
+        }
+        // add the large token
+        document[*leading + 0] = '<';
+        document[*leading + 1] = 'b';
+        memset(&document[*leading + 2], ' ', *bigtoken - 2); // a spacy token
+        document[*leading + *bigtoken - 1] = '>';
+
+        // 1 for 'b', plus 1 or 0 depending on the presence of 'a'
+        const int expected_elem_total = 1 + (*leading ? 1 : 0);
+
+        XML_Parser parser = XML_ParserCreate_MM(NULL, &memfuncs, NULL);
+        assert_true(parser != NULL);
+
+        CharData storage;
+        CharData_Init(&storage);
+        XML_SetUserData(parser, &storage);
+        XML_SetStartElementHandler(parser, start_element_event_handler);
+
+        g_biggestAlloc = 0;
+        g_totalAlloc = 0;
+        int offset = 0;
+        // fill data until the big token is covered (but not necessarily parsed)
+        while (offset < *leading + *bigtoken) {
+          assert_true(offset + *fillsize <= document_length);
+          const enum XML_Status status
+              = XML_Parse(parser, &document[offset], *fillsize, XML_FALSE);
+          if (status != XML_STATUS_OK) {
+            xml_failure(parser);
+          }
+          offset += *fillsize;
+        }
+        // Now, check that we've had a buffer allocation that could fit the
+        // context bytes and our big token. In order to detect a special case,
+        // we need to know how many bytes of our big token were included in the
+        // first push that contained _any_ bytes of the big token:
+        const int bigtok_first_chunk_bytes = *fillsize - (*leading % *fillsize);
+        if (bigtok_first_chunk_bytes >= *bigtoken && XML_CONTEXT_BYTES == 0) {
+          // Special case: we aren't saving any context, and the whole big token
+          // was covered by a single fill, so Expat may have parsed directly
+          // from our input pointer, without allocating an internal buffer.
+        } else if (*leading < XML_CONTEXT_BYTES) {
+          assert_true(g_biggestAlloc >= *leading + (size_t)*bigtoken);
+        } else {
+          assert_true(g_biggestAlloc >= XML_CONTEXT_BYTES + (size_t)*bigtoken);
+        }
+        // fill data until the big token is actually parsed
+        while (storage.count < expected_elem_total) {
+          const size_t alloc_before = g_totalAlloc;
+          assert_true(offset + *fillsize <= document_length);
+          const enum XML_Status status
+              = XML_Parse(parser, &document[offset], *fillsize, XML_FALSE);
+          if (status != XML_STATUS_OK) {
+            xml_failure(parser);
+          }
+          offset += *fillsize;
+          // since all the bytes of the big token are already in the buffer,
+          // the bufsize ceiling should make us finish its parsing without any
+          // further buffer allocations. We assume that there will be no other
+          // large allocations in this test.
+          assert_true(g_totalAlloc - alloc_before < 4096);
+        }
+        // test-the-test: was our alloc even called?
+        assert_true(g_totalAlloc > 0);
+        // test-the-test: there shouldn't be any extra start elements
+        assert_true(storage.count == expected_elem_total);
+
+        XML_ParserFree(parser);
+      }
     }
-    // the heuristic should defer parsing, so the error is not reported yet
-    if (XML_ParseBuffer(parser, fillsize, XML_FALSE) != XML_STATUS_OK)
-      xml_failure(parser);
   }
-  // last fill, should actually parse and detect the error
-  {
-    set_subtest("last fill");
-    void *const buf = XML_GetBuffer(parser, fillsize);
-    assert_true(buf != NULL);
-    // Using isFinal=XML_FALSE here is important: we want to check that the
-    // heuristic correctly detects the "close to out-of-memory" situation and
-    // actually parses the pending data. XML_TRUE would force the heuristic to
-    // parse regardless, which is not what we want.
-    if (XML_ParseBuffer(parser, fillsize, XML_FALSE) != XML_STATUS_ERROR)
-      fail("expected parse error");
-    assert_true(XML_GetErrorCode(parser) == XML_ERROR_TAG_MISMATCH);
-  }
-  XML_ParserFree(parser);
-  */
+  free(document);
 }
 END_TEST
 
@@ -5904,5 +5947,5 @@ make_basic_test_case(Suite *s) {
   tcase_add_test(tc_basic, test_set_reparse_deferral_on_null_parser);
   tcase_add_test(tc_basic, test_set_reparse_deferral_on_the_fly);
   tcase_add_test(tc_basic, test_set_bad_reparse_option);
-  tcase_add_test(tc_basic, test_bypass_heuristic_when_close_to_maxbuf);
+  tcase_add_test(tc_basic, test_bypass_heuristic_when_close_to_bufsize);
 }

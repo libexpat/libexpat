@@ -996,18 +996,18 @@ callProcessor(XML_Parser parser, const char *start, const char *end,
     // Heuristic: don't try to parse a partial token again until the amount of
     // available data has increased significantly.
     const size_t had_before = parser->m_partialTokenBytesBefore;
-    // ...but *do* try anyway if we're close to reaching the max buffer size.
-    size_t close_to_maxbuf = INT_MAX / 2 + (INT_MAX & 1); // round up
+    // ...but *do* try anyway if we're close to causing a reallocation.
+    size_t available_buffer
+        = EXPAT_SAFE_PTR_DIFF(parser->m_bufferPtr, parser->m_buffer);
 #if XML_CONTEXT_BYTES > 0
-    // subtract XML_CONTEXT_BYTES, but don't go below zero
-    close_to_maxbuf -= EXPAT_MIN(close_to_maxbuf, XML_CONTEXT_BYTES);
+    available_buffer -= EXPAT_MIN(available_buffer, XML_CONTEXT_BYTES);
 #endif
-    // subtract the last buffer fill size, but don't go below zero
+    available_buffer
+        += EXPAT_SAFE_PTR_DIFF(parser->m_bufferLim, parser->m_bufferEnd);
     // m_lastBufferRequestSize is never assigned a value < 0, so the cast is ok
-    close_to_maxbuf
-        -= EXPAT_MIN(close_to_maxbuf, (size_t)parser->m_lastBufferRequestSize);
     const bool enough
-        = (have_now >= 2 * had_before) || (have_now > close_to_maxbuf);
+        = (have_now >= 2 * had_before)
+          || ((size_t)parser->m_lastBufferRequestSize > available_buffer);
 
     if (! enough) {
       *endPtr = start; // callers may expect this to be set
