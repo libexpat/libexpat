@@ -687,6 +687,10 @@ if(EXPAT_BUILD_TESTS)
             target_link_libraries(${_target} ${LIB_BSD})
         endif()
     endforeach()
+
+    add_executable(benchmark tests/benchmark/benchmark.c)
+    set_property(TARGET benchmark PROPERTY RUNTIME_OUTPUT_DIRECTORY tests/benchmark)
+    target_link_libraries(benchmark expat)
 endif()
 
 #
