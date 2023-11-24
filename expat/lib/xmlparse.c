@@ -628,6 +628,7 @@ static unsigned long getDebugLevel(const char *variableName,
        : ((*((pool)->ptr)++ = c), 1))
 
 XML_Bool g_reparseDeferralEnabledDefault = XML_TRUE; // write ONLY in runtests.c
+unsigned int g_parseAttempts = 0;                    // used for testing only
 
 struct XML_ParserStruct {
   /* The first member must be m_userData so that the XML_GetUserData
@@ -1014,6 +1015,7 @@ callProcessor(XML_Parser parser, const char *start, const char *end,
       return XML_ERROR_NONE;
     }
   }
+  g_parseAttempts += 1;
   const enum XML_Error ret = parser->m_processor(parser, start, end, endPtr);
   if (ret == XML_ERROR_NONE) {
     // if we consumed nothing, remember what we had on this parse attempt.

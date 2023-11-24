@@ -5701,6 +5701,129 @@ START_TEST(test_bypass_heuristic_when_close_to_bufsize) {
 }
 END_TEST
 
+START_TEST(test_varying_buffer_fills) {
+  const int KiB = 1024;
+  const int MiB = 1024 * KiB;
+  const int document_length = 16 * MiB;
+  const int big = 7654321; // arbitrarily chosen between 4 and 8 MiB
+
+  if (g_chunkSize != 0) {
+    return; // this test is slow, and doesn't use _XML_Parse_SINGLE_BYTES().
+  }
+
+  char *const document = (char *)malloc(document_length);
+  assert_true(document != NULL);
+  memset(document, 'x', document_length);
+  document[0] = '<';
+  document[1] = 't';
+  memset(&document[2], ' ', big - 2); // a very spacy token
+  document[big - 1] = '>';
+
+  // Each testcase is a list of buffer fill sizes, terminated by a value < 0.
+  // When reparse deferral is enabled, the final (negated) value is the expected
+  // maximum number of bytes scanned in parse attempts.
+  const int testcases[][30] = {
+      {8 * MiB, -8 * MiB},
+      {4 * MiB, 4 * MiB, -12 * MiB}, // try at 4MB, then 8MB = 12 MB total
+      // zero-size fills shouldn't trigger the bypass
+      {4 * MiB, 0, 4 * MiB, -12 * MiB},
+      {4 * MiB, 0, 0, 4 * MiB, -12 * MiB},
+      {4 * MiB, 0, 1 * MiB, 0, 3 * MiB, -12 * MiB},
+      // try to hit the buffer ceiling only once (at the end)
+      {4 * MiB, 2 * MiB, 1 * MiB, 512 * KiB, 256 * KiB, 256 * KiB, -12 * MiB},
+      // try to hit the same buffer ceiling multiple times
+      {4 * MiB + 1, 2 * MiB, 1 * MiB, 512 * KiB, -25 * MiB},
+
+      // try to hit every ceiling, by always landing 1K shy of the buffer size
+      {1 * KiB, 2 * KiB, 4 * KiB, 8 * KiB, 16 * KiB, 32 * KiB, 64 * KiB,
+       128 * KiB, 256 * KiB, 512 * KiB, 1 * MiB, 2 * MiB, 4 * MiB, -16 * MiB},
+
+      // try to avoid every ceiling, by always landing 1B past the buffer size
+      // the normal 2x heuristic threshold still forces parse attempts.
+      {2 * KiB + 1,          // will attempt 2KiB + 1 ==> total 2KiB + 1
+       2 * KiB, 4 * KiB,     // will attempt 8KiB + 1 ==> total 10KiB + 2
+       8 * KiB, 16 * KiB,    // will attempt 32KiB + 1 ==> total 42KiB + 3
+       32 * KiB, 64 * KiB,   // will attempt 128KiB + 1 ==> total 170KiB + 4
+       128 * KiB, 256 * KiB, // will attempt 512KiB + 1 ==> total 682KiB + 5
+       512 * KiB, 1 * MiB,   // will attempt 2MiB + 1 ==> total 2M + 682K + 6
+       2 * MiB, 4 * MiB,     // will attempt 8MiB + 1 ==> total 10M + 682K + 7
+       -(10 * MiB + 682 * KiB + 7)},
+      // try to avoid every ceiling again, except on our last fill.
+      {2 * KiB + 1,          // will attempt 2KiB + 1 ==> total 2KiB + 1
+       2 * KiB, 4 * KiB,     // will attempt 8KiB + 1 ==> total 10KiB + 2
+       8 * KiB, 16 * KiB,    // will attempt 32KiB + 1 ==> total 42KiB + 3
+       32 * KiB, 64 * KiB,   // will attempt 128KiB + 1 ==> total 170KiB + 4
+       128 * KiB, 256 * KiB, // will attempt 512KiB + 1 ==> total 682KiB + 5
+       512 * KiB, 1 * MiB,   // will attempt 2MiB + 1 ==> total 2M + 682K + 6
+       2 * MiB, 4 * MiB - 1, // will attempt 8MiB ==> total 10M + 682K + 6
+       -(10 * MiB + 682 * KiB + 6)},
+
+      // try to hit ceilings on the way multiple times
+      {512 * KiB + 1, 256 * KiB, 128 * KiB, 128 * KiB - 1, // 1 MiB buffer
+       512 * KiB + 1, 256 * KiB, 128 * KiB, 128 * KiB - 1, // 2 MiB buffer
+       1 * MiB + 1, 512 * KiB, 256 * KiB, 256 * KiB - 1,   // 4 MiB buffer
+       2 * MiB + 1, 1 * MiB, 512 * KiB,                    // 8 MiB buffer
+       // we'll make a parse attempt at every parse call
+       -(45 * MiB + 12)},
+  };
+  const int testcount = sizeof(testcases) / sizeof(testcases[0]);
+  for (int test_i = 0; test_i < testcount; test_i++) {
+    const int *fillsize = testcases[test_i];
+    set_subtest("#%d {%d %d %d %d ...}", test_i, fillsize[0], fillsize[1],
+                fillsize[2], fillsize[3]);
+    XML_Parser parser = XML_ParserCreate(NULL);
+    assert_true(parser != NULL);
+    g_parseAttempts = 0;
+
+    CharData storage;
+    CharData_Init(&storage);
+    XML_SetUserData(parser, &storage);
+    XML_SetStartElementHandler(parser, start_element_event_handler);
+
+    int worstcase_bytes = 0; // sum of (buffered bytes at each XML_Parse call)
+    int scanned_bytes = 0;   // sum of (buffered bytes at each actual parse)
+    int offset = 0;
+    while (*fillsize >= 0) {
+      assert_true(offset + *fillsize <= document_length); // or test is invalid
+      const unsigned attempts_before = g_parseAttempts;
+      const enum XML_Status status
+          = XML_Parse(parser, &document[offset], *fillsize, XML_FALSE);
+      if (status != XML_STATUS_OK) {
+        xml_failure(parser);
+      }
+      offset += *fillsize;
+      fillsize++;
+      assert_true(offset <= INT_MAX - worstcase_bytes); // avoid overflow
+      worstcase_bytes += offset; // we might've tried to parse all pending bytes
+      if (g_parseAttempts != attempts_before) {
+        assert_true(g_parseAttempts == attempts_before + 1); // max 1/XML_Parse
+        assert_true(offset <= INT_MAX - scanned_bytes);      // avoid overflow
+        scanned_bytes += offset; // we *did* try to parse all pending bytes
+      }
+    }
+    assert_true(storage.count == 1); // the big token should've been parsed
+    assert_true(scanned_bytes > 0);  // test-the-test: does our counter work?
+    if (g_reparseDeferralEnabledDefault) {
+      // heuristic is enabled; some XML_Parse calls may have deferred reparsing
+      const int max_bytes_scanned = -*fillsize;
+      if (scanned_bytes > max_bytes_scanned) {
+        fprintf(stderr,
+                "bytes scanned in parse attempts: actual=%d limit=%d \n",
+                scanned_bytes, max_bytes_scanned);
+        fail("too many bytes scanned in parse attempts");
+      }
+      assert_true(scanned_bytes <= worstcase_bytes);
+    } else {
+      // heuristic is disabled; every XML_Parse() will have reparsed
+      assert_true(scanned_bytes == worstcase_bytes);
+    }
+
+    XML_ParserFree(parser);
+  }
+  free(document);
+}
+END_TEST
+
 void
 make_basic_test_case(Suite *s) {
   TCase *tc_basic = tcase_create("basic tests");
@@ -5948,4 +6071,5 @@ make_basic_test_case(Suite *s) {
   tcase_add_test(tc_basic, test_set_reparse_deferral_on_the_fly);
   tcase_add_test(tc_basic, test_set_bad_reparse_option);
   tcase_add_test(tc_basic, test_bypass_heuristic_when_close_to_bufsize);
+  tcase_add_test(tc_basic, test_varying_buffer_fills);
 }
