@@ -356,8 +356,12 @@ AS_IF([test "x${DOCBOOK_TO_MAN}" != x -a "x$with_docbook" != xno],
   You can also configure using --without-docbook if you can do without a man
   page for xmlwf.])])])
 
-AM_CONDITIONAL(WITH_DOCBOOK, [test "x${DOCBOOK_TO_MAN}" != x])
-
+dnl This will make sure that a release tarball shipping a pre-rendered xmlwf man page will
+dnl get it installed, independent of whether some flavor of docbook2man is available.
+dnl This relies on file xmlwf.1 being at least as recent as its source file xmlwf.xml.
+AS_IF([test -f "${srcdir}"/doc/xmlwf.1],
+  [AM_CONDITIONAL(WITH_DOCBOOK, [true])],
+  [AM_CONDITIONAL(WITH_DOCBOOK, [test "x${DOCBOOK_TO_MAN}" != x])])
 
 dnl Configure CMake file templates
 dnl NOTE: The *_TRUE variables read here are Automake conditionals
