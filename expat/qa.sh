@@ -231,7 +231,7 @@ dump_config() {
 Configuration:
   QA_COMPILER=${QA_COMPILER}  # auto-detected from \$CC and \$CXX
   QA_PROCESSOR=${QA_PROCESSOR}  # GCC only
-  QA_SANITIZER=${QA_SANITIZER}  # Clang only
+  QA_SANITIZER=${QA_SANITIZER}
 
   CFLAGS=${CFLAGS}
   CXXFLAGS=${CXXFLAGS}
@@ -275,8 +275,9 @@ process_config() {
     esac
 
 
-    if [[ ${QA_COMPILER} != clang && -n ${QA_SANITIZER:-} ]]; then
+    if [[ ${QA_COMPILER} != clang && ( ${QA_SANITIZER:-} == cfi || ${QA_SANITIZER:-} == memory ) ]]; then
         WARNING "QA_COMPILER=${QA_COMPILER} is not 'clang' -- ignoring QA_SANITIZER=${QA_SANITIZER}" >&2
+        QA_SANITIZER=
     fi
 
     case "${QA_SANITIZER:=address}" in
