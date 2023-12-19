@@ -91,6 +91,10 @@ populate_environment() {
                     export ASAN_OPTIONS=detect_leaks=1
                 fi
                 ;;
+            cfi)
+                BASE_COMPILE_FLAGS+=' -fsanitize=cfi -flto -fvisibility=hidden -fno-sanitize-trap=all -fsanitize-cfi-cross-dso'
+                BASE_LINK_FLAGS+=' -fuse-ld=gold'
+                ;;
             memory)
                 # http://clang.llvm.org/docs/MemorySanitizer.html
                 BASE_COMPILE_FLAGS+=" -fsanitize=memory -fno-omit-frame-pointer -g -O2 -fsanitize-memory-track-origins -fsanitize-blacklist=$PWD/memory-sanitizer-blacklist.txt"
@@ -227,7 +231,7 @@ dump_config() {
 Configuration:
   QA_COMPILER=${QA_COMPILER}  # auto-detected from \$CC and \$CXX
   QA_PROCESSOR=${QA_PROCESSOR}  # GCC only
-  QA_SANITIZER=${QA_SANITIZER}  # Clang only
+  QA_SANITIZER=${QA_SANITIZER}
 
   CFLAGS=${CFLAGS}
   CXXFLAGS=${CXXFLAGS}
@@ -271,12 +275,13 @@ process_config() {
     esac
 
 
-    if [[ ${QA_COMPILER} != clang && -n ${QA_SANITIZER:-} ]]; then
+    if [[ ${QA_COMPILER} != clang && ( ${QA_SANITIZER:-} == cfi || ${QA_SANITIZER:-} == memory ) ]]; then
         WARNING "QA_COMPILER=${QA_COMPILER} is not 'clang' -- ignoring QA_SANITIZER=${QA_SANITIZER}" >&2
+        QA_SANITIZER=
     fi
 
     case "${QA_SANITIZER:=address}" in
-        address|memory|undefined) ;;
+        address|cfi|memory|undefined) ;;
         *) usage; exit 1 ;;
     esac
 }
@@ -288,9 +293,9 @@ Usage:
   $ ./qa.sh [ARG ..]
 
 Environment variables
-  QA_COMPILER=(clang|gcc)                  # default: auto-detected
-  QA_PROCESSOR=(egypt|gcov)                # default: gcov
-  QA_SANITIZER=(address|memory|undefined)  # default: address
+  QA_COMPILER=(clang|gcc)                      # default: auto-detected
+  QA_PROCESSOR=(egypt|gcov)                    # default: gcov
+  QA_SANITIZER=(address|cfi|memory|undefined)  # default: address
 
 EOF
 }
