@@ -47,18 +47,48 @@ end(void *userData, const XML_Char *name) {
   (void)name;
 }
 
-int
-LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
-  XML_Parser p = XML_ParserCreate(xstr(ENCODING_FOR_FUZZING));
-  assert(p);
-
+static void
+ParseOneInput(XML_Parser p, const uint8_t *data, size_t size) {
   // Set the hash salt using siphash to generate a deterministic hash.
   struct sipkey *key = sip_keyof(hash_key);
   XML_SetHashSalt(p, (unsigned long)siphash24(data, size, key));
 
   XML_SetElementHandler(p, start, end);
   XML_Parse(p, (const XML_Char *)data, size, 0);
-  XML_Parse(p, (const XML_Char *)data, size, 1);
-  XML_ParserFree(p);
+  if (XML_Parse(p, (const XML_Char *)data, size, 1) == XML_STATUS_ERROR) {
+    XML_ErrorString(XML_GetErrorCode(p));
+  }
+  XML_GetCurrentLineNumber(p);
+  if (size % 2) {
+    XML_ParserReset(p, NULL);
+  }
+}
+
+int
+LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
+  XML_Parser parentParser = XML_ParserCreate(xstr(ENCODING_FOR_FUZZING));
+  assert(parentParser);
+  ParseOneInput(parentParser, data, size);
+  // not freed yet, but used later and freed then
+
+  XML_Parser namespaceParser = XML_ParserCreateNS(NULL, '!');
+  assert(namespaceParser);
+  ParseOneInput(namespaceParser, data, size);
+  XML_ParserFree(namespaceParser);
+
+  XML_Parser externalEntityParser
+      = XML_ExternalEntityParserCreate(parentParser, "e1", NULL);
+  assert(externalEntityParser);
+  ParseOneInput(externalEntityParser, data, size);
+  XML_ParserFree(externalEntityParser);
+
+  XML_Parser externalDtdParser
+      = XML_ExternalEntityParserCreate(parentParser, NULL, NULL);
+  assert(externalDtdParser);
+  ParseOneInput(externalDtdParser, data, size);
+  XML_ParserFree(externalDtdParser);
+
+  // finally frees this parser which served as parent
+  XML_ParserFree(parentParser);
   return 0;
 }
