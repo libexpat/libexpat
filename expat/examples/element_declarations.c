@@ -157,11 +157,17 @@ dumpContentModel(const XML_Char *name, const XML_Content *root) {
     stackTop = stackPopFree(stackTop);
 
     for (size_t u = model->numchildren; u >= 1; u--) {
-      stackTop
+      Stack *const newStackTop
           = stackPushMalloc(stackTop, model->children + (u - 1), level + 1);
-      if (! stackTop) {
+      if (! newStackTop) {
+        // We ran out of memory, so let's free all memory allocated
+        // earlier in this function, to be leak-clean:
+        while (stackTop != NULL) {
+          stackTop = stackPopFree(stackTop);
+        }
         return false;
       }
+      stackTop = newStackTop;
     }
   }
 
