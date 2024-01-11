@@ -142,8 +142,7 @@ dumpContentModelElement(const XML_Content *model, unsigned level,
 static bool
 dumpContentModel(const XML_Char *name, const XML_Content *root) {
   printf("Element \"%" XML_FMT_STR "\":\n", name);
-  Stack *stackTop = NULL;
-  stackTop = stackPushMalloc(stackTop, root, 1);
+  Stack *stackTop = stackPushMalloc(NULL, root, 1);
   if (! stackTop) {
     return false;
   }
