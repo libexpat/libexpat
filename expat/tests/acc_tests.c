@@ -365,7 +365,7 @@ START_TEST(test_helper_unsigned_char_to_printable) {
     const char *const printable = unsignedCharToPrintable(uc);
     if (printable == NULL)
       fail("unsignedCharToPrintable returned NULL");
-    if (strlen(printable) < (size_t)1)
+    else if (strlen(printable) < (size_t)1)
       fail("unsignedCharToPrintable returned empty string");
   }
 
