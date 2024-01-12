@@ -34,6 +34,7 @@ cd "$(dirname "$(type -P "$0")")"
 
 checks_to_enable=(
     readability-avoid-const-params-in-decls
+    readability-named-parameter
 )
 checks_to_enable_flat="${checks_to_enable[*]}"  # i.e. flat string separated by spaces
 

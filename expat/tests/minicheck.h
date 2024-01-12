@@ -128,8 +128,8 @@ void _assert_true(int condition, const char *file, int line, const char *msg);
 Suite *suite_create(const char *name);
 TCase *tcase_create(const char *name);
 void suite_add_tcase(Suite *suite, TCase *tc);
-void tcase_add_checked_fixture(TCase *, tcase_setup_function,
-                               tcase_teardown_function);
+void tcase_add_checked_fixture(TCase *tc, tcase_setup_function setup,
+                               tcase_teardown_function teardown);
 void tcase_add_test(TCase *tc, tcase_test_function test);
 SRunner *srunner_create(Suite *suite);
 void srunner_run_all(SRunner *runner, const char *context, int verbosity);

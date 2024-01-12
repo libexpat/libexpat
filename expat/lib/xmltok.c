@@ -225,7 +225,7 @@ struct normal_encoding {
       /* isNmstrt2 */ NULL, /* isNmstrt3 */ NULL, /* isNmstrt4 */ NULL,        \
       /* isInvalid2 */ NULL, /* isInvalid3 */ NULL, /* isInvalid4 */ NULL
 
-static int FASTCALL checkCharRefNumber(int);
+static int FASTCALL checkCharRefNumber(int result);
 
 #include "xmltok_impl.h"
 #include "ascii.h"
