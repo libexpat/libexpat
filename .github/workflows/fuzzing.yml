@@ -1,0 +1,126 @@
+#                          __  __            _
+#                       ___\ \/ /_ __   __ _| |_
+#                      / _ \\  /| '_ \ / _` | __|
+#                     |  __//  \| |_) | (_| | |_
+#                      \___/_/\_\ .__/ \__,_|\__|
+#                               |_| XML parser
+#
+# Copyright (c) 2024      Sebastian Pipping <sebastian@pipping.org>
+# Licensed under the MIT license:
+#
+# Permission is  hereby granted,  free of charge,  to any  person obtaining
+# a  copy  of  this  software   and  associated  documentation  files  (the
+# "Software"),  to  deal in  the  Software  without restriction,  including
+# without  limitation the  rights  to use,  copy,  modify, merge,  publish,
+# distribute, sublicense, and/or sell copies of the Software, and to permit
+# persons  to whom  the Software  is  furnished to  do so,  subject to  the
+# following conditions:
+#
+# The above copyright  notice and this permission notice  shall be included
+# in all copies or substantial portions of the Software.
+#
+# THE  SOFTWARE  IS  PROVIDED  "AS  IS",  WITHOUT  WARRANTY  OF  ANY  KIND,
+# EXPRESS  OR IMPLIED,  INCLUDING  BUT  NOT LIMITED  TO  THE WARRANTIES  OF
+# MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+# NO EVENT SHALL THE AUTHORS OR  COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+# DAMAGES OR  OTHER LIABILITY, WHETHER  IN AN  ACTION OF CONTRACT,  TORT OR
+# OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
+# USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+name: Run fuzzing regression tests
+
+on:
+  pull_request:
+  push:
+  schedule:
+    - cron: '0 2 * * 5'  # Every Friday at 2am
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  run_fuzzers:
+    name: Run fuzzing regression tests
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11  # v4.1.1
+
+    - name: Install Clang 17
+      run: |-
+        set -x
+        source /etc/os-release
+        wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
+        sudo add-apt-repository "deb https://apt.llvm.org/${UBUNTU_CODENAME}/ llvm-toolchain-${UBUNTU_CODENAME}-17 main"
+        sudo apt-get update  # due to new repository
+        sudo apt-get install --yes --no-install-recommends -V \
+            clang-17 \
+            libclang-rt-17-dev \
+            llvm-17
+        echo /usr/lib/llvm-17/bin >>"${GITHUB_PATH}"
+
+    - name: Build Expat fuzzers
+      run: |
+        set -x -o pipefail
+
+        type -P clang clang++
+        clang --version | head -n1
+        clang++ --version | head -n1
+
+        cd expat/
+        args=(
+            # Build nothing but fuzzers
+            -DEXPAT_BUILD_DOCS=OFF
+            -DEXPAT_BUILD_EXAMPLES=OFF
+            -DEXPAT_BUILD_FUZZERS=ON
+            -DEXPAT_BUILD_PKGCONFIG=OFF
+            -DEXPAT_BUILD_TESTS=OFF
+            -DEXPAT_BUILD_TOOLS=OFF
+
+            # Tune compilation of fuzzers to use Clang with ASan and UBSan
+            -DCMAKE_C_COMPILER=clang
+            -DCMAKE_C_FLAGS='-Wall -Wextra -pedantic -O1 -g -fsanitize=address,undefined -fno-sanitize-recover=all -fno-omit-frame-pointer -fno-common'
+            -DCMAKE_{EXE,MODULE,SHARED}_LINKER_FLAGS='-g -fsanitize=address,undefined'
+            -DEXPAT_WARNINGS_AS_ERRORS=ON
+        )
+        cmake "${args[@]}" -S . -B build
+        make -C build VERBOSE=1 -j$(nproc)
+
+    - name: Download and extract Expat fuzzing corpora
+      run: |-
+        set -x
+        cd expat/build/
+
+        wget -q -O expat_corpus_UTF-8.zip    https://storage.googleapis.com/expat-backup.clusterfuzz-external.appspot.com/corpus/libFuzzer/expat_xml_parse_fuzzer_UTF-8/public.zip
+        wget -q -O expat_corpus_UTF-16LE.zip https://storage.googleapis.com/expat-backup.clusterfuzz-external.appspot.com/corpus/libFuzzer/expat_xml_parse_fuzzer_UTF-16LE/public.zip
+
+        unzip -q -d corpus_UTF-8    expat_corpus_UTF-8.zip
+        unzip -q -d corpus_UTF-16LE expat_corpus_UTF-16LE.zip
+
+    - name: Run fuzzing regression tests (10+ minutes)
+      run: |
+        fuzz_args=(
+            -jobs=$(nproc)
+            -print_final_stats=1
+            -rss_limit_mb=2560  # from oss-fuzz
+            -timeout=25         # from oss-fuzz
+        )
+
+        set -x -o pipefail
+        cd expat/build/
+
+        #           vvvvv
+        find corpus_UTF-8/ -type f | sort | xargs \
+            fuzz/xml_parse_fuzzer_UTF-8 "${fuzz_args[@]}"
+        #                         ^^^^^
+        #           vvvvvvvv
+        find corpus_UTF-16LE/ -type f | sort | xargs \
+            fuzz/xml_parsebuffer_fuzzer_UTF-16LE "${fuzz_args[@]}"
+        #                 ^^^^^^        ^^^^^^^^
+
+    - name: Store crashing test units
+      if: ${{ failure() }}
+      uses: actions/upload-artifact@c7d193f32edcb7bfad88892161225aeda64e9392  # v4.0.0
+      with:
+        name: expat_fuzzing_trouble_${{ github.sha }}
+        path: expat/build/*-????????????????????????????????????????
