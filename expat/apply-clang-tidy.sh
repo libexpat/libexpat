@@ -32,6 +32,12 @@ set -e -u -o pipefail
 
 cd "$(dirname "$(type -P "$0")")"
 
+checks_to_enable=(
+    readability-avoid-const-params-in-decls
+    readability-named-parameter
+)
+checks_to_enable_flat="${checks_to_enable[*]}"  # i.e. flat string separated by spaces
+
 checks_to_disable=(
     # Would need a closer look before any adjustments
     clang-analyzer-optin.performance.Padding
@@ -42,8 +48,9 @@ checks_to_disable=(
     # Disabling because buggy, see https://github.com/llvm/llvm-project/issues/40656
     clang-analyzer-valist.Uninitialized
 )
-checks="${checks_to_disable[*]}"  # i.e. flat string separated by spaces
-checks="-${checks// /,-}"
+checks_to_disable_flat="${checks_to_disable[*]}"  # i.e. flat string separated by spaces
+
+checks="${checks_to_enable_flat// /,},-${checks_to_disable_flat// /,-}"
 
 args=(
     --checks="${checks}"

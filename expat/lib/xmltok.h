@@ -289,7 +289,8 @@ int XmlParseXmlDecl(int isGeneralTextEntity, const ENCODING *enc,
                     const char **encodingNamePtr,
                     const ENCODING **namedEncodingPtr, int *standalonePtr);
 
-int XmlInitEncoding(INIT_ENCODING *, const ENCODING **, const char *name);
+int XmlInitEncoding(INIT_ENCODING *p, const ENCODING **encPtr,
+                    const char *name);
 const ENCODING *XmlGetUtf8InternalEncoding(void);
 const ENCODING *XmlGetUtf16InternalEncoding(void);
 int FASTCALL XmlUtf8Encode(int charNumber, char *buf);
@@ -307,7 +308,8 @@ int XmlParseXmlDeclNS(int isGeneralTextEntity, const ENCODING *enc,
                       const char **encodingNamePtr,
                       const ENCODING **namedEncodingPtr, int *standalonePtr);
 
-int XmlInitEncodingNS(INIT_ENCODING *, const ENCODING **, const char *name);
+int XmlInitEncodingNS(INIT_ENCODING *p, const ENCODING **encPtr,
+                      const char *name);
 const ENCODING *XmlGetUtf8InternalEncodingNS(void);
 const ENCODING *XmlGetUtf16InternalEncodingNS(void);
 ENCODING *XmlInitUnknownEncodingNS(void *mem, int *table, CONVERTER convert,

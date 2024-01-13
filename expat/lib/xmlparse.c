@@ -480,38 +480,40 @@ static enum XML_Error doContent(XML_Parser parser, int startTagLevel,
                                 const ENCODING *enc, const char *start,
                                 const char *end, const char **endPtr,
                                 XML_Bool haveMore, enum XML_Account account);
-static enum XML_Error doCdataSection(XML_Parser parser, const ENCODING *,
+static enum XML_Error doCdataSection(XML_Parser parser, const ENCODING *enc,
                                      const char **startPtr, const char *end,
                                      const char **nextPtr, XML_Bool haveMore,
                                      enum XML_Account account);
 #ifdef XML_DTD
-static enum XML_Error doIgnoreSection(XML_Parser parser, const ENCODING *,
+static enum XML_Error doIgnoreSection(XML_Parser parser, const ENCODING *enc,
                                       const char **startPtr, const char *end,
                                       const char **nextPtr, XML_Bool haveMore);
 #endif /* XML_DTD */
 
 static void freeBindings(XML_Parser parser, BINDING *bindings);
-static enum XML_Error storeAtts(XML_Parser parser, const ENCODING *,
-                                const char *s, TAG_NAME *tagNamePtr,
+static enum XML_Error storeAtts(XML_Parser parser, const ENCODING *enc,
+                                const char *attStr, TAG_NAME *tagNamePtr,
                                 BINDING **bindingsPtr,
                                 enum XML_Account account);
 static enum XML_Error addBinding(XML_Parser parser, PREFIX *prefix,
                                  const ATTRIBUTE_ID *attId, const XML_Char *uri,
                                  BINDING **bindingsPtr);
-static int defineAttribute(ELEMENT_TYPE *type, ATTRIBUTE_ID *, XML_Bool isCdata,
-                           XML_Bool isId, const XML_Char *dfltValue,
-                           XML_Parser parser);
-static enum XML_Error storeAttributeValue(XML_Parser parser, const ENCODING *,
-                                          XML_Bool isCdata, const char *,
-                                          const char *, STRING_POOL *,
+static int defineAttribute(ELEMENT_TYPE *type, ATTRIBUTE_ID *attId,
+                           XML_Bool isCdata, XML_Bool isId,
+                           const XML_Char *value, XML_Parser parser);
+static enum XML_Error storeAttributeValue(XML_Parser parser,
+                                          const ENCODING *enc, XML_Bool isCdata,
+                                          const char *ptr, const char *end,
+                                          STRING_POOL *pool,
                                           enum XML_Account account);
-static enum XML_Error appendAttributeValue(XML_Parser parser, const ENCODING *,
-                                           XML_Bool isCdata, const char *,
-                                           const char *, STRING_POOL *,
+static enum XML_Error appendAttributeValue(XML_Parser parser,
+                                           const ENCODING *enc,
+                                           XML_Bool isCdata, const char *ptr,
+                                           const char *end, STRING_POOL *pool,
                                            enum XML_Account account);
 static ATTRIBUTE_ID *getAttributeId(XML_Parser parser, const ENCODING *enc,
                                     const char *start, const char *end);
-static int setElementTypePrefix(XML_Parser parser, ELEMENT_TYPE *);
+static int setElementTypePrefix(XML_Parser parser, ELEMENT_TYPE *elementType);
 #if XML_GE == 1
 static enum XML_Error storeEntityValue(XML_Parser parser, const ENCODING *enc,
                                        const char *start, const char *end,
@@ -538,21 +540,22 @@ static void dtdDestroy(DTD *p, XML_Bool isDocEntity,
                        const XML_Memory_Handling_Suite *ms);
 static int dtdCopy(XML_Parser oldParser, DTD *newDtd, const DTD *oldDtd,
                    const XML_Memory_Handling_Suite *ms);
-static int copyEntityTable(XML_Parser oldParser, HASH_TABLE *, STRING_POOL *,
-                           const HASH_TABLE *);
+static int copyEntityTable(XML_Parser oldParser, HASH_TABLE *newTable,
+                           STRING_POOL *newPool, const HASH_TABLE *oldTable);
 static NAMED *lookup(XML_Parser parser, HASH_TABLE *table, KEY name,
                      size_t createSize);
-static void FASTCALL hashTableInit(HASH_TABLE *,
+static void FASTCALL hashTableInit(HASH_TABLE *table,
                                    const XML_Memory_Handling_Suite *ms);
-static void FASTCALL hashTableClear(HASH_TABLE *);
-static void FASTCALL hashTableDestroy(HASH_TABLE *);
-static void FASTCALL hashTableIterInit(HASH_TABLE_ITER *, const HASH_TABLE *);
-static NAMED *FASTCALL hashTableIterNext(HASH_TABLE_ITER *);
+static void FASTCALL hashTableClear(HASH_TABLE *table);
+static void FASTCALL hashTableDestroy(HASH_TABLE *table);
+static void FASTCALL hashTableIterInit(HASH_TABLE_ITER *iter,
+                                       const HASH_TABLE *table);
+static NAMED *FASTCALL hashTableIterNext(HASH_TABLE_ITER *iter);
 
-static void FASTCALL poolInit(STRING_POOL *,
+static void FASTCALL poolInit(STRING_POOL *pool,
                               const XML_Memory_Handling_Suite *ms);
-static void FASTCALL poolClear(STRING_POOL *);
-static void FASTCALL poolDestroy(STRING_POOL *);
+static void FASTCALL poolClear(STRING_POOL *pool);
+static void FASTCALL poolDestroy(STRING_POOL *pool);
 static XML_Char *poolAppend(STRING_POOL *pool, const ENCODING *enc,
                             const char *ptr, const char *end);
 static XML_Char *poolStoreString(STRING_POOL *pool, const ENCODING *enc,
