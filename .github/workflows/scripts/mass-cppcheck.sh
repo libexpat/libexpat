@@ -39,24 +39,30 @@ cppcheck --version
 
 find --version | head -n1
 
-cppcheck_args=(
-    --quiet
-    --error-exitcode=1
-    --force
-    --suppress=objectIndex
-    --suppress=unknownMacro
-)
+for xml_context_bytes in 0 1024; do
+    for xml_ge in 0 1; do
+        cppcheck_args=(
+            --quiet
+            --error-exitcode=1
+            --force
+            --suppress=objectIndex
+            --suppress=unknownMacro
+            -DXML_CONTEXT_BYTES=${xml_context_bytes}
+            -DXML_GE=${xml_ge}
+        )
 
-find_args=(
-    -type f \(
-        -name \*.cpp
-        -o -name \*.c
-    \)
-    -not \(  # Exclude .c files that are merely included by other files
-        -name xmltok_ns.c
-        -o -name xmltok_impl.c
-    \)
-    -exec cppcheck "${cppcheck_args[@]}" {} +
-)
+        find_args=(
+            -type f \(
+                -name \*.cpp
+                -o -name \*.c
+            \)
+            -not \(  # Exclude .c files that are merely included by other files
+                -name xmltok_ns.c
+                -o -name xmltok_impl.c
+            \)
+            -exec cppcheck "${cppcheck_args[@]}" {} +
+        )
 
-exec find "${find_args[@]}"
+        time find "${find_args[@]}"
+    done
+done
