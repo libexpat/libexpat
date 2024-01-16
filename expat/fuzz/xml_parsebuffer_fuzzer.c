@@ -71,7 +71,9 @@ ParseOneInput(XML_Parser p, const uint8_t *data, size_t size) {
   memcpy(buf, data, size);
   XML_ParseBuffer(p, size, 0);
   buf = XML_GetBuffer(p, size);
-  assert(buf);
+  if (buf == NULL) {
+    return;
+  }
   memcpy(buf, data, size);
   if (XML_ParseBuffer(p, size, 1) == XML_STATUS_ERROR) {
     XML_ErrorString(XML_GetErrorCode(p));
