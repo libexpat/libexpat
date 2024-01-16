@@ -37,6 +37,7 @@
    Copyright (c) 2022      Jeffrey Walton <noloader@gmail.com>
    Copyright (c) 2022      Jann Horn <jannh@google.com>
    Copyright (c) 2023      Sony Corporation / Snild Dolkow <snild@sony.com>
+   Copyright (c) 2023      Semenov Hermann <GermanAizek@yandex.ru>
    Licensed under the MIT license:
 
    Permission is  hereby granted,  free of charge,  to any  person obtaining
@@ -877,9 +878,13 @@ writeRandomBytes_rand_s(void *target, size_t count) {
   while (bytesWrittenTotal < count) {
     unsigned int random32 = 0;
     size_t i = 0;
-
+    
+#ifndef __BORLANDC__
     if (rand_s(&random32))
       return 0; /* failure */
+#else
+    random32 = rand();
+#endif
 
     for (; (i < sizeof(random32)) && (bytesWrittenTotal < count);
          i++, bytesWrittenTotal++) {
