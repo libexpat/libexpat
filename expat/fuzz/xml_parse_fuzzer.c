@@ -52,6 +52,7 @@ ParseOneInput(XML_Parser p, const uint8_t *data, size_t size) {
   // Set the hash salt using siphash to generate a deterministic hash.
   struct sipkey *key = sip_keyof(hash_key);
   XML_SetHashSalt(p, (unsigned long)siphash24(data, size, key));
+  (void)sip24_valid;
 
   XML_SetElementHandler(p, start, end);
   XML_Parse(p, (const XML_Char *)data, size, 0);
