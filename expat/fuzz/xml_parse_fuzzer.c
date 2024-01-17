@@ -47,6 +47,14 @@ end(void *userData, const XML_Char *name) {
   (void)name;
 }
 
+static void XMLCALL
+may_stop_character_handler(void *userData, const XML_Char *s, int len) {
+  XML_Parser parser = (XML_Parser)userData;
+  if (len > 1 && s[0] == 's') {
+    XML_StopParser(parser, s[1] == 'r' ? XML_FALSE : XML_TRUE);
+  }
+}
+
 static void
 ParseOneInput(XML_Parser p, const uint8_t *data, size_t size) {
   // Set the hash salt using siphash to generate a deterministic hash.
@@ -54,7 +62,9 @@ ParseOneInput(XML_Parser p, const uint8_t *data, size_t size) {
   XML_SetHashSalt(p, (unsigned long)siphash24(data, size, key));
   (void)sip24_valid;
 
+  XML_SetUserData(p, p);
   XML_SetElementHandler(p, start, end);
+  XML_SetCharacterDataHandler(p, may_stop_character_handler);
   XML_Parse(p, (const XML_Char *)data, size, 0);
   if (XML_Parse(p, (const XML_Char *)data, size, 1) == XML_STATUS_ERROR) {
     XML_ErrorString(XML_GetErrorCode(p));
