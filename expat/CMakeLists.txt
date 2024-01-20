@@ -558,6 +558,10 @@ if(EXPAT_BUILD_PKGCONFIG)
         endif()
     endforeach()
 
+    if(NOT EXPAT_SHARED_LIBS)
+        set_property(TARGET expat PROPERTY "pkgconfig_cflags" "-DXML_STATIC")
+    endif()
+
     file(GENERATE
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/expat.pc
         INPUT ${PROJECT_SOURCE_DIR}/expat.pc.cmake)
