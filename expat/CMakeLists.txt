@@ -559,7 +559,10 @@ if(EXPAT_BUILD_PKGCONFIG)
     endforeach()
 
     if(NOT EXPAT_SHARED_LIBS)
-        set_property(TARGET expat PROPERTY "pkgconfig_cflags" "-DXML_STATIC")
+        # The leading space on this value when set is important! We need to
+        # make sure that we don't leave a trailing space in the generated .pc
+        # file, so that we avoid mismatches with what we generate in autotools
+        set_property(TARGET expat PROPERTY "pkgconfig_cflags" " -DXML_STATIC")
     endif()
 
     file(GENERATE
