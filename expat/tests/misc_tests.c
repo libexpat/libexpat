@@ -107,12 +107,34 @@ START_TEST(test_misc_null_parser) {
 }
 END_TEST
 
+#if defined(__has_feature)
+#  if __has_feature(undefined_behavior_sanitizer)
+#    define EXPAT_TESTS_UBSAN 1
+#  else
+#    define EXPAT_TESTS_UBSAN 0
+#  endif
+#else
+#  define EXPAT_TESTS_UBSAN 0
+#endif
+
 /* Test that XML_ErrorString rejects out-of-range codes */
 START_TEST(test_misc_error_string) {
-  if (XML_ErrorString((enum XML_Error) - 1) != NULL)
+#if ! EXPAT_TESTS_UBSAN // because this would trigger UBSan
+  union {
+    enum XML_Error xml_error;
+    int integer;
+  } trickery;
+
+  assert_true(sizeof(enum XML_Error) == sizeof(int)); // self-test
+
+  trickery.integer = -1;
+  if (XML_ErrorString(trickery.xml_error) != NULL)
     fail("Negative error code not rejected");
-  if (XML_ErrorString((enum XML_Error)100) != NULL)
+
+  trickery.integer = 100;
+  if (XML_ErrorString(trickery.xml_error) != NULL)
     fail("Large error code not rejected");
+#endif
 }
 END_TEST
 
