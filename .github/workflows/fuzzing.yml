@@ -46,18 +46,18 @@ jobs:
     steps:
     - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11  # v4.1.1
 
-    - name: Install Clang 17
+    - name: Install Clang 18
       run: |-
         set -x
         source /etc/os-release
         wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
-        sudo add-apt-repository "deb https://apt.llvm.org/${UBUNTU_CODENAME}/ llvm-toolchain-${UBUNTU_CODENAME}-17 main"
+        sudo add-apt-repository "deb https://apt.llvm.org/${UBUNTU_CODENAME}/ llvm-toolchain-${UBUNTU_CODENAME}-18 main"
         sudo apt-get update  # due to new repository
         sudo apt-get install --yes --no-install-recommends -V \
-            clang-17 \
-            libclang-rt-17-dev \
-            llvm-17
-        echo /usr/lib/llvm-17/bin >>"${GITHUB_PATH}"
+            clang-18 \
+            libclang-rt-18-dev \
+            llvm-18
+        echo /usr/lib/llvm-18/bin >>"${GITHUB_PATH}"
 
     - name: Build Expat fuzzers
       run: |

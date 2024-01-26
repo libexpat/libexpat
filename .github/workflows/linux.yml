@@ -50,7 +50,6 @@ jobs:
           - MODE: distcheck
           - MODE: qa-sh
             FLAT_ENV: CC=clang CXX=clang++ LD=clang++ QA_SANITIZER=address
-          - MODE: clang-format
           - MODE: cmake-oos
             FLAT_ENV: CMAKE_ARGS="-DEXPAT_ATTR_INFO=ON -DEXPAT_BUILD_FUZZERS=ON -DCMAKE_C_FLAGS=-fsanitize=address -DCMAKE_CXX_FLAGS=-fsanitize=address -DCMAKE_EXE_LINKER_FLAGS=-fsanitize=address -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++"
           - MODE: qa-sh
@@ -119,13 +118,12 @@ jobs:
         set -x
         source /etc/os-release
         wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
-        sudo add-apt-repository "deb https://apt.llvm.org/${UBUNTU_CODENAME}/ llvm-toolchain-${UBUNTU_CODENAME}-17 main"
+        sudo add-apt-repository "deb https://apt.llvm.org/${UBUNTU_CODENAME}/ llvm-toolchain-${UBUNTU_CODENAME}-18 main"
         sudo apt-get update  # due to new repository
-        # NOTE: Please note the version-specific ${PATH} extension for Clang adding /usr/lib/llvm-17/bin in .ci.sh
+        # NOTE: Please note the version-specific ${PATH} extension for Clang adding /usr/lib/llvm-18/bin in .ci.sh
         sudo apt-get install --yes --no-install-recommends -V \
-            clang-17 \
-            clang-format-17 \
-            libclang-rt-17-dev
+            clang-18 \
+            libclang-rt-18-dev
     - name: Install build dependencies (common)
       run: |-
         sudo apt-get install --yes --no-install-recommends -V \
