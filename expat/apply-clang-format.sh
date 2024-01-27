@@ -51,8 +51,6 @@ type -P clang-format
 
 clang-format --version
 
-expand --tabs=2 --initial lib/siphash.h | sponge lib/siphash.h
-
 clang-format "${args[@]}" -- "${files[@]}"
 
 sed \
