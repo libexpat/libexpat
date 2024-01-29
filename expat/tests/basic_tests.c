@@ -3163,7 +3163,7 @@ static int XMLCALL
 external_bom_checker(XML_Parser parser, const XML_Char *context,
                      const XML_Char *base, const XML_Char *systemId,
                      const XML_Char *publicId) {
-  const char *text = "";
+  const char *text;
   UNUSED_P(base);
   UNUSED_P(systemId);
   UNUSED_P(publicId);

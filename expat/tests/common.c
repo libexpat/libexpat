@@ -185,7 +185,7 @@ _xml_failure(XML_Parser parser, const char *file, int line) {
            "u, offset %" XML_FMT_INT_MOD "u)\n    reported from %s, line %d\n",
            err, XML_ErrorString(err), XML_GetCurrentLineNumber(parser),
            XML_GetCurrentColumnNumber(parser), file, line);
-  _assert_true(0, file, line, buffer);
+  _fail(file, line, buffer);
 }
 
 enum XML_Status
@@ -214,9 +214,9 @@ _expect_failure(const char *text, enum XML_Error errorCode,
                 const char *errorMessage, const char *file, int lineno) {
   if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
       == XML_STATUS_OK)
-    /* Hackish use of _assert_true() macro, but let's us report
+    /* Hackish use of _fail() macro, but lets us report
        the right filename and line number. */
-    _assert_true(0, file, lineno, errorMessage);
+    _fail(file, lineno, errorMessage);
   if (XML_GetErrorCode(g_parser) != errorCode)
     _xml_failure(g_parser, file, lineno);
 }
