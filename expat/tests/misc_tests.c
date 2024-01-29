@@ -474,6 +474,28 @@ START_TEST(test_misc_general_entities_support) {
 }
 END_TEST
 
+static void XMLCALL
+resumable_stopping_character_handler(void *userData, const XML_Char *s,
+                                     int len) {
+  UNUSED_P(s);
+  UNUSED_P(len);
+  XML_Parser parser = (XML_Parser)userData;
+  XML_StopParser(parser, XML_TRUE);
+}
+
+// NOTE: This test needs active LeakSanitizer to be of actual use
+START_TEST(test_misc_char_handler_stop_without_leak) {
+  const char *const data
+      = "<!DOCTYPE t1[<!ENTITY e1 'angle<'><!ENTITY e2 '&e1;'>]><t1>&e2;";
+  XML_Parser parser = XML_ParserCreate(NULL);
+  assert_true(parser != NULL);
+  XML_SetUserData(parser, parser);
+  XML_SetCharacterDataHandler(parser, resumable_stopping_character_handler);
+  _XML_Parse_SINGLE_BYTES(parser, data, (int)strlen(data), XML_FALSE);
+  XML_ParserFree(parser);
+}
+END_TEST
+
 void
 make_miscellaneous_test_case(Suite *s) {
   TCase *tc_misc = tcase_create("miscellaneous tests");
@@ -497,4 +519,5 @@ make_miscellaneous_test_case(Suite *s) {
   tcase_add_test(tc_misc,
                  test_misc_create_external_entity_parser_with_null_context);
   tcase_add_test(tc_misc, test_misc_general_entities_support);
+  tcase_add_test(tc_misc, test_misc_char_handler_stop_without_leak);
 }
