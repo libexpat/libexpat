@@ -83,9 +83,13 @@ extern "C" {
 
 void PRINTF_LIKE(1, 2) set_subtest(char const *fmt, ...);
 
-#  define fail(msg) _assert_true(0, __FILE__, __LINE__, msg)
+#  define fail(msg) _fail(__FILE__, __LINE__, msg)
 #  define assert_true(cond)                                                    \
-    _assert_true((cond), __FILE__, __LINE__, "check failed: " #cond)
+    do {                                                                       \
+      if (! (cond)) {                                                          \
+        _fail(__FILE__, __LINE__, "check failed: " #cond);                     \
+      }                                                                        \
+    } while (0)
 
 typedef void (*tcase_setup_function)(void);
 typedef void (*tcase_teardown_function)(void);
@@ -124,7 +128,11 @@ void _check_set_test_info(char const *function, char const *filename,
  * Prototypes for the actual implementation.
  */
 
-void _assert_true(int condition, const char *file, int line, const char *msg);
+#  if defined(__GNUC__)
+__attribute__((noreturn))
+#  endif
+void
+_fail(const char *file, int line, const char *msg);
 Suite *suite_create(const char *name);
 TCase *tcase_create(const char *name);
 void suite_add_tcase(Suite *suite, TCase *tc);

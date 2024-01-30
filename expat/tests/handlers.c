@@ -1717,7 +1717,9 @@ record_element_end_handler(void *userData, const XML_Char *name) {
 const struct handler_record_entry *
 _handler_record_get(const struct handler_record_list *storage, int index,
                     const char *file, int line) {
-  _assert_true(storage->count > index, file, line, "too few handler calls");
+  if (storage->count <= index) {
+    _fail(file, line, "too few handler calls");
+  }
   return &storage->entries[index];
 }
 

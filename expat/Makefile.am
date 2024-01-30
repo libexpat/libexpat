@@ -131,6 +131,11 @@ buildlib:
 run-benchmark:
 	$(MAKE) -C tests/benchmark
 	./run.sh tests/benchmark/benchmark@EXEEXT@ -n $(top_srcdir)/../testdata/largefiles/recset.xml 65535 3
+	./run.sh tests/benchmark/benchmark@EXEEXT@ -n $(top_srcdir)/../testdata/largefiles/aaaaaa_attr.xml 4096 3
+	./run.sh tests/benchmark/benchmark@EXEEXT@ -n $(top_srcdir)/../testdata/largefiles/aaaaaa_cdata.xml 4096 3
+	./run.sh tests/benchmark/benchmark@EXEEXT@ -n $(top_srcdir)/../testdata/largefiles/aaaaaa_comment.xml 4096 3
+	./run.sh tests/benchmark/benchmark@EXEEXT@ -n $(top_srcdir)/../testdata/largefiles/aaaaaa_tag.xml 4096 3
+	./run.sh tests/benchmark/benchmark@EXEEXT@ -n $(top_srcdir)/../testdata/largefiles/aaaaaa_text.xml 4096 3
 
 .PHONY: download-xmlts-zip
 download-xmlts-zip:

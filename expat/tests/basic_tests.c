@@ -49,6 +49,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
 
 #if ! defined(__cplusplus)
 #  include <stdbool.h>
@@ -2910,6 +2911,20 @@ START_TEST(test_buffer_can_grow_to_max) {
 }
 END_TEST
 
+START_TEST(test_getbuffer_allocates_on_zero_len) {
+  for (int first_len = 1; first_len >= 0; first_len--) {
+    set_subtest("with len=%d first", first_len);
+    XML_Parser parser = XML_ParserCreate(NULL);
+    assert_true(parser != NULL);
+    assert_true(XML_GetBuffer(parser, first_len) != NULL);
+    assert_true(XML_GetBuffer(parser, 0) != NULL);
+    if (XML_ParseBuffer(parser, 0, XML_FALSE) != XML_STATUS_OK)
+      xml_failure(parser);
+    XML_ParserFree(parser);
+  }
+}
+END_TEST
+
 /* Test position information macros */
 START_TEST(test_byte_info_at_end) {
   const char *text = "<doc></doc>";
@@ -3148,7 +3163,7 @@ static int XMLCALL
 external_bom_checker(XML_Parser parser, const XML_Char *context,
                      const XML_Char *base, const XML_Char *systemId,
                      const XML_Char *publicId) {
-  const char *text = "";
+  const char *text;
   UNUSED_P(base);
   UNUSED_P(systemId);
   UNUSED_P(publicId);
@@ -3625,7 +3640,9 @@ START_TEST(test_suspend_resume_internal_entity) {
   XML_SetStartElementHandler(g_parser, start_element_suspender);
   XML_SetCharacterDataHandler(g_parser, accumulate_characters);
   XML_SetUserData(g_parser, &storage);
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+  // can't use SINGLE_BYTES here, because it'll return early on suspension, and
+  // we won't know exactly how much input we actually managed to give Expat.
+  if (XML_Parse(g_parser, text, (int)strlen(text), XML_TRUE)
       != XML_STATUS_SUSPENDED)
     xml_failure(g_parser);
   CharData_CheckXMLChars(&storage, XCS(""));
@@ -4638,6 +4655,12 @@ START_TEST(test_utf8_in_start_tags) {
   char doc[1024];
   size_t failCount = 0;
 
+  // we need all the bytes to be parsed, but we don't want the errors that can
+  // trigger on isFinal=XML_TRUE, so we skip the test if the heuristic is on.
+  if (g_reparseDeferralEnabledDefault) {
+    return;
+  }
+
   for (; i < sizeof(cases) / sizeof(cases[0]); i++) {
     size_t j = 0;
     for (; j < sizeof(atNameStart) / sizeof(atNameStart[0]); j++) {
@@ -5178,6 +5201,629 @@ START_TEST(test_nested_entity_suspend) {
 }
 END_TEST
 
+/* Regression test for quadratic parsing on large tokens */
+START_TEST(test_big_tokens_take_linear_time) {
+  const char *const too_slow_failure_message
+      = "Compared to the baseline runtime of the first test, this test has a "
+        "slowdown of more than <max_slowdown>. "
+        "Please keep increasing the value by 1 until it reliably passes the "
+        "test on your hardware and open a bug sharing that number with us. "
+        "Thanks in advance!";
+  const struct {
+    const char *pre;
+    const char *post;
+  } text[] = {
+      {"<a>", "</a>"},                      // assumed good, used as baseline
+      {"<b><![CDATA[ value: ", " ]]></b>"}, // CDATA, performed OK before patch
+      {"<c attr='", "'></c>"},              // big attribute, used to be O(N²)
+      {"<d><!-- ", " --></d>"},             // long comment, used to be O(N²)
+      {"<e><", "/></e>"},                   // big elem name, used to be O(N²)
+  };
+  const int num_cases = sizeof(text) / sizeof(text[0]);
+  // For the test we need a <max_slowdown> value that is:
+  // (1) big enough that the test passes reliably (avoiding flaky tests), and
+  // (2) small enough that the test actually catches regressions.
+  const int max_slowdown = 15;
+  char aaaaaa[4096];
+  const int fillsize = (int)sizeof(aaaaaa);
+  const int fillcount = 100;
+
+  memset(aaaaaa, 'a', fillsize);
+
+  if (! g_reparseDeferralEnabledDefault) {
+    return; // heuristic is disabled; we would get O(n^2) and fail.
+  }
+#if defined(_WIN32)
+  if (CLOCKS_PER_SEC < 100000) {
+    // Skip this test if clock() doesn't have reasonably good resolution.
+    // This workaround is only applied to Windows targets, since XSI requires
+    // the value to be 1 000 000 (10x the condition here), and we want to be
+    // very sure that at least one platform in CI can catch regressions.
+    return;
+  }
+#endif
+
+  clock_t baseline = 0;
+  for (int i = 0; i < num_cases; ++i) {
+    XML_Parser parser = XML_ParserCreate(NULL);
+    assert_true(parser != NULL);
+    enum XML_Status status;
+    set_subtest("max_slowdown=%d text=\"%saaaaaa%s\"", max_slowdown,
+                text[i].pre, text[i].post);
+    const clock_t start = clock();
+
+    // parse the start text
+    status = _XML_Parse_SINGLE_BYTES(parser, text[i].pre,
+                                     (int)strlen(text[i].pre), XML_FALSE);
+    if (status != XML_STATUS_OK) {
+      xml_failure(parser);
+    }
+    // parse lots of 'a', failing the test early if it takes too long
+    for (int f = 0; f < fillcount; ++f) {
+      status = _XML_Parse_SINGLE_BYTES(parser, aaaaaa, fillsize, XML_FALSE);
+      if (status != XML_STATUS_OK) {
+        xml_failure(parser);
+      }
+      // i == 0 means we're still calculating the baseline value
+      if (i > 0) {
+        const clock_t now = clock();
+        const clock_t clocks_so_far = now - start;
+        const int slowdown = clocks_so_far / baseline;
+        if (slowdown >= max_slowdown) {
+          fprintf(
+              stderr,
+              "fill#%d: clocks_so_far=%d baseline=%d slowdown=%d max_slowdown=%d\n",
+              f, (int)clocks_so_far, (int)baseline, slowdown, max_slowdown);
+          fail(too_slow_failure_message);
+        }
+      }
+    }
+    // parse the end text
+    status = _XML_Parse_SINGLE_BYTES(parser, text[i].post,
+                                     (int)strlen(text[i].post), XML_TRUE);
+    if (status != XML_STATUS_OK) {
+      xml_failure(parser);
+    }
+
+    // how long did it take in total?
+    const clock_t end = clock();
+    const clock_t taken = end - start;
+    if (i == 0) {
+      assert_true(taken > 0); // just to make sure we don't div-by-0 later
+      baseline = taken;
+    }
+    const int slowdown = taken / baseline;
+    if (slowdown >= max_slowdown) {
+      fprintf(stderr, "taken=%d baseline=%d slowdown=%d max_slowdown=%d\n",
+              (int)taken, (int)baseline, slowdown, max_slowdown);
+      fail(too_slow_failure_message);
+    }
+
+    XML_ParserFree(parser);
+  }
+}
+END_TEST
+
+START_TEST(test_set_reparse_deferral) {
+  const char *const pre = "<d>";
+  const char *const start = "<x attr='";
+  const char *const end = "'></x>";
+  char eeeeee[100];
+  const int fillsize = (int)sizeof(eeeeee);
+  memset(eeeeee, 'e', fillsize);
+
+  for (int enabled = 0; enabled <= 1; enabled += 1) {
+    set_subtest("deferral=%d", enabled);
+
+    XML_Parser parser = XML_ParserCreate(NULL);
+    assert_true(parser != NULL);
+    assert_true(XML_SetReparseDeferralEnabled(parser, enabled));
+    // pre-grow the buffer to avoid reparsing due to almost-fullness
+    assert_true(XML_GetBuffer(parser, fillsize * 10103) != NULL);
+
+    CharData storage;
+    CharData_Init(&storage);
+    XML_SetUserData(parser, &storage);
+    XML_SetStartElementHandler(parser, start_element_event_handler);
+
+    enum XML_Status status;
+    // parse the start text
+    status = XML_Parse(parser, pre, (int)strlen(pre), XML_FALSE);
+    if (status != XML_STATUS_OK) {
+      xml_failure(parser);
+    }
+    CharData_CheckXMLChars(&storage, XCS("d")); // first element should be done
+
+    // ..and the start of the token
+    status = XML_Parse(parser, start, (int)strlen(start), XML_FALSE);
+    if (status != XML_STATUS_OK) {
+      xml_failure(parser);
+    }
+    CharData_CheckXMLChars(&storage, XCS("d")); // still just the first one
+
+    // try to parse lots of 'e', but the token isn't finished
+    for (int c = 0; c < 100; ++c) {
+      status = XML_Parse(parser, eeeeee, fillsize, XML_FALSE);
+      if (status != XML_STATUS_OK) {
+        xml_failure(parser);
+      }
+    }
+    CharData_CheckXMLChars(&storage, XCS("d")); // *still* just the first one
+
+    // end the <x> token.
+    status = XML_Parse(parser, end, (int)strlen(end), XML_FALSE);
+    if (status != XML_STATUS_OK) {
+      xml_failure(parser);
+    }
+
+    if (enabled) {
+      // In general, we may need to push more data to trigger a reparse attempt,
+      // but in this test, the data is constructed to always require it.
+      CharData_CheckXMLChars(&storage, XCS("d")); // or the test is incorrect
+      // 2x the token length should suffice; the +1 covers the start and end.
+      for (int c = 0; c < 101; ++c) {
+        status = XML_Parse(parser, eeeeee, fillsize, XML_FALSE);
+        if (status != XML_STATUS_OK) {
+          xml_failure(parser);
+        }
+      }
+    }
+    CharData_CheckXMLChars(&storage, XCS("dx")); // the <x> should be done
+
+    XML_ParserFree(parser);
+  }
+}
+END_TEST
+
+struct element_decl_data {
+  XML_Parser parser;
+  int count;
+};
+
+static void
+element_decl_counter(void *userData, const XML_Char *name, XML_Content *model) {
+  UNUSED_P(name);
+  struct element_decl_data *testdata = (struct element_decl_data *)userData;
+  testdata->count += 1;
+  XML_FreeContentModel(testdata->parser, model);
+}
+
+static int
+external_inherited_parser(XML_Parser p, const XML_Char *context,
+                          const XML_Char *base, const XML_Char *systemId,
+                          const XML_Char *publicId) {
+  UNUSED_P(base);
+  UNUSED_P(systemId);
+  UNUSED_P(publicId);
+  const char *const pre = "<!ELEMENT document ANY>\n";
+  const char *const start = "<!ELEMENT ";
+  const char *const end = " ANY>\n";
+  const char *const post = "<!ELEMENT xyz ANY>\n";
+  const int enabled = *(int *)XML_GetUserData(p);
+  char eeeeee[100];
+  char spaces[100];
+  const int fillsize = (int)sizeof(eeeeee);
+  assert_true(fillsize == (int)sizeof(spaces));
+  memset(eeeeee, 'e', fillsize);
+  memset(spaces, ' ', fillsize);
+
+  XML_Parser parser = XML_ExternalEntityParserCreate(p, context, NULL);
+  assert_true(parser != NULL);
+  // pre-grow the buffer to avoid reparsing due to almost-fullness
+  assert_true(XML_GetBuffer(parser, fillsize * 10103) != NULL);
+
+  struct element_decl_data testdata;
+  testdata.parser = parser;
+  testdata.count = 0;
+  XML_SetUserData(parser, &testdata);
+  XML_SetElementDeclHandler(parser, element_decl_counter);
+
+  enum XML_Status status;
+  // parse the initial text
+  status = XML_Parse(parser, pre, (int)strlen(pre), XML_FALSE);
+  if (status != XML_STATUS_OK) {
+    xml_failure(parser);
+  }
+  assert_true(testdata.count == 1); // first element should be done
+
+  // ..and the start of the big token
+  status = XML_Parse(parser, start, (int)strlen(start), XML_FALSE);
+  if (status != XML_STATUS_OK) {
+    xml_failure(parser);
+  }
+  assert_true(testdata.count == 1); // still just the first one
+
+  // try to parse lots of 'e', but the token isn't finished
+  for (int c = 0; c < 100; ++c) {
+    status = XML_Parse(parser, eeeeee, fillsize, XML_FALSE);
+    if (status != XML_STATUS_OK) {
+      xml_failure(parser);
+    }
+  }
+  assert_true(testdata.count == 1); // *still* just the first one
+
+  // end the big token.
+  status = XML_Parse(parser, end, (int)strlen(end), XML_FALSE);
+  if (status != XML_STATUS_OK) {
+    xml_failure(parser);
+  }
+
+  if (enabled) {
+    // In general, we may need to push more data to trigger a reparse attempt,
+    // but in this test, the data is constructed to always require it.
+    assert_true(testdata.count == 1); // or the test is incorrect
+    // 2x the token length should suffice; the +1 covers the start and end.
+    for (int c = 0; c < 101; ++c) {
+      status = XML_Parse(parser, spaces, fillsize, XML_FALSE);
+      if (status != XML_STATUS_OK) {
+        xml_failure(parser);
+      }
+    }
+  }
+  assert_true(testdata.count == 2); // the big token should be done
+
+  // parse the final text
+  status = XML_Parse(parser, post, (int)strlen(post), XML_TRUE);
+  if (status != XML_STATUS_OK) {
+    xml_failure(parser);
+  }
+  assert_true(testdata.count == 3); // after isFinal=XML_TRUE, all must be done
+
+  XML_ParserFree(parser);
+  return XML_STATUS_OK;
+}
+
+START_TEST(test_reparse_deferral_is_inherited) {
+  const char *const text
+      = "<!DOCTYPE document SYSTEM 'something.ext'><document/>";
+  for (int enabled = 0; enabled <= 1; ++enabled) {
+    set_subtest("deferral=%d", enabled);
+
+    XML_Parser parser = XML_ParserCreate(NULL);
+    assert_true(parser != NULL);
+    XML_SetUserData(parser, (void *)&enabled);
+    XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+    // this handler creates a sub-parser and checks that its deferral behavior
+    // is what we expected, based on the value of `enabled` (in userdata).
+    XML_SetExternalEntityRefHandler(parser, external_inherited_parser);
+    assert_true(XML_SetReparseDeferralEnabled(parser, enabled));
+    if (XML_Parse(parser, text, (int)strlen(text), XML_TRUE) != XML_STATUS_OK)
+      xml_failure(parser);
+
+    XML_ParserFree(parser);
+  }
+}
+END_TEST
+
+START_TEST(test_set_reparse_deferral_on_null_parser) {
+  assert_true(XML_SetReparseDeferralEnabled(NULL, 0) == XML_FALSE);
+  assert_true(XML_SetReparseDeferralEnabled(NULL, 1) == XML_FALSE);
+  assert_true(XML_SetReparseDeferralEnabled(NULL, 10) == XML_FALSE);
+  assert_true(XML_SetReparseDeferralEnabled(NULL, 100) == XML_FALSE);
+  assert_true(XML_SetReparseDeferralEnabled(NULL, (XML_Bool)INT_MIN)
+              == XML_FALSE);
+  assert_true(XML_SetReparseDeferralEnabled(NULL, (XML_Bool)INT_MAX)
+              == XML_FALSE);
+}
+END_TEST
+
+START_TEST(test_set_reparse_deferral_on_the_fly) {
+  const char *const pre = "<d><x attr='";
+  const char *const end = "'></x>";
+  char iiiiii[100];
+  const int fillsize = (int)sizeof(iiiiii);
+  memset(iiiiii, 'i', fillsize);
+
+  XML_Parser parser = XML_ParserCreate(NULL);
+  assert_true(parser != NULL);
+  assert_true(XML_SetReparseDeferralEnabled(parser, XML_TRUE));
+
+  CharData storage;
+  CharData_Init(&storage);
+  XML_SetUserData(parser, &storage);
+  XML_SetStartElementHandler(parser, start_element_event_handler);
+
+  enum XML_Status status;
+  // parse the start text
+  status = XML_Parse(parser, pre, (int)strlen(pre), XML_FALSE);
+  if (status != XML_STATUS_OK) {
+    xml_failure(parser);
+  }
+  CharData_CheckXMLChars(&storage, XCS("d")); // first element should be done
+
+  // try to parse some 'i', but the token isn't finished
+  status = XML_Parse(parser, iiiiii, fillsize, XML_FALSE);
+  if (status != XML_STATUS_OK) {
+    xml_failure(parser);
+  }
+  CharData_CheckXMLChars(&storage, XCS("d")); // *still* just the first one
+
+  // end the <x> token.
+  status = XML_Parse(parser, end, (int)strlen(end), XML_FALSE);
+  if (status != XML_STATUS_OK) {
+    xml_failure(parser);
+  }
+  CharData_CheckXMLChars(&storage, XCS("d")); // not yet.
+
+  // now change the heuristic setting and add *no* data
+  assert_true(XML_SetReparseDeferralEnabled(parser, XML_FALSE));
+  // we avoid isFinal=XML_TRUE, because that would force-bypass the heuristic.
+  status = XML_Parse(parser, "", 0, XML_FALSE);
+  if (status != XML_STATUS_OK) {
+    xml_failure(parser);
+  }
+  CharData_CheckXMLChars(&storage, XCS("dx"));
+
+  XML_ParserFree(parser);
+}
+END_TEST
+
+START_TEST(test_set_bad_reparse_option) {
+  XML_Parser parser = XML_ParserCreate(NULL);
+  assert_true(XML_FALSE == XML_SetReparseDeferralEnabled(parser, 2));
+  assert_true(XML_FALSE == XML_SetReparseDeferralEnabled(parser, 3));
+  assert_true(XML_FALSE == XML_SetReparseDeferralEnabled(parser, 99));
+  assert_true(XML_FALSE == XML_SetReparseDeferralEnabled(parser, 127));
+  assert_true(XML_FALSE == XML_SetReparseDeferralEnabled(parser, 128));
+  assert_true(XML_FALSE == XML_SetReparseDeferralEnabled(parser, 129));
+  assert_true(XML_FALSE == XML_SetReparseDeferralEnabled(parser, 255));
+  assert_true(XML_TRUE == XML_SetReparseDeferralEnabled(parser, 0));
+  assert_true(XML_TRUE == XML_SetReparseDeferralEnabled(parser, 1));
+  XML_ParserFree(parser);
+}
+END_TEST
+
+static size_t g_totalAlloc = 0;
+static size_t g_biggestAlloc = 0;
+
+static void *
+counting_realloc(void *ptr, size_t size) {
+  g_totalAlloc += size;
+  if (size > g_biggestAlloc) {
+    g_biggestAlloc = size;
+  }
+  return realloc(ptr, size);
+}
+
+static void *
+counting_malloc(size_t size) {
+  return counting_realloc(NULL, size);
+}
+
+START_TEST(test_bypass_heuristic_when_close_to_bufsize) {
+  if (g_chunkSize != 0) {
+    // this test does not use SINGLE_BYTES, because it depends on very precise
+    // buffer fills.
+    return;
+  }
+  if (! g_reparseDeferralEnabledDefault) {
+    return; // this test is irrelevant when the deferral heuristic is disabled.
+  }
+
+  const int document_length = 65536;
+  char *const document = (char *)malloc(document_length);
+
+  const XML_Memory_Handling_Suite memfuncs = {
+      counting_malloc,
+      counting_realloc,
+      free,
+  };
+
+  const int leading_list[] = {0, 3, 61, 96, 400, 401, 4000, 4010, 4099, -1};
+  const int bigtoken_list[] = {3000, 4000, 4001, 4096, 4099, 5000, 20000, -1};
+  const int fillsize_list[] = {131, 256, 399, 400, 401, 1025, 4099, 4321, -1};
+
+  for (const int *leading = leading_list; *leading >= 0; leading++) {
+    for (const int *bigtoken = bigtoken_list; *bigtoken >= 0; bigtoken++) {
+      for (const int *fillsize = fillsize_list; *fillsize >= 0; fillsize++) {
+        set_subtest("leading=%d bigtoken=%d fillsize=%d", *leading, *bigtoken,
+                    *fillsize);
+        // start by checking that the test looks reasonably valid
+        assert_true(*leading + *bigtoken <= document_length);
+
+        // put 'x' everywhere; some will be overwritten by elements.
+        memset(document, 'x', document_length);
+        // maybe add an initial tag
+        if (*leading) {
+          assert_true(*leading >= 3); // or the test case is invalid
+          memcpy(document, "<a>", 3);
+        }
+        // add the large token
+        document[*leading + 0] = '<';
+        document[*leading + 1] = 'b';
+        memset(&document[*leading + 2], ' ', *bigtoken - 2); // a spacy token
+        document[*leading + *bigtoken - 1] = '>';
+
+        // 1 for 'b', plus 1 or 0 depending on the presence of 'a'
+        const int expected_elem_total = 1 + (*leading ? 1 : 0);
+
+        XML_Parser parser = XML_ParserCreate_MM(NULL, &memfuncs, NULL);
+        assert_true(parser != NULL);
+
+        CharData storage;
+        CharData_Init(&storage);
+        XML_SetUserData(parser, &storage);
+        XML_SetStartElementHandler(parser, start_element_event_handler);
+
+        g_biggestAlloc = 0;
+        g_totalAlloc = 0;
+        int offset = 0;
+        // fill data until the big token is covered (but not necessarily parsed)
+        while (offset < *leading + *bigtoken) {
+          assert_true(offset + *fillsize <= document_length);
+          const enum XML_Status status
+              = XML_Parse(parser, &document[offset], *fillsize, XML_FALSE);
+          if (status != XML_STATUS_OK) {
+            xml_failure(parser);
+          }
+          offset += *fillsize;
+        }
+        // Now, check that we've had a buffer allocation that could fit the
+        // context bytes and our big token. In order to detect a special case,
+        // we need to know how many bytes of our big token were included in the
+        // first push that contained _any_ bytes of the big token:
+        const int bigtok_first_chunk_bytes = *fillsize - (*leading % *fillsize);
+        if (bigtok_first_chunk_bytes >= *bigtoken && XML_CONTEXT_BYTES == 0) {
+          // Special case: we aren't saving any context, and the whole big token
+          // was covered by a single fill, so Expat may have parsed directly
+          // from our input pointer, without allocating an internal buffer.
+        } else if (*leading < XML_CONTEXT_BYTES) {
+          assert_true(g_biggestAlloc >= *leading + (size_t)*bigtoken);
+        } else {
+          assert_true(g_biggestAlloc >= XML_CONTEXT_BYTES + (size_t)*bigtoken);
+        }
+        // fill data until the big token is actually parsed
+        while (storage.count < expected_elem_total) {
+          const size_t alloc_before = g_totalAlloc;
+          assert_true(offset + *fillsize <= document_length);
+          const enum XML_Status status
+              = XML_Parse(parser, &document[offset], *fillsize, XML_FALSE);
+          if (status != XML_STATUS_OK) {
+            xml_failure(parser);
+          }
+          offset += *fillsize;
+          // since all the bytes of the big token are already in the buffer,
+          // the bufsize ceiling should make us finish its parsing without any
+          // further buffer allocations. We assume that there will be no other
+          // large allocations in this test.
+          assert_true(g_totalAlloc - alloc_before < 4096);
+        }
+        // test-the-test: was our alloc even called?
+        assert_true(g_totalAlloc > 0);
+        // test-the-test: there shouldn't be any extra start elements
+        assert_true(storage.count == expected_elem_total);
+
+        XML_ParserFree(parser);
+      }
+    }
+  }
+  free(document);
+}
+END_TEST
+
+START_TEST(test_varying_buffer_fills) {
+  const int KiB = 1024;
+  const int MiB = 1024 * KiB;
+  const int document_length = 16 * MiB;
+  const int big = 7654321; // arbitrarily chosen between 4 and 8 MiB
+
+  if (g_chunkSize != 0) {
+    return; // this test is slow, and doesn't use _XML_Parse_SINGLE_BYTES().
+  }
+
+  char *const document = (char *)malloc(document_length);
+  assert_true(document != NULL);
+  memset(document, 'x', document_length);
+  document[0] = '<';
+  document[1] = 't';
+  memset(&document[2], ' ', big - 2); // a very spacy token
+  document[big - 1] = '>';
+
+  // Each testcase is a list of buffer fill sizes, terminated by a value < 0.
+  // When reparse deferral is enabled, the final (negated) value is the expected
+  // maximum number of bytes scanned in parse attempts.
+  const int testcases[][30] = {
+      {8 * MiB, -8 * MiB},
+      {4 * MiB, 4 * MiB, -12 * MiB}, // try at 4MB, then 8MB = 12 MB total
+      // zero-size fills shouldn't trigger the bypass
+      {4 * MiB, 0, 4 * MiB, -12 * MiB},
+      {4 * MiB, 0, 0, 4 * MiB, -12 * MiB},
+      {4 * MiB, 0, 1 * MiB, 0, 3 * MiB, -12 * MiB},
+      // try to hit the buffer ceiling only once (at the end)
+      {4 * MiB, 2 * MiB, 1 * MiB, 512 * KiB, 256 * KiB, 256 * KiB, -12 * MiB},
+      // try to hit the same buffer ceiling multiple times
+      {4 * MiB + 1, 2 * MiB, 1 * MiB, 512 * KiB, -25 * MiB},
+
+      // try to hit every ceiling, by always landing 1K shy of the buffer size
+      {1 * KiB, 2 * KiB, 4 * KiB, 8 * KiB, 16 * KiB, 32 * KiB, 64 * KiB,
+       128 * KiB, 256 * KiB, 512 * KiB, 1 * MiB, 2 * MiB, 4 * MiB, -16 * MiB},
+
+      // try to avoid every ceiling, by always landing 1B past the buffer size
+      // the normal 2x heuristic threshold still forces parse attempts.
+      {2 * KiB + 1,          // will attempt 2KiB + 1 ==> total 2KiB + 1
+       2 * KiB, 4 * KiB,     // will attempt 8KiB + 1 ==> total 10KiB + 2
+       8 * KiB, 16 * KiB,    // will attempt 32KiB + 1 ==> total 42KiB + 3
+       32 * KiB, 64 * KiB,   // will attempt 128KiB + 1 ==> total 170KiB + 4
+       128 * KiB, 256 * KiB, // will attempt 512KiB + 1 ==> total 682KiB + 5
+       512 * KiB, 1 * MiB,   // will attempt 2MiB + 1 ==> total 2M + 682K + 6
+       2 * MiB, 4 * MiB,     // will attempt 8MiB + 1 ==> total 10M + 682K + 7
+       -(10 * MiB + 682 * KiB + 7)},
+      // try to avoid every ceiling again, except on our last fill.
+      {2 * KiB + 1,          // will attempt 2KiB + 1 ==> total 2KiB + 1
+       2 * KiB, 4 * KiB,     // will attempt 8KiB + 1 ==> total 10KiB + 2
+       8 * KiB, 16 * KiB,    // will attempt 32KiB + 1 ==> total 42KiB + 3
+       32 * KiB, 64 * KiB,   // will attempt 128KiB + 1 ==> total 170KiB + 4
+       128 * KiB, 256 * KiB, // will attempt 512KiB + 1 ==> total 682KiB + 5
+       512 * KiB, 1 * MiB,   // will attempt 2MiB + 1 ==> total 2M + 682K + 6
+       2 * MiB, 4 * MiB - 1, // will attempt 8MiB ==> total 10M + 682K + 6
+       -(10 * MiB + 682 * KiB + 6)},
+
+      // try to hit ceilings on the way multiple times
+      {512 * KiB + 1, 256 * KiB, 128 * KiB, 128 * KiB - 1, // 1 MiB buffer
+       512 * KiB + 1, 256 * KiB, 128 * KiB, 128 * KiB - 1, // 2 MiB buffer
+       1 * MiB + 1, 512 * KiB, 256 * KiB, 256 * KiB - 1,   // 4 MiB buffer
+       2 * MiB + 1, 1 * MiB, 512 * KiB,                    // 8 MiB buffer
+       // we'll make a parse attempt at every parse call
+       -(45 * MiB + 12)},
+  };
+  const int testcount = sizeof(testcases) / sizeof(testcases[0]);
+  for (int test_i = 0; test_i < testcount; test_i++) {
+    const int *fillsize = testcases[test_i];
+    set_subtest("#%d {%d %d %d %d ...}", test_i, fillsize[0], fillsize[1],
+                fillsize[2], fillsize[3]);
+    XML_Parser parser = XML_ParserCreate(NULL);
+    assert_true(parser != NULL);
+    g_parseAttempts = 0;
+
+    CharData storage;
+    CharData_Init(&storage);
+    XML_SetUserData(parser, &storage);
+    XML_SetStartElementHandler(parser, start_element_event_handler);
+
+    int worstcase_bytes = 0; // sum of (buffered bytes at each XML_Parse call)
+    int scanned_bytes = 0;   // sum of (buffered bytes at each actual parse)
+    int offset = 0;
+    while (*fillsize >= 0) {
+      assert_true(offset + *fillsize <= document_length); // or test is invalid
+      const unsigned attempts_before = g_parseAttempts;
+      const enum XML_Status status
+          = XML_Parse(parser, &document[offset], *fillsize, XML_FALSE);
+      if (status != XML_STATUS_OK) {
+        xml_failure(parser);
+      }
+      offset += *fillsize;
+      fillsize++;
+      assert_true(offset <= INT_MAX - worstcase_bytes); // avoid overflow
+      worstcase_bytes += offset; // we might've tried to parse all pending bytes
+      if (g_parseAttempts != attempts_before) {
+        assert_true(g_parseAttempts == attempts_before + 1); // max 1/XML_Parse
+        assert_true(offset <= INT_MAX - scanned_bytes);      // avoid overflow
+        scanned_bytes += offset; // we *did* try to parse all pending bytes
+      }
+    }
+    assert_true(storage.count == 1); // the big token should've been parsed
+    assert_true(scanned_bytes > 0);  // test-the-test: does our counter work?
+    if (g_reparseDeferralEnabledDefault) {
+      // heuristic is enabled; some XML_Parse calls may have deferred reparsing
+      const int max_bytes_scanned = -*fillsize;
+      if (scanned_bytes > max_bytes_scanned) {
+        fprintf(stderr,
+                "bytes scanned in parse attempts: actual=%d limit=%d \n",
+                scanned_bytes, max_bytes_scanned);
+        fail("too many bytes scanned in parse attempts");
+      }
+      assert_true(scanned_bytes <= worstcase_bytes);
+    } else {
+      // heuristic is disabled; every XML_Parse() will have reparsed
+      assert_true(scanned_bytes == worstcase_bytes);
+    }
+
+    XML_ParserFree(parser);
+  }
+  free(document);
+}
+END_TEST
+
 void
 make_basic_test_case(Suite *s) {
   TCase *tc_basic = tcase_create("basic tests");
@@ -5299,6 +5945,7 @@ make_basic_test_case(Suite *s) {
   tcase_add_test(tc_basic, test_get_buffer_3_overflow);
 #endif
   tcase_add_test(tc_basic, test_buffer_can_grow_to_max);
+  tcase_add_test(tc_basic, test_getbuffer_allocates_on_zero_len);
   tcase_add_test(tc_basic, test_byte_info_at_end);
   tcase_add_test(tc_basic, test_byte_info_at_error);
   tcase_add_test(tc_basic, test_byte_info_at_cdata);
@@ -5417,4 +6064,12 @@ make_basic_test_case(Suite *s) {
   tcase_add_test__ifdef_xml_dtd(tc_basic,
                                 test_pool_integrity_with_unfinished_attr);
   tcase_add_test__if_xml_ge(tc_basic, test_nested_entity_suspend);
+  tcase_add_test(tc_basic, test_big_tokens_take_linear_time);
+  tcase_add_test(tc_basic, test_set_reparse_deferral);
+  tcase_add_test(tc_basic, test_reparse_deferral_is_inherited);
+  tcase_add_test(tc_basic, test_set_reparse_deferral_on_null_parser);
+  tcase_add_test(tc_basic, test_set_reparse_deferral_on_the_fly);
+  tcase_add_test(tc_basic, test_set_bad_reparse_option);
+  tcase_add_test(tc_basic, test_bypass_heuristic_when_close_to_bufsize);
+  tcase_add_test(tc_basic, test_varying_buffer_fills);
 }

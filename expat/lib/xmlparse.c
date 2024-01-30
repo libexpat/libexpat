@@ -89,6 +89,7 @@
 #  endif
 #endif
 
+#include <stdbool.h>
 #include <stddef.h>
 #include <string.h> /* memset(), memcpy() */
 #include <assert.h>
@@ -211,6 +212,8 @@ typedef char ICHAR;
 
 /* Do safe (NULL-aware) pointer arithmetic */
 #define EXPAT_SAFE_PTR_DIFF(p, q) (((p) && (q)) ? ((p) - (q)) : 0)
+
+#define EXPAT_MIN(a, b) (((a) < (b)) ? (a) : (b))
 
 #include "internal.h"
 #include "xmltok.h"
@@ -624,6 +627,9 @@ static unsigned long getDebugLevel(const char *variableName,
        ? 0                                                                     \
        : ((*((pool)->ptr)++ = c), 1))
 
+XML_Bool g_reparseDeferralEnabledDefault = XML_TRUE; // write ONLY in runtests.c
+unsigned int g_parseAttempts = 0;                    // used for testing only
+
 struct XML_ParserStruct {
   /* The first member must be m_userData so that the XML_GetUserData
      macro works. */
@@ -647,6 +653,9 @@ struct XML_ParserStruct {
 
   XML_Index m_parseEndByteIndex;
   const char *m_parseEndPtr;
+  size_t m_partialTokenBytesBefore; /* used in heuristic to avoid O(n^2) */
+  XML_Bool m_reparseDeferralEnabled;
+  int m_lastBufferRequestSize;
   XML_Char *m_dataBuf;
   XML_Char *m_dataBufEnd;
   XML_StartElementHandler m_startElementHandler;
@@ -978,6 +987,47 @@ get_hash_secret_salt(XML_Parser parser) {
   return parser->m_hash_secret_salt;
 }
 
+static enum XML_Error
+callProcessor(XML_Parser parser, const char *start, const char *end,
+              const char **endPtr) {
+  const size_t have_now = EXPAT_SAFE_PTR_DIFF(end, start);
+
+  if (parser->m_reparseDeferralEnabled
+      && ! parser->m_parsingStatus.finalBuffer) {
+    // Heuristic: don't try to parse a partial token again until the amount of
+    // available data has increased significantly.
+    const size_t had_before = parser->m_partialTokenBytesBefore;
+    // ...but *do* try anyway if we're close to causing a reallocation.
+    size_t available_buffer
+        = EXPAT_SAFE_PTR_DIFF(parser->m_bufferPtr, parser->m_buffer);
+#if XML_CONTEXT_BYTES > 0
+    available_buffer -= EXPAT_MIN(available_buffer, XML_CONTEXT_BYTES);
+#endif
+    available_buffer
+        += EXPAT_SAFE_PTR_DIFF(parser->m_bufferLim, parser->m_bufferEnd);
+    // m_lastBufferRequestSize is never assigned a value < 0, so the cast is ok
+    const bool enough
+        = (have_now >= 2 * had_before)
+          || ((size_t)parser->m_lastBufferRequestSize > available_buffer);
+
+    if (! enough) {
+      *endPtr = start; // callers may expect this to be set
+      return XML_ERROR_NONE;
+    }
+  }
+  g_parseAttempts += 1;
+  const enum XML_Error ret = parser->m_processor(parser, start, end, endPtr);
+  if (ret == XML_ERROR_NONE) {
+    // if we consumed nothing, remember what we had on this parse attempt.
+    if (*endPtr == start) {
+      parser->m_partialTokenBytesBefore = have_now;
+    } else {
+      parser->m_partialTokenBytesBefore = 0;
+    }
+  }
+  return ret;
+}
+
 static XML_Bool /* only valid for root parser */
 startParsing(XML_Parser parser) {
   /* hash functions must be initialized before setContext() is called */
@@ -1159,6 +1209,9 @@ parserInit(XML_Parser parser, const XML_Char *encodingName) {
   parser->m_bufferEnd = parser->m_buffer;
   parser->m_parseEndByteIndex = 0;
   parser->m_parseEndPtr = NULL;
+  parser->m_partialTokenBytesBefore = 0;
+  parser->m_reparseDeferralEnabled = g_reparseDeferralEnabledDefault;
+  parser->m_lastBufferRequestSize = 0;
   parser->m_declElementType = NULL;
   parser->m_declAttributeId = NULL;
   parser->m_declEntity = NULL;
@@ -1328,6 +1381,7 @@ XML_ExternalEntityParserCreate(XML_Parser oldParser, const XML_Char *context,
      to worry which hash secrets each table has.
   */
   unsigned long oldhash_secret_salt;
+  XML_Bool oldReparseDeferralEnabled;
 
   /* Validate the oldParser parameter before we pull everything out of it */
   if (oldParser == NULL)
@@ -1372,6 +1426,7 @@ XML_ExternalEntityParserCreate(XML_Parser oldParser, const XML_Char *context,
      to worry which hash secrets each table has.
   */
   oldhash_secret_salt = parser->m_hash_secret_salt;
+  oldReparseDeferralEnabled = parser->m_reparseDeferralEnabled;
 
 #ifdef XML_DTD
   if (! context)
@@ -1424,6 +1479,7 @@ XML_ExternalEntityParserCreate(XML_Parser oldParser, const XML_Char *context,
   parser->m_defaultExpandInternalEntities = oldDefaultExpandInternalEntities;
   parser->m_ns_triplets = oldns_triplets;
   parser->m_hash_secret_salt = oldhash_secret_salt;
+  parser->m_reparseDeferralEnabled = oldReparseDeferralEnabled;
   parser->m_parentParser = oldParser;
 #ifdef XML_DTD
   parser->m_paramEntityParsing = oldParamEntityParsing;
@@ -1878,55 +1934,8 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal) {
     parser->m_parsingStatus.parsing = XML_PARSING;
   }
 
-  if (len == 0) {
-    parser->m_parsingStatus.finalBuffer = (XML_Bool)isFinal;
-    if (! isFinal)
-      return XML_STATUS_OK;
-    parser->m_positionPtr = parser->m_bufferPtr;
-    parser->m_parseEndPtr = parser->m_bufferEnd;
-
-    /* If data are left over from last buffer, and we now know that these
-       data are the final chunk of input, then we have to check them again
-       to detect errors based on that fact.
-    */
-    parser->m_errorCode
-        = parser->m_processor(parser, parser->m_bufferPtr,
-                              parser->m_parseEndPtr, &parser->m_bufferPtr);
-
-    if (parser->m_errorCode == XML_ERROR_NONE) {
-      switch (parser->m_parsingStatus.parsing) {
-      case XML_SUSPENDED:
-        /* It is hard to be certain, but it seems that this case
-         * cannot occur.  This code is cleaning up a previous parse
-         * with no new data (since len == 0).  Changing the parsing
-         * state requires getting to execute a handler function, and
-         * there doesn't seem to be an opportunity for that while in
-         * this circumstance.
-         *
-         * Given the uncertainty, we retain the code but exclude it
-         * from coverage tests.
-         *
-         * LCOV_EXCL_START
-         */
-        XmlUpdatePosition(parser->m_encoding, parser->m_positionPtr,
-                          parser->m_bufferPtr, &parser->m_position);
-        parser->m_positionPtr = parser->m_bufferPtr;
-        return XML_STATUS_SUSPENDED;
-        /* LCOV_EXCL_STOP */
-      case XML_INITIALIZED:
-      case XML_PARSING:
-        parser->m_parsingStatus.parsing = XML_FINISHED;
-        /* fall through */
-      default:
-        return XML_STATUS_OK;
-      }
-    }
-    parser->m_eventEndPtr = parser->m_eventPtr;
-    parser->m_processor = errorProcessor;
-    return XML_STATUS_ERROR;
-  }
 #if XML_CONTEXT_BYTES == 0
-  else if (parser->m_bufferPtr == parser->m_bufferEnd) {
+  if (parser->m_bufferPtr == parser->m_bufferEnd) {
     const char *end;
     int nLeftOver;
     enum XML_Status result;
@@ -1937,12 +1946,15 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal) {
       parser->m_processor = errorProcessor;
       return XML_STATUS_ERROR;
     }
+    // though this isn't a buffer request, we assume that `len` is the app's
+    // preferred buffer fill size, and therefore save it here.
+    parser->m_lastBufferRequestSize = len;
     parser->m_parseEndByteIndex += len;
     parser->m_positionPtr = s;
     parser->m_parsingStatus.finalBuffer = (XML_Bool)isFinal;
 
     parser->m_errorCode
-        = parser->m_processor(parser, s, parser->m_parseEndPtr = s + len, &end);
+        = callProcessor(parser, s, parser->m_parseEndPtr = s + len, &end);
 
     if (parser->m_errorCode != XML_ERROR_NONE) {
       parser->m_eventEndPtr = parser->m_eventPtr;
@@ -1975,6 +1987,9 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal) {
       parser->m_parsingStatus.parsing = XML_PARSING;
       void *const temp = XML_GetBuffer(parser, nLeftOver);
       parser->m_parsingStatus.parsing = originalStatus;
+      // GetBuffer may have overwritten this, but we want to remember what the
+      // app requested, not how many bytes were left over after parsing.
+      parser->m_lastBufferRequestSize = len;
       if (temp == NULL) {
         // NOTE: parser->m_errorCode has already been set by XML_GetBuffer().
         parser->m_eventPtr = parser->m_eventEndPtr = NULL;
@@ -1996,15 +2011,14 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal) {
     return result;
   }
 #endif /* XML_CONTEXT_BYTES == 0 */
-  else {
-    void *buff = XML_GetBuffer(parser, len);
-    if (buff == NULL)
-      return XML_STATUS_ERROR;
-    else {
-      memcpy(buff, s, len);
-      return XML_ParseBuffer(parser, len, isFinal);
-    }
+  void *buff = XML_GetBuffer(parser, len);
+  if (buff == NULL)
+    return XML_STATUS_ERROR;
+  if (len > 0) {
+    assert(s != NULL); // make sure s==NULL && len!=0 was rejected above
+    memcpy(buff, s, len);
   }
+  return XML_ParseBuffer(parser, len, isFinal);
 }
 
 enum XML_Status XMLCALL
@@ -2044,8 +2058,8 @@ XML_ParseBuffer(XML_Parser parser, int len, int isFinal) {
   parser->m_parseEndByteIndex += len;
   parser->m_parsingStatus.finalBuffer = (XML_Bool)isFinal;
 
-  parser->m_errorCode = parser->m_processor(
-      parser, start, parser->m_parseEndPtr, &parser->m_bufferPtr);
+  parser->m_errorCode = callProcessor(parser, start, parser->m_parseEndPtr,
+                                      &parser->m_bufferPtr);
 
   if (parser->m_errorCode != XML_ERROR_NONE) {
     parser->m_eventEndPtr = parser->m_eventPtr;
@@ -2090,7 +2104,11 @@ XML_GetBuffer(XML_Parser parser, int len) {
   default:;
   }
 
-  if (len > EXPAT_SAFE_PTR_DIFF(parser->m_bufferLim, parser->m_bufferEnd)) {
+  // whether or not the request succeeds, `len` seems to be the app's preferred
+  // buffer fill size; remember it.
+  parser->m_lastBufferRequestSize = len;
+  if (len > EXPAT_SAFE_PTR_DIFF(parser->m_bufferLim, parser->m_bufferEnd)
+      || parser->m_buffer == NULL) {
 #if XML_CONTEXT_BYTES > 0
     int keep;
 #endif /* XML_CONTEXT_BYTES > 0 */
@@ -2113,8 +2131,9 @@ XML_GetBuffer(XML_Parser parser, int len) {
     }
     neededSize += keep;
 #endif /* XML_CONTEXT_BYTES > 0 */
-    if (neededSize
-        <= EXPAT_SAFE_PTR_DIFF(parser->m_bufferLim, parser->m_buffer)) {
+    if (parser->m_buffer && parser->m_bufferPtr
+        && neededSize
+               <= EXPAT_SAFE_PTR_DIFF(parser->m_bufferLim, parser->m_buffer)) {
 #if XML_CONTEXT_BYTES > 0
       if (keep < EXPAT_SAFE_PTR_DIFF(parser->m_bufferPtr, parser->m_buffer)) {
         int offset
@@ -2128,14 +2147,12 @@ XML_GetBuffer(XML_Parser parser, int len) {
         parser->m_bufferPtr -= offset;
       }
 #else
-      if (parser->m_buffer && parser->m_bufferPtr) {
-        memmove(parser->m_buffer, parser->m_bufferPtr,
-                EXPAT_SAFE_PTR_DIFF(parser->m_bufferEnd, parser->m_bufferPtr));
-        parser->m_bufferEnd
-            = parser->m_buffer
-              + EXPAT_SAFE_PTR_DIFF(parser->m_bufferEnd, parser->m_bufferPtr);
-        parser->m_bufferPtr = parser->m_buffer;
-      }
+      memmove(parser->m_buffer, parser->m_bufferPtr,
+              EXPAT_SAFE_PTR_DIFF(parser->m_bufferEnd, parser->m_bufferPtr));
+      parser->m_bufferEnd
+          = parser->m_buffer
+            + EXPAT_SAFE_PTR_DIFF(parser->m_bufferEnd, parser->m_bufferPtr);
+      parser->m_bufferPtr = parser->m_buffer;
 #endif /* XML_CONTEXT_BYTES > 0 */
     } else {
       char *newBuf;
@@ -2237,7 +2254,7 @@ XML_ResumeParser(XML_Parser parser) {
   }
   parser->m_parsingStatus.parsing = XML_PARSING;
 
-  parser->m_errorCode = parser->m_processor(
+  parser->m_errorCode = callProcessor(
       parser, parser->m_bufferPtr, parser->m_parseEndPtr, &parser->m_bufferPtr);
 
   if (parser->m_errorCode != XML_ERROR_NONE) {
@@ -2591,6 +2608,15 @@ XML_SetBillionLaughsAttackProtectionActivationThreshold(
   return XML_TRUE;
 }
 #endif /* XML_GE == 1 */
+
+XML_Bool XMLCALL
+XML_SetReparseDeferralEnabled(XML_Parser parser, XML_Bool enabled) {
+  if (parser != NULL && (enabled == XML_TRUE || enabled == XML_FALSE)) {
+    parser->m_reparseDeferralEnabled = enabled;
+    return XML_TRUE;
+  }
+  return XML_FALSE;
+}
 
 /* Initially tag->rawName always points into the parse buffer;
    for those TAG instances opened while the current parse buffer was
