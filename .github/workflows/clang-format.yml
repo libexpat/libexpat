@@ -35,7 +35,7 @@ on:
   schedule:
     - cron: '0 2 * * 5'  # Every Friday at 2am
   workflow_dispatch:
-    
+
 permissions:
   contents: read
 
