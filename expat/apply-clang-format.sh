@@ -29,31 +29,29 @@
 # OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 # USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-set -e
-set -u
-set -o pipefail
+set -e -u -o pipefail
 
-clang-format --version
+cd "$(dirname "$(type -P "$0")")"
 
-clang_format_args=(
+args=(
     -i
     -style=file
     -verbose
 )
 
-if [[ $# -ge 1 ]]; then
-    exec clang-format "${clang_format_args[@]}" "$@"
+if [[ $# -gt 0 ]]; then
+    files=( "$@" )
+else
+    files=( $(git ls-files -- '*.[ch]' '*.cpp' '*.cxx' '*.h.cmake') )
 fi
 
-expand --tabs=2 --initial lib/siphash.h | sponge lib/siphash.h
+set -x
 
-find . \
-        -name '*.[ch]' \
-        -o -name '*.cpp' \
-        -o -name '*.cxx' \
-        -o -name '*.h.cmake' \
-    | sort \
-    | xargs clang-format "${clang_format_args[@]}"
+type -P clang-format
+
+clang-format --version
+
+clang-format "${args[@]}" -- "${files[@]}"
 
 sed \
         -e 's, @$,@,' \
