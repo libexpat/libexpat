@@ -5853,7 +5853,7 @@ processInternalEntity(XML_Parser parser, ENTITY *entity, XML_Bool betweenDecl) {
     if (textEnd != next && parser->m_parsingStatus.parsing == XML_SUSPENDED) {
       entity->processed = (int)(next - textStart);
       parser->m_processor = internalEntityProcessor;
-    } else {
+    } else if (parser->m_openInternalEntities->entity == entity) {
 #if XML_GE == 1
       entityTrackingOnClose(parser, entity, __LINE__);
 #endif /* XML_GE == 1 */
