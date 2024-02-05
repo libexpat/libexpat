@@ -5233,12 +5233,13 @@ START_TEST(test_big_tokens_take_linear_time) {
   if (! g_reparseDeferralEnabledDefault) {
     return; // heuristic is disabled; we would get O(n^2) and fail.
   }
-#if defined(_WIN32)
+#if ! defined(__linux__)
   if (CLOCKS_PER_SEC < 100000) {
     // Skip this test if clock() doesn't have reasonably good resolution.
-    // This workaround is only applied to Windows targets, since XSI requires
-    // the value to be 1 000 000 (10x the condition here), and we want to be
-    // very sure that at least one platform in CI can catch regressions.
+    // This workaround is primarily targeting Windows and FreeBSD, since
+    // XSI requires the value to be 1.000.000 (10x the condition here), and
+    // we want to be very sure that at least one platform in CI can catch
+    // regressions (through a failing test).
     return;
   }
 #endif
