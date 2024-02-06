@@ -9,9 +9,10 @@
    Copyright (c) 2002-2004 Fred L. Drake, Jr. <fdrake@users.sourceforge.net>
    Copyright (c) 2003      Greg Stein <gstein@users.sourceforge.net>
    Copyright (c) 2016      Gilles Espinasse <g.esp@free.fr>
-   Copyright (c) 2016-2021 Sebastian Pipping <sebastian@pipping.org>
+   Copyright (c) 2016-2023 Sebastian Pipping <sebastian@pipping.org>
    Copyright (c) 2017      Joe Orton <jorton@redhat.com>
    Copyright (c) 2017      Rhodri James <rhodri@wildebeest.org.uk>
+   Copyright (c) 2022      Sean McBride <sean@rogue-research.com>
    Licensed under the MIT license:
 
    Permission is  hereby granted,  free of charge,  to any  person obtaining

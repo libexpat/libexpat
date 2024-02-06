@@ -11,11 +11,11 @@
                                  |_| XML parser
 
    Copyright (c) 2004-2006 Fred L. Drake, Jr. <fdrake@users.sourceforge.net>
-   Copyright (c) 2016-2020 Sebastian Pipping <sebastian@pipping.org>
+   Copyright (c) 2016-2023 Sebastian Pipping <sebastian@pipping.org>
    Copyright (c) 2017      Rhodri James <rhodri@wildebeest.org.uk>
    Copyright (c) 2018      Marco Maggi <marco.maggi-ipsu@poste.it>
    Copyright (c) 2019      David Loffredo <loffredo@steptools.com>
-   Copyright (c) 2023      Sony Corporation / Snild Dolkow <snild@sony.com>
+   Copyright (c) 2023-2024 Sony Corporation / Snild Dolkow <snild@sony.com>
    Licensed under the MIT license:
 
    Permission is  hereby granted,  free of charge,  to any  person obtaining

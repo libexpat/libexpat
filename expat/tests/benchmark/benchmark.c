@@ -8,7 +8,7 @@
 
    Copyright (c) 2003-2006 Karl Waclawek <karl@waclawek.net>
    Copyright (c) 2005-2007 Steven Solie <steven@solie.ca>
-   Copyright (c) 2017      Sebastian Pipping <sebastian@pipping.org>
+   Copyright (c) 2017-2023 Sebastian Pipping <sebastian@pipping.org>
    Copyright (c) 2017      Rhodri James <rhodri@wildebeest.org.uk>
    Licensed under the MIT license:
 

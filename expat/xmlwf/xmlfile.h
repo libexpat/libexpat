@@ -10,7 +10,7 @@
    Copyright (c) 2000      Clark Cooper <coopercc@users.sourceforge.net>
    Copyright (c) 2002      Fred L. Drake, Jr. <fdrake@users.sourceforge.net>
    Copyright (c) 2005      Karl Waclawek <karl@waclawek.net>
-   Copyright (c) 2016-2019 Sebastian Pipping <sebastian@pipping.org>
+   Copyright (c) 2016-2023 Sebastian Pipping <sebastian@pipping.org>
    Licensed under the MIT license:
 
    Permission is  hereby granted,  free of charge,  to any  person obtaining

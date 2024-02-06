@@ -14,8 +14,9 @@
 
    Copyright (c) 2004-2006 Fred L. Drake, Jr. <fdrake@users.sourceforge.net>
    Copyright (c) 2006-2012 Karl Waclawek <karl@waclawek.net>
-   Copyright (c) 2016-2017 Sebastian Pipping <sebastian@pipping.org>
-   Copyright (c) 2023      Sony Corporation / Snild Dolkow <snild@sony.com>
+   Copyright (c) 2016-2024 Sebastian Pipping <sebastian@pipping.org>
+   Copyright (c) 2022      Rhodri James <rhodri@wildebeest.org.uk>
+   Copyright (c) 2023-2024 Sony Corporation / Snild Dolkow <snild@sony.com>
    Licensed under the MIT license:
 
    Permission is  hereby granted,  free of charge,  to any  person obtaining

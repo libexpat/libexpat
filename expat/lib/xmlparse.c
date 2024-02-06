@@ -1,4 +1,4 @@
-/* 5ab094ffadd6edfc94c3eee53af44a86951f9f1f0933ada3114bbce2bfb02c99 (2.5.0+)
+/* 628e24d4966bedbd4800f6ed128d06d29703765b4bce12d3b7f099f90f842fc9 (2.6.0+)
                             __  __            _
                          ___\ \/ /_ __   __ _| |_
                         / _ \\  /| '_ \ / _` | __|
@@ -13,7 +13,7 @@
    Copyright (c) 2002-2016 Karl Waclawek <karl@waclawek.net>
    Copyright (c) 2005-2009 Steven Solie <steven@solie.ca>
    Copyright (c) 2016      Eric Rahm <erahm@mozilla.com>
-   Copyright (c) 2016-2022 Sebastian Pipping <sebastian@pipping.org>
+   Copyright (c) 2016-2024 Sebastian Pipping <sebastian@pipping.org>
    Copyright (c) 2016      Gaurav <g.gupta@samsung.com>
    Copyright (c) 2016      Thomas Beutlich <tc@tbeu.de>
    Copyright (c) 2016      Gustavo Grieco <gustavo.grieco@imag.fr>
@@ -36,6 +36,8 @@
    Copyright (c) 2022      Samanta Navarro <ferivoz@riseup.net>
    Copyright (c) 2022      Jeffrey Walton <noloader@gmail.com>
    Copyright (c) 2022      Jann Horn <jannh@google.com>
+   Copyright (c) 2022      Sean McBride <sean@rogue-research.com>
+   Copyright (c) 2023      Owain Davies <owaind@bath.edu>
    Copyright (c) 2023      Sony Corporation / Snild Dolkow <snild@sony.com>
    Licensed under the MIT license:
 

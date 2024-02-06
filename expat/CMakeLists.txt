@@ -7,12 +7,12 @@
 #
 # Copyright (c) 2010      Patrick Spendrin <ps_ml@gmx.de>
 # Copyright (c) 2012      Karl Waclawek <karl@waclawek.net>
-# Copyright (c) 2016-2022 Sebastian Pipping <sebastian@pipping.org>
+# Copyright (c) 2016-2024 Sebastian Pipping <sebastian@pipping.org>
 # Copyright (c) 2016      Sergei Nikulov <sergey.nikulov@gmail.com>
 # Copyright (c) 2016      Björn Lindahl <bjorn.lindahl@foi.se>
 # Copyright (c) 2016      Tobias Taschner <github@tc84.de>
 # Copyright (c) 2016      Ben Boeckel <ben.boeckel@kitware.com>
-# Copyright (c) 2017      Rhodri James <rhodri@wildebeest.org.uk>
+# Copyright (c) 2017-2022 Rhodri James <rhodri@wildebeest.org.uk>
 # Copyright (c) 2017      Rolf Eike Beer <eike@sf-mail.de>
 # Copyright (c) 2017      Stephen Groat <stephen@groat.us>
 # Copyright (c) 2017      Franek Korta <fkorta@gmail.com>
@@ -38,7 +38,7 @@ cmake_minimum_required(VERSION 3.5.0)
 
 project(expat
     VERSION
-        2.5.0
+        2.6.0
     LANGUAGES
         C
 )
@@ -465,9 +465,9 @@ foreach(build_type_upper
     set_property(TARGET expat PROPERTY ${build_type_upper}_POSTFIX ${EXPAT_${build_type_upper}_POSTFIX})
 endforeach()
 
-set(LIBCURRENT 9)    # sync
-set(LIBREVISION 10)  # with
-set(LIBAGE 8)        # configure.ac!
+set(LIBCURRENT 10)  # sync
+set(LIBREVISION 0)  # with
+set(LIBAGE 9)       # configure.ac!
 math(EXPR LIBCURRENT_MINUS_AGE "${LIBCURRENT} - ${LIBAGE}")
 
 if(NOT WIN32)
