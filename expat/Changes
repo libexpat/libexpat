@@ -6,6 +6,7 @@ Release 2.5.1 xxx xxxxxxx xx xxxx
         Other changes:
             #673  examples: Add new example "element_declarations.c"
   #678 #706 #733  Autotools: Sync CMake templates with CMake 3.25
+            #565  Replace some loops by memcmp, memcpy, strlen, wcslen
 
         Infrastructure:
        #698 #721  CI: Resolve some Travis CI leftovers
