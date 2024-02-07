@@ -68,6 +68,7 @@ cmakedir = $(libdir)/cmake/expat-@PACKAGE_VERSION@
 
 
 _EXTRA_DIST_CMAKE = \
+    cmake/autotools/expat-noconfig__haiku.cmake.in \
     cmake/autotools/expat-noconfig__linux.cmake.in \
     cmake/autotools/expat-noconfig__macos.cmake.in \
     cmake/autotools/expat-noconfig__windows.cmake.in \

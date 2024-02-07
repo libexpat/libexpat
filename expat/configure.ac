@@ -425,6 +425,7 @@ AC_SUBST([CMAKE_SHARED_LIBRARY_PREFIX])
 AS_CASE("${host_os}",
   [darwin*], [CMAKE_NOCONFIG_SOURCE=cmake/autotools/expat-noconfig__macos.cmake.in],
   [mingw*|cygwin*], [CMAKE_NOCONFIG_SOURCE=cmake/autotools/expat-noconfig__windows.cmake.in],
+  [haiku*], [CMAKE_NOCONFIG_SOURCE=cmake/autotools/expat-noconfig__haiku.cmake.in],
   [CMAKE_NOCONFIG_SOURCE=cmake/autotools/expat-noconfig__linux.cmake.in])
 AC_CONFIG_FILES([Makefile]
   [expat.pc]
