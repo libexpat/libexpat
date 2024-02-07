@@ -303,4 +303,7 @@ EXPAT_WITH_GETRANDOM:STRING=AUTO
 
 // Make use of syscall SYS_getrandom (ON|OFF|AUTO) [default=AUTO]
 EXPAT_WITH_SYS_GETRANDOM:STRING=AUTO
+
+// Make use of getentropy function (ON|OFF|AUTO) [default=AUTO]
+EXPAT_WITH_GETENTROPY:STRING=AUTO
 ```
