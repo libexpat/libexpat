@@ -290,6 +290,19 @@ AS_IF([test "x$with_sys_getrandom" != xno],
       AS_IF([test "x$with_sys_getrandom" = xyes],
         [AC_MSG_ERROR([enforced the use of syscall SYS_getrandom --with-sys-getrandom, but not detected])])])])
 
+AC_ARG_WITH([getentropy],
+  [AS_HELP_STRING([--with-getentropy],
+                  [enforce the use of getentropy function in the system @<:@default=check@:>@])
+AS_HELP_STRING([--without-getentropy],
+               [skip auto detect of getentropy @<:@default=check@:>@])],
+  [],
+  [with_getentropy=check])
+
+AS_IF([test "x$with_getentropy" != xno],
+  [AC_CHECK_FUNCS([getentropy],,
+     [AS_IF([test "x$with_getentropy" = xyes],
+        [AC_MSG_ERROR([enforced the use of getentropy --with-getentropy, but not detected])])])])
+
 dnl Only needed for xmlwf:
 AC_CHECK_HEADERS(fcntl.h unistd.h)
 AC_TYPE_OFF_T

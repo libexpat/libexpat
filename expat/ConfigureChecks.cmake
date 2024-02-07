@@ -6,6 +6,10 @@ include(CheckLibraryExists)
 include(CheckSymbolExists)
 include(TestBigEndian)
 
+if(CYGWIN OR CMAKE_SYSTEM_NAME STREQUAL "Linux" OR CMAKE_SYSTEM_NAME STREQUAL "GNU")
+  list(APPEND CMAKE_REQUIRED_DEFINITIONS "-D_GNU_SOURCE")  # Apply to all feature checks
+endif()
+
 check_include_file("dlfcn.h" HAVE_DLFCN_H)
 check_include_file("fcntl.h" HAVE_FCNTL_H)
 check_include_file("inttypes.h" HAVE_INTTYPES_H)
@@ -21,6 +25,7 @@ check_include_file("unistd.h" HAVE_UNISTD_H)
 check_symbol_exists("getpagesize" "unistd.h" HAVE_GETPAGESIZE)
 check_symbol_exists("mmap" "sys/mman.h" HAVE_MMAP)
 check_symbol_exists("getrandom" "sys/random.h" HAVE_GETRANDOM)
+check_symbol_exists("getentropy" "unistd.h" HAVE_GETENTROPY)
 
 check_symbol_exists("arc4random_buf" "stdlib.h" HAVE_ARC4RANDOM_BUF)
 if(NOT HAVE_ARC4RANDOM_BUF)
