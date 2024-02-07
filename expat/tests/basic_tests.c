@@ -5774,19 +5774,17 @@ START_TEST(test_varying_buffer_fills) {
                 fillsize[2], fillsize[3]);
     XML_Parser parser = XML_ParserCreate(NULL);
     assert_true(parser != NULL);
-    g_parseAttempts = 0;
 
     CharData storage;
     CharData_Init(&storage);
     XML_SetUserData(parser, &storage);
     XML_SetStartElementHandler(parser, start_element_event_handler);
 
+    g_bytesScanned = 0;
     int worstcase_bytes = 0; // sum of (buffered bytes at each XML_Parse call)
-    int scanned_bytes = 0;   // sum of (buffered bytes at each actual parse)
     int offset = 0;
     while (*fillsize >= 0) {
       assert_true(offset + *fillsize <= document_length); // or test is invalid
-      const unsigned attempts_before = g_parseAttempts;
       const enum XML_Status status
           = XML_Parse(parser, &document[offset], *fillsize, XML_FALSE);
       if (status != XML_STATUS_OK) {
@@ -5796,28 +5794,20 @@ START_TEST(test_varying_buffer_fills) {
       fillsize++;
       assert_true(offset <= INT_MAX - worstcase_bytes); // avoid overflow
       worstcase_bytes += offset; // we might've tried to parse all pending bytes
-      if (g_parseAttempts != attempts_before) {
-        assert_true(g_parseAttempts == attempts_before + 1); // max 1/XML_Parse
-        assert_true(offset <= INT_MAX - scanned_bytes);      // avoid overflow
-        scanned_bytes += offset; // we *did* try to parse all pending bytes
-      }
     }
     assert_true(storage.count == 1); // the big token should've been parsed
-    assert_true(scanned_bytes > 0);  // test-the-test: does our counter work?
+    assert_true(g_bytesScanned > 0); // test-the-test: does our counter work?
     if (g_reparseDeferralEnabledDefault) {
       // heuristic is enabled; some XML_Parse calls may have deferred reparsing
-      const int max_bytes_scanned = -*fillsize;
-      if (scanned_bytes > max_bytes_scanned) {
+      const unsigned max_bytes_scanned = -*fillsize;
+      if (g_bytesScanned > max_bytes_scanned) {
         fprintf(stderr,
-                "bytes scanned in parse attempts: actual=%d limit=%d \n",
-                scanned_bytes, max_bytes_scanned);
+                "bytes scanned in parse attempts: actual=%u limit=%u \n",
+                g_bytesScanned, max_bytes_scanned);
         fail("too many bytes scanned in parse attempts");
       }
-      assert_true(scanned_bytes <= worstcase_bytes);
-    } else {
-      // heuristic is disabled; every XML_Parse() will have reparsed
-      assert_true(scanned_bytes == worstcase_bytes);
     }
+    assert_true(g_bytesScanned <= (unsigned)worstcase_bytes);
 
     XML_ParserFree(parser);
   }

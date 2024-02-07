@@ -38,7 +38,7 @@
    Copyright (c) 2022      Jann Horn <jannh@google.com>
    Copyright (c) 2022      Sean McBride <sean@rogue-research.com>
    Copyright (c) 2023      Owain Davies <owaind@bath.edu>
-   Copyright (c) 2023      Sony Corporation / Snild Dolkow <snild@sony.com>
+   Copyright (c) 2023-2024 Sony Corporation / Snild Dolkow <snild@sony.com>
    Licensed under the MIT license:
 
    Permission is  hereby granted,  free of charge,  to any  person obtaining
@@ -630,7 +630,7 @@ static unsigned long getDebugLevel(const char *variableName,
        : ((*((pool)->ptr)++ = c), 1))
 
 XML_Bool g_reparseDeferralEnabledDefault = XML_TRUE; // write ONLY in runtests.c
-unsigned int g_parseAttempts = 0;                    // used for testing only
+unsigned int g_bytesScanned = 0;                     // used for testing only
 
 struct XML_ParserStruct {
   /* The first member must be m_userData so that the XML_GetUserData
@@ -1017,7 +1017,7 @@ callProcessor(XML_Parser parser, const char *start, const char *end,
       return XML_ERROR_NONE;
     }
   }
-  g_parseAttempts += 1;
+  g_bytesScanned += (unsigned)have_now;
   const enum XML_Error ret = parser->m_processor(parser, start, end, endPtr);
   if (ret == XML_ERROR_NONE) {
     // if we consumed nothing, remember what we had on this parse attempt.
