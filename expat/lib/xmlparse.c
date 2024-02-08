@@ -210,7 +210,7 @@ typedef char ICHAR;
 #endif
 
 /* Round up n to be a multiple of sz, where sz is a power of 2. */
-#define ROUND_UP(n, sz) (((n) + ((sz)-1)) & ~((sz)-1))
+#define ROUND_UP(n, sz) (((n) + ((sz) - 1)) & ~((sz) - 1))
 
 /* Do safe (NULL-aware) pointer arithmetic */
 #define EXPAT_SAFE_PTR_DIFF(p, q) (((p) && (q)) ? ((p) - (q)) : 0)
@@ -248,7 +248,7 @@ static void copy_salt_to_sipkey(XML_Parser parser, struct sipkey *key);
    it odd, since odd numbers are always relative prime to a power of 2.
 */
 #define SECOND_HASH(hash, mask, power)                                         \
-  ((((hash) & ~(mask)) >> ((power)-1)) & ((mask) >> 2))
+  ((((hash) & ~(mask)) >> ((power) - 1)) & ((mask) >> 2))
 #define PROBE_STEP(hash, mask, power)                                          \
   ((unsigned char)((SECOND_HASH(hash, mask, power)) | 1))
 
