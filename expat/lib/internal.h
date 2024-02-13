@@ -31,7 +31,7 @@
    Copyright (c) 2016-2023 Sebastian Pipping <sebastian@pipping.org>
    Copyright (c) 2018      Yury Gribov <tetra2005@gmail.com>
    Copyright (c) 2019      David Loffredo <loffredo@steptools.com>
-   Copyright (c) 2023      Sony Corporation / Snild Dolkow <snild@sony.com>
+   Copyright (c) 2023-2024 Sony Corporation / Snild Dolkow <snild@sony.com>
    Licensed under the MIT license:
 
    Permission is  hereby granted,  free of charge,  to any  person obtaining
@@ -162,7 +162,7 @@ const char *unsignedCharToPrintable(unsigned char c);
 #endif
 
 extern XML_Bool g_reparseDeferralEnabledDefault; // written ONLY in runtests.c
-extern unsigned int g_parseAttempts;             // used for testing only
+extern unsigned int g_bytesScanned;              // used for testing only
 
 #ifdef __cplusplus
 }
