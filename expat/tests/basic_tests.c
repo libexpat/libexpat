@@ -5234,7 +5234,8 @@ START_TEST(test_big_tokens_scale_linearly) {
     set_subtest("text=\"%saaaaaa%s\"", text[i].pre, text[i].post);
 
     // parse the start text
-    g_bytesScanned = 0;
+    unsigned int bytes_scanned = 0;
+    g_bytesScanned = &bytes_scanned;
     status = _XML_Parse_SINGLE_BYTES(parser, text[i].pre,
                                      (int)strlen(text[i].pre), XML_FALSE);
     if (status != XML_STATUS_OK) {
@@ -5248,7 +5249,7 @@ START_TEST(test_big_tokens_scale_linearly) {
       if (status != XML_STATUS_OK) {
         xml_failure(parser);
       }
-      if (g_bytesScanned > max_scanned) {
+      if (bytes_scanned > max_scanned) {
         // We're not done, and have already passed the limit -- the test will
         // definitely fail. This block allows us to save time by failing early.
         const unsigned pushed
@@ -5256,8 +5257,8 @@ START_TEST(test_big_tokens_scale_linearly) {
         fprintf(
             stderr,
             "after %d/%d loops: pushed=%u scanned=%u (factor ~%.2f) max_scanned: %u (factor ~%u)\n",
-            f + 1, fillcount, pushed, g_bytesScanned,
-            g_bytesScanned / (double)pushed, max_scanned, max_factor);
+            f + 1, fillcount, pushed, bytes_scanned,
+            bytes_scanned / (double)pushed, max_scanned, max_factor);
         past_max_count++;
         // We are failing, but allow a few log prints first. If we don't reach
         // a count of five, the test will fail after the loop instead.
@@ -5272,17 +5273,18 @@ START_TEST(test_big_tokens_scale_linearly) {
       xml_failure(parser);
     }
 
-    assert_true(g_bytesScanned > approx_bytes); // or the counter isn't working
-    if (g_bytesScanned > max_scanned) {
+    assert_true(bytes_scanned > approx_bytes); // or the counter isn't working
+    if (bytes_scanned > max_scanned) {
       fprintf(
           stderr,
           "after all input: scanned=%u (factor ~%.2f) max_scanned: %u (factor ~%u)\n",
-          g_bytesScanned, g_bytesScanned / (double)approx_bytes, max_scanned,
+          bytes_scanned, bytes_scanned / (double)approx_bytes, max_scanned,
           max_factor);
       fail("scanned too many bytes");
     }
 
     XML_ParserFree(parser);
+    g_bytesScanned = NULL;
   }
 }
 END_TEST
@@ -5762,7 +5764,8 @@ START_TEST(test_varying_buffer_fills) {
     XML_SetUserData(parser, &storage);
     XML_SetStartElementHandler(parser, start_element_event_handler);
 
-    g_bytesScanned = 0;
+    unsigned int bytes_scanned = 0;
+    g_bytesScanned = &bytes_scanned;
     int worstcase_bytes = 0; // sum of (buffered bytes at each XML_Parse call)
     int offset = 0;
     while (*fillsize >= 0) {
@@ -5778,20 +5781,21 @@ START_TEST(test_varying_buffer_fills) {
       worstcase_bytes += offset; // we might've tried to parse all pending bytes
     }
     assert_true(storage.count == 1); // the big token should've been parsed
-    assert_true(g_bytesScanned > 0); // test-the-test: does our counter work?
+    assert_true(bytes_scanned > 0); // test-the-test: does our counter work?
     if (g_reparseDeferralEnabledDefault) {
       // heuristic is enabled; some XML_Parse calls may have deferred reparsing
       const unsigned max_bytes_scanned = -*fillsize;
-      if (g_bytesScanned > max_bytes_scanned) {
+      if (bytes_scanned > max_bytes_scanned) {
         fprintf(stderr,
                 "bytes scanned in parse attempts: actual=%u limit=%u \n",
-                g_bytesScanned, max_bytes_scanned);
+                bytes_scanned, max_bytes_scanned);
         fail("too many bytes scanned in parse attempts");
       }
     }
-    assert_true(g_bytesScanned <= (unsigned)worstcase_bytes);
+    assert_true(bytes_scanned <= (unsigned)worstcase_bytes);
 
     XML_ParserFree(parser);
+    g_bytesScanned = NULL;
   }
   free(document);
 }
