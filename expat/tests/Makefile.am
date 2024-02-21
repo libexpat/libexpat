@@ -32,7 +32,7 @@
 
 SUBDIRS = . benchmark
 
-AM_CPPFLAGS = @AM_CPPFLAGS@ -I$(srcdir)/../lib
+AM_CPPFLAGS = @AM_CPPFLAGS@ -I$(srcdir)/../lib -DXML_TESTING
 
 check_PROGRAMS = runtests runtests_cxx
 TESTS = runtests runtests_cxx

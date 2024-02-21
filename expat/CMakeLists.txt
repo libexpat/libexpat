@@ -676,6 +676,8 @@ if(EXPAT_BUILD_TESTS)
     )
 
     foreach(_target ${_EXPAT_TEST_TARGETS})
+        target_compile_definitions(${_target} PRIVATE -DXML_TESTING)
+
         set_property(TARGET ${_target} PROPERTY RUNTIME_OUTPUT_DIRECTORY tests)
         expat_add_test(${_target} $<TARGET_FILE:${_target}>)
 

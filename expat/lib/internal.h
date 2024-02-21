@@ -161,8 +161,14 @@ unsigned long long testingAccountingGetCountBytesIndirect(XML_Parser parser);
 const char *unsignedCharToPrintable(unsigned char c);
 #endif
 
-extern XML_Bool g_reparseDeferralEnabledDefault; // written ONLY in runtests.c
-extern unsigned int g_bytesScanned;              // used for testing only
+extern
+#if ! defined(XML_TESTING)
+    const
+#endif
+    XML_Bool g_reparseDeferralEnabledDefault; // written ONLY in runtests.c
+#if defined(XML_TESTING)
+extern unsigned int g_bytesScanned; // used for testing only
+#endif
 
 #ifdef __cplusplus
 }

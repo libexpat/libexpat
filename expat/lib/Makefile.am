@@ -52,6 +52,8 @@ libexpat_la_SOURCES = \
     xmlrole.c
 
 if WITH_TESTS
+libtestpat_la_CPPFLAGS = -DXML_TESTING
+
 libtestpat_la_SOURCES = $(libexpat_la_SOURCES)
 endif
 
