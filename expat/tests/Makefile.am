@@ -32,7 +32,7 @@
 
 SUBDIRS = . benchmark
 
-AM_CPPFLAGS = @AM_CPPFLAGS@ -I$(srcdir)/../lib
+AM_CPPFLAGS = @AM_CPPFLAGS@ -I$(srcdir)/../lib -DXML_TESTING
 
 check_PROGRAMS = runtests runtests_cxx
 TESTS = runtests runtests_cxx
@@ -72,8 +72,8 @@ runtests_cxx_SOURCES = \
     runtests_cxx.cpp \
     structdata_cxx.cpp
 
-runtests_LDADD = ../lib/libexpatinternal.la
-runtests_cxx_LDADD = ../lib/libexpatinternal.la
+runtests_LDADD = ../lib/libtestpat.la
+runtests_cxx_LDADD = ../lib/libtestpat.la
 
 runtests_LDFLAGS = @AM_LDFLAGS@ @LIBM@
 runtests_cxx_LDFLAGS = @AM_LDFLAGS@ @LIBM@

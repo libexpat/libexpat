@@ -68,6 +68,7 @@ flags=(
     -DXML_DTD
     -DXML_GE
     -DXML_NS
+    -DXML_TESTING
 )
 
 if [[ $# -gt 0 ]]; then
