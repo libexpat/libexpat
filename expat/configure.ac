@@ -418,6 +418,14 @@ AC_SUBST([SO_MINOR])
 AC_SUBST([SO_PATCH])
 AC_SUBST([ac_cv_sizeof_void_p])
 
+dnl Protect against generating an expat_config.h that would break multilib
+AS_IF([grep -F -q SIZEOF_VOID_P "${srcdir}"/expat_config.h.in],
+  [AC_MSG_ERROR(
+    [Plain autoreconf/autoheader does not cut it,
+                  please use ./buildconf.sh or imitate its effect
+                  through other means, so that file expat_config.h.in
+                  no longer defines macro SIZEOF_VOID_P, as that would
+                  break multilib support.  Thank you.])])
 
 dnl write the Automake flags we set
 AC_SUBST([AM_CPPFLAGS])
