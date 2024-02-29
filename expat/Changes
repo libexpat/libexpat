@@ -11,6 +11,8 @@ Release 2.6.1 Thu February 29 2024
         Other changes:
             #829  Hide test-only code behind new internal macro
             #833  Autotools: Reject expat_config.h.in defining SIZEOF_VOID_P
+       #821 #824  Autotools: Fix "make clean" for case:
+                    ./configure --without-docbook && make clean all
             #819  Address compiler warnings
        #832 #834  Version info bumped from 10:0:9 (libexpat*.so.1.9.0)
                     to 10:1:9 (libexpat*.so.1.9.1); see https://verbump.de/
