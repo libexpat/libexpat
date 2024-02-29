@@ -18,6 +18,7 @@
    Copyright (c) 2022      Thijs Schreijer <thijs@thijsschreijer.nl>
    Copyright (c) 2023      Hanno Böck <hanno@gentoo.org>
    Copyright (c) 2023      Sony Corporation / Snild Dolkow <snild@sony.com>
+   Copyright (c) 2024      Taichi Haradaguchi <20001722@ymail.ne.jp>
    Licensed under the MIT license:
 
    Permission is  hereby granted,  free of charge,  to any  person obtaining
@@ -1065,7 +1066,7 @@ XML_SetReparseDeferralEnabled(XML_Parser parser, XML_Bool enabled);
 */
 #define XML_MAJOR_VERSION 2
 #define XML_MINOR_VERSION 6
-#define XML_MICRO_VERSION 0
+#define XML_MICRO_VERSION 1
 
 #ifdef __cplusplus
 }
