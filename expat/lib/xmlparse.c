@@ -6240,7 +6240,7 @@ storeEntityValue(XML_Parser parser, const ENCODING *enc,
           dtd->keepProcessing = dtd->standalone;
           goto endEntityValue;
         }
-        if (entity->open) {
+        if (entity->open || (entity == parser->m_declEntity)) {
           if (enc == parser->m_encoding)
             parser->m_eventPtr = entityTextPtr;
           result = XML_ERROR_RECURSIVE_ENTITY_REF;
