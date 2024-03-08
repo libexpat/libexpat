@@ -2,6 +2,28 @@ NOTE: We are looking for help with a few things:
       https://github.com/libexpat/libexpat/labels/help%20wanted
       If you can help, please get in touch.  Thanks!
 
+Release 2.6.2 XXX XXXXXXXXXX XX XXXX
+        Security fixes:
+       #839 #842  CVE-2024-28757 -- Prevent billion laughs attacks with
+                    isolated use of external parsers.  Please see the commit
+                    message of commit 1d50b80cf31de87750103656f6eb693746854aa8
+                    for details.
+
+        Bug fixes:
+       #839 #841  Reject direct parameter entity recursion
+                    and avoid the related undefined behavior
+
+        Other changes:
+            #847  Autotools: Fix build for DOCBOOK_TO_MAN containing spaces
+            #837  Add missing #821 and #824 to 2.6.1 change log
+
+        Special thanks to:
+            Philippe Antoine
+            Tomas Korbar
+                 and
+            Clang UndefinedBehaviorSanitizer
+            OSS-Fuzz / ClusterFuzz
+
 Release 2.6.1 Thu February 29 2024
         Bug fixes:
             #817  Make tests independent of CPU speed, and thus more robust
