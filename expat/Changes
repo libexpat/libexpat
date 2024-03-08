@@ -16,6 +16,9 @@ Release 2.6.2 XXX XXXXXXXXXX XX XXXX
         Other changes:
             #847  Autotools: Fix build for DOCBOOK_TO_MAN containing spaces
             #837  Add missing #821 and #824 to 2.6.1 change log
+       #838 #843  Version info bumped from 10:1:9 (libexpat*.so.1.9.1)
+                    to 10:2:9 (libexpat*.so.1.9.2); see https://verbump.de/
+                    for what these numbers do
 
         Special thanks to:
             Philippe Antoine
