@@ -1,6 +1,34 @@
-NOTE: We are looking for help with a few things:
-      https://github.com/libexpat/libexpat/labels/help%20wanted
-      If you can help, please get in touch.  Thanks!
+                           __  __            _
+                        ___\ \/ /_ __   __ _| |_
+                       / _ \\  /| '_ \ / _` | __|
+                      |  __//  \| |_) | (_| | |_
+                       \___/_/\_\ .__/ \__,_|\__|
+                                |_| XML parser
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!! <blink>Expat is UNDERSTAFFED and WITHOUT FUNDING.</blink>                 !!
+!!                 ~~~~~~~~~~~~                                              !!
+!! The following topics need *additional skilled C developers* to progress   !!
+!! in a timely manner or at all (loosely ordered by descending priority):    !!
+!!                                                                           !!
+!! - <blink>fixing a complex non-public security issue</blink>,              !!
+!! - teaming up on researching and fixing future security reports and        !!
+!!   ClusterFuzz findings with few-days-max response times in communication  !!
+!!   in order to (1) have a sound fix ready before the end of a 90 days      !!
+!!   grace period and (2) in a sustainable manner,                           !!
+!! - implementing and auto-testing XML 1.0r5 support                         !!
+!!   (needs discussion before pull requests),                                !!
+!! - smart ideas on fixing the Autotools CMake files generation issue        !!
+!!   without breaking CI (needs discussion before pull requests),            !!
+!! - the Windows binaries topic (needs requirements engineering first),      !!
+!! - pushing migration from `int` to `size_t` further                        !!
+!!   including edge-cases test coverage (needs discussion before anything).  !!
+!!                                                                           !!
+!! For details, please reach out via e-mail to sebastian@pipping.org so we   !!
+!! can schedule a voice call on the topic, in English or German.             !!
+!!                                                                           !!
+!! THANK YOU!                        Sebastian Pipping -- Berlin, 2024-03-09 !!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 Release 2.6.2 Wed March 13 2024
         Security fixes:
