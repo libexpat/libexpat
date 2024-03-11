@@ -419,7 +419,7 @@ AC_SUBST([SO_PATCH])
 AC_SUBST([ac_cv_sizeof_void_p])
 
 dnl Protect against generating an expat_config.h that would break multilib
-AS_IF([grep -F -q SIZEOF_VOID_P "${srcdir}"/expat_config.h.in],
+AS_IF([grep -q "#define.*SIZEOF_VOID_P" "${srcdir}"/expat_config.h.in],
   [AC_MSG_ERROR(
     [Plain autoreconf/autoheader does not cut it,
                   please use ./buildconf.sh or imitate its effect
