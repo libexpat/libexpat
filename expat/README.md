@@ -20,7 +20,7 @@ Expat supports the following compilers:
 
 - GNU GCC >=4.5
 - LLVM Clang >=3.5
-- Microsoft Visual Studio >=15.0/2017 (rolling `${today} minus 5 years`)
+- Microsoft Visual Studio >=16.0/2019 (rolling `${today} minus 5 years`)
 
 Windows users can use the
 [`expat-win32bin-*.*.*.{exe,zip}` download](https://github.com/libexpat/libexpat/releases),

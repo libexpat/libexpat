@@ -52,32 +52,6 @@ configuration: Debug
 # https://cmake.org/cmake/help/latest/manual/cmake-generators.7.html#visual-studio-generators
 environment:
   matrix:
-    # Visual Studio 2017 Win32
-    - GENERATOR: Visual Studio 15 2017
-      PLATFORM: Win32
-      EXPAT_DLL: libexpatd.dll
-      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-
-    # Visual Studio 2017 Win32 XML_UNICODE_WCHAR_T
-    - GENERATOR: Visual Studio 15 2017
-      PLATFORM: Win32
-      CMAKE_ARGS: -DEXPAT_CHAR_TYPE=wchar_t
-      EXPAT_DLL: libexpatwd.dll
-      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-
-    # Visual Studio 2017 x64
-    - GENERATOR: Visual Studio 15 2017 Win64
-      PLATFORM: x64
-      EXPAT_DLL: libexpatd.dll
-      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-
-    # Visual Studio 2017 x64 XML_UNICODE_WCHAR_T
-    - GENERATOR: Visual Studio 15 2017 Win64
-      PLATFORM: x64
-      CMAKE_ARGS: -DEXPAT_CHAR_TYPE=wchar_t
-      EXPAT_DLL: libexpatwd.dll
-      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-
     # Visual Studio 2019 Win32
     - GENERATOR: Visual Studio 16 2019
       PLATFORM: Win32
