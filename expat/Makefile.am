@@ -114,7 +114,7 @@ buildlib:
 	@echo 'ERROR: is no longer supported.  INSTEAD please:' >&2
 	@echo 'ERROR:' >&2
 	@echo 'ERROR:  * Mass-patch Makefile.am, e.g.' >&2
-	@echo 'ERROR:    # find -name Makefile.am -exec sed \' >&2
+	@echo 'ERROR:    # find . -name Makefile.am -exec sed \' >&2
 	@echo 'ERROR:          -e "s,libexpat\.la,libexpatw.la," \' >&2
 	@echo 'ERROR:          -e "s,libexpat_la,libexpatw_la," \' >&2
 	@echo 'ERROR:          -i {} +' >&2

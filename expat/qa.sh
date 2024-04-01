@@ -192,7 +192,7 @@ run_processor() {
         local DOT_FORMAT="${DOT_FORMAT:-svg}"
         local o="callgraph.${DOT_FORMAT}"
         ANNOUNCE "egypt ...... | dot ...... > ${o}"
-        find -name '*.expand' \
+        find . -name '*.expand' \
                 | sort \
                 | xargs -r egypt \
                 | unflatten -c 20 \
@@ -209,7 +209,7 @@ run_processor() {
         )
         done
 
-        RUN find -name '*.gcov' | sort
+        RUN find . -name '*.gcov' | sort
         ;;
     esac
 }
