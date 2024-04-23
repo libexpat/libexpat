@@ -92,7 +92,7 @@ EXTRA_DIST = \
     structdata.h \
     minicheck.h \
     memcheck.h \
-    README.txt \
+    README.md \
     udiffer.py \
     xmltest.log.expected \
     xmltest.sh
