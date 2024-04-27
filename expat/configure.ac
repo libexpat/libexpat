@@ -274,6 +274,7 @@ AS_HELP_STRING([--without-sys-getrandom],
 AS_IF([test "x$with_sys_getrandom" != xno],
   [AC_MSG_CHECKING([for syscall SYS_getrandom (Linux 3.17+)])
    AC_LINK_IFELSE([AC_LANG_SOURCE([
+       #define _GNU_SOURCE
        #include <stdlib.h>  /* for NULL */
        #include <unistd.h>  /* for syscall */
        #include <sys/syscall.h>  /* for SYS_getrandom */
