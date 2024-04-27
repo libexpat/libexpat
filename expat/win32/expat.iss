@@ -96,7 +96,7 @@ Flags: ignoreversion; Source: examples\*.c;                 DestDir: "{app}\Sour
 Flags: ignoreversion; Source: tests\*.c;                    DestDir: "{app}\Source\tests"
 Flags: ignoreversion; Source: tests\*.cpp;                  DestDir: "{app}\Source\tests"
 Flags: ignoreversion; Source: tests\*.h;                    DestDir: "{app}\Source\tests"
-Flags: ignoreversion; Source: tests\README.txt;             DestDir: "{app}\Source\tests"
+Flags: ignoreversion; Source: tests\README.md;              DestDir: "{app}\Source\tests"
 Flags: ignoreversion; Source: tests\benchmark\*.c;          DestDir: "{app}\Source\tests\benchmark"
 Flags: ignoreversion; Source: tests\benchmark\README.txt;   DestDir: "{app}\Source\tests\benchmark"
 Flags: ignoreversion; Source: xmlwf\*.c*;                   DestDir: "{app}\Source\xmlwf"
