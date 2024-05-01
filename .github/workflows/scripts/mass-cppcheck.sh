@@ -39,6 +39,7 @@ for xml_context_bytes in 0 1024; do
             --quiet
             --error-exitcode=1
             --force
+            --check-level=exhaustive
             --suppress=objectIndex
             --suppress=unknownMacro
             -DXML_CONTEXT_BYTES=${xml_context_bytes}
