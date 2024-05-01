@@ -60,6 +60,7 @@ if(NOT HAVE_OFF_T)
 endif()
 
 check_c_source_compiles("
+        #define _GNU_SOURCE
         #include <stdlib.h>  /* for NULL */
         #include <unistd.h>  /* for syscall */
         #include <sys/syscall.h>  /* for SYS_getrandom */
