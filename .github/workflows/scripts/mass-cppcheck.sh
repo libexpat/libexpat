@@ -31,13 +31,7 @@
 PS4='# '
 set -e -u -o pipefail -x
 
-if [[ "$(uname -s)" =~ ^Darwin ]]; then
-    export PATH="/usr/local/opt/findutils/libexec/gnubin${PATH:+:}${PATH}"
-fi
-
 cppcheck --version
-
-find --version | head -n1
 
 for xml_context_bytes in 0 1024; do
     for xml_ge in 0 1; do
@@ -63,6 +57,6 @@ for xml_context_bytes in 0 1024; do
             -exec cppcheck "${cppcheck_args[@]}" {} +
         )
 
-        time find "${find_args[@]}"
+        time find . "${find_args[@]}"
     done
 done

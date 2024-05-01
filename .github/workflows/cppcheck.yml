@@ -48,7 +48,7 @@ jobs:
     - uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b  # v4.1.4
     - name: Install runtime dependencies
       run: |
-        exec brew install cppcheck findutils
+        exec brew install cppcheck
     - name: Run Cppcheck
       run: |
         exec .github/workflows/scripts/mass-cppcheck.sh
