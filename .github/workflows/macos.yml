@@ -45,15 +45,13 @@ jobs:
     name: Perform checks
     strategy:
       matrix:
+        os: [macos-12, macos-14]
         include:
-          # NOTE: This is a quick port from .travis.yml in reaction to
-          #       Homebrew issues at Travis CI.  While we have the matrix
-          #       in two places, please keep the two files in sync.  Thank you!
           - MODE: cmake-oos
           - MODE: distcheck
           - MODE: qa-sh
             FLAT_ENV: CC=clang CXX=clang++ LD=clang++ QA_SANITIZER=address
-    runs-on: macos-11
+    runs-on: ${{ matrix.os }}
     steps:
     - uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b  # v4.1.4
     - name: Install build dependencies

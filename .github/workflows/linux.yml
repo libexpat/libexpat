@@ -47,8 +47,6 @@ jobs:
     strategy:
       matrix:
         include:
-          # NOTE: This is a quick port from .travis.yml in reaction to
-          #       stability issues at Travis CI.
           - MODE: cmake-oos
           - MODE: distcheck
           - MODE: qa-sh

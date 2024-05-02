@@ -37,8 +37,6 @@ set -e
 if [[ ${RUNNER_OS} = macOS ]]; then
     latest_brew_python3_bin="$(ls -1d /usr/local/Cellar/python/3.*/bin | sort -n | tail -n1)"
     export PATH="${latest_brew_python3_bin}${PATH:+:}${PATH}"
-    export PATH="/usr/local/opt/coreutils/libexec/gnubin${PATH:+:}${PATH}"
-    export PATH="/usr/local/opt/findutils/libexec/gnubin${PATH:+:}${PATH}"
 elif [[ ${RUNNER_OS} = Linux ]]; then
     export PATH="/usr/lib/llvm-18/bin:${PATH}"
 else
@@ -65,7 +63,7 @@ elif [[ ${MODE} = cmake-oos ]]; then
     cmake ${CMAKE_ARGS} ..
     make VERBOSE=1 CTEST_OUTPUT_ON_FAILURE=1 all test
     make DESTDIR="${PWD}"/ROOT install
-    find ROOT -printf "%P\n" | sort
+    find ROOT | cut -c 6- | sort
 elif [[ ${MODE} = coverage-sh ]]; then
     ./coverage.sh
 else

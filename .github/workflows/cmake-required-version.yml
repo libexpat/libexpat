@@ -58,7 +58,7 @@ jobs:
         wget --no-verbose "${download_url}"
 
         chmod +x "${installer_filename}"
-        mkdir ~/.local/
+        mkdir -p ~/.local/
 
         ./"${installer_filename}" --prefix="${HOME}"/.local/ --skip-license
 
