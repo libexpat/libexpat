@@ -1,7 +1,6 @@
 brew "autoconf"
 brew "automake"
 brew "cmake"
-brew "coreutils"
 brew "docbook2x"
 brew "dos2unix"
 brew "gcc"
