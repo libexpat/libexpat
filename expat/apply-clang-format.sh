@@ -56,5 +56,5 @@ clang-format "${args[@]}" -- "${files[@]}"
 sed \
         -e 's, @$,@,' \
         -e 's,#\( \+\)cmakedefine,#cmakedefine,' \
-        -i \
+        -i.bak \
         expat_config.h.cmake

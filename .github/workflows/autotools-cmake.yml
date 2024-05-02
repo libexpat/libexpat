@@ -81,7 +81,6 @@ jobs:
             automake \
             cmake \
             docbook2x \
-            gnu-sed \
             libtool \
             lzip
 
@@ -128,8 +127,14 @@ jobs:
           # Autotools' LT_LIB_M has a hardcoded exclude for "*-*-darwin*" hosts,
           # while macOS does have libm and is successfully found by CMake.
           # We patch the CMake side in line here to get the differ below to empty.
-          export PATH="$(brew --prefix)/opt/gnu-sed/libexec/gnubin:${PATH}"
-          sed 's,-lm,,' -i build_cmake/ROOT/usr/local/lib*/pkgconfig/expat.pc
+          #
+          # Both GNU and BSD sed can edit in-place without creating a backup,
+          # but not with the same syntax.  The syntax for editing in-place
+          # _with_ a backup however is the same, so do that, then remove the
+          # backup so it doesn't show up in the diff later.
+          sed -e 's,-lm,,' -i.bak \
+              build_cmake/ROOT/usr/local/lib*/pkgconfig/expat.pc
+          rm -f build_cmake/ROOT/usr/local/lib*/pkgconfig/expat.pc.bak
         fi
 
         diff \
