@@ -130,7 +130,6 @@ jobs:
         sudo apt-get install --yes --no-install-recommends -V \
             cmake \
             docbook2x \
-            dos2unix \
             gcc-multilib \
             g++-multilib \
             lcov \

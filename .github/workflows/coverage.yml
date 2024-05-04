@@ -61,7 +61,6 @@ jobs:
             cmake \
             docbook-xml \
             docbook2x \
-            dos2unix \
             gcc-multilib \
             g++-multilib \
             lcov \
