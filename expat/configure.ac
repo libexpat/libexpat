@@ -403,7 +403,6 @@ LIBDIR_BASENAME="$(basename "${libdir}")"
 SO_MAJOR="$(expr "${LIBCURRENT}" - "${LIBAGE}")"
 SO_MINOR="${LIBAGE}"
 SO_PATCH="${LIBREVISION}"
-AC_CHECK_SIZEOF([void *])  # sets ac_cv_sizeof_void_p
 AC_SUBST([EXPAT_ATTR_INFO])
 AC_SUBST([EXPAT_DTD])
 AC_SUBST([EXPAT_LARGE_SIZE])
@@ -416,16 +415,13 @@ AC_SUBST([LIBDIR_BASENAME])
 AC_SUBST([SO_MAJOR])
 AC_SUBST([SO_MINOR])
 AC_SUBST([SO_PATCH])
-AC_SUBST([ac_cv_sizeof_void_p])
 
-dnl Protect against generating an expat_config.h that would break multilib
-AS_IF([grep -F -q SIZEOF_VOID_P "${srcdir}"/expat_config.h.in],
-  [AC_MSG_ERROR(
-    [Plain autoreconf/autoheader does not cut it,
-                  please use ./buildconf.sh or imitate its effect
-                  through other means, so that file expat_config.h.in
-                  no longer defines macro SIZEOF_VOID_P, as that would
-                  break multilib support.  Thank you.])])
+dnl The canonical way of doing this is AC_CHECK_SIZEOF(void *), but
+dnl that adds SIZEOF_VOID_P to expat_config.h.in, making it difficult
+dnl to have 32-bit and 64-bit versions of libexpat installed on the
+dnl same system with a single, shared copy of the header.
+AC_COMPUTE_INT(SIZEOF_VOID_P, [sizeof(void *)])
+AC_SUBST([SIZEOF_VOID_P])
 
 dnl write the Automake flags we set
 AC_SUBST([AM_CPPFLAGS])
