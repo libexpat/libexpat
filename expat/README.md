@@ -161,7 +161,7 @@ support this mode of compilation (yet):
    `find . -name Makefile.am -exec sed
        -e 's,libexpat\.la,libexpatw.la,'
        -e 's,libexpat_la,libexpatw_la,'
-       -i {} +`
+       -i.bak {} +`
 
 1. Run `automake` to re-write `Makefile.in` files:<br/>
    `automake`
