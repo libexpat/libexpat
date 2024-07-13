@@ -4,6 +4,12 @@
 [![Downloads SourceForge](https://img.shields.io/sourceforge/dt/expat?label=Downloads%20SourceForge)](https://sourceforge.net/projects/expat/files/)
 [![Downloads GitHub](https://img.shields.io/github/downloads/libexpat/libexpat/total?label=Downloads%20GitHub)](https://github.com/libexpat/libexpat/releases)
 
+> [!CAUTION]
+>
+> Expat is **understaffed** and without funding.
+> There is a [call for help with details](https://github.com/libexpat/libexpat/blob/master/expat/Changes)
+> at the top of the `Changes` file.
+
 
 # Expat, Release 2.6.2
 
