@@ -756,6 +756,7 @@ struct XML_ParserStruct {
   ACCOUNTING m_accounting;
   ENTITY_STATS m_entity_stats;
 #endif
+  XML_Bool m_reenter;
 };
 
 #define MALLOC(parser, s) (parser->m_mem.malloc_fcn((s)))
@@ -1028,7 +1029,29 @@ callProcessor(XML_Parser parser, const char *start, const char *end,
 #if defined(XML_TESTING)
   g_bytesScanned += (unsigned)have_now;
 #endif
-  const enum XML_Error ret = parser->m_processor(parser, start, end, endPtr);
+  // Run in a loop to eliminate dangerous recursion depths
+  enum XML_Error ret;
+  *endPtr = start;
+  while (1) {
+    // Use endPtr as the new start in each iteration, since it will
+    // be set to the next start point by m_processor.
+    ret = parser->m_processor(parser, *endPtr, end, endPtr);
+
+    // Make parsing status (and in particular XML_SUSPENDED) take
+    // precedence over re-enter flag when they disagree
+    if (parser->m_parsingStatus.parsing != XML_PARSING) {
+      parser->m_reenter = XML_FALSE;
+    }
+
+    if (! parser->m_reenter) {
+      break;
+    }
+
+    parser->m_reenter = XML_FALSE;
+    if (ret != XML_ERROR_NONE)
+      return ret;
+  }
+
   if (ret == XML_ERROR_NONE) {
     // if we consumed nothing, remember what we had on this parse attempt.
     if (*endPtr == start) {
@@ -1251,6 +1274,8 @@ parserInit(XML_Parser parser, const XML_Char *encodingName) {
   parser->m_unknownEncodingData = NULL;
   parser->m_parentParser = NULL;
   parser->m_parsingStatus.parsing = XML_INITIALIZED;
+  // Reentry can only be triggered inside m_processor calls
+  parser->m_reenter = XML_FALSE;
 #ifdef XML_DTD
   parser->m_isParamEntity = XML_FALSE;
   parser->m_useForeignDTD = XML_FALSE;
@@ -2238,6 +2263,11 @@ XML_GetBuffer(XML_Parser parser, int len) {
   return parser->m_bufferEnd;
 }
 
+static void
+triggerReenter(XML_Parser parser) {
+  parser->m_reenter = XML_TRUE;
+}
+
 enum XML_Status XMLCALL
 XML_StopParser(XML_Parser parser, XML_Bool resumable) {
   if (parser == NULL)
@@ -2801,6 +2831,12 @@ externalEntityInitProcessor3(XML_Parser parser, const char *start,
       return XML_ERROR_NONE;
     case XML_FINISHED:
       return XML_ERROR_ABORTED;
+    case XML_PARSING:
+      if (parser->m_reenter) {
+        *endPtr = next;
+        return XML_ERROR_NONE;
+      }
+      /* Fall through */
     default:
       start = next;
     }
@@ -3100,7 +3136,9 @@ doContent(XML_Parser parser, int startTagLevel, const ENCODING *enc,
     }
       if ((parser->m_tagLevel == 0)
           && (parser->m_parsingStatus.parsing != XML_FINISHED)) {
-        if (parser->m_parsingStatus.parsing == XML_SUSPENDED)
+        if (parser->m_parsingStatus.parsing == XML_SUSPENDED
+            || (parser->m_parsingStatus.parsing == XML_PARSING
+                && parser->m_reenter))
           parser->m_processor = epilogProcessor;
         else
           return epilogProcessor(parser, next, end, nextPtr);
@@ -3161,7 +3199,9 @@ doContent(XML_Parser parser, int startTagLevel, const ENCODING *enc,
         }
         if ((parser->m_tagLevel == 0)
             && (parser->m_parsingStatus.parsing != XML_FINISHED)) {
-          if (parser->m_parsingStatus.parsing == XML_SUSPENDED)
+          if (parser->m_parsingStatus.parsing == XML_SUSPENDED
+              || (parser->m_parsingStatus.parsing == XML_PARSING
+                  && parser->m_reenter))
             parser->m_processor = epilogProcessor;
           else
             return epilogProcessor(parser, next, end, nextPtr);
@@ -3301,6 +3341,12 @@ doContent(XML_Parser parser, int startTagLevel, const ENCODING *enc,
       return XML_ERROR_NONE;
     case XML_FINISHED:
       return XML_ERROR_ABORTED;
+    case XML_PARSING:
+      if (parser->m_reenter) {
+        *nextPtr = next;
+        return XML_ERROR_NONE;
+      }
+      /* Fall through */
     default:;
     }
   }
@@ -4225,6 +4271,12 @@ doCdataSection(XML_Parser parser, const ENCODING *enc, const char **startPtr,
       return XML_ERROR_NONE;
     case XML_FINISHED:
       return XML_ERROR_ABORTED;
+    case XML_PARSING:
+      if (parser->m_reenter) {
+        *nextPtr = next;
+        return XML_ERROR_NONE;
+      }
+      /* Fall through */
     default:;
     }
   }
@@ -5759,6 +5811,12 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
       return XML_ERROR_NONE;
     case XML_FINISHED:
       return XML_ERROR_ABORTED;
+    case XML_PARSING:
+      if (parser->m_reenter) {
+        *nextPtr = next;
+        return XML_ERROR_NONE;
+      }
+    /* Fall through */
     default:
       s = next;
       tok = XmlPrologTok(enc, s, end, &next);
@@ -5833,6 +5891,12 @@ epilogProcessor(XML_Parser parser, const char *s, const char *end,
       return XML_ERROR_NONE;
     case XML_FINISHED:
       return XML_ERROR_ABORTED;
+    case XML_PARSING:
+      if (parser->m_reenter) {
+        *nextPtr = next;
+        return XML_ERROR_NONE;
+      }
+    /* Fall through */
     default:;
     }
   }
@@ -5932,8 +5996,10 @@ internalEntityProcessor(XML_Parser parser, const char *s, const char *end,
 
   if (result != XML_ERROR_NONE)
     return result;
-
-  if (textEnd != next && parser->m_parsingStatus.parsing == XML_SUSPENDED) {
+  if (textEnd != next
+      && (parser->m_parsingStatus.parsing == XML_SUSPENDED
+          || (parser->m_parsingStatus.parsing == XML_PARSING
+              && parser->m_reenter))) {
     entity->processed = (int)(next - (const char *)entity->textPtr);
     return result;
   }
@@ -5947,11 +6013,16 @@ internalEntityProcessor(XML_Parser parser, const char *s, const char *end,
   openEntity->next = parser->m_freeInternalEntities;
   parser->m_freeInternalEntities = openEntity;
 
-  // If there are more open entities we want to stop right here and have the
-  // upcoming call to XML_ResumeParser continue with entity content, or it would
-  // be ignored altogether.
+  // If the state is XML_SUSPENDED and there are more open entities we want to
+  // stop right here and have the upcoming call to XML_ResumeParser continue
+  // with entity content, or it would be ignored altogether.
+  // If the state is XML_PARSING, m_reenter is set, and there are more open
+  // entities, we want to return and reenter to internalEntityProcessor to
+  // process the next entity in the list
   if (parser->m_openInternalEntities != NULL
-      && parser->m_parsingStatus.parsing == XML_SUSPENDED) {
+      && (parser->m_parsingStatus.parsing == XML_SUSPENDED
+          || (parser->m_parsingStatus.parsing == XML_PARSING
+              && parser->m_reenter))) {
     return XML_ERROR_NONE;
   }
 
