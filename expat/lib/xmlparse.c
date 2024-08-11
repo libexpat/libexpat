@@ -2742,8 +2742,9 @@ static enum XML_Error PTRCALL
 contentProcessor(XML_Parser parser, const char *start, const char *end,
                  const char **endPtr) {
   enum XML_Error result = doContent(
-      parser, 0, parser->m_encoding, start, end, endPtr,
-      (XML_Bool)! parser->m_parsingStatus.finalBuffer, XML_ACCOUNT_DIRECT);
+      parser, parser->m_parentParser ? 1 : 0, parser->m_encoding, start, end,
+      endPtr, (XML_Bool)! parser->m_parsingStatus.finalBuffer,
+      XML_ACCOUNT_DIRECT);
   if (result == XML_ERROR_NONE) {
     if (! storeRawNames(parser))
       return XML_ERROR_NO_MEMORY;
@@ -5904,9 +5905,6 @@ epilogProcessor(XML_Parser parser, const char *s, const char *end,
 
 static enum XML_Error
 processInternalEntity(XML_Parser parser, ENTITY *entity, XML_Bool betweenDecl) {
-  const char *textStart, *textEnd;
-  const char *next;
-  enum XML_Error result;
   OPEN_INTERNAL_ENTITY *openEntity;
 
   if (parser->m_freeInternalEntities) {
@@ -5923,6 +5921,7 @@ processInternalEntity(XML_Parser parser, ENTITY *entity, XML_Bool betweenDecl) {
   entityTrackingOnOpen(parser, entity, __LINE__);
 #endif
   entity->processed = 0;
+  parser->m_processor = internalEntityProcessor;
   openEntity->next = parser->m_openInternalEntities;
   parser->m_openInternalEntities = openEntity;
   openEntity->entity = entity;
@@ -5930,44 +5929,15 @@ processInternalEntity(XML_Parser parser, ENTITY *entity, XML_Bool betweenDecl) {
   openEntity->betweenDecl = betweenDecl;
   openEntity->internalEventPtr = NULL;
   openEntity->internalEventEndPtr = NULL;
-  textStart = (const char *)entity->textPtr;
-  textEnd = (const char *)(entity->textPtr + entity->textLen);
-  /* Set a safe default value in case 'next' does not get set */
-  next = textStart;
 
-  if (entity->is_param) {
-    int tok
-        = XmlPrologTok(parser->m_internalEncoding, textStart, textEnd, &next);
-    result = doProlog(parser, parser->m_internalEncoding, textStart, textEnd,
-                      tok, next, &next, XML_FALSE, XML_FALSE,
-                      XML_ACCOUNT_ENTITY_EXPANSION);
-  } else {
-    result = doContent(parser, parser->m_tagLevel, parser->m_internalEncoding,
-                       textStart, textEnd, &next, XML_FALSE,
-                       XML_ACCOUNT_ENTITY_EXPANSION);
-  }
-
-  if (result == XML_ERROR_NONE) {
-    if (textEnd != next && parser->m_parsingStatus.parsing == XML_SUSPENDED) {
-      entity->processed = (int)(next - textStart);
-      parser->m_processor = internalEntityProcessor;
-    } else if (parser->m_openInternalEntities->entity == entity) {
-#if XML_GE == 1
-      entityTrackingOnClose(parser, entity, __LINE__);
-#endif /* XML_GE == 1 */
-      entity->open = XML_FALSE;
-      parser->m_openInternalEntities = openEntity->next;
-      /* put openEntity back in list of free instances */
-      openEntity->next = parser->m_freeInternalEntities;
-      parser->m_freeInternalEntities = openEntity;
-    }
-  }
-  return result;
+  triggerReenter(parser);
+  return XML_ERROR_NONE;
 }
 
 static enum XML_Error PTRCALL
 internalEntityProcessor(XML_Parser parser, const char *s, const char *end,
                         const char **nextPtr) {
+  UNUSED_P(s);
   ENTITY *entity;
   const char *textStart, *textEnd;
   const char *next;
@@ -5996,6 +5966,7 @@ internalEntityProcessor(XML_Parser parser, const char *s, const char *end,
 
   if (result != XML_ERROR_NONE)
     return result;
+  // Check if entity is complete, if not, mark down how much of it is processed
   if (textEnd != next
       && (parser->m_parsingStatus.parsing == XML_SUSPENDED
           || (parser->m_parsingStatus.parsing == XML_PARSING
@@ -6008,7 +5979,19 @@ internalEntityProcessor(XML_Parser parser, const char *s, const char *end,
   entityTrackingOnClose(parser, entity, __LINE__);
 #endif
   entity->open = XML_FALSE;
-  parser->m_openInternalEntities = openEntity->next;
+  // Remove fully processed openEntity from open entity list. doContent call can
+  // add maximum one new entity to m_openInternalEntities since when a new
+  // entity is detected, parser will go into REENTER state and return. Therefore
+  // openEntity is either the head or next to the new head.
+  if (parser->m_openInternalEntities == openEntity) {
+    // No new entity detected during entity processing,
+    // openEntity is still the head.
+    parser->m_openInternalEntities = parser->m_openInternalEntities->next;
+  } else {
+    // New entity detected since list has a new head. openEntity is the second
+    // element.
+    parser->m_openInternalEntities->next = openEntity->next;
+  }
   /* put openEntity back in list of free instances */
   openEntity->next = parser->m_freeInternalEntities;
   parser->m_freeInternalEntities = openEntity;
@@ -6026,26 +6009,19 @@ internalEntityProcessor(XML_Parser parser, const char *s, const char *end,
     return XML_ERROR_NONE;
   }
 
-  if (entity->is_param) {
-    int tok;
-    parser->m_processor = prologProcessor;
-    tok = XmlPrologTok(parser->m_encoding, s, end, &next);
-    return doProlog(parser, parser->m_encoding, s, end, tok, next, nextPtr,
-                    (XML_Bool)! parser->m_parsingStatus.finalBuffer, XML_TRUE,
-                    XML_ACCOUNT_DIRECT);
-  } else {
-    parser->m_processor = contentProcessor;
-    /* see externalEntityContentProcessor vs contentProcessor */
-    result = doContent(parser, parser->m_parentParser ? 1 : 0,
-                       parser->m_encoding, s, end, nextPtr,
-                       (XML_Bool)! parser->m_parsingStatus.finalBuffer,
-                       XML_ACCOUNT_DIRECT);
-    if (result == XML_ERROR_NONE) {
-      if (! storeRawNames(parser))
-        return XML_ERROR_NO_MEMORY;
+  if (parser->m_openInternalEntities == NULL) {
+    parser->m_processor = entity->is_param ? prologProcessor : contentProcessor;
+    // internalEntityProcessor is called from callProcessor's while(1) loop,
+    // therefore "end" denotes callProcessor's "end", which denotes the end
+    // of the current buffer being parsed. Consequently, if we do not have
+    // any open entities left and have reached to the end, we must not
+    // trigger a reentry.
+    if (end == *nextPtr) {
+      return XML_ERROR_NONE;
     }
-    return result;
   }
+  triggerReenter(parser);
+  return XML_ERROR_NONE;
 }
 
 static enum XML_Error PTRCALL
