@@ -66,6 +66,9 @@ Release 2.6.3 XXX XXXXX XX XXXX
             #741  Windows: Drop support for Visual Studio <=15.0/2017
             #886  Drop needless XML_DTD guards around is_param access
             #885  Fix typo in a code comment
+       #894 #896  Version info bumped from 10:2:9 (libexpat*.so.1.9.2)
+                    to 10:3:9 (libexpat*.so.1.9.3); see https://verbump.de/
+                    for what these numbers do
 
         Infrastructure:
             #880  Readme: Promote the call for help
