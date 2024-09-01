@@ -30,7 +30,7 @@
 !! THANK YOU!                        Sebastian Pipping -- Berlin, 2024-03-09 !!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-Release 2.6.3 XXX XXXXX XX XXXX
+Release 2.6.3 Wed September 4 2024
         Security fixes:
        #887 #890  CVE-2024-45490 -- Calling function XML_ParseBuffer with
                     len < 0 without noticing and then calling XML_GetBuffer
