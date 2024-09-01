@@ -7,7 +7,7 @@ REM                     |  __//  \| |_) | (_| | |_
 REM                      \___/_/\_\ .__/ \__,_|\__|
 REM                               |_| XML parser
 REM
-REM Copyright (c) 2019-2021 Sebastian Pipping <sebastian@pipping.org>
+REM Copyright (c) 2019-2024 Sebastian Pipping <sebastian@pipping.org>
 REM Licensed under the MIT license:
 REM
 REM Permission is  hereby granted,  free of charge,  to any  person obtaining
