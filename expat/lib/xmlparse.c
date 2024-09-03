@@ -7017,6 +7017,16 @@ dtdCopy(XML_Parser oldParser, DTD *newDtd, const DTD *oldDtd,
     if (! newE)
       return 0;
     if (oldE->nDefaultAtts) {
+      /* Detect and prevent integer overflow.
+       * The preprocessor guard addresses the "always false" warning
+       * from -Wtype-limits on platforms where
+       * sizeof(int) < sizeof(size_t), e.g. on x86_64. */
+#if UINT_MAX >= SIZE_MAX
+      if ((size_t)oldE->nDefaultAtts
+          > ((size_t)(-1) / sizeof(DEFAULT_ATTRIBUTE))) {
+        return 0;
+      }
+#endif
       newE->defaultAtts
           = ms->malloc_fcn(oldE->nDefaultAtts * sizeof(DEFAULT_ATTRIBUTE));
       if (! newE->defaultAtts) {
