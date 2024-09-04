@@ -11,6 +11,7 @@
 # Copyright (c) 2019      Mohammed Khajapasha <mohammed.khajapasha@intel.com>
 # Copyright (c) 2019      Manish, Kumar <manish3.kumar@intel.com>
 # Copyright (c) 2019      Philippe Antoine <contact@catenacyber.fr>
+# Copyright (c) 2024      Dag-Erling Smørgrav <des@des.dev>
 # Licensed under the MIT license:
 #
 # Permission is  hereby granted,  free of charge,  to any  person obtaining
