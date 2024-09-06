@@ -5469,6 +5469,35 @@ START_TEST(test_nested_entity_suspend) {
 }
 END_TEST
 
+START_TEST(test_nested_entity_suspend_2) {
+  const char *const text = "<!DOCTYPE doc [\n"
+                           "  <!ENTITY ge1 'head1Ztail1'>\n"
+                           "  <!ENTITY ge2 'head2&ge1;tail2'>\n"
+                           "  <!ENTITY ge3 'head3&ge2;tail3'>\n"
+                           "]>\n"
+                           "<doc>&ge3;</doc>";
+  const XML_Char *const expected = XCS("head3") XCS("head2") XCS("head1")
+      XCS("Z") XCS("tail1") XCS("tail2") XCS("tail3");
+  CharData storage;
+  CharData_Init(&storage);
+  XML_Parser parser = XML_ParserCreate(NULL);
+  ParserPlusStorage parserPlusStorage = {parser, &storage};
+
+  XML_SetCharacterDataHandler(parser, accumulate_char_data_and_suspend);
+  XML_SetUserData(parser, &parserPlusStorage);
+
+  enum XML_Status status = XML_Parse(parser, text, (int)strlen(text), XML_TRUE);
+  while (status == XML_STATUS_SUSPENDED) {
+    status = XML_ResumeParser(parser);
+  }
+  if (status != XML_STATUS_OK)
+    xml_failure(parser);
+
+  CharData_CheckXMLChars(&storage, expected);
+  XML_ParserFree(parser);
+}
+END_TEST
+
 /* Regression test for quadratic parsing on large tokens */
 START_TEST(test_big_tokens_scale_linearly) {
   const struct {
@@ -6312,6 +6341,7 @@ make_basic_test_case(Suite *s) {
                                 test_pool_integrity_with_unfinished_attr);
   tcase_add_test__if_xml_ge(tc_basic, test_deep_nested_entity);
   tcase_add_test__if_xml_ge(tc_basic, test_nested_entity_suspend);
+  tcase_add_test__if_xml_ge(tc_basic, test_nested_entity_suspend_2);
   tcase_add_test(tc_basic, test_big_tokens_scale_linearly);
   tcase_add_test(tc_basic, test_set_reparse_deferral);
   tcase_add_test(tc_basic, test_reparse_deferral_is_inherited);
