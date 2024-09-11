@@ -5439,6 +5439,51 @@ START_TEST(test_deep_nested_entity) {
 }
 END_TEST
 
+/* Tests if chained entity references in attributes
+lead to unbounded recursion */
+START_TEST(test_deep_nested_attribute_entity) {
+  const size_t N_LINES = 60000;
+  const size_t SIZE_PER_LINE = 100;
+
+  char *const text = (char *)malloc((N_LINES + 4) * SIZE_PER_LINE);
+  if (text == NULL) {
+    fail("malloc failed");
+  }
+
+  char *textPtr = text;
+
+  // Create the XML
+  textPtr += snprintf(textPtr, SIZE_PER_LINE,
+                      "<!DOCTYPE foo [\n"
+                      "	<!ENTITY s0 'deepText'>\n");
+
+  for (size_t i = 1; i < N_LINES; ++i) {
+    textPtr += snprintf(textPtr, SIZE_PER_LINE, "  <!ENTITY s%lu '&s%lu;'>\n",
+                        (long unsigned)i, (long unsigned)(i - 1));
+  }
+
+  snprintf(textPtr, SIZE_PER_LINE, "]> <foo name='&s%lu;'>mainText</foo>\n",
+           (long unsigned)(N_LINES - 1));
+
+  AttrInfo doc_info[] = {{XCS("name"), XCS("deepText")}, {NULL, NULL}};
+  ElementInfo info[] = {{XCS("foo"), 1, NULL, NULL}, {NULL, 0, NULL, NULL}};
+  info[0].attributes = doc_info;
+
+  XML_Parser parser = XML_ParserCreate(NULL);
+  ParserAndElementInfo parserPlusElemenInfo = {parser, info};
+
+  XML_SetStartElementHandler(parser, counting_start_element_handler);
+  XML_SetUserData(parser, &parserPlusElemenInfo);
+
+  if (_XML_Parse_SINGLE_BYTES(parser, text, (int)strlen(text), XML_TRUE)
+      == XML_STATUS_ERROR)
+    xml_failure(parser);
+
+  XML_ParserFree(parser);
+  free(text);
+}
+END_TEST
+
 START_TEST(test_nested_entity_suspend) {
   const char *const text = "<!DOCTYPE a [\n"
                            "  <!ENTITY e1 '<!--e1-->'>\n"
@@ -6340,6 +6385,7 @@ make_basic_test_case(Suite *s) {
   tcase_add_test__ifdef_xml_dtd(tc_basic,
                                 test_pool_integrity_with_unfinished_attr);
   tcase_add_test__if_xml_ge(tc_basic, test_deep_nested_entity);
+  tcase_add_test__if_xml_ge(tc_basic, test_deep_nested_attribute_entity);
   tcase_add_test__if_xml_ge(tc_basic, test_nested_entity_suspend);
   tcase_add_test__if_xml_ge(tc_basic, test_nested_entity_suspend_2);
   tcase_add_test(tc_basic, test_big_tokens_scale_linearly);
