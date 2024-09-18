@@ -485,6 +485,10 @@ static enum XML_Error processInternalEntity(XML_Parser parser, ENTITY *entity,
                                             XML_Bool betweenDecl);
 static enum XML_Error processAttributeEntity(XML_Parser parser, ENTITY *entity,
                                              XML_Bool betweenDecl);
+#ifdef XML_DTD
+static enum XML_Error processValueEntity(XML_Parser parser, ENTITY *entity,
+                                         XML_Bool betweenDecl);
+#endif /* XML_DTD */
 static enum XML_Error doContent(XML_Parser parser, int startTagLevel,
                                 const ENCODING *enc, const char *start,
                                 const char *end, const char **endPtr,
@@ -527,6 +531,10 @@ static enum XML_Error storeEntityValue(XML_Parser parser, const ENCODING *enc,
                                        const char *start, const char *end,
                                        enum XML_Account account,
                                        const char **nextPtr);
+static enum XML_Error callStoreEntityValue(XML_Parser parser,
+                                           const ENCODING *enc,
+                                           const char *start, const char *end,
+                                           enum XML_Account account);
 #else
 static enum XML_Error storeSelfEntityValue(XML_Parser parser, ENTITY *entity);
 #endif
@@ -713,6 +721,8 @@ struct XML_ParserStruct {
   OPEN_INTERNAL_ENTITY *m_freeInternalEntities;
   OPEN_INTERNAL_ENTITY *m_openAttributeEntities;
   OPEN_INTERNAL_ENTITY *m_freeAttributeEntities;
+  OPEN_INTERNAL_ENTITY *m_openValueEntities;
+  OPEN_INTERNAL_ENTITY *m_freeValueEntities;
   XML_Bool m_defaultExpandInternalEntities;
   int m_tagLevel;
   ENTITY *m_declEntity;
@@ -1167,6 +1177,7 @@ parserCreate(const XML_Char *encodingName,
   parser->m_freeTagList = NULL;
   parser->m_freeInternalEntities = NULL;
   parser->m_freeAttributeEntities = NULL;
+  parser->m_freeValueEntities = NULL;
 
   parser->m_groupSize = 0;
   parser->m_groupConnector = NULL;
@@ -1270,6 +1281,7 @@ parserInit(XML_Parser parser, const XML_Char *encodingName) {
   parser->m_positionPtr = NULL;
   parser->m_openInternalEntities = NULL;
   parser->m_openAttributeEntities = NULL;
+  parser->m_openValueEntities = NULL;
   parser->m_defaultExpandInternalEntities = XML_TRUE;
   parser->m_tagLevel = 0;
   parser->m_tagStack = NULL;
@@ -1349,6 +1361,15 @@ XML_ParserReset(XML_Parser parser, const XML_Char *encodingName) {
     openEntityList = openEntity->next;
     openEntity->next = parser->m_freeAttributeEntities;
     parser->m_freeAttributeEntities = openEntity;
+  }
+  /* move m_openValueEntities to m_freeValueEntities (i.e. same task but
+   * for value entities) */
+  openEntityList = parser->m_openValueEntities;
+  while (openEntityList) {
+    OPEN_INTERNAL_ENTITY *openEntity = openEntityList;
+    openEntityList = openEntity->next;
+    openEntity->next = parser->m_freeValueEntities;
+    parser->m_freeValueEntities = openEntity;
   }
   moveToFreeBindingList(parser, parser->m_inheritedBindings);
   FREE(parser, parser->m_unknownEncodingMem);
@@ -1630,6 +1651,20 @@ XML_ParserFree(XML_Parser parser) {
         break;
       entityList = parser->m_freeAttributeEntities;
       parser->m_freeAttributeEntities = NULL;
+    }
+    openEntity = entityList;
+    entityList = entityList->next;
+    FREE(parser, openEntity);
+  }
+  /* free m_openValueEntities and m_freeValueEntities */
+  entityList = parser->m_openValueEntities;
+  for (;;) {
+    OPEN_INTERNAL_ENTITY *openEntity;
+    if (entityList == NULL) {
+      if (parser->m_freeValueEntities == NULL)
+        break;
+      entityList = parser->m_freeValueEntities;
+      parser->m_freeValueEntities = NULL;
     }
     openEntity = entityList;
     entityList = entityList->next;
@@ -5208,9 +5243,9 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
 #if XML_GE == 1
         // This will store the given replacement text in
         // parser->m_declEntity->textPtr.
-        enum XML_Error result
-            = storeEntityValue(parser, enc, s + enc->minBytesPerChar,
-                               next - enc->minBytesPerChar, XML_ACCOUNT_NONE, NULL);
+        enum XML_Error result = callStoreEntityValue(
+            parser, enc, s + enc->minBytesPerChar, next - enc->minBytesPerChar,
+            XML_ACCOUNT_NONE);
         if (parser->m_declEntity) {
           parser->m_declEntity->textPtr = poolStart(&dtd->entityValuePool);
           parser->m_declEntity->textLen
@@ -5994,6 +6029,38 @@ processAttributeEntity(XML_Parser parser, ENTITY *entity,
   return XML_ERROR_NONE;
 }
 
+/* KEEP IN SYNC with processInternalEntity */
+#ifdef XML_DTD
+static enum XML_Error
+processValueEntity(XML_Parser parser, ENTITY *entity, XML_Bool betweenDecl) {
+  OPEN_INTERNAL_ENTITY *openEntity;
+
+  if (parser->m_freeValueEntities) {
+    openEntity = parser->m_freeValueEntities;
+    parser->m_freeValueEntities = openEntity->next;
+  } else {
+    openEntity
+        = (OPEN_INTERNAL_ENTITY *)MALLOC(parser, sizeof(OPEN_INTERNAL_ENTITY));
+    if (! openEntity)
+      return XML_ERROR_NO_MEMORY;
+  }
+  entity->open = XML_TRUE;
+#  if XML_GE == 1
+  entityTrackingOnOpen(parser, entity, __LINE__);
+#  endif
+  entity->processed = 0;
+  openEntity->next = parser->m_openValueEntities;
+  parser->m_openValueEntities = openEntity;
+  openEntity->entity = entity;
+  openEntity->startTagLevel = parser->m_tagLevel;
+  openEntity->betweenDecl = betweenDecl;
+  openEntity->internalEventPtr = NULL;
+  openEntity->internalEventEndPtr = NULL;
+
+  return XML_ERROR_NONE;
+}
+#endif /* XML_DTD */
+
 static enum XML_Error PTRCALL
 internalEntityProcessor(XML_Parser parser, const char *s, const char *end,
                         const char **nextPtr) {
@@ -6449,16 +6516,8 @@ storeEntityValue(XML_Parser parser, const ENCODING *enc,
           } else
             dtd->keepProcessing = dtd->standalone;
         } else {
-          entity->open = XML_TRUE;
-          entityTrackingOnOpen(parser, entity, __LINE__);
-          result = storeEntityValue(
-              parser, parser->m_internalEncoding, (const char *)entity->textPtr,
-              (const char *)(entity->textPtr + entity->textLen),
-              XML_ACCOUNT_ENTITY_EXPANSION, NULL);
-          entityTrackingOnClose(parser, entity, __LINE__);
-          entity->open = XML_FALSE;
-          if (result)
-            goto endEntityValue;
+          result = processValueEntity(parser, entity, XML_FALSE);
+          goto endEntityValue;
         }
         break;
       }
@@ -6550,6 +6609,74 @@ endEntityValue:
   if (nextPtr != NULL) {
     *nextPtr = next;
   }
+  return result;
+}
+
+static enum XML_Error
+callStoreEntityValue(XML_Parser parser, const ENCODING *enc,
+                     const char *entityTextPtr, const char *entityTextEnd,
+                     enum XML_Account account) {
+  const char *next = entityTextPtr;
+  enum XML_Error result = XML_ERROR_NONE;
+  while (1) {
+    if (! parser->m_openValueEntities) {
+      result
+          = storeEntityValue(parser, enc, next, entityTextEnd, account, &next);
+    } else {
+      OPEN_INTERNAL_ENTITY *const openEntity = parser->m_openValueEntities;
+      if (! openEntity)
+        return XML_ERROR_UNEXPECTED_STATE;
+
+      ENTITY *const entity = openEntity->entity;
+      const char *const textStart
+          = ((const char *)entity->textPtr) + entity->processed;
+      const char *const textEnd
+          = (const char *)(entity->textPtr + entity->textLen);
+      /* Set a safe default value in case 'next' does not get set */
+      const char *nextInEntity = textStart;
+      result = storeEntityValue(parser, parser->m_internalEncoding, textStart,
+                                textEnd, XML_ACCOUNT_ENTITY_EXPANSION,
+                                &nextInEntity);
+      if (result != XML_ERROR_NONE)
+        break;
+      // Check if entity is complete, if not, mark down how much of it is
+      // processed. A XML_SUSPENDED check here is not required as
+      // appendAttributeValue will never suspend the parser.
+      if (textEnd != nextInEntity) {
+        entity->processed = (int)(nextInEntity - (const char *)entity->textPtr);
+        continue;
+      }
+
+#  if XML_GE == 1
+      entityTrackingOnClose(parser, entity, __LINE__);
+#  endif
+      entity->open = XML_FALSE;
+      // Remove fully processed openEntity from open entity list.
+      // appendAttributeValue call can add maximum one new entity to
+      // m_openValueEntities since when a new entity is detected, parser
+      // will set the 'reenter' flag and return. Therefore openEntity is either
+      // the head or next to the new head.
+      if (parser->m_openValueEntities == openEntity) {
+        // No new entity detected during entity processing,
+        // openEntity is still the head.
+        parser->m_openValueEntities = parser->m_openValueEntities->next;
+      } else {
+        // New entity detected since list has a new head. openEntity is the
+        // second element.
+        parser->m_openValueEntities->next = openEntity->next;
+      }
+      /* put openEntity back in list of free instances */
+      openEntity->next = parser->m_freeValueEntities;
+      parser->m_freeValueEntities = openEntity;
+    }
+
+    // Break if an error occurred or there is nothing left to process
+    if (result
+        || (parser->m_openValueEntities == NULL && entityTextEnd == next)) {
+      break;
+    }
+  }
+
   return result;
 }
 
