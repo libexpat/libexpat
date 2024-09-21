@@ -1914,7 +1914,7 @@ accumulate_characters(void *userData, const XML_Char *s, int len) {
 void XMLCALL
 accumulate_attribute(void *userData, const XML_Char *name,
                      const XML_Char **atts) {
-  CharData *storage = (CharData *)userData;
+  CharData *const storage = (CharData *)userData;
   UNUSED_P(name);
   /* Check there are attributes to deal with */
   if (atts == NULL)
@@ -1929,7 +1929,7 @@ accumulate_attribute(void *userData, const XML_Char *name,
 
 void XMLCALL
 ext_accumulate_characters(void *userData, const XML_Char *s, int len) {
-  ExtTest *test_data = (ExtTest *)userData;
+  ExtTest *const test_data = (ExtTest *)userData;
   accumulate_characters(test_data->storage, s, len);
 }
 
