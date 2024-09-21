@@ -59,6 +59,9 @@
 #include "handlers.h"
 #include "misc_tests.h"
 
+void XMLCALL accumulate_characters_ext_handler(void *userData,
+                                               const XML_Char *s, int len);
+
 /* Test that a failure to allocate the parser structure fails gracefully */
 START_TEST(test_misc_alloc_create_parser) {
   XML_Memory_Handling_Suite memsuite = {duff_allocator, realloc, free};
@@ -576,6 +579,45 @@ START_TEST(test_misc_stopparser_rejects_unstarted_parser) {
 }
 END_TEST
 
+/* Adaptation of accumulate_characters that takes ExtHdlrData input to work with
+ * test_renter_loop_finite_content below */
+void XMLCALL
+accumulate_characters_ext_handler(void *userData, const XML_Char *s, int len) {
+  ExtHdlrData *const test_data = (ExtHdlrData *)userData;
+  CharData_AppendXMLChars(test_data->storage, s, len);
+}
+
+/* Test that internalEntityProcessor does not re-enter forever;
+ * based on files tests/xmlconf/xmltest/valid/ext-sa/012.{xml,ent} */
+START_TEST(test_renter_loop_finite_content) {
+  CharData storage;
+  CharData_Init(&storage);
+  const char *const text = "<!DOCTYPE doc [\n"
+                           "<!ENTITY e1 '&e2;'>\n"
+                           "<!ENTITY e2 '&e3;'>\n"
+                           "<!ENTITY e3 SYSTEM '012.ent'>\n"
+                           "<!ENTITY e4 '&e5;'>\n"
+                           "<!ENTITY e5 '(e5)'>\n"
+                           "<!ELEMENT doc (#PCDATA)>\n"
+                           "]>\n"
+                           "<doc>&e1;</doc>\n";
+  ExtHdlrData test_data = {"&e4;\n", external_entity_null_loader, &storage};
+  const XML_Char *const expected = XCS("(e5)\n");
+
+  XML_Parser parser = XML_ParserCreate(NULL);
+  assert_true(parser != NULL);
+  XML_SetUserData(parser, &test_data);
+  XML_SetExternalEntityRefHandler(parser, external_entity_oneshot_loader);
+  XML_SetCharacterDataHandler(parser, accumulate_characters_ext_handler);
+  if (_XML_Parse_SINGLE_BYTES(parser, text, (int)strlen(text), XML_TRUE)
+      == XML_STATUS_ERROR)
+    xml_failure(parser);
+
+  CharData_CheckXMLChars(&storage, expected);
+  XML_ParserFree(parser);
+}
+END_TEST
+
 void
 make_miscellaneous_test_case(Suite *s) {
   TCase *tc_misc = tcase_create("miscellaneous tests");
@@ -602,4 +644,5 @@ make_miscellaneous_test_case(Suite *s) {
   tcase_add_test(tc_misc, test_misc_char_handler_stop_without_leak);
   tcase_add_test(tc_misc, test_misc_resumeparser_not_crashing);
   tcase_add_test(tc_misc, test_misc_stopparser_rejects_unstarted_parser);
+  tcase_add_test__if_xml_ge(tc_misc, test_renter_loop_finite_content);
 }
