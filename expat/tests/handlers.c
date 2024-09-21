@@ -1883,12 +1883,6 @@ accumulate_entity_decl(void *userData, const XML_Char *entityName,
 }
 
 void XMLCALL
-accumulate_char_data(void *userData, const XML_Char *s, int len) {
-  CharData *const storage = (CharData *)userData;
-  CharData_AppendXMLChars(storage, s, len);
-}
-
-void XMLCALL
 accumulate_start_element(void *userData, const XML_Char *name,
                          const XML_Char **atts) {
   CharData *const storage = (CharData *)userData;

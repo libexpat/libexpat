@@ -569,9 +569,6 @@ extern void XMLCALL accumulate_entity_decl(
     const XML_Char *systemId, const XML_Char *publicId,
     const XML_Char *notationName);
 
-extern void XMLCALL accumulate_char_data(void *userData, const XML_Char *s,
-                                         int len);
-
 extern void XMLCALL accumulate_start_element(void *userData,
                                              const XML_Char *name,
                                              const XML_Char **atts);
