@@ -4076,7 +4076,7 @@ START_TEST(test_skipped_null_loaded_ext_entity) {
       = {"<!ENTITY % pe1 SYSTEM 'http://example.org/two.ent'>\n"
          "<!ENTITY % pe2 '%pe1;'>\n"
          "%pe2;\n",
-         external_entity_null_loader};
+         external_entity_null_loader, NULL};
 
   XML_SetUserData(g_parser, &test_data);
   XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
@@ -4094,7 +4094,7 @@ START_TEST(test_skipped_unloaded_ext_entity) {
       = {"<!ENTITY % pe1 SYSTEM 'http://example.org/two.ent'>\n"
          "<!ENTITY % pe2 '%pe1;'>\n"
          "%pe2;\n",
-         NULL};
+         NULL, NULL};
 
   XML_SetUserData(g_parser, &test_data);
   XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);

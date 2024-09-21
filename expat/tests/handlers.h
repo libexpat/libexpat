@@ -325,6 +325,7 @@ extern int XMLCALL external_entity_devaluer(XML_Parser parser,
 typedef struct ext_hdlr_data {
   const char *parse_text;
   XML_ExternalEntityRefHandler handler;
+  CharData *storage;
 } ExtHdlrData;
 
 extern int XMLCALL external_entity_oneshot_loader(XML_Parser parser,
