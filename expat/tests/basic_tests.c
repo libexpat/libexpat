@@ -2356,9 +2356,13 @@ START_TEST(test_attributes) {
                         {NULL, 0, NULL, NULL}};
   info[0].attributes = doc_info;
   info[1].attributes = tag_info;
+  ParserAndElementInfo parserAndElementInfos = {
+      g_parser,
+      info,
+  };
 
   XML_SetStartElementHandler(g_parser, counting_start_element_handler);
-  XML_SetUserData(g_parser, info);
+  XML_SetUserData(g_parser, &parserAndElementInfos);
   if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
