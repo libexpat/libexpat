@@ -1908,7 +1908,8 @@ accumulate_start_element(void *userData, const XML_Char *name,
 
 void XMLCALL
 accumulate_characters(void *userData, const XML_Char *s, int len) {
-  CharData_AppendXMLChars((CharData *)userData, s, len);
+  CharData *const storage = (CharData *)userData;
+  CharData_AppendXMLChars(storage, s, len);
 }
 
 void XMLCALL
