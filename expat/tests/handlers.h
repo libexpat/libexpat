@@ -573,6 +573,15 @@ extern void XMLCALL accumulate_start_element(void *userData,
                                              const XML_Char *name,
                                              const XML_Char **atts);
 
+extern void XMLCALL accumulate_characters(void *userData, const XML_Char *s,
+                                          int len);
+
+extern void XMLCALL accumulate_attribute(void *userData, const XML_Char *name,
+                                         const XML_Char **atts);
+
+extern void XMLCALL ext_accumulate_characters(void *userData, const XML_Char *s,
+                                              int len);
+
 typedef struct default_check {
   const XML_Char *expected;
   const int expectedLen;
