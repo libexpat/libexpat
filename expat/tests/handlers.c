@@ -103,7 +103,9 @@ end_element_event_handler2(void *userData, const XML_Char *name) {
 void XMLCALL
 counting_start_element_handler(void *userData, const XML_Char *name,
                                const XML_Char **atts) {
-  ElementInfo *info = (ElementInfo *)userData;
+  ParserAndElementInfo *const parserAndElementInfos
+      = (ParserAndElementInfo *)userData;
+  ElementInfo *info = parserAndElementInfos->info;
   AttrInfo *attr;
   int count, id, i;
 
@@ -120,12 +122,12 @@ counting_start_element_handler(void *userData, const XML_Char *name,
    * is possibly a little unexpected, but it is what the
    * documentation in expat.h tells us to expect.
    */
-  count = XML_GetSpecifiedAttributeCount(g_parser);
+  count = XML_GetSpecifiedAttributeCount(parserAndElementInfos->parser);
   if (info->attr_count * 2 != count) {
     fail("Not got expected attribute count");
     return;
   }
-  id = XML_GetIdAttributeIndex(g_parser);
+  id = XML_GetIdAttributeIndex(parserAndElementInfos->parser);
   if (id == -1 && info->id_name != NULL) {
     fail("ID not present");
     return;

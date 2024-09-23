@@ -92,6 +92,11 @@ typedef struct elementInfo {
   AttrInfo *attributes;
 } ElementInfo;
 
+typedef struct StructParserAndElementInfo {
+  XML_Parser parser;
+  ElementInfo *info;
+} ParserAndElementInfo;
+
 extern void XMLCALL counting_start_element_handler(void *userData,
                                                    const XML_Char *name,
                                                    const XML_Char **atts);
