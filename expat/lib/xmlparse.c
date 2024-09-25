@@ -513,11 +513,10 @@ static enum XML_Error storeAttributeValue(XML_Parser parser,
                                           const char *ptr, const char *end,
                                           STRING_POOL *pool,
                                           enum XML_Account account);
-static enum XML_Error appendAttributeValue(XML_Parser parser,
-                                           const ENCODING *enc,
-                                           XML_Bool isCdata, const char *ptr,
-                                           const char *end, STRING_POOL *pool,
-                                           enum XML_Account account);
+static enum XML_Error
+appendAttributeValue(XML_Parser parser, const ENCODING *enc, XML_Bool isCdata,
+                     const char *ptr, const char *end, STRING_POOL *pool,
+                     enum XML_Account account, const char **nextPtr);
 static ATTRIBUTE_ID *getAttributeId(XML_Parser parser, const ENCODING *enc,
                                     const char *start, const char *end);
 static int setElementTypePrefix(XML_Parser parser, ELEMENT_TYPE *elementType);
@@ -6037,8 +6036,8 @@ static enum XML_Error
 storeAttributeValue(XML_Parser parser, const ENCODING *enc, XML_Bool isCdata,
                     const char *ptr, const char *end, STRING_POOL *pool,
                     enum XML_Account account) {
-  enum XML_Error result
-      = appendAttributeValue(parser, enc, isCdata, ptr, end, pool, account);
+  enum XML_Error result = appendAttributeValue(parser, enc, isCdata, ptr, end,
+                                               pool, account, NULL);
   if (result)
     return result;
   if (! isCdata && poolLength(pool) && poolLastChar(pool) == 0x20)
@@ -6051,7 +6050,7 @@ storeAttributeValue(XML_Parser parser, const ENCODING *enc, XML_Bool isCdata,
 static enum XML_Error
 appendAttributeValue(XML_Parser parser, const ENCODING *enc, XML_Bool isCdata,
                      const char *ptr, const char *end, STRING_POOL *pool,
-                     enum XML_Account account) {
+                     enum XML_Account account, const char **nextPtr) {
   DTD *const dtd = parser->m_dtd; /* save one level of indirection */
 #ifndef XML_DTD
   UNUSED_P(account);
@@ -6069,6 +6068,9 @@ appendAttributeValue(XML_Parser parser, const ENCODING *enc, XML_Bool isCdata,
 #endif
     switch (tok) {
     case XML_TOK_NONE:
+      if (nextPtr) {
+        *nextPtr = next;
+      }
       return XML_ERROR_NONE;
     case XML_TOK_INVALID:
       if (enc == parser->m_encoding)
@@ -6217,7 +6219,7 @@ appendAttributeValue(XML_Parser parser, const ENCODING *enc, XML_Bool isCdata,
         result = appendAttributeValue(parser, parser->m_internalEncoding,
                                       isCdata, (const char *)entity->textPtr,
                                       (const char *)textEnd, pool,
-                                      XML_ACCOUNT_ENTITY_EXPANSION);
+                                      XML_ACCOUNT_ENTITY_EXPANSION, NULL);
 #if XML_GE == 1
         entityTrackingOnClose(parser, entity, __LINE__);
 #endif
@@ -6244,6 +6246,9 @@ appendAttributeValue(XML_Parser parser, const ENCODING *enc, XML_Bool isCdata,
       /* LCOV_EXCL_STOP */
     }
     ptr = next;
+    if (nextPtr) {
+      *nextPtr = next;
+    }
   }
   /* not reached */
 }
