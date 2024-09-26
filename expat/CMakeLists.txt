@@ -425,6 +425,7 @@ else()
 endif()
 
 add_library(expat ${_SHARED} ${_EXPAT_C_SOURCES} ${_EXPAT_EXTRA_SOURCES})
+add_library(expat::expat ALIAS expat)
 if(_EXPAT_LIBM_FOUND)
     target_link_libraries(expat m)
 endif()
