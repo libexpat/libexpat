@@ -1883,12 +1883,6 @@ accumulate_entity_decl(void *userData, const XML_Char *entityName,
 }
 
 void XMLCALL
-accumulate_char_data(void *userData, const XML_Char *s, int len) {
-  CharData *const storage = (CharData *)userData;
-  CharData_AppendXMLChars(storage, s, len);
-}
-
-void XMLCALL
 accumulate_start_element(void *userData, const XML_Char *name,
                          const XML_Char **atts) {
   CharData *const storage = (CharData *)userData;
@@ -1910,6 +1904,34 @@ accumulate_start_element(void *userData, const XML_Char *name,
   }
 
   CharData_AppendXMLChars(storage, XCS(")\n"), 2);
+}
+
+void XMLCALL
+accumulate_characters(void *userData, const XML_Char *s, int len) {
+  CharData *const storage = (CharData *)userData;
+  CharData_AppendXMLChars(storage, s, len);
+}
+
+void XMLCALL
+accumulate_attribute(void *userData, const XML_Char *name,
+                     const XML_Char **atts) {
+  CharData *const storage = (CharData *)userData;
+  UNUSED_P(name);
+  /* Check there are attributes to deal with */
+  if (atts == NULL)
+    return;
+
+  while (storage->count < 0 && atts[0] != NULL) {
+    /* "accumulate" the value of the first attribute we see */
+    CharData_AppendXMLChars(storage, atts[1], -1);
+    atts += 2;
+  }
+}
+
+void XMLCALL
+ext_accumulate_characters(void *userData, const XML_Char *s, int len) {
+  ExtTest *const test_data = (ExtTest *)userData;
+  accumulate_characters(test_data->storage, s, len);
 }
 
 void XMLCALL

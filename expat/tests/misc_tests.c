@@ -447,7 +447,7 @@ START_TEST(test_misc_general_entities_support) {
   XML_SetExternalEntityRefHandler(parser,
                                   external_entity_failer__if_not_xml_ge);
   XML_SetEntityDeclHandler(parser, accumulate_entity_decl);
-  XML_SetCharacterDataHandler(parser, accumulate_char_data);
+  XML_SetCharacterDataHandler(parser, accumulate_characters);
 
   if (_XML_Parse_SINGLE_BYTES(parser, doc, (int)strlen(doc), XML_TRUE)
       != XML_STATUS_OK) {
