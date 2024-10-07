@@ -525,7 +525,8 @@ static int setElementTypePrefix(XML_Parser parser, ELEMENT_TYPE *elementType);
 #if XML_GE == 1
 static enum XML_Error storeEntityValue(XML_Parser parser, const ENCODING *enc,
                                        const char *start, const char *end,
-                                       enum XML_Account account);
+                                       enum XML_Account account,
+                                       const char **nextPtr);
 #else
 static enum XML_Error storeSelfEntityValue(XML_Parser parser, ENTITY *entity);
 #endif
@@ -4637,7 +4638,7 @@ entityValueInitProcessor(XML_Parser parser, const char *s, const char *end,
       }
       /* found end of entity value - can store it now */
       return storeEntityValue(parser, parser->m_encoding, s, end,
-                              XML_ACCOUNT_DIRECT);
+                              XML_ACCOUNT_DIRECT, NULL);
     } else if (tok == XML_TOK_XML_DECL) {
       enum XML_Error result;
       result = processXmlDecl(parser, 0, start, next);
@@ -4764,7 +4765,7 @@ entityValueProcessor(XML_Parser parser, const char *s, const char *end,
         break;
       }
       /* found end of entity value - can store it now */
-      return storeEntityValue(parser, enc, s, end, XML_ACCOUNT_DIRECT);
+      return storeEntityValue(parser, enc, s, end, XML_ACCOUNT_DIRECT, NULL);
     }
     start = next;
   }
@@ -5209,7 +5210,7 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
         // parser->m_declEntity->textPtr.
         enum XML_Error result
             = storeEntityValue(parser, enc, s + enc->minBytesPerChar,
-                               next - enc->minBytesPerChar, XML_ACCOUNT_NONE);
+                               next - enc->minBytesPerChar, XML_ACCOUNT_NONE, NULL);
         if (parser->m_declEntity) {
           parser->m_declEntity->textPtr = poolStart(&dtd->entityValuePool);
           parser->m_declEntity->textLen
@@ -6366,7 +6367,7 @@ appendAttributeValue(XML_Parser parser, const ENCODING *enc, XML_Bool isCdata,
 static enum XML_Error
 storeEntityValue(XML_Parser parser, const ENCODING *enc,
                  const char *entityTextPtr, const char *entityTextEnd,
-                 enum XML_Account account) {
+                 enum XML_Account account, const char **nextPtr) {
   DTD *const dtd = parser->m_dtd; /* save one level of indirection */
   STRING_POOL *pool = &(dtd->entityValuePool);
   enum XML_Error result = XML_ERROR_NONE;
@@ -6384,8 +6385,9 @@ storeEntityValue(XML_Parser parser, const ENCODING *enc,
       return XML_ERROR_NO_MEMORY;
   }
 
+  const char *next;
   for (;;) {
-    const char *next
+    next
         = entityTextPtr; /* XmlEntityValueTok doesn't always set the last arg */
     int tok = XmlEntityValueTok(enc, entityTextPtr, entityTextEnd, &next);
 
@@ -6452,7 +6454,7 @@ storeEntityValue(XML_Parser parser, const ENCODING *enc,
           result = storeEntityValue(
               parser, parser->m_internalEncoding, (const char *)entity->textPtr,
               (const char *)(entity->textPtr + entity->textLen),
-              XML_ACCOUNT_ENTITY_EXPANSION);
+              XML_ACCOUNT_ENTITY_EXPANSION, NULL);
           entityTrackingOnClose(parser, entity, __LINE__);
           entity->open = XML_FALSE;
           if (result)
@@ -6544,6 +6546,10 @@ endEntityValue:
 #  ifdef XML_DTD
   parser->m_prologState.inEntityValue = oldInEntityValue;
 #  endif /* XML_DTD */
+  // If 'nextPtr' is given, it should be updated during the processing
+  if (nextPtr != NULL) {
+    *nextPtr = next;
+  }
   return result;
 }
 
