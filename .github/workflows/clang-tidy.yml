@@ -47,16 +47,16 @@ jobs:
     steps:
     - uses: actions/checkout@d632683dd7b4114ad314bca15554477dd762a938  # v4.2.0
 
-    - name: Install clang-tidy 18
+    - name: Install clang-tidy 19
       run: |-
         set -x
         source /etc/os-release
         wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
-        sudo add-apt-repository "deb https://apt.llvm.org/${UBUNTU_CODENAME}/ llvm-toolchain-${UBUNTU_CODENAME}-18 main"
+        sudo add-apt-repository "deb https://apt.llvm.org/${UBUNTU_CODENAME}/ llvm-toolchain-${UBUNTU_CODENAME}-19 main"
         sudo apt-get update  # due to new repository
         sudo apt-get install --yes --no-install-recommends -V \
-            clang-tidy-18
-        echo /usr/lib/llvm-18/bin >>"${GITHUB_PATH}"
+            clang-tidy-19
+        echo /usr/lib/llvm-19/bin >>"${GITHUB_PATH}"
 
     - name: Run clang-tidy
       run: |
