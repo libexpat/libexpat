@@ -415,6 +415,12 @@ typedef struct {
   int *scaffIndex;
 } DTD;
 
+enum EntityType {
+  ENTITY_INTERNAL,
+  ENTITY_ATTRIBUTE,
+  ENTITY_VALUE,
+};
+
 typedef struct open_internal_entity {
   const char *internalEventPtr;
   const char *internalEventEndPtr;
@@ -422,6 +428,7 @@ typedef struct open_internal_entity {
   ENTITY *entity;
   int startTagLevel;
   XML_Bool betweenDecl; /* WFC: PE Between Declarations */
+  enum EntityType type;
 } OPEN_INTERNAL_ENTITY;
 
 enum XML_Account {
@@ -481,14 +488,8 @@ static enum XML_Error doProlog(XML_Parser parser, const ENCODING *enc,
                                const char *next, const char **nextPtr,
                                XML_Bool haveMore, XML_Bool allowClosingDoctype,
                                enum XML_Account account);
-static enum XML_Error processInternalEntity(XML_Parser parser, ENTITY *entity,
-                                            XML_Bool betweenDecl);
-static enum XML_Error processAttributeEntity(XML_Parser parser, ENTITY *entity,
-                                             XML_Bool betweenDecl);
-#ifdef XML_DTD
-static enum XML_Error processValueEntity(XML_Parser parser, ENTITY *entity,
-                                         XML_Bool betweenDecl);
-#endif /* XML_DTD */
+static enum XML_Error processEntity(XML_Parser parser, ENTITY *entity,
+                                    XML_Bool betweenDecl, enum EntityType type);
 static enum XML_Error doContent(XML_Parser parser, int startTagLevel,
                                 const ENCODING *enc, const char *start,
                                 const char *end, const char **endPtr,
@@ -3074,7 +3075,7 @@ doContent(XML_Parser parser, int startTagLevel, const ENCODING *enc,
             reportDefault(parser, enc, s, next);
           break;
         }
-        result = processInternalEntity(parser, entity, XML_FALSE);
+        result = processEntity(parser, entity, XML_FALSE, ENTITY_INTERNAL);
         if (result != XML_ERROR_NONE)
           return result;
       } else if (parser->m_externalEntityRefHandler) {
@@ -5670,7 +5671,7 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
           enum XML_Error result;
           XML_Bool betweenDecl
               = (role == XML_ROLE_PARAM_ENTITY_REF ? XML_TRUE : XML_FALSE);
-          result = processInternalEntity(parser, entity, betweenDecl);
+          result = processEntity(parser, entity, betweenDecl, ENTITY_INTERNAL);
           if (result != XML_ERROR_NONE)
             return result;
           handleDefault = XML_FALSE;
@@ -5966,14 +5967,39 @@ epilogProcessor(XML_Parser parser, const char *s, const char *end,
   }
 }
 
-/* KEEP IN SYNC with processAttributeEntity */
 static enum XML_Error
-processInternalEntity(XML_Parser parser, ENTITY *entity, XML_Bool betweenDecl) {
-  OPEN_INTERNAL_ENTITY *openEntity;
+processEntity(XML_Parser parser, ENTITY *entity, XML_Bool betweenDecl,
+              enum EntityType type) {
+  OPEN_INTERNAL_ENTITY *openEntity, **openEntityList, **freeEntityList;
+  switch (type) {
+  case ENTITY_INTERNAL:
+    parser->m_processor = internalEntityProcessor;
+    openEntityList = &parser->m_openInternalEntities;
+    freeEntityList = &parser->m_freeInternalEntities;
+    break;
+  case ENTITY_ATTRIBUTE:
+    openEntityList = &parser->m_openAttributeEntities;
+    freeEntityList = &parser->m_freeAttributeEntities;
+    break;
+  case ENTITY_VALUE:
+    openEntityList = &parser->m_openValueEntities;
+    freeEntityList = &parser->m_freeValueEntities;
+    break;
+    /* default case serves merely as a safety net in case of a
+     * wrong entityType. Therefore we exclude the following lines
+     * from the test coverage.
+     *
+     * LCOV_EXCL_START
+     */
+  default:
+    // Should not reach here
+    assert(0);
+    /* LCOV_EXCL_STOP */
+  }
 
-  if (parser->m_freeInternalEntities) {
-    openEntity = parser->m_freeInternalEntities;
-    parser->m_freeInternalEntities = openEntity->next;
+  if (*freeEntityList) {
+    openEntity = *freeEntityList;
+    *freeEntityList = openEntity->next;
   } else {
     openEntity
         = (OPEN_INTERNAL_ENTITY *)MALLOC(parser, sizeof(OPEN_INTERNAL_ENTITY));
@@ -5985,81 +6011,22 @@ processInternalEntity(XML_Parser parser, ENTITY *entity, XML_Bool betweenDecl) {
   entityTrackingOnOpen(parser, entity, __LINE__);
 #endif
   entity->processed = 0;
-  parser->m_processor = internalEntityProcessor;
-  openEntity->next = parser->m_openInternalEntities;
-  parser->m_openInternalEntities = openEntity;
+  openEntity->next = *openEntityList;
+  *openEntityList = openEntity;
   openEntity->entity = entity;
+  openEntity->type = type;
   openEntity->startTagLevel = parser->m_tagLevel;
   openEntity->betweenDecl = betweenDecl;
   openEntity->internalEventPtr = NULL;
   openEntity->internalEventEndPtr = NULL;
 
-  triggerReenter(parser);
-  return XML_ERROR_NONE;
-}
-
-/* KEEP IN SYNC with processInternalEntity */
-static enum XML_Error
-processAttributeEntity(XML_Parser parser, ENTITY *entity,
-                       XML_Bool betweenDecl) {
-  OPEN_INTERNAL_ENTITY *openEntity;
-
-  if (parser->m_freeAttributeEntities) {
-    openEntity = parser->m_freeAttributeEntities;
-    parser->m_freeAttributeEntities = openEntity->next;
-  } else {
-    openEntity
-        = (OPEN_INTERNAL_ENTITY *)MALLOC(parser, sizeof(OPEN_INTERNAL_ENTITY));
-    if (! openEntity)
-      return XML_ERROR_NO_MEMORY;
+  // Only internal entities make use of the reenter flag
+  // therefore no need to set it for other entity types
+  if (type == ENTITY_INTERNAL) {
+    triggerReenter(parser);
   }
-  entity->open = XML_TRUE;
-#if XML_GE == 1
-  entityTrackingOnOpen(parser, entity, __LINE__);
-#endif
-  entity->processed = 0;
-  openEntity->next = parser->m_openAttributeEntities;
-  parser->m_openAttributeEntities = openEntity;
-  openEntity->entity = entity;
-  openEntity->startTagLevel = parser->m_tagLevel;
-  openEntity->betweenDecl = betweenDecl;
-  openEntity->internalEventPtr = NULL;
-  openEntity->internalEventEndPtr = NULL;
-
   return XML_ERROR_NONE;
 }
-
-/* KEEP IN SYNC with processInternalEntity */
-#ifdef XML_DTD
-static enum XML_Error
-processValueEntity(XML_Parser parser, ENTITY *entity, XML_Bool betweenDecl) {
-  OPEN_INTERNAL_ENTITY *openEntity;
-
-  if (parser->m_freeValueEntities) {
-    openEntity = parser->m_freeValueEntities;
-    parser->m_freeValueEntities = openEntity->next;
-  } else {
-    openEntity
-        = (OPEN_INTERNAL_ENTITY *)MALLOC(parser, sizeof(OPEN_INTERNAL_ENTITY));
-    if (! openEntity)
-      return XML_ERROR_NO_MEMORY;
-  }
-  entity->open = XML_TRUE;
-#  if XML_GE == 1
-  entityTrackingOnOpen(parser, entity, __LINE__);
-#  endif
-  entity->processed = 0;
-  openEntity->next = parser->m_openValueEntities;
-  parser->m_openValueEntities = openEntity;
-  openEntity->entity = entity;
-  openEntity->startTagLevel = parser->m_tagLevel;
-  openEntity->betweenDecl = betweenDecl;
-  openEntity->internalEventPtr = NULL;
-  openEntity->internalEventEndPtr = NULL;
-
-  return XML_ERROR_NONE;
-}
-#endif /* XML_DTD */
 
 static enum XML_Error PTRCALL
 internalEntityProcessor(XML_Parser parser, const char *s, const char *end,
@@ -6398,7 +6365,7 @@ appendAttributeValue(XML_Parser parser, const ENCODING *enc, XML_Bool isCdata,
         return XML_ERROR_ATTRIBUTE_EXTERNAL_ENTITY_REF;
       } else {
         enum XML_Error result;
-        result = processAttributeEntity(parser, entity, XML_FALSE);
+        result = processEntity(parser, entity, XML_FALSE, ENTITY_ATTRIBUTE);
         if (nextPtr) {
           *nextPtr = next;
         }
@@ -6516,7 +6483,7 @@ storeEntityValue(XML_Parser parser, const ENCODING *enc,
           } else
             dtd->keepProcessing = dtd->standalone;
         } else {
-          result = processValueEntity(parser, entity, XML_FALSE);
+          result = processEntity(parser, entity, XML_FALSE, ENTITY_VALUE);
           goto endEntityValue;
         }
         break;
