@@ -6041,38 +6041,44 @@ internalEntityProcessor(XML_Parser parser, const char *s, const char *end,
     return XML_ERROR_UNEXPECTED_STATE;
 
   entity = openEntity->entity;
-  textStart = ((const char *)entity->textPtr) + entity->processed;
-  textEnd = (const char *)(entity->textPtr + entity->textLen);
-  /* Set a safe default value in case 'next' does not get set */
-  next = textStart;
+  if (entity->open) {
+    textStart = ((const char *)entity->textPtr) + entity->processed;
+    textEnd = (const char *)(entity->textPtr + entity->textLen);
+    /* Set a safe default value in case 'next' does not get set */
+    next = textStart;
 
-  if (entity->is_param) {
-    int tok
-        = XmlPrologTok(parser->m_internalEncoding, textStart, textEnd, &next);
-    result = doProlog(parser, parser->m_internalEncoding, textStart, textEnd,
-                      tok, next, &next, XML_FALSE, XML_FALSE,
-                      XML_ACCOUNT_ENTITY_EXPANSION);
-  } else {
-    result = doContent(parser, openEntity->startTagLevel,
-                       parser->m_internalEncoding, textStart, textEnd, &next,
-                       XML_FALSE, XML_ACCOUNT_ENTITY_EXPANSION);
-  }
+    if (entity->is_param) {
+      int tok
+          = XmlPrologTok(parser->m_internalEncoding, textStart, textEnd, &next);
+      result = doProlog(parser, parser->m_internalEncoding, textStart, textEnd,
+                        tok, next, &next, XML_FALSE, XML_FALSE,
+                        XML_ACCOUNT_ENTITY_EXPANSION);
+    } else {
+      result = doContent(parser, openEntity->startTagLevel,
+                         parser->m_internalEncoding, textStart, textEnd, &next,
+                         XML_FALSE, XML_ACCOUNT_ENTITY_EXPANSION);
+    }
 
-  if (result != XML_ERROR_NONE)
-    return result;
-  // Check if entity is complete, if not, mark down how much of it is processed
-  if (textEnd != next
-      && (parser->m_parsingStatus.parsing == XML_SUSPENDED
-          || (parser->m_parsingStatus.parsing == XML_PARSING
-              && parser->m_reenter))) {
-    entity->processed = (int)(next - (const char *)entity->textPtr);
+    if (result != XML_ERROR_NONE)
+      return result;
+    // Check if entity is complete, if not, mark down how much of it is
+    // processed
+    if (textEnd != next
+        && (parser->m_parsingStatus.parsing == XML_SUSPENDED
+            || (parser->m_parsingStatus.parsing == XML_PARSING
+                && parser->m_reenter))) {
+      entity->processed = (int)(next - (const char *)entity->textPtr);
+      return result;
+    }
+
+    entity->open = XML_FALSE;
+    triggerReenter(parser);
     return result;
   }
 
 #if XML_GE == 1
   entityTrackingOnClose(parser, entity, __LINE__);
 #endif
-  entity->open = XML_FALSE;
   // Remove fully processed openEntity from open entity list. doContent call can
   // add maximum one new entity to m_openInternalEntities since when a new
   // entity is detected, parser will go into REENTER state and return. Therefore
@@ -6089,19 +6095,6 @@ internalEntityProcessor(XML_Parser parser, const char *s, const char *end,
   /* put openEntity back in list of free instances */
   openEntity->next = parser->m_freeInternalEntities;
   parser->m_freeInternalEntities = openEntity;
-
-  // If the state is XML_SUSPENDED and there are more open entities we want to
-  // stop right here and have the upcoming call to XML_ResumeParser continue
-  // with entity content, or it would be ignored altogether.
-  // If the state is XML_PARSING, m_reenter is set, and there are more open
-  // entities, we want to return and reenter to internalEntityProcessor to
-  // process the next entity in the list
-  if (parser->m_openInternalEntities != NULL
-      && (parser->m_parsingStatus.parsing == XML_SUSPENDED
-          || (parser->m_parsingStatus.parsing == XML_PARSING
-              && parser->m_reenter))) {
-    return XML_ERROR_NONE;
-  }
 
   if (parser->m_openInternalEntities == NULL) {
     parser->m_processor = entity->is_param ? prologProcessor : contentProcessor;
@@ -6150,23 +6143,29 @@ storeAttributeValue(XML_Parser parser, const ENCODING *enc, XML_Bool isCdata,
           = (const char *)(entity->textPtr + entity->textLen);
       /* Set a safe default value in case 'next' does not get set */
       const char *nextInEntity = textStart;
-      result = appendAttributeValue(
-          parser, parser->m_internalEncoding, isCdata, textStart, textEnd, pool,
-          XML_ACCOUNT_ENTITY_EXPANSION, &nextInEntity);
-      if (result != XML_ERROR_NONE)
-        break;
-      // Check if entity is complete, if not, mark down how much of it is
-      // processed. A XML_SUSPENDED check here is not required as
-      // appendAttributeValue will never suspend the parser.
-      if (textEnd != nextInEntity) {
-        entity->processed = (int)(nextInEntity - (const char *)entity->textPtr);
+      if (entity->open) {
+        result = appendAttributeValue(
+            parser, parser->m_internalEncoding, isCdata, textStart, textEnd,
+            pool, XML_ACCOUNT_ENTITY_EXPANSION, &nextInEntity);
+        if (result != XML_ERROR_NONE)
+          break;
+        // Check if entity is complete, if not, mark down how much of it is
+        // processed. A XML_SUSPENDED check here is not required as
+        // appendAttributeValue will never suspend the parser.
+        if (textEnd != nextInEntity) {
+          entity->processed
+              = (int)(nextInEntity - (const char *)entity->textPtr);
+          continue;
+        }
+
+        entity->open = XML_FALSE;
+        triggerReenter(parser);
         continue;
       }
 
 #if XML_GE == 1
       entityTrackingOnClose(parser, entity, __LINE__);
 #endif
-      entity->open = XML_FALSE;
       // Remove fully processed openEntity from open entity list.
       // appendAttributeValue call can add maximum one new entity to
       // m_openAttributeEntities since when a new entity is detected, parser
@@ -6601,23 +6600,29 @@ callStoreEntityValue(XML_Parser parser, const ENCODING *enc,
           = (const char *)(entity->textPtr + entity->textLen);
       /* Set a safe default value in case 'next' does not get set */
       const char *nextInEntity = textStart;
-      result = storeEntityValue(parser, parser->m_internalEncoding, textStart,
-                                textEnd, XML_ACCOUNT_ENTITY_EXPANSION,
-                                &nextInEntity);
-      if (result != XML_ERROR_NONE)
-        break;
-      // Check if entity is complete, if not, mark down how much of it is
-      // processed. A XML_SUSPENDED check here is not required as
-      // appendAttributeValue will never suspend the parser.
-      if (textEnd != nextInEntity) {
-        entity->processed = (int)(nextInEntity - (const char *)entity->textPtr);
+      if (entity->open) {
+        result = storeEntityValue(parser, parser->m_internalEncoding, textStart,
+                                  textEnd, XML_ACCOUNT_ENTITY_EXPANSION,
+                                  &nextInEntity);
+        if (result != XML_ERROR_NONE)
+          break;
+        // Check if entity is complete, if not, mark down how much of it is
+        // processed. A XML_SUSPENDED check here is not required as
+        // appendAttributeValue will never suspend the parser.
+        if (textEnd != nextInEntity) {
+          entity->processed
+              = (int)(nextInEntity - (const char *)entity->textPtr);
+          continue;
+        }
+
+        entity->open = XML_FALSE;
+        triggerReenter(parser);
         continue;
       }
 
 #  if XML_GE == 1
       entityTrackingOnClose(parser, entity, __LINE__);
 #  endif
-      entity->open = XML_FALSE;
       // Remove fully processed openEntity from open entity list.
       // appendAttributeValue call can add maximum one new entity to
       // m_openValueEntities since when a new entity is detected, parser
