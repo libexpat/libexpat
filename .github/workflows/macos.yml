@@ -46,7 +46,7 @@ jobs:
     name: Perform checks
     strategy:
       matrix:
-        os: [macos-12, macos-14]
+        os: [macos-13, macos-15]
         include:
           - MODE: cmake-oos
           - MODE: distcheck
