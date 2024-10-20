@@ -2247,7 +2247,7 @@ XML_StopParser(XML_Parser parser, XML_Bool resumable) {
   case XML_FINISHED:
     parser->m_errorCode = XML_ERROR_FINISHED;
     return XML_STATUS_ERROR;
-  default:
+  case XML_PARSING:
     if (resumable) {
 #ifdef XML_DTD
       if (parser->m_isParamEntity) {
@@ -2258,6 +2258,9 @@ XML_StopParser(XML_Parser parser, XML_Bool resumable) {
       parser->m_parsingStatus.parsing = XML_SUSPENDED;
     } else
       parser->m_parsingStatus.parsing = XML_FINISHED;
+    break;
+  default:
+    assert(0);
   }
   return XML_STATUS_OK;
 }
