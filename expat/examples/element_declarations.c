@@ -127,15 +127,15 @@ dumpContentModelElement(const XML_Content *model, unsigned level,
   }
 
   // Node
-  printf("[%u] type=%s(%d), quant=%s(%d)", (unsigned)(model - root),
-         contentTypeName(model->type), model->type,
-         contentQuantName(model->quant), model->quant);
+  printf("[%u] type=%s(%u), quant=%s(%u)", (unsigned)(model - root),
+         contentTypeName(model->type), (unsigned int)model->type,
+         contentQuantName(model->quant), (unsigned int)model->quant);
   if (model->name) {
     printf(", name=\"%" XML_FMT_STR "\"", model->name);
   } else {
     printf(", name=NULL");
   }
-  printf(", numchildren=%d", model->numchildren);
+  printf(", numchildren=%u", model->numchildren);
   printf("\n");
 }
 

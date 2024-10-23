@@ -91,7 +91,8 @@ reportError(XML_Parser parser, const XML_Char *filename) {
              filename, XML_GetErrorLineNumber(parser),
              XML_GetErrorColumnNumber(parser), message);
   else
-    ftprintf(stderr, T("%s: (unknown message %d)\n"), filename, code);
+    ftprintf(stderr, T("%s: (unknown message %u)\n"), filename,
+             (unsigned int)code);
 }
 
 /* This implementation will give problems on files larger than INT_MAX. */
