@@ -333,7 +333,7 @@ START_TEST(test_misc_deny_internal_entity_closing_doctype_issue_317) {
                                "\n"
                                "%e;";
   const char *const inputTwo = "<!DOCTYPE d [\n"
-                               "<!ENTITY % e1 ']><d/>'><!ENTITY % e2 '&e1;'>\n"
+                               "<!ENTITY % e1 ']><d/>'><!ENTITY % e2 '&#37;e1;'>\n"
                                "\n"
                                "%e2;";
   const char *const inputThree = "<!DOCTYPE d [\n"
