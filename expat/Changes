@@ -30,7 +30,7 @@
 !! THANK YOU!                        Sebastian Pipping -- Berlin, 2024-03-09 !!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-Release 2.6.4 ??? ??? ??? ????
+Release 2.6.4 Wed November 6 2024
         Security fixes:
             #915  CVE-2024-50602 -- Fix crash within function XML_ResumeParser
                     from a NULL pointer dereference by disallowing function
