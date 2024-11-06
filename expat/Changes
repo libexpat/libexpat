@@ -46,6 +46,9 @@ Release 2.6.4 ??? ??? ??? ????
             #904  tests: Resolve duplicate handler
        #317 #918  tests: Improve tests on doctype closing (ex CVE-2019-15903)
             #914  Fix signedness of format strings
+       #919 #920  Version info bumped from 10:3:9 (libexpat*.so.1.9.3)
+                    to 11:0:10 (libexpat*.so.1.10.0); see https://verbump.de/
+                    for what these numbers do
 
         Infrastructure:
             #907  CI: Upgrade Clang from 18 to 19
