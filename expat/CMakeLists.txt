@@ -38,7 +38,7 @@ cmake_minimum_required(VERSION 3.5.0)
 
 project(expat
     VERSION
-        2.6.3
+        2.6.4
     LANGUAGES
         C
 )
@@ -466,9 +466,9 @@ foreach(build_type_upper
     set_property(TARGET expat PROPERTY ${build_type_upper}_POSTFIX ${EXPAT_${build_type_upper}_POSTFIX})
 endforeach()
 
-set(LIBCURRENT 10)  # sync
-set(LIBREVISION 3)  # with
-set(LIBAGE 9)       # configure.ac!
+set(LIBCURRENT 11)  # sync
+set(LIBREVISION 0)  # with
+set(LIBAGE 10)      # configure.ac!
 math(EXPR LIBCURRENT_MINUS_AGE "${LIBCURRENT} - ${LIBAGE}")
 
 if(NOT WIN32)
