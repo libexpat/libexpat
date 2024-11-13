@@ -72,7 +72,7 @@
 #  endif
 #endif
 
-int g_read_size_bytes = 1024 * 8;
+size_t g_read_size_bytes = 1024 * 8;
 
 typedef struct {
   XML_Parser parser;

@@ -1119,7 +1119,7 @@ with <code>isFinal</code> set to <code>XML_TRUE</code>.</p>
 enum XML_Status XMLCALL
 XML_Parse(XML_Parser p,
           const char *s,
-          int len,
+          size_t len,
           int isFinal);
 </pre>
 <pre class="signature">
@@ -1181,7 +1181,7 @@ then parse with <code><a href="#XML_ParseBuffer">XML_ParseBuffer</a></code>.
 <pre class="fcndec">
 enum XML_Status XMLCALL
 XML_ParseBuffer(XML_Parser p,
-                int len,
+                size_t len,
                 int isFinal);
 </pre>
 <div class="fcndef">
@@ -1202,7 +1202,7 @@ Negative values for <code>len</code> are rejected since Expat 2.6.3.
 <pre class="fcndec">
 void * XMLCALL
 XML_GetBuffer(XML_Parser p,
-              int len);
+              size_t len);
 </pre>
 <div class="fcndef">
 Obtain a buffer of size <code>len</code> to read a piece of the document
@@ -1214,7 +1214,7 @@ typical use would look like this:
 
 <pre class="eg">
 for (;;) {
-  int bytes_read;
+  ssize_t bytes_read;
   void *buff = XML_GetBuffer(p, BUFF_SIZE);
   if (buff == NULL) {
     /* handle error */

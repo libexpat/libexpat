@@ -102,7 +102,7 @@ main(int argc, char *argv[]) {
     for (int enabled = 0; enabled <= 1; ++enabled) {
       char context[100];
       g_reparseDeferralEnabledDefault = enabled;
-      snprintf(context, sizeof(context), "chunksize=%d deferral=%d",
+      snprintf(context, sizeof(context), "chunksize=%zu deferral=%d",
                g_chunkSize, enabled);
       context[sizeof(context) - 1] = '\0';
       srunner_run_all(sr, context, verbosity);

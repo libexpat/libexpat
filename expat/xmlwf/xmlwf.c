@@ -304,8 +304,8 @@ processingInstruction(void *userData, const XML_Char *target,
 static XML_Char *
 xcsdup(const XML_Char *s) {
   XML_Char *result;
-  int count = 0;
-  int numBytes;
+  size_t count = 0;
+  size_t numBytes;
 
   /* Get the length of the string, including terminator */
   while (s[count++] != 0) {

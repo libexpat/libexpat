@@ -42,7 +42,7 @@
 #  define XML_FMT_INT_MOD "l"
 #endif
 
-extern int g_read_size_bytes;
+extern size_t g_read_size_bytes;
 
 extern int XML_ProcessFile(XML_Parser parser, const XML_Char *filename,
                            unsigned flags);

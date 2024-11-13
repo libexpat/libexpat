@@ -665,7 +665,7 @@ struct XML_ParserStruct {
   const char *m_parseEndPtr;
   size_t m_partialTokenBytesBefore; /* used in heuristic to avoid O(n^2) */
   XML_Bool m_reparseDeferralEnabled;
-  int m_lastBufferRequestSize;
+  size_t m_lastBufferRequestSize;
   XML_Char *m_dataBuf;
   XML_Char *m_dataBufEnd;
   XML_StartElementHandler m_startElementHandler;
@@ -1923,10 +1923,11 @@ XML_SetHashSalt(XML_Parser parser, unsigned long hash_salt) {
 }
 
 enum XML_Status XMLCALL
-XML_Parse(XML_Parser parser, const char *s, int len, int isFinal) {
-  if ((parser == NULL) || (len < 0) || ((s == NULL) && (len != 0))) {
-    if (parser != NULL)
-      parser->m_errorCode = XML_ERROR_INVALID_ARGUMENT;
+XML_Parse(XML_Parser parser, const char *s, size_t len, int isFinal) {
+  if (parser==NULL) {
+    return XML_STATUS_ERROR;
+  } else if ((s == NULL) && (len != 0)) {
+    parser->m_errorCode = XML_ERROR_INVALID_ARGUMENT;
     return XML_STATUS_ERROR;
   }
   switch (parser->m_parsingStatus.parsing) {
@@ -2034,7 +2035,7 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal) {
 }
 
 enum XML_Status XMLCALL
-XML_ParseBuffer(XML_Parser parser, int len, int isFinal) {
+XML_ParseBuffer(XML_Parser parser, size_t len, int isFinal) {
   const char *start;
   enum XML_Status result = XML_STATUS_OK;
 
@@ -2105,13 +2106,9 @@ XML_ParseBuffer(XML_Parser parser, int len, int isFinal) {
 }
 
 void *XMLCALL
-XML_GetBuffer(XML_Parser parser, int len) {
+XML_GetBuffer(XML_Parser parser, size_t len) {
   if (parser == NULL)
     return NULL;
-  if (len < 0) {
-    parser->m_errorCode = XML_ERROR_NO_MEMORY;
-    return NULL;
-  }
   switch (parser->m_parsingStatus.parsing) {
   case XML_SUSPENDED:
     parser->m_errorCode = XML_ERROR_SUSPENDED;
@@ -3927,7 +3924,7 @@ addBinding(XML_Parser parser, PREFIX *prefix, const ATTRIBUTE_ID *attId,
          ASCII_8,      ASCII_SLASH, ASCII_n,     ASCII_a,      ASCII_m,
          ASCII_e,      ASCII_s,     ASCII_p,     ASCII_a,      ASCII_c,
          ASCII_e,      '\0'};
-  static const int xmlLen = (int)sizeof(xmlNamespace) / sizeof(XML_Char) - 1;
+  static const unsigned xmlLen = sizeof(xmlNamespace) / sizeof(XML_Char) - 1;
   // "http://www.w3.org/2000/xmlns/"
   static const XML_Char xmlnsNamespace[]
       = {ASCII_h,     ASCII_t,      ASCII_t, ASCII_p, ASCII_COLON,  ASCII_SLASH,
@@ -3935,8 +3932,8 @@ addBinding(XML_Parser parser, PREFIX *prefix, const ATTRIBUTE_ID *attId,
          ASCII_3,     ASCII_PERIOD, ASCII_o, ASCII_r, ASCII_g,      ASCII_SLASH,
          ASCII_2,     ASCII_0,      ASCII_0, ASCII_0, ASCII_SLASH,  ASCII_x,
          ASCII_m,     ASCII_l,      ASCII_n, ASCII_s, ASCII_SLASH,  '\0'};
-  static const int xmlnsLen
-      = (int)sizeof(xmlnsNamespace) / sizeof(XML_Char) - 1;
+  static const unsigned xmlnsLen
+      = sizeof(xmlnsNamespace) / sizeof(XML_Char) - 1;
 
   XML_Bool mustBeXML = XML_FALSE;
   XML_Bool isXML = XML_TRUE;
@@ -7442,7 +7439,7 @@ poolStoreString(STRING_POOL *pool, const ENCODING *enc, const char *ptr,
 }
 
 static size_t
-poolBytesToAllocateFor(int blockSize) {
+poolBytesToAllocateFor(size_t blockSize) {
   /* Unprotected math would be:
   ** return offsetof(BLOCK, s) + blockSize * sizeof(XML_Char);
   **
@@ -7452,20 +7449,18 @@ poolBytesToAllocateFor(int blockSize) {
   */
   const size_t stretch = sizeof(XML_Char); /* can be 4 bytes */
 
-  if (blockSize <= 0)
+  if (blockSize == 0)
     return 0;
 
-  if (blockSize > (int)(INT_MAX / stretch))
+  if (blockSize > (SIZE_T_MAX / stretch))
     return 0;
 
   {
-    const int stretchedBlockSize = blockSize * (int)stretch;
-    const int bytesToAllocate
-        = (int)(offsetof(BLOCK, s) + (unsigned)stretchedBlockSize);
-    if (bytesToAllocate < 0)
-      return 0;
+    const size_t stretchedBlockSize = blockSize * stretch;
+    const size_t bytesToAllocate
+        = (offsetof(BLOCK, s) + stretchedBlockSize);
 
-    return (size_t)bytesToAllocate;
+    return bytesToAllocate;
   }
 }
 

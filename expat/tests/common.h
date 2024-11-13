@@ -83,7 +83,7 @@ extern XML_Parser g_parser;
 extern XML_Bool g_resumable;
 extern XML_Bool g_abortable;
 
-extern int g_chunkSize;
+extern size_t g_chunkSize;
 
 extern const char *long_character_data_text;
 extern const char *long_cdata_text;
@@ -99,7 +99,7 @@ extern void _xml_failure(XML_Parser parser, const char *file, int line);
 #  define xml_failure(parser) _xml_failure((parser), __FILE__, __LINE__)
 
 extern enum XML_Status _XML_Parse_SINGLE_BYTES(XML_Parser parser, const char *s,
-                                               int len, int isFinal);
+                                               size_t len, int isFinal);
 
 extern void _expect_failure(const char *text, enum XML_Error errorCode,
                             const char *errorMessage, const char *file,

@@ -141,7 +141,7 @@ XML_Bool g_resumable = XML_FALSE;
 XML_Bool g_abortable = XML_FALSE;
 
 /* Used to control _XML_Parse_SINGLE_BYTES() chunk size */
-int g_chunkSize = 1;
+size_t g_chunkSize = 1;
 
 /* Common test functions */
 
@@ -190,13 +190,13 @@ _xml_failure(XML_Parser parser, const char *file, int line) {
 }
 
 enum XML_Status
-_XML_Parse_SINGLE_BYTES(XML_Parser parser, const char *s, int len,
+_XML_Parse_SINGLE_BYTES(XML_Parser parser, const char *s, size_t len,
                         int isFinal) {
   // This ensures that tests have to run pathological parse cases
   // (e.g. when `s` is NULL) against plain XML_Parse rather than
   // chunking _XML_Parse_SINGLE_BYTES.
-  assert((parser != NULL) && (s != NULL) && (len >= 0));
-  const int chunksize = g_chunkSize;
+  assert((parser != NULL) && (s != NULL));
+  const size_t chunksize = g_chunkSize;
   if (chunksize > 0) {
     // parse in chunks of `chunksize` bytes as long as not exhausting
     for (; len > chunksize; len -= chunksize, s += chunksize) {
