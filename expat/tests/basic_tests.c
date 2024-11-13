@@ -1834,6 +1834,11 @@ END_TEST
 
 /* Test suspending the parser in cdata handler */
 START_TEST(test_suspend_parser_between_cdata_calls) {
+  if (g_chunkSize != 0) {
+    // this test does not use SINGLE_BYTES, because of suspension
+    return;
+  }
+
   const char *text = long_cdata_text;
   enum XML_Status result;
 
@@ -2384,6 +2389,11 @@ END_TEST
  * entity.  Exercises some obscure code in XML_ParserReset().
  */
 START_TEST(test_reset_in_entity) {
+  if (g_chunkSize != 0) {
+    // this test does not use SINGLE_BYTES, because of suspension
+    return;
+  }
+
   const char *text = "<!DOCTYPE doc [\n"
                      "<!ENTITY wombat 'wom'>\n"
                      "<!ENTITY entity 'hi &wom; there'>\n"
@@ -3840,6 +3850,11 @@ END_TEST
 
 /* Test syntax error is caught at parse resumption */
 START_TEST(test_resume_entity_with_syntax_error) {
+  if (g_chunkSize != 0) {
+    // this test does not use SINGLE_BYTES, because of suspension
+    return;
+  }
+
   const char *text = "<!DOCTYPE doc [\n"
                      "<!ENTITY foo '<suspend>Hi</wombat>'>\n"
                      "]>\n"
