@@ -213,7 +213,7 @@ _XML_Parse_SINGLE_BYTES(XML_Parser parser, const char *s, size_t len,
 void
 _expect_failure(const char *text, enum XML_Error errorCode,
                 const char *errorMessage, const char *file, int lineno) {
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
       == XML_STATUS_OK)
     /* Hackish use of _fail() macro, but lets us report
        the right filename and line number. */
@@ -230,7 +230,7 @@ _run_character_check(const char *text, const XML_Char *expected,
   CharData_Init(&storage);
   XML_SetUserData(g_parser, &storage);
   XML_SetCharacterDataHandler(g_parser, accumulate_characters);
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
       == XML_STATUS_ERROR)
     _xml_failure(g_parser, file, line);
   CharData_CheckXMLChars(&storage, expected);
@@ -244,7 +244,7 @@ _run_attribute_check(const char *text, const XML_Char *expected,
   CharData_Init(&storage);
   XML_SetUserData(g_parser, &storage);
   XML_SetStartElementHandler(g_parser, accumulate_attribute);
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
       == XML_STATUS_ERROR)
     _xml_failure(g_parser, file, line);
   CharData_CheckXMLChars(&storage, expected);
@@ -259,7 +259,7 @@ _run_ext_character_check(const char *text, ExtTest *test_data,
   test_data->storage = storage;
   XML_SetUserData(g_parser, test_data);
   XML_SetCharacterDataHandler(g_parser, ext_accumulate_characters);
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
       == XML_STATUS_ERROR)
     _xml_failure(g_parser, file, line);
   CharData_CheckXMLChars(storage, expected);

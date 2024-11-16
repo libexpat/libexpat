@@ -259,7 +259,7 @@ START_TEST(test_accounting_precision) {
 
     enum XML_Status status
         = _XML_Parse_SINGLE_BYTES(parser, cases[u].primaryText,
-                                  (int)strlen(cases[u].primaryText), XML_TRUE);
+                                  strlen(cases[u].primaryText), XML_TRUE);
     if (status != XML_STATUS_OK) {
       _xml_failure(parser, __FILE__, __LINE__);
     }

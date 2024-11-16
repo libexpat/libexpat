@@ -298,7 +298,7 @@ START_TEST(test_misc_stop_during_end_handler_issue_240_1) {
   mydata->deep = 0;
   XML_SetUserData(parser, mydata);
 
-  result = _XML_Parse_SINGLE_BYTES(parser, doc1, (int)strlen(doc1), 1);
+  result = _XML_Parse_SINGLE_BYTES(parser, doc1, strlen(doc1), 1);
   XML_ParserFree(parser);
   free(mydata);
   if (result != XML_STATUS_ERROR)
@@ -319,7 +319,7 @@ START_TEST(test_misc_stop_during_end_handler_issue_240_2) {
   mydata->deep = 0;
   XML_SetUserData(parser, mydata);
 
-  result = _XML_Parse_SINGLE_BYTES(parser, doc2, (int)strlen(doc2), 1);
+  result = _XML_Parse_SINGLE_BYTES(parser, doc2, strlen(doc2), 1);
   XML_ParserFree(parser);
   free(mydata);
   if (result != XML_STATUS_ERROR)
@@ -366,7 +366,7 @@ START_TEST(test_misc_deny_internal_entity_closing_doctype_issue_317) {
     if (setParamEntityResult != 1)
       fail("Failed to set XML_PARAM_ENTITY_PARSING_ALWAYS.");
 
-    parseResult = _XML_Parse_SINGLE_BYTES(parser, input, (int)strlen(input), 0);
+    parseResult = _XML_Parse_SINGLE_BYTES(parser, input, strlen(input), 0);
     if (parseResult != XML_STATUS_ERROR) {
       parseResult = _XML_Parse_SINGLE_BYTES(parser, "", 0, 1);
       if (parseResult != XML_STATUS_ERROR) {
@@ -395,7 +395,7 @@ START_TEST(test_misc_tag_mismatch_reset_leak) {
   const char *const text = "<open xmlns='https://namespace1.test'></close>";
   XML_Parser parser = XML_ParserCreateNS(NULL, XCS('\n'));
 
-  if (_XML_Parse_SINGLE_BYTES(parser, text, (int)strlen(text), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text), XML_TRUE)
       != XML_STATUS_ERROR)
     fail("Call to parse was expected to fail");
   if (XML_GetErrorCode(parser) != XML_ERROR_TAG_MISMATCH)
@@ -403,7 +403,7 @@ START_TEST(test_misc_tag_mismatch_reset_leak) {
 
   XML_ParserReset(parser, NULL);
 
-  if (_XML_Parse_SINGLE_BYTES(parser, text, (int)strlen(text), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text), XML_TRUE)
       != XML_STATUS_ERROR)
     fail("Call to parse was expected to fail");
   if (XML_GetErrorCode(parser) != XML_ERROR_TAG_MISMATCH)
@@ -450,7 +450,7 @@ START_TEST(test_misc_general_entities_support) {
   XML_SetEntityDeclHandler(parser, accumulate_entity_decl);
   XML_SetCharacterDataHandler(parser, accumulate_characters);
 
-  if (_XML_Parse_SINGLE_BYTES(parser, doc, (int)strlen(doc), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(parser, doc, strlen(doc), XML_TRUE)
       != XML_STATUS_OK) {
     xml_failure(parser);
   }
@@ -492,7 +492,7 @@ START_TEST(test_misc_char_handler_stop_without_leak) {
   assert_true(parser != NULL);
   XML_SetUserData(parser, parser);
   XML_SetCharacterDataHandler(parser, resumable_stopping_character_handler);
-  _XML_Parse_SINGLE_BYTES(parser, data, (int)strlen(data), XML_FALSE);
+  _XML_Parse_SINGLE_BYTES(parser, data, strlen(data), XML_FALSE);
   XML_ParserFree(parser);
 }
 END_TEST

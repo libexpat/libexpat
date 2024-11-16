@@ -106,7 +106,7 @@ main(void) {
 
     done = feof(stdin);
 
-    if (XML_ParseBuffer(parser, (int)len, done) == XML_STATUS_ERROR) {
+    if (XML_ParseBuffer(parser, len, done) == XML_STATUS_ERROR) {
       fprintf(stderr,
               "Parse error at line %" XML_FMT_INT_MOD "u:\n%" XML_FMT_STR "\n",
               XML_GetCurrentLineNumber(parser),

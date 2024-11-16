@@ -217,7 +217,7 @@ main(void) {
 
     done = feof(stdin);
 
-    if (XML_ParseBuffer(parser, (int)len, done) == XML_STATUS_ERROR) {
+    if (XML_ParseBuffer(parser, len, done) == XML_STATUS_ERROR) {
       enum XML_Error errorCode = XML_GetErrorCode(parser);
       if (errorCode == XML_ERROR_ABORTED) {
         errorCode = XML_ERROR_NO_MEMORY;

@@ -86,7 +86,7 @@ START_TEST(test_nsalloc_xmlns) {
     g_allocation_count = i;
     /* Exercise more code paths with a default handler */
     XML_SetDefaultHandler(g_parser, dummy_default_handler);
-    if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+    if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
         != XML_STATUS_ERROR)
       break;
     /* Resetting the parser is insufficient, because some memory
@@ -140,34 +140,34 @@ START_TEST(test_nsalloc_parse_buffer) {
   /* Get the parser into suspended state */
   XML_SetCharacterDataHandler(g_parser, clearing_aborting_character_handler);
   g_resumable = XML_TRUE;
-  buffer = XML_GetBuffer(g_parser, (int)strlen(text));
+  buffer = XML_GetBuffer(g_parser, strlen(text));
   if (buffer == NULL)
     fail("Could not acquire parse buffer");
   assert(buffer != NULL);
   memcpy(buffer, text, strlen(text));
-  if (XML_ParseBuffer(g_parser, (int)strlen(text), XML_TRUE)
+  if (XML_ParseBuffer(g_parser, strlen(text), XML_TRUE)
       != XML_STATUS_SUSPENDED)
     xml_failure(g_parser);
   if (XML_GetErrorCode(g_parser) != XML_ERROR_NONE)
     xml_failure(g_parser);
-  if (XML_ParseBuffer(g_parser, (int)strlen(text), XML_TRUE)
+  if (XML_ParseBuffer(g_parser, strlen(text), XML_TRUE)
       != XML_STATUS_ERROR)
     fail("Suspended XML_ParseBuffer not faulted");
   if (XML_GetErrorCode(g_parser) != XML_ERROR_SUSPENDED)
     xml_failure(g_parser);
-  if (XML_GetBuffer(g_parser, (int)strlen(text)) != NULL)
+  if (XML_GetBuffer(g_parser, strlen(text)) != NULL)
     fail("Suspended XML_GetBuffer not faulted");
 
   /* Get it going again and complete the world */
   XML_SetCharacterDataHandler(g_parser, NULL);
   if (XML_ResumeParser(g_parser) != XML_STATUS_OK)
     xml_failure(g_parser);
-  if (XML_ParseBuffer(g_parser, (int)strlen(text), XML_TRUE)
+  if (XML_ParseBuffer(g_parser, strlen(text), XML_TRUE)
       != XML_STATUS_ERROR)
     fail("Post-finishing XML_ParseBuffer not faulted");
   if (XML_GetErrorCode(g_parser) != XML_ERROR_FINISHED)
     xml_failure(g_parser);
-  if (XML_GetBuffer(g_parser, (int)strlen(text)) != NULL)
+  if (XML_GetBuffer(g_parser, strlen(text)) != NULL)
     fail("Post-finishing XML_GetBuffer not faulted");
 }
 END_TEST
@@ -234,7 +234,7 @@ START_TEST(test_nsalloc_long_prefix) {
 
   for (i = 0; i < max_alloc_count; i++) {
     g_allocation_count = i;
-    if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+    if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
         != XML_STATUS_ERROR)
       break;
     /* See comment in test_nsalloc_xmlns() */
@@ -294,7 +294,7 @@ START_TEST(test_nsalloc_long_uri) {
 
   for (i = 0; i < max_alloc_count; i++) {
     g_allocation_count = i;
-    if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+    if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
         != XML_STATUS_ERROR)
       break;
     /* See comment in test_nsalloc_xmlns() */
@@ -337,7 +337,7 @@ START_TEST(test_nsalloc_long_attr) {
 
   for (i = 0; i < max_alloc_count; i++) {
     g_allocation_count = i;
-    if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+    if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
         != XML_STATUS_ERROR)
       break;
     /* See comment in test_nsalloc_xmlns() */
@@ -423,7 +423,7 @@ START_TEST(test_nsalloc_long_attr_prefix) {
     XML_SetReturnNSTriplet(g_parser, XML_TRUE);
     XML_SetUserData(g_parser, (void *)elemstr);
     XML_SetElementHandler(g_parser, triplet_start_checker, triplet_end_checker);
-    if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+    if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
         != XML_STATUS_ERROR)
       break;
     /* See comment in test_nsalloc_xmlns() */
@@ -447,7 +447,7 @@ START_TEST(test_nsalloc_realloc_attributes) {
 
   for (i = 0; i < max_realloc_count; i++) {
     g_reallocation_count = i;
-    if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+    if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
         != XML_STATUS_ERROR)
       break;
     /* See comment in test_nsalloc_xmlns() */
@@ -480,7 +480,7 @@ START_TEST(test_nsalloc_long_element) {
     XML_SetReturnNSTriplet(g_parser, XML_TRUE);
     XML_SetUserData(g_parser, (void *)elemstr);
     XML_SetElementHandler(g_parser, triplet_start_checker, triplet_end_checker);
-    if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+    if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
         != XML_STATUS_ERROR)
       break;
     /* See comment in test_nsalloc_xmlns() */
@@ -516,7 +516,7 @@ START_TEST(test_nsalloc_realloc_binding_uri) {
   const unsigned max_realloc_count = 10;
 
   /* First, do a full parse that will leave bindings around */
-  if (_XML_Parse_SINGLE_BYTES(g_parser, first, (int)strlen(first), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, first, strlen(first), XML_TRUE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
 
@@ -524,7 +524,7 @@ START_TEST(test_nsalloc_realloc_binding_uri) {
   for (i = 0; i < max_realloc_count; i++) {
     XML_ParserReset(g_parser, NULL);
     g_reallocation_count = i;
-    if (_XML_Parse_SINGLE_BYTES(g_parser, second, (int)strlen(second), XML_TRUE)
+    if (_XML_Parse_SINGLE_BYTES(g_parser, second, strlen(second), XML_TRUE)
         != XML_STATUS_ERROR)
       break;
   }
@@ -597,7 +597,7 @@ START_TEST(test_nsalloc_realloc_long_prefix) {
 
   for (i = 0; i < max_realloc_count; i++) {
     g_reallocation_count = i;
-    if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+    if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
         != XML_STATUS_ERROR)
       break;
     /* See comment in test_nsalloc_xmlns() */
@@ -673,7 +673,7 @@ START_TEST(test_nsalloc_realloc_longer_prefix) {
 
   for (i = 0; i < max_realloc_count; i++) {
     g_reallocation_count = i;
-    if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+    if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
         != XML_STATUS_ERROR)
       break;
     /* See comment in test_nsalloc_xmlns() */
@@ -784,9 +784,9 @@ START_TEST(test_nsalloc_long_namespace) {
 
   for (i = 0; i < max_alloc_count; i++) {
     g_allocation_count = i;
-    if (_XML_Parse_SINGLE_BYTES(g_parser, text1, (int)strlen(text1), XML_FALSE)
+    if (_XML_Parse_SINGLE_BYTES(g_parser, text1, strlen(text1), XML_FALSE)
             != XML_STATUS_ERROR
-        && _XML_Parse_SINGLE_BYTES(g_parser, text2, (int)strlen(text2),
+        && _XML_Parse_SINGLE_BYTES(g_parser, text2, strlen(text2),
                                    XML_TRUE)
                != XML_STATUS_ERROR)
       break;
@@ -860,7 +860,7 @@ START_TEST(test_nsalloc_less_long_namespace) {
 
   for (i = 0; i < max_alloc_count; i++) {
     g_allocation_count = i;
-    if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+    if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
         != XML_STATUS_ERROR)
       break;
     /* See comment in test_nsalloc_xmlns() */
@@ -911,7 +911,7 @@ START_TEST(test_nsalloc_long_context) {
     XML_SetUserData(g_parser, options);
     XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
     XML_SetExternalEntityRefHandler(g_parser, external_entity_optioner);
-    if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+    if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
         != XML_STATUS_ERROR)
       break;
 
@@ -941,7 +941,7 @@ context_realloc_test(const char *text) {
     XML_SetUserData(g_parser, options);
     XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
     XML_SetExternalEntityRefHandler(g_parser, external_entity_optioner);
-    if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+    if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
         != XML_STATUS_ERROR)
       break;
     /* See comment in test_nsalloc_xmlns() */
@@ -1224,7 +1224,7 @@ START_TEST(test_nsalloc_realloc_long_ge_name) {
     XML_SetUserData(g_parser, options);
     XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
     XML_SetExternalEntityRefHandler(g_parser, external_entity_optioner);
-    if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+    if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
         != XML_STATUS_ERROR)
       break;
     /* See comment in test_nsalloc_xmlns() */
@@ -1329,9 +1329,9 @@ START_TEST(test_nsalloc_realloc_long_context_in_dtd) {
     XML_SetUserData(g_parser, options);
     XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
     XML_SetExternalEntityRefHandler(g_parser, external_entity_optioner);
-    if (_XML_Parse_SINGLE_BYTES(g_parser, text1, (int)strlen(text1), XML_FALSE)
+    if (_XML_Parse_SINGLE_BYTES(g_parser, text1, strlen(text1), XML_FALSE)
             != XML_STATUS_ERROR
-        && _XML_Parse_SINGLE_BYTES(g_parser, text2, (int)strlen(text2),
+        && _XML_Parse_SINGLE_BYTES(g_parser, text2, strlen(text2),
                                    XML_TRUE)
                != XML_STATUS_ERROR)
       break;
@@ -1380,7 +1380,7 @@ START_TEST(test_nsalloc_long_default_in_ext) {
     XML_SetUserData(g_parser, options);
     XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
     XML_SetExternalEntityRefHandler(g_parser, external_entity_optioner);
-    if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+    if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
         != XML_STATUS_ERROR)
       break;
 
@@ -1449,7 +1449,7 @@ START_TEST(test_nsalloc_long_systemid_in_ext) {
     XML_SetUserData(g_parser, options);
     XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
     XML_SetExternalEntityRefHandler(g_parser, external_entity_optioner);
-    if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+    if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
         != XML_STATUS_ERROR)
       break;
 
@@ -1485,7 +1485,7 @@ START_TEST(test_nsalloc_prefixed_element) {
     XML_SetUserData(g_parser, options);
     XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
     XML_SetExternalEntityRefHandler(g_parser, external_entity_optioner);
-    if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+    if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
         != XML_STATUS_ERROR)
       break;
 

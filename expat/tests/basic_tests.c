@@ -136,7 +136,7 @@ START_TEST(test_bom_utf8) {
   /* This test is really just making sure we don't core on a UTF-8 BOM. */
   const char *text = "\357\273\277<e/>";
 
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
 }
@@ -196,7 +196,7 @@ START_TEST(test_hash_collision) {
         "</doc>\n";
 
   XML_SetHashSalt(g_parser, COLLIDING_HASH_SALT);
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
 }
@@ -297,7 +297,7 @@ START_TEST(test_illegal_utf8) {
 
   for (i = 128; i <= 255; ++i) {
     snprintf(text, sizeof(text), "<e>%ccd</e>", i);
-    if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+    if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
         == XML_STATUS_OK) {
       snprintf(text, sizeof(text),
                "expected token error for '%c' (ordinal %d) in UTF-8 text", i,
@@ -603,7 +603,7 @@ START_TEST(test_line_number_after_parse) {
                      "\n</tag>";
   XML_Size lineno;
 
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
   lineno = XML_GetCurrentLineNumber(g_parser);
@@ -621,7 +621,7 @@ START_TEST(test_column_number_after_parse) {
   const char *text = "<tag></tag>";
   XML_Size colno;
 
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
   colno = XML_GetCurrentColumnNumber(g_parser);
@@ -657,7 +657,7 @@ START_TEST(test_line_and_column_numbers_inside_handlers) {
   XML_SetUserData(g_parser, &storage);
   XML_SetStartElementHandler(g_parser, start_element_event_handler2);
   XML_SetEndElementHandler(g_parser, end_element_event_handler2);
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
 
@@ -672,7 +672,7 @@ START_TEST(test_line_number_after_error) {
                      "  <b>\n"
                      "  </a>"; /* missing </b> */
   XML_Size lineno;
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
       != XML_STATUS_ERROR)
     fail("Expected a parse error");
 
@@ -692,7 +692,7 @@ START_TEST(test_column_number_after_error) {
                      "  <b>\n"
                      "  </a>"; /* missing </b> */
   XML_Size colno;
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
       != XML_STATUS_ERROR)
     fail("Expected a parse error");
 
@@ -735,7 +735,7 @@ START_TEST(test_really_long_lines) {
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-+"
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-+"
         "</e>";
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
 }
@@ -771,7 +771,7 @@ START_TEST(test_really_long_encoded_lines) {
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-+"
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-+"
         "</e>";
-  int parse_len = (int)strlen(text);
+  size_t parse_len = strlen(text);
 
   /* Need a cdata handler to provoke the code path we want to test */
   XML_SetCharacterDataHandler(g_parser, dummy_cdata_handler);
@@ -797,7 +797,7 @@ START_TEST(test_end_element_events) {
   CharData_Init(&storage);
   XML_SetUserData(g_parser, &storage);
   XML_SetEndElementHandler(g_parser, end_element_event_handler);
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
   CharData_CheckXMLChars(&storage, expected);
@@ -908,7 +908,7 @@ START_TEST(test_attr_whitespace_normalization) {
 
   XML_SetStartElementHandler(g_parser,
                              check_attr_contains_normalized_whitespace);
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
 }
@@ -954,7 +954,7 @@ START_TEST(test_unknown_encoding_internal_entity) {
                      "<test a='&foo;'/>";
 
   XML_SetUnknownEncodingHandler(g_parser, UnknownEncodingHandler, NULL);
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
 }
@@ -967,7 +967,7 @@ START_TEST(test_unrecognised_encoding_internal_entity) {
                      "<test a='&foo;'/>";
 
   XML_SetUnknownEncodingHandler(g_parser, UnrecognisedEncodingHandler, NULL);
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
       != XML_STATUS_ERROR)
     fail("Unrecognised encoding not rejected");
 }
@@ -1069,7 +1069,7 @@ START_TEST(test_wfc_undeclared_entity_unread_external_subset) {
   const char *text = "<!DOCTYPE doc SYSTEM 'foo'>\n"
                      "<doc>&entity;</doc>";
 
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
 }
@@ -1231,7 +1231,7 @@ START_TEST(test_recursive_external_parameter_entity_2) {
     assert_true(ext_parser != NULL);
 
     const enum XML_Status actualStatus
-        = _XML_Parse_SINGLE_BYTES(ext_parser, doc, (int)strlen(doc), XML_TRUE);
+        = _XML_Parse_SINGLE_BYTES(ext_parser, doc, strlen(doc), XML_TRUE);
 
     assert_true(actualStatus == expectedStatus);
     if (actualStatus != XML_STATUS_OK) {
@@ -1336,12 +1336,12 @@ START_TEST(test_dtd_attr_handling) {
     set_subtest("%s", test->definition);
     XML_SetAttlistDeclHandler(g_parser, verify_attlist_decl_handler);
     XML_SetUserData(g_parser, test);
-    if (_XML_Parse_SINGLE_BYTES(g_parser, prolog, (int)strlen(prolog),
+    if (_XML_Parse_SINGLE_BYTES(g_parser, prolog, strlen(prolog),
                                 XML_FALSE)
         == XML_STATUS_ERROR)
       xml_failure(g_parser);
     if (_XML_Parse_SINGLE_BYTES(g_parser, test->definition,
-                                (int)strlen(test->definition), XML_TRUE)
+                                strlen(test->definition), XML_TRUE)
         == XML_STATUS_ERROR)
       xml_failure(g_parser);
     XML_ParserReset(g_parser, NULL);
@@ -1360,7 +1360,7 @@ START_TEST(test_empty_ns_without_namespaces) {
                      "  <e xmlns:prefix=''/>\n"
                      "</doc>";
 
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
 }
@@ -1377,7 +1377,7 @@ START_TEST(test_ns_in_attribute_default_without_namespaces) {
                      "      ]>\n"
                      "<e:element/>";
 
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
 }
@@ -1396,7 +1396,7 @@ START_TEST(test_stop_parser_between_char_data_calls) {
 
   XML_SetCharacterDataHandler(g_parser, clearing_aborting_character_handler);
   g_resumable = XML_FALSE;
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
       != XML_STATUS_ERROR)
     xml_failure(g_parser);
   if (XML_GetErrorCode(g_parser) != XML_ERROR_ABORTED)
@@ -1417,13 +1417,13 @@ START_TEST(test_suspend_parser_between_char_data_calls) {
 
   XML_SetCharacterDataHandler(g_parser, clearing_aborting_character_handler);
   g_resumable = XML_TRUE;
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
       != XML_STATUS_SUSPENDED)
     xml_failure(g_parser);
   if (XML_GetErrorCode(g_parser) != XML_ERROR_NONE)
     xml_failure(g_parser);
   /* Try parsing directly */
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
       != XML_STATUS_ERROR)
     fail("Attempt to continue parse while suspended not faulted");
   if (XML_GetErrorCode(g_parser) != XML_ERROR_SUSPENDED)
@@ -1438,7 +1438,7 @@ START_TEST(test_repeated_stop_parser_between_char_data_calls) {
   XML_SetCharacterDataHandler(g_parser, parser_stop_character_handler);
   g_resumable = XML_FALSE;
   g_abortable = XML_FALSE;
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
       != XML_STATUS_ERROR)
     fail("Failed to double-stop parser");
 
@@ -1446,7 +1446,7 @@ START_TEST(test_repeated_stop_parser_between_char_data_calls) {
   XML_SetCharacterDataHandler(g_parser, parser_stop_character_handler);
   g_resumable = XML_TRUE;
   g_abortable = XML_FALSE;
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
       != XML_STATUS_SUSPENDED)
     fail("Failed to double-suspend parser");
 
@@ -1454,7 +1454,7 @@ START_TEST(test_repeated_stop_parser_between_char_data_calls) {
   XML_SetCharacterDataHandler(g_parser, parser_stop_character_handler);
   g_resumable = XML_TRUE;
   g_abortable = XML_TRUE;
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
       != XML_STATUS_ERROR)
     fail("Failed to suspend-abort parser");
 }
@@ -1472,7 +1472,7 @@ START_TEST(test_good_cdata_ascii) {
   XML_SetStartCdataSectionHandler(g_parser, dummy_start_cdata_handler);
   XML_SetEndCdataSectionHandler(g_parser, dummy_end_cdata_handler);
 
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
   CharData_CheckXMLChars(&storage, expected);
@@ -1484,7 +1484,7 @@ START_TEST(test_good_cdata_ascii) {
   XML_SetCharacterDataHandler(g_parser, accumulate_characters);
   XML_SetDefaultHandler(g_parser, dummy_default_handler);
 
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
   CharData_CheckXMLChars(&storage, expected);
@@ -1724,7 +1724,7 @@ START_TEST(test_bad_cdata) {
   for (; i < sizeof(cases) / sizeof(struct CaseData); i++) {
     set_subtest("%s", cases[i].text);
     const enum XML_Status actualStatus = _XML_Parse_SINGLE_BYTES(
-        g_parser, cases[i].text, (int)strlen(cases[i].text), XML_TRUE);
+        g_parser, cases[i].text, strlen(cases[i].text), XML_TRUE);
     const enum XML_Error actualError = XML_GetErrorCode(g_parser);
 
     assert(actualStatus == XML_STATUS_ERROR);
@@ -1835,7 +1835,7 @@ START_TEST(test_suspend_parser_between_cdata_calls) {
 
   XML_SetCharacterDataHandler(g_parser, clearing_aborting_character_handler);
   g_resumable = XML_TRUE;
-  result = _XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE);
+  result = _XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE);
   if (result != XML_STATUS_SUSPENDED) {
     if (result == XML_STATUS_ERROR)
       xml_failure(g_parser);
@@ -1895,7 +1895,7 @@ START_TEST(test_default_current) {
     XML_SetDefaultHandler(g_parser, record_default_handler);
     XML_SetCharacterDataHandler(g_parser, record_cdata_handler);
     XML_SetUserData(g_parser, &storage);
-    if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+    if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
         == XML_STATUS_ERROR)
       xml_failure(g_parser);
     int i = 0;
@@ -1926,7 +1926,7 @@ START_TEST(test_default_current) {
     XML_SetDefaultHandler(g_parser, record_default_handler);
     XML_SetCharacterDataHandler(g_parser, record_cdata_nodefault_handler);
     XML_SetUserData(g_parser, &storage);
-    if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+    if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
         == XML_STATUS_ERROR)
       xml_failure(g_parser);
     int i = 0;
@@ -1954,7 +1954,7 @@ START_TEST(test_default_current) {
     XML_SetDefaultHandler(g_parser, record_default_handler);
     XML_SetCharacterDataHandler(g_parser, record_cdata_handler);
     XML_SetUserData(g_parser, &storage);
-    if (_XML_Parse_SINGLE_BYTES(g_parser, entity_text, (int)strlen(entity_text),
+    if (_XML_Parse_SINGLE_BYTES(g_parser, entity_text, strlen(entity_text),
                                 XML_TRUE)
         == XML_STATUS_ERROR)
       xml_failure(g_parser);
@@ -1991,7 +1991,7 @@ START_TEST(test_default_current) {
     XML_SetCharacterDataHandler(g_parser, record_cdata_handler);
     XML_SetSkippedEntityHandler(g_parser, record_skip_handler);
     XML_SetUserData(g_parser, &storage);
-    if (_XML_Parse_SINGLE_BYTES(g_parser, entity_text, (int)strlen(entity_text),
+    if (_XML_Parse_SINGLE_BYTES(g_parser, entity_text, strlen(entity_text),
                                 XML_TRUE)
         == XML_STATUS_ERROR)
       xml_failure(g_parser);
@@ -2027,7 +2027,7 @@ START_TEST(test_default_current) {
     XML_SetDefaultHandlerExpand(g_parser, record_default_handler);
     XML_SetCharacterDataHandler(g_parser, record_cdata_handler);
     XML_SetUserData(g_parser, &storage);
-    if (_XML_Parse_SINGLE_BYTES(g_parser, entity_text, (int)strlen(entity_text),
+    if (_XML_Parse_SINGLE_BYTES(g_parser, entity_text, strlen(entity_text),
                                 XML_TRUE)
         == XML_STATUS_ERROR)
       xml_failure(g_parser);
@@ -2063,7 +2063,7 @@ START_TEST(test_default_current) {
     XML_SetDefaultHandlerExpand(g_parser, record_default_handler);
     XML_SetCharacterDataHandler(g_parser, record_cdata_nodefault_handler);
     XML_SetUserData(g_parser, &storage);
-    if (_XML_Parse_SINGLE_BYTES(g_parser, entity_text, (int)strlen(entity_text),
+    if (_XML_Parse_SINGLE_BYTES(g_parser, entity_text, strlen(entity_text),
                                 XML_TRUE)
         == XML_STATUS_ERROR)
       xml_failure(g_parser);
@@ -2101,7 +2101,7 @@ START_TEST(test_dtd_elements) {
                      "<doc><chapter>Wombats are go</chapter></doc>";
 
   XML_SetElementDeclHandler(g_parser, dummy_element_decl_handler);
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
 }
@@ -2177,7 +2177,7 @@ START_TEST(test_dtd_elements_nesting) {
   XML_SetUserData(g_parser, (void *)(uintptr_t)-1);
 
   XML_SetElementDeclHandler(g_parser, element_decl_check_model);
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
 
@@ -2201,7 +2201,7 @@ START_TEST(test_set_foreign_dtd) {
   XML_SetDefaultHandler(g_parser, dummy_default_handler);
   if (XML_UseForeignDTD(g_parser, XML_TRUE) != XML_ERROR_NONE)
     fail("Could not set foreign DTD");
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text1, (int)strlen(text1), XML_FALSE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text1, strlen(text1), XML_FALSE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
 
@@ -2216,7 +2216,7 @@ START_TEST(test_set_foreign_dtd) {
     fail("Failed to reject late hash salt change");
 
   /* Now finish the parse */
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text2, (int)strlen(text2), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text2, strlen(text2), XML_TRUE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
 }
@@ -2271,7 +2271,7 @@ START_TEST(test_foreign_dtd_with_doctype) {
   XML_SetDefaultHandler(g_parser, dummy_default_handler);
   if (XML_UseForeignDTD(g_parser, XML_TRUE) != XML_ERROR_NONE)
     fail("Could not set foreign DTD");
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text1, (int)strlen(text1), XML_FALSE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text1, strlen(text1), XML_FALSE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
 
@@ -2286,7 +2286,7 @@ START_TEST(test_foreign_dtd_with_doctype) {
     fail("Failed to reject late hash salt change");
 
   /* Now finish the parse */
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text2, (int)strlen(text2), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text2, strlen(text2), XML_TRUE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
 }
@@ -2301,7 +2301,7 @@ START_TEST(test_foreign_dtd_without_external_subset) {
   XML_SetUserData(g_parser, NULL);
   XML_SetExternalEntityRefHandler(g_parser, external_entity_null_loader);
   XML_UseForeignDTD(g_parser, XML_TRUE);
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
 }
@@ -2366,7 +2366,7 @@ START_TEST(test_attributes) {
 
   XML_SetStartElementHandler(parser, counting_start_element_handler);
   XML_SetUserData(parser, &parserAndElementInfos);
-  if (_XML_Parse_SINGLE_BYTES(parser, text, (int)strlen(text), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text), XML_TRUE)
       == XML_STATUS_ERROR)
     xml_failure(parser);
 
@@ -2387,7 +2387,7 @@ START_TEST(test_reset_in_entity) {
 
   g_resumable = XML_TRUE;
   XML_SetCharacterDataHandler(g_parser, clearing_aborting_character_handler);
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
   XML_GetParsingStatus(g_parser, &status);
@@ -2406,7 +2406,7 @@ START_TEST(test_resume_invalid_parse) {
 
   g_resumable = XML_TRUE;
   XML_SetCharacterDataHandler(g_parser, clearing_aborting_character_handler);
-  if (XML_Parse(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (XML_Parse(g_parser, text, strlen(text), XML_TRUE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
   if (XML_ResumeParser(g_parser) == XML_STATUS_OK)
@@ -2422,7 +2422,7 @@ START_TEST(test_resume_resuspended) {
 
   g_resumable = XML_TRUE;
   XML_SetCharacterDataHandler(g_parser, clearing_aborting_character_handler);
-  if (XML_Parse(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (XML_Parse(g_parser, text, strlen(text), XML_TRUE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
   g_resumable = XML_TRUE;
@@ -2445,7 +2445,7 @@ START_TEST(test_cdata_default) {
   XML_SetUserData(g_parser, &storage);
   XML_SetDefaultHandler(g_parser, accumulate_characters);
 
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
   CharData_CheckXMLChars(&storage, expected);
@@ -2460,7 +2460,7 @@ START_TEST(test_subordinate_reset) {
 
   XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
   XML_SetExternalEntityRefHandler(g_parser, external_entity_resetter);
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
 }
@@ -2474,7 +2474,7 @@ START_TEST(test_subordinate_suspend) {
 
   XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
   XML_SetExternalEntityRefHandler(g_parser, external_entity_suspender);
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
 }
@@ -2493,7 +2493,7 @@ START_TEST(test_subordinate_xdecl_suspend) {
   XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
   XML_SetExternalEntityRefHandler(g_parser, external_entity_suspend_xmldecl);
   g_resumable = XML_TRUE;
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
 }
@@ -2509,7 +2509,7 @@ START_TEST(test_subordinate_xdecl_abort) {
   XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
   XML_SetExternalEntityRefHandler(g_parser, external_entity_suspend_xmldecl);
   g_resumable = XML_FALSE;
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
 }
@@ -2555,13 +2555,13 @@ START_TEST(test_explicit_encoding) {
   /* Say we are UTF-8 */
   if (XML_SetEncoding(g_parser, XCS("utf-8")) != XML_STATUS_OK)
     fail("Failed to set explicit encoding");
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text1, (int)strlen(text1), XML_FALSE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text1, strlen(text1), XML_FALSE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
   /* Try to switch encodings mid-parse */
   if (XML_SetEncoding(g_parser, XCS("us-ascii")) != XML_STATUS_ERROR)
     fail("Allowed encoding change");
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text2, (int)strlen(text2), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text2, strlen(text2), XML_TRUE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
   /* Try now the parse is over */
@@ -2579,7 +2579,7 @@ START_TEST(test_trailing_cr) {
   XML_SetCharacterDataHandler(g_parser, cr_cdata_handler);
   XML_SetUserData(g_parser, &found_cr);
   found_cr = 0;
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
       == XML_STATUS_OK)
     fail("Failed to fault unclosed doc");
   if (found_cr == 0)
@@ -2590,7 +2590,7 @@ START_TEST(test_trailing_cr) {
   XML_SetDefaultHandler(g_parser, cr_cdata_handler);
   XML_SetUserData(g_parser, &found_cr);
   found_cr = 0;
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
       == XML_STATUS_OK)
     fail("Failed to fault unclosed doc");
   if (found_cr == 0)
@@ -2610,7 +2610,7 @@ START_TEST(test_ext_entity_trailing_cr) {
   XML_SetExternalEntityRefHandler(g_parser, external_entity_cr_catcher);
   XML_SetUserData(g_parser, &found_cr);
   found_cr = 0;
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
       != XML_STATUS_OK)
     xml_failure(g_parser);
   if (found_cr == 0)
@@ -2622,7 +2622,7 @@ START_TEST(test_ext_entity_trailing_cr) {
   XML_SetExternalEntityRefHandler(g_parser, external_entity_bad_cr_catcher);
   XML_SetUserData(g_parser, &found_cr);
   found_cr = 0;
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
       != XML_STATUS_OK)
     xml_failure(g_parser);
   if (found_cr == 0)
@@ -2635,12 +2635,11 @@ START_TEST(test_trailing_rsqb) {
   const char *text8 = "<doc>]";
   const char text16[] = "\xFF\xFE<\000d\000o\000c\000>\000]\000";
   int found_rsqb;
-  int text8_len = (int)strlen(text8);
 
   XML_SetCharacterDataHandler(g_parser, rsqb_handler);
   XML_SetUserData(g_parser, &found_rsqb);
   found_rsqb = 0;
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text8, text8_len, XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text8, strlen(text8), XML_TRUE)
       == XML_STATUS_OK)
     fail("Failed to fault unclosed doc");
   if (found_rsqb == 0)
@@ -2684,7 +2683,7 @@ START_TEST(test_ext_entity_trailing_rsqb) {
   XML_SetExternalEntityRefHandler(g_parser, external_entity_rsqb_catcher);
   XML_SetUserData(g_parser, &found_rsqb);
   found_rsqb = 0;
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
       != XML_STATUS_OK)
     xml_failure(g_parser);
   if (found_rsqb == 0)
@@ -2701,7 +2700,7 @@ START_TEST(test_ext_entity_good_cdata) {
 
   XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
   XML_SetExternalEntityRefHandler(g_parser, external_entity_good_cdata_ascii);
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
       != XML_STATUS_OK)
     xml_failure(g_parser);
 }
@@ -2727,13 +2726,13 @@ START_TEST(test_user_parameters) {
   XML_UseParserAsHandlerArg(g_parser);
   XML_SetUserData(g_parser, (void *)1);
   g_handler_data = g_parser;
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_FALSE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_FALSE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
   /* Ensure we can't change policy mid-parse */
   if (XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_NEVER))
     fail("Changed param entity parsing policy while parsing");
-  if (_XML_Parse_SINGLE_BYTES(g_parser, epilog, (int)strlen(epilog), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, epilog, strlen(epilog), XML_TRUE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
   if (g_comment_count != 3)
@@ -2766,7 +2765,7 @@ START_TEST(test_ext_entity_ref_parameter) {
    */
   XML_SetExternalEntityRefHandlerArg(g_parser, (void *)text);
   g_handler_data = text;
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
 
@@ -2776,7 +2775,7 @@ START_TEST(test_ext_entity_ref_parameter) {
   XML_SetExternalEntityRefHandler(g_parser, external_entity_ref_param_checker);
   XML_SetExternalEntityRefHandlerArg(g_parser, NULL);
   g_handler_data = g_parser;
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
 }
@@ -2796,7 +2795,7 @@ START_TEST(test_empty_parse) {
 
   /* Now try with valid text before the empty end */
   XML_ParserReset(g_parser, NULL);
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_FALSE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_FALSE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
   if (XML_Parse(g_parser, NULL, 0, XML_TRUE) == XML_STATUS_ERROR)
@@ -2804,7 +2803,7 @@ START_TEST(test_empty_parse) {
 
   /* Now try with invalid text before the empty end */
   XML_ParserReset(g_parser, NULL);
-  if (_XML_Parse_SINGLE_BYTES(g_parser, partial, (int)strlen(partial),
+  if (_XML_Parse_SINGLE_BYTES(g_parser, partial, strlen(partial),
                               XML_FALSE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
@@ -2848,8 +2847,6 @@ START_TEST(test_get_buffer_1) {
   if (XML_ParseBuffer(g_parser, strlen(text), XML_FALSE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
-  if (XML_GetBuffer(g_parser, SIZE_T_MAX) != NULL)
-    fail("SIZE_T_MAX buffer not failed");
 
   /* Now try extending it a more reasonable but still too large
    * amount.  The allocator in XML_GetBuffer() doubles the buffer
@@ -2863,7 +2860,7 @@ START_TEST(test_get_buffer_1) {
    */
   if (get_feature(XML_FEATURE_CONTEXT_BYTES, &context_bytes) != XML_STATUS_OK)
     context_bytes = 0;
-  if (XML_GetBuffer(g_parser, INT_MAX - (context_bytes + 1025)) != NULL)
+  if (XML_GetBuffer(g_parser, SIZE_T_MAX - (context_bytes + 1025)) != NULL)
     fail("INT_MAX- buffer not failed");
 
   /* Now try extending it a carefully crafted amount */
@@ -2883,7 +2880,7 @@ START_TEST(test_get_buffer_2) {
     fail("1.5K buffer failed");
   assert(buffer != NULL);
   memcpy(buffer, text, strlen(text));
-  if (XML_ParseBuffer(g_parser, (int)strlen(text), XML_FALSE)
+  if (XML_ParseBuffer(g_parser, strlen(text), XML_FALSE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
 
@@ -2900,11 +2897,11 @@ START_TEST(test_get_buffer_3_overflow) {
   assert(parser != NULL);
 
   const char *const text = "\n";
-  const int expectedKeepValue = (int)strlen(text);
+  const int expectedKeepValue = strlen(text);
 
   // After this call, variable "keep" in XML_GetBuffer will
   // have value expectedKeepValue
-  if (_XML_Parse_SINGLE_BYTES(parser, text, (int)strlen(text),
+  if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text),
                               XML_FALSE /* isFinal */)
       == XML_STATUS_ERROR)
     xml_failure(parser);
@@ -2931,7 +2928,7 @@ START_TEST(test_buffer_can_grow_to_max) {
       "herebutipromisethatididntheybtwhowgreatarespacesandpunctuationforhelping"
       "withreadabilityprettygreatithinkanywaysthisisprobablylongenoughbye><x a='"};
   const int num_prefixes = sizeof(prefixes) / sizeof(prefixes[0]);
-  size_t maxbuf = SIZE_T_MAX / 2 + (SIZE_T_MAX & 1); // round up without overflow
+  size_t maxbuf = SIZE_T_MAX; // round up without overflow
 #if defined(__MINGW32__) && ! defined(__MINGW64__)
   // workaround for mingw/wine32 on GitHub CI not being able to reach 1GiB
   // Can we make a big allocation?
@@ -2946,7 +2943,7 @@ START_TEST(test_buffer_can_grow_to_max) {
   for (int i = 0; i < num_prefixes; ++i) {
     set_subtest("\"%s\"", prefixes[i]);
     XML_Parser parser = XML_ParserCreate(NULL);
-    const int prefix_len = (int)strlen(prefixes[i]);
+    const size_t prefix_len = strlen(prefixes[i]);
     const enum XML_Status s
         = _XML_Parse_SINGLE_BYTES(parser, prefixes[i], prefix_len, XML_FALSE);
     if (s != XML_STATUS_OK)
@@ -2954,6 +2951,7 @@ START_TEST(test_buffer_can_grow_to_max) {
 
     // XML_CONTEXT_BYTES of the prefix may remain in the buffer;
     // subtracting the whole prefix is easiest, and close enough.
+    printf("%zu %zu\n",maxbuf, prefix_len);
     assert_true(XML_GetBuffer(parser, maxbuf - prefix_len) != NULL);
     // The limit should be consistent; no prefix should allow us to
     // reach above the max buffer size.
@@ -2984,7 +2982,7 @@ START_TEST(test_byte_info_at_end) {
   if (XML_GetCurrentByteIndex(g_parser) != -1
       || XML_GetCurrentByteCount(g_parser) != 0)
     fail("Byte index/count incorrect at start of parse");
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
   /* At end, the count will be zero and the index the end of string */
@@ -3001,7 +2999,7 @@ END_TEST
 START_TEST(test_byte_info_at_error) {
   const char *text = PRE_ERROR_STR POST_ERROR_STR;
 
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
       == XML_STATUS_OK)
     fail("Syntax error not faulted");
   if (XML_GetCurrentByteCount(g_parser) != 0)
@@ -3026,12 +3024,12 @@ START_TEST(test_byte_info_at_cdata) {
   if (XML_GetInputContext(g_parser, &offset, &size) != NULL)
     fail("Unexpected context at start of parse");
 
-  data.start_element_len = (int)strlen(START_ELEMENT);
-  data.cdata_len = (int)strlen(CDATA_TEXT);
-  data.total_string_len = (int)strlen(text);
+  data.start_element_len = strlen(START_ELEMENT);
+  data.cdata_len = strlen(CDATA_TEXT);
+  data.total_string_len = strlen(text);
   XML_SetCharacterDataHandler(g_parser, byte_character_handler);
   XML_SetUserData(g_parser, &data);
-  if (XML_Parse(g_parser, text, (int)strlen(text), XML_TRUE) != XML_STATUS_OK)
+  if (XML_Parse(g_parser, text, strlen(text), XML_TRUE) != XML_STATUS_OK)
     xml_failure(g_parser);
 }
 END_TEST
@@ -3052,7 +3050,7 @@ START_TEST(test_predefined_entities) {
    */
   CharData_Init(&storage);
   XML_SetUserData(g_parser, &storage);
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
   /* The default handler doesn't translate the entities */
@@ -3116,7 +3114,7 @@ START_TEST(test_ignore_section) {
   XML_SetElementDeclHandler(g_parser, dummy_element_decl_handler);
   XML_SetStartElementHandler(g_parser, dummy_start_element);
   XML_SetEndElementHandler(g_parser, dummy_end_element);
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
   CharData_CheckXMLChars(&storage, expected);
@@ -3207,7 +3205,7 @@ END_TEST
 
 struct bom_testdata {
   const char *external;
-  int split;
+  size_t split;
   XML_Bool nested_callback_happened;
 };
 
@@ -3228,7 +3226,7 @@ external_bom_checker(XML_Parser parser, const XML_Char *context,
     struct bom_testdata *const testdata
         = (struct bom_testdata *)XML_GetUserData(parser);
     const char *const external = testdata->external;
-    const int split = testdata->split;
+    const size_t split = testdata->split;
     testdata->nested_callback_happened = XML_TRUE;
 
     if (_XML_Parse_SINGLE_BYTES(ext_parser, external, split, XML_FALSE)
@@ -3244,7 +3242,7 @@ external_bom_checker(XML_Parser parser, const XML_Char *context,
     fail("unknown systemId");
   }
 
-  if (_XML_Parse_SINGLE_BYTES(ext_parser, text, (int)strlen(text), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(ext_parser, text, strlen(text), XML_TRUE)
       != XML_STATUS_OK)
     xml_failure(ext_parser);
 
@@ -3257,9 +3255,9 @@ START_TEST(test_external_bom_consumed) {
   const char *const text = "<!DOCTYPE doc SYSTEM '004-1.ent'>\n"
                            "<doc></doc>\n";
   const char *const external = "\xEF\xBB\xBF<!ATTLIST doc a1 CDATA 'value'>";
-  const int len = (int)strlen(external);
-  for (int split = 0; split <= len; ++split) {
-    set_subtest("split at byte %d", split);
+  const size_t len = strlen(external);
+  for (size_t split = 0; split <= len; ++split) {
+    set_subtest("split at byte %zu", split);
 
     struct bom_testdata testdata;
     testdata.external = external;
@@ -3273,7 +3271,7 @@ START_TEST(test_external_bom_consumed) {
     XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
     XML_SetExternalEntityRefHandler(parser, external_bom_checker);
     XML_SetUserData(parser, &testdata);
-    if (_XML_Parse_SINGLE_BYTES(parser, text, (int)strlen(text), XML_TRUE)
+    if (_XML_Parse_SINGLE_BYTES(parser, text, strlen(text), XML_TRUE)
         == XML_STATUS_ERROR)
       xml_failure(parser);
     if (! testdata.nested_callback_happened) {
@@ -3321,7 +3319,7 @@ START_TEST(test_external_entity_values) {
     XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
     XML_SetExternalEntityRefHandler(g_parser, external_entity_valuer);
     XML_SetUserData(g_parser, &data_004_2[i]);
-    if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+    if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
         == XML_STATUS_ERROR)
       xml_failure(g_parser);
     XML_ParserReset(g_parser, NULL);
@@ -3348,7 +3346,7 @@ START_TEST(test_ext_entity_value_abort) {
   XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
   XML_SetExternalEntityRefHandler(g_parser, external_entity_value_aborter);
   g_resumable = XML_FALSE;
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
 }
@@ -3412,7 +3410,7 @@ START_TEST(test_dtd_stop_processing) {
 
   XML_SetEntityDeclHandler(g_parser, dummy_entity_decl_handler);
   init_dummy_handlers();
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
   if (get_dummy_handler_flags() != 0)
@@ -3429,7 +3427,7 @@ START_TEST(test_public_notation_no_sysid) {
 
   init_dummy_handlers();
   XML_SetNotationDeclHandler(g_parser, dummy_notation_decl_handler);
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
   if (get_dummy_handler_flags() != DUMMY_NOTATION_DECL_HANDLER_FLAG)
@@ -3455,7 +3453,7 @@ START_TEST(test_nested_groups) {
   XML_SetStartElementHandler(g_parser, record_element_start_handler);
   XML_SetUserData(g_parser, &storage);
   init_dummy_handlers();
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
   CharData_CheckXMLChars(&storage, XCS("doce"));
@@ -3479,7 +3477,7 @@ START_TEST(test_group_choice) {
 
   XML_SetElementDeclHandler(g_parser, dummy_element_decl_handler);
   init_dummy_handlers();
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
   if (get_dummy_handler_flags() != DUMMY_ELEMENT_DECL_HANDLER_FLAG)
@@ -3499,7 +3497,7 @@ START_TEST(test_standalone_parameter_entity) {
   XML_SetUserData(g_parser, dtd_data);
   XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
   XML_SetExternalEntityRefHandler(g_parser, external_entity_public);
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
 }
@@ -3520,7 +3518,7 @@ START_TEST(test_skipped_parameter_entity) {
   XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
   XML_SetSkippedEntityHandler(g_parser, dummy_skip_handler);
   init_dummy_handlers();
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
   if (get_dummy_handler_flags() != DUMMY_SKIP_HANDLER_FLAG)
@@ -3555,7 +3553,7 @@ START_TEST(test_undefined_ext_entity_in_external_dtd) {
   XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
   XML_SetExternalEntityRefHandler(g_parser, external_entity_devaluer);
   XML_SetUserData(g_parser, NULL);
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
 
@@ -3566,7 +3564,7 @@ START_TEST(test_undefined_ext_entity_in_external_dtd) {
   XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
   XML_SetExternalEntityRefHandler(g_parser, external_entity_devaluer);
   XML_SetUserData(g_parser, g_parser); /* Any non-NULL value will do */
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
 }
@@ -3579,13 +3577,13 @@ START_TEST(test_suspend_xdecl) {
   XML_SetXmlDeclHandler(g_parser, entity_suspending_xdecl_handler);
   XML_SetUserData(g_parser, g_parser);
   g_resumable = XML_TRUE;
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
       != XML_STATUS_SUSPENDED)
     xml_failure(g_parser);
   if (XML_GetErrorCode(g_parser) != XML_ERROR_NONE)
     xml_failure(g_parser);
   /* Attempt to start a new parse while suspended */
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
       != XML_STATUS_ERROR)
     fail("Attempt to parse while suspended not faulted");
   if (XML_GetErrorCode(g_parser) != XML_ERROR_SUSPENDED)
@@ -3601,7 +3599,7 @@ START_TEST(test_abort_epilog) {
   XML_SetDefaultHandler(g_parser, selective_aborting_default_handler);
   XML_SetUserData(g_parser, &trigger_char);
   g_resumable = XML_FALSE;
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
       != XML_STATUS_ERROR)
     fail("Abort not triggered");
   if (XML_GetErrorCode(g_parser) != XML_ERROR_ABORTED)
@@ -3629,7 +3627,7 @@ START_TEST(test_suspend_epilog) {
   XML_SetDefaultHandler(g_parser, selective_aborting_default_handler);
   XML_SetUserData(g_parser, &trigger_char);
   g_resumable = XML_TRUE;
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
       != XML_STATUS_SUSPENDED)
     xml_failure(g_parser);
 }
@@ -3641,7 +3639,7 @@ START_TEST(test_suspend_in_sole_empty_tag) {
 
   XML_SetEndElementHandler(g_parser, suspending_end_handler);
   XML_SetUserData(g_parser, g_parser);
-  rc = _XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE);
+  rc = _XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE);
   if (rc == XML_STATUS_ERROR)
     xml_failure(g_parser);
   else if (rc != XML_STATUS_SUSPENDED)
@@ -3666,7 +3664,7 @@ START_TEST(test_partial_char_in_epilog) {
   const char *text = "<doc></doc>\xe2\x82";
 
   /* First check that no fault is raised if the parse is not finished */
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_FALSE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_FALSE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
   /* Now check that it is faulted once we finish */
@@ -3694,7 +3692,7 @@ START_TEST(test_suspend_resume_internal_entity) {
   XML_SetUserData(g_parser, &storage);
   // can't use SINGLE_BYTES here, because it'll return early on suspension, and
   // we won't know exactly how much input we actually managed to give Expat.
-  if (XML_Parse(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (XML_Parse(g_parser, text, strlen(text), XML_TRUE)
       != XML_STATUS_SUSPENDED)
     xml_failure(g_parser);
   CharData_CheckXMLChars(&storage, XCS(""));
@@ -3781,7 +3779,7 @@ START_TEST(test_resume_entity_with_syntax_error) {
                      "<doc>&foo;</doc>\n";
 
   XML_SetStartElementHandler(g_parser, start_element_suspender);
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
       != XML_STATUS_SUSPENDED)
     xml_failure(g_parser);
   if (XML_ResumeParser(g_parser) != XML_STATUS_ERROR)
@@ -3806,7 +3804,7 @@ START_TEST(test_suspend_resume_parameter_entity) {
   XML_SetElementDeclHandler(g_parser, element_decl_suspender);
   XML_SetCharacterDataHandler(g_parser, accumulate_characters);
   XML_SetUserData(g_parser, &storage);
-  if (XML_Parse(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (XML_Parse(g_parser, text, strlen(text), XML_TRUE)
       != XML_STATUS_SUSPENDED)
     xml_failure(g_parser);
   CharData_CheckXMLChars(&storage, XCS(""));
@@ -3820,7 +3818,7 @@ END_TEST
 START_TEST(test_restart_on_error) {
   const char *text = "<$doc><doc></doc>";
 
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
       != XML_STATUS_ERROR)
     fail("Invalid tag name not faulted");
   if (XML_GetErrorCode(g_parser) != XML_ERROR_INVALID_TOKEN)
@@ -3854,7 +3852,7 @@ END_TEST
 START_TEST(test_trailing_cr_in_att_value) {
   const char *text = "<doc a='value\r'/>";
 
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
 }
@@ -3874,7 +3872,7 @@ START_TEST(test_standalone_internal_entity) {
                      "<doc att2='any'/>";
 
   XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
 }
@@ -3891,7 +3889,7 @@ START_TEST(test_skipped_external_entity) {
   XML_SetUserData(g_parser, &test_data);
   XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
   XML_SetExternalEntityRefHandler(g_parser, external_entity_loader);
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
 }
@@ -3910,7 +3908,7 @@ START_TEST(test_skipped_null_loaded_ext_entity) {
   XML_SetUserData(g_parser, &test_data);
   XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
   XML_SetExternalEntityRefHandler(g_parser, external_entity_oneshot_loader);
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
 }
@@ -3928,7 +3926,7 @@ START_TEST(test_skipped_unloaded_ext_entity) {
   XML_SetUserData(g_parser, &test_data);
   XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
   XML_SetExternalEntityRefHandler(g_parser, external_entity_oneshot_loader);
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
 }
@@ -3953,7 +3951,7 @@ START_TEST(test_param_entity_with_trailing_cr) {
   XML_SetEntityDeclHandler(g_parser, param_entity_match_handler);
   param_entity_match_init(XCS(PARAM_ENTITY_NAME),
                           XCS(PARAM_ENTITY_CORE_VALUE) XCS("\n"));
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
   int entity_match_flag = get_param_entity_match_flag();
@@ -4030,7 +4028,7 @@ START_TEST(test_pi_handled_in_default) {
   CharData_Init(&storage);
   XML_SetDefaultHandler(g_parser, accumulate_characters);
   XML_SetUserData(g_parser, &storage);
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
   CharData_CheckXMLChars(&storage, expected);
@@ -4046,7 +4044,7 @@ START_TEST(test_comment_handled_in_default) {
   CharData_Init(&storage);
   XML_SetDefaultHandler(g_parser, accumulate_characters);
   XML_SetUserData(g_parser, &storage);
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
   CharData_CheckXMLChars(&storage, expected);
@@ -4062,7 +4060,7 @@ START_TEST(test_pi_yml) {
   CharData_Init(&storage);
   XML_SetProcessingInstructionHandler(g_parser, accumulate_pi_characters);
   XML_SetUserData(g_parser, &storage);
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
   CharData_CheckXMLChars(&storage, expected);
@@ -4077,7 +4075,7 @@ START_TEST(test_pi_xnl) {
   CharData_Init(&storage);
   XML_SetProcessingInstructionHandler(g_parser, accumulate_pi_characters);
   XML_SetUserData(g_parser, &storage);
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
   CharData_CheckXMLChars(&storage, expected);
@@ -4092,7 +4090,7 @@ START_TEST(test_pi_xmm) {
   CharData_Init(&storage);
   XML_SetProcessingInstructionHandler(g_parser, accumulate_pi_characters);
   XML_SetUserData(g_parser, &storage);
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
   CharData_CheckXMLChars(&storage, expected);
@@ -4272,7 +4270,7 @@ START_TEST(test_unknown_encoding_long_name_1) {
   XML_SetUnknownEncodingHandler(g_parser, MiscEncodingHandler, NULL);
   XML_SetStartElementHandler(g_parser, record_element_start_handler);
   XML_SetUserData(g_parser, &storage);
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
   CharData_CheckXMLChars(&storage, expected);
@@ -4294,7 +4292,7 @@ START_TEST(test_unknown_encoding_long_name_2) {
   XML_SetUnknownEncodingHandler(g_parser, MiscEncodingHandler, NULL);
   XML_SetStartElementHandler(g_parser, record_element_start_handler);
   XML_SetUserData(g_parser, &storage);
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
   CharData_CheckXMLChars(&storage, expected);
@@ -4408,7 +4406,7 @@ START_TEST(test_ext_entity_latin1_utf16le_bom) {
   XML_SetExternalEntityRefHandler(g_parser, external_entity_loader2);
   XML_SetUserData(g_parser, &test_data);
   XML_SetCharacterDataHandler(g_parser, ext2_accumulate_characters);
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
   CharData_CheckXMLChars(&storage, expected);
@@ -4439,7 +4437,7 @@ START_TEST(test_ext_entity_latin1_utf16be_bom) {
   XML_SetExternalEntityRefHandler(g_parser, external_entity_loader2);
   XML_SetUserData(g_parser, &test_data);
   XML_SetCharacterDataHandler(g_parser, ext2_accumulate_characters);
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
   CharData_CheckXMLChars(&storage, expected);
@@ -4474,7 +4472,7 @@ START_TEST(test_ext_entity_latin1_utf16le_bom2) {
   XML_SetExternalEntityRefHandler(g_parser, external_entity_loader2);
   XML_SetUserData(g_parser, &test_data);
   XML_SetCharacterDataHandler(g_parser, ext2_accumulate_characters);
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
   CharData_CheckXMLChars(&storage, expected);
@@ -4505,7 +4503,7 @@ START_TEST(test_ext_entity_latin1_utf16be_bom2) {
   XML_SetExternalEntityRefHandler(g_parser, external_entity_loader2);
   XML_SetUserData(g_parser, &test_data);
   XML_SetCharacterDataHandler(g_parser, ext2_accumulate_characters);
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
   CharData_CheckXMLChars(&storage, expected);
@@ -4534,7 +4532,7 @@ START_TEST(test_ext_entity_utf16_be) {
   XML_SetExternalEntityRefHandler(g_parser, external_entity_loader2);
   XML_SetUserData(g_parser, &test_data);
   XML_SetCharacterDataHandler(g_parser, ext2_accumulate_characters);
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
   CharData_CheckXMLChars(&storage, expected);
@@ -4563,7 +4561,7 @@ START_TEST(test_ext_entity_utf16_le) {
   XML_SetExternalEntityRefHandler(g_parser, external_entity_loader2);
   XML_SetUserData(g_parser, &test_data);
   XML_SetCharacterDataHandler(g_parser, ext2_accumulate_characters);
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
   CharData_CheckXMLChars(&storage, expected);
@@ -4614,7 +4612,7 @@ START_TEST(test_ext_entity_utf8_non_bom) {
   XML_SetExternalEntityRefHandler(g_parser, external_entity_loader2);
   XML_SetUserData(g_parser, &test_data);
   XML_SetCharacterDataHandler(g_parser, ext2_accumulate_characters);
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
   CharData_CheckXMLChars(&storage, expected);
@@ -4723,7 +4721,7 @@ START_TEST(test_utf8_in_start_tags) {
       XML_Parser parser = XML_ParserCreate(NULL);
 
       const enum XML_Status status = _XML_Parse_SINGLE_BYTES(
-          parser, doc, (int)strlen(doc), /*isFinal=*/XML_FALSE);
+          parser, doc, strlen(doc), /*isFinal=*/XML_FALSE);
 
       bool success = true;
       if ((status == XML_STATUS_OK) != expectedSuccess) {
@@ -4763,7 +4761,7 @@ START_TEST(test_trailing_spaces_in_elements) {
   XML_SetElementHandler(g_parser, record_element_start_handler,
                         record_element_end_handler);
   XML_SetUserData(g_parser, &storage);
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
   CharData_CheckXMLChars(&storage, expected);
@@ -5177,7 +5175,7 @@ START_TEST(test_default_doctype_handler) {
   XML_SetUserData(g_parser, &test_data);
   XML_SetDefaultHandler(g_parser, checking_default_handler);
   XML_SetEntityDeclHandler(g_parser, dummy_entity_decl_handler);
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
   for (i = 0; test_data[i].expected != NULL; i++)
@@ -5190,7 +5188,7 @@ START_TEST(test_empty_element_abort) {
   const char *text = "<abort/>";
 
   XML_SetStartElementHandler(g_parser, start_element_suspender);
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
       != XML_STATUS_ERROR)
     fail("Expected to error on abort");
 }
@@ -5216,7 +5214,7 @@ START_TEST(test_pool_integrity_with_unfinished_attr) {
   XML_SetAttlistDeclHandler(g_parser, dummy_attlist_decl_handler);
   XML_SetCommentHandler(g_parser, accumulate_comment);
   XML_SetUserData(g_parser, &storage);
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, strlen(text), XML_TRUE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
   CharData_CheckXMLChars(&storage, expected);
@@ -5241,7 +5239,7 @@ START_TEST(test_nested_entity_suspend) {
   XML_SetCommentHandler(parser, accumulate_and_suspend_comment_handler);
   XML_SetUserData(parser, &parserPlusStorage);
 
-  enum XML_Status status = XML_Parse(parser, text, (int)strlen(text), XML_TRUE);
+  enum XML_Status status = XML_Parse(parser, text, strlen(text), XML_TRUE);
   while (status == XML_STATUS_SUSPENDED) {
     status = XML_ResumeParser(parser);
   }
@@ -5267,11 +5265,11 @@ START_TEST(test_big_tokens_scale_linearly) {
   };
   const int num_cases = sizeof(text) / sizeof(text[0]);
   char aaaaaa[4096];
-  const int fillsize = (int)sizeof(aaaaaa);
-  const int fillcount = 100;
-  const unsigned approx_bytes = fillsize * fillcount; // ignore pre/post.
+  const size_t fillsize = sizeof(aaaaaa);
+  const size_t fillcount = 100;
+  const size_t approx_bytes = fillsize * fillcount; // ignore pre/post.
   const unsigned max_factor = 4;
-  const unsigned max_scanned = max_factor * approx_bytes;
+  const size_t max_scanned = max_factor * approx_bytes;
 
   memset(aaaaaa, 'a', fillsize);
 
@@ -5288,7 +5286,7 @@ START_TEST(test_big_tokens_scale_linearly) {
     // parse the start text
     g_bytesScanned = 0;
     status = _XML_Parse_SINGLE_BYTES(parser, text[i].pre,
-                                     (int)strlen(text[i].pre), XML_FALSE);
+                                     strlen(text[i].pre), XML_FALSE);
     if (status != XML_STATUS_OK) {
       xml_failure(parser);
     }
@@ -5303,11 +5301,11 @@ START_TEST(test_big_tokens_scale_linearly) {
       if (g_bytesScanned > max_scanned) {
         // We're not done, and have already passed the limit -- the test will
         // definitely fail. This block allows us to save time by failing early.
-        const unsigned pushed
-            = (unsigned)strlen(text[i].pre) + (f + 1) * fillsize;
+        const size_t pushed
+            = strlen(text[i].pre) + (f + 1) * fillsize;
         fprintf(
             stderr,
-            "after %d/%d loops: pushed=%u scanned=%u (factor ~%.2f) max_scanned: %u (factor ~%u)\n",
+            "after %d/%zu loops: pushed=%zu scanned=%u (factor ~%.2f) max_scanned: %zu (factor ~%u)\n",
             f + 1, fillcount, pushed, g_bytesScanned,
             g_bytesScanned / (double)pushed, max_scanned, max_factor);
         past_max_count++;
@@ -5319,7 +5317,7 @@ START_TEST(test_big_tokens_scale_linearly) {
 
     // parse the end text
     status = _XML_Parse_SINGLE_BYTES(parser, text[i].post,
-                                     (int)strlen(text[i].post), XML_TRUE);
+                                     strlen(text[i].post), XML_TRUE);
     if (status != XML_STATUS_OK) {
       xml_failure(parser);
     }
@@ -5328,7 +5326,7 @@ START_TEST(test_big_tokens_scale_linearly) {
     if (g_bytesScanned > max_scanned) {
       fprintf(
           stderr,
-          "after all input: scanned=%u (factor ~%.2f) max_scanned: %u (factor ~%u)\n",
+          "after all input: scanned=%u (factor ~%.2f) max_scanned: %zu (factor ~%u)\n",
           g_bytesScanned, g_bytesScanned / (double)approx_bytes, max_scanned,
           max_factor);
       fail("scanned too many bytes");
@@ -5363,14 +5361,14 @@ START_TEST(test_set_reparse_deferral) {
 
     enum XML_Status status;
     // parse the start text
-    status = XML_Parse(parser, pre, (int)strlen(pre), XML_FALSE);
+    status = XML_Parse(parser, pre, strlen(pre), XML_FALSE);
     if (status != XML_STATUS_OK) {
       xml_failure(parser);
     }
     CharData_CheckXMLChars(&storage, XCS("d")); // first element should be done
 
     // ..and the start of the token
-    status = XML_Parse(parser, start, (int)strlen(start), XML_FALSE);
+    status = XML_Parse(parser, start, strlen(start), XML_FALSE);
     if (status != XML_STATUS_OK) {
       xml_failure(parser);
     }
@@ -5386,7 +5384,7 @@ START_TEST(test_set_reparse_deferral) {
     CharData_CheckXMLChars(&storage, XCS("d")); // *still* just the first one
 
     // end the <x> token.
-    status = XML_Parse(parser, end, (int)strlen(end), XML_FALSE);
+    status = XML_Parse(parser, end, strlen(end), XML_FALSE);
     if (status != XML_STATUS_OK) {
       xml_failure(parser);
     }
@@ -5455,14 +5453,14 @@ external_inherited_parser(XML_Parser p, const XML_Char *context,
 
   enum XML_Status status;
   // parse the initial text
-  status = XML_Parse(parser, pre, (int)strlen(pre), XML_FALSE);
+  status = XML_Parse(parser, pre, strlen(pre), XML_FALSE);
   if (status != XML_STATUS_OK) {
     xml_failure(parser);
   }
   assert_true(testdata.count == 1); // first element should be done
 
   // ..and the start of the big token
-  status = XML_Parse(parser, start, (int)strlen(start), XML_FALSE);
+  status = XML_Parse(parser, start, strlen(start), XML_FALSE);
   if (status != XML_STATUS_OK) {
     xml_failure(parser);
   }
@@ -5478,7 +5476,7 @@ external_inherited_parser(XML_Parser p, const XML_Char *context,
   assert_true(testdata.count == 1); // *still* just the first one
 
   // end the big token.
-  status = XML_Parse(parser, end, (int)strlen(end), XML_FALSE);
+  status = XML_Parse(parser, end, strlen(end), XML_FALSE);
   if (status != XML_STATUS_OK) {
     xml_failure(parser);
   }
@@ -5498,7 +5496,7 @@ external_inherited_parser(XML_Parser p, const XML_Char *context,
   assert_true(testdata.count == 2); // the big token should be done
 
   // parse the final text
-  status = XML_Parse(parser, post, (int)strlen(post), XML_TRUE);
+  status = XML_Parse(parser, post, strlen(post), XML_TRUE);
   if (status != XML_STATUS_OK) {
     xml_failure(parser);
   }
@@ -5522,7 +5520,7 @@ START_TEST(test_reparse_deferral_is_inherited) {
     // is what we expected, based on the value of `enabled` (in userdata).
     XML_SetExternalEntityRefHandler(parser, external_inherited_parser);
     assert_true(XML_SetReparseDeferralEnabled(parser, enabled));
-    if (XML_Parse(parser, text, (int)strlen(text), XML_TRUE) != XML_STATUS_OK)
+    if (XML_Parse(parser, text, strlen(text), XML_TRUE) != XML_STATUS_OK)
       xml_failure(parser);
 
     XML_ParserFree(parser);
@@ -5560,7 +5558,7 @@ START_TEST(test_set_reparse_deferral_on_the_fly) {
 
   enum XML_Status status;
   // parse the start text
-  status = XML_Parse(parser, pre, (int)strlen(pre), XML_FALSE);
+  status = XML_Parse(parser, pre, strlen(pre), XML_FALSE);
   if (status != XML_STATUS_OK) {
     xml_failure(parser);
   }
@@ -5574,7 +5572,7 @@ START_TEST(test_set_reparse_deferral_on_the_fly) {
   CharData_CheckXMLChars(&storage, XCS("d")); // *still* just the first one
 
   // end the <x> token.
-  status = XML_Parse(parser, end, (int)strlen(end), XML_FALSE);
+  status = XML_Parse(parser, end, strlen(end), XML_FALSE);
   if (status != XML_STATUS_OK) {
     xml_failure(parser);
   }
@@ -5964,7 +5962,6 @@ make_basic_test_case(Suite *s) {
   tcase_add_test__ifdef_xml_dtd(tc_basic, test_user_parameters);
   tcase_add_test__ifdef_xml_dtd(tc_basic, test_ext_entity_ref_parameter);
   tcase_add_test(tc_basic, test_empty_parse);
-  tcase_add_test(tc_basic, test_negative_len_parse);
   tcase_add_test(tc_basic, test_get_buffer_1);
   tcase_add_test(tc_basic, test_get_buffer_2);
 #if XML_CONTEXT_BYTES > 0
