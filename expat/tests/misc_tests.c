@@ -369,6 +369,13 @@ START_TEST(test_misc_deny_internal_entity_closing_doctype_issue_317) {
          suspendOrNotIndex++) {
       const char *const input = inputs[inputIndex];
       const XML_Bool suspend = suspendOrNot[suspendOrNotIndex];
+      if (suspend && (g_chunkSize > 0)) {
+        // We cannot use _XML_Parse_SINGLE_BYTES below due to suspension, and
+        // so chunk sizes >0 would only repeat the very same test
+        // due to use of plain XML_Parse; we are saving upon that runtime:
+        return;
+      }
+
       set_subtest("[input=%d suspend=%s] %s", (int)inputIndex,
                   suspend ? "true" : "false", input);
       XML_Parser parser;
