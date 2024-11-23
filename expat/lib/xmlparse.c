@@ -325,6 +325,10 @@ typedef struct {
   const XML_Char *publicId;
   const XML_Char *notation;
   XML_Bool open;
+  XML_Bool hasMore; /* true if entity has not been completely processed */
+  /* An entity can be open while being already completely processed (hasMore ==
+    XML_FALSE). The reason is the delayed closing of entities until their inner
+    entities are processed and closed */
   XML_Bool is_param;
   XML_Bool is_internal; /* true if declared in internal subset outside PE */
 } ENTITY;
@@ -6007,6 +6011,7 @@ processEntity(XML_Parser parser, ENTITY *entity, XML_Bool betweenDecl,
       return XML_ERROR_NO_MEMORY;
   }
   entity->open = XML_TRUE;
+  entity->hasMore = XML_TRUE;
 #if XML_GE == 1
   entityTrackingOnOpen(parser, entity, __LINE__);
 #endif
@@ -6041,7 +6046,7 @@ internalEntityProcessor(XML_Parser parser, const char *s, const char *end,
     return XML_ERROR_UNEXPECTED_STATE;
 
   entity = openEntity->entity;
-  if (entity->open) {
+  if (entity->hasMore) {
     textStart = ((const char *)entity->textPtr) + entity->processed;
     textEnd = (const char *)(entity->textPtr + entity->textLen);
     /* Set a safe default value in case 'next' does not get set */
@@ -6071,7 +6076,10 @@ internalEntityProcessor(XML_Parser parser, const char *s, const char *end,
       return result;
     }
 
-    entity->open = XML_FALSE;
+    // Entity is complete. We cannot close it here since we need to first
+    // process its possible inner entities (which are added to the
+    // m_openInternalEntities during doProlog or doContent calls above)
+    entity->hasMore = XML_FALSE;
     triggerReenter(parser);
     return result;
   }
@@ -6079,6 +6087,7 @@ internalEntityProcessor(XML_Parser parser, const char *s, const char *end,
 #if XML_GE == 1
   entityTrackingOnClose(parser, entity, __LINE__);
 #endif
+  entity->open = XML_FALSE;
   // Remove fully processed openEntity from open entity list. doContent call can
   // add maximum one new entity to m_openInternalEntities since when a new
   // entity is detected, parser will go into REENTER state and return. Therefore
@@ -6143,7 +6152,7 @@ storeAttributeValue(XML_Parser parser, const ENCODING *enc, XML_Bool isCdata,
           = (const char *)(entity->textPtr + entity->textLen);
       /* Set a safe default value in case 'next' does not get set */
       const char *nextInEntity = textStart;
-      if (entity->open) {
+      if (entity->hasMore) {
         result = appendAttributeValue(
             parser, parser->m_internalEncoding, isCdata, textStart, textEnd,
             pool, XML_ACCOUNT_ENTITY_EXPANSION, &nextInEntity);
@@ -6158,7 +6167,10 @@ storeAttributeValue(XML_Parser parser, const ENCODING *enc, XML_Bool isCdata,
           continue;
         }
 
-        entity->open = XML_FALSE;
+        // Entity is complete. We cannot close it here since we need to first
+        // process its possible inner entities (which are added to the
+        // m_openAttributeEntities during appendAttributeValue)
+        entity->hasMore = XML_FALSE;
         triggerReenter(parser);
         continue;
       }
@@ -6166,6 +6178,7 @@ storeAttributeValue(XML_Parser parser, const ENCODING *enc, XML_Bool isCdata,
 #if XML_GE == 1
       entityTrackingOnClose(parser, entity, __LINE__);
 #endif
+      entity->open = XML_FALSE;
       // Remove fully processed openEntity from open entity list.
       // appendAttributeValue call can add maximum one new entity to
       // m_openAttributeEntities since when a new entity is detected, parser
@@ -6600,7 +6613,7 @@ callStoreEntityValue(XML_Parser parser, const ENCODING *enc,
           = (const char *)(entity->textPtr + entity->textLen);
       /* Set a safe default value in case 'next' does not get set */
       const char *nextInEntity = textStart;
-      if (entity->open) {
+      if (entity->hasMore) {
         result = storeEntityValue(parser, parser->m_internalEncoding, textStart,
                                   textEnd, XML_ACCOUNT_ENTITY_EXPANSION,
                                   &nextInEntity);
@@ -6615,7 +6628,10 @@ callStoreEntityValue(XML_Parser parser, const ENCODING *enc,
           continue;
         }
 
-        entity->open = XML_FALSE;
+        // Entity is complete. We cannot close it here since we need to first
+        // process its possible inner entities (which are added to the
+        // m_openValueEntities during storeEntityValue)
+        entity->hasMore = XML_FALSE;
         triggerReenter(parser);
         continue;
       }
@@ -6623,6 +6639,7 @@ callStoreEntityValue(XML_Parser parser, const ENCODING *enc,
 #  if XML_GE == 1
       entityTrackingOnClose(parser, entity, __LINE__);
 #  endif
+      entity->open = XML_FALSE;
       // Remove fully processed openEntity from open entity list.
       // appendAttributeValue call can add maximum one new entity to
       // m_openValueEntities since when a new entity is detected, parser
