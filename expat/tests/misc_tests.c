@@ -328,64 +328,119 @@ START_TEST(test_misc_stop_during_end_handler_issue_240_2) {
 END_TEST
 
 START_TEST(test_misc_deny_internal_entity_closing_doctype_issue_317) {
-  const char *const inputOne = "<!DOCTYPE d [\n"
-                               "<!ENTITY % e ']><d/>'>\n"
-                               "\n"
-                               "%e;";
+  const char *const inputOne
+      = "<!DOCTYPE d [\n"
+        "<!ENTITY % element_d '<!ELEMENT d (#PCDATA)*>'>\n"
+        "%element_d;\n"
+        "<!ENTITY % e ']><d/>'>\n"
+        "\n"
+        "%e;";
   const char *const inputTwo
       = "<!DOCTYPE d [\n"
+        "<!ENTITY % element_d '<!ELEMENT d (#PCDATA)*>'>\n"
+        "%element_d;\n"
         "<!ENTITY % e1 ']><d/>'><!ENTITY % e2 '&#37;e1;'>\n"
         "\n"
         "%e2;";
-  const char *const inputThree = "<!DOCTYPE d [\n"
-                                 "<!ENTITY % e ']><d'>\n"
-                                 "\n"
-                                 "%e;/>";
-  const char *const inputIssue317 = "<!DOCTYPE doc [\n"
-                                    "<!ENTITY % foo ']>\n"
-                                    "<doc>Hell<oc (#PCDATA)*>'>\n"
-                                    "%foo;\n"
-                                    "]>\n"
-                                    "<doc>Hello, world</dVc>";
+  const char *const inputThree
+      = "<!DOCTYPE d [\n"
+        "<!ENTITY % element_d '<!ELEMENT d (#PCDATA)*>'>\n"
+        "%element_d;\n"
+        "<!ENTITY % e ']><d'>\n"
+        "\n"
+        "%e;/>";
+  const char *const inputIssue317
+      = "<!DOCTYPE doc [\n"
+        "<!ENTITY % element_doc '<!ELEMENT doc (#PCDATA)*>'>\n"
+        "%element_doc;\n"
+        "<!ENTITY % foo ']>\n"
+        "<doc>Hell<oc (#PCDATA)*>'>\n"
+        "%foo;\n"
+        "]>\n"
+        "<doc>Hello, world</dVc>";
 
   const char *const inputs[] = {inputOne, inputTwo, inputThree, inputIssue317};
+  const XML_Bool suspendOrNot[] = {XML_FALSE, XML_TRUE};
   size_t inputIndex = 0;
 
   for (; inputIndex < sizeof(inputs) / sizeof(inputs[0]); inputIndex++) {
-    set_subtest("%s", inputs[inputIndex]);
-    XML_Parser parser;
-    enum XML_Status parseResult;
-    int setParamEntityResult;
-    XML_Size lineNumber;
-    XML_Size columnNumber;
-    const char *const input = inputs[inputIndex];
+    for (size_t suspendOrNotIndex = 0;
+         suspendOrNotIndex < sizeof(suspendOrNot) / sizeof(suspendOrNot[0]);
+         suspendOrNotIndex++) {
+      const char *const input = inputs[inputIndex];
+      const XML_Bool suspend = suspendOrNot[suspendOrNotIndex];
+      if (suspend && (g_chunkSize > 0)) {
+        // We cannot use _XML_Parse_SINGLE_BYTES below due to suspension, and
+        // so chunk sizes >0 would only repeat the very same test
+        // due to use of plain XML_Parse; we are saving upon that runtime:
+        return;
+      }
 
-    parser = XML_ParserCreate(NULL);
-    setParamEntityResult
-        = XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
-    if (setParamEntityResult != 1)
-      fail("Failed to set XML_PARAM_ENTITY_PARSING_ALWAYS.");
+      set_subtest("[input=%d suspend=%s] %s", (int)inputIndex,
+                  suspend ? "true" : "false", input);
+      XML_Parser parser;
+      enum XML_Status parseResult;
+      int setParamEntityResult;
+      XML_Size lineNumber;
+      XML_Size columnNumber;
 
-    parseResult = _XML_Parse_SINGLE_BYTES(parser, input, (int)strlen(input), 0);
-    if (parseResult != XML_STATUS_ERROR) {
-      parseResult = _XML_Parse_SINGLE_BYTES(parser, "", 0, 1);
+      parser = XML_ParserCreate(NULL);
+      setParamEntityResult
+          = XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+      if (setParamEntityResult != 1)
+        fail("Failed to set XML_PARAM_ENTITY_PARSING_ALWAYS.");
+
+      if (suspend) {
+        XML_SetUserData(parser, parser);
+        XML_SetElementDeclHandler(parser, suspend_after_element_declaration);
+      }
+
+      if (suspend) {
+        // can't use SINGLE_BYTES here, because it'll return early on
+        // suspension, and we won't know exactly how much input we actually
+        // managed to give Expat.
+        parseResult = XML_Parse(parser, input, (int)strlen(input), 0);
+
+        while (parseResult == XML_STATUS_SUSPENDED) {
+          parseResult = XML_ResumeParser(parser);
+        }
+
+        if (parseResult != XML_STATUS_ERROR) {
+          // can't use SINGLE_BYTES here, because it'll return early on
+          // suspension, and we won't know exactly how much input we actually
+          // managed to give Expat.
+          parseResult = XML_Parse(parser, "", 0, 1);
+        }
+
+        while (parseResult == XML_STATUS_SUSPENDED) {
+          parseResult = XML_ResumeParser(parser);
+        }
+      } else {
+        parseResult
+            = _XML_Parse_SINGLE_BYTES(parser, input, (int)strlen(input), 0);
+
+        if (parseResult != XML_STATUS_ERROR) {
+          parseResult = _XML_Parse_SINGLE_BYTES(parser, "", 0, 1);
+        }
+      }
+
       if (parseResult != XML_STATUS_ERROR) {
         fail("Parsing was expected to fail but succeeded.");
       }
+
+      if (XML_GetErrorCode(parser) != XML_ERROR_INVALID_TOKEN)
+        fail("Error code does not match XML_ERROR_INVALID_TOKEN");
+
+      lineNumber = XML_GetCurrentLineNumber(parser);
+      if (lineNumber != 6)
+        fail("XML_GetCurrentLineNumber does not work as expected.");
+
+      columnNumber = XML_GetCurrentColumnNumber(parser);
+      if (columnNumber != 0)
+        fail("XML_GetCurrentColumnNumber does not work as expected.");
+
+      XML_ParserFree(parser);
     }
-
-    if (XML_GetErrorCode(parser) != XML_ERROR_INVALID_TOKEN)
-      fail("Error code does not match XML_ERROR_INVALID_TOKEN");
-
-    lineNumber = XML_GetCurrentLineNumber(parser);
-    if (lineNumber != 4)
-      fail("XML_GetCurrentLineNumber does not work as expected.");
-
-    columnNumber = XML_GetCurrentColumnNumber(parser);
-    if (columnNumber != 0)
-      fail("XML_GetCurrentColumnNumber does not work as expected.");
-
-    XML_ParserFree(parser);
   }
 }
 END_TEST

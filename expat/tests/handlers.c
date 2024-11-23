@@ -1843,6 +1843,15 @@ element_decl_suspender(void *userData, const XML_Char *name,
 }
 
 void XMLCALL
+suspend_after_element_declaration(void *userData, const XML_Char *name,
+                                  XML_Content *model) {
+  UNUSED_P(name);
+  XML_Parser parser = (XML_Parser)userData;
+  assert_true(XML_StopParser(parser, /*resumable*/ XML_TRUE) == XML_STATUS_OK);
+  XML_FreeContentModel(parser, model);
+}
+
+void XMLCALL
 accumulate_pi_characters(void *userData, const XML_Char *target,
                          const XML_Char *data) {
   CharData *storage = (CharData *)userData;
