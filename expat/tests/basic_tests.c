@@ -1191,6 +1191,22 @@ START_TEST(test_not_standalone_handler_accept) {
 }
 END_TEST
 
+START_TEST(test_entity_start_tag_level_greater_than_one) {
+  const char *const text = "<!DOCTYPE t1 [\n"
+                           "  <!ENTITY e1 'hello'>\n"
+                           "]>\n"
+                           "<t1>\n"
+                           "  <t2>&e1;</t2>\n"
+                           "</t1>\n";
+
+  XML_Parser parser = XML_ParserCreate(NULL);
+  assert_true(_XML_Parse_SINGLE_BYTES(parser, text, (int)strlen(text),
+                                      /*isFinal*/ XML_TRUE)
+              == XML_STATUS_OK);
+  XML_ParserFree(parser);
+}
+END_TEST
+
 START_TEST(test_wfc_no_recursive_entity_refs) {
   const char *text = "<!DOCTYPE doc [\n"
                      "  <!ENTITY entity '&#38;entity;'>\n"
@@ -6068,6 +6084,7 @@ make_basic_test_case(Suite *s) {
   tcase_add_test(tc_basic, test_wfc_undeclared_entity_with_external_subset);
   tcase_add_test(tc_basic, test_not_standalone_handler_reject);
   tcase_add_test(tc_basic, test_not_standalone_handler_accept);
+  tcase_add_test(tc_basic, test_entity_start_tag_level_greater_than_one);
   tcase_add_test__if_xml_ge(tc_basic, test_wfc_no_recursive_entity_refs);
   tcase_add_test(tc_basic, test_no_indirectly_recursive_entity_refs);
   tcase_add_test__ifdef_xml_dtd(tc_basic, test_ext_entity_invalid_parse);
