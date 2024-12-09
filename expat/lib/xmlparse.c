@@ -8542,11 +8542,13 @@ unsignedCharToPrintable(unsigned char c) {
     return "\\xFE";
   case 255:
     return "\\xFF";
+  // LCOV_EXCL_START
   default:
     assert(0); /* never gets here */
     return "dead code";
   }
   assert(0); /* never gets here */
+  // LCOV_EXCL_STOP
 }
 
 #endif /* XML_GE == 1 */
