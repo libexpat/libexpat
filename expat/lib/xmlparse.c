@@ -5986,7 +5986,7 @@ internalEntityProcessor(XML_Parser parser, const char *s, const char *end,
     int tok
         = XmlPrologTok(parser->m_internalEncoding, textStart, textEnd, &next);
     result = doProlog(parser, parser->m_internalEncoding, textStart, textEnd,
-                      tok, next, &next, XML_FALSE, XML_TRUE,
+                      tok, next, &next, XML_FALSE, XML_FALSE,
                       XML_ACCOUNT_ENTITY_EXPANSION);
   } else {
     result = doContent(parser, openEntity->startTagLevel,
