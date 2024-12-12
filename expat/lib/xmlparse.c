@@ -7806,7 +7806,7 @@ copyString(const XML_Char *s, const XML_Memory_Handling_Suite *memsuite) {
   charsRequired++;
 
   /* Now allocate space for the copy */
-  result = memsuite->malloc_fcn(charsRequired * sizeof(XML_Char));
+  result = (XML_Char*) memsuite->malloc_fcn(charsRequired * sizeof(XML_Char));
   if (result == NULL)
     return NULL;
   /* Copy the original into place */
