@@ -64,7 +64,6 @@ jobs:
             docbook2x \
             gcc-multilib \
             g++-multilib \
-            lcov \
             libbsd-dev \
             lzip \
             moreutils
@@ -77,6 +76,31 @@ jobs:
     - name: Unshallow Git clone
       run: |
         git fetch --force --tags --unshallow origin  # for "git describe" in coverage.sh
+    - name: Install LCOV Perl dependencies
+      run: |
+        deps=(
+          Capture::Tiny
+          Devel::Cover
+          Digest::MD5
+          File::Spec
+          JSON::XS
+          Memory::Process
+          Module::Load::Conditional
+          Scalar::Util
+          Time::HiRes
+        )
+        set -x
+        sudo apt-get install --no-install-recommends --yes -V libdatetime-perl
+        for i in ${deps[@]}; do
+          sudo perl -MCPAN -e "install(${i})"
+        done
+    - name: Install LCOV from Git
+      run: |
+        git clone https://github.com/linux-test-project/lcov
+        cd lcov
+        sudo make install PREFIX=/usr CFG_DIR=/etc
+        which lcov
+        lcov --version
     - name: Collect test coverage
       env:
         MODE: coverage-sh
