@@ -229,7 +229,7 @@ _merge_coverage_info() {
 
     mkdir -p "${coverage_dir}"
     (
-        local lcov_merge_args=( -q )
+        local lcov_merge_args=( -q -q )
         for build_dir in "${build_dirs[@]}"; do
             lcov_merge_args+=( -a "${build_dir}/${coverage_info}" )
         done
@@ -252,7 +252,7 @@ _clean_coverage_info() {
         ; do
         (
             set -x
-            lcov -q -o "${coverage_dir}/${coverage_info}" -r "${coverage_dir}/${coverage_info}" "${pattern}"
+            lcov -q -q -o "${coverage_dir}/${coverage_info}" -r "${coverage_dir}/${coverage_info}" "${pattern}"
         ) |& tee "${coverage_dir}/clean.log"
     done
 }
@@ -271,7 +271,7 @@ _show_summary() {
     local coverage_dir="$1"
     (
         set -x
-        lcov -q -l "${coverage_dir}/${coverage_info}"
+        lcov -q -q -l "${coverage_dir}/${coverage_info}"
     ) | grep -v '^\['
 }
 
