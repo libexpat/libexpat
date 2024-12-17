@@ -125,6 +125,20 @@ jobs:
         cd expat/expat-*.*.*/
 
         if [[ "${{ runner.os }}" == macOS ]]; then
+          # There is a known difference between Autotools and CMake for macOS:
+          #   Autotools:
+          #   - /usr/local/lib123/libexpat.<major>.dylib
+          #   - /usr/local/lib123/libexpat.dylib
+          #   CMake:
+          #   - /usr/local/lib123/libexpat.<major>.<minor>.<patch>.dylib
+          #   - /usr/local/lib123/libexpat.<major>.dylib
+          #   - /usr/local/lib123/libexpat.dylib
+          # We patch the CMake side in line here to get the differ below to empty.
+          ( cd build_cmake/ROOT/usr/local/lib*/cmake/expat-*/ \
+              && sed -E 's,(libexpat\.[0-9]+)\.[0-9]+\.[0-9]+(\.dylib),\1\2,' expat-noconfig.cmake > expat-noconfig-patched.cmake \
+              && ! diff -u0 expat-noconfig{,-patched}.cmake \
+              && mv expat-noconfig{-patched,}.cmake )
+
           # Autotools' LT_LIB_M has a hardcoded exclude for "*-*-darwin*" hosts,
           # while macOS does have libm and is successfully found by CMake.
           # We patch the CMake side in line here to get the differ below to empty.
