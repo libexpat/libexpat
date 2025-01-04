@@ -743,14 +743,12 @@ if(EXPAT_BUILD_FUZZERS)
             target_link_libraries(${target_name} fuzzpat)
             target_compile_definitions(${target_name}
                 PRIVATE ENCODING_FOR_FUZZING=${encoding_type})
-            if(NOT EXPAT_OSSFUZZ_BUILD)
-                target_compile_options(${target_name} PRIVATE -fsanitize=fuzzer-no-link)
-            endif()
             # NOTE: Avoiding target_link_options here only because it needs CMake >=3.13
             if(EXPAT_OSSFUZZ_BUILD)
                 set_target_properties(${target_name} PROPERTIES LINK_FLAGS $ENV{LIB_FUZZING_ENGINE})
                 set_target_properties(${target_name} PROPERTIES LINKER_LANGUAGE "CXX")
             else()
+                target_compile_options(${target_name} PRIVATE -fsanitize=fuzzer-no-link)
                 set_target_properties(${target_name} PROPERTIES LINK_FLAGS -fsanitize=fuzzer)
             endif()
             set_property(
