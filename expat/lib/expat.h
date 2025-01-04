@@ -132,7 +132,7 @@ enum XML_Error {
   /* Added in 2.4.0. */
   XML_ERROR_AMPLIFICATION_LIMIT_BREACH,
   /* Added in 2.6.4. */
-  XML_ERROR_NOT_STARTED,
+  XML_ERROR_NOT_STARTED
 };
 
 enum XML_Content_Type {
