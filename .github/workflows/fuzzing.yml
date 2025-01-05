@@ -117,3 +117,10 @@ jobs:
         find corpus_UTF-16LE/ -type f | sort | xargs \
             fuzz/xml_parsebuffer_fuzzer_UTF-16LE "${fuzz_args[@]}"
         #                 ^^^^^^        ^^^^^^^^
+
+    - name: Store fuzzing logs
+      uses: actions/upload-artifact@6f51ac03b9356f520e9adb1b1b7802705f340c2b  # v4.5.0
+      with:
+        name: expat_fuzzing_logs_${{ github.sha }}
+        path: expat/build/fuzz-*.log
+        if-no-files-found: error
