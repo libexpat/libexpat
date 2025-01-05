@@ -102,8 +102,8 @@ jobs:
         fuzz_args=(
             -jobs=$(nproc)
             -print_final_stats=1
-            -rss_limit_mb=2560  # from oss-fuzz
-            -timeout=25         # from oss-fuzz
+            -rss_limit_mb=2560  # from OSS-Fuzz
+            -timeout=25         # from OSS-Fuzz
         )
 
         set -x -o pipefail

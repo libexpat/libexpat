@@ -134,7 +134,7 @@ expat_shy_set(EXPAT_SHARED_LIBS ${_EXPAT_SHARED_LIBS_DEFAULT} CACHE BOOL "Build 
 expat_shy_set(EXPAT_BUILD_DOCS ${_EXPAT_BUILD_DOCS_DEFAULT} CACHE BOOL "Build man page for xmlwf")
 expat_shy_set(EXPAT_BUILD_FUZZERS OFF CACHE BOOL "Build fuzzers for the expat library")
 expat_shy_set(EXPAT_BUILD_PKGCONFIG ${_EXPAT_BUILD_PKGCONFIG_DEFAULT} CACHE BOOL "Build pkg-config file")
-expat_shy_set(EXPAT_OSSFUZZ_BUILD OFF CACHE BOOL "Build fuzzers via ossfuzz for the expat library")
+expat_shy_set(EXPAT_OSSFUZZ_BUILD OFF CACHE BOOL "Build fuzzers via OSS-Fuzz for the expat library")
 if(UNIX OR _EXPAT_HELP)
     expat_shy_set(EXPAT_WITH_LIBBSD OFF CACHE BOOL "Utilize libbsd (for arc4random_buf)")
 endif()
@@ -724,7 +724,7 @@ if(EXPAT_BUILD_FUZZERS)
         message(SEND_ERROR
             "OSS-Fuzz builds require the environment variable "
             "LIB_FUZZING_ENGINE to be set. If you are seeing this "
-            "warning, it points to a deeper problem in the ossfuzz "
+            "warning, it points to a deeper problem in the OSS-Fuzz "
             "build setup.")
     endif()
 
@@ -760,7 +760,7 @@ if(EXPAT_BUILD_FUZZERS)
 else()
     if(EXPAT_OSSFUZZ_BUILD)
         message(SEND_ERROR
-                "Attempting to perform an ossfuzz build without turning on the fuzzer build. "
+                "Attempting to perform an OSS-Fuzz build without turning on the fuzzer build. "
                 "This is likely in error - consider adding "
                 "-DEXPAT_BUILD_FUZZERS=ON to your cmake execution.")
     endif()
