@@ -102,8 +102,8 @@ jobs:
         fuzz_args=(
             -jobs=$(nproc)
             -print_final_stats=1
-            -rss_limit_mb=2560  # from oss-fuzz
-            -timeout=25         # from oss-fuzz
+            -rss_limit_mb=2560  # from OSS-Fuzz
+            -timeout=25         # from OSS-Fuzz
         )
 
         set -x -o pipefail
@@ -118,9 +118,9 @@ jobs:
             fuzz/xml_parsebuffer_fuzzer_UTF-16LE "${fuzz_args[@]}"
         #                 ^^^^^^        ^^^^^^^^
 
-    - name: Store crashing test units
-      if: ${{ failure() }}
+    - name: Store fuzzing logs
       uses: actions/upload-artifact@6f51ac03b9356f520e9adb1b1b7802705f340c2b  # v4.5.0
       with:
-        name: expat_fuzzing_trouble_${{ github.sha }}
-        path: expat/build/*-????????????????????????????????????????
+        name: expat_fuzzing_logs_${{ github.sha }}
+        path: expat/build/fuzz-*.log
+        if-no-files-found: error

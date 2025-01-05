@@ -295,7 +295,7 @@ EXPAT_ENABLE_INSTALL:BOOL=ON
 // Use /MT flag (static CRT) when compiling in MSVC
 EXPAT_MSVC_STATIC_CRT:BOOL=OFF
 
-// Build fuzzers via ossfuzz for the expat library
+// Build fuzzers via OSS-Fuzz for the expat library
 EXPAT_OSSFUZZ_BUILD:BOOL=OFF
 
 // Build a shared expat library
