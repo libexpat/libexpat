@@ -748,7 +748,7 @@ if(EXPAT_BUILD_FUZZERS)
                 set_target_properties(${target_name} PROPERTIES LINK_FLAGS $ENV{LIB_FUZZING_ENGINE})
                 set_target_properties(${target_name} PROPERTIES LINKER_LANGUAGE "CXX")
             else()
-                target_compile_options(${target_name} PRIVATE -fsanitize=fuzzer-no-link)
+                target_compile_options(${target_name} PRIVATE -fsanitize=fuzzer)
                 set_target_properties(${target_name} PROPERTIES LINK_FLAGS -fsanitize=fuzzer)
             endif()
             set_property(
