@@ -46,6 +46,8 @@ Release 2.6.4 Wed November 6 2024
             #904  tests: Resolve duplicate handler
        #317 #918  tests: Improve tests on doctype closing (ex CVE-2019-15903)
             #914  Fix signedness of format strings
+            #915  For use from C++, expat.h started requiring C++11 due to
+                    use of C99 features
        #919 #920  Version info bumped from 10:3:9 (libexpat*.so.1.9.3)
                     to 11:0:10 (libexpat*.so.1.10.0); see https://verbump.de/
                     for what these numbers do
