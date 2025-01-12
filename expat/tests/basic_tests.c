@@ -1249,44 +1249,58 @@ START_TEST(test_no_indirectly_recursive_entity_refs) {
        "<doc/>\n",
        true},
   };
-  for (size_t i = 0; i < sizeof(cases) / sizeof(cases[0]); i++) {
-    const char *const doc = cases[i].doc;
-    const bool usesParameterEntities = cases[i].usesParameterEntities;
+  const XML_Bool reset_or_not[] = {XML_TRUE, XML_FALSE};
 
-    set_subtest("[%i] %s", (int)i, doc);
+  for (size_t i = 0; i < sizeof(cases) / sizeof(cases[0]); i++) {
+    for (size_t j = 0; j < sizeof(reset_or_not) / sizeof(reset_or_not[0]);
+         j++) {
+      const XML_Bool reset_wanted = reset_or_not[j];
+      const char *const doc = cases[i].doc;
+      const bool usesParameterEntities = cases[i].usesParameterEntities;
+
+      set_subtest("[%i,reset=%i] %s", (int)i, (int)j, doc);
 
 #ifdef XML_DTD // both GE and DTD
-    const bool rejection_expected = true;
+      const bool rejection_expected = true;
 #elif XML_GE == 1 // GE but not DTD
-    const bool rejection_expected = ! usesParameterEntities;
+      const bool rejection_expected = ! usesParameterEntities;
 #else             // neither DTD nor GE
-    const bool rejection_expected = false;
+      const bool rejection_expected = false;
 #endif
 
-    XML_Parser parser = XML_ParserCreate(NULL);
+      XML_Parser parser = XML_ParserCreate(NULL);
 
 #ifdef XML_DTD
-    if (usesParameterEntities) {
-      assert_true(
-          XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS)
-          == 1);
-    }
+      if (usesParameterEntities) {
+        assert_true(
+            XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS)
+            == 1);
+      }
 #else
-    UNUSED_P(usesParameterEntities);
+      UNUSED_P(usesParameterEntities);
 #endif // XML_DTD
 
-    const enum XML_Status status
-        = _XML_Parse_SINGLE_BYTES(parser, doc, (int)strlen(doc),
-                                  /*isFinal*/ XML_TRUE);
+      const enum XML_Status status
+          = _XML_Parse_SINGLE_BYTES(parser, doc, (int)strlen(doc),
+                                    /*isFinal*/ XML_TRUE);
 
-    if (rejection_expected) {
-      assert_true(status == XML_STATUS_ERROR);
-      assert_true(XML_GetErrorCode(parser) == XML_ERROR_RECURSIVE_ENTITY_REF);
-    } else {
-      assert_true(status == XML_STATUS_OK);
+      if (rejection_expected) {
+        assert_true(status == XML_STATUS_ERROR);
+        assert_true(XML_GetErrorCode(parser) == XML_ERROR_RECURSIVE_ENTITY_REF);
+      } else {
+        assert_true(status == XML_STATUS_OK);
+      }
+
+      if (reset_wanted) {
+        // This covers free'ing of (eventually) all three open entity lists by
+        // XML_ParserReset.
+        XML_ParserReset(parser, NULL);
+      }
+
+      // This covers free'ing of (eventually) all three open entity lists by
+      // XML_ParserFree (unless XML_ParserReset has already done that above).
+      XML_ParserFree(parser);
     }
-
-    XML_ParserFree(parser);
   }
 }
 END_TEST
