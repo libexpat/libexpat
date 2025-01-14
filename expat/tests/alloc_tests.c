@@ -450,6 +450,31 @@ START_TEST(test_alloc_internal_entity) {
 }
 END_TEST
 
+START_TEST(test_alloc_parameter_entity) {
+  const char *text = "<!DOCTYPE foo ["
+                     "<!ENTITY % param1 \"<!ENTITY internal 'some_text'>\">"
+                     "%param1;"
+                     "]> <foo>&internal;content</foo>";
+  int i;
+  const int alloc_test_max_repeats = 30;
+
+  for (i = 0; i < alloc_test_max_repeats; i++) {
+    g_allocation_count = i;
+    XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+    if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+        != XML_STATUS_ERROR)
+      break;
+    alloc_teardown();
+    alloc_setup();
+  }
+  g_allocation_count = -1;
+  if (i == 0)
+    fail("Parameter entity processed despite duff allocator");
+  if (i == alloc_test_max_repeats)
+    fail("Parameter entity not processed at max allocation count");
+}
+END_TEST
+
 /* Test the robustness against allocation failure of element handling
  * Based on test_dtd_default_handling().
  */
@@ -2079,6 +2104,7 @@ make_alloc_test_case(Suite *s) {
   tcase_add_test__ifdef_xml_dtd(tc_alloc, test_alloc_external_entity);
   tcase_add_test__ifdef_xml_dtd(tc_alloc, test_alloc_ext_entity_set_encoding);
   tcase_add_test__ifdef_xml_dtd(tc_alloc, test_alloc_internal_entity);
+  tcase_add_test__ifdef_xml_dtd(tc_alloc, test_alloc_parameter_entity);
   tcase_add_test__ifdef_xml_dtd(tc_alloc, test_alloc_dtd_default_handling);
   tcase_add_test(tc_alloc, test_alloc_explicit_encoding);
   tcase_add_test(tc_alloc, test_alloc_set_base);
