@@ -6378,7 +6378,7 @@ appendAttributeValue(XML_Parser parser, const ENCODING *enc, XML_Bool isCdata,
       } else {
         enum XML_Error result;
         result = processEntity(parser, entity, XML_FALSE, ENTITY_ATTRIBUTE);
-        if (nextPtr) {
+        if ((result == XML_ERROR_NONE) && (nextPtr != NULL)) {
           *nextPtr = next;
         }
         return result;
@@ -6402,9 +6402,6 @@ appendAttributeValue(XML_Parser parser, const ENCODING *enc, XML_Bool isCdata,
       /* LCOV_EXCL_STOP */
     }
     ptr = next;
-    if (nextPtr) {
-      *nextPtr = next;
-    }
   }
   /* not reached */
 }
