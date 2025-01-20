@@ -20,7 +20,6 @@
 !!   (needs discussion before pull requests),                                !!
 !! - smart ideas on fixing the Autotools CMake files generation issue        !!
 !!   without breaking CI (needs discussion before pull requests),            !!
-!! - the Windows binaries topic (needs requirements engineering first),      !!
 !! - pushing migration from `int` to `size_t` further                        !!
 !!   including edge-cases test coverage (needs discussion before anything).  !!
 !!                                                                           !!
