@@ -52,7 +52,7 @@ This approach leverages CMake's own [module `FindEXPAT`](https://cmake.org/cmake
 Notice the *uppercase* `EXPAT` in the following example:
 
 ```cmake
-cmake_minimum_required(VERSION 3.0)  # or 3.10, see below
+cmake_minimum_required(VERSION 3.10)
 
 project(hello VERSION 1.0.0)
 
@@ -62,12 +62,7 @@ add_executable(hello
     hello.c
 )
 
-# a) for CMake >=3.10 (see CMake's FindEXPAT docs)
 target_link_libraries(hello PUBLIC EXPAT::EXPAT)
-
-# b) for CMake >=3.0
-target_include_directories(hello PRIVATE ${EXPAT_INCLUDE_DIRS})
-target_link_libraries(hello PUBLIC ${EXPAT_LIBRARIES})
 ```
 
 ### b) `find_package` with Config Mode
@@ -85,7 +80,7 @@ or
 Notice the *lowercase* `expat` in the following example:
 
 ```cmake
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.10)
 
 project(hello VERSION 1.0.0)
 
