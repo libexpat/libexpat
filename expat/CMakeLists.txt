@@ -34,7 +34,7 @@
 # Unlike most of Expat,
 # this file is copyrighted under the BSD-license for buildsystem files of KDE.
 
-cmake_minimum_required(VERSION 3.5.0)
+cmake_minimum_required(VERSION 3.10.0)
 
 project(expat
     VERSION
@@ -911,13 +911,7 @@ elseif(EXPAT_CHAR_TYPE STREQUAL "wchar_t")
 else()
     set(_EXPAT_CHAR_TYPE_SUMMARY "ERROR")
 endif()
-# NOTE: We're not accessing global property GENERATOR_IS_MULTI_CONFIG
-#       because that would require CMake >=3.9
-if(CMAKE_CONFIGURATION_TYPES)
-    set(_EXPAT_GENERATOR_IS_MULTI_CONFIG TRUE)
-else()
-    set(_EXPAT_GENERATOR_IS_MULTI_CONFIG FALSE)
-endif()
+get_property(_EXPAT_GENERATOR_IS_MULTI_CONFIG GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
 
 message(STATUS "===========================================================================")
 message(STATUS "")
