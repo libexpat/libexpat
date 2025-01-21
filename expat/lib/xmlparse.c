@@ -6046,6 +6046,8 @@ internalEntityProcessor(XML_Parser parser, const char *s, const char *end,
     return XML_ERROR_UNEXPECTED_STATE;
 
   entity = openEntity->entity;
+
+  // This will return early
   if (entity->hasMore) {
     textStart = ((const char *)entity->textPtr) + entity->processed;
     textEnd = (const char *)(entity->textPtr + entity->textLen);
@@ -6082,25 +6084,20 @@ internalEntityProcessor(XML_Parser parser, const char *s, const char *end,
     entity->hasMore = XML_FALSE;
     triggerReenter(parser);
     return result;
-  }
+  } // End of entity processing, "if" block will return here
 
+  // Remove fully processed openEntity from open entity list.
 #if XML_GE == 1
   entityTrackingOnClose(parser, entity, __LINE__);
 #endif
+  // openEntity is m_openInternalEntities' head, as we set it at the start of
+  // this function and we skipped doProlog and doContent calls with hasMore set
+  // to false. This means we can directly remove the head of
+  // m_openInternalEntities
+  assert(parser->m_openInternalEntities == openEntity);
   entity->open = XML_FALSE;
-  // Remove fully processed openEntity from open entity list. doContent call can
-  // add maximum one new entity to m_openInternalEntities since when a new
-  // entity is detected, parser will go into REENTER state and return. Therefore
-  // openEntity is either the head or next to the new head.
-  if (parser->m_openInternalEntities == openEntity) {
-    // No new entity detected during entity processing,
-    // openEntity is still the head.
-    parser->m_openInternalEntities = parser->m_openInternalEntities->next;
-  } else {
-    // New entity detected since list has a new head. openEntity is the second
-    // element.
-    parser->m_openInternalEntities->next = openEntity->next;
-  }
+  parser->m_openInternalEntities = parser->m_openInternalEntities->next;
+
   /* put openEntity back in list of free instances */
   openEntity->next = parser->m_freeInternalEntities;
   parser->m_freeInternalEntities = openEntity;
@@ -6173,26 +6170,20 @@ storeAttributeValue(XML_Parser parser, const ENCODING *enc, XML_Bool isCdata,
         entity->hasMore = XML_FALSE;
         triggerReenter(parser);
         continue;
-      }
+      } // End of entity processing, "if" block skips the rest
 
+      // Remove fully processed openEntity from open entity list.
 #if XML_GE == 1
       entityTrackingOnClose(parser, entity, __LINE__);
 #endif
+      // openEntity is m_openAttributeEntities' head, since we set it at the
+      // start of this function and because we skipped appendAttributeValue call
+      // with hasMore set to false. This means we can directly remove the head
+      // of m_openAttributeEntities
+      assert(parser->m_openAttributeEntities == openEntity);
       entity->open = XML_FALSE;
-      // Remove fully processed openEntity from open entity list.
-      // appendAttributeValue call can add maximum one new entity to
-      // m_openAttributeEntities since when a new entity is detected, parser
-      // will set the 'reenter' flag and return. Therefore openEntity is either
-      // the head or next to the new head.
-      if (parser->m_openAttributeEntities == openEntity) {
-        // No new entity detected during entity processing,
-        // openEntity is still the head.
-        parser->m_openAttributeEntities = parser->m_openAttributeEntities->next;
-      } else {
-        // New entity detected since list has a new head. openEntity is the
-        // second element.
-        parser->m_openAttributeEntities->next = openEntity->next;
-      }
+      parser->m_openAttributeEntities = parser->m_openAttributeEntities->next;
+
       /* put openEntity back in list of free instances */
       openEntity->next = parser->m_freeAttributeEntities;
       parser->m_freeAttributeEntities = openEntity;
@@ -6631,26 +6622,20 @@ callStoreEntityValue(XML_Parser parser, const ENCODING *enc,
         entity->hasMore = XML_FALSE;
         triggerReenter(parser);
         continue;
-      }
+      } // End of entity processing, "if" block skips the rest
 
+      // Remove fully processed openEntity from open entity list.
 #  if XML_GE == 1
       entityTrackingOnClose(parser, entity, __LINE__);
 #  endif
+      // openEntity is m_openValueEntities' head, since we set it at the
+      // start of this function and because we skipped storeEntityValue call
+      // with hasMore set to false. This means we can directly remove the head
+      // of m_openValueEntities
+      assert(parser->m_openValueEntities == openEntity);
       entity->open = XML_FALSE;
-      // Remove fully processed openEntity from open entity list.
-      // appendAttributeValue call can add maximum one new entity to
-      // m_openValueEntities since when a new entity is detected, parser
-      // will set the 'reenter' flag and return. Therefore openEntity is either
-      // the head or next to the new head.
-      if (parser->m_openValueEntities == openEntity) {
-        // No new entity detected during entity processing,
-        // openEntity is still the head.
-        parser->m_openValueEntities = parser->m_openValueEntities->next;
-      } else {
-        // New entity detected since list has a new head. openEntity is the
-        // second element.
-        parser->m_openValueEntities->next = openEntity->next;
-      }
+      parser->m_openValueEntities = parser->m_openValueEntities->next;
+
       /* put openEntity back in list of free instances */
       openEntity->next = parser->m_freeValueEntities;
       parser->m_freeValueEntities = openEntity;
