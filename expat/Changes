@@ -29,6 +29,29 @@
 !! THANK YOU!                        Sebastian Pipping -- Berlin, 2024-03-09 !!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
+Release 2.6.5 ??? ???????? ?? ????
+        Other changes:
+       #935 #937  Autotools: Make generated CMake files look for
+                    libexpat.@SO_MAJOR@.dylib on macOS
+            #925  Autotools: Sync CMake templates with CMake 3.29
+            #945  CMake: Drop support for CMake <3.10
+            #942  CMake: Small fuzzing related improvements
+            #921  docs: Add missing documentation of error code
+                    XML_ERROR_NOT_STARTED that was introduced with 2.6.4
+            #941  docs: Document need for C++11 compiler for use from C++
+            #944  Windows: Fix installer target location of file xmlwf.xml
+                    for CMake
+
+        Infrastructure:
+            #926  tests: Increase robustness
+    #927 #932 ..
+       #930 #933  tests: Increase test coverage
+            #936  CI: Pass -q -q for LCOV >=2.1 in coverage.sh
+            #942  CI: Small fuzzing related improvements
+    #139 #203 ..
+       #791 #946  CI: Make GitHub Actions build using MSVC on Windows and
+                      produce 32bit and 64bit Windows binaries
+
 Release 2.6.4 Wed November 6 2024
         Security fixes:
             #915  CVE-2024-50602 -- Fix crash within function XML_ResumeParser
