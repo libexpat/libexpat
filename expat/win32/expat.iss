@@ -14,7 +14,7 @@
 ; Copyright (c) 2001      Tim Peters <tim.peters@gmail.com>
 ; Copyright (c) 2001-2005 Fred L. Drake, Jr. <fdrake@users.sourceforge.net>
 ; Copyright (c) 2006-2017 Karl Waclawek <karl@waclawek.net>
-; Copyright (c) 2007-2024 Sebastian Pipping <sebastian@pipping.org>
+; Copyright (c) 2007-2025 Sebastian Pipping <sebastian@pipping.org>
 ; Copyright (c) 2022      Johnny Jazeix <jazeix@gmail.com>
 ; Copyright (c) 2024      Dag-Erling Smørgrav <des@des.dev>
 ; Licensed under the MIT license:

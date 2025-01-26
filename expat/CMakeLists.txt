@@ -7,7 +7,7 @@
 #
 # Copyright (c) 2010      Patrick Spendrin <ps_ml@gmx.de>
 # Copyright (c) 2012      Karl Waclawek <karl@waclawek.net>
-# Copyright (c) 2016-2024 Sebastian Pipping <sebastian@pipping.org>
+# Copyright (c) 2016-2025 Sebastian Pipping <sebastian@pipping.org>
 # Copyright (c) 2016      Sergei Nikulov <sergey.nikulov@gmail.com>
 # Copyright (c) 2016      Björn Lindahl <bjorn.lindahl@foi.se>
 # Copyright (c) 2016      Tobias Taschner <github@tc84.de>
