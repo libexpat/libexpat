@@ -16,6 +16,15 @@
 !!   ClusterFuzz findings with few-days-max response times in communication  !!
 !!   in order to (1) have a sound fix ready before the end of a 90 days      !!
 !!   grace period and (2) in a sustainable manner,                           !!
+!! - helping CPython Expat bindings with supporting Expat's billion laughs   !!
+!!   attack protection API (https://github.com/python/cpython/issues/90949): !!
+!!   - XML_SetBillionLaughsAttackProtectionActivationThreshold               !!
+!!   - XML_SetBillionLaughsAttackProtectionMaximumAmplification              !!
+!! - helping Perl's XML::Parser Expat bindings with supporting Expat's       !!
+!!   security API (https://github.com/cpan-authors/XML-Parser/issues/102):   !!
+!!   - XML_SetBillionLaughsAttackProtectionActivationThreshold               !!
+!!   - XML_SetBillionLaughsAttackProtectionMaximumAmplification              !!
+!!   - XML_SetReparseDeferralEnabled                                         !!
 !! - implementing and auto-testing XML 1.0r5 support                         !!
 !!   (needs discussion before pull requests),                                !!
 !! - smart ideas on fixing the Autotools CMake files generation issue        !!
@@ -28,6 +37,29 @@
 !!                                                                           !!
 !! THANK YOU!                        Sebastian Pipping -- Berlin, 2024-03-09 !!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+Release 2.6.5 ??? ???????? ?? ????
+        Other changes:
+       #935 #937  Autotools: Make generated CMake files look for
+                    libexpat.@SO_MAJOR@.dylib on macOS
+            #925  Autotools: Sync CMake templates with CMake 3.29
+            #945  CMake: Drop support for CMake <3.10
+            #942  CMake: Small fuzzing related improvements
+            #921  docs: Add missing documentation of error code
+                    XML_ERROR_NOT_STARTED that was introduced with 2.6.4
+            #941  docs: Document need for C++11 compiler for use from C++
+            #944  Windows: Fix installer target location of file xmlwf.xml
+                    for CMake
+
+        Infrastructure:
+            #926  tests: Increase robustness
+    #927 #932 ..
+       #930 #933  tests: Increase test coverage
+            #936  CI: Pass -q -q for LCOV >=2.1 in coverage.sh
+            #942  CI: Small fuzzing related improvements
+    #139 #203 ..
+       #791 #946  CI: Make GitHub Actions build using MSVC on Windows and
+                      produce 32bit and 64bit Windows binaries
 
 Release 2.6.4 Wed November 6 2024
         Security fixes:
