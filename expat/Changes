@@ -11,7 +11,6 @@
 !! The following topics need *additional skilled C developers* to progress   !!
 !! in a timely manner or at all (loosely ordered by descending priority):    !!
 !!                                                                           !!
-!! - <blink>fixing a complex non-public security issue</blink>,              !!
 !! - teaming up on researching and fixing future security reports and        !!
 !!   ClusterFuzz findings with few-days-max response times in communication  !!
 !!   in order to (1) have a sound fix ready before the end of a 90 days      !!
@@ -39,6 +38,19 @@
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 Release 2.6.5 ??? ???????? ?? ????
+        Security fixes:
+       #893 #???  CVE-2024-8176 -- Fix crash from chaining a large number
+                    of entities caused by stack overflow by resolving use of
+                    recursion, for all three uses of entities:
+                    - general entities in character data ("<e>&g1;</e>")
+                    - general entities in attribute values ("<e k1='&g1;'/>")
+                    - parameter entities ("%p1;")
+                    Known impact is (reliable and easy) denial of service:
+                    CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H/E:H/RL:O/RC:C
+                    (Base Score: 7.5, Temporal Score: 7.2)
+                    Please note that a layer of compression around XML can
+                    significantly reduce the minimum attack payload size.
+
         Other changes:
        #935 #937  Autotools: Make generated CMake files look for
                     libexpat.@SO_MAJOR@.dylib on macOS
@@ -75,8 +87,20 @@ Release 2.6.5 ??? ???????? ?? ????
             #971  CI: Adapt to breaking changes in Cppcheck
 
         Special thanks to:
+            Alexander Gieringer
+            Berkay Eren Ürün
+            Jann Horn
             Mark Brand
+            Sebastian Andrzej Siewior
+            Snild Dolkow
+            Thomas Pröll
+            Tomas Korbar
             valord577
+                 and
+            Google Project Zero
+            Linutronix
+            Red Hat
+            Siemens
 
 Release 2.6.4 Wed November 6 2024
         Security fixes:
