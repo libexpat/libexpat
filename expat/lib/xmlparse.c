@@ -2902,8 +2902,7 @@ externalEntityInitProcessor3(XML_Parser parser, const char *start,
       return XML_ERROR_ABORTED;
     case XML_PARSING:
       if (parser->m_reenter) {
-        *endPtr = next;
-        return XML_ERROR_NONE;
+        return XML_ERROR_UNEXPECTED_STATE; // LCOV_EXCL_LINE
       }
       /* Fall through */
     default:
@@ -4342,8 +4341,7 @@ doCdataSection(XML_Parser parser, const ENCODING *enc, const char **startPtr,
       return XML_ERROR_ABORTED;
     case XML_PARSING:
       if (parser->m_reenter) {
-        *nextPtr = next;
-        return XML_ERROR_NONE;
+        return XML_ERROR_UNEXPECTED_STATE; // LCOV_EXCL_LINE
       }
       /* Fall through */
     default:;
@@ -5962,8 +5960,7 @@ epilogProcessor(XML_Parser parser, const char *s, const char *end,
       return XML_ERROR_ABORTED;
     case XML_PARSING:
       if (parser->m_reenter) {
-        *nextPtr = next;
-        return XML_ERROR_NONE;
+        return XML_ERROR_UNEXPECTED_STATE; // LCOV_EXCL_LINE
       }
     /* Fall through */
     default:;
