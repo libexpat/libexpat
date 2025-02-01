@@ -173,7 +173,11 @@ if(EXPAT_BUILD_TESTS OR EXPAT_BUILD_FUZZERS)
     # We have to call enable_language() before modifying any CMAKE_CXX_* variables
     enable_language(CXX)
 
-    set(CMAKE_CXX_STANDARD 11)
+    if (EXPAT_BUILD_FUZZERS)
+        set(CMAKE_CXX_STANDARD 17)  # for std::string_view for Abseil for libprotobuf-mutator
+    else()
+        set(CMAKE_CXX_STANDARD 11)
+    endif()
     set(CMAKE_CXX_STANDARD_REQUIRED ON)
     set(CMAKE_CXX_EXTENSIONS OFF)  # i.e. -std=c++11 rather than default -std=gnu++11
 endif()
