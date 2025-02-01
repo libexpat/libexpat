@@ -756,53 +756,28 @@ if(EXPAT_BUILD_FUZZERS)
         endforeach()
     endforeach()
 
-    # Only include protobuf and libprotobuf-mutator here so that we don't build
-    # them in non-fuzz configurations.
-    include(FetchContent)
+    find_package(Protobuf REQUIRED)
 
-    FetchContent_Declare(
-        Protobuf
-        GIT_REPOSITORY https://github.com/protocolbuffers/protobuf.git
-        GIT_TAG v3.20.1
+    # Only include libprotobuf-mutator here so we don't build it in non-fuzz
+    # configurations.
+    include(ExternalProject)
+
+    set(ProtobufMutator_PREFIX libprotobuf-mutator)
+    set(ProtobufMutator_PATH ${CMAKE_CURRENT_BINARY_DIR}/${ProtobufMutator_PREFIX}/src/${ProtobufMutator_PREFIX})
+    set(ProtobufMutator_BUILD_PATH ${ProtobufMutator_PATH}-build)
+    set(ProtobufMutator_INCLUDE_DIR ${ProtobufMutator_PATH})
+    set(ProtobufMutator_LIBRARIES ${ProtobufMutator_BUILD_PATH}/src/libfuzzer/libprotobuf-mutator-libfuzzer.a ${ProtobufMutator_BUILD_PATH}/src/libprotobuf-mutator.a)
+
+    ExternalProject_Add(
+        ${ProtobufMutator_PREFIX}
+        PREFIX ${ProtobufMutator_PREFIX}
+        GIT_REPOSITORY https://github.com/google/libprotobuf-mutator.git
+        GIT_TAG master
         CMAKE_ARGS -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
         CMAKE_CACHE_ARGS -DCMAKE_C_COMPILER:FILEPATH=${CMAKE_C_COMPILER} -DCMAKE_CXX_COMPILER:FILEPATH=${CMAKE_CXX_COMPILER}
-        SOURCE_SUBDIR cmake
-        OVERRIDE_FIND_PACKAGE)
-    set(protobuf_BUILD_TESTS OFF CACHE BOOL "No protobuf tests")
-    FetchContent_MakeAvailable(Protobuf)
-    FetchContent_GetProperties(
-        Protobuf
-        SOURCE_DIR Protobuf_SOURCE_DIR
-        BINARY_DIR Protobuf_BINARY_DIR)
-
-    FetchContent_Declare(
-        ProtobufMutator
-        GIT_REPOSITORY https://github.com/google/libprotobuf-mutator.git
-        GIT_TAG v1.0
-        CMAKE_ARGS -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-        CMAKE_CACHE_ARGS -DCMAKE_C_COMPILER:FILEPATH=${CMAKE_C_COMPILER}-DCMAKE_CXX_COMPILER:FILEPATH=${CMAKE_CXX_COMPILER})
-
-    # This is enough for libprotobuf-mutator build to find our build of protobuf
-    set(Protobuf_INCLUDE_DIR ${Protobuf_SOURCE_DIR}/src)
-    set(Protobuf_LIBRARIES ${Protobuf_BINARY_DIR}/libprotobuf.a)
-    set(Protobuf_PROTOC_EXECUTABLE ${Protobuf_BINARY_DIR}/protoc)
-
-    # This combination of flags is necessary to prevent libprotobuf-mutator from
-    # trying to build another copy of expat internally.
-    set(LIB_PROTO_MUTATOR_TESTING OFF CACHE BOOL "No libprotobuf-mutator tests")
-    set(LIB_PROTO_MUTATOR_FUZZER_LIBRARIES "")
-    set(LIB_PROTO_MUTATOR_HAS_SANITIZE_FUZZER "")
-
-    FetchContent_MakeAvailable(ProtobufMutator)
-    FetchContent_GetProperties(
-        ProtobufMutator
-        SOURCE_DIR ProtobufMutator_SOURCE_DIR
-        BINARY_DIR ProtobufMutator_BINARY_DIR)
-
-    set(ProtobufMutator_INCLUDE_DIR ${ProtobufMutator_SOURCE_DIR})
-
-    # We need to include this to get the `protobuf_generate_cpp` rule.
-    include(FindProtobuf)
+        BUILD_BYPRODUCTS ${ProtobufMutator_LIBRARIES}
+        UPDATE_COMMAND true
+        INSTALL_COMMAND true)
 
     protobuf_generate_cpp(XML_LPM_FUZZER_PROTO_SRCS
                           XML_LPM_FUZZER_PROTO_HDRS
@@ -811,14 +786,12 @@ if(EXPAT_BUILD_FUZZERS)
     add_executable(xml_lpm_fuzzer
                    fuzz/xml_lpm_fuzzer.cpp
                    ${XML_LPM_FUZZER_PROTO_SRCS})
-
     set_target_properties(xml_lpm_fuzzer PROPERTIES LINKER_LANGUAGE CXX)
-    target_include_directories(xml_lpm_fuzzer PUBLIC
-                               ${Protobuf_INCLUDE_DIR}
-                               ${ProtobufMutator_INCLUDE_DIR})
+    target_include_directories(xml_lpm_fuzzer PUBLIC ${ProtobufMutator_INCLUDE_DIR})
     target_link_libraries(xml_lpm_fuzzer
-                          fuzzpat libprotobuf protobuf-mutator-libfuzzer)
-
+                          fuzzpat
+                          ${Protobuf_LIBRARIES}
+                          ${ProtobufMutator_LIBRARIES})
     # NOTE: Avoiding target_link_options here only because it needs CMake >=3.13
     if(EXPAT_OSSFUZZ_BUILD)
         set_target_properties(xml_lpm_fuzzer PROPERTIES LINK_FLAGS $ENV{LIB_FUZZING_ENGINE})
