@@ -41,34 +41,34 @@
 #include "xml_lpm_fuzzer.pb.h"
 #include "src/libfuzzer/libfuzzer_macro.h"
 
-static const char* encoding = nullptr;
+static const char* g_encoding = nullptr;
 static const char* external_entity = nullptr;
 static size_t external_entity_size = 0;
 
 void SetEncoding(const xml_lpm_fuzzer::Encoding& e) {
   switch (e) {
     case xml_lpm_fuzzer::Encoding::UTF8:
-      encoding = "UTF-8";
+      g_encoding = "UTF-8";
       break;
 
     case xml_lpm_fuzzer::Encoding::UTF16:
-      encoding = "UTF-16";
+      g_encoding = "UTF-16";
       break;
 
     case xml_lpm_fuzzer::Encoding::ISO88591:
-      encoding = "ISO-8859-1";
+      g_encoding = "ISO-8859-1";
       break;
 
     case xml_lpm_fuzzer::Encoding::ASCII:
-      encoding = "US-ASCII";
+      g_encoding = "US-ASCII";
       break;
 
     case xml_lpm_fuzzer::Encoding::NONE:
-      encoding = NULL;
+      g_encoding = NULL;
       break;
 
     default:
-      encoding = "UNKNOWN";
+      g_encoding = "UNKNOWN";
       break;
   }
 }
@@ -328,7 +328,7 @@ ExternalEntityRefHandler(XML_Parser parser, const XML_Char *context,
 
   if (external_entity) {
     XML_Parser ext_parser = XML_ExternalEntityParserCreate(parser, context,
-                                                           encoding);
+                                                           g_encoding);
     rc = Parse(ext_parser, (const XML_Char*)external_entity,
                external_entity_size, 1);
     XML_ParserFree(ext_parser);
@@ -395,7 +395,7 @@ DEFINE_TEXT_PROTO_FUZZER(const xml_lpm_fuzzer::Testcase& testcase) {
   }
 
   SetEncoding(testcase.encoding());
-  XML_Parser parser = XML_ParserCreate_MM(encoding, &memory_handling_suite, "|");
+  XML_Parser parser = XML_ParserCreate_MM(g_encoding, &memory_handling_suite, "|");
   InitializeParser(parser);
 
   for (size_t i = 0; i < testcase.actions_size(); ++i) {
@@ -406,19 +406,19 @@ DEFINE_TEXT_PROTO_FUZZER(const xml_lpm_fuzzer::Testcase& testcase) {
                                       (const XML_Char*)action.chunk().data(),
                                       action.chunk().size(), 0)) {
           // Force a reset after parse error.
-          XML_ParserReset(parser, encoding);
+          XML_ParserReset(parser, g_encoding);
         }
         break;
 
       case xml_lpm_fuzzer::Action::kLastChunk:
         Parse(parser, (const XML_Char*)action.last_chunk().data(),
               action.last_chunk().size(), 1);
-        XML_ParserReset(parser, encoding);
+        XML_ParserReset(parser, g_encoding);
         InitializeParser(parser);
         break;
 
       case xml_lpm_fuzzer::Action::kReset:
-        XML_ParserReset(parser, encoding);
+        XML_ParserReset(parser, g_encoding);
         InitializeParser(parser);
         break;
 
