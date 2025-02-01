@@ -776,7 +776,7 @@ if(EXPAT_BUILD_FUZZERS)
         ${ProtobufMutator_PREFIX}
         PREFIX ${ProtobufMutator_PREFIX}
         GIT_REPOSITORY https://github.com/google/libprotobuf-mutator.git
-        GIT_TAG master
+        GIT_TAG 50ef9159bb838931d83e5bbd77eeec05fc50f57d  # v1.1-7-g50ef915, last before commit "Switch to requires_utf8_validation"
         CMAKE_ARGS -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
         CMAKE_CACHE_ARGS -DCMAKE_C_COMPILER:FILEPATH=${CMAKE_C_COMPILER} -DCMAKE_CXX_COMPILER:FILEPATH=${CMAKE_CXX_COMPILER}
         BUILD_BYPRODUCTS ${ProtobufMutator_LIBRARIES}
