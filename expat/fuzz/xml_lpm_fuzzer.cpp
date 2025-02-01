@@ -108,7 +108,7 @@ void InitializeParser(XML_Parser parser);
 
 // We want a parse function that supports resumption, so that we can cover the
 // suspend/resume code.
-enum XML_Status Parse(XML_Parser parser, const XML_Char* input, int input_len,
+enum XML_Status Parse(XML_Parser parser, const char* input, int input_len,
                       int is_final) {
   enum XML_Status status = XML_Parse(parser, input, input_len, is_final);
   while (status == XML_STATUS_SUSPENDED) {
@@ -329,7 +329,7 @@ ExternalEntityRefHandler(XML_Parser parser, const XML_Char *context,
   if (g_external_entity) {
     XML_Parser ext_parser = XML_ExternalEntityParserCreate(parser, context,
                                                            g_encoding);
-    rc = Parse(ext_parser, (const XML_Char*)g_external_entity,
+    rc = Parse(ext_parser, g_external_entity,
                g_external_entity_size, 1);
     XML_ParserFree(ext_parser);
   }
@@ -403,7 +403,7 @@ DEFINE_TEXT_PROTO_FUZZER(const xml_lpm_fuzzer::Testcase& testcase) {
     switch (action.action_case()) {
       case xml_lpm_fuzzer::Action::kChunk:
         if (XML_STATUS_ERROR == Parse(parser,
-                                      (const XML_Char*)action.chunk().data(),
+                                      action.chunk().data(),
                                       action.chunk().size(), 0)) {
           // Force a reset after parse error.
           XML_ParserReset(parser, g_encoding);
@@ -411,7 +411,7 @@ DEFINE_TEXT_PROTO_FUZZER(const xml_lpm_fuzzer::Testcase& testcase) {
         break;
 
       case xml_lpm_fuzzer::Action::kLastChunk:
-        Parse(parser, (const XML_Char*)action.last_chunk().data(),
+        Parse(parser, action.last_chunk().data(),
               action.last_chunk().size(), 1);
         XML_ParserReset(parser, g_encoding);
         InitializeParser(parser);
