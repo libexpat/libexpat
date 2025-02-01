@@ -74,10 +74,10 @@ void SetEncoding(const xml_lpm_fuzzer::Encoding& e) {
 }
 
 static int g_allocation_count = 0;
-static std::vector<int> fail_allocations = {};
+static std::vector<int> g_fail_allocations = {};
 
 void* MallocHook(size_t size) {
-  for (auto index : fail_allocations) {
+  for (auto index : g_fail_allocations) {
     if (index == g_allocation_count) {
       return NULL;
     }
@@ -87,7 +87,7 @@ void* MallocHook(size_t size) {
 }
 
 void* ReallocHook(void* ptr, size_t size) {
-  for (auto index : fail_allocations) {
+  for (auto index : g_fail_allocations) {
     if (index == g_allocation_count) {
       return NULL;
     }
@@ -389,9 +389,9 @@ DEFINE_TEXT_PROTO_FUZZER(const xml_lpm_fuzzer::Testcase& testcase) {
   }
 
   g_allocation_count = 0;
-  fail_allocations.clear();
+  g_fail_allocations.clear();
   for (size_t i = 0; i < testcase.fail_allocations_size(); ++i) {
-    fail_allocations.push_back(testcase.fail_allocations(i));
+    g_fail_allocations.push_back(testcase.fail_allocations(i));
   }
 
   SetEncoding(testcase.encoding());
