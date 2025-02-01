@@ -42,8 +42,8 @@
 #include "src/libfuzzer/libfuzzer_macro.h"
 
 static const char* g_encoding = nullptr;
-static const char* external_entity = nullptr;
-static size_t external_entity_size = 0;
+static const char* g_external_entity = nullptr;
+static size_t g_external_entity_size = 0;
 
 void SetEncoding(const xml_lpm_fuzzer::Encoding& e) {
   switch (e) {
@@ -326,11 +326,11 @@ ExternalEntityRefHandler(XML_Parser parser, const XML_Char *context,
   TouchString(systemId);
   TouchString(publicId);
 
-  if (external_entity) {
+  if (g_external_entity) {
     XML_Parser ext_parser = XML_ExternalEntityParserCreate(parser, context,
                                                            g_encoding);
-    rc = Parse(ext_parser, (const XML_Char*)external_entity,
-               external_entity_size, 1);
+    rc = Parse(ext_parser, (const XML_Char*)g_external_entity,
+               g_external_entity_size, 1);
     XML_ParserFree(ext_parser);
   }
 
@@ -382,7 +382,7 @@ void InitializeParser(XML_Parser parser) {
 }
 
 DEFINE_TEXT_PROTO_FUZZER(const xml_lpm_fuzzer::Testcase& testcase) {
-  external_entity = nullptr;
+  g_external_entity = nullptr;
 
   if (!testcase.actions_size()) {
     return;
@@ -423,8 +423,8 @@ DEFINE_TEXT_PROTO_FUZZER(const xml_lpm_fuzzer::Testcase& testcase) {
         break;
 
       case xml_lpm_fuzzer::Action::kExternalEntity:
-        external_entity = action.external_entity().data();
-        external_entity_size = action.external_entity().size();
+        g_external_entity = action.external_entity().data();
+        g_external_entity_size = action.external_entity().size();
         break;
 
       default:
