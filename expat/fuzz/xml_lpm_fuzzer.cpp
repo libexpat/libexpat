@@ -29,6 +29,10 @@
    USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+#if defined(NDEBUG)
+#  undef NDEBUG  // because checks below rely on assert(...)
+#endif
+
 #include <assert.h>
 #include <stdint.h>
 #include <vector>
