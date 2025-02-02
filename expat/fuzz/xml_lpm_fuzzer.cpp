@@ -140,7 +140,7 @@ static void TouchString(const XML_Char* ptr, int len=-1) {
   }
 }
 
-static void TouchChildNodes(XML_Content* content, bool topLevel=true) {
+static void TouchNodeAndRecurse(XML_Content* content, bool topLevel=true) {
   switch (content->type) {
     case XML_CTYPE_EMPTY:
     case XML_CTYPE_ANY:
@@ -181,7 +181,7 @@ static void TouchChildNodes(XML_Content* content, bool topLevel=true) {
           || (content->quant == XML_CQUANT_PLUS));
       assert(content->name == NULL);
       for (int i = 0; i < content->numchildren; ++i) {
-        TouchChildNodes(&content->children[i], false);
+        TouchNodeAndRecurse(&content->children[i], false);
       }
       break;
 
@@ -193,7 +193,7 @@ static void TouchChildNodes(XML_Content* content, bool topLevel=true) {
 static void XMLCALL
 ElementDeclHandler(void* userData, const XML_Char* name, XML_Content* model) {
   TouchString(name);
-  TouchChildNodes(model);
+  TouchNodeAndRecurse(model);
   XML_FreeContentModel((XML_Parser)userData, model);
 }
 
