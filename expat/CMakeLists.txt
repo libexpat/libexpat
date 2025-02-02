@@ -792,7 +792,6 @@ if(EXPAT_BUILD_FUZZERS)
     add_executable(xml_lpm_fuzzer
                    fuzz/xml_lpm_fuzzer.cpp
                    ${XML_LPM_FUZZER_PROTO_SRCS})
-    set_target_properties(xml_lpm_fuzzer PROPERTIES LINKER_LANGUAGE CXX)
     target_include_directories(xml_lpm_fuzzer PUBLIC ${ProtobufMutator_INCLUDE_DIR})
     target_link_libraries(xml_lpm_fuzzer
                           fuzzpat
@@ -804,7 +803,6 @@ if(EXPAT_BUILD_FUZZERS)
     # NOTE: Avoiding target_link_options here only because it needs CMake >=3.13
     if(EXPAT_OSSFUZZ_BUILD)
         set_target_properties(xml_lpm_fuzzer PROPERTIES LINK_FLAGS $ENV{LIB_FUZZING_ENGINE})
-        set_target_properties(xml_lpm_fuzzer PROPERTIES LINKER_LANGUAGE "CXX")
     else()
         target_compile_options(xml_lpm_fuzzer PRIVATE -fsanitize=fuzzer-no-link)
         set_target_properties(xml_lpm_fuzzer PROPERTIES LINK_FLAGS -fsanitize=fuzzer)
