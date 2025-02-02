@@ -405,6 +405,7 @@ DEFINE_TEXT_PROTO_FUZZER(const xml_lpm_fuzzer::Testcase& testcase) {
                                       action.chunk().size(), 0)) {
           // Force a reset after parse error.
           XML_ParserReset(parser, g_encoding);
+          InitializeParser(parser);
         }
         break;
 
