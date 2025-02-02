@@ -201,22 +201,27 @@ static void XMLCALL
 AttlistDeclHandler(void* userData, const XML_Char* elname,
                      const XML_Char* attname, const XML_Char* atttype,
                      const XML_Char* dflt, int isrequired) {
+  (void)userData;
   TouchString(elname);
   TouchString(attname);
   TouchString(atttype);
   TouchString(dflt);
+  (void)isrequired;
 }
 
 static void XMLCALL
 XmlDeclHandler(void* userData, const XML_Char* version,
                const XML_Char* encoding, int standalone) {
+  (void)userData;
   TouchString(version);
   TouchString(encoding);
+  (void)standalone;
 }
 
 static void XMLCALL
 StartElementHandler(void *userData, const XML_Char *name,
                     const XML_Char **atts) {
+  (void)userData;
   TouchString(name);
   for (size_t i = 0; atts[i] != NULL; ++i) {
     TouchString(atts[i]);
@@ -225,17 +230,20 @@ StartElementHandler(void *userData, const XML_Char *name,
 
 static void XMLCALL
 EndElementHandler(void *userData, const XML_Char *name) {
+  (void)userData;
   TouchString(name);
 }
 
 static void XMLCALL
 CharacterDataHandler(void* userData, const XML_Char* s, int len) {
+  (void)userData;
   TouchString(s, len);
 }
 
 static void XMLCALL
 ProcessingInstructionHandler(void* userData, const XML_Char* target,
                              const XML_Char* data) {
+  (void)userData;
   TouchString(target);
   TouchString(data);
 }
@@ -250,14 +258,17 @@ CommentHandler(void* userData, const XML_Char* data) {
 
 static void XMLCALL
 StartCdataSectionHandler(void* userData) {
+  (void)userData;
 }
 
 static void XMLCALL
 EndCdataSectionHandler(void* userData) {
+  (void)userData;
 }
 
 static void XMLCALL
 DefaultHandler(void* userData, const XML_Char* s, int len) {
+  (void)userData;
   TouchString(s, len);
 }
 
@@ -265,13 +276,16 @@ static void XMLCALL
 StartDoctypeDeclHandler(void* userData, const XML_Char* doctypeName,
                         const XML_Char* sysid, const XML_Char* pubid,
                         int has_internal_subset) {
+  (void)userData;
   TouchString(doctypeName);
   TouchString(sysid);
   TouchString(pubid);
+  (void)has_internal_subset;
 }
 
 static void XMLCALL
 EndDoctypeDeclHandler(void* userData) {
+  (void)userData;
 }
 
 static void XMLCALL
@@ -280,7 +294,9 @@ EntityDeclHandler(void *userData, const XML_Char *entityName,
                   int value_length, const XML_Char *base,
                   const XML_Char *systemId, const XML_Char *publicId,
                   const XML_Char *notationName) {
+  (void)userData;
   TouchString(entityName);
+  (void)is_parameter_entity;
   TouchString(value, value_length);
   TouchString(base);
   TouchString(systemId);
@@ -292,6 +308,7 @@ static void XMLCALL
 NotationDeclHandler(void *userData, const XML_Char *notationName,
                     const XML_Char *base, const XML_Char *systemId,
                     const XML_Char *publicId) {
+  (void)userData;
   TouchString(notationName);
   TouchString(base);
   TouchString(systemId);
@@ -301,17 +318,20 @@ NotationDeclHandler(void *userData, const XML_Char *notationName,
 static void XMLCALL
 StartNamespaceDeclHandler(void *userData, const XML_Char *prefix,
                           const XML_Char *uri) {
+  (void)userData;
   TouchString(prefix);
   TouchString(uri);
 }
 
 static void XMLCALL
 EndNamespaceDeclHandler(void *userData, const XML_Char *prefix) {
+  (void)userData;
   TouchString(prefix);
 }
 
 static int XMLCALL
 NotStandaloneHandler(void *userData) {
+  (void)userData;
   return XML_STATUS_OK;
 }
 
@@ -339,13 +359,17 @@ ExternalEntityRefHandler(XML_Parser parser, const XML_Char *context,
 static void XMLCALL
 SkippedEntityHandler(void *userData, const XML_Char *entityName,
                      int is_parameter_entity) {
+  (void)userData;
   TouchString(entityName);
+  (void)is_parameter_entity;
 }
 
 static int XMLCALL
 UnknownEncodingHandler(void *encodingHandlerData, const XML_Char *name,
                        XML_Encoding *info) {
+  (void)encodingHandlerData;
   TouchString(name);
+  (void)info;
   return XML_STATUS_ERROR;
 }
 
