@@ -96,6 +96,8 @@ jobs:
         cmake "${args[@]}" -S . -B build
         make -C build VERBOSE=1 -j$(nproc)
 
+        ./build/fuzz/xml_lpm_fuzzer -help=1
+
     - name: Download and extract Expat fuzzing corpora
       run: |-
         set -x
