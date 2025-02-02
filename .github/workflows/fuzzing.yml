@@ -59,6 +59,15 @@ jobs:
             llvm-19
         echo /usr/lib/llvm-19/bin >>"${GITHUB_PATH}"
 
+    - name: Install build dependencies
+      run: |-
+        set -x
+        sudo apt-get install --yes --no-install-recommends -V \
+            libabsl-dev \
+            liblzma-dev \
+            libprotobuf-dev \
+            protobuf-compiler
+
     - name: Build Expat fuzzers
       run: |
         set -x -o pipefail
