@@ -154,7 +154,7 @@ static void TouchNodeAndRecurse(XML_Content* content) {
       assert(content->quant == XML_CQUANT_NONE
              || content->quant == XML_CQUANT_REP);
       assert(content->name == NULL);
-      for (int i = 0; i < content->numchildren; ++i) {
+      for (unsigned int i = 0; i < content->numchildren; ++i) {
         assert(content->children[i].type == XML_CTYPE_NAME);
         assert(content->children[i].quant == XML_CQUANT_NONE);
         assert(content->children[i].numchildren == 0);
@@ -180,7 +180,7 @@ static void TouchNodeAndRecurse(XML_Content* content) {
           || (content->quant == XML_CQUANT_REP)
           || (content->quant == XML_CQUANT_PLUS));
       assert(content->name == NULL);
-      for (int i = 0; i < content->numchildren; ++i) {
+      for (unsigned int i = 0; i < content->numchildren; ++i) {
         TouchNodeAndRecurse(&content->children[i]);
       }
       break;
@@ -388,7 +388,7 @@ DEFINE_TEXT_PROTO_FUZZER(const xml_lpm_fuzzer::Testcase& testcase) {
 
   g_allocation_count = 0;
   g_fail_allocations.clear();
-  for (size_t i = 0; i < testcase.fail_allocations_size(); ++i) {
+  for (int i = 0; i < testcase.fail_allocations_size(); ++i) {
     g_fail_allocations.push_back(testcase.fail_allocations(i));
   }
 
@@ -396,7 +396,7 @@ DEFINE_TEXT_PROTO_FUZZER(const xml_lpm_fuzzer::Testcase& testcase) {
   XML_Parser parser = XML_ParserCreate_MM(g_encoding, &memory_handling_suite, "|");
   InitializeParser(parser);
 
-  for (size_t i = 0; i < testcase.actions_size(); ++i) {
+  for (int i = 0; i < testcase.actions_size(); ++i) {
     const auto& action = testcase.actions(i);
     switch (action.action_case()) {
       case xml_lpm_fuzzer::Action::kChunk:
