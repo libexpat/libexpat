@@ -30,7 +30,7 @@
 */
 
 #if defined(NDEBUG)
-#  undef NDEBUG  // because checks below rely on assert(...)
+#  undef NDEBUG // because checks below rely on assert(...)
 #endif
 
 #include <assert.h>
@@ -41,42 +41,44 @@
 #include "xml_lpm_fuzzer.pb.h"
 #include "src/libfuzzer/libfuzzer_macro.h"
 
-static const char* g_encoding = nullptr;
-static const char* g_external_entity = nullptr;
+static const char *g_encoding = nullptr;
+static const char *g_external_entity = nullptr;
 static size_t g_external_entity_size = 0;
 
-void SetEncoding(const xml_lpm_fuzzer::Encoding& e) {
+void
+SetEncoding(const xml_lpm_fuzzer::Encoding &e) {
   switch (e) {
-    case xml_lpm_fuzzer::Encoding::UTF8:
-      g_encoding = "UTF-8";
-      break;
+  case xml_lpm_fuzzer::Encoding::UTF8:
+    g_encoding = "UTF-8";
+    break;
 
-    case xml_lpm_fuzzer::Encoding::UTF16:
-      g_encoding = "UTF-16";
-      break;
+  case xml_lpm_fuzzer::Encoding::UTF16:
+    g_encoding = "UTF-16";
+    break;
 
-    case xml_lpm_fuzzer::Encoding::ISO88591:
-      g_encoding = "ISO-8859-1";
-      break;
+  case xml_lpm_fuzzer::Encoding::ISO88591:
+    g_encoding = "ISO-8859-1";
+    break;
 
-    case xml_lpm_fuzzer::Encoding::ASCII:
-      g_encoding = "US-ASCII";
-      break;
+  case xml_lpm_fuzzer::Encoding::ASCII:
+    g_encoding = "US-ASCII";
+    break;
 
-    case xml_lpm_fuzzer::Encoding::NONE:
-      g_encoding = NULL;
-      break;
+  case xml_lpm_fuzzer::Encoding::NONE:
+    g_encoding = NULL;
+    break;
 
-    default:
-      g_encoding = "UNKNOWN";
-      break;
+  default:
+    g_encoding = "UNKNOWN";
+    break;
   }
 }
 
 static int g_allocation_count = 0;
 static std::vector<int> g_fail_allocations = {};
 
-void* MallocHook(size_t size) {
+void *
+MallocHook(size_t size) {
   for (auto index : g_fail_allocations) {
     if (index == g_allocation_count) {
       return NULL;
@@ -86,7 +88,8 @@ void* MallocHook(size_t size) {
   return malloc(size);
 }
 
-void* ReallocHook(void* ptr, size_t size) {
+void *
+ReallocHook(void *ptr, size_t size) {
   for (auto index : g_fail_allocations) {
     if (index == g_allocation_count) {
       return NULL;
@@ -96,20 +99,20 @@ void* ReallocHook(void* ptr, size_t size) {
   return realloc(ptr, size);
 }
 
-void FreeHook(void* ptr) {
+void
+FreeHook(void *ptr) {
   free(ptr);
 }
 
-XML_Memory_Handling_Suite memory_handling_suite = {
-  MallocHook, ReallocHook, FreeHook
-};
+XML_Memory_Handling_Suite memory_handling_suite
+    = {MallocHook, ReallocHook, FreeHook};
 
 void InitializeParser(XML_Parser parser);
 
 // We want a parse function that supports resumption, so that we can cover the
 // suspend/resume code.
-enum XML_Status Parse(XML_Parser parser, const char* input, int input_len,
-                      int is_final) {
+enum XML_Status
+Parse(XML_Parser parser, const char *input, int input_len, int is_final) {
   enum XML_Status status = XML_Parse(parser, input, input_len, is_final);
   while (status == XML_STATUS_SUSPENDED) {
     status = XML_ResumeParser(parser);
@@ -124,8 +127,9 @@ enum XML_Status Parse(XML_Parser parser, const char* input, int input_len,
 // in terms of length/null-termination. no_optimize is used to ensure that the
 // compiler has to emit actual memory reads, instead of removing them.
 static volatile size_t no_optimize = 0;
-static void TouchString(const XML_Char* ptr, int len=-1) {
-  if (!ptr) {
+static void
+TouchString(const XML_Char *ptr, int len = -1) {
+  if (! ptr) {
     return;
   }
 
@@ -140,67 +144,68 @@ static void TouchString(const XML_Char* ptr, int len=-1) {
   }
 }
 
-static void TouchNodeAndRecurse(XML_Content* content) {
+static void
+TouchNodeAndRecurse(XML_Content *content) {
   switch (content->type) {
-    case XML_CTYPE_EMPTY:
-    case XML_CTYPE_ANY:
-      assert(content->quant == XML_CQUANT_NONE);
-      assert(content->name == NULL);
-      assert(content->numchildren == 0);
-      assert(content->children == NULL);
-      break;
+  case XML_CTYPE_EMPTY:
+  case XML_CTYPE_ANY:
+    assert(content->quant == XML_CQUANT_NONE);
+    assert(content->name == NULL);
+    assert(content->numchildren == 0);
+    assert(content->children == NULL);
+    break;
 
-    case XML_CTYPE_MIXED:
-      assert(content->quant == XML_CQUANT_NONE
-             || content->quant == XML_CQUANT_REP);
-      assert(content->name == NULL);
-      for (unsigned int i = 0; i < content->numchildren; ++i) {
-        assert(content->children[i].type == XML_CTYPE_NAME);
-        assert(content->children[i].quant == XML_CQUANT_NONE);
-        assert(content->children[i].numchildren == 0);
-        assert(content->children[i].children == NULL);
-        TouchString(content->children[i].name);
-      }
-      break;
+  case XML_CTYPE_MIXED:
+    assert(content->quant == XML_CQUANT_NONE
+           || content->quant == XML_CQUANT_REP);
+    assert(content->name == NULL);
+    for (unsigned int i = 0; i < content->numchildren; ++i) {
+      assert(content->children[i].type == XML_CTYPE_NAME);
+      assert(content->children[i].quant == XML_CQUANT_NONE);
+      assert(content->children[i].numchildren == 0);
+      assert(content->children[i].children == NULL);
+      TouchString(content->children[i].name);
+    }
+    break;
 
-    case XML_CTYPE_NAME:
-      assert((content->quant == XML_CQUANT_NONE)
-          || (content->quant == XML_CQUANT_OPT)
-          || (content->quant == XML_CQUANT_REP)
-          || (content->quant == XML_CQUANT_PLUS));
-      assert(content->numchildren == 0);
-      assert(content->children == NULL);
-      TouchString(content->name);
-      break;
+  case XML_CTYPE_NAME:
+    assert((content->quant == XML_CQUANT_NONE)
+           || (content->quant == XML_CQUANT_OPT)
+           || (content->quant == XML_CQUANT_REP)
+           || (content->quant == XML_CQUANT_PLUS));
+    assert(content->numchildren == 0);
+    assert(content->children == NULL);
+    TouchString(content->name);
+    break;
 
-    case XML_CTYPE_CHOICE:
-    case XML_CTYPE_SEQ:
-      assert((content->quant == XML_CQUANT_NONE)
-          || (content->quant == XML_CQUANT_OPT)
-          || (content->quant == XML_CQUANT_REP)
-          || (content->quant == XML_CQUANT_PLUS));
-      assert(content->name == NULL);
-      for (unsigned int i = 0; i < content->numchildren; ++i) {
-        TouchNodeAndRecurse(&content->children[i]);
-      }
-      break;
+  case XML_CTYPE_CHOICE:
+  case XML_CTYPE_SEQ:
+    assert((content->quant == XML_CQUANT_NONE)
+           || (content->quant == XML_CQUANT_OPT)
+           || (content->quant == XML_CQUANT_REP)
+           || (content->quant == XML_CQUANT_PLUS));
+    assert(content->name == NULL);
+    for (unsigned int i = 0; i < content->numchildren; ++i) {
+      TouchNodeAndRecurse(&content->children[i]);
+    }
+    break;
 
-    default:
-      assert(false);
+  default:
+    assert(false);
   }
 }
 
 static void XMLCALL
-ElementDeclHandler(void* userData, const XML_Char* name, XML_Content* model) {
+ElementDeclHandler(void *userData, const XML_Char *name, XML_Content *model) {
   TouchString(name);
   TouchNodeAndRecurse(model);
   XML_FreeContentModel((XML_Parser)userData, model);
 }
 
 static void XMLCALL
-AttlistDeclHandler(void* userData, const XML_Char* elname,
-                     const XML_Char* attname, const XML_Char* atttype,
-                     const XML_Char* dflt, int isrequired) {
+AttlistDeclHandler(void *userData, const XML_Char *elname,
+                   const XML_Char *attname, const XML_Char *atttype,
+                   const XML_Char *dflt, int isrequired) {
   (void)userData;
   TouchString(elname);
   TouchString(attname);
@@ -210,8 +215,8 @@ AttlistDeclHandler(void* userData, const XML_Char* elname,
 }
 
 static void XMLCALL
-XmlDeclHandler(void* userData, const XML_Char* version,
-               const XML_Char* encoding, int standalone) {
+XmlDeclHandler(void *userData, const XML_Char *version,
+               const XML_Char *encoding, int standalone) {
   (void)userData;
   TouchString(version);
   TouchString(encoding);
@@ -235,21 +240,21 @@ EndElementHandler(void *userData, const XML_Char *name) {
 }
 
 static void XMLCALL
-CharacterDataHandler(void* userData, const XML_Char* s, int len) {
+CharacterDataHandler(void *userData, const XML_Char *s, int len) {
   (void)userData;
   TouchString(s, len);
 }
 
 static void XMLCALL
-ProcessingInstructionHandler(void* userData, const XML_Char* target,
-                             const XML_Char* data) {
+ProcessingInstructionHandler(void *userData, const XML_Char *target,
+                             const XML_Char *data) {
   (void)userData;
   TouchString(target);
   TouchString(data);
 }
 
 static void XMLCALL
-CommentHandler(void* userData, const XML_Char* data) {
+CommentHandler(void *userData, const XML_Char *data) {
   TouchString(data);
   // Use the comment handler to trigger parser suspend, so that we can get
   // coverage of that code.
@@ -257,24 +262,24 @@ CommentHandler(void* userData, const XML_Char* data) {
 }
 
 static void XMLCALL
-StartCdataSectionHandler(void* userData) {
+StartCdataSectionHandler(void *userData) {
   (void)userData;
 }
 
 static void XMLCALL
-EndCdataSectionHandler(void* userData) {
+EndCdataSectionHandler(void *userData) {
   (void)userData;
 }
 
 static void XMLCALL
-DefaultHandler(void* userData, const XML_Char* s, int len) {
+DefaultHandler(void *userData, const XML_Char *s, int len) {
   (void)userData;
   TouchString(s, len);
 }
 
 static void XMLCALL
-StartDoctypeDeclHandler(void* userData, const XML_Char* doctypeName,
-                        const XML_Char* sysid, const XML_Char* pubid,
+StartDoctypeDeclHandler(void *userData, const XML_Char *doctypeName,
+                        const XML_Char *sysid, const XML_Char *pubid,
                         int has_internal_subset) {
   (void)userData;
   TouchString(doctypeName);
@@ -284,7 +289,7 @@ StartDoctypeDeclHandler(void* userData, const XML_Char* doctypeName,
 }
 
 static void XMLCALL
-EndDoctypeDeclHandler(void* userData) {
+EndDoctypeDeclHandler(void *userData) {
   (void)userData;
 }
 
@@ -346,10 +351,9 @@ ExternalEntityRefHandler(XML_Parser parser, const XML_Char *context,
   TouchString(publicId);
 
   if (g_external_entity) {
-    XML_Parser ext_parser = XML_ExternalEntityParserCreate(parser, context,
-                                                           g_encoding);
-    rc = Parse(ext_parser, g_external_entity,
-               g_external_entity_size, 1);
+    XML_Parser ext_parser
+        = XML_ExternalEntityParserCreate(parser, context, g_encoding);
+    rc = Parse(ext_parser, g_external_entity, g_external_entity_size, 1);
     XML_ParserFree(ext_parser);
   }
 
@@ -373,8 +377,9 @@ UnknownEncodingHandler(void *encodingHandlerData, const XML_Char *name,
   return XML_STATUS_ERROR;
 }
 
-void InitializeParser(XML_Parser parser) {
-  XML_SetUserData(parser, (void*)parser);
+void
+InitializeParser(XML_Parser parser) {
+  XML_SetUserData(parser, (void *)parser);
   XML_SetHashSalt(parser, 0x41414141);
   XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
 
@@ -400,13 +405,13 @@ void InitializeParser(XML_Parser parser) {
   XML_SetNotStandaloneHandler(parser, NotStandaloneHandler);
   XML_SetExternalEntityRefHandler(parser, ExternalEntityRefHandler);
   XML_SetSkippedEntityHandler(parser, SkippedEntityHandler);
-  XML_SetUnknownEncodingHandler(parser, UnknownEncodingHandler, (void*)parser);
+  XML_SetUnknownEncodingHandler(parser, UnknownEncodingHandler, (void *)parser);
 }
 
-DEFINE_TEXT_PROTO_FUZZER(const xml_lpm_fuzzer::Testcase& testcase) {
+DEFINE_TEXT_PROTO_FUZZER(const xml_lpm_fuzzer::Testcase &testcase) {
   g_external_entity = nullptr;
 
-  if (!testcase.actions_size()) {
+  if (! testcase.actions_size()) {
     return;
   }
 
@@ -417,41 +422,40 @@ DEFINE_TEXT_PROTO_FUZZER(const xml_lpm_fuzzer::Testcase& testcase) {
   }
 
   SetEncoding(testcase.encoding());
-  XML_Parser parser = XML_ParserCreate_MM(g_encoding, &memory_handling_suite, "|");
+  XML_Parser parser
+      = XML_ParserCreate_MM(g_encoding, &memory_handling_suite, "|");
   InitializeParser(parser);
 
   for (int i = 0; i < testcase.actions_size(); ++i) {
-    const auto& action = testcase.actions(i);
+    const auto &action = testcase.actions(i);
     switch (action.action_case()) {
-      case xml_lpm_fuzzer::Action::kChunk:
-        if (XML_STATUS_ERROR == Parse(parser,
-                                      action.chunk().data(),
-                                      action.chunk().size(), 0)) {
-          // Force a reset after parse error.
-          XML_ParserReset(parser, g_encoding);
-          InitializeParser(parser);
-        }
-        break;
-
-      case xml_lpm_fuzzer::Action::kLastChunk:
-        Parse(parser, action.last_chunk().data(),
-              action.last_chunk().size(), 1);
+    case xml_lpm_fuzzer::Action::kChunk:
+      if (XML_STATUS_ERROR
+          == Parse(parser, action.chunk().data(), action.chunk().size(), 0)) {
+        // Force a reset after parse error.
         XML_ParserReset(parser, g_encoding);
         InitializeParser(parser);
-        break;
+      }
+      break;
 
-      case xml_lpm_fuzzer::Action::kReset:
-        XML_ParserReset(parser, g_encoding);
-        InitializeParser(parser);
-        break;
+    case xml_lpm_fuzzer::Action::kLastChunk:
+      Parse(parser, action.last_chunk().data(), action.last_chunk().size(), 1);
+      XML_ParserReset(parser, g_encoding);
+      InitializeParser(parser);
+      break;
 
-      case xml_lpm_fuzzer::Action::kExternalEntity:
-        g_external_entity = action.external_entity().data();
-        g_external_entity_size = action.external_entity().size();
-        break;
+    case xml_lpm_fuzzer::Action::kReset:
+      XML_ParserReset(parser, g_encoding);
+      InitializeParser(parser);
+      break;
 
-      default:
-        break;
+    case xml_lpm_fuzzer::Action::kExternalEntity:
+      g_external_entity = action.external_entity().data();
+      g_external_entity_size = action.external_entity().size();
+      break;
+
+    default:
+      break;
     }
   }
 
