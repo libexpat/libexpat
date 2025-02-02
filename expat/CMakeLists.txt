@@ -799,6 +799,8 @@ if(EXPAT_BUILD_FUZZERS)
                           ${absl_LIBRARIES}
                           ${Protobuf_LIBRARIES}
                           ${ProtobufMutator_LIBRARIES})
+    add_dependencies(xml_lpm_fuzzer ${ProtobufMutator_PREFIX})
+
     # NOTE: Avoiding target_link_options here only because it needs CMake >=3.13
     if(EXPAT_OSSFUZZ_BUILD)
         set_target_properties(xml_lpm_fuzzer PROPERTIES LINK_FLAGS $ENV{LIB_FUZZING_ENGINE})
