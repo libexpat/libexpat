@@ -156,18 +156,29 @@ static void TouchChildNodes(XML_Content* content, bool topLevel=true) {
       assert(content->name == NULL);
       for (int i = 0; i < content->numchildren; ++i) {
         assert(content->children[i].type == XML_CTYPE_NAME);
+        assert(content->children[i].quant == XML_CQUANT_NONE);
         assert(content->children[i].numchildren == 0);
+        assert(content->children[i].children == NULL);
         TouchString(content->children[i].name);
       }
       break;
 
     case XML_CTYPE_NAME:
+      assert((content->quant == XML_CQUANT_NONE)
+          || (content->quant == XML_CQUANT_OPT)
+          || (content->quant == XML_CQUANT_REP)
+          || (content->quant == XML_CQUANT_PLUS));
       assert(content->numchildren == 0);
+      assert(content->children == NULL);
       TouchString(content->name);
       break;
 
     case XML_CTYPE_CHOICE:
     case XML_CTYPE_SEQ:
+      assert((content->quant == XML_CQUANT_NONE)
+          || (content->quant == XML_CQUANT_OPT)
+          || (content->quant == XML_CQUANT_REP)
+          || (content->quant == XML_CQUANT_PLUS));
       assert(content->name == NULL);
       for (int i = 0; i < content->numchildren; ++i) {
         TouchChildNodes(&content->children[i], false);
