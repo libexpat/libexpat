@@ -88,7 +88,8 @@ jobs:
 
             # Tune compilation of fuzzers to use Clang with ASan and UBSan
             -DCMAKE_C_COMPILER=clang
-            -DCMAKE_C_FLAGS='-Wall -Wextra -pedantic -O1 -g -fsanitize=address,undefined -fno-sanitize-recover=all -fno-omit-frame-pointer -fno-common'
+            -DCMAKE_CXX_COMPILER=clang++
+            -DCMAKE_{C,CXX}_FLAGS='-Wall -Wextra -pedantic -O1 -g -fsanitize=address,undefined -fno-sanitize-recover=all -fno-omit-frame-pointer -fno-common'
             -DCMAKE_{EXE,MODULE,SHARED}_LINKER_FLAGS='-g -fsanitize=address,undefined'
             -DEXPAT_WARNINGS_AS_ERRORS=ON
         )
