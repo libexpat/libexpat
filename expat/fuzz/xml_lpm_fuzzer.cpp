@@ -289,18 +289,6 @@ EntityDeclHandler(void *userData, const XML_Char *entityName,
 }
 
 static void XMLCALL
-UnparsedEntityDeclHandler(void *userData, const XML_Char *entityName,
-                          const XML_Char *base, const XML_Char *systemId,
-                          const XML_Char *publicId,
-                          const XML_Char *notationName) {
-  TouchString(entityName);
-  TouchString(base);
-  TouchString(systemId);
-  TouchString(publicId);
-  TouchString(notationName);
-}
-
-static void XMLCALL
 NotationDeclHandler(void *userData, const XML_Char *notationName,
                     const XML_Char *base, const XML_Char *systemId,
                     const XML_Char *publicId) {
@@ -379,10 +367,9 @@ void InitializeParser(XML_Parser parser) {
   XML_SetDefaultHandlerExpand(parser, DefaultHandler);
   XML_SetDoctypeDeclHandler(parser, StartDoctypeDeclHandler,
                             EndDoctypeDeclHandler);
+  // Note: This is mutually exclusive with XML_SetUnparsedEntityDeclHandler,
+  //       and there isn't any significant code change between the two.
   XML_SetEntityDeclHandler(parser, EntityDeclHandler);
-  // NB: This is mutually exclusive with entity_decl_handler, and there isn't
-  // any significant code change between the two.
-  // XML_SetUnparsedEntityDeclHandler(p, UnparsedEntityDeclHandler);
   XML_SetNotationDeclHandler(parser, NotationDeclHandler);
   XML_SetNamespaceDeclHandler(parser, StartNamespaceDeclHandler,
                               EndNamespaceDeclHandler);
