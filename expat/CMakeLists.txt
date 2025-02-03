@@ -786,6 +786,14 @@ if(EXPAT_BUILD_FUZZERS)
         UPDATE_COMMAND true
         INSTALL_COMMAND true)
 
+    # Check for availability of protobuf compiler to avoid hard-to-understand
+    # errors from make(1) down the line as seen with CMake 3.25.1 on Debian
+    if(NOT Protobuf_PROTOC_EXECUTABLE)
+        message(SEND_ERROR
+            "The protobuf compiler (protoc) could not be found. "
+            "Is it installed and working properly?")
+    endif()
+
     protobuf_generate_cpp(XML_LPM_FUZZER_PROTO_SRCS
                           XML_LPM_FUZZER_PROTO_HDRS
                           fuzz/xml_lpm_fuzzer.proto)
