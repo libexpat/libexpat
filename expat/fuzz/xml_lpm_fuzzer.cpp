@@ -7,6 +7,7 @@
                                  |_| XML parser
 
    Copyright (c) 2022 Mark Brand <markbrand@google.com>
+   Copyright (c) 2025 Sebastian Pipping <sebastian@pipping.org>
    Licensed under the MIT license:
 
    Permission is  hereby granted,  free of charge,  to any  person obtaining

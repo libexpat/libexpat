@@ -30,6 +30,7 @@
 # Copyright (c) 2020      Thomas Beutlich <tc@tbeu.de>
 # Copyright (c) 2021      Alex Richardson <Alexander.Richardson@cl.cam.ac.uk>
 # Copyright (c) 2022      Johnny Jazeix <jazeix@gmail.com>
+# Copyright (c) 2022      Mark Brand <markbrand@google.com>
 # Copyright (c) 2022      David Faure <david.faure@kdab.com>
 # Unlike most of Expat,
 # this file is copyrighted under the BSD-license for buildsystem files of KDE.
