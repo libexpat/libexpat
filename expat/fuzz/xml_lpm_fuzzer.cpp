@@ -79,23 +79,23 @@ static std::vector<int> g_fail_allocations = {};
 
 void *
 MallocHook(size_t size) {
+  g_allocation_count += 1;
   for (auto index : g_fail_allocations) {
     if (index == g_allocation_count) {
       return NULL;
     }
   }
-  g_allocation_count += 1;
   return malloc(size);
 }
 
 void *
 ReallocHook(void *ptr, size_t size) {
+  g_allocation_count += 1;
   for (auto index : g_fail_allocations) {
     if (index == g_allocation_count) {
       return NULL;
     }
   }
-  g_allocation_count += 1;
   return realloc(ptr, size);
 }
 
