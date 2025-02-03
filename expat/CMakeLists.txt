@@ -30,6 +30,7 @@
 # Copyright (c) 2020      Thomas Beutlich <tc@tbeu.de>
 # Copyright (c) 2021      Alex Richardson <Alexander.Richardson@cl.cam.ac.uk>
 # Copyright (c) 2022      Johnny Jazeix <jazeix@gmail.com>
+# Copyright (c) 2022      Mark Brand <markbrand@google.com>
 # Copyright (c) 2022      David Faure <david.faure@kdab.com>
 # Unlike most of Expat,
 # this file is copyrighted under the BSD-license for buildsystem files of KDE.
@@ -169,11 +170,15 @@ if(NOT _EXPAT_HELP)
     mark_as_advanced(_EXPAT_M32)
 endif()
 
-if(EXPAT_BUILD_TESTS)
+if(EXPAT_BUILD_TESTS OR EXPAT_BUILD_FUZZERS)
     # We have to call enable_language() before modifying any CMAKE_CXX_* variables
     enable_language(CXX)
 
-    set(CMAKE_CXX_STANDARD 11)
+    if (EXPAT_BUILD_FUZZERS)
+        set(CMAKE_CXX_STANDARD 17)  # for std::string_view for Abseil for libprotobuf-mutator
+    else()
+        set(CMAKE_CXX_STANDARD 11)
+    endif()
     set(CMAKE_CXX_STANDARD_REQUIRED ON)
     set(CMAKE_CXX_EXTENSIONS OFF)  # i.e. -std=c++11 rather than default -std=gnu++11
 endif()
@@ -755,6 +760,55 @@ if(EXPAT_BUILD_FUZZERS)
                 TARGET ${target_name} PROPERTY RUNTIME_OUTPUT_DIRECTORY fuzz)
         endforeach()
     endforeach()
+
+    find_package(absl REQUIRED)
+    find_package(Protobuf REQUIRED)
+
+    # Only include libprotobuf-mutator here so we don't build it in non-fuzz
+    # configurations.
+    include(ExternalProject)
+
+    set(ProtobufMutator_PREFIX libprotobuf-mutator)
+    set(ProtobufMutator_PATH ${CMAKE_CURRENT_BINARY_DIR}/${ProtobufMutator_PREFIX}/src/${ProtobufMutator_PREFIX})
+    set(ProtobufMutator_BUILD_PATH ${ProtobufMutator_PATH}-build)
+    set(ProtobufMutator_INCLUDE_DIR ${ProtobufMutator_PATH})
+    set(ProtobufMutator_LIBRARIES ${ProtobufMutator_BUILD_PATH}/src/libfuzzer/libprotobuf-mutator-libfuzzer.a ${ProtobufMutator_BUILD_PATH}/src/libprotobuf-mutator.a)
+
+    ExternalProject_Add(
+        ${ProtobufMutator_PREFIX}
+        PREFIX ${ProtobufMutator_PREFIX}
+        GIT_REPOSITORY https://github.com/google/libprotobuf-mutator.git
+        GIT_TAG 50ef9159bb838931d83e5bbd77eeec05fc50f57d  # v1.1-7-g50ef915, last before commit "Switch to requires_utf8_validation"
+        CMAKE_ARGS -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+        CMAKE_CACHE_ARGS -DCMAKE_C_COMPILER:FILEPATH=${CMAKE_C_COMPILER} -DCMAKE_CXX_COMPILER:FILEPATH=${CMAKE_CXX_COMPILER} -DLIB_PROTO_MUTATOR_TESTING:BOOL=OFF
+        BUILD_BYPRODUCTS ${ProtobufMutator_LIBRARIES}
+        PATCH_COMMAND sed -e "s,-Werror, ," -e "s,CMAKE_CXX_STANDARD [0-9]\\+,CMAKE_CXX_STANDARD 17," -i.bak ${ProtobufMutator_PATH}/CMakeLists.txt
+        UPDATE_COMMAND true
+        INSTALL_COMMAND true)
+
+    protobuf_generate_cpp(XML_LPM_FUZZER_PROTO_SRCS
+                          XML_LPM_FUZZER_PROTO_HDRS
+                          fuzz/xml_lpm_fuzzer.proto)
+
+    add_executable(xml_lpm_fuzzer
+                   fuzz/xml_lpm_fuzzer.cpp
+                   ${XML_LPM_FUZZER_PROTO_SRCS})
+    target_include_directories(xml_lpm_fuzzer PUBLIC ${ProtobufMutator_INCLUDE_DIR})
+    target_link_libraries(xml_lpm_fuzzer
+                          fuzzpat
+                          ${absl_LIBRARIES}
+                          ${Protobuf_LIBRARIES}
+                          ${ProtobufMutator_LIBRARIES})
+    add_dependencies(xml_lpm_fuzzer ${ProtobufMutator_PREFIX})
+
+    # NOTE: Avoiding target_link_options here only because it needs CMake >=3.13
+    if(EXPAT_OSSFUZZ_BUILD)
+        set_target_properties(xml_lpm_fuzzer PROPERTIES LINK_FLAGS $ENV{LIB_FUZZING_ENGINE})
+    else()
+        target_compile_options(xml_lpm_fuzzer PRIVATE -fsanitize=fuzzer)
+        set_target_properties(xml_lpm_fuzzer PROPERTIES LINK_FLAGS -fsanitize=fuzzer)
+    endif()
+    set_property(TARGET xml_lpm_fuzzer PROPERTY RUNTIME_OUTPUT_DIRECTORY fuzz)
 else()
     if(EXPAT_OSSFUZZ_BUILD)
         message(SEND_ERROR

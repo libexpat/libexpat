@@ -42,7 +42,7 @@ permissions:
 jobs:
   run_fuzzers:
     name: Run fuzzing regression tests
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
     - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
 
@@ -58,6 +58,15 @@ jobs:
             libclang-rt-19-dev \
             llvm-19
         echo /usr/lib/llvm-19/bin >>"${GITHUB_PATH}"
+
+    - name: Install build dependencies
+      run: |-
+        set -x
+        sudo apt-get install --yes --no-install-recommends -V \
+            libabsl-dev \
+            liblzma-dev \
+            libprotobuf-dev \
+            protobuf-compiler
 
     - name: Build Expat fuzzers
       run: |
@@ -79,12 +88,15 @@ jobs:
 
             # Tune compilation of fuzzers to use Clang with ASan and UBSan
             -DCMAKE_C_COMPILER=clang
-            -DCMAKE_C_FLAGS='-Wall -Wextra -pedantic -O1 -g -fsanitize=address,undefined -fno-sanitize-recover=all -fno-omit-frame-pointer -fno-common'
+            -DCMAKE_CXX_COMPILER=clang++
+            -DCMAKE_{C,CXX}_FLAGS='-Wall -Wextra -pedantic -O1 -g -fsanitize=address,undefined -fno-sanitize-recover=all -fno-omit-frame-pointer -fno-common'
             -DCMAKE_{EXE,MODULE,SHARED}_LINKER_FLAGS='-g -fsanitize=address,undefined'
             -DEXPAT_WARNINGS_AS_ERRORS=ON
         )
         cmake "${args[@]}" -S . -B build
         make -C build VERBOSE=1 -j$(nproc)
+
+        ./build/fuzz/xml_lpm_fuzzer -help=1
 
     - name: Download and extract Expat fuzzing corpora
       run: |-
