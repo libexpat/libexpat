@@ -761,7 +761,6 @@ if(EXPAT_BUILD_FUZZERS)
         endforeach()
     endforeach()
 
-    find_package(absl REQUIRED)
     find_package(Protobuf REQUIRED)
 
     # Only include libprotobuf-mutator here so we don't build it in non-fuzz
@@ -804,7 +803,6 @@ if(EXPAT_BUILD_FUZZERS)
     target_include_directories(xml_lpm_fuzzer PUBLIC ${ProtobufMutator_INCLUDE_DIR})
     target_link_libraries(xml_lpm_fuzzer
                           fuzzpat
-                          ${absl_LIBRARIES}
                           ${Protobuf_LIBRARIES}
                           ${ProtobufMutator_LIBRARIES})
     add_dependencies(xml_lpm_fuzzer ${ProtobufMutator_PREFIX})
