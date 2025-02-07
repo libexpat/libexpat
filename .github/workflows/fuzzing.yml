@@ -63,7 +63,6 @@ jobs:
       run: |-
         set -x
         sudo apt-get install --yes --no-install-recommends -V \
-            liblzma-dev \
             libprotobuf-dev \
             protobuf-compiler
 
