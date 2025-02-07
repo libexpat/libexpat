@@ -325,7 +325,7 @@ if(FLAG_VISIBILITY)
   endif()
   set(EXTRA_COMPILE_FLAGS "${EXTRA_COMPILE_FLAGS} -fvisibility=hidden")
 endif()
-if(MINGW)
+if(MINGW AND ("${CMAKE_C_COMPILER_ID}" STREQUAL "GNU"))
     # Without __USE_MINGW_ANSI_STDIO the compiler produces a false positive
     set(EXTRA_COMPILE_FLAGS "${EXTRA_COMPILE_FLAGS} -Wno-pedantic-ms-format")
 endif()
