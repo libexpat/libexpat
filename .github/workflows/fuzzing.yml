@@ -96,37 +96,91 @@ jobs:
 
         ./build/fuzz/xml_lpm_fuzzer -help=1
 
-    - name: Download and extract Expat fuzzing corpora
+    - name: Download fuzzing dictionaries
       run: |-
         set -x
         cd expat/build/
 
-        wget -q -O expat_corpus_UTF-8.zip    https://storage.googleapis.com/expat-backup.clusterfuzz-external.appspot.com/corpus/libFuzzer/expat_xml_parse_fuzzer_UTF-8/public.zip
-        wget -q -O expat_corpus_UTF-16LE.zip https://storage.googleapis.com/expat-backup.clusterfuzz-external.appspot.com/corpus/libFuzzer/expat_xml_parse_fuzzer_UTF-16LE/public.zip
+        wget -q https://raw.githubusercontent.com/google/oss-fuzz/refs/heads/master/projects/expat/xml.dict
+        wget -q https://raw.githubusercontent.com/google/oss-fuzz/refs/heads/master/projects/expat/xml_UTF_16.dict
+        wget -q https://raw.githubusercontent.com/google/oss-fuzz/refs/heads/master/projects/expat/xml_UTF_16BE.dict
+        wget -q https://raw.githubusercontent.com/google/oss-fuzz/refs/heads/master/projects/expat/xml_UTF_16LE.dict
+        wget -q -O libxml2.dict https://gitlab.gnome.org/GNOME/libxml2/-/raw/HEAD/fuzz/xml.dict
+        grep -h '"' *.dict | sort -u > joint.dict
 
-        unzip -q -d corpus_UTF-8    expat_corpus_UTF-8.zip
-        unzip -q -d corpus_UTF-16LE expat_corpus_UTF-16LE.zip
+    - name: Download and extract Expat fuzzing corpora
+      run: |-
+        set -x -o pipefail
+        cd expat/build/
 
-    - name: Run fuzzing regression tests (10+ minutes)
+        for i in \
+                xml_parsebuffer_fuzzer_ISO-8859-1 \
+                xml_parsebuffer_fuzzer_US-ASCII \
+                xml_parsebuffer_fuzzer_UTF-16 \
+                xml_parsebuffer_fuzzer_UTF-16BE \
+                xml_parsebuffer_fuzzer_UTF-16LE \
+                xml_parsebuffer_fuzzer_UTF-8 \
+                xml_parse_fuzzer_ISO-8859-1 \
+                xml_parse_fuzzer_US-ASCII \
+                xml_parse_fuzzer_UTF-16 \
+                xml_parse_fuzzer_UTF-16BE \
+                xml_parse_fuzzer_UTF-16LE \
+                xml_parse_fuzzer_UTF-8 \
+                ; do
+            wget -q -O "${i}.zip" "https://storage.googleapis.com/expat-backup.clusterfuzz-external.appspot.com/corpus/libFuzzer/expat_${i}/public.zip"
+            unzip -q -o -d corpus_parse_fuzzer_old "${i}.zip"
+        done
+        echo ../fuzz/expat_fuzzing_corpus_parse_fuzzer_*.tar.xz | xargs -t -r -n1 tar -C corpus_parse_fuzzer_old -x -f
+        find corpus_parse_fuzzer_old/ -type f | wc -l
+
+        mkdir corpus_lpm_fuzzer_old
+        echo ../fuzz/expat_fuzzing_corpus_lpm_fuzzer_*.tar.xz | xargs -t -r -n1 tar -C corpus_lpm_fuzzer_old -x -f
+        find corpus_lpm_fuzzer_old/ -type f | wc -l
+
+    - name: Run fuzzing (300+ minutes)
       run: |
         fuzz_args=(
             -jobs=$(nproc)
             -print_final_stats=1
             -rss_limit_mb=2560  # from OSS-Fuzz
             -timeout=25         # from OSS-Fuzz
+            -dict=joint.dict
         )
 
         set -x -o pipefail
         cd expat/build/
 
-        #           vvvvv
-        find corpus_UTF-8/ -type f | sort | xargs \
-            fuzz/xml_parse_fuzzer_UTF-8 "${fuzz_args[@]}"
-        #                         ^^^^^
-        #           vvvvvvvv
-        find corpus_UTF-16LE/ -type f | sort | xargs \
-            fuzz/xml_parsebuffer_fuzzer_UTF-16LE "${fuzz_args[@]}"
-        #                 ^^^^^^        ^^^^^^^^
+        mkdir corpus_parse_fuzzer
+        timeout 255m fuzz/xml_parse_fuzzer_UTF-8 "${fuzz_args[@]}" corpus_parse_fuzzer/ corpus_parse_fuzzer_old/ || true
+        for i in fuzz-*.log ; do mv "${i}" "${i%.log}-parse-fuzzer.log" ; done
+
+        mkdir corpus_lpm_fuzzer
+        timeout 45m fuzz/xml_lpm_fuzzer "${fuzz_args[@]}" corpus_lpm_fuzzer/ corpus_lpm_fuzzer_old/ || true
+        for i in fuzz-*.log ; do mv "${i}" "${i%.log}-lpm-fuzzer.log" ; done
+
+        ls -l fuzz-*.log
+        find corpus_parse_fuzzer/ -type f | wc -l
+        find corpus_lpm_fuzzer/ -type f | wc -l
+
+        [[ "$({ ls -lh crash-* timeout-* 2>/dev/null || true ; } | tee /dev/stderr | wc -l)" = 0 ]]
+
+    - name: Store fuzzing crash samples
+      uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08  # v4.6.0
+      with:
+        name: expat_fuzzing_crashes_${{ github.sha }}
+        path: expat/build/crash-*
+
+    - name: Store fuzzing timeout samples
+      uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08  # v4.6.0
+      with:
+        name: expat_fuzzing_timeouts_${{ github.sha }}
+        path: expat/build/timeout-*
+
+    - name: Store fuzzing corpus "corpus_parse_fuzzer"
+      uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08  # v4.6.0
+      with:
+        name: expat_fuzzing_corpus_parse_fuzzer_${{ github.sha }}
+        path: expat/build/corpus_parse_fuzzer/*
 
     - name: Store fuzzing logs
       uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08  # v4.6.0
@@ -134,3 +188,9 @@ jobs:
         name: expat_fuzzing_logs_${{ github.sha }}
         path: expat/build/fuzz-*.log
         if-no-files-found: error
+
+    - name: Store fuzzing corpus "corpus_lpm_fuzzer"
+      uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08  # v4.6.0
+      with:
+        name: expat_fuzzing_corpus_lpm_fuzzer_${{ github.sha }}
+        path: expat/build/corpus_lpm_fuzzer/*
