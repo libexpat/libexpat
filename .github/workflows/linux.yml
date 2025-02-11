@@ -82,7 +82,7 @@ jobs:
             FLAT_ENV: CC=i686-w64-mingw32-gcc CXX=i686-w64-mingw32-g++ LD=i686-w64-mingw32-ld QA_PROCESSOR=gcov CMAKE_ARGS="-DCMAKE_SYSTEM_NAME=Windows -DWIN32=ON -DMINGW=ON -DEXPAT_ATTR_INFO=ON"
           - MODE: qa-sh
             FLAT_ENV: CC=i686-w64-mingw32-gcc CXX=i686-w64-mingw32-g++ LD=i686-w64-mingw32-ld QA_PROCESSOR=gcov CMAKE_ARGS="-DCMAKE_SYSTEM_NAME=Windows -DWIN32=ON -DMINGW=ON -DEXPAT_ATTR_INFO=ON -DEXPAT_CHAR_TYPE=wchar_t"
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     env:
       CFLAGS: -g3 -pipe
     steps:
