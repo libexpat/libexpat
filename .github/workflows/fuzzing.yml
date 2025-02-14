@@ -42,7 +42,15 @@ permissions:
 jobs:
   run_fuzzers:
     name: Run fuzzing regression tests
+    strategy:
+      fail-fast: false
+      matrix:
+        fuzzer:
+          - xml_parse_fuzzer_UTF-8
+          - xml_parsebuffer_fuzzer_UTF-16LE
     runs-on: ubuntu-24.04
+    env:
+      fuzzer: ${{ matrix.fuzzer }}
     steps:
     - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
 
@@ -87,7 +95,7 @@ jobs:
             # Tune compilation of fuzzers to use Clang with ASan and UBSan
             -DCMAKE_C_COMPILER=clang
             -DCMAKE_CXX_COMPILER=clang++
-            -DCMAKE_{C,CXX}_FLAGS='-Wall -Wextra -pedantic -O1 -g -fsanitize=address,undefined -fno-sanitize-recover=all -fno-omit-frame-pointer -fno-common'
+            -DCMAKE_{C,CXX}_FLAGS='-Wall -Wextra -pedantic -O1 -g -fsanitize=address,undefined -fno-sanitize-recover=all -fno-omit-frame-pointer -fno-common -fprofile-instr-generate -fcoverage-mapping'
             -DCMAKE_{EXE,MODULE,SHARED}_LINKER_FLAGS='-g -fsanitize=address,undefined'
             -DEXPAT_WARNINGS_AS_ERRORS=ON
         )
@@ -100,14 +108,10 @@ jobs:
       run: |-
         set -x
         cd expat/build/
+        wget -q -O corpus.zip "https://storage.googleapis.com/expat-backup.clusterfuzz-external.appspot.com/corpus/libFuzzer/expat_${fuzzer}/public.zip"
+        unzip -q -d corpus/ corpus.zip
 
-        wget -q -O expat_corpus_UTF-8.zip    https://storage.googleapis.com/expat-backup.clusterfuzz-external.appspot.com/corpus/libFuzzer/expat_xml_parse_fuzzer_UTF-8/public.zip
-        wget -q -O expat_corpus_UTF-16LE.zip https://storage.googleapis.com/expat-backup.clusterfuzz-external.appspot.com/corpus/libFuzzer/expat_xml_parse_fuzzer_UTF-16LE/public.zip
-
-        unzip -q -d corpus_UTF-8    expat_corpus_UTF-8.zip
-        unzip -q -d corpus_UTF-16LE expat_corpus_UTF-16LE.zip
-
-    - name: Run fuzzing regression tests (10+ minutes)
+    - name: Run fuzzing regression tests (1 to 5 minutes)
       run: |
         fuzz_args=(
             -jobs=$(nproc)
@@ -119,18 +123,34 @@ jobs:
         set -x -o pipefail
         cd expat/build/
 
-        #           vvvvv
-        find corpus_UTF-8/ -type f | sort | xargs \
-            fuzz/xml_parse_fuzzer_UTF-8 "${fuzz_args[@]}"
-        #                         ^^^^^
-        #           vvvvvvvv
-        find corpus_UTF-16LE/ -type f | sort | xargs \
-            fuzz/xml_parsebuffer_fuzzer_UTF-16LE "${fuzz_args[@]}"
-        #                 ^^^^^^        ^^^^^^^^
+        mkdir coverage/
+        export LLVM_PROFILE_FILE=coverage/expat-%p.profraw
 
-    - name: Store fuzzing logs
+        find corpus/ -type f | sort | xargs "fuzz/${fuzzer}" "${fuzz_args[@]}"
+
+    - name: Store fuzzing logs of last batch
       uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08  # v4.6.0
       with:
-        name: expat_fuzzing_logs_${{ github.sha }}
+        name: expat_fuzzing_logs_last_${{ matrix.fuzzer }}_${{ github.sha }}
         path: expat/build/fuzz-*.log
+        if-no-files-found: error
+
+    - name: Render coverage report
+      run: |
+        set -x -o pipefail
+        cd expat/build/
+
+        # Merged and convert to a single indexed profile data file
+        llvm-profdata merge -sparse -o coverage/expat.profdata coverage/expat-*.profraw
+
+        # Render report
+        llvm-cov show fuzz/${fuzzer} -instr-profile=coverage/expat.profdata -show-branches=count -format=html -output-dir=coverage/html/
+        llvm-cov report fuzz/${fuzzer} -instr-profile=coverage/expat.profdata -show-functions -sources ../lib/ | tee coverage/report_functions.txt
+        llvm-cov report fuzz/${fuzzer} -instr-profile=coverage/expat.profdata                 -sources ../lib/ | tee coverage/report_files.txt
+
+    - name: Store coverage report
+      uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08  # v4.6.0
+      with:
+        name: expat_fuzzing_coverage_${{ matrix.fuzzer }}_${{ github.sha }}
+        path: expat/build/coverage/
         if-no-files-found: error
