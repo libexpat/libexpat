@@ -806,8 +806,8 @@ if(EXPAT_BUILD_FUZZERS)
     target_include_directories(xml_lpm_fuzzer PUBLIC ${ProtobufMutator_INCLUDE_DIR})
     target_link_libraries(xml_lpm_fuzzer
                           fuzzpat
-                          ${Protobuf_LIBRARIES}
-                          ${ProtobufMutator_LIBRARIES})
+                          ${ProtobufMutator_LIBRARIES}
+                          ${Protobuf_LIBRARIES})
     add_dependencies(xml_lpm_fuzzer ${ProtobufMutator_PREFIX})
 
     # NOTE: Avoiding target_link_options here only because it needs CMake >=3.13
