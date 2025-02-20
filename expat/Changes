@@ -43,23 +43,38 @@ Release 2.6.5 ??? ???????? ?? ????
        #935 #937  Autotools: Make generated CMake files look for
                     libexpat.@SO_MAJOR@.dylib on macOS
             #925  Autotools: Sync CMake templates with CMake 3.29
-            #945  CMake: Drop support for CMake <3.10
+       #945 #962  CMake: Drop support for CMake <3.13
             #942  CMake: Small fuzzing related improvements
             #921  docs: Add missing documentation of error code
                     XML_ERROR_NOT_STARTED that was introduced with 2.6.4
             #941  docs: Document need for C++11 compiler for use from C++
+            #959  tests/benchmark: Fix a (harmless) TOCTTOU
             #944  Windows: Fix installer target location of file xmlwf.xml
                     for CMake
+            #953  Windows: Address warning -Wunknown-warning-option
+                    about -Wno-pedantic-ms-format from LLVM MinGW
 
         Infrastructure:
             #926  tests: Increase robustness
     #927 #932 ..
        #930 #933  tests: Increase test coverage
+    #617 #950 ..
+    #951 #952 ..
+    #954 #955 ..
+            #961  Fuzzing: Add new fuzzer "xml_lpm_fuzzer" based on
+                    Google's libprotobuf-mutator ("LPM")
+            #957  Fuzzing|CI: Start producing fuzzing code coverage reports
             #936  CI: Pass -q -q for LCOV >=2.1 in coverage.sh
             #942  CI: Small fuzzing related improvements
     #139 #203 ..
        #791 #946  CI: Make GitHub Actions build using MSVC on Windows and
                       produce 32bit and 64bit Windows binaries
+            #956  CI: Get off of about-to-be-removed Ubuntu 20.04
+            #960  CI: Start uploading to Coverity Scan for static analysis
+
+        Special thanks to:
+            Mark Brand
+            valord577
 
 Release 2.6.4 Wed November 6 2024
         Security fixes:
