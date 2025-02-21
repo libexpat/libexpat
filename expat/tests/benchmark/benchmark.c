@@ -32,6 +32,15 @@
    USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+#define _POSIX_C_SOURCE 1 // fdopen
+
+#if defined(_MSC_VER)
+#  include <io.h> // _open, _close
+#else
+#  include <unistd.h> // close
+#endif
+
+#include <fcntl.h> // open
 #include <sys/stat.h>
 #include <assert.h>
 #include <stddef.h> // ptrdiff_t
@@ -61,6 +70,7 @@ int
 main(int argc, char *argv[]) {
   XML_Parser parser;
   char *XMLBuf, *XMLBufEnd, *XMLBufPtr;
+  int fd;
   FILE *file;
   struct stat fileAttr;
   int nrOfLoops, bufferSize, i, isFinal;
@@ -82,13 +92,21 @@ main(int argc, char *argv[]) {
   if (argc != j + 4)
     return usage(argv[0], 1);
 
-  if (stat(argv[j + 1], &fileAttr) != 0) {
+  fd = open(argv[j + 1], O_RDONLY);
+  if (fd == -1) {
+    fprintf(stderr, "could not open file '%s'\n", argv[j + 1]);
+    return 2;
+  }
+
+  if (fstat(fd, &fileAttr) != 0) {
+    close(fd);
     fprintf(stderr, "could not access file '%s'\n", argv[j + 1]);
     return 2;
   }
 
-  file = fopen(argv[j + 1], "r");
+  file = fdopen(fd, "r");
   if (! file) {
+    close(fd);
     fprintf(stderr, "could not open file '%s'\n", argv[j + 1]);
     return 2;
   }
@@ -97,6 +115,7 @@ main(int argc, char *argv[]) {
   nrOfLoops = atoi(argv[j + 3]);
   if (bufferSize <= 0 || nrOfLoops <= 0) {
     fclose(file);
+    close(fd);
     fprintf(stderr, "buffer size and nr of loops must be greater than zero.\n");
     return 3;
   }
@@ -104,6 +123,7 @@ main(int argc, char *argv[]) {
   XMLBuf = malloc(fileAttr.st_size);
   fileSize = fread(XMLBuf, sizeof(char), fileAttr.st_size, file);
   fclose(file);
+  close(fd);
 
   if (ns)
     parser = XML_ParserCreateNS(NULL, '!');
