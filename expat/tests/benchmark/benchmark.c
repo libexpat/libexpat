@@ -35,7 +35,6 @@
 #include <sys/stat.h>
 #include <assert.h>
 #include <stddef.h> // ptrdiff_t
-#include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
 #include "expat.h"
@@ -52,10 +51,10 @@
 #  define XML_FMT_STR "s"
 #endif
 
-static void
+static int
 usage(const char *prog, int rc) {
   fprintf(stderr, "usage: %s [-n] filename bufferSize nr_of_loops\n", prog);
-  exit(rc);
+  return rc;
 }
 
 int
@@ -76,12 +75,12 @@ main(int argc, char *argv[]) {
         ns = 1;
         j = 1;
       } else
-        usage(argv[0], 1);
+        return usage(argv[0], 1);
     }
   }
 
   if (argc != j + 4)
-    usage(argv[0], 1);
+    return usage(argv[0], 1);
 
   if (stat(argv[j + 1], &fileAttr) != 0) {
     fprintf(stderr, "could not access file '%s'\n", argv[j + 1]);
@@ -91,14 +90,14 @@ main(int argc, char *argv[]) {
   file = fopen(argv[j + 1], "r");
   if (! file) {
     fprintf(stderr, "could not open file '%s'\n", argv[j + 1]);
-    exit(2);
+    return 2;
   }
 
   bufferSize = atoi(argv[j + 2]);
   nrOfLoops = atoi(argv[j + 3]);
   if (bufferSize <= 0 || nrOfLoops <= 0) {
     fprintf(stderr, "buffer size and nr of loops must be greater than zero.\n");
-    exit(3);
+    return 3;
   }
 
   XMLBuf = malloc(fileAttr.st_size);
@@ -132,7 +131,7 @@ main(int argc, char *argv[]) {
                 XML_GetCurrentColumnNumber(parser));
         free(XMLBuf);
         XML_ParserFree(parser);
-        exit(4);
+        return 4;
       }
       XMLBufPtr += bufferSize;
     } while (! isFinal);
