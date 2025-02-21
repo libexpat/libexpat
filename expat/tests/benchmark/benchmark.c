@@ -96,6 +96,7 @@ main(int argc, char *argv[]) {
   bufferSize = atoi(argv[j + 2]);
   nrOfLoops = atoi(argv[j + 3]);
   if (bufferSize <= 0 || nrOfLoops <= 0) {
+    fclose(file);
     fprintf(stderr, "buffer size and nr of loops must be greater than zero.\n");
     return 3;
   }
