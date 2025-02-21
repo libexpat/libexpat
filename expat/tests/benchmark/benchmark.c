@@ -100,14 +100,14 @@ main(int argc, char *argv[]) {
 
   if (fstat(fd, &fileAttr) != 0) {
     close(fd);
-    fprintf(stderr, "could not access file '%s'\n", argv[j + 1]);
+    fprintf(stderr, "could not fstat file '%s'\n", argv[j + 1]);
     return 2;
   }
 
   file = fdopen(fd, "r");
   if (! file) {
     close(fd);
-    fprintf(stderr, "could not open file '%s'\n", argv[j + 1]);
+    fprintf(stderr, "could not fdopen file '%s'\n", argv[j + 1]);
     return 2;
   }
 
