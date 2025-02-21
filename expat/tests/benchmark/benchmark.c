@@ -62,7 +62,7 @@ int
 main(int argc, char *argv[]) {
   XML_Parser parser;
   char *XMLBuf, *XMLBufEnd, *XMLBufPtr;
-  FILE *fd;
+  FILE *file;
   struct stat fileAttr;
   int nrOfLoops, bufferSize, i, isFinal;
   size_t fileSize;
@@ -88,8 +88,8 @@ main(int argc, char *argv[]) {
     return 2;
   }
 
-  fd = fopen(argv[j + 1], "r");
-  if (! fd) {
+  file = fopen(argv[j + 1], "r");
+  if (! file) {
     fprintf(stderr, "could not open file '%s'\n", argv[j + 1]);
     exit(2);
   }
@@ -102,8 +102,8 @@ main(int argc, char *argv[]) {
   }
 
   XMLBuf = malloc(fileAttr.st_size);
-  fileSize = fread(XMLBuf, sizeof(char), fileAttr.st_size, fd);
-  fclose(fd);
+  fileSize = fread(XMLBuf, sizeof(char), fileAttr.st_size, file);
+  fclose(file);
 
   if (ns)
     parser = XML_ParserCreateNS(NULL, '!');
