@@ -761,73 +761,63 @@ if(EXPAT_BUILD_FUZZERS)
         endforeach()
     endforeach()
 
-    # Note: OSS-Fuzz is stuck in Ubuntu 20.04 land with too-old libprotobuf-dev.
-    #       Until OSS-Fuzz arrives in the present with Ubuntu 24.04, we are not
-    #       building xml_lpm_fuzzer for -DEXPAT_OSSFUZZ_BUILD=ON for an actual
-    #       chance at a successful build in OSS-Fuzz' pipelines.  Related:
-    #       - https://github.com/google/oss-fuzz/issues/13016
-    #       - https://github.com/google/oss-fuzz/issues/11835
-    #       - https://github.com/google/oss-fuzz/pull/13018
-    #       - https://github.com/google/oss-fuzz/pull/13015
-    if(NOT EXPAT_OSSFUZZ_BUILD)
-        find_package(Protobuf REQUIRED)
+    find_package(Protobuf REQUIRED)
 
-        # Only include libprotobuf-mutator here so we don't build it in non-fuzz
-        # configurations.
-        include(ExternalProject)
+    # Only include libprotobuf-mutator here so we don't build it in non-fuzz
+    # configurations.
+    include(ExternalProject)
 
-        set(ProtobufMutator_PREFIX libprotobuf-mutator)
-        set(ProtobufMutator_PATH ${CMAKE_CURRENT_BINARY_DIR}/${ProtobufMutator_PREFIX}/src/${ProtobufMutator_PREFIX})
-        set(ProtobufMutator_BUILD_PATH ${ProtobufMutator_PATH}-build)
-        set(ProtobufMutator_INCLUDE_DIR ${ProtobufMutator_PATH})
-        set(ProtobufMutator_LIBRARIES ${ProtobufMutator_BUILD_PATH}/src/libfuzzer/libprotobuf-mutator-libfuzzer.a ${ProtobufMutator_BUILD_PATH}/src/libprotobuf-mutator.a)
+    set(ProtobufMutator_PREFIX libprotobuf-mutator)
+    set(ProtobufMutator_PATH ${CMAKE_CURRENT_BINARY_DIR}/${ProtobufMutator_PREFIX}/src/${ProtobufMutator_PREFIX})
+    set(ProtobufMutator_BUILD_PATH ${ProtobufMutator_PATH}-build)
+    set(ProtobufMutator_INCLUDE_DIR ${ProtobufMutator_PATH})
+    set(ProtobufMutator_LIBRARIES ${ProtobufMutator_BUILD_PATH}/src/libfuzzer/libprotobuf-mutator-libfuzzer.a ${ProtobufMutator_BUILD_PATH}/src/libprotobuf-mutator.a)
 
-        ExternalProject_Add(
-            ${ProtobufMutator_PREFIX}
-            PREFIX ${ProtobufMutator_PREFIX}
-            GIT_REPOSITORY https://github.com/google/libprotobuf-mutator.git
-            GIT_TAG 75f1720aeb847b780f270ad7d4157ece5d4f3df1  # v1.4-8-g75f1720
-            CMAKE_ARGS -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-            CMAKE_CACHE_ARGS
-                -DCMAKE_C_COMPILER:FILEPATH=${CMAKE_C_COMPILER}
-                -DCMAKE_CXX_COMPILER:FILEPATH=${CMAKE_CXX_COMPILER}
-                -DLIB_PROTO_MUTATOR_EXAMPLES:BOOL=OFF
-                -DLIB_PROTO_MUTATOR_TESTING:BOOL=OFF
-            BUILD_BYPRODUCTS ${ProtobufMutator_LIBRARIES}
-            UPDATE_COMMAND true
-            INSTALL_COMMAND true)
+    ExternalProject_Add(
+        ${ProtobufMutator_PREFIX}
+        PREFIX ${ProtobufMutator_PREFIX}
+        GIT_REPOSITORY https://github.com/google/libprotobuf-mutator.git
+        GIT_TAG 57928f41ae52bb27666aa15b310130d086dac245  # v1.4-16-g57928f4
+        CMAKE_ARGS -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+        CMAKE_CACHE_ARGS
+            -DCMAKE_C_COMPILER:FILEPATH=${CMAKE_C_COMPILER}
+            -DCMAKE_CXX_COMPILER:FILEPATH=${CMAKE_CXX_COMPILER}
+            -DLIB_PROTO_MUTATOR_EXAMPLES:BOOL=OFF
+            -DLIB_PROTO_MUTATOR_TESTING:BOOL=OFF
+        BUILD_BYPRODUCTS ${ProtobufMutator_LIBRARIES}
+        UPDATE_COMMAND true
+        INSTALL_COMMAND true)
 
-        # Check for availability of protobuf compiler to avoid hard-to-understand
-        # errors from make(1) down the line as seen with CMake 3.25.1 on Debian
-        if(NOT Protobuf_PROTOC_EXECUTABLE)
-            message(SEND_ERROR
-                "The protobuf compiler (protoc) could not be found. "
-                "Is it installed and working properly?")
-        endif()
-
-        protobuf_generate_cpp(XML_LPM_FUZZER_PROTO_SRCS
-                            XML_LPM_FUZZER_PROTO_HDRS
-                            fuzz/xml_lpm_fuzzer.proto)
-
-        add_executable(xml_lpm_fuzzer
-                    fuzz/xml_lpm_fuzzer.cpp
-                    ${XML_LPM_FUZZER_PROTO_SRCS})
-        target_include_directories(xml_lpm_fuzzer PUBLIC ${ProtobufMutator_INCLUDE_DIR})
-        target_link_libraries(xml_lpm_fuzzer
-                            fuzzpat
-                            ${Protobuf_LIBRARIES}
-                            ${ProtobufMutator_LIBRARIES})
-        add_dependencies(xml_lpm_fuzzer ${ProtobufMutator_PREFIX})
-
-        # NOTE: Avoiding target_link_options here only because it needs CMake >=3.13
-        if(EXPAT_OSSFUZZ_BUILD)
-            set_target_properties(xml_lpm_fuzzer PROPERTIES LINK_FLAGS $ENV{LIB_FUZZING_ENGINE})
-        else()
-            target_compile_options(xml_lpm_fuzzer PRIVATE -fsanitize=fuzzer)
-            set_target_properties(xml_lpm_fuzzer PROPERTIES LINK_FLAGS -fsanitize=fuzzer)
-        endif()
-        set_property(TARGET xml_lpm_fuzzer PROPERTY RUNTIME_OUTPUT_DIRECTORY fuzz)
+    # Check for availability of protobuf compiler to avoid hard-to-understand
+    # errors from make(1) down the line as seen with CMake 3.25.1 on Debian
+    if(NOT Protobuf_PROTOC_EXECUTABLE)
+        message(SEND_ERROR
+            "The protobuf compiler (protoc) could not be found. "
+            "Is it installed and working properly?")
     endif()
+
+    protobuf_generate_cpp(XML_LPM_FUZZER_PROTO_SRCS
+                          XML_LPM_FUZZER_PROTO_HDRS
+                          fuzz/xml_lpm_fuzzer.proto)
+
+    add_executable(xml_lpm_fuzzer
+                   fuzz/xml_lpm_fuzzer.cpp
+                   ${XML_LPM_FUZZER_PROTO_SRCS})
+    target_include_directories(xml_lpm_fuzzer PUBLIC ${ProtobufMutator_INCLUDE_DIR})
+    target_link_libraries(xml_lpm_fuzzer
+                          fuzzpat
+                          ${ProtobufMutator_LIBRARIES}
+                          ${Protobuf_LIBRARIES})
+    add_dependencies(xml_lpm_fuzzer ${ProtobufMutator_PREFIX})
+
+    # NOTE: Avoiding target_link_options here only because it needs CMake >=3.13
+    if(EXPAT_OSSFUZZ_BUILD)
+        set_target_properties(xml_lpm_fuzzer PROPERTIES LINK_FLAGS $ENV{LIB_FUZZING_ENGINE})
+    else()
+        target_compile_options(xml_lpm_fuzzer PRIVATE -fsanitize=fuzzer)
+        set_target_properties(xml_lpm_fuzzer PROPERTIES LINK_FLAGS -fsanitize=fuzzer)
+    endif()
+    set_property(TARGET xml_lpm_fuzzer PROPERTY RUNTIME_OUTPUT_DIRECTORY fuzz)
 else()
     if(EXPAT_OSSFUZZ_BUILD)
         message(SEND_ERROR
