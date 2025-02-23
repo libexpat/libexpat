@@ -777,7 +777,7 @@ if(EXPAT_BUILD_FUZZERS)
         ${ProtobufMutator_PREFIX}
         PREFIX ${ProtobufMutator_PREFIX}
         GIT_REPOSITORY https://github.com/google/libprotobuf-mutator.git
-        GIT_TAG 75f1720aeb847b780f270ad7d4157ece5d4f3df1  # v1.4-8-g75f1720
+        GIT_TAG 57928f41ae52bb27666aa15b310130d086dac245  # v1.4-16-g57928f4
         CMAKE_ARGS -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
         CMAKE_CACHE_ARGS
             -DCMAKE_C_COMPILER:FILEPATH=${CMAKE_C_COMPILER}
