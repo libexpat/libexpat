@@ -129,7 +129,7 @@ jobs:
         find corpus/ -type f | sort | xargs "fuzz/${fuzzer}" "${fuzz_args[@]}"
 
     - name: Store fuzzing logs of last batch
-      uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08  # v4.6.0
+      uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1  # v4.6.1
       with:
         name: expat_fuzzing_logs_last_${{ matrix.fuzzer }}_${{ github.sha }}
         path: expat/build/fuzz-*.log
@@ -149,7 +149,7 @@ jobs:
         llvm-cov report fuzz/${fuzzer} -instr-profile=coverage/expat.profdata                 -sources ../lib/ | tee coverage/report_files.txt
 
     - name: Store coverage report
-      uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08  # v4.6.0
+      uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1  # v4.6.1
       with:
         name: expat_fuzzing_coverage_${{ matrix.fuzzer }}_${{ github.sha }}
         path: expat/build/coverage/
