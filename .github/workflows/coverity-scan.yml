@@ -43,6 +43,9 @@ permissions:
 jobs:
   coverity_scan_upload:
     name: Upload build to Coverity Scan
+    # NOTE: The idea is not to bother fork repositories with a job
+    #       that is doomed to fail
+    if: ${{ github.repository == 'libexpat/libexpat' }}
     runs-on: ubuntu-24.04
     steps:
     - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
