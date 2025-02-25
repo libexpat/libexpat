@@ -70,7 +70,7 @@ Release 2.6.5 ??? ???????? ?? ????
        #791 #946  CI: Make GitHub Actions build using MSVC on Windows and
                       produce 32bit and 64bit Windows binaries
             #956  CI: Get off of about-to-be-removed Ubuntu 20.04
-            #960  CI: Start uploading to Coverity Scan for static analysis
+       #960 #964  CI: Start uploading to Coverity Scan for static analysis
 
         Special thanks to:
             Mark Brand
