@@ -592,7 +592,7 @@ if(EXPAT_BUILD_TOOLS)
 
     if(MINGW AND _EXPAT_UNICODE_WCHAR_T)
         # https://gcc.gnu.org/onlinedocs/gcc/x86-Windows-Options.html
-        set_target_properties(xmlwf PROPERTIES LINK_FLAGS -municode)
+        target_link_options(xmlwf PRIVATE -municode)
     endif()
 
     if(EXPAT_BUILD_DOCS)
@@ -748,13 +748,12 @@ if(EXPAT_BUILD_FUZZERS)
             target_link_libraries(${target_name} fuzzpat)
             target_compile_definitions(${target_name}
                 PRIVATE ENCODING_FOR_FUZZING=${encoding_type})
-            # NOTE: Avoiding target_link_options here only because it needs CMake >=3.13
             if(EXPAT_OSSFUZZ_BUILD)
-                set_target_properties(${target_name} PROPERTIES LINK_FLAGS $ENV{LIB_FUZZING_ENGINE})
+                target_link_options(${target_name} PRIVATE $ENV{LIB_FUZZING_ENGINE})
                 set_target_properties(${target_name} PROPERTIES LINKER_LANGUAGE "CXX")
             else()
                 target_compile_options(${target_name} PRIVATE -fsanitize=fuzzer)
-                set_target_properties(${target_name} PROPERTIES LINK_FLAGS -fsanitize=fuzzer)
+                target_link_options(${target_name} PRIVATE -fsanitize=fuzzer)
             endif()
             set_property(
                 TARGET ${target_name} PROPERTY RUNTIME_OUTPUT_DIRECTORY fuzz)
@@ -810,12 +809,11 @@ if(EXPAT_BUILD_FUZZERS)
                           ${Protobuf_LIBRARIES})
     add_dependencies(xml_lpm_fuzzer ${ProtobufMutator_PREFIX})
 
-    # NOTE: Avoiding target_link_options here only because it needs CMake >=3.13
     if(EXPAT_OSSFUZZ_BUILD)
-        set_target_properties(xml_lpm_fuzzer PROPERTIES LINK_FLAGS $ENV{LIB_FUZZING_ENGINE})
+        target_link_options(xml_lpm_fuzzer PRIVATE $ENV{LIB_FUZZING_ENGINE})
     else()
         target_compile_options(xml_lpm_fuzzer PRIVATE -fsanitize=fuzzer)
-        set_target_properties(xml_lpm_fuzzer PROPERTIES LINK_FLAGS -fsanitize=fuzzer)
+        target_link_options(xml_lpm_fuzzer PRIVATE -fsanitize=fuzzer)
     endif()
     set_property(TARGET xml_lpm_fuzzer PROPERTY RUNTIME_OUTPUT_DIRECTORY fuzz)
 else()
