@@ -43,7 +43,7 @@ Release 2.6.5 ??? ???????? ?? ????
        #935 #937  Autotools: Make generated CMake files look for
                     libexpat.@SO_MAJOR@.dylib on macOS
             #925  Autotools: Sync CMake templates with CMake 3.29
-       #945 #962  CMake: Drop support for CMake <3.13
+  #945 #962 #966  CMake: Drop support for CMake <3.13
             #942  CMake: Small fuzzing related improvements
             #921  docs: Add missing documentation of error code
                     XML_ERROR_NOT_STARTED that was introduced with 2.6.4
