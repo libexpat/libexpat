@@ -6165,7 +6165,6 @@ storeAttributeValue(XML_Parser parser, const ENCODING *enc, XML_Bool isCdata,
         // process its possible inner entities (which are added to the
         // m_openAttributeEntities during appendAttributeValue)
         entity->hasMore = XML_FALSE;
-        triggerReenter(parser);
         continue;
       } // End of entity processing, "if" block skips the rest
 
@@ -6617,7 +6616,6 @@ callStoreEntityValue(XML_Parser parser, const ENCODING *enc,
         // process its possible inner entities (which are added to the
         // m_openValueEntities during storeEntityValue)
         entity->hasMore = XML_FALSE;
-        triggerReenter(parser);
         continue;
       } // End of entity processing, "if" block skips the rest
 
