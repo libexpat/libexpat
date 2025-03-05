@@ -5408,6 +5408,20 @@ START_TEST(test_pool_integrity_with_unfinished_attr) {
 }
 END_TEST
 
+/* Test a possible early return location in internalEntityProcessor */
+START_TEST(test_entity_ref_no_elements) {
+  const char *const text = "<!DOCTYPE foo [\n"
+                           "<!ENTITY e1 \"test\">\n"
+                           "]> <foo>&e1;"; // intentionally missing newline
+
+  XML_Parser parser = XML_ParserCreate(NULL);
+  assert_true(_XML_Parse_SINGLE_BYTES(parser, text, (int)strlen(text), XML_TRUE)
+              == XML_STATUS_ERROR);
+  assert_true(XML_GetErrorCode(parser) == XML_ERROR_NO_ELEMENTS);
+  XML_ParserFree(parser);
+}
+END_TEST
+
 /* Tests if chained entity references lead to unbounded recursion */
 START_TEST(test_deep_nested_entity) {
   const size_t N_LINES = 60000;
@@ -6439,6 +6453,7 @@ make_basic_test_case(Suite *s) {
   tcase_add_test(tc_basic, test_empty_element_abort);
   tcase_add_test__ifdef_xml_dtd(tc_basic,
                                 test_pool_integrity_with_unfinished_attr);
+  tcase_add_test__if_xml_ge(tc_basic, test_entity_ref_no_elements);
   tcase_add_test__if_xml_ge(tc_basic, test_deep_nested_entity);
   tcase_add_test__if_xml_ge(tc_basic, test_deep_nested_attribute_entity);
   tcase_add_test__if_xml_ge(tc_basic,
