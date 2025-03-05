@@ -6034,6 +6034,8 @@ static enum XML_Error PTRCALL
 internalEntityProcessor(XML_Parser parser, const char *s, const char *end,
                         const char **nextPtr) {
   UNUSED_P(s);
+  UNUSED_P(end);
+  UNUSED_P(nextPtr);
   ENTITY *entity;
   const char *textStart, *textEnd;
   const char *next;
@@ -6101,14 +6103,6 @@ internalEntityProcessor(XML_Parser parser, const char *s, const char *end,
 
   if (parser->m_openInternalEntities == NULL) {
     parser->m_processor = entity->is_param ? prologProcessor : contentProcessor;
-    // internalEntityProcessor is called from callProcessor's while(1) loop,
-    // therefore "end" denotes callProcessor's "end", which denotes the end
-    // of the current buffer being parsed. Consequently, if we do not have
-    // any open entities left and have reached to the end, we must not
-    // trigger a reentry.
-    if (end == *nextPtr) {
-      return XML_ERROR_NONE;
-    }
   }
   triggerReenter(parser);
   return XML_ERROR_NONE;
