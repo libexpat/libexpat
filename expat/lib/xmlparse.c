@@ -39,7 +39,7 @@
    Copyright (c) 2022      Sean McBride <sean@rogue-research.com>
    Copyright (c) 2023      Owain Davies <owaind@bath.edu>
    Copyright (c) 2023-2024 Sony Corporation / Snild Dolkow <snild@sony.com>
-   Copyright (c) 2024      Berkay Eren Ürün <berkay.ueruen@siemens.com>
+   Copyright (c) 2024-2025 Berkay Eren Ürün <berkay.ueruen@siemens.com>
    Copyright (c) 2024      Hanno Böck <hanno@gentoo.org>
    Licensed under the MIT license:
 
