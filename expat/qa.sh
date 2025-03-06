@@ -83,7 +83,7 @@ populate_environment() {
     if [[ ${QA_COMPILER} = clang ]]; then
         case "${QA_SANITIZER}" in
             address)
-                # http://clang.llvm.org/docs/AddressSanitizer.html
+                # https://clang.llvm.org/docs/AddressSanitizer.html
                 BASE_COMPILE_FLAGS+=" -g -fsanitize=address -fno-omit-frame-pointer -fno-common"
                 BASE_LINK_FLAGS+=" -g -fsanitize=address"
                 # macOS's XCode does not support LeakSanitizer and reports error:
@@ -97,11 +97,11 @@ populate_environment() {
                 BASE_LINK_FLAGS+=' -fuse-ld=gold'
                 ;;
             memory)
-                # http://clang.llvm.org/docs/MemorySanitizer.html
+                # https://clang.llvm.org/docs/MemorySanitizer.html
                 BASE_COMPILE_FLAGS+=" -fsanitize=memory -fno-omit-frame-pointer -g -O2 -fsanitize-memory-track-origins -fsanitize-blacklist=$PWD/memory-sanitizer-blacklist.txt"
                 ;;
             undefined)
-                # http://clang.llvm.org/docs/UndefinedBehaviorSanitizer.html
+                # https://clang.llvm.org/docs/UndefinedBehaviorSanitizer.html
                 BASE_COMPILE_FLAGS+=" -fsanitize=undefined"
                 BASE_LINK_FLAGS+=" -fsanitize=undefined"
                 export UBSAN_OPTIONS="print_stacktrace=1:halt_on_error=1:abort_on_error=1"
