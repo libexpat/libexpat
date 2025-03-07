@@ -53,6 +53,7 @@ Release 2.6.5 ??? ???????? ?? ????
                     for CMake
             #953  Windows: Address warning -Wunknown-warning-option
                     about -Wno-pedantic-ms-format from LLVM MinGW
+            #971  Address Cppcheck warnings
 
         Infrastructure:
             #926  tests: Increase robustness
@@ -71,6 +72,7 @@ Release 2.6.5 ??? ???????? ?? ????
                       produce 32bit and 64bit Windows binaries
             #956  CI: Get off of about-to-be-removed Ubuntu 20.04
        #960 #964  CI: Start uploading to Coverity Scan for static analysis
+            #971  CI: Adapt to breaking changes in Cppcheck
 
         Special thanks to:
             Mark Brand
