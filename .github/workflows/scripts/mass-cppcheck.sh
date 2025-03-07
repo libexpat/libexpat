@@ -43,6 +43,7 @@ for xml_context_bytes in 0 1024; do
             --check-level=exhaustive
             --suppress=objectIndex
             --suppress=unknownMacro
+            '-D__has_attribute(x)=1'
             -DXML_CONTEXT_BYTES=${xml_context_bytes}
             -DXML_GE=${xml_ge}
         )
