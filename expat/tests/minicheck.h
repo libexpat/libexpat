@@ -129,8 +129,10 @@ void _check_set_test_info(char const *function, char const *filename,
  * Prototypes for the actual implementation.
  */
 
-#  if defined(__GNUC__)
+#  if defined(__has_attribute)
+#    if __has_attribute(noreturn)
 __attribute__((noreturn))
+#    endif
 #  endif
 void
 _fail(const char *file, int line, const char *msg);
