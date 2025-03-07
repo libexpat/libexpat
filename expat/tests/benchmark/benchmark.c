@@ -121,6 +121,12 @@ main(int argc, char *argv[]) {
   }
 
   XMLBuf = malloc(fileAttr.st_size);
+  if (XMLBuf == NULL) {
+    fclose(file);
+    close(fd);
+    fprintf(stderr, "ouf of memory.\n");
+    return 5;
+  }
   fileSize = fread(XMLBuf, sizeof(char), fileAttr.st_size, file);
   fclose(file);
   close(fd);
