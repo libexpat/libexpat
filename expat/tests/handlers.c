@@ -1892,6 +1892,20 @@ accumulate_entity_decl(void *userData, const XML_Char *entityName,
 }
 
 void XMLCALL
+accumulate_char_data_and_suspend(void *userData, const XML_Char *s, int len) {
+  ParserPlusStorage *const parserPlusStorage = (ParserPlusStorage *)userData;
+
+  CharData_AppendXMLChars(parserPlusStorage->storage, s, len);
+
+  for (int i = 0; i < len; i++) {
+    if (s[i] == 'Z') {
+      XML_StopParser(parserPlusStorage->parser, /*resumable=*/XML_TRUE);
+      break;
+    }
+  }
+}
+
+void XMLCALL
 accumulate_start_element(void *userData, const XML_Char *name,
                          const XML_Char **atts) {
   CharData *const storage = (CharData *)userData;
