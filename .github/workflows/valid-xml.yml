@@ -59,5 +59,12 @@ jobs:
     - name: Ensure well-formed and valid XML
       run: |
         set -x
-        xmllint --noout --valid expat/doc/reference.html
-        xmllint --noout --valid expat/doc/xmlwf.xml
+
+        # Target offline validation rather than online (for robust CI)
+        sed 's,http://www.oasis-open.org/docbook/xml/4.2/docbookx.dtd,file:///usr/share/sgml/docbook/dtd/4.2/docbookx.dtd,' -i expat/doc/xmlwf.xml
+        sed 's,http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd,file:///usr/share/xml/w3c-sgml-lib/schema/dtd/REC-xhtml1-20020801/xhtml1-strict.dtd,' -i expat/doc/reference.html
+
+        # We're using unshare(1) to take internet access away forcefully
+        # so that we'll notice whenever our all-offline validation stops being all-offline
+        unshare --map-root-user --net -- xmllint --nonet --noout --valid expat/doc/reference.html
+        unshare --map-root-user --net -- xmllint --nonet --noout --valid expat/doc/xmlwf.xml
