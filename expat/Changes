@@ -37,9 +37,9 @@
 !! THANK YOU!                        Sebastian Pipping -- Berlin, 2024-03-09 !!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-Release 2.6.5 ??? ???????? ?? ????
+Release 2.7.0 Thu March 13 2025
         Security fixes:
-       #893 #???  CVE-2024-8176 -- Fix crash from chaining a large number
+       #893 #973  CVE-2024-8176 -- Fix crash from chaining a large number
                     of entities caused by stack overflow by resolving use of
                     recursion, for all three uses of entities:
                     - general entities in character data ("<e>&g1;</e>")
@@ -66,6 +66,12 @@ Release 2.6.5 ??? ???????? ?? ????
             #953  Windows: Address warning -Wunknown-warning-option
                     about -Wno-pedantic-ms-format from LLVM MinGW
             #971  Address Cppcheck warnings
+       #969 #970  Mass-migrate links from http:// to https://
+    #947 #958 ..
+       #974 #975  Document changes since the previous release
+       #974 #975  Version info bumped from 11:0:10 (libexpat*.so.1.10.0)
+                    to 11:1:10 (libexpat*.so.1.10.1); see https://verbump.de/
+                    for what these numbers do
 
         Infrastructure:
             #926  tests: Increase robustness
@@ -73,9 +79,8 @@ Release 2.6.5 ??? ???????? ?? ????
        #930 #933  tests: Increase test coverage
     #617 #950 ..
     #951 #952 ..
-    #954 #955 ..
-            #961  Fuzzing: Add new fuzzer "xml_lpm_fuzzer" based on
-                    Google's libprotobuf-mutator ("LPM")
+    #954 #955 ..  Fuzzing: Add new fuzzer "xml_lpm_fuzzer" based on
+            #961    Google's libprotobuf-mutator ("LPM")
             #957  Fuzzing|CI: Start producing fuzzing code coverage reports
             #936  CI: Pass -q -q for LCOV >=2.1 in coverage.sh
             #942  CI: Small fuzzing related improvements
@@ -84,11 +89,13 @@ Release 2.6.5 ??? ???????? ?? ????
                       produce 32bit and 64bit Windows binaries
             #956  CI: Get off of about-to-be-removed Ubuntu 20.04
        #960 #964  CI: Start uploading to Coverity Scan for static analysis
+            #972  CI: Stop loading DTD from the internet to address flaky CI
             #971  CI: Adapt to breaking changes in Cppcheck
 
         Special thanks to:
             Alexander Gieringer
             Berkay Eren Ürün
+            Hanno Böck
             Jann Horn
             Mark Brand
             Sebastian Andrzej Siewior

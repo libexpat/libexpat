@@ -8,7 +8,7 @@
 #
 # Copyright (c) 2016-2023 Sebastian Pipping <sebastian@pipping.org>
 # Copyright (c) 2019      Philippe Antoine <contact@catenacyber.fr>
-# Copyright (c) 2019      Hanno Böck <hanno@gentoo.org>
+# Copyright (c) 2019-2025 Hanno Böck <hanno@gentoo.org>
 # Copyright (c) 2024      Alexander Bluhm <alexander.bluhm@gmx.net>
 # Licensed under the MIT license:
 #

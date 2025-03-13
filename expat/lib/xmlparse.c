@@ -1,4 +1,4 @@
-/* c5625880f4bf417c1463deee4eb92d86ff413f802048621c57e25fe483eb59e4 (2.6.4+)
+/* 7d6840a33c250b74adb0ba295d6ec818dccebebaffc8c3ed27d0b29c28adbeb3 (2.7.0+)
                             __  __            _
                          ___\ \/ /_ __   __ _| |_
                         / _ \\  /| '_ \ / _` | __|
@@ -13,7 +13,7 @@
    Copyright (c) 2002-2016 Karl Waclawek <karl@waclawek.net>
    Copyright (c) 2005-2009 Steven Solie <steven@solie.ca>
    Copyright (c) 2016      Eric Rahm <erahm@mozilla.com>
-   Copyright (c) 2016-2024 Sebastian Pipping <sebastian@pipping.org>
+   Copyright (c) 2016-2025 Sebastian Pipping <sebastian@pipping.org>
    Copyright (c) 2016      Gaurav <g.gupta@samsung.com>
    Copyright (c) 2016      Thomas Beutlich <tc@tbeu.de>
    Copyright (c) 2016      Gustavo Grieco <gustavo.grieco@imag.fr>
