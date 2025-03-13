@@ -37,7 +37,7 @@
 !! THANK YOU!                        Sebastian Pipping -- Berlin, 2024-03-09 !!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-Release 2.6.5 ??? ???????? ?? ????
+Release 2.7.0 Thu March 13 2025
         Security fixes:
        #893 #973  CVE-2024-8176 -- Fix crash from chaining a large number
                     of entities caused by stack overflow by resolving use of
