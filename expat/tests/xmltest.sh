@@ -30,6 +30,7 @@
 # Copyright (c) 2002      Karl Waclawek <karl@waclawek.net>
 # Copyright (c) 2008-2019 Sebastian Pipping <sebastian@pipping.org>
 # Copyright (c) 2017      Rhodri James <rhodri@wildebeest.org.uk>
+# Copyright (c) 2025      Hanno Böck <hanno@gentoo.org>
 # Licensed under the MIT license:
 #
 # Permission is  hereby granted,  free of charge,  to any  person obtaining
