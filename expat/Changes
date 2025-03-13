@@ -69,6 +69,9 @@ Release 2.6.5 ??? ???????? ?? ????
        #969 #970  Mass-migrate links from http:// to https://
     #947 #958 ..
        #974 #975  Document changes since the previous release
+       #974 #975  Version info bumped from 11:0:10 (libexpat*.so.1.10.0)
+                    to 11:1:10 (libexpat*.so.1.10.1); see https://verbump.de/
+                    for what these numbers do
 
         Infrastructure:
             #926  tests: Increase robustness
