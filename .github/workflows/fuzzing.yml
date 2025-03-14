@@ -148,7 +148,7 @@ jobs:
     - name: Store fuzzing logs of last batch
       uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1  # v4.6.1
       with:
-        name: expat_fuzzing_logs_last_${{ matrix.fuzzer }}_${{ github.sha }}
+        name: ${{ matrix.fuzzer }}_${{ github.sha }}_logs_last
         path: expat/build/fuzz-*.log
         if-no-files-found: error
 
@@ -168,6 +168,6 @@ jobs:
     - name: Store coverage report
       uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1  # v4.6.1
       with:
-        name: expat_fuzzing_coverage_${{ matrix.fuzzer }}_${{ github.sha }}
+        name: ${{ matrix.fuzzer }}_${{ github.sha }}_coverage
         path: expat/build/coverage/
         if-no-files-found: error
