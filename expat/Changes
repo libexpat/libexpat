@@ -37,6 +37,15 @@
 !! THANK YOU!                        Sebastian Pipping -- Berlin, 2024-03-09 !!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
+Release 2.7.1 ??? ????? ?? ????
+        Other changes:
+       #976 #977  Autotools: Integrate files "fuzz/xml_lpm_fuzzer.{cpp,proto}"
+                    with Automake that were missing from 2.7.0 release tarballs
+
+        Infrastructure:
+       #976 #977  CI: Protect against fuzzer files missing from future
+                    release archives
+
 Release 2.7.0 Thu March 13 2025
         Security fixes:
        #893 #973  CVE-2024-8176 -- Fix crash from chaining a large number
