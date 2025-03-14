@@ -96,6 +96,8 @@ EXTRA_DIST = \
     conftools/expat.m4 \
     conftools/get-version.sh \
     \
+    fuzz/xml_lpm_fuzzer.cpp \
+    fuzz/xml_lpm_fuzzer.proto \
     fuzz/xml_parsebuffer_fuzzer.c \
     fuzz/xml_parse_fuzzer.c \
     \
