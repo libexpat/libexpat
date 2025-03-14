@@ -71,8 +71,25 @@ jobs:
       run: |-
         set -x
         sudo apt-get install --yes --no-install-recommends -V \
+            autoconf \
+            automake \
+            docbook2x \
+            libtool \
             libprotobuf-dev \
+            lzip \
             protobuf-compiler
+
+    - name: Turn Git clone into Autotools "make dist" release tarball
+      run: |-
+        set -x
+        pushd expat/
+          ./buildconf.sh
+          ./configure
+          make dist
+        popd
+        tar xf expat/expat-*.tar.xz
+        rm -R expat/
+        mv expat-* expat
 
     - name: Build Expat fuzzers
       run: |
