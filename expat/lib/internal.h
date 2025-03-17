@@ -127,6 +127,9 @@
 #  elif ULONG_MAX == 18446744073709551615u // 2^64-1
 #    define EXPAT_FMT_PTRDIFF_T(midpart) "%" midpart "ld"
 #    define EXPAT_FMT_SIZE_T(midpart) "%" midpart "lu"
+#  elif defined(EMSCRIPTEN) // 32bit mode Emscripten
+#    define EXPAT_FMT_PTRDIFF_T(midpart) "%" midpart "ld"
+#    define EXPAT_FMT_SIZE_T(midpart) "%" midpart "zu"
 #  else
 #    define EXPAT_FMT_PTRDIFF_T(midpart) "%" midpart "d"
 #    define EXPAT_FMT_SIZE_T(midpart) "%" midpart "u"
