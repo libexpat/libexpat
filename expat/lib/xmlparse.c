@@ -4334,12 +4334,13 @@ doCdataSection(XML_Parser parser, const ENCODING *enc, const char **startPtr,
       /* LCOV_EXCL_STOP */
     }
 
-    *eventPP = s = next;
     switch (parser->m_parsingStatus.parsing) {
     case XML_SUSPENDED:
+      *eventPP = next;
       *nextPtr = next;
       return XML_ERROR_NONE;
     case XML_FINISHED:
+      *eventPP = next;
       return XML_ERROR_ABORTED;
     case XML_PARSING:
       if (parser->m_reenter) {
@@ -4347,6 +4348,7 @@ doCdataSection(XML_Parser parser, const ENCODING *enc, const char **startPtr,
       }
       /* Fall through */
     default:;
+      *eventPP = s = next;
     }
   }
   /* not reached */
@@ -5953,12 +5955,13 @@ epilogProcessor(XML_Parser parser, const char *s, const char *end,
     default:
       return XML_ERROR_JUNK_AFTER_DOC_ELEMENT;
     }
-    parser->m_eventPtr = s = next;
     switch (parser->m_parsingStatus.parsing) {
     case XML_SUSPENDED:
+      parser->m_eventPtr = next;
       *nextPtr = next;
       return XML_ERROR_NONE;
     case XML_FINISHED:
+      parser->m_eventPtr = next;
       return XML_ERROR_ABORTED;
     case XML_PARSING:
       if (parser->m_reenter) {
@@ -5966,6 +5969,7 @@ epilogProcessor(XML_Parser parser, const char *s, const char *end,
       }
     /* Fall through */
     default:;
+      parser->m_eventPtr = s = next;
     }
   }
 }
