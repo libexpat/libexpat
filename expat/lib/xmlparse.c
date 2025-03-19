@@ -3402,12 +3402,13 @@ doContent(XML_Parser parser, int startTagLevel, const ENCODING *enc,
       break;
       /* LCOV_EXCL_STOP */
     }
-    *eventPP = s = next;
     switch (parser->m_parsingStatus.parsing) {
     case XML_SUSPENDED:
+      *eventPP = next;
       *nextPtr = next;
       return XML_ERROR_NONE;
     case XML_FINISHED:
+      *eventPP = next;
       return XML_ERROR_ABORTED;
     case XML_PARSING:
       if (parser->m_reenter) {
@@ -3416,6 +3417,7 @@ doContent(XML_Parser parser, int startTagLevel, const ENCODING *enc,
       }
       /* Fall through */
     default:;
+      *eventPP = s = next;
     }
   }
   /* not reached */
