@@ -42,6 +42,7 @@ Release 2.7.1 ??? ????? ?? ????
        #976 #977  Autotools: Integrate files "fuzz/xml_lpm_fuzzer.{cpp,proto}"
                     with Automake that were missing from 2.7.0 release tarballs
        #983 #984  Fix printf format specifiers for 32bit Emscripten
+            #986  Address compiler warnings
 
         Infrastructure:
             #981  CI: Cover compilation with musl
