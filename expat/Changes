@@ -45,6 +45,7 @@ Release 2.7.1 ??? ????? ?? ????
             #986  Address compiler warnings
 
         Infrastructure:
+            #987  CI: Enforce Clang Static Analyzer clean code
             #981  CI: Cover compilation with musl
        #983 #984  CI: Cover compilation with 32bit Emscripten
        #976 #977  CI: Protect against fuzzer files missing from future
