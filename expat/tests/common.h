@@ -146,6 +146,8 @@ extern void *duff_allocator(size_t size);
 
 extern void *duff_reallocator(void *ptr, size_t size);
 
+extern char *portable_strndup(const char *s, size_t n);
+
 #endif /* XML_COMMON_H */
 
 #ifdef __cplusplus
