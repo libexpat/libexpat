@@ -37,7 +37,7 @@
 !! THANK YOU!                        Sebastian Pipping -- Berlin, 2024-03-09 !!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-Release 2.7.1 ??? ????? ?? ????
+Release 2.7.1 Thu March 27 2025
         Bug fixes:
        #980 #989  Restore event pointer behavior from Expat 2.6.4
                     (that the fix to CVE-2024-8176 changed in 2.7.0);
