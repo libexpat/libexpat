@@ -3,6 +3,7 @@
 [![Packaging status](https://repology.org/badge/tiny-repos/expat.svg)](https://repology.org/metapackage/expat/versions)
 [![Downloads SourceForge](https://img.shields.io/sourceforge/dt/expat?label=Downloads%20SourceForge)](https://sourceforge.net/projects/expat/files/)
 [![Downloads GitHub](https://img.shields.io/github/downloads/libexpat/libexpat/total?label=Downloads%20GitHub)](https://github.com/libexpat/libexpat/releases)
+[![OpenSSF Best Practices](https://www.bestpractices.dev/projects/10205/badge)](https://www.bestpractices.dev/projects/10205)
 
 > [!CAUTION]
 >
