@@ -56,6 +56,7 @@ Release 2.7.1 ??? ????? ?? ????
             #986  Address compiler warnings
 
         Infrastructure:
+            #982  CI: Start running Perl XML::Parser integration tests
             #987  CI: Enforce Clang Static Analyzer clean code
             #991  CI: Re-enable warning clang-analyzer-valist.Uninitialized
                     for clang-tidy
