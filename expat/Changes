@@ -55,6 +55,9 @@ Release 2.7.1 ??? ????? ?? ????
             #992  docs: Promote OpenSSF Best Practices self-certification
             #978  tests/benchmark: Resolve mistaken double close
             #986  Address compiler warnings
+       #990 #993  Version info bumped from 11:1:10 (libexpat*.so.1.10.1)
+                    to 11:2:10 (libexpat*.so.1.10.2); see https://verbump.de/
+                    for what these numbers do
 
         Infrastructure:
             #982  CI: Start running Perl XML::Parser integration tests
