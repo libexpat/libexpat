@@ -39,6 +39,7 @@
 
 Release 2.7.2 ??? ????? ?? ????
         Other changes:
+            #565  Replace some loops by memcmp, memcpy, strlen, wcslen
             #994  docs: Drop AppVeyor badge
 
 Release 2.7.1 Thu March 27 2025

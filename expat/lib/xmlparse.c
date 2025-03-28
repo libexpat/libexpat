@@ -120,6 +120,7 @@
 #include "ascii.h"
 #include "expat.h"
 #include "siphash.h"
+#include "xcsinc.c"
 
 #if defined(HAVE_GETRANDOM) || defined(HAVE_SYSCALL_GETRANDOM)
 #  if defined(HAVE_GETRANDOM)
@@ -583,6 +584,7 @@ static XML_Char *poolAppend(STRING_POOL *pool, const ENCODING *enc,
 static XML_Char *poolStoreString(STRING_POOL *pool, const ENCODING *enc,
                                  const char *ptr, const char *end);
 static XML_Bool FASTCALL poolGrow(STRING_POOL *pool);
+static XML_Bool FASTCALL poolGrowUntil(STRING_POOL *pool, size_t needed);
 static const XML_Char *FASTCALL poolCopyString(STRING_POOL *pool,
                                                const XML_Char *s);
 static const XML_Char *poolCopyStringN(STRING_POOL *pool, const XML_Char *s,
@@ -645,6 +647,11 @@ static unsigned long getDebugLevel(const char *variableName,
   (((pool)->ptr == (pool)->end && ! poolGrow(pool))                            \
        ? 0                                                                     \
        : ((*((pool)->ptr)++ = c), 1))
+#define poolAppendChars(pool, s, len)                                          \
+  (! poolGrowUntil((pool), (len))                                              \
+       ? 0                                                                     \
+       : (memcpy((pool)->ptr, (s), (len) * sizeof(XML_Char)),                  \
+          (pool)->ptr += (len), 1))
 
 #if ! defined(XML_TESTING)
 const
@@ -3772,11 +3779,9 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
         if (! b)
           return XML_ERROR_UNBOUND_PREFIX;
 
-        for (j = 0; j < b->uriLen; j++) {
-          const XML_Char c = b->uri[j];
-          if (! poolAppendChar(&parser->m_tempPool, c))
-            return XML_ERROR_NO_MEMORY;
-        }
+        if (! poolAppendChars(&parser->m_tempPool, b->uri, b->uriLen))
+          return XML_ERROR_NO_MEMORY;
+        j = b->uriLen;
 
         sip24_update(&sip_state, b->uri, b->uriLen * sizeof(XML_Char));
 
@@ -3785,10 +3790,12 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
 
         sip24_update(&sip_state, s, keylen(s) * sizeof(XML_Char));
 
-        do { /* copies null terminator */
-          if (! poolAppendChar(&parser->m_tempPool, *s))
+        {
+          size_t len = xcslen(s) + /*null terminator*/ 1;
+          if (! poolAppendChars(&parser->m_tempPool, s, len))
             return XML_ERROR_NO_MEMORY;
-        } while (*s++);
+          s += len;
+        }
 
         uriHash = (unsigned long)sip24_final(&sip_state);
 
@@ -3818,10 +3825,10 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
         if (parser->m_ns_triplets) { /* append namespace separator and prefix */
           parser->m_tempPool.ptr[-1] = parser->m_namespaceSeparator;
           s = b->prefix->name;
-          do {
-            if (! poolAppendChar(&parser->m_tempPool, *s))
-              return XML_ERROR_NO_MEMORY;
-          } while (*s++);
+          const size_t len = xcslen(s) + /*null terminator*/ 1;
+          if (! poolAppendChars(&parser->m_tempPool, s, len))
+            return XML_ERROR_NO_MEMORY;
+          s += len;
         }
 
         /* store expanded name in attribute list */
@@ -3866,15 +3873,23 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
     return XML_ERROR_NONE;
   prefixLen = 0;
   if (parser->m_ns_triplets && binding->prefix->name) {
-    for (; binding->prefix->name[prefixLen++];)
-      ; /* prefixLen includes null terminator */
+    const size_t candidateLen
+        = xcslen(binding->prefix->name) + /*null terminator*/ 1;
+    if (candidateLen > INT_MAX)
+      return XML_ERROR_NO_MEMORY;
+    prefixLen = (int)candidateLen;
   }
   tagNamePtr->localPart = localPart;
   tagNamePtr->uriLen = binding->uriLen;
   tagNamePtr->prefix = binding->prefix->name;
   tagNamePtr->prefixLen = prefixLen;
-  for (i = 0; localPart[i++];)
-    ; /* i includes null terminator */
+  {
+    const size_t candidateLen = xcslen(localPart) + /*null terminator*/ 1;
+    /* Detect and prevent integer overflow */
+    if (i > INT_MAX)
+      return XML_ERROR_NO_MEMORY;
+    i = (int)candidateLen;
+  }
 
   /* Detect and prevent integer overflow */
   if (binding->uriLen > INT_MAX - prefixLen
@@ -5786,9 +5801,7 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
           return XML_ERROR_NO_MEMORY;
         name = el->name;
         dtd->scaffold[myindex].name = name;
-        nameLen = 0;
-        for (; name[nameLen++];)
-          ;
+        nameLen = xcslen(name) + /*null terminator*/ 1;
 
         /* Detect and prevent integer overflow */
         if (nameLen > UINT_MAX - dtd->contentStringLen) {
@@ -6235,7 +6248,6 @@ appendAttributeValue(XML_Parser parser, const ENCODING *enc, XML_Bool isCdata,
       return XML_ERROR_INVALID_TOKEN;
     case XML_TOK_CHAR_REF: {
       XML_Char buf[XML_ENCODE_MAX];
-      int i;
       int n = XmlCharRefNumber(enc, ptr);
       if (n < 0) {
         if (enc == parser->m_encoding)
@@ -6255,10 +6267,9 @@ appendAttributeValue(XML_Parser parser, const ENCODING *enc, XML_Bool isCdata,
        * XmlEncode() is never passed a value it might return an
        * error for.
        */
-      for (i = 0; i < n; i++) {
-        if (! poolAppendChar(pool, buf[i]))
-          return XML_ERROR_NO_MEMORY;
-      }
+
+      if (! poolAppendChars(pool, buf, n))
+        return XML_ERROR_NO_MEMORY;
     } break;
     case XML_TOK_DATA_CHARS:
       if (! poolAppend(pool, enc, ptr, next))
@@ -6504,15 +6515,13 @@ storeEntityValue(XML_Parser parser, const ENCODING *enc,
       next = entityTextPtr + enc->minBytesPerChar;
       /* fall through */
     case XML_TOK_DATA_NEWLINE:
-      if (pool->end == pool->ptr && ! poolGrow(pool)) {
+      if (! poolAppendChar(pool, 0xA)) {
         result = XML_ERROR_NO_MEMORY;
         goto endEntityValue;
       }
-      *(pool->ptr)++ = 0xA;
       break;
     case XML_TOK_CHAR_REF: {
       XML_Char buf[XML_ENCODE_MAX];
-      int i;
       int n = XmlCharRefNumber(enc, entityTextPtr);
       if (n < 0) {
         if (enc == parser->m_encoding)
@@ -6530,12 +6539,9 @@ storeEntityValue(XML_Parser parser, const ENCODING *enc,
        * XmlEncode() is never passed a value it might return an
        * error for.
        */
-      for (i = 0; i < n; i++) {
-        if (pool->end == pool->ptr && ! poolGrow(pool)) {
-          result = XML_ERROR_NO_MEMORY;
-          goto endEntityValue;
-        }
-        *(pool->ptr)++ = buf[i];
+      if (! poolAppendChars(pool, buf, n)) {
+        result = XML_ERROR_NO_MEMORY;
+        goto endEntityValue;
       }
     } break;
     case XML_TOK_PARTIAL:
@@ -6915,11 +6921,8 @@ getAttributeId(XML_Parser parser, const ENCODING *enc, const char *start,
       for (i = 0; name[i]; i++) {
         /* attributes without prefix are *not* in the default namespace */
         if (name[i] == XML_T(ASCII_COLON)) {
-          int j;
-          for (j = 0; j < i; j++) {
-            if (! poolAppendChar(&dtd->pool, name[j]))
-              return NULL;
-          }
+          if (! poolAppendChars(&dtd->pool, name, i))
+            return NULL;
           if (! poolAppendChar(&dtd->pool, XML_T('\0')))
             return NULL;
           id->prefix = (PREFIX *)lookup(parser, &dtd->prefixes,
@@ -6947,46 +6950,41 @@ getContext(XML_Parser parser) {
   XML_Bool needSep = XML_FALSE;
 
   if (dtd->defaultPrefix.binding) {
-    int i;
     int len;
     if (! poolAppendChar(&parser->m_tempPool, XML_T(ASCII_EQUALS)))
       return NULL;
     len = dtd->defaultPrefix.binding->uriLen;
     if (parser->m_namespaceSeparator)
       len--;
-    for (i = 0; i < len; i++) {
-      if (! poolAppendChar(&parser->m_tempPool,
-                           dtd->defaultPrefix.binding->uri[i])) {
-        /* Because of memory caching, I don't believe this line can be
-         * executed.
-         *
-         * This is part of a loop copying the default prefix binding
-         * URI into the parser's temporary string pool.  Previously,
-         * that URI was copied into the same string pool, with a
-         * terminating NUL character, as part of setContext().  When
-         * the pool was cleared, that leaves a block definitely big
-         * enough to hold the URI on the free block list of the pool.
-         * The URI copy in getContext() therefore cannot run out of
-         * memory.
-         *
-         * If the pool is used between the setContext() and
-         * getContext() calls, the worst it can do is leave a bigger
-         * block on the front of the free list.  Given that this is
-         * all somewhat inobvious and program logic can be changed, we
-         * don't delete the line but we do exclude it from the test
-         * coverage statistics.
-         */
-        return NULL; /* LCOV_EXCL_LINE */
-      }
+    if (! poolAppendChars(&parser->m_tempPool, dtd->defaultPrefix.binding->uri,
+                          len)) {
+      /* Because of memory caching, I don't believe this line can be
+       * executed.
+       *
+       * This is part of a loop copying the default prefix binding
+       * URI into the parser's temporary string pool.  Previously,
+       * that URI was copied into the same string pool, with a
+       * terminating NUL character, as part of setContext().  When
+       * the pool was cleared, that leaves a block definitely big
+       * enough to hold the URI on the free block list of the pool.
+       * The URI copy in getContext() therefore cannot run out of
+       * memory.
+       *
+       * If the pool is used between the setContext() and
+       * getContext() calls, the worst it can do is leave a bigger
+       * block on the front of the free list.  Given that this is
+       * all somewhat inobvious and program logic can be changed, we
+       * don't delete the line but we do exclude it from the test
+       * coverage statistics.
+       */
+      return NULL; /* LCOV_EXCL_LINE */
     }
     needSep = XML_TRUE;
   }
 
   hashTableIterInit(&iter, &(dtd->prefixes));
   for (;;) {
-    int i;
     int len;
-    const XML_Char *s;
     PREFIX *prefix = (PREFIX *)hashTableIterNext(&iter);
     if (! prefix)
       break;
@@ -7001,23 +6999,21 @@ getContext(XML_Parser parser) {
     }
     if (needSep && ! poolAppendChar(&parser->m_tempPool, CONTEXT_SEP))
       return NULL;
-    for (s = prefix->name; *s; s++)
-      if (! poolAppendChar(&parser->m_tempPool, *s))
-        return NULL;
+    if (! poolAppendChars(&parser->m_tempPool, prefix->name,
+                          xcslen(prefix->name)))
+      return NULL;
     if (! poolAppendChar(&parser->m_tempPool, XML_T(ASCII_EQUALS)))
       return NULL;
     len = prefix->binding->uriLen;
     if (parser->m_namespaceSeparator)
       len--;
-    for (i = 0; i < len; i++)
-      if (! poolAppendChar(&parser->m_tempPool, prefix->binding->uri[i]))
-        return NULL;
+    if (! poolAppendChars(&parser->m_tempPool, prefix->binding->uri, len))
+      return NULL;
     needSep = XML_TRUE;
   }
 
   hashTableIterInit(&iter, &(dtd->generalEntities));
   for (;;) {
-    const XML_Char *s;
     ENTITY *e = (ENTITY *)hashTableIterNext(&iter);
     if (! e)
       break;
@@ -7025,9 +7021,8 @@ getContext(XML_Parser parser) {
       continue;
     if (needSep && ! poolAppendChar(&parser->m_tempPool, CONTEXT_SEP))
       return NULL;
-    for (s = e->name; *s; s++)
-      if (! poolAppendChar(&parser->m_tempPool, *s))
-        return 0;
+    if (! poolAppendChars(&parser->m_tempPool, e->name, xcslen(e->name)))
+      return 0;
     needSep = XML_TRUE;
   }
 
@@ -7427,18 +7422,23 @@ copyEntityTable(XML_Parser oldParser, HASH_TABLE *newTable,
 
 static XML_Bool FASTCALL
 keyeq(KEY s1, KEY s2) {
+#ifdef XML_UNICODE
+#  ifdef XML_UNICODE_WCHAR_T
+  return (wcscmp(s1, s2) == 0) ? XML_TRUE : XML_FALSE;
+#  else
   for (; *s1 == *s2; s1++, s2++)
     if (*s1 == 0)
       return XML_TRUE;
   return XML_FALSE;
+#  endif
+#else
+  return (strcmp(s1, s2) == 0) ? XML_TRUE : XML_FALSE;
+#endif
 }
 
 static size_t
 keylen(KEY s) {
-  size_t len = 0;
-  for (; *s; s++, len++)
-    ;
-  return len;
+  return xcslen(s);
 }
 
 static void
@@ -7654,10 +7654,8 @@ poolAppend(STRING_POOL *pool, const ENCODING *enc, const char *ptr,
 
 static const XML_Char *FASTCALL
 poolCopyString(STRING_POOL *pool, const XML_Char *s) {
-  do {
-    if (! poolAppendChar(pool, *s))
-      return NULL;
-  } while (*s++);
+  if (! poolAppendChars(pool, s, xcslen(s) + /*null terminator*/ 1))
+    return NULL;
   s = pool->start;
   poolFinish(pool);
   return s;
@@ -7679,10 +7677,8 @@ poolCopyStringN(STRING_POOL *pool, const XML_Char *s, int n) {
      */
     return NULL; /* LCOV_EXCL_LINE */
   }
-  for (; n > 0; --n, s++) {
-    if (! poolAppendChar(pool, *s))
-      return NULL;
-  }
+  if (! poolAppendChars(pool, s, n))
+    return NULL;
   s = pool->start;
   poolFinish(pool);
   return s;
@@ -7690,11 +7686,8 @@ poolCopyStringN(STRING_POOL *pool, const XML_Char *s, int n) {
 
 static const XML_Char *FASTCALL
 poolAppendString(STRING_POOL *pool, const XML_Char *s) {
-  while (*s) {
-    if (! poolAppendChar(pool, *s))
-      return NULL;
-    s++;
-  }
+  if (! poolAppendChars(pool, s, xcslen(s)))
+    return NULL;
   return pool->start;
 }
 
@@ -7703,9 +7696,8 @@ poolStoreString(STRING_POOL *pool, const ENCODING *enc, const char *ptr,
                 const char *end) {
   if (! poolAppend(pool, enc, ptr, end))
     return NULL;
-  if (pool->ptr == pool->end && ! poolGrow(pool))
+  if (! poolAppendChar(pool, 0))
     return NULL;
-  *(pool->ptr)++ = 0;
   return pool->start;
 }
 
@@ -7839,6 +7831,19 @@ poolGrow(STRING_POOL *pool) {
     pool->end = tem->s + blockSize;
   }
   return XML_TRUE;
+}
+
+static XML_Bool FASTCALL
+poolGrowUntil(STRING_POOL *pool, size_t needed) {
+  for (;;) {
+    const size_t available = pool->end - pool->ptr;
+    if (available >= needed) {
+      return XML_TRUE;
+    }
+    if (! poolGrow(pool)) {
+      return XML_FALSE;
+    }
+  }
 }
 
 static int FASTCALL
@@ -8013,12 +8018,9 @@ build_model(XML_Parser parser) {
       const XML_Char *src;
       dest->name = str;
       src = dtd->scaffold[src_node].name;
-      for (;;) {
-        *str++ = *src;
-        if (! *src)
-          break;
-        src++;
-      }
+      const size_t nameLen = xcslen(src) + /* null terminator*/ 1;
+      memcpy(str, src, nameLen * sizeof(XML_Char));
+      str += nameLen;
       dest->numchildren = 0;
       dest->children = NULL;
     } else {
@@ -8066,12 +8068,10 @@ copyString(const XML_Char *s, const XML_Memory_Handling_Suite *memsuite) {
   size_t charsRequired = 0;
   XML_Char *result;
 
-  /* First determine how long the string is */
-  while (s[charsRequired] != 0) {
-    charsRequired++;
-  }
-  /* Include the terminator */
-  charsRequired++;
+  const size_t candidateLen = xcslen(s) + /*null terminator*/ 1;
+  if (candidateLen > INT_MAX)
+    return NULL;
+  charsRequired = (int)candidateLen;
 
   /* Now allocate space for the copy */
   result = memsuite->malloc_fcn(charsRequired * sizeof(XML_Char));
