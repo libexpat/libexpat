@@ -83,7 +83,7 @@ START_TEST(test_nsalloc_xmlns) {
   const unsigned int max_alloc_count = 30;
 
   for (i = 0; i < max_alloc_count; i++) {
-    g_allocation_count = i;
+    g_allocation_count = (int)i;
     /* Exercise more code paths with a default handler */
     XML_SetDefaultHandler(g_parser, dummy_default_handler);
     if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
@@ -523,7 +523,7 @@ START_TEST(test_nsalloc_realloc_binding_uri) {
   /* Now repeat with a longer URI and a duff reallocator */
   for (i = 0; i < max_realloc_count; i++) {
     XML_ParserReset(g_parser, NULL);
-    g_reallocation_count = i;
+    g_reallocation_count = (int)i;
     if (_XML_Parse_SINGLE_BYTES(g_parser, second, (int)strlen(second), XML_TRUE)
         != XML_STATUS_ERROR)
       break;
