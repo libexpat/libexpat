@@ -64,7 +64,7 @@ Release 2.7.1 Thu March 27 2025
        #983 #984  Fix printf format specifiers for 32bit Emscripten
             #992  docs: Promote OpenSSF Best Practices self-certification
             #978  tests/benchmark: Resolve mistaken double close
-            #986  Address compiler warnings
+            #986  Address Frama-C warnings
        #990 #993  Version info bumped from 11:1:10 (libexpat*.so.1.10.1)
                     to 11:2:10 (libexpat*.so.1.10.2); see https://verbump.de/
                     for what these numbers do
