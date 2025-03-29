@@ -41,6 +41,7 @@ Release 2.7.2 ??? ????? ?? ????
         Other changes:
             #994  docs: Drop AppVeyor badge
            #1000  tests: Fix portable_strndup
+            #999  Address more clang-tidy warnings
 
         Special thanks to:
             Alexander Bluhm
