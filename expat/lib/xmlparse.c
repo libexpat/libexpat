@@ -97,7 +97,7 @@
 #include <stddef.h>
 #include <string.h> /* memset(), memcpy() */
 #include <assert.h>
-#include <limits.h> /* UINT_MAX */
+#include <limits.h> /* INT_MAX, UINT_MAX */
 #include <stdio.h>  /* fprintf */
 #include <stdlib.h> /* getenv, rand_s */
 #include <stdint.h> /* uintptr_t */
@@ -821,11 +821,14 @@ writeRandomBytes_getrandom_nonblock(void *target, size_t count) {
     void *const currentTarget = (void *)((char *)target + bytesWrittenTotal);
     const size_t bytesToWrite = count - bytesWrittenTotal;
 
+    assert(bytesToWrite <= INT_MAX);
+
     const int bytesWrittenMore =
 #    if defined(HAVE_GETRANDOM)
-        getrandom(currentTarget, bytesToWrite, getrandomFlags);
+        (int)getrandom(currentTarget, bytesToWrite, getrandomFlags);
 #    else
-        syscall(SYS_getrandom, currentTarget, bytesToWrite, getrandomFlags);
+        (int)syscall(SYS_getrandom, currentTarget, bytesToWrite,
+                     getrandomFlags);
 #    endif
 
     if (bytesWrittenMore > 0) {
@@ -2761,8 +2764,8 @@ static XML_Bool
 storeRawNames(XML_Parser parser) {
   TAG *tag = parser->m_tagStack;
   while (tag) {
-    int bufSize;
-    int nameLen = sizeof(XML_Char) * (tag->name.strLen + 1);
+    size_t bufSize;
+    size_t nameLen = sizeof(XML_Char) * (tag->name.strLen + 1);
     size_t rawNameLen;
     char *rawNameBuf = tag->buf + nameLen;
     /* Stop if already stored.  Since m_tagStack is a stack, we can stop
@@ -2779,8 +2782,8 @@ storeRawNames(XML_Parser parser) {
     /* Detect and prevent integer overflow. */
     if (rawNameLen > (size_t)INT_MAX - nameLen)
       return XML_FALSE;
-    bufSize = nameLen + (int)rawNameLen;
-    if (bufSize > tag->bufEnd - tag->buf) {
+    bufSize = nameLen + rawNameLen;
+    if (bufSize > (size_t)(tag->bufEnd - tag->buf)) {
       char *temp = (char *)REALLOC(parser, tag->buf, bufSize);
       if (temp == NULL)
         return XML_FALSE;
@@ -3677,7 +3680,7 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
      and clear flags that say whether attributes were specified */
   i = 0;
   if (nPrefixes) {
-    int j; /* hash table index */
+    unsigned int j; /* hash table index */
     unsigned long version = parser->m_nsAttsVersion;
 
     /* Detect and prevent invalid shift */
@@ -3772,7 +3775,7 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
         if (! b)
           return XML_ERROR_UNBOUND_PREFIX;
 
-        for (j = 0; j < b->uriLen; j++) {
+        for (j = 0; j < (unsigned int)b->uriLen; j++) {
           const XML_Char c = b->uri[j];
           if (! poolAppendChar(&parser->m_tempPool, c))
             return XML_ERROR_NO_MEMORY;
@@ -6277,7 +6280,7 @@ appendAttributeValue(XML_Parser parser, const ENCODING *enc, XML_Bool isCdata,
     case XML_TOK_ENTITY_REF: {
       const XML_Char *name;
       ENTITY *entity;
-      char checkEntityDecl;
+      bool checkEntityDecl;
       XML_Char ch = (XML_Char)XmlPredefinedEntityName(
           enc, ptr + enc->minBytesPerChar, next - enc->minBytesPerChar);
       if (ch) {
@@ -7863,6 +7866,11 @@ nextScaffoldPart(XML_Parser parser) {
     dtd->scaffIndex[0] = 0;
   }
 
+  // Will casting to int be safe further down?
+  if (dtd->scaffCount > INT_MAX) {
+    return -1;
+  }
+
   if (dtd->scaffCount >= dtd->scaffSize) {
     CONTENT_SCAFFOLD *temp;
     if (dtd->scaffold) {
@@ -7894,7 +7902,7 @@ nextScaffoldPart(XML_Parser parser) {
     }
     dtd->scaffold = temp;
   }
-  next = dtd->scaffCount++;
+  next = (int)dtd->scaffCount++;
   me = &dtd->scaffold[next];
   if (dtd->scaffLevel) {
     CONTENT_SCAFFOLD *parent
@@ -8093,10 +8101,10 @@ accountingGetCurrentAmplification(XML_Parser rootParser) {
         + rootParser->m_accounting.countBytesIndirect;
   const float amplificationFactor
       = rootParser->m_accounting.countBytesDirect
-            ? (countBytesOutput
+            ? ((float)countBytesOutput
                / (float)(rootParser->m_accounting.countBytesDirect))
-            : ((lenOfShortestInclude
-                + rootParser->m_accounting.countBytesIndirect)
+            : ((float)(lenOfShortestInclude
+                       + rootParser->m_accounting.countBytesIndirect)
                / (float)lenOfShortestInclude);
   assert(! rootParser->m_parentParser);
   return amplificationFactor;
