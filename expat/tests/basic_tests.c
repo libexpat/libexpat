@@ -412,13 +412,13 @@ START_TEST(test_utf16_le_epilog_newline) {
 
   if (first_chunk_bytes >= sizeof(text) - 1)
     fail("bad value of first_chunk_bytes");
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, first_chunk_bytes, XML_FALSE)
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)first_chunk_bytes, XML_FALSE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
   else {
     enum XML_Status rc;
     rc = _XML_Parse_SINGLE_BYTES(g_parser, text + first_chunk_bytes,
-                                 sizeof(text) - first_chunk_bytes - 1,
+                                 (int)(sizeof(text) - first_chunk_bytes - 1),
                                  XML_TRUE);
     if (rc == XML_STATUS_ERROR)
       xml_failure(g_parser);

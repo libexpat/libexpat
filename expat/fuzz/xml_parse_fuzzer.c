@@ -15,6 +15,7 @@
  */
 
 #include <assert.h>
+#include <limits.h> // for INT_MAX
 #include <stdint.h>
 
 #include "expat.h"
@@ -65,8 +66,9 @@ ParseOneInput(XML_Parser p, const uint8_t *data, size_t size) {
   XML_SetUserData(p, p);
   XML_SetElementHandler(p, start, end);
   XML_SetCharacterDataHandler(p, may_stop_character_handler);
-  XML_Parse(p, (const XML_Char *)data, size, 0);
-  if (XML_Parse(p, (const XML_Char *)data, size, 1) == XML_STATUS_ERROR) {
+  assert(size <= INT_MAX);
+  XML_Parse(p, (const XML_Char *)data, (int)size, 0);
+  if (XML_Parse(p, (const XML_Char *)data, (int)size, 1) == XML_STATUS_ERROR) {
     XML_ErrorString(XML_GetErrorCode(p));
   }
   XML_GetCurrentLineNumber(p);

@@ -323,7 +323,7 @@ START_TEST(test_alloc_run_external_parser) {
     XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
     XML_SetUserData(g_parser, foo_text);
     XML_SetExternalEntityRefHandler(g_parser, external_entity_null_loader);
-    g_allocation_count = i;
+    g_allocation_count = (int)i;
     if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
         != XML_STATUS_ERROR)
       break;
@@ -434,7 +434,7 @@ START_TEST(test_alloc_internal_entity) {
   const unsigned int max_alloc_count = 20;
 
   for (i = 0; i < max_alloc_count; i++) {
-    g_allocation_count = i;
+    g_allocation_count = (int)i;
     XML_SetUnknownEncodingHandler(g_parser, unknown_released_encoding_handler,
                                   NULL);
     if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
