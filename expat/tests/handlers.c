@@ -132,7 +132,7 @@ counting_start_element_handler(void *userData, const XML_Char *name,
     fail("ID not present");
     return;
   }
-  if (id != -1 && xcstrcmp(atts[id], info->id_name)) {
+  if (id != -1 && xcstrcmp(atts[id], info->id_name) != 0) {
     fail("ID does not have the correct name");
     return;
   }
@@ -147,7 +147,7 @@ counting_start_element_handler(void *userData, const XML_Char *name,
       fail("Attribute not recognised");
       return;
     }
-    if (xcstrcmp(atts[1], attr->value)) {
+    if (xcstrcmp(atts[1], attr->value) != 0) {
       fail("Attribute has wrong value");
       return;
     }
@@ -1110,7 +1110,7 @@ external_entity_devaluer(XML_Parser parser, const XML_Char *context,
   UNUSED_P(publicId);
   if (systemId == NULL || ! xcstrcmp(systemId, XCS("bar")))
     return XML_STATUS_OK;
-  if (xcstrcmp(systemId, XCS("foo")))
+  if (xcstrcmp(systemId, XCS("foo")) != 0)
     fail("Unexpected system ID");
   ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
   if (ext_parser == NULL)
@@ -1552,15 +1552,16 @@ verify_attlist_decl_handler(void *userData, const XML_Char *element_name,
                             const XML_Char *default_value, int is_required) {
   AttTest *at = (AttTest *)userData;
 
-  if (xcstrcmp(element_name, at->element_name))
+  if (xcstrcmp(element_name, at->element_name) != 0)
     fail("Unexpected element name in attribute declaration");
-  if (xcstrcmp(attr_name, at->attr_name))
+  if (xcstrcmp(attr_name, at->attr_name) != 0)
     fail("Unexpected attribute name in attribute declaration");
-  if (xcstrcmp(attr_type, at->attr_type))
+  if (xcstrcmp(attr_type, at->attr_type) != 0)
     fail("Unexpected attribute type in attribute declaration");
   if ((default_value == NULL && at->default_value != NULL)
       || (default_value != NULL && at->default_value == NULL)
-      || (default_value != NULL && xcstrcmp(default_value, at->default_value)))
+      || (default_value != NULL
+          && xcstrcmp(default_value, at->default_value) != 0))
     fail("Unexpected default value in attribute declaration");
   if (is_required != at->is_required)
     fail("Requirement mismatch in attribute declaration");
@@ -1751,7 +1752,7 @@ param_entity_match_handler(void *userData, const XML_Char *entityName,
      * going to overflow an int.
      */
     if (value_length != (int)xcstrlen(entity_value_to_match)
-        || xcstrncmp(value, entity_value_to_match, value_length)) {
+        || xcstrncmp(value, entity_value_to_match, value_length) != 0) {
       entity_match_flag = ENTITY_MATCH_FAIL;
     } else {
       entity_match_flag = ENTITY_MATCH_SUCCESS;
