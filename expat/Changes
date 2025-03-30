@@ -40,6 +40,11 @@
 Release 2.7.2 ??? ????? ?? ????
         Other changes:
             #994  docs: Drop AppVeyor badge
+           #1000  tests: Fix portable_strndup
+
+        Special thanks to:
+            Alexander Bluhm
+            Theo Buehler
 
 Release 2.7.1 Thu March 27 2025
         Bug fixes:
