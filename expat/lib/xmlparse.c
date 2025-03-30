@@ -627,10 +627,10 @@ static void entityTrackingOnOpen(XML_Parser parser, ENTITY *entity,
                                  int sourceLine);
 static void entityTrackingOnClose(XML_Parser parser, ENTITY *entity,
                                   int sourceLine);
+#endif /* XML_GE == 1 */
 
 static XML_Parser getRootParserOf(XML_Parser parser,
                                   unsigned int *outLevelDiff);
-#endif /* XML_GE == 1 */
 
 static unsigned long getDebugLevel(const char *variableName,
                                    unsigned long defaultDebugLevel);
@@ -8288,6 +8288,8 @@ entityTrackingOnClose(XML_Parser originParser, ENTITY *entity, int sourceLine) {
   rootParser->m_entity_stats.currentDepth--;
 }
 
+#endif /* XML_GE == 1 */
+
 static XML_Parser
 getRootParserOf(XML_Parser parser, unsigned int *outLevelDiff) {
   XML_Parser rootParser = parser;
@@ -8302,6 +8304,8 @@ getRootParserOf(XML_Parser parser, unsigned int *outLevelDiff) {
   }
   return rootParser;
 }
+
+#if XML_GE == 1
 
 const char *
 unsignedCharToPrintable(unsigned char c) {
