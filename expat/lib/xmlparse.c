@@ -1015,9 +1015,10 @@ generate_hash_secret_salt(XML_Parser parser) {
 
 static unsigned long
 get_hash_secret_salt(XML_Parser parser) {
-  if (parser->m_parentParser != NULL)
-    return get_hash_secret_salt(parser->m_parentParser);
-  return parser->m_hash_secret_salt;
+  const XML_Parser rootParser = getRootParserOf(parser, NULL);
+  assert(! rootParser->m_parentParser);
+
+  return rootParser->m_hash_secret_salt;
 }
 
 static enum XML_Error
@@ -2017,12 +2018,14 @@ int XMLCALL
 XML_SetHashSalt(XML_Parser parser, unsigned long hash_salt) {
   if (parser == NULL)
     return 0;
-  if (parser->m_parentParser)
-    return XML_SetHashSalt(parser->m_parentParser, hash_salt);
+
+  const XML_Parser rootParser = getRootParserOf(parser, NULL);
+  assert(! rootParser->m_parentParser);
+
   /* block after XML_Parse()/XML_ParseBuffer() has been called */
-  if (parserBusy(parser))
+  if (parserBusy(rootParser))
     return 0;
-  parser->m_hash_secret_salt = hash_salt;
+  rootParser->m_hash_secret_salt = hash_salt;
   return 1;
 }
 

@@ -35,6 +35,7 @@ cd "$(dirname "$(type -P "$0")")"
 checks_to_enable=(
     bugprone-narrowing-conversions
     bugprone-suspicious-string-compare
+    misc-no-recursion
     readability-avoid-const-params-in-decls
     readability-named-parameter
 )
