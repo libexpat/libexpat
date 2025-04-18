@@ -358,7 +358,9 @@ if (MSVC)
                 CMAKE_C_FLAGS_MINSIZEREL
                 CMAKE_C_FLAGS_RELWITHDEBINFO
                 )
+            message(STATUS "BEFORE: ${flag_var}: ${${flag_var}}")
             string(REPLACE "/MD" "/MT" ${flag_var} "${${flag_var}}")
+            message(STATUS "AFTER: ${flag_var}: ${${flag_var}}")
         endforeach()
     endif()
 endif()
