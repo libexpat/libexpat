@@ -976,6 +976,8 @@ get_property(_EXPAT_GENERATOR_IS_MULTI_CONFIG GLOBAL PROPERTY GENERATOR_IS_MULTI
 
 message(STATUS "===========================================================================")
 message(STATUS "")
+message(STATUS "CMake version in use ......... ${CMAKE_VERSION}")
+message(STATUS "")
 message(STATUS "Configuration")
 message(STATUS "  Generator .................. ${CMAKE_GENERATOR}")
 if(_EXPAT_GENERATOR_IS_MULTI_CONFIG)
