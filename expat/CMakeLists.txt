@@ -360,6 +360,7 @@ if (MSVC)
                 )
             string(REPLACE "/MD" "/MT" ${flag_var} "${${flag_var}}")
         endforeach()
+        set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
     endif()
 endif()
 
