@@ -362,6 +362,9 @@ if (MSVC)
             string(REPLACE "/MD" "/MT" ${flag_var} "${${flag_var}}")
             message(STATUS "AFTER: ${flag_var}: ${${flag_var}}")
         endforeach()
+
+        cmake_policy(GET CMP0091 _POLICY_CMP0091_ENABLED)
+        message(STATUS "Policy CMP0091 status: ${_POLICY_CMP0091_ENABLED} (can be: 'OLD', 'NEW', '' (empty)")
     endif()
 endif()
 
