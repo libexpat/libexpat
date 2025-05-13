@@ -63,18 +63,18 @@ jobs:
         tee    "${GITHUB_OUTPUT}" <<< "version=$(git describe --tags | sed -e 's,^R_,,' -e 's,_,.,g')"
         tee -a "${GITHUB_OUTPUT}" <<< "git_commit=$(git rev-parse HEAD)"
 
-    - name: Install Clang 19
+    - name: Install Clang 20
       run: |-
         set -x
         source /etc/os-release
         wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
-        sudo add-apt-repository "deb https://apt.llvm.org/${UBUNTU_CODENAME}/ llvm-toolchain-${UBUNTU_CODENAME}-19 main"
+        sudo add-apt-repository "deb https://apt.llvm.org/${UBUNTU_CODENAME}/ llvm-toolchain-${UBUNTU_CODENAME}-20 main"
         sudo apt-get update  # due to new repository
         sudo apt-get install --yes --no-install-recommends -V \
-            clang-19 \
-            libclang-rt-19-dev \
-            llvm-19
-        echo /usr/lib/llvm-19/bin >>"${GITHUB_PATH}"
+            clang-20 \
+            libclang-rt-20-dev \
+            llvm-20
+        echo /usr/lib/llvm-20/bin >>"${GITHUB_PATH}"
 
     - name: Install build dependencies
       run: |-

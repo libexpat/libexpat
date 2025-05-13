@@ -47,17 +47,17 @@ jobs:
     steps:
     - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
 
-    - name: Install clang-format 19
+    - name: Install clang-format 20
       run: |-
         set -x
         source /etc/os-release
         wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
-        sudo add-apt-repository "deb https://apt.llvm.org/${UBUNTU_CODENAME}/ llvm-toolchain-${UBUNTU_CODENAME}-19 main"
+        sudo add-apt-repository "deb https://apt.llvm.org/${UBUNTU_CODENAME}/ llvm-toolchain-${UBUNTU_CODENAME}-20 main"
         sudo apt-get update  # due to new repository
         sudo apt-get install --yes --no-install-recommends -V \
-            clang-format-19 \
+            clang-format-20 \
             moreutils
-        echo /usr/lib/llvm-19/bin >>"${GITHUB_PATH}"
+        echo /usr/lib/llvm-20/bin >>"${GITHUB_PATH}"
 
     - name: Run clang-format
       run: |
