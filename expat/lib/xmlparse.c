@@ -3872,7 +3872,7 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
     return XML_ERROR_NONE;
   prefixLen = 0;
   if (parser->m_ns_triplets && binding->prefix->name) {
-    for (; binding->prefix->name[prefixLen++];)
+    while (binding->prefix->name[prefixLen++])
       ; /* prefixLen includes null terminator */
   }
   tagNamePtr->localPart = localPart;
@@ -5793,7 +5793,7 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
         name = el->name;
         dtd->scaffold[myindex].name = name;
         nameLen = 0;
-        for (; name[nameLen++];)
+        while (name[nameLen++])
           ;
 
         /* Detect and prevent integer overflow */
