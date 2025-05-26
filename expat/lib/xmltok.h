@@ -299,7 +299,7 @@ int XmlSizeOfUnknownEncoding(void);
 
 typedef int(XMLCALL *CONVERTER)(void *userData, const char *p);
 
-ENCODING *XmlInitUnknownEncoding(void *mem, int *table, CONVERTER convert,
+ENCODING *XmlInitUnknownEncoding(void *mem, const int *table, CONVERTER convert,
                                  void *userData);
 
 int XmlParseXmlDeclNS(int isGeneralTextEntity, const ENCODING *enc,
@@ -312,8 +312,8 @@ int XmlInitEncodingNS(INIT_ENCODING *p, const ENCODING **encPtr,
                       const char *name);
 const ENCODING *XmlGetUtf8InternalEncodingNS(void);
 const ENCODING *XmlGetUtf16InternalEncodingNS(void);
-ENCODING *XmlInitUnknownEncodingNS(void *mem, int *table, CONVERTER convert,
-                                   void *userData);
+ENCODING *XmlInitUnknownEncodingNS(void *mem, const int *table,
+                                   CONVERTER convert, void *userData);
 #ifdef __cplusplus
 }
 #endif
