@@ -46,9 +46,9 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - runs-on: windows-2019
+          - runs-on: windows-2025
             cmake_build_type: Debug
-            cmake_generator: Visual Studio 16 2019
+            cmake_generator: Visual Studio 17 2022
             cmake_platform: Win32
             expat_char_type: char
             expat_dll: libexpatd.dll
