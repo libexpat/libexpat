@@ -46,16 +46,16 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - runs-on: windows-2019
+          - runs-on: windows-2022
             cmake_build_type: Debug
-            cmake_generator: Visual Studio 16 2019
+            cmake_generator: Visual Studio 17 2022
             cmake_platform: Win32
             expat_char_type: char
             expat_dll: libexpatd.dll
             expat_platform: win32
-          - runs-on: windows-2019
+          - runs-on: windows-2022
             cmake_build_type: Debug
-            cmake_generator: Visual Studio 16 2019
+            cmake_generator: Visual Studio 17 2022
             cmake_platform: x64
             expat_char_type: wchar_t
             expat_dll: libexpatwd.dll
@@ -130,7 +130,7 @@ jobs:
       env:
         expat_platform: ${{ matrix.expat_platform }}
       run: |-
-        export PATH="${PATH}:/c/msys64/usr/bin"  # for zip
+        export PATH="${PATH}:/c/Program Files/7-Zip"
         set -x
 
         cd "expat/${expat_platform}"
@@ -148,7 +148,7 @@ jobs:
 
         ls -lh app/Bin/
 
-        ( cd app && zip -9 -r ../"${zip_name}" . )
+        ( cd app && 7z a -tzip -mx=9 ../"${zip_name}" . )
 
     - name: Offer binaries for download
       uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2

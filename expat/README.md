@@ -26,7 +26,8 @@ Expat supports the following C99 compilers:
 
 - GNU GCC >=4.5 (for use from C) or GNU GCC >=4.8.1 (for use from C++)
 - LLVM Clang >=3.5
-- Microsoft Visual Studio >=16.0/2019 (rolling `${today} minus 5 years`)
+- Microsoft Visual Studio >=17.0/2022
+  (the oldest version supported by the [official GitHub Actions Windows images](https://github.com/actions/runner-images))
 
 Windows users can use the
 [`expat-win32bin-*.*.*.{exe,zip}` download](https://github.com/libexpat/libexpat/releases),
