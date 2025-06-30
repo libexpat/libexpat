@@ -440,12 +440,22 @@ AC_MSG_RESULT([${CMAKE_SHARED_LIBRARY_PREFIX}])
 AC_SUBST([CMAKE_SHARED_LIBRARY_PREFIX])
 
 AS_CASE("${host_os}",
-  [darwin*], [CMAKE_NOCONFIG_SOURCE=cmake/autotools/expat-noconfig__macos.cmake.in],
-  [mingw*|cygwin*], [CMAKE_NOCONFIG_SOURCE=cmake/autotools/expat-noconfig__windows.cmake.in],
-  [CMAKE_NOCONFIG_SOURCE=cmake/autotools/expat-noconfig__linux.cmake.in])
+  [darwin*], [
+    CMAKE_SOURCE=cmake/autotools/expat__macos.cmake.in
+    CMAKE_NOCONFIG_SOURCE=cmake/autotools/expat-noconfig__macos.cmake.in
+  ],
+  [mingw*|cygwin*], [
+    CMAKE_SOURCE=cmake/autotools/expat__windows.cmake.in
+    CMAKE_NOCONFIG_SOURCE=cmake/autotools/expat-noconfig__windows.cmake.in
+  ],
+  [
+    CMAKE_SOURCE=cmake/autotools/expat__linux.cmake.in
+    CMAKE_NOCONFIG_SOURCE=cmake/autotools/expat-noconfig__linux.cmake.in
+  ])
 AC_CONFIG_FILES([Makefile]
   [expat.pc]
   [cmake/expat-config.cmake]
+  [cmake/autotools/expat.cmake:${CMAKE_SOURCE}]
   [cmake/autotools/expat-config-version.cmake]
   [cmake/autotools/expat-noconfig.cmake:${CMAKE_NOCONFIG_SOURCE}]
   [doc/Makefile]
