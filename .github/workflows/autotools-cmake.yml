@@ -45,6 +45,7 @@ jobs:
   checks:
     name: Ensure that GNU Autotools and CMake build systems agree
     strategy:
+      fail-fast: false
       matrix:
         include:
           - os: macos-14
