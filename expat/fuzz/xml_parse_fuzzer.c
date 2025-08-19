@@ -79,15 +79,18 @@ ParseOneInput(XML_Parser p, const uint8_t *data, size_t size) {
 
 int
 LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
-  XML_Parser parentParser = XML_ParserCreate(xstr(ENCODING_FOR_FUZZING));
-  assert(parentParser);
-  ParseOneInput(parentParser, data, size);
-  // not freed yet, but used later and freed then
+  XML_Parser plainParser = XML_ParserCreate(xstr(ENCODING_FOR_FUZZING));
+  assert(plainParser);
+  ParseOneInput(plainParser, data, size);
+  XML_ParserFree(plainParser);
 
   XML_Parser namespaceParser = XML_ParserCreateNS(NULL, '!');
   assert(namespaceParser);
   ParseOneInput(namespaceParser, data, size);
   XML_ParserFree(namespaceParser);
+
+  XML_Parser parentParser = XML_ParserCreate(xstr(ENCODING_FOR_FUZZING));
+  assert(parentParser);
 
   XML_Parser externalEntityParser
       = XML_ExternalEntityParserCreate(parentParser, "e1", NULL);
@@ -101,7 +104,6 @@ LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
   ParseOneInput(externalDtdParser, data, size);
   XML_ParserFree(externalDtdParser);
 
-  // finally frees this parser which served as parent
   XML_ParserFree(parentParser);
   return 0;
 }
