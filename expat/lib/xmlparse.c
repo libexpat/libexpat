@@ -1107,6 +1107,88 @@ XML_ParserCreate_MM(const XML_Char *encodingName,
   return parserCreate(encodingName, memsuite, nameSep, NULL);
 }
 
+
+
+static void * TrackMalloc(size_t size) {
+	printf("MALLOC %ld", (long)size);
+	const size_t extraBytes = sizeof(size_t);
+	void * buffer;
+
+	/* check for unsigned overflow */
+	if (size > ((size_t)-1) - extraBytes) {
+		errno = ENOMEM;
+		return NULL;
+	}
+
+	buffer = malloc(extraBytes + size);
+	if (buffer == NULL) {
+		printf(" -> NULL\n");
+		return NULL;
+	}
+	printf(" -> %p\n", buffer + extraBytes);
+
+	*(size_t *)buffer = size;
+
+	return (char *)buffer + extraBytes;
+}
+
+static void TrackFree(void * ptr) {
+	if ((ptr == NULL)) {
+		return;
+	}
+
+	printf("FREE %p (%ld)\n", ptr, (long)*((size_t *)ptr - 1));
+
+	free((char *)ptr - sizeof(size_t));
+}
+
+static void * TrackRealloc(void * ptr, size_t size) {
+	if (ptr)
+		printf("REALLOC %p (%ld) %ld ", ptr, (long)*((size_t *)ptr - 1), (long)size);
+	else
+		printf("REALLOC NULL (0) %ld ", (long)size);
+
+	void * newBuffer;
+	size_t prevSize;
+
+	/* man realloc: "If ptr is NULL, then the call is equivalent to
+	 * malloc(size), for *all* values of size" */
+	if (ptr == NULL) {
+		return TrackMalloc(size);
+	}
+
+	/* man realloc: "If size is equal to zero, and ptr is *not* NULL,
+	 * then the call is equivalent to free(ptr)." */
+	if (size == 0) {
+		TrackFree(ptr);
+		return NULL;
+	}
+
+	prevSize = *((size_t *)((char *)ptr - sizeof(size_t)));
+
+	/* Anything to do? */
+	if (size <= prevSize) {
+		return ptr;
+	}
+
+	newBuffer = TrackMalloc(size);
+
+	if (newBuffer == NULL) {
+		/* errno set by malloc */
+		return NULL;
+	}
+
+	memcpy(newBuffer, ptr, prevSize);
+
+	TrackFree(ptr);
+
+	return newBuffer;
+}
+
+
+
+
+
 static XML_Parser
 parserCreate(const XML_Char *encodingName,
              const XML_Memory_Handling_Suite *memsuite, const XML_Char *nameSep,
@@ -1124,12 +1206,12 @@ parserCreate(const XML_Char *encodingName,
     }
   } else {
     XML_Memory_Handling_Suite *mtemp;
-    parser = (XML_Parser)malloc(sizeof(struct XML_ParserStruct));
+    parser = (XML_Parser)TrackMalloc(sizeof(struct XML_ParserStruct));
     if (parser != NULL) {
       mtemp = (XML_Memory_Handling_Suite *)&(parser->m_mem);
-      mtemp->malloc_fcn = malloc;
-      mtemp->realloc_fcn = realloc;
-      mtemp->free_fcn = free;
+      mtemp->malloc_fcn = TrackMalloc;
+      mtemp->realloc_fcn = TrackRealloc;
+      mtemp->free_fcn = TrackFree;
     }
   }
 
