@@ -557,7 +557,7 @@ static void FASTCALL normalizePublicId(XML_Char *s);
 
 static DTD *dtdCreate(XML_Parser parser);
 /* do not call if m_parentParser != NULL */
-static void dtdReset(DTD *p, const XML_Memory_Handling_Suite *ms);
+static void dtdReset(DTD *p, XML_Parser parser);
 static void dtdDestroy(DTD *p, XML_Bool isDocEntity,
                        const XML_Memory_Handling_Suite *ms);
 static int dtdCopy(XML_Parser oldParser, DTD *newDtd, const DTD *oldDtd,
@@ -1386,7 +1386,7 @@ XML_ParserReset(XML_Parser parser, const XML_Char *encodingName) {
   FREE(parser, (void *)parser->m_protocolEncodingName);
   parser->m_protocolEncodingName = NULL;
   parserInit(parser, encodingName);
-  dtdReset(parser->m_dtd, &parser->m_mem);
+  dtdReset(parser->m_dtd, parser);
   return XML_TRUE;
 }
 
@@ -7157,7 +7157,7 @@ dtdCreate(XML_Parser parser) {
 }
 
 static void
-dtdReset(DTD *p, const XML_Memory_Handling_Suite *ms) {
+dtdReset(DTD *p, XML_Parser parser) {
   HASH_TABLE_ITER iter;
   hashTableIterInit(&iter, &(p->elementTypes));
   for (;;) {
@@ -7165,7 +7165,7 @@ dtdReset(DTD *p, const XML_Memory_Handling_Suite *ms) {
     if (! e)
       break;
     if (e->allocDefaultAtts != 0)
-      ms->free_fcn(e->defaultAtts);
+      FREE(parser, e->defaultAtts);
   }
   hashTableClear(&(p->generalEntities));
 #ifdef XML_DTD
@@ -7182,9 +7182,9 @@ dtdReset(DTD *p, const XML_Memory_Handling_Suite *ms) {
 
   p->in_eldecl = XML_FALSE;
 
-  ms->free_fcn(p->scaffIndex);
+  FREE(parser, p->scaffIndex);
   p->scaffIndex = NULL;
-  ms->free_fcn(p->scaffold);
+  FREE(parser, p->scaffold);
   p->scaffold = NULL;
 
   p->scaffLevel = 0;
