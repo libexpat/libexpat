@@ -560,7 +560,7 @@ static DTD *dtdCreate(XML_Parser parser);
 static void dtdReset(DTD *p, XML_Parser parser);
 static void dtdDestroy(DTD *p, XML_Bool isDocEntity, XML_Parser parser);
 static int dtdCopy(XML_Parser oldParser, DTD *newDtd, const DTD *oldDtd,
-                   const XML_Memory_Handling_Suite *ms);
+                   XML_Parser parser);
 static int copyEntityTable(XML_Parser oldParser, HASH_TABLE *newTable,
                            STRING_POOL *newPool, const HASH_TABLE *oldTable);
 static NAMED *lookup(XML_Parser parser, HASH_TABLE *table, KEY name,
@@ -1576,7 +1576,7 @@ XML_ExternalEntityParserCreate(XML_Parser oldParser, const XML_Char *context,
   parser->m_prologState.inEntityValue = oldInEntityValue;
   if (context) {
 #endif /* XML_DTD */
-    if (! dtdCopy(oldParser, parser->m_dtd, oldDtd, &parser->m_mem)
+    if (! dtdCopy(oldParser, parser->m_dtd, oldDtd, parser)
         || ! setContext(parser, context)) {
       XML_ParserFree(parser);
       return NULL;
@@ -7227,7 +7227,7 @@ dtdDestroy(DTD *p, XML_Bool isDocEntity, XML_Parser parser) {
 */
 static int
 dtdCopy(XML_Parser oldParser, DTD *newDtd, const DTD *oldDtd,
-        const XML_Memory_Handling_Suite *ms) {
+        XML_Parser parser) {
   HASH_TABLE_ITER iter;
 
   /* Copy the prefix table. */
@@ -7308,7 +7308,7 @@ dtdCopy(XML_Parser oldParser, DTD *newDtd, const DTD *oldDtd,
       }
 #endif
       newE->defaultAtts
-          = ms->malloc_fcn(oldE->nDefaultAtts * sizeof(DEFAULT_ATTRIBUTE));
+          = MALLOC(parser, oldE->nDefaultAtts * sizeof(DEFAULT_ATTRIBUTE));
       if (! newE->defaultAtts) {
         return 0;
       }
