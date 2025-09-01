@@ -234,7 +234,7 @@ typedef struct {
   unsigned char power;
   size_t size;
   size_t used;
-  const XML_Memory_Handling_Suite *mem;
+  XML_Parser parser;
 } HASH_TABLE;
 
 static size_t keylen(KEY s);
@@ -566,8 +566,7 @@ static int copyEntityTable(XML_Parser oldParser, HASH_TABLE *newTable,
                            STRING_POOL *newPool, const HASH_TABLE *oldTable);
 static NAMED *lookup(XML_Parser parser, HASH_TABLE *table, KEY name,
                      size_t createSize);
-static void FASTCALL hashTableInit(HASH_TABLE *table,
-                                   const XML_Memory_Handling_Suite *ms);
+static void FASTCALL hashTableInit(HASH_TABLE *table, XML_Parser parser);
 static void FASTCALL hashTableClear(HASH_TABLE *table);
 static void FASTCALL hashTableDestroy(HASH_TABLE *table);
 static void FASTCALL hashTableIterInit(HASH_TABLE_ITER *iter,
@@ -7128,19 +7127,18 @@ normalizePublicId(XML_Char *publicId) {
 
 static DTD *
 dtdCreate(XML_Parser parser) {
-  const XML_Memory_Handling_Suite *const ms = &parser->m_mem;
   DTD *p = MALLOC(parser, sizeof(DTD));
   if (p == NULL)
     return p;
   poolInit(&(p->pool), parser);
   poolInit(&(p->entityValuePool), parser);
-  hashTableInit(&(p->generalEntities), ms);
-  hashTableInit(&(p->elementTypes), ms);
-  hashTableInit(&(p->attributeIds), ms);
-  hashTableInit(&(p->prefixes), ms);
+  hashTableInit(&(p->generalEntities), parser);
+  hashTableInit(&(p->elementTypes), parser);
+  hashTableInit(&(p->attributeIds), parser);
+  hashTableInit(&(p->prefixes), parser);
 #ifdef XML_DTD
   p->paramEntityRead = XML_FALSE;
-  hashTableInit(&(p->paramEntities), ms);
+  hashTableInit(&(p->paramEntities), parser);
 #endif /* XML_DTD */
   p->defaultPrefix.name = NULL;
   p->defaultPrefix.binding = NULL;
@@ -7475,7 +7473,7 @@ lookup(XML_Parser parser, HASH_TABLE *table, KEY name, size_t createSize) {
     /* table->size is a power of 2 */
     table->size = (size_t)1 << INIT_POWER;
     tsize = table->size * sizeof(NAMED *);
-    table->v = table->mem->malloc_fcn(tsize);
+    table->v = MALLOC(table->parser, tsize);
     if (! table->v) {
       table->size = 0;
       return NULL;
@@ -7515,7 +7513,7 @@ lookup(XML_Parser parser, HASH_TABLE *table, KEY name, size_t createSize) {
       }
 
       size_t tsize = newSize * sizeof(NAMED *);
-      NAMED **newV = table->mem->malloc_fcn(tsize);
+      NAMED **newV = MALLOC(table->parser, tsize);
       if (! newV)
         return NULL;
       memset(newV, 0, tsize);
@@ -7531,7 +7529,7 @@ lookup(XML_Parser parser, HASH_TABLE *table, KEY name, size_t createSize) {
           }
           newV[j] = table->v[i];
         }
-      table->mem->free_fcn(table->v);
+      FREE(table->parser, table->v);
       table->v = newV;
       table->power = newPower;
       table->size = newSize;
@@ -7544,7 +7542,7 @@ lookup(XML_Parser parser, HASH_TABLE *table, KEY name, size_t createSize) {
       }
     }
   }
-  table->v[i] = table->mem->malloc_fcn(createSize);
+  table->v[i] = MALLOC(table->parser, createSize);
   if (! table->v[i])
     return NULL;
   memset(table->v[i], 0, createSize);
@@ -7557,7 +7555,7 @@ static void FASTCALL
 hashTableClear(HASH_TABLE *table) {
   size_t i;
   for (i = 0; i < table->size; i++) {
-    table->mem->free_fcn(table->v[i]);
+    FREE(table->parser, table->v[i]);
     table->v[i] = NULL;
   }
   table->used = 0;
@@ -7567,17 +7565,17 @@ static void FASTCALL
 hashTableDestroy(HASH_TABLE *table) {
   size_t i;
   for (i = 0; i < table->size; i++)
-    table->mem->free_fcn(table->v[i]);
-  table->mem->free_fcn(table->v);
+    FREE(table->parser, table->v[i]);
+  FREE(table->parser, table->v);
 }
 
 static void FASTCALL
-hashTableInit(HASH_TABLE *p, const XML_Memory_Handling_Suite *ms) {
+hashTableInit(HASH_TABLE *p, XML_Parser parser) {
   p->power = 0;
   p->size = 0;
   p->used = 0;
   p->v = NULL;
-  p->mem = ms;
+  p->parser = parser;
 }
 
 static void FASTCALL
