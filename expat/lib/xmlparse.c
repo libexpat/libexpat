@@ -555,7 +555,7 @@ static XML_Bool setContext(XML_Parser parser, const XML_Char *context);
 
 static void FASTCALL normalizePublicId(XML_Char *s);
 
-static DTD *dtdCreate(const XML_Memory_Handling_Suite *ms);
+static DTD *dtdCreate(XML_Parser parser);
 /* do not call if m_parentParser != NULL */
 static void dtdReset(DTD *p, const XML_Memory_Handling_Suite *ms);
 static void dtdDestroy(DTD *p, XML_Bool isDocEntity,
@@ -1170,7 +1170,7 @@ parserCreate(const XML_Char *encodingName,
   if (dtd)
     parser->m_dtd = dtd;
   else {
-    parser->m_dtd = dtdCreate(&parser->m_mem);
+    parser->m_dtd = dtdCreate(parser);
     if (parser->m_dtd == NULL) {
       FREE(parser, parser->m_dataBuf);
       FREE(parser, parser->m_atts);
@@ -7128,8 +7128,9 @@ normalizePublicId(XML_Char *publicId) {
 }
 
 static DTD *
-dtdCreate(const XML_Memory_Handling_Suite *ms) {
-  DTD *p = ms->malloc_fcn(sizeof(DTD));
+dtdCreate(XML_Parser parser) {
+  const XML_Memory_Handling_Suite *const ms = &parser->m_mem;
+  DTD *p = MALLOC(parser, sizeof(DTD));
   if (p == NULL)
     return p;
   poolInit(&(p->pool), ms);
