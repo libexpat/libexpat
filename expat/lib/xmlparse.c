@@ -357,7 +357,7 @@ typedef struct {
   const XML_Char *end;
   XML_Char *ptr;
   XML_Char *start;
-  const XML_Memory_Handling_Suite *mem;
+  XML_Parser parser;
 } STRING_POOL;
 
 /* The XML_Char before the name is used to determine whether
@@ -574,8 +574,7 @@ static void FASTCALL hashTableIterInit(HASH_TABLE_ITER *iter,
                                        const HASH_TABLE *table);
 static NAMED *FASTCALL hashTableIterNext(HASH_TABLE_ITER *iter);
 
-static void FASTCALL poolInit(STRING_POOL *pool,
-                              const XML_Memory_Handling_Suite *ms);
+static void FASTCALL poolInit(STRING_POOL *pool, XML_Parser parser);
 static void FASTCALL poolClear(STRING_POOL *pool);
 static void FASTCALL poolDestroy(STRING_POOL *pool);
 static XML_Char *poolAppend(STRING_POOL *pool, const ENCODING *enc,
@@ -1204,8 +1203,8 @@ parserCreate(const XML_Char *encodingName,
 
   parser->m_protocolEncodingName = NULL;
 
-  poolInit(&parser->m_tempPool, &(parser->m_mem));
-  poolInit(&parser->m_temp2Pool, &(parser->m_mem));
+  poolInit(&parser->m_tempPool, parser);
+  poolInit(&parser->m_temp2Pool, parser);
   parserInit(parser, encodingName);
 
   if (encodingName && ! parser->m_protocolEncodingName) {
@@ -7133,8 +7132,8 @@ dtdCreate(XML_Parser parser) {
   DTD *p = MALLOC(parser, sizeof(DTD));
   if (p == NULL)
     return p;
-  poolInit(&(p->pool), ms);
-  poolInit(&(p->entityValuePool), ms);
+  poolInit(&(p->pool), parser);
+  poolInit(&(p->entityValuePool), parser);
   hashTableInit(&(p->generalEntities), ms);
   hashTableInit(&(p->elementTypes), ms);
   hashTableInit(&(p->attributeIds), ms);
@@ -7598,13 +7597,13 @@ hashTableIterNext(HASH_TABLE_ITER *iter) {
 }
 
 static void FASTCALL
-poolInit(STRING_POOL *pool, const XML_Memory_Handling_Suite *ms) {
+poolInit(STRING_POOL *pool, XML_Parser parser) {
   pool->blocks = NULL;
   pool->freeBlocks = NULL;
   pool->start = NULL;
   pool->ptr = NULL;
   pool->end = NULL;
-  pool->mem = ms;
+  pool->parser = parser;
 }
 
 static void FASTCALL
@@ -7631,13 +7630,13 @@ poolDestroy(STRING_POOL *pool) {
   BLOCK *p = pool->blocks;
   while (p) {
     BLOCK *tem = p->next;
-    pool->mem->free_fcn(p);
+    FREE(pool->parser, p);
     p = tem;
   }
   p = pool->freeBlocks;
   while (p) {
     BLOCK *tem = p->next;
-    pool->mem->free_fcn(p);
+    FREE(pool->parser, p);
     p = tem;
   }
 }
@@ -7792,8 +7791,8 @@ poolGrow(STRING_POOL *pool) {
     if (bytesToAllocate == 0)
       return XML_FALSE;
 
-    temp = (BLOCK *)pool->mem->realloc_fcn(pool->blocks,
-                                           (unsigned)bytesToAllocate);
+    temp = (BLOCK *)REALLOC(pool->parser, pool->blocks,
+                            (unsigned)bytesToAllocate);
     if (temp == NULL)
       return XML_FALSE;
     pool->blocks = temp;
@@ -7833,7 +7832,7 @@ poolGrow(STRING_POOL *pool) {
     if (bytesToAllocate == 0)
       return XML_FALSE;
 
-    tem = pool->mem->malloc_fcn(bytesToAllocate);
+    tem = MALLOC(pool->parser, bytesToAllocate);
     if (! tem)
       return XML_FALSE;
     tem->size = blockSize;
