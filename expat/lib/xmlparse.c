@@ -452,6 +452,14 @@ typedef struct accounting {
   unsigned long long activationThresholdBytes;
 } ACCOUNTING;
 
+typedef struct MALLOC_TRACKER {
+  XmlBigCount bytesAllocated;
+  XmlBigCount peakBytesAllocated; // updated live only for debug level >=2
+  unsigned long debugLevel;
+  float maximumAmplificationFactor; // >=1.0
+  XmlBigCount activationThresholdBytes;
+} MALLOC_TRACKER;
+
 typedef struct entity_stats {
   unsigned int countEverOpened;
   unsigned int currentDepth;
@@ -599,7 +607,8 @@ static XML_Bool startParsing(XML_Parser parser);
 
 static XML_Parser parserCreate(const XML_Char *encodingName,
                                const XML_Memory_Handling_Suite *memsuite,
-                               const XML_Char *nameSep, DTD *dtd);
+                               const XML_Char *nameSep, DTD *dtd,
+                               XML_Parser parentParser);
 
 static void parserInit(XML_Parser parser, const XML_Char *encodingName);
 
@@ -769,14 +778,220 @@ struct XML_ParserStruct {
   unsigned long m_hash_secret_salt;
 #if XML_GE == 1
   ACCOUNTING m_accounting;
+  MALLOC_TRACKER m_alloc_tracker;
   ENTITY_STATS m_entity_stats;
 #endif
   XML_Bool m_reenter;
 };
 
-#define MALLOC(parser, s) (parser->m_mem.malloc_fcn((s)))
-#define REALLOC(parser, p, s) (parser->m_mem.realloc_fcn((p), (s)))
-#define FREE(parser, p) (parser->m_mem.free_fcn((p)))
+#if XML_GE == 1
+#  define MALLOC(parser, s) (expat_malloc((parser), (s), __LINE__))
+#  define REALLOC(parser, p, s) (expat_realloc((parser), (p), (s), __LINE__))
+#  define FREE(parser, p) (expat_free((parser), (p), __LINE__))
+#else
+#  define MALLOC(parser, s) (parser->m_mem.malloc_fcn((s)))
+#  define REALLOC(parser, p, s) (parser->m_mem.realloc_fcn((p), (s)))
+#  define FREE(parser, p) (parser->m_mem.free_fcn((p)))
+#endif
+
+#if XML_GE == 1
+static void
+expat_heap_stat(XML_Parser rootParser, char operator, XmlBigCount absDiff,
+                XmlBigCount newTotal, XmlBigCount peakTotal, int sourceLine) {
+  // NOTE: This can be +infinity or -nan
+  const float amplification
+      = (float)newTotal / (float)rootParser->m_accounting.countBytesDirect;
+  fprintf(
+      stderr,
+      "expat: Allocations(%p): Direct " EXPAT_FMT_ULL("10") ", allocated %c" EXPAT_FMT_ULL(
+          "10") " to " EXPAT_FMT_ULL("10") " (" EXPAT_FMT_ULL("10") " peak), amplification %8.2f (xmlparse.c:%d)\n",
+      (void *)rootParser, rootParser->m_accounting.countBytesDirect, operator,
+      absDiff, newTotal, peakTotal, (double)amplification, sourceLine);
+}
+
+static bool
+expat_heap_increase_tolerable(XML_Parser rootParser, XmlBigCount increase,
+                              int sourceLine) {
+  assert(rootParser != NULL);
+  assert(increase > 0);
+
+  XmlBigCount newTotal = 0;
+  bool tolerable = true;
+
+  // Detect integer overflow
+  if ((XmlBigCount)-1 - rootParser->m_alloc_tracker.bytesAllocated < increase) {
+    tolerable = false;
+  } else {
+    newTotal = rootParser->m_alloc_tracker.bytesAllocated + increase;
+
+    if (newTotal >= rootParser->m_alloc_tracker.activationThresholdBytes) {
+      assert(newTotal > 0);
+      // NOTE: This can be +infinity when dividing by zero but not -nan
+      const float amplification
+          = (float)newTotal / (float)rootParser->m_accounting.countBytesDirect;
+      if (amplification
+          > rootParser->m_alloc_tracker.maximumAmplificationFactor) {
+        tolerable = false;
+      }
+    }
+  }
+
+  if (! tolerable && (rootParser->m_alloc_tracker.debugLevel >= 1)) {
+    expat_heap_stat(rootParser, '+', increase, newTotal, newTotal, sourceLine);
+  }
+
+  return tolerable;
+}
+
+static void *
+expat_malloc(XML_Parser parser, size_t size, int sourceLine) {
+  // Detect integer overflow
+  if (SIZE_MAX - size < sizeof(size_t)) {
+    return NULL;
+  }
+
+  const XML_Parser rootParser = getRootParserOf(parser, NULL);
+  assert(rootParser->m_parentParser == NULL);
+
+  const size_t bytesToAllocate = sizeof(size_t) + size;
+
+  if ((XmlBigCount)-1 - rootParser->m_alloc_tracker.bytesAllocated
+      < bytesToAllocate) {
+    return NULL; // i.e. signal integer overflow as out-of-memory
+  }
+
+  if (! expat_heap_increase_tolerable(rootParser, bytesToAllocate,
+                                      sourceLine)) {
+    return NULL; // i.e. signal violation as out-of-memory
+  }
+
+  // Actually allocate
+  void *const mallocedPtr = parser->m_mem.malloc_fcn(bytesToAllocate);
+
+  if (mallocedPtr == NULL) {
+    return NULL;
+  }
+
+  // Update in-block recorded size
+  *(size_t *)mallocedPtr = size;
+
+  // Update accounting
+  rootParser->m_alloc_tracker.bytesAllocated += bytesToAllocate;
+
+  // Report as needed
+  if (rootParser->m_alloc_tracker.debugLevel >= 2) {
+    if (rootParser->m_alloc_tracker.bytesAllocated
+        > rootParser->m_alloc_tracker.peakBytesAllocated) {
+      rootParser->m_alloc_tracker.peakBytesAllocated
+          = rootParser->m_alloc_tracker.bytesAllocated;
+    }
+    expat_heap_stat(rootParser, '+', bytesToAllocate,
+                    rootParser->m_alloc_tracker.bytesAllocated,
+                    rootParser->m_alloc_tracker.peakBytesAllocated, sourceLine);
+  }
+
+  return (char *)mallocedPtr + sizeof(size_t);
+}
+
+static void
+expat_free(XML_Parser parser, void *ptr, int sourceLine) {
+  assert(parser != NULL);
+
+  if (ptr == NULL) {
+    return;
+  }
+
+  const XML_Parser rootParser = getRootParserOf(parser, NULL);
+  assert(rootParser->m_parentParser == NULL);
+
+  // Extract size (to the eyes of malloc_fcn/realloc_fcn) and
+  // the original pointer returned by malloc/realloc
+  void *const mallocedPtr = (char *)ptr - sizeof(size_t);
+  const size_t bytesAllocated = sizeof(size_t) + *(size_t *)mallocedPtr;
+
+  // Update accounting
+  assert(rootParser->m_alloc_tracker.bytesAllocated >= bytesAllocated);
+  rootParser->m_alloc_tracker.bytesAllocated -= bytesAllocated;
+
+  // Report as needed
+  if (rootParser->m_alloc_tracker.debugLevel >= 2) {
+    expat_heap_stat(rootParser, '-', bytesAllocated,
+                    rootParser->m_alloc_tracker.bytesAllocated,
+                    rootParser->m_alloc_tracker.peakBytesAllocated, sourceLine);
+  }
+
+  // NOTE: This may be freeing rootParser, so freeing has to come last
+  parser->m_mem.free_fcn(mallocedPtr);
+}
+
+static void *
+expat_realloc(XML_Parser parser, void *ptr, size_t size, int sourceLine) {
+  assert(parser != NULL);
+
+  if (ptr == NULL) {
+    return expat_malloc(parser, size, sourceLine);
+  }
+
+  if (size == 0) {
+    expat_free(parser, ptr, sourceLine);
+    return NULL;
+  }
+
+  const XML_Parser rootParser = getRootParserOf(parser, NULL);
+  assert(rootParser->m_parentParser == NULL);
+
+  // Extract original size (to the eyes of the caller) and the original
+  // pointer returned by malloc/realloc
+  void *mallocedPtr = (char *)ptr - sizeof(size_t);
+  const size_t prevSize = *(size_t *)mallocedPtr;
+
+  // Classify upcoming change
+  const bool isIncrease = (size > prevSize);
+  const size_t absDiff
+      = (size > prevSize) ? (size - prevSize) : (prevSize - size);
+
+  // Ask for permission from accounting
+  if (isIncrease) {
+    if (! expat_heap_increase_tolerable(rootParser, absDiff, sourceLine)) {
+      return NULL; // i.e. signal violation as out-of-memory
+    }
+  }
+
+  // Actually allocate
+  mallocedPtr = parser->m_mem.realloc_fcn(mallocedPtr, sizeof(size_t) + size);
+
+  if (mallocedPtr == NULL) {
+    return NULL;
+  }
+
+  // Update accounting
+  if (isIncrease) {
+    assert((XmlBigCount)-1 - rootParser->m_alloc_tracker.bytesAllocated
+           >= absDiff);
+    rootParser->m_alloc_tracker.bytesAllocated += absDiff;
+  } else { // i.e. decrease
+    assert(rootParser->m_alloc_tracker.bytesAllocated >= absDiff);
+    rootParser->m_alloc_tracker.bytesAllocated -= absDiff;
+  }
+
+  // Report as needed
+  if (rootParser->m_alloc_tracker.debugLevel >= 2) {
+    if (rootParser->m_alloc_tracker.bytesAllocated
+        > rootParser->m_alloc_tracker.peakBytesAllocated) {
+      rootParser->m_alloc_tracker.peakBytesAllocated
+          = rootParser->m_alloc_tracker.bytesAllocated;
+    }
+    expat_heap_stat(rootParser, isIncrease ? '+' : '-', absDiff,
+                    rootParser->m_alloc_tracker.bytesAllocated,
+                    rootParser->m_alloc_tracker.peakBytesAllocated, sourceLine);
+  }
+
+  // Update in-block recorded size
+  *(size_t *)mallocedPtr = size;
+
+  return (char *)mallocedPtr + sizeof(size_t);
+}
+#endif // XML_GE == 1
 
 XML_Parser XMLCALL
 XML_ParserCreate(const XML_Char *encodingName) {
@@ -1100,19 +1315,40 @@ XML_Parser XMLCALL
 XML_ParserCreate_MM(const XML_Char *encodingName,
                     const XML_Memory_Handling_Suite *memsuite,
                     const XML_Char *nameSep) {
-  return parserCreate(encodingName, memsuite, nameSep, NULL);
+  return parserCreate(encodingName, memsuite, nameSep, NULL, NULL);
 }
 
 static XML_Parser
 parserCreate(const XML_Char *encodingName,
              const XML_Memory_Handling_Suite *memsuite, const XML_Char *nameSep,
-             DTD *dtd) {
-  XML_Parser parser;
+             DTD *dtd, XML_Parser parentParser) {
+  XML_Parser parser = NULL;
+
+#if XML_GE == 1
+  const size_t increase = sizeof(size_t) + sizeof(struct XML_ParserStruct);
+
+  if (parentParser != NULL) {
+    const XML_Parser rootParser = getRootParserOf(parentParser, NULL);
+    if (! expat_heap_increase_tolerable(rootParser, increase, __LINE__)) {
+      return NULL;
+    }
+  }
+#else
+  UNUSED_P(parentParser);
+#endif
 
   if (memsuite) {
     XML_Memory_Handling_Suite *mtemp;
+#if XML_GE == 1
+    void *const sizeAndParser = memsuite->malloc_fcn(
+        sizeof(size_t) + sizeof(struct XML_ParserStruct));
+    if (sizeAndParser != NULL) {
+      *(size_t *)sizeAndParser = sizeof(struct XML_ParserStruct);
+      parser = (XML_Parser)((char *)sizeAndParser + sizeof(size_t));
+#else
     parser = memsuite->malloc_fcn(sizeof(struct XML_ParserStruct));
     if (parser != NULL) {
+#endif
       mtemp = (XML_Memory_Handling_Suite *)&(parser->m_mem);
       mtemp->malloc_fcn = memsuite->malloc_fcn;
       mtemp->realloc_fcn = memsuite->realloc_fcn;
@@ -1120,17 +1356,66 @@ parserCreate(const XML_Char *encodingName,
     }
   } else {
     XML_Memory_Handling_Suite *mtemp;
+#if XML_GE == 1
+    void *const sizeAndParser
+        = (XML_Parser)malloc(sizeof(size_t) + sizeof(struct XML_ParserStruct));
+    if (sizeAndParser != NULL) {
+      *(size_t *)sizeAndParser = sizeof(struct XML_ParserStruct);
+      parser = (XML_Parser)((char *)sizeAndParser + sizeof(size_t));
+#else
     parser = (XML_Parser)malloc(sizeof(struct XML_ParserStruct));
     if (parser != NULL) {
+#endif
       mtemp = (XML_Memory_Handling_Suite *)&(parser->m_mem);
       mtemp->malloc_fcn = malloc;
       mtemp->realloc_fcn = realloc;
       mtemp->free_fcn = free;
     }
-  }
+  } // cppcheck-suppress[memleak symbolName=sizeAndParser] // Cppcheck >=2.18.0
 
   if (! parser)
     return parser;
+
+#if XML_GE == 1
+  // Initialize .m_alloc_tracker
+  memset(&parser->m_alloc_tracker, 0, sizeof(MALLOC_TRACKER));
+  if (parentParser == NULL) {
+    parser->m_alloc_tracker.debugLevel
+        = getDebugLevel("EXPAT_MALLOC_DEBUG", 0u);
+    parser->m_alloc_tracker.maximumAmplificationFactor
+        = EXPAT_ALLOC_TRACKER_MAXIMUM_AMPLIFICATION_DEFAULT;
+    parser->m_alloc_tracker.activationThresholdBytes
+        = EXPAT_ALLOC_TRACKER_ACTIVATION_THRESHOLD_DEFAULT;
+
+    // NOTE: This initialization needs to come this early because these fields
+    //       are read by allocation tracking code
+    parser->m_parentParser = NULL;
+    parser->m_accounting.countBytesDirect = 0;
+  } else {
+    parser->m_parentParser = parentParser;
+  }
+
+  // Record XML_ParserStruct allocation we did a few lines up before
+  const XML_Parser rootParser = getRootParserOf(parser, NULL);
+  assert(rootParser->m_parentParser == NULL);
+  assert(SIZE_MAX - rootParser->m_alloc_tracker.bytesAllocated >= increase);
+  rootParser->m_alloc_tracker.bytesAllocated += increase;
+
+  // Report on allocation
+  if (rootParser->m_alloc_tracker.debugLevel >= 2) {
+    if (rootParser->m_alloc_tracker.bytesAllocated
+        > rootParser->m_alloc_tracker.peakBytesAllocated) {
+      rootParser->m_alloc_tracker.peakBytesAllocated
+          = rootParser->m_alloc_tracker.bytesAllocated;
+    }
+
+    expat_heap_stat(rootParser, '+', increase,
+                    rootParser->m_alloc_tracker.bytesAllocated,
+                    rootParser->m_alloc_tracker.peakBytesAllocated, __LINE__);
+  }
+#else
+  parser->m_parentParser = NULL;
+#endif // XML_GE == 1
 
   parser->m_buffer = NULL;
   parser->m_bufferLim = NULL;
@@ -1295,7 +1580,6 @@ parserInit(XML_Parser parser, const XML_Char *encodingName) {
   parser->m_unknownEncodingMem = NULL;
   parser->m_unknownEncodingRelease = NULL;
   parser->m_unknownEncodingData = NULL;
-  parser->m_parentParser = NULL;
   parser->m_parsingStatus.parsing = XML_INITIALIZED;
   // Reentry can only be triggered inside m_processor calls
   parser->m_reenter = XML_FALSE;
@@ -1530,9 +1814,10 @@ XML_ExternalEntityParserCreate(XML_Parser oldParser, const XML_Char *context,
   */
   if (parser->m_ns) {
     XML_Char tmp[2] = {parser->m_namespaceSeparator, 0};
-    parser = parserCreate(encodingName, &parser->m_mem, tmp, newDtd);
+    parser = parserCreate(encodingName, &parser->m_mem, tmp, newDtd, oldParser);
   } else {
-    parser = parserCreate(encodingName, &parser->m_mem, NULL, newDtd);
+    parser
+        = parserCreate(encodingName, &parser->m_mem, NULL, newDtd, oldParser);
   }
 
   if (! parser)
@@ -2714,6 +2999,13 @@ XML_GetFeatureList(void) {
        EXPAT_BILLION_LAUGHS_ATTACK_PROTECTION_ACTIVATION_THRESHOLD_DEFAULT},
       /* Added in Expat 2.6.0. */
       {XML_FEATURE_GE, XML_L("XML_GE"), 0},
+      /* Added in Expat 2.7.2. */
+      {XML_FEATURE_ALLOC_TRACKER_MAXIMUM_AMPLIFICATION_DEFAULT,
+       XML_L("XML_AT_MAX_AMP"),
+       (long int)EXPAT_ALLOC_TRACKER_MAXIMUM_AMPLIFICATION_DEFAULT},
+      {XML_FEATURE_ALLOC_TRACKER_ACTIVATION_THRESHOLD_DEFAULT,
+       XML_L("XML_AT_ACT_THRES"),
+       (long int)EXPAT_ALLOC_TRACKER_ACTIVATION_THRESHOLD_DEFAULT},
 #endif
       {XML_FEATURE_END, NULL, 0}};
 
@@ -2740,6 +3032,29 @@ XML_SetBillionLaughsAttackProtectionActivationThreshold(
     return XML_FALSE;
   }
   parser->m_accounting.activationThresholdBytes = activationThresholdBytes;
+  return XML_TRUE;
+}
+
+XML_Bool XMLCALL
+XML_SetAllocTrackerMaximumAmplification(XML_Parser parser,
+                                        float maximumAmplificationFactor) {
+  if ((parser == NULL) || (parser->m_parentParser != NULL)
+      || isnan(maximumAmplificationFactor)
+      || (maximumAmplificationFactor < 1.0f)) {
+    return XML_FALSE;
+  }
+  parser->m_alloc_tracker.maximumAmplificationFactor
+      = maximumAmplificationFactor;
+  return XML_TRUE;
+}
+
+XML_Bool XMLCALL
+XML_SetAllocTrackerActivationThreshold(
+    XML_Parser parser, unsigned long long activationThresholdBytes) {
+  if ((parser == NULL) || (parser->m_parentParser != NULL)) {
+    return XML_FALSE;
+  }
+  parser->m_alloc_tracker.activationThresholdBytes = activationThresholdBytes;
   return XML_TRUE;
 }
 #endif /* XML_GE == 1 */

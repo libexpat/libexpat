@@ -933,6 +933,8 @@ usage(const XML_Char *prog, int rc) {
       T("                 Control verbosity of entity debugging (default: 0)\n")
       T("  EXPAT_ENTROPY_DEBUG=(0|1)\n")
       T("                 Control verbosity of entropy debugging (default: 0)\n")
+      T("  EXPAT_MALLOC_DEBUG=(0|1|2)\n")
+      T("                 Control verbosity of allocation tracker (default: 0)\n")
       T("\n")
       T("exit status:\n")
       T("  0              the input files are well-formed and the output (if requested) was written successfully\n")

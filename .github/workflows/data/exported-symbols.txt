@@ -27,6 +27,8 @@ XML_ParserCreateNS
 XML_ParserFree
 XML_ParserReset
 XML_ResumeParser
+XML_SetAllocTrackerActivationThreshold
+XML_SetAllocTrackerMaximumAmplification
 XML_SetAttlistDeclHandler
 XML_SetBase
 XML_SetBillionLaughsAttackProtectionActivationThreshold

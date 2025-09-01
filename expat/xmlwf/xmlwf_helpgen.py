@@ -39,6 +39,8 @@ environment variables:
                  Control verbosity of entity debugging (default: 0)
   EXPAT_ENTROPY_DEBUG=(0|1)
                  Control verbosity of entropy debugging (default: 0)
+  EXPAT_MALLOC_DEBUG=(0|1|2)
+                 Control verbosity of allocation tracker (default: 0)
 
 exit status:
   0              the input files are well-formed and the output (if requested) was written successfully
