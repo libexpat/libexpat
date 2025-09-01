@@ -593,8 +593,7 @@ static XML_Content *build_model(XML_Parser parser);
 static ELEMENT_TYPE *getElementType(XML_Parser parser, const ENCODING *enc,
                                     const char *ptr, const char *end);
 
-static XML_Char *copyString(const XML_Char *s,
-                            const XML_Memory_Handling_Suite *memsuite);
+static XML_Char *copyString(const XML_Char *s, XML_Parser parser);
 
 static unsigned long generate_hash_secret_salt(XML_Parser parser);
 static XML_Bool startParsing(XML_Parser parser);
@@ -1235,7 +1234,7 @@ parserInit(XML_Parser parser, const XML_Char *encodingName) {
   parser->m_processor = prologInitProcessor;
   XmlPrologStateInit(&parser->m_prologState);
   if (encodingName != NULL) {
-    parser->m_protocolEncodingName = copyString(encodingName, &(parser->m_mem));
+    parser->m_protocolEncodingName = copyString(encodingName, parser);
   }
   parser->m_curBase = NULL;
   XmlInitEncoding(&parser->m_initEncoding, &parser->m_encoding, 0);
@@ -1423,7 +1422,7 @@ XML_SetEncoding(XML_Parser parser, const XML_Char *encodingName) {
     parser->m_protocolEncodingName = NULL;
   else {
     /* Copy the new encoding name into allocated memory */
-    parser->m_protocolEncodingName = copyString(encodingName, &(parser->m_mem));
+    parser->m_protocolEncodingName = copyString(encodingName, parser);
     if (! parser->m_protocolEncodingName)
       return XML_STATUS_ERROR;
   }
@@ -8071,7 +8070,7 @@ getElementType(XML_Parser parser, const ENCODING *enc, const char *ptr,
 }
 
 static XML_Char *
-copyString(const XML_Char *s, const XML_Memory_Handling_Suite *memsuite) {
+copyString(const XML_Char *s, XML_Parser parser) {
   size_t charsRequired = 0;
   XML_Char *result;
 
@@ -8083,7 +8082,7 @@ copyString(const XML_Char *s, const XML_Memory_Handling_Suite *memsuite) {
   charsRequired++;
 
   /* Now allocate space for the copy */
-  result = memsuite->malloc_fcn(charsRequired * sizeof(XML_Char));
+  result = MALLOC(parser, charsRequired * sizeof(XML_Char));
   if (result == NULL)
     return NULL;
   /* Copy the original into place */
