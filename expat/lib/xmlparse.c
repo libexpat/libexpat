@@ -558,8 +558,7 @@ static void FASTCALL normalizePublicId(XML_Char *s);
 static DTD *dtdCreate(XML_Parser parser);
 /* do not call if m_parentParser != NULL */
 static void dtdReset(DTD *p, XML_Parser parser);
-static void dtdDestroy(DTD *p, XML_Bool isDocEntity,
-                       const XML_Memory_Handling_Suite *ms);
+static void dtdDestroy(DTD *p, XML_Bool isDocEntity, XML_Parser parser);
 static int dtdCopy(XML_Parser oldParser, DTD *newDtd, const DTD *oldDtd,
                    const XML_Memory_Handling_Suite *ms);
 static int copyEntityTable(XML_Parser oldParser, HASH_TABLE *newTable,
@@ -1689,8 +1688,7 @@ XML_ParserFree(XML_Parser parser) {
 #else
   if (parser->m_dtd)
 #endif /* XML_DTD */
-    dtdDestroy(parser->m_dtd, (XML_Bool)! parser->m_parentParser,
-               &parser->m_mem);
+    dtdDestroy(parser->m_dtd, (XML_Bool)! parser->m_parentParser, parser);
   FREE(parser, (void *)parser->m_atts);
 #ifdef XML_ATTR_INFO
   FREE(parser, (void *)parser->m_attInfo);
@@ -7198,7 +7196,7 @@ dtdReset(DTD *p, XML_Parser parser) {
 }
 
 static void
-dtdDestroy(DTD *p, XML_Bool isDocEntity, const XML_Memory_Handling_Suite *ms) {
+dtdDestroy(DTD *p, XML_Bool isDocEntity, XML_Parser parser) {
   HASH_TABLE_ITER iter;
   hashTableIterInit(&iter, &(p->elementTypes));
   for (;;) {
@@ -7206,7 +7204,7 @@ dtdDestroy(DTD *p, XML_Bool isDocEntity, const XML_Memory_Handling_Suite *ms) {
     if (! e)
       break;
     if (e->allocDefaultAtts != 0)
-      ms->free_fcn(e->defaultAtts);
+      FREE(parser, e->defaultAtts);
   }
   hashTableDestroy(&(p->generalEntities));
 #ifdef XML_DTD
@@ -7218,10 +7216,10 @@ dtdDestroy(DTD *p, XML_Bool isDocEntity, const XML_Memory_Handling_Suite *ms) {
   poolDestroy(&(p->pool));
   poolDestroy(&(p->entityValuePool));
   if (isDocEntity) {
-    ms->free_fcn(p->scaffIndex);
-    ms->free_fcn(p->scaffold);
+    FREE(parser, p->scaffIndex);
+    FREE(parser, p->scaffold);
   }
-  ms->free_fcn(p);
+  FREE(parser, p);
 }
 
 /* Do a deep copy of the DTD. Return 0 for out of memory, non-zero otherwise.
