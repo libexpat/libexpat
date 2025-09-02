@@ -913,11 +913,11 @@ usage(const XML_Char *prog, int rc) {
       T("  -t             write no XML output for [t]iming of plain parsing\n")
       T("  -N             enable adding doctype and [n]otation declarations\n")
       T("\n")
-      T("billion laughs attack protection:\n")
+      T("amplification attack protection (e.g. billion laughs):\n")
       T("  NOTE: If you ever need to increase these values for non-attack payload, please file a bug report.\n")
       T("\n")
       T("  -a FACTOR      set maximum tolerated [a]mplification factor (default: 100.0)\n")
-      T("  -b BYTES       set number of output [b]ytes needed to activate (default: 8 MiB)\n")
+      T("  -b BYTES       set number of output [b]ytes needed to activate (default: 8 MiB/64 MiB)\n")
       T("\n")
       T("reparse deferral:\n")
       T("  -q             disable reparse deferral, and allow [q]uadratic parse runtime with large tokens\n")
@@ -1181,12 +1181,15 @@ tmain(int argc, XML_Char **argv) {
 #if XML_GE == 1
       XML_SetBillionLaughsAttackProtectionMaximumAmplification(
           parser, attackMaximumAmplification);
+      XML_SetAllocTrackerMaximumAmplification(parser,
+                                              attackMaximumAmplification);
 #endif
     }
     if (attackThresholdGiven) {
 #if XML_GE == 1
       XML_SetBillionLaughsAttackProtectionActivationThreshold(
           parser, attackThresholdBytes);
+      XML_SetAllocTrackerActivationThreshold(parser, attackThresholdBytes);
 #else
       (void)attackThresholdBytes; // silence -Wunused-but-set-variable
 #endif
