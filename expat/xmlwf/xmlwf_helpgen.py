@@ -83,7 +83,7 @@ billion_laughs.add_argument('-a', metavar='FACTOR',
 billion_laughs.add_argument('-b', metavar='BYTES', help='set number of output [b]ytes needed to activate (default: 8 MiB)')
 
 reparse_deferral = parser.add_argument_group('reparse deferral')
-reparse_deferral.add_argument('-q', metavar='FACTOR',
+reparse_deferral.add_argument('-q', action='store_true',
                             help='disable reparse deferral, and allow [q]uadratic parse runtime with large tokens')
 
 parser.add_argument('files', metavar='FILE', nargs='*', help='file to process (default: STDIN)')
