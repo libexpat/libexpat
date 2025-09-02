@@ -78,6 +78,7 @@ jobs:
     - name: (macOS) Install build dependencies
       if: "${{ runner.os == 'macOS' }}"
       run: |
+        brew uninstall cmake
         brew install \
             autoconf \
             automake \
