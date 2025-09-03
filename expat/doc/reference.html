@@ -2198,13 +2198,13 @@ XML_SetBillionLaughsAttackProtectionMaximumAmplification(XML_Parser p,
     returns <code>XML_TRUE</code> upon success and <code>XML_FALSE</code> upon error.
   </p>
 
-  The amplification factor is calculated as ..
-  <pre>
-    amplification := (direct + indirect) / direct
-  </pre>
-  .. while parsing, whereas
-  <code>direct</code> is the number of bytes read from the primary document in parsing and
-  <code>indirect</code> is the number of bytes added by expanding entities and reading of external DTD files, combined.
+  <p>The amplification factor is calculated as ..</p>
+  <pre>amplification := (direct + indirect) / direct</pre>
+  <p>
+    .. while parsing, whereas
+    <code>direct</code> is the number of bytes read from the primary document in parsing and
+    <code>indirect</code> is the number of bytes added by expanding entities and reading of external DTD files, combined.
+  </p>
 
   <p>For a call to <code>XML_SetBillionLaughsAttackProtectionMaximumAmplification</code> to succeed:</p>
   <ul>
