@@ -32,6 +32,14 @@
 import argparse
 
 epilog = """
+environment variables:
+  EXPAT_ACCOUNTING_DEBUG=(0|1|2|3)
+                 Control verbosity of accounting debugging (default: 0)
+  EXPAT_ENTITY_DEBUG=(0|1)
+                 Control verbosity of entity debugging (default: 0)
+  EXPAT_ENTROPY_DEBUG=(0|1)
+                 Control verbosity of entropy debugging (default: 0)
+
 exit status:
   0              the input files are well-formed and the output (if requested) was written successfully
   1              could not allocate data structures, signals a serious problem with execution environment
