@@ -2787,21 +2787,31 @@ void *XMLCALL
 XML_MemMalloc(XML_Parser parser, size_t size) {
   if (parser == NULL)
     return NULL;
-  return MALLOC(parser, size);
+
+  // NOTE: We are avoiding MALLOC(..) here to not include
+  //       user allocations with allocation tracking and limiting.
+  return parser->m_mem.malloc_fcn(size);
 }
 
 void *XMLCALL
 XML_MemRealloc(XML_Parser parser, void *ptr, size_t size) {
   if (parser == NULL)
     return NULL;
-  return REALLOC(parser, ptr, size);
+
+  // NOTE: We are avoiding REALLOC(..) here to not include
+  //       user allocations with allocation tracking and limiting.
+  return parser->m_mem.realloc_fcn(ptr, size);
 }
 
 void XMLCALL
 XML_MemFree(XML_Parser parser, void *ptr) {
   if (parser == NULL)
     return;
-  FREE(parser, ptr);
+
+  // NOTE: We are avoiding FREE(..) here because XML_MemMalloc and
+  //       XML_MemRealloc are not using MALLOC(..) and REALLOC(..)
+  //       but plain .malloc_fcn(..) and .realloc_fcn(..), internally.
+  parser->m_mem.free_fcn(ptr);
 }
 
 void XMLCALL
