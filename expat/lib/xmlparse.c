@@ -2778,8 +2778,9 @@ XML_GetCurrentColumnNumber(XML_Parser parser) {
 
 void XMLCALL
 XML_FreeContentModel(XML_Parser parser, XML_Content *model) {
-  if (parser != NULL)
-    FREE(parser, model);
+  if (parser == NULL)
+    return;
+  FREE(parser, model);
 }
 
 void *XMLCALL
@@ -2798,8 +2799,9 @@ XML_MemRealloc(XML_Parser parser, void *ptr, size_t size) {
 
 void XMLCALL
 XML_MemFree(XML_Parser parser, void *ptr) {
-  if (parser != NULL)
-    FREE(parser, ptr);
+  if (parser == NULL)
+    return;
+  FREE(parser, ptr);
 }
 
 void XMLCALL
