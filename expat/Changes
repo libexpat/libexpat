@@ -39,12 +39,31 @@
 
 Release 2.7.2 ??? ????? ?? ????
         Other changes:
+     #1008 #1017  Autotools: Sync CMake templates with CMake 3.31 for macOS
+           #1007  CMake: Drop support for CMake <3.15
+           #1004  CMake: Fix off_t detection for -Werror
+           #1007  CMake|Windows: Fix -DEXPAT_MSVC_STATIC_CRT=ON
+           #1013  Windows: Drop support for Visual Studio <=16.0/2019
+           #1026  xmlwf: Mention supported environment variables in
+                    --help output
+           #1024  xmlwf: Fix (internal) help generator
+           #1027  docs: Add missing <p>..</p> wrap
             #994  docs: Drop AppVeyor badge
            #1000  tests: Fix portable_strndup
+           #1010  Replace empty for-loops with while loops
+           #1011  Add const with internal XmlInitUnknownEncodingNS
       #999 #1001  Address more clang-tidy warnings
+
+        Infrastructure:
+           #1003  CI: Cover compilation on FreeBSD
+           #1009  CI: Upgrade Clang from 19 to 20
+           #1013  CI|Windows: Get off of deprecated image "windows-2019"
+  #1008 #1017 ..
+     #1023 #1025  CI: Adapt to breaking changes in GitHub Actions
 
         Special thanks to:
             Alexander Bluhm
+            Neil Pang
             Theo Buehler
 
 Release 2.7.1 Thu March 27 2025
