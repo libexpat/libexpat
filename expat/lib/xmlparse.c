@@ -1979,7 +1979,10 @@ XML_ParserFree(XML_Parser parser) {
   FREE(parser, (void *)parser->m_attInfo);
 #endif
   FREE(parser, parser->m_groupConnector);
-  FREE(parser, parser->m_buffer);
+  // NOTE: We are avoiding FREE(..) here because parser->m_buffer
+  //       is not being allocated with MALLOC(..) but with plain
+  //       .malloc_fcn(..).
+  parser->m_mem.free_fcn(parser->m_buffer);
   FREE(parser, parser->m_dataBuf);
   FREE(parser, parser->m_nsAtts);
   FREE(parser, parser->m_unknownEncodingMem);
@@ -2573,7 +2576,9 @@ XML_GetBuffer(XML_Parser parser, int len) {
         parser->m_errorCode = XML_ERROR_NO_MEMORY;
         return NULL;
       }
-      newBuf = (char *)MALLOC(parser, bufferSize);
+      // NOTE: We are avoiding MALLOC(..) here to leave limiting
+      //       the input size to the application using Expat.
+      newBuf = (char *)parser->m_mem.malloc_fcn(bufferSize);
       if (newBuf == 0) {
         parser->m_errorCode = XML_ERROR_NO_MEMORY;
         return NULL;
@@ -2584,7 +2589,10 @@ XML_GetBuffer(XML_Parser parser, int len) {
         memcpy(newBuf, &parser->m_bufferPtr[-keep],
                EXPAT_SAFE_PTR_DIFF(parser->m_bufferEnd, parser->m_bufferPtr)
                    + keep);
-        FREE(parser, parser->m_buffer);
+        // NOTE: We are avoiding FREE(..) here because parser->m_buffer
+        //       is not being allocated with MALLOC(..) but with plain
+        //       .malloc_fcn(..).
+        parser->m_mem.free_fcn(parser->m_buffer);
         parser->m_buffer = newBuf;
         parser->m_bufferEnd
             = parser->m_buffer
@@ -2600,7 +2608,10 @@ XML_GetBuffer(XML_Parser parser, int len) {
       if (parser->m_bufferPtr) {
         memcpy(newBuf, parser->m_bufferPtr,
                EXPAT_SAFE_PTR_DIFF(parser->m_bufferEnd, parser->m_bufferPtr));
-        FREE(parser, parser->m_buffer);
+        // NOTE: We are avoiding FREE(..) here because parser->m_buffer
+        //       is not being allocated with MALLOC(..) but with plain
+        //       .malloc_fcn(..).
+        parser->m_mem.free_fcn(parser->m_buffer);
         parser->m_bufferEnd
             = newBuf
               + EXPAT_SAFE_PTR_DIFF(parser->m_bufferEnd, parser->m_bufferPtr);
