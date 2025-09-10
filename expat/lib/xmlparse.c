@@ -2791,7 +2791,10 @@ void XMLCALL
 XML_FreeContentModel(XML_Parser parser, XML_Content *model) {
   if (parser == NULL)
     return;
-  FREE(parser, model);
+
+  // NOTE: We are avoiding FREE(..) here because the content model
+  //       has been created using plain .malloc_fcn(..) rather than MALLOC(..).
+  parser->m_mem.free_fcn(model);
 }
 
 void *XMLCALL
@@ -6069,8 +6072,12 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
     case XML_ROLE_CONTENT_EMPTY:
       if (dtd->in_eldecl) {
         if (parser->m_elementDeclHandler) {
+          // NOTE: We are avoiding MALLOC(..) here to so that
+          //       applications that are not using XML_FreeContentModel but
+          //       plain free(..) or .free_fcn() to free the content model's
+          //       memory are safe.
           XML_Content *content
-              = (XML_Content *)MALLOC(parser, sizeof(XML_Content));
+              = (XML_Content *)parser->m_mem.malloc_fcn(sizeof(XML_Content));
           if (! content)
             return XML_ERROR_NO_MEMORY;
           content->quant = XML_CQUANT_NONE;
@@ -8285,7 +8292,10 @@ build_model(XML_Parser parser) {
   const size_t allocsize = (dtd->scaffCount * sizeof(XML_Content)
                             + (dtd->contentStringLen * sizeof(XML_Char)));
 
-  ret = (XML_Content *)MALLOC(parser, allocsize);
+  // NOTE: We are avoiding MALLOC(..) here to so that
+  //       applications that are not using XML_FreeContentModel but plain
+  //       free(..) or .free_fcn() to free the content model's memory are safe.
+  ret = (XML_Content *)parser->m_mem.malloc_fcn(allocsize);
   if (! ret)
     return NULL;
 
