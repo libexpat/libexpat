@@ -1907,7 +1907,7 @@ struct XML_cp {
 <p>Sets a handler for element declarations in a DTD. The handler gets
 called with the name of the element in the declaration and a pointer
 to a structure that contains the element model. It's the user code's 
-responsibility to free model when finished with it. See <code>
+responsibility to free model when finished with via a call to <code>
 <a href="#XML_FreeContentModel">XML_FreeContentModel</a></code>.
 There is no need to free the model from the handler, it can be kept
 around and freed at a later stage.</p>
