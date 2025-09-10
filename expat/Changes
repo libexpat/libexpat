@@ -57,6 +57,8 @@ Release 2.7.2 ??? ????? ?? ????
         Infrastructure:
            #1003  CI: Cover compilation on FreeBSD
            #1009  CI: Upgrade Clang from 19 to 20
+           #1031  CI: Make calling Cppcheck without --suppress=objectIndex
+                    and --suppress=unknownMacro possible
            #1013  CI|Windows: Get off of deprecated image "windows-2019"
   #1008 #1017 ..
      #1023 #1025  CI: Adapt to breaking changes in GitHub Actions
