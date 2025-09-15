@@ -1983,9 +1983,9 @@ XML_ParserFree(XML_Parser parser) {
   if (parser->m_dtd)
 #endif /* XML_DTD */
     dtdDestroy(parser->m_dtd, (XML_Bool)! parser->m_parentParser, parser);
-  FREE(parser, (void *)parser->m_atts);
+  FREE(parser, parser->m_atts);
 #ifdef XML_ATTR_INFO
-  FREE(parser, (void *)parser->m_attInfo);
+  FREE(parser, parser->m_attInfo);
 #endif
   FREE(parser, parser->m_groupConnector);
   // NOTE: We are avoiding FREE(..) here because parser->m_buffer
@@ -3873,7 +3873,7 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
     }
 #endif
 
-    temp = REALLOC(parser, (void *)parser->m_atts,
+    temp = REALLOC(parser, parser->m_atts,
                    parser->m_attsSize * sizeof(ATTRIBUTE));
     if (temp == NULL) {
       parser->m_attsSize = oldAttsSize;
@@ -3892,7 +3892,7 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
     }
 #  endif
 
-    temp2 = REALLOC(parser, (void *)parser->m_attInfo,
+    temp2 = REALLOC(parser, parser->m_attInfo,
                     parser->m_attsSize * sizeof(XML_AttrInfo));
     if (temp2 == NULL) {
       parser->m_attsSize = oldAttsSize;
