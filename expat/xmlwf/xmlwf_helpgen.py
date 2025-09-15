@@ -39,6 +39,8 @@ environment variables:
                  Control verbosity of entity debugging (default: 0)
   EXPAT_ENTROPY_DEBUG=(0|1)
                  Control verbosity of entropy debugging (default: 0)
+  EXPAT_MALLOC_DEBUG=(0|1|2)
+                 Control verbosity of allocation tracker (default: 0)
 
 exit status:
   0              the input files are well-formed and the output (if requested) was written successfully
@@ -82,13 +84,13 @@ output_mode.add_argument('-m', action='store_true', help='write [m]eta XML, not 
 output_mode.add_argument('-t', action='store_true', help='write no XML output for [t]iming of plain parsing')
 output_related.add_argument('-N', action='store_true', help='enable adding doctype and [n]otation declarations')
 
-billion_laughs = parser.add_argument_group('billion laughs attack protection',
+billion_laughs = parser.add_argument_group('amplification attack protection (e.g. billion laughs)',
                                            description='NOTE: '
                                                        'If you ever need to increase these values '
                                                        'for non-attack payload, please file a bug report.')
 billion_laughs.add_argument('-a', metavar='FACTOR',
                             help='set maximum tolerated [a]mplification factor (default: 100.0)')
-billion_laughs.add_argument('-b', metavar='BYTES', help='set number of output [b]ytes needed to activate (default: 8 MiB)')
+billion_laughs.add_argument('-b', metavar='BYTES', help='set number of output [b]ytes needed to activate (default: 8 MiB/64 MiB)')
 
 reparse_deferral = parser.add_argument_group('reparse deferral')
 reparse_deferral.add_argument('-q', action='store_true',

@@ -3123,6 +3123,10 @@ START_TEST(test_buffer_can_grow_to_max) {
   for (int i = 0; i < num_prefixes; ++i) {
     set_subtest("\"%s\"", prefixes[i]);
     XML_Parser parser = XML_ParserCreate(NULL);
+#if XML_GE == 1
+    assert_true(XML_SetAllocTrackerActivationThreshold(parser, (size_t)-1)
+                == XML_TRUE); // i.e. deactivate
+#endif
     const int prefix_len = (int)strlen(prefixes[i]);
     const enum XML_Status s
         = _XML_Parse_SINGLE_BYTES(parser, prefixes[i], prefix_len, XML_FALSE);

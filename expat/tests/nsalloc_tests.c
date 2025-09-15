@@ -454,10 +454,15 @@ START_TEST(test_nsalloc_realloc_attributes) {
     nsalloc_teardown();
     nsalloc_setup();
   }
+#if XML_GE == 1
+  assert_true(
+      i == 0); // because expat_realloc relies on expat_malloc to some extent
+#else
   if (i == 0)
     fail("Parsing worked despite failing reallocations");
   else if (i == max_realloc_count)
     fail("Parsing failed at max reallocation count");
+#endif
 }
 END_TEST
 

@@ -1032,7 +1032,10 @@ enum XML_FeatureEnum {
   XML_FEATURE_BILLION_LAUGHS_ATTACK_PROTECTION_MAXIMUM_AMPLIFICATION_DEFAULT,
   XML_FEATURE_BILLION_LAUGHS_ATTACK_PROTECTION_ACTIVATION_THRESHOLD_DEFAULT,
   /* Added in Expat 2.6.0. */
-  XML_FEATURE_GE
+  XML_FEATURE_GE,
+  /* Added in Expat 2.7.2. */
+  XML_FEATURE_ALLOC_TRACKER_MAXIMUM_AMPLIFICATION_DEFAULT,
+  XML_FEATURE_ALLOC_TRACKER_ACTIVATION_THRESHOLD_DEFAULT,
   /* Additional features must be added to the end of this enum. */
 };
 
@@ -1056,6 +1059,16 @@ XML_SetBillionLaughsAttackProtectionMaximumAmplification(
  * added in Expat 2.6.0 for XML_GE == 1. */
 XMLPARSEAPI(XML_Bool)
 XML_SetBillionLaughsAttackProtectionActivationThreshold(
+    XML_Parser parser, unsigned long long activationThresholdBytes);
+
+/* Added in Expat 2.7.2. */
+XMLPARSEAPI(XML_Bool)
+XML_SetAllocTrackerMaximumAmplification(XML_Parser parser,
+                                        float maximumAmplificationFactor);
+
+/* Added in Expat 2.7.2. */
+XMLPARSEAPI(XML_Bool)
+XML_SetAllocTrackerActivationThreshold(
     XML_Parser parser, unsigned long long activationThresholdBytes);
 #endif
 
