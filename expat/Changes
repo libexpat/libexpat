@@ -88,6 +88,7 @@ Release 2.7.2 ??? ????? ?? ????
            #1027  docs: Add missing <p>..</p> wrap
             #994  docs: Drop AppVeyor badge
            #1000  tests: Fix portable_strndup
+           #1036  Drop casts around malloc/free/realloc that C99 does not need
            #1010  Replace empty for-loops with while loops
            #1011  Add const with internal XmlInitUnknownEncodingNS
       #999 #1001  Address more clang-tidy warnings
