@@ -41,7 +41,7 @@
 !! THANK YOU!                        Sebastian Pipping -- Berlin, 2024-03-09 !!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-Release 2.7.2 ??? ????? ?? ????
+Release 2.7.2 Tue September 16 2025
         Security fixes:
      #1018 #1034  CVE-2025-59375 -- Disallow use of disproportional amounts of
                     dynamic memory from within an Expat parser (e.g. previously
@@ -93,6 +93,9 @@ Release 2.7.2 ??? ????? ?? ????
            #1011  Add const with internal XmlInitUnknownEncodingNS
        #14 #1037  Drop an OpenVMS support leftover
       #999 #1001  Address more clang-tidy warnings
+     #1030 #1038  Version info bumped from 11:2:10 (libexpat*.so.1.10.2)
+                    to 12:0:11 (libexpat*.so.1.11.0); see https://verbump.de/
+                    for what these numbers do
 
         Infrastructure:
            #1003  CI: Cover compilation on FreeBSD

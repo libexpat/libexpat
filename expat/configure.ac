@@ -84,9 +84,9 @@ dnl
 dnl If the API changes incompatibly set LIBAGE back to 0
 dnl
 
-LIBCURRENT=11  # sync
-LIBREVISION=2  # with
-LIBAGE=10      # CMakeLists.txt!
+LIBCURRENT=12  # sync
+LIBREVISION=0  # with
+LIBAGE=11      # CMakeLists.txt!
 
 AC_CONFIG_HEADERS([expat_config.h])
 AH_TOP([#ifndef EXPAT_CONFIG_H
