@@ -41,6 +41,14 @@
 !! THANK YOU!                        Sebastian Pipping -- Berlin, 2024-03-09 !!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
+Release 2.7.3 ??? ????????? ?? ????
+        Other changes:
+           #1040  Autotools: Sync CMake templates with CMake 3.31 for Linux
+                    and Windows
+
+        Infrastructure:
+           #1040  CI: Adapt to breaking changes in GitHub Actions
+
 Release 2.7.2 Tue September 16 2025
         Security fixes:
      #1018 #1034  CVE-2025-59375 -- Disallow use of disproportional amounts of
