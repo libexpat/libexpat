@@ -83,7 +83,7 @@ Release 2.7.2 Tue September 16 2025
                     to the pull request URL could be of help.
 
         Other changes:
-     #1008 #1017  Autotools: Sync CMake templates with CMake 3.31 for macOS
+     #1008 #1017  Autotools|macOS: Sync CMake templates with CMake 3.31
            #1007  CMake: Drop support for CMake <3.15
            #1004  CMake: Fix off_t detection for -Werror
            #1007  CMake|Windows: Fix -DEXPAT_MSVC_STATIC_CRT=ON
@@ -99,7 +99,7 @@ Release 2.7.2 Tue September 16 2025
             #994  docs: Drop AppVeyor badge
            #1000  tests: Fix portable_strndup
            #1036  Drop casts around malloc/free/realloc that C99 does not need
-           #1010  Replace empty for-loops with while loops
+           #1010  Replace empty for loops with while loops
            #1011  Add const with internal XmlInitUnknownEncodingNS
        #14 #1037  Drop an OpenVMS support leftover
       #999 #1001  Address more clang-tidy warnings
@@ -121,6 +121,7 @@ Release 2.7.2 Tue September 16 2025
             Neil Pang
             Theo Buehler
                  and
+            GNU Time
             OSS-Fuzz / ClusterFuzz
             Perl XML::Parser
 
