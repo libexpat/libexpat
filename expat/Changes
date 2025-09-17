@@ -41,6 +41,16 @@
 !! THANK YOU!                        Sebastian Pipping -- Berlin, 2024-03-09 !!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
+Release 2.7.3 ??? ????????? ?? ????
+        Other changes:
+           #1043  Prove and regression-proof absence of integer overflow
+                    from function expat_realloc
+
+        Special thanks to:
+            Matthew Fernandez
+                 and
+            Z3 Theorem Prover
+
 Release 2.7.2 Tue September 16 2025
         Security fixes:
      #1018 #1034  CVE-2025-59375 -- Disallow use of disproportional amounts of
