@@ -51,10 +51,10 @@ jobs:
           - os: macos-14
             configure_args:
             cmake_args:
-          - os: ubuntu-22.04
+          - os: ubuntu-24.04
             configure_args:
             cmake_args:
-          - os: ubuntu-22.04
+          - os: ubuntu-24.04
             configure_args: --host=i686-w64-mingw32
             cmake_args: -DCMAKE_TOOLCHAIN_FILE=cmake/mingw-toolchain.cmake
     defaults:
