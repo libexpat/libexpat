@@ -45,6 +45,7 @@ Release 2.7.3 ??? ????????? ?? ????
         Other changes:
            #1043  Prove and regression-proof absence of integer overflow
                     from function expat_realloc
+           #1041  docs: Improve change log of release 2.7.2
 
         Special thanks to:
             Matthew Fernandez
