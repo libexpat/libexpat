@@ -46,6 +46,7 @@ jobs:
   checks:
     name: Perform checks
     strategy:
+      fail-fast: false
       matrix:
         include:
           - MODE: cmake-oos
