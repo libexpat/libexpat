@@ -120,7 +120,7 @@ project(hello VERSION 1.0.0)
 FetchContent_Declare(
     expat
     GIT_REPOSITORY https://github.com/libexpat/libexpat/
-    GIT_TAG        000000000_GIT_COMMIT_SHA1_HERE_000000000  # i.e. Git tag R_0_Y_Z
+    GIT_TAG        000000000_GIT_COMMIT_SHA1_HERE_000000000  # i.e. Git tag R_X_Y_Z
     SOURCE_SUBDIR  expat/
 )
 
