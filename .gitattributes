@@ -1,0 +1,4 @@
+* text=auto
+testdata/largefiles/* -text
+testdata/largefiles/README.txt text=auto
+*.bat text eol=crlf
