@@ -2362,14 +2362,12 @@ make_alloc_test_case(Suite *s) {
   tcase_add_test__ifdef_xml_dtd(
       tc_alloc, test_alloc_reset_after_external_entity_parser_create_fail);
 
-  tcase_add_test__ifdef_xml_dtd(tc_alloc, test_alloc_tracker_size_recorded);
-  tcase_add_test__ifdef_xml_dtd(tc_alloc,
-                                test_alloc_tracker_maximum_amplification);
-  tcase_add_test__ifdef_xml_dtd(tc_alloc, test_alloc_tracker_threshold);
-  tcase_add_test__ifdef_xml_dtd(tc_alloc,
-                                test_alloc_tracker_getbuffer_unlimited);
-  tcase_add_test__ifdef_xml_dtd(tc_alloc, test_alloc_tracker_api);
+  tcase_add_test__if_xml_ge(tc_alloc, test_alloc_tracker_size_recorded);
+  tcase_add_test__if_xml_ge(tc_alloc, test_alloc_tracker_maximum_amplification);
+  tcase_add_test__if_xml_ge(tc_alloc, test_alloc_tracker_threshold);
+  tcase_add_test__if_xml_ge(tc_alloc, test_alloc_tracker_getbuffer_unlimited);
+  tcase_add_test__if_xml_ge(tc_alloc, test_alloc_tracker_api);
 
   tcase_add_test(tc_alloc, test_mem_api_cycle);
-  tcase_add_test__ifdef_xml_dtd(tc_alloc, test_mem_api_unlimited);
+  tcase_add_test__if_xml_ge(tc_alloc, test_mem_api_unlimited);
 }
