@@ -140,6 +140,9 @@ jobs:
         set -x -o pipefail
         cd expat/build/
 
+        # Make UBSan fatal (which by default it is not)
+        export UBSAN_OPTIONS='print_stacktrace=1:halt_on_error=1'
+
         mkdir coverage/
         export LLVM_PROFILE_FILE=coverage/expat-%p.profraw
 
