@@ -2132,6 +2132,22 @@ START_TEST(test_alloc_tracker_size_recorded) {
 }
 END_TEST
 
+START_TEST(test_alloc_tracker_pointer_alignment) {
+  XML_Parser parser = XML_ParserCreate(NULL);
+#if XML_GE == 1
+  assert_true(sizeof(long long) >= sizeof(size_t)); // self-test
+  long long *const ptr
+      = (long long *)expat_malloc(parser, 4 * sizeof(long long), -1);
+  ptr[0] = 0LL;
+  ptr[1] = 1LL;
+  ptr[2] = 2LL;
+  ptr[3] = 3LL;
+  expat_free(parser, ptr, -1);
+#endif
+  XML_ParserFree(parser);
+}
+END_TEST
+
 START_TEST(test_alloc_tracker_maximum_amplification) {
   if (g_reparseDeferralEnabledDefault == XML_TRUE) {
     return;
@@ -2363,6 +2379,7 @@ make_alloc_test_case(Suite *s) {
       tc_alloc, test_alloc_reset_after_external_entity_parser_create_fail);
 
   tcase_add_test__if_xml_ge(tc_alloc, test_alloc_tracker_size_recorded);
+  tcase_add_test__if_xml_ge(tc_alloc, test_alloc_tracker_pointer_alignment);
   tcase_add_test__if_xml_ge(tc_alloc, test_alloc_tracker_maximum_amplification);
   tcase_add_test__if_xml_ge(tc_alloc, test_alloc_tracker_threshold);
   tcase_add_test__if_xml_ge(tc_alloc, test_alloc_tracker_getbuffer_unlimited);
