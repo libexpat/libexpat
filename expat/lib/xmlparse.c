@@ -969,6 +969,10 @@ expat_realloc(XML_Parser parser, void *ptr, size_t size, int sourceLine) {
     }
   }
 
+  // NOTE: Integer overflow detection has already been done for us
+  //       by expat_heap_increase_tolerable(..) above
+  assert(SIZE_MAX - sizeof(size_t) >= size);
+
   // Actually allocate
   mallocedPtr = parser->m_mem.realloc_fcn(mallocedPtr, sizeof(size_t) + size);
 
