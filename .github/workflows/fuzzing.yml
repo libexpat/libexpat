@@ -140,8 +140,12 @@ jobs:
         set -x -o pipefail
         cd expat/build/
 
-        # Make UBSan fatal (which by default it is not)
-        export UBSAN_OPTIONS='print_stacktrace=1:halt_on_error=1'
+        # Configure UBSan to show (non-default) stack traces for runtime errors
+        # NOTE: "halt_on_error=1" we don't need to add because of the
+        #       -fno-sanitize-recover=all for CFLAGS further up.
+        # NOTE: "abort_on_error=1" we don't need here because to CI,
+        #       a non-zero exit code is all that matters.
+        export UBSAN_OPTIONS='print_stacktrace=1'
 
         mkdir coverage/
         export LLVM_PROFILE_FILE=coverage/expat-%p.profraw
