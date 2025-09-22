@@ -159,6 +159,30 @@ typedef long XML_Index;
 typedef unsigned long XML_Size;
 #  endif /* XML_LARGE_SIZE */
 
+// Define macros to aid use of XML_Size and XML_Index in calls to printf
+// e.g. fprintf(stderr, "Error at line " XML_FMT_XML_SIZE() " line, "
+//                      "column " XML_FMT_XML_SIZE() ".\n", line, column);
+// Added in Expat 2.7.3.
+#  if defined(_WIN32)                                                          \
+      && (! defined(__USE_MINGW_ANSI_STDIO)                                    \
+          || (1 - __USE_MINGW_ANSI_STDIO - 1 == 0))
+#    ifdef XML_LARGE_SIZE // Use large integers for file/stream positions.
+#      define XML_FMT_XML_INDEX(midpart) "%" midpart "I64d"
+#      define XML_FMT_XML_SIZE(midpart) "%" midpart "I64u"
+#    else
+#      define XML_FMT_XML_INDEX(midpart) "%" midpart "I32d"
+#      define XML_FMT_XML_SIZE(midpart) "%" midpart "I32u"
+#    endif
+#  else
+#    ifdef XML_LARGE_SIZE // Use large integers for file/stream positions.
+#      define XML_FMT_XML_INDEX(midpart) "%" midpart "lld"
+#      define XML_FMT_XML_SIZE(midpart) "%" midpart "llu"
+#    else
+#      define XML_FMT_XML_INDEX(midpart) "%" midpart "ld"
+#      define XML_FMT_XML_SIZE(midpart) "%" midpart "lu"
+#    endif
+#  endif
+
 #  ifdef __cplusplus
 }
 #  endif
