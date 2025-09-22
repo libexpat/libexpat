@@ -94,8 +94,8 @@ reportError(XML_Parser parser, const XML_Char *filename) {
   const XML_Char *message = XML_ErrorString(code);
   if (message)
     ftprintf(stdout,
-             T("%s") T(":%") T(XML_FMT_INT_MOD) T("u") T(":%")
-                 T(XML_FMT_INT_MOD) T("u") T(": %s\n"),
+             T("%s") T(":") T(XML_FMT_XML_SIZE()) T(":") T(XML_FMT_XML_SIZE())
+                 T(": %s\n"),
              filename, XML_GetCurrentLineNumber(parser),
              XML_GetCurrentColumnNumber(parser), message);
   else

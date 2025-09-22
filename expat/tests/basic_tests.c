@@ -611,7 +611,7 @@ START_TEST(test_line_number_after_parse) {
   if (lineno != 4) {
     char buffer[100];
     snprintf(buffer, sizeof(buffer),
-             "expected 4 lines, saw %" XML_FMT_INT_MOD "u", lineno);
+             "expected 4 lines, saw " XML_FMT_XML_SIZE(), lineno);
     fail(buffer);
   }
 }
@@ -629,7 +629,7 @@ START_TEST(test_column_number_after_parse) {
   if (colno != 11) {
     char buffer[100];
     snprintf(buffer, sizeof(buffer),
-             "expected 11 columns, saw %" XML_FMT_INT_MOD "u", colno);
+             "expected 11 columns, saw " XML_FMT_XML_SIZE(), colno);
     fail(buffer);
   }
 }
@@ -681,7 +681,7 @@ START_TEST(test_line_number_after_error) {
   if (lineno != 3) {
     char buffer[100];
     snprintf(buffer, sizeof(buffer),
-             "expected 3 lines, saw %" XML_FMT_INT_MOD "u", lineno);
+             "expected 3 lines, saw " XML_FMT_XML_SIZE(), lineno);
     fail(buffer);
   }
 }
@@ -701,7 +701,7 @@ START_TEST(test_column_number_after_error) {
   if (colno != 4) {
     char buffer[100];
     snprintf(buffer, sizeof(buffer),
-             "expected 4 columns, saw %" XML_FMT_INT_MOD "u", colno);
+             "expected 4 columns, saw " XML_FMT_XML_SIZE(), colno);
     fail(buffer);
   }
 }

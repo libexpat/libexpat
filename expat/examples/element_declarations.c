@@ -43,12 +43,6 @@
 #include <stdlib.h>
 #include <expat.h>
 
-#ifdef XML_LARGE_SIZE
-#  define XML_FMT_INT_MOD "ll"
-#else
-#  define XML_FMT_INT_MOD "l"
-#endif
-
 #ifdef XML_UNICODE_WCHAR_T
 #  define XML_FMT_STR "ls"
 #else
@@ -223,7 +217,7 @@ main(void) {
         errorCode = XML_ERROR_NO_MEMORY;
       }
       fprintf(stderr,
-              "Parse error at line %" XML_FMT_INT_MOD "u:\n%" XML_FMT_STR "\n",
+              "Parse error at line " XML_FMT_XML_SIZE() ":\n%" XML_FMT_STR "\n",
               XML_GetCurrentLineNumber(parser), XML_ErrorString(errorCode));
       XML_ParserFree(parser);
       return 1;

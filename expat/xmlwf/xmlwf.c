@@ -563,9 +563,9 @@ metaLocation(XML_Parser parser) {
   if (uri)
     ftprintf(fp, T(" uri=\"%s\""), uri);
   ftprintf(fp,
-           T(" byte=\"%") T(XML_FMT_INT_MOD) T("d\"") T(" nbytes=\"%d\"")
-               T(" line=\"%") T(XML_FMT_INT_MOD) T("u\"") T(" col=\"%")
-                   T(XML_FMT_INT_MOD) T("u\""),
+           T(" byte=\"") T(XML_FMT_XML_INDEX()) T("\"") T(" nbytes=\"%d\"")
+               T(" line=\"") T(XML_FMT_XML_SIZE()) T("\"") T(" col=\"")
+                   T(XML_FMT_XML_SIZE()) T("\""),
            XML_GetCurrentByteIndex(parser), XML_GetCurrentByteCount(parser),
            XML_GetCurrentLineNumber(parser),
            XML_GetCurrentColumnNumber(parser));

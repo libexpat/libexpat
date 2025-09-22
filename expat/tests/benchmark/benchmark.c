@@ -48,12 +48,6 @@
 #include <time.h>
 #include "expat.h"
 
-#ifdef XML_LARGE_SIZE
-#  define XML_FMT_INT_MOD "ll"
-#else
-#  define XML_FMT_INT_MOD "l"
-#endif
-
 #ifdef XML_UNICODE_WCHAR_T
 #  define XML_FMT_STR "ls"
 #else
@@ -147,12 +141,13 @@ main(int argc, char *argv[]) {
         parseBufferSize = bufferSize;
       assert(parseBufferSize <= (ptrdiff_t)bufferSize);
       if (! XML_Parse(parser, XMLBufPtr, (int)parseBufferSize, isFinal)) {
-        fprintf(stderr,
-                "error '%" XML_FMT_STR "' at line %" XML_FMT_INT_MOD
-                "u character %" XML_FMT_INT_MOD "u\n",
-                XML_ErrorString(XML_GetErrorCode(parser)),
-                XML_GetCurrentLineNumber(parser),
-                XML_GetCurrentColumnNumber(parser));
+        fprintf(
+            stderr,
+            "error '%" XML_FMT_STR
+            "' at line " XML_FMT_XML_SIZE() " character " XML_FMT_XML_SIZE() "\n",
+            XML_ErrorString(XML_GetErrorCode(parser)),
+            XML_GetCurrentLineNumber(parser),
+            XML_GetCurrentColumnNumber(parser));
         free(XMLBuf);
         XML_ParserFree(parser);
         return 4;

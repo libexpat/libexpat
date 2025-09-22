@@ -183,11 +183,12 @@ void
 _xml_failure(XML_Parser parser, const char *file, int line) {
   char buffer[1024];
   enum XML_Error err = XML_GetErrorCode(parser);
-  snprintf(buffer, sizeof(buffer),
-           "    %d: %" XML_FMT_STR " (line %" XML_FMT_INT_MOD
-           "u, offset %" XML_FMT_INT_MOD "u)\n    reported from %s, line %d\n",
-           err, XML_ErrorString(err), XML_GetCurrentLineNumber(parser),
-           XML_GetCurrentColumnNumber(parser), file, line);
+  snprintf(
+      buffer, sizeof(buffer),
+      "    %d: %" XML_FMT_STR
+      " (line " XML_FMT_XML_SIZE() ", offset " XML_FMT_XML_SIZE() ")\n    reported from %s, line %d\n",
+      err, XML_ErrorString(err), XML_GetCurrentLineNumber(parser),
+      XML_GetCurrentColumnNumber(parser), file, line);
   _fail(file, line, buffer);
 }
 

@@ -52,12 +52,6 @@ extern "C" {
 #  include "minicheck.h"
 #  include "chardata.h"
 
-#  ifdef XML_LARGE_SIZE
-#    define XML_FMT_INT_MOD "ll"
-#  else
-#    define XML_FMT_INT_MOD "l"
-#  endif
-
 #  ifdef XML_UNICODE_WCHAR_T
 #    define XML_FMT_STR "ls"
 #    include <wchar.h>
