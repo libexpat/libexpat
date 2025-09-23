@@ -702,6 +702,8 @@ START_TEST(test_misc_async_entity_rejected) {
     const char *doc;
     enum XML_Status expectedStatusNoGE;
     enum XML_Error expectedErrorNoGE;
+    XML_Size expectedErrorLine;
+    XML_Size expectedErrorColumn;
   };
   const struct test_case cases[] = {
       // Opened by one entity, closed by another
@@ -710,35 +712,35 @@ START_TEST(test_misc_async_entity_rejected) {
        "   <!ENTITY close '</t1>'>\n"
        "]>\n"
        "<t0>&open;&close;</t0>\n",
-       XML_STATUS_OK, XML_ERROR_NONE},
+       XML_STATUS_OK, XML_ERROR_NONE, 5, 4},
       // Opened by tag, closed by entity (non-root case)
       {"<!DOCTYPE t0 [\n"
        "  <!ENTITY g0 ''>\n"
        "  <!ENTITY g1 '&g0;</t1>'>\n"
        "]>\n"
        "<t0><t1>&g1;</t0>\n",
-       XML_STATUS_ERROR, XML_ERROR_TAG_MISMATCH},
+       XML_STATUS_ERROR, XML_ERROR_TAG_MISMATCH, 5, 8},
       // Opened by tag, closed by entity (root case)
       {"<!DOCTYPE t0 [\n"
        "  <!ENTITY g0 ''>\n"
        "  <!ENTITY g1 '&g0;</t0>'>\n"
        "]>\n"
        "<t0>&g1;\n",
-       XML_STATUS_ERROR, XML_ERROR_NO_ELEMENTS},
+       XML_STATUS_ERROR, XML_ERROR_NO_ELEMENTS, 5, 4},
       // Opened by entity, closed by tag <-- regression from 2.7.0
       {"<!DOCTYPE t0 [\n"
        "  <!ENTITY g0 ''>\n"
        "  <!ENTITY g1 '<t1>&g0;'>\n"
        "]>\n"
        "<t0>&g1;</t1></t0>\n",
-       XML_STATUS_ERROR, XML_ERROR_TAG_MISMATCH},
+       XML_STATUS_ERROR, XML_ERROR_TAG_MISMATCH, 5, 4},
       // Opened by tag, closed by entity; then the other way around
       {"<!DOCTYPE t0 [\n"
        "  <!ENTITY open '<t1>'>\n"
        "  <!ENTITY close '</t1>'>\n"
        "]>\n"
        "<t0><t1>&close;&open;</t1></t0>\n",
-       XML_STATUS_OK, XML_ERROR_NONE},
+       XML_STATUS_OK, XML_ERROR_NONE, 5, 8},
   };
 
   for (size_t i = 0; i < sizeof(cases) / sizeof(cases[0]); i++) {
@@ -759,6 +761,11 @@ START_TEST(test_misc_async_entity_rejected) {
                                         /*isFinal=*/XML_TRUE)
                 == expectedStatus);
     assert_true(XML_GetErrorCode(parser) == expectedError);
+#if XML_GE == 1
+    assert_true(XML_GetCurrentLineNumber(parser) == testCase.expectedErrorLine);
+    assert_true(XML_GetCurrentColumnNumber(parser)
+                == testCase.expectedErrorColumn);
+#endif
     XML_ParserFree(parser);
   }
 }
