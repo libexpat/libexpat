@@ -6447,6 +6447,10 @@ internalEntityProcessor(XML_Parser parser, const char *s, const char *end,
     // process its possible inner entities (which are added to the
     // m_openInternalEntities during doProlog or doContent calls above)
     entity->hasMore = XML_FALSE;
+    if (! entity->is_param
+        && (openEntity->startTagLevel != parser->m_tagLevel)) {
+      return XML_ERROR_ASYNC_ENTITY;
+    }
     triggerReenter(parser);
     return result;
   } // End of entity processing, "if" block will return here
