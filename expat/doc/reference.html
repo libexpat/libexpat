@@ -2200,7 +2200,10 @@ XML_SetBillionLaughsAttackProtectionMaximumAmplification(XML_Parser p,
     returns <code>XML_TRUE</code> upon success and <code>XML_FALSE</code> upon error.
   </p>
 
-  <p>The amplification factor is calculated as ..</p>
+  <p>
+    Once the <a href="#XML_SetBillionLaughsAttackProtectionActivationThreshold">threshold for activation</a> is reached,
+    the amplification factor is calculated as ..
+  </p>
   <pre>amplification := (direct + indirect) / direct</pre>
   <p>
     .. while parsing, whereas
@@ -2317,7 +2320,10 @@ XML_SetAllocTrackerMaximumAmplification(XML_Parser p,
     </li>
   </ul>
 
-  <p>The amplification factor is calculated as ..</p>
+  <p>
+    Once the <a href="#XML_SetAllocTrackerActivationThreshold">threshold for activation</a> is reached,
+    the amplification factor is calculated as ..
+  </p>
   <pre>amplification := allocated / direct</pre>
   <p>
     .. while parsing, whereas
