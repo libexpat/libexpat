@@ -43,7 +43,7 @@
 
 Release 2.7.3 ??? ????????? ?? ????
         Bug fixes:
-     #1046 #1047  Fix alignment of internal allocations for some non-amd64
+     #1046 #1048  Fix alignment of internal allocations for some non-amd64
                     architectures (e.g. sparc32); fixes up on the fix to
                     CVE-2025-59375 in release 2.7.2 from #1034
 
