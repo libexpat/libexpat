@@ -8149,7 +8149,7 @@ poolGrow(STRING_POOL *pool) {
     if (bytesToAllocate == 0)
       return XML_FALSE;
 
-    temp = REALLOC(pool->parser, pool->blocks, (unsigned)bytesToAllocate);
+    temp = REALLOC(pool->parser, pool->blocks, bytesToAllocate);
     if (temp == NULL)
       return XML_FALSE;
     pool->blocks = temp;
