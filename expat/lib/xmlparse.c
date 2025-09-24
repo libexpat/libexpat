@@ -1,4 +1,4 @@
-/* 60e137abb91af642d6c3988f8f133d23329b32638659c74d47125fc0faf6ddd5 (2.7.2+)
+/* 28bcd8b1ba7eb595d82822908257fd9c3589b4243e3c922d0369f35bfcd7b506 (2.7.3+)
                             __  __            _
                          ___\ \/ /_ __   __ _| |_
                         / _ \\  /| '_ \ / _` | __|
@@ -41,6 +41,7 @@
    Copyright (c) 2023-2024 Sony Corporation / Snild Dolkow <snild@sony.com>
    Copyright (c) 2024-2025 Berkay Eren Ürün <berkay.ueruen@siemens.com>
    Copyright (c) 2024      Hanno Böck <hanno@gentoo.org>
+   Copyright (c) 2025      Matthew Fernandez <matthew.fernandez@gmail.com>
    Licensed under the MIT license:
 
    Permission is  hereby granted,  free of charge,  to any  person obtaining

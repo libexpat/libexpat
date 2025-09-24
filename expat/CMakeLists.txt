@@ -39,7 +39,7 @@ cmake_minimum_required(VERSION 3.15.0)
 
 project(expat
     VERSION
-        2.7.2
+        2.7.3
     LANGUAGES
         C
 )
@@ -465,7 +465,7 @@ foreach(build_type_upper
 endforeach()
 
 set(LIBCURRENT 12)  # sync
-set(LIBREVISION 0)  # with
+set(LIBREVISION 1)  # with
 set(LIBAGE 11)      # configure.ac!
 math(EXPR LIBCURRENT_MINUS_AGE "${LIBCURRENT} - ${LIBAGE}")
 

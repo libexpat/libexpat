@@ -41,22 +41,57 @@
 !! THANK YOU!                        Sebastian Pipping -- Berlin, 2024-03-09 !!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-Release 2.7.3 ??? ????????? ?? ????
-        Bug fixes:
-     #1046 #1047  Fix alignment of internal allocations for some non-amd64
+Release 2.7.3 Wed September 24 2025
+        Security fixes:
+     #1046 #1048  Fix alignment of internal allocations for some non-amd64
                     architectures (e.g. sparc32); fixes up on the fix to
-                    CVE-2025-59375 in release 2.7.2 from #1034
+                    CVE-2025-59375 from #1034 (of Expat 2.7.2 and related
+                    backports)
+           #1059  Fix a class of false positives where input should have been
+                    rejected with error XML_ERROR_ASYNC_ENTITY; regression from
+                    CVE-2024-8176 fix pull request #973 (of Expat 2.7.0 and
+                    related backports). Please check the added unit tests for
+                    example documents.
 
         Other changes:
            #1043  Prove and regression-proof absence of integer overflow
                     from function expat_realloc
+           #1062  Remove "harmless" cast that truncated a size_t to unsigned
+           #1049  Autotools: Remove "ln -s" discovery
+           #1054  docs: Be consistent with use of floating point around
+                    XML_SetAllocTrackerMaximumAmplification
+           #1056  docs: Make it explicit that XML_GetCurrentColumnNumber
+                    starts at 0
+           #1057  docs: Better integrate the effect of the activation
+                    thresholds
+           #1058  docs: Fix an in-comment typo in expat.h
+           #1045  docs: Fix a typo in README.md
            #1041  docs: Improve change log of release 2.7.2
+           #1053  xmlwf: Resolve use of functions XML_GetErrorLineNumber
+                    and XML_GetErrorColumnNumber
+           #1032  Windows: Normalize .bat files to CRLF line endings
+     #1060 #1061  Version info bumped from 12:0:11 (libexpat*.so.1.11.0)
+                    to 12:1:11 (libexpat*.so.1.11.1); see https://verbump.de/
+                    for what these numbers do
+
+        Infrastructure:
+     #1047 #1050  CI: Cleanup UndefinedBehaviorSanitizer fatality
+           #1044  CI|Linux: Stop aborting at first job failure
+           #1052  CI|FreeBSD: Upgrade to FreeBSD 15.0
+           #1039  CI|FreeBSD: Do not install CMake meta-package
 
         Special thanks to:
+            Bénédikt Tran
+            Berkay Eren Ürün
+            Daniel Engberg
+            Hanno Böck
             Matthew Fernandez
             Rolf Eike Beer
+            Sam James
+            Tim Bray
                  and
             Clang/GCC UndefinedBehaviorSanitizer
+            OSS-Fuzz / ClusterFuzz
             Z3 Theorem Prover
 
 Release 2.7.2 Tue September 16 2025
