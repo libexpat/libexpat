@@ -24,6 +24,7 @@ dnl   Copyright (c) 2019      Kishore Kunche <kishore.kunche@intel.com>
 dnl   Copyright (c) 2020      Jeffrey Walton <noloader@gmail.com>
 dnl   Copyright (c) 2024      Ferenc Géczi <ferenc.gm@gmail.com>
 dnl   Copyright (c) 2024      Dag-Erling Smørgrav <des@des.dev>
+dnl   Copyright (c) 2025      Matthew Fernandez <matthew.fernandez@gmail.com>
 dnl   Licensed under the MIT license:
 dnl
 dnl   Permission is  hereby granted,  free of charge,  to any  person obtaining
