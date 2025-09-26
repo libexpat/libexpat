@@ -101,7 +101,7 @@
 #include <limits.h> /* INT_MAX, UINT_MAX */
 #include <stdio.h>  /* fprintf */
 #include <stdlib.h> /* getenv, rand_s */
-#include <stdint.h> /* uintptr_t */
+#include <stdint.h> /* SIZE_MAX, uintptr_t */
 #include <math.h>   /* isnan */
 
 #ifdef _WIN32
@@ -3878,7 +3878,7 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
      * from -Wtype-limits on platforms where
      * sizeof(unsigned int) < sizeof(size_t), e.g. on x86_64. */
 #if UINT_MAX >= SIZE_MAX
-    if ((unsigned)parser->m_attsSize > (size_t)(-1) / sizeof(ATTRIBUTE)) {
+    if ((unsigned)parser->m_attsSize > SIZE_MAX / sizeof(ATTRIBUTE)) {
       parser->m_attsSize = oldAttsSize;
       return XML_ERROR_NO_MEMORY;
     }
@@ -3897,7 +3897,7 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
      * from -Wtype-limits on platforms where
      * sizeof(unsigned int) < sizeof(size_t), e.g. on x86_64. */
 #  if UINT_MAX >= SIZE_MAX
-    if ((unsigned)parser->m_attsSize > (size_t)(-1) / sizeof(XML_AttrInfo)) {
+    if ((unsigned)parser->m_attsSize > SIZE_MAX / sizeof(XML_AttrInfo)) {
       parser->m_attsSize = oldAttsSize;
       return XML_ERROR_NO_MEMORY;
     }
@@ -4073,7 +4073,7 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
        * from -Wtype-limits on platforms where
        * sizeof(unsigned int) < sizeof(size_t), e.g. on x86_64. */
 #if UINT_MAX >= SIZE_MAX
-      if (nsAttsSize > (size_t)(-1) / sizeof(NS_ATT)) {
+      if (nsAttsSize > SIZE_MAX / sizeof(NS_ATT)) {
         /* Restore actual size of memory in m_nsAtts */
         parser->m_nsAttsPower = oldNsAttsPower;
         return XML_ERROR_NO_MEMORY;
@@ -4256,7 +4256,7 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
      * from -Wtype-limits on platforms where
      * sizeof(unsigned int) < sizeof(size_t), e.g. on x86_64. */
 #if UINT_MAX >= SIZE_MAX
-    if ((unsigned)(n + EXPAND_SPARE) > (size_t)(-1) / sizeof(XML_Char)) {
+    if ((unsigned)(n + EXPAND_SPARE) > SIZE_MAX / sizeof(XML_Char)) {
       return XML_ERROR_NO_MEMORY;
     }
 #endif
