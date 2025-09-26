@@ -205,7 +205,10 @@ if(MSVC)
     # - https://sourceforge.net/p/predef/wiki/Compilers/
     # - https://en.wikipedia.org/wiki/Microsoft_Visual_Studio#History
     set(_EXPAT_MSVC_REQUIRED_INT 1800)  # i.e. 12.0/2013/1800; see PR #426
-    set(_EXPAT_MSVC_SUPPORTED_INT 1930)
+    # It is no longer possible to test MSVC compilers in the CI infrastructure older than _EXPAT_MSVC_SUPPORTED_INT.
+    # By default warn developers, but allow developers to do independant test and override the default
+    # _EXPAT_MSVC_SUPPORTED_INT value at configuration time (i.e. cmake -D_EXPAT_MSVC_SUPPORTED_INT:STRING=1929)
+    expat_shy_set(_EXPAT_MSVC_SUPPORTED_INT 1930 CACHE STRING "Allow manual setting of supporting MSVC")
     set(_EXPAT_MSVC_SUPPORTED_DISPLAY "Visual Studio 17.0/2022/${_EXPAT_MSVC_SUPPORTED_INT}")
 
     if(MSVC_VERSION VERSION_LESS ${_EXPAT_MSVC_SUPPORTED_INT})
@@ -213,8 +216,8 @@ if(MSVC)
             message(SEND_ERROR "MSVC_VERSION ${MSVC_VERSION} is TOO OLD to compile Expat without errors.")
             message(SEND_ERROR "Please use officially supported ${_EXPAT_MSVC_SUPPORTED_DISPLAY} or later.  Thank you!")
         else()
-            message(WARNING "MSVC_VERSION ${MSVC_VERSION} is NOT OFFICIALLY SUPPORTED by Expat.")
-            message(WARNING "Please use ${_EXPAT_MSVC_SUPPORTED_DISPLAY} or later.  Thank you!")
+            message(WARNING "MSVC_VERSION ${MSVC_VERSION} is NOT TESTED OR OFFICIALLY SUPPORTED by Expat.")
+            message(WARNING "Please perform independant tests, or use ${_EXPAT_MSVC_SUPPORTED_DISPLAY} or later.  Thank you!")
         endif()
     endif()
 endif()
