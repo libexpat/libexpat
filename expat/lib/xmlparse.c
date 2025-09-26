@@ -101,7 +101,7 @@
 #include <limits.h> /* INT_MAX, UINT_MAX */
 #include <stdio.h>  /* fprintf */
 #include <stdlib.h> /* getenv, rand_s */
-#include <stdint.h> /* uintptr_t */
+#include <stdint.h> /* SIZE_MAX, uintptr_t */
 #include <math.h>   /* isnan */
 
 #ifdef _WIN32
@@ -3878,7 +3878,7 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
      * from -Wtype-limits on platforms where
      * sizeof(unsigned int) < sizeof(size_t), e.g. on x86_64. */
 #if UINT_MAX >= SIZE_MAX
-    if ((unsigned)parser->m_attsSize > (size_t)(-1) / sizeof(ATTRIBUTE)) {
+    if ((unsigned)parser->m_attsSize > SIZE_MAX / sizeof(ATTRIBUTE)) {
       parser->m_attsSize = oldAttsSize;
       return XML_ERROR_NO_MEMORY;
     }
@@ -3897,7 +3897,7 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
      * from -Wtype-limits on platforms where
      * sizeof(unsigned int) < sizeof(size_t), e.g. on x86_64. */
 #  if UINT_MAX >= SIZE_MAX
-    if ((unsigned)parser->m_attsSize > (size_t)(-1) / sizeof(XML_AttrInfo)) {
+    if ((unsigned)parser->m_attsSize > SIZE_MAX / sizeof(XML_AttrInfo)) {
       parser->m_attsSize = oldAttsSize;
       return XML_ERROR_NO_MEMORY;
     }
@@ -4073,7 +4073,7 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
        * from -Wtype-limits on platforms where
        * sizeof(unsigned int) < sizeof(size_t), e.g. on x86_64. */
 #if UINT_MAX >= SIZE_MAX
-      if (nsAttsSize > (size_t)(-1) / sizeof(NS_ATT)) {
+      if (nsAttsSize > SIZE_MAX / sizeof(NS_ATT)) {
         /* Restore actual size of memory in m_nsAtts */
         parser->m_nsAttsPower = oldNsAttsPower;
         return XML_ERROR_NO_MEMORY;
@@ -4256,7 +4256,7 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
      * from -Wtype-limits on platforms where
      * sizeof(unsigned int) < sizeof(size_t), e.g. on x86_64. */
 #if UINT_MAX >= SIZE_MAX
-    if ((unsigned)(n + EXPAND_SPARE) > (size_t)(-1) / sizeof(XML_Char)) {
+    if ((unsigned)(n + EXPAND_SPARE) > SIZE_MAX / sizeof(XML_Char)) {
       return XML_ERROR_NO_MEMORY;
     }
 #endif
@@ -4502,7 +4502,7 @@ addBinding(XML_Parser parser, PREFIX *prefix, const ATTRIBUTE_ID *attId,
        * from -Wtype-limits on platforms where
        * sizeof(unsigned int) < sizeof(size_t), e.g. on x86_64. */
 #if UINT_MAX >= SIZE_MAX
-      if ((unsigned)(len + EXPAND_SPARE) > (size_t)(-1) / sizeof(XML_Char)) {
+      if ((unsigned)(len + EXPAND_SPARE) > SIZE_MAX / sizeof(XML_Char)) {
         return XML_ERROR_NO_MEMORY;
       }
 #endif
@@ -4529,7 +4529,7 @@ addBinding(XML_Parser parser, PREFIX *prefix, const ATTRIBUTE_ID *attId,
      * from -Wtype-limits on platforms where
      * sizeof(unsigned int) < sizeof(size_t), e.g. on x86_64. */
 #if UINT_MAX >= SIZE_MAX
-    if ((unsigned)(len + EXPAND_SPARE) > (size_t)(-1) / sizeof(XML_Char)) {
+    if ((unsigned)(len + EXPAND_SPARE) > SIZE_MAX / sizeof(XML_Char)) {
       return XML_ERROR_NO_MEMORY;
     }
 #endif
@@ -5920,7 +5920,7 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
              * from -Wtype-limits on platforms where
              * sizeof(unsigned int) < sizeof(size_t), e.g. on x86_64. */
 #if UINT_MAX >= SIZE_MAX
-            if (parser->m_groupSize > (size_t)(-1) / sizeof(int)) {
+            if (parser->m_groupSize > SIZE_MAX / sizeof(int)) {
               return XML_ERROR_NO_MEMORY;
             }
 #endif
@@ -7190,7 +7190,7 @@ defineAttribute(ELEMENT_TYPE *type, ATTRIBUTE_ID *attId, XML_Bool isCdata,
        * from -Wtype-limits on platforms where
        * sizeof(unsigned int) < sizeof(size_t), e.g. on x86_64. */
 #if UINT_MAX >= SIZE_MAX
-      if ((unsigned)count > (size_t)(-1) / sizeof(DEFAULT_ATTRIBUTE)) {
+      if ((unsigned)count > SIZE_MAX / sizeof(DEFAULT_ATTRIBUTE)) {
         return 0;
       }
 #endif
@@ -7666,8 +7666,7 @@ dtdCopy(XML_Parser oldParser, DTD *newDtd, const DTD *oldDtd,
        * from -Wtype-limits on platforms where
        * sizeof(int) < sizeof(size_t), e.g. on x86_64. */
 #if UINT_MAX >= SIZE_MAX
-      if ((size_t)oldE->nDefaultAtts
-          > ((size_t)(-1) / sizeof(DEFAULT_ATTRIBUTE))) {
+      if ((size_t)oldE->nDefaultAtts > SIZE_MAX / sizeof(DEFAULT_ATTRIBUTE)) {
         return 0;
       }
 #endif
@@ -7869,7 +7868,7 @@ lookup(XML_Parser parser, HASH_TABLE *table, KEY name, size_t createSize) {
       unsigned long newMask = (unsigned long)newSize - 1;
 
       /* Detect and prevent integer overflow */
-      if (newSize > (size_t)(-1) / sizeof(NAMED *)) {
+      if (newSize > SIZE_MAX / sizeof(NAMED *)) {
         return NULL;
       }
 
@@ -8217,7 +8216,7 @@ nextScaffoldPart(XML_Parser parser) {
      * from -Wtype-limits on platforms where
      * sizeof(unsigned int) < sizeof(size_t), e.g. on x86_64. */
 #if UINT_MAX >= SIZE_MAX
-    if (parser->m_groupSize > ((size_t)(-1) / sizeof(int))) {
+    if (parser->m_groupSize > SIZE_MAX / sizeof(int)) {
       return -1;
     }
 #endif
@@ -8244,7 +8243,7 @@ nextScaffoldPart(XML_Parser parser) {
        * from -Wtype-limits on platforms where
        * sizeof(unsigned int) < sizeof(size_t), e.g. on x86_64. */
 #if UINT_MAX >= SIZE_MAX
-      if (dtd->scaffSize > (size_t)(-1) / 2u / sizeof(CONTENT_SCAFFOLD)) {
+      if (dtd->scaffSize > SIZE_MAX / 2u / sizeof(CONTENT_SCAFFOLD)) {
         return -1;
       }
 #endif
@@ -8294,15 +8293,15 @@ build_model(XML_Parser parser) {
    * from -Wtype-limits on platforms where
    * sizeof(unsigned int) < sizeof(size_t), e.g. on x86_64. */
 #if UINT_MAX >= SIZE_MAX
-  if (dtd->scaffCount > (size_t)(-1) / sizeof(XML_Content)) {
+  if (dtd->scaffCount > SIZE_MAX / sizeof(XML_Content)) {
     return NULL;
   }
-  if (dtd->contentStringLen > (size_t)(-1) / sizeof(XML_Char)) {
+  if (dtd->contentStringLen > SIZE_MAX / sizeof(XML_Char)) {
     return NULL;
   }
 #endif
   if (dtd->scaffCount * sizeof(XML_Content)
-      > (size_t)(-1) - dtd->contentStringLen * sizeof(XML_Char)) {
+      > SIZE_MAX - dtd->contentStringLen * sizeof(XML_Char)) {
     return NULL;
   }
 
