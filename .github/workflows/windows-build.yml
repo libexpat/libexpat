@@ -50,14 +50,10 @@ jobs:
             cmake_build_type: Debug
             cmake_generator: Visual Studio 17 2022
             cmake_platform: Win32
-            expat_char_type: char
-            expat_dll: libexpatd.dll
           - runs-on: windows-2022
             cmake_build_type: Debug
             cmake_generator: Visual Studio 17 2022
             cmake_platform: x64
-            expat_char_type: wchar_t
-            expat_dll: libexpatwd.dll
     defaults:
       run:
         shell: bash
@@ -69,7 +65,6 @@ jobs:
 
     - name: Configure
       env:
-        cmake_build_type: ${{ matrix.cmake_build_type }}
         cmake_generator: ${{ matrix.cmake_generator }}
         cmake_platform: ${{ matrix.cmake_platform }}
         expat_char_type: ${{ matrix.expat_char_type }}
@@ -77,40 +72,17 @@ jobs:
         cmake_args=(
           -A "${cmake_platform}"
           -G "${cmake_generator}"
-          -DCMAKE_BUILD_TYPE="${cmake_build_type}"
-          -DEXPAT_CHAR_TYPE="${expat_char_type}"
-          -DEXPAT_WARNINGS_AS_ERRORS=ON
           -Wdev
           -Wdeprecated
         )
         set -x
-        cd expat
         mkdir build
         cmake -S . -B build "${cmake_args[@]}"
+        cat build/CMakeFiles/CMakeConfigureLog.yaml
 
-    - name: Build
-      env:
-        cmake_build_type: ${{ matrix.cmake_build_type }}
-      run: |-
-        msbuild_args=(
-          -m
-          -property:Configuration="${cmake_build_type}"
-        )
-        set -x
-        cd expat/build
-        MSBuild.exe "${msbuild_args[@]}" expat.sln
-
-    - name: Run tests
-      env:
-        cmake_build_type: ${{ matrix.cmake_build_type }}
-        expat_dll: ${{ matrix.expat_dll }}
-      run: |-
-        ctest_args=(
-          --build-config "${cmake_build_type}"
-          --output-on-failure
-          --parallel 2
-        )
-        set -x
-        cd expat/build
-        cp -v "${cmake_build_type}/${expat_dll}" "tests/${cmake_build_type}/"
-        ctest "${ctest_args[@]}"
+    - name: Offer CMakeConfigureLog.yaml for download
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
+      with:
+        name: CMakeConfigureLog_yaml_${{ matrix.cmake_platform }}_${{ github.sha }}
+        path: build/CMakeFiles/CMakeConfigureLog.yaml
+        if-no-files-found: error
