@@ -41,6 +41,11 @@
 !! THANK YOU!                        Sebastian Pipping -- Berlin, 2024-03-09 !!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
+Release 2.7.4 ??? ????????? ?? ????
+        Other changes:
+           #1066  docs: Be explicit that parent parsers need to outlive
+                    subparsers
+
 Release 2.7.3 Wed September 24 2025
         Security fixes:
      #1046 #1048  Fix alignment of internal allocations for some non-amd64
