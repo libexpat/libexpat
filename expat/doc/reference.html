@@ -1052,13 +1052,15 @@ XML_ExternalEntityParserCreate(XML_Parser p,
                                const XML_Char *encoding);
 </pre>
 <div class="fcndef">
-Construct a new <code>XML_Parser</code> object for parsing an external
-general entity. Context is the context argument passed in a call to a
-ExternalEntityRefHandler. Other state information such as handlers,
-user data, namespace processing is inherited from the parser passed as
-the 1st argument. So you shouldn't need to call any of the behavior
-changing functions on this parser (unless you want it to act
-differently than the parent parser).
+<p>
+  Construct a new <code>XML_Parser</code> object for parsing an external
+  general entity. Context is the context argument passed in a call to a
+  ExternalEntityRefHandler. Other state information such as handlers,
+  user data, namespace processing is inherited from the parser passed as
+  the 1st argument. So you shouldn't need to call any of the behavior
+  changing functions on this parser (unless you want it to act
+  differently than the parent parser).
+</p>
 </div>
 
 <h4 id="XML_ParserFree">XML_ParserFree</h4>
@@ -1067,8 +1069,13 @@ void XMLCALL
 XML_ParserFree(XML_Parser p);
 </pre>
 <div class="fcndef">
-Free memory used by the parser. Your application is responsible for
-freeing any memory associated with <a href="#userdata">user data</a>.
+<p>
+  Free memory used by the parser.
+</p>
+<p><strong>Note:</strong>
+  Your application is responsible for
+  freeing any memory associated with <a href="#userdata">user data</a>.
+</p>
 </div>
 
 <h4 id="XML_ParserReset">XML_ParserReset</h4>
