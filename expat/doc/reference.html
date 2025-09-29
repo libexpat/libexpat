@@ -1061,6 +1061,13 @@ XML_ExternalEntityParserCreate(XML_Parser p,
   changing functions on this parser (unless you want it to act
   differently than the parent parser).
 </p>
+<p><strong>Note:</strong>
+  Please be sure to free subparsers created by
+  <code><a href="#XML_ExternalEntityParserCreate">XML_ExternalEntityParserCreate</a></code>
+  <em>prior to</em> freeing their related parent parser,
+  as subparsers reference and use parts of their respective parent parser, internally.
+  Parent parsers must outlive subparsers.
+</p>
 </div>
 
 <h4 id="XML_ParserFree">XML_ParserFree</h4>
@@ -1075,6 +1082,13 @@ XML_ParserFree(XML_Parser p);
 <p><strong>Note:</strong>
   Your application is responsible for
   freeing any memory associated with <a href="#userdata">user data</a>.
+</p>
+<p><strong>Note:</strong>
+  Please be sure to free subparsers created by
+  <code><a href="#XML_ExternalEntityParserCreate">XML_ExternalEntityParserCreate</a></code>
+  <em>prior to</em> freeing their related parent parser,
+  as subparsers reference and use parts of their respective parent parser, internally.
+  Parent parsers must outlive subparsers.
 </p>
 </div>
 
