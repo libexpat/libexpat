@@ -48,7 +48,6 @@
 #include "expat.h"
 #include "chardata.h"
 #include "internal.h"
-#include "minicheck.h"
 #include "common.h"
 #include "dummy.h"
 #include "handlers.h"

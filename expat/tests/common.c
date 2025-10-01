@@ -50,7 +50,6 @@
 #include "expat_config.h"
 #include "expat.h"
 #include "internal.h"
-#include "minicheck.h"
 #include "common.h"
 #include "handlers.h"
 

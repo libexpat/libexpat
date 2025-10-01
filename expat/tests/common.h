@@ -49,7 +49,7 @@ extern "C" {
 #  define XML_COMMON_H
 
 #  include "expat_config.h"
-#  include "minicheck.h"
+#  include "minicheck.h" // for TCase
 #  include "chardata.h"
 
 #  ifdef XML_LARGE_SIZE

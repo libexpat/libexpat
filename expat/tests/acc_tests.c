@@ -50,7 +50,6 @@
 #include "expat.h"
 #include "internal.h"
 #include "common.h"
-#include "minicheck.h"
 #include "handlers.h"
 #include "acc_tests.h"
 

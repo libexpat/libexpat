@@ -43,7 +43,7 @@
 #include <string.h>
 
 #include "structdata.h"
-#include "minicheck.h"
+#include "minicheck.h" // for fail
 
 #define STRUCT_EXTENSION_COUNT 8
 
