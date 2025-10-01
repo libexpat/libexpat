@@ -51,7 +51,6 @@
 #include "internal.h"
 #include "common.h"
 #include "minicheck.h"
-#include "chardata.h"
 #include "handlers.h"
 #include "acc_tests.h"
 

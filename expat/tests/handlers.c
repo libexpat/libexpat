@@ -53,7 +53,6 @@
 
 #include "expat.h"
 #include "internal.h"
-#include "chardata.h"
 #include "structdata.h"
 #include "common.h"
 #include "handlers.h"

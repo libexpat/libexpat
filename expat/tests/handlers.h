@@ -51,6 +51,7 @@ extern "C" {
 #  include "expat_config.h"
 
 #  include "expat.h"
+#  include "chardata.h"
 
 /* Variable holding the expected handler userData */
 extern const void *g_handler_data;

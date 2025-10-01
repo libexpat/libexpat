@@ -51,6 +51,7 @@
 #include "expat_config.h"
 
 #include "expat.h"
+#include "chardata.h"
 #include "internal.h"
 #include "minicheck.h"
 #include "memcheck.h"
