@@ -1,5 +1,7 @@
 /autom4te.cache/
 /cmake-build-debug/
+/CPackConfig.cmake
+/CPackSourceConfig.cmake
 CMakeFiles/
 Testing/
 aclocal.m4
