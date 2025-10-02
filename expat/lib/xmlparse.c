@@ -938,7 +938,11 @@ expat_free(XML_Parser parser, void *ptr, int sourceLine) {
   parser->m_mem.free_fcn(mallocedPtr);
 }
 
+#  if defined(XML_TESTING)
+void *
+#  else
 static void *
+#  endif
 expat_realloc_sized(XML_Parser parser, void *ptr, size_t size, size_t old_size,
                     int sourceLine) {
   assert(parser != NULL);
