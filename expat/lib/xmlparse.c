@@ -788,10 +788,14 @@ struct XML_ParserStruct {
 #if XML_GE == 1
 #  define MALLOC(parser, s) (expat_malloc((parser), (s), __LINE__))
 #  define REALLOC(parser, p, s) (expat_realloc((parser), (p), (s), __LINE__))
+#  define REALLOC_SIZED(parser, p, s, old_size)                                \
+    (expat_realloc_sized((parser), (p), (s), (old_size), __LINE__))
 #  define FREE(parser, p) (expat_free((parser), (p), __LINE__))
 #else
 #  define MALLOC(parser, s) (parser->m_mem.malloc_fcn((s)))
 #  define REALLOC(parser, p, s) (parser->m_mem.realloc_fcn((p), (s)))
+#  define REALLOC_SIZED(parser, p, s, old_size)                                \
+    ((void)(old_size), parser->m_mem.realloc_fcn((p), (s)))
 #  define FREE(parser, p) (parser->m_mem.free_fcn((p)))
 #endif
 
