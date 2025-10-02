@@ -8273,8 +8273,9 @@ nextScaffoldPart(XML_Parser parser) {
       }
 #endif
 
-      temp = REALLOC(parser, dtd->scaffold,
-                     dtd->scaffSize * 2 * sizeof(CONTENT_SCAFFOLD));
+      temp = REALLOC_SIZED(parser, dtd->scaffold,
+                           dtd->scaffSize * 2 * sizeof(CONTENT_SCAFFOLD),
+                           dtd->scaffSize * sizeof(CONTENT_SCAFFOLD));
       if (temp == NULL)
         return -1;
       dtd->scaffSize *= 2;
