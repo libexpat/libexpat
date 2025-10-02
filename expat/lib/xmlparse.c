@@ -5921,14 +5921,17 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
              * sizeof(unsigned int) < sizeof(size_t), e.g. on x86_64. */
 #if UINT_MAX >= SIZE_MAX
             if (parser->m_groupSize > SIZE_MAX / sizeof(int)) {
+              parser->m_groupSize /= 2;
               return XML_ERROR_NO_MEMORY;
             }
 #endif
 
             int *const new_scaff_index = REALLOC(
                 parser, dtd->scaffIndex, parser->m_groupSize * sizeof(int));
-            if (new_scaff_index == NULL)
+            if (new_scaff_index == NULL) {
+              parser->m_groupSize /= 2;
               return XML_ERROR_NO_MEMORY;
+            }
             dtd->scaffIndex = new_scaff_index;
           }
         } else {
