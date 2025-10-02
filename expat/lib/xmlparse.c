@@ -934,12 +934,9 @@ expat_free(XML_Parser parser, void *ptr, int sourceLine) {
   parser->m_mem.free_fcn(mallocedPtr);
 }
 
-#  if defined(XML_TESTING)
-void *
-#  else
 static void *
-#  endif
-expat_realloc(XML_Parser parser, void *ptr, size_t size, int sourceLine) {
+expat_realloc_sized(XML_Parser parser, void *ptr, size_t size, size_t old_size,
+                    int sourceLine) {
   assert(parser != NULL);
 
   if (ptr == NULL) {
@@ -958,6 +955,11 @@ expat_realloc(XML_Parser parser, void *ptr, size_t size, int sourceLine) {
   // pointer returned by malloc/realloc
   void *mallocedPtr = (char *)ptr - EXPAT_MALLOC_PADDING - sizeof(size_t);
   const size_t prevSize = *(size_t *)mallocedPtr;
+
+  // Old size should either have not been provided (`SIZE_MAX` sentinel) or
+  // should agree with the metadata
+  assert(old_size == SIZE_MAX || old_size == prevSize);
+  (void)old_size;
 
   // Classify upcoming change
   const bool isIncrease = (size > prevSize);
@@ -1009,6 +1011,15 @@ expat_realloc(XML_Parser parser, void *ptr, size_t size, int sourceLine) {
   *(size_t *)mallocedPtr = size;
 
   return (char *)mallocedPtr + sizeof(size_t) + EXPAT_MALLOC_PADDING;
+}
+
+#  if defined(XML_TESTING)
+void *
+#  else
+static void *
+#  endif
+expat_realloc(XML_Parser parser, void *ptr, size_t size, int sourceLine) {
+  return expat_realloc_sized(parser, ptr, size, SIZE_MAX, sourceLine);
 }
 #endif // XML_GE == 1
 
