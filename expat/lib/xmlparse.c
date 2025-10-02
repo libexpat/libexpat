@@ -7219,8 +7219,9 @@ defineAttribute(ELEMENT_TYPE *type, ATTRIBUTE_ID *attId, XML_Bool isCdata,
       }
 #endif
 
-      temp = REALLOC(parser, type->defaultAtts,
-                     (count * sizeof(DEFAULT_ATTRIBUTE)));
+      temp = REALLOC_SIZED(parser, type->defaultAtts,
+                           count * sizeof(DEFAULT_ATTRIBUTE),
+                           type->allocDefaultAtts * sizeof(DEFAULT_ATTRIBUTE));
       if (temp == NULL)
         return 0;
       type->allocDefaultAtts = count;
