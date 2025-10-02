@@ -5926,8 +5926,10 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
               return XML_ERROR_NO_MEMORY;
             }
 
-            char *const new_connector = REALLOC(
-                parser, parser->m_groupConnector, parser->m_groupSize *= 2);
+            parser->m_groupSize *= 2;
+            char *const new_connector
+                = REALLOC_SIZED(parser, parser->m_groupConnector,
+                                parser->m_groupSize, parser->m_groupSize / 2);
             if (new_connector == NULL) {
               parser->m_groupSize /= 2;
               return XML_ERROR_NO_MEMORY;
@@ -5946,8 +5948,9 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
             }
 #endif
 
-            int *const new_scaff_index = REALLOC(
-                parser, dtd->scaffIndex, parser->m_groupSize * sizeof(int));
+            int *const new_scaff_index = REALLOC_SIZED(
+                parser, dtd->scaffIndex, parser->m_groupSize * sizeof(int),
+                parser->m_groupSize / 2 * sizeof(int));
             if (new_scaff_index == NULL)
               return XML_ERROR_NO_MEMORY;
             dtd->scaffIndex = new_scaff_index;
