@@ -40,6 +40,8 @@
    USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+#include "minicheck.h" // for Suite
+
 #ifdef __cplusplus
 extern "C" {
 #endif

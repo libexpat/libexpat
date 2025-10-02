@@ -49,7 +49,6 @@
 
 #include "expat.h"
 #include "common.h"
-#include "minicheck.h"
 #include "dummy.h"
 #include "handlers.h"
 #include "nsalloc_tests.h"
