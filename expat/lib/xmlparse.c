@@ -3901,8 +3901,9 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
     }
 #endif
 
-    temp = REALLOC(parser, parser->m_atts,
-                   parser->m_attsSize * sizeof(ATTRIBUTE));
+    temp = REALLOC_SIZED(parser, parser->m_atts,
+                         parser->m_attsSize * sizeof(ATTRIBUTE),
+                         oldAttsSize * sizeof(ATTRIBUTE));
     if (temp == NULL) {
       parser->m_attsSize = oldAttsSize;
       return XML_ERROR_NO_MEMORY;
@@ -3920,8 +3921,9 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
     }
 #  endif
 
-    temp2 = REALLOC(parser, parser->m_attInfo,
-                    parser->m_attsSize * sizeof(XML_AttrInfo));
+    temp2 = REALLOC_SIZED(parser, parser->m_attInfo,
+                          parser->m_attsSize * sizeof(XML_AttrInfo),
+                          oldAttsSize * sizeof(XML_AttrInfo));
     if (temp2 == NULL) {
       parser->m_attsSize = oldAttsSize;
       return XML_ERROR_NO_MEMORY;
@@ -4097,7 +4099,9 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
       }
 #endif
 
-      temp = REALLOC(parser, parser->m_nsAtts, nsAttsSize * sizeof(NS_ATT));
+      temp
+          = REALLOC_SIZED(parser, parser->m_nsAtts, nsAttsSize * sizeof(NS_ATT),
+                          oldNsAttsPower * sizeof(NS_ATT));
       if (! temp) {
         /* Restore actual size of memory in m_nsAtts */
         parser->m_nsAttsPower = oldNsAttsPower;
