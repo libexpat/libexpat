@@ -787,13 +787,11 @@ struct XML_ParserStruct {
 
 #if XML_GE == 1
 #  define MALLOC(parser, s) (expat_malloc((parser), (s), __LINE__))
-#  define REALLOC(parser, p, s) (expat_realloc((parser), (p), (s), __LINE__))
 #  define REALLOC_SIZED(parser, p, s, old_size)                                \
     (expat_realloc_sized((parser), (p), (s), (old_size), __LINE__))
 #  define FREE(parser, p) (expat_free((parser), (p), __LINE__))
 #else
 #  define MALLOC(parser, s) (parser->m_mem.malloc_fcn((s)))
-#  define REALLOC(parser, p, s) (parser->m_mem.realloc_fcn((p), (s)))
 #  define REALLOC_SIZED(parser, p, s, old_size)                                \
     ((void)(old_size), parser->m_mem.realloc_fcn((p), (s)))
 #  define FREE(parser, p) (parser->m_mem.free_fcn((p)))
@@ -1019,15 +1017,6 @@ expat_realloc_sized(XML_Parser parser, void *ptr, size_t size, size_t old_size,
   *(size_t *)mallocedPtr = size;
 
   return (char *)mallocedPtr + sizeof(size_t) + EXPAT_MALLOC_PADDING;
-}
-
-#  if defined(XML_TESTING)
-void *
-#  else
-static void *
-#  endif
-expat_realloc(XML_Parser parser, void *ptr, size_t size, int sourceLine) {
-  return expat_realloc_sized(parser, ptr, size, SIZE_MAX, sourceLine);
 }
 #endif // XML_GE == 1
 

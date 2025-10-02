@@ -184,7 +184,6 @@ extern
 #if defined(XML_TESTING)
 void *expat_malloc(XML_Parser parser, size_t size, int sourceLine);
 void expat_free(XML_Parser parser, void *ptr, int sourceLine);
-void *expat_realloc(XML_Parser parser, void *ptr, size_t size, int sourceLine);
 void *expat_realloc_sized(XML_Parser parser, void *ptr, size_t size,
                           size_t oldSize, int sourceLine);
 extern unsigned int g_bytesScanned; // used for testing only
