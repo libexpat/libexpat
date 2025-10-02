@@ -4528,8 +4528,9 @@ addBinding(XML_Parser parser, PREFIX *prefix, const ATTRIBUTE_ID *attId,
       }
 #endif
 
-      XML_Char *temp
-          = REALLOC(parser, b->uri, sizeof(XML_Char) * (len + EXPAND_SPARE));
+      XML_Char *temp = REALLOC_SIZED(parser, b->uri,
+                                     sizeof(XML_Char) * (len + EXPAND_SPARE),
+                                     sizeof(XML_Char) * b->uriAlloc);
       if (temp == NULL)
         return XML_ERROR_NO_MEMORY;
       b->uri = temp;
