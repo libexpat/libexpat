@@ -8174,7 +8174,10 @@ poolGrow(STRING_POOL *pool) {
     if (bytesToAllocate == 0)
       return XML_FALSE;
 
-    temp = REALLOC(pool->parser, pool->blocks, bytesToAllocate);
+    const int oldBlockSize = (int)(pool->end - pool->start);
+    const size_t oldBytesAllocated = poolBytesToAllocateFor(oldBlockSize);
+    temp = REALLOC_SIZED(pool->parser, pool->blocks, bytesToAllocate,
+                         oldBytesAllocated);
     if (temp == NULL)
       return XML_FALSE;
     pool->blocks = temp;
