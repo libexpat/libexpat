@@ -962,9 +962,8 @@ expat_realloc_sized(XML_Parser parser, void *ptr, size_t size, size_t old_size,
   void *mallocedPtr = (char *)ptr - EXPAT_MALLOC_PADDING - sizeof(size_t);
   const size_t prevSize = *(size_t *)mallocedPtr;
 
-  // Old size should either have not been provided (`SIZE_MAX` sentinel) or
-  // should agree with the metadata
-  assert(old_size == SIZE_MAX || old_size == prevSize);
+  // Old size should agree with the metadata
+  assert(old_size == prevSize);
   (void)old_size;
 
   // Classify upcoming change
