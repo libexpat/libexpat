@@ -3157,8 +3157,9 @@ storeRawNames(XML_Parser parser) {
     if (rawNameLen > (size_t)INT_MAX - nameLen)
       return XML_FALSE;
     bufSize = nameLen + rawNameLen;
-    if (bufSize > (size_t)(tag->bufEnd - tag->buf)) {
-      char *temp = REALLOC(parser, tag->buf, bufSize);
+    const size_t oldBufSize = (size_t)(tag->bufEnd - tag->buf);
+    if (bufSize > oldBufSize) {
+      char *temp = REALLOC_SIZED(parser, tag->buf, bufSize, oldBufSize);
       if (temp == NULL)
         return XML_FALSE;
       /* if tag->name.str points to tag->buf (only when namespace
