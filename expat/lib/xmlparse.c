@@ -787,11 +787,13 @@ struct XML_ParserStruct {
 
 #if XML_GE == 1
 #  define MALLOC(parser, s) (expat_malloc((parser), (s), __LINE__))
-#  define REALLOC(parser, p, s) (expat_realloc((parser), (p), (s), __LINE__))
+#  define REALLOC_SIZED(parser, p, s, old_size)                                \
+    (expat_realloc_sized((parser), (p), (s), (old_size), __LINE__))
 #  define FREE(parser, p) (expat_free((parser), (p), __LINE__))
 #else
 #  define MALLOC(parser, s) (parser->m_mem.malloc_fcn((s)))
-#  define REALLOC(parser, p, s) (parser->m_mem.realloc_fcn((p), (s)))
+#  define REALLOC_SIZED(parser, p, s, old_size)                                \
+    ((void)(old_size), parser->m_mem.realloc_fcn((p), (s)))
 #  define FREE(parser, p) (parser->m_mem.free_fcn((p)))
 #endif
 
@@ -939,7 +941,8 @@ void *
 #  else
 static void *
 #  endif
-expat_realloc(XML_Parser parser, void *ptr, size_t size, int sourceLine) {
+expat_realloc_sized(XML_Parser parser, void *ptr, size_t size, size_t old_size,
+                    int sourceLine) {
   assert(parser != NULL);
 
   if (ptr == NULL) {
@@ -958,6 +961,10 @@ expat_realloc(XML_Parser parser, void *ptr, size_t size, int sourceLine) {
   // pointer returned by malloc/realloc
   void *mallocedPtr = (char *)ptr - EXPAT_MALLOC_PADDING - sizeof(size_t);
   const size_t prevSize = *(size_t *)mallocedPtr;
+
+  // Old size should agree with the metadata
+  assert(old_size == prevSize);
+  (void)old_size;
 
   // Classify upcoming change
   const bool isIncrease = (size > prevSize);
@@ -3142,8 +3149,9 @@ storeRawNames(XML_Parser parser) {
     if (rawNameLen > (size_t)INT_MAX - nameLen)
       return XML_FALSE;
     bufSize = nameLen + rawNameLen;
-    if (bufSize > (size_t)(tag->bufEnd - tag->buf)) {
-      char *temp = REALLOC(parser, tag->buf, bufSize);
+    const size_t oldBufSize = (size_t)(tag->bufEnd - tag->buf);
+    if (bufSize > oldBufSize) {
+      char *temp = REALLOC_SIZED(parser, tag->buf, bufSize, oldBufSize);
       if (temp == NULL)
         return XML_FALSE;
       /* if tag->name.str points to tag->buf (only when namespace
@@ -3503,9 +3511,10 @@ doContent(XML_Parser parser, int startTagLevel, const ENCODING *enc,
             tag->name.strLen = convLen;
             break;
           }
-          bufSize = (int)(tag->bufEnd - tag->buf) << 1;
+          const size_t oldBufSize = (size_t)(tag->bufEnd - tag->buf);
+          bufSize = (int)oldBufSize << 1;
           {
-            char *temp = REALLOC(parser, tag->buf, bufSize);
+            char *temp = REALLOC_SIZED(parser, tag->buf, bufSize, oldBufSize);
             if (temp == NULL)
               return XML_ERROR_NO_MEMORY;
             tag->buf = temp;
@@ -3884,8 +3893,9 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
     }
 #endif
 
-    temp = REALLOC(parser, parser->m_atts,
-                   parser->m_attsSize * sizeof(ATTRIBUTE));
+    temp = REALLOC_SIZED(parser, parser->m_atts,
+                         parser->m_attsSize * sizeof(ATTRIBUTE),
+                         oldAttsSize * sizeof(ATTRIBUTE));
     if (temp == NULL) {
       parser->m_attsSize = oldAttsSize;
       return XML_ERROR_NO_MEMORY;
@@ -3903,8 +3913,9 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
     }
 #  endif
 
-    temp2 = REALLOC(parser, parser->m_attInfo,
-                    parser->m_attsSize * sizeof(XML_AttrInfo));
+    temp2 = REALLOC_SIZED(parser, parser->m_attInfo,
+                          parser->m_attsSize * sizeof(XML_AttrInfo),
+                          oldAttsSize * sizeof(XML_AttrInfo));
     if (temp2 == NULL) {
       parser->m_attsSize = oldAttsSize;
       return XML_ERROR_NO_MEMORY;
@@ -4080,7 +4091,9 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
       }
 #endif
 
-      temp = REALLOC(parser, parser->m_nsAtts, nsAttsSize * sizeof(NS_ATT));
+      temp
+          = REALLOC_SIZED(parser, parser->m_nsAtts, nsAttsSize * sizeof(NS_ATT),
+                          oldNsAttsPower * sizeof(NS_ATT));
       if (! temp) {
         /* Restore actual size of memory in m_nsAtts */
         parser->m_nsAttsPower = oldNsAttsPower;
@@ -4507,8 +4520,9 @@ addBinding(XML_Parser parser, PREFIX *prefix, const ATTRIBUTE_ID *attId,
       }
 #endif
 
-      XML_Char *temp
-          = REALLOC(parser, b->uri, sizeof(XML_Char) * (len + EXPAND_SPARE));
+      XML_Char *temp = REALLOC_SIZED(parser, b->uri,
+                                     sizeof(XML_Char) * (len + EXPAND_SPARE),
+                                     sizeof(XML_Char) * b->uriAlloc);
       if (temp == NULL)
         return XML_ERROR_NO_MEMORY;
       b->uri = temp;
@@ -5905,8 +5919,10 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
               return XML_ERROR_NO_MEMORY;
             }
 
-            char *const new_connector = REALLOC(
-                parser, parser->m_groupConnector, parser->m_groupSize *= 2);
+            parser->m_groupSize *= 2;
+            char *const new_connector
+                = REALLOC_SIZED(parser, parser->m_groupConnector,
+                                parser->m_groupSize, parser->m_groupSize / 2);
             if (new_connector == NULL) {
               parser->m_groupSize /= 2;
               return XML_ERROR_NO_MEMORY;
@@ -5925,8 +5941,9 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
             }
 #endif
 
-            int *const new_scaff_index = REALLOC(
-                parser, dtd->scaffIndex, parser->m_groupSize * sizeof(int));
+            int *const new_scaff_index = REALLOC_SIZED(
+                parser, dtd->scaffIndex, parser->m_groupSize * sizeof(int),
+                parser->m_groupSize / 2 * sizeof(int));
             if (new_scaff_index == NULL)
               return XML_ERROR_NO_MEMORY;
             dtd->scaffIndex = new_scaff_index;
@@ -7195,8 +7212,9 @@ defineAttribute(ELEMENT_TYPE *type, ATTRIBUTE_ID *attId, XML_Bool isCdata,
       }
 #endif
 
-      temp = REALLOC(parser, type->defaultAtts,
-                     (count * sizeof(DEFAULT_ATTRIBUTE)));
+      temp = REALLOC_SIZED(parser, type->defaultAtts,
+                           count * sizeof(DEFAULT_ATTRIBUTE),
+                           type->allocDefaultAtts * sizeof(DEFAULT_ATTRIBUTE));
       if (temp == NULL)
         return 0;
       type->allocDefaultAtts = count;
@@ -8149,7 +8167,10 @@ poolGrow(STRING_POOL *pool) {
     if (bytesToAllocate == 0)
       return XML_FALSE;
 
-    temp = REALLOC(pool->parser, pool->blocks, bytesToAllocate);
+    const int oldBlockSize = (int)(pool->end - pool->start);
+    const size_t oldBytesAllocated = poolBytesToAllocateFor(oldBlockSize);
+    temp = REALLOC_SIZED(pool->parser, pool->blocks, bytesToAllocate,
+                         oldBytesAllocated);
     if (temp == NULL)
       return XML_FALSE;
     pool->blocks = temp;
@@ -8248,8 +8269,9 @@ nextScaffoldPart(XML_Parser parser) {
       }
 #endif
 
-      temp = REALLOC(parser, dtd->scaffold,
-                     dtd->scaffSize * 2 * sizeof(CONTENT_SCAFFOLD));
+      temp = REALLOC_SIZED(parser, dtd->scaffold,
+                           dtd->scaffSize * 2 * sizeof(CONTENT_SCAFFOLD),
+                           dtd->scaffSize * sizeof(CONTENT_SCAFFOLD));
       if (temp == NULL)
         return -1;
       dtd->scaffSize *= 2;
