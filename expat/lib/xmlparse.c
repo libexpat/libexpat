@@ -3503,7 +3503,7 @@ doContent(XML_Parser parser, int startTagLevel, const ENCODING *enc,
             tag->name.strLen = convLen;
             break;
           }
-          bufSize = (int)(tag->bufEnd - tag->buf) << 1;
+          bufSize = (int)(tag->bufEnd - tag->buf) * 2;
           {
             char *temp = REALLOC(parser, tag->buf, bufSize);
             if (temp == NULL)
