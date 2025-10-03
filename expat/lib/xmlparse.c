@@ -3502,6 +3502,8 @@ doContent(XML_Parser parser, int startTagLevel, const ENCODING *enc,
             tag->name.strLen = convLen;
             break;
           }
+          if (SIZE_MAX / 2 < (size_t)(tag->bufEnd - tag->buf))
+            return XML_ERROR_NO_MEMORY;
           const size_t bufSize = (size_t)(tag->bufEnd - tag->buf) * 2;
           {
             char *temp = REALLOC(parser, tag->buf, bufSize);
