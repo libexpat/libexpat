@@ -40,7 +40,7 @@
 #endif
 
 #include "expat_config.h"
-#include "minicheck.h"
+#include "minicheck.h" // for fail
 
 #include <assert.h>
 #include <stdio.h>

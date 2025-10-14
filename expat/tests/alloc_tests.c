@@ -55,9 +55,9 @@
 #include "expat_config.h"
 
 #include "expat.h"
+#include "chardata.h"
 #include "internal.h"
 #include "common.h"
-#include "minicheck.h"
 #include "dummy.h"
 #include "handlers.h"
 #include "alloc_tests.h"
