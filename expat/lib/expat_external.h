@@ -88,8 +88,7 @@
 #    ifndef XML_BUILDING_EXPAT
 /* using Expat from an application */
 
-#      if defined(_MSC_EXTENSIONS) && ! defined(__BEOS__)                      \
-          && ! defined(__CYGWIN__)
+#      if defined(_MSC_VER) && ! defined(__BEOS__) && ! defined(__CYGWIN__)
 #        define XMLIMPORT __declspec(dllimport)
 #      endif
 
