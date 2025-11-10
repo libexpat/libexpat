@@ -195,10 +195,17 @@ _run() {
             done
         fi
 
+        # NOTE: This is meant to mitigate Wine crashing randomly in CI
+        if ${with_mingw} && [[ ${CI} = true ]]; then
+            local retry='retry --times 5 --'
+        else
+            local retry=
+        fi
+
         set -x
         make CTEST_OUTPUT_ON_FAILURE=1 test
         if ${with_dtd}; then
-            make run-xmltest
+            ${retry} make run-xmltest
         fi
 
         lcov -c -d "${capture_dir}" -o "${coverage_info}-test" &>> run.log

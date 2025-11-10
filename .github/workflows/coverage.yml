@@ -67,7 +67,8 @@ jobs:
             lcov \
             libbsd-dev \
             lzip \
-            moreutils
+            moreutils \
+            retry
 
         # Install 32bit Wine
         sudo apt-get install --yes --no-install-recommends -V \
