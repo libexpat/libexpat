@@ -180,7 +180,14 @@ run_tests() {
     RUN "${MAKE}" "${make_args[@]}" test
 
     if [[ ! $* =~ -DEXPAT_DTD=OFF ]]; then
-        RUN "${MAKE}" "${make_args[@]}" run-xmltest
+        # NOTE: This is meant to mitigate Wine crashing randomly in CI
+        if [[ ${CC} =~ mingw ]]; then
+            local retry='retry --times 5 --'
+        else
+            local retry=
+        fi
+
+        RUN ${retry} "${MAKE}" "${make_args[@]}" run-xmltest
     fi
 }
 
