@@ -98,6 +98,7 @@ jobs:
         sudo apt-get update  # due to new architecture
         sudo apt-get install --yes --no-install-recommends -V \
             mingw-w64 \
+            retry \
             wine-stable \
             wine32:i386
     - name: Install build dependencies (Non-MinGW)
