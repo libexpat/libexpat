@@ -1660,6 +1660,12 @@ parser, the body of the external entity can be recursively parsed.</p>
 
 <p>Since this handler may be called recursively, it should not be saving
 information into global or static variables.</p>
+
+<p><strong>Warning:</strong> Using an external entity reference handler
+can lead to <a href="https://libexpat.github.io/doc/xml-security/#external-entities">XXE
+vulnerabilities</a>. It should only be used in applications that do not parse
+untrusted XML input.</p>
+
 </div>
 
 <h4 id="XML_SetExternalEntityRefHandlerArg">XML_SetExternalEntityRefHandlerArg</h4>
