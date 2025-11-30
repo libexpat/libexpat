@@ -191,7 +191,7 @@ interface.</p>
 </ul>
 
 <hr />
-<h2><a name="overview">Overview</a></h2>
+<h2><a id="overview">Overview</a></h2>
 
 <p>Expat is a stream-oriented parser. You register callback (or
 handler) functions with the parser and then start feeding it the
@@ -305,7 +305,7 @@ safely with older versions of Expat, you can conditionally define it
 shoveling the document to the parser so that it can do its work.</p>
 
 <hr />
-<h2><a name="building">Building and Installing Expat</a></h2>
+<h2><a id="building">Building and Installing Expat</a></h2>
 
 <p>The Expat distribution comes as a compressed (with GNU gzip) tar
 file.  You may download the latest version from <a href=
@@ -360,7 +360,7 @@ library and header would get installed in
 pre-processor definitions.  The symbols are:</p>
 
 <dl class="cpp-symbols">
-<dt><a name="XML_GE">XML_GE</a></dt>
+<dt><a id="XML_GE">XML_GE</a></dt>
 <dd>
 Added in Expat 2.6.0.
 Include support for
@@ -387,7 +387,7 @@ for example, referencing an entity <code>e1</code> via <code>&amp;e1;</code> wil
 by text <code>&amp;e1;</code>.
 </dd>
 
-<dt><a name="XML_DTD">XML_DTD</a></dt>
+<dt><a id="XML_DTD">XML_DTD</a></dt>
 <dd>Include support for using and reporting DTD-based content.  If
 this is defined, default attribute values from an external DTD subset
 are reported and attribute value normalization occurs based on the
@@ -400,24 +400,24 @@ XML_SetBillionLaughsAttackProtectionMaximumAmplification</a></code> and <code>
 <a href="#XML_SetBillionLaughsAttackProtectionActivationThreshold">
 XML_SetBillionLaughsAttackProtectionActivationThreshold</a></code> available.</dd>
 
-<dt><a name="XML_NS">XML_NS</a></dt>
+<dt><a id="XML_NS">XML_NS</a></dt>
 <dd>When defined, support for the <cite><a href=
 "https://www.w3.org/TR/REC-xml-names/" >Namespaces in XML</a></cite>
 specification is included.</dd>
 
-<dt><a name="XML_UNICODE">XML_UNICODE</a></dt>
+<dt><a id="XML_UNICODE">XML_UNICODE</a></dt>
 <dd>When defined, character data reported to the application is
 encoded in UTF-16 using wide characters of the type
 <code>XML_Char</code>.  This is implied if
 <code>XML_UNICODE_WCHAR_T</code> is defined.</dd>
 
-<dt><a name="XML_UNICODE_WCHAR_T">XML_UNICODE_WCHAR_T</a></dt>
+<dt><a id="XML_UNICODE_WCHAR_T">XML_UNICODE_WCHAR_T</a></dt>
 <dd>If defined, causes the <code>XML_Char</code> character type to be
 defined using the <code>wchar_t</code> type; otherwise, <code>unsigned
 short</code> is used.  Defining this implies
 <code>XML_UNICODE</code>.</dd>
 
-<dt><a name="XML_LARGE_SIZE">XML_LARGE_SIZE</a></dt>
+<dt><a id="XML_LARGE_SIZE">XML_LARGE_SIZE</a></dt>
 <dd>If defined, causes the <code>XML_Size</code> and <code>XML_Index</code>
 integer types to be at least 64 bits in size. This is intended to support
 processing of very large input streams, where the return values of
@@ -427,7 +427,7 @@ processing of very large input streams, where the return values of
 could overflow. It may not be supported by all compilers, and is turned
 off by default.</dd>
 
-<dt><a name="XML_CONTEXT_BYTES">XML_CONTEXT_BYTES</a></dt>
+<dt><a id="XML_CONTEXT_BYTES">XML_CONTEXT_BYTES</a></dt>
 <dd>The number of input bytes of markup context which the parser will
 ensure are available for reporting via <code><a href=
 "#XML_GetInputContext" >XML_GetInputContext</a></code>.  This is
@@ -437,20 +437,20 @@ href= "#XML_GetInputContext" >XML_GetInputContext</a></code> will
 always report <code>NULL</code>.  Without this, Expat has a smaller memory
 footprint and can be faster.</dd>
 
-<dt><a name="XML_STATIC">XML_STATIC</a></dt>
+<dt><a id="XML_STATIC">XML_STATIC</a></dt>
 <dd>On Windows, this should be set if Expat is going to be linked
 statically with the code that calls it; this is required to get all
 the right MSVC magic annotations correct.  This is ignored on other
 platforms.</dd>
 
-<dt><a name="XML_ATTR_INFO">XML_ATTR_INFO</a></dt>
+<dt><a id="XML_ATTR_INFO">XML_ATTR_INFO</a></dt>
 <dd>If defined, makes the additional function <code><a href=
 "#XML_GetAttributeInfo" >XML_GetAttributeInfo</a></code> available
 for reporting attribute byte offsets.</dd>
 </dl>
 
 <hr />
-<h2><a name="using">Using Expat</a></h2>
+<h2><a id="using">Using Expat</a></h2>
 
 <h3>Compiling and Linking Against Expat</h3>
 
@@ -730,7 +730,7 @@ creating a parser. This is useful when the encoding information may
 come from a source outside the document itself (like a higher level
 protocol.)</p>
 
-<p><a name="builtin_encodings"></a>There are four built-in encodings
+<p><a id="builtin_encodings"></a>There are four built-in encodings
 in Expat:</p>
 <ul>
 <li>UTF-8</li>
@@ -966,9 +966,9 @@ whether the parse can be resumed in the future.</p>
 <hr />
 <!-- ================================================================ -->
 
-<h2><a name="reference">Expat Reference</a></h2>
+<h2><a id="reference">Expat Reference</a></h2>
 
-<h3><a name="creation">Parser Creation</a></h3>
+<h3><a id="creation">Parser Creation</a></h3>
 
 <h4 id="XML_ParserCreate">XML_ParserCreate</h4>
 <pre class="fcndec">
@@ -1110,7 +1110,7 @@ This function may not be used on a parser created using <code><a href=
 dealing with any memory associated with <a href="#userdata">user data</a>.
 </div>
 
-<h3><a name="parsing">Parsing</a></h3>
+<h3><a id="parsing">Parsing</a></h3>
 
 <p>To state the obvious: the three parsing functions <code><a href=
 "#XML_Parse" >XML_Parse</a></code>, <code><a href= "#XML_ParseBuffer">
@@ -1131,7 +1131,7 @@ exceed the maximum integer value. Input data at the end of a buffer
 will remain unprocessed if it is part of an XML token for which the
 end is not part of that buffer.</p>
 
-<p><a name="isFinal"></a>The application <em>must</em> make a concluding
+<p><a id="isFinal"></a>The application <em>must</em> make a concluding
 <code><a href="#XML_Parse">XML_Parse</a></code> or
 <code><a href="#XML_ParseBuffer">XML_ParseBuffer</a></code> call
 with <code>isFinal</code> set to <code>XML_TRUE</code>.</p>
@@ -1386,7 +1386,7 @@ processed.  The <code>status</code> parameter <em>must not</em> be
 </div>
 
 
-<h3><a name="setting">Handler Setting</a></h3>
+<h3><a id="setting">Handler Setting</a></h3>
 
 <p>Although handlers are typically set prior to parsing and left alone, an
 application may choose to set or change the handler for a parsing event
@@ -2097,7 +2097,7 @@ then the parser will throw an <code>XML_ERROR_NOT_STANDALONE</code>
 error.</p>
 </div>
 
-<h3><a name="position">Parse position and error reporting functions</a></h3>
+<h3><a id="position">Parse position and error reporting functions</a></h3>
 
 <p>These are the functions you'll want to call when the parse
 functions return <code>XML_STATUS_ERROR</code> (a parse error has
@@ -2207,7 +2207,7 @@ parse position may be before the beginning of the buffer.</p>
 return <code>NULL</code>.</p>
 </div>
 
-<h3><a name="attack-protection">Attack Protection</a><a name="billion-laughs"></a></h3>
+<h3><a id="attack-protection">Attack Protection</a><a id="billion-laughs"></a></h3>
 
 <h4 id="XML_SetBillionLaughsAttackProtectionMaximumAmplification">XML_SetBillionLaughsAttackProtectionMaximumAmplification</h4>
 <pre class="fcndec">
@@ -2436,7 +2436,7 @@ XML_SetReparseDeferralEnabled(XML_Parser parser, XML_Bool enabled);
   </p>
 </div>
 
-<h3><a name="miscellaneous">Miscellaneous functions</a></h3>
+<h3><a id="miscellaneous">Miscellaneous functions</a></h3>
 
 <p>The functions in this section either obtain state information from
 the parser or can be used to dynamically set parser options.</p>
