@@ -1418,11 +1418,11 @@ START_TEST(test_dtd_attr_handling) {
           "<!ATTLIST doc a NOTATION (foo) #IMPLIED>\n"
           "]>"
           "<doc/>",
-          XCS("doc"), XCS("a"), XCS("NOTATION(foo)"), NULL, XML_FALSE},
+          XCS("doc"), XCS("a"), XCS("NOTATION (foo)"), NULL, XML_FALSE},
          {"<!ATTLIST doc a NOTATION (foo) 'bar'>\n"
           "]>"
           "<doc/>",
-          XCS("doc"), XCS("a"), XCS("NOTATION(foo)"), XCS("bar"), XML_FALSE},
+          XCS("doc"), XCS("a"), XCS("NOTATION (foo)"), XCS("bar"), XML_FALSE},
          {"<!ATTLIST doc a CDATA '\xdb\xb2'>\n"
           "]>"
           "<doc/>",

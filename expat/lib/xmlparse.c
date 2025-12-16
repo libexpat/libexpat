@@ -5211,8 +5211,8 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
       = {ASCII_N, ASCII_M, ASCII_T, ASCII_O, ASCII_K,
          ASCII_E, ASCII_N, ASCII_S, '\0'};
   static const XML_Char notationPrefix[]
-      = {ASCII_N, ASCII_O, ASCII_T, ASCII_A,      ASCII_T,
-         ASCII_I, ASCII_O, ASCII_N, ASCII_LPAREN, '\0'};
+      = {ASCII_N, ASCII_O, ASCII_T,     ASCII_A,      ASCII_T, ASCII_I,
+         ASCII_O, ASCII_N, ASCII_SPACE, ASCII_LPAREN, '\0'};
   static const XML_Char enumValueSep[] = {ASCII_PIPE, '\0'};
   static const XML_Char enumValueStart[] = {ASCII_LPAREN, '\0'};
 
