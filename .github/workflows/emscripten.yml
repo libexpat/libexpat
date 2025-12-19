@@ -55,7 +55,7 @@ jobs:
             emscripten \
             make
 
-    - name: Build using musl-tools
+    - name: Build using Emscripten
       run: |
         cmake_args=(
           -DCMAKE_C_FLAGS='-O1 -pipe -Wall -Wextra -pedantic -Wno-overlength-strings'
