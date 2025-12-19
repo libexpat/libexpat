@@ -27,7 +27,7 @@
 # OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 # USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-name: Build with Emscripten
+name: Build with WASI SDK
 
 on:
   pull_request:
@@ -40,8 +40,8 @@ permissions:
   contents: read
 
 jobs:
-  emscripten:
-    name: Build with Emscripten
+  wasi_sdk:
+    name: Build with WASI SDK
     runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6.0.1
@@ -49,20 +49,21 @@ jobs:
     - name: Install build dependencies
       run: |-
         set -x
-        sudo apt-get update
-        sudo apt-get install --yes --no-install-recommends -V \
-            cmake \
-            emscripten \
-            make
+        wget https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-29/wasi-sdk-29.0-x86_64-linux.deb
+        sudo apt-get install --yes ./wasi-sdk-29.0-x86_64-linux.deb
 
-    - name: Build using Emscripten
+    - name: Build using WASI SDK
       run: |
         cmake_args=(
-          -DCMAKE_C_FLAGS='-O1 -pipe -Wall -Wextra -pedantic -Wno-overlength-strings'
+          -DCMAKE_TOOLCHAIN_FILE=/opt/wasi-sdk/share/cmake/wasi-sdk.cmake
+          -DCMAKE_C_FLAGS='-O1 -pipe -Wall -Wextra -pedantic -Wno-overlength-strings -D_WASI_EMULATED_GETPID -DXML_POOR_ENTROPY'
           -DCMAKE_CXX_FLAGS='-O2 -pipe -Wall -Wextra -pedantic -Wno-overlength-strings'
+          -DCMAKE_{EXE,SHARED,MODULE}_LINKER_FLAGS='-lwasi-emulated-getpid'
           -DEXPAT_BUILD_DOCS=OFF
+          -DEXPAT_BUILD_TESTS=OFF
+          -DEXPAT_SHARED_LIBS=OFF
           -DEXPAT_WARNINGS_AS_ERRORS=ON
         )
         set -x
-        emcmake cmake "${cmake_args[@]}" -S expat/ -B build/
-        emmake make -C build -j$(nproc) VERBOSE=1 all
+        cmake "${cmake_args[@]}" -S expat/ -B build/
+        make -C build -j$(nproc) VERBOSE=1 all
