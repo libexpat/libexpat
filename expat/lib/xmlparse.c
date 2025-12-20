@@ -1230,8 +1230,11 @@ generate_hash_secret_salt(XML_Parser parser) {
 #  endif /* ! defined(_WIN32) && defined(XML_DEV_URANDOM) */
   /* .. and self-made low quality for backup: */
 
+  entropy = gather_time_entropy();
+#  if ! defined(__wasi__)
   /* Process ID is 0 bits entropy if attacker has local access */
-  entropy = gather_time_entropy() ^ getpid();
+  entropy ^= getpid();
+#  endif
 
   /* Factors are 2^31-1 and 2^61-1 (Mersenne primes M31 and M61) */
   if (sizeof(unsigned long) == 4) {
