@@ -117,7 +117,7 @@ AS_IF([test "$GCC" = yes],
    dnl GCC don't support it and it causes extra warnings that are only
    dnl distracting; avoid.
    AX_APPEND_COMPILE_FLAGS([-fexceptions], [AM_CFLAGS])
-   AX_APPEND_COMPILE_FLAGS([-fno-strict-aliasing -Wmissing-prototypes -Wstrict-prototypes], [AM_CFLAGS])
+   AX_APPEND_COMPILE_FLAGS([-Wstrict-aliasing=3 -Wmissing-prototypes -Wstrict-prototypes], [AM_CFLAGS])
    AX_APPEND_COMPILE_FLAGS([-pedantic -Wduplicated-cond -Wduplicated-branches -Wlogical-op], [AM_CFLAGS])
    AX_APPEND_COMPILE_FLAGS([-Wrestrict -Wnull-dereference -Wjump-misses-init -Wdouble-promotion], [AM_CFLAGS])
    AX_APPEND_COMPILE_FLAGS([-Wshadow -Wformat=2 -Wno-pedantic-ms-format -Wmisleading-indentation], [AM_CFLAGS])])
@@ -131,11 +131,11 @@ AS_IF([test "$GCC" = yes],
    dnl GCC don't support it and it causes extra warnings that are only
    dnl distracting; avoid.
    AX_APPEND_COMPILE_FLAGS([-fexceptions], [AM_CXXFLAGS])
-   AX_APPEND_COMPILE_FLAGS([-fno-strict-aliasing], [AM_CXXFLAGS])])
+   AX_APPEND_COMPILE_FLAGS([-Wstrict-aliasing=3], [AM_CXXFLAGS])])
 AC_LANG_POP([C++])
 
 AS_IF([test "$GCC" = yes],
-  [AX_APPEND_LINK_FLAGS([-fno-strict-aliasing],[AM_LDFLAGS])])
+  [AX_APPEND_LINK_FLAGS([-Wstrict-aliasing=3],[AM_LDFLAGS])])
 
 dnl patching ${archive_cmds} to affect generation of file "libtool" to fix linking with clang (issue #312)
 AS_CASE(["$LD"],[*clang*],
