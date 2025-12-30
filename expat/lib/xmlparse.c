@@ -349,7 +349,7 @@ typedef struct {
 typedef struct block {
   struct block *next;
   int size;
-  XML_Char s[1];
+  XML_Char s[];
 } BLOCK;
 
 typedef struct {
