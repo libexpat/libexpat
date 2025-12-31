@@ -45,6 +45,8 @@ Release 2.7.4 ??? ????????? ?? ????
         Other changes:
            #1066  docs: Be explicit that parent parsers need to outlive
                     subparsers
+           #1105  Stop using -fno-strict-aliasing, and use -Wstrict-aliasing=3
+                    instead
 
 Release 2.7.3 Wed September 24 2025
         Security fixes:

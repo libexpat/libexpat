@@ -84,10 +84,10 @@ if (_FLAG_DETECTION_UNUSABLE)
         " HINT: Is it configured to report errors in a language other"
         " than English?"
     )
-    set(FLAG_NO_STRICT_ALIASING FALSE)
+    set(FLAG_WSTRICT_ALIASING FALSE)
     set(FLAG_VISIBILITY FALSE)
 else()
-    check_c_compiler_flag("-fno-strict-aliasing" FLAG_NO_STRICT_ALIASING)
+    check_c_compiler_flag("-Wstrict-aliasing=3" FLAG_WSTRICT_ALIASING)
     check_c_compiler_flag("-fvisibility=hidden" FLAG_VISIBILITY)
 endif()
 
