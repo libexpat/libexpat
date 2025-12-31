@@ -899,6 +899,7 @@ usage(const XML_Char *prog, int rc) {
       T("  -n             enable [n]amespace processing\n")
       T("  -p             enable processing of external DTDs and [p]arameter entities\n")
       T("  -x             enable processing of e[x]ternal entities\n")
+      T("                 (CAREFUL! This makes xmlwf vulnerable to external entity attacks (XXE).)\n")
       T("  -e ENCODING    override any in-document [e]ncoding declaration\n")
       T("  -w             enable support for [W]indows code pages\n")
       T("  -r             disable memory-mapping and use [r]ead calls instead\n")
