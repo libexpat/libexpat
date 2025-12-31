@@ -390,16 +390,13 @@ endDoctypeDecl(void *userData) {
     notationCount++;
   if (notationCount == 0) {
     /* Nothing to report */
-    free((void *)data->currentDoctypeName);
-    data->currentDoctypeName = NULL;
-    return;
+    goto cleanUp;
   }
 
   notations = malloc(notationCount * sizeof(NotationList *));
   if (notations == NULL) {
     fprintf(stderr, "Unable to sort notations");
-    freeNotations(data);
-    return;
+    goto cleanUp;
   }
 
   for (p = data->notationListHead, i = 0; i < notationCount; p = p->next, i++) {
@@ -439,6 +436,8 @@ endDoctypeDecl(void *userData) {
   fputts(T("]>\n"), data->fp);
 
   free(notations);
+
+cleanUp:
   freeNotations(data);
   free((void *)data->currentDoctypeName);
   data->currentDoctypeName = NULL;
