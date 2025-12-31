@@ -8,11 +8,11 @@ dnl In addition, an Automake conditional EXPAT_INSTALLED is set accordingly.
 dnl This is necessary to adapt a whole lot of packages that have expat
 dnl bundled as a static library.
 AC_DEFUN([AM_WITH_EXPAT],
-[ AC_ARG_WITH(expat,
-	      [  --with-expat=PREFIX     Use system Expat library],
-	      , with_expat=no)
+[ AC_ARG_WITH([expat],
+	      [AS_HELP_STRING([--with-expat=PREFIX], [Use system Expat library])],
+	      , [with_expat=no])
 
-  AM_CONDITIONAL(EXPAT_INSTALLED, test $with_expat != no)
+  AM_CONDITIONAL([EXPAT_INSTALLED], [test $with_expat != no])
 
   EXPAT_CFLAGS=
   EXPAT_LIBS=
@@ -21,23 +21,23 @@ AC_DEFUN([AM_WITH_EXPAT],
 		EXPAT_CFLAGS="-I$with_expat/include"
 		EXPAT_LIBS="-L$with_expat/lib"
 	fi
-	AC_CHECK_LIB(expat, XML_ParserCreate,
+	AC_CHECK_LIB([expat], [XML_ParserCreate],
 		     [ EXPAT_LIBS="$EXPAT_LIBS -lexpat"
 		       expat_found=yes ],
 		     [ expat_found=no ],
-		     "$EXPAT_LIBS")
+		     ["$EXPAT_LIBS"])
 	if test $expat_found = no; then
 		AC_MSG_ERROR([Could not find the Expat library])
 	fi
 	expat_save_CFLAGS="$CFLAGS"
 	CFLAGS="$CFLAGS $EXPAT_CFLAGS"
-	AC_CHECK_HEADERS(expat.h, , expat_found=no)
+	AC_CHECK_HEADERS([expat.h], , [expat_found=no])
 	if test $expat_found = no; then
 		AC_MSG_ERROR([Could not find expat.h])
 	fi
 	CFLAGS="$expat_save_CFLAGS"
   fi
 
-  AC_SUBST(EXPAT_CFLAGS)
-  AC_SUBST(EXPAT_LIBS)
+  AC_SUBST([EXPAT_CFLAGS])
+  AC_SUBST([EXPAT_LIBS])
 ])
