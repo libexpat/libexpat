@@ -225,7 +225,6 @@ processStream(const XML_Char *filename, XML_Parser parser) {
       if (filename != NULL)
         close(fd);
       break;
-      ;
     }
   }
   return 1;
