@@ -56,7 +56,6 @@
 #  include "winconfig.h"
 #endif
 
-#include "expat_external.h"
 #include "internal.h"
 #include "xmltok.h"
 #include "nametab.h"
