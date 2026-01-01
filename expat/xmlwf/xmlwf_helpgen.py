@@ -30,28 +30,31 @@
 # USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 import argparse
+from textwrap import dedent
 
-epilog = """
-environment variables:
-  EXPAT_ACCOUNTING_DEBUG=(0|1|2|3)
-                 Control verbosity of accounting debugging (default: 0)
-  EXPAT_ENTITY_DEBUG=(0|1)
-                 Control verbosity of entity debugging (default: 0)
-  EXPAT_ENTROPY_DEBUG=(0|1)
-                 Control verbosity of entropy debugging (default: 0)
-  EXPAT_MALLOC_DEBUG=(0|1|2)
-                 Control verbosity of allocation tracker (default: 0)
+epilog = dedent(
+    """
+    environment variables:
+      EXPAT_ACCOUNTING_DEBUG=(0|1|2|3)
+                     Control verbosity of accounting debugging (default: 0)
+      EXPAT_ENTITY_DEBUG=(0|1)
+                     Control verbosity of entity debugging (default: 0)
+      EXPAT_ENTROPY_DEBUG=(0|1)
+                     Control verbosity of entropy debugging (default: 0)
+      EXPAT_MALLOC_DEBUG=(0|1|2)
+                     Control verbosity of allocation tracker (default: 0)
 
-exit status:
-  0              the input files are well-formed and the output (if requested) was written successfully
-  1              could not allocate data structures, signals a serious problem with execution environment
-  2              one or more input files were not well-formed
-  3              could not create an output file
-  4              command-line argument error
+    exit status:
+      0              the input files are well-formed and the output (if requested) was written successfully
+      1              could not allocate data structures, signals a serious problem with execution environment
+      2              one or more input files were not well-formed
+      3              could not create an output file
+      4              command-line argument error
 
-xmlwf of libexpat is software libre, licensed under the MIT license.
-Please report bugs at https://github.com/libexpat/libexpat/issues -- thank you!
-"""
+    xmlwf of libexpat is software libre, licensed under the MIT license.
+    Please report bugs at https://github.com/libexpat/libexpat/issues -- thank you!
+    """
+)
 
 usage = """
   %(prog)s [OPTIONS] [FILE ...]
@@ -83,7 +86,11 @@ input_related.add_argument(
 input_related.add_argument(
     "-x",
     action="store_true",
-    help="enable processing of e[x]ternal entities\n(CAREFUL! This makes xmlwf vulnerable to external entity attacks (XXE).)",
+    help=(
+        "enable processing of e[x]ternal entities"
+        "\n"
+        "(CAREFUL! This makes xmlwf vulnerable to external entity attacks (XXE).)"
+    ),
 )
 input_related.add_argument(
     "-e",
@@ -130,9 +137,11 @@ output_related.add_argument(
 
 billion_laughs = parser.add_argument_group(
     "amplification attack protection (e.g. billion laughs)",
-    description="NOTE: "
-    "If you ever need to increase these values "
-    "for non-attack payload, please file a bug report.",
+    description=(
+        "NOTE: "
+        "If you ever need to increase these values "
+        "for non-attack payload, please file a bug report."
+    ),
 )
 billion_laughs.add_argument(
     "-a",
