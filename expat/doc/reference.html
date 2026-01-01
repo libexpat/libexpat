@@ -1626,6 +1626,11 @@ called for processing an external DTD subset if parameter entity parsing
 is in effect. (See <a href="#XML_SetParamEntityParsing">
 <code>XML_SetParamEntityParsing</code></a>.)</p>
 
+<p><strong>Warning:</strong> Using an external entity reference handler
+can lead to <a href="https://libexpat.github.io/doc/xml-security/#external-entities">XXE
+vulnerabilities</a>. It should only be used in applications that do not parse
+untrusted XML input.</p>
+
 <p>The <code>context</code> parameter specifies the parsing context in
 the format expected by the <code>context</code> argument to <code><a
 href="#XML_ExternalEntityParserCreate"
@@ -1659,11 +1664,6 @@ parser, the body of the external entity can be recursively parsed.</p>
 
 <p>Since this handler may be called recursively, it should not be saving
 information into global or static variables.</p>
-
-<p><strong>Warning:</strong> Using an external entity reference handler
-can lead to <a href="https://libexpat.github.io/doc/xml-security/#external-entities">XXE
-vulnerabilities</a>. It should only be used in applications that do not parse
-untrusted XML input.</p>
 
 </div>
 

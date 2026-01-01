@@ -443,6 +443,7 @@ supports both.
         <listitem>
 		<para>
   Turns on parsing external entities.
+  (CAREFUL! This makes xmlwf vulnerable to external entity attacks (XXE).)
   </para>
 <para>
   Non-validating parsers are not required to resolve external
