@@ -48,13 +48,42 @@ jobs:
     - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6.0.1
 
     - name: Install build dependencies
+      env:
+        tidy_version: 5.8.0
       run: |-
         set -x
         sudo apt-get update
         sudo apt-get install --yes --no-install-recommends -V \
             docbook \
             libxml2-utils \
+            moreutils \
             w3c-sgml-lib
+
+        # NOTE: Ubuntu 24.04 has tidy 5.6.0 while we need more recent tidy 5.8.0
+        wget --progress=dot:giga "https://github.com/htacg/tidy-html5/releases/download/${tidy_version}/tidy-${tidy_version}-Linux-64bit.deb"
+        sudo apt-get install --yes "./tidy-${tidy_version}-Linux-64bit.deb"
+
+    - name: Enforce clean XML
+      run: |
+        tidy_args=(
+            --indent 1
+            --tidy-mark no
+            --vertical-space yes
+            --wrap 90
+            --write-back yes
+        )
+        set -x -o pipefail
+
+        # Re-indent XHTML
+        tidy "${tidy_args[@]}" expat/doc/reference.html
+
+        # Drop trailing whitespace
+        sed 's, \+$,,' -i.bak expat/doc/reference.html
+
+        # Replace leading tabs by spaces
+        expand -i -t 2 expat/doc/xmlwf.xml | sponge expat/doc/xmlwf.xml
+
+        git -c color.ui=yes diff --exit-code  # i.e. show diff and fail CI if there is a diff
 
     - name: Ensure well-formed and valid XML
       run: |
