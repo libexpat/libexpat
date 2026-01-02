@@ -3040,7 +3040,7 @@ START_TEST(test_get_buffer_1) {
    */
   if (get_feature(XML_FEATURE_CONTEXT_BYTES, &context_bytes) != XML_STATUS_OK)
     context_bytes = 0;
-  if (XML_GetBuffer(g_parser, INT_MAX - (context_bytes + 1025)) != NULL)
+  if (XML_GetBuffer(g_parser, INT_MAX - ((int)context_bytes + 1025)) != NULL)
     fail("INT_MAX- buffer not failed");
 
   /* Now try extending it a carefully crafted amount */

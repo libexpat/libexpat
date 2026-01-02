@@ -4164,7 +4164,7 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
              Derived from code in lookup(parser, HASH_TABLE *table, ...).
           */
           unsigned char step = 0;
-          unsigned long mask = nsAttsSize - 1;
+          unsigned int mask = nsAttsSize - 1;
           j = uriHash & mask; /* index into hash table */
           while (parser->m_nsAtts[j].version == version) {
             /* for speed we compare stored hash values first */
@@ -4741,7 +4741,7 @@ ignoreSectionProcessor(XML_Parser parser, const char *start, const char *end,
   return result;
 }
 
-/* startPtr gets set to non-null is the section is closed, and to null
+/* startPtr gets set to non-null if the section is closed, and to null
    if the section is not yet closed.
 */
 static enum XML_Error
@@ -7849,10 +7849,10 @@ lookup(XML_Parser parser, HASH_TABLE *table, KEY name, size_t createSize) {
       return NULL;
     }
     memset(table->v, 0, tsize);
-    i = hash(parser, name) & ((unsigned long)table->size - 1);
+    i = hash(parser, name) & (table->size - 1);
   } else {
     unsigned long h = hash(parser, name);
-    unsigned long mask = (unsigned long)table->size - 1;
+    size_t mask = table->size - 1;
     unsigned char step = 0;
     i = h & mask;
     while (table->v[i]) {
@@ -7875,7 +7875,7 @@ lookup(XML_Parser parser, HASH_TABLE *table, KEY name, size_t createSize) {
       }
 
       size_t newSize = (size_t)1 << newPower;
-      unsigned long newMask = (unsigned long)newSize - 1;
+      size_t newMask = newSize - 1;
 
       /* Detect and prevent integer overflow */
       if (newSize > SIZE_MAX / sizeof(NAMED *)) {
