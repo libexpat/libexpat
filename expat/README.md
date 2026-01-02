@@ -303,9 +303,6 @@ EXPAT_WARNINGS_AS_ERRORS:BOOL=OFF
 // Make use of getrandom function (ON|OFF|AUTO) [default=AUTO]
 EXPAT_WITH_GETRANDOM:STRING=AUTO
 
-// Utilize libbsd (for arc4random_buf)
-EXPAT_WITH_LIBBSD:BOOL=OFF
-
 // Make use of syscall SYS_getrandom (ON|OFF|AUTO) [default=AUTO]
 EXPAT_WITH_SYS_GETRANDOM:STRING=AUTO
 ```

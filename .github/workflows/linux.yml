@@ -121,7 +121,6 @@ jobs:
             gcc-multilib \
             g++-multilib \
             lcov \
-            libbsd-dev \
             lzip \
             moreutils
     - name: Perform check "${{ matrix.MODE }}"
