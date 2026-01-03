@@ -170,13 +170,13 @@
             The amplification factor is calculated as ..
           </para>
           <literallayout>
-            amplification := (direct + indirect) / direct
+    amplification := (direct + indirect) / direct
           </literallayout>
           <para>
             .. with regard to use of entities and ..
           </para>
           <literallayout>
-            amplification := allocated / direct
+    amplification := allocated / direct
           </literallayout>
           <para>
             .. with regard to dynamic memory while parsing.
