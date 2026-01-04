@@ -3,17 +3,17 @@
 Thanks for your interest in contributing to the libexpat project or "Expat"! :+1:
 
 > [!TIP]
-> TL;DR: **The best move prior to creating a pull request**
-> that is big, complex and/or controversial
+> TL;DR: **The best move before creating a pull request**
+> that is big, complex, and/or controversial
 > is to [open a new issue](https://github.com/libexpat/libexpat/issues)
 > and discuss options moving forward :pray: :beers:
 
-Below I'll try to document what Expat needs and does not need, at this time.
+Below, I'll document what Expat needs and does not need, at this time.
 
 
 # What Expat needs (and does not need) in general
 
-Expat is…
+Expat is:
 
 - in maintenance mode,
 - unfunded,
@@ -50,7 +50,7 @@ Pull requests will *not* be welcome when:
 
 - the changes are big, complex, high risk, controversial
   and/or hard to review,
-- the same change has been said "no" to in the past,
+- the exact change has been said "no" to in the past,
 - the changes break API or ABI backwards compatibility,
 - it fixes an issue for an unsupported
   (or no-longer supported) environment, and/or
