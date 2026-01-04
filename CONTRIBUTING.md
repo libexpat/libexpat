@@ -73,7 +73,14 @@ Specific examples of things known to *not* be welcome:
 # What Expat needs on a technical level
 
 - All new C code and changes to existing C code must:
-  - pass all existing CI,
+  - pass all existing CI
+    (that includes
+    [ASan](https://clang.llvm.org/docs/AddressSanitizer.html),
+    [UBSan](https://clang.llvm.org/docs/UndefinedBehaviorSanitizer.html),
+    [clang-format](https://clang.llvm.org/docs/ClangFormat.html),
+    [Cppcheck](https://cppcheck.sourceforge.io/),
+    [codespell](https://github.com/codespell-project/codespell),
+    ..),
   - conform to C99,
   - check returns from `malloc`/`realloc` for `NULL`,
   - not use recursion (when it can be controlled by user input),
