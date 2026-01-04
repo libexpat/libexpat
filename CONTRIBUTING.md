@@ -61,7 +61,7 @@ Pull requests will *not* be welcome when:
 Specific examples of things known to *not* be welcome:
 
 - Mass-changing things.
-- Fixing things for some stonage version of Visual Studio.
+- Fixing things for some stone age version of Visual Studio.
 - Adding support to ignore or recover from malformed XML.
 - Adding support for XML streaming.
 - Making the C code compile with a C++ compiler.
