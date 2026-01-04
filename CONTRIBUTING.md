@@ -3,17 +3,17 @@
 Thanks for your interest in contributing to the libexpat project or "Expat"! :+1:
 
 > [!TIP]
-> TL;DR: **The best move prior to creating a pull request**
-> that is big, complex and/or controversial
+> TL;DR: **The best move before creating a pull request**
+> that is big, complex, and/or controversial
 > is to [open a new issue](https://github.com/libexpat/libexpat/issues)
 > and discuss options moving forward :pray: :beers:
 
-Below I'll try to document what Expat needs and does not need, at this time.
+Below, I'll document what Expat needs and does not need, at this time.
 
 
 # What Expat needs (and does not need) in general
 
-Expat is…
+Expat is:
 
 - in maintenance mode,
 - unfunded,
@@ -50,7 +50,7 @@ Pull requests will *not* be welcome when:
 
 - the changes are big, complex, high risk, controversial
   and/or hard to review,
-- the same change has been said "no" to in the past,
+- the exact change has been said "no" to in the past,
 - the changes break API or ABI backwards compatibility,
 - it fixes an issue for an unsupported
   (or no-longer supported) environment, and/or
@@ -61,7 +61,7 @@ Pull requests will *not* be welcome when:
 Specific examples of things known to *not* be welcome:
 
 - Mass-changing things.
-- Fixing things for some stonage version of Visual Studio.
+- Fixing things for some stone age version of Visual Studio.
 - Adding support to ignore or recover from malformed XML.
 - Adding support for XML streaming.
 - Making the C code compile with a C++ compiler.
@@ -73,10 +73,18 @@ Specific examples of things known to *not* be welcome:
 # What Expat needs on a technical level
 
 - All new C code and changes to existing C code must:
-  - pass all existing CI,
+  - pass all existing CI
+    (that includes
+    [ASan](https://clang.llvm.org/docs/AddressSanitizer.html),
+    [UBSan](https://clang.llvm.org/docs/UndefinedBehaviorSanitizer.html),
+    [clang-format](https://clang.llvm.org/docs/ClangFormat.html),
+    [Cppcheck](https://cppcheck.sourceforge.io/),
+    [codespell](https://github.com/codespell-project/codespell),
+    ..),
   - conform to C99,
   - check returns from `malloc`/`realloc` for `NULL`,
   - not use recursion (when it can be controlled by user input),
+  - have integer overflow in mind,
   - have undefined behavior in mind, and
   - have security in mind in general.
 - A commit should be about one — and just one — of these things:
