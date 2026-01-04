@@ -77,6 +77,7 @@ Specific examples of things known to *not* be welcome:
   - conform to C99,
   - check returns from `malloc`/`realloc` for `NULL`,
   - not use recursion (when it can be controlled by user input),
+  - have integer overflow in mind,
   - have undefined behavior in mind, and
   - have security in mind in general.
 - A commit should be about one — and just one — of these things:
