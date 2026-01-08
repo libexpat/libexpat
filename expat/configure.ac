@@ -63,7 +63,7 @@ m4_define([expat_version],
   m4_ifdef([__gnu__],
            [esyscmd(conftools/get-version.sh lib/expat.h)],
            [2.2.x]))
-AC_INIT([expat], expat_version, [https://github.com/libexpat/libexpat/issues])
+AC_INIT([expat], [expat_version], [https://github.com/libexpat/libexpat/issues])
 m4_undefine([expat_version])
 
 AC_CONFIG_SRCDIR([Makefile.in])
@@ -106,11 +106,7 @@ AC_SUBST(LIBREVISION)
 AC_SUBST(LIBAGE)
 
 AC_LANG([C])
-AC_PROG_CC_C99
-
-AS_IF([test "${ac_cv_prog_cc_c99}" = no],
-  [AC_MSG_ERROR([Expat requires a C99 compiler.])])
-
+AC_PROG_CC
 AS_IF([test "$GCC" = yes],
   [AX_APPEND_COMPILE_FLAGS([-Wall -Wextra], [AM_CFLAGS])
    dnl Be careful about adding the -fexceptions option; some versions of
