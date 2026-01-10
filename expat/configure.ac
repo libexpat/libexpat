@@ -203,6 +203,10 @@ LT_LIB_M
 
 AC_MSG_CHECKING([for arc4random_buf (BSD or glibc 2.36+)])
 AC_LINK_IFELSE([AC_LANG_SOURCE([
+    #if defined(sun) || defined(__sun)
+    #  error This forced error protects from false positives (in particular) on Solaris <11.3.9.
+    #endif
+
     #include <stdlib.h>
     int main(void) {
       char dummy[[123]];  // double brackets for m4
@@ -216,6 +220,10 @@ AC_LINK_IFELSE([AC_LANG_SOURCE([
 
    AC_MSG_CHECKING([for arc4random (BSD, macOS, or glibc 2.36+)])
    AC_LINK_IFELSE([AC_LANG_SOURCE([
+       #if defined(sun) || defined(__sun)
+       #  error This forced error protects from false positives (in particular) on Solaris <11.3.9.
+       #endif
+
        #include <stdlib.h>
        int main(void) {
           arc4random();
