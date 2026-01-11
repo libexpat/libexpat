@@ -34,7 +34,7 @@ set -e
 sed="$(type -P gsed sed false | head -n 1)"  # e.g. for Solaris
 filename="${1:-tests/xmltest.log}"
 
-"${sed}" -i.bak \
+exec "${sed}" -i.bak \
         -e '# convert DOS line endings to Unix without resorting to dos2unix' \
         -e $'s/\r//' \
         \
