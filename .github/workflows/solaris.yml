@@ -46,9 +46,9 @@ jobs:
     steps:
     - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6.0.1
 
-    - uses: vmactions/solaris-vm@7a5256863396c1cea1665b084d569876a1321347  # v1.2.4
+    - uses: vmactions/solaris-vm@d97557a2a994450fb4862ea0bb2c3b0c2333667a  # v1.2.5
       with:
-        release: "11.4-gcc"  # with GCC 14 as of 2026-01-11
+        release: "11.4-clang-19"
         usesh: true
 
         prepare: |
@@ -57,10 +57,12 @@ jobs:
               autoconf \
               automake \
               bash \
-              cmake \
+              ggrep \
               gmake \
               gsed \
               libtool
+          pkg install \
+              cmake
 
         run: |
           set -e -x
@@ -69,8 +71,8 @@ jobs:
           export CFLAGS="-std=c99 ${compile_flags}"
           export CXXFLAGS="-std=c++11 ${compile_flags}"
 
-          gcc -v
-          g++ -v
+          clang -v
+          clang++ -v
 
           cd expat
           ./buildconf.sh
