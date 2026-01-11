@@ -59,7 +59,9 @@ jobs:
               automake \
               bash \
               cmake-core \
-              libtool
+              libtool \
+              python3 \
+              wget
 
         run: |
           set -e -x
@@ -80,6 +82,7 @@ jobs:
             ../configure
             make -j2 CFLAGS="${CFLAGS} -Werror"
             make check CFLAGS="${CFLAGS} -Werror" CXXFLAGS="${CXXLAGS} -Werror"
+            make run-xmltest
             make install DESTDIR="${PWD}/ROOT/"
             find ROOT/
           cd ..
@@ -90,6 +93,7 @@ jobs:
             cmake -S .. -B . -DEXPAT_WARNINGS_AS_ERRORS:BOOL=ON
             make -j2 VERBOSE=1
             make test VERBOSE=1
+            make run-xmltest VERBOSE=1
             make install DESTDIR="${PWD}/ROOT/"
             find ROOT/
           cd ..
