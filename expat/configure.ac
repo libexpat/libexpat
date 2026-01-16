@@ -137,7 +137,8 @@ AS_IF([test "$GCC" = yes],
 AC_LANG_POP([C++])
 
 AS_IF([test "$GCC" = yes],
-  [AX_APPEND_LINK_FLAGS([-Wstrict-aliasing=3],[AM_LDFLAGS])])
+  [AX_APPEND_LINK_FLAGS([-Wstrict-aliasing=3],[AM_LDFLAGS])
+   AX_APPEND_LINK_FLAGS([-Wl,--version-script=$(pwd)/lib/libexpat.map],[AM_LDFLAGS])])
 
 dnl patching ${archive_cmds} to affect generation of file "libtool" to fix linking with clang (issue #312)
 AS_CASE(["$LD"],[*clang*],
