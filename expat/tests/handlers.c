@@ -45,6 +45,7 @@
 #  undef NDEBUG /* because test suite relies on assert(...) at the moment */
 #endif
 
+#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
@@ -405,6 +406,15 @@ long_encoding_handler(void *userData, const XML_Char *encoding,
   info->convert = NULL;
   info->release = NULL;
   return XML_STATUS_OK;
+}
+
+int XMLCALL
+user_data_checking_unknown_encoding_handler(void *userData,
+                                            const XML_Char *encoding,
+                                            XML_Encoding *info) {
+  const intptr_t number = (intptr_t)userData;
+  assert_true(number == 0xC0FFEE);
+  return long_encoding_handler(userData, encoding, info);
 }
 
 /* External Entity Handlers */
