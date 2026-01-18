@@ -94,7 +94,6 @@ EXTRA_DIST = \
     $(_EXTRA_DIST_CMAKE) \
     $(_EXTRA_DIST_WINDOWS) \
     \
-    conftools/expat.m4 \
     conftools/get-version.sh \
     \
     fuzz/xml_lpm_fuzzer.cpp \

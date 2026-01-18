@@ -234,11 +234,6 @@ overrides the in-makefile set `DESTDIR`, because variable-setting priority is
 Note: This only applies to the Expat library itself, building UTF-16 versions
 of xmlwf and the tests is currently not supported.
 
-When using Expat with a project using autoconf for configuration, you
-can use the probing macro in `conftools/expat.m4` to determine how to
-include Expat.  See the comments at the top of that file for more
-information.
-
 A reference manual is available in the file `doc/reference.html` in this
 distribution.
 
