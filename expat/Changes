@@ -15,12 +15,6 @@
 !!   ClusterFuzz findings with few-days-max response times in communication  !!
 !!   in order to (1) have a sound fix ready before the end of a 90 days      !!
 !!   grace period and (2) in a sustainable manner,                           !!
-!! - helping CPython Expat bindings with supporting Expat's amplification    !!
-!!   attack protection API (https://github.com/python/cpython/issues/90949): !!
-!!   - XML_SetAllocTrackerActivationThreshold                                !!
-!!   - XML_SetAllocTrackerMaximumAmplification                               !!
-!!   - XML_SetBillionLaughsAttackProtectionActivationThreshold               !!
-!!   - XML_SetBillionLaughsAttackProtectionMaximumAmplification              !!
 !! - helping Perl's XML::Parser Expat bindings with supporting Expat's       !!
 !!   security API (https://github.com/cpan-authors/XML-Parser/issues/102):   !!
 !!   - XML_SetAllocTrackerActivationThreshold                                !!
@@ -116,6 +110,7 @@ Release 2.7.4 ??? ????????? ?? ????
 
         Special thanks to:
             Alfonso Gregory
+            Bénédikt Tran
             Gordon Messmer
             Hanno Böck
             Jakub Kulík
