@@ -137,8 +137,20 @@ AS_IF([test "$GCC" = yes],
 AC_LANG_POP([C++])
 
 AS_IF([test "$GCC" = yes],
-  [AX_APPEND_LINK_FLAGS([-Wstrict-aliasing=3],[AM_LDFLAGS])
-   AX_APPEND_LINK_FLAGS([-Wl,--version-script=$(pwd)/lib/libexpat.map],[AM_LDFLAGS])])
+  [AX_APPEND_LINK_FLAGS([-Wstrict-aliasing=3],[AM_LDFLAGS])])
+
+AC_ARG_ENABLE([symvers],
+  [AS_HELP_STRING([--enable-symvers],
+    [provide symbol versions for dependency generation @<:@default=no@:>@])],
+  [enable_symvers=$enableval],
+  [enable_symvers=no])
+#AX_APPEND_LINK_FLAGS([-Wl,--version-script=${top_srcdir}/lib/libexpat.map],[AM_LDFLAGS])
+AS_IF([test "x$enable_symvers" != xno],
+  [VSCRIPT_LDFLAGS="-Wl,--version-script"
+   AC_SUBST([VSCRIPT_LDFLAGS])
+  ])
+AM_CONDITIONAL([HAVE_VSCRIPT],
+  [test "$enable_symvers" != xno])
 
 dnl patching ${archive_cmds} to affect generation of file "libtool" to fix linking with clang (issue #312)
 AS_CASE(["$LD"],[*clang*],
@@ -366,9 +378,14 @@ dnl NOTE: The *_TRUE variables read here are Automake conditionals
 dnl       that are either set to "" when enabled or to "#" when disabled
 dnl       (because they are used to dynamically comment out certain things)
 AS_IF([test "x${enable_xml_attr_info}" = xyes],
-  [EXPAT_ATTR_INFO=ON],
-  [EXPAT_ATTR_INFO=OFF])
+  [EXPAT_ATTR_INFO=ON
+   _EXPAT_COMMENT_ATTR_INFO=""],
+  [EXPAT_ATTR_INFO=OFF
+   _EXPAT_COMMENT_ATTR_INFO="#"])
+AC_SUBST([_EXPAT_COMMENT_ATTR_INFO])
 EXPAT_DTD=ON
+_EXPAT_COMMENT_DTD_OR_GE=""
+AC_SUBST([_EXPAT_COMMENT_DTD_OR_GE])
 AS_IF([test "x${_INTERNAL_LARGE_SIZE_TRUE}" = x],
   [EXPAT_LARGE_SIZE=ON],
   [EXPAT_LARGE_SIZE=OFF])
@@ -446,6 +463,7 @@ AC_CONFIG_FILES([Makefile]
   [doc/Makefile]
   [examples/Makefile]
   [lib/Makefile]
+  [lib/libexpat.map]
   [tests/Makefile]
   [tests/benchmark/Makefile]
   [xmlwf/Makefile])
