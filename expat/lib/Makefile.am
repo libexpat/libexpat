@@ -46,7 +46,7 @@ libexpat_la_LDFLAGS = \
     -no-undefined \
     -version-info @LIBCURRENT@:@LIBREVISION@:@LIBAGE@
 if HAVE_VSCRIPT
-libexpat_la_LDFLAGS += $(VSCRIPT_LDFLAGS),@srcdir@/libexpat.map -Wl,--no-undefined-version
+libexpat_la_LDFLAGS += $(VSCRIPT_LDFLAGS),@srcdir@/libexpat.map
 endif
 
 libexpat_la_SOURCES = \
