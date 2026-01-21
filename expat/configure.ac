@@ -144,7 +144,6 @@ AC_ARG_ENABLE([symvers],
     [provide symbol versions for dependency generation @<:@default=no@:>@])],
   [enable_symvers=$enableval],
   [enable_symvers=no])
-#AX_APPEND_LINK_FLAGS([-Wl,--version-script=${top_srcdir}/lib/libexpat.map],[AM_LDFLAGS])
 AS_IF([test "x$enable_symvers" != xno],
   [VSCRIPT_LDFLAGS="-Wl,--version-script"
    AC_SUBST([VSCRIPT_LDFLAGS])

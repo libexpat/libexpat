@@ -381,6 +381,12 @@ set(_EXPAT_C_SOURCES
 
 if(EXPAT_SHARED_LIBS)
     set(_SHARED SHARED)
+    if(EXPAT_DTD OR EXPAT_GE)
+        set(_EXPAT_DTD_OR_GE TRUE)
+    else()
+        set(_EXPAT_DTD_OR_GE FALSE)
+    endif()
+
     if(WIN32)
         macro(_expat_def_file_toggle source_var target_var)
             if(${source_var})
@@ -389,12 +395,6 @@ if(EXPAT_SHARED_LIBS)
                 set(${target_var} ";")  # i.e. commented out
             endif()
         endmacro()
-
-        if(EXPAT_DTD OR EXPAT_GE)
-            set(_EXPAT_DTD_OR_GE TRUE)
-        else()
-            set(_EXPAT_DTD_OR_GE FALSE)
-        endif()
 
         _expat_def_file_toggle(_EXPAT_DTD_OR_GE _EXPAT_COMMENT_DTD_OR_GE)
         _expat_def_file_toggle(EXPAT_ATTR_INFO _EXPAT_COMMENT_ATTR_INFO)
@@ -406,6 +406,20 @@ if(EXPAT_SHARED_LIBS)
         string(REPLACE "." "," _EXPAT_DLL_VERSION ${PROJECT_VERSION}.0)
         configure_file("${CMAKE_CURRENT_SOURCE_DIR}/win32/version.rc.cmake" "${CMAKE_CURRENT_BINARY_DIR}/win32/version.rc")
         set(_EXPAT_EXTRA_SOURCES ${_EXPAT_EXTRA_SOURCES} "${CMAKE_CURRENT_BINARY_DIR}/win32/version.rc")
+    else()
+        macro(_expat_def_file_toggle source_var target_var)
+            if(${source_var})
+                set(${target_var} " ")  # i.e. not commented out, a single space
+            else()
+                set(${target_var} "#")  # i.e. commented out
+            endif()
+        endmacro()
+
+        _expat_def_file_toggle(_EXPAT_DTD_OR_GE _EXPAT_COMMENT_DTD_OR_GE)
+        _expat_def_file_toggle(EXPAT_ATTR_INFO _EXPAT_COMMENT_ATTR_INFO)
+
+        configure_file("${CMAKE_CURRENT_SOURCE_DIR}/lib/libexpat.map.in" "${CMAKE_CURRENT_BINARY_DIR}/lib/libexpat.map")
+        set(_EXPAT_EXTRA_SOURCES ${_EXPAT_EXTRA_SOURCES} "${CMAKE_CURRENT_BINARY_DIR}/lib/libexpat.map")
     endif()
 else()
     set(_SHARED STATIC)
@@ -460,9 +474,7 @@ if(NOT WIN32)
     set_property(TARGET expat PROPERTY SOVERSION ${LIBCURRENT_MINUS_AGE})
     set_property(TARGET expat PROPERTY NO_SONAME ${NO_SONAME})
     if(EXPAT_SYMBOL_VERSIONING)
-        configure_file("${CMAKE_CURRENT_SOURCE_DIR}/lib/libexpat.map.in" "${CMAKE_CURRENT_BINARY_DIR}/lib/libexpat.map")
-        set(_EXPAT_EXTRA_SOURCES ${_EXPAT_EXTRA_SOURCES} "${CMAKE_CURRENT_BINARY_DIR}/lib/libexpat.map")
-	set_property(TARGET expat PROPERTY LINK_FLAGS "-Wl,--version-script=${CMAKE_CURRENT_BINARY_DIR}/lib/libexpat.map")
+        set_property(TARGET expat PROPERTY LINK_FLAGS "-Wl,--version-script=${CMAKE_CURRENT_BINARY_DIR}/lib/libexpat.map -Wl,--no-undefined-version")
     endif()
 
     if(APPLE)
