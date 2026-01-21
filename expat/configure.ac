@@ -141,7 +141,7 @@ AS_IF([test "$GCC" = yes],
 
 AC_ARG_ENABLE([symvers],
   [AS_HELP_STRING([--enable-symvers],
-    [provide symbol versions for dependency generation @<:@default=no@:>@])],
+    [provide symbol versioning for dependency generation @<:@default=no@:>@])],
   [enable_symvers=$enableval],
   [enable_symvers=no])
 AS_IF([test "x$enable_symvers" != xno],

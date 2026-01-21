@@ -138,7 +138,7 @@ expat_shy_set(EXPAT_OSSFUZZ_BUILD OFF CACHE BOOL "Build fuzzers via OSS-Fuzz for
 expat_shy_set(EXPAT_ENABLE_INSTALL ON CACHE BOOL "Install expat files in cmake install target")
 expat_shy_set(EXPAT_CONTEXT_BYTES 1024 CACHE STRING "Define to specify how much context to retain around the current parse point, 0 to disable")
 mark_as_advanced(EXPAT_CONTEXT_BYTES)
-expat_shy_set(EXPAT_SYMBOL_VERSIONING OFF CACHE BOOL "Define to provide symbol versions for dependency generation")
+expat_shy_set(EXPAT_SYMBOL_VERSIONING OFF CACHE BOOL "Define to provide symbol versioning for dependency generation")
 expat_shy_set(EXPAT_DTD ON CACHE BOOL "Define to make parameter entity parsing functionality available")
 mark_as_advanced(EXPAT_DTD)
 expat_shy_set(EXPAT_GE ON CACHE BOOL "Define to make general entity parsing functionality available")
