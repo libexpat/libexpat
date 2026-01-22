@@ -139,17 +139,17 @@ AC_LANG_POP([C++])
 AS_IF([test "$GCC" = yes],
   [AX_APPEND_LINK_FLAGS([-Wstrict-aliasing=3],[AM_LDFLAGS])])
 
-AC_ARG_ENABLE([symvers],
-  [AS_HELP_STRING([--enable-symvers],
+AC_ARG_ENABLE([symbol-versioning],
+  [AS_HELP_STRING([--enable-symbol-versioning],
     [provide symbol versioning for dependency generation @<:@default=no@:>@])],
-  [enable_symvers=$enableval],
-  [enable_symvers=no])
-AS_IF([test "x$enable_symvers" != xno],
+  [enable_symbol_versioning=$enableval],
+  [enable_symbol_versioning=no])
+AS_IF([test "x$enable_symbol_versioning" != xno],
   [VSCRIPT_LDFLAGS="-Wl,--version-script"
    AC_SUBST([VSCRIPT_LDFLAGS])
   ])
 AM_CONDITIONAL([HAVE_VSCRIPT],
-  [test "$enable_symvers" != xno])
+  [test "$enable_symbol_versioning" != xno])
 
 dnl patching ${archive_cmds} to affect generation of file "libtool" to fix linking with clang (issue #312)
 AS_CASE(["$LD"],[*clang*],
