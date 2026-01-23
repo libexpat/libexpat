@@ -53,6 +53,7 @@ jobs:
 
         prepare: |
           set -e -x
+          pkgutil -U
           pkgutil -y -i \
               autoconf \
               automake \
