@@ -42,11 +42,25 @@
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 Release 2.7.4 ??? ????????? ?? ????
+        Security fixes:
+           #1131  CVE-2026-24515 -- Function XML_ExternalEntityParserCreate
+                    failed to copy the encoding handler data passed to
+                    XML_SetUnknownEncodingHandler from the parent to the new
+                    subparser. This can cause a NULL dereference (CWE-476) from
+                    external entities that declare use of an unknown encoding.
+                    The expected impact is denial of service. It takes use of
+                    both functions XML_ExternalEntityParserCreate and
+                    XML_SetUnknownEncodingHandler for an application to be
+                    vulnerable.
+
         Other changes:
            #1066  docs: Be explicit that parent parsers need to outlive
                     subparsers
            #1105  Stop using -fno-strict-aliasing, and use -Wstrict-aliasing=3
                     instead
+
+        Special thanks to:
+            Artiphishell Inc.
 
 Release 2.7.3 Wed September 24 2025
         Security fixes:

@@ -159,6 +159,9 @@ extern int XMLCALL long_encoding_handler(void *userData,
                                          const XML_Char *encoding,
                                          XML_Encoding *info);
 
+extern int XMLCALL user_data_checking_unknown_encoding_handler(
+    void *userData, const XML_Char *encoding, XML_Encoding *info);
+
 /* External Entity Handlers */
 
 typedef struct ExtOption {
