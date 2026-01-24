@@ -2,71 +2,83 @@ LIBEXPAT_1.0.0 {
  global:
   XML_DefaultCurrent;
   XML_ErrorString;
-  XML_ExpatVersion;
-  XML_ExpatVersionInfo;
   XML_ExternalEntityParserCreate;
   XML_GetBase;
   XML_GetBuffer;
-  XML_GetCurrentByteCount;
   XML_GetCurrentByteIndex;
   XML_GetCurrentColumnNumber;
   XML_GetCurrentLineNumber;
   XML_GetErrorCode;
-  XML_GetIdAttributeIndex;
-  XML_GetInputContext;
-  XML_GetSpecifiedAttributeCount;
   XML_Parse;
   XML_ParseBuffer;
   XML_ParserCreate;
-  XML_ParserCreateNS;
-  XML_ParserCreate_MM;
   XML_ParserFree;
-  XML_SetAttlistDeclHandler;
   XML_SetBase;
-  XML_SetCdataSectionHandler;
   XML_SetCharacterDataHandler;
-  XML_SetCommentHandler;
   XML_SetDefaultHandler;
+  XML_SetElementHandler;
+  XML_SetExternalEntityRefHandler;
+  XML_SetNotationDeclHandler;
+  XML_SetProcessingInstructionHandler;
+  XML_SetUnknownEncodingHandler;
+  XML_SetUnparsedEntityDeclHandler;
+  XML_SetUserData;
+  XML_UseParserAsHandlerArg;
+};
+
+LIBEXPAT_1.1.0 {
+ global:
+  XML_GetCurrentByteCount;
+  XML_GetSpecifiedAttributeCount;
+  XML_ParserCreateNS;
+  XML_SetCdataSectionHandler;
+  XML_SetCommentHandler;
   XML_SetDefaultHandlerExpand;
+  XML_SetEncoding;
+  XML_SetExternalEntityRefHandlerArg;
+  XML_SetNamespaceDeclHandler;
+  XML_SetNotStandaloneHandler;
+} LIBEXPAT_1.0.0;
+
+LIBEXPAT_1.95.0 {
+ global:
+  XML_ExpatVersion;
+  XML_GetIdAttributeIndex;
+  XML_GetInputContext;
+  XML_ParserCreate_MM;
+  XML_SetAttlistDeclHandler;
   XML_SetDoctypeDeclHandler;
   XML_SetElementDeclHandler;
-  XML_SetElementHandler;
-  XML_SetEncoding;
   XML_SetEndCdataSectionHandler;
   XML_SetEndDoctypeDeclHandler;
   XML_SetEndElementHandler;
   XML_SetEndNamespaceDeclHandler;
   XML_SetEntityDeclHandler;
-  XML_SetExternalEntityRefHandler;
-  XML_SetExternalEntityRefHandlerArg;
-  XML_SetNamespaceDeclHandler;
-  XML_SetNotStandaloneHandler;
-  XML_SetNotationDeclHandler;
   XML_SetParamEntityParsing;
-  XML_SetProcessingInstructionHandler;
   XML_SetReturnNSTriplet;
   XML_SetStartCdataSectionHandler;
   XML_SetStartDoctypeDeclHandler;
   XML_SetStartElementHandler;
   XML_SetStartNamespaceDeclHandler;
-  XML_SetUnknownEncodingHandler;
-  XML_SetUnparsedEntityDeclHandler;
-  XML_SetUserData;
   XML_SetXmlDeclHandler;
-  XML_UseParserAsHandlerArg;
-};
+} LIBEXPAT_1.1.0;
 
 LIBEXPAT_1.95.3 {
  global:
+  XML_ExpatVersionInfo;
   XML_ParserReset;
+} LIBEXPAT_1.95.0;
+
+LIBEXPAT_1.95.4 {
+ global:
   XML_SetSkippedEntityHandler;
-} LIBEXPAT_1.0.0;
+} LIBEXPAT_1.95.3;
 
 LIBEXPAT_1.95.5 {
  global:
   XML_GetFeatureList;
   XML_UseForeignDTD;
-} LIBEXPAT_1.95.3;
+} LIBEXPAT_1.95.4;
 
 LIBEXPAT_1.95.6 {
  global:
