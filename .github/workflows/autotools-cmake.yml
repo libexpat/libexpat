@@ -172,7 +172,7 @@ jobs:
       if: "${{ runner.os == 'Linux' && ! contains(matrix.configure_args, 'mingw') }}"
       run: |
         list_shared_library_symbols_sh="${GITHUB_WORKSPACE}"/.github/workflows/scripts/list-shared-library-symbols.sh
-        exported_symbols_txt="${GITHUB_WORKSPACE}"/.github/workflows/data/exported-symbols.txt
+        exported_symbols_txt="${GITHUB_WORKSPACE}"/.github/workflows/data/exported-symbols-unversioned.txt
 
         set -x
         cd expat/expat-*.*.*/
