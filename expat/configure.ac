@@ -378,12 +378,12 @@ dnl       that are either set to "" when enabled or to "#" when disabled
 dnl       (because they are used to dynamically comment out certain things)
 AS_IF([test "x${enable_xml_attr_info}" = xyes],
   [EXPAT_ATTR_INFO=ON
-   _EXPAT_COMMENT_ATTR_INFO=""],
+   _EXPAT_COMMENT_ATTR_INFO=" "],
   [EXPAT_ATTR_INFO=OFF
    _EXPAT_COMMENT_ATTR_INFO="#"])
 AC_SUBST([_EXPAT_COMMENT_ATTR_INFO])
 EXPAT_DTD=ON
-_EXPAT_COMMENT_DTD_OR_GE=""
+_EXPAT_COMMENT_DTD_OR_GE=" "
 AC_SUBST([_EXPAT_COMMENT_DTD_OR_GE])
 AS_IF([test "x${_INTERNAL_LARGE_SIZE_TRUE}" = x],
   [EXPAT_LARGE_SIZE=ON],
