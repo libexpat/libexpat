@@ -35,7 +35,7 @@
 # Unlike most of Expat,
 # this file is copyrighted under the BSD-license for buildsystem files of KDE.
 
-cmake_minimum_required(VERSION 3.15.0)
+cmake_minimum_required(VERSION 3.17.0)
 
 project(expat
     VERSION
@@ -460,10 +460,6 @@ if(NOT WIN32)
     set_property(TARGET expat PROPERTY NO_SONAME ${NO_SONAME})
 
     if(APPLE)
-        if(NOT CMAKE_VERSION VERSION_GREATER_EQUAL 3.17)
-            message(FATAL_ERROR "Expat requires CMake >=3.17 on platform \"APPLE\".")
-        endif()
-
         # NOTE: This intends to talk CMake into compatibility with GNU Libtool
         math(EXPR _EXPAT_MACHO_COMPATIBILITY_VERSION "${LIBCURRENT} + 1")
         set(_EXPAT_MACHO_CURRENT_VERSION "${_EXPAT_MACHO_COMPATIBILITY_VERSION}.${LIBREVISION}")
