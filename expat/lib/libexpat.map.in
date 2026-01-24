@@ -83,7 +83,7 @@ LIBEXPAT_1.95.8 {
   XML_StopParser;
 } LIBEXPAT_1.95.6;
 
-LIBEXPAT_2.1.1 {
+LIBEXPAT_2.1.0 {
  global:
 @_EXPAT_COMMENT_ATTR_INFO@  XML_GetAttributeInfo;
   XML_SetHashSalt;
@@ -93,7 +93,7 @@ LIBEXPAT_2.4.0 {
  global:
 @_EXPAT_COMMENT_DTD_OR_GE@  XML_SetBillionLaughsAttackProtectionActivationThreshold;
 @_EXPAT_COMMENT_DTD_OR_GE@  XML_SetBillionLaughsAttackProtectionMaximumAmplification;
-} LIBEXPAT_2.1.1;
+} LIBEXPAT_2.1.0;
 
 LIBEXPAT_2.6.0 {
  global:
