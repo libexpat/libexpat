@@ -66,6 +66,17 @@ jobs:
               -DCMAKE_EXE_LINKER_FLAGS=-Wl,--no-undefined-version
               -DCMAKE_MODULE_LINKER_FLAGS=-Wl,--no-undefined-version
               -DCMAKE_SHARED_LINKER_FLAGS=-Wl,--no-undefined-version
+          - os: ubuntu-24.04
+            configure_args: >-
+              --enable-xml-attr-info
+              --enable-symbol-versioning
+              LDFLAGS=-Wl,--no-undefined-version
+            cmake_args: >-
+              -DEXPAT_ATTR_INFO=ON
+              -DEXPAT_SYMBOL_VERSIONING=ON
+              -DCMAKE_EXE_LINKER_FLAGS=-Wl,--no-undefined-version
+              -DCMAKE_MODULE_LINKER_FLAGS=-Wl,--no-undefined-version
+              -DCMAKE_SHARED_LINKER_FLAGS=-Wl,--no-undefined-version
     defaults:
       run:
         shell: bash
@@ -180,11 +191,16 @@ jobs:
     - name: (Linux except MinGW) Check for identical exported symbols from both build systems
       if: "${{ runner.os == 'Linux' && ! contains(matrix.configure_args, 'mingw') }}"
       env:
+        maximum: "${{ contains(matrix.configure_args, '--enable-xml-attr-info') && 'true' || 'false' }}"
         symbol_versioning: "${{ contains(matrix.configure_args, '--enable-symbol-versioning') && 'true' || 'false' }}"
       run: |
         list_shared_library_symbols_sh="${GITHUB_WORKSPACE}"/.github/workflows/scripts/list-shared-library-symbols.sh
         if ${symbol_versioning} ; then
-            exported_symbols_txt="${GITHUB_WORKSPACE}"/.github/workflows/data/exported-symbols-versioned.txt
+            if ${maximum} ; then
+                exported_symbols_txt="${GITHUB_WORKSPACE}"/.github/workflows/data/exported-symbols-versioned-maximum.txt
+            else
+                exported_symbols_txt="${GITHUB_WORKSPACE}"/.github/workflows/data/exported-symbols-versioned-default.txt
+            fi
         else
             exported_symbols_txt="${GITHUB_WORKSPACE}"/.github/workflows/data/exported-symbols-unversioned.txt
         fi
