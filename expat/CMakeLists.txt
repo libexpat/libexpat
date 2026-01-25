@@ -138,6 +138,7 @@ expat_shy_set(EXPAT_OSSFUZZ_BUILD OFF CACHE BOOL "Build fuzzers via OSS-Fuzz for
 expat_shy_set(EXPAT_ENABLE_INSTALL ON CACHE BOOL "Install expat files in cmake install target")
 expat_shy_set(EXPAT_CONTEXT_BYTES 1024 CACHE STRING "Define to specify how much context to retain around the current parse point, 0 to disable")
 mark_as_advanced(EXPAT_CONTEXT_BYTES)
+expat_shy_set(EXPAT_SYMBOL_VERSIONING OFF CACHE BOOL "Define to provide symbol versioning for dependency generation")
 expat_shy_set(EXPAT_DTD ON CACHE BOOL "Define to make parameter entity parsing functionality available")
 mark_as_advanced(EXPAT_DTD)
 expat_shy_set(EXPAT_GE ON CACHE BOOL "Define to make general entity parsing functionality available")
@@ -380,6 +381,12 @@ set(_EXPAT_C_SOURCES
 
 if(EXPAT_SHARED_LIBS)
     set(_SHARED SHARED)
+    if(EXPAT_DTD OR EXPAT_GE)
+        set(_EXPAT_DTD_OR_GE TRUE)
+    else()
+        set(_EXPAT_DTD_OR_GE FALSE)
+    endif()
+
     if(WIN32)
         macro(_expat_def_file_toggle source_var target_var)
             if(${source_var})
@@ -388,12 +395,6 @@ if(EXPAT_SHARED_LIBS)
                 set(${target_var} ";")  # i.e. commented out
             endif()
         endmacro()
-
-        if(EXPAT_DTD OR EXPAT_GE)
-            set(_EXPAT_DTD_OR_GE TRUE)
-        else()
-            set(_EXPAT_DTD_OR_GE FALSE)
-        endif()
 
         _expat_def_file_toggle(_EXPAT_DTD_OR_GE _EXPAT_COMMENT_DTD_OR_GE)
         _expat_def_file_toggle(EXPAT_ATTR_INFO _EXPAT_COMMENT_ATTR_INFO)
@@ -405,6 +406,20 @@ if(EXPAT_SHARED_LIBS)
         string(REPLACE "." "," _EXPAT_DLL_VERSION ${PROJECT_VERSION}.0)
         configure_file("${CMAKE_CURRENT_SOURCE_DIR}/win32/version.rc.cmake" "${CMAKE_CURRENT_BINARY_DIR}/win32/version.rc")
         set(_EXPAT_EXTRA_SOURCES ${_EXPAT_EXTRA_SOURCES} "${CMAKE_CURRENT_BINARY_DIR}/win32/version.rc")
+    else()
+        macro(_expat_map_file_toggle source_var target_var)
+            if(${source_var})
+                set(${target_var} " ")  # i.e. not commented out, a single space
+            else()
+                set(${target_var} "#")  # i.e. commented out
+            endif()
+        endmacro()
+
+        _expat_map_file_toggle(_EXPAT_DTD_OR_GE _EXPAT_COMMENT_DTD_OR_GE)
+        _expat_map_file_toggle(EXPAT_ATTR_INFO _EXPAT_COMMENT_ATTR_INFO)
+
+        configure_file("${CMAKE_CURRENT_SOURCE_DIR}/lib/libexpat.map.in" "${CMAKE_CURRENT_BINARY_DIR}/lib/libexpat.map")
+        set(_EXPAT_EXTRA_SOURCES ${_EXPAT_EXTRA_SOURCES} "${CMAKE_CURRENT_BINARY_DIR}/lib/libexpat.map")
     endif()
 else()
     set(_SHARED STATIC)
@@ -458,6 +473,9 @@ if(NOT WIN32)
     set_property(TARGET expat PROPERTY VERSION ${LIBCURRENT_MINUS_AGE}.${LIBAGE}.${LIBREVISION})
     set_property(TARGET expat PROPERTY SOVERSION ${LIBCURRENT_MINUS_AGE})
     set_property(TARGET expat PROPERTY NO_SONAME ${NO_SONAME})
+    if(EXPAT_SYMBOL_VERSIONING)
+        set_property(TARGET expat PROPERTY LINK_FLAGS "-Wl,--version-script=${CMAKE_CURRENT_BINARY_DIR}/lib/libexpat.map")
+    endif()
 
     if(APPLE)
         # NOTE: This intends to talk CMake into compatibility with GNU Libtool

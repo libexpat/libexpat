@@ -292,6 +292,9 @@ EXPAT_OSSFUZZ_BUILD:BOOL=OFF
 // Build a shared expat library
 EXPAT_SHARED_LIBS:BOOL=ON
 
+// Define to provide symbol versioning for dependency generation
+EXPAT_SYMBOL_VERSIONING:BOOL=OFF
+
 // Treat all compiler warnings as errors
 EXPAT_WARNINGS_AS_ERRORS:BOOL=OFF
 
