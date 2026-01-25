@@ -184,7 +184,7 @@ jobs:
       run: |
         list_shared_library_symbols_sh="${GITHUB_WORKSPACE}"/.github/workflows/scripts/list-shared-library-symbols.sh
         if ${symbol_versioning} ; then
-            exported_symbols_txt="${GITHUB_WORKSPACE}"/.github/workflows/data/exported-symbols-versioned.txt
+            exported_symbols_txt="${GITHUB_WORKSPACE}"/.github/workflows/data/exported-symbols-versioned-default.txt
         else
             exported_symbols_txt="${GITHUB_WORKSPACE}"/.github/workflows/data/exported-symbols-unversioned.txt
         fi
