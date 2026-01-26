@@ -54,6 +54,8 @@ Release 2.7.4 ??? ????????? ?? ????
                     vulnerable.
 
         Other changes:
+           #1040  Autotools: Sync CMake templates with CMake 3.31 for Linux
+                    and Windows
            #1066  docs: Be explicit that parent parsers need to outlive
                     subparsers
            #1105  Stop using -fno-strict-aliasing, and use -Wstrict-aliasing=3
@@ -64,6 +66,9 @@ Release 2.7.4 ??? ????????? ?? ????
             Neil Pang
                  and
             Artiphishell Inc.
+
+        Infrastructure:
+           #1040  CI: Adapt to breaking changes in GitHub Actions
 
 Release 2.7.3 Wed September 24 2025
         Security fixes:
