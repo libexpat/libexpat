@@ -92,6 +92,9 @@ Release 2.7.4 ??? ????????? ?? ????
   #1092 #1093 ..
   #1094 #1098 ..
      #1115 #1116  docs: Misc non-content improvements to doc/reference.html
+     #1132 #1133  Version info bumped from 12:1:11 (libexpat*.so.1.11.1)
+                    to 12:2:11 (libexpat*.so.1.11.2); see https://verbump.de/
+                    for what these numbers do
 
         Infrastructure:
      #1119 #1121  Document guidelines for contributing to Expat
