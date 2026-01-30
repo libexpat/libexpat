@@ -35,7 +35,7 @@
 !! THANK YOU!                        Sebastian Pipping -- Berlin, 2024-03-09 !!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-Release 2.7.4 ??? ????????? ?? ????
+Release 2.7.4 Sat January 31 2026
         Security fixes:
            #1131  CVE-2026-24515 -- Function XML_ExternalEntityParserCreate
                     failed to copy the encoding handler data passed to
