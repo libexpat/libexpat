@@ -7,7 +7,7 @@
 #
 # Copyright (c) 2010      Patrick Spendrin <ps_ml@gmx.de>
 # Copyright (c) 2012      Karl Waclawek <karl@waclawek.net>
-# Copyright (c) 2016-2025 Sebastian Pipping <sebastian@pipping.org>
+# Copyright (c) 2016-2026 Sebastian Pipping <sebastian@pipping.org>
 # Copyright (c) 2016      Sergei Nikulov <sergey.nikulov@gmail.com>
 # Copyright (c) 2016      Björn Lindahl <bjorn.lindahl@foi.se>
 # Copyright (c) 2016      Tobias Taschner <github@tc84.de>
@@ -32,6 +32,9 @@
 # Copyright (c) 2022      Johnny Jazeix <jazeix@gmail.com>
 # Copyright (c) 2022      Mark Brand <markbrand@google.com>
 # Copyright (c) 2022      David Faure <david.faure@kdab.com>
+# Copyright (c) 2025      Alfonso Gregory <gfunni234@gmail.com>
+# Copyright (c) 2026      Rosen Penev <rosenp@gmail.com>
+# Copyright (c) 2026      Gordon Messmer <gordon.messmer@gmail.com>
 # Unlike most of Expat,
 # this file is copyrighted under the BSD-license for buildsystem files of KDE.
 
@@ -39,7 +42,7 @@ cmake_minimum_required(VERSION 3.17.0)
 
 project(expat
     VERSION
-        2.7.3
+        2.7.4
     LANGUAGES
         C
 )
@@ -465,7 +468,7 @@ foreach(build_type_upper
 endforeach()
 
 set(LIBCURRENT 12)  # sync
-set(LIBREVISION 1)  # with
+set(LIBREVISION 2)  # with
 set(LIBAGE 11)      # configure.ac!
 math(EXPR LIBCURRENT_MINUS_AGE "${LIBCURRENT} - ${LIBAGE}")
 

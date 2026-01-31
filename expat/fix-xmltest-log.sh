@@ -6,7 +6,7 @@
 #                      \___/_/\_\ .__/ \__,_|\__|
 #                               |_| XML parser
 #
-# Copyright (c) 2019-2022 Sebastian Pipping <sebastian@pipping.org>
+# Copyright (c) 2019-2026 Sebastian Pipping <sebastian@pipping.org>
 # Copyright (c) 2024      Dag-Erling Smørgrav <des@des.dev>
 # Licensed under the MIT license:
 #
