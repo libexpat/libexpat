@@ -216,6 +216,7 @@ AM_CONDITIONAL([_INTERNAL_LARGE_SIZE], [echo -- "${CPPFLAGS}${CFLAGS}" | ${FGREP
 
 LT_LIB_M
 
+AC_CHECK_LIB([bsd], [arc4random_buf])
 AC_MSG_CHECKING([for arc4random_buf (BSD or glibc 2.36+)])
 AC_LINK_IFELSE([AC_LANG_SOURCE([
     #include <stdlib.h>
