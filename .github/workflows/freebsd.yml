@@ -53,7 +53,7 @@ jobs:
         usesh: true
 
         prepare: |
-          set -e -x
+          set -e -u -x
           pkg install -y \
               autoconf \
               automake \
@@ -64,7 +64,7 @@ jobs:
               wget
 
         run: |
-          set -e -x
+          set -e -u -x
 
           compile_flags='-Wall -Wextra -pedantic -O1 -pipe'
           export CFLAGS="-std=c99 ${compile_flags}"
