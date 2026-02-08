@@ -81,7 +81,7 @@ jobs:
           cd build_autotools
             ../configure
             make -j2 CFLAGS="${CFLAGS} -Werror"
-            make check CFLAGS="${CFLAGS} -Werror" CXXFLAGS="${CXXLAGS} -Werror"
+            make check CFLAGS="${CFLAGS} -Werror" CXXFLAGS="${CXXFLAGS} -Werror"
             make run-xmltest
             make install DESTDIR="${PWD}/ROOT/"
             find ROOT/

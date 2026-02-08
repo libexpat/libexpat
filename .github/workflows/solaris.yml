@@ -86,7 +86,7 @@ jobs:
           cd build_autotools
             ../configure
             gmake -j2 CFLAGS="${CFLAGS} -Werror"
-            gmake check CFLAGS="${CFLAGS} -Werror" CXXFLAGS="${CXXLAGS} -Werror"
+            gmake check CFLAGS="${CFLAGS} -Werror" CXXFLAGS="${CXXFLAGS} -Werror"
             gmake run-xmltest
             gmake install DESTDIR="${PWD}/ROOT/"
             find ROOT/
