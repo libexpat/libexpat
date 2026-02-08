@@ -152,7 +152,7 @@ AS_IF([test "x$enable_symbol_versioning" != xno],
    AC_SUBST([VSCRIPT_LDFLAGS])
   ])
 AM_CONDITIONAL([HAVE_VSCRIPT],
-  [test "$enable_symbol_versioning" != xno])
+  [test "x$enable_symbol_versioning" != xno])
 
 dnl patching ${archive_cmds} to affect generation of file "libtool" to fix linking with clang (issue #312)
 AS_CASE(["$LD"],[*clang*],
