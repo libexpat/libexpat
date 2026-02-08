@@ -50,8 +50,8 @@ jobs:
     - name: Install build dependencies
       run: |-
         set -x
-        wget https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-29/wasi-sdk-29.0-x86_64-linux.deb
-        sudo apt-get install --yes ./wasi-sdk-29.0-x86_64-linux.deb
+        wget https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-30/wasi-sdk-30.0-x86_64-linux.deb
+        sudo apt-get install --yes ./wasi-sdk-30.0-x86_64-linux.deb
 
     - name: Build using WASI SDK
       run: |
