@@ -53,7 +53,7 @@ jobs:
         usesh: true
 
         prepare: |
-          set -e -x
+          set -e -u -x
           pkg install -y \
               autoconf \
               automake \
@@ -64,7 +64,7 @@ jobs:
               wget
 
         run: |
-          set -e -x
+          set -e -u -x
 
           compile_flags='-Wall -Wextra -pedantic -O1 -pipe'
           export CFLAGS="-std=c99 ${compile_flags}"
@@ -81,7 +81,7 @@ jobs:
           cd build_autotools
             ../configure
             make -j2 CFLAGS="${CFLAGS} -Werror"
-            make check CFLAGS="${CFLAGS} -Werror" CXXFLAGS="${CXXLAGS} -Werror"
+            make check CFLAGS="${CFLAGS} -Werror" CXXFLAGS="${CXXFLAGS} -Werror"
             make run-xmltest
             make install DESTDIR="${PWD}/ROOT/"
             find ROOT/
