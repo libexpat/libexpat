@@ -143,8 +143,8 @@
 
 #if ! defined(HAVE_GETRANDOM) && ! defined(HAVE_SYSCALL_GETRANDOM)             \
     && ! defined(HAVE_ARC4RANDOM_BUF) && ! defined(HAVE_ARC4RANDOM)            \
-    && ! defined(XML_DEV_URANDOM) && ! defined(_WIN32)                         \
-    && ! defined(XML_POOR_ENTROPY)
+    && ! defined(HAVE_GETENTROPY) && ! defined(XML_DEV_URANDOM)                \
+    && ! defined(_WIN32) && ! defined(XML_POOR_ENTROPY)
 #  error You do not have support for any sources of high quality entropy \
     enabled.  For end user security, that is probably not what you want. \
     \
@@ -153,6 +153,7 @@
       * Linux >=3.17 + glibc (including <2.25) (syscall SYS_getrandom): HAVE_SYSCALL_GETRANDOM, \
       * BSD / macOS >=10.7 / glibc >=2.36 (arc4random_buf): HAVE_ARC4RANDOM_BUF, \
       * BSD / macOS (including <10.7) / glibc >=2.36 (arc4random): HAVE_ARC4RANDOM, \
+      * BSD / macOS >=10.12 / glibc >=2.25 (getentropy): HAVE_GETENTROPY, \
       * Linux (including <3.17) / BSD / macOS (including <10.7) / Solaris >=8 (/dev/urandom): XML_DEV_URANDOM, \
       * Windows >=Vista (rand_s): _WIN32. \
     \
@@ -1217,10 +1218,17 @@ generate_hash_secret_salt(XML_Parser parser) {
   if (writeRandomBytes_rand_s((void *)&entropy, sizeof(entropy))) {
     return ENTROPY_DEBUG("rand_s", entropy);
   }
-#  elif defined(HAVE_GETRANDOM) || defined(HAVE_SYSCALL_GETRANDOM)
+#  else
+#    if defined(HAVE_GETENTROPY)
+  if (getentropy(&entropy, sizeof(entropy)) == 0) {
+    return ENTROPY_DEBUG("getentropy", entropy);
+  }
+#    endif
+#    if defined(HAVE_GETRANDOM) || defined(HAVE_SYSCALL_GETRANDOM)
   if (writeRandomBytes_getrandom_nonblock((void *)&entropy, sizeof(entropy))) {
     return ENTROPY_DEBUG("getrandom", entropy);
   }
+#    endif
 #  endif
 #  if ! defined(_WIN32) && defined(XML_DEV_URANDOM)
   if (writeRandomBytes_dev_urandom((void *)&entropy, sizeof(entropy))) {
