@@ -5086,7 +5086,7 @@ entityValueInitProcessor(XML_Parser parser, const char *s, const char *end,
     }
     /* If we get this token, we have the start of what might be a
        normal tag, but not a declaration (i.e. it doesn't begin with
-       "<!").  In a DTD context, that isn't legal.
+       "<!" or "<?").  In a DTD context, that isn't legal.
     */
     else if (tok == XML_TOK_INSTANCE_START) {
       *nextPtr = next;
@@ -5175,6 +5175,15 @@ entityValueProcessor(XML_Parser parser, const char *s, const char *end,
       /* found end of entity value - can store it now */
       return storeEntityValue(parser, enc, s, end, XML_ACCOUNT_DIRECT, NULL);
     }
+    /* If we get this token, we have the start of what might be a
+       normal tag, but not a declaration (i.e. it doesn't begin with
+       "<!" or "<?").  In a DTD context, that isn't legal.
+    */
+    else if (tok == XML_TOK_INSTANCE_START) {
+      *nextPtr = next;
+      return XML_ERROR_SYNTAX;
+    }
+
     start = next;
   }
 }
