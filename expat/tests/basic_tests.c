@@ -6045,6 +6045,7 @@ START_TEST(test_bypass_heuristic_when_close_to_bufsize) {
 
   const int document_length = 65536;
   char *const document = (char *)malloc(document_length);
+  assert_true(document != NULL);
 
   const XML_Memory_Handling_Suite memfuncs = {
       counting_malloc,
