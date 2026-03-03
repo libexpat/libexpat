@@ -43,6 +43,7 @@ for xml_context_bytes in 0 1024; do
             --check-level=exhaustive
             --inline-suppr
             '-D__has_attribute(x)=1'
+            '-D__has_feature(x)=1'
             '-DEXPAT_FMT_SIZE_T(x)=%llu'
             '-DEXPAT_FMT_ULL(x)=%llu'
             -DXML_CONTEXT_BYTES=${xml_context_bytes}
