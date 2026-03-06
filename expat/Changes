@@ -33,6 +33,49 @@
 !! THANK YOU!                        Sebastian Pipping -- Berlin, 2024-03-09 !!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
+Release 2.7.5 XXX XXXXXXX XX XXXX
+        Security fixes:
+           #1158  CVE-2026-32776 -- Fix NULL function pointer dereference for
+                    empty external parameter entities; it takes use of both
+                    functions XML_ExternalEntityParserCreate and
+                    XML_SetParamEntityParsing for an application to be
+                    vulnerable.
+     #1161 #1162  CVE-2026-32777 -- Protect from XML_TOK_INSTANCE_START
+                    infinite loop in function entityValueProcessor; it takes
+                    use of both functions XML_ExternalEntityParserCreate and
+                    XML_SetParamEntityParsing for an application to be
+                    vulnerable.
+           #1163  CVE-2026-32778 -- Fix NULL dereference in function setContext
+                    on retry after an earlier ouf-of-memory condition; it takes
+                    use of function XML_ParserCreateNS or XML_ParserCreate_MM
+                    for an application to be vulnerable.
+
+        Other changes:
+     #1146 #1147  Autotools: Fix condition for symbol versioning check, in
+                    particular when compiling with slibtool (not libtool)
+           #1156  Address Cppcheck >=2.20.0 warnings
+           #1153  tests: Make test_buffer_can_grow_to_max work for MinGW on
+                    Ubuntu 24.04
+
+        Infrastructure:
+           #1148  CI: Fix FreeBSD and Solaris CI
+           #1149  CI: Bump to WASI SDK 30
+           #1153  CI: Adapt to breaking changes with Ubuntu 22.04
+           #1156  CI: Adapt to breaking changes in Cppcheck
+
+        Special thanks to:
+            Berkay Eren Ürün
+            Christian Ng
+            Fabio Scaccabarozzi
+            Francesco Bertolaccini
+            Mark Brand
+            Rhodri James
+                 and
+            AddressSanitizer
+            Buttercup
+            OSS-Fuzz / ClusterFuzz
+            Trail of Bits
+
 Release 2.7.4 Sat January 31 2026
         Security fixes:
            #1131  CVE-2026-24515 -- Function XML_ExternalEntityParserCreate
