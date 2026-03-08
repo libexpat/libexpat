@@ -7105,10 +7105,10 @@ defineAttribute(ELEMENT_TYPE *type, ATTRIBUTE_ID *attId, XML_Bool isCdata,
   if (value || isId) {
     /* The handling of default attributes gets messed up if we have
        a default which duplicates a non-default. */
-    int i;
-    for (i = 0; i < type->nDefaultAtts; i++)
-      if (attId == type->defaultAtts[i].id)
-        return 1;
+    NAMED *const nameFound
+        = (NAMED *)lookup(parser, &(type->defaultAttsNames), attId->name, 0);
+    if (nameFound)
+      return 1;
     if (isId && ! type->idAtt && ! attId->xmlns)
       type->idAtt = attId;
   }
@@ -7155,6 +7155,12 @@ defineAttribute(ELEMENT_TYPE *type, ATTRIBUTE_ID *attId, XML_Bool isCdata,
   att->isCdata = isCdata;
   if (! isCdata)
     attId->maybeTokenized = XML_TRUE;
+
+  NAMED *const nameAddedOrFound = (NAMED *)lookup(
+      parser, &(type->defaultAttsNames), attId->name, sizeof(NAMED));
+  if (! nameAddedOrFound)
+    return 0;
+
   type->nDefaultAtts += 1;
   return 1;
 }
