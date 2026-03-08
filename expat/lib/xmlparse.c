@@ -387,6 +387,7 @@ typedef struct {
   int nDefaultAtts;
   int allocDefaultAtts;
   DEFAULT_ATTRIBUTE *defaultAtts;
+  HASH_TABLE defaultAttsNames;
 } ELEMENT_TYPE;
 
 typedef struct {
@@ -3769,6 +3770,8 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
                                          sizeof(ELEMENT_TYPE));
     if (! elementType)
       return XML_ERROR_NO_MEMORY;
+    if (! elementType->defaultAttsNames.parser)
+      hashTableInit(&(elementType->defaultAttsNames), parser);
     if (parser->m_ns && ! setElementTypePrefix(parser, elementType))
       return XML_ERROR_NO_MEMORY;
   }
@@ -7477,6 +7480,7 @@ dtdReset(DTD *p, XML_Parser parser) {
     ELEMENT_TYPE *e = (ELEMENT_TYPE *)hashTableIterNext(&iter);
     if (! e)
       break;
+    hashTableDestroy(&(e->defaultAttsNames));
     if (e->allocDefaultAtts != 0)
       FREE(parser, e->defaultAtts);
   }
@@ -7518,6 +7522,7 @@ dtdDestroy(DTD *p, XML_Bool isDocEntity, XML_Parser parser) {
     ELEMENT_TYPE *e = (ELEMENT_TYPE *)hashTableIterNext(&iter);
     if (! e)
       break;
+    hashTableDestroy(&(e->defaultAttsNames));
     if (e->allocDefaultAtts != 0)
       FREE(parser, e->defaultAtts);
   }
@@ -7611,6 +7616,10 @@ dtdCopy(XML_Parser oldParser, DTD *newDtd, const DTD *oldDtd,
                                   sizeof(ELEMENT_TYPE));
     if (! newE)
       return 0;
+
+    if (! newE->defaultAttsNames.parser)
+      hashTableInit(&(newE->defaultAttsNames), parser);
+
     if (oldE->nDefaultAtts) {
       /* Detect and prevent integer overflow.
        * The preprocessor guard addresses the "always false" warning
@@ -7646,6 +7655,12 @@ dtdCopy(XML_Parser oldParser, DTD *newDtd, const DTD *oldDtd,
           return 0;
       } else
         newE->defaultAtts[i].value = NULL;
+
+      NAMED *const nameAddedOrFound = (NAMED *)lookup(
+          parser, &(newE->defaultAttsNames), attributeName, sizeof(NAMED));
+      if (! nameAddedOrFound) {
+        return 0;
+      }
     }
   }
 
@@ -8392,6 +8407,8 @@ getElementType(XML_Parser parser, const ENCODING *enc, const char *ptr,
                                sizeof(ELEMENT_TYPE));
   if (! ret)
     return NULL;
+  if (! ret->defaultAttsNames.parser)
+    hashTableInit(&(ret->defaultAttsNames), getRootParserOf(parser, NULL));
   if (ret->name != name)
     poolDiscard(&dtd->pool);
   else {
