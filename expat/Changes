@@ -53,6 +53,9 @@ Release 2.7.5 XXX XXXXXXX XX XXXX
            #1156  Address Cppcheck >=2.20.0 warnings
            #1153  tests: Make test_buffer_can_grow_to_max work for MinGW on
                     Ubuntu 24.04
+     #1157 #1159  Version info bumped from 12:2:11 (libexpat*.so.1.11.2)
+                    to 12:3:11 (libexpat*.so.1.11.3); see https://verbump.de/
+                    for what these numbers do
 
         Infrastructure:
            #1148  CI: Fix FreeBSD and Solaris CI
