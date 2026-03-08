@@ -27,12 +27,6 @@
 !! - implementing and auto-testing XML 1.0r5 support                         !!
 !!   (needs discussion before pull requests),                                !!
 !!                                                                           !!
-!! - smart ideas on fixing the Autotools CMake files generation issue        !!
-!!   without breaking CI (needs discussion before pull requests),            !!
-!!                                                                           !!
-!! - pushing migration from `int` to `size_t` further                        !!
-!!   including edge-cases test coverage (needs discussion before anything).  !!
-!!                                                                           !!
 !! For details, please reach out via e-mail to sebastian@pipping.org so we   !!
 !! can schedule a voice call on the topic, in English or German.             !!
 !!                                                                           !!
