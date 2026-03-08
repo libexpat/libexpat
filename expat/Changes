@@ -10,6 +10,10 @@
 !!                 ~~~~~~~~~~~~                                              !!
 !! The following topics need *additional skilled C developers* to progress   !!
 !! in a timely manner or at all (loosely ordered by descending priority):    !!
+!!                            _______________________                        !!
+!! - teaming up on fixing the UNFIXED SECURITY ISSUES listed at:             !!
+!!                            """""""""""""""""""""""                        !!
+!!   https://github.com/libexpat/libexpat/issues/1160                        !!
 !!                                                                           !!
 !! - teaming up on researching and fixing future security reports and        !!
 !!   ClusterFuzz findings with few-days-max response times in communication  !!
@@ -49,6 +53,7 @@ Release 2.7.5 XXX XXXXXXX XX XXXX
                     on retry after an earlier ouf-of-memory condition; it takes
                     use of function XML_ParserCreateNS or XML_ParserCreate_MM
                     for an application to be vulnerable.
+           #1160  Three more unfixed vulnerabilities left
 
         Other changes:
      #1146 #1147  Autotools: Fix condition for symbol versioning check, in
