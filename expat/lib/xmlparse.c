@@ -7635,8 +7635,9 @@ dtdCopy(XML_Parser oldParser, DTD *newDtd, const DTD *oldDtd,
       newE->prefix = (PREFIX *)lookup(oldParser, &(newDtd->prefixes),
                                       oldE->prefix->name, 0);
     for (i = 0; i < newE->nDefaultAtts; i++) {
+      const XML_Char *const attributeName = oldE->defaultAtts[i].id->name;
       newE->defaultAtts[i].id = (ATTRIBUTE_ID *)lookup(
-          oldParser, &(newDtd->attributeIds), oldE->defaultAtts[i].id->name, 0);
+          oldParser, &(newDtd->attributeIds), attributeName, 0);
       newE->defaultAtts[i].isCdata = oldE->defaultAtts[i].isCdata;
       if (oldE->defaultAtts[i].value) {
         newE->defaultAtts[i].value
