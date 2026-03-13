@@ -2514,6 +2514,279 @@ START_TEST(test_attributes) {
 }
 END_TEST
 
+START_TEST(test_duplicate_cdata_attribute) {
+  /*
+  https://www.w3.org/TR/xml/#attdecls
+
+  Test the following statement from the linked specification:
+    When more than one definition is provided for the same attribute of a given
+    element type, the first declaration is binding and later declarations are
+    ignored.
+  */
+
+  const char *text
+      = "<!DOCTYPE doc [\n"
+        "  <!ATTLIST doc attribute CDATA 'expected' attribute CDATA 'ignored'>\n"
+        "]>\n"
+        "<doc/>\n";
+  AttrInfo doc_info[] = {{XCS("attribute"), XCS("expected")}, {NULL, NULL}};
+  ElementInfo info[]
+      = {{XCS("doc"), 0, 1, NULL, doc_info}, {NULL, 0, 0, NULL, NULL}};
+
+  XML_Parser parser = XML_ParserCreate(NULL);
+  assert_true(parser != NULL);
+
+  ParserAndElementInfo parserAndElementInfos = {
+      parser,
+      info,
+  };
+
+  XML_SetStartElementHandler(parser, counting_start_element_handler);
+  XML_SetUserData(parser, &parserAndElementInfos);
+
+  if (_XML_Parse_SINGLE_BYTES(parser, text, (int)strlen(text), XML_TRUE)
+      != XML_STATUS_OK)
+    xml_failure(parser);
+
+  XML_ParserFree(parser);
+}
+END_TEST
+
+START_TEST(test_duplicate_id_attribute_1) {
+  /*
+  https://www.w3.org/TR/xml/#attdecls
+
+  Test the following statement from the linked specification:
+    When more than one definition is provided for the same attribute of a given
+    element type, the first declaration is binding and later declarations are
+    ignored.
+  */
+
+  const char *text
+      = "<!DOCTYPE doc [\n"
+        "  <!ATTLIST doc identifier CDATA 'expected' identifier ID #REQUIRED>\n"
+        "]>\n"
+        "<doc/>\n";
+  AttrInfo doc_info[] = {{XCS("identifier"), XCS("expected")}, {NULL, NULL}};
+  ElementInfo info[]
+      = {{XCS("doc"), 0, 1, NULL, doc_info}, {NULL, 0, 0, NULL, NULL}};
+
+  XML_Parser parser = XML_ParserCreate(NULL);
+  assert_true(parser != NULL);
+
+  ParserAndElementInfo parserAndElementInfos = {
+      parser,
+      info,
+  };
+
+  XML_SetStartElementHandler(parser, counting_start_element_handler);
+  XML_SetUserData(parser, &parserAndElementInfos);
+
+  if (_XML_Parse_SINGLE_BYTES(parser, text, (int)strlen(text), XML_TRUE)
+      != XML_STATUS_OK)
+    xml_failure(parser);
+
+  XML_ParserFree(parser);
+}
+END_TEST
+
+START_TEST(test_duplicate_id_attribute_2) {
+  /*
+  https://www.w3.org/TR/xml/#attdecls
+
+  Test the following statement from the linked specification:
+    When more than one definition is provided for the same attribute of a given
+    element type, the first declaration is binding and later declarations are
+    ignored.
+  */
+
+  const char *text
+      = "<!DOCTYPE doc [\n"
+        "  <!ATTLIST doc identifier ID #REQUIRED identifier CDATA 'unexpected'>\n"
+        "]>\n"
+        "<doc/>\n";
+  AttrInfo doc_info[] = {{NULL, NULL}};
+
+  ElementInfo info[]
+      = {{XCS("doc"), 0, 0, NULL, doc_info}, {NULL, 0, 0, NULL, NULL}};
+
+  XML_Parser parser = XML_ParserCreate(NULL);
+  assert_true(parser != NULL);
+
+  ParserAndElementInfo parserAndElementInfos = {
+      parser,
+      info,
+  };
+
+  XML_SetStartElementHandler(parser, counting_start_element_handler);
+  XML_SetUserData(parser, &parserAndElementInfos);
+
+  if (_XML_Parse_SINGLE_BYTES(parser, text, (int)strlen(text), XML_TRUE)
+      != XML_STATUS_OK)
+    xml_failure(parser);
+
+  XML_ParserFree(parser);
+}
+END_TEST
+
+START_TEST(test_duplicate_cdata_attribute_multiple_attlistdecl) {
+  /*
+  https://www.w3.org/TR/xml/#attdecls
+
+  Test the following statement from the linked specification:
+    When more than one AttlistDecl is provided for a given element type,
+    the contents of all those provided are merged.
+  */
+  const char *text = "<!DOCTYPE doc [\n"
+                     "  <!ATTLIST doc attribute CDATA 'expected'>\n"
+                     "  <!ATTLIST doc attribute CDATA 'ignored'>\n"
+                     "]>\n"
+                     "<doc/>\n";
+  AttrInfo doc_info[] = {{XCS("attribute"), XCS("expected")}, {NULL, NULL}};
+  ElementInfo info[]
+      = {{XCS("doc"), 0, 1, NULL, doc_info}, {NULL, 0, 0, NULL, NULL}};
+
+  XML_Parser parser = XML_ParserCreate(NULL);
+  assert_true(parser != NULL);
+
+  ParserAndElementInfo parserAndElementInfos = {
+      parser,
+      info,
+  };
+
+  XML_SetStartElementHandler(parser, counting_start_element_handler);
+  XML_SetUserData(parser, &parserAndElementInfos);
+
+  if (_XML_Parse_SINGLE_BYTES(parser, text, (int)strlen(text), XML_TRUE)
+      != XML_STATUS_OK)
+    xml_failure(parser);
+
+  XML_ParserFree(parser);
+}
+END_TEST
+
+START_TEST(test_duplicate_cdata_attribute_multiple_attlistdecl_2) {
+  /*
+  https://www.w3.org/TR/xml/#attdecls
+
+  Test the following statement from the linked specification:
+    When more than one AttlistDecl is provided for a given element type,
+    the contents of all those provided are merged.
+  */
+  const char *text = "<!DOCTYPE doc [\n"
+                     "  <!ATTLIST doc attribute CDATA 'expected_doc'>\n"
+                     "  <!ATTLIST tag attribute CDATA 'expected_tag'>\n"
+                     "  <!ATTLIST doc attribute CDATA 'ignored_doc'>\n"
+                     "]>\n"
+                     "<doc><tag></tag></doc>\n";
+  AttrInfo doc_info[] = {{XCS("attribute"), XCS("expected_doc")}, {NULL, NULL}};
+  AttrInfo tag_info[] = {{XCS("attribute"), XCS("expected_tag")}, {NULL, NULL}};
+  ElementInfo info[] = {{XCS("doc"), 0, 1, NULL, doc_info},
+                        {XCS("tag"), 0, 1, NULL, tag_info},
+                        {NULL, 0, 0, NULL, NULL}};
+
+  XML_Parser parser = XML_ParserCreate(NULL);
+  assert_true(parser != NULL);
+
+  ParserAndElementInfo parserAndElementInfos = {
+      parser,
+      info,
+  };
+
+  XML_SetStartElementHandler(parser, counting_start_element_handler);
+  XML_SetUserData(parser, &parserAndElementInfos);
+
+  if (_XML_Parse_SINGLE_BYTES(parser, text, (int)strlen(text), XML_TRUE)
+      != XML_STATUS_OK)
+    xml_failure(parser);
+
+  XML_ParserFree(parser);
+}
+END_TEST
+
+START_TEST(test_duplicate_cdata_attribute_multiple_attlistdecl_3) {
+  /*
+  https://www.w3.org/TR/xml/#attdecls
+
+  Test the following statement from the linked specification:
+    When more than one AttlistDecl is provided for a given element type,
+    the contents of all those provided are merged.
+  */
+  const char *text
+      = "<!DOCTYPE doc [\n"
+        "  <!ATTLIST doc attribute CDATA 'expected_doc'>\n"
+        "  <!ATTLIST tag attribute CDATA 'expected_tag'>\n"
+        "  <!ATTLIST doc second_attribute CDATA 'second_expected_doc' attribute CDATA 'ignored_doc'>\n"
+        "]>\n"
+        "<doc><tag></tag></doc>\n";
+  AttrInfo doc_info[] = {{XCS("attribute"), XCS("expected_doc")},
+                         {XCS("second_attribute"), XCS("second_expected_doc")},
+                         {NULL, NULL}};
+  AttrInfo tag_info[] = {{XCS("attribute"), XCS("expected_tag")}, {NULL, NULL}};
+  ElementInfo info[] = {{XCS("doc"), 0, 2, NULL, doc_info},
+                        {XCS("tag"), 0, 1, NULL, tag_info},
+                        {NULL, 0, 0, NULL, NULL}};
+
+  XML_Parser parser = XML_ParserCreate(NULL);
+  assert_true(parser != NULL);
+
+  ParserAndElementInfo parserAndElementInfos = {
+      parser,
+      info,
+  };
+
+  XML_SetStartElementHandler(parser, counting_start_element_handler);
+  XML_SetUserData(parser, &parserAndElementInfos);
+
+  if (_XML_Parse_SINGLE_BYTES(parser, text, (int)strlen(text), XML_TRUE)
+      != XML_STATUS_OK)
+    xml_failure(parser);
+
+  XML_ParserFree(parser);
+}
+END_TEST
+
+START_TEST(test_duplicate_id_attribute_multiple_attlistdecl) {
+  /*
+  https://www.w3.org/TR/xml/#attdecls
+
+  Test the following statement from the linked specification:
+    When more than one AttlistDecl is provided for a given element type,
+    the contents of all those provided are merged.
+  */
+  const char *text = "<!DOCTYPE doc [\n"
+                     "  <!ATTLIST doc identifier ID #REQUIRED>\n"
+                     "  <!ATTLIST tag identifier CDATA 'identifier_tag'>\n"
+                     "  <!ATTLIST doc identifier CDATA 'ignored'>\n"
+                     "]>\n"
+                     "<doc identifier='doc_identity'><tag></tag></doc>\n";
+  AttrInfo doc_info[]
+      = {{XCS("identifier"), XCS("doc_identity")}, {NULL, NULL}};
+  AttrInfo tag_info[]
+      = {{XCS("identifier"), XCS("identifier_tag")}, {NULL, NULL}};
+  ElementInfo info[] = {{XCS("doc"), 1, 0, XCS("identifier"), doc_info},
+                        {XCS("tag"), 0, 1, NULL, tag_info},
+                        {NULL, 0, 0, NULL, NULL}};
+
+  XML_Parser parser = XML_ParserCreate(NULL);
+  assert_true(parser != NULL);
+
+  ParserAndElementInfo parserAndElementInfos = {
+      parser,
+      info,
+  };
+
+  XML_SetStartElementHandler(parser, counting_start_element_handler);
+  XML_SetUserData(parser, &parserAndElementInfos);
+
+  if (_XML_Parse_SINGLE_BYTES(parser, text, (int)strlen(text), XML_TRUE)
+      != XML_STATUS_OK)
+    xml_failure(parser);
+
+  XML_ParserFree(parser);
+}
+END_TEST
+
 /* Test reset works correctly in the middle of processing an internal
  * entity.  Exercises some obscure code in XML_ParserReset().
  */
@@ -6399,6 +6672,15 @@ make_basic_test_case(Suite *s) {
   tcase_add_test__ifdef_xml_dtd(tc_basic, test_empty_foreign_dtd);
   tcase_add_test(tc_basic, test_set_base);
   tcase_add_test(tc_basic, test_attributes);
+  tcase_add_test(tc_basic, test_duplicate_cdata_attribute);
+  tcase_add_test(tc_basic, test_duplicate_id_attribute_1);
+  tcase_add_test(tc_basic, test_duplicate_id_attribute_2);
+  tcase_add_test(tc_basic, test_duplicate_cdata_attribute_multiple_attlistdecl);
+  tcase_add_test(tc_basic,
+                 test_duplicate_cdata_attribute_multiple_attlistdecl_2);
+  tcase_add_test(tc_basic,
+                 test_duplicate_cdata_attribute_multiple_attlistdecl_3);
+  tcase_add_test(tc_basic, test_duplicate_id_attribute_multiple_attlistdecl);
   tcase_add_test__if_xml_ge(tc_basic, test_reset_in_entity);
   tcase_add_test(tc_basic, test_resume_invalid_parse);
   tcase_add_test(tc_basic, test_resume_resuspended);
