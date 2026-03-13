@@ -137,7 +137,7 @@ counting_start_element_handler(void *userData, const XML_Char *name,
     fail("ID does not have the correct name");
     return;
   }
-  for (i = 0; i < info->attr_count; i++) {
+  for (i = 0; i < info->attr_count + info->default_attr_count; i++) {
     attr = info->attributes;
     while (attr->name != NULL) {
       if (! xcstrcmp(atts[0], attr->name))
