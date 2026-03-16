@@ -6789,7 +6789,14 @@ storeEntityValue(XML_Parser parser, const ENCODING *enc,
       return XML_ERROR_NO_MEMORY;
   }
 
-  const char *next;
+  const char *next = entityTextPtr;
+
+  /* Nothing to tokenize. */
+  if (entityTextPtr >= entityTextEnd) {
+    result = XML_ERROR_NONE;
+    goto endEntityValue;
+  }
+
   for (;;) {
     next
         = entityTextPtr; /* XmlEntityValueTok doesn't always set the last arg */
