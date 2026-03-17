@@ -28,6 +28,7 @@ dnl   Copyright (c) 2025      Matthew Fernandez <matthew.fernandez@gmail.com>
 dnl   Copyright (c) 2025      Alfonso Gregory <gfunni234@gmail.com>
 dnl   Copyright (c) 2026      Rosen Penev <rosenp@gmail.com>
 dnl   Copyright (c) 2026      Gordon Messmer <gordon.messmer@gmail.com>
+dnl   Copyright (c) 2026      Fabio Scaccabarozzi <fsvm88@gmail.com>
 dnl   Licensed under the MIT license:
 dnl
 dnl   Permission is  hereby granted,  free of charge,  to any  person obtaining
