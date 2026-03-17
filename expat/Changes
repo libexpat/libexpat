@@ -29,7 +29,7 @@
 !! THANK YOU!                        Sebastian Pipping -- Berlin, 2026-03-17 !!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-Release 2.7.5 XXX XXXXXXX XX XXXX
+Release 2.7.5 Tue March 17 2026
         Security fixes:
            #1158  CVE-2026-32776 -- Fix NULL function pointer dereference for
                     empty external parameter entities; it takes use of both
