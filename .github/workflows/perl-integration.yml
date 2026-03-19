@@ -42,9 +42,24 @@ permissions:
 jobs:
   perl_integration:
     name: Run Perl XML::Parser integration tests
+    strategy:
+      fail-fast: false
+      matrix:
+        xml_parser_commit:
+          - "7096c4e45a62a23837382cf822d8c2dab780a3a1"  # ==2.47 without AI
+          - "b9df3091dcd154a73d8019053087ceba14fe8a2c"  # >=2.49    with AI
     runs-on: ubuntu-24.04
     steps:
     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+
+    - name: Install system dependencies
+      if: "${{ matrix.xml_parser_commit != '7096c4e45a62a23837382cf822d8c2dab780a3a1' }}"
+      run: |
+        set -x
+        sudo apt-get update
+        sudo apt-get install --yes --no-install-recommends -V \
+            libfile-sharedir-install-perl \
+            libfile-sharedir-perl
 
     - name: Build and replace system Expat
       run: |
@@ -66,12 +81,16 @@ jobs:
         sudo make -C build VERBOSE=1 install
 
     - name: Run Perl XML::Parser integration tests
+      env:
+        xml_parser_commit: "${{ matrix.xml_parser_commit }}"
       run: |
         set -x
 
         # NOTE: The version pin is for CI stability.
-        git clone --depth 1 --branch 2.47 https://github.com/cpan-authors/XML-Parser
+        git -c init.defaultbranch=main init XML-Parser/
         cd XML-Parser/
+        git fetch --depth 1 https://github.com/cpan-authors/XML-Parser "${xml_parser_commit}"
+        git -c advice.detachedHead=false checkout FETCH_HEAD
 
         perl Makefile.PL
         make -j$(nproc)
