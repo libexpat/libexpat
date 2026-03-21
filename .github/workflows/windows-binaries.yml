@@ -72,7 +72,7 @@ jobs:
     - name: Install Inno Setup
       shell: pwsh
       run: |-
-        Invoke-WebRequest -Uri https://files.jrsoftware.org/is/6/innosetup-6.1.2.exe -OutFile D:\\is.exe
+        Invoke-WebRequest -Uri https://github.com/jrsoftware/issrc/releases/download/is-6_1_2/innosetup-6.1.2.exe -OutFile D:\\is.exe
         Start-Process -FilePath D:\\is.exe -ArgumentList "/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART" -Wait
 
     - name: 'Add Inno Setup compiler to ${PATH}'
