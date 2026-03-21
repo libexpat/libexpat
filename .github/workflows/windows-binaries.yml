@@ -72,7 +72,7 @@ jobs:
     - name: Install Inno Setup
       shell: pwsh
       run: |-
-        Invoke-WebRequest -Uri https://files.jrsoftware.org/is/6/innosetup-6.1.2.exe -OutFile D:\\is.exe
+        Invoke-WebRequest -Uri https://github.com/jrsoftware/issrc/releases/download/is-6_1_2/innosetup-6.1.2.exe -OutFile D:\\is.exe
         Start-Process -FilePath D:\\is.exe -ArgumentList "/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART" -Wait
 
     - name: 'Add Inno Setup compiler to ${PATH}'
@@ -113,7 +113,7 @@ jobs:
         sed "${inno_sed_args[@]}" win32/expat.iss > win64/expat.iss
         ! grep 'win32\\bin' win64/expat.iss  # i.e. assert success
         grep win32 win64/expat.iss  # purely informational
-    
+
     - name: Build installer (and the Expat binaries that go into it)
       env:
         expat_platform: ${{ matrix.expat_platform }}
