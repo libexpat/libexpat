@@ -113,7 +113,7 @@ jobs:
         sed "${inno_sed_args[@]}" win32/expat.iss > win64/expat.iss
         ! grep 'win32\\bin' win64/expat.iss  # i.e. assert success
         grep win32 win64/expat.iss  # purely informational
-    
+
     - name: Build installer (and the Expat binaries that go into it)
       env:
         expat_platform: ${{ matrix.expat_platform }}
