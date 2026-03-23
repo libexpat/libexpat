@@ -6,7 +6,7 @@
 #                      \___/_/\_\ .__/ \__,_|\__|
 #                               |_| XML parser
 #
-# Copyright (c) 2017-2026 Sebastian Pipping <sebastian@pipping.org>
+# Copyright (c) 2017-2025 Sebastian Pipping <sebastian@pipping.org>
 # Copyright (c) 2018      Marco Maggi <marco.maggi-ipsu@poste.it>
 # Copyright (c) 2019      Mohammed Khajapasha <mohammed.khajapasha@intel.com>
 # Copyright (c) 2026      Rosen Penev <rosenp@gmail.com>
