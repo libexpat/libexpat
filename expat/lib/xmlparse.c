@@ -45,6 +45,8 @@
    Copyright (c) 2025      Atrem Borovik <polzovatellllk@gmail.com>
    Copyright (c) 2025      Alfonso Gregory <gfunni234@gmail.com>
    Copyright (c) 2026      Rosen Penev <rosenp@gmail.com>
+   Copyright (c) 2026      Francesco Bertolaccini
+   Copyright (c) 2026      Christian Ng <christianrng@berkeley.edu>
    Licensed under the MIT license:
 
    Permission is  hereby granted,  free of charge,  to any  person obtaining
