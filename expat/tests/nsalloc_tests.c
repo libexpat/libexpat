@@ -1520,7 +1520,9 @@ START_TEST(test_nsalloc_setContext_zombie) {
       break;
     /* Retry on the same parser — must not crash */
     g_allocation_count = ALLOC_ALWAYS_SUCCEED;
-    XML_Parse(g_parser, text, (int)strlen(text), XML_TRUE);
+    const enum XML_Status status
+        = XML_Parse(g_parser, text, (int)strlen(text), XML_TRUE);
+    (void)status;
 
     nsalloc_teardown();
     nsalloc_setup();
