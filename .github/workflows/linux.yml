@@ -113,7 +113,8 @@ jobs:
         # NOTE: Please note the version-specific ${PATH} extension for Clang adding /usr/lib/llvm-21/bin in .ci.sh
         sudo apt-get install --yes --no-install-recommends -V \
             clang-21 \
-            libclang-rt-21-dev
+            libclang-rt-21-dev \
+            llvm-21-tools
     - name: Install build dependencies (common)
       run: |-
         sudo apt-get install --yes --no-install-recommends -V \
