@@ -299,10 +299,10 @@ AS_HELP_STRING([--without-getentropy],
   [],
   [with_getentropy=check])
 
-AS_IF([test "x$with_getentropy" != xno],
+AS_IF([true],
   [AC_CHECK_FUNCS([getentropy],,
-     [AS_IF([test "x$with_getentropy" = xyes],
-        [AC_MSG_ERROR([enforced the use of getentropy --with-getentropy, but not detected])])])])
+     [AS_IF([true],
+        [AC_MSG_ERROR([XXX getentropy MISSING AUTOCONF])])])])
 
 dnl Only needed for xmlwf:
 AC_CHECK_HEADERS(fcntl.h unistd.h)

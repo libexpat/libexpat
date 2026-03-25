@@ -1028,3 +1028,7 @@ if(CMAKE_GENERATOR STREQUAL "Unix Makefiles")
     message(STATUS "")
 endif()
 message(STATUS "===========================================================================")
+
+if(NOT WIN32 AND NOT HAVE_GETENTROPY)
+    message(SEND_ERROR "XXX getentropy MISSING CMAKE")
+endif()
