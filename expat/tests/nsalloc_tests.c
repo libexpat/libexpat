@@ -1508,7 +1508,7 @@ END_TEST
 
 /* Verify that retry after OOM in setContext() does not crash.
  */
-START_TEST(test_nsalloc_setContext_zombie) {
+START_TEST(test_nsalloc_set_context_zombie) {
   const char *text = "<doc>Hello</doc>";
   unsigned int i;
   const unsigned int max_alloc_count = 30;
@@ -1568,5 +1568,5 @@ make_nsalloc_test_case(Suite *s) {
   tcase_add_test__if_xml_ge(tc_nsalloc, test_nsalloc_long_default_in_ext);
   tcase_add_test(tc_nsalloc, test_nsalloc_long_systemid_in_ext);
   tcase_add_test(tc_nsalloc, test_nsalloc_prefixed_element);
-  tcase_add_test(tc_nsalloc, test_nsalloc_setContext_zombie);
+  tcase_add_test(tc_nsalloc, test_nsalloc_set_context_zombie);
 }
