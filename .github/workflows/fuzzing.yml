@@ -46,6 +46,7 @@ jobs:
       fail-fast: false
       matrix:
         fuzzer:
+          - xml_lpm_fuzzer
           - xml_parse_fuzzer_UTF-8
           - xml_parsebuffer_fuzzer_UTF-16LE
     runs-on: ubuntu-24.04
