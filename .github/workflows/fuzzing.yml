@@ -127,7 +127,7 @@ jobs:
         set -x
         cd expat/build/
         wget -q -O corpus.zip "https://storage.googleapis.com/expat-backup.clusterfuzz-external.appspot.com/corpus/libFuzzer/expat_${fuzzer}/public.zip"
-        unzip -q -d corpus/ corpus.zip
+        unzip -q -d c/ corpus.zip
 
     - name: Run fuzzing regression tests (1 to 5 minutes)
       run: |
@@ -151,7 +151,7 @@ jobs:
         mkdir coverage/
         export LLVM_PROFILE_FILE=coverage/expat-%p.profraw
 
-        find corpus/ -type f | sort | xargs "fuzz/${fuzzer}" "${fuzz_args[@]}"
+        find c/ -type f | sort | xargs "fuzz/${fuzzer}" "${fuzz_args[@]}"
 
     - name: Store fuzzing logs of last batch
       uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # v7.0.0
