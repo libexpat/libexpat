@@ -46,6 +46,7 @@ jobs:
       fail-fast: false
       matrix:
         fuzzer:
+          - xml_lpm_fuzzer
           - xml_parse_fuzzer_UTF-8
           - xml_parsebuffer_fuzzer_UTF-16LE
     runs-on: ubuntu-24.04
@@ -77,6 +78,7 @@ jobs:
             libtool \
             libprotobuf-dev \
             lzip \
+            parallel \
             protobuf-compiler
 
     - name: Turn Git clone into Autotools "make dist" release tarball
@@ -126,12 +128,11 @@ jobs:
         set -x
         cd expat/build/
         wget -q -O corpus.zip "https://storage.googleapis.com/expat-backup.clusterfuzz-external.appspot.com/corpus/libFuzzer/expat_${fuzzer}/public.zip"
-        unzip -q -d corpus/ corpus.zip
+        unzip -q -d c/ corpus.zip
 
     - name: Run fuzzing regression tests (1 to 5 minutes)
       run: |
         fuzz_args=(
-            -jobs=$(nproc)
             -print_final_stats=1
             -rss_limit_mb=2560  # from OSS-Fuzz
             -timeout=25         # from OSS-Fuzz
@@ -150,12 +151,16 @@ jobs:
         mkdir coverage/
         export LLVM_PROFILE_FILE=coverage/expat-%p.profraw
 
-        find corpus/ -type f | sort | xargs "fuzz/${fuzzer}" "${fuzz_args[@]}"
+        find c/ -type f | sort \
+            | parallel --max-args 1000 \
+                "fuzz/${fuzzer}" "${fuzz_args[@]}" \
+            |& tee fuzz-all.log
 
-    - name: Store fuzzing logs of last batch
+    - name: Store fuzzing logs
       uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # v7.0.0
+      if: ${{ always() }}
       with:
-        name: ${{ matrix.fuzzer }}_${{ github.sha }}_logs_last
+        name: ${{ matrix.fuzzer }}_${{ github.sha }}_logs
         path: expat/build/fuzz-*.log
         if-no-files-found: error
 
