@@ -47,7 +47,7 @@ jobs:
     steps:
     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
 
-    - uses: vmactions/freebsd-vm@4807432c7cab1c3f97688665332c0b932062d31f  # v1.4.3
+    - uses: vmactions/freebsd-vm@7ca82f79fe3078fecded6d3a2bff094995447bbd  # v1.4.4
       with:
         release: "15.0"
         usesh: true
