@@ -29,6 +29,16 @@
 !! THANK YOU!                        Sebastian Pipping -- Berlin, 2026-03-17 !!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
+Release 2.7.6 XXX XXXXX XX XXXX
+        Other changes:
+           #1180  Add support for `getentropy(3)` as a source of entropy;
+                    this helps with protecting against hash flooding attacks,
+                    in particular with WASI SDK (where none of the other
+                    entropy sources supported by libexpat are available).
+
+        Special thanks to:
+            Jérôme Duval
+
 Release 2.7.5 Tue March 17 2026
         Security fixes:
            #1158  CVE-2026-32776 -- Fix NULL function pointer dereference for

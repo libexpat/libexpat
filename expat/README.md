@@ -298,6 +298,9 @@ EXPAT_SYMBOL_VERSIONING:BOOL=OFF
 // Treat all compiler warnings as errors
 EXPAT_WARNINGS_AS_ERRORS:BOOL=OFF
 
+// Make use of getentropy function (ON|OFF|AUTO) [default=AUTO]
+EXPAT_WITH_GETENTROPY:STRING=AUTO
+
 // Make use of getrandom function (ON|OFF|AUTO) [default=AUTO]
 EXPAT_WITH_GETRANDOM:STRING=AUTO
 

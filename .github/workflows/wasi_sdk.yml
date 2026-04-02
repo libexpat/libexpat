@@ -59,7 +59,7 @@ jobs:
       run: |
         cmake_args=(
           -DCMAKE_TOOLCHAIN_FILE=/opt/wasi-sdk/share/cmake/wasi-sdk-p1.cmake
-          -DCMAKE_C_FLAGS='-O1 -pipe -Wall -Wextra -pedantic -Wno-overlength-strings -DXML_POOR_ENTROPY'
+          -DCMAKE_C_FLAGS='-O1 -pipe -Wall -Wextra -pedantic -Wno-overlength-strings'
           -DCMAKE_CXX_FLAGS='-O2 -pipe -Wall -Wextra -pedantic -Wno-overlength-strings'
           -DEXPAT_BUILD_DOCS=OFF
           -DEXPAT_BUILD_TESTS=OFF
