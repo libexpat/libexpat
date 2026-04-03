@@ -55,6 +55,10 @@ jobs:
         wget "https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-${wasi_sdk_major}/wasi-sdk-${wasi_sdk_major}.0-x86_64-linux.deb"
         sudo apt-get install --yes "./wasi-sdk-${wasi_sdk_major}.0-x86_64-linux.deb"
 
+        # Fix WASI SDK 32 for compilation with -Werror, see
+        # upstream issue https://github.com/WebAssembly/wasi-sdk/issues/620
+        sudo sed 's,triple wasm32-wasi,triple wasm32-wasip1,' -i /opt/wasi-sdk/share/cmake/wasi-sdk.cmake
+
     - name: Build using WASI SDK
       run: |
         cmake_args=(
