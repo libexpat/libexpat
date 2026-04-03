@@ -48,10 +48,12 @@ jobs:
     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
 
     - name: Install build dependencies
+      env:
+        wasi_sdk_major: "32"
       run: |-
-        set -x
-        wget https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-32/wasi-sdk-32.0-x86_64-linux.deb
-        sudo apt-get install --yes ./wasi-sdk-32.0-x86_64-linux.deb
+        set -x -u
+        wget "https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-${wasi_sdk_major}/wasi-sdk-${wasi_sdk_major}.0-x86_64-linux.deb"
+        sudo apt-get install --yes "./wasi-sdk-${wasi_sdk_major}.0-x86_64-linux.deb"
 
     - name: Build using WASI SDK
       run: |
