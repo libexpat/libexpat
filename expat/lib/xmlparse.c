@@ -2224,8 +2224,14 @@ XML_SetHashSalt(XML_Parser parser, unsigned long hash_salt) {
   rootParser->m_hash_secret_salt_128.k[0] = 0;
   rootParser->m_hash_secret_salt_128.k[1] = hash_salt;
 
-  if (hash_salt != 0) // to remain backwards compatible
+  if (hash_salt != 0) { // to remain backwards compatible
     rootParser->m_hash_secret_salt_set = XML_TRUE;
+
+    if (sizeof(unsigned long) == 4)
+      ENTROPY_DEBUG("explicit(4)", rootParser->m_hash_secret_salt_128);
+    else
+      ENTROPY_DEBUG("explicit(8)", rootParser->m_hash_secret_salt_128);
+  }
 
   return 1;
 }
@@ -2248,6 +2254,8 @@ XML_SetHashSalt16Bytes(XML_Parser parser, const uint8_t entropy[16]) {
   sip_tokey(&(rootParser->m_hash_secret_salt_128), entropy);
 
   rootParser->m_hash_secret_salt_set = XML_TRUE;
+
+  ENTROPY_DEBUG("explicit(16)", rootParser->m_hash_secret_salt_128);
 
   return XML_TRUE;
 }
