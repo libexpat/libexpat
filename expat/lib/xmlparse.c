@@ -1128,14 +1128,6 @@ generate_hash_secret_salt(XML_Parser parser) {
 #endif
 }
 
-static unsigned long
-get_hash_secret_salt(XML_Parser parser) {
-  const XML_Parser rootParser = getRootParserOf(parser, NULL);
-  assert(! rootParser->m_parentParser);
-
-  return rootParser->m_hash_secret_salt;
-}
-
 static enum XML_Error
 callProcessor(XML_Parser parser, const char *start, const char *end,
               const char **endPtr) {
@@ -7723,8 +7715,11 @@ keylen(KEY s) {
 
 static void
 copy_salt_to_sipkey(XML_Parser parser, struct sipkey *key) {
+  const XML_Parser rootParser = getRootParserOf(parser, NULL);
+  assert(! rootParser->m_parentParser);
+
   key->k[0] = 0;
-  key->k[1] = get_hash_secret_salt(parser);
+  key->k[1] = rootParser->m_hash_secret_salt;
 }
 
 static unsigned long FASTCALL
