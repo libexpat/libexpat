@@ -761,6 +761,7 @@ struct XML_ParserStruct {
   enum XML_ParamEntityParsing m_paramEntityParsing;
 #endif
   struct sipkey m_hash_secret_salt_128;
+  XML_Bool m_hash_secret_salt_set;
 #if XML_GE == 1
   ACCOUNTING m_accounting;
   MALLOC_TRACKER m_alloc_tracker;
@@ -1200,9 +1201,9 @@ callProcessor(XML_Parser parser, const char *start, const char *end,
 static XML_Bool /* only valid for root parser */
 startParsing(XML_Parser parser) {
   /* hash functions must be initialized before setContext() is called */
-  if ((parser->m_hash_secret_salt_128.k[0] == 0)
-      && (parser->m_hash_secret_salt_128.k[1] == 0)) {
+  if (parser->m_hash_secret_salt_set != XML_TRUE) {
     parser->m_hash_secret_salt_128 = generate_hash_secret_salt();
+    parser->m_hash_secret_salt_set = XML_TRUE;
   }
   if (parser->m_ns) {
     /* implicit context only set for root parser, since child
@@ -1493,6 +1494,7 @@ parserInit(XML_Parser parser, const XML_Char *encodingName) {
 #endif
   parser->m_hash_secret_salt_128.k[0] = 0;
   parser->m_hash_secret_salt_128.k[1] = 0;
+  parser->m_hash_secret_salt_set = XML_FALSE;
 
 #if XML_GE == 1
   memset(&parser->m_accounting, 0, sizeof(ACCOUNTING));
@@ -1660,6 +1662,7 @@ XML_ExternalEntityParserCreate(XML_Parser oldParser, const XML_Char *context,
      to worry which hash secrets each table has.
   */
   struct sipkey oldhash_secret_salt_128;
+  XML_Bool oldhash_secret_salt_set;
   XML_Bool oldReparseDeferralEnabled;
 
   /* Validate the oldParser parameter before we pull everything out of it */
@@ -1706,6 +1709,7 @@ XML_ExternalEntityParserCreate(XML_Parser oldParser, const XML_Char *context,
      to worry which hash secrets each table has.
   */
   oldhash_secret_salt_128 = parser->m_hash_secret_salt_128;
+  oldhash_secret_salt_set = parser->m_hash_secret_salt_set;
   oldReparseDeferralEnabled = parser->m_reparseDeferralEnabled;
 
 #ifdef XML_DTD
@@ -1761,6 +1765,7 @@ XML_ExternalEntityParserCreate(XML_Parser oldParser, const XML_Char *context,
   parser->m_defaultExpandInternalEntities = oldDefaultExpandInternalEntities;
   parser->m_ns_triplets = oldns_triplets;
   parser->m_hash_secret_salt_128 = oldhash_secret_salt_128;
+  parser->m_hash_secret_salt_set = oldhash_secret_salt_set;
   parser->m_reparseDeferralEnabled = oldReparseDeferralEnabled;
   parser->m_parentParser = oldParser;
 #ifdef XML_DTD
@@ -2215,8 +2220,13 @@ XML_SetHashSalt(XML_Parser parser, unsigned long hash_salt) {
   /* block after XML_Parse()/XML_ParseBuffer() has been called */
   if (parserBusy(rootParser))
     return 0;
+
   rootParser->m_hash_secret_salt_128.k[0] = 0;
   rootParser->m_hash_secret_salt_128.k[1] = hash_salt;
+
+  if (hash_salt != 0) // to remain backwards compatible
+    rootParser->m_hash_secret_salt_set = XML_TRUE;
+
   return 1;
 }
 
