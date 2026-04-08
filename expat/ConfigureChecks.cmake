@@ -55,6 +55,27 @@ if(NOT HAVE_OFF_T)
 endif()
 
 check_c_source_compiles("
+        // NOTE: Please keep this block in sync with its two siblings in files
+        //       `configure.ac` and `lib/random_getentropy.c`!
+        #if defined(__APPLE__)
+        #  include <sys/random.h>
+        #else
+        #  if defined(__GLIBC__) && ! defined(_DEFAULT_SOURCE)
+        #    define _DEFAULT_SOURCE 1
+        #  endif
+        #  if ! defined(_GNU_SOURCE)
+        #    define _GNU_SOURCE 1 /* for musl */
+        #  endif
+        #  include <unistd.h>
+        #endif // ! defined(__APPLE__)
+
+        int main(void) {
+            return getentropy(NULL, 0U);
+        }
+    "
+    HAVE_GETENTROPY)
+
+check_c_source_compiles("
         #define _GNU_SOURCE
         #include <stdlib.h>  /* for NULL */
         #include <unistd.h>  /* for syscall */

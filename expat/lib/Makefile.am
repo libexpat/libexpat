@@ -55,6 +55,12 @@ libexpat_la_SOURCES = \
     xmltok.c \
     xmlrole.c
 
+if WITH_GETENTROPY
+    libexpat_la_SOURCES += \
+        random_getentropy.c \
+        random_getentropy.h
+endif
+
 if WITH_TESTS
 libtestpat_la_CPPFLAGS = -DXML_TESTING
 

@@ -242,6 +242,46 @@ AC_LINK_IFELSE([AC_LANG_SOURCE([
       AC_MSG_RESULT([yes])],
      [AC_MSG_RESULT([no])])])
 
+have_getentropy=false
+
+AC_ARG_WITH([getentropy],
+  [AS_HELP_STRING([--with-getentropy],
+                  [enforce the use of getentropy function in the system @<:@default=check@:>@])
+AS_HELP_STRING([--without-getentropy],
+               [skip auto detect of getentropy @<:@default=check@:>@])],
+  [],
+  [with_getentropy=check])
+
+AS_IF([test "x$with_getentropy" != xno],
+  [AC_MSG_CHECKING([for getentropy (BSD, macOS 10.12+, glibc 2.25+)])
+   AC_LINK_IFELSE([AC_LANG_SOURCE([
+       // NOTE: Please keep this block in sync with its two siblings in files
+       //       `ConfigureChecks.cmake` and `lib/random_getentropy.c`!
+       #if defined(__APPLE__)
+       #  include <sys/random.h>
+       #else
+       #  if defined(__GLIBC__) && ! defined(_DEFAULT_SOURCE)
+       #    define _DEFAULT_SOURCE 1
+       #  endif
+       #  if ! defined(_GNU_SOURCE)
+       #    define _GNU_SOURCE 1 /* for musl */
+       #  endif
+       #  include <unistd.h>
+       #endif // ! defined(__APPLE__)
+
+       int main(void) {
+         return getentropy(NULL, 0U);
+       }
+     ])],
+     [AC_DEFINE([HAVE_GETENTROPY], [1], [Define to 1 if you have the `getentropy' function.])
+      have_getentropy=true
+      AC_MSG_RESULT([yes])],
+     [AC_MSG_RESULT([no])
+      AS_IF([test "x$with_getentropy" = xyes],
+        [AC_MSG_ERROR([enforced the use of getentropy --with-getentropy, but not detected])])])])
+
+AM_CONDITIONAL([WITH_GETENTROPY], [test x${have_getentropy} = xtrue])
+
 AC_ARG_WITH([getrandom],
   [AS_HELP_STRING([--with-getrandom],
                   [enforce the use of getrandom function in the system @<:@default=check@:>@])

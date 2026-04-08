@@ -108,6 +108,7 @@
 #include <stdlib.h> /* getenv, rand_s */
 #include <stdint.h> /* SIZE_MAX, uintptr_t */
 #include <math.h>   /* isnan */
+#include <errno.h>
 
 #ifdef _WIN32
 #  define getpid GetCurrentProcessId
@@ -127,6 +128,10 @@
 #include "expat.h"
 #include "siphash.h"
 
+#if defined(HAVE_GETENTROPY)
+#  include "random_getentropy.h"
+#endif // defined(HAVE_GETENTROPY)
+
 #if defined(HAVE_GETRANDOM) || defined(HAVE_SYSCALL_GETRANDOM)
 #  if defined(HAVE_GETRANDOM)
 #    include <sys/random.h> /* getrandom */
@@ -145,8 +150,8 @@
 
 #if ! defined(HAVE_GETRANDOM) && ! defined(HAVE_SYSCALL_GETRANDOM)             \
     && ! defined(HAVE_ARC4RANDOM_BUF) && ! defined(HAVE_ARC4RANDOM)            \
-    && ! defined(XML_DEV_URANDOM) && ! defined(_WIN32)                         \
-    && ! defined(XML_POOR_ENTROPY)
+    && ! defined(HAVE_GETENTROPY) && ! defined(XML_DEV_URANDOM)                \
+    && ! defined(_WIN32) && ! defined(XML_POOR_ENTROPY)
 #  error You do not have support for any sources of high quality entropy \
     enabled.  For end user security, that is probably not what you want. \
     \
@@ -155,6 +160,7 @@
       * Linux >=3.17 + glibc (including <2.25) (syscall SYS_getrandom): HAVE_SYSCALL_GETRANDOM, \
       * BSD / macOS >=10.7 / glibc >=2.36 (arc4random_buf): HAVE_ARC4RANDOM_BUF, \
       * BSD / macOS (including <10.7) / glibc >=2.36 (arc4random): HAVE_ARC4RANDOM, \
+      * BSD / macOS >=10.12 / glibc >=2.25 (getentropy): HAVE_GETENTROPY, \
       * Linux (including <3.17) / BSD / macOS (including <10.7) / Solaris >=8 (/dev/urandom): XML_DEV_URANDOM, \
       * Windows >=Vista (rand_s): _WIN32. \
     \
@@ -1041,7 +1047,10 @@ static const XML_Char implicitContext[]
 /* To avoid warnings about unused functions: */
 #if ! defined(HAVE_ARC4RANDOM_BUF) && ! defined(HAVE_ARC4RANDOM)
 
-#  if defined(HAVE_GETRANDOM) || defined(HAVE_SYSCALL_GETRANDOM)
+/* To avoid warnings about unused functions: */
+#  if ! defined(HAVE_GETENTROPY)
+
+#    if defined(HAVE_GETRANDOM) || defined(HAVE_SYSCALL_GETRANDOM)
 
 /* Obtain entropy on Linux 3.17+ */
 static int
@@ -1057,12 +1066,12 @@ writeRandomBytes_getrandom_nonblock(void *target, size_t count) {
     assert(bytesToWrite <= INT_MAX);
 
     const int bytesWrittenMore =
-#    if defined(HAVE_GETRANDOM)
+#      if defined(HAVE_GETRANDOM)
         (int)getrandom(currentTarget, bytesToWrite, getrandomFlags);
-#    else
+#      else
         (int)syscall(SYS_getrandom, currentTarget, bytesToWrite,
                      getrandomFlags);
-#    endif
+#      endif
 
     if (bytesWrittenMore > 0) {
       bytesWrittenTotal += bytesWrittenMore;
@@ -1074,7 +1083,9 @@ writeRandomBytes_getrandom_nonblock(void *target, size_t count) {
   return success;
 }
 
-#  endif /* defined(HAVE_GETRANDOM) || defined(HAVE_SYSCALL_GETRANDOM) */
+#    endif /* defined(HAVE_GETRANDOM) || defined(HAVE_SYSCALL_GETRANDOM) */
+
+#  endif // ! defined(HAVE_GETENTROPY)
 
 #  if ! defined(_WIN32) && defined(XML_DEV_URANDOM)
 
@@ -1221,6 +1232,11 @@ generate_hash_secret_salt(XML_Parser parser) {
   if (writeRandomBytes_rand_s((void *)&entropy, sizeof(entropy))) {
     return ENTROPY_DEBUG("rand_s", entropy);
   }
+#  elif defined(HAVE_GETENTROPY)
+  if (writeRandomBytes_getentropy(&entropy, sizeof(entropy))) {
+    return ENTROPY_DEBUG("getentropy", entropy);
+  }
+  errno = 0;
 #  elif defined(HAVE_GETRANDOM) || defined(HAVE_SYSCALL_GETRANDOM)
   if (writeRandomBytes_getrandom_nonblock((void *)&entropy, sizeof(entropy))) {
     return ENTROPY_DEBUG("getrandom", entropy);

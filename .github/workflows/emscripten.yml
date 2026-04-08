@@ -61,6 +61,7 @@ jobs:
           -DCMAKE_C_FLAGS='-O1 -pipe -Wall -Wextra -pedantic -Wno-overlength-strings'
           -DCMAKE_CXX_FLAGS='-O2 -pipe -Wall -Wextra -pedantic -Wno-overlength-strings'
           -DEXPAT_BUILD_DOCS=OFF
+          -DEXPAT_SHARED_LIBS=OFF  # to silence warning; not supported by Emscripten
           -DEXPAT_WARNINGS_AS_ERRORS=ON
         )
         set -x

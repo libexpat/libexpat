@@ -149,8 +149,9 @@ mark_as_advanced(EXPAT_GE)
 expat_shy_set(EXPAT_NS ON CACHE BOOL "Define to make XML Namespaces functionality available")
 mark_as_advanced(EXPAT_NS)
 expat_shy_set(EXPAT_WARNINGS_AS_ERRORS OFF CACHE BOOL "Treat all compiler warnings as errors")
-if(UNIX OR _EXPAT_HELP)
+if(NOT WIN32 OR _EXPAT_HELP)
     expat_shy_set(EXPAT_DEV_URANDOM ON CACHE BOOL "Define to include code reading entropy from `/dev/urandom'.")
+    expat_shy_set(EXPAT_WITH_GETENTROPY "AUTO" CACHE STRING "Make use of getentropy function (ON|OFF|AUTO) [default=AUTO]")
     expat_shy_set(EXPAT_WITH_GETRANDOM "AUTO" CACHE STRING "Make use of getrandom function (ON|OFF|AUTO) [default=AUTO]")
     expat_shy_set(EXPAT_WITH_SYS_GETRANDOM "AUTO" CACHE STRING "Make use of syscall SYS_getrandom (ON|OFF|AUTO) [default=AUTO]")
     mark_as_advanced(EXPAT_DEV_URANDOM)
@@ -278,6 +279,7 @@ macro(evaluate_detection_results use_ref have_ref thing_lower thing_title)
 endmacro()
 
 if(NOT WIN32)
+    evaluate_detection_results(EXPAT_WITH_GETENTROPY HAVE_GETENTROPY "function getentropy" "Function getentropy")
     evaluate_detection_results(EXPAT_WITH_GETRANDOM HAVE_GETRANDOM "function getrandom" "Function getrandom")
     evaluate_detection_results(EXPAT_WITH_SYS_GETRANDOM HAVE_SYSCALL_GETRANDOM "syscall SYS_getrandom" "Syscall SYS_getrandom")
 endif()
@@ -381,6 +383,14 @@ set(_EXPAT_C_SOURCES
 #   lib/xmltok_impl.c
 #   lib/xmltok_ns.c
 )
+
+if(HAVE_GETENTROPY)
+    set(_EXPAT_C_SOURCES
+        ${_EXPAT_C_SOURCES}
+        lib/random_getentropy.c
+        lib/random_getentropy.h
+    )
+endif()
 
 if(EXPAT_SHARED_LIBS)
     set(_SHARED SHARED)
@@ -1008,6 +1018,7 @@ message(STATUS "  Entropy sources")
 if(WIN32)
     message(STATUS "    rand_s ................... ON")
 else()
+    message(STATUS "    getentropy ............... ${HAVE_GETENTROPY}")
     message(STATUS "    getrandom ................ ${HAVE_GETRANDOM}")
     message(STATUS "    syscall SYS_getrandom .... ${HAVE_SYSCALL_GETRANDOM}")
     message(STATUS "    /dev/random .............. ${EXPAT_DEV_URANDOM}")
