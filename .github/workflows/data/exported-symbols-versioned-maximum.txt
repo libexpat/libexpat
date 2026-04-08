@@ -50,6 +50,7 @@ XML_SetEndNamespaceDeclHandler@@LIBEXPAT_1.95.0
 XML_SetEntityDeclHandler@@LIBEXPAT_1.95.0
 XML_SetExternalEntityRefHandlerArg@@LIBEXPAT_1.1.0
 XML_SetExternalEntityRefHandler@@LIBEXPAT_1.0.0
+XML_SetHashSalt16Bytes@@LIBEXPAT_2.7.6
 XML_SetHashSalt@@LIBEXPAT_2.1.0
 XML_SetNamespaceDeclHandler@@LIBEXPAT_1.1.0
 XML_SetNotationDeclHandler@@LIBEXPAT_1.0.0

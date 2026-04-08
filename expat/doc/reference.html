@@ -408,6 +408,10 @@
                 </li>
 
                 <li>
+                  <a href="#XML_SetHashSalt16Bytes">XML_SetHashSalt16Bytes</a>
+                </li>
+
+                <li>
                   <a href="#XML_UseForeignDTD">XML_UseForeignDTD</a>
                 </li>
 
@@ -3473,6 +3477,34 @@ XML_SetHashSalt(XML_Parser parser,
           value of 0, as this value is used as sentinel value to indicate that
           <code>XML_SetHashSalt</code> has <b>not</b> been called. Consequently such a
           call will have no effect, even if it returns 1.
+        </p>
+      </div>
+
+      <h4 id="XML_SetHashSalt16Bytes">
+        XML_SetHashSalt16Bytes
+      </h4>
+
+      <pre class="fcndec">
+/* Added in Expat 2.7.6. */
+XML_Bool XMLCALL
+XML_SetHashSalt16Bytes(XML_Parser parser,
+                       const uint8_t entropy[16]);
+</pre>
+      <div class="fcndef">
+        Sets the hash salt to use for internal hash calculations. Helps in preventing DoS
+        attacks based on predicting hash function behavior. In order to have an effect
+        this must be called before parsing has started. Returns <code>XML_TRUE</code> if
+        successful, <code>XML_FALSE</code> when called after <code>XML_Parse</code> or
+        <code>XML_ParseBuffer</code> or when <code>parser</code> is <code>NULL</code>.
+        <p>
+          <b>Note:</b> Setting a salt that is <em>not</em> from a source of high quality
+          entropy (like <code>getentropy(3)</code>) will make the parser vulnerable to
+          hash flooding attacks.
+        </p>
+
+        <p>
+          <b>Note:</b> This call is optional, as the parser will auto-generate a new
+          random salt value internally if no value has been set by the start of parsing.
         </p>
       </div>
 
