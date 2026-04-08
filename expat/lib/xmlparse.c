@@ -587,7 +587,7 @@ static ELEMENT_TYPE *getElementType(XML_Parser parser, const ENCODING *enc,
 
 static XML_Char *copyString(const XML_Char *s, XML_Parser parser);
 
-static unsigned long generate_hash_secret_salt(XML_Parser parser);
+static unsigned long generate_hash_secret_salt(void);
 static XML_Bool startParsing(XML_Parser parser);
 
 static XML_Parser parserCreate(const XML_Char *encodingName,
@@ -1078,9 +1078,8 @@ ENTROPY_DEBUG(const char *label, unsigned long entropy) {
 }
 
 static unsigned long
-generate_hash_secret_salt(XML_Parser parser) {
+generate_hash_secret_salt(void) {
   unsigned long entropy;
-  (void)parser;
 
   /* "Failproof" high quality providers: */
 #if defined(HAVE_ARC4RANDOM_BUF)
@@ -1197,7 +1196,7 @@ static XML_Bool /* only valid for root parser */
 startParsing(XML_Parser parser) {
   /* hash functions must be initialized before setContext() is called */
   if (parser->m_hash_secret_salt == 0)
-    parser->m_hash_secret_salt = generate_hash_secret_salt(parser);
+    parser->m_hash_secret_salt = generate_hash_secret_salt();
   if (parser->m_ns) {
     /* implicit context only set for root parser, since child
        parsers (i.e. external entity parsers) will inherit it
