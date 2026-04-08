@@ -932,6 +932,8 @@ expat_install(
 expat_install(
     EXPORT
         expat
+    FILE
+        expat-targets.cmake
     DESTINATION
         ${CMAKE_INSTALL_LIBDIR}/cmake/expat-${PROJECT_VERSION}/
     NAMESPACE

@@ -32,7 +32,7 @@ if(NOT _expat_config_included)
     set(_expat_config_included TRUE)
 
 
-include("${CMAKE_CURRENT_LIST_DIR}/expat.cmake")
+include("${CMAKE_CURRENT_LIST_DIR}/expat-targets.cmake")
 
 @PACKAGE_INIT@
 
