@@ -1086,12 +1086,12 @@ generate_hash_secret_salt(void) {
   arc4random_buf(&entropy, sizeof(entropy));
   return ENTROPY_DEBUG("arc4random_buf", entropy);
 #elif defined(HAVE_ARC4RANDOM)
-  writeRandomBytes_arc4random((void *)&entropy, sizeof(entropy));
+  writeRandomBytes_arc4random(&entropy, sizeof(entropy));
   return ENTROPY_DEBUG("arc4random", entropy);
 #else
   /* Try high quality providers first .. */
 #  ifdef _WIN32
-  if (writeRandomBytes_rand_s((void *)&entropy, sizeof(entropy))) {
+  if (writeRandomBytes_rand_s(&entropy, sizeof(entropy))) {
     return ENTROPY_DEBUG("rand_s", entropy);
   }
 #  elif defined(HAVE_GETENTROPY)
@@ -1100,12 +1100,12 @@ generate_hash_secret_salt(void) {
   }
   errno = 0;
 #  elif defined(HAVE_GETRANDOM) || defined(HAVE_SYSCALL_GETRANDOM)
-  if (writeRandomBytes_getrandom_nonblock((void *)&entropy, sizeof(entropy))) {
+  if (writeRandomBytes_getrandom_nonblock(&entropy, sizeof(entropy))) {
     return ENTROPY_DEBUG("getrandom", entropy);
   }
 #  endif
 #  if ! defined(_WIN32) && defined(XML_DEV_URANDOM)
-  if (writeRandomBytes_dev_urandom((void *)&entropy, sizeof(entropy))) {
+  if (writeRandomBytes_dev_urandom(&entropy, sizeof(entropy))) {
     return ENTROPY_DEBUG("/dev/urandom", entropy);
   }
 #  endif /* ! defined(_WIN32) && defined(XML_DEV_URANDOM) */
