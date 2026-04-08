@@ -587,7 +587,7 @@ static ELEMENT_TYPE *getElementType(XML_Parser parser, const ENCODING *enc,
 
 static XML_Char *copyString(const XML_Char *s, XML_Parser parser);
 
-static unsigned long generate_hash_secret_salt(void);
+static struct sipkey generate_hash_secret_salt(void);
 static XML_Bool startParsing(XML_Parser parser);
 
 static XML_Parser parserCreate(const XML_Char *encodingName,
@@ -1068,18 +1068,21 @@ gather_time_entropy(void) {
 
 #endif /* ! defined(HAVE_ARC4RANDOM_BUF) && ! defined(HAVE_ARC4RANDOM) */
 
-static unsigned long
-ENTROPY_DEBUG(const char *label, unsigned long entropy) {
+static struct sipkey
+ENTROPY_DEBUG(const char *label, struct sipkey entropy_128) {
   if (getDebugLevel("EXPAT_ENTROPY_DEBUG", 0) >= 1u) {
-    fprintf(stderr, "expat: Entropy: %s --> 0x%0*lx (%lu bytes)\n", label,
-            (int)sizeof(entropy) * 2, entropy, (unsigned long)sizeof(entropy));
+    fprintf(stderr,
+            "expat: Entropy: %s --> [0x" EXPAT_FMT_LLX(
+                "016") ", 0x" EXPAT_FMT_LLX("016") "] (16 bytes)\n",
+            label, (unsigned long long)entropy_128.k[0],
+            (unsigned long long)entropy_128.k[1]);
   }
-  return entropy;
+  return entropy_128;
 }
 
-static unsigned long
+static struct sipkey
 generate_hash_secret_salt(void) {
-  unsigned long entropy;
+  struct sipkey entropy;
 
   /* "Failproof" high quality providers: */
 #if defined(HAVE_ARC4RANDOM_BUF)
@@ -1111,18 +1114,20 @@ generate_hash_secret_salt(void) {
 #  endif /* ! defined(_WIN32) && defined(XML_DEV_URANDOM) */
   /* .. and self-made low quality for backup: */
 
-  entropy = gather_time_entropy();
+  entropy.k[0] = 0;
+  entropy.k[1] = gather_time_entropy();
 #  if ! defined(__wasi__)
   /* Process ID is 0 bits entropy if attacker has local access */
-  entropy ^= getpid();
+  entropy.k[1] ^= getpid();
 #  endif
 
   /* Factors are 2^31-1 and 2^61-1 (Mersenne primes M31 and M61) */
   if (sizeof(unsigned long) == 4) {
-    return ENTROPY_DEBUG("fallback(4)", entropy * 2147483647);
+    entropy.k[1] *= 2147483647;
+    return ENTROPY_DEBUG("fallback(4)", entropy);
   } else {
-    return ENTROPY_DEBUG("fallback(8)",
-                         entropy * (unsigned long)2305843009213693951ULL);
+    entropy.k[1] *= 2305843009213693951ULL;
+    return ENTROPY_DEBUG("fallback(8)", entropy);
   }
 #endif
 }
@@ -1197,8 +1202,7 @@ startParsing(XML_Parser parser) {
   /* hash functions must be initialized before setContext() is called */
   if ((parser->m_hash_secret_salt_128.k[0] == 0)
       && (parser->m_hash_secret_salt_128.k[1] == 0)) {
-    parser->m_hash_secret_salt_128.k[0] = 0;
-    parser->m_hash_secret_salt_128.k[1] = (uint64_t)generate_hash_secret_salt();
+    parser->m_hash_secret_salt_128 = generate_hash_secret_salt();
   }
   if (parser->m_ns) {
     /* implicit context only set for root parser, since child
