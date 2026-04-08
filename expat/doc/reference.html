@@ -3454,14 +3454,15 @@ XML_SetParamEntityParsing(XML_Parser p,
 
       <pre class="fcndec">
 int XMLCALL
-XML_SetHashSalt(XML_Parser p,
+XML_SetHashSalt(XML_Parser parser,
                 unsigned long hash_salt);
 </pre>
       <div class="fcndef">
         Sets the hash salt to use for internal hash calculations. Helps in preventing DoS
         attacks based on predicting hash function behavior. In order to have an effect
         this must be called before parsing has started. Returns 1 if successful, 0 when
-        called after <code>XML_Parse</code> or <code>XML_ParseBuffer</code>.
+        called after <code>XML_Parse</code> or <code>XML_ParseBuffer</code> or when
+        <code>parser</code> is <code>NULL</code>.
         <p>
           <b>Note:</b> This call is optional, as the parser will auto-generate a new
           random salt value if no value has been set at the start of parsing.
