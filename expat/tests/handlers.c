@@ -155,6 +155,9 @@ counting_start_element_handler(void *userData, const XML_Char *name,
     /* Remember, two entries in atts per attribute (see above) */
     atts += 2;
   }
+
+  // Self-test that the test case's list of expected attributes is complete
+  assert_true(atts[0] == NULL);
 }
 
 void XMLCALL
