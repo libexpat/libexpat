@@ -392,6 +392,14 @@ if(HAVE_ARC4RANDOM)
     )
 endif()
 
+if(EXPAT_DEV_URANDOM)
+    set(_EXPAT_C_SOURCES
+        ${_EXPAT_C_SOURCES}
+        lib/random_dev_urandom.c
+        lib/random_dev_urandom.h
+    )
+endif()
+
 if(HAVE_GETENTROPY)
     set(_EXPAT_C_SOURCES
         ${_EXPAT_C_SOURCES}
