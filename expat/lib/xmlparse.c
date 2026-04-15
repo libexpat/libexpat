@@ -164,7 +164,7 @@
       * Linux (including <3.17) / BSD / macOS (including <10.7) / Solaris >=8 (/dev/urandom): XML_DEV_URANDOM, \
       * Windows >=Vista (rand_s): _WIN32. \
     \
-    If insist on not using any of these, bypass this error by defining \
+    If you insist on not using any of these, bypass this error by defining \
     XML_POOR_ENTROPY; you have been warned. \
     \
     If you have reasons to patch this detection code away or need changes \
