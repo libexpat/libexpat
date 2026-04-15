@@ -49,6 +49,11 @@
 #include <stdint.h> // for uint8_t
 #include <stdlib.h> // for rand_s
 
+// Help clang-tidy out with prototype of function `rand_s`
+#if defined(XML_CLANG_TIDY)
+int rand_s(unsigned int *);
+#endif
+
 /* Provide declaration of rand_s() for MinGW-32 (not 64, which has it),
    as it didn't declare it in its header prior to version 5.3.0 of its
    runtime package (mingwrt, containing stdlib.h).  The upstream fix

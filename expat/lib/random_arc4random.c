@@ -34,6 +34,11 @@
 #include <stdint.h> // for uint8_t, uint32_t
 #include <stdlib.h> // for arc4random
 
+// Help clang-tidy out with prototype of function `arc4random`
+#if defined(XML_CLANG_TIDY)
+uint32_t arc4random(void);
+#endif
+
 void
 writeRandomBytes_arc4random(void *target, size_t count) {
   size_t bytesWrittenTotal = 0;

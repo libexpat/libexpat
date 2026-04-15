@@ -1032,6 +1032,11 @@ static const XML_Char implicitContext[]
 #  include "random_arc4random.h"
 #endif /* defined(HAVE_ARC4RANDOM) && ! defined(HAVE_ARC4RANDOM_BUF) */
 
+// Help clang-tidy out with prototype of function `arc4random_buf`
+#if defined(HAVE_ARC4RANDOM_BUF) && defined(XML_CLANG_TIDY)
+void arc4random_buf(void *buf, size_t n);
+#endif
+
 #ifdef _WIN32
 #  include "random_rand_s.h"
 #endif /* _WIN32 */
