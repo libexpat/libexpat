@@ -1065,6 +1065,8 @@ writeRandomBytes_getrandom_nonblock(void *target, size_t count) {
 
     assert(bytesToWrite <= INT_MAX);
 
+    errno = 0;
+
     const int bytesWrittenMore =
 #      if defined(HAVE_GETRANDOM)
         (int)getrandom(currentTarget, bytesToWrite, getrandomFlags);
