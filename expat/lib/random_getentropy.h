@@ -32,8 +32,6 @@
 #if ! defined(RANDOM_GETENTROPY_H)
 #  define RANDOM_GETENTROPY_H 1
 
-#  include "expat_config.h"
-
 #  include <stdbool.h>
 #  include <stddef.h> // for size_t
 
