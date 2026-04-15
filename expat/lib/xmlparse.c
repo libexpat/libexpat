@@ -1106,6 +1106,8 @@ writeRandomBytes_dev_urandom(void *target, size_t count) {
     void *const currentTarget = (void *)((char *)target + bytesWrittenTotal);
     const size_t bytesToWrite = count - bytesWrittenTotal;
 
+    errno = 0;
+
     const ssize_t bytesWrittenMore = read(fd, currentTarget, bytesToWrite);
 
     if (bytesWrittenMore > 0) {
