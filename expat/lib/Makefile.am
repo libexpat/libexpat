@@ -61,6 +61,12 @@ if WITH_GETENTROPY
         random_getentropy.h
 endif
 
+if MINGW
+    libexpat_la_SOURCES += \
+        random_rand_s.c \
+        random_rand_s.h
+endif
+
 if WITH_TESTS
 libtestpat_la_CPPFLAGS = -DXML_TESTING
 

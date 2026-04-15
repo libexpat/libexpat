@@ -92,20 +92,13 @@
 #  endif
 #endif
 
-#ifdef _WIN32
-/* force stdlib to define rand_s() */
-#  if ! defined(_CRT_RAND_S)
-#    define _CRT_RAND_S
-#  endif
-#endif
-
 #include <stdbool.h>
 #include <stddef.h>
 #include <string.h> /* memset(), memcpy() */
 #include <assert.h>
 #include <limits.h> /* INT_MAX, UINT_MAX */
 #include <stdio.h>  /* fprintf */
-#include <stdlib.h> /* getenv, rand_s */
+#include <stdlib.h> /* getenv */
 #include <stdint.h> /* SIZE_MAX, uintptr_t */
 #include <math.h>   /* isnan */
 #include <errno.h>
@@ -1146,40 +1139,7 @@ writeRandomBytes_arc4random(void *target, size_t count) {
 #endif /* defined(HAVE_ARC4RANDOM) && ! defined(HAVE_ARC4RANDOM_BUF) */
 
 #ifdef _WIN32
-
-/* Provide declaration of rand_s() for MinGW-32 (not 64, which has it),
-   as it didn't declare it in its header prior to version 5.3.0 of its
-   runtime package (mingwrt, containing stdlib.h).  The upstream fix
-   was introduced at https://osdn.net/projects/mingw/ticket/39658 . */
-#  if defined(__MINGW32__) && defined(__MINGW32_VERSION)                       \
-      && __MINGW32_VERSION < 5003000L && ! defined(__MINGW64_VERSION_MAJOR)
-__declspec(dllimport) int rand_s(unsigned int *);
-#  endif
-
-/* Obtain entropy on Windows using the rand_s() function which
- * generates cryptographically secure random numbers.  Internally it
- * uses RtlGenRandom API which is present in Windows XP and later.
- */
-static int
-writeRandomBytes_rand_s(void *target, size_t count) {
-  size_t bytesWrittenTotal = 0;
-
-  while (bytesWrittenTotal < count) {
-    unsigned int random32 = 0;
-    size_t i = 0;
-
-    if (rand_s(&random32))
-      return 0; /* failure */
-
-    for (; (i < sizeof(random32)) && (bytesWrittenTotal < count);
-         i++, bytesWrittenTotal++) {
-      const uint8_t random8 = (uint8_t)(random32 >> (i * 8));
-      ((uint8_t *)target)[bytesWrittenTotal] = random8;
-    }
-  }
-  return 1; /* success */
-}
-
+#  include "random_rand_s.h"
 #endif /* _WIN32 */
 
 #if ! defined(HAVE_ARC4RANDOM_BUF) && ! defined(HAVE_ARC4RANDOM)

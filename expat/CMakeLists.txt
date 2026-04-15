@@ -392,6 +392,14 @@ if(HAVE_GETENTROPY)
     )
 endif()
 
+if(WIN32)
+    set(_EXPAT_C_SOURCES
+        ${_EXPAT_C_SOURCES}
+        lib/random_rand_s.c
+        lib/random_rand_s.h
+    )
+endif()
+
 if(EXPAT_SHARED_LIBS)
     set(_SHARED SHARED)
     if(EXPAT_DTD OR EXPAT_GE)
