@@ -287,6 +287,8 @@ AS_IF([test "x$with_getentropy" != xno],
 
 AM_CONDITIONAL([WITH_GETENTROPY], [test x${have_getentropy} = xtrue])
 
+have_either_getrandom=false
+
 AC_ARG_WITH([getrandom],
   [AS_HELP_STRING([--with-getrandom],
                   [enforce the use of getrandom function in the system @<:@default=check@:>@])
@@ -305,6 +307,7 @@ AS_IF([test "x$with_getrandom" != xno],
        }
      ])],
      [AC_DEFINE([HAVE_GETRANDOM], [1], [Define to 1 if you have the `getrandom' function.])
+      have_either_getrandom=true
       AC_MSG_RESULT([yes])],
      [AC_MSG_RESULT([no])
       AS_IF([test "x$with_getrandom" = xyes],
@@ -331,10 +334,13 @@ AS_IF([test "x$with_sys_getrandom" != xno],
      }
    ])],
      [AC_DEFINE([HAVE_SYSCALL_GETRANDOM], [1], [Define to 1 if you have `syscall' and `SYS_getrandom'.])
+      have_either_getrandom=true
       AC_MSG_RESULT([yes])],
      [AC_MSG_RESULT([no])
       AS_IF([test "x$with_sys_getrandom" = xyes],
         [AC_MSG_ERROR([enforced the use of syscall SYS_getrandom --with-sys-getrandom, but not detected])])])])
+
+AM_CONDITIONAL([WITH_EITHER_GETRANDOM], [test x${have_either_getrandom} = xtrue])
 
 dnl Only needed for xmlwf:
 AC_CHECK_HEADERS(fcntl.h unistd.h)

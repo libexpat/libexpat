@@ -67,6 +67,12 @@ if WITH_GETENTROPY
         random_getentropy.h
 endif
 
+if WITH_EITHER_GETRANDOM
+    libexpat_la_SOURCES += \
+        random_getrandom.c \
+        random_getrandom.h
+endif
+
 if MINGW
     libexpat_la_SOURCES += \
         random_rand_s.c \

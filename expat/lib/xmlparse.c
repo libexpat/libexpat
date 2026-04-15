@@ -86,12 +86,6 @@
 #  error XML_CONTEXT_BYTES must be defined, non-empty and >=0 (0 to disable, >=1 to enable; 1024 is a common default)
 #endif
 
-#if defined(HAVE_SYSCALL_GETRANDOM)
-#  if ! defined(_GNU_SOURCE)
-#    define _GNU_SOURCE 1 /* syscall prototype */
-#  endif
-#endif
-
 #include <stdbool.h>
 #include <stddef.h>
 #include <string.h> /* memset(), memcpy() */
@@ -126,16 +120,8 @@
 #endif // defined(HAVE_GETENTROPY)
 
 #if defined(HAVE_GETRANDOM) || defined(HAVE_SYSCALL_GETRANDOM)
-#  if defined(HAVE_GETRANDOM)
-#    include <sys/random.h> /* getrandom */
-#  else
-#    include <unistd.h>      /* syscall */
-#    include <sys/syscall.h> /* SYS_getrandom */
-#  endif
-#  if ! defined(GRND_NONBLOCK)
-#    define GRND_NONBLOCK 0x0001
-#  endif /* defined(GRND_NONBLOCK) */
-#endif   /* defined(HAVE_GETRANDOM) || defined(HAVE_SYSCALL_GETRANDOM) */
+#  include "random_getrandom.h"
+#endif /* defined(HAVE_GETRANDOM) || defined(HAVE_SYSCALL_GETRANDOM) */
 
 #if defined(_WIN32) && ! defined(LOAD_LIBRARY_SEARCH_SYSTEM32)
 #  define LOAD_LIBRARY_SEARCH_SYSTEM32 0x00000800
@@ -1039,48 +1025,6 @@ static const XML_Char implicitContext[]
 
 /* To avoid warnings about unused functions: */
 #if ! defined(HAVE_ARC4RANDOM_BUF) && ! defined(HAVE_ARC4RANDOM)
-
-/* To avoid warnings about unused functions: */
-#  if ! defined(HAVE_GETENTROPY)
-
-#    if defined(HAVE_GETRANDOM) || defined(HAVE_SYSCALL_GETRANDOM)
-
-/* Obtain entropy on Linux 3.17+ */
-static int
-writeRandomBytes_getrandom_nonblock(void *target, size_t count) {
-  int success = 0; /* full count bytes written? */
-  size_t bytesWrittenTotal = 0;
-  const unsigned int getrandomFlags = GRND_NONBLOCK;
-
-  do {
-    void *const currentTarget = (void *)((char *)target + bytesWrittenTotal);
-    const size_t bytesToWrite = count - bytesWrittenTotal;
-
-    assert(bytesToWrite <= INT_MAX);
-
-    errno = 0;
-
-    const int bytesWrittenMore =
-#      if defined(HAVE_GETRANDOM)
-        (int)getrandom(currentTarget, bytesToWrite, getrandomFlags);
-#      else
-        (int)syscall(SYS_getrandom, currentTarget, bytesToWrite,
-                     getrandomFlags);
-#      endif
-
-    if (bytesWrittenMore > 0) {
-      bytesWrittenTotal += bytesWrittenMore;
-      if (bytesWrittenTotal >= count)
-        success = 1;
-    }
-  } while (! success && (errno == EINTR));
-
-  return success;
-}
-
-#    endif /* defined(HAVE_GETRANDOM) || defined(HAVE_SYSCALL_GETRANDOM) */
-
-#  endif // ! defined(HAVE_GETENTROPY)
 
 #  if ! defined(_WIN32) && defined(XML_DEV_URANDOM)
 

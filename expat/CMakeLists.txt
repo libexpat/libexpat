@@ -400,6 +400,14 @@ if(HAVE_GETENTROPY)
     )
 endif()
 
+if(HAVE_GETRANDOM OR HAVE_SYSCALL_GETRANDOM)
+    set(_EXPAT_C_SOURCES
+        ${_EXPAT_C_SOURCES}
+        lib/random_getrandom.c
+        lib/random_getrandom.h
+    )
+endif()
+
 if(WIN32)
     set(_EXPAT_C_SOURCES
         ${_EXPAT_C_SOURCES}
