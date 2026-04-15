@@ -217,6 +217,8 @@ AM_CONDITIONAL([_INTERNAL_LARGE_SIZE], [echo -- "${CPPFLAGS}${CFLAGS}" | ${FGREP
 
 LT_LIB_M
 
+have_arc4random=false
+
 AC_MSG_CHECKING([for arc4random_buf (BSD or glibc 2.36+)])
 AC_LINK_IFELSE([AC_LANG_SOURCE([
     #include <stdlib.h>
@@ -239,8 +241,11 @@ AC_LINK_IFELSE([AC_LANG_SOURCE([
        }
      ])],
      [AC_DEFINE([HAVE_ARC4RANDOM], [1], [Define to 1 if you have the `arc4random' function.])
+      have_arc4random=true
       AC_MSG_RESULT([yes])],
      [AC_MSG_RESULT([no])])])
+
+AM_CONDITIONAL([WITH_ARC4RANDOM], [test x${have_arc4random} = xtrue])
 
 have_getentropy=false
 

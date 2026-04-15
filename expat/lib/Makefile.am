@@ -55,6 +55,12 @@ libexpat_la_SOURCES = \
     xmltok.c \
     xmlrole.c
 
+if WITH_ARC4RANDOM
+    libexpat_la_SOURCES += \
+        random_arc4random.c \
+        random_arc4random.h
+endif
+
 if WITH_GETENTROPY
     libexpat_la_SOURCES += \
         random_getentropy.c \

@@ -384,6 +384,14 @@ set(_EXPAT_C_SOURCES
 #   lib/xmltok_ns.c
 )
 
+if(HAVE_ARC4RANDOM)
+    set(_EXPAT_C_SOURCES
+        ${_EXPAT_C_SOURCES}
+        lib/random_arc4random.c
+        lib/random_arc4random.h
+    )
+endif()
+
 if(HAVE_GETENTROPY)
     set(_EXPAT_C_SOURCES
         ${_EXPAT_C_SOURCES}
