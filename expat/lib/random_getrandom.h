@@ -29,12 +29,11 @@
    USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#if ! defined(RANDOM_GETENTROPY_H)
-#  define RANDOM_GETENTROPY_H 1
+#if ! defined(RANDOM_GETRANDOM_H)
+#  define RANDOM_GETRANDOM_H 1
 
-#  include <stdbool.h>
 #  include <stddef.h> // for size_t
 
-bool writeRandomBytes_getentropy(void *target, size_t count);
+int writeRandomBytes_getrandom_nonblock(void *target, size_t count);
 
-#endif // ! defined(RANDOM_GETENTROPY_H)
+#endif // ! defined(RANDOM_GETRANDOM_H)

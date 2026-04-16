@@ -86,26 +86,13 @@
 #  error XML_CONTEXT_BYTES must be defined, non-empty and >=0 (0 to disable, >=1 to enable; 1024 is a common default)
 #endif
 
-#if defined(HAVE_SYSCALL_GETRANDOM)
-#  if ! defined(_GNU_SOURCE)
-#    define _GNU_SOURCE 1 /* syscall prototype */
-#  endif
-#endif
-
-#ifdef _WIN32
-/* force stdlib to define rand_s() */
-#  if ! defined(_CRT_RAND_S)
-#    define _CRT_RAND_S
-#  endif
-#endif
-
 #include <stdbool.h>
 #include <stddef.h>
 #include <string.h> /* memset(), memcpy() */
 #include <assert.h>
 #include <limits.h> /* INT_MAX, UINT_MAX */
 #include <stdio.h>  /* fprintf */
-#include <stdlib.h> /* getenv, rand_s */
+#include <stdlib.h> /* getenv */
 #include <stdint.h> /* SIZE_MAX, uintptr_t */
 #include <math.h>   /* isnan */
 #include <errno.h>
@@ -133,20 +120,8 @@
 #endif // defined(HAVE_GETENTROPY)
 
 #if defined(HAVE_GETRANDOM) || defined(HAVE_SYSCALL_GETRANDOM)
-#  if defined(HAVE_GETRANDOM)
-#    include <sys/random.h> /* getrandom */
-#  else
-#    include <unistd.h>      /* syscall */
-#    include <sys/syscall.h> /* SYS_getrandom */
-#  endif
-#  if ! defined(GRND_NONBLOCK)
-#    define GRND_NONBLOCK 0x0001
-#  endif /* defined(GRND_NONBLOCK) */
-#endif   /* defined(HAVE_GETRANDOM) || defined(HAVE_SYSCALL_GETRANDOM) */
-
-#if defined(_WIN32) && ! defined(LOAD_LIBRARY_SEARCH_SYSTEM32)
-#  define LOAD_LIBRARY_SEARCH_SYSTEM32 0x00000800
-#endif
+#  include "random_getrandom.h"
+#endif /* defined(HAVE_GETRANDOM) || defined(HAVE_SYSCALL_GETRANDOM) */
 
 #if ! defined(HAVE_GETRANDOM) && ! defined(HAVE_SYSCALL_GETRANDOM)             \
     && ! defined(HAVE_ARC4RANDOM_BUF) && ! defined(HAVE_ARC4RANDOM)            \
@@ -1047,139 +1022,23 @@ static const XML_Char implicitContext[]
 /* To avoid warnings about unused functions: */
 #if ! defined(HAVE_ARC4RANDOM_BUF) && ! defined(HAVE_ARC4RANDOM)
 
-/* To avoid warnings about unused functions: */
-#  if ! defined(HAVE_GETENTROPY)
-
-#    if defined(HAVE_GETRANDOM) || defined(HAVE_SYSCALL_GETRANDOM)
-
-/* Obtain entropy on Linux 3.17+ */
-static int
-writeRandomBytes_getrandom_nonblock(void *target, size_t count) {
-  int success = 0; /* full count bytes written? */
-  size_t bytesWrittenTotal = 0;
-  const unsigned int getrandomFlags = GRND_NONBLOCK;
-
-  do {
-    void *const currentTarget = (void *)((char *)target + bytesWrittenTotal);
-    const size_t bytesToWrite = count - bytesWrittenTotal;
-
-    assert(bytesToWrite <= INT_MAX);
-
-    errno = 0;
-
-    const int bytesWrittenMore =
-#      if defined(HAVE_GETRANDOM)
-        (int)getrandom(currentTarget, bytesToWrite, getrandomFlags);
-#      else
-        (int)syscall(SYS_getrandom, currentTarget, bytesToWrite,
-                     getrandomFlags);
-#      endif
-
-    if (bytesWrittenMore > 0) {
-      bytesWrittenTotal += bytesWrittenMore;
-      if (bytesWrittenTotal >= count)
-        success = 1;
-    }
-  } while (! success && (errno == EINTR));
-
-  return success;
-}
-
-#    endif /* defined(HAVE_GETRANDOM) || defined(HAVE_SYSCALL_GETRANDOM) */
-
-#  endif // ! defined(HAVE_GETENTROPY)
-
 #  if ! defined(_WIN32) && defined(XML_DEV_URANDOM)
-
-/* Extract entropy from /dev/urandom */
-static int
-writeRandomBytes_dev_urandom(void *target, size_t count) {
-  int success = 0; /* full count bytes written? */
-  size_t bytesWrittenTotal = 0;
-
-  const int fd = open("/dev/urandom", O_RDONLY | O_CLOEXEC);
-  if (fd < 0) {
-    return 0;
-  }
-
-  do {
-    void *const currentTarget = (void *)((char *)target + bytesWrittenTotal);
-    const size_t bytesToWrite = count - bytesWrittenTotal;
-
-    errno = 0;
-
-    const ssize_t bytesWrittenMore = read(fd, currentTarget, bytesToWrite);
-
-    if (bytesWrittenMore > 0) {
-      bytesWrittenTotal += bytesWrittenMore;
-      if (bytesWrittenTotal >= count)
-        success = 1;
-    }
-  } while (! success && (errno == EINTR));
-
-  close(fd);
-  return success;
-}
-
+#    include "random_dev_urandom.h"
 #  endif /* ! defined(_WIN32) && defined(XML_DEV_URANDOM) */
 
 #endif /* ! defined(HAVE_ARC4RANDOM_BUF) && ! defined(HAVE_ARC4RANDOM) */
 
 #if defined(HAVE_ARC4RANDOM) && ! defined(HAVE_ARC4RANDOM_BUF)
-
-static void
-writeRandomBytes_arc4random(void *target, size_t count) {
-  size_t bytesWrittenTotal = 0;
-
-  while (bytesWrittenTotal < count) {
-    const uint32_t random32 = arc4random();
-    size_t i = 0;
-
-    for (; (i < sizeof(random32)) && (bytesWrittenTotal < count);
-         i++, bytesWrittenTotal++) {
-      const uint8_t random8 = (uint8_t)(random32 >> (i * 8));
-      ((uint8_t *)target)[bytesWrittenTotal] = random8;
-    }
-  }
-}
-
+#  include "random_arc4random.h"
 #endif /* defined(HAVE_ARC4RANDOM) && ! defined(HAVE_ARC4RANDOM_BUF) */
 
+// Help clang-tidy out with prototype of function `arc4random_buf`
+#if defined(HAVE_ARC4RANDOM_BUF) && defined(XML_CLANG_TIDY)
+void arc4random_buf(void *buf, size_t n);
+#endif
+
 #ifdef _WIN32
-
-/* Provide declaration of rand_s() for MinGW-32 (not 64, which has it),
-   as it didn't declare it in its header prior to version 5.3.0 of its
-   runtime package (mingwrt, containing stdlib.h).  The upstream fix
-   was introduced at https://osdn.net/projects/mingw/ticket/39658 . */
-#  if defined(__MINGW32__) && defined(__MINGW32_VERSION)                       \
-      && __MINGW32_VERSION < 5003000L && ! defined(__MINGW64_VERSION_MAJOR)
-__declspec(dllimport) int rand_s(unsigned int *);
-#  endif
-
-/* Obtain entropy on Windows using the rand_s() function which
- * generates cryptographically secure random numbers.  Internally it
- * uses RtlGenRandom API which is present in Windows XP and later.
- */
-static int
-writeRandomBytes_rand_s(void *target, size_t count) {
-  size_t bytesWrittenTotal = 0;
-
-  while (bytesWrittenTotal < count) {
-    unsigned int random32 = 0;
-    size_t i = 0;
-
-    if (rand_s(&random32))
-      return 0; /* failure */
-
-    for (; (i < sizeof(random32)) && (bytesWrittenTotal < count);
-         i++, bytesWrittenTotal++) {
-      const uint8_t random8 = (uint8_t)(random32 >> (i * 8));
-      ((uint8_t *)target)[bytesWrittenTotal] = random8;
-    }
-  }
-  return 1; /* success */
-}
-
+#  include "random_rand_s.h"
 #endif /* _WIN32 */
 
 #if ! defined(HAVE_ARC4RANDOM_BUF) && ! defined(HAVE_ARC4RANDOM)

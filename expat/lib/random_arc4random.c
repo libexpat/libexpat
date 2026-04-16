@@ -6,7 +6,7 @@
                         \___/_/\_\ .__/ \__,_|\__|
                                  |_| XML parser
 
-   Copyright (c) 2026 Sebastian Pipping <sebastian@pipping.org>
+   Copyright (c) 2017-2026 Sebastian Pipping <sebastian@pipping.org>
    Licensed under the MIT license:
 
    Permission is  hereby granted,  free of charge,  to any  person obtaining
@@ -29,12 +29,28 @@
    USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#if ! defined(RANDOM_GETENTROPY_H)
-#  define RANDOM_GETENTROPY_H 1
+#include "random_arc4random.h"
 
-#  include <stdbool.h>
-#  include <stddef.h> // for size_t
+#include <stdint.h> // for uint8_t, uint32_t
+#include <stdlib.h> // for arc4random
 
-bool writeRandomBytes_getentropy(void *target, size_t count);
+// Help clang-tidy out with prototype of function `arc4random`
+#if defined(XML_CLANG_TIDY)
+uint32_t arc4random(void);
+#endif
 
-#endif // ! defined(RANDOM_GETENTROPY_H)
+void
+writeRandomBytes_arc4random(void *target, size_t count) {
+  size_t bytesWrittenTotal = 0;
+
+  while (bytesWrittenTotal < count) {
+    const uint32_t random32 = arc4random();
+    size_t i = 0;
+
+    for (; (i < sizeof(random32)) && (bytesWrittenTotal < count);
+         i++, bytesWrittenTotal++) {
+      const uint8_t random8 = (uint8_t)(random32 >> (i * 8));
+      ((uint8_t *)target)[bytesWrittenTotal] = random8;
+    }
+  }
+}

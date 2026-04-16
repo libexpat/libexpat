@@ -6,7 +6,8 @@
                         \___/_/\_\ .__/ \__,_|\__|
                                  |_| XML parser
 
-   Copyright (c) 2026 Sebastian Pipping <sebastian@pipping.org>
+   Copyright (c) 2017-2026 Sebastian Pipping <sebastian@pipping.org>
+   Copyright (c)      2026 Matthew Fernandez <matthew.fernandez@gmail.com>
    Licensed under the MIT license:
 
    Permission is  hereby granted,  free of charge,  to any  person obtaining
@@ -29,12 +30,43 @@
    USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#if ! defined(RANDOM_GETENTROPY_H)
-#  define RANDOM_GETENTROPY_H 1
+#include "random_dev_urandom.h"
 
-#  include <stdbool.h>
-#  include <stddef.h> // for size_t
+#if ! defined(_POSIX_C_SOURCE)                                                 \
+    || (defined(_POSIX_C_SOURCE) && (_POSIX_C_SOURCE < 200809L))
+#  define _POSIX_C_SOURCE 200809L // for O_CLOEXEC
+#endif
 
-bool writeRandomBytes_getentropy(void *target, size_t count);
+#include <errno.h>
+#include <fcntl.h>  // open
+#include <unistd.h> // close
 
-#endif // ! defined(RANDOM_GETENTROPY_H)
+/* Extract entropy from /dev/urandom */
+int
+writeRandomBytes_dev_urandom(void *target, size_t count) {
+  int success = 0; /* full count bytes written? */
+  size_t bytesWrittenTotal = 0;
+
+  const int fd = open("/dev/urandom", O_RDONLY | O_CLOEXEC);
+  if (fd < 0) {
+    return 0;
+  }
+
+  do {
+    void *const currentTarget = (void *)((char *)target + bytesWrittenTotal);
+    const size_t bytesToWrite = count - bytesWrittenTotal;
+
+    errno = 0;
+
+    const ssize_t bytesWrittenMore = read(fd, currentTarget, bytesToWrite);
+
+    if (bytesWrittenMore > 0) {
+      bytesWrittenTotal += bytesWrittenMore;
+      if (bytesWrittenTotal >= count)
+        success = 1;
+    }
+  } while (! success && (errno == EINTR));
+
+  close(fd);
+  return success;
+}

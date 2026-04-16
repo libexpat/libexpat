@@ -384,11 +384,43 @@ set(_EXPAT_C_SOURCES
 #   lib/xmltok_ns.c
 )
 
+if(HAVE_ARC4RANDOM)
+    set(_EXPAT_C_SOURCES
+        ${_EXPAT_C_SOURCES}
+        lib/random_arc4random.c
+        lib/random_arc4random.h
+    )
+endif()
+
+if(EXPAT_DEV_URANDOM)
+    set(_EXPAT_C_SOURCES
+        ${_EXPAT_C_SOURCES}
+        lib/random_dev_urandom.c
+        lib/random_dev_urandom.h
+    )
+endif()
+
 if(HAVE_GETENTROPY)
     set(_EXPAT_C_SOURCES
         ${_EXPAT_C_SOURCES}
         lib/random_getentropy.c
         lib/random_getentropy.h
+    )
+endif()
+
+if(HAVE_GETRANDOM OR HAVE_SYSCALL_GETRANDOM)
+    set(_EXPAT_C_SOURCES
+        ${_EXPAT_C_SOURCES}
+        lib/random_getrandom.c
+        lib/random_getrandom.h
+    )
+endif()
+
+if(WIN32)
+    set(_EXPAT_C_SOURCES
+        ${_EXPAT_C_SOURCES}
+        lib/random_rand_s.c
+        lib/random_rand_s.h
     )
 endif()
 
@@ -1021,7 +1053,7 @@ else()
     message(STATUS "    getentropy ............... ${HAVE_GETENTROPY}")
     message(STATUS "    getrandom ................ ${HAVE_GETRANDOM}")
     message(STATUS "    syscall SYS_getrandom .... ${HAVE_SYSCALL_GETRANDOM}")
-    message(STATUS "    /dev/random .............. ${EXPAT_DEV_URANDOM}")
+    message(STATUS "    /dev/urandom ............. ${EXPAT_DEV_URANDOM}")
 endif()
 message(STATUS "")
 if(CMAKE_GENERATOR STREQUAL "Unix Makefiles")
