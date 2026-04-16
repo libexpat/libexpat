@@ -6,7 +6,6 @@
 /xmltest.log
 Makefile
 runtests
-runtests_cxx
 xmlts.zip
 XML-Test-Suite
 .libs

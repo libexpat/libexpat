@@ -171,15 +171,11 @@ if(NOT _EXPAT_HELP)
     mark_as_advanced(_EXPAT_M32)
 endif()
 
-if(EXPAT_BUILD_TESTS OR EXPAT_BUILD_FUZZERS)
+if(EXPAT_BUILD_FUZZERS)
     # We have to call enable_language() before modifying any CMAKE_CXX_* variables
     enable_language(CXX)
 
-    if (EXPAT_BUILD_FUZZERS)
-        set(CMAKE_CXX_STANDARD 17)  # for std::string_view for Abseil for libprotobuf-mutator
-    else()
-        set(CMAKE_CXX_STANDARD 11)
-    endif()
+    set(CMAKE_CXX_STANDARD 17)  # for std::string_view for Abseil for libprotobuf-mutator
     set(CMAKE_CXX_STANDARD_REQUIRED ON)
     set(CMAKE_CXX_EXTENSIONS OFF)  # i.e. -std=c++11 rather than default -std=gnu++11
 endif()
@@ -680,7 +676,7 @@ if(EXPAT_BUILD_TESTS)
         endif()
     endfunction()
 
-    set(_EXPAT_TEST_TARGETS runtests runtests_cxx)
+    set(_EXPAT_TEST_TARGETS runtests)
 
     add_executable(runtests
         tests/acc_tests.c
@@ -697,24 +693,6 @@ if(EXPAT_BUILD_TESTS)
         tests/nsalloc_tests.c
         tests/runtests.c
         tests/structdata.c
-        ${_EXPAT_C_SOURCES}
-    )
-
-    add_executable(runtests_cxx
-        tests/acc_tests_cxx.cpp
-        tests/alloc_tests_cxx.cpp
-        tests/basic_tests_cxx.cpp
-        tests/chardata_cxx.cpp
-        tests/common_cxx.cpp
-        tests/dummy_cxx.cpp
-        tests/handlers_cxx.cpp
-        tests/memcheck_cxx.cpp
-        tests/minicheck_cxx.cpp
-        tests/misc_tests_cxx.cpp
-        tests/ns_tests_cxx.cpp
-        tests/nsalloc_tests_cxx.cpp
-        tests/runtests_cxx.cpp
-        tests/structdata_cxx.cpp
         ${_EXPAT_C_SOURCES}
     )
 
