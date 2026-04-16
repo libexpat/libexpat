@@ -82,7 +82,7 @@ stackPopFree(Stack *stackTop) {
   return newStackTop;
 }
 
-static char *
+static const char *
 contentTypeName(enum XML_Content_Type contentType) {
   switch (contentType) {
   case XML_CTYPE_EMPTY:
@@ -102,7 +102,7 @@ contentTypeName(enum XML_Content_Type contentType) {
   }
 }
 
-static char *
+static const char *
 contentQuantName(enum XML_Content_Quant contentQuant) {
   switch (contentQuant) {
   case XML_CQUANT_NONE:
