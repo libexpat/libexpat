@@ -1065,6 +1065,8 @@ writeRandomBytes_getrandom_nonblock(void *target, size_t count) {
 
     assert(bytesToWrite <= INT_MAX);
 
+    errno = 0;
+
     const int bytesWrittenMore =
 #      if defined(HAVE_GETRANDOM)
         (int)getrandom(currentTarget, bytesToWrite, getrandomFlags);
@@ -1103,6 +1105,8 @@ writeRandomBytes_dev_urandom(void *target, size_t count) {
   do {
     void *const currentTarget = (void *)((char *)target + bytesWrittenTotal);
     const size_t bytesToWrite = count - bytesWrittenTotal;
+
+    errno = 0;
 
     const ssize_t bytesWrittenMore = read(fd, currentTarget, bytesToWrite);
 
