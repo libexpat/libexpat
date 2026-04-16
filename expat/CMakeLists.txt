@@ -171,15 +171,11 @@ if(NOT _EXPAT_HELP)
     mark_as_advanced(_EXPAT_M32)
 endif()
 
-if(EXPAT_BUILD_TESTS OR EXPAT_BUILD_FUZZERS)
+if(EXPAT_BUILD_FUZZERS)
     # We have to call enable_language() before modifying any CMAKE_CXX_* variables
     enable_language(CXX)
 
-    if (EXPAT_BUILD_FUZZERS)
-        set(CMAKE_CXX_STANDARD 17)  # for std::string_view for Abseil for libprotobuf-mutator
-    else()
-        set(CMAKE_CXX_STANDARD 11)
-    endif()
+    set(CMAKE_CXX_STANDARD 17)  # for std::string_view for Abseil for libprotobuf-mutator
     set(CMAKE_CXX_STANDARD_REQUIRED ON)
     set(CMAKE_CXX_EXTENSIONS OFF)  # i.e. -std=c++11 rather than default -std=gnu++11
 endif()
@@ -680,8 +676,6 @@ if(EXPAT_BUILD_TESTS)
         endif()
     endfunction()
 
-    set(_EXPAT_TEST_TARGETS runtests runtests_cxx)
-
     add_executable(runtests
         tests/acc_tests.c
         tests/alloc_tests.c
@@ -700,34 +694,12 @@ if(EXPAT_BUILD_TESTS)
         ${_EXPAT_C_SOURCES}
     )
 
-    add_executable(runtests_cxx
-        tests/acc_tests_cxx.cpp
-        tests/alloc_tests_cxx.cpp
-        tests/basic_tests_cxx.cpp
-        tests/chardata_cxx.cpp
-        tests/common_cxx.cpp
-        tests/dummy_cxx.cpp
-        tests/handlers_cxx.cpp
-        tests/memcheck_cxx.cpp
-        tests/minicheck_cxx.cpp
-        tests/misc_tests_cxx.cpp
-        tests/ns_tests_cxx.cpp
-        tests/nsalloc_tests_cxx.cpp
-        tests/runtests_cxx.cpp
-        tests/structdata_cxx.cpp
-        ${_EXPAT_C_SOURCES}
-    )
-
-    foreach(_target ${_EXPAT_TEST_TARGETS})
-        target_compile_definitions(${_target} PRIVATE -DXML_TESTING)
-
-        set_property(TARGET ${_target} PROPERTY RUNTIME_OUTPUT_DIRECTORY tests)
-        expat_add_test(${_target} $<TARGET_FILE:${_target}>)
-
-        if(_EXPAT_LIBM_FOUND)
-            target_link_libraries(${_target} m)
-        endif()
-    endforeach()
+    target_compile_definitions(runtests PRIVATE -DXML_TESTING)
+    set_property(TARGET runtests PROPERTY RUNTIME_OUTPUT_DIRECTORY tests)
+    expat_add_test(runtests $<TARGET_FILE:runtests>)
+    if(_EXPAT_LIBM_FOUND)
+        target_link_libraries(runtests m)
+    endif()
 
     add_executable(benchmark tests/benchmark/benchmark.c)
     set_property(TARGET benchmark PROPERTY RUNTIME_OUTPUT_DIRECTORY tests/benchmark)
@@ -862,7 +834,11 @@ endif()
 # C/C++ config affecting multiple targets
 #
 if(WIN32)
-    set(_EXPAT_STATIC_TARGETS ${_EXPAT_TEST_TARGETS})
+    set(_EXPAT_STATIC_TARGETS "")  # intended as "empty list"
+
+    if(EXPAT_BUILD_TESTS)
+        list(APPEND _EXPAT_STATIC_TARGETS runtests)
+    endif()
     if(NOT EXPAT_SHARED_LIBS)
         list(APPEND _EXPAT_STATIC_TARGETS expat)
     endif()
