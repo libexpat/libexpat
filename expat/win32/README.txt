@@ -12,7 +12,7 @@ Expat can be built on Windows in two ways:
   md build
   cd build
   cmake -G"Visual Studio 17 2022" -DCMAKE_BUILD_TYPE=RelWithDebInfo ..
-  msbuild /m expat.sln
+  cmake --build . --parallel
 
 * All MS C/C++ compilers:
   The output for all projects will be generated in the <CMAKE_BUILD_TYPE>\
