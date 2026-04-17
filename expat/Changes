@@ -30,6 +30,22 @@
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 Release 2.7.6 XXX XXXXX XX XXXX
+        Security fixes:
+       #47 #1183  CVE-2026-41080 -- The existing hash flooding protection
+                    (based on SipHash) only used 4 to 8 bytes of entropy for
+                    a salt, when 16 bytes of salt are supported by the
+                    implementation of SipHash used by Expat. Now full 16 bytes
+                    of entropy are used to improve protection against hash
+                    flooding attacks.
+                      Existing API function XML_SetHashSalt is now deprecated
+                    because of its limitations, and its use should be
+                    considered a vulnerability. Please either use the new API
+                    function XML_SetHashSalt16Bytes (with known-high-quality
+                    entropy input only!) instead, or leave the derivation of
+                    a 16-bytes hash salt from high quality entropy to Expat's
+                    internal machinery (by *not* calling either of the two
+                    XML_SetHashSalt* functions).
+
         Other changes:
            #1180  Add support for `getentropy(3)` as a source of entropy;
                     this helps with protecting against hash flooding attacks,
