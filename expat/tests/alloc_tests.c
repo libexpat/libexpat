@@ -48,7 +48,7 @@
 
 #include <math.h> /* NAN, INFINITY */
 #include <stdbool.h>
-#include <stdint.h> /* for SIZE_MAX */
+#include <stdint.h> /* for SIZE_MAX, uintptr_t */
 #include <string.h>
 #include <assert.h>
 
@@ -2094,7 +2094,7 @@ END_TEST
 #if XML_GE == 1
 static size_t
 sizeRecordedFor(void *ptr) {
-  return *(size_t *)((char *)ptr - EXPAT_MALLOC_PADDING - sizeof(size_t));
+  return *(size_t *)((uintptr_t)ptr - EXPAT_MALLOC_PADDING - sizeof(size_t));
 }
 #endif // XML_GE == 1
 
