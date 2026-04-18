@@ -46,8 +46,8 @@
 #  include <errno.h>
 #endif
 
-#include <stdint.h> // for uint8_t
 #include <stdlib.h> // for rand_s
+#include <string.h> // for memcpy
 
 // Help clang-tidy out with prototype of function `rand_s`
 #if defined(XML_CLANG_TIDY)
@@ -73,16 +73,15 @@ writeRandomBytes_rand_s(void *target, size_t count) {
 
   while (bytesWrittenTotal < count) {
     unsigned int random32 = 0;
-    size_t i = 0;
 
     if (rand_s(&random32))
       return 0; /* failure */
 
-    for (; (i < sizeof(random32)) && (bytesWrittenTotal < count);
-         i++, bytesWrittenTotal++) {
-      const uint8_t random8 = (uint8_t)(random32 >> (i * 8));
-      ((uint8_t *)target)[bytesWrittenTotal] = random8;
-    }
+    size_t toUse = count - bytesWrittenTotal;
+    if (toUse > sizeof(random32))
+      toUse = sizeof(random32);
+    memcpy((char *)target + bytesWrittenTotal, &random32, toUse);
+    bytesWrittenTotal += toUse;
   }
   return 1; /* success */
 }

@@ -31,8 +31,9 @@
 
 #include "random_arc4random.h"
 
-#include <stdint.h> // for uint8_t, uint32_t
+#include <stdint.h> // for uint32_t
 #include <stdlib.h> // for arc4random
+#include <string.h> // for memcpy
 
 // Help clang-tidy out with prototype of function `arc4random`
 #if defined(XML_CLANG_TIDY)
@@ -45,12 +46,11 @@ writeRandomBytes_arc4random(void *target, size_t count) {
 
   while (bytesWrittenTotal < count) {
     const uint32_t random32 = arc4random();
-    size_t i = 0;
 
-    for (; (i < sizeof(random32)) && (bytesWrittenTotal < count);
-         i++, bytesWrittenTotal++) {
-      const uint8_t random8 = (uint8_t)(random32 >> (i * 8));
-      ((uint8_t *)target)[bytesWrittenTotal] = random8;
-    }
+    size_t toUse = count - bytesWrittenTotal;
+    if (toUse > sizeof(random32))
+      toUse = sizeof(random32);
+    memcpy((char *)target + bytesWrittenTotal, &random32, toUse);
+    bytesWrittenTotal += toUse;
   }
 }
