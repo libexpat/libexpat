@@ -1250,7 +1250,7 @@ parserCreate(const XML_Char *encodingName,
                                + sizeof(struct XML_ParserStruct));
     if (sizeAndParser != NULL) {
       *(size_t *)sizeAndParser = sizeof(struct XML_ParserStruct);
-      parser = (XML_Parser)((char *)sizeAndParser + sizeof(size_t)
+      parser = (XML_Parser)((uintptr_t)sizeAndParser + sizeof(size_t)
                             + EXPAT_MALLOC_PADDING);
 #else
     parser = memsuite->malloc_fcn(sizeof(struct XML_ParserStruct));
@@ -1268,7 +1268,7 @@ parserCreate(const XML_Char *encodingName,
                                        + sizeof(struct XML_ParserStruct));
     if (sizeAndParser != NULL) {
       *(size_t *)sizeAndParser = sizeof(struct XML_ParserStruct);
-      parser = (XML_Parser)((char *)sizeAndParser + sizeof(size_t)
+      parser = (XML_Parser)((uintptr_t)sizeAndParser + sizeof(size_t)
                             + EXPAT_MALLOC_PADDING);
 #else
     parser = malloc(sizeof(struct XML_ParserStruct));
