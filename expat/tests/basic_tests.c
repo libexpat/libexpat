@@ -2491,11 +2491,9 @@ START_TEST(test_attributes) {
                          {XCS("id"), XCS("one")},
                          {NULL, NULL}};
   AttrInfo tag_info[] = {{XCS("c"), XCS("3")}, {NULL, NULL}};
-  ElementInfo info[] = {{XCS("doc"), 3, 0, XCS("id"), NULL},
-                        {XCS("tag"), 1, 0, NULL, NULL},
+  ElementInfo info[] = {{XCS("doc"), 3, 0, XCS("id"), doc_info},
+                        {XCS("tag"), 1, 0, NULL, tag_info},
                         {NULL, 0, 0, NULL, NULL}};
-  info[0].attributes = doc_info;
-  info[1].attributes = tag_info;
 
   XML_Parser parser = XML_ParserCreate(NULL);
   assert_true(parser != NULL);
@@ -5840,8 +5838,8 @@ START_TEST(test_deep_nested_attribute_entity) {
            (long unsigned)(N_LINES - 1));
 
   AttrInfo doc_info[] = {{XCS("name"), XCS("deepText")}, {NULL, NULL}};
-  ElementInfo info[] = {{XCS("foo"), 1, 0, NULL, NULL}, {NULL, 0, 0, NULL, NULL}};
-  info[0].attributes = doc_info;
+  ElementInfo info[]
+      = {{XCS("foo"), 1, 0, NULL, doc_info}, {NULL, 0, 0, NULL, NULL}};
 
   XML_Parser parser = XML_ParserCreate(NULL);
   ParserAndElementInfo parserPlusElemenInfo = {parser, info};
