@@ -115,6 +115,10 @@
 #include "expat.h"
 #include "siphash.h"
 
+#if defined(HAVE_ARC4RANDOM_BUF)
+#  include "random_arc4random_buf.h"
+#endif // defined(HAVE_ARC4RANDOM_BUF)
+
 #if defined(HAVE_GETENTROPY)
 #  include "random_getentropy.h"
 #endif // defined(HAVE_GETENTROPY)
@@ -1033,11 +1037,6 @@ static const XML_Char implicitContext[]
 #  include "random_arc4random.h"
 #endif /* defined(HAVE_ARC4RANDOM) && ! defined(HAVE_ARC4RANDOM_BUF) */
 
-// Help clang-tidy out with prototype of function `arc4random_buf`
-#if defined(HAVE_ARC4RANDOM_BUF) && defined(XML_CLANG_TIDY)
-void arc4random_buf(void *buf, size_t n);
-#endif
-
 #ifdef _WIN32
 #  include "random_rand_s.h"
 #endif /* _WIN32 */
@@ -1087,7 +1086,7 @@ generate_hash_secret_salt(void) {
 
   /* "Failproof" high quality providers: */
 #if defined(HAVE_ARC4RANDOM_BUF)
-  arc4random_buf(&entropy, sizeof(entropy));
+  writeRandomBytes_arc4random_buf(&entropy, sizeof(entropy));
   return ENTROPY_DEBUG("arc4random_buf", entropy);
 #elif defined(HAVE_ARC4RANDOM)
   writeRandomBytes_arc4random(&entropy, sizeof(entropy));

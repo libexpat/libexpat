@@ -151,10 +151,17 @@ mark_as_advanced(EXPAT_NS)
 expat_shy_set(EXPAT_WARNINGS_AS_ERRORS OFF CACHE BOOL "Treat all compiler warnings as errors")
 if(NOT WIN32 OR _EXPAT_HELP)
     expat_shy_set(EXPAT_DEV_URANDOM ON CACHE BOOL "Define to include code reading entropy from `/dev/urandom'.")
-    expat_shy_set(EXPAT_WITH_GETENTROPY "AUTO" CACHE STRING "Make use of getentropy function (ON|OFF|AUTO) [default=AUTO]")
-    expat_shy_set(EXPAT_WITH_GETRANDOM "AUTO" CACHE STRING "Make use of getrandom function (ON|OFF|AUTO) [default=AUTO]")
-    expat_shy_set(EXPAT_WITH_SYS_GETRANDOM "AUTO" CACHE STRING "Make use of syscall SYS_getrandom (ON|OFF|AUTO) [default=AUTO]")
     mark_as_advanced(EXPAT_DEV_URANDOM)
+    expat_shy_set(EXPAT_WITH_ARC4RANDOM "AUTO" CACHE STRING "Make use of arc4random function (ON|OFF|AUTO) [default=AUTO]")
+    mark_as_advanced(EXPAT_WITH_ARC4RANDOM)
+    expat_shy_set(EXPAT_WITH_ARC4RANDOM_BUF "AUTO" CACHE STRING "Make use of arc4random_buf function (ON|OFF|AUTO) [default=AUTO]")
+    mark_as_advanced(EXPAT_WITH_ARC4RANDOM_BUF)
+    expat_shy_set(EXPAT_WITH_GETENTROPY "AUTO" CACHE STRING "Make use of getentropy function (ON|OFF|AUTO) [default=AUTO]")
+    mark_as_advanced(EXPAT_WITH_GETENTROPY)
+    expat_shy_set(EXPAT_WITH_GETRANDOM "AUTO" CACHE STRING "Make use of getrandom function (ON|OFF|AUTO) [default=AUTO]")
+    mark_as_advanced(EXPAT_WITH_GETRANDOM)
+    expat_shy_set(EXPAT_WITH_SYS_GETRANDOM "AUTO" CACHE STRING "Make use of syscall SYS_getrandom (ON|OFF|AUTO) [default=AUTO]")
+    mark_as_advanced(EXPAT_WITH_SYS_GETRANDOM)
 endif()
 expat_shy_set(EXPAT_CHAR_TYPE "char" CACHE STRING "Character type to use (char|ushort|wchar_t) [default=char]")
 expat_shy_set(EXPAT_ATTR_INFO OFF CACHE BOOL "Define to allow retrieving the byte offsets for attribute names and values")
@@ -275,6 +282,8 @@ macro(evaluate_detection_results use_ref have_ref thing_lower thing_title)
 endmacro()
 
 if(NOT WIN32)
+    evaluate_detection_results(EXPAT_WITH_ARC4RANDOM HAVE_ARC4RANDOM "function arc4random" "Function arc4random")
+    evaluate_detection_results(EXPAT_WITH_ARC4RANDOM_BUF HAVE_ARC4RANDOM_BUF "function arc4random_buf" "Function arc4random_buf")
     evaluate_detection_results(EXPAT_WITH_GETENTROPY HAVE_GETENTROPY "function getentropy" "Function getentropy")
     evaluate_detection_results(EXPAT_WITH_GETRANDOM HAVE_GETRANDOM "function getrandom" "Function getrandom")
     evaluate_detection_results(EXPAT_WITH_SYS_GETRANDOM HAVE_SYSCALL_GETRANDOM "syscall SYS_getrandom" "Syscall SYS_getrandom")
@@ -385,6 +394,14 @@ if(HAVE_ARC4RANDOM)
         ${_EXPAT_C_SOURCES}
         lib/random_arc4random.c
         lib/random_arc4random.h
+    )
+endif()
+
+if(HAVE_ARC4RANDOM_BUF)
+    set(_EXPAT_C_SOURCES
+        ${_EXPAT_C_SOURCES}
+        lib/random_arc4random_buf.c
+        lib/random_arc4random_buf.h
     )
 endif()
 
@@ -1026,6 +1043,8 @@ message(STATUS "  Entropy sources")
 if(WIN32)
     message(STATUS "    rand_s ................... ON")
 else()
+    message(STATUS "    arc4random ............... ${HAVE_ARC4RANDOM}")
+    message(STATUS "    arc4random_buf ........... ${HAVE_ARC4RANDOM_BUF}")
     message(STATUS "    getentropy ............... ${HAVE_GETENTROPY}")
     message(STATUS "    getrandom ................ ${HAVE_GETRANDOM}")
     message(STATUS "    syscall SYS_getrandom .... ${HAVE_SYSCALL_GETRANDOM}")

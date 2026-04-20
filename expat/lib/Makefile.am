@@ -61,6 +61,12 @@ if WITH_ARC4RANDOM
         random_arc4random.h
 endif
 
+if WITH_ARC4RANDOM_BUF
+    libexpat_la_SOURCES += \
+        random_arc4random_buf.c \
+        random_arc4random_buf.h
+endif
+
 if ! MINGW
     libexpat_la_SOURCES += \
         random_dev_urandom.c \

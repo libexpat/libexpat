@@ -6,7 +6,7 @@
                         \___/_/\_\ .__/ \__,_|\__|
                                  |_| XML parser
 
-   Copyright (c) 2017-2026 Sebastian Pipping <sebastian@pipping.org>
+   Copyright (c) 2026 Sebastian Pipping <sebastian@pipping.org>
    Licensed under the MIT license:
 
    Permission is  hereby granted,  free of charge,  to any  person obtaining
@@ -29,27 +29,11 @@
    USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include "random_arc4random.h"
+#if ! defined(RANDOM_ACR4RANDOM_BUF_H)
+#  define RANDOM_ACR4RANDOM_BUF_H 1
 
-#if ! defined(_DEFAULT_SOURCE)
-#  define _DEFAULT_SOURCE 1 /* for glibc */
-#endif
+#  include <stddef.h> // for size_t
 
-#include <stdint.h> // for uint32_t
-#include <stdlib.h> // for arc4random
-#include <string.h> // for memcpy
+void writeRandomBytes_arc4random_buf(void *target, size_t count);
 
-void
-writeRandomBytes_arc4random(void *target, size_t count) {
-  size_t bytesWrittenTotal = 0;
-
-  while (bytesWrittenTotal < count) {
-    const uint32_t random32 = arc4random();
-
-    size_t toUse = count - bytesWrittenTotal;
-    if (toUse > sizeof(random32))
-      toUse = sizeof(random32);
-    memcpy((char *)target + bytesWrittenTotal, &random32, toUse);
-    bytesWrittenTotal += toUse;
-  }
-}
+#endif // ! defined(RANDOM_ACR4RANDOM_BUF_H)
