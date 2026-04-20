@@ -45,7 +45,7 @@
 /* Expat tries very hard to make the API boundary very specifically
    defined.  There are two macros defined to control this boundary;
    each of these can be defined before including this header to
-   achieve some different behavior, but doing so it not recommended or
+   achieve some different behavior, but doing so is not recommended or
    tested frequently.
 
    XMLCALL    - The calling convention to use for all calls across the
