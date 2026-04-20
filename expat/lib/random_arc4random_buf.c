@@ -31,12 +31,11 @@
 
 #include "random_arc4random_buf.h"
 
-#include <stdlib.h> // for arc4random_buf
-
-// Help clang-tidy out with prototype of function `arc4random_buf`
-#if defined(XML_CLANG_TIDY)
-void arc4random_buf(void *buf, size_t n);
+#if ! defined(_DEFAULT_SOURCE)
+#  define _DEFAULT_SOURCE 1 /* for glibc */
 #endif
+
+#include <stdlib.h> // for arc4random_buf
 
 void
 writeRandomBytes_arc4random_buf(void *target, size_t count) {

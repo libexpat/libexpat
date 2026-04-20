@@ -31,14 +31,13 @@
 
 #include "random_arc4random.h"
 
+#if ! defined(_DEFAULT_SOURCE)
+#  define _DEFAULT_SOURCE 1 /* for glibc */
+#endif
+
 #include <stdint.h> // for uint32_t
 #include <stdlib.h> // for arc4random
 #include <string.h> // for memcpy
-
-// Help clang-tidy out with prototype of function `arc4random`
-#if defined(XML_CLANG_TIDY)
-uint32_t arc4random(void);
-#endif
 
 void
 writeRandomBytes_arc4random(void *target, size_t count) {

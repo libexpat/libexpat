@@ -239,6 +239,9 @@ have_arc4random_buf=false
 AS_IF([test "x${with_arc4random_buf}" != xno],
   [AC_MSG_CHECKING([for arc4random_buf (BSD or glibc 2.36+)])
    AC_LINK_IFELSE([AC_LANG_SOURCE([
+       #if ! defined(_DEFAULT_SOURCE)
+       # define _DEFAULT_SOURCE 1 /* for glibc */
+       #endif
        #include <stdlib.h>
        int main(void) {
          char dummy[[123]];  // double brackets for m4
@@ -256,6 +259,9 @@ AS_IF([test "x${with_arc4random_buf}" != xno],
 AS_IF([test "x${with_arc4random}" != xno],
   [AC_MSG_CHECKING([for arc4random (BSD, macOS, or glibc 2.36+)])
    AC_LINK_IFELSE([AC_LANG_SOURCE([
+       #if ! defined(_DEFAULT_SOURCE)
+       # define _DEFAULT_SOURCE 1 /* for glibc */
+       #endif
        #include <stdlib.h>
        int main(void) {
           arc4random();
