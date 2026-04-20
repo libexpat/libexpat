@@ -270,6 +270,7 @@ AS_IF([test "x${with_arc4random}" != xno],
         [AC_MSG_ERROR([enforced the use of arc4random --with-arc4random, but not detected])])])])
 
 AM_CONDITIONAL([WITH_ARC4RANDOM], [test x${have_arc4random} = xtrue])
+AM_CONDITIONAL([WITH_ARC4RANDOM_BUF], [test x${have_arc4random_buf} = xtrue])
 
 have_getentropy=false
 

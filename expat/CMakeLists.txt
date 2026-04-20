@@ -397,6 +397,14 @@ if(HAVE_ARC4RANDOM)
     )
 endif()
 
+if(HAVE_ARC4RANDOM_BUF)
+    set(_EXPAT_C_SOURCES
+        ${_EXPAT_C_SOURCES}
+        lib/random_arc4random_buf.c
+        lib/random_arc4random_buf.h
+    )
+endif()
+
 if(EXPAT_DEV_URANDOM)
     set(_EXPAT_C_SOURCES
         ${_EXPAT_C_SOURCES}
