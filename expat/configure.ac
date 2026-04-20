@@ -537,4 +537,9 @@ User flags (override Automake flags on conflict):
      CPPFLAGS: ${CPPFLAGS}
        CFLAGS: ${CFLAGS}
      CXXFLAGS: ${CXXFLAGS}
-      LDFLAGS: ${LDFLAGS}])
+      LDFLAGS: ${LDFLAGS}
+
+Continue with e.g.:
+  make -j2
+  make check
+  sudo make install])
