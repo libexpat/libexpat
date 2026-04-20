@@ -50,6 +50,7 @@ XML_SetEntityDeclHandler
 XML_SetExternalEntityRefHandler
 XML_SetExternalEntityRefHandlerArg
 XML_SetHashSalt
+XML_SetHashSalt16Bytes
 XML_SetNamespaceDeclHandler
 XML_SetNotationDeclHandler
 XML_SetNotStandaloneHandler
