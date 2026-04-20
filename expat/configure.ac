@@ -261,7 +261,7 @@ AS_IF([test "x$with_getentropy" != xno],
   [AC_MSG_CHECKING([for getentropy (BSD, macOS 10.12+, glibc 2.25+)])
    AC_LINK_IFELSE([AC_LANG_SOURCE([
        // NOTE: Please keep this block in sync with its two siblings in files
-       //       `ConfigureChecks.cmake` and `lib/random_getentropy.c`!
+       //       'ConfigureChecks.cmake' and 'lib/random_getentropy.c'!
        #if defined(__APPLE__)
        #  include <sys/random.h>
        #else
