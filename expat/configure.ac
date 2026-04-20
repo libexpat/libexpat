@@ -218,6 +218,7 @@ AM_CONDITIONAL([_INTERNAL_LARGE_SIZE], [echo -- "${CPPFLAGS}${CFLAGS}" | ${FGREP
 LT_LIB_M
 
 have_arc4random=false
+have_arc4random_buf=false
 
 AC_MSG_CHECKING([for arc4random_buf (BSD or glibc 2.36+)])
 AC_LINK_IFELSE([AC_LANG_SOURCE([
@@ -229,6 +230,7 @@ AC_LINK_IFELSE([AC_LANG_SOURCE([
     }
   ])],
   [AC_DEFINE([HAVE_ARC4RANDOM_BUF], [1], [Define to 1 if you have the `arc4random_buf' function.])
+   have_arc4random_buf=true
    AC_MSG_RESULT([yes])],
   [AC_MSG_RESULT([no])
 
@@ -288,6 +290,8 @@ AS_IF([test "x$with_getentropy" != xno],
 AM_CONDITIONAL([WITH_GETENTROPY], [test x${have_getentropy} = xtrue])
 
 have_either_getrandom=false
+have_getrandom_function=false
+have_getrandom_syscall=false
 
 AC_ARG_WITH([getrandom],
   [AS_HELP_STRING([--with-getrandom],
@@ -308,6 +312,7 @@ AS_IF([test "x$with_getrandom" != xno],
      ])],
      [AC_DEFINE([HAVE_GETRANDOM], [1], [Define to 1 if you have the `getrandom' function.])
       have_either_getrandom=true
+      have_getrandom_function=true
       AC_MSG_RESULT([yes])],
      [AC_MSG_RESULT([no])
       AS_IF([test "x$with_getrandom" = xyes],
@@ -335,6 +340,7 @@ AS_IF([test "x$with_sys_getrandom" != xno],
    ])],
      [AC_DEFINE([HAVE_SYSCALL_GETRANDOM], [1], [Define to 1 if you have `syscall' and `SYS_getrandom'.])
       have_either_getrandom=true
+      have_getrandom_syscall=true
       AC_MSG_RESULT([yes])],
      [AC_MSG_RESULT([no])
       AS_IF([test "x$with_sys_getrandom" = xyes],
@@ -538,6 +544,14 @@ User flags (override Automake flags on conflict):
        CFLAGS: ${CFLAGS}
      CXXFLAGS: ${CXXFLAGS}
       LDFLAGS: ${LDFLAGS}
+
+Entropy sources:
+             arc4random: ${have_arc4random}
+         arc4random_buf: ${have_arc4random_buf}
+             getentropy: ${have_getentropy}
+              getrandom: ${have_getrandom_function}
+  syscall SYS_getrandom: ${have_getrandom_syscall}
+           /dev/urandom: true
 
 Continue with e.g.:
   make -j2
