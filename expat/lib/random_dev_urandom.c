@@ -42,9 +42,9 @@
 #include <unistd.h> // close
 
 /* Extract entropy from /dev/urandom */
-int
+bool
 writeRandomBytes_dev_urandom(void *target, size_t count) {
-  int success = 0; /* full count bytes written? */
+  int success = false; /* full count bytes written? */
   size_t bytesWrittenTotal = 0;
 
   const int fd = open("/dev/urandom", O_RDONLY | O_CLOEXEC);
@@ -63,7 +63,7 @@ writeRandomBytes_dev_urandom(void *target, size_t count) {
     if (bytesWrittenMore > 0) {
       bytesWrittenTotal += bytesWrittenMore;
       if (bytesWrittenTotal >= count)
-        success = 1;
+        success = true;
     }
   } while (! success && (errno == EINTR));
 

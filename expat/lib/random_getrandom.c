@@ -57,9 +57,9 @@
 #include <limits.h> // for INT_MAX
 
 /* Obtain entropy on Linux 3.17+ */
-int
+bool
 writeRandomBytes_getrandom_nonblock(void *target, size_t count) {
-  int success = 0; /* full count bytes written? */
+  int success = false; /* full count bytes written? */
   size_t bytesWrittenTotal = 0;
   const unsigned int getrandomFlags = GRND_NONBLOCK;
 
@@ -82,7 +82,7 @@ writeRandomBytes_getrandom_nonblock(void *target, size_t count) {
     if (bytesWrittenMore > 0) {
       bytesWrittenTotal += bytesWrittenMore;
       if (bytesWrittenTotal >= count)
-        success = 1;
+        success = true;
     }
   } while (! success && (errno == EINTR));
 

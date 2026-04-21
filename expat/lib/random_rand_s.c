@@ -67,7 +67,7 @@ __declspec(dllimport) int rand_s(unsigned int *);
  * generates cryptographically secure random numbers.  Internally it
  * uses RtlGenRandom API which is present in Windows XP and later.
  */
-int
+bool
 writeRandomBytes_rand_s(void *target, size_t count) {
   size_t bytesWrittenTotal = 0;
 
@@ -75,7 +75,7 @@ writeRandomBytes_rand_s(void *target, size_t count) {
     unsigned int random32 = 0;
 
     if (rand_s(&random32))
-      return 0; /* failure */
+      return false; /* failure */
 
     size_t toUse = count - bytesWrittenTotal;
     if (toUse > sizeof(random32))
@@ -83,5 +83,5 @@ writeRandomBytes_rand_s(void *target, size_t count) {
     memcpy((char *)target + bytesWrittenTotal, &random32, toUse);
     bytesWrittenTotal += toUse;
   }
-  return 1; /* success */
+  return true; /* success */
 }

@@ -32,8 +32,9 @@
 #if ! defined(RANDOM_DEV_URANDOM_H)
 #  define RANDOM_DEV_URANDOM_H 1
 
+#  include <stdbool.h>
 #  include <stddef.h> // for size_t
 
-int writeRandomBytes_dev_urandom(void *target, size_t count);
+bool writeRandomBytes_dev_urandom(void *target, size_t count);
 
 #endif // ! defined(RANDOM_DEV_URANDOM_H)
