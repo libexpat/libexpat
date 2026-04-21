@@ -33,8 +33,9 @@
 #if ! defined(RANDOM_RAND_S_H)
 #  define RANDOM_RAND_S_H 1
 
+#  include <stdbool.h>
 #  include <stddef.h> // for size_t
 
-int writeRandomBytes_rand_s(void *target, size_t count);
+bool writeRandomBytes_rand_s(void *target, size_t count);
 
 #endif // ! defined(RANDOM_RAND_S_H)

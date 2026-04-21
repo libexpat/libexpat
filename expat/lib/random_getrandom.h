@@ -32,8 +32,9 @@
 #if ! defined(RANDOM_GETRANDOM_H)
 #  define RANDOM_GETRANDOM_H 1
 
+#  include <stdbool.h>
 #  include <stddef.h> // for size_t
 
-int writeRandomBytes_getrandom_nonblock(void *target, size_t count);
+bool writeRandomBytes_getrandom_nonblock(void *target, size_t count);
 
 #endif // ! defined(RANDOM_GETRANDOM_H)
