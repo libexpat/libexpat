@@ -643,6 +643,8 @@ static XML_Parser getRootParserOf(XML_Parser parser,
 static unsigned long getDebugLevel(const char *variableName,
                                    unsigned long defaultDebugLevel);
 
+static bool poolAppendChar(STRING_POOL *pool, XML_Char c);
+
 static bool poolAppendChars(STRING_POOL *pool, const XML_Char *s, size_t len);
 
 #define poolStart(pool) ((pool)->start)
@@ -651,10 +653,15 @@ static bool poolAppendChars(STRING_POOL *pool, const XML_Char *s, size_t len);
 #define poolLastChar(pool) (((pool)->ptr)[-1])
 #define poolDiscard(pool) ((pool)->ptr = (pool)->start)
 #define poolFinish(pool) ((pool)->start = (pool)->ptr)
-#define poolAppendChar(pool, c)                                                \
-  (((pool)->ptr == (pool)->end && ! poolGrow(pool))                            \
-       ? 0                                                                     \
-       : ((*((pool)->ptr)++ = c), 1))
+
+bool
+poolAppendChar(STRING_POOL *pool, XML_Char c) {
+  if (pool->ptr == pool->end && ! poolGrow(pool))
+    return false;
+
+  *(pool->ptr)++ = c;
+  return true;
+}
 
 bool
 poolAppendChars(STRING_POOL *pool, const XML_Char *s, size_t len) {
