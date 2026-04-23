@@ -47,7 +47,7 @@ jobs:
       matrix:
         xml_parser_commit:
           - "7096c4e45a62a23837382cf822d8c2dab780a3a1"  # ==2.47 without AI
-          - "c8fe015d885439188b792d036e01ecc9062768e3"  # ==2.57    with AI
+          - "3fb2a0bf51a67a09e30c09351b28b52da9d4a166"  # ==2.58    with AI
     runs-on: ubuntu-24.04
     steps:
     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
