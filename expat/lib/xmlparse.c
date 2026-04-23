@@ -8432,12 +8432,15 @@ copyString(const XML_Char *s, XML_Parser parser) {
   if (charsRequired > SIZE_MAX / sizeof(XML_Char))
     return NULL;
 
+  const size_t bytesRequired = charsRequired * sizeof(XML_Char);
+
   /* Now allocate space for the copy */
-  result = MALLOC(parser, charsRequired * sizeof(XML_Char));
+  result = MALLOC(parser, bytesRequired);
+
   if (result == NULL)
     return NULL;
   /* Copy the original into place */
-  memcpy(result, s, charsRequired * sizeof(XML_Char));
+  memcpy(result, s, bytesRequired);
   return result;
 }
 
