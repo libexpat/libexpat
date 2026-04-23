@@ -41,7 +41,7 @@
    Copyright (c) 2023-2024 Sony Corporation / Snild Dolkow <snild@sony.com>
    Copyright (c) 2024-2025 Berkay Eren Ürün <berkay.ueruen@siemens.com>
    Copyright (c) 2024      Hanno Böck <hanno@gentoo.org>
-   Copyright (c) 2025      Matthew Fernandez <matthew.fernandez@gmail.com>
+   Copyright (c) 2025-2026 Matthew Fernandez <matthew.fernandez@gmail.com>
    Copyright (c) 2025      Atrem Borovik <polzovatellllk@gmail.com>
    Copyright (c) 2025      Alfonso Gregory <gfunni234@gmail.com>
    Copyright (c) 2026      Rosen Penev <rosenp@gmail.com>
