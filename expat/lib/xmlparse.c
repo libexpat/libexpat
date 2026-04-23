@@ -8428,6 +8428,10 @@ copyString(const XML_Char *s, XML_Parser parser) {
   /* First determine how long the string is */
   charsRequired = xcslen(s) + /*null terminator*/ 1;
 
+  /* Detect and prevent integer overflow */
+  if (charsRequired > SIZE_MAX / sizeof(XML_Char))
+    return NULL;
+
   /* Now allocate space for the copy */
   result = MALLOC(parser, charsRequired * sizeof(XML_Char));
   if (result == NULL)
