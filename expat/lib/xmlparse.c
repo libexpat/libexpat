@@ -2203,7 +2203,7 @@ XML_SetParamEntityParsing(XML_Parser parser,
 #endif
 }
 
-// DEPRECATED since Expat 2.7.6.
+// DEPRECATED since Expat 2.8.0.
 int XMLCALL
 XML_SetHashSalt(XML_Parser parser, unsigned long hash_salt) {
   if (parser == NULL)

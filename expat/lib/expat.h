@@ -918,7 +918,7 @@ XML_SetParamEntityParsing(XML_Parser parser,
    function behavior. This must be called before parsing is started.
    Returns 1 if successful, 0 when called after parsing has started.
    Note: If parser == NULL, the function will do nothing and return 0.
-   DEPRECATED since Expat 2.7.6.
+   DEPRECATED since Expat 2.8.0.
 */
 XMLPARSEAPI(int)
 XML_SetHashSalt(XML_Parser parser, unsigned long hash_salt);
@@ -928,7 +928,7 @@ XML_SetHashSalt(XML_Parser parser, unsigned long hash_salt);
    This must be called before parsing is started.
    Returns XML_TRUE if successful, XML_FALSE when called after parsing has
    started or when parser is NULL.
-   Added in Expat 2.7.6.
+   Added in Expat 2.8.0.
 */
 XMLPARSEAPI(XML_Bool)
 XML_SetHashSalt16Bytes(XML_Parser parser, const uint8_t entropy[16]);

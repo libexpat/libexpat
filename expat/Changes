@@ -29,7 +29,7 @@
 !! THANK YOU!                        Sebastian Pipping -- Berlin, 2026-03-17 !!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-Release 2.7.6 XXX XXXXX XX XXXX
+Release 2.8.0 XXX XXXXX XX XXXX
         Security fixes:
        #47 #1183  CVE-2026-41080 -- The existing hash flooding protection
                     (based on SipHash) only used 4 to 8 bytes of entropy for
