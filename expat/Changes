@@ -75,6 +75,9 @@ Release 2.8.0 XXX XXXXX XX XXXX
            #1192  examples: Build warning-free with -Wwrite-strings
            #1171  tests: Address harmless warning from Coverity
      #1170 #1176  Sync file headers
+     #1190 #1206  Version info bumped from 12:3:11 (libexpat*.so.1.11.3)
+                    to 13:0:12 (libexpat*.so.1.12.0); see https://verbump.de/
+                    for what these numbers do
 
         Infrastructure:
   #1166 #1167 ..
