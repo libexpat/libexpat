@@ -115,9 +115,17 @@
 #include "expat.h"
 #include "siphash.h"
 
+#if defined(HAVE_ARC4RANDOM)
+#  include "random_arc4random.h"
+#endif /* defined(HAVE_ARC4RANDOM) */
+
 #if defined(HAVE_ARC4RANDOM_BUF)
 #  include "random_arc4random_buf.h"
 #endif // defined(HAVE_ARC4RANDOM_BUF)
+
+#if defined(XML_DEV_URANDOM)
+#  include "random_dev_urandom.h"
+#endif /* defined(XML_DEV_URANDOM) */
 
 #if defined(HAVE_GETENTROPY)
 #  include "random_getentropy.h"
@@ -126,6 +134,10 @@
 #if defined(HAVE_GETRANDOM) || defined(HAVE_SYSCALL_GETRANDOM)
 #  include "random_getrandom.h"
 #endif /* defined(HAVE_GETRANDOM) || defined(HAVE_SYSCALL_GETRANDOM) */
+
+#if defined(_WIN32)
+#  include "random_rand_s.h"
+#endif /* defined(_WIN32) */
 
 #if ! defined(HAVE_GETRANDOM) && ! defined(HAVE_SYSCALL_GETRANDOM)             \
     && ! defined(HAVE_ARC4RANDOM_BUF) && ! defined(HAVE_ARC4RANDOM)            \
@@ -1023,23 +1035,6 @@ static const XML_Char implicitContext[]
        ASCII_SLASH, ASCII_n,     ASCII_a,      ASCII_m,      ASCII_e,
        ASCII_s,     ASCII_p,     ASCII_a,      ASCII_c,      ASCII_e,
        '\0'};
-
-/* To avoid warnings about unused functions: */
-#if ! defined(HAVE_ARC4RANDOM_BUF) && ! defined(HAVE_ARC4RANDOM)
-
-#  if ! defined(_WIN32) && defined(XML_DEV_URANDOM)
-#    include "random_dev_urandom.h"
-#  endif /* ! defined(_WIN32) && defined(XML_DEV_URANDOM) */
-
-#endif /* ! defined(HAVE_ARC4RANDOM_BUF) && ! defined(HAVE_ARC4RANDOM) */
-
-#if defined(HAVE_ARC4RANDOM) && ! defined(HAVE_ARC4RANDOM_BUF)
-#  include "random_arc4random.h"
-#endif /* defined(HAVE_ARC4RANDOM) && ! defined(HAVE_ARC4RANDOM_BUF) */
-
-#ifdef _WIN32
-#  include "random_rand_s.h"
-#endif /* _WIN32 */
 
 #if ! defined(HAVE_ARC4RANDOM_BUF) && ! defined(HAVE_ARC4RANDOM)
 
