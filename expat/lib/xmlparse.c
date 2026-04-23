@@ -8422,11 +8422,8 @@ getElementType(XML_Parser parser, const ENCODING *enc, const char *ptr,
 
 static XML_Char *
 copyString(const XML_Char *s, XML_Parser parser) {
-  size_t charsRequired = 0;
-  XML_Char *result;
-
   /* First determine how long the string is */
-  charsRequired = xcslen(s) + /*null terminator*/ 1;
+  const size_t charsRequired = xcslen(s) + /*null terminator*/ 1;
 
   /* Detect and prevent integer overflow */
   if (charsRequired > SIZE_MAX / sizeof(XML_Char))
@@ -8435,7 +8432,7 @@ copyString(const XML_Char *s, XML_Parser parser) {
   const size_t bytesRequired = charsRequired * sizeof(XML_Char);
 
   /* Now allocate space for the copy */
-  result = MALLOC(parser, bytesRequired);
+  XML_Char *const result = MALLOC(parser, bytesRequired);
 
   if (result == NULL)
     return NULL;
