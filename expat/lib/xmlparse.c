@@ -1,4 +1,4 @@
-/* 93c1caa66e2b0310459482516af05505b57c5cb7b96df777105308fc585c85d1 (2.7.5+)
+/* a5d18f6a50f536615ac1c70304f87d94f99cc85a86b502188952440610ccf0f8 (2.8.0+)
                             __  __            _
                          ___\ \/ /_ __   __ _| |_
                         / _ \\  /| '_ \ / _` | __|
@@ -41,7 +41,7 @@
    Copyright (c) 2023-2024 Sony Corporation / Snild Dolkow <snild@sony.com>
    Copyright (c) 2024-2025 Berkay Eren Ürün <berkay.ueruen@siemens.com>
    Copyright (c) 2024      Hanno Böck <hanno@gentoo.org>
-   Copyright (c) 2025      Matthew Fernandez <matthew.fernandez@gmail.com>
+   Copyright (c) 2025-2026 Matthew Fernandez <matthew.fernandez@gmail.com>
    Copyright (c) 2025      Atrem Borovik <polzovatellllk@gmail.com>
    Copyright (c) 2025      Alfonso Gregory <gfunni234@gmail.com>
    Copyright (c) 2026      Rosen Penev <rosenp@gmail.com>
@@ -2203,7 +2203,7 @@ XML_SetParamEntityParsing(XML_Parser parser,
 #endif
 }
 
-// DEPRECATED since Expat 2.7.6.
+// DEPRECATED since Expat 2.8.0.
 int XMLCALL
 XML_SetHashSalt(XML_Parser parser, unsigned long hash_salt) {
   if (parser == NULL)

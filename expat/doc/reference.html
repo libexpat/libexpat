@@ -53,7 +53,7 @@
   <body>
     <div>
       <h1>
-        The Expat XML Parser <small>Release 2.7.5</small>
+        The Expat XML Parser <small>Release 2.8.0</small>
       </h1>
     </div>
 
@@ -3475,7 +3475,7 @@ XML_SetHashSalt(XML_Parser parser,
           (depending on the size of type <code>unsigned long</code>) while the SipHash
           implementation used by Expat can leverage up to 16 bytes of entropy — at least
           twice as much. Function <code><a href=
-          "#XML_SetHashSalt16Bytes">XML_SetHashSalt16Bytes</a></code> of Expat &gt;=2.7.6
+          "#XML_SetHashSalt16Bytes">XML_SetHashSalt16Bytes</a></code> of Expat &gt;=2.8.0
           (and where backported) matches the amount of entropy supported by SipHash.
         </p>
 
@@ -3497,7 +3497,7 @@ XML_SetHashSalt(XML_Parser parser,
       </h4>
 
       <pre class="fcndec">
-/* Added in Expat 2.7.6. */
+/* Added in Expat 2.8.0. */
 XML_Bool XMLCALL
 XML_SetHashSalt16Bytes(XML_Parser parser,
                        const uint8_t entropy[16]);
