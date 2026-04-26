@@ -7311,7 +7311,7 @@ getContext(XML_Parser parser) {
     if (needSep && ! poolAppendChar(&parser->m_tempPool, CONTEXT_SEP))
       return NULL;
     if (! poolAppendChars(&parser->m_tempPool, e->name, xcslen(e->name)))
-      return 0;
+      return NULL;
     needSep = XML_TRUE;
   }
 
