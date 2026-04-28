@@ -107,6 +107,11 @@ install-data-hook:
 uninstall-local:
 	$(RM) "$(DESTDIR)$(docdir)/changelog"
 
+BUILT_SOURCES = nametab.h
+
+nametab.h: ../gennmtab/gennmtab$(BUILD_EXEEXT) Makefile
+	./$< >$@
+
 EXTRA_DIST = \
     ascii.h \
     asciitab.h \
@@ -116,7 +121,6 @@ EXTRA_DIST = \
     internal.h \
     latin1tab.h \
     libexpat.def.cmake \
-    nametab.h \
     siphash.h \
     utf8tab.h \
     winconfig.h \
@@ -125,3 +129,5 @@ EXTRA_DIST = \
     xmltok_impl.c \
     xmltok_impl.h \
     xmltok_ns.c
+
+CLEANFILES = nametab.h

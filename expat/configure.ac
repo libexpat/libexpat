@@ -111,6 +111,7 @@ AC_SUBST(LIBAGE)
 
 AC_LANG([C])
 AC_PROG_CC_C99
+AC_PROG_CC_FOR_BUILD
 
 AS_IF([test "${ac_cv_prog_cc_c99}" = no],
   [AC_MSG_ERROR([Expat requires a C99 compiler.])])
@@ -551,6 +552,7 @@ AC_CONFIG_FILES([Makefile]
   [cmake/autotools/expat-noconfig.cmake:${CMAKE_NOCONFIG_SOURCE}]
   [doc/Makefile]
   [examples/Makefile]
+  [gennmtab/Makefile]
   [lib/Makefile]
   [lib/libexpat.map]
   [tests/Makefile]
