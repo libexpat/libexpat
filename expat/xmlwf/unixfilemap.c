@@ -101,7 +101,7 @@ filemap(const tchar *name,
     return 0;
   }
   processor(p, nbytes, name, arg);
-  munmap((void *)p, nbytes);
+  munmap(p, nbytes);
   close(fd);
   return 1;
 }
