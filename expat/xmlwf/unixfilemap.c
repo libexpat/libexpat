@@ -95,13 +95,13 @@ filemap(const tchar *name,
     return 1;
   }
   p = mmap(NULL, nbytes, PROT_READ, MAP_FILE | MAP_PRIVATE, fd, (off_t)0);
-  if (p == (void *)-1) {
+  if (p == MAP_FAILED) {
     tperror(name);
     close(fd);
     return 0;
   }
   processor(p, nbytes, name, arg);
-  munmap((void *)p, nbytes);
+  munmap(p, nbytes);
   close(fd);
   return 1;
 }
