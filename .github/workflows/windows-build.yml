@@ -60,6 +60,13 @@ jobs:
             expat_char_type: wchar_t
             expat_dll: libexpatwd.dll
             expat_sln: expat.sln
+          - runs-on: windows-11-arm
+            cmake_build_type: Debug
+            cmake_generator: Visual Studio 17 2022
+            cmake_platform: ARM64
+            expat_char_type: wchar_t
+            expat_dll: libexpatwd.dll
+            expat_sln: expat.sln
           - runs-on: windows-2025-vs2026
             cmake_build_type: Debug
             cmake_generator: Visual Studio 18 2026
