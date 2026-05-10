@@ -40,6 +40,9 @@ Release 2.8.1 XXX XXXXX XX XXXX
         Other changes:
      #1209 #1213  Drop more casts related to `void *` that C99 does not need
            #1213  xmlwf: Streamline use of `mmap`
+     #1214 #1217  Version info bumped from 13:0:12 (libexpat*.so.1.12.0)
+                    to 13:1:12 (libexpat*.so.1.12.1); see https://verbump.de/
+                    for what these numbers do
 
         Infrastructure:
            #1210  CI: Cover compilation with Visual Studio 18 2026 on Windows
