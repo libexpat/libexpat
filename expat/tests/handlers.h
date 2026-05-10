@@ -88,6 +88,7 @@ typedef struct attrInfo {
 typedef struct elementInfo {
   const XML_Char *name;
   int attr_count;
+  int default_attr_count;
   const XML_Char *id_name;
   AttrInfo *attributes;
 } ElementInfo;

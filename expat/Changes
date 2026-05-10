@@ -29,6 +29,18 @@
 !! THANK YOU!                        Sebastian Pipping -- Berlin, 2026-03-17 !!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
+Release 2.8.1 XXX XXXXX XX XXXX
+        Security fixes:
+           #1216  CVE-2026-TODO -- Fix quadratic runtime from attribute name
+                    collision checks that allowed denial of service attacks
+                    through moderately sized crafted XML input (CWE-407).
+                    Please note that a layer of compression around XML can
+                    significantly reduce the minimum attack payload size.
+
+        Special thanks to:
+            Berkay Eren Ürün
+            Nick Wellnhofer
+
 Release 2.8.0 Fri April 24 2026
         Security fixes:
        #47 #1183  CVE-2026-41080 -- The existing hash flooding protection

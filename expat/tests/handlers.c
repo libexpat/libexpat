@@ -137,7 +137,7 @@ counting_start_element_handler(void *userData, const XML_Char *name,
     fail("ID does not have the correct name");
     return;
   }
-  for (i = 0; i < info->attr_count; i++) {
+  for (i = 0; i < info->attr_count + info->default_attr_count; i++) {
     attr = info->attributes;
     while (attr->name != NULL) {
       if (! xcstrcmp(atts[0], attr->name))
@@ -155,6 +155,9 @@ counting_start_element_handler(void *userData, const XML_Char *name,
     /* Remember, two entries in atts per attribute (see above) */
     atts += 2;
   }
+
+  // Self-test that the test case's list of expected attributes is complete
+  assert_true(atts[0] == NULL);
 }
 
 void XMLCALL
