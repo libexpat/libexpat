@@ -309,6 +309,8 @@ typedef struct tag {
   BINDING *bindings;
 } TAG;
 
+typedef unsigned long long XmlBigCount;
+
 typedef struct {
   const XML_Char *name;
   const XML_Char *textPtr;
@@ -455,7 +457,6 @@ enum XML_Account {
 };
 
 #if XML_GE == 1
-typedef unsigned long long XmlBigCount;
 typedef struct accounting {
   XmlBigCount countBytesDirect;
   XmlBigCount countBytesIndirect;
