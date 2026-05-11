@@ -619,7 +619,8 @@ static XML_Parser parserCreate(const XML_Char *encodingName,
 static void parserInit(XML_Parser parser, const XML_Char *encodingName);
 
 #if XML_GE == 1
-static float accountingGetCurrentAmplification(XML_Parser rootParser);
+static float accountingGetCurrentAmplification(XML_Parser rootParser,
+                                               XmlBigCount extraBytes);
 static void accountingReportStats(XML_Parser originParser, const char *epilog);
 static void accountingOnAbort(XML_Parser originParser);
 static void accountingReportDiff(XML_Parser rootParser,
@@ -8935,18 +8936,20 @@ copyString(const XML_Char *s, XML_Parser parser) {
 #if XML_GE == 1
 
 static float
-accountingGetCurrentAmplification(XML_Parser rootParser) {
+accountingGetCurrentAmplification(XML_Parser rootParser,
+                                  XmlBigCount extraBytes) {
   //                                          1.........1.........12 => 22
   const size_t lenOfShortestInclude = sizeof("<!ENTITY a SYSTEM 'b'>") - 1;
   const XmlBigCount countBytesOutput
       = rootParser->m_accounting.countBytesDirect
-        + rootParser->m_accounting.countBytesIndirect;
+        + rootParser->m_accounting.countBytesIndirect + extraBytes;
   const float amplificationFactor
       = rootParser->m_accounting.countBytesDirect
             ? ((float)countBytesOutput
                / (float)(rootParser->m_accounting.countBytesDirect))
             : ((float)(lenOfShortestInclude
-                       + rootParser->m_accounting.countBytesIndirect)
+                       + rootParser->m_accounting.countBytesIndirect
+                       + extraBytes)
                / (float)lenOfShortestInclude);
   assert(! rootParser->m_parentParser);
   return amplificationFactor;
@@ -8962,7 +8965,7 @@ accountingReportStats(XML_Parser originParser, const char *epilog) {
   }
 
   const float amplificationFactor
-      = accountingGetCurrentAmplification(rootParser);
+      = accountingGetCurrentAmplification(rootParser, 0);
   fprintf(stderr,
           "expat: Accounting(%p): Direct " EXPAT_FMT_ULL(
               "10") ", indirect " EXPAT_FMT_ULL("10") ", amplification %8.2f%s",
@@ -9053,7 +9056,7 @@ accountingDiffTolerated(XML_Parser originParser, int tok, const char *before,
       = rootParser->m_accounting.countBytesDirect
         + rootParser->m_accounting.countBytesIndirect;
   const float amplificationFactor
-      = accountingGetCurrentAmplification(rootParser);
+      = accountingGetCurrentAmplification(rootParser, 0);
   const XML_Bool tolerated
       = (countBytesOutput < rootParser->m_accounting.activationThresholdBytes)
         || (amplificationFactor
