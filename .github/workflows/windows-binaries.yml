@@ -60,6 +60,13 @@ jobs:
             expat_char_type: wchar_t
             expat_dll: libexpatwd.dll
             expat_platform: win64
+          - runs-on: windows-11-arm
+            cmake_build_type: Debug
+            cmake_generator: Visual Studio 17 2022
+            cmake_platform: ARM64
+            expat_char_type: wchar_t
+            expat_dll: libexpatwd.dll
+            expat_platform: winarm64
     defaults:
       run:
         shell: bash
@@ -70,16 +77,26 @@ jobs:
     - uses: microsoft/setup-msbuild@30375c66a4eea26614e0d39710365f22f8b0af57  # v3.0.0
 
     - name: Install Inno Setup
+      if: "${{ matrix.expat_platform != 'winarm64' }}"
       shell: pwsh
       run: |-
         Invoke-WebRequest -Uri https://github.com/jrsoftware/issrc/releases/download/is-6_1_2/innosetup-6.1.2.exe -OutFile D:\\is.exe
         Start-Process -FilePath D:\\is.exe -ArgumentList "/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART" -Wait
+
+    # Windows ARM64 runners do not provide a D:\ drive 
+    - name: Install Inno Setup (ARM64)
+      if: "${{ matrix.expat_platform == 'winarm64' }}"
+      shell: pwsh
+      run: |-
+        Invoke-WebRequest -Uri https://github.com/jrsoftware/issrc/releases/download/is-6_1_2/innosetup-6.1.2.exe -OutFile $env:RUNNER_TEMP\is.exe
+        Start-Process -FilePath $env:RUNNER_TEMP\is.exe -ArgumentList "/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART" -Wait
 
     - name: 'Add Inno Setup compiler to ${PATH}'
       run: |-
         echo 'C:\Program Files (x86)\Inno Setup 6' >> "${GITHUB_PATH}"
 
     - name: Install Innoextract
+      if: "${{ matrix.expat_platform != 'winarm64' }}"
       env:
         version: 1.9
       run: |-
@@ -88,6 +105,19 @@ jobs:
         cd innoextract
         export PATH="${PATH}:/c/msys64/usr/bin"  # for wget
         wget -q https://github.com/dscharrer/innoextract/releases/download/${version}/innoextract-${version}-windows.zip
+        unzip innoextract-${version}-windows.zip
+        echo "${GITHUB_WORKSPACE}\innoextract" >> "${GITHUB_PATH}"
+
+    # Windows ARM64 runners do not provide wget
+    - name: Install Innoextract (ARM64)
+      if: "${{ matrix.expat_platform == 'winarm64' }}"
+      env:
+        version: 1.9
+      run: |-
+        set -x
+        mkdir innoextract
+        cd innoextract
+        curl -sSLO https://github.com/dscharrer/innoextract/releases/download/${version}/innoextract-${version}-windows.zip
         unzip innoextract-${version}-windows.zip
         echo "${GITHUB_WORKSPACE}\innoextract" >> "${GITHUB_PATH}"
 
@@ -114,6 +144,29 @@ jobs:
         ! grep 'win32\\bin' win64/expat.iss  # i.e. assert success
         grep win32 win64/expat.iss  # purely informational
 
+    - name: Prepare winarm64 installer
+      if: "${{ matrix.expat_platform == 'winarm64' }}"
+      run: |-
+        bat_sed_args=(
+          -e 's,-A Win32,-A ARM64,g'
+          -e 's,win32,winarm64,g'
+        )
+        inno_sed_args=(
+          -e 's,^OutputDir=win32,OutputDir=winarm64,'
+          -e 's,win32bin,winarm64bin,'
+          -e 's,win32\\bin,winarm64\\bin,g'
+        )
+        set -x
+        cd expat
+        mkdir winarm64
+
+        sed "${bat_sed_args[@]}" win32/build_expat_iss.bat > winarm64/build_expat_iss.bat
+        ! grep -i win32 winarm64/build_expat_iss.bat  # i.e. assert success
+
+        sed "${inno_sed_args[@]}" win32/expat.iss > winarm64/expat.iss
+        ! grep 'win32\\bin' winarm64/expat.iss  # i.e. assert success
+        grep win32 winarm64/expat.iss  # purely informational
+
     - name: Build installer (and the Expat binaries that go into it)
       env:
         expat_platform: ${{ matrix.expat_platform }}
@@ -124,7 +177,11 @@ jobs:
         cmd < "${expat_platform}"/build_expat_iss.bat
 
         ls -lh "${expat_platform}"/*.exe
-        cp -v "${expat_platform}"/expat-*bin-*.*.*.exe /d/expat-installer.exe
+        if [[ "${expat_platform}" == "winarm64" ]]; then
+          cp -v "${expat_platform}"/expat-*bin-*.*.*.exe "${RUNNER_TEMP}/expat-installer.exe"
+        else
+          cp -v "${expat_platform}"/expat-*bin-*.*.*.exe /d/expat-installer.exe
+        fi
 
     - name: Create .zip file from installer content
       env:
@@ -158,9 +215,16 @@ jobs:
         if-no-files-found: error
 
     - name: Run installer
+      if: "${{ matrix.expat_platform != 'winarm64' }}"
       shell: pwsh
       run: |-
         Start-Process -FilePath D:\\expat-installer.exe -ArgumentList "/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART" -Wait
+
+    - name: Run installer (ARM64)
+      if: "${{ matrix.expat_platform == 'winarm64' }}"
+      shell: pwsh
+      run: |-
+        Start-Process -FilePath $env:RUNNER_TEMP\expat-installer.exe -ArgumentList "/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART" -Wait
 
     - name: Build installed code — Configure
       env:
