@@ -35,19 +35,12 @@ updates:
       include: "scope"
       prefix: "Actions"
     directory: "/"
-    ignore:
-      - dependency-name: "*"
-        update-types:
-          - "version-update:semver-minor"
-          - "version-update:semver-patch"
-    groups:
-      actions:
-        patterns:
-          - "*"
+    labels:
+      - "enhancement"
     schedule:
-      interval: "quarterly"
+      interval: "weekly"
     cooldown:
       # https://blog.yossarian.net/2025/11/21/We-should-all-be-using-dependency-cooldowns
       # Cooldowns protect against supply chain attacks by avoiding the
       # highest-risk window immediately after new releases.
-      default-days: 14
+      default-days: 7
