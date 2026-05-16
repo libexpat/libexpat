@@ -7473,8 +7473,7 @@ dtdReset(DTD *p, XML_Parser parser) {
     if (! e)
       break;
     hashTableDestroy(&(e->defaultAttsNames));
-    if (e->allocDefaultAtts != 0)
-      FREE(parser, e->defaultAtts);
+    FREE(parser, e->defaultAtts);
   }
   hashTableClear(&(p->generalEntities));
 #ifdef XML_DTD
