@@ -7514,8 +7514,7 @@ dtdDestroy(DTD *p, XML_Bool isDocEntity, XML_Parser parser) {
     if (! e)
       break;
     hashTableDestroy(&(e->defaultAttsNames));
-    if (e->allocDefaultAtts != 0)
-      FREE(parser, e->defaultAtts);
+    FREE(parser, e->defaultAtts);
   }
   hashTableDestroy(&(p->generalEntities));
 #ifdef XML_DTD
