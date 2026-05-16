@@ -3386,7 +3386,6 @@ doContent(XML_Parser parser, int startTagLevel, const ENCODING *enc,
       break;
     }
     case XML_TOK_START_TAG_NO_ATTS:
-      _EXPAT_FALLTHROUGH;
     case XML_TOK_START_TAG_WITH_ATTS: {
       TAG *tag;
       enum XML_Error result;
@@ -3456,7 +3455,6 @@ doContent(XML_Parser parser, int startTagLevel, const ENCODING *enc,
       break;
     }
     case XML_TOK_EMPTY_ELEMENT_NO_ATTS:
-      _EXPAT_FALLTHROUGH;
     case XML_TOK_EMPTY_ELEMENT_WITH_ATTS: {
       const char *rawName = s + enc->minBytesPerChar;
       enum XML_Error result;
