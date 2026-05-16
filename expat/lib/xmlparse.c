@@ -768,7 +768,7 @@ struct XML_ParserStruct {
   STRING_POOL m_tempPool;
   STRING_POOL m_temp2Pool;
   char *m_groupConnector;
-  unsigned int m_groupSize;
+  size_t m_groupSize;
   XML_Char m_namespaceSeparator;
   XML_Parser m_parentParser;
   XML_ParsingStatus m_parsingStatus;
@@ -5837,7 +5837,7 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
         if (parser->m_groupSize) {
           {
             /* Detect and prevent integer overflow */
-            if (parser->m_groupSize > (unsigned int)(-1) / 2u) {
+            if (parser->m_groupSize > SIZE_MAX / 2) {
               return XML_ERROR_NO_MEMORY;
             }
 
@@ -5851,16 +5851,11 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
           }
 
           if (dtd->scaffIndex) {
-            /* Detect and prevent integer overflow.
-             * The preprocessor guard addresses the "always false" warning
-             * from -Wtype-limits on platforms where
-             * sizeof(unsigned int) < sizeof(size_t), e.g. on x86_64. */
-#if UINT_MAX >= SIZE_MAX
+            /* Detect and prevent integer overflow. */
             if (parser->m_groupSize > SIZE_MAX / sizeof(int)) {
               parser->m_groupSize /= 2;
               return XML_ERROR_NO_MEMORY;
             }
-#endif
 
             int *const new_scaff_index = REALLOC(
                 parser, dtd->scaffIndex, parser->m_groupSize * sizeof(int));
@@ -8203,15 +8198,10 @@ nextScaffoldPart(XML_Parser parser) {
   int next;
 
   if (! dtd->scaffIndex) {
-    /* Detect and prevent integer overflow.
-     * The preprocessor guard addresses the "always false" warning
-     * from -Wtype-limits on platforms where
-     * sizeof(unsigned int) < sizeof(size_t), e.g. on x86_64. */
-#if UINT_MAX >= SIZE_MAX
+    /* Detect and prevent integer overflow. */
     if (parser->m_groupSize > SIZE_MAX / sizeof(int)) {
       return -1;
     }
-#endif
     dtd->scaffIndex = MALLOC(parser, parser->m_groupSize * sizeof(int));
     if (! dtd->scaffIndex)
       return -1;
