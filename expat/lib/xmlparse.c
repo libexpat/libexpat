@@ -7106,7 +7106,7 @@ defineAttribute(ELEMENT_TYPE *type, ATTRIBUTE_ID *attId, XML_Bool isCdata,
     /* The handling of default attributes gets messed up if we have
        a default which duplicates a non-default. */
     NAMED *const nameFound
-        = (NAMED *)lookup(parser, &(type->defaultAttsNames), attId->name, 0);
+        = lookup(parser, &(type->defaultAttsNames), attId->name, 0);
     if (nameFound)
       return 1;
     if (isId && ! type->idAtt && ! attId->xmlns)
@@ -7156,8 +7156,8 @@ defineAttribute(ELEMENT_TYPE *type, ATTRIBUTE_ID *attId, XML_Bool isCdata,
   if (! isCdata)
     attId->maybeTokenized = XML_TRUE;
 
-  NAMED *const nameAddedOrFound = (NAMED *)lookup(
-      parser, &(type->defaultAttsNames), attId->name, sizeof(NAMED));
+  NAMED *const nameAddedOrFound
+      = lookup(parser, &(type->defaultAttsNames), attId->name, sizeof(NAMED));
   if (! nameAddedOrFound)
     return 0;
 
@@ -7662,8 +7662,8 @@ dtdCopy(XML_Parser oldParser, DTD *newDtd, const DTD *oldDtd,
       } else
         newE->defaultAtts[i].value = NULL;
 
-      NAMED *const nameAddedOrFound = (NAMED *)lookup(
-          parser, &(newE->defaultAttsNames), attributeName, sizeof(NAMED));
+      NAMED *const nameAddedOrFound = lookup(parser, &(newE->defaultAttsNames),
+                                             attributeName, sizeof(NAMED));
       if (! nameAddedOrFound) {
         return 0;
       }
