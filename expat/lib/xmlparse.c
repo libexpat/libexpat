@@ -3063,7 +3063,7 @@ storeRawNames(XML_Parser parser) {
     */
     rawNameLen = ROUND_UP(tag->rawNameLength, sizeof(XML_Char));
     /* Detect and prevent integer overflow. */
-    if (rawNameLen > (size_t)INT_MAX - nameLen)
+    if (rawNameLen > SIZE_MAX - nameLen)
       return XML_FALSE;
     bufSize = nameLen + rawNameLen;
     if (bufSize > (size_t)(tag->bufEnd - tag->buf.raw)) {
