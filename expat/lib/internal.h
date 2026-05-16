@@ -190,7 +190,6 @@ void *expat_realloc(XML_Parser parser, void *ptr, size_t size, int sourceLine);
 extern unsigned int g_bytesScanned; // used for testing only
 #endif
 
-
 #ifdef __cplusplus
 }
 #endif

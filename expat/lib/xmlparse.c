@@ -2317,7 +2317,7 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal) {
           parser->m_parsingStatus.parsing = XML_FINISHED;
           return XML_STATUS_OK;
         }
-      _EXPAT_FALLTHROUGH;
+        _EXPAT_FALLTHROUGH;
       default:
         result = XML_STATUS_OK;
       }
@@ -6188,7 +6188,7 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
         *nextPtr = next;
         return XML_ERROR_NONE;
       }
-    _EXPAT_FALLTHROUGH;
+      _EXPAT_FALLTHROUGH;
     default:
       s = next;
       tok = XmlPrologTok(enc, s, end, &next);
@@ -6268,7 +6268,7 @@ epilogProcessor(XML_Parser parser, const char *s, const char *end,
       if (parser->m_reenter) {
         return XML_ERROR_UNEXPECTED_STATE; // LCOV_EXCL_LINE
       }
-    _EXPAT_FALLTHROUGH;
+      _EXPAT_FALLTHROUGH;
     default:;
       parser->m_eventPtr = s = next;
     }
