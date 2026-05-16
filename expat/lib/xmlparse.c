@@ -7108,8 +7108,6 @@ defineAttribute(ELEMENT_TYPE *type, ATTRIBUTE_ID *attId, XML_Bool isCdata,
       type->idAtt = attId;
   }
   if (type->nDefaultAtts == type->allocDefaultAtts) {
-    DEFAULT_ATTRIBUTE *temp;
-
     /* Detect and prevent integer overflow */
     if (type->allocDefaultAtts > INT_MAX / 2) {
       return 0;
@@ -7130,8 +7128,8 @@ defineAttribute(ELEMENT_TYPE *type, ATTRIBUTE_ID *attId, XML_Bool isCdata,
     }
 #endif
 
-    temp = REALLOC(parser, type->defaultAtts,
-                   (count * sizeof(DEFAULT_ATTRIBUTE)));
+    DEFAULT_ATTRIBUTE *const temp = REALLOC(
+        parser, type->defaultAtts, (count * sizeof(DEFAULT_ATTRIBUTE)));
     if (temp == NULL)
       return 0;
     type->allocDefaultAtts = count;
