@@ -768,7 +768,7 @@ struct XML_ParserStruct {
   STRING_POOL m_tempPool;
   STRING_POOL m_temp2Pool;
   char *m_groupConnector;
-  unsigned int m_groupSize;
+  size_t m_groupSize;
   XML_Char m_namespaceSeparator;
   XML_Parser m_parentParser;
   XML_ParsingStatus m_parsingStatus;
@@ -3065,7 +3065,7 @@ storeRawNames(XML_Parser parser) {
     */
     rawNameLen = ROUND_UP(tag->rawNameLength, sizeof(XML_Char));
     /* Detect and prevent integer overflow. */
-    if (rawNameLen > (size_t)INT_MAX - nameLen)
+    if (rawNameLen > SIZE_MAX - nameLen)
       return XML_FALSE;
     bufSize = nameLen + rawNameLen;
     if (bufSize > (size_t)(tag->bufEnd - tag->buf.raw)) {
@@ -5837,7 +5837,7 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
         if (parser->m_groupSize) {
           {
             /* Detect and prevent integer overflow */
-            if (parser->m_groupSize > (unsigned int)(-1) / 2u) {
+            if (parser->m_groupSize > SIZE_MAX / 2) {
               return XML_ERROR_NO_MEMORY;
             }
 
@@ -5851,16 +5851,11 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
           }
 
           if (dtd->scaffIndex) {
-            /* Detect and prevent integer overflow.
-             * The preprocessor guard addresses the "always false" warning
-             * from -Wtype-limits on platforms where
-             * sizeof(unsigned int) < sizeof(size_t), e.g. on x86_64. */
-#if UINT_MAX >= SIZE_MAX
+            /* Detect and prevent integer overflow. */
             if (parser->m_groupSize > SIZE_MAX / sizeof(int)) {
               parser->m_groupSize /= 2;
               return XML_ERROR_NO_MEMORY;
             }
-#endif
 
             int *const new_scaff_index = REALLOC(
                 parser, dtd->scaffIndex, parser->m_groupSize * sizeof(int));
@@ -7106,7 +7101,7 @@ defineAttribute(ELEMENT_TYPE *type, ATTRIBUTE_ID *attId, XML_Bool isCdata,
     /* The handling of default attributes gets messed up if we have
        a default which duplicates a non-default. */
     NAMED *const nameFound
-        = (NAMED *)lookup(parser, &(type->defaultAttsNames), attId->name, 0);
+        = lookup(parser, &(type->defaultAttsNames), attId->name, 0);
     if (nameFound)
       return 1;
     if (isId && ! type->idAtt && ! attId->xmlns)
@@ -7156,8 +7151,8 @@ defineAttribute(ELEMENT_TYPE *type, ATTRIBUTE_ID *attId, XML_Bool isCdata,
   if (! isCdata)
     attId->maybeTokenized = XML_TRUE;
 
-  NAMED *const nameAddedOrFound = (NAMED *)lookup(
-      parser, &(type->defaultAttsNames), attId->name, sizeof(NAMED));
+  NAMED *const nameAddedOrFound
+      = lookup(parser, &(type->defaultAttsNames), attId->name, sizeof(NAMED));
   if (! nameAddedOrFound)
     return 0;
 
@@ -7662,8 +7657,8 @@ dtdCopy(XML_Parser oldParser, DTD *newDtd, const DTD *oldDtd,
       } else
         newE->defaultAtts[i].value = NULL;
 
-      NAMED *const nameAddedOrFound = (NAMED *)lookup(
-          parser, &(newE->defaultAttsNames), attributeName, sizeof(NAMED));
+      NAMED *const nameAddedOrFound = lookup(parser, &(newE->defaultAttsNames),
+                                             attributeName, sizeof(NAMED));
       if (! nameAddedOrFound) {
         return 0;
       }
@@ -8203,15 +8198,10 @@ nextScaffoldPart(XML_Parser parser) {
   int next;
 
   if (! dtd->scaffIndex) {
-    /* Detect and prevent integer overflow.
-     * The preprocessor guard addresses the "always false" warning
-     * from -Wtype-limits on platforms where
-     * sizeof(unsigned int) < sizeof(size_t), e.g. on x86_64. */
-#if UINT_MAX >= SIZE_MAX
+    /* Detect and prevent integer overflow. */
     if (parser->m_groupSize > SIZE_MAX / sizeof(int)) {
       return -1;
     }
-#endif
     dtd->scaffIndex = MALLOC(parser, parser->m_groupSize * sizeof(int));
     if (! dtd->scaffIndex)
       return -1;
