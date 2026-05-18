@@ -64,7 +64,7 @@ writeRandomBytes_getrandom_nonblock(void *target, size_t count) {
   const unsigned int getrandomFlags = GRND_NONBLOCK;
 
   do {
-    void *const currentTarget = (void *)((char *)target + bytesWrittenTotal);
+    void *const currentTarget = (char *)target + bytesWrittenTotal;
     const size_t bytesToWrite = count - bytesWrittenTotal;
 
     assert(bytesToWrite <= INT_MAX);
