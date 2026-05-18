@@ -1,17 +1,12 @@
-#ifndef __FALLTHROUGH
-#  define __FALLTHROUGH 1
+#ifndef __FALLTHROUGH_H
+#  define __FALLTHROUGH_H 1
 
 // Explicit fallthrough in switch case to avoid warnings
 // with compiler flag -Wimplicit-fallthrough.
-//
-// __attribute__((fallthrough)) was introduced in GCC 7 and Clang 10 /
-// Apple Clang 12.0. Earlier Clang versions support only the C++11
-// style fallthrough attribute, not the GCC extension syntax used here,
-// and __has_attribute(fallthrough) evaluates to 1.
-#  if defined(__has_attribute)                                                 \
-      && (! defined(__clang__)                                                 \
-          || (! defined(__apple_build_version__) && __clang_major__ >= 10)     \
-          || (defined(__apple_build_version__) && __clang_major__ >= 12))
+
+#  if defined(__has_c_attribute) && __has_c_attribute(fallthrough)
+#    define _EXPAT_FALLTHROUGH [[fallthrough]]
+#  elif defined(__has_attribute) && __has_attribute(fallthrough)
 #    define _EXPAT_FALLTHROUGH __attribute__((fallthrough))
 #  else
 #    define _EXPAT_FALLTHROUGH                                                 \
@@ -19,4 +14,4 @@
       } while (0)
 #  endif
 
-#endif //__FALLTHROUGH
+#endif // __FALLTHROUGH_H
