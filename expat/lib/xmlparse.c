@@ -7108,41 +7108,32 @@ defineAttribute(ELEMENT_TYPE *type, ATTRIBUTE_ID *attId, XML_Bool isCdata,
       type->idAtt = attId;
   }
   if (type->nDefaultAtts == type->allocDefaultAtts) {
-    if (type->allocDefaultAtts == 0) {
-      type->allocDefaultAtts = 8;
-      type->defaultAtts
-          = MALLOC(parser, type->allocDefaultAtts * sizeof(DEFAULT_ATTRIBUTE));
-      if (! type->defaultAtts) {
-        type->allocDefaultAtts = 0;
-        return 0;
-      }
-    } else {
-      DEFAULT_ATTRIBUTE *temp;
+    /* Detect and prevent integer overflow */
+    if (type->allocDefaultAtts > INT_MAX / 2) {
+      return 0;
+    }
 
-      /* Detect and prevent integer overflow */
-      if (type->allocDefaultAtts > INT_MAX / 2) {
-        return 0;
-      }
+    int count = type->allocDefaultAtts * 2;
+    if (count == 0) {
+      count = 8;
+    }
 
-      int count = type->allocDefaultAtts * 2;
-
-      /* Detect and prevent integer overflow.
-       * The preprocessor guard addresses the "always false" warning
-       * from -Wtype-limits on platforms where
-       * sizeof(unsigned int) < sizeof(size_t), e.g. on x86_64. */
+    /* Detect and prevent integer overflow.
+     * The preprocessor guard addresses the "always false" warning
+     * from -Wtype-limits on platforms where
+     * sizeof(unsigned int) < sizeof(size_t), e.g. on x86_64. */
 #if UINT_MAX >= SIZE_MAX
-      if ((unsigned)count > SIZE_MAX / sizeof(DEFAULT_ATTRIBUTE)) {
-        return 0;
-      }
+    if ((unsigned)count > SIZE_MAX / sizeof(DEFAULT_ATTRIBUTE)) {
+      return 0;
+    }
 #endif
 
-      temp = REALLOC(parser, type->defaultAtts,
-                     (count * sizeof(DEFAULT_ATTRIBUTE)));
-      if (temp == NULL)
-        return 0;
-      type->allocDefaultAtts = count;
-      type->defaultAtts = temp;
-    }
+    DEFAULT_ATTRIBUTE *const temp = REALLOC(
+        parser, type->defaultAtts, (count * sizeof(DEFAULT_ATTRIBUTE)));
+    if (temp == NULL)
+      return 0;
+    type->allocDefaultAtts = count;
+    type->defaultAtts = temp;
   }
   att = type->defaultAtts + type->nDefaultAtts;
   att->id = attId;
@@ -7482,8 +7473,7 @@ dtdReset(DTD *p, XML_Parser parser) {
     if (! e)
       break;
     hashTableDestroy(&(e->defaultAttsNames));
-    if (e->allocDefaultAtts != 0)
-      FREE(parser, e->defaultAtts);
+    FREE(parser, e->defaultAtts);
   }
   hashTableClear(&(p->generalEntities));
 #ifdef XML_DTD
@@ -7524,8 +7514,7 @@ dtdDestroy(DTD *p, XML_Bool isDocEntity, XML_Parser parser) {
     if (! e)
       break;
     hashTableDestroy(&(e->defaultAttsNames));
-    if (e->allocDefaultAtts != 0)
-      FREE(parser, e->defaultAtts);
+    FREE(parser, e->defaultAtts);
   }
   hashTableDestroy(&(p->generalEntities));
 #ifdef XML_DTD
