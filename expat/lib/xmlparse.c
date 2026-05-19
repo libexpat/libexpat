@@ -3872,8 +3872,7 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
 
       /* figure out whether declared as other than CDATA */
       if (attId->maybeTokenized) {
-        int j;
-        for (j = 0; j < nDefaultAtts; j++) {
+        for (int j = 0; j < nDefaultAtts; j++) {
           if (attId == elementType->defaultAtts[j].id) {
             isCdata = elementType->defaultAtts[j].isCdata;
             break;
