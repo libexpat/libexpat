@@ -3747,12 +3747,7 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
           TAG_NAME *tagNamePtr, BINDING **bindingsPtr,
           enum XML_Account account) {
   DTD *const dtd = parser->m_dtd; /* save one level of indirection */
-  ELEMENT_TYPE *elementType;
-  int nDefaultAtts;
-  const XML_Char **appAtts; /* the attribute list for the application */
   int attIndex = 0;
-  int prefixLen;
-  int i;
   int n;
   XML_Char *uri;
   int nPrefixes = 0;
@@ -3760,7 +3755,7 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
   const XML_Char *localPart;
 
   /* lookup the element type name */
-  elementType
+  ELEMENT_TYPE *elementType
       = (ELEMENT_TYPE *)lookup(parser, &dtd->elementTypes, tagNamePtr->str, 0);
   if (! elementType) {
     const XML_Char *name = poolCopyString(&dtd->pool, tagNamePtr->str);
@@ -3775,7 +3770,7 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
     if (parser->m_ns && ! setElementTypePrefix(parser, elementType))
       return XML_ERROR_NO_MEMORY;
   }
-  nDefaultAtts = elementType->nDefaultAtts;
+  const int nDefaultAtts = elementType->nDefaultAtts;
 
   /* get the attributes from the tokenizer */
   n = XmlGetAttributes(enc, attStr, parser->m_attsSize, parser->m_atts);
@@ -3787,10 +3782,6 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
 
   if (n + nDefaultAtts > parser->m_attsSize) {
     int oldAttsSize = parser->m_attsSize;
-    ATTRIBUTE *temp;
-#ifdef XML_ATTR_INFO
-    XML_AttrInfo *temp2;
-#endif
 
     /* Detect and prevent integer overflow */
     if ((nDefaultAtts > INT_MAX - INIT_ATTS_SIZE)
@@ -3811,8 +3802,8 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
     }
 #endif
 
-    temp = REALLOC(parser, parser->m_atts,
-                   parser->m_attsSize * sizeof(ATTRIBUTE));
+    ATTRIBUTE *const temp = REALLOC(parser, parser->m_atts,
+                                    parser->m_attsSize * sizeof(ATTRIBUTE));
     if (temp == NULL) {
       parser->m_attsSize = oldAttsSize;
       return XML_ERROR_NO_MEMORY;
@@ -3830,8 +3821,8 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
     }
 #  endif
 
-    temp2 = REALLOC(parser, parser->m_attInfo,
-                    parser->m_attsSize * sizeof(XML_AttrInfo));
+    XML_AttrInfo *const temp2 = REALLOC(
+        parser, parser->m_attInfo, parser->m_attsSize * sizeof(XML_AttrInfo));
     if (temp2 == NULL) {
       parser->m_attsSize = oldAttsSize;
       return XML_ERROR_NO_MEMORY;
@@ -3842,8 +3833,9 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
       XmlGetAttributes(enc, attStr, n, parser->m_atts);
   }
 
-  appAtts = (const XML_Char **)parser->m_atts;
-  for (i = 0; i < n; i++) {
+  /* the attribute list for the application */
+  const XML_Char **const appAtts = (const XML_Char **)parser->m_atts;
+  for (int i = 0; i < n; i++) {
     ATTRIBUTE *currAtt = &parser->m_atts[i];
 #ifdef XML_ATTR_INFO
     XML_AttrInfo *currAttInfo = &parser->m_attInfo[i];
@@ -3876,13 +3868,11 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
     (attId->name)[-1] = 1;
     appAtts[attIndex++] = attId->name;
     if (! parser->m_atts[i].normalized) {
-      enum XML_Error result;
       XML_Bool isCdata = XML_TRUE;
 
       /* figure out whether declared as other than CDATA */
       if (attId->maybeTokenized) {
-        int j;
-        for (j = 0; j < nDefaultAtts; j++) {
+        for (int j = 0; j < nDefaultAtts; j++) {
           if (attId == elementType->defaultAtts[j].id) {
             isCdata = elementType->defaultAtts[j].isCdata;
             break;
@@ -3891,7 +3881,7 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
       }
 
       /* normalize the attribute value */
-      result = storeAttributeValue(
+      const enum XML_Error result = storeAttributeValue(
           parser, enc, isCdata, parser->m_atts[i].valuePtr,
           parser->m_atts[i].valueEnd, &parser->m_tempPool, account);
       if (result)
@@ -3929,7 +3919,7 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
   /* set-up for XML_GetSpecifiedAttributeCount and XML_GetIdAttributeIndex */
   parser->m_nSpecifiedAtts = attIndex;
   if (elementType->idAtt && (elementType->idAtt->name)[-1]) {
-    for (i = 0; i < attIndex; i += 2)
+    for (int i = 0; i < attIndex; i += 2)
       if (appAtts[i] == elementType->idAtt->name) {
         parser->m_idAttIndex = i;
         break;
@@ -3938,7 +3928,7 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
     parser->m_idAttIndex = -1;
 
   /* do attribute defaulting */
-  for (i = 0; i < nDefaultAtts; i++) {
+  for (int i = 0; i < nDefaultAtts; i++) {
     const DEFAULT_ATTRIBUTE *da = elementType->defaultAtts + i;
     if (! (da->id->name)[-1] && da->value) {
       if (da->id->prefix) {
@@ -3964,7 +3954,7 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
 
   /* expand prefixed attribute names, check for duplicates,
      and clear flags that say whether attributes were specified */
-  i = 0;
+  int i = 0;
   if (nPrefixes) {
     unsigned int j; /* hash table index */
     unsigned long version = parser->m_nsAttsVersion;
@@ -3979,7 +3969,6 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
     /* size of hash table must be at least 2 * (# of prefixed attributes) */
     if ((nPrefixes << 1)
         >> parser->m_nsAttsPower) { /* true for m_nsAttsPower = 0 */
-      NS_ATT *temp;
       /* hash table size must also be a power of 2 and >= 8 */
       while (nPrefixes >> parser->m_nsAttsPower++)
         ;
@@ -4007,7 +3996,8 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
       }
 #endif
 
-      temp = REALLOC(parser, parser->m_nsAtts, nsAttsSize * sizeof(NS_ATT));
+      NS_ATT *const temp
+          = REALLOC(parser, parser->m_nsAtts, nsAttsSize * sizeof(NS_ATT));
       if (! temp) {
         /* Restore actual size of memory in m_nsAtts */
         parser->m_nsAttsPower = oldNsAttsPower;
@@ -4028,9 +4018,6 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
     for (; i < attIndex; i += 2) {
       const XML_Char *s = appAtts[i];
       if (s[-1] == 2) { /* prefixed */
-        ATTRIBUTE_ID *id;
-        const BINDING *b;
-        unsigned long uriHash;
         struct siphash sip_state;
         struct sipkey sip_key;
 
@@ -4038,7 +4025,8 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
         sip24_init(&sip_state, &sip_key);
 
         ((XML_Char *)s)[-1] = 0; /* clear flag */
-        id = (ATTRIBUTE_ID *)lookup(parser, &dtd->attributeIds, s, 0);
+        ATTRIBUTE_ID *const id
+            = (ATTRIBUTE_ID *)lookup(parser, &dtd->attributeIds, s, 0);
         if (! id || ! id->prefix) {
           /* This code is walking through the appAtts array, dealing
            * with (in this case) a prefixed attribute name.  To be in
@@ -4046,7 +4034,7 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
            * has to have passed through the hash table lookup once
            * already.  That implies that an entry for it already
            * exists, so the lookup above will return a pointer to
-           * already allocated memory.  There is no opportunaity for
+           * already allocated memory.  There is no opportunity for
            * the allocator to fail, so the condition above cannot be
            * fulfilled.
            *
@@ -4056,7 +4044,7 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
            */
           return XML_ERROR_NO_MEMORY; /* LCOV_EXCL_LINE */
         }
-        b = id->prefix->binding;
+        const BINDING *const b = id->prefix->binding;
         if (! b)
           return XML_ERROR_UNBOUND_PREFIX;
 
@@ -4078,7 +4066,7 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
             return XML_ERROR_NO_MEMORY;
         } while (*s++);
 
-        uriHash = (unsigned long)sip24_final(&sip_state);
+        const unsigned long uriHash = (unsigned long)sip24_final(&sip_state);
 
         { /* Check hash table for duplicate of expanded name (uriName).
              Derived from code in lookup(parser, HASH_TABLE *table, ...).
@@ -4152,7 +4140,7 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
     localPart = tagNamePtr->str;
   } else
     return XML_ERROR_NONE;
-  prefixLen = 0;
+  int prefixLen = 0;
   if (parser->m_ns_triplets && binding->prefix->name) {
     while (binding->prefix->name[prefixLen++])
       ; /* prefixLen includes null terminator */
@@ -4172,8 +4160,6 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
 
   n = i + binding->uriLen + prefixLen;
   if (n > binding->uriAlloc) {
-    TAG *p;
-
     /* Detect and prevent integer overflow */
     if (n > INT_MAX - EXPAND_SPARE) {
       return XML_ERROR_NO_MEMORY;
@@ -4193,7 +4179,7 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
       return XML_ERROR_NO_MEMORY;
     binding->uriAlloc = n + EXPAND_SPARE;
     memcpy(uri, binding->uri, binding->uriLen * sizeof(XML_Char));
-    for (p = parser->m_tagStack; p; p = p->parent)
+    for (TAG *p = parser->m_tagStack; p; p = p->parent)
       if (p->name.str == binding->uri)
         p->name.str = uri;
     FREE(parser, binding->uri);
