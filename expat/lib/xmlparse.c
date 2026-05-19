@@ -4018,7 +4018,6 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
     for (; i < attIndex; i += 2) {
       const XML_Char *s = appAtts[i];
       if (s[-1] == 2) { /* prefixed */
-        unsigned long uriHash;
         struct siphash sip_state;
         struct sipkey sip_key;
 
@@ -4067,7 +4066,7 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
             return XML_ERROR_NO_MEMORY;
         } while (*s++);
 
-        uriHash = (unsigned long)sip24_final(&sip_state);
+        const unsigned long uriHash = (unsigned long)sip24_final(&sip_state);
 
         { /* Check hash table for duplicate of expanded name (uriName).
              Derived from code in lookup(parser, HASH_TABLE *table, ...).
