@@ -4018,7 +4018,6 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
     for (; i < attIndex; i += 2) {
       const XML_Char *s = appAtts[i];
       if (s[-1] == 2) { /* prefixed */
-        ATTRIBUTE_ID *id;
         const BINDING *b;
         unsigned long uriHash;
         struct siphash sip_state;
@@ -4028,7 +4027,8 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
         sip24_init(&sip_state, &sip_key);
 
         ((XML_Char *)s)[-1] = 0; /* clear flag */
-        id = (ATTRIBUTE_ID *)lookup(parser, &dtd->attributeIds, s, 0);
+        ATTRIBUTE_ID *const id
+            = (ATTRIBUTE_ID *)lookup(parser, &dtd->attributeIds, s, 0);
         if (! id || ! id->prefix) {
           /* This code is walking through the appAtts array, dealing
            * with (in this case) a prefixed attribute name.  To be in
