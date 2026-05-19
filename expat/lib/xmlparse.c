@@ -3868,7 +3868,6 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
     (attId->name)[-1] = 1;
     appAtts[attIndex++] = attId->name;
     if (! parser->m_atts[i].normalized) {
-      enum XML_Error result;
       XML_Bool isCdata = XML_TRUE;
 
       /* figure out whether declared as other than CDATA */
@@ -3883,7 +3882,7 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
       }
 
       /* normalize the attribute value */
-      result = storeAttributeValue(
+      const enum XML_Error result = storeAttributeValue(
           parser, enc, isCdata, parser->m_atts[i].valuePtr,
           parser->m_atts[i].valueEnd, &parser->m_tempPool, account);
       if (result)
