@@ -3747,7 +3747,6 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
           TAG_NAME *tagNamePtr, BINDING **bindingsPtr,
           enum XML_Account account) {
   DTD *const dtd = parser->m_dtd; /* save one level of indirection */
-  const XML_Char **appAtts; /* the attribute list for the application */
   int attIndex = 0;
   int prefixLen;
   int i;
@@ -3840,7 +3839,8 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
       XmlGetAttributes(enc, attStr, n, parser->m_atts);
   }
 
-  appAtts = (const XML_Char **)parser->m_atts;
+  /* the attribute list for the application */
+  const XML_Char **const appAtts = (const XML_Char **)parser->m_atts;
   for (i = 0; i < n; i++) {
     ATTRIBUTE *currAtt = &parser->m_atts[i];
 #ifdef XML_ATTR_INFO
