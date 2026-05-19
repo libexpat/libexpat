@@ -3748,7 +3748,6 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
           enum XML_Account account) {
   DTD *const dtd = parser->m_dtd; /* save one level of indirection */
   int attIndex = 0;
-  int prefixLen;
   int i;
   int n;
   XML_Char *uri;
@@ -4150,7 +4149,7 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
     localPart = tagNamePtr->str;
   } else
     return XML_ERROR_NONE;
-  prefixLen = 0;
+  int prefixLen = 0;
   if (parser->m_ns_triplets && binding->prefix->name) {
     while (binding->prefix->name[prefixLen++])
       ; /* prefixLen includes null terminator */
