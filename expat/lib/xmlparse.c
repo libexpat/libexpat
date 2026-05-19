@@ -3783,9 +3783,6 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
   if (n + nDefaultAtts > parser->m_attsSize) {
     int oldAttsSize = parser->m_attsSize;
     ATTRIBUTE *temp;
-#ifdef XML_ATTR_INFO
-    XML_AttrInfo *temp2;
-#endif
 
     /* Detect and prevent integer overflow */
     if ((nDefaultAtts > INT_MAX - INIT_ATTS_SIZE)
@@ -3825,8 +3822,8 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
     }
 #  endif
 
-    temp2 = REALLOC(parser, parser->m_attInfo,
-                    parser->m_attsSize * sizeof(XML_AttrInfo));
+    XML_AttrInfo *const temp2 = REALLOC(
+        parser, parser->m_attInfo, parser->m_attsSize * sizeof(XML_AttrInfo));
     if (temp2 == NULL) {
       parser->m_attsSize = oldAttsSize;
       return XML_ERROR_NO_MEMORY;
