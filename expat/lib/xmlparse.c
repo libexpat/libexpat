@@ -3969,7 +3969,6 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
     /* size of hash table must be at least 2 * (# of prefixed attributes) */
     if ((nPrefixes << 1)
         >> parser->m_nsAttsPower) { /* true for m_nsAttsPower = 0 */
-      NS_ATT *temp;
       /* hash table size must also be a power of 2 and >= 8 */
       while (nPrefixes >> parser->m_nsAttsPower++)
         ;
@@ -3997,7 +3996,8 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
       }
 #endif
 
-      temp = REALLOC(parser, parser->m_nsAtts, nsAttsSize * sizeof(NS_ATT));
+      NS_ATT *const temp
+          = REALLOC(parser, parser->m_nsAtts, nsAttsSize * sizeof(NS_ATT));
       if (! temp) {
         /* Restore actual size of memory in m_nsAtts */
         parser->m_nsAttsPower = oldNsAttsPower;
