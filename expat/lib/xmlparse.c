@@ -4018,7 +4018,6 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
     for (; i < attIndex; i += 2) {
       const XML_Char *s = appAtts[i];
       if (s[-1] == 2) { /* prefixed */
-        const BINDING *b;
         unsigned long uriHash;
         struct siphash sip_state;
         struct sipkey sip_key;
@@ -4046,7 +4045,7 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
            */
           return XML_ERROR_NO_MEMORY; /* LCOV_EXCL_LINE */
         }
-        b = id->prefix->binding;
+        const BINDING *const b = id->prefix->binding;
         if (! b)
           return XML_ERROR_UNBOUND_PREFIX;
 
