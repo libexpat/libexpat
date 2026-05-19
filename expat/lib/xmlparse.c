@@ -3747,7 +3747,6 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
           TAG_NAME *tagNamePtr, BINDING **bindingsPtr,
           enum XML_Account account) {
   DTD *const dtd = parser->m_dtd; /* save one level of indirection */
-  int nDefaultAtts;
   const XML_Char **appAtts; /* the attribute list for the application */
   int attIndex = 0;
   int prefixLen;
@@ -3774,7 +3773,7 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
     if (parser->m_ns && ! setElementTypePrefix(parser, elementType))
       return XML_ERROR_NO_MEMORY;
   }
-  nDefaultAtts = elementType->nDefaultAtts;
+  const int nDefaultAtts = elementType->nDefaultAtts;
 
   /* get the attributes from the tokenizer */
   n = XmlGetAttributes(enc, attStr, parser->m_attsSize, parser->m_atts);
