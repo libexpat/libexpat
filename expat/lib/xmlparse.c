@@ -3747,7 +3747,6 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
           TAG_NAME *tagNamePtr, BINDING **bindingsPtr,
           enum XML_Account account) {
   DTD *const dtd = parser->m_dtd; /* save one level of indirection */
-  ELEMENT_TYPE *elementType;
   int nDefaultAtts;
   const XML_Char **appAtts; /* the attribute list for the application */
   int attIndex = 0;
@@ -3760,7 +3759,7 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
   const XML_Char *localPart;
 
   /* lookup the element type name */
-  elementType
+  ELEMENT_TYPE *elementType
       = (ELEMENT_TYPE *)lookup(parser, &dtd->elementTypes, tagNamePtr->str, 0);
   if (! elementType) {
     const XML_Char *name = poolCopyString(&dtd->pool, tagNamePtr->str);
