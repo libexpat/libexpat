@@ -3748,7 +3748,6 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
           enum XML_Account account) {
   DTD *const dtd = parser->m_dtd; /* save one level of indirection */
   int attIndex = 0;
-  int i;
   int n;
   XML_Char *uri;
   int nPrefixes = 0;
@@ -3840,7 +3839,7 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
 
   /* the attribute list for the application */
   const XML_Char **const appAtts = (const XML_Char **)parser->m_atts;
-  for (i = 0; i < n; i++) {
+  for (int i = 0; i < n; i++) {
     ATTRIBUTE *currAtt = &parser->m_atts[i];
 #ifdef XML_ATTR_INFO
     XML_AttrInfo *currAttInfo = &parser->m_attInfo[i];
@@ -3926,7 +3925,7 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
   /* set-up for XML_GetSpecifiedAttributeCount and XML_GetIdAttributeIndex */
   parser->m_nSpecifiedAtts = attIndex;
   if (elementType->idAtt && (elementType->idAtt->name)[-1]) {
-    for (i = 0; i < attIndex; i += 2)
+    for (int i = 0; i < attIndex; i += 2)
       if (appAtts[i] == elementType->idAtt->name) {
         parser->m_idAttIndex = i;
         break;
@@ -3935,7 +3934,7 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
     parser->m_idAttIndex = -1;
 
   /* do attribute defaulting */
-  for (i = 0; i < nDefaultAtts; i++) {
+  for (int i = 0; i < nDefaultAtts; i++) {
     const DEFAULT_ATTRIBUTE *da = elementType->defaultAtts + i;
     if (! (da->id->name)[-1] && da->value) {
       if (da->id->prefix) {
@@ -3961,7 +3960,7 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
 
   /* expand prefixed attribute names, check for duplicates,
      and clear flags that say whether attributes were specified */
-  i = 0;
+  int i = 0;
   if (nPrefixes) {
     unsigned int j; /* hash table index */
     unsigned long version = parser->m_nsAttsVersion;
