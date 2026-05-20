@@ -4158,10 +4158,10 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
     return XML_ERROR_NO_MEMORY;
   }
 
-  n = i + binding->uriLen + prefixLen;
-  if (n > binding->uriAlloc) {
+  const int totalLen = i + binding->uriLen + prefixLen;
+  if (totalLen > binding->uriAlloc) {
     /* Detect and prevent integer overflow */
-    if (n > INT_MAX - EXPAND_SPARE) {
+    if (totalLen > INT_MAX - EXPAND_SPARE) {
       return XML_ERROR_NO_MEMORY;
     }
     /* Detect and prevent integer overflow.
@@ -4169,15 +4169,15 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
      * from -Wtype-limits on platforms where
      * sizeof(unsigned int) < sizeof(size_t), e.g. on x86_64. */
 #if UINT_MAX >= SIZE_MAX
-    if ((unsigned)(n + EXPAND_SPARE) > SIZE_MAX / sizeof(XML_Char)) {
+    if ((unsigned)(totalLen + EXPAND_SPARE) > SIZE_MAX / sizeof(XML_Char)) {
       return XML_ERROR_NO_MEMORY;
     }
 #endif
 
-    uri = MALLOC(parser, (n + EXPAND_SPARE) * sizeof(XML_Char));
+    uri = MALLOC(parser, (totalLen + EXPAND_SPARE) * sizeof(XML_Char));
     if (! uri)
       return XML_ERROR_NO_MEMORY;
-    binding->uriAlloc = n + EXPAND_SPARE;
+    binding->uriAlloc = totalLen + EXPAND_SPARE;
     memcpy(uri, binding->uri, binding->uriLen * sizeof(XML_Char));
     for (TAG *p = parser->m_tagStack; p; p = p->parent)
       if (p->name.str == binding->uri)
