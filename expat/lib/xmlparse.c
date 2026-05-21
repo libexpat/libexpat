@@ -839,7 +839,7 @@ expat_heap_increase_tolerable(XML_Parser rootParser, XmlBigCount increase,
     }
   }
 
-  if (! tolerable && (rootParser->m_alloc_tracker.debugLevel >= 1)) {
+  if (tolerable && (rootParser->m_alloc_tracker.debugLevel >= 1)) {
     expat_heap_stat(rootParser, '+', increase, newTotal, newTotal, sourceLine);
   }
 
