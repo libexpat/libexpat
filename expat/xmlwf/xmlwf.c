@@ -1035,7 +1035,7 @@ tmain(int argc, XML_Char **argv) {
       break;
     case T('p'):
       paramEntityParsing = XML_PARAM_ENTITY_PARSING_ALWAYS;
-      _EXPAT_FALLTHROUGH;
+      EXPAT_FALLTHROUGH;
     case T('x'):
       processFlags |= XML_EXTERNAL_ENTITIES;
       j++;
@@ -1153,7 +1153,7 @@ tmain(int argc, XML_Char **argv) {
         j = 0;
         break;
       }
-      _EXPAT_FALLTHROUGH;
+      EXPAT_FALLTHROUGH;
     default:
       usage(argv[0], XMLWF_EXIT_USAGE_ERROR);
       // usage called exit(..), never gets here

@@ -7,11 +7,6 @@
                         \___/_/\_\ .__/ \__,_|\__|
                                  |_| XML parser
 
-   Copyright (c) 1999-2000 Thai Open Source Software Center Ltd
-   Copyright (c) 2000      Clark Cooper <coopercc@users.sourceforge.net>
-   Copyright (c) 2002      Fred L. Drake, Jr. <fdrake@users.sourceforge.net>
-   Copyright (c) 2007      Karl Waclawek <karl@waclawek.net>
-   Copyright (c) 2017      Sebastian Pipping <sebastian@pipping.org>
    Copyright (c) 2026      Nick Begg <nick@stunttruck.net>
    Licensed under the MIT license:
 
@@ -41,14 +36,14 @@
 // Explicit fallthrough in switch case to avoid warnings
 // with compiler flag -Wimplicit-fallthrough.
 
-#  define _EXPAT_FALLTHROUGH                                                   \
+#  define EXPAT_FALLTHROUGH                                                    \
     do {                                                                       \
     } while (0)
 
 #  if defined(__has_attribute)
 #    if __has_attribute(fallthrough)
-#      undef _EXPAT_FALLTHROUGH
-#      define _EXPAT_FALLTHROUGH __attribute__((fallthrough))
+#      undef EXPAT_FALLTHROUGH
+#      define EXPAT_FALLTHROUGH __attribute__((fallthrough))
 #    endif
 #  endif
 
