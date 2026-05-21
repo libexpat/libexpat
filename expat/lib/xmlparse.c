@@ -384,8 +384,8 @@ typedef struct {
   const XML_Char *name;
   PREFIX *prefix;
   const ATTRIBUTE_ID *idAtt;
-  int nDefaultAtts;
-  int allocDefaultAtts;
+  size_t nDefaultAtts;
+  size_t allocDefaultAtts;
   DEFAULT_ATTRIBUTE *defaultAtts;
   HASH_TABLE defaultAttsNames;
 } ELEMENT_TYPE;
@@ -754,7 +754,7 @@ struct XML_ParserStruct {
   TAG *m_freeTagList;
   BINDING *m_inheritedBindings;
   BINDING *m_freeBindingList;
-  int m_attsSize;
+  size_t m_attsSize;
   int m_nSpecifiedAtts;
   int m_idAttIndex;
   ATTRIBUTE *m_atts;
@@ -3747,20 +3747,14 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
           TAG_NAME *tagNamePtr, BINDING **bindingsPtr,
           enum XML_Account account) {
   DTD *const dtd = parser->m_dtd; /* save one level of indirection */
-  ELEMENT_TYPE *elementType;
-  int nDefaultAtts;
-  const XML_Char **appAtts; /* the attribute list for the application */
   int attIndex = 0;
-  int prefixLen;
-  int i;
-  int n;
   XML_Char *uri;
   int nPrefixes = 0;
   BINDING *binding;
   const XML_Char *localPart;
 
   /* lookup the element type name */
-  elementType
+  ELEMENT_TYPE *elementType
       = (ELEMENT_TYPE *)lookup(parser, &dtd->elementTypes, tagNamePtr->str, 0);
   if (! elementType) {
     const XML_Char *name = poolCopyString(&dtd->pool, tagNamePtr->str);
@@ -3775,75 +3769,71 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
     if (parser->m_ns && ! setElementTypePrefix(parser, elementType))
       return XML_ERROR_NO_MEMORY;
   }
-  nDefaultAtts = elementType->nDefaultAtts;
+  const size_t nDefaultAtts = elementType->nDefaultAtts;
+
+  /* Detect and prevent integer overflow. */
+  if (parser->m_attsSize > (size_t)INT_MAX)
+    return XML_ERROR_NO_MEMORY;
 
   /* get the attributes from the tokenizer */
-  n = XmlGetAttributes(enc, attStr, parser->m_attsSize, parser->m_atts);
+  size_t n = (size_t)XmlGetAttributes(enc, attStr, (int)parser->m_attsSize,
+                                      parser->m_atts);
 
   /* Detect and prevent integer overflow */
-  if (n > INT_MAX - nDefaultAtts) {
+  if (n > SIZE_MAX - nDefaultAtts) {
     return XML_ERROR_NO_MEMORY;
   }
 
   if (n + nDefaultAtts > parser->m_attsSize) {
-    int oldAttsSize = parser->m_attsSize;
-    ATTRIBUTE *temp;
-#ifdef XML_ATTR_INFO
-    XML_AttrInfo *temp2;
-#endif
+    size_t oldAttsSize = parser->m_attsSize;
 
     /* Detect and prevent integer overflow */
-    if ((nDefaultAtts > INT_MAX - INIT_ATTS_SIZE)
-        || (n > INT_MAX - (nDefaultAtts + INIT_ATTS_SIZE))) {
+    if ((nDefaultAtts > SIZE_MAX - INIT_ATTS_SIZE)
+        || (n > SIZE_MAX - (nDefaultAtts + INIT_ATTS_SIZE))) {
       return XML_ERROR_NO_MEMORY;
     }
 
     parser->m_attsSize = n + nDefaultAtts + INIT_ATTS_SIZE;
 
-    /* Detect and prevent integer overflow.
-     * The preprocessor guard addresses the "always false" warning
-     * from -Wtype-limits on platforms where
-     * sizeof(unsigned int) < sizeof(size_t), e.g. on x86_64. */
-#if UINT_MAX >= SIZE_MAX
-    if ((unsigned)parser->m_attsSize > SIZE_MAX / sizeof(ATTRIBUTE)) {
+    /* Detect and prevent integer overflow. */
+    if (parser->m_attsSize > SIZE_MAX / sizeof(ATTRIBUTE)) {
       parser->m_attsSize = oldAttsSize;
       return XML_ERROR_NO_MEMORY;
     }
-#endif
 
-    temp = REALLOC(parser, parser->m_atts,
-                   parser->m_attsSize * sizeof(ATTRIBUTE));
+    ATTRIBUTE *const temp = REALLOC(parser, parser->m_atts,
+                                    parser->m_attsSize * sizeof(ATTRIBUTE));
     if (temp == NULL) {
       parser->m_attsSize = oldAttsSize;
       return XML_ERROR_NO_MEMORY;
     }
     parser->m_atts = temp;
 #ifdef XML_ATTR_INFO
-    /* Detect and prevent integer overflow.
-     * The preprocessor guard addresses the "always false" warning
-     * from -Wtype-limits on platforms where
-     * sizeof(unsigned int) < sizeof(size_t), e.g. on x86_64. */
-#  if UINT_MAX >= SIZE_MAX
-    if ((unsigned)parser->m_attsSize > SIZE_MAX / sizeof(XML_AttrInfo)) {
+    /* Detect and prevent integer overflow. */
+    if (parser->m_attsSize > SIZE_MAX / sizeof(XML_AttrInfo)) {
       parser->m_attsSize = oldAttsSize;
       return XML_ERROR_NO_MEMORY;
     }
-#  endif
 
-    temp2 = REALLOC(parser, parser->m_attInfo,
-                    parser->m_attsSize * sizeof(XML_AttrInfo));
+    XML_AttrInfo *const temp2 = REALLOC(
+        parser, parser->m_attInfo, parser->m_attsSize * sizeof(XML_AttrInfo));
     if (temp2 == NULL) {
       parser->m_attsSize = oldAttsSize;
       return XML_ERROR_NO_MEMORY;
     }
     parser->m_attInfo = temp2;
 #endif
-    if (n > oldAttsSize)
-      XmlGetAttributes(enc, attStr, n, parser->m_atts);
+    if (n > oldAttsSize) {
+      /* Detect and prevent integer overflow. */
+      if (n > (size_t)INT_MAX)
+        return XML_ERROR_NO_MEMORY;
+      XmlGetAttributes(enc, attStr, (int)n, parser->m_atts);
+    }
   }
 
-  appAtts = (const XML_Char **)parser->m_atts;
-  for (i = 0; i < n; i++) {
+  /* the attribute list for the application */
+  const XML_Char **const appAtts = (const XML_Char **)parser->m_atts;
+  for (size_t i = 0; i < n; i++) {
     ATTRIBUTE *currAtt = &parser->m_atts[i];
 #ifdef XML_ATTR_INFO
     XML_AttrInfo *currAttInfo = &parser->m_attInfo[i];
@@ -3876,13 +3866,11 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
     (attId->name)[-1] = 1;
     appAtts[attIndex++] = attId->name;
     if (! parser->m_atts[i].normalized) {
-      enum XML_Error result;
       XML_Bool isCdata = XML_TRUE;
 
       /* figure out whether declared as other than CDATA */
       if (attId->maybeTokenized) {
-        int j;
-        for (j = 0; j < nDefaultAtts; j++) {
+        for (size_t j = 0; j < nDefaultAtts; j++) {
           if (attId == elementType->defaultAtts[j].id) {
             isCdata = elementType->defaultAtts[j].isCdata;
             break;
@@ -3891,7 +3879,7 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
       }
 
       /* normalize the attribute value */
-      result = storeAttributeValue(
+      const enum XML_Error result = storeAttributeValue(
           parser, enc, isCdata, parser->m_atts[i].valuePtr,
           parser->m_atts[i].valueEnd, &parser->m_tempPool, account);
       if (result)
@@ -3929,7 +3917,7 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
   /* set-up for XML_GetSpecifiedAttributeCount and XML_GetIdAttributeIndex */
   parser->m_nSpecifiedAtts = attIndex;
   if (elementType->idAtt && (elementType->idAtt->name)[-1]) {
-    for (i = 0; i < attIndex; i += 2)
+    for (int i = 0; i < attIndex; i += 2)
       if (appAtts[i] == elementType->idAtt->name) {
         parser->m_idAttIndex = i;
         break;
@@ -3938,7 +3926,7 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
     parser->m_idAttIndex = -1;
 
   /* do attribute defaulting */
-  for (i = 0; i < nDefaultAtts; i++) {
+  for (size_t i = 0; i < nDefaultAtts; i++) {
     const DEFAULT_ATTRIBUTE *da = elementType->defaultAtts + i;
     if (! (da->id->name)[-1] && da->value) {
       if (da->id->prefix) {
@@ -3964,7 +3952,7 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
 
   /* expand prefixed attribute names, check for duplicates,
      and clear flags that say whether attributes were specified */
-  i = 0;
+  int i = 0;
   if (nPrefixes) {
     unsigned int j; /* hash table index */
     unsigned long version = parser->m_nsAttsVersion;
@@ -3979,7 +3967,6 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
     /* size of hash table must be at least 2 * (# of prefixed attributes) */
     if ((nPrefixes << 1)
         >> parser->m_nsAttsPower) { /* true for m_nsAttsPower = 0 */
-      NS_ATT *temp;
       /* hash table size must also be a power of 2 and >= 8 */
       while (nPrefixes >> parser->m_nsAttsPower++)
         ;
@@ -4007,7 +3994,8 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
       }
 #endif
 
-      temp = REALLOC(parser, parser->m_nsAtts, nsAttsSize * sizeof(NS_ATT));
+      NS_ATT *const temp
+          = REALLOC(parser, parser->m_nsAtts, nsAttsSize * sizeof(NS_ATT));
       if (! temp) {
         /* Restore actual size of memory in m_nsAtts */
         parser->m_nsAttsPower = oldNsAttsPower;
@@ -4028,9 +4016,6 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
     for (; i < attIndex; i += 2) {
       const XML_Char *s = appAtts[i];
       if (s[-1] == 2) { /* prefixed */
-        ATTRIBUTE_ID *id;
-        const BINDING *b;
-        unsigned long uriHash;
         struct siphash sip_state;
         struct sipkey sip_key;
 
@@ -4038,7 +4023,8 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
         sip24_init(&sip_state, &sip_key);
 
         ((XML_Char *)s)[-1] = 0; /* clear flag */
-        id = (ATTRIBUTE_ID *)lookup(parser, &dtd->attributeIds, s, 0);
+        ATTRIBUTE_ID *const id
+            = (ATTRIBUTE_ID *)lookup(parser, &dtd->attributeIds, s, 0);
         if (! id || ! id->prefix) {
           /* This code is walking through the appAtts array, dealing
            * with (in this case) a prefixed attribute name.  To be in
@@ -4046,7 +4032,7 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
            * has to have passed through the hash table lookup once
            * already.  That implies that an entry for it already
            * exists, so the lookup above will return a pointer to
-           * already allocated memory.  There is no opportunaity for
+           * already allocated memory.  There is no opportunity for
            * the allocator to fail, so the condition above cannot be
            * fulfilled.
            *
@@ -4056,7 +4042,7 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
            */
           return XML_ERROR_NO_MEMORY; /* LCOV_EXCL_LINE */
         }
-        b = id->prefix->binding;
+        const BINDING *const b = id->prefix->binding;
         if (! b)
           return XML_ERROR_UNBOUND_PREFIX;
 
@@ -4078,7 +4064,7 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
             return XML_ERROR_NO_MEMORY;
         } while (*s++);
 
-        uriHash = (unsigned long)sip24_final(&sip_state);
+        const unsigned long uriHash = (unsigned long)sip24_final(&sip_state);
 
         { /* Check hash table for duplicate of expanded name (uriName).
              Derived from code in lookup(parser, HASH_TABLE *table, ...).
@@ -4152,7 +4138,7 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
     localPart = tagNamePtr->str;
   } else
     return XML_ERROR_NONE;
-  prefixLen = 0;
+  int prefixLen = 0;
   if (parser->m_ns_triplets && binding->prefix->name) {
     while (binding->prefix->name[prefixLen++])
       ; /* prefixLen includes null terminator */
@@ -4170,12 +4156,10 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
     return XML_ERROR_NO_MEMORY;
   }
 
-  n = i + binding->uriLen + prefixLen;
-  if (n > binding->uriAlloc) {
-    TAG *p;
-
+  const int totalLen = i + binding->uriLen + prefixLen;
+  if (totalLen > binding->uriAlloc) {
     /* Detect and prevent integer overflow */
-    if (n > INT_MAX - EXPAND_SPARE) {
+    if (totalLen > INT_MAX - EXPAND_SPARE) {
       return XML_ERROR_NO_MEMORY;
     }
     /* Detect and prevent integer overflow.
@@ -4183,17 +4167,17 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
      * from -Wtype-limits on platforms where
      * sizeof(unsigned int) < sizeof(size_t), e.g. on x86_64. */
 #if UINT_MAX >= SIZE_MAX
-    if ((unsigned)(n + EXPAND_SPARE) > SIZE_MAX / sizeof(XML_Char)) {
+    if ((unsigned)(totalLen + EXPAND_SPARE) > SIZE_MAX / sizeof(XML_Char)) {
       return XML_ERROR_NO_MEMORY;
     }
 #endif
 
-    uri = MALLOC(parser, (n + EXPAND_SPARE) * sizeof(XML_Char));
+    uri = MALLOC(parser, (totalLen + EXPAND_SPARE) * sizeof(XML_Char));
     if (! uri)
       return XML_ERROR_NO_MEMORY;
-    binding->uriAlloc = n + EXPAND_SPARE;
+    binding->uriAlloc = totalLen + EXPAND_SPARE;
     memcpy(uri, binding->uri, binding->uriLen * sizeof(XML_Char));
-    for (p = parser->m_tagStack; p; p = p->parent)
+    for (TAG *p = parser->m_tagStack; p; p = p->parent)
       if (p->name.str == binding->uri)
         p->name.str = uri;
     FREE(parser, binding->uri);
@@ -7108,41 +7092,27 @@ defineAttribute(ELEMENT_TYPE *type, ATTRIBUTE_ID *attId, XML_Bool isCdata,
       type->idAtt = attId;
   }
   if (type->nDefaultAtts == type->allocDefaultAtts) {
-    if (type->allocDefaultAtts == 0) {
-      type->allocDefaultAtts = 8;
-      type->defaultAtts
-          = MALLOC(parser, type->allocDefaultAtts * sizeof(DEFAULT_ATTRIBUTE));
-      if (! type->defaultAtts) {
-        type->allocDefaultAtts = 0;
-        return 0;
-      }
-    } else {
-      DEFAULT_ATTRIBUTE *temp;
-
-      /* Detect and prevent integer overflow */
-      if (type->allocDefaultAtts > INT_MAX / 2) {
-        return 0;
-      }
-
-      int count = type->allocDefaultAtts * 2;
-
-      /* Detect and prevent integer overflow.
-       * The preprocessor guard addresses the "always false" warning
-       * from -Wtype-limits on platforms where
-       * sizeof(unsigned int) < sizeof(size_t), e.g. on x86_64. */
-#if UINT_MAX >= SIZE_MAX
-      if ((unsigned)count > SIZE_MAX / sizeof(DEFAULT_ATTRIBUTE)) {
-        return 0;
-      }
-#endif
-
-      temp = REALLOC(parser, type->defaultAtts,
-                     (count * sizeof(DEFAULT_ATTRIBUTE)));
-      if (temp == NULL)
-        return 0;
-      type->allocDefaultAtts = count;
-      type->defaultAtts = temp;
+    /* Detect and prevent integer overflow */
+    if (type->allocDefaultAtts > SIZE_MAX / 2) {
+      return 0;
     }
+
+    size_t count = type->allocDefaultAtts * 2;
+    if (count == 0) {
+      count = 8;
+    }
+
+    /* Detect and prevent integer overflow. */
+    if (count > SIZE_MAX / sizeof(DEFAULT_ATTRIBUTE)) {
+      return 0;
+    }
+
+    DEFAULT_ATTRIBUTE *const temp = REALLOC(
+        parser, type->defaultAtts, (count * sizeof(DEFAULT_ATTRIBUTE)));
+    if (temp == NULL)
+      return 0;
+    type->allocDefaultAtts = count;
+    type->defaultAtts = temp;
   }
   att = type->defaultAtts + type->nDefaultAtts;
   att->id = attId;
@@ -7482,8 +7452,7 @@ dtdReset(DTD *p, XML_Parser parser) {
     if (! e)
       break;
     hashTableDestroy(&(e->defaultAttsNames));
-    if (e->allocDefaultAtts != 0)
-      FREE(parser, e->defaultAtts);
+    FREE(parser, e->defaultAtts);
   }
   hashTableClear(&(p->generalEntities));
 #ifdef XML_DTD
@@ -7524,8 +7493,7 @@ dtdDestroy(DTD *p, XML_Bool isDocEntity, XML_Parser parser) {
     if (! e)
       break;
     hashTableDestroy(&(e->defaultAttsNames));
-    if (e->allocDefaultAtts != 0)
-      FREE(parser, e->defaultAtts);
+    FREE(parser, e->defaultAtts);
   }
   hashTableDestroy(&(p->generalEntities));
 #ifdef XML_DTD
@@ -7604,7 +7572,6 @@ dtdCopy(XML_Parser oldParser, DTD *newDtd, const DTD *oldDtd,
   hashTableIterInit(&iter, &(oldDtd->elementTypes));
 
   for (;;) {
-    int i;
     ELEMENT_TYPE *newE;
     const XML_Char *name;
     const ELEMENT_TYPE *oldE = (ELEMENT_TYPE *)hashTableIterNext(&iter);
@@ -7622,15 +7589,10 @@ dtdCopy(XML_Parser oldParser, DTD *newDtd, const DTD *oldDtd,
       hashTableInit(&(newE->defaultAttsNames), parser);
 
     if (oldE->nDefaultAtts) {
-      /* Detect and prevent integer overflow.
-       * The preprocessor guard addresses the "always false" warning
-       * from -Wtype-limits on platforms where
-       * sizeof(int) < sizeof(size_t), e.g. on x86_64. */
-#if UINT_MAX >= SIZE_MAX
-      if ((size_t)oldE->nDefaultAtts > SIZE_MAX / sizeof(DEFAULT_ATTRIBUTE)) {
+      /* Detect and prevent integer overflow. */
+      if (oldE->nDefaultAtts > SIZE_MAX / sizeof(DEFAULT_ATTRIBUTE)) {
         return 0;
       }
-#endif
       newE->defaultAtts
           = MALLOC(parser, oldE->nDefaultAtts * sizeof(DEFAULT_ATTRIBUTE));
       if (! newE->defaultAtts) {
@@ -7644,7 +7606,7 @@ dtdCopy(XML_Parser oldParser, DTD *newDtd, const DTD *oldDtd,
     if (oldE->prefix)
       newE->prefix = (PREFIX *)lookup(oldParser, &(newDtd->prefixes),
                                       oldE->prefix->name, 0);
-    for (i = 0; i < newE->nDefaultAtts; i++) {
+    for (size_t i = 0; i < newE->nDefaultAtts; i++) {
       const XML_Char *const attributeName = oldE->defaultAtts[i].id->name;
       newE->defaultAtts[i].id = (ATTRIBUTE_ID *)lookup(
           oldParser, &(newDtd->attributeIds), attributeName, 0);
