@@ -122,6 +122,7 @@ if (_FLAG_DETECTION_UNUSABLE)
     set(FLAG_VISIBILITY FALSE)
 else()
     check_c_compiler_flag("-Wstrict-aliasing=3" FLAG_WSTRICT_ALIASING)
+    check_c_compiler_flag("-Wimplicit-fallthrough" FLAG_WIMPLICIT_FALLTHROUGH)
     check_c_compiler_flag("-fvisibility=hidden" FLAG_VISIBILITY)
 endif()
 
