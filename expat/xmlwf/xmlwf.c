@@ -306,13 +306,18 @@ processingInstruction(void *userData, const XML_Char *target,
 static XML_Char *
 xcsdup(const XML_Char *s) {
   XML_Char *result;
-  int count = 0;
+  size_t count = 0;
   size_t numBytes;
 
   /* Get the length of the string, including terminator */
   while (s[count++] != 0) {
     /* Do nothing */
   }
+
+  // Detect and prevent integer overflow
+  if (count > SIZE_MAX / sizeof(XML_Char))
+    return NULL;
+
   numBytes = count * sizeof(XML_Char);
   result = malloc(numBytes);
   if (result == NULL)
