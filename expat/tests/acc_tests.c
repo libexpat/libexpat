@@ -41,7 +41,8 @@
    USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include <math.h> /* NAN, INFINITY */
+#include <math.h>   /* NAN, INFINITY */
+#include <stddef.h> /* size_t */
 #include <stdio.h>
 #include <string.h>
 
@@ -264,9 +265,9 @@ START_TEST(test_accounting_precision) {
       _xml_failure(parser, __FILE__, __LINE__);
     }
 
-    const unsigned long long actualCountBytesDirect
+    const size_t actualCountBytesDirect
         = testingAccountingGetCountBytesDirect(parser);
-    const unsigned long long actualCountBytesIndirect
+    const size_t actualCountBytesIndirect
         = testingAccountingGetCountBytesIndirect(parser);
 
     XML_ParserFree(parser);
@@ -275,7 +276,7 @@ START_TEST(test_accounting_precision) {
       fprintf(
           stderr,
           "Document " EXPAT_FMT_SIZE_T("") " of " EXPAT_FMT_SIZE_T("") ": Expected " EXPAT_FMT_ULL(
-              "") " count direct bytes, got " EXPAT_FMT_ULL("") " instead.\n",
+              "") " count direct bytes, got " EXPAT_FMT_SIZE_T("") " instead.\n",
           u + 1, countCases, expectedCountBytesDirect, actualCountBytesDirect);
       fail("Count of direct bytes is off");
     }
@@ -284,7 +285,7 @@ START_TEST(test_accounting_precision) {
       fprintf(
           stderr,
           "Document " EXPAT_FMT_SIZE_T("") " of " EXPAT_FMT_SIZE_T("") ": Expected " EXPAT_FMT_ULL(
-              "") " count indirect bytes, got " EXPAT_FMT_ULL("") " instead.\n",
+              "") " count indirect bytes, got " EXPAT_FMT_SIZE_T("") " instead.\n",
           u + 1, countCases, expectedCountBytesIndirect,
           actualCountBytesIndirect);
       fail("Count of indirect bytes is off");

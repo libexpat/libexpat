@@ -445,16 +445,16 @@ enum XML_Account {
 #if XML_GE == 1
 typedef unsigned long long XmlBigCount;
 typedef struct accounting {
-  XmlBigCount countBytesDirect;
-  XmlBigCount countBytesIndirect;
+  size_t countBytesDirect;
+  size_t countBytesIndirect;
   unsigned long debugLevel;
   float maximumAmplificationFactor; // >=1.0
   unsigned long long activationThresholdBytes;
 } ACCOUNTING;
 
 typedef struct MALLOC_TRACKER {
-  XmlBigCount bytesAllocated;
-  XmlBigCount peakBytesAllocated; // updated live only for debug level >=2
+  size_t bytesAllocated;
+  size_t peakBytesAllocated; // updated live only for debug level >=2
   unsigned long debugLevel;
   float maximumAmplificationFactor; // >=1.0
   XmlBigCount activationThresholdBytes;
@@ -799,30 +799,30 @@ struct XML_ParserStruct {
 
 #if XML_GE == 1
 static void
-expat_heap_stat(XML_Parser rootParser, char operator, XmlBigCount absDiff,
-                XmlBigCount newTotal, XmlBigCount peakTotal, int sourceLine) {
+expat_heap_stat(XML_Parser rootParser, char operator, size_t absDiff,
+                size_t newTotal, size_t peakTotal, int sourceLine) {
   // NOTE: This can be +infinity or -nan
   const float amplification
       = (float)newTotal / (float)rootParser->m_accounting.countBytesDirect;
   fprintf(
       stderr,
-      "expat: Allocations(%p): Direct " EXPAT_FMT_ULL("10") ", allocated %c" EXPAT_FMT_ULL(
-          "10") " to " EXPAT_FMT_ULL("10") " (" EXPAT_FMT_ULL("10") " peak), amplification %8.2f (xmlparse.c:%d)\n",
+      "expat: Allocations(%p): Direct " EXPAT_FMT_SIZE_T("10") ", allocated %c" EXPAT_FMT_SIZE_T(
+          "10") " to " EXPAT_FMT_SIZE_T("10") " (" EXPAT_FMT_SIZE_T("10") " peak), amplification %8.2f (xmlparse.c:%d)\n",
       (void *)rootParser, rootParser->m_accounting.countBytesDirect, operator,
       absDiff, newTotal, peakTotal, (double)amplification, sourceLine);
 }
 
 static bool
-expat_heap_increase_tolerable(XML_Parser rootParser, XmlBigCount increase,
+expat_heap_increase_tolerable(XML_Parser rootParser, size_t increase,
                               int sourceLine) {
   assert(rootParser != NULL);
   assert(increase > 0);
 
-  XmlBigCount newTotal = 0;
+  size_t newTotal = 0;
   bool tolerable = true;
 
   // Detect integer overflow
-  if ((XmlBigCount)-1 - rootParser->m_alloc_tracker.bytesAllocated < increase) {
+  if (SIZE_MAX - rootParser->m_alloc_tracker.bytesAllocated < increase) {
     tolerable = false;
   } else {
     newTotal = rootParser->m_alloc_tracker.bytesAllocated + increase;
@@ -862,8 +862,7 @@ expat_malloc(XML_Parser parser, size_t size, int sourceLine) {
 
   const size_t bytesToAllocate = sizeof(size_t) + EXPAT_MALLOC_PADDING + size;
 
-  if ((XmlBigCount)-1 - rootParser->m_alloc_tracker.bytesAllocated
-      < bytesToAllocate) {
+  if (SIZE_MAX - rootParser->m_alloc_tracker.bytesAllocated < bytesToAllocate) {
     return NULL; // i.e. signal integer overflow as out-of-memory
   }
 
@@ -987,8 +986,7 @@ expat_realloc(XML_Parser parser, void *ptr, size_t size, int sourceLine) {
 
   // Update accounting
   if (isIncrease) {
-    assert((XmlBigCount)-1 - rootParser->m_alloc_tracker.bytesAllocated
-           >= absDiff);
+    assert(SIZE_MAX - rootParser->m_alloc_tracker.bytesAllocated >= absDiff);
     rootParser->m_alloc_tracker.bytesAllocated += absDiff;
   } else { // i.e. decrease
     assert(rootParser->m_alloc_tracker.bytesAllocated >= absDiff);
@@ -8404,9 +8402,8 @@ static float
 accountingGetCurrentAmplification(XML_Parser rootParser) {
   //                                          1.........1.........12 => 22
   const size_t lenOfShortestInclude = sizeof("<!ENTITY a SYSTEM 'b'>") - 1;
-  const XmlBigCount countBytesOutput
-      = rootParser->m_accounting.countBytesDirect
-        + rootParser->m_accounting.countBytesIndirect;
+  const size_t countBytesOutput = rootParser->m_accounting.countBytesDirect
+                                  + rootParser->m_accounting.countBytesIndirect;
   const float amplificationFactor
       = rootParser->m_accounting.countBytesDirect
             ? ((float)countBytesOutput
@@ -8429,12 +8426,13 @@ accountingReportStats(XML_Parser originParser, const char *epilog) {
 
   const float amplificationFactor
       = accountingGetCurrentAmplification(rootParser);
-  fprintf(stderr,
-          "expat: Accounting(%p): Direct " EXPAT_FMT_ULL(
-              "10") ", indirect " EXPAT_FMT_ULL("10") ", amplification %8.2f%s",
-          (void *)rootParser, rootParser->m_accounting.countBytesDirect,
-          rootParser->m_accounting.countBytesIndirect,
-          (double)amplificationFactor, epilog);
+  fprintf(
+      stderr,
+      "expat: Accounting(%p): Direct " EXPAT_FMT_SIZE_T(
+          "10") ", indirect " EXPAT_FMT_SIZE_T("10") ", amplification %8.2f%s",
+      (void *)rootParser, rootParser->m_accounting.countBytesDirect,
+      rootParser->m_accounting.countBytesIndirect, (double)amplificationFactor,
+      epilog);
 }
 
 static void
@@ -8506,18 +8504,17 @@ accountingDiffTolerated(XML_Parser originParser, int tok, const char *before,
       = (account == XML_ACCOUNT_DIRECT) && (originParser == rootParser);
   const ptrdiff_t bytesMore = after - before;
 
-  XmlBigCount *const additionTarget
+  size_t *const additionTarget
       = isDirect ? &rootParser->m_accounting.countBytesDirect
                  : &rootParser->m_accounting.countBytesIndirect;
 
   /* Detect and avoid integer overflow */
-  if (*additionTarget > (XmlBigCount)(-1) - (XmlBigCount)bytesMore)
+  if (*additionTarget > SIZE_MAX - (size_t)bytesMore)
     return XML_FALSE;
   *additionTarget += bytesMore;
 
-  const XmlBigCount countBytesOutput
-      = rootParser->m_accounting.countBytesDirect
-        + rootParser->m_accounting.countBytesIndirect;
+  const size_t countBytesOutput = rootParser->m_accounting.countBytesDirect
+                                  + rootParser->m_accounting.countBytesIndirect;
   const float amplificationFactor
       = accountingGetCurrentAmplification(rootParser);
   const XML_Bool tolerated
@@ -8534,14 +8531,14 @@ accountingDiffTolerated(XML_Parser originParser, int tok, const char *before,
   return tolerated;
 }
 
-unsigned long long
+size_t
 testingAccountingGetCountBytesDirect(XML_Parser parser) {
   if (! parser)
     return 0;
   return parser->m_accounting.countBytesDirect;
 }
 
-unsigned long long
+size_t
 testingAccountingGetCountBytesIndirect(XML_Parser parser) {
   if (! parser)
     return 0;
