@@ -109,8 +109,6 @@ populate_environment() {
         esac
     fi
 
-    BASE_COMPILE_FLAGS+=" -Wimplicit-fallthrough"
-
     if [[ ${QA_COMPILER} = gcc ]]; then
         case "${QA_PROCESSOR}" in
             egypt) BASE_COMPILE_FLAGS+=" -fdump-rtl-expand" ;;
