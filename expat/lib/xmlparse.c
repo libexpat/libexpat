@@ -4140,23 +4140,30 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
     return XML_ERROR_NONE;
   int prefixLen = 0;
   if (parser->m_ns_triplets && binding->prefix->name) {
-    while (binding->prefix->name[prefixLen++])
-      ; /* prefixLen includes null terminator */
+    size_t candidateLen = 0;
+    while (binding->prefix->name[candidateLen++])
+      ; /* candidateLen includes null terminator */
+    /* Detect and prevent integer overflow */
+    if (candidateLen > INT_MAX)
+      return XML_ERROR_NO_MEMORY;
+    prefixLen = (int)candidateLen;
   }
   tagNamePtr->localPart = localPart;
   tagNamePtr->uriLen = binding->uriLen;
   tagNamePtr->prefix = binding->prefix->name;
   tagNamePtr->prefixLen = prefixLen;
-  for (i = 0; localPart[i++];)
-    ; /* i includes null terminator */
+
+  size_t localPartLen = 0;
+  for (; localPart[localPartLen++];)
+    ; /* localPartLen includes null terminator */
 
   /* Detect and prevent integer overflow */
-  if (binding->uriLen > INT_MAX - prefixLen
-      || i > INT_MAX - (binding->uriLen + prefixLen)) {
+  if (localPartLen > INT_MAX || binding->uriLen > INT_MAX - prefixLen
+      || localPartLen > (size_t)INT_MAX - (binding->uriLen + prefixLen)) {
     return XML_ERROR_NO_MEMORY;
   }
 
-  const int totalLen = i + binding->uriLen + prefixLen;
+  const int totalLen = (int)localPartLen + binding->uriLen + prefixLen;
   if (totalLen > binding->uriAlloc) {
     /* Detect and prevent integer overflow */
     if (totalLen > INT_MAX - EXPAND_SPARE) {
@@ -4185,10 +4192,14 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
   }
   /* if m_namespaceSeparator != '\0' then uri includes it already */
   uri = binding->uri + binding->uriLen;
-  memcpy(uri, localPart, i * sizeof(XML_Char));
+  /* Detect and prevent integer overflow */
+  if (localPartLen > SIZE_MAX / sizeof(XML_Char)) {
+    return XML_ERROR_NO_MEMORY;
+  }
+  memcpy(uri, localPart, localPartLen * sizeof(XML_Char));
   /* we always have a namespace separator between localPart and prefix */
   if (prefixLen) {
-    uri += i - 1;
+    uri += localPartLen - 1;
     *uri = parser->m_namespaceSeparator; /* replace null terminator */
     memcpy(uri + 1, binding->prefix->name, prefixLen * sizeof(XML_Char));
   }
