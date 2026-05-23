@@ -50,13 +50,10 @@
 
 #include <assert.h>
 
+#include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
-
-#if ! defined(__cplusplus)
-#  include <stdbool.h>
-#endif
 
 #include "expat_config.h"
 
