@@ -3348,10 +3348,9 @@ END_TEST
 /* Test more corners of the XML_GetBuffer interface */
 START_TEST(test_get_buffer_2) {
   const char *text = get_buffer_test_text;
-  void *buffer;
 
   /* Now get a decent buffer */
-  buffer = XML_GetBuffer(g_parser, 1536);
+  void *const buffer = XML_GetBuffer(g_parser, 1536);
   if (buffer == NULL)
     fail("1.5K buffer failed");
   assert(buffer != NULL);
