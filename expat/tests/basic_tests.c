@@ -50,13 +50,10 @@
 
 #include <assert.h>
 
+#include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
-
-#if ! defined(__cplusplus)
-#  include <stdbool.h>
-#endif
 
 #include "expat_config.h"
 
@@ -3306,7 +3303,6 @@ get_feature(enum XML_FeatureEnum feature_id, long *presult) {
 /* Test odd corners of the XML_GetBuffer interface */
 START_TEST(test_get_buffer_1) {
   const char *text = get_buffer_test_text;
-  void *buffer;
   long context_bytes;
 
   /* Attempt to allocate a negative length buffer */
@@ -3314,7 +3310,7 @@ START_TEST(test_get_buffer_1) {
     fail("Negative length buffer not failed");
 
   /* Now get a small buffer and extend it past valid length */
-  buffer = XML_GetBuffer(g_parser, 1536);
+  void *const buffer = XML_GetBuffer(g_parser, 1536);
   if (buffer == NULL)
     fail("1.5K buffer failed");
   assert(buffer != NULL);
@@ -3349,10 +3345,9 @@ END_TEST
 /* Test more corners of the XML_GetBuffer interface */
 START_TEST(test_get_buffer_2) {
   const char *text = get_buffer_test_text;
-  void *buffer;
 
   /* Now get a decent buffer */
-  buffer = XML_GetBuffer(g_parser, 1536);
+  void *const buffer = XML_GetBuffer(g_parser, 1536);
   if (buffer == NULL)
     fail("1.5K buffer failed");
   assert(buffer != NULL);
