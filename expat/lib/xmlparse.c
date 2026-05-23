@@ -2461,9 +2461,6 @@ XML_GetBuffer(XML_Parser parser, int len) {
   parser->m_lastBufferRequestSize = len;
   if (len > EXPAT_SAFE_PTR_DIFF(parser->m_bufferLim, parser->m_bufferEnd)
       || parser->m_buffer == NULL) {
-#if XML_CONTEXT_BYTES > 0
-    int keep;
-#endif /* XML_CONTEXT_BYTES > 0 */
     /* Do not invoke signed arithmetic overflow: */
     int neededSize = (int)((unsigned)len
                            + (unsigned)EXPAT_SAFE_PTR_DIFF(
@@ -2473,7 +2470,7 @@ XML_GetBuffer(XML_Parser parser, int len) {
       return NULL;
     }
 #if XML_CONTEXT_BYTES > 0
-    keep = (int)EXPAT_SAFE_PTR_DIFF(parser->m_bufferPtr, parser->m_buffer);
+    int keep = (int)EXPAT_SAFE_PTR_DIFF(parser->m_bufferPtr, parser->m_buffer);
     if (keep > XML_CONTEXT_BYTES)
       keep = XML_CONTEXT_BYTES;
     /* Detect and prevent integer overflow */
