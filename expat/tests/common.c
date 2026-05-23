@@ -42,13 +42,14 @@
    USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+#include "expat_config.h"
+
 #include <assert.h>
 #include <errno.h>
 #include <stdint.h> // for SIZE_MAX
 #include <stdio.h>
 #include <string.h>
 
-#include "expat_config.h"
 #include "expat.h"
 #include "internal.h"
 #include "chardata.h"
