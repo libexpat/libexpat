@@ -41,11 +41,11 @@
    USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+#include "expat_config.h"
+
 #include <math.h> /* NAN, INFINITY */
 #include <stdio.h>
 #include <string.h>
-
-#include "expat_config.h"
 
 #include "expat.h"
 #include "internal.h"

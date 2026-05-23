@@ -47,13 +47,13 @@
 #  undef NDEBUG /* because test suite relies on assert(...) at the moment */
 #endif
 
+#include "expat_config.h"
+
 #include <math.h> /* NAN, INFINITY */
 #include <stdbool.h>
 #include <stdint.h> /* for SIZE_MAX */
 #include <string.h>
 #include <assert.h>
-
-#include "expat_config.h"
 
 #include "expat.h"
 #include "internal.h"
