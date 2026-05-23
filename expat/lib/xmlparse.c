@@ -2504,7 +2504,6 @@ XML_GetBuffer(XML_Parser parser, int len) {
       parser->m_bufferPtr = parser->m_buffer;
 #endif /* XML_CONTEXT_BYTES > 0 */
     } else {
-      char *newBuf;
       int bufferSize
           = (int)EXPAT_SAFE_PTR_DIFF(parser->m_bufferLim, parser->m_buffer);
       if (bufferSize == 0)
@@ -2519,7 +2518,7 @@ XML_GetBuffer(XML_Parser parser, int len) {
       }
       // NOTE: We are avoiding MALLOC(..) here to leave limiting
       //       the input size to the application using Expat.
-      newBuf = parser->m_mem.malloc_fcn(bufferSize);
+      char *const newBuf = parser->m_mem.malloc_fcn(bufferSize);
       if (newBuf == NULL) {
         parser->m_errorCode = XML_ERROR_NO_MEMORY;
         return NULL;
