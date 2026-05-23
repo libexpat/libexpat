@@ -32,9 +32,9 @@
    USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include "random_getrandom.h"
-
 #include "expat_config.h" // for HAVE_GETRANDOM, HAVE_SYSCALL_GETRANDOM
+
+#include "random_getrandom.h"
 
 #if defined(HAVE_GETRANDOM)
 #  include <sys/random.h> /* getrandom */
