@@ -43,7 +43,7 @@ AUTOMAKE_OPTIONS = \
 ACLOCAL_AMFLAGS = -I m4
 LIBTOOLFLAGS = --verbose
 
-SUBDIRS = lib # lib goes first to build first
+SUBDIRS = gennmtab lib # lib goes first to build first
 if WITH_EXAMPLES
 SUBDIRS += examples
 endif

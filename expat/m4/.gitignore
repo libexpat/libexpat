@@ -1,1 +1,2 @@
 /*.m4
+!ax_prog_cc_for_build.m4
