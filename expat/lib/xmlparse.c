@@ -1712,11 +1712,6 @@ XML_ExternalEntityParserCreate(XML_Parser oldParser, const XML_Char *context,
     newDtd = oldDtd;
 #endif /* XML_DTD */
 
-  /* Note that the magical uses of the pre-processor to make field
-     access look more like C++ require that `parser' be overwritten
-     here.  This makes this function more painful to follow than it
-     would be otherwise.
-  */
   if (parser->m_ns) {
     XML_Char tmp[2] = {parser->m_namespaceSeparator, 0};
     parser = parserCreate(encodingName, &parser->m_mem, tmp, newDtd, oldParser);
