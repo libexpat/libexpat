@@ -3523,7 +3523,9 @@ doContent(XML_Parser parser, int startTagLevel, const ENCODING *enc,
       if (parser->m_endElementHandler) {
         if (parser->m_startElementHandler)
           *eventPP = *eventEndPP;
+        beforeHandler(parser);
         parser->m_endElementHandler(parser->m_handlerArg, name.str);
+        afterHandler(parser);
         noElmHandlers = XML_FALSE;
       }
       if (noElmHandlers && parser->m_defaultHandler)
@@ -3581,7 +3583,9 @@ doContent(XML_Parser parser, int startTagLevel, const ENCODING *enc,
             }
             *uri = XML_T('\0');
           }
+          beforeHandler(parser);
           parser->m_endElementHandler(parser->m_handlerArg, tag->name.str);
+          afterHandler(parser);
         } else if (parser->m_defaultHandler)
           reportDefault(parser, enc, s, next);
         while (tag->bindings) {
