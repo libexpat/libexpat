@@ -2558,7 +2558,8 @@ XML_GetBuffer(XML_Parser parser, int len) {
         parser->m_mem.free_fcn(parser->m_buffer);
         parser->m_bufferEnd
             = newBuf
-              + EXPAT_SAFE_PTR_DIFF(parser->m_bufferEnd, parser->m_bufferPtr);
+              + EXPAT_SAFE_PTR_DIFF(parser->m_bufferEnd, parser->m_bufferPtr)
+              + keep;
       } else {
         /* This must be a brand new buffer with no data in it yet */
         parser->m_bufferEnd = newBuf;
