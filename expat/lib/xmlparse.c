@@ -3494,10 +3494,12 @@ doContent(XML_Parser parser, int startTagLevel, const ENCODING *enc,
           = storeAtts(parser, enc, s, &(tag->name), &(tag->bindings), account);
       if (result)
         return result;
-      if (parser->m_startElementHandler)
+      if (parser->m_startElementHandler) {
+        beforeHandler(parser);
         parser->m_startElementHandler(parser->m_handlerArg, tag->name.str,
                                       (const XML_Char **)parser->m_atts);
-      else if (parser->m_defaultHandler)
+        afterHandler(parser);
+      } else if (parser->m_defaultHandler)
         reportDefault(parser, enc, s, next);
       poolClear(&parser->m_tempPool);
       break;
@@ -3522,8 +3524,10 @@ doContent(XML_Parser parser, int startTagLevel, const ENCODING *enc,
       }
       poolFinish(&parser->m_tempPool);
       if (parser->m_startElementHandler) {
+        beforeHandler(parser);
         parser->m_startElementHandler(parser->m_handlerArg, name.str,
                                       (const XML_Char **)parser->m_atts);
+        afterHandler(parser);
         noElmHandlers = XML_FALSE;
       }
       if (parser->m_endElementHandler) {
