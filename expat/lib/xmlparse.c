@@ -2481,8 +2481,10 @@ XML_GetBuffer(XML_Parser parser, int len) {
       parser->m_errorCode = XML_ERROR_NO_MEMORY;
       return NULL;
     }
-    neededSize += keep;
+#else
+    int keep = 0;
 #endif /* XML_CONTEXT_BYTES > 0 */
+    neededSize += keep;
     if (parser->m_buffer && parser->m_bufferPtr
         && neededSize
                <= EXPAT_SAFE_PTR_DIFF(parser->m_bufferLim, parser->m_buffer)) {
