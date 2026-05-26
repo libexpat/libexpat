@@ -3590,9 +3590,12 @@ doContent(XML_Parser parser, int startTagLevel, const ENCODING *enc,
           reportDefault(parser, enc, s, next);
         while (tag->bindings) {
           BINDING *b = tag->bindings;
-          if (parser->m_endNamespaceDeclHandler)
+          if (parser->m_endNamespaceDeclHandler) {
+            beforeHandler(parser);
             parser->m_endNamespaceDeclHandler(parser->m_handlerArg,
                                               b->prefix->name);
+            afterHandler(parser);
+          }
           tag->bindings = tag->bindings->nextTagBinding;
           b->nextTagBinding = parser->m_freeBindingList;
           parser->m_freeBindingList = b;
@@ -3784,8 +3787,11 @@ freeBindings(XML_Parser parser, BINDING *bindings) {
     /* m_startNamespaceDeclHandler will have been called for this
      * binding in addBindings(), so call the end handler now.
      */
-    if (parser->m_endNamespaceDeclHandler)
+    if (parser->m_endNamespaceDeclHandler) {
+      beforeHandler(parser);
       parser->m_endNamespaceDeclHandler(parser->m_handlerArg, b->prefix->name);
+      afterHandler(parser);
+    }
 
     bindings = bindings->nextTagBinding;
     b->nextTagBinding = parser->m_freeBindingList;
