@@ -5507,10 +5507,12 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
             poolFinish(&parser->m_tempPool);
           }
           *eventEndPP = s;
+          beforeHandler(parser);
           parser->m_attlistDeclHandler(
               parser->m_handlerArg, parser->m_declElementType->name,
               parser->m_declAttributeId->name, parser->m_declAttributeType, 0,
               role == XML_ROLE_REQUIRED_ATTRIBUTE_VALUE);
+          afterHandler(parser);
           handleDefault = XML_FALSE;
         }
       }
@@ -5545,10 +5547,12 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
             poolFinish(&parser->m_tempPool);
           }
           *eventEndPP = s;
+          beforeHandler(parser);
           parser->m_attlistDeclHandler(
               parser->m_handlerArg, parser->m_declElementType->name,
               parser->m_declAttributeId->name, parser->m_declAttributeType,
               attVal, role == XML_ROLE_FIXED_ATTRIBUTE_VALUE);
+          afterHandler(parser);
           poolClear(&parser->m_tempPool);
           handleDefault = XML_FALSE;
         }
