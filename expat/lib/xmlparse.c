@@ -5771,10 +5771,12 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
         poolFinish(&dtd->pool);
         if (parser->m_unparsedEntityDeclHandler) {
           *eventEndPP = s;
+          beforeHandler(parser);
           parser->m_unparsedEntityDeclHandler(
               parser->m_handlerArg, parser->m_declEntity->name,
               parser->m_declEntity->base, parser->m_declEntity->systemId,
               parser->m_declEntity->publicId, parser->m_declEntity->notation);
+          afterHandler(parser);
           handleDefault = XML_FALSE;
         } else if (parser->m_entityDeclHandler) {
           *eventEndPP = s;
