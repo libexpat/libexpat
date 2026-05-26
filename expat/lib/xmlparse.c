@@ -2544,8 +2544,9 @@ XML_GetBuffer(XML_Parser parser, int len) {
         parser->m_bufferPtr = parser->m_buffer + keep;
       } else {
         /* This must be a brand new buffer with no data in it yet */
+        parser->m_buffer = newBuf;
         parser->m_bufferEnd = newBuf;
-        parser->m_bufferPtr = parser->m_buffer = newBuf;
+        parser->m_bufferPtr = newBuf;
       }
 #else
       if (parser->m_bufferPtr) {
