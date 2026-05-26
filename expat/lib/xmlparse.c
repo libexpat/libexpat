@@ -4529,9 +4529,12 @@ addBinding(XML_Parser parser, PREFIX *prefix, const ATTRIBUTE_ID *attId,
   b->nextTagBinding = *bindingsPtr;
   *bindingsPtr = b;
   /* if attId == NULL then we are not starting a namespace scope */
-  if (attId && parser->m_startNamespaceDeclHandler)
+  if (attId && parser->m_startNamespaceDeclHandler) {
+    beforeHandler(parser);
     parser->m_startNamespaceDeclHandler(parser->m_handlerArg, prefix->name,
                                         prefix->binding ? uri : 0);
+    afterHandler(parser);
+  }
   return XML_ERROR_NONE;
 }
 
