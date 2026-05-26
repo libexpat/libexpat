@@ -5865,9 +5865,11 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
         if (! systemId)
           return XML_ERROR_NO_MEMORY;
         *eventEndPP = s;
+        beforeHandler(parser);
         parser->m_notationDeclHandler(
             parser->m_handlerArg, parser->m_declNotationName, parser->m_curBase,
             systemId, parser->m_declNotationPublicId);
+        afterHandler(parser);
         handleDefault = XML_FALSE;
       }
       poolClear(&parser->m_tempPool);
@@ -5875,9 +5877,11 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
     case XML_ROLE_NOTATION_NO_SYSTEM_ID:
       if (parser->m_declNotationPublicId && parser->m_notationDeclHandler) {
         *eventEndPP = s;
+        beforeHandler(parser);
         parser->m_notationDeclHandler(
             parser->m_handlerArg, parser->m_declNotationName, parser->m_curBase,
             0, parser->m_declNotationPublicId);
+        afterHandler(parser);
         handleDefault = XML_FALSE;
       }
       poolClear(&parser->m_tempPool);
