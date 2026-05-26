@@ -7117,7 +7117,9 @@ reportProcessingInstruction(XML_Parser parser, const ENCODING *enc,
   if (! data)
     return 0;
   normalizeLines(data);
+  beforeHandler(parser);
   parser->m_processingInstructionHandler(parser->m_handlerArg, target, data);
+  afterHandler(parser);
   poolClear(&parser->m_tempPool);
   return 1;
 }
