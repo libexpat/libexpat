@@ -5616,10 +5616,12 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
           poolFinish(&dtd->entityValuePool);
           if (parser->m_entityDeclHandler) {
             *eventEndPP = s;
+            beforeHandler(parser);
             parser->m_entityDeclHandler(
                 parser->m_handlerArg, parser->m_declEntity->name,
                 parser->m_declEntity->is_param, parser->m_declEntity->textPtr,
                 parser->m_declEntity->textLen, parser->m_curBase, 0, 0, 0);
+            afterHandler(parser);
             handleDefault = XML_FALSE;
           }
         } else
@@ -5637,10 +5639,12 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
 
           if (parser->m_entityDeclHandler) {
             *eventEndPP = s;
+            beforeHandler(parser);
             parser->m_entityDeclHandler(
                 parser->m_handlerArg, parser->m_declEntity->name,
                 parser->m_declEntity->is_param, parser->m_declEntity->textPtr,
                 parser->m_declEntity->textLen, parser->m_curBase, 0, 0, 0);
+            afterHandler(parser);
             handleDefault = XML_FALSE;
           }
         }
@@ -5718,10 +5722,12 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
       if (dtd->keepProcessing && parser->m_declEntity
           && parser->m_entityDeclHandler) {
         *eventEndPP = s;
+        beforeHandler(parser);
         parser->m_entityDeclHandler(
             parser->m_handlerArg, parser->m_declEntity->name,
             parser->m_declEntity->is_param, 0, 0, parser->m_declEntity->base,
             parser->m_declEntity->systemId, parser->m_declEntity->publicId, 0);
+        afterHandler(parser);
         handleDefault = XML_FALSE;
       }
       break;
@@ -5741,10 +5747,12 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
           handleDefault = XML_FALSE;
         } else if (parser->m_entityDeclHandler) {
           *eventEndPP = s;
+          beforeHandler(parser);
           parser->m_entityDeclHandler(
               parser->m_handlerArg, parser->m_declEntity->name, 0, 0, 0,
               parser->m_declEntity->base, parser->m_declEntity->systemId,
               parser->m_declEntity->publicId, parser->m_declEntity->notation);
+          afterHandler(parser);
           handleDefault = XML_FALSE;
         }
       }
