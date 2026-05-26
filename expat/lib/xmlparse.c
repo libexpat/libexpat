@@ -2538,7 +2538,7 @@ XML_GetBuffer(XML_Parser parser, int len) {
         parser->m_mem.free_fcn(parser->m_buffer);
         parser->m_buffer = newBuf;
         parser->m_bufferEnd
-            = parser->m_buffer
+            = newBuf
               + EXPAT_SAFE_PTR_DIFF(parser->m_bufferEnd, parser->m_bufferPtr)
               + keep;
         parser->m_bufferPtr = parser->m_buffer + keep;
