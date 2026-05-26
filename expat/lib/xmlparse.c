@@ -6087,8 +6087,10 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
           content->type = ((role == XML_ROLE_CONTENT_ANY) ? XML_CTYPE_ANY
                                                           : XML_CTYPE_EMPTY);
           *eventEndPP = s;
+          beforeHandler(parser);
           parser->m_elementDeclHandler(
               parser->m_handlerArg, parser->m_declElementType->name, content);
+          afterHandler(parser);
           handleDefault = XML_FALSE;
         }
         dtd->in_eldecl = XML_FALSE;
@@ -6168,8 +6170,10 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
             if (! model)
               return XML_ERROR_NO_MEMORY;
             *eventEndPP = s;
+            beforeHandler(parser);
             parser->m_elementDeclHandler(
                 parser->m_handlerArg, parser->m_declElementType->name, model);
+            afterHandler(parser);
           }
           dtd->in_eldecl = XML_FALSE;
           dtd->contentStringLen = 0;
