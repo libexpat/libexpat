@@ -4883,8 +4883,10 @@ processXmlDecl(XML_Parser parser, int isGeneralTextEntity, const char *s,
       if (! storedversion)
         return XML_ERROR_NO_MEMORY;
     }
+    beforeHandler(parser);
     parser->m_xmlDeclHandler(parser->m_handlerArg, storedversion, storedEncName,
                              standalone);
+    afterHandler(parser);
   } else if (parser->m_defaultHandler)
     reportDefault(parser, parser->m_encoding, s, next);
   if (parser->m_protocolEncodingName == NULL) {
