@@ -2562,12 +2562,13 @@ XML_GetBuffer(XML_Parser parser, int len) {
             = newBuf
               + EXPAT_SAFE_PTR_DIFF(parser->m_bufferEnd, parser->m_bufferPtr)
               + keep;
+        parser->m_bufferPtr = parser->m_buffer + keep;
       } else {
         /* This must be a brand new buffer with no data in it yet */
         parser->m_buffer = newBuf;
         parser->m_bufferEnd = newBuf;
+        parser->m_bufferPtr = newBuf;
       }
-      parser->m_bufferPtr = newBuf;
 #endif /* XML_CONTEXT_BYTES > 0 */
     }
     parser->m_eventPtr = parser->m_eventEndPtr = NULL;
