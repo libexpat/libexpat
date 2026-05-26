@@ -2549,8 +2549,9 @@ XML_GetBuffer(XML_Parser parser, int len) {
       }
 #else
       if (parser->m_bufferPtr) {
-        memcpy(newBuf, parser->m_bufferPtr,
-               EXPAT_SAFE_PTR_DIFF(parser->m_bufferEnd, parser->m_bufferPtr));
+        memcpy(newBuf, parser->m_bufferPtr - keep,
+               EXPAT_SAFE_PTR_DIFF(parser->m_bufferEnd, parser->m_bufferPtr)
+                   + keep);
         // NOTE: We are avoiding FREE(..) here because parser->m_buffer
         //       is not being allocated with MALLOC(..) but with plain
         //       .malloc_fcn(..).
