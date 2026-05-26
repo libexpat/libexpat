@@ -4571,8 +4571,11 @@ doCdataSection(XML_Parser parser, const ENCODING *enc, const char **startPtr,
     *eventEndPP = next;
     switch (tok) {
     case XML_TOK_CDATA_SECT_CLOSE:
-      if (parser->m_endCdataSectionHandler)
+      if (parser->m_endCdataSectionHandler) {
+        beforeHandler(parser);
         parser->m_endCdataSectionHandler(parser->m_handlerArg);
+        afterHandler(parser);
+      }
       /* BEGIN disabled code */
       /* see comment under XML_TOK_CDATA_SECT_OPEN */
       else if ((0) && parser->m_characterDataHandler) {
