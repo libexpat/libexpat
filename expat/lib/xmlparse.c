@@ -2529,7 +2529,7 @@ XML_GetBuffer(XML_Parser parser, int len) {
       parser->m_bufferLim = newBuf + bufferSize;
 #if XML_CONTEXT_BYTES > 0
       if (parser->m_bufferPtr) {
-        memcpy(newBuf, &parser->m_bufferPtr[-keep],
+        memcpy(newBuf, parser->m_bufferPtr - keep,
                EXPAT_SAFE_PTR_DIFF(parser->m_bufferEnd, parser->m_bufferPtr)
                    + keep);
         // NOTE: We are avoiding FREE(..) here because parser->m_buffer
