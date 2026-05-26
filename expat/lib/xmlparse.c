@@ -5306,9 +5306,11 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
       break;
     case XML_ROLE_DOCTYPE_INTERNAL_SUBSET:
       if (parser->m_startDoctypeDeclHandler) {
+        beforeHandler(parser);
         parser->m_startDoctypeDeclHandler(
             parser->m_handlerArg, parser->m_doctypeName, parser->m_doctypeSysid,
             parser->m_doctypePubid, 1);
+        afterHandler(parser);
         parser->m_doctypeName = NULL;
         poolClear(&parser->m_tempPool);
         handleDefault = XML_FALSE;
@@ -5375,9 +5377,11 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
       }
 
       if (parser->m_doctypeName) {
+        beforeHandler(parser);
         parser->m_startDoctypeDeclHandler(
             parser->m_handlerArg, parser->m_doctypeName, parser->m_doctypeSysid,
             parser->m_doctypePubid, 0);
+        afterHandler(parser);
         poolClear(&parser->m_tempPool);
         handleDefault = XML_FALSE;
       }
