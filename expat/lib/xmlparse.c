@@ -5410,7 +5410,9 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
       }
 #endif /* XML_DTD */
       if (parser->m_endDoctypeDeclHandler) {
+        beforeHandler(parser);
         parser->m_endDoctypeDeclHandler(parser->m_handlerArg);
+        afterHandler(parser);
         handleDefault = XML_FALSE;
       }
       break;
