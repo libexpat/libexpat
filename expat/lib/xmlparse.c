@@ -3644,22 +3644,24 @@ doContent(XML_Parser parser, int startTagLevel, const ENCODING *enc,
       break;
     case XML_TOK_CDATA_SECT_OPEN: {
       enum XML_Error result;
-      if (parser->m_startCdataSectionHandler)
+      if (parser->m_startCdataSectionHandler) {
+        beforeHandler(parser);
         parser->m_startCdataSectionHandler(parser->m_handlerArg);
-      /* BEGIN disabled code */
-      /* Suppose you doing a transformation on a document that involves
-         changing only the character data.  You set up a defaultHandler
-         and a characterDataHandler.  The defaultHandler simply copies
-         characters through.  The characterDataHandler does the
-         transformation and writes the characters out escaping them as
-         necessary.  This case will fail to work if we leave out the
-         following two lines (because & and < inside CDATA sections will
-         be incorrectly escaped).
+        afterHandler(parser);
+        /* BEGIN disabled code */
+        /* Suppose you doing a transformation on a document that involves
+           changing only the character data.  You set up a defaultHandler
+           and a characterDataHandler.  The defaultHandler simply copies
+           characters through.  The characterDataHandler does the
+           transformation and writes the characters out escaping them as
+           necessary.  This case will fail to work if we leave out the
+           following two lines (because & and < inside CDATA sections will
+           be incorrectly escaped).
 
-         However, now we have a start/endCdataSectionHandler, so it seems
-         easier to let the user deal with this.
-      */
-      else if ((0) && parser->m_characterDataHandler) {
+           However, now we have a start/endCdataSectionHandler, so it seems
+           easier to let the user deal with this.
+        */
+      } else if ((0) && parser->m_characterDataHandler) {
         beforeHandler(parser);
         parser->m_characterDataHandler(parser->m_handlerArg, parser->m_dataBuf,
                                        0);
