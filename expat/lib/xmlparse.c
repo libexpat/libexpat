@@ -7088,7 +7088,9 @@ reportComment(XML_Parser parser, const ENCODING *enc, const char *start,
   if (! data)
     return 0;
   normalizeLines(data);
+  beforeHandler(parser);
   parser->m_commentHandler(parser->m_handlerArg, data);
+  afterHandler(parser);
   poolClear(&parser->m_tempPool);
   return 1;
 }
