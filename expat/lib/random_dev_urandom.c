@@ -49,7 +49,7 @@ writeRandomBytes_dev_urandom(void *target, size_t count) {
 
   const int fd = open("/dev/urandom", O_RDONLY | O_CLOEXEC);
   if (fd < 0) {
-    return 0;
+    return false;
   }
 
   do {
