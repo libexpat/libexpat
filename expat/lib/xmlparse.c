@@ -2439,6 +2439,31 @@ XML_ParseBuffer(XML_Parser parser, int len, int isFinal) {
   return result;
 }
 
+/* Modifies `parser`’s buffer to be backed by `newBuf`. */
+static void
+setParserBuffer(XML_Parser parser, char *newBuf, int newBufSize, int keep) {
+  parser->m_bufferLim = newBuf + newBufSize;
+  if (parser->m_bufferPtr) {
+    memcpy(newBuf, parser->m_bufferPtr - keep,
+           EXPAT_SAFE_PTR_DIFF(parser->m_bufferEnd, parser->m_bufferPtr)
+               + keep);
+    // NOTE: We are avoiding FREE(..) here because parser->m_buffer
+    //       is not being allocated with MALLOC(..) but with plain
+    //       .malloc_fcn(..).
+    parser->m_mem.free_fcn(parser->m_buffer);
+    parser->m_buffer = newBuf;
+    parser->m_bufferEnd
+        = newBuf + EXPAT_SAFE_PTR_DIFF(parser->m_bufferEnd, parser->m_bufferPtr)
+          + keep;
+    parser->m_bufferPtr = parser->m_buffer + keep;
+  } else {
+    /* This must be a brand new buffer with no data in it yet */
+    parser->m_buffer = newBuf;
+    parser->m_bufferEnd = newBuf;
+    parser->m_bufferPtr = newBuf;
+  }
+}
+
 void *XMLCALL
 XML_GetBuffer(XML_Parser parser, int len) {
   if (parser == NULL)
@@ -2526,27 +2551,7 @@ XML_GetBuffer(XML_Parser parser, int len) {
         parser->m_errorCode = XML_ERROR_NO_MEMORY;
         return NULL;
       }
-      parser->m_bufferLim = newBuf + bufferSize;
-      if (parser->m_bufferPtr) {
-        memcpy(newBuf, parser->m_bufferPtr - keep,
-               EXPAT_SAFE_PTR_DIFF(parser->m_bufferEnd, parser->m_bufferPtr)
-                   + keep);
-        // NOTE: We are avoiding FREE(..) here because parser->m_buffer
-        //       is not being allocated with MALLOC(..) but with plain
-        //       .malloc_fcn(..).
-        parser->m_mem.free_fcn(parser->m_buffer);
-        parser->m_buffer = newBuf;
-        parser->m_bufferEnd
-            = newBuf
-              + EXPAT_SAFE_PTR_DIFF(parser->m_bufferEnd, parser->m_bufferPtr)
-              + keep;
-        parser->m_bufferPtr = parser->m_buffer + keep;
-      } else {
-        /* This must be a brand new buffer with no data in it yet */
-        parser->m_buffer = newBuf;
-        parser->m_bufferEnd = newBuf;
-        parser->m_bufferPtr = newBuf;
-      }
+      setParserBuffer(parser, newBuf, bufferSize, keep);
     }
     parser->m_eventPtr = parser->m_eventEndPtr = NULL;
     parser->m_positionPtr = NULL;
