@@ -2455,7 +2455,7 @@ setParserBuffer(XML_Parser parser, char *newBuf, int newBufSize, int keep) {
     parser->m_bufferEnd
         = newBuf + EXPAT_SAFE_PTR_DIFF(parser->m_bufferEnd, parser->m_bufferPtr)
           + keep;
-    parser->m_bufferPtr = parser->m_buffer + keep;
+    parser->m_bufferPtr = newBuf + keep;
   } else {
     /* This must be a brand new buffer with no data in it yet */
     parser->m_buffer = newBuf;
