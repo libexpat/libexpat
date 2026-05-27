@@ -2444,17 +2444,15 @@ static void
 setParserBuffer(XML_Parser parser, char *newBuf, int newBufSize, int keep) {
   parser->m_bufferLim = newBuf + newBufSize;
   if (parser->m_bufferPtr) {
-    memcpy(newBuf, parser->m_bufferPtr - keep,
-           EXPAT_SAFE_PTR_DIFF(parser->m_bufferEnd, parser->m_bufferPtr)
-               + keep);
+    const int parsing
+        = (int)EXPAT_SAFE_PTR_DIFF(parser->m_bufferEnd, parser->m_bufferPtr);
+    memcpy(newBuf, parser->m_bufferPtr - keep, parsing + keep);
     // NOTE: We are avoiding FREE(..) here because parser->m_buffer
     //       is not being allocated with MALLOC(..) but with plain
     //       .malloc_fcn(..).
     parser->m_mem.free_fcn(parser->m_buffer);
     parser->m_buffer = newBuf;
-    parser->m_bufferEnd
-        = newBuf + EXPAT_SAFE_PTR_DIFF(parser->m_bufferEnd, parser->m_bufferPtr)
-          + keep;
+    parser->m_bufferEnd = newBuf + parsing + keep;
     parser->m_bufferPtr = newBuf + keep;
   } else {
     /* This must be a brand new buffer with no data in it yet */
