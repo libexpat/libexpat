@@ -277,8 +277,8 @@ typedef struct binding {
   struct binding *prevPrefixBinding;
   const struct attribute_id *attId;
   XML_Char *uri;
-  int uriLen;
-  int uriAlloc;
+  size_t uriLen;
+  size_t uriAlloc;
 } BINDING;
 
 typedef struct prefix {
@@ -291,8 +291,8 @@ typedef struct {
   const XML_Char *localPart;
   const XML_Char *prefix;
   size_t strLen;
-  int uriLen;
-  int prefixLen;
+  size_t uriLen;
+  size_t prefixLen;
 } TAG_NAME;
 
 /* TAG represents an open element.
@@ -4145,15 +4145,9 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
     localPart = tagNamePtr->str;
   } else
     return XML_ERROR_NONE;
-  int prefixLen = 0;
-  if (parser->m_ns_triplets && binding->prefix->name) {
-    const size_t candidateLen
-        = xcslen(binding->prefix->name) + /*null terminator*/ 1;
-    /* Detect and prevent integer overflow */
-    if (candidateLen > INT_MAX)
-      return XML_ERROR_NO_MEMORY;
-    prefixLen = (int)candidateLen;
-  }
+  size_t prefixLen = 0;
+  if (parser->m_ns_triplets && binding->prefix->name)
+    prefixLen = xcslen(binding->prefix->name) + /*null terminator*/ 1;
   tagNamePtr->localPart = localPart;
   tagNamePtr->uriLen = binding->uriLen;
   tagNamePtr->prefix = binding->prefix->name;
@@ -4162,26 +4156,18 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
   const size_t localPartLen = xcslen(localPart) + /*null terminator*/ 1;
 
   /* Detect and prevent integer overflow */
-  if (localPartLen > INT_MAX || binding->uriLen > INT_MAX - prefixLen
-      || localPartLen > (size_t)INT_MAX - (binding->uriLen + prefixLen)) {
+  if (binding->uriLen > SIZE_MAX - prefixLen
+      || localPartLen > SIZE_MAX - (binding->uriLen + prefixLen)) {
     return XML_ERROR_NO_MEMORY;
   }
 
-  const int totalLen = (int)localPartLen + binding->uriLen + prefixLen;
+  const size_t totalLen = localPartLen + binding->uriLen + prefixLen;
   if (totalLen > binding->uriAlloc) {
     /* Detect and prevent integer overflow */
-    if (totalLen > INT_MAX - EXPAND_SPARE) {
+    if (totalLen > SIZE_MAX - EXPAND_SPARE
+        || totalLen + EXPAND_SPARE > SIZE_MAX / sizeof(XML_Char)) {
       return XML_ERROR_NO_MEMORY;
     }
-    /* Detect and prevent integer overflow.
-     * The preprocessor guard addresses the "always false" warning
-     * from -Wtype-limits on platforms where
-     * sizeof(unsigned int) < sizeof(size_t), e.g. on x86_64. */
-#if UINT_MAX >= SIZE_MAX
-    if ((unsigned)(totalLen + EXPAND_SPARE) > SIZE_MAX / sizeof(XML_Char)) {
-      return XML_ERROR_NO_MEMORY;
-    }
-#endif
 
     uri = MALLOC(parser, (totalLen + EXPAND_SPARE) * sizeof(XML_Char));
     if (! uri)
@@ -4338,7 +4324,7 @@ addBinding(XML_Parser parser, PREFIX *prefix, const ATTRIBUTE_ID *attId,
          ASCII_8,      ASCII_SLASH, ASCII_n,     ASCII_a,      ASCII_m,
          ASCII_e,      ASCII_s,     ASCII_p,     ASCII_a,      ASCII_c,
          ASCII_e,      '\0'};
-  static const int xmlLen = (int)sizeof(xmlNamespace) / sizeof(XML_Char) - 1;
+  static const size_t xmlLen = sizeof(xmlNamespace) / sizeof(XML_Char) - 1;
   // "http://www.w3.org/2000/xmlns/"
   static const XML_Char xmlnsNamespace[]
       = {ASCII_h,     ASCII_t,      ASCII_t, ASCII_p, ASCII_COLON,  ASCII_SLASH,
@@ -4346,15 +4332,14 @@ addBinding(XML_Parser parser, PREFIX *prefix, const ATTRIBUTE_ID *attId,
          ASCII_3,     ASCII_PERIOD, ASCII_o, ASCII_r, ASCII_g,      ASCII_SLASH,
          ASCII_2,     ASCII_0,      ASCII_0, ASCII_0, ASCII_SLASH,  ASCII_x,
          ASCII_m,     ASCII_l,      ASCII_n, ASCII_s, ASCII_SLASH,  '\0'};
-  static const int xmlnsLen
-      = (int)sizeof(xmlnsNamespace) / sizeof(XML_Char) - 1;
+  static const size_t xmlnsLen = sizeof(xmlnsNamespace) / sizeof(XML_Char) - 1;
 
   XML_Bool mustBeXML = XML_FALSE;
   XML_Bool isXML = XML_TRUE;
   XML_Bool isXMLNS = XML_TRUE;
 
   BINDING *b;
-  int len;
+  size_t len;
 
   /* empty URI is only valid for default namespace per XML NS 1.0 (not 1.1) */
   if (*uri == XML_T('\0') && prefix->name)
@@ -4374,7 +4359,7 @@ addBinding(XML_Parser parser, PREFIX *prefix, const ATTRIBUTE_ID *attId,
 
   for (len = 0; uri[len]; len++) {
     /* Detect and prevent signed integer overflow */
-    if (len == INT_MAX) {
+    if (len == SIZE_MAX) {
       return XML_ERROR_NO_MEMORY;
     }
     if (isXML && (len > xmlLen || uri[len] != xmlNamespace[len]))
@@ -4419,7 +4404,7 @@ addBinding(XML_Parser parser, PREFIX *prefix, const ATTRIBUTE_ID *attId,
 
   if (parser->m_namespaceSeparator) {
     /* Detect and prevent signed integer overflow */
-    if (len == INT_MAX) {
+    if (len == SIZE_MAX) {
       return XML_ERROR_NO_MEMORY;
     }
     len++;
@@ -4428,19 +4413,10 @@ addBinding(XML_Parser parser, PREFIX *prefix, const ATTRIBUTE_ID *attId,
     b = parser->m_freeBindingList;
     if (len > b->uriAlloc) {
       /* Detect and prevent integer overflow */
-      if (len > INT_MAX - EXPAND_SPARE) {
+      if (len > SIZE_MAX - EXPAND_SPARE
+          || len + EXPAND_SPARE > SIZE_MAX / sizeof(XML_Char)) {
         return XML_ERROR_NO_MEMORY;
       }
-
-      /* Detect and prevent integer overflow.
-       * The preprocessor guard addresses the "always false" warning
-       * from -Wtype-limits on platforms where
-       * sizeof(unsigned int) < sizeof(size_t), e.g. on x86_64. */
-#if UINT_MAX >= SIZE_MAX
-      if ((unsigned)(len + EXPAND_SPARE) > SIZE_MAX / sizeof(XML_Char)) {
-        return XML_ERROR_NO_MEMORY;
-      }
-#endif
 
       XML_Char *temp
           = REALLOC(parser, b->uri, sizeof(XML_Char) * (len + EXPAND_SPARE));
@@ -4456,18 +4432,10 @@ addBinding(XML_Parser parser, PREFIX *prefix, const ATTRIBUTE_ID *attId,
       return XML_ERROR_NO_MEMORY;
 
     /* Detect and prevent integer overflow */
-    if (len > INT_MAX - EXPAND_SPARE) {
+    if (len > SIZE_MAX - EXPAND_SPARE
+        || len + EXPAND_SPARE > SIZE_MAX / sizeof(XML_Char)) {
       return XML_ERROR_NO_MEMORY;
     }
-    /* Detect and prevent integer overflow.
-     * The preprocessor guard addresses the "always false" warning
-     * from -Wtype-limits on platforms where
-     * sizeof(unsigned int) < sizeof(size_t), e.g. on x86_64. */
-#if UINT_MAX >= SIZE_MAX
-    if ((unsigned)(len + EXPAND_SPARE) > SIZE_MAX / sizeof(XML_Char)) {
-      return XML_ERROR_NO_MEMORY;
-    }
-#endif
 
     b->uri = MALLOC(parser, sizeof(XML_Char) * (len + EXPAND_SPARE));
     if (! b->uri) {
@@ -7245,10 +7213,9 @@ getContext(XML_Parser parser) {
   XML_Bool needSep = XML_FALSE;
 
   if (dtd->defaultPrefix.binding) {
-    int len;
     if (! poolAppendChar(&parser->m_tempPool, XML_T(ASCII_EQUALS)))
       return NULL;
-    len = dtd->defaultPrefix.binding->uriLen;
+    size_t len = dtd->defaultPrefix.binding->uriLen;
     if (parser->m_namespaceSeparator)
       len--;
     if (! poolAppendChars(&parser->m_tempPool, dtd->defaultPrefix.binding->uri,
@@ -7279,7 +7246,6 @@ getContext(XML_Parser parser) {
 
   hashTableIterInit(&iter, &(dtd->prefixes));
   for (;;) {
-    int len;
     PREFIX *prefix = (PREFIX *)hashTableIterNext(&iter);
     if (! prefix)
       break;
@@ -7299,7 +7265,7 @@ getContext(XML_Parser parser) {
       return NULL;
     if (! poolAppendChar(&parser->m_tempPool, XML_T(ASCII_EQUALS)))
       return NULL;
-    len = prefix->binding->uriLen;
+    size_t len = prefix->binding->uriLen;
     if (parser->m_namespaceSeparator)
       len--;
     if (! poolAppendChars(&parser->m_tempPool, prefix->binding->uri, len))
