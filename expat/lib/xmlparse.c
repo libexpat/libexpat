@@ -290,7 +290,7 @@ typedef struct {
   const XML_Char *str;
   const XML_Char *localPart;
   const XML_Char *prefix;
-  int strLen;
+  size_t strLen;
   int uriLen;
   int prefixLen;
 } TAG_NAME;
@@ -3428,11 +3428,10 @@ doContent(XML_Parser parser, int startTagLevel, const ENCODING *enc,
         const char *fromPtr = tag->rawName;
         toPtr = tag->buf.str;
         for (;;) {
-          int convLen;
           const enum XML_Convert_Result convert_res
               = XmlConvert(enc, &fromPtr, rawNameEnd, (ICHAR **)&toPtr,
                            (ICHAR *)tag->bufEnd - 1);
-          convLen = (int)(toPtr - tag->buf.str);
+          const size_t convLen = (size_t)(toPtr - tag->buf.str);
           if ((fromPtr >= rawNameEnd)
               || (convert_res == XML_CONVERT_INPUT_INCOMPLETE)) {
             tag->name.strLen = convLen;
