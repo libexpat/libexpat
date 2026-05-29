@@ -4934,8 +4934,10 @@ handleUnknownEncoding(XML_Parser parser, const XML_Char *encodingName) {
     info.convert = NULL;
     info.data = NULL;
     info.release = NULL;
+    beforeHandler(parser);
     const int status = parser->m_unknownEncodingHandler(
         parser->m_unknownEncodingHandlerData, encodingName, &info);
+    afterHandler(parser);
     if (status) {
       ENCODING *enc;
       parser->m_unknownEncodingMem = MALLOC(parser, XmlSizeOfUnknownEncoding());
