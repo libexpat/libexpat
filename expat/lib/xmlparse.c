@@ -3414,9 +3414,10 @@ doContent(XML_Parser parser, int startTagLevel, const ENCODING *enc,
         entity->open = XML_FALSE;
         if (! context)
           return XML_ERROR_NO_MEMORY;
-        if (! parser->m_externalEntityRefHandler(
-                parser->m_externalEntityRefHandlerArg, context, entity->base,
-                entity->systemId, entity->publicId))
+        const int status = parser->m_externalEntityRefHandler(
+            parser->m_externalEntityRefHandlerArg, context, entity->base,
+            entity->systemId, entity->publicId);
+        if (! status)
           return XML_ERROR_EXTERNAL_ENTITY_HANDLING;
         poolDiscard(&parser->m_tempPool);
       } else if (parser->m_defaultHandler)
@@ -5357,9 +5358,10 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
           if (parser->m_useForeignDTD)
             entity->base = parser->m_curBase;
           dtd->paramEntityRead = XML_FALSE;
-          if (! parser->m_externalEntityRefHandler(
-                  parser->m_externalEntityRefHandlerArg, 0, entity->base,
-                  entity->systemId, entity->publicId))
+          const int status = parser->m_externalEntityRefHandler(
+              parser->m_externalEntityRefHandlerArg, 0, entity->base,
+              entity->systemId, entity->publicId);
+          if (! status)
             return XML_ERROR_EXTERNAL_ENTITY_HANDLING;
           if (dtd->paramEntityRead) {
             if (! dtd->standalone && parser->m_notStandaloneHandler) {
@@ -5400,9 +5402,10 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
             return XML_ERROR_NO_MEMORY;
           entity->base = parser->m_curBase;
           dtd->paramEntityRead = XML_FALSE;
-          if (! parser->m_externalEntityRefHandler(
-                  parser->m_externalEntityRefHandlerArg, 0, entity->base,
-                  entity->systemId, entity->publicId))
+          const int status = parser->m_externalEntityRefHandler(
+              parser->m_externalEntityRefHandlerArg, 0, entity->base,
+              entity->systemId, entity->publicId);
+          if (! status)
             return XML_ERROR_EXTERNAL_ENTITY_HANDLING;
           if (dtd->paramEntityRead) {
             if (! dtd->standalone && parser->m_notStandaloneHandler) {
@@ -5995,9 +5998,10 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
           dtd->paramEntityRead = XML_FALSE;
           entity->open = XML_TRUE;
           entityTrackingOnOpen(parser, entity, __LINE__);
-          if (! parser->m_externalEntityRefHandler(
-                  parser->m_externalEntityRefHandlerArg, 0, entity->base,
-                  entity->systemId, entity->publicId)) {
+          const int status = parser->m_externalEntityRefHandler(
+              parser->m_externalEntityRefHandlerArg, 0, entity->base,
+              entity->systemId, entity->publicId);
+          if (! status) {
             entityTrackingOnClose(parser, entity, __LINE__);
             entity->open = XML_FALSE;
             return XML_ERROR_EXTERNAL_ENTITY_HANDLING;
@@ -6783,9 +6787,10 @@ storeEntityValue(XML_Parser parser, const ENCODING *enc,
             dtd->paramEntityRead = XML_FALSE;
             entity->open = XML_TRUE;
             entityTrackingOnOpen(parser, entity, __LINE__);
-            if (! parser->m_externalEntityRefHandler(
-                    parser->m_externalEntityRefHandlerArg, 0, entity->base,
-                    entity->systemId, entity->publicId)) {
+            const int status = parser->m_externalEntityRefHandler(
+                parser->m_externalEntityRefHandlerArg, 0, entity->base,
+                entity->systemId, entity->publicId);
+            if (! status) {
               entityTrackingOnClose(parser, entity, __LINE__);
               entity->open = XML_FALSE;
               result = XML_ERROR_EXTERNAL_ENTITY_HANDLING;
