@@ -3418,9 +3418,11 @@ doContent(XML_Parser parser, int startTagLevel, const ENCODING *enc,
         entity->open = XML_FALSE;
         if (! context)
           return XML_ERROR_NO_MEMORY;
+        beforeHandler(parser);
         const int status = parser->m_externalEntityRefHandler(
             parser->m_externalEntityRefHandlerArg, context, entity->base,
             entity->systemId, entity->publicId);
+        afterHandler(parser);
         if (! status)
           return XML_ERROR_EXTERNAL_ENTITY_HANDLING;
         poolDiscard(&parser->m_tempPool);
@@ -5396,9 +5398,11 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
           if (parser->m_useForeignDTD)
             entity->base = parser->m_curBase;
           dtd->paramEntityRead = XML_FALSE;
+          beforeHandler(parser);
           const int status = parser->m_externalEntityRefHandler(
               parser->m_externalEntityRefHandlerArg, 0, entity->base,
               entity->systemId, entity->publicId);
+          afterHandler(parser);
           if (! status)
             return XML_ERROR_EXTERNAL_ENTITY_HANDLING;
           if (dtd->paramEntityRead) {
@@ -5442,9 +5446,11 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
             return XML_ERROR_NO_MEMORY;
           entity->base = parser->m_curBase;
           dtd->paramEntityRead = XML_FALSE;
+          beforeHandler(parser);
           const int status = parser->m_externalEntityRefHandler(
               parser->m_externalEntityRefHandlerArg, 0, entity->base,
               entity->systemId, entity->publicId);
+          afterHandler(parser);
           if (! status)
             return XML_ERROR_EXTERNAL_ENTITY_HANDLING;
           if (dtd->paramEntityRead) {
@@ -6050,9 +6056,11 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
           dtd->paramEntityRead = XML_FALSE;
           entity->open = XML_TRUE;
           entityTrackingOnOpen(parser, entity, __LINE__);
+          beforeHandler(parser);
           const int status = parser->m_externalEntityRefHandler(
               parser->m_externalEntityRefHandlerArg, 0, entity->base,
               entity->systemId, entity->publicId);
+          afterHandler(parser);
           if (! status) {
             entityTrackingOnClose(parser, entity, __LINE__);
             entity->open = XML_FALSE;
@@ -6843,9 +6851,11 @@ storeEntityValue(XML_Parser parser, const ENCODING *enc,
             dtd->paramEntityRead = XML_FALSE;
             entity->open = XML_TRUE;
             entityTrackingOnOpen(parser, entity, __LINE__);
+            beforeHandler(parser);
             const int status = parser->m_externalEntityRefHandler(
                 parser->m_externalEntityRefHandlerArg, 0, entity->base,
                 entity->systemId, entity->publicId);
+            afterHandler(parser);
             if (! status) {
               entityTrackingOnClose(parser, entity, __LINE__);
               entity->open = XML_FALSE;
