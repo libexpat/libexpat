@@ -90,7 +90,7 @@
 #include <stddef.h>
 #include <string.h> /* memset(), memcpy() */
 #include <assert.h>
-#include <limits.h> /* INT_MAX, UINT_MAX */
+#include <limits.h> /* INT_MAX, LLONG_MAX, LONG_MAX, UINT_MAX */
 #include <stdio.h>  /* fprintf */
 #include <stdlib.h> /* getenv */
 #include <stdint.h> /* SIZE_MAX, uintptr_t */
@@ -206,6 +206,12 @@ typedef char ICHAR;
 #  define XML_T(x) x
 #  define XML_L(x) x
 
+#endif
+
+#ifdef XML_LARGE_SIZE
+#  define XML_INDEX_MAX LLONG_MAX
+#else
+#  define XML_INDEX_MAX LONG_MAX
 #endif
 
 /* Round up n to be a multiple of sz, where sz is a power of 2. */
@@ -2307,7 +2313,7 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal) {
     int nLeftOver;
     enum XML_Status result;
     /* Detect overflow (a+b > MAX <==> b > MAX-a) */
-    if ((XML_Size)len > ((XML_Size)-1) / 2 - parser->m_parseEndByteIndex) {
+    if (len > XML_INDEX_MAX - parser->m_parseEndByteIndex) {
       parser->m_errorCode = XML_ERROR_NO_MEMORY;
       parser->m_eventPtr = parser->m_eventEndPtr = NULL;
       parser->m_processor = errorProcessor;
