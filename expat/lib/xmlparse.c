@@ -4368,6 +4368,10 @@ addBinding(XML_Parser parser, PREFIX *prefix, const ATTRIBUTE_ID *attId,
   }
 
   for (len = 0; uri[len]; len++) {
+    /* Detect and prevent signed integer overflow */
+    if (len == INT_MAX) {
+      return XML_ERROR_NO_MEMORY;
+    }
     if (isXML && (len > xmlLen || uri[len] != xmlNamespace[len]))
       isXML = XML_FALSE;
 
@@ -4408,8 +4412,13 @@ addBinding(XML_Parser parser, PREFIX *prefix, const ATTRIBUTE_ID *attId,
   if (isXMLNS)
     return XML_ERROR_RESERVED_NAMESPACE_URI;
 
-  if (parser->m_namespaceSeparator)
+  if (parser->m_namespaceSeparator) {
+    /* Detect and prevent signed integer overflow */
+    if (len == INT_MAX) {
+      return XML_ERROR_NO_MEMORY;
+    }
     len++;
+  }
   if (parser->m_freeBindingList) {
     b = parser->m_freeBindingList;
     if (len > b->uriAlloc) {
