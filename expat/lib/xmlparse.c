@@ -7211,10 +7211,6 @@ getAttributeId(XML_Parser parser, const ENCODING *enc, const char *start,
     } else {
       int i;
       for (i = 0; name[i]; i++) {
-        /* Detect and prevent signed integer overflow */
-        if (i == INT_MAX) {
-          return NULL;
-        }
         /* attributes without prefix are *not* in the default namespace */
         if (name[i] == XML_T(ASCII_COLON)) {
           if (! poolAppendChars(&dtd->pool, name, i))
@@ -7230,6 +7226,10 @@ getAttributeId(XML_Parser parser, const ENCODING *enc, const char *start,
           else
             poolDiscard(&dtd->pool);
           break;
+        }
+        /* Detect and prevent signed integer overflow */
+        if (i == INT_MAX) {
+          return NULL;
         }
       }
     }
