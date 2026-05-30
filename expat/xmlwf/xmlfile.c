@@ -140,9 +140,17 @@ resolveSystemId(const XML_Char *base, const XML_Char *systemId,
   )
     return systemId;
 
-  const size_t charsRequired = tcslen(base) + tcslen(systemId) + 2;
+  const size_t baseLen = tcslen(base);
+  const size_t systemIdLen = tcslen(systemId);
 
-  /* Detect and prevent integer overflow */
+  /* Detect and prevent integer overflow in the addition (without risking
+     underflow) */
+  if (baseLen > SIZE_MAX - systemIdLen || baseLen > SIZE_MAX - systemIdLen - 2)
+    return systemId;
+
+  const size_t charsRequired = baseLen + systemIdLen + 2;
+
+  /* Detect and prevent integer overflow in the multiplication */
   if (charsRequired > SIZE_MAX / sizeof(XML_Char))
     return systemId;
 
