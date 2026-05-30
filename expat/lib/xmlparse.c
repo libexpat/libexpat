@@ -4374,10 +4374,6 @@ addBinding(XML_Parser parser, PREFIX *prefix, const ATTRIBUTE_ID *attId,
   }
 
   for (len = 0; uri[len]; len++) {
-    /* Detect and prevent signed integer overflow */
-    if (len == INT_MAX) {
-      return XML_ERROR_NO_MEMORY;
-    }
     if (isXML && (len > xmlLen || uri[len] != xmlNamespace[len]))
       isXML = XML_FALSE;
 
@@ -4406,6 +4402,10 @@ addBinding(XML_Parser parser, PREFIX *prefix, const ATTRIBUTE_ID *attId,
     if (parser->m_ns && (uri[len] == parser->m_namespaceSeparator)
         && ! is_rfc3986_uri_char(uri[len])) {
       return XML_ERROR_SYNTAX;
+    }
+    /* Detect and prevent signed integer overflow */
+    if (len == INT_MAX) {
+      return XML_ERROR_NO_MEMORY;
     }
   }
   isXML = isXML && len == xmlLen;
