@@ -2430,6 +2430,14 @@ XML_ParseBuffer(XML_Parser parser, int len, int isFinal) {
     parser->m_parsingStatus.parsing = XML_PARSING;
   }
 
+  // Detect and avoid integer overflow
+  if (len > XML_INDEX_MAX - parser->m_parseEndByteIndex) {
+    parser->m_errorCode = XML_ERROR_NO_MEMORY;
+    parser->m_eventPtr = parser->m_eventEndPtr = NULL;
+    parser->m_processor = errorProcessor;
+    return XML_STATUS_ERROR;
+  }
+
   start = parser->m_bufferPtr;
   parser->m_positionPtr = start;
   parser->m_bufferEnd += len;
