@@ -2725,7 +2725,7 @@ XML_GetInputContext(XML_Parser parser, int *offset, int *size) {
   (void)offset;
   (void)size;
 #endif /* XML_CONTEXT_BYTES > 0 */
-  return (const char *)0;
+  return NULL;
 }
 
 XML_Size XMLCALL
