@@ -802,6 +802,20 @@ START_TEST(test_misc_no_infinite_loop_issue_1161) {
 }
 END_TEST
 
+START_TEST(test_misc_calls_forbidden_from_handlers) {
+  const char *const doc = "<doc>Hello world!</doc>";
+
+  XML_Parser parser = XML_ParserCreate(NULL);
+  XML_UseParserAsHandlerArg(parser);
+  XML_SetCharacterDataHandler(parser, forbidden_calls_character_handler);
+
+  assert_true(XML_Parse(parser, doc, (int)strlen(doc), /*isFinal=*/XML_TRUE)
+              == XML_STATUS_OK);
+
+  XML_ParserFree(parser);
+}
+END_TEST
+
 void
 make_miscellaneous_test_case(Suite *s) {
   TCase *tc_misc = tcase_create("miscellaneous tests");
@@ -833,4 +847,5 @@ make_miscellaneous_test_case(Suite *s) {
   tcase_add_test(tc_misc, test_misc_sync_entity_tolerated);
   tcase_add_test(tc_misc, test_misc_async_entity_rejected);
   tcase_add_test(tc_misc, test_misc_no_infinite_loop_issue_1161);
+  tcase_add_test(tc_misc, test_misc_calls_forbidden_from_handlers);
 }

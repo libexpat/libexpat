@@ -1992,3 +1992,27 @@ accumulate_and_suspend_comment_handler(void *userData, const XML_Char *data) {
   accumulate_comment(parserPlusStorage->storage, data);
   XML_StopParser(parserPlusStorage->parser, XML_TRUE);
 }
+
+void XMLCALL
+forbidden_calls_character_handler(void *userData, const XML_Char *s, int len) {
+  UNUSED_P(s);
+  UNUSED_P(len);
+  XML_Parser parser = userData;
+
+  assert_true(parser != NULL); // self-test
+
+  assert_true(XML_GetBuffer(parser, 123) == NULL); // i.e. rejected
+
+  assert_true(XML_Parse(parser, "", 0, /*isFinal=*/XML_FALSE)
+              == XML_STATUS_ERROR); // i.e. rejected
+
+  assert_true(XML_ParseBuffer(parser, 0, /*isFinal=*/XML_FALSE)
+              == XML_STATUS_ERROR); // i.e. rejected
+
+  XML_ParserFree(parser); // rejected
+
+  assert_true(XML_ParserReset(parser, /*encodingName=*/NULL)
+              == XML_FALSE); // i.e. rejected
+
+  assert_true(XML_GetErrorCode(parser) == XML_ERROR_NONE);
+}
