@@ -157,7 +157,7 @@
       * Windows >=Vista (rand_s): _WIN32. \
     \
     If you insist on not using any of these, bypass this error by defining \
-    XML_POOR_ENTROPY; you have been warned. \
+    XML_POOR_ENTROPY and be vulnerable to hash flooding; you have been warned. \
     \
     If you have reasons to patch this detection code away or need changes \
     to the build system, please open a bug.  Thank you!

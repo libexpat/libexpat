@@ -151,7 +151,7 @@ expat_shy_set(EXPAT_NS ON CACHE BOOL "Define to make XML Namespaces functionalit
 mark_as_advanced(EXPAT_NS)
 expat_shy_set(EXPAT_WARNINGS_AS_ERRORS OFF CACHE BOOL "Treat all compiler warnings as errors")
 if(UNIX OR _EXPAT_HELP)
-    expat_shy_set(EXPAT_DEV_URANDOM ON CACHE BOOL "Define to include code reading entropy from `/dev/urandom'.")
+    expat_shy_set(EXPAT_DEV_URANDOM OFF CACHE BOOL "Define to include code reading entropy from `/dev/urandom'.")
     mark_as_advanced(EXPAT_DEV_URANDOM)
 endif()
 if(UNIX OR WASI OR _EXPAT_HELP)
