@@ -1235,8 +1235,26 @@ tmain(int argc, XML_Char **argv) {
         }
 #endif
       }
-      outName
-          = malloc((tcslen(outputDir) + tcslen(file) + 2) * sizeof(XML_Char));
+      const size_t outputDirLen = tcslen(outputDir);
+      const size_t fileLen = tcslen(file);
+
+      /* Detect and prevent integer overflow in the addition (without
+         risking underflow) and the multiplication, mirroring the guards
+         in xcsdup() and resolveSystemId() */
+      if (outputDirLen > SIZE_MAX - fileLen
+          || outputDirLen > SIZE_MAX - fileLen - 2) {
+        tperror(T("Could not allocate memory"));
+        exit(XMLWF_EXIT_INTERNAL_ERROR);
+      }
+
+      const size_t charsRequired = outputDirLen + fileLen + 2;
+
+      if (charsRequired > SIZE_MAX / sizeof(XML_Char)) {
+        tperror(T("Could not allocate memory"));
+        exit(XMLWF_EXIT_INTERNAL_ERROR);
+      }
+
+      outName = malloc(charsRequired * sizeof(XML_Char));
       if (! outName) {
         tperror(T("Could not allocate memory"));
         exit(XMLWF_EXIT_INTERNAL_ERROR);
