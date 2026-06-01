@@ -562,8 +562,11 @@ static void
 metaLocation(XML_Parser parser) {
   const XML_Char *uri = XML_GetBase(parser);
   FILE *fp = ((XmlwfUserData *)XML_GetUserData(parser))->fp;
-  if (uri)
-    ftprintf(fp, T(" uri=\"%s\""), uri);
+  if (uri) {
+    fputts(T(" uri=\""), fp);
+    characterData(XML_GetUserData(parser), uri, (int)tcslen(uri));
+    puttc(T('"'), fp);
+  }
   ftprintf(fp,
            T(" byte=\"%") T(XML_FMT_INT_MOD) T("d\"") T(" nbytes=\"%d\"")
                T(" line=\"%") T(XML_FMT_INT_MOD) T("u\"") T(" col=\"%")
@@ -597,12 +600,16 @@ metaStartElement(void *userData, const XML_Char *name, const XML_Char **atts) {
   else
     idAttPtr = atts + idAttIndex;
 
-  ftprintf(fp, T("<starttag name=\"%s\""), name);
+  fputts(T("<starttag name=\""), fp);
+  characterData(data, name, (int)tcslen(name));
+  puttc(T('"'), fp);
   metaLocation(parser);
   if (*atts) {
     fputts(T(">\n"), fp);
     do {
-      ftprintf(fp, T("<attribute name=\"%s\" value=\""), atts[0]);
+      fputts(T("<attribute name=\""), fp);
+      characterData(data, atts[0], (int)tcslen(atts[0]));
+      fputts(T("\" value=\""), fp);
       characterData(data, atts[1], (int)tcslen(atts[1]));
       if (atts >= specifiedAttsEnd)
         fputts(T("\" defaulted=\"yes\"/>\n"), fp);
@@ -621,7 +628,9 @@ metaEndElement(void *userData, const XML_Char *name) {
   XML_Parser parser = userData;
   XmlwfUserData *data = XML_GetUserData(parser);
   FILE *fp = data->fp;
-  ftprintf(fp, T("<endtag name=\"%s\""), name);
+  fputts(T("<endtag name=\""), fp);
+  characterData(data, name, (int)tcslen(name));
+  puttc(T('"'), fp);
   metaLocation(parser);
   fputts(T("/>\n"), fp);
 }
