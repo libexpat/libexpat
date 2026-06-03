@@ -36,7 +36,7 @@
 #include <stddef.h>
 
 /* The following limit (for XML_Parse's int len) derives from
- * this loop in xmparse.c:
+ * this loop in xmlparse.c:
  *
  *    do {
  *      bufferSize = (int) (2U * (unsigned) bufferSize);

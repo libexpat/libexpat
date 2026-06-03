@@ -4366,7 +4366,7 @@ addBinding(XML_Parser parser, PREFIX *prefix, const ATTRIBUTE_ID *attId,
   }
 
   for (len = 0; uri[len]; len++) {
-    /* Detect and prevent signed integer overflow */
+    /* Detect and prevent integer overflow */
     if (len == SIZE_MAX) {
       return XML_ERROR_NO_MEMORY;
     }
@@ -4411,7 +4411,7 @@ addBinding(XML_Parser parser, PREFIX *prefix, const ATTRIBUTE_ID *attId,
     return XML_ERROR_RESERVED_NAMESPACE_URI;
 
   if (parser->m_namespaceSeparator) {
-    /* Detect and prevent signed integer overflow */
+    /* Detect and prevent integer overflow */
     if (len == SIZE_MAX) {
       return XML_ERROR_NO_MEMORY;
     }
