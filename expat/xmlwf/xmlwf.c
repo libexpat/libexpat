@@ -384,15 +384,22 @@ static void XMLCALL
 endDoctypeDecl(void *userData) {
   XmlwfUserData *data = userData;
   NotationList **notations;
-  int notationCount = 0;
+  size_t notationCount = 0;
   NotationList *p;
-  int i;
+  size_t i;
 
   /* How many notations do we have? */
   for (p = data->notationListHead; p != NULL; p = p->next)
     notationCount++;
   if (notationCount == 0) {
     /* Nothing to report */
+    goto cleanUp;
+  }
+
+  /* Detect and prevent integer overflow in the multiplication, mirroring
+     the guards in xcsdup() and resolveSystemId() */
+  if (notationCount > SIZE_MAX / sizeof(NotationList *)) {
+    fprintf(stderr, "Unable to sort notations");
     goto cleanUp;
   }
 
