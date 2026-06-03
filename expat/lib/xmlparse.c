@@ -5534,6 +5534,10 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
             parser, enc, s + enc->minBytesPerChar, next - enc->minBytesPerChar,
             XML_ACCOUNT_NONE);
         if (parser->m_declEntity) {
+          /* Detect and prevent signed integer overflow */
+          if ((size_t)poolLength(&dtd->entityValuePool) > (size_t)INT_MAX) {
+            return XML_ERROR_NO_MEMORY;
+          }
           parser->m_declEntity->textPtr = poolStart(&dtd->entityValuePool);
           parser->m_declEntity->textLen
               = (int)(poolLength(&dtd->entityValuePool));
@@ -6944,6 +6948,11 @@ storeSelfEntityValue(XML_Parser parser, ENTITY *entity) {
     return XML_ERROR_NO_MEMORY;
   }
 
+  /* Detect and prevent signed integer overflow */
+  if ((size_t)poolLength(pool) > (size_t)INT_MAX) {
+    poolDiscard(pool);
+    return XML_ERROR_NO_MEMORY;
+  }
   entity->textPtr = poolStart(pool);
   entity->textLen = (int)(poolLength(pool));
   poolFinish(pool);
