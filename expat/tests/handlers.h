@@ -613,6 +613,10 @@ typedef struct {
 extern void XMLCALL
 accumulate_and_suspend_comment_handler(void *userData, const XML_Char *data);
 
+extern void XMLCALL forbidden_calls_character_handler(void *userData,
+                                                      const XML_Char *s,
+                                                      int len);
+
 #endif /* XML_HANDLERS_H */
 
 #ifdef __cplusplus

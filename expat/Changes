@@ -29,6 +29,20 @@
 !! THANK YOU!                        Sebastian Pipping -- Berlin, 2026-03-17 !!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
+Release 2.8.2 XXX XXX XX XXXX
+        Security fixes:
+           #1246  CVE-2026-50219 -- Disallow calls to functions
+                    `XML_GetBuffer`, `XML_Parse`, `XML_ParseBuffer`,
+                    `XML_ParserFree`, `XML_ParserReset` to guard e.g.
+                    Expat bindings from memory corruption;
+                    this CPython issue is related:
+                    https://github.com/python/cpython/issues/146169
+
+        Special thanks to:
+            Asher Darden
+            Matthew Fernandez
+            Yousef Shanableh
+
 Release 2.8.1 Sun May 10 2026
         Security fixes:
            #1216  CVE-2026-45186 -- Fix quadratic runtime from attribute name
