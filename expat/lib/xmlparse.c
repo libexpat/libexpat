@@ -5935,21 +5935,6 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
             }
             parser->m_groupConnector = new_connector;
           }
-
-          if (dtd->scaffIndex) {
-            /* Detect and prevent integer overflow. */
-            if (parser->m_groupSize > SIZE_MAX / sizeof(int)) {
-              return XML_ERROR_NO_MEMORY;
-            }
-
-            int *const new_scaff_index = REALLOC(
-                parser, dtd->scaffIndex, parser->m_groupSize * sizeof(int));
-            if (new_scaff_index == NULL) {
-              return XML_ERROR_NO_MEMORY;
-            }
-            dtd->scaffIndex = new_scaff_index;
-            dtd->scaffIndexSize = parser->m_groupSize;
-          }
         } else {
           parser->m_groupConnector = MALLOC(parser, parser->m_groupSize = 32);
           if (! parser->m_groupConnector) {
