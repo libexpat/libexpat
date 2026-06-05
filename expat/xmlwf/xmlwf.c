@@ -380,6 +380,18 @@ notationCmp(const void *a, const void *b) {
   return xcscmp(n1->notationName, n2->notationName);
 }
 
+/* Write a SystemLiteral/PubidLiteral, choosing a delimiter that does not
+   occur in the value.  The grammar forbids a literal from containing its
+   own delimiter, so a value reported by Expat never holds both quote
+   characters and a safe delimiter always exists. */
+static void
+writeLiteral(FILE *fp, const XML_Char *value) {
+  const XML_Char quote = (tcschr(value, T('\'')) != NULL) ? T('"') : T('\'');
+  puttc(quote, fp);
+  fputts(value, fp);
+  puttc(quote, fp);
+}
+
 static void XMLCALL
 endDoctypeDecl(void *userData) {
   XmlwfUserData *data = userData;
@@ -424,19 +436,15 @@ endDoctypeDecl(void *userData) {
     fputts(T("<!NOTATION "), data->fp);
     fputts(notations[i]->notationName, data->fp);
     if (notations[i]->publicId != NULL) {
-      fputts(T(" PUBLIC '"), data->fp);
-      fputts(notations[i]->publicId, data->fp);
-      puttc(T('\''), data->fp);
+      fputts(T(" PUBLIC "), data->fp);
+      writeLiteral(data->fp, notations[i]->publicId);
       if (notations[i]->systemId != NULL) {
         puttc(T(' '), data->fp);
-        puttc(T('\''), data->fp);
-        fputts(notations[i]->systemId, data->fp);
-        puttc(T('\''), data->fp);
+        writeLiteral(data->fp, notations[i]->systemId);
       }
     } else if (notations[i]->systemId != NULL) {
-      fputts(T(" SYSTEM '"), data->fp);
-      fputts(notations[i]->systemId, data->fp);
-      puttc(T('\''), data->fp);
+      fputts(T(" SYSTEM "), data->fp);
+      writeLiteral(data->fp, notations[i]->systemId);
     }
     puttc(T('>'), data->fp);
     puttc(T('\n'), data->fp);
