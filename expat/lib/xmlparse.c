@@ -5964,6 +5964,21 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
         if (myindex < 0)
           return XML_ERROR_NO_MEMORY;
         assert(dtd->scaffIndex != NULL);
+        if ((size_t)dtd->scaffLevel >= dtd->scaffIndexSize) {
+          /* Detect and prevent integer overflow */
+          if (dtd->scaffIndexSize > SIZE_MAX / 2 / sizeof(int)) {
+            return XML_ERROR_NO_MEMORY;
+          }
+          assert(dtd->scaffIndexSize > 0);
+          const size_t new_size = dtd->scaffIndexSize * 2;
+          int *const new_scaff_index
+              = REALLOC(parser, dtd->scaffIndex, new_size * sizeof(int));
+          if (new_scaff_index == NULL) {
+            return XML_ERROR_NO_MEMORY;
+          }
+          dtd->scaffIndex = new_scaff_index;
+          dtd->scaffIndexSize = new_size;
+        }
         dtd->scaffIndex[dtd->scaffLevel] = myindex;
         dtd->scaffLevel++;
         dtd->scaffold[myindex].type = XML_CTYPE_SEQ;
