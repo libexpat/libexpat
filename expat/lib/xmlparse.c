@@ -5921,20 +5921,18 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
     case XML_ROLE_GROUP_OPEN:
       if (parser->m_prologState.level >= parser->m_groupSize) {
         if (parser->m_groupSize) {
-          {
-            /* Detect and prevent integer overflow */
-            if (parser->m_groupSize > SIZE_MAX / 2) {
-              return XML_ERROR_NO_MEMORY;
-            }
-
-            char *const new_connector = REALLOC(
-                parser, parser->m_groupConnector, parser->m_groupSize *= 2);
-            if (new_connector == NULL) {
-              parser->m_groupSize /= 2;
-              return XML_ERROR_NO_MEMORY;
-            }
-            parser->m_groupConnector = new_connector;
+          /* Detect and prevent integer overflow */
+          if (parser->m_groupSize > SIZE_MAX / 2) {
+            return XML_ERROR_NO_MEMORY;
           }
+
+          char *const new_connector = REALLOC(parser, parser->m_groupConnector,
+                                              parser->m_groupSize *= 2);
+          if (new_connector == NULL) {
+            parser->m_groupSize /= 2;
+            return XML_ERROR_NO_MEMORY;
+          }
+          parser->m_groupConnector = new_connector;
         } else {
           parser->m_groupConnector = MALLOC(parser, parser->m_groupSize = 32);
           if (! parser->m_groupConnector) {
