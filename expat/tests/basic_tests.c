@@ -4382,6 +4382,37 @@ START_TEST(test_skipped_external_entity) {
 }
 END_TEST
 
+START_TEST(test_scaff_index_shared_across_external_entity_parser) {
+  const char text[]
+      = "<!DOCTYPE doc [\n"
+        "<!ELEMENT a "
+        "((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((b))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))>\n"
+        "<!ENTITY % e SYSTEM 'ext'>\n"
+        "%e;\n"
+        "<!ELEMENT c "
+        "(((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((d)))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))>\n"
+        "]>\n"
+        "<doc/>";
+  ExtOption options[]
+      = {{XCS("ext"),
+          "<!ELEMENT x "
+          "((((((((((((((((((((((((((((((((y))))))))))))))))))))))))))))))))>"},
+         {NULL, NULL}};
+
+  XML_Parser parser = XML_ParserCreate(NULL);
+  XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
+  XML_SetUserData(parser, options);
+  XML_SetExternalEntityRefHandler(parser, external_entity_optioner);
+  XML_SetElementDeclHandler(parser, dummy_element_decl_handler);
+
+  if (_XML_Parse_SINGLE_BYTES(parser, text, (int)strlen(text), XML_TRUE)
+      == XML_STATUS_ERROR)
+    xml_failure(parser);
+
+  XML_ParserFree(parser);
+}
+END_TEST
+
 /* Test a different form of unknown external entity */
 START_TEST(test_skipped_null_loaded_ext_entity) {
   const char *text = "<!DOCTYPE doc SYSTEM 'http://example.org/one.ent'>\n"
@@ -6749,6 +6780,8 @@ make_basic_test_case(Suite *s) {
   tcase_add_test(tc_basic, test_trailing_cr_in_att_value);
   tcase_add_test(tc_basic, test_standalone_internal_entity);
   tcase_add_test(tc_basic, test_skipped_external_entity);
+  tcase_add_test__ifdef_xml_dtd(
+      tc_basic, test_scaff_index_shared_across_external_entity_parser);
   tcase_add_test(tc_basic, test_skipped_null_loaded_ext_entity);
   tcase_add_test(tc_basic, test_skipped_unloaded_ext_entity);
   tcase_add_test__ifdef_xml_dtd(tc_basic, test_param_entity_with_trailing_cr);
