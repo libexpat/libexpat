@@ -1566,10 +1566,20 @@ moveToFreeBindingList(XML_Parser parser, BINDING *bindings) {
   }
 }
 
+/* Moves a list of entities onto the start of another list. */
+static void
+moveEntityList(OPEN_INTERNAL_ENTITY **dst, OPEN_INTERNAL_ENTITY **src) {
+  for (OPEN_INTERNAL_ENTITY *head = *src; head != NULL;) {
+    OPEN_INTERNAL_ENTITY *const openEntity = head;
+    head = head->next;
+    openEntity->next = *dst;
+    *dst = openEntity;
+  }
+}
+
 XML_Bool XMLCALL
 XML_ParserReset(XML_Parser parser, const XML_Char *encodingName) {
   TAG *tStk;
-  OPEN_INTERNAL_ENTITY *openEntityList;
 
   if ((parser == NULL) || isCalledFromInsideHandler(parser))
     return XML_FALSE;
@@ -1587,31 +1597,15 @@ XML_ParserReset(XML_Parser parser, const XML_Char *encodingName) {
     parser->m_freeTagList = tag;
   }
   /* move m_openInternalEntities to m_freeInternalEntities */
-  openEntityList = parser->m_openInternalEntities;
-  while (openEntityList) {
-    OPEN_INTERNAL_ENTITY *openEntity = openEntityList;
-    openEntityList = openEntity->next;
-    openEntity->next = parser->m_freeInternalEntities;
-    parser->m_freeInternalEntities = openEntity;
-  }
+  moveEntityList(&parser->m_freeInternalEntities,
+                 &parser->m_openInternalEntities);
   /* move m_openAttributeEntities to m_freeAttributeEntities (i.e. same task but
    * for attributes) */
-  openEntityList = parser->m_openAttributeEntities;
-  while (openEntityList) {
-    OPEN_INTERNAL_ENTITY *openEntity = openEntityList;
-    openEntityList = openEntity->next;
-    openEntity->next = parser->m_freeAttributeEntities;
-    parser->m_freeAttributeEntities = openEntity;
-  }
+  moveEntityList(&parser->m_freeAttributeEntities,
+                 &parser->m_openAttributeEntities);
   /* move m_openValueEntities to m_freeValueEntities (i.e. same task but
    * for value entities) */
-  openEntityList = parser->m_openValueEntities;
-  while (openEntityList) {
-    OPEN_INTERNAL_ENTITY *openEntity = openEntityList;
-    openEntityList = openEntity->next;
-    openEntity->next = parser->m_freeValueEntities;
-    parser->m_freeValueEntities = openEntity;
-  }
+  moveEntityList(&parser->m_freeValueEntities, &parser->m_openValueEntities);
   moveToFreeBindingList(parser, parser->m_inheritedBindings);
   FREE(parser, parser->m_unknownEncodingMem);
   if (parser->m_unknownEncodingRelease)
