@@ -1840,7 +1840,6 @@ destroyBindings(BINDING *bindings, XML_Parser parser) {
 void XMLCALL
 XML_ParserFree(XML_Parser parser) {
   TAG *tagList;
-  OPEN_INTERNAL_ENTITY *entityList;
   if ((parser == NULL) || isCalledFromInsideHandler(parser))
     return;
   /* free m_tagStack and m_freeTagList */
@@ -1860,42 +1859,30 @@ XML_ParserFree(XML_Parser parser) {
     FREE(parser, p);
   }
   /* free m_openInternalEntities */
-  entityList = parser->m_openInternalEntities;
-  for (;;) {
-    OPEN_INTERNAL_ENTITY *openEntity;
-    if (entityList == NULL)
-      break;
-    openEntity = entityList;
+  for (OPEN_INTERNAL_ENTITY *entityList = parser->m_openInternalEntities;
+       entityList != NULL;) {
+    OPEN_INTERNAL_ENTITY *const openEntity = entityList;
     entityList = entityList->next;
     FREE(parser, openEntity);
   }
   /* free m_openAttributeEntities */
-  entityList = parser->m_openAttributeEntities;
-  for (;;) {
-    OPEN_INTERNAL_ENTITY *openEntity;
-    if (entityList == NULL)
-      break;
-    openEntity = entityList;
+  for (OPEN_INTERNAL_ENTITY *entityList = parser->m_openAttributeEntities;
+       entityList != NULL;) {
+    OPEN_INTERNAL_ENTITY *const openEntity = entityList;
     entityList = entityList->next;
     FREE(parser, openEntity);
   }
   /* free m_openValueEntities */
-  entityList = parser->m_openValueEntities;
-  for (;;) {
-    OPEN_INTERNAL_ENTITY *openEntity;
-    if (entityList == NULL)
-      break;
-    openEntity = entityList;
+  for (OPEN_INTERNAL_ENTITY *entityList = parser->m_openValueEntities;
+       entityList != NULL;) {
+    OPEN_INTERNAL_ENTITY *const openEntity = entityList;
     entityList = entityList->next;
     FREE(parser, openEntity);
   }
   /* free m_freeEntities */
-  entityList = parser->m_freeEntities;
-  for (;;) {
-    OPEN_INTERNAL_ENTITY *openEntity;
-    if (entityList == NULL)
-      break;
-    openEntity = entityList;
+  for (OPEN_INTERNAL_ENTITY *entityList = parser->m_freeEntities;
+       entityList != NULL;) {
+    OPEN_INTERNAL_ENTITY *const openEntity = entityList;
     entityList = entityList->next;
     FREE(parser, openEntity);
   }
