@@ -46,7 +46,7 @@ jobs:
     steps:
     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
 
-    - uses: vmactions/solaris-vm@3702ccf20b84c7f7c0a9bb68894aba7623f8301d  # v1.3.6
+    - uses: vmactions/solaris-vm@d30dd6c228c8661ade859e36ead7660b9a62efcc  # v1.3.7
       with:
         release: "11.4-gcc"  # with GCC 14 as of 2026-01-11
         usesh: true
