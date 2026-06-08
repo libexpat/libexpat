@@ -762,11 +762,9 @@ struct XML_ParserStruct {
   const char *m_eventEndPtr;
   const char *m_positionPtr;
   OPEN_INTERNAL_ENTITY *m_openInternalEntities;
-  OPEN_INTERNAL_ENTITY *m_freeInternalEntities;
   OPEN_INTERNAL_ENTITY *m_openAttributeEntities;
-  OPEN_INTERNAL_ENTITY *m_freeAttributeEntities;
   OPEN_INTERNAL_ENTITY *m_openValueEntities;
-  OPEN_INTERNAL_ENTITY *m_freeValueEntities;
+  OPEN_INTERNAL_ENTITY *m_freeEntities;
   XML_Bool m_defaultExpandInternalEntities;
   int m_tagLevel;
   ENTITY *m_declEntity;
@@ -1414,9 +1412,7 @@ parserCreate(const XML_Char *encodingName,
 
   parser->m_freeBindingList = NULL;
   parser->m_freeTagList = NULL;
-  parser->m_freeInternalEntities = NULL;
-  parser->m_freeAttributeEntities = NULL;
-  parser->m_freeValueEntities = NULL;
+  parser->m_freeEntities = NULL;
 
   parser->m_groupSize = 0;
   parser->m_groupConnector = NULL;
@@ -1566,10 +1562,20 @@ moveToFreeBindingList(XML_Parser parser, BINDING *bindings) {
   }
 }
 
+/* Moves a list of entities onto the start of another list. */
+static void
+moveEntityList(OPEN_INTERNAL_ENTITY **dst, OPEN_INTERNAL_ENTITY **src) {
+  for (OPEN_INTERNAL_ENTITY *head = *src; head != NULL;) {
+    OPEN_INTERNAL_ENTITY *const openEntity = head;
+    head = head->next;
+    openEntity->next = *dst;
+    *dst = openEntity;
+  }
+}
+
 XML_Bool XMLCALL
 XML_ParserReset(XML_Parser parser, const XML_Char *encodingName) {
   TAG *tStk;
-  OPEN_INTERNAL_ENTITY *openEntityList;
 
   if ((parser == NULL) || isCalledFromInsideHandler(parser))
     return XML_FALSE;
@@ -1586,32 +1592,14 @@ XML_ParserReset(XML_Parser parser, const XML_Char *encodingName) {
     tag->bindings = NULL;
     parser->m_freeTagList = tag;
   }
-  /* move m_openInternalEntities to m_freeInternalEntities */
-  openEntityList = parser->m_openInternalEntities;
-  while (openEntityList) {
-    OPEN_INTERNAL_ENTITY *openEntity = openEntityList;
-    openEntityList = openEntity->next;
-    openEntity->next = parser->m_freeInternalEntities;
-    parser->m_freeInternalEntities = openEntity;
-  }
-  /* move m_openAttributeEntities to m_freeAttributeEntities (i.e. same task but
-   * for attributes) */
-  openEntityList = parser->m_openAttributeEntities;
-  while (openEntityList) {
-    OPEN_INTERNAL_ENTITY *openEntity = openEntityList;
-    openEntityList = openEntity->next;
-    openEntity->next = parser->m_freeAttributeEntities;
-    parser->m_freeAttributeEntities = openEntity;
-  }
-  /* move m_openValueEntities to m_freeValueEntities (i.e. same task but
-   * for value entities) */
-  openEntityList = parser->m_openValueEntities;
-  while (openEntityList) {
-    OPEN_INTERNAL_ENTITY *openEntity = openEntityList;
-    openEntityList = openEntity->next;
-    openEntity->next = parser->m_freeValueEntities;
-    parser->m_freeValueEntities = openEntity;
-  }
+  /* move m_openInternalEntities to m_freeEntities */
+  moveEntityList(&parser->m_freeEntities, &parser->m_openInternalEntities);
+  /* move m_openAttributeEntities to m_freeEntities (i.e. same task but for
+   * attributes) */
+  moveEntityList(&parser->m_freeEntities, &parser->m_openAttributeEntities);
+  /* move m_openValueEntities to m_freeEntities (i.e. same task but for value
+   * entities) */
+  moveEntityList(&parser->m_freeEntities, &parser->m_openValueEntities);
   moveToFreeBindingList(parser, parser->m_inheritedBindings);
   FREE(parser, parser->m_unknownEncodingMem);
   if (parser->m_unknownEncodingRelease)
@@ -1852,7 +1840,6 @@ destroyBindings(BINDING *bindings, XML_Parser parser) {
 void XMLCALL
 XML_ParserFree(XML_Parser parser) {
   TAG *tagList;
-  OPEN_INTERNAL_ENTITY *entityList;
   if ((parser == NULL) || isCalledFromInsideHandler(parser))
     return;
   /* free m_tagStack and m_freeTagList */
@@ -1871,48 +1858,35 @@ XML_ParserFree(XML_Parser parser) {
     destroyBindings(p->bindings, parser);
     FREE(parser, p);
   }
-  /* free m_openInternalEntities and m_freeInternalEntities */
-  entityList = parser->m_openInternalEntities;
-  for (;;) {
-    OPEN_INTERNAL_ENTITY *openEntity;
-    if (entityList == NULL) {
-      if (parser->m_freeInternalEntities == NULL)
-        break;
-      entityList = parser->m_freeInternalEntities;
-      parser->m_freeInternalEntities = NULL;
-    }
-    openEntity = entityList;
+  /* free m_openInternalEntities */
+  for (OPEN_INTERNAL_ENTITY *entityList = parser->m_openInternalEntities;
+       entityList != NULL;) {
+    OPEN_INTERNAL_ENTITY *const openEntity = entityList;
     entityList = entityList->next;
     FREE(parser, openEntity);
   }
-  /* free m_openAttributeEntities and m_freeAttributeEntities */
-  entityList = parser->m_openAttributeEntities;
-  for (;;) {
-    OPEN_INTERNAL_ENTITY *openEntity;
-    if (entityList == NULL) {
-      if (parser->m_freeAttributeEntities == NULL)
-        break;
-      entityList = parser->m_freeAttributeEntities;
-      parser->m_freeAttributeEntities = NULL;
-    }
-    openEntity = entityList;
+  /* free m_openAttributeEntities */
+  for (OPEN_INTERNAL_ENTITY *entityList = parser->m_openAttributeEntities;
+       entityList != NULL;) {
+    OPEN_INTERNAL_ENTITY *const openEntity = entityList;
     entityList = entityList->next;
     FREE(parser, openEntity);
   }
-  /* free m_openValueEntities and m_freeValueEntities */
-  entityList = parser->m_openValueEntities;
-  for (;;) {
-    OPEN_INTERNAL_ENTITY *openEntity;
-    if (entityList == NULL) {
-      if (parser->m_freeValueEntities == NULL)
-        break;
-      entityList = parser->m_freeValueEntities;
-      parser->m_freeValueEntities = NULL;
-    }
-    openEntity = entityList;
+  /* free m_openValueEntities */
+  for (OPEN_INTERNAL_ENTITY *entityList = parser->m_openValueEntities;
+       entityList != NULL;) {
+    OPEN_INTERNAL_ENTITY *const openEntity = entityList;
     entityList = entityList->next;
     FREE(parser, openEntity);
   }
+  /* free m_freeEntities */
+  for (OPEN_INTERNAL_ENTITY *entityList = parser->m_freeEntities;
+       entityList != NULL;) {
+    OPEN_INTERNAL_ENTITY *const openEntity = entityList;
+    entityList = entityList->next;
+    FREE(parser, openEntity);
+  }
+  parser->m_freeEntities = NULL;
   destroyBindings(parser->m_freeBindingList, parser);
   destroyBindings(parser->m_inheritedBindings, parser);
   poolDestroy(&parser->m_tempPool);
@@ -6395,20 +6369,18 @@ epilogProcessor(XML_Parser parser, const char *s, const char *end,
 static enum XML_Error
 processEntity(XML_Parser parser, ENTITY *entity, XML_Bool betweenDecl,
               enum EntityType type) {
-  OPEN_INTERNAL_ENTITY *openEntity, **openEntityList, **freeEntityList;
+  OPEN_INTERNAL_ENTITY *openEntity, **openEntityList;
+  OPEN_INTERNAL_ENTITY **const freeEntityList = &parser->m_freeEntities;
   switch (type) {
   case ENTITY_INTERNAL:
     parser->m_processor = internalEntityProcessor;
     openEntityList = &parser->m_openInternalEntities;
-    freeEntityList = &parser->m_freeInternalEntities;
     break;
   case ENTITY_ATTRIBUTE:
     openEntityList = &parser->m_openAttributeEntities;
-    freeEntityList = &parser->m_freeAttributeEntities;
     break;
   case ENTITY_VALUE:
     openEntityList = &parser->m_openValueEntities;
-    freeEntityList = &parser->m_freeValueEntities;
     break;
     /* default case serves merely as a safety net in case of a
      * wrong entityType. Therefore we exclude the following lines
@@ -6525,8 +6497,8 @@ internalEntityProcessor(XML_Parser parser, const char *s, const char *end,
   parser->m_openInternalEntities = parser->m_openInternalEntities->next;
 
   /* put openEntity back in list of free instances */
-  openEntity->next = parser->m_freeInternalEntities;
-  parser->m_freeInternalEntities = openEntity;
+  openEntity->next = parser->m_freeEntities;
+  parser->m_freeEntities = openEntity;
 
   if (parser->m_openInternalEntities == NULL) {
     parser->m_processor = entity->is_param ? prologProcessor : contentProcessor;
@@ -6602,8 +6574,8 @@ storeAttributeValue(XML_Parser parser, const ENCODING *enc, XML_Bool isCdata,
       parser->m_openAttributeEntities = parser->m_openAttributeEntities->next;
 
       /* put openEntity back in list of free instances */
-      openEntity->next = parser->m_freeAttributeEntities;
-      parser->m_freeAttributeEntities = openEntity;
+      openEntity->next = parser->m_freeEntities;
+      parser->m_freeEntities = openEntity;
     }
 
     // Break if an error occurred or there is nothing left to process
@@ -7062,8 +7034,8 @@ callStoreEntityValue(XML_Parser parser, const ENCODING *enc,
       parser->m_openValueEntities = parser->m_openValueEntities->next;
 
       /* put openEntity back in list of free instances */
-      openEntity->next = parser->m_freeValueEntities;
-      parser->m_freeValueEntities = openEntity;
+      openEntity->next = parser->m_freeEntities;
+      parser->m_freeEntities = openEntity;
     }
 
     // Break if an error occurred or there is nothing left to process
