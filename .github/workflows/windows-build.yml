@@ -139,3 +139,11 @@ jobs:
         cd expat/build
         cp -v "${cmake_build_type}/${expat_dll}" "tests/${cmake_build_type}/"
         ctest "${ctest_args[@]}"
+
+    - name: Ensure that file libexpat.def.cmake is not missing any symbols
+      run: |
+        symbols_txt="${GITHUB_WORKSPACE}"/.github/workflows/data/exported-symbols-unversioned.txt
+        while read line ; do
+            symbol="$(tr -d '\r' <<<"${line}")"  # drops trailing carriage return
+            ( set -x ; grep -q -F " ${symbol} @" expat/lib/libexpat.def.cmake )  # i.e. fail CI if symbol is missing
+        done < "${symbols_txt}"
