@@ -8706,15 +8706,25 @@ entityTrackingReportStats(XML_Parser rootParser, ENTITY *entity,
   const char *const entityName = entity->name;
 #  endif
 
+  const bool limitingWanted = rootParser->m_entity_stats.debugLevel < 2;
+  const int maxLimitedDepth = 10; // somewhat arbitrary
+  const int candidateIndentDepth
+      = (int)rootParser->m_entity_stats.currentDepth - 1;
+  const bool limitingNeeded
+      = limitingWanted && (candidateIndentDepth > maxLimitedDepth);
+  const char *const ellipisOrEmpty = limitingNeeded ? " [..] " : "";
+  const int indentDepth
+      = limitingNeeded ? (maxLimitedDepth - /* make space for ellipis */ 2)
+                       : candidateIndentDepth;
+
   fprintf(
       stderr,
-      "expat: Entities(%p): Count %9u, depth %2u/%2u %*s%s%s; %s length %d (xmlparse.c:%d)\n",
+      "expat: Entities(%p): Count %9u, depth %2u/%2u %*s%s%s%s; %s length %d (xmlparse.c:%d)\n",
       (void *)rootParser, rootParser->m_entity_stats.countEverOpened,
       rootParser->m_entity_stats.currentDepth,
-      rootParser->m_entity_stats.maximumDepthSeen,
-      ((int)rootParser->m_entity_stats.currentDepth - 1) * 2, "",
-      entity->is_param ? "%" : "&", entityName, action, entity->textLen,
-      sourceLine);
+      rootParser->m_entity_stats.maximumDepthSeen, indentDepth * 2, "",
+      ellipisOrEmpty, entity->is_param ? "%" : "&", entityName, action,
+      entity->textLen, sourceLine);
 }
 
 static void

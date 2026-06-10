@@ -954,7 +954,7 @@ usage(const XML_Char *prog, int rc) {
       T("environment variables:\n")
       T("  EXPAT_ACCOUNTING_DEBUG=(0|1|2|3)\n")
       T("                 Control verbosity of accounting debugging (default: 0)\n")
-      T("  EXPAT_ENTITY_DEBUG=(0|1)\n")
+      T("  EXPAT_ENTITY_DEBUG=(0|1|2)\n")
       T("                 Control verbosity of entity debugging (default: 0)\n")
       T("  EXPAT_ENTROPY_DEBUG=(0|1)\n")
       T("                 Control verbosity of entropy debugging (default: 0)\n")
