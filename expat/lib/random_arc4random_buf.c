@@ -35,9 +35,12 @@
 #  define _DEFAULT_SOURCE 1 /* for glibc */
 #endif
 
+#include "memory_sanitizer.h"
 #include <stdlib.h> // for arc4random_buf
 
 void
 writeRandomBytes_arc4random_buf(void *target, size_t count) {
   arc4random_buf(target, count);
+  // MSan does not understand `arc4random_buf`, so explain its effects
+  MSAN_UNPOISON(target, count);
 }
