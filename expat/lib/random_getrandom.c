@@ -52,6 +52,7 @@
 #  define GRND_NONBLOCK 0x0001
 #endif /* defined(GRND_NONBLOCK) */
 
+#include "memory_sanitizer.h"
 #include <assert.h>
 #include <errno.h>
 #include <limits.h> // for INT_MAX
@@ -74,9 +75,13 @@ writeRandomBytes_getrandom_nonblock(void *target, size_t count) {
     const int bytesWrittenMore =
 #if defined(HAVE_GETRANDOM)
         (int)getrandom(currentTarget, bytesToWrite, getrandomFlags);
+    // MSan understands `getrandom`, so does not need extra guidance
 #else
         (int)syscall(SYS_getrandom, currentTarget, bytesToWrite,
                      getrandomFlags);
+    // MSan does not understand `syscall`, so explain its effects
+    if (bytesWrittenMore > 0)
+      MSAN_UNPOISON(currentTarget, bytesWrittenMore);
 #endif
 
     if (bytesWrittenMore > 0) {

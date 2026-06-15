@@ -117,6 +117,7 @@ EXTRA_DIST = \
     internal.h \
     latin1tab.h \
     libexpat.def.cmake \
+    memory_sanitizer.h \
     nametab.h \
     siphash.h \
     utf8tab.h \

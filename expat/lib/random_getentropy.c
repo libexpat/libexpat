@@ -45,10 +45,15 @@
 #  include <unistd.h>
 #endif // ! defined(__APPLE__)
 
+#include "memory_sanitizer.h"
 #include <errno.h>
 
 bool
 writeRandomBytes_getentropy(void *target, size_t count) {
   errno = 0;
-  return getentropy(target, count) == 0;
+  const bool success = getentropy(target, count);
+  // MSan does not understand `getentropy`, so explain its effects
+  if (success)
+    MSAN_UNPOISON(target, count);
+  return success;
 }

@@ -98,7 +98,7 @@ populate_environment() {
                 ;;
             memory)
                 # https://clang.llvm.org/docs/MemorySanitizer.html
-                BASE_COMPILE_FLAGS+=" -fsanitize=memory -fno-omit-frame-pointer -g -O2 -fsanitize-memory-track-origins -fsanitize-blacklist=$PWD/memory-sanitizer-blacklist.txt"
+                BASE_COMPILE_FLAGS+=" -fsanitize=memory -fno-omit-frame-pointer -g -O2 -fsanitize-memory-track-origins"
                 ;;
             undefined)
                 # https://clang.llvm.org/docs/UndefinedBehaviorSanitizer.html
