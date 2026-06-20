@@ -424,6 +424,7 @@ typedef struct {
   unsigned scaffCount;
   int scaffLevel;
   int *scaffIndex;
+  size_t scaffIndexSize;
 } DTD;
 
 enum EntityType {
@@ -5920,36 +5921,18 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
     case XML_ROLE_GROUP_OPEN:
       if (parser->m_prologState.level >= parser->m_groupSize) {
         if (parser->m_groupSize) {
-          {
-            /* Detect and prevent integer overflow */
-            if (parser->m_groupSize > SIZE_MAX / 2) {
-              return XML_ERROR_NO_MEMORY;
-            }
-
-            char *const new_connector = REALLOC(
-                parser, parser->m_groupConnector, parser->m_groupSize *= 2);
-            if (new_connector == NULL) {
-              parser->m_groupSize /= 2;
-              return XML_ERROR_NO_MEMORY;
-            }
-            parser->m_groupConnector = new_connector;
+          /* Detect and prevent integer overflow */
+          if (parser->m_groupSize > SIZE_MAX / 2) {
+            return XML_ERROR_NO_MEMORY;
           }
 
-          if (dtd->scaffIndex) {
-            /* Detect and prevent integer overflow. */
-            if (parser->m_groupSize > SIZE_MAX / sizeof(int)) {
-              parser->m_groupSize /= 2;
-              return XML_ERROR_NO_MEMORY;
-            }
-
-            int *const new_scaff_index = REALLOC(
-                parser, dtd->scaffIndex, parser->m_groupSize * sizeof(int));
-            if (new_scaff_index == NULL) {
-              parser->m_groupSize /= 2;
-              return XML_ERROR_NO_MEMORY;
-            }
-            dtd->scaffIndex = new_scaff_index;
+          char *const new_connector = REALLOC(parser, parser->m_groupConnector,
+                                              parser->m_groupSize *= 2);
+          if (new_connector == NULL) {
+            parser->m_groupSize /= 2;
+            return XML_ERROR_NO_MEMORY;
           }
+          parser->m_groupConnector = new_connector;
         } else {
           parser->m_groupConnector = MALLOC(parser, parser->m_groupSize = 32);
           if (! parser->m_groupConnector) {
@@ -5964,6 +5947,21 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
         if (myindex < 0)
           return XML_ERROR_NO_MEMORY;
         assert(dtd->scaffIndex != NULL);
+        if ((size_t)dtd->scaffLevel >= dtd->scaffIndexSize) {
+          /* Detect and prevent integer overflow */
+          if (dtd->scaffIndexSize > SIZE_MAX / 2 / sizeof(int)) {
+            return XML_ERROR_NO_MEMORY;
+          }
+          assert(dtd->scaffIndexSize > 0);
+          const size_t new_size = dtd->scaffIndexSize * 2;
+          int *const new_scaff_index
+              = REALLOC(parser, dtd->scaffIndex, new_size * sizeof(int));
+          if (new_scaff_index == NULL) {
+            return XML_ERROR_NO_MEMORY;
+          }
+          dtd->scaffIndex = new_scaff_index;
+          dtd->scaffIndexSize = new_size;
+        }
         dtd->scaffIndex[dtd->scaffLevel] = myindex;
         dtd->scaffLevel++;
         dtd->scaffold[myindex].type = XML_CTYPE_SEQ;
@@ -7548,6 +7546,7 @@ dtdCreate(XML_Parser parser) {
 
   p->in_eldecl = XML_FALSE;
   p->scaffIndex = NULL;
+  p->scaffIndexSize = 0;
   p->scaffold = NULL;
   p->scaffLevel = 0;
   p->scaffSize = 0;
@@ -7588,6 +7587,7 @@ dtdReset(DTD *p, XML_Parser parser) {
 
   FREE(parser, p->scaffIndex);
   p->scaffIndex = NULL;
+  p->scaffIndexSize = 0;
   FREE(parser, p->scaffold);
   p->scaffold = NULL;
 
@@ -7767,6 +7767,7 @@ dtdCopy(XML_Parser oldParser, DTD *newDtd, const DTD *oldDtd,
   newDtd->scaffSize = oldDtd->scaffSize;
   newDtd->scaffLevel = oldDtd->scaffLevel;
   newDtd->scaffIndex = oldDtd->scaffIndex;
+  newDtd->scaffIndexSize = oldDtd->scaffIndexSize;
 
   return 1;
 } /* End dtdCopy */
@@ -8294,6 +8295,7 @@ nextScaffoldPart(XML_Parser parser) {
     dtd->scaffIndex = MALLOC(parser, parser->m_groupSize * sizeof(int));
     if (! dtd->scaffIndex)
       return -1;
+    dtd->scaffIndexSize = parser->m_groupSize;
     dtd->scaffIndex[0] = 0;
   }
 
