@@ -2632,7 +2632,7 @@ enum XML_Status XMLCALL
 XML_ResumeParser(XML_Parser parser) {
   enum XML_Status result = XML_STATUS_OK;
 
-  if (parser == NULL)
+  if ((parser == NULL) || isCalledFromInsideHandler(parser))
     return XML_STATUS_ERROR;
   if (parser->m_parsingStatus.parsing != XML_SUSPENDED) {
     parser->m_errorCode = XML_ERROR_NOT_SUSPENDED;

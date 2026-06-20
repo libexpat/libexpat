@@ -2016,3 +2016,27 @@ forbidden_calls_character_handler(void *userData, const XML_Char *s, int len) {
 
   assert_true(XML_GetErrorCode(parser) == XML_ERROR_NONE);
 }
+
+void XMLCALL
+suspend_then_resume_character_handler(void *userData, const XML_Char *s,
+                                      int len) {
+  UNUSED_P(s);
+  UNUSED_P(len);
+  ResumeFromHandlerData *const data = (ResumeFromHandlerData *)userData;
+
+  data->callCount++;
+  if (data->callCount > 1) {
+    // Reached only if the guard under test is missing: XML_ResumeParser would
+    // then have driven the parser re-entrantly and called us again.  Bail out
+    // so the test fails by assertion below rather than recursing without bound.
+    return;
+  }
+
+  // Put the parser into XML_SUSPENDED so that, without the guard,
+  // XML_ResumeParser would proceed into a re-entrant parse.
+  assert_true(XML_StopParser(data->parser, /*resumable=*/XML_TRUE)
+              == XML_STATUS_OK);
+
+  // Resuming the parser from inside a handler must be rejected.
+  assert_true(XML_ResumeParser(data->parser) == XML_STATUS_ERROR);
+}

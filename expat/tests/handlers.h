@@ -617,6 +617,15 @@ extern void XMLCALL forbidden_calls_character_handler(void *userData,
                                                       const XML_Char *s,
                                                       int len);
 
+typedef struct {
+  XML_Parser parser;
+  int callCount;
+} ResumeFromHandlerData;
+
+extern void XMLCALL suspend_then_resume_character_handler(void *userData,
+                                                          const XML_Char *s,
+                                                          int len);
+
 #endif /* XML_HANDLERS_H */
 
 #ifdef __cplusplus
