@@ -91,6 +91,9 @@ Release 2.8.2 XXX XXX XX XXXX
            #1258  lib: XML_GetInputContext: Remove use of 0 for NULL
            #1261  Comment typo fixes
            #1275  Teach Memory Sanitizer semantics of randomization functions
+     #1276 #1281  Version info bumped from 13:1:12 (libexpat*.so.1.12.1)
+                    to 13:2:12 (libexpat*.so.1.12.2); see https://verbump.de/
+                    for what these numbers do
 
         Infrastructure:
            #1231  perl-integration.yml: Bump to XML::Parser 2.59
