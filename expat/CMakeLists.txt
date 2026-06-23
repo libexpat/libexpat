@@ -35,6 +35,7 @@
 # Copyright (c) 2025      Alfonso Gregory <gfunni234@gmail.com>
 # Copyright (c) 2026      Rosen Penev <rosenp@gmail.com>
 # Copyright (c) 2026      Gordon Messmer <gordon.messmer@gmail.com>
+# Copyright (c) 2026      Nick Begg <nick@stunttruck.net>
 # Unlike most of Expat,
 # this file is copyrighted under the BSD-license for buildsystem files of KDE.
 

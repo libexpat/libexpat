@@ -10,6 +10,7 @@
 # Copyright (c) 2019      Philippe Antoine <contact@catenacyber.fr>
 # Copyright (c) 2019-2025 Hanno Böck <hanno@gentoo.org>
 # Copyright (c) 2024      Alexander Bluhm <alexander.bluhm@gmx.net>
+# Copyright (c) 2026      Matthew Fernandez <matthew.fernandez@gmail.com>
 # Licensed under the MIT license:
 #
 # Permission is  hereby granted,  free of charge,  to any  person obtaining
