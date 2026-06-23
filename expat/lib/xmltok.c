@@ -228,6 +228,19 @@ struct normal_encoding {
       /* isNmstrt2 */ NULL, /* isNmstrt3 */ NULL, /* isNmstrt4 */ NULL,        \
       /* isInvalid2 */ NULL, /* isInvalid3 */ NULL, /* isInvalid4 */ NULL
 
+/* Like NULL_VTABLE but with a real isInvalid4 so the UTF-16 encodings reject a
+   high surrogate that is not followed by a low surrogate.  Only needed for the
+   XML_MIN_SIZE build, where the shared tokenizer dispatches through the vtable;
+   the regular build inlines the same check via IS_INVALID_CHAR. */
+#ifdef XML_MIN_SIZE
+#  define UTF16_NULL_VTABLE(E)                                                 \
+    /* isName2 */ NULL, /* isName3 */ NULL, /* isName4 */ NULL,                \
+        /* isNmstrt2 */ NULL, /* isNmstrt3 */ NULL, /* isNmstrt4 */ NULL,      \
+        /* isInvalid2 */ NULL, /* isInvalid3 */ NULL, E##isInvalid4
+#else
+#  define UTF16_NULL_VTABLE(E) NULL_VTABLE
+#endif
+
 static int FASTCALL checkCharRefNumber(int result);
 
 #include "xmltok_impl.h"
@@ -744,6 +757,11 @@ DEFINE_UTF16_TO_UTF16(big2_)
   UCS2_GET_NAMING(namePages, (unsigned char)p[1], (unsigned char)p[0])
 #define LITTLE2_IS_NMSTRT_CHAR_MINBPC(p)                                       \
   UCS2_GET_NAMING(nmstrtPages, (unsigned char)p[1], (unsigned char)p[0])
+/* A 4-byte UTF-16 character is a surrogate pair; byteType only reports BT_LEAD4
+   for a high surrogate, so the pair is invalid unless the second unit is a low
+   surrogate (U+DC00..U+DFFF, i.e. high byte 0xDC..0xDF). */
+#define LITTLE2_IS_INVALID_CHAR(p, n)                                          \
+  ((n) == 4 && ((unsigned char)(p)[3] & 0xFC) != 0xDC)
 
 #ifdef XML_MIN_SIZE
 
@@ -776,6 +794,12 @@ little2_isNmstrtMin(const ENCODING *enc, const char *p) {
   return LITTLE2_IS_NMSTRT_CHAR_MINBPC(p);
 }
 
+static int PTRFASTCALL
+little2_isInvalid4(const ENCODING *enc, const char *p) {
+  UNUSED_P(enc);
+  return LITTLE2_IS_INVALID_CHAR(p, 4);
+}
+
 #  undef VTABLE
 #  define VTABLE VTABLE1, little2_toUtf8, little2_toUtf16
 
@@ -792,6 +816,7 @@ little2_isNmstrtMin(const ENCODING *enc, const char *p) {
 #  define IS_NAME_CHAR_MINBPC(enc, p) LITTLE2_IS_NAME_CHAR_MINBPC(p)
 #  define IS_NMSTRT_CHAR(enc, p, n) (0)
 #  define IS_NMSTRT_CHAR_MINBPC(enc, p) LITTLE2_IS_NMSTRT_CHAR_MINBPC(p)
+#  define IS_INVALID_CHAR(enc, p, n) LITTLE2_IS_INVALID_CHAR(p, n)
 
 #  define XML_TOK_IMPL_C
 #  include "xmltok_impl.c"
@@ -823,7 +848,7 @@ static const struct normal_encoding little2_encoding_ns
 #  include "asciitab.h"
 #  include "latin1tab.h"
        },
-       STANDARD_VTABLE(little2_) NULL_VTABLE};
+       STANDARD_VTABLE(little2_) UTF16_NULL_VTABLE(little2_)};
 
 #endif
 
@@ -841,7 +866,7 @@ static const struct normal_encoding little2_encoding
 #undef BT_COLON
 #include "latin1tab.h"
        },
-       STANDARD_VTABLE(little2_) NULL_VTABLE};
+       STANDARD_VTABLE(little2_) UTF16_NULL_VTABLE(little2_)};
 
 #if BYTEORDER != 4321
 
@@ -853,7 +878,7 @@ static const struct normal_encoding internal_little2_encoding_ns
 #    include "iasciitab.h"
 #    include "latin1tab.h"
        },
-       STANDARD_VTABLE(little2_) NULL_VTABLE};
+       STANDARD_VTABLE(little2_) UTF16_NULL_VTABLE(little2_)};
 
 #  endif
 
@@ -865,7 +890,7 @@ static const struct normal_encoding internal_little2_encoding
 #  undef BT_COLON
 #  include "latin1tab.h"
        },
-       STANDARD_VTABLE(little2_) NULL_VTABLE};
+       STANDARD_VTABLE(little2_) UTF16_NULL_VTABLE(little2_)};
 
 #endif
 
@@ -877,6 +902,11 @@ static const struct normal_encoding internal_little2_encoding
   UCS2_GET_NAMING(namePages, (unsigned char)p[0], (unsigned char)p[1])
 #define BIG2_IS_NMSTRT_CHAR_MINBPC(p)                                          \
   UCS2_GET_NAMING(nmstrtPages, (unsigned char)p[0], (unsigned char)p[1])
+/* A 4-byte UTF-16 character is a surrogate pair; byteType only reports BT_LEAD4
+   for a high surrogate, so the pair is invalid unless the second unit is a low
+   surrogate (U+DC00..U+DFFF, i.e. high byte 0xDC..0xDF). */
+#define BIG2_IS_INVALID_CHAR(p, n)                                             \
+  ((n) == 4 && ((unsigned char)(p)[2] & 0xFC) != 0xDC)
 
 #ifdef XML_MIN_SIZE
 
@@ -909,6 +939,12 @@ big2_isNmstrtMin(const ENCODING *enc, const char *p) {
   return BIG2_IS_NMSTRT_CHAR_MINBPC(p);
 }
 
+static int PTRFASTCALL
+big2_isInvalid4(const ENCODING *enc, const char *p) {
+  UNUSED_P(enc);
+  return BIG2_IS_INVALID_CHAR(p, 4);
+}
+
 #  undef VTABLE
 #  define VTABLE VTABLE1, big2_toUtf8, big2_toUtf16
 
@@ -925,6 +961,7 @@ big2_isNmstrtMin(const ENCODING *enc, const char *p) {
 #  define IS_NAME_CHAR_MINBPC(enc, p) BIG2_IS_NAME_CHAR_MINBPC(p)
 #  define IS_NMSTRT_CHAR(enc, p, n) (0)
 #  define IS_NMSTRT_CHAR_MINBPC(enc, p) BIG2_IS_NMSTRT_CHAR_MINBPC(p)
+#  define IS_INVALID_CHAR(enc, p, n) BIG2_IS_INVALID_CHAR(p, n)
 
 #  define XML_TOK_IMPL_C
 #  include "xmltok_impl.c"
@@ -956,7 +993,7 @@ static const struct normal_encoding big2_encoding_ns
 #  include "asciitab.h"
 #  include "latin1tab.h"
        },
-       STANDARD_VTABLE(big2_) NULL_VTABLE};
+       STANDARD_VTABLE(big2_) UTF16_NULL_VTABLE(big2_)};
 
 #endif
 
@@ -974,7 +1011,7 @@ static const struct normal_encoding big2_encoding
 #undef BT_COLON
 #include "latin1tab.h"
        },
-       STANDARD_VTABLE(big2_) NULL_VTABLE};
+       STANDARD_VTABLE(big2_) UTF16_NULL_VTABLE(big2_)};
 
 #if BYTEORDER != 1234
 
@@ -986,7 +1023,7 @@ static const struct normal_encoding internal_big2_encoding_ns
 #    include "iasciitab.h"
 #    include "latin1tab.h"
        },
-       STANDARD_VTABLE(big2_) NULL_VTABLE};
+       STANDARD_VTABLE(big2_) UTF16_NULL_VTABLE(big2_)};
 
 #  endif
 
@@ -998,7 +1035,7 @@ static const struct normal_encoding internal_big2_encoding
 #  undef BT_COLON
 #  include "latin1tab.h"
        },
-       STANDARD_VTABLE(big2_) NULL_VTABLE};
+       STANDARD_VTABLE(big2_) UTF16_NULL_VTABLE(big2_)};
 
 #endif
 
