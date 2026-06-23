@@ -29,7 +29,7 @@
 !! THANK YOU!                        Sebastian Pipping -- Berlin, 2026-03-17 !!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-Release 2.8.2 XXX XXX XX XXXX
+Release 2.8.2 Thu June 25 2026
         Security fixes:
            #1246  CVE-2026-50219 -- Disallow calls to functions
                     `XML_GetBuffer`, `XML_Parse`, `XML_ParseBuffer`,
