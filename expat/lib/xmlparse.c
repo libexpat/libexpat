@@ -1,4 +1,4 @@
-/* 75ef4224f81c052e9e5aeea2ac7de75357d2169ff9908e39edc08b9dc3052513 (2.8.1+)
+/* 5de44e6750c6cc78818f06ed552f522a1241df0299395250e1792cb339389daf (2.8.2+)
                             __  __            _
                          ___\ \/ /_ __   __ _| |_
                         / _ \\  /| '_ \ / _` | __|
@@ -47,6 +47,9 @@
    Copyright (c) 2026      Rosen Penev <rosenp@gmail.com>
    Copyright (c) 2026      Francesco Bertolaccini
    Copyright (c) 2026      Christian Ng <christianrng@berkeley.edu>
+   Copyright (c) 2026      Nick Begg <nick@stunttruck.net>
+   Copyright (c) 2026      Kartik Kenchi <netliomax25@gmail.com>
+   Copyright (c) 2026      Haris Hussain <hextheshadow0x@gmail.com>
    Licensed under the MIT license:
 
    Permission is  hereby granted,  free of charge,  to any  person obtaining
