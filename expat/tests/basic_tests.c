@@ -1819,6 +1819,36 @@ START_TEST(test_utf16_bad_surrogate_pair) {
 }
 END_TEST
 
+/* Test that a UTF-16 high surrogate not followed by a low surrogate is
+   rejected.  Without validation the high surrogate would consume the next
+   code unit as a fake low surrogate, hiding e.g. a following '<' from the
+   tokenizer. */
+START_TEST(test_utf16_high_surrogate_without_low) {
+  /* Test data is:
+   *   <?xml version='1.0' encoding='utf-16'?>
+   *   <a>{HIGH}X</a>
+   *
+   * where {HIGH} is the high surrogate 0xd800 and 'X' (0x0058) is a regular
+   * BMP character that is not a low surrogate.
+   */
+  const char text[] = "\0<\0?\0x\0m\0l\0"
+                      " \0v\0e\0r\0s\0i\0o\0n\0=\0'\0\x31\0.\0\x30\0'\0"
+                      " \0e\0n\0c\0o\0d\0i\0n\0g\0=\0'\0u\0t\0f\0-\0"
+                      "1\0"
+                      "6\0'"
+                      "\0?\0>\0\n"
+                      "\0<\0a\0>"
+                      "\xd8\x00\0X"
+                      "\0<\0/\0a\0>";
+
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)sizeof(text) - 1, XML_TRUE)
+      != XML_STATUS_ERROR)
+    fail("Lone UTF-16 high surrogate not faulted");
+  if (XML_GetErrorCode(g_parser) != XML_ERROR_INVALID_TOKEN)
+    xml_failure(g_parser);
+}
+END_TEST
+
 START_TEST(test_bad_cdata) {
   struct CaseData {
     const char *text;
@@ -6680,6 +6710,7 @@ make_basic_test_case(Suite *s) {
   tcase_add_test(tc_basic, test_long_cdata_utf16);
   tcase_add_test(tc_basic, test_multichar_cdata_utf16);
   tcase_add_test(tc_basic, test_utf16_bad_surrogate_pair);
+  tcase_add_test(tc_basic, test_utf16_high_surrogate_without_low);
   tcase_add_test(tc_basic, test_bad_cdata);
   tcase_add_test(tc_basic, test_bad_cdata_utf16);
   tcase_add_test(tc_basic, test_stop_parser_between_cdata_calls);
