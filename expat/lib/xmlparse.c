@@ -3287,12 +3287,15 @@ doContent(XML_Parser parser, int startTagLevel, const ENCODING *enc,
         return XML_ERROR_NONE;
       }
       *eventEndPP = end;
-      if (parser->m_characterDataHandler) {
-        XML_Char c = 0xA;
-        beforeHandler(parser);
-        parser->m_characterDataHandler(parser->m_handlerArg, &c, 1);
-        afterHandler(parser);
-      } else if (parser->m_defaultHandler)
+      XML_Char c = 0;
+if (parser->m_handlerCallDepth == 0 && parser->m_characterDataHandler) {
+    beforeHandler(parser);
+    parser->m_handlerCallDepth++;
+    parser->m_characterDataHandler(parser->m_handlerArg, &c, 1);
+    parser->m_handlerCallDepth--;
+    afterHandler(parser);
+}
+         else if (parser->m_defaultHandler)
         reportDefault(parser, enc, s, end);
       /* We are at the end of the final buffer, should we check for
          XML_SUSPENDED, XML_FINISHED?
@@ -3474,12 +3477,16 @@ doContent(XML_Parser parser, int startTagLevel, const ENCODING *enc,
           = storeAtts(parser, enc, s, &(tag->name), &(tag->bindings), account);
       if (result)
         return result;
-      if (parser->m_startElementHandler) {
-        beforeHandler(parser);
-        parser->m_startElementHandler(parser->m_handlerArg, tag->name.str,
-                                      (const XML_Char **)parser->m_atts);
-        afterHandler(parser);
-      } else if (parser->m_defaultHandler)
+
+      if (parser->m_handlerCallDepth == 0 && parser->m_startElementHandler) {
+    beforeHandler(parser);
+    parser->m_handlerCallDepth++;
+    parser->m_startElementHandler(parser->m_handlerArg, tag->name.str, attlist);
+    parser->m_handlerCallDepth--;
+    afterHandler(parser);
+}
+
+       else if (parser->m_defaultHandler)
         reportDefault(parser, enc, s, next);
       poolClear(&parser->m_tempPool);
       break;
@@ -3510,14 +3517,16 @@ doContent(XML_Parser parser, int startTagLevel, const ENCODING *enc,
         afterHandler(parser);
         noElmHandlers = XML_FALSE;
       }
-      if (parser->m_endElementHandler) {
-        if (parser->m_startElementHandler)
-          *eventPP = *eventEndPP;
-        beforeHandler(parser);
-        parser->m_endElementHandler(parser->m_handlerArg, name.str);
-        afterHandler(parser);
-        noElmHandlers = XML_FALSE;
-      }
+
+      if (parser->m_handlerCallDepth == 0 && parser->m_startElementHandler) {
+    beforeHandler(parser);
+    parser->m_handlerCallDepth++;
+    parser->m_startElementHandler(parser->m_handlerArg, name.str, attlist);
+    parser->m_handlerCallDepth--;
+    afterHandler(parser);
+}
+
+
       if (noElmHandlers && parser->m_defaultHandler)
         reportDefault(parser, enc, s, next);
       poolClear(&parser->m_tempPool);
@@ -3645,13 +3654,16 @@ doContent(XML_Parser parser, int startTagLevel, const ENCODING *enc,
            However, now we have a start/endCdataSectionHandler, so it seems
            easier to let the user deal with this.
         */
-      } else if ((0) && parser->m_characterDataHandler) {
-        beforeHandler(parser);
-        parser->m_characterDataHandler(parser->m_handlerArg, parser->m_dataBuf,
-                                       0);
-        afterHandler(parser);
-        /* END disabled code */
-      } else if (parser->m_defaultHandler)
+      } 
+        
+if (parser->m_handlerCallDepth == 0 && parser->m_characterDataHandler) {
+    beforeHandler(parser);
+    parser->m_handlerCallDepth++;
+    parser->m_characterDataHandler(parser->m_handlerArg, dataPtr, dataLen);
+    parser->m_handlerCallDepth--;
+    afterHandler(parser);
+}
+      else if (parser->m_defaultHandler)
         reportDefault(parser, enc, s, next);
       result
           = doCdataSection(parser, enc, &next, end, nextPtr, haveMore, account);
@@ -3667,16 +3679,16 @@ doContent(XML_Parser parser, int startTagLevel, const ENCODING *enc,
         *nextPtr = s;
         return XML_ERROR_NONE;
       }
-      if (parser->m_characterDataHandler) {
-        if (MUST_CONVERT(enc, s)) {
-          ICHAR *dataPtr = (ICHAR *)parser->m_dataBuf;
-          XmlConvert(enc, &s, end, &dataPtr, (ICHAR *)parser->m_dataBufEnd);
-          beforeHandler(parser);
-          parser->m_characterDataHandler(
-              parser->m_handlerArg, parser->m_dataBuf,
-              (int)(dataPtr - (ICHAR *)parser->m_dataBuf));
-          afterHandler(parser);
-        } else {
+      if (parser->m_handlerCallDepth == 0 && parser->m_characterDataHandler) {
+    beforeHandler(parser);
+    parser->m_handlerCallDepth++;
+    parser->m_characterDataHandler(parser->m_handlerArg, buf,
+                                   XmlEncode(n, (ICHAR *)buf));
+    parser->m_handlerCallDepth--;
+    afterHandler(parser);
+}
+
+          else {
           beforeHandler(parser);
           parser->m_characterDataHandler(
               parser->m_handlerArg, (const XML_Char *)s,
