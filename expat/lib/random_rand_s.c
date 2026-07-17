@@ -42,7 +42,7 @@
 
 // Workaround MinGW GCC trouble with recognizing `rand_s`, likely related
 // to return type `error_t`; the symptom was:
-// > error: implicit declaration of function ‘rand_s’
+// > error: implicit declaration of function 'rand_s'
 #if defined(__MINGW32__)
 #  include <errno.h>
 #endif
