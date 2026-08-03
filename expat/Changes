@@ -6,28 +6,20 @@
                                 |_| XML parser
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!! <blink>Expat is UNDERSTAFFED and WITHOUT FUNDING.</blink>                 !!
-!!                 ~~~~~~~~~~~~                                              !!
-!! The following topics need *additional skilled C developers* to progress   !!
-!! in a timely manner or at all (loosely ordered by descending priority):    !!
-!!                            _______________________                        !!
-!! - teaming up on fixing the UNFIXED SECURITY ISSUES listed at:             !!
-!!                            """""""""""""""""""""""                        !!
-!!   https://github.com/libexpat/libexpat/issues/1160                        !!
+!! <blink>Expat has UNFIXED SECURITY ISSUES!</blink>                         !!
+!! Please see https://github.com/libexpat/libexpat/issues/1160 for details.  !!
 !!                                                                           !!
-!! - teaming up on researching and fixing future security reports and        !!
-!!   ClusterFuzz findings with few-days-max response times in communication  !!
-!!   in order to (1) have a sound fix ready before the end of a 90 days      !!
-!!   grace period and (2) in a sustainable manner,                           !!
-!!                                                                           !!
-!! - implementing and auto-testing XML 1.0r5 support                         !!
-!!   (needs discussion before pull requests),                                !!
-!!                                                                           !!
-!! For details, please reach out via e-mail to sebastian@pipping.org so we   !!
-!! can schedule a voice call on the topic, in English or German.             !!
-!!                                                                           !!
-!! THANK YOU!                        Sebastian Pipping -- Berlin, 2026-03-17 !!
+!! Starting 2026-08-01, for up to six months my work maintaining libexpat    !!
+!! will be funded by the City of Munich as part of their                     !!
+!! Open Source Sabbatical (https://opensource.muenchen.de/sabbatical.html)   !!
+!! — thank you!                                                              !!
+!!                                   Sebastian Pipping -- Berlin, 2026-08-03 !!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+Release 2.8.3 XXX XXX XX XXXX
+        Special thanks to:
+            City of Munich Open Source Sabbatical
+
 
 Release 2.8.2 Thu June 25 2026
         Security fixes:
