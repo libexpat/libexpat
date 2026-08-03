@@ -709,7 +709,8 @@ unicode_byte_type(char hi, char lo) {
     fromLim = *fromP + (((fromLim - *fromP) >> 1) << 1); /* shrink to even */  \
     /* Avoid copying the first half (2 bytes) of surrogate pairs (4 bytes) */  \
     if (fromLim - *fromP > ((toLim - *toP) << 1)                               \
-        && (GET_HI(fromLim - 2) & 0xF8) == 0xD8) {                             \
+        && /* are the last two bytes a high surrogate (0xD800-0xDBFF)? */      \
+        (GET_HI(fromLim - 2) & 0xFC) == 0xD8) {                                \
       fromLim -= 2;                                                            \
       res = XML_CONVERT_INPUT_INCOMPLETE;                                      \
     }                                                                          \
