@@ -1841,11 +1841,16 @@ START_TEST(test_utf16_high_surrogate_without_low) {
                       "\xd8\x00\0X"
                       "\0<\0/\0a\0>";
 
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)sizeof(text) - 1, XML_TRUE)
+  XML_Parser parser = XML_ParserCreate(NULL);
+  assert_true(parser != NULL);
+
+  if (_XML_Parse_SINGLE_BYTES(parser, text, (int)sizeof(text) - 1, XML_TRUE)
       != XML_STATUS_ERROR)
     fail("Lone UTF-16 high surrogate not faulted");
-  if (XML_GetErrorCode(g_parser) != XML_ERROR_INVALID_TOKEN)
-    xml_failure(g_parser);
+  if (XML_GetErrorCode(parser) != XML_ERROR_INVALID_TOKEN)
+    xml_failure(parser);
+
+  XML_ParserFree(parser);
 }
 END_TEST
 
