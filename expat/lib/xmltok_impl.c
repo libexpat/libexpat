@@ -41,7 +41,7 @@
 
 #ifdef XML_TOK_IMPL_C
 
-#  ifndef IS_INVALID_CHAR // i.e. for UTF-16 and XML_MIN_SIZE not defined
+#  ifndef IS_INVALID_CHAR // currently unused: all includers define it
 #    define IS_INVALID_CHAR(enc, ptr, n) (0)
 #  endif
 
