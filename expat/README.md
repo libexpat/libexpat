@@ -13,7 +13,7 @@
 >
 > Starting 2026-08-01, for up to six months my work maintaining libexpat
 > will be funded by the [City of Munich](https://en.wikipedia.org/wiki/Munich)
-> as part of their [Open Source Sabbatical](https://opensource.muenchen.de/sabbatical.html).
+> as part of their [Open Source Sabbatical](https://opensource.muenchen.de/software/libexpat.html#open-source-sabbatical).
 > Thank you! :heart: :pray:
 
 
