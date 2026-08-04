@@ -20,7 +20,6 @@ Release 2.8.3 XXX XXX XX XXXX
         Special thanks to:
             City of Munich Open Source Sabbatical
 
-
 Release 2.8.2 Thu June 25 2026
         Security fixes:
            #1246  CVE-2026-50219 -- Disallow calls to functions
