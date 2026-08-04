@@ -115,6 +115,8 @@ jobs:
         retry='retry --times 5 --'
         set -x
 
+        export ASAN_OPTIONS=verbosity=2
+
         make -C build test || {
             cat build/Testing/Temporary/LastTest.log
             false  # i.e. fail CI
