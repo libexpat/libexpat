@@ -106,6 +106,7 @@ jobs:
           -DCMAKE_BUILD_TYPE="${cmake_build_type}"
           -DEXPAT_CHAR_TYPE="${expat_char_type}"
           -DEXPAT_WARNINGS_AS_ERRORS=ON
+          -D_EXPAT_MSVC_ASAN=ON
           -Wdev
           -Wdeprecated
         )
@@ -139,6 +140,12 @@ jobs:
         )
         set -x
         cd expat/build
+        # Copy ASan DLL in place
+        find \
+            '/c/Program Files\Microsoft Visual Studio' \
+            -type f \
+            -name clang_rt.asan_dynamic-\*.dll \
+            -exec cp -v {} "tests/${cmake_build_type}/" \;
         cp -v "${cmake_build_type}/${expat_dll}" "tests/${cmake_build_type}/"
         ctest "${ctest_args[@]}"
 
