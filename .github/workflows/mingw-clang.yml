@@ -1,0 +1,131 @@
+#                          __  __            _
+#                       ___\ \/ /_ __   __ _| |_
+#                      / _ \\  /| '_ \ / _` | __|
+#                     |  __//  \| |_) | (_| | |_
+#                      \___/_/\_\ .__/ \__,_|\__|
+#                               |_| XML parser
+#
+# Copyright (c) 2026 Sebastian Pipping <sebastian@pipping.org>
+# Licensed under the MIT license:
+#
+# Permission is  hereby granted,  free of charge,  to any  person obtaining
+# a  copy  of  this  software   and  associated  documentation  files  (the
+# "Software"),  to  deal in  the  Software  without restriction,  including
+# without  limitation the  rights  to use,  copy,  modify, merge,  publish,
+# distribute, sublicense, and/or sell copies of the Software, and to permit
+# persons  to whom  the Software  is  furnished to  do so,  subject to  the
+# following conditions:
+#
+# The above copyright  notice and this permission notice  shall be included
+# in all copies or substantial portions of the Software.
+#
+# THE  SOFTWARE  IS  PROVIDED  "AS  IS",  WITHOUT  WARRANTY  OF  ANY  KIND,
+# EXPRESS  OR IMPLIED,  INCLUDING  BUT  NOT LIMITED  TO  THE WARRANTIES  OF
+# MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+# NO EVENT SHALL THE AUTHORS OR  COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+# DAMAGES OR  OTHER LIABILITY, WHETHER  IN AN  ACTION OF CONTRACT,  TORT OR
+# OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
+# USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+name: Compile and test with Clang-based MinGW
+
+on:
+  pull_request:
+  push:
+  schedule:
+    - cron: '0 2 * * 5'  # Every Friday at 2am
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  mingw_clang:
+    name: Compile and test with Clang-based MinGW (${{ matrix.name }})
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: char
+            cmake_args: -DEXPAT_CHAR_TYPE=char
+          - name: wchar_t
+            cmake_args: -DEXPAT_CHAR_TYPE=wchar_t
+    runs-on: ubuntu-26.04
+
+    steps:
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+      with:
+        persist-credentials: false
+
+    - name: Install build dependencies (everything but MinGW)
+      env:
+        DEBIAN_FRONTEND: noninteractive
+      run: |-
+        set -x
+
+        # Install 32bit Wine
+        sudo dpkg --add-architecture i386  # for wine32
+        sudo apt-get update  # due to new architecture
+        sudo timeout 10m apt-get install --yes --no-install-recommends -V \
+            retry \
+            wine \
+            wine32:i386
+
+    - name: Install build dependencies (Clang-based MinGW toolchain)
+      run: |-
+        version=20260826  # with LLVM/Clang 23.0.1
+        sha256sum=cee8d2ce3da5145ce4dc882e70d0b0719a783d53a99752c60948fc0659975a65
+
+        dirname="llvm-mingw-${version}-ucrt-ubuntu-22.04-x86_64"
+        tarball="${dirname}.tar.xz"
+        set -x
+        wget \
+            --progress=dot:giga \
+            "https://github.com/mstorsjo/llvm-mingw/releases/download/${version}/${tarball}"
+        sha256sum --check <<<"${sha256sum}  ${tarball}"
+        tar xf "${tarball}"
+        echo "${PWD}/${dirname}/bin" >>"${GITHUB_PATH}"
+
+    - name: Configure
+      env:
+        cmake_args: ${{ matrix.cmake_args }}
+      run: |-
+        set -u
+        args=(
+            -DCMAKE_TOOLCHAIN_FILE=cmake/mingw-toolchain-win32.cmake
+
+            -DCMAKE_{C,CXX}_FLAGS='-Wall -Wextra -pedantic -O1 -g -fsanitize=address,undefined -fno-sanitize-recover=all -fno-omit-frame-pointer'
+            -DCMAKE_{EXE,MODULE,SHARED}_LINKER_FLAGS='-g -fsanitize=address,undefined'
+
+            -DEXPAT_BUILD_DOCS=OFF
+            -DEXPAT_BUILD_TESTS=ON
+            -DEXPAT_WARNINGS_AS_ERRORS=ON
+
+            ${cmake_args}
+        )
+        set -x
+        cmake "${args[@]}" -S expat/ -B build/
+
+    - name: Build
+      run: |-
+        set -x
+        make -C build -j$(nproc) VERBOSE=1
+
+    - name: Run unit tests (takes about 3 minutes)
+      env:
+        retry: retry --times 5 --  # mitigate Wine crashing randomly in CI
+        WINEDEBUG: -all            # to reduce noise
+      run: |-
+        set -x
+
+        # Make Wine find the needed DLL files:
+        # - libc++.dll
+        # - libclang_rt.asan_dynamic-*.dll
+        # - libexpat*.dll
+        # - libunwind.dll
+        export WINEPATH="$(winepath -w build);$(winepath -w llvm-mingw-*-ucrt-ubuntu-*/i686-w64-mingw32/bin)"
+
+        make -C build CTEST_OUTPUT_ON_FAILURE=1 test
+
+        ${retry} make -C build run-xmltest
