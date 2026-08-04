@@ -6556,11 +6556,12 @@ storeAttributeValue(XML_Parser parser, const ENCODING *enc, XML_Bool isCdata,
         // Check if entity is complete, if not, mark down how much of it is
         // processed. A XML_SUSPENDED check here is not required as
         // appendAttributeValue will never suspend the parser.
-        if (textEnd != nextInEntity) {
+        if (nextInEntity < textEnd) {
           entity->processed
               = (int)(nextInEntity - (const char *)entity->textPtr);
           continue;
         }
+        assert(nextInEntity == textEnd);
 
         // Entity is complete. We cannot close it here since we need to first
         // process its possible inner entities (which are added to the
