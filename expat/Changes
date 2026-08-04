@@ -17,8 +17,25 @@
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 Release 2.8.3 XXX XXX XX XXXX
+        Security fixes:
+           #1296  CVE-2026-72522 -- Fix an out-of-bounds read and the resulting
+                    infinite loop caused by treating low surrogates (Unicode)
+                    the same as high surrogates in functions *_toUtf16.
+                    Needs Expat compiled with 16bit character support
+                    (e.g. with Firefox and/or on Windows) to be affected.
+                    Upstream CVSS 3.1 vector:
+                    AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H (CVSS score: 7.5)
+                    (Note the "AV:N" for network/remote, the "AV:L" in NVD by
+                    Mitre is mistaken.)
+                    Original bug report from Mozilla at:
+                    https://bugzilla.mozilla.org/show_bug.cgi?id=2053153
+
         Special thanks to:
+            Henri Sivonen
+                 and
+            Anthropic
             City of Munich Open Source Sabbatical
+            Mozilla Security Team
 
 Release 2.8.2 Thu June 25 2026
         Security fixes:
