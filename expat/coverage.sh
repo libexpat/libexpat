@@ -98,7 +98,7 @@ _call_cmake() {
         cmake_args+=( -DEXPAT_CONTEXT_BYTES=${xml_context} )
     fi
 
-    ${with_mingw} && cmake_args+=( -DCMAKE_TOOLCHAIN_FILE="${abs_source_dir}"/cmake/mingw-toolchain.cmake )
+    ${with_mingw} && cmake_args+=( -DCMAKE_TOOLCHAIN_FILE="${abs_source_dir}"/cmake/mingw-toolchain-win32.cmake )
     ${with_m32} && cmake_args+=( -D_EXPAT_M32=ON )
     ${with_ge} || cmake_args+=( -DEXPAT_GE=OFF )
     ${with_dtd} || cmake_args+=( -DEXPAT_DTD=OFF )

@@ -56,7 +56,7 @@ jobs:
             cmake_args:
           - os: ubuntu-22.04
             configure_args: --host=i686-w64-mingw32
-            cmake_args: -DCMAKE_TOOLCHAIN_FILE=cmake/mingw-toolchain.cmake
+            cmake_args: -DCMAKE_TOOLCHAIN_FILE=cmake/mingw-toolchain-win32.cmake
           - os: ubuntu-24.04
             configure_args: >-
               --enable-symbol-versioning
