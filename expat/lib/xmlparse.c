@@ -2738,7 +2738,12 @@ XML_GetCurrentLineNumber(XML_Parser parser) {
                       parser->m_eventPtr, &parser->m_position);
     parser->m_positionPtr = parser->m_eventPtr;
   }
-  return parser->m_position.lineNumber + 1;
+  // NOTE: XML_Size is known to wrap around for >2 4iB content
+  //       on 32bit machines and 64bit Windows, unless (non-default and
+  //       uncommon) XML_LARGE_SIZE is defined.
+  //       That's a bug and it only lives on because we cannot break
+  //       ABI compatibility of public API.
+  return (XML_Size)(parser->m_position.lineNumber + 1);
 }
 
 XML_Size XMLCALL
@@ -2750,7 +2755,12 @@ XML_GetCurrentColumnNumber(XML_Parser parser) {
                       parser->m_eventPtr, &parser->m_position);
     parser->m_positionPtr = parser->m_eventPtr;
   }
-  return parser->m_position.columnNumber;
+  // NOTE: XML_Size is known to wrap around for >2 4iB content
+  //       on 32bit machines and 64bit Windows, unless (non-default and
+  //       uncommon) XML_LARGE_SIZE is defined.
+  //       That's a bug and it only lives on because we cannot break
+  //       ABI compatibility of public API.
+  return (XML_Size)parser->m_position.columnNumber;
 }
 
 void XMLCALL
