@@ -8192,7 +8192,7 @@ poolGrow(STRING_POOL *pool) {
       pool->freeBlocks = tem;
       memcpy(pool->blocks->s, pool->start,
              (pool->end - pool->start) * sizeof(XML_Char));
-      pool->ptr = pool->blocks->s + (pool->ptr - pool->start);
+      pool->ptr = pool->blocks->s + EXPAT_SAFE_PTR_DIFF(pool->ptr, pool->start);
       pool->start = pool->blocks->s;
       pool->end = pool->start + pool->blocks->size;
       return XML_TRUE;
@@ -8205,7 +8205,8 @@ poolGrow(STRING_POOL *pool) {
 
     /* NOTE: Needs to be calculated prior to calling `realloc`
              to avoid dangling pointers: */
-    const ptrdiff_t offsetInsideBlock = pool->ptr - pool->start;
+    const ptrdiff_t offsetInsideBlock
+        = EXPAT_SAFE_PTR_DIFF(pool->ptr, pool->start);
 
     if (blockSize < 0) {
       /* This condition traps a situation where either more than
@@ -8268,8 +8269,9 @@ poolGrow(STRING_POOL *pool) {
     tem->next = pool->blocks;
     pool->blocks = tem;
     if (pool->ptr != pool->start)
-      memcpy(tem->s, pool->start, (pool->ptr - pool->start) * sizeof(XML_Char));
-    pool->ptr = tem->s + (pool->ptr - pool->start);
+      memcpy(tem->s, pool->start,
+             EXPAT_SAFE_PTR_DIFF(pool->ptr, pool->start) * sizeof(XML_Char));
+    pool->ptr = tem->s + EXPAT_SAFE_PTR_DIFF(pool->ptr, pool->start);
     pool->start = tem->s;
     pool->end = tem->s + blockSize;
   }
