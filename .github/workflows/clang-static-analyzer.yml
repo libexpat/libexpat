@@ -46,17 +46,17 @@ jobs:
     steps:
     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
 
-    - name: Install Clang 21 (including scan-build)
+    - name: Install Clang 22 (including scan-build)
       run: |-
         set -x
         source /etc/os-release
         wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
-        sudo add-apt-repository "deb https://apt.llvm.org/${UBUNTU_CODENAME}/ llvm-toolchain-${UBUNTU_CODENAME}-21 main"
+        sudo add-apt-repository "deb https://apt.llvm.org/${UBUNTU_CODENAME}/ llvm-toolchain-${UBUNTU_CODENAME}-22 main"
         sudo apt-get update  # due to new repository
         sudo apt-get install --yes --no-install-recommends -V \
-            clang-21 \
-            clang-tools-21
-        echo /usr/lib/llvm-21/bin >>"${GITHUB_PATH}"
+            clang-22 \
+            clang-tools-22
+        echo /usr/lib/llvm-22/bin >>"${GITHUB_PATH}"
 
     - name: Build using scan-build
       run: |
