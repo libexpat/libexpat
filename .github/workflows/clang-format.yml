@@ -43,6 +43,7 @@ permissions:
 jobs:
   clang_format:
     name: Enforce clang-format clean code
+    timeout-minutes: 30
     runs-on: ubuntu-24.04
     steps:
     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
@@ -56,7 +57,7 @@ jobs:
         wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
         sudo add-apt-repository "deb https://apt.llvm.org/${UBUNTU_CODENAME}/ llvm-toolchain-${UBUNTU_CODENAME}-22 main"
         sudo apt-get update  # due to new repository
-        sudo apt-get install --yes --no-install-recommends -V \
+        sudo timeout 10m apt-get install --yes --no-install-recommends -V \
             clang-format-22 \
             moreutils
         echo /usr/lib/llvm-22/bin >>"${GITHUB_PATH}"

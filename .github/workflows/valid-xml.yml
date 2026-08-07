@@ -43,6 +43,7 @@ permissions:
 jobs:
   checks:
     name: Ensure well-formed and valid XML
+    timeout-minutes: 15
     runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
@@ -55,7 +56,7 @@ jobs:
       run: |-
         set -x
         sudo apt-get update
-        sudo apt-get install --yes --no-install-recommends -V \
+        sudo timeout 10m apt-get install --yes --no-install-recommends -V \
             docbook \
             libxml2-utils \
             moreutils \
@@ -63,7 +64,7 @@ jobs:
 
         # NOTE: Ubuntu 24.04 has tidy 5.6.0 while we need more recent tidy 5.8.0
         wget --progress=dot:giga "https://github.com/htacg/tidy-html5/releases/download/${tidy_version}/tidy-${tidy_version}-Linux-64bit.deb"
-        sudo apt-get install --yes "./tidy-${tidy_version}-Linux-64bit.deb"
+        sudo timeout 10m apt-get install --yes "./tidy-${tidy_version}-Linux-64bit.deb"
 
     - name: Enforce clean XML
       run: |

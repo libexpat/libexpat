@@ -43,6 +43,7 @@ permissions:
 jobs:
   wasi_sdk:
     name: Build with WASI SDK
+    timeout-minutes: 15
     runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
@@ -56,7 +57,7 @@ jobs:
       run: |-
         set -x -u
         wget "https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-${wasi_sdk_major}/wasi-sdk-${wasi_sdk_major}.${wasi_sdk_minor}-x86_64-linux.deb"
-        sudo apt-get install --yes "./wasi-sdk-${wasi_sdk_major}.${wasi_sdk_minor}-x86_64-linux.deb"
+        sudo timeout 10m apt-get install --yes "./wasi-sdk-${wasi_sdk_major}.${wasi_sdk_minor}-x86_64-linux.deb"
 
     - name: Build using WASI SDK
       run: |

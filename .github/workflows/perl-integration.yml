@@ -42,6 +42,7 @@ permissions:
 jobs:
   perl_integration:
     name: Run Perl XML::Parser integration tests
+    timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
@@ -59,7 +60,7 @@ jobs:
       run: |
         set -x
         sudo apt-get update
-        sudo apt-get install --yes --no-install-recommends -V \
+        sudo timeout 10m apt-get install --yes --no-install-recommends -V \
             libfile-sharedir-install-perl \
             libfile-sharedir-perl
 

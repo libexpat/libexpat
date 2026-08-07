@@ -45,6 +45,7 @@ permissions:
 jobs:
   checks:
     name: Collect test coverage
+    timeout-minutes: 60
     runs-on: ubuntu-22.04
     env:
       CFLAGS: -g3 -pipe
@@ -62,7 +63,7 @@ jobs:
         sudo dpkg --add-architecture i386  # for wine32
         sudo apt-get update  # due to new architecture
 
-        sudo apt-get install --yes --no-install-recommends -V \
+        sudo timeout 10m apt-get install --yes --no-install-recommends -V \
             cmake \
             docbook-xml \
             docbook2x \
@@ -74,7 +75,7 @@ jobs:
             retry
 
         # Install 32bit Wine
-        sudo apt-get install --yes --no-install-recommends -V \
+        sudo timeout 10m apt-get install --yes --no-install-recommends -V \
             mingw-w64 \
             wine-stable \
             wine32:i386

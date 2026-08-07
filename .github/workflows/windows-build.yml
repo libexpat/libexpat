@@ -43,6 +43,7 @@ permissions:
 jobs:
   windows_build:
     name: Build on Windows (${{ matrix.runs-on }}, ${{ matrix.cmake_platform }}, ${{ matrix.expat_char_type }})
+    timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:

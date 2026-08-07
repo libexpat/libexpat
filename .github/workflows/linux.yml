@@ -47,6 +47,7 @@ permissions:
 jobs:
   checks:
     name: Perform checks
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
@@ -101,7 +102,7 @@ jobs:
         # Install 32bit Wine
         sudo dpkg --add-architecture i386  # for wine32
         sudo apt-get update  # due to new architecture
-        sudo apt-get install --yes --no-install-recommends -V \
+        sudo timeout 10m apt-get install --yes --no-install-recommends -V \
             mingw-w64 \
             retry \
             wine-stable \
@@ -116,14 +117,14 @@ jobs:
         sudo add-apt-repository "deb https://apt.llvm.org/${UBUNTU_CODENAME}/ llvm-toolchain-${UBUNTU_CODENAME}-22 main"
         sudo apt-get update  # due to new repository
         # NOTE: Please note the version-specific ${PATH} extension for Clang adding /usr/lib/llvm-22/bin in .ci.sh
-        sudo apt-get install --yes --no-install-recommends -V \
+        sudo timeout 10m apt-get install --yes --no-install-recommends -V \
             clang-22 \
             libclang-rt-22-dev \
             llvm-22
 
     - name: Install build dependencies (common)
       run: |-
-        sudo apt-get install --yes --no-install-recommends -V \
+        sudo timeout 10m apt-get install --yes --no-install-recommends -V \
             cmake \
             docbook2x \
             gcc-multilib \
