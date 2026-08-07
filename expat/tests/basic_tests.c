@@ -53,7 +53,7 @@
 #include "expat_config.h"
 
 #include <assert.h>
-
+#include <limits.h> // ULONG_MAX
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
@@ -68,6 +68,21 @@
 #include "handlers.h"
 #include "siphash.h"
 #include "basic_tests.h"
+
+#define EXPAT_TESTS_ASAN 1
+
+#if defined(__has_feature)
+#  if ! __has_feature(address_sanitizer)
+#    undef EXPAT_TESTS_ASAN
+#    define EXPAT_TESTS_ASAN 0
+#  endif
+#endif
+
+#if ULONG_MAX == 18446744073709551615u // 2^64-1
+#  define EXPAT_TESTS_64BIT 1
+#else
+#  define EXPAT_TESTS_64BIT 0
+#endif
 
 static void
 basic_setup(void) {
@@ -3439,12 +3454,16 @@ START_TEST(test_buffer_can_grow_to_max) {
     if (s != XML_STATUS_OK)
       xml_failure(parser);
 
+// Avoid running into "AddressSanitizer: out of memory" on 32bit Windows
+#if ! defined(_WIN32) || EXPAT_TESTS_ASAN == 0 || EXPAT_TESTS_64BIT == 1
     // XML_CONTEXT_BYTES of the prefix may remain in the buffer;
     // subtracting the whole prefix is easiest, and close enough.
     assert_true(XML_GetBuffer(parser, maxbuf - prefix_len) != NULL);
     // The limit should be consistent; no prefix should allow us to
     // reach above the max buffer size.
     assert_true(XML_GetBuffer(parser, maxbuf + 1) == NULL);
+#endif
+
     XML_ParserFree(parser);
   }
 }
