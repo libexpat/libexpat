@@ -55,10 +55,12 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+
     - name: Install build dependencies
       run: |
         sudo rm /usr/local/bin/2to3  # so that "brew link" will work
         brew bundle                  # acts upon file Brewfile
+
     - name: Perform check "${{ matrix.MODE }}"
       env:
         MODE: ${{ matrix.MODE }}
