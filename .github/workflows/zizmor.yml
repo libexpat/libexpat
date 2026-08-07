@@ -5,9 +5,7 @@
 #                      \___/_/\_\ .__/ \__,_|\__|
 #                               |_| XML parser
 #
-# Copyright (c) 2020-2025 Sebastian Pipping <sebastian@pipping.org>
-# Copyright (c) 2023      Joyce Brum <joycebrum@google.com>
-# Copyright (c) 2024      Dag-Erling Smørgrav <des@des.dev>
+# Copyright (c) 2026 Sebastian Pipping <sebastian@pipping.org>
 # Licensed under the MIT license:
 #
 # Permission is  hereby granted,  free of charge,  to any  person obtaining
@@ -29,11 +27,11 @@
 # OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 # USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-name: Run macOS CI tasks
+name: Enforce GitHub Actions security via zizmor
 
 on:
-  pull_request:
   push:
+  pull_request:
   schedule:
     - cron: '0 2 * * 5'  # Every Friday at 2am
   workflow_dispatch:
@@ -42,29 +40,14 @@ permissions:
   contents: read
 
 jobs:
-  checks:
-    name: Perform checks
-    strategy:
-      matrix:
-        os: [macos-14, macos-15]
-        include:
-          - MODE: cmake-oos
-          - MODE: distcheck
-          - MODE: qa-sh
-            FLAT_ENV: CC=clang CXX=clang++ LD=clang++ QA_SANITIZER=address
-    runs-on: ${{ matrix.os }}
+  zizmor:
+    name: Enforce GitHub Actions security via zizmor
+    runs-on: ubuntu-24.04
     steps:
-    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
-      with:
-        persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
 
-    - name: Install build dependencies
-      run: |
-        sudo rm /usr/local/bin/2to3  # so that "brew link" will work
-        brew bundle                  # acts upon file Brewfile
-
-    - name: Perform check "${{ matrix.MODE }}"
-      env:
-        MODE: ${{ matrix.MODE }}
-      run: |
-        env ${{ matrix.FLAT_ENV }} ./.ci.sh
+      - uses: zizmorcore/zizmor-action@3dc1ecc9bcb9e94e9b2c709687979e1298497054  # v0.6.2
+        with:
+          advanced-security: false

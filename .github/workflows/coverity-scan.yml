@@ -50,6 +50,7 @@ jobs:
     steps:
     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
       with:
+        persist-credentials: false
         # The next two lines ensure clean and public-only submissions
         repository: libexpat/libexpat
         ref: master
