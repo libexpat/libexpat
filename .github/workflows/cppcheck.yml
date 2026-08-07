@@ -29,7 +29,7 @@
 # OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 # USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-name: Run Cppcheck (from macOS Homebrew)
+name: Run Cppcheck
 
 on:
   pull_request:
@@ -44,18 +44,41 @@ permissions:
 jobs:
   checks:
     name: Run Cppcheck
-    runs-on: macos-14
+    runs-on: ubuntu-24.04
     steps:
     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
       with:
         persist-credentials: false
 
-    - name: Install runtime dependencies
+    - name: Build and install Cppcheck (less than 2 minutes)
       run: |
-        set -x
-        brew update
-        exec brew install cppcheck
+        commit=e73bf44c3e49686b7495fab352d03a6c6075516b  # 2.21.0
 
-    - name: Run Cppcheck
+        cmake_args=(
+            -G Ninja  # for faster builds
+            -DCMAKE_BUILD_TYPE=Release  # for runtime performance
+        )
+        set -x
+
+        git init -b main cppcheck/
+
+        pushd cppcheck/
+          git fetch --depth 1 https://github.com/cppcheck-opensource/cppcheck "${commit}"
+          git -c advice.detachedHead=false checkout FETCH_HEAD
+        popd
+
+        cmake "${cmake_args[@]}" -S cppcheck/ -B build/
+
+        cmake --build build/ --parallel "$(nproc)"
+
+        sudo cmake --install build/
+
+        rm -Rf cppcheck/ build/
+
+        # Smoke-test installed version
+        [[ $(type -P cppcheck) == /usr/local/bin/cppcheck ]]
+        cppcheck --version
+
+    - name: Run Cppcheck (less than 6 minutes)
       run: |
         exec .github/workflows/scripts/mass-cppcheck.sh
