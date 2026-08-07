@@ -88,6 +88,15 @@ if(DEFINED BUILD_SHARED_LIBS)
 else()
     set(_EXPAT_SHARED_LIBS_DEFAULT ON)
 endif()
+
+# AIX has none(!) of the high quality entropy sources supported by Expat (e.g.
+# getentropy(3)) but, unlike UNIX, has /dev/urandom availability guaranteed.
+if(AIX)  # needs CMake >=4.0 (or explicit `-DAIX=ON`)
+    set(_EXPAT_DEV_URANDOM_DEFAULT ON)
+else()
+    set(_EXPAT_DEV_URANDOM_DEFAULT OFF)
+endif()
+
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE NoConfig)  # so that accessing EXPAT_*_POSTFIX will be waterproof
 endif()
@@ -152,7 +161,7 @@ expat_shy_set(EXPAT_NS ON CACHE BOOL "Define to make XML Namespaces functionalit
 mark_as_advanced(EXPAT_NS)
 expat_shy_set(EXPAT_WARNINGS_AS_ERRORS OFF CACHE BOOL "Treat all compiler warnings as errors")
 if(UNIX OR _EXPAT_HELP)
-    expat_shy_set(EXPAT_DEV_URANDOM OFF CACHE BOOL "Define to include code reading entropy from `/dev/urandom'.")
+    expat_shy_set(EXPAT_DEV_URANDOM ${_EXPAT_DEV_URANDOM_DEFAULT} CACHE BOOL "Define to include code reading entropy from `/dev/urandom'.")
     mark_as_advanced(EXPAT_DEV_URANDOM)
 endif()
 if(UNIX OR WASI OR _EXPAT_HELP)
