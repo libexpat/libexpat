@@ -7897,13 +7897,13 @@ copy_salt_to_sipkey(XML_Parser parser, struct sipkey *key) {
 }
 
 static unsigned long FASTCALL
-hash(XML_Parser parser, KEY s) {
+hash(XML_Parser parser, KEY s, size_t keyLen) {
   struct siphash state;
   struct sipkey key;
   (void)sip24_valid;
   copy_salt_to_sipkey(parser, &key);
   sip24_init(&state, &key);
-  sip24_update(&state, s, keylen(s) * sizeof(XML_Char));
+  sip24_update(&state, s, keyLen * sizeof(XML_Char));
   return (unsigned long)sip24_final(&state);
 }
 
@@ -7924,9 +7924,9 @@ lookup(XML_Parser parser, HASH_TABLE *table, KEY name, size_t createSize) {
       return NULL;
     }
     memset(table->v, 0, tsize);
-    i = hash(parser, name) & ((unsigned long)table->size - 1);
+    i = hash(parser, name, keylen(name)) & ((unsigned long)table->size - 1);
   } else {
-    unsigned long h = hash(parser, name);
+    unsigned long h = hash(parser, name, keylen(name));
     unsigned long mask = (unsigned long)table->size - 1;
     unsigned char step = 0;
     i = h & mask;
@@ -7964,7 +7964,8 @@ lookup(XML_Parser parser, HASH_TABLE *table, KEY name, size_t createSize) {
       memset(newV, 0, tsize);
       for (i = 0; i < table->size; i++)
         if (table->v[i]) {
-          unsigned long newHash = hash(parser, table->v[i]->name);
+          KEY const key = table->v[i]->name;
+          unsigned long newHash = hash(parser, key, keylen(key));
           size_t j = newHash & newMask;
           step = 0;
           while (newV[j]) {
