@@ -44,6 +44,7 @@ permissions:
 jobs:
   checks:
     name: Ensure that GNU Autotools and CMake build systems agree
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
@@ -91,7 +92,7 @@ jobs:
       run: |-
         set -x
         sudo apt-get update
-        sudo apt-get install --yes --no-install-recommends -V \
+        sudo timeout 10m apt-get install --yes --no-install-recommends -V \
             cmake \
             docbook2x \
             lzip \

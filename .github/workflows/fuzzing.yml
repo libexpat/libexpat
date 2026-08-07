@@ -42,6 +42,7 @@ permissions:
 jobs:
   run_fuzzers:
     name: Run fuzzing regression tests
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
@@ -64,7 +65,7 @@ jobs:
         wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
         sudo add-apt-repository "deb https://apt.llvm.org/${UBUNTU_CODENAME}/ llvm-toolchain-${UBUNTU_CODENAME}-22 main"
         sudo apt-get update  # due to new repository
-        sudo apt-get install --yes --no-install-recommends -V \
+        sudo timeout 10m apt-get install --yes --no-install-recommends -V \
             clang-22 \
             libclang-rt-22-dev \
             llvm-22
@@ -73,7 +74,7 @@ jobs:
     - name: Install build dependencies
       run: |-
         set -x
-        sudo apt-get install --yes --no-install-recommends -V \
+        sudo timeout 10m apt-get install --yes --no-install-recommends -V \
             autoconf \
             automake \
             docbook2x \

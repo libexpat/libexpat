@@ -42,6 +42,7 @@ permissions:
 jobs:
   windows_binaries:
     name: Build ${{ matrix.expat_platform }} binaries
+    timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:

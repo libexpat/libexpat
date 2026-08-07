@@ -42,6 +42,7 @@ permissions:
 jobs:
   solaris:
     name: Build in a Solaris VM
+    timeout-minutes: 30
     runs-on: ubuntu-24.04
     steps:
     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
@@ -60,7 +61,7 @@ jobs:
           #       Exit code 3 means "all now installed and some not before".
           #       Exit code 4 means "all now installed and all already before".
           #       Command "pkg list -a" can show a list of packages available.
-          pkg install \
+          timeout 10m pkg install \
             autoconf \
             automake \
             bash \
