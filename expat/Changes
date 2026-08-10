@@ -30,12 +30,54 @@ Release 2.8.3 XXX XXX XX XXXX
                     Original bug report from Mozilla at:
                     https://bugzilla.mozilla.org/show_bug.cgi?id=2053153
 
+        Bug fixes:
+     #1297 #1300  lib: Fix support for 2+ GiB documents (regression from 2.8.2)
+           #1286  lib: Reject empty version in the XML declaration
+     #1305 #1306  lib: Fix printf format for AIX
+
+        Other changes:
+           #1309  CMake|AIX: Enable EXPAT_DEV_URANDOM by default for AIX
+           #1295  CMake|Windows: Add a 64bit MinGW toolchain file
+     #1287 #1289  CMake|Windows: Start invoking MSVC with /source-charset:utf-8
+           #1289  CMake|Windows: Start requiring MSVC 2015 Update 2 or later
+           #1300  Document the current wrap-around issues with functions
+                    - XML_GetCurrentByteIndex
+                    - XML_GetCurrentColumnNumber
+                    - XML_GetCurrentLineNumber
+                    - XML_GetAttributeInfo
+                    explicitly.
+           #1303  Address Clang Static Analyzer 22 warning
+                    `core.NullPointerArithm`
+
+        Infrastructure:
+           #1311  CI: Limit workflow runtime and package installation runtime
+           #1310  CI: Pin Cppcheck version for a robust CI
+           #1310  CI: Migrate Cppcheck CI from macOS to Linux
+           #1312  CI: Get CFLAGS and CXXFLAGS back in sync for both Emscripten
+                    and WASI SDK
+           #1304  CI: Activate AddressSanitizer for MSVC Windows CI
+           #1308  CI: Introduce zizmor static analysis for GitHub Actions
+           #1308  CI: Start using `persist-credentials: false` with Git checkout
+           #1219  CI: Add a 7 day cooldown to Dependabot for GitHub Actions
+     #1302 #1303  CI: Bump Clang from 21 to 22
+     #1293 #1294  Update project status for 2026-08
+     #1301 #1307  Add SPDX license identifiers to the source code
+
         Special thanks to:
+            Evgeny Kotkov
             Henri Sivonen
+            Kartik Kenchi
+            Matthew Fernandez
+            Matthew Wozniczka
+            Stan Ulbrych
+            Tuukka Pasanen
+            William Woodruff
                  and
             Anthropic
             City of Munich Open Source Sabbatical
             Mozilla Security Team
+            Subversion
+            zizmor static analysis
 
 Release 2.8.2 Thu June 25 2026
         Security fixes:
