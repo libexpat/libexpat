@@ -22,6 +22,7 @@
    Copyright (c) 2025      Berkay Eren Ürün <berkay.ueruen@siemens.com>
    Copyright (c) 2026      Matthew Fernandez <matthew.fernandez@gmail.com>
    Copyright (c) 2026      Kartik Kenchi <netliomax25@gmail.com>
+   Copyright (c) 2026      Evgeny Kotkov <kotkov@apache.org>
    Licensed under the MIT license:
 
    Permission is  hereby granted,  free of charge,  to any  person obtaining
