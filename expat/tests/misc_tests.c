@@ -872,6 +872,36 @@ START_TEST(test_misc_low_surrogate_mozilla_bug_2053153) {
 }
 END_TEST
 
+START_TEST(test_misc_input_2gb) {
+  XML_Parser parser;
+  const char *const doc = "<?xml version='1.0'?><doc/>";
+  unsigned long long offset = 0;
+  char buf[4096];
+
+  if (g_chunkSize != 0) {
+    return; // this test is slow, and doesn't use _XML_Parse_SINGLE_BYTES().
+  }
+
+  memset(buf, ' ', sizeof(buf));
+
+  parser = XML_ParserCreate(NULL);
+
+  assert_true(XML_Parse(parser, doc, (int)strlen(doc), XML_FALSE)
+              == XML_STATUS_OK);
+  offset += strlen(doc);
+
+  while (offset < 2ULL * 1024 * 1024 * 1024) {
+    assert_true(XML_Parse(parser, buf, sizeof(buf), XML_FALSE)
+                == XML_STATUS_OK);
+    offset += sizeof(buf);
+  }
+
+  assert_true(XML_Parse(parser, NULL, 0, XML_TRUE) == XML_STATUS_OK);
+
+  XML_ParserFree(parser);
+}
+END_TEST
+
 void
 make_miscellaneous_test_case(Suite *s) {
   TCase *tc_misc = tcase_create("miscellaneous tests");
@@ -905,6 +935,6 @@ make_miscellaneous_test_case(Suite *s) {
   tcase_add_test(tc_misc, test_misc_no_infinite_loop_issue_1161);
   tcase_add_test(tc_misc, test_misc_calls_forbidden_from_handlers);
   tcase_add_test(tc_misc, test_misc_resume_parser_forbidden_from_handler);
-
+  tcase_add_test(tc_misc, test_misc_input_2gb);
   tcase_add_test(tc_misc, test_misc_low_surrogate_mozilla_bug_2053153);
 }
