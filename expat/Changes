@@ -48,6 +48,9 @@ Release 2.8.3 XXX XXX XX XXXX
                     explicitly.
            #1303  Address Clang Static Analyzer 22 warning
                     `core.NullPointerArithm`
+     #1313 #1314  Version info bumped from 13:2:12 (libexpat*.so.1.12.2)
+                    to 13:3:12 (libexpat*.so.1.12.3); see https://verbump.de/
+                    for what these numbers do
 
         Infrastructure:
            #1311  CI: Limit workflow runtime and package installation runtime
