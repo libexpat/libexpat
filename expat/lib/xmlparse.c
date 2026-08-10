@@ -51,6 +51,7 @@
    Copyright (c) 2026      Kartik Kenchi <netliomax25@gmail.com>
    Copyright (c) 2026      Haris Hussain <hextheshadow0x@gmail.com>
    Copyright (c) 2026      Evgeny Kotkov <kotkov@apache.org>
+   Copyright (c) 2026      Alberto Maschietto <albertomaschietto9@gmail.com>
    Licensed under the MIT license:
 
    Permission is  hereby granted,  free of charge,  to any  person obtaining
@@ -4067,8 +4068,8 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
     unsigned int nsAttsSize = 1u << parser->m_nsAttsPower;
     unsigned char oldNsAttsPower = parser->m_nsAttsPower;
     /* size of hash table must be at least 2 * (# of prefixed attributes) */
-    if ((nPrefixes << 1)
-        >> parser->m_nsAttsPower) { /* true for m_nsAttsPower = 0 */
+    if (parser->m_nsAttsPower == 0
+        || (nPrefixes >> (parser->m_nsAttsPower - 1))) {
       /* hash table size must also be a power of 2 and >= 8 */
       while (nPrefixes >> parser->m_nsAttsPower++)
         ;
