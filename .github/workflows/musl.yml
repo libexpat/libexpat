@@ -61,7 +61,7 @@ jobs:
       run: |
         cmake_args=(
           -DCMAKE_C_COMPILER=musl-gcc
-          -DCMAKE_CXX_COMPILER=g++  # musl-tools does not support C++
+          -DCMAKE_CXX_COMPILER=false  # musl-tools does not support C++
           -DCMAKE_C_FLAGS='-O1 -pipe -Wall -Wextra -pedantic -Wno-overlength-strings'
           -DCMAKE_CXX_FLAGS='-O0 -pipe'
           -DEXPAT_BUILD_DOCS=OFF
@@ -70,3 +70,7 @@ jobs:
         set -x
         cmake "${cmake_args[@]}" -S expat/ -B build/
         make -C build -j$(nproc) VERBOSE=1 all
+
+    - name: Run the test suite
+      run: |
+        make -C build/ test run-xmltest
