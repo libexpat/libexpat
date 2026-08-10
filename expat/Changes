@@ -16,7 +16,7 @@
 !!                                   Sebastian Pipping -- Berlin, 2026-08-03 !!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-Release 2.8.3 XXX XXX XX XXXX
+Release 2.8.3 Mon August 10 2026
         Security fixes:
            #1296  CVE-2026-72522 -- Fix an out-of-bounds read and the resulting
                     infinite loop caused by treating low surrogates (Unicode)
