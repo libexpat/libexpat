@@ -70,3 +70,7 @@ jobs:
         set -x
         cmake "${cmake_args[@]}" -S expat/ -B build/
         make -C build -j$(nproc) VERBOSE=1 all
+
+    - name: Run the test suite
+      run: |
+        make -C build/ test run-xmltest
