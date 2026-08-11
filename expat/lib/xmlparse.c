@@ -2739,7 +2739,7 @@ XML_GetCurrentLineNumber(XML_Parser parser) {
                       parser->m_eventPtr, &parser->m_position);
     parser->m_positionPtr = parser->m_eventPtr;
   }
-  // NOTE: XML_Size is known to wrap around for >2 4iB content
+  // NOTE: XML_Size is known to wrap around for >4 GiB content
   //       on 32bit machines and 64bit Windows, unless (non-default and
   //       uncommon) XML_LARGE_SIZE is defined.
   //       That's a bug and it only lives on because we cannot break
@@ -2756,7 +2756,7 @@ XML_GetCurrentColumnNumber(XML_Parser parser) {
                       parser->m_eventPtr, &parser->m_position);
     parser->m_positionPtr = parser->m_eventPtr;
   }
-  // NOTE: XML_Size is known to wrap around for >2 4iB content
+  // NOTE: XML_Size is known to wrap around for >4 GiB content
   //       on 32bit machines and 64bit Windows, unless (non-default and
   //       uncommon) XML_LARGE_SIZE is defined.
   //       That's a bug and it only lives on because we cannot break
