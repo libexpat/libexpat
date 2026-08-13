@@ -16,6 +16,25 @@
 !!                                   Sebastian Pipping -- Berlin, 2026-08-03 !!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
+Release 2.8.4 XXX XXXXXX XX XXXX
+        Security fixes:
+           #1321  CVE-2026-66046 -- Fix quadratic runtime from "attribute
+                    isCdata lookups" that allowed denial of service attacks
+                    through moderately sized crafted XML input (CWE-407).
+                    The vulnerability is closely related to past CVE-2026-45186
+                    that was fixed with Expat 2.8.1.
+                    Please note that a layer of compression around XML can
+                    significantly reduce the minimum attack payload size.
+                    Upstream CVSS 3.1 vector:
+                    AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H (CVSS score: 7.5)
+                    (Note the "AV:N" for network/remote.)
+
+        Special thanks to:
+            Fabian Wahle (Hap Security)
+                 and
+            Moonshot AI
+            Z.ai
+
 Release 2.8.3 Mon August 10 2026
         Security fixes:
            #1296  CVE-2026-72522 -- Fix an out-of-bounds read and the resulting
