@@ -312,7 +312,15 @@
                 </li>
 
                 <li>
+                  <a href="#XML_GetCurrentByteIndex64">XML_GetCurrentByteIndex64</a>
+                </li>
+
+                <li>
                   <a href="#XML_GetCurrentLineNumber">XML_GetCurrentLineNumber</a>
+                </li>
+
+                <li>
+                  <a href="#XML_GetCurrentLineNumber64">XML_GetCurrentLineNumber64</a>
                 </li>
 
                 <li>
@@ -320,11 +328,24 @@
                 </li>
 
                 <li>
+                  <a href=
+                  "#XML_GetCurrentColumnNumber64">XML_GetCurrentColumnNumber64</a>
+                </li>
+
+                <li>
                   <a href="#XML_GetCurrentByteCount">XML_GetCurrentByteCount</a>
                 </li>
 
                 <li>
+                  <a href="#XML_GetCurrentByteCount64">XML_GetCurrentByteCount64</a>
+                </li>
+
+                <li>
                   <a href="#XML_GetInputContext">XML_GetInputContext</a>
+                </li>
+
+                <li>
+                  <a href="#XML_GetInputContext64">XML_GetInputContext64</a>
                 </li>
               </ul>
             </li>
@@ -393,6 +414,10 @@
 
                 <li>
                   <a href="#XML_GetAttributeInfo">XML_GetAttributeInfo</a>
+                </li>
+
+                <li>
+                  <a href="#XML_GetAttributeInfo64">XML_GetAttributeInfo64</a>
                 </li>
 
                 <li>
@@ -796,9 +821,10 @@ make install
         </dt>
 
         <dd>
-          If defined, makes the additional function <code><a href=
-          "#XML_GetAttributeInfo">XML_GetAttributeInfo</a></code> available for reporting
-          attribute byte offsets.
+          If defined, makes the additional functions <code><a href=
+          "#XML_GetAttributeInfo">XML_GetAttributeInfo</a></code> and <code><a href=
+          "#XML_GetAttributeInfo64">XML_GetAttributeInfo64</a></code> available for
+          reporting attribute byte offsets.
         </dd>
       </dl>
 
@@ -2924,6 +2950,23 @@ XML_GetCurrentByteIndex(XML_Parser p);
         "#XML_LARGE_SIZE">XML_LARGE_SIZE</a></code>.
       </p>
 
+      <h4 id="XML_GetCurrentByteIndex64">
+        XML_GetCurrentByteIndex64
+      </h4>
+
+      <pre class="fcndec">
+/* Added in Expat 2.9.0. */
+int64_t XMLCALL
+XML_GetCurrentByteIndex64(XML_Parser p);
+</pre>
+      <div class="fcndef">
+        Return the byte offset of the position. This always corresponds to the values
+        returned by <code><a href=
+        "#XML_GetCurrentLineNumber64">XML_GetCurrentLineNumber64</a></code> and
+        <code><a href=
+        "#XML_GetCurrentColumnNumber64">XML_GetCurrentColumnNumber64</a></code>.
+      </div>
+
       <h4 id="XML_GetCurrentLineNumber">
         XML_GetCurrentLineNumber
       </h4>
@@ -2943,6 +2986,20 @@ XML_GetCurrentLineNumber(XML_Parser p);
         (non-default and uncommon) macro <code><a href=
         "#XML_LARGE_SIZE">XML_LARGE_SIZE</a></code>.
       </p>
+
+      <h4 id="XML_GetCurrentLineNumber64">
+        XML_GetCurrentLineNumber64
+      </h4>
+
+      <pre class="fcndec">
+/* Added in Expat 2.9.0. */
+uint64_t XMLCALL
+XML_GetCurrentLineNumber64(XML_Parser p);
+</pre>
+      <div class="fcndef">
+        Return the line number of the position. The first line is reported as
+        <code>1</code>.
+      </div>
 
       <h4 id="XML_GetCurrentColumnNumber">
         XML_GetCurrentColumnNumber
@@ -2964,6 +3021,20 @@ XML_GetCurrentColumnNumber(XML_Parser p);
         "#XML_LARGE_SIZE">XML_LARGE_SIZE</a></code>.
       </p>
 
+      <h4 id="XML_GetCurrentColumnNumber64">
+        XML_GetCurrentColumnNumber64
+      </h4>
+
+      <pre class="fcndec">
+/* Added in Expat 2.9.0. */
+uint64_t XMLCALL
+XML_GetCurrentColumnNumber64(XML_Parser p);
+</pre>
+      <div class="fcndef">
+        Return the <em>offset</em>, from the beginning of the current line, of the
+        position. The first column is reported as <code>0</code>.
+      </div>
+
       <h4 id="XML_GetCurrentByteCount">
         XML_GetCurrentByteCount
       </h4>
@@ -2983,6 +3054,22 @@ XML_GetCurrentByteCount(XML_Parser p);
         <strong>Note:</strong> Type <code>int</code> is known to wrap around (on both
         32bit platforms and 64bit platforms).
       </p>
+
+      <h4 id="XML_GetCurrentByteCount64">
+        XML_GetCurrentByteCount64
+      </h4>
+
+      <pre class="fcndec">
+/* Added in Expat 2.9.0. */
+uint64_t XMLCALL
+XML_GetCurrentByteCount64(XML_Parser p);
+</pre>
+      <div class="fcndef">
+        Return the number of bytes in the current event. Returns <code>0</code> if the
+        event is inside a reference to an internal entity and for the end-tag event for
+        empty element tags (the later can be used to distinguish empty-element tags from
+        empty elements using separate start and end tags).
+      </div>
 
       <h4 id="XML_GetInputContext">
         XML_GetInputContext
@@ -3022,6 +3109,43 @@ XML_GetInputContext(XML_Parser p,
         <p>
           <strong>Note:</strong> Type <code>int</code> is known to wrap around (on both
           32bit platforms and 64bit platforms).
+        </p>
+      </div>
+
+      <h4 id="XML_GetInputContext64">
+        XML_GetInputContext64
+      </h4>
+
+      <pre class="fcndec">
+/* Added in Expat 2.9.0. */
+const char * XMLCALL
+XML_GetInputContext64(XML_Parser p,
+                    int64_t *offset,
+                    zint64_t *size);
+</pre>
+      <div class="fcndef">
+        <p>
+          Returns the parser's input buffer, sets the integer pointed at by
+          <code>offset</code> to the offset within this buffer of the current parse
+          position, and set the integer pointed at by <code>size</code> to the size of
+          the returned buffer.
+        </p>
+
+        <p>
+          This should only be called from within a handler during an active parse and the
+          returned buffer should only be referred to from within the handler that made
+          the call. This input buffer contains the untranslated bytes of the input.
+        </p>
+
+        <p>
+          Only a limited amount of context is kept, so if the event triggering a call
+          spans over a very large amount of input, the actual parse position may be
+          before the beginning of the buffer.
+        </p>
+
+        <p>
+          If <code>XML_CONTEXT_BYTES</code> is zero, this will always return
+          <code>NULL</code>.
         </p>
       </div>
 
@@ -3442,6 +3566,33 @@ typedef struct {
         (non-default and uncommon) macro <code><a href=
         "#XML_LARGE_SIZE">XML_LARGE_SIZE</a></code>.
       </p>
+
+      <h4 id="XML_GetAttributeInfo64">
+        XML_GetAttributeInfo64
+      </h4>
+
+      <pre class="fcndec">
+/* Added in Expat 2.9.0. */
+const XML_AttrInfo64 * XMLCALL
+XML_GetAttributeInfo64(XML_Parser parser);
+</pre>
+
+      <pre class="signature">
+/* Added in Expat 2.9.0. */
+typedef struct {
+  int64_t  nameStart;  /* Offset to beginning of the attribute name. */
+  int64_t  nameEnd;    /* Offset after the attribute name's last byte. */
+  int64_t  valueStart; /* Offset to beginning of the attribute value. */
+  int64_t  valueEnd;   /* Offset after the attribute value's last byte. */
+} XML_AttrInfo64;
+</pre>
+      <div class="fcndef">
+        Returns an array of <code>XML_AttrInfo64</code> structures for the
+        attribute/value pairs passed in the last call to the
+        <code>XML_StartElementHandler</code> that were specified in the start-tag rather
+        than defaulted. Each attribute/value pair counts as 1; thus the number of entries
+        in the array is <code>XML_GetSpecifiedAttributeCount(parser) / 2</code>.
+      </div>
 
       <h4 id="XML_SetEncoding">
         XML_SetEncoding
