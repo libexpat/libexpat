@@ -85,3 +85,9 @@ EXPORTS
 @_EXPAT_COMMENT_DTD_OR_GE@ XML_SetAllocTrackerActivationThreshold @73
 ; added with version 2.8.0
   XML_SetHashSalt16Bytes @74
+; added with version 2.9.0
+  XML_GetCurrentByteCount64 @75
+  XML_GetCurrentByteIndex64 @76
+  XML_GetCurrentColumnNumber64 @77
+  XML_GetCurrentLineNumber64 @78
+  XML_GetInputContext64 @79

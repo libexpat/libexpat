@@ -48,7 +48,7 @@
 #ifndef Expat_INCLUDED
 #  define Expat_INCLUDED 1
 
-#  include <stdint.h> // for uint8_t
+#  include <stdint.h> // for int64_t, uint8_t, uint64_t
 #  include <stdlib.h>
 #  include "expat_external.h"
 
@@ -965,14 +965,19 @@ XML_GetErrorCode(XML_Parser parser);
    Note: XML_GetCurrentByteIndex returns -1 to indicate an error.
 */
 XMLPARSEAPI(XML_Size) XML_GetCurrentLineNumber(XML_Parser parser);
+XMLPARSEAPI(uint64_t) XML_GetCurrentLineNumber64(XML_Parser parser);
 XMLPARSEAPI(XML_Size) XML_GetCurrentColumnNumber(XML_Parser parser);
+XMLPARSEAPI(uint64_t) XML_GetCurrentColumnNumber64(XML_Parser parser);
 XMLPARSEAPI(XML_Index) XML_GetCurrentByteIndex(XML_Parser parser);
+XMLPARSEAPI(int64_t) XML_GetCurrentByteIndex64(XML_Parser parser);
 
 /* Return the number of bytes in the current event.
    Returns 0 if the event is in an internal entity.
 */
 XMLPARSEAPI(int)
 XML_GetCurrentByteCount(XML_Parser parser);
+XMLPARSEAPI(uint64_t)
+XML_GetCurrentByteCount64(XML_Parser parser);
 
 /* If XML_CONTEXT_BYTES is >=1, returns the input buffer, sets
    the integer pointed to by offset to the offset within this buffer
@@ -986,6 +991,8 @@ XML_GetCurrentByteCount(XML_Parser parser);
 */
 XMLPARSEAPI(const char *)
 XML_GetInputContext(XML_Parser parser, int *offset, int *size);
+XMLPARSEAPI(const char *)
+XML_GetInputContext64(XML_Parser parser, int64_t *offset, uint64_t *size);
 
 /* For backwards compatibility with previous versions. */
 #  define XML_GetErrorLineNumber XML_GetCurrentLineNumber
