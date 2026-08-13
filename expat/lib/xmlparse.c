@@ -381,6 +381,22 @@ typedef struct {
   const XML_Char *value;
 } DEFAULT_ATTRIBUTE;
 
+// This structure allows mapping attribute names to instances of
+// `DEFAULT_ATTRIBUTE`.
+typedef struct {
+  // Member `name` goes first to make this structure compatible with structure
+  // `NAMED` (further up), which is needed to support use of structure
+  // `NAME_AND_DEFAULT_ATTRIBUTE` in a hash table as implemented by function
+  // `lookup` (further down).
+  const XML_Char *name;
+  // We would store a `DEFAULT_ATTRIBUTE *` here but the backing array
+  // can be reallocated which would invalidate the pointer. Using an index
+  // into the array instead, avoids that problem.
+  size_t attIndex;
+  // This is set to `false` by function `lookup`.
+  bool initialized;
+} NAME_AND_DEFAULT_ATTRIBUTE;
+
 typedef struct {
   unsigned long version;
   unsigned long hash;
@@ -3951,11 +3967,14 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
 
       /* figure out whether declared as other than CDATA */
       if (attId->maybeTokenized) {
-        for (size_t j = 0; j < nDefaultAtts; j++) {
-          if (attId == elementType->defaultAtts[j].id) {
-            isCdata = elementType->defaultAtts[j].isCdata;
-            break;
-          }
+        NAME_AND_DEFAULT_ATTRIBUTE *const nameAndDefaultAttribute
+            = (NAME_AND_DEFAULT_ATTRIBUTE *)lookup(
+                parser, &(elementType->defaultAttForName), attId->name, 0);
+        if (nameAndDefaultAttribute != NULL) {
+          assert(nameAndDefaultAttribute->attIndex < elementType->nDefaultAtts);
+          const DEFAULT_ATTRIBUTE *const att
+              = elementType->defaultAtts + nameAndDefaultAttribute->attIndex;
+          isCdata = att->isCdata;
         }
       }
 
@@ -7275,10 +7294,23 @@ defineAttribute(ELEMENT_TYPE *type, ATTRIBUTE_ID *attId, XML_Bool isCdata,
   if (! isCdata)
     attId->maybeTokenized = XML_TRUE;
 
-  NAMED *const nameAddedOrFound
-      = lookup(parser, &(type->defaultAttForName), attId->name, sizeof(NAMED));
-  if (! nameAddedOrFound)
+  NAME_AND_DEFAULT_ATTRIBUTE *const nameAndDefaultAttribute
+      = (NAME_AND_DEFAULT_ATTRIBUTE *)lookup(
+          parser, &(type->defaultAttForName), attId->name,
+          sizeof(NAME_AND_DEFAULT_ATTRIBUTE));
+  if (! nameAndDefaultAttribute)
     return 0;
+
+  assert(nameAndDefaultAttribute->name == attId->name);
+
+  // NOTE: The XML 1.0r4 spec says:
+  // "When more than one definition is provided for the same attribute of a
+  // given element type, the first declaration is binding and later
+  // declarations are ignored."
+  if (! nameAndDefaultAttribute->initialized) {
+    nameAndDefaultAttribute->attIndex = type->nDefaultAtts;
+    nameAndDefaultAttribute->initialized = true;
+  }
 
   type->nDefaultAtts += 1;
   return 1;
