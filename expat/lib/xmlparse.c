@@ -394,7 +394,7 @@ typedef struct {
   size_t nDefaultAtts;
   size_t allocDefaultAtts;
   DEFAULT_ATTRIBUTE *defaultAtts;
-  HASH_TABLE defaultAttsNames;
+  HASH_TABLE defaultAttForName;
 } ELEMENT_TYPE;
 
 typedef struct {
@@ -3837,8 +3837,8 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
                                          sizeof(ELEMENT_TYPE));
     if (! elementType)
       return XML_ERROR_NO_MEMORY;
-    if (! elementType->defaultAttsNames.parser)
-      hashTableInit(&(elementType->defaultAttsNames), parser);
+    if (! elementType->defaultAttForName.parser)
+      hashTableInit(&(elementType->defaultAttForName), parser);
     if (parser->m_ns && ! setElementTypePrefix(parser, elementType))
       return XML_ERROR_NO_MEMORY;
   }
@@ -7239,7 +7239,7 @@ defineAttribute(ELEMENT_TYPE *type, ATTRIBUTE_ID *attId, XML_Bool isCdata,
     /* The handling of default attributes gets messed up if we have
        a default which duplicates a non-default. */
     NAMED *const nameFound
-        = lookup(parser, &(type->defaultAttsNames), attId->name, 0);
+        = lookup(parser, &(type->defaultAttForName), attId->name, 0);
     if (nameFound)
       return 1;
     if (isId && ! type->idAtt && ! attId->xmlns)
@@ -7276,7 +7276,7 @@ defineAttribute(ELEMENT_TYPE *type, ATTRIBUTE_ID *attId, XML_Bool isCdata,
     attId->maybeTokenized = XML_TRUE;
 
   NAMED *const nameAddedOrFound
-      = lookup(parser, &(type->defaultAttsNames), attId->name, sizeof(NAMED));
+      = lookup(parser, &(type->defaultAttForName), attId->name, sizeof(NAMED));
   if (! nameAddedOrFound)
     return 0;
 
@@ -7597,7 +7597,7 @@ dtdReset(DTD *p, XML_Parser parser) {
     ELEMENT_TYPE *e = (ELEMENT_TYPE *)hashTableIterNext(&iter);
     if (! e)
       break;
-    hashTableDestroy(&(e->defaultAttsNames));
+    hashTableDestroy(&(e->defaultAttForName));
     FREE(parser, e->defaultAtts);
   }
   hashTableClear(&(p->generalEntities));
@@ -7639,7 +7639,7 @@ dtdDestroy(DTD *p, XML_Bool isDocEntity, XML_Parser parser) {
     ELEMENT_TYPE *e = (ELEMENT_TYPE *)hashTableIterNext(&iter);
     if (! e)
       break;
-    hashTableDestroy(&(e->defaultAttsNames));
+    hashTableDestroy(&(e->defaultAttForName));
     FREE(parser, e->defaultAtts);
   }
   hashTableDestroy(&(p->generalEntities));
@@ -7732,8 +7732,8 @@ dtdCopy(XML_Parser oldParser, DTD *newDtd, const DTD *oldDtd,
     if (! newE)
       return 0;
 
-    if (! newE->defaultAttsNames.parser)
-      hashTableInit(&(newE->defaultAttsNames), parser);
+    if (! newE->defaultAttForName.parser)
+      hashTableInit(&(newE->defaultAttForName), parser);
 
     if (oldE->nDefaultAtts) {
       /* Detect and prevent integer overflow. */
@@ -7766,7 +7766,7 @@ dtdCopy(XML_Parser oldParser, DTD *newDtd, const DTD *oldDtd,
       } else
         newE->defaultAtts[i].value = NULL;
 
-      NAMED *const nameAddedOrFound = lookup(parser, &(newE->defaultAttsNames),
+      NAMED *const nameAddedOrFound = lookup(parser, &(newE->defaultAttForName),
                                              attributeName, sizeof(NAMED));
       if (! nameAddedOrFound) {
         return 0;
@@ -8535,8 +8535,8 @@ getElementType(XML_Parser parser, const ENCODING *enc, const char *ptr,
                                sizeof(ELEMENT_TYPE));
   if (! ret)
     return NULL;
-  if (! ret->defaultAttsNames.parser)
-    hashTableInit(&(ret->defaultAttsNames), getRootParserOf(parser, NULL));
+  if (! ret->defaultAttForName.parser)
+    hashTableInit(&(ret->defaultAttForName), getRootParserOf(parser, NULL));
   if (ret->name != name)
     poolDiscard(&dtd->pool);
   else {
