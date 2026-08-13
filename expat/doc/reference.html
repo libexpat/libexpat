@@ -309,6 +309,7 @@
 
                 <li>
                   <a href="#XML_GetCurrentByteIndex">XML_GetCurrentByteIndex</a>
+                  (deprecated)
                 </li>
 
                 <li>
@@ -317,6 +318,7 @@
 
                 <li>
                   <a href="#XML_GetCurrentLineNumber">XML_GetCurrentLineNumber</a>
+                  (deprecated)
                 </li>
 
                 <li>
@@ -325,6 +327,7 @@
 
                 <li>
                   <a href="#XML_GetCurrentColumnNumber">XML_GetCurrentColumnNumber</a>
+                  (deprecated)
                 </li>
 
                 <li>
@@ -334,6 +337,7 @@
 
                 <li>
                   <a href="#XML_GetCurrentByteCount">XML_GetCurrentByteCount</a>
+                  (deprecated)
                 </li>
 
                 <li>
@@ -341,7 +345,7 @@
                 </li>
 
                 <li>
-                  <a href="#XML_GetInputContext">XML_GetInputContext</a>
+                  <a href="#XML_GetInputContext">XML_GetInputContext</a> (deprecated)
                 </li>
 
                 <li>
@@ -413,7 +417,7 @@
                 </li>
 
                 <li>
-                  <a href="#XML_GetAttributeInfo">XML_GetAttributeInfo</a>
+                  <a href="#XML_GetAttributeInfo">XML_GetAttributeInfo</a> (deprecated)
                 </li>
 
                 <li>
@@ -2929,13 +2933,18 @@ XML_ErrorString(enum XML_Error code);
       </div>
 
       <h4 id="XML_GetCurrentByteIndex">
-        XML_GetCurrentByteIndex
+        XML_GetCurrentByteIndex (deprecated)
       </h4>
 
       <pre class="fcndec">
 XML_Index XMLCALL
 XML_GetCurrentByteIndex(XML_Parser p);
 </pre>
+      <p>
+        <b>Note:</b> This function is deprecated, please use function <code><a href=
+        "#XML_GetCurrentByteIndex64">XML_GetCurrentByteIndex64</a></code>, instead.
+      </p>
+
       <div class="fcndef">
         Return the byte offset of the position. This always corresponds to the values
         returned by <code><a href=
@@ -2968,13 +2977,18 @@ XML_GetCurrentByteIndex64(XML_Parser p);
       </div>
 
       <h4 id="XML_GetCurrentLineNumber">
-        XML_GetCurrentLineNumber
+        XML_GetCurrentLineNumber (deprecated)
       </h4>
 
       <pre class="fcndec">
 XML_Size XMLCALL
 XML_GetCurrentLineNumber(XML_Parser p);
 </pre>
+      <p>
+        <b>Note:</b> This function is deprecated, please use function <code><a href=
+        "#XML_GetCurrentLineNumber64">XML_GetCurrentLineNumber64</a></code>, instead.
+      </p>
+
       <div class="fcndef">
         Return the line number of the position. The first line is reported as
         <code>1</code>.
@@ -3002,13 +3016,18 @@ XML_GetCurrentLineNumber64(XML_Parser p);
       </div>
 
       <h4 id="XML_GetCurrentColumnNumber">
-        XML_GetCurrentColumnNumber
+        XML_GetCurrentColumnNumber (deprecated)
       </h4>
 
       <pre class="fcndec">
 XML_Size XMLCALL
 XML_GetCurrentColumnNumber(XML_Parser p);
 </pre>
+      <p>
+        <b>Note:</b> This function is deprecated, please use function <code><a href=
+        "#XML_GetCurrentColumnNumber64">XML_GetCurrentColumnNumber64</a></code>, instead.
+      </p>
+
       <div class="fcndef">
         Return the <em>offset</em>, from the beginning of the current line, of the
         position. The first column is reported as <code>0</code>.
@@ -3036,13 +3055,18 @@ XML_GetCurrentColumnNumber64(XML_Parser p);
       </div>
 
       <h4 id="XML_GetCurrentByteCount">
-        XML_GetCurrentByteCount
+        XML_GetCurrentByteCount (deprecated)
       </h4>
 
       <pre class="fcndec">
 int XMLCALL
 XML_GetCurrentByteCount(XML_Parser p);
 </pre>
+      <p>
+        <b>Note:</b> This function is deprecated, please use function <code><a href=
+        "#XML_GetCurrentByteCount64">XML_GetCurrentByteCount64</a></code>, instead.
+      </p>
+
       <div class="fcndef">
         Return the number of bytes in the current event. Returns <code>0</code> if the
         event is inside a reference to an internal entity and for the end-tag event for
@@ -3072,7 +3096,7 @@ XML_GetCurrentByteCount64(XML_Parser p);
       </div>
 
       <h4 id="XML_GetInputContext">
-        XML_GetInputContext
+        XML_GetInputContext (deprecated)
       </h4>
 
       <pre class="fcndec">
@@ -3081,6 +3105,11 @@ XML_GetInputContext(XML_Parser p,
                     int *offset,
                     int *size);
 </pre>
+      <p>
+        <b>Note:</b> This function is deprecated, please use function <code><a href=
+        "#XML_GetInputContext64">XML_GetInputContext64</a></code>, instead.
+      </p>
+
       <div class="fcndef">
         <p>
           Returns the parser's input buffer, sets the integer pointed at by
@@ -3552,6 +3581,11 @@ typedef struct {
   XML_Index  valueEnd;   /* Offset after the attribute value's last byte. */
 } XML_AttrInfo;
 </pre>
+      <p>
+        <b>Note:</b> This function is deprecated, please use function <code><a href=
+        "#XML_GetAttributeInfo64">XML_GetAttributeInfo64</a></code>, instead.
+      </p>
+
       <div class="fcndef">
         Returns an array of <code>XML_AttrInfo</code> structures for the attribute/value
         pairs passed in the last call to the <code>XML_StartElementHandler</code> that
