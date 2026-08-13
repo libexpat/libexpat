@@ -587,12 +587,11 @@ metaLocation(XML_Parser parser) {
     puttc(T('"'), fp);
   }
   ftprintf(fp,
-           T(" byte=\"%") T(XML_FMT_INT_MOD) T("d\"") T(" nbytes=\"%d\"")
-               T(" line=\"%") T(XML_FMT_INT_MOD) T("u\"") T(" col=\"%")
-                   T(XML_FMT_INT_MOD) T("u\""),
-           XML_GetCurrentByteIndex(parser), XML_GetCurrentByteCount(parser),
-           XML_GetCurrentLineNumber(parser),
-           XML_GetCurrentColumnNumber(parser));
+           T(" byte=\"%") T(PRId64) T("\"") T(" nbytes=\"%") T(PRIu64) T("\"")
+               T(" line=\"%") T(PRIu64) T("\"") T(" col=\"%") T(PRIu64) T("\""),
+           XML_GetCurrentByteIndex64(parser), XML_GetCurrentByteCount64(parser),
+           XML_GetCurrentLineNumber64(parser),
+           XML_GetCurrentColumnNumber64(parser));
 }
 
 static void
