@@ -2705,8 +2705,12 @@ int XMLCALL
 XML_GetCurrentByteCount(XML_Parser parser) {
   if (parser == NULL)
     return 0;
-  if (parser->m_eventEndPtr && parser->m_eventPtr)
+  if (parser->m_eventEndPtr && parser->m_eventPtr) {
+    // NOTE: int is known to wrap around for >2 GiB content.
+    //       That's a bug and it only lives on because we cannot break
+    //       ABI compatibility of public API.
     return (int)(parser->m_eventEndPtr - parser->m_eventPtr);
+  }
   return 0;
 }
 
