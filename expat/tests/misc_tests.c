@@ -54,6 +54,7 @@
 #include "expat_config.h"
 
 #include <assert.h>
+#include <stdint.h>
 #include <string.h>
 
 #include "expat.h"
@@ -637,13 +638,25 @@ dup_original_string(XML_Parser parser) {
 
   const char *const context = XML_GetInputContext(parser, &offset, &size);
 
+  int64_t offset64 = -1;
+  uint64_t size64 = UINT64_MAX;
+
+  const char *const context64
+      = XML_GetInputContext64(parser, &offset64, &size64);
+
 #if XML_CONTEXT_BYTES > 0
   assert_true(context != NULL);
   assert_true(offset >= 0);
   assert_true(size >= 0);
+
+  assert_true(context64 != NULL);
+  assert_true(offset64 != -1);
+  assert_true(size64 != UINT64_MAX);
+
   return portable_strndup(context + offset, byte_count);
 #else
   assert_true(context == NULL);
+  assert_true(context64 == NULL);
   return NULL;
 #endif
 }
