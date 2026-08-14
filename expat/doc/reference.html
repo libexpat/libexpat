@@ -3018,6 +3018,11 @@ XML_GetInputContext(XML_Parser p,
           If <code>XML_CONTEXT_BYTES</code> is zero, this will always return
           <code>NULL</code>.
         </p>
+
+        <p>
+          <strong>Note:</strong> Type <code>int</code> is known to wrap around (on both
+          32bit platforms and 64bit platforms).
+        </p>
       </div>
 
       <h3>

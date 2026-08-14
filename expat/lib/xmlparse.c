@@ -2720,6 +2720,9 @@ XML_GetInputContext(XML_Parser parser, int *offset, int *size) {
   if (parser == NULL)
     return NULL;
   if (parser->m_eventPtr && parser->m_buffer) {
+    // NOTE: int is known to wrap around for >2 GiB content.
+    //       That's a bug and it only lives on because we cannot break
+    //       ABI compatibility of public API.
     if (offset != NULL)
       *offset = (int)(parser->m_eventPtr - parser->m_buffer);
     if (size != NULL)
