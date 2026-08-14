@@ -780,7 +780,7 @@ make install
         </dd>
 
         <dt>
-          <a id="XML_LARGE_SIZE" name="XML_LARGE_SIZE">XML_LARGE_SIZE</a>
+          <a id="XML_LARGE_SIZE" name="XML_LARGE_SIZE">XML_LARGE_SIZE</a> (deprecated)
         </dt>
 
         <dd>
@@ -795,6 +795,29 @@ make install
             overflow. It may not be supported by all compilers, and is turned off by
             default.
           </p>
+
+          <p>
+            Starting with Expat 2.9.0, there are 64bit versions of these functions, so
+            that relying on (non-default and uncommon) macro <code>XML_LARGE_SIZE</code>
+            is no longer needed. These functions are:
+          </p>
+
+          <ul>
+            <li>
+              <code><a href=
+              "#XML_GetCurrentByteIndex64">XML_GetCurrentByteIndex64</a></code>
+            </li>
+
+            <li>
+              <code><a href=
+              "#XML_GetCurrentColumnNumber64">XML_GetCurrentColumnNumber64</a></code>
+            </li>
+
+            <li>
+              <code><a href=
+              "#XML_GetCurrentLineNumber64">XML_GetCurrentLineNumber64</a></code>
+            </li>
+          </ul>
         </dd>
 
         <dt>
