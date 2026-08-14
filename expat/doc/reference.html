@@ -3501,6 +3501,11 @@ int XMLCALL
 XML_SetHashSalt(XML_Parser parser,
                 unsigned long hash_salt);
 </pre>
+      <p>
+        <b>Note:</b> This function is deprecated, please use function <code><a href=
+        "#XML_SetHashSalt16Bytes">XML_SetHashSalt16Bytes</a></code>, instead.
+      </p>
+
       <div class="fcndef">
         Sets the hash salt to use for internal hash calculations. Helps in preventing DoS
         attacks based on predicting hash function behavior. In order to have an effect
@@ -3508,15 +3513,13 @@ XML_SetHashSalt(XML_Parser parser,
         called after <code>XML_Parse</code> or <code>XML_ParseBuffer</code> or when
         <code>parser</code> is <code>NULL</code>.
         <p>
-          <b>Note:</b> Function <code>XML_SetHashSalt</code> is
-          <strong>deprecated</strong>. Please use function <code><a href=
-          "#XML_SetHashSalt16Bytes">XML_SetHashSalt16Bytes</a></code> instead for better
-          security. <code>XML_SetHashSalt</code> only provides 4 to 8 bytes of entropy
-          (depending on the size of type <code>unsigned long</code>) while the SipHash
-          implementation used by Expat can leverage up to 16 bytes of entropy — at least
-          twice as much. Function <code><a href=
+          <b>Note:</b> Function <code>XML_SetHashSalt</code> only provides 4 to 8 bytes
+          of entropy (depending on the size of type <code>unsigned long</code>) while the
+          SipHash implementation used by Expat can leverage up to 16 bytes of entropy —
+          at least twice as much. Function <code><a href=
           "#XML_SetHashSalt16Bytes">XML_SetHashSalt16Bytes</a></code> of Expat &gt;=2.8.0
-          (and where backported) matches the amount of entropy supported by SipHash.
+          (and where backported) with better security matches the amount of entropy
+          supported by SipHash.
         </p>
 
         <p>
