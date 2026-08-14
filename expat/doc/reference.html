@@ -784,15 +784,17 @@ make install
         </dt>
 
         <dd>
-          If defined, causes the <code>XML_Size</code> and <code>XML_Index</code> integer
-          types to be at least 64 bits in size. This is intended to support processing of
-          very large input streams, where the return values of <code><a href=
-          "#XML_GetCurrentByteIndex">XML_GetCurrentByteIndex</a></code>, <code><a href=
-          "#XML_GetCurrentLineNumber">XML_GetCurrentLineNumber</a></code> and
-          <code><a href=
-          "#XML_GetCurrentColumnNumber">XML_GetCurrentColumnNumber</a></code> could
-          overflow. It may not be supported by all compilers, and is turned off by
-          default.
+          <p>
+            If defined, causes the <code>XML_Size</code> and <code>XML_Index</code>
+            integer types to be at least 64 bits in size. This is intended to support
+            processing of very large input streams, where the return values of
+            <code><a href="#XML_GetCurrentByteIndex">XML_GetCurrentByteIndex</a></code>,
+            <code><a href="#XML_GetCurrentLineNumber">XML_GetCurrentLineNumber</a></code>
+            and <code><a href=
+            "#XML_GetCurrentColumnNumber">XML_GetCurrentColumnNumber</a></code> could
+            overflow. It may not be supported by all compilers, and is turned off by
+            default.
+          </p>
         </dd>
 
         <dt>
