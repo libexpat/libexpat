@@ -8010,6 +8010,7 @@ lookupWithLength(XML_Parser parser, HASH_TABLE *table, KEY name, size_t nameLen,
       }
     }
   }
+  assert(createSize >= sizeof(NAMED));
   table->v[i] = MALLOC(table->parser, createSize);
   if (! table->v[i])
     return NULL;
