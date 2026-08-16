@@ -20,6 +20,9 @@ XML_GetIdAttributeIndex
 XML_GetInputContext
 XML_GetInputContext64
 XML_GetParsingStatus
+XML_GetPropertyBool
+XML_GetPropertyDouble
+XML_GetPropertyUInt64
 XML_GetSpecifiedAttributeCount
 XML_MemFree
 XML_MemMalloc
@@ -61,6 +64,9 @@ XML_SetNotationDeclHandler
 XML_SetNotStandaloneHandler
 XML_SetParamEntityParsing
 XML_SetProcessingInstructionHandler
+XML_SetPropertyBool
+XML_SetPropertyDouble
+XML_SetPropertyUInt64
 XML_SetReparseDeferralEnabled
 XML_SetReturnNSTriplet
 XML_SetSkippedEntityHandler
