@@ -3112,6 +3112,130 @@ XML_SetReparseDeferralEnabled(XML_Parser parser, XML_Bool enabled) {
   return XML_FALSE;
 }
 
+XML_Bool XMLCALL
+XML_SetPropertyBool(XML_Parser parser, enum XML_PARSER_PROPERTY property,
+                    XML_Bool value) {
+  if (parser == NULL)
+    return XML_FALSE;
+
+  switch (property) {
+  case XML_PROP_REPARSE_DEFERRAL_ENABLED:
+    return XML_SetReparseDeferralEnabled(parser, value);
+  default:
+    return XML_FALSE;
+  }
+}
+
+XML_Bool XMLCALL
+XML_SetPropertyDouble(XML_Parser parser, enum XML_PARSER_PROPERTY property,
+                      double value) {
+  if (parser == NULL)
+    return XML_FALSE;
+
+#if XML_GE == 0
+  UNUSED_P(value);
+#endif
+
+  switch (property) {
+#if XML_GE == 1
+  case XML_PROP_BILLION_LAUGHS_MAXIMUM_AMPLIFICATION:
+    return XML_SetBillionLaughsAttackProtectionMaximumAmplification(
+        parser, (float)value);
+  case XML_PROP_ALLOC_TRACKER_MAXIMUM_AMPLIFICATION:
+    return XML_SetAllocTrackerMaximumAmplification(parser, (float)value);
+#endif
+  default:
+    return XML_FALSE;
+  }
+}
+
+XML_Bool XMLCALL
+XML_SetPropertyUInt64(XML_Parser parser, enum XML_PARSER_PROPERTY property,
+                      uint64_t value) {
+  if (parser == NULL)
+    return XML_FALSE;
+
+#if XML_GE == 0
+  UNUSED_P(value);
+#endif
+
+  switch (property) {
+#if XML_GE == 1
+  case XML_PROP_BILLION_LAUGHS_ACTIVATION_THRESHOLD: {
+    return XML_SetBillionLaughsAttackProtectionActivationThreshold(
+        parser, (unsigned long long)value);
+  }
+  case XML_PROP_ALLOC_TRACKER_ACTIVATION_THRESHOLD: {
+    return XML_SetAllocTrackerActivationThreshold(parser,
+                                                  (unsigned long long)value);
+  }
+#endif
+  default:
+    return XML_FALSE;
+  }
+}
+
+XML_Bool XMLCALL
+XML_GetPropertyBool(XML_Parser parser, enum XML_PARSER_PROPERTY property,
+                    XML_Bool *value) {
+  if (parser == NULL || value == NULL)
+    return XML_FALSE;
+
+  switch (property) {
+  case XML_PROP_REPARSE_DEFERRAL_ENABLED:
+    *value = parser->m_reparseDeferralEnabled;
+    break;
+  default:
+    return XML_FALSE;
+  }
+
+  return XML_TRUE;
+}
+
+XML_Bool XMLCALL
+XML_GetPropertyDouble(XML_Parser parser, enum XML_PARSER_PROPERTY property,
+                      double *value) {
+  if (parser == NULL || value == NULL)
+    return XML_FALSE;
+
+  switch (property) {
+#if XML_GE == 1
+  case XML_PROP_BILLION_LAUGHS_MAXIMUM_AMPLIFICATION:
+    *value = (double)parser->m_accounting.maximumAmplificationFactor;
+    break;
+  case XML_PROP_ALLOC_TRACKER_MAXIMUM_AMPLIFICATION:
+    *value = (double)parser->m_alloc_tracker.maximumAmplificationFactor;
+    break;
+#endif
+  default:
+    return XML_FALSE;
+  }
+
+  return XML_TRUE;
+}
+
+XML_Bool XMLCALL
+XML_GetPropertyUInt64(XML_Parser parser, enum XML_PARSER_PROPERTY property,
+                      uint64_t *value) {
+  if (parser == NULL || value == NULL)
+    return XML_FALSE;
+
+  switch (property) {
+#if XML_GE == 1
+  case XML_PROP_BILLION_LAUGHS_ACTIVATION_THRESHOLD:
+    *value = parser->m_accounting.activationThresholdBytes;
+    break;
+  case XML_PROP_ALLOC_TRACKER_ACTIVATION_THRESHOLD:
+    *value = parser->m_alloc_tracker.activationThresholdBytes;
+    break;
+#endif
+  default:
+    return XML_FALSE;
+  }
+
+  return XML_TRUE;
+}
+
 /* Initially tag->rawName always points into the parse buffer;
    for those TAG instances opened while the current parse buffer was
    processed, and not yet closed, we need to store tag->rawName in a more
