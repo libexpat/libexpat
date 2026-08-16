@@ -1076,6 +1076,40 @@ typedef struct {
 XMLPARSEAPI(const XML_Feature *)
 XML_GetFeatureList(void);
 
+/* Added in Expat 2.9.0. */
+enum XML_PARSER_PROPERTY {
+#  if defined(XML_TESTING)
+  XML_PROP_INVALID = 0,
+#  endif
+#  if XML_GE == 1
+  XML_PROP_ALLOC_TRACKER_ACTIVATION_THRESHOLD = 1,
+  XML_PROP_ALLOC_TRACKER_MAXIMUM_AMPLIFICATION = 2,
+  XML_PROP_BILLION_LAUGHS_ACTIVATION_THRESHOLD = 3,
+  XML_PROP_BILLION_LAUGHS_MAXIMUM_AMPLIFICATION = 4,
+#  endif
+  XML_PROP_REPARSE_DEFERRAL_ENABLED = 5,
+};
+
+/* Added in Expat 2.9.0. */
+XMLPARSEAPI(enum XML_Prop_Error)
+XML_GetPropertyBool(XML_Parser parser, enum XML_PARSER_PROPERTY property,
+                    XML_Bool *value);
+XMLPARSEAPI(enum XML_Prop_Error)
+XML_GetPropertyDouble(XML_Parser parser, enum XML_PARSER_PROPERTY property,
+                      double *value);
+XMLPARSEAPI(enum XML_Prop_Error)
+XML_GetPropertyUInt64(XML_Parser parser, enum XML_PARSER_PROPERTY property,
+                      uint64_t *value);
+XMLPARSEAPI(enum XML_Prop_Error)
+XML_SetPropertyBool(XML_Parser parser, enum XML_PARSER_PROPERTY property,
+                    XML_Bool value);
+XMLPARSEAPI(enum XML_Prop_Error)
+XML_SetPropertyDouble(XML_Parser parser, enum XML_PARSER_PROPERTY property,
+                      double value);
+XMLPARSEAPI(enum XML_Prop_Error)
+XML_SetPropertyUInt64(XML_Parser parser, enum XML_PARSER_PROPERTY property,
+                      uint64_t value);
+
 #  if defined(XML_DTD) || (defined(XML_GE) && XML_GE == 1)
 /* Added in Expat 2.4.0 for XML_DTD defined and
  * added in Expat 2.6.0 for XML_GE == 1. */
