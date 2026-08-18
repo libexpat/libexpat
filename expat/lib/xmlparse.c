@@ -579,6 +579,8 @@ static int dtdCopy(XML_Parser oldParser, DTD *newDtd, const DTD *oldDtd,
                    XML_Parser parser);
 static int copyEntityTable(XML_Parser oldParser, HASH_TABLE *newTable,
                            STRING_POOL *newPool, const HASH_TABLE *oldTable);
+static NAMED *lookupWithLength(XML_Parser parser, HASH_TABLE *table, KEY name,
+                               size_t nameLen, size_t createSize);
 static NAMED *lookup(XML_Parser parser, HASH_TABLE *table, KEY name,
                      size_t createSize);
 static void FASTCALL hashTableInit(HASH_TABLE *table, XML_Parser parser);
@@ -7897,18 +7899,38 @@ copy_salt_to_sipkey(XML_Parser parser, struct sipkey *key) {
 }
 
 static unsigned long FASTCALL
-hash(XML_Parser parser, KEY s) {
+hash(XML_Parser parser, KEY s, size_t keyLen) {
   struct siphash state;
   struct sipkey key;
   (void)sip24_valid;
   copy_salt_to_sipkey(parser, &key);
   sip24_init(&state, &key);
-  sip24_update(&state, s, keylen(s) * sizeof(XML_Char));
+  sip24_update(&state, s, keyLen * sizeof(XML_Char));
   return (unsigned long)sip24_final(&state);
 }
 
+// Function `lookupWithLength` can be used to either…
+//
+// a) check whether an element with key `name` exists in the given hash table
+//    (read-only mode where `createSize == 0`) or
+//
+// b) check whether an element with key `name` exists in the given hash table
+//    *and* insert it if missing (i.e. read-write mode where `createSize != 0`.
+//
+// When inserting, a block of `createSize` number of bytes will be allocated
+// and set to zero, and the resulting block of memory will be considered
+// to start with a `NAMED` structure, and `->name = name;` is performed.
+// The fact that all other bytes in the structure are initially zero can
+// be used to tell cases "existed and found" and "newly inserted" apart
+// with the structure returned.
+//
+// NOTE: Read-only lookup does not need zero-terminated keys but
+//       read-write mode does, because keys can be re-hashed later and the
+//       hash table does not store key length information.
+//
 static NAMED *
-lookup(XML_Parser parser, HASH_TABLE *table, KEY name, size_t createSize) {
+lookupWithLength(XML_Parser parser, HASH_TABLE *table, KEY name, size_t nameLen,
+                 size_t createSize) {
   size_t i;
   if (table->size == 0) {
     size_t tsize;
@@ -7924,9 +7946,9 @@ lookup(XML_Parser parser, HASH_TABLE *table, KEY name, size_t createSize) {
       return NULL;
     }
     memset(table->v, 0, tsize);
-    i = hash(parser, name) & ((unsigned long)table->size - 1);
+    i = hash(parser, name, nameLen) & ((unsigned long)table->size - 1);
   } else {
-    unsigned long h = hash(parser, name);
+    unsigned long h = hash(parser, name, nameLen);
     unsigned long mask = (unsigned long)table->size - 1;
     unsigned char step = 0;
     i = h & mask;
@@ -7964,7 +7986,8 @@ lookup(XML_Parser parser, HASH_TABLE *table, KEY name, size_t createSize) {
       memset(newV, 0, tsize);
       for (i = 0; i < table->size; i++)
         if (table->v[i]) {
-          unsigned long newHash = hash(parser, table->v[i]->name);
+          KEY const key = table->v[i]->name;
+          unsigned long newHash = hash(parser, key, keylen(key));
           size_t j = newHash & newMask;
           step = 0;
           while (newV[j]) {
@@ -7987,13 +8010,34 @@ lookup(XML_Parser parser, HASH_TABLE *table, KEY name, size_t createSize) {
       }
     }
   }
+  assert(createSize >= sizeof(NAMED));
   table->v[i] = MALLOC(table->parser, createSize);
   if (! table->v[i])
     return NULL;
   memset(table->v[i], 0, createSize);
-  table->v[i]->name = name;
+  table->v[i]->name = name; // NOTE: This requires and assumes zero termination!
   (table->used)++;
   return table->v[i];
+}
+
+// Function `lookup` can be used to either…
+//
+// a) check whether an element with key `name` exists in the given hash table
+//    (read-only mode where `createSize == 0`) or
+//
+// b) check whether an element with key `name` exists in the given hash table
+//    *and* insert it if missing (i.e. read-write mode where `createSize != 0`.
+//
+// When inserting, a block of `createSize` number of bytes will be allocated
+// and set to zero, and the resulting block of memory will be considered
+// to start with a `NAMED` structure, and `->name = name;` is performed.
+// The fact that all other bytes in the structure are initially zero can
+// be used to tell cases "existed and found" and "newly inserted" apart
+// with the structure returned.
+//
+static NAMED *
+lookup(XML_Parser parser, HASH_TABLE *table, KEY name, size_t createSize) {
+  return lookupWithLength(parser, table, name, keylen(name), createSize);
 }
 
 static void FASTCALL
