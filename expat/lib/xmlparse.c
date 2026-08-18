@@ -755,6 +755,8 @@ struct XML_ParserStruct {
   void *m_unknownEncodingMem;
   void *m_unknownEncodingData;
   void *m_unknownEncodingHandlerData;
+  // Application callback invoked by callUnknownEncodingConvert.
+  int(XMLCALL *m_unknownEncodingConvert)(void *, const char *);
   void(XMLCALL *m_unknownEncodingRelease)(void *);
   PROLOG_STATE m_prologState;
   Processor *m_processor;
@@ -1177,6 +1179,25 @@ isCalledFromInsideHandler(XML_Parser parser) {
   return parser->m_handlerCallDepth > 0;
 }
 
+static void
+callUnknownEncodingRelease(XML_Parser parser) {
+  beforeHandler(parser);
+  parser->m_unknownEncodingRelease(parser->m_unknownEncodingData);
+  afterHandler(parser);
+  parser->m_unknownEncodingRelease = NULL;
+  parser->m_unknownEncodingData = NULL;
+}
+
+static int XMLCALL
+callUnknownEncodingConvert(void *data, const char *p) {
+  XML_Parser parser = data;
+  beforeHandler(parser);
+  const int result
+      = parser->m_unknownEncodingConvert(parser->m_unknownEncodingData, p);
+  afterHandler(parser);
+  return result;
+}
+
 static enum XML_Error
 callProcessor(XML_Parser parser, const char *start, const char *end,
               const char **endPtr) {
@@ -1524,6 +1545,7 @@ parserInit(XML_Parser parser, const XML_Char *encodingName) {
   parser->m_inheritedBindings = NULL;
   parser->m_nSpecifiedAtts = 0;
   parser->m_unknownEncodingMem = NULL;
+  parser->m_unknownEncodingConvert = NULL;
   parser->m_unknownEncodingRelease = NULL;
   parser->m_unknownEncodingData = NULL;
   parser->m_parsingStatus.parsing = XML_INITIALIZED;
@@ -1604,7 +1626,7 @@ XML_ParserReset(XML_Parser parser, const XML_Char *encodingName) {
   moveToFreeBindingList(parser, parser->m_inheritedBindings);
   FREE(parser, parser->m_unknownEncodingMem);
   if (parser->m_unknownEncodingRelease)
-    parser->m_unknownEncodingRelease(parser->m_unknownEncodingData);
+    callUnknownEncodingRelease(parser);
   poolClear(&parser->m_tempPool);
   poolClear(&parser->m_temp2Pool);
   FREE(parser, (void *)parser->m_protocolEncodingName);
@@ -1915,7 +1937,7 @@ XML_ParserFree(XML_Parser parser) {
   FREE(parser, parser->m_nsAtts);
   FREE(parser, parser->m_unknownEncodingMem);
   if (parser->m_unknownEncodingRelease)
-    parser->m_unknownEncodingRelease(parser->m_unknownEncodingData);
+    callUnknownEncodingRelease(parser);
   FREE(parser, parser);
 }
 
@@ -4946,25 +4968,34 @@ handleUnknownEncoding(XML_Parser parser, const XML_Char *encodingName) {
     const int status = parser->m_unknownEncodingHandler(
         parser->m_unknownEncodingHandlerData, encodingName, &info);
     afterHandler(parser);
+
+    parser->m_unknownEncodingRelease = info.release;
+    parser->m_unknownEncodingData = info.data;
+
     if (status) {
       ENCODING *enc;
       parser->m_unknownEncodingMem = MALLOC(parser, XmlSizeOfUnknownEncoding());
       if (! parser->m_unknownEncodingMem) {
-        if (info.release)
-          info.release(info.data);
+        if (parser->m_unknownEncodingRelease)
+          callUnknownEncodingRelease(parser);
+        else
+          parser->m_unknownEncodingData = NULL;
         return XML_ERROR_NO_MEMORY;
       }
+      parser->m_unknownEncodingConvert = info.convert;
       enc = (parser->m_ns ? XmlInitUnknownEncodingNS : XmlInitUnknownEncoding)(
-          parser->m_unknownEncodingMem, info.map, info.convert, info.data);
+          parser->m_unknownEncodingMem, info.map,
+          info.convert ? callUnknownEncodingConvert : NULL, parser);
       if (enc) {
-        parser->m_unknownEncodingData = info.data;
-        parser->m_unknownEncodingRelease = info.release;
         parser->m_encoding = enc;
         return XML_ERROR_NONE;
       }
+      parser->m_unknownEncodingConvert = NULL;
     }
-    if (info.release != NULL)
-      info.release(info.data);
+    if (parser->m_unknownEncodingRelease != NULL)
+      callUnknownEncodingRelease(parser);
+    else
+      parser->m_unknownEncodingData = NULL;
   }
   return XML_ERROR_UNKNOWN_ENCODING;
 }
