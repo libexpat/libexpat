@@ -2809,6 +2809,79 @@ START_TEST(test_duplicate_id_attribute_multiple_attlistdecl) {
 }
 END_TEST
 
+static void XMLCALL
+check_second_attr_normalization(void *userData, const XML_Char *name,
+                                const XML_Char **atts) {
+  int *const seen_second = userData;
+  UNUSED_P(name);
+
+  for (size_t i = 0; atts[i] != NULL; i += 2) {
+    const XML_Char *const key = atts[i];
+    const XML_Char *const value = atts[i + 1];
+    if (xcstrcmp(key, XCS("second")) != 0)
+      continue;
+    *seen_second = 1;
+    /* Attribute "second" is not of type CDATA, so leading, trailing and
+     * repeated whitespace is to be normalized away. */
+    if (xcstrcmp(value, XCS("a b")) != 0)
+      fail("Attribute of non-CDATA type was not whitespace-normalized");
+  }
+}
+
+static int XMLCALL
+external_entity_attr_checker(XML_Parser parser, const XML_Char *context,
+                             const XML_Char *base, const XML_Char *systemId,
+                             const XML_Char *publicId) {
+  const char *const text = "<tag second=' a  b '/>";
+  UNUSED_P(base);
+  UNUSED_P(systemId);
+  UNUSED_P(publicId);
+
+  XML_Parser ext_parser = XML_ExternalEntityParserCreate(parser, context, NULL);
+  if (ext_parser == NULL)
+    fail("Could not create external entity parser");
+
+  if (_XML_Parse_SINGLE_BYTES(ext_parser, text, (int)strlen(text), XML_TRUE)
+      != XML_STATUS_OK)
+    xml_failure(ext_parser);
+
+  XML_ParserFree(ext_parser);
+  return XML_STATUS_OK;
+}
+
+START_TEST(test_default_attr_index_after_dtd_copy) {
+  /* Function storeAtts resolves member .attIndex of structure
+   * NAME_AND_DEFAULT_ATTRIBUTE to tell whether an attribute value needs
+   * whitespace normalization, so function dtdCopy needs to carry that index
+   * over to the copy.  Attribute "first" is declared before attribute
+   * "second" so that a mixed-up index resolves to the wrong declaration.
+   */
+  const char *text = "<!DOCTYPE doc [\n"
+                     "  <!ENTITY e SYSTEM 'entity.ent'>\n"
+                     "  <!ELEMENT doc ANY>\n"
+                     "  <!ELEMENT tag EMPTY>\n"
+                     "  <!ATTLIST tag first CDATA #IMPLIED>\n"
+                     "  <!ATTLIST tag second NMTOKENS #IMPLIED>\n"
+                     "]>\n"
+                     "<doc>&e;</doc>\n";
+  int seen_second = 0;
+
+  XML_Parser parser = XML_ParserCreate(NULL);
+  assert_true(parser != NULL);
+  XML_SetUserData(parser, &seen_second);
+  XML_SetExternalEntityRefHandler(parser, external_entity_attr_checker);
+  XML_SetStartElementHandler(parser, check_second_attr_normalization);
+
+  if (_XML_Parse_SINGLE_BYTES(parser, text, (int)strlen(text), XML_TRUE)
+      != XML_STATUS_OK)
+    xml_failure(parser);
+  if (! seen_second)
+    fail("Attribute \"second\" has not been reported");
+
+  XML_ParserFree(parser);
+}
+END_TEST
+
 /* Test reset works correctly in the middle of processing an internal
  * entity.  Exercises some obscure code in XML_ParserReset().
  */
@@ -6737,6 +6810,7 @@ make_basic_test_case(Suite *s) {
   tcase_add_test(tc_basic,
                  test_duplicate_cdata_attribute_multiple_attlistdecl_3);
   tcase_add_test(tc_basic, test_duplicate_id_attribute_multiple_attlistdecl);
+  tcase_add_test__if_xml_ge(tc_basic, test_default_attr_index_after_dtd_copy);
   tcase_add_test__if_xml_ge(tc_basic, test_reset_in_entity);
   tcase_add_test(tc_basic, test_resume_invalid_parse);
   tcase_add_test(tc_basic, test_resume_resuspended);

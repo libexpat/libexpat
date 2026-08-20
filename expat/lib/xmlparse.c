@@ -7832,10 +7832,21 @@ dtdCopy(XML_Parser oldParser, DTD *newDtd, const DTD *oldDtd,
       } else
         newE->defaultAtts[i].value = NULL;
 
-      NAMED *const nameAddedOrFound = lookup(parser, &(newE->defaultAttForName),
-                                             attributeName, sizeof(NAMED));
-      if (! nameAddedOrFound) {
+      NAME_AND_DEFAULT_ATTRIBUTE *const nameAndDefaultAttribute
+          = (NAME_AND_DEFAULT_ATTRIBUTE *)lookup(
+              parser, &(newE->defaultAttForName), attributeName,
+              sizeof(NAME_AND_DEFAULT_ATTRIBUTE));
+      if (! nameAndDefaultAttribute) {
         return 0;
+      }
+
+      // NOTE: The XML 1.0r4 spec says:
+      // "When more than one definition is provided for the same attribute of a
+      // given element type, the first declaration is binding and later
+      // declarations are ignored."
+      if (! nameAndDefaultAttribute->initialized) {
+        nameAndDefaultAttribute->attIndex = i;
+        nameAndDefaultAttribute->initialized = true;
       }
     }
   }
