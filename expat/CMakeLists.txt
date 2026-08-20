@@ -231,11 +231,14 @@ if(MSVC)
         endif()
     endif()
 
-    # Stop MSVC from trying to decode the source files using
-    # the Windows system code page encoding that could e.g. be Windows-936
-    # on a Chinese Windows system rather than UTF-8.
-    # https://devblogs.microsoft.com/cppblog/new-options-for-managing-character-sets-in-the-microsoft-cc-compiler/
-    add_compile_options(/source-charset:utf-8)
+    # Avoid clashing of /source-charset:utf-8 with incompatible /utf-8
+    if(NOT CMAKE_CXX_FLAGS MATCHES /utf-8)
+        # Stop MSVC from trying to decode the source files using
+        # the Windows system code page encoding that could e.g. be Windows-936
+        # on a Chinese Windows system rather than UTF-8.
+        # https://devblogs.microsoft.com/cppblog/new-options-for-managing-character-sets-in-the-microsoft-cc-compiler/
+        add_compile_options(/source-charset:utf-8)
+    endif()
 endif()
 
 macro(_expat_copy_bool_int source_ref dest_ref)
