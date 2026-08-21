@@ -7869,19 +7869,23 @@ copyEntityTable(XML_Parser oldParser, HASH_TABLE *newTable,
 
 #define INIT_POWER 6
 
+// Compares two strings `s1` and `s2` whereas:
+// - `s2` is zero-terminated but
+// - `s1` is made up of exactly (not just up to) `s1len` non-zero characters.
 static XML_Bool FASTCALL
-keyeq(KEY s1, KEY s2) {
+keyeq(KEY s1, size_t s1len, KEY s2) {
 #ifdef XML_UNICODE
 #  ifdef XML_UNICODE_WCHAR_T
-  return (wcscmp(s1, s2) == 0) ? XML_TRUE : XML_FALSE;
+  return (wcsncmp(s1, s2, s1len) == 0 && s2[s1len] == L'\0') ? XML_TRUE
+                                                             : XML_FALSE;
 #  else
-  for (; *s1 == *s2; s1++, s2++)
-    if (*s1 == 0)
-      return XML_TRUE;
-  return XML_FALSE;
+  for (; s1len > 0 && *s1 == *s2; s1len--, s1++, s2++)
+    ; /* no loop body! */
+  return ((s1len == 0) && (*s2 == 0)) ? XML_TRUE : XML_FALSE;
 #  endif
 #else
-  return (strcmp(s1, s2) == 0) ? XML_TRUE : XML_FALSE;
+  return (strncmp(s1, s2, s1len) == 0 && s2[s1len] == '\0') ? XML_TRUE
+                                                            : XML_FALSE;
 #endif
 }
 
@@ -7953,7 +7957,7 @@ lookupWithLength(XML_Parser parser, HASH_TABLE *table, KEY name, size_t nameLen,
     unsigned char step = 0;
     i = h & mask;
     while (table->v[i]) {
-      if (keyeq(name, table->v[i]->name))
+      if (keyeq(name, nameLen, table->v[i]->name))
         return table->v[i];
       if (! step)
         step = PROBE_STEP(h, mask, table->power);
