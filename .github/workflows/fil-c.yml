@@ -51,7 +51,7 @@ jobs:
 
     - name: Install Fil-C toolchain
       run: |-
-        version=0.683  # of 2026-08-09
+        version=0.684  # of 2026-08-22
         dirname="filc-${version}-linux-$(uname -m)"
         tarball="${dirname}.tar.xz"
         set -x
