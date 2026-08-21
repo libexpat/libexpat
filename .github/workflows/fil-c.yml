@@ -52,10 +52,13 @@ jobs:
     - name: Install Fil-C toolchain
       run: |-
         version=0.684  # of 2026-08-22
+        sha256sum=eefb594bcbc1261a18dfa8b50041674635f53df2b5fe067915b5652adaed4e3f
+
         dirname="filc-${version}-linux-$(uname -m)"
         tarball="${dirname}.tar.xz"
         set -x
         wget --progress=dot:giga "https://github.com/pizlonator/fil-c/releases/download/v${version}/${tarball}"
+        sha256sum --check <<<"${sha256sum} ${dirname}.tar.xz"
         tar xf "${tarball}"
         ( cd "${dirname}" && ./setup.sh )
         echo "${PWD}/${dirname}/build/bin" >>"${GITHUB_PATH}"
