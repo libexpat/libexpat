@@ -646,6 +646,10 @@ static bool poolAppendChars(STRING_POOL *pool, const XML_Char *s, size_t len);
 
 #if XML_GE == 1
 static enum XML_Prop_Error
+setAllocTrackerMaximumAmplification(XML_Parser parser,
+                                    float maximumAmplificationFactor);
+
+static enum XML_Prop_Error
 setAllocTrackerActivationThreshold(XML_Parser parser,
                                    unsigned long long activationThresholdBytes);
 #endif /* XML_GE == 1 */
@@ -3058,17 +3062,32 @@ XML_SetBillionLaughsAttackProtectionActivationThreshold(
   return XML_TRUE;
 }
 
+static enum XML_Prop_Error
+setAllocTrackerMaximumAmplification(XML_Parser parser,
+                                    float maximumAmplificationFactor) {
+  if (parser == NULL)
+    return XML_PROP_ERROR_PARSER_NULL;
+
+  if (parser->m_parentParser != NULL)
+    return XML_PROP_ERROR_PARSER_NOT_ROOT;
+
+  if (isnan(maximumAmplificationFactor) || (maximumAmplificationFactor < 1.0f))
+    return XML_PROP_ERROR_INVALID_VALUE;
+
+  parser->m_alloc_tracker.maximumAmplificationFactor
+      = maximumAmplificationFactor;
+
+  return XML_PROP_ERROR_NONE;
+}
+
 XML_Bool XMLCALL
 XML_SetAllocTrackerMaximumAmplification(XML_Parser parser,
                                         float maximumAmplificationFactor) {
-  if ((parser == NULL) || (parser->m_parentParser != NULL)
-      || isnan(maximumAmplificationFactor)
-      || (maximumAmplificationFactor < 1.0f)) {
-    return XML_FALSE;
-  }
-  parser->m_alloc_tracker.maximumAmplificationFactor
-      = maximumAmplificationFactor;
-  return XML_TRUE;
+  return (setAllocTrackerMaximumAmplification(parser,
+                                              maximumAmplificationFactor)
+          == XML_PROP_ERROR_NONE)
+             ? XML_TRUE
+             : XML_FALSE;
 }
 
 static enum XML_Prop_Error
