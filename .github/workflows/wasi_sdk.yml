@@ -52,7 +52,7 @@ jobs:
 
     - name: Install build dependencies
       env:
-        wasi_sdk_major: "33"
+        wasi_sdk_major: "34"
         wasi_sdk_minor: "0"
       run: |-
         set -x -u
