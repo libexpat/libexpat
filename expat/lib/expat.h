@@ -139,6 +139,29 @@ enum XML_Error {
   XML_ERROR_NOT_STARTED,
 };
 
+/* Added in 2.9.0. */
+enum XML_Prop_Error {
+  XML_PROP_ERROR_NONE = 0, // i.e. success
+
+  XML_PROP_ERROR_INVALID_KEY = 1,   // i.e. the property is not known at all
+  XML_PROP_ERROR_INVALID_TYPE = 2,  // i.e. the property is known but expects a
+                                    // different type (so a different
+                                    // getter/setter would need to be called)
+  XML_PROP_ERROR_INVALID_VALUE = 3, // i.e. the value is invalid (with a setter
+                                    // function) or a NULL-pointer (with a
+                                    // getter function)
+
+  XML_PROP_ERROR_PARSER_NULL = 4,     // i.e. the parser argument is NULL
+  XML_PROP_ERROR_PARSER_NOT_ROOT = 5, // i.e. the parser is not a root parser
+                                      // but a subparser (and a root parser is
+                                      // needed)
+  XML_PROP_ERROR_PARSER_STARTED = 6,  // i.e. the parser is in the middle of
+                                      // parsing and this property cannot be
+                                      // changed while parsing
+
+  /* potentially more error codes upcoming here */
+};
+
 enum XML_Content_Type {
   XML_CTYPE_EMPTY = 1,
   XML_CTYPE_ANY,
