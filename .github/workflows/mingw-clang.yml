@@ -6,6 +6,7 @@
 #                               |_| XML parser
 #
 # Copyright (c) 2026 Sebastian Pipping <sebastian@pipping.org>
+# Copyright (c) 2026 Jeff McJunkin <jeff.mcjunkin@gmail.com>
 # Licensed under the MIT license:
 #
 # Permission is  hereby granted,  free of charge,  to any  person obtaining
@@ -52,6 +53,27 @@ jobs:
           - name: wchar_t
             cmake_args: -DEXPAT_CHAR_TYPE=wchar_t
     runs-on: ubuntu-26.04
+    container:
+      # We use Debian trixie here because combination "Clang MinGW ASan Wine"
+      # is broken on Ubuntu.
+      image: debian:trixie-slim
+      env:
+        # Job containers run as root, but the workspace bind mount is runner-owned.
+        # Wine rejects a prefix below a directory owned by another user.
+        WINEPREFIX: /tmp/libexpat-wineprefix
+        # This avoids
+        #   error: XDG_RUNTIME_DIR is invalid or not set in the environment.
+        # from Wine from inside the container.
+        XDG_RUNTIME_DIR: /run/user/0
+      # This unblocks 32bit wineserver; without it, we would get this error:
+      #   sock_init: ERROR in sock_check_pollhup()
+      #   wineserver: socket: Function not implemented
+      options: >-
+        --security-opt apparmor=unconfined
+        --security-opt  seccomp=unconfined
+    defaults:
+      run:
+        shell: "bash -e {0}"  # because the default is only POSIX shell
 
     steps:
     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
@@ -63,15 +85,20 @@ jobs:
         DEBIAN_FRONTEND: noninteractive
       run: |-
         set -x
-
-        # Install 32bit Wine
-        sudo dpkg --add-architecture i386  # for wine32
-        sudo apt-get update  # due to new architecture
-        sudo timeout 10m apt-get install --yes --no-install-recommends -V \
+        dpkg --add-architecture i386  # for wine32
+        apt-get update
+        timeout 10m apt-get install --yes --no-install-recommends -V \
+            ca-certificates \
+            cmake \
+            make \
+            python3 \
             retry \
+            unzip \
+            wget \
             wine \
             wine32:i386 \
-            wine32-preloader:i386
+            wine32-preloader:i386 \
+            xz-utils
 
     - name: Install build dependencies (Clang-based MinGW toolchain)
       run: |-
