@@ -644,6 +644,9 @@ static bool poolAppendChar(STRING_POOL *pool, XML_Char c);
 
 static bool poolAppendChars(STRING_POOL *pool, const XML_Char *s, size_t len);
 
+static enum XML_Prop_Error setReparseDeferralEnabled(XML_Parser parser,
+                                                     XML_Bool enabled);
+
 #define poolStart(pool) ((pool)->start)
 #define poolLength(pool) ((pool)->ptr - (pool)->start)
 #define poolChop(pool) ((void)--(pool->ptr))
@@ -3073,13 +3076,24 @@ XML_SetAllocTrackerActivationThreshold(
 }
 #endif /* XML_GE == 1 */
 
+static enum XML_Prop_Error
+setReparseDeferralEnabled(XML_Parser parser, XML_Bool enabled) {
+  if (parser == NULL)
+    return XML_PROP_ERROR_PARSER_NULL;
+
+  if (enabled != XML_TRUE && enabled != XML_FALSE)
+    return XML_PROP_ERROR_INVALID_VALUE;
+
+  parser->m_reparseDeferralEnabled = enabled;
+
+  return XML_PROP_ERROR_NONE;
+}
+
 XML_Bool XMLCALL
 XML_SetReparseDeferralEnabled(XML_Parser parser, XML_Bool enabled) {
-  if (parser != NULL && (enabled == XML_TRUE || enabled == XML_FALSE)) {
-    parser->m_reparseDeferralEnabled = enabled;
-    return XML_TRUE;
-  }
-  return XML_FALSE;
+  return (setReparseDeferralEnabled(parser, enabled) == XML_PROP_ERROR_NONE)
+             ? XML_TRUE
+             : XML_FALSE;
 }
 
 /* Initially tag->rawName always points into the parse buffer;
