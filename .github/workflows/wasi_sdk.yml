@@ -54,10 +54,13 @@ jobs:
       env:
         wasi_sdk_major: "34"
         wasi_sdk_minor: "0"
+        wasi_sdk_sha256sum: "09f37a478107bf30381e0d8922ac678ebe998de59e574f96830f08e520908d4a"
       run: |-
         set -x -u
-        wget --progress=dot:giga "https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-${wasi_sdk_major}/wasi-sdk-${wasi_sdk_major}.${wasi_sdk_minor}-x86_64-linux.deb"
-        sudo timeout 10m apt-get install --yes "./wasi-sdk-${wasi_sdk_major}.${wasi_sdk_minor}-x86_64-linux.deb"
+        wasi_sdk_deb="wasi-sdk-${wasi_sdk_major}.${wasi_sdk_minor}-$(uname -m)-linux.deb"
+        wget --progress=dot:giga "https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-${wasi_sdk_major}/${wasi_sdk_deb}"
+        sha256sum --check <<<"${wasi_sdk_sha256sum} ${wasi_sdk_deb}"
+        sudo timeout 10m apt-get install --yes "./${wasi_sdk_deb}"
 
     - name: Build using WASI SDK
       run: |
