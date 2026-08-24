@@ -645,6 +645,9 @@ static bool poolAppendChar(STRING_POOL *pool, XML_Char c);
 static bool poolAppendChars(STRING_POOL *pool, const XML_Char *s, size_t len);
 
 #if XML_GE == 1
+static enum XML_Prop_Error setBillionLaughsAttackProtectionActivationThreshold(
+    XML_Parser parser, unsigned long long activationThresholdBytes);
+
 static enum XML_Prop_Error
 setAllocTrackerMaximumAmplification(XML_Parser parser,
                                     float maximumAmplificationFactor);
@@ -3052,14 +3055,28 @@ XML_SetBillionLaughsAttackProtectionMaximumAmplification(
   return XML_TRUE;
 }
 
+static enum XML_Prop_Error
+setBillionLaughsAttackProtectionActivationThreshold(
+    XML_Parser parser, unsigned long long activationThresholdBytes) {
+  if (parser == NULL)
+    return XML_PROP_ERROR_PARSER_NULL;
+
+  if (parser->m_parentParser != NULL)
+    return XML_PROP_ERROR_PARSER_NOT_ROOT;
+
+  parser->m_accounting.activationThresholdBytes = activationThresholdBytes;
+
+  return XML_PROP_ERROR_NONE;
+}
+
 XML_Bool XMLCALL
 XML_SetBillionLaughsAttackProtectionActivationThreshold(
     XML_Parser parser, unsigned long long activationThresholdBytes) {
-  if ((parser == NULL) || (parser->m_parentParser != NULL)) {
-    return XML_FALSE;
-  }
-  parser->m_accounting.activationThresholdBytes = activationThresholdBytes;
-  return XML_TRUE;
+  return (setBillionLaughsAttackProtectionActivationThreshold(
+              parser, activationThresholdBytes)
+          == XML_PROP_ERROR_NONE)
+             ? XML_TRUE
+             : XML_FALSE;
 }
 
 static enum XML_Prop_Error
