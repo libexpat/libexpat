@@ -56,7 +56,7 @@ jobs:
         wasi_sdk_minor: "0"
       run: |-
         set -x -u
-        wget "https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-${wasi_sdk_major}/wasi-sdk-${wasi_sdk_major}.${wasi_sdk_minor}-x86_64-linux.deb"
+        wget --progress=dot:giga "https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-${wasi_sdk_major}/wasi-sdk-${wasi_sdk_major}.${wasi_sdk_minor}-x86_64-linux.deb"
         sudo timeout 10m apt-get install --yes "./wasi-sdk-${wasi_sdk_major}.${wasi_sdk_minor}-x86_64-linux.deb"
 
     - name: Build using WASI SDK
