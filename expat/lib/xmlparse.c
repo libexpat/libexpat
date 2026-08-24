@@ -644,6 +644,12 @@ static bool poolAppendChar(STRING_POOL *pool, XML_Char c);
 
 static bool poolAppendChars(STRING_POOL *pool, const XML_Char *s, size_t len);
 
+#if XML_GE == 1
+static enum XML_Prop_Error
+setAllocTrackerActivationThreshold(XML_Parser parser,
+                                   unsigned long long activationThresholdBytes);
+#endif /* XML_GE == 1 */
+
 static enum XML_Prop_Error setReparseDeferralEnabled(XML_Parser parser,
                                                      XML_Bool enabled);
 
@@ -3065,14 +3071,27 @@ XML_SetAllocTrackerMaximumAmplification(XML_Parser parser,
   return XML_TRUE;
 }
 
+static enum XML_Prop_Error
+setAllocTrackerActivationThreshold(
+    XML_Parser parser, unsigned long long activationThresholdBytes) {
+  if (parser == NULL)
+    return XML_PROP_ERROR_PARSER_NULL;
+
+  if (parser->m_parentParser != NULL)
+    return XML_PROP_ERROR_PARSER_NOT_ROOT;
+
+  parser->m_alloc_tracker.activationThresholdBytes = activationThresholdBytes;
+
+  return XML_PROP_ERROR_NONE;
+}
+
 XML_Bool XMLCALL
 XML_SetAllocTrackerActivationThreshold(
     XML_Parser parser, unsigned long long activationThresholdBytes) {
-  if ((parser == NULL) || (parser->m_parentParser != NULL)) {
-    return XML_FALSE;
-  }
-  parser->m_alloc_tracker.activationThresholdBytes = activationThresholdBytes;
-  return XML_TRUE;
+  return (setAllocTrackerActivationThreshold(parser, activationThresholdBytes)
+          == XML_PROP_ERROR_NONE)
+             ? XML_TRUE
+             : XML_FALSE;
 }
 #endif /* XML_GE == 1 */
 
