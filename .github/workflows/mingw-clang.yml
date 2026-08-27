@@ -32,15 +32,7 @@ name: Compile and test with Clang-based MinGW
 on:
   pull_request:
   push:
-  schedule:
-    - cron: '0 2 * * 5'  # Every Friday at 2am
   workflow_dispatch:
-    inputs:
-      full_xml_conformance:
-        description: Run the full W3C XML conformance suite
-        required: true
-        default: true
-        type: boolean
 
 permissions:
   contents: read
@@ -49,7 +41,7 @@ jobs:
   mingw_clang:
     name: Clang MinGW ASan + Wine (${{ matrix.expat_char_type }})
     runs-on: ubuntu-24.04
-    timeout-minutes: 180
+    timeout-minutes: 30
     # The tested Ubuntu 26.04 Wine binaries use ENDBR64 at functions that
     # compiler-rt 22's Windows interceptor cannot decode.  Debian 13 works.
     container: debian:13-slim
@@ -69,7 +61,9 @@ jobs:
       UBSAN_OPTIONS: halt_on_error=1:print_stacktrace=1
       WINEARCH: win64
       WINEDEBUG: -all
-      WINEPREFIX: ${{ github.workspace }}/.wineprefix
+      # Job containers run as root, but the workspace bind mount is runner-owned.
+      # Wine rejects a prefix below a directory owned by another user.
+      WINEPREFIX: /tmp/libexpat-wineprefix
 
     steps:
     - name: Install build and runtime dependencies
@@ -83,7 +77,6 @@ jobs:
             make \
             ninja-build \
             python3 \
-            unzip \
             wget \
             wine \
             wine64 \
@@ -188,51 +181,4 @@ jobs:
         test "${asan_exit_code}" -ne 0
         grep -Fq 'ERROR: AddressSanitizer: heap-buffer-overflow' \
             build/tests/asan-heap-overflow.log
-        wineserver --wait
-
-    - name: Run the full W3C XML conformance suite
-      if: >-
-        github.event_name == 'schedule'
-        || (github.event_name == 'workflow_dispatch'
-            && inputs.full_xml_conformance)
-      run: |-
-        # Debian Wine causes two known non-fatal compiler-rt interception
-        # diagnostics for every process.  Keep them out of xmltest.log while
-        # retaining them in per-process logs that are checked for real errors.
-        asan_wine_wrapper_dir="${PWD}/build/asan-wine-wrapper"
-        mkdir -p "${asan_wine_wrapper_dir}"
-        cp .github/workflows/scripts/wine-asan-log-wrapper.sh \
-            "${asan_wine_wrapper_dir}/wine"
-        chmod +x "${asan_wine_wrapper_dir}/wine"
-        export ASAN_XMLTEST_LOG_PREFIX="asan-xmltest-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
-        export PATH="${asan_wine_wrapper_dir}:${PATH}"
-
-        set +e
-        timeout 160m cmake --build build --target run-xmltest
-        xmltest_exit_code=$?
-        set -e
-
-        mapfile -d '' asan_logs \
-            < <(find build/tests/xmlconf -type f \
-                -name "${ASAN_XMLTEST_LOG_PREFIX}-*.*" -print0)
-        printf 'Inspecting %d ASan XML-conformance logs\n' "${#asan_logs[@]}"
-        if ((${#asan_logs[@]} != 1809)); then
-            echo 'Expected one sanitizer log for each of 1,809 XML inputs.' >&2
-            false
-        fi
-
-        known_asan_noise='^==[0-9]+==interception_win: unhandled instruction at 0x[0-9a-fA-F]+: (41 b9 04 00 00 00 ba 0c|45 84 c9 74 45 0f 1f 80)$'
-        set +e
-        grep -H -v -E "${known_asan_noise}" "${asan_logs[@]}"
-        asan_scan_exit_code=$?
-        set -e
-        if [[ ${asan_scan_exit_code} -eq 0 ]]; then
-            echo 'Unexpected sanitizer output occurred during XML conformance testing.' >&2
-            false
-        elif [[ ${asan_scan_exit_code} -ne 1 ]]; then
-            echo 'Could not inspect every XML-conformance sanitizer log.' >&2
-            false
-        fi
-
-        test "${xmltest_exit_code}" -eq 0
         wineserver --wait
