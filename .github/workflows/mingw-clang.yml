@@ -70,7 +70,8 @@ jobs:
         sudo timeout 10m apt-get install --yes --no-install-recommends -V \
             retry \
             wine \
-            wine32:i386
+            wine32:i386 \
+            wine32-preloader:i386
 
     - name: Install build dependencies (Clang-based MinGW toolchain)
       run: |-
