@@ -3513,6 +3513,8 @@ START_TEST(test_buffer_can_grow_to_max) {
     maxbuf = maxbuf / 2;
     fprintf(stderr, "Reducing maxbuf to %d...\n", maxbuf);
   }
+#else
+  UNUSED_P(maxbuf);
 #endif
 
   for (int i = 0; i < num_prefixes; ++i) {
@@ -3536,6 +3538,8 @@ START_TEST(test_buffer_can_grow_to_max) {
     // The limit should be consistent; no prefix should allow us to
     // reach above the max buffer size.
     assert_true(XML_GetBuffer(parser, maxbuf + 1) == NULL);
+#else
+    UNUSED_P(maxbuf);
 #endif
 
     XML_ParserFree(parser);
