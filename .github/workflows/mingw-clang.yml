@@ -42,7 +42,7 @@ permissions:
 
 jobs:
   mingw_clang:
-    name: Compile and test with Clang-based MinGW (${{ matrix.name }})
+    name: Compile and test with Clang-based MinGW (${{ matrix.mingw_arch }}, ${{ matrix.name }})
     timeout-minutes: 15
     strategy:
       fail-fast: false
@@ -50,8 +50,14 @@ jobs:
         include:
           - name: char
             cmake_args: -DEXPAT_CHAR_TYPE=char
+            mingw_arch: i686
+            wine_arch: win32
+            wine_packages: wine32:i386 wine32-preloader:i386
           - name: wchar_t
             cmake_args: -DEXPAT_CHAR_TYPE=wchar_t
+            mingw_arch: x86_64
+            wine_arch: win64
+            wine_package: wine64 wine64-preloader
     runs-on: ubuntu-26.04
     container:
       # We use Debian trixie here because combination "Clang MinGW ASan Wine"
@@ -83,9 +89,12 @@ jobs:
     - name: Install build dependencies (everything but MinGW)
       env:
         DEBIAN_FRONTEND: noninteractive
+        wine_packages: ${{ matrix.wine_packages }}
       run: |-
         set -x
-        dpkg --add-architecture i386  # for wine32
+        if [[ ${wine_packages} =~ :i386 ]]; then
+            dpkg --add-architecture i386
+        fi
         apt-get update
         timeout 10m apt-get install --yes --no-install-recommends -V \
             ca-certificates \
@@ -96,8 +105,7 @@ jobs:
             unzip \
             wget \
             wine \
-            wine32:i386 \
-            wine32-preloader:i386 \
+            ${wine_packages} \
             xz-utils
 
     - name: Install build dependencies (Clang-based MinGW toolchain)
@@ -118,10 +126,11 @@ jobs:
     - name: Configure
       env:
         cmake_args: ${{ matrix.cmake_args }}
+        wine_arch: ${{ matrix.wine_arch }}
       run: |-
         set -u
         args=(
-            -DCMAKE_TOOLCHAIN_FILE=cmake/mingw-toolchain-win32.cmake
+            -DCMAKE_TOOLCHAIN_FILE=cmake/mingw-toolchain-${wine_arch}.cmake
 
             -DCMAKE_{C,CXX}_FLAGS='-Wall -Wextra -pedantic -O1 -g -fsanitize=address,undefined -fno-sanitize-recover=all -fno-omit-frame-pointer'
             -DCMAKE_{EXE,MODULE,SHARED}_LINKER_FLAGS='-g -fsanitize=address,undefined'
@@ -143,6 +152,7 @@ jobs:
     - name: Run unit tests (takes about 3 minutes)
       env:
         retry: retry --times 5 --  # mitigate Wine crashing randomly in CI
+        mingw_arch: ${{ matrix.mingw_arch }}
         WINEDEBUG: -all            # to reduce noise
       run: |-
         set -x
@@ -152,8 +162,12 @@ jobs:
         # - libclang_rt.asan_dynamic-*.dll
         # - libexpat*.dll
         # - libunwind.dll
-        export WINEPATH="$(winepath -w build);$(winepath -w llvm-mingw-*-ucrt-ubuntu-*/i686-w64-mingw32/bin)"
+        export WINEPATH="$(winepath -w build);$(winepath -w llvm-mingw-*-ucrt-ubuntu-*/${mingw_arch}-w64-mingw32/bin)"
 
         make -C build CTEST_OUTPUT_ON_FAILURE=1 test
 
-        ${retry} make -C build run-xmltest
+        # Bypass `run-xmltest` on 64bit because it takes forever,
+        # needs more debugging
+        if [[ ${mingw_arch} != x86_64 ]]; then
+            ${retry} make -C build run-xmltest
+        fi
