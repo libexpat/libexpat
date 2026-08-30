@@ -19,6 +19,7 @@
    Copyright (c) 2020      Tim Gates <tim.gates@iress.com>
    Copyright (c) 2021      Donghee Na <donghee.na@python.org>
    Copyright (c) 2023      Sony Corporation / Snild Dolkow <snild@sony.com>
+   Copyright (c) 2026      Artem Kulyk
    Licensed under the MIT license:
 
    Permission is  hereby granted,  free of charge,  to any  person obtaining
@@ -304,6 +305,100 @@ START_TEST(test_ns_duplicate_attrs_diff_prefixes) {
                      "     a:a='v' b:a='v' />";
   expect_failure(text, XML_ERROR_DUPLICATE_ATTRIBUTE,
                  "did not report multiple attributes with same URI+name");
+}
+END_TEST
+
+/* Detect a duplicate expanded attribute name after the same prefixed
+   attributes have occurred on earlier elements. */
+START_TEST(test_ns_duplicate_attrs_diff_prefixes_after_repeats) {
+  const char *text
+      = "<doc xmlns:a='http://example.org/a' xmlns:b='http://example.org/a'>"
+        "<e a:x='v1' b:y='v2'/>"
+        "<e a:x='v3' b:y='v4'/>"
+        "<e a:x='v5' b:x='dup'/>"
+        "</doc>";
+  expect_failure(text, XML_ERROR_DUPLICATE_ATTRIBUTE,
+                 "did not report duplicate expanded attribute after repeats");
+}
+END_TEST
+
+/* Rebind a prefix then still detect a duplicate expanded name. */
+START_TEST(test_ns_duplicate_after_prefix_rebind) {
+  const char *text
+      = "<doc>"
+        "<e xmlns:a='http://example.org/u1' a:x='v1'/>"
+        "<e xmlns:a='http://example.org/u2' xmlns:b='http://example.org/u2'"
+        "   a:x='v2' b:x='dup'/>"
+        "</doc>";
+  expect_failure(text, XML_ERROR_DUPLICATE_ATTRIBUTE,
+                 "did not report duplicate after prefix rebind");
+}
+END_TEST
+
+/* Same local name under different URIs must not collide after a rebind. */
+START_TEST(test_ns_same_local_different_uri_after_rebind) {
+  const char *text
+      = "<doc>"
+        "<e xmlns:a='http://example.org/u1' a:x='v1'/>"
+        "<e xmlns:a='http://example.org/u2' xmlns:b='http://example.org/u1'"
+        "   a:x='v2' b:x='ok'/>"
+        "</doc>";
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+      == XML_STATUS_ERROR)
+    xml_failure(g_parser);
+}
+END_TEST
+
+/* Memos must not survive XML_ParserReset. */
+START_TEST(test_ns_duplicate_after_parser_reset) {
+  const char *ok
+      = "<doc xmlns:a='http://example.org/a' xmlns:b='http://example.org/a'>"
+        "<e a:x='1' b:y='2'/></doc>";
+  const char *dup
+      = "<doc xmlns:a='http://example.org/a' xmlns:b='http://example.org/a'>"
+        "<e a:x='1' b:x='2'/></doc>";
+  if (_XML_Parse_SINGLE_BYTES(g_parser, ok, (int)strlen(ok), XML_TRUE)
+      == XML_STATUS_ERROR)
+    xml_failure(g_parser);
+  XML_ParserReset(g_parser, NULL);
+  expect_failure(dup, XML_ERROR_DUPLICATE_ATTRIBUTE,
+                 "did not report duplicate after parser reset");
+}
+END_TEST
+
+static int g_ns_default_attr_seen;
+
+static void XMLCALL
+ns_default_attr_start(void *userData, const XML_Char *name,
+                      const XML_Char **atts) {
+  int i;
+  UNUSED_P(userData);
+  if (xcstrcmp(name, XCS("e")) != 0)
+    return;
+  for (i = 0; atts[i]; i += 2) {
+    if (xcstrcmp(atts[i], XCS("http://example.org/a x")) == 0
+        && xcstrcmp(atts[i + 1], XCS("def")) == 0) {
+      g_ns_default_attr_seen++;
+      return;
+    }
+  }
+  fail("namespaced default attribute was not expanded");
+}
+
+/* Namespaced default attributes must still expand after repeated elements. */
+START_TEST(test_ns_default_attrs_after_repeats) {
+  const char *text = "<!DOCTYPE doc [\n"
+                     "  <!ATTLIST e xmlns:a CDATA 'http://example.org/a'\n"
+                     "              a:x CDATA 'def'>\n"
+                     "]>\n"
+                     "<doc><e/><e/></doc>";
+  g_ns_default_attr_seen = 0;
+  XML_SetStartElementHandler(g_parser, ns_default_attr_start);
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+      == XML_STATUS_ERROR)
+    xml_failure(g_parser);
+  if (g_ns_default_attr_seen != 2)
+    fail("expected two start-element events with default attributes");
 }
 END_TEST
 
@@ -733,6 +828,12 @@ make_namespace_test_case(Suite *s) {
   tcase_add_test(tc_namespace, test_ns_unbound_prefix);
   tcase_add_test(tc_namespace, test_ns_default_with_empty_uri);
   tcase_add_test(tc_namespace, test_ns_duplicate_attrs_diff_prefixes);
+  tcase_add_test(tc_namespace,
+                 test_ns_duplicate_attrs_diff_prefixes_after_repeats);
+  tcase_add_test(tc_namespace, test_ns_duplicate_after_prefix_rebind);
+  tcase_add_test(tc_namespace, test_ns_same_local_different_uri_after_rebind);
+  tcase_add_test(tc_namespace, test_ns_duplicate_after_parser_reset);
+  tcase_add_test(tc_namespace, test_ns_default_attrs_after_repeats);
   tcase_add_test(tc_namespace, test_ns_duplicate_hashes);
   tcase_add_test(tc_namespace, test_ns_unbound_prefix_on_attribute);
   tcase_add_test(tc_namespace, test_ns_unbound_prefix_on_element);

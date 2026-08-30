@@ -52,6 +52,7 @@
    Copyright (c) 2026      Haris Hussain <hextheshadow0x@gmail.com>
    Copyright (c) 2026      Evgeny Kotkov <kotkov@apache.org>
    Copyright (c) 2026      Alberto Maschietto <albertomaschietto9@gmail.com>
+   Copyright (c) 2026      Artem Kulyk
    Licensed under the MIT license:
 
    Permission is  hereby granted,  free of charge,  to any  person obtaining
@@ -280,6 +281,11 @@ typedef struct binding {
   XML_Char *uri;
   size_t uriLen;
   size_t uriAlloc;
+  /* Incremented by addBinding() when uriLen or the first uriLen characters
+     change, including on recycled BINDING objects.  The element-name
+     expansion path may reallocate uri and append the local part in place
+     without bumping gen, because it leaves [0, uriLen) unchanged. */
+  uint64_t gen;
 } BINDING;
 
 typedef struct prefix {
@@ -374,6 +380,11 @@ typedef struct attribute_id {
   PREFIX *prefix;
   XML_Bool maybeTokenized;
   XML_Bool xmlns;
+  /* SipHash of the expanded name; valid while nsAttsBindingGen matches
+     nsAttsBinding->gen.  Unused when namespace processing is off. */
+  const struct binding *nsAttsBinding;
+  uint64_t nsAttsBindingGen;
+  unsigned long nsAttsHash;
 } ATTRIBUTE_ID;
 
 typedef struct {
@@ -810,6 +821,9 @@ struct XML_ParserStruct {
   int m_nSpecifiedAtts;
   int m_idAttIndex;
   ATTRIBUTE *m_atts;
+  /* interned ATTRIBUTE_ID of each start-tag attribute, ns mode only */
+  ATTRIBUTE_ID **m_attIds;
+  size_t m_attIdsSize;
   NS_ATT *m_nsAtts;
   unsigned long m_nsAttsVersion;
   unsigned char m_nsAttsPower;
@@ -1417,6 +1431,8 @@ parserCreate(const XML_Char *encodingName,
     FREE(parser, parser);
     return NULL;
   }
+  parser->m_attIds = NULL;
+  parser->m_attIdsSize = 0;
 #ifdef XML_ATTR_INFO
   parser->m_attInfo = MALLOC(parser, parser->m_attsSize * sizeof(XML_AttrInfo));
   if (parser->m_attInfo == NULL) {
@@ -1944,6 +1960,7 @@ XML_ParserFree(XML_Parser parser) {
 #endif /* XML_DTD */
     dtdDestroy(parser->m_dtd, (XML_Bool)! parser->m_parentParser, parser);
   FREE(parser, parser->m_atts);
+  FREE(parser, parser->m_attIds);
 #ifdef XML_ATTR_INFO
   FREE(parser, parser->m_attInfo);
 #endif
@@ -3945,6 +3962,19 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
     }
   }
 
+  /* keep the per-attribute interned id array in sync (namespace mode only) */
+  if (parser->m_ns && (parser->m_attIdsSize < parser->m_attsSize)) {
+    if (parser->m_attsSize > SIZE_MAX / sizeof(ATTRIBUTE_ID *))
+      return XML_ERROR_NO_MEMORY;
+    ATTRIBUTE_ID **const tempAttIds = REALLOC(
+        parser, parser->m_attIds, parser->m_attsSize * sizeof(ATTRIBUTE_ID *));
+    if (tempAttIds == NULL) {
+      return XML_ERROR_NO_MEMORY;
+    }
+    parser->m_attIds = tempAttIds;
+    parser->m_attIdsSize = parser->m_attsSize;
+  }
+
   /* the attribute list for the application */
   const XML_Char **const appAtts = (const XML_Char **)parser->m_atts;
   for (size_t i = 0; i < n; i++) {
@@ -3986,6 +4016,9 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
       return XML_ERROR_DUPLICATE_ATTRIBUTE;
     }
     (attId->name)[-1] = 1;
+    if (parser->m_ns) {
+      parser->m_attIds[attIndex / 2] = attId; /* name slots are even */
+    }
     appAtts[attIndex++] = attId->name;
     if (! parser->m_atts[i].normalized) {
       XML_Bool isCdata = XML_TRUE;
@@ -4063,6 +4096,10 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
         } else {
           (da->id->name)[-1] = 2;
           nPrefixes++;
+          if (parser->m_ns) {
+            /* DEFAULT_ATTRIBUTE only marks the id const for read access */
+            parser->m_attIds[attIndex / 2] = (ATTRIBUTE_ID *)da->id;
+          }
           appAtts[attIndex++] = da->id->name;
           appAtts[attIndex++] = da->value;
         }
@@ -4140,26 +4177,20 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
     /* expand prefixed names and check for duplicates */
     for (; i < attIndex; i += 2) {
       const XML_Char *s = appAtts[i];
-      if (s[-1] == 2) { /* prefixed */
-        struct siphash sip_state;
-        struct sipkey sip_key;
-
-        copy_salt_to_sipkey(parser, &sip_key);
-        sip24_init(&sip_state, &sip_key);
-
+      if (s[-1] == 2) {          /* prefixed */
         ((XML_Char *)s)[-1] = 0; /* clear flag */
-        ATTRIBUTE_ID *const id
-            = (ATTRIBUTE_ID *)lookup(parser, &dtd->attributeIds, s, 0);
+        /* the interned id is already known; no need to look up (and hash) */
+        ATTRIBUTE_ID *const id = parser->m_attIds[i / 2];
         if (! id || ! id->prefix) {
           /* This code is walking through the appAtts array, dealing
            * with (in this case) a prefixed attribute name.  To be in
            * the array, the attribute must have already been bound, so
            * has to have passed through the hash table lookup once
            * already.  That implies that an entry for it already
-           * exists, so the lookup above will return a pointer to
-           * already allocated memory.  There is no opportunity for
-           * the allocator to fail, so the condition above cannot be
-           * fulfilled.
+           * exists, so the array above will hold a pointer to
+           * already allocated memory with a prefix.  There is no
+           * opportunity for the allocator to fail, so the condition
+           * above cannot be fulfilled.
            *
            * Since it is difficult to be certain that the above
            * analysis is complete, we retain the test and merely
@@ -4174,12 +4205,8 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
         if (! poolAppendChars(&parser->m_tempPool, b->uri, b->uriLen))
           return XML_ERROR_NO_MEMORY;
 
-        sip24_update(&sip_state, b->uri, b->uriLen * sizeof(XML_Char));
-
         while (*s++ != XML_T(ASCII_COLON))
           ;
-
-        sip24_update(&sip_state, s, keylen(s) * sizeof(XML_Char));
 
         {
           const size_t len = xcslen(s) + /*null terminator*/ 1;
@@ -4187,7 +4214,24 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
             return XML_ERROR_NO_MEMORY;
         }
 
-        const unsigned long uriHash = (unsigned long)sip24_final(&sip_state);
+        unsigned long uriHash;
+        if (id->nsAttsBinding == b && id->nsAttsBindingGen == b->gen) {
+          uriHash = id->nsAttsHash; /* memoized from an earlier element */
+        } else {
+          struct siphash sip_state;
+          struct sipkey sip_key;
+
+          copy_salt_to_sipkey(parser, &sip_key);
+          sip24_init(&sip_state, &sip_key);
+
+          sip24_update(&sip_state, b->uri, b->uriLen * sizeof(XML_Char));
+          sip24_update(&sip_state, s, keylen(s) * sizeof(XML_Char));
+
+          uriHash = (unsigned long)sip24_final(&sip_state);
+          id->nsAttsBinding = b;
+          id->nsAttsBindingGen = b->gen;
+          id->nsAttsHash = uriHash;
+        }
 
         { /* Check hash table for duplicate of expanded name (uriName).
              Derived from code in lookup(parser, HASH_TABLE *table, ...).
@@ -4558,12 +4602,14 @@ addBinding(XML_Parser parser, PREFIX *prefix, const ATTRIBUTE_ID *attId,
       return XML_ERROR_NO_MEMORY;
     }
     b->uriAlloc = len + EXPAND_SPARE;
+    b->gen = 0;
   }
   b->uriLen = len;
   memcpy(b->uri, uri, len * sizeof(XML_Char));
   if (parser->m_namespaceSeparator)
     b->uri[len - 1] = parser->m_namespaceSeparator;
   b->prefix = prefix;
+  b->gen++;
   b->attId = attId;
   b->prevPrefixBinding = prefix->binding;
   /* NULL binding when default namespace undeclared */
