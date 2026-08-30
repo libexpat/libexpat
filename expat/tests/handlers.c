@@ -22,6 +22,7 @@
    Copyright (c) 2026      Matthew Fernandez <matthew.fernandez@gmail.com>
    Copyright (c) 2026      Berkay Eren Ürün <berkay.ueruen@siemens.com>
    Copyright (c) 2026      Kartik Kenchi <netliomax25@gmail.com>
+   Copyright (c) 2026      Artem Kulyk
    Licensed under the MIT license:
 
    Permission is  hereby granted,  free of charge,  to any  person obtaining
@@ -364,7 +365,9 @@ MiscEncodingHandler(void *data, const XML_Char *encoding, XML_Encoding *info) {
       || ! xcstrcmp(encoding, XCS("invalid-len"))
       || ! xcstrcmp(encoding, XCS("invalid-a"))
       || ! xcstrcmp(encoding, XCS("invalid-surrogate"))
-      || ! xcstrcmp(encoding, XCS("invalid-high")))
+      || ! xcstrcmp(encoding, XCS("invalid-high"))
+      || ! xcstrcmp(encoding, XCS("invalid-ascii-malform"))
+      || ! xcstrcmp(encoding, XCS("invalid-ascii-nonxml")))
     high_map = -1;
 
   for (i = 0; i < 128; ++i)
@@ -389,6 +392,11 @@ MiscEncodingHandler(void *data, const XML_Char *encoding, XML_Encoding *info) {
   /* If required, give a top-bit set character too high a value */
   if (! xcstrcmp(encoding, XCS("invalid-high")))
     info->map[0x84] = 0x010101;
+  /* If required, re-type an ASCII byte that Latin-1 treats as BT_OTHER */
+  if (! xcstrcmp(encoding, XCS("invalid-ascii-malform")))
+    info->map[0x24] = -1; /* '$' */
+  if (! xcstrcmp(encoding, XCS("invalid-ascii-nonxml")))
+    info->map[0x7E] = 0xD800; /* '~' */
 
   info->data = data;
   info->release = NULL;

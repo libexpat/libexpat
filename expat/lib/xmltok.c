@@ -27,6 +27,7 @@
    Copyright (c) 2025      Alfonso Gregory <gfunni234@gmail.com>
    Copyright (c) 2026      Nick Begg <nick@stunttruck.net>
    Copyright (c) 2026      Kartik Kenchi <netliomax25@gmail.com>
+   Copyright (c) 2026      Artem Kulyk
    Licensed under the MIT license:
 
    Permission is  hereby granted,  free of charge,  to any  person obtaining
@@ -208,6 +209,10 @@ struct normal_encoding {
   int(PTRFASTCALL *isInvalid2)(const ENCODING *, const char *);
   int(PTRFASTCALL *isInvalid3)(const ENCODING *, const char *);
   int(PTRFASTCALL *isInvalid4)(const ENCODING *, const char *);
+  /* Zero for the built-in encodings, whose type[] is one of the static
+     tables; set for encodings from XML_SetUnknownEncodingHandler, whose
+     type[] the application may have re-mapped. */
+  unsigned char appDefinedByteTypes;
 };
 
 #define AS_NORMAL_ENCODING(enc) ((const struct normal_encoding *)(enc))
@@ -1416,6 +1421,7 @@ XmlInitUnknownEncoding(void *mem, const int *table, CONVERTER convert,
   int i;
   struct unknown_encoding *e = (struct unknown_encoding *)mem;
   memcpy(mem, &latin1_encoding, sizeof(struct normal_encoding));
+  e->normal.appDefinedByteTypes = 1;
   for (i = 0; i < 128; i++)
     if (latin1_encoding.type[i] != BT_OTHER
         && latin1_encoding.type[i] != BT_NONXML && table[i] != i)

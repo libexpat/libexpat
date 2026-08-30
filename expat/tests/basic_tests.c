@@ -23,6 +23,7 @@
    Copyright (c) 2026      Francesco Bertolaccini
    Copyright (c) 2026      Matthew Fernandez <matthew.fernandez@gmail.com>
    Copyright (c) 2026      Kartik Kenchi <netliomax25@gmail.com>
+   Copyright (c) 2026      Artem Kulyk
    Licensed under the MIT license:
 
    Permission is  hereby granted,  free of charge,  to any  person obtaining
@@ -2809,6 +2810,107 @@ START_TEST(test_duplicate_id_attribute_multiple_attlistdecl) {
 }
 END_TEST
 
+static void
+parse_document_in_chunks(XML_Parser parser, const char *text, int chunk) {
+  const int len = (int)strlen(text);
+  int off = 0;
+  while (off < len) {
+    int n = len - off;
+    if (n > chunk)
+      n = chunk;
+    if (XML_Parse(parser, text + off, n,
+                  (off + n >= len) ? XML_TRUE : XML_FALSE)
+        != XML_STATUS_OK)
+      xml_failure(parser);
+    off += n;
+  }
+}
+
+/* Feed long ASCII character data and a CDATA section at 8-byte window edges. */
+START_TEST(test_bulk_scan_chunk_boundaries) {
+  char text[160];
+  XML_Char expected[81];
+  int chunk, i;
+  CharData storage;
+
+  memset(text, 'a', 80);
+  text[80] = '\0';
+  for (i = 0; i < 80; i++)
+    expected[i] = (XML_Char)'a';
+  expected[80] = 0;
+
+  {
+    char doc[200];
+    strcpy(doc, "<doc>");
+    strcat(doc, text);
+    strcat(doc, "</doc>");
+    for (chunk = 7; chunk <= 9; chunk++) {
+      XML_Parser parser = XML_ParserCreate(NULL);
+      assert_true(parser != NULL);
+      CharData_Init(&storage);
+      XML_SetUserData(parser, &storage);
+      XML_SetCharacterDataHandler(parser, accumulate_characters);
+      parse_document_in_chunks(parser, doc, chunk);
+      CharData_CheckXMLChars(&storage, expected);
+      XML_ParserFree(parser);
+    }
+  }
+
+  {
+    char doc[220];
+    strcpy(doc, "<doc><![CDATA[");
+    strcat(doc, text);
+    strcat(doc, "]]></doc>");
+    for (chunk = 7; chunk <= 9; chunk++) {
+      XML_Parser parser = XML_ParserCreate(NULL);
+      assert_true(parser != NULL);
+      CharData_Init(&storage);
+      XML_SetUserData(parser, &storage);
+      XML_SetCharacterDataHandler(parser, accumulate_characters);
+      parse_document_in_chunks(parser, doc, chunk);
+      CharData_CheckXMLChars(&storage, expected);
+      XML_ParserFree(parser);
+    }
+  }
+}
+END_TEST
+
+/* ISO-8859-1 character data: attribute memo is off, bulk scan still runs. */
+START_TEST(test_iso8859_1_long_chardata) {
+  char doc[96];
+  XML_Char expected[129];
+  int i;
+  CharData storage;
+  XML_Parser parser = XML_ParserCreate("ISO-8859-1");
+  assert_true(parser != NULL);
+
+  strcpy(doc, "<e>");
+  for (i = 0; i < 64; i++)
+    doc[3 + i] = (char)0xE4;
+  strcpy(doc + 3 + 64, "</e>");
+
+#ifdef XML_UNICODE
+  for (i = 0; i < 64; i++)
+    expected[i] = 0x00e4;
+  expected[64] = 0;
+#else
+  for (i = 0; i < 64; i++) {
+    expected[2 * i] = (XML_Char)0xC3;
+    expected[2 * i + 1] = (XML_Char)0xA4;
+  }
+  expected[128] = 0;
+#endif
+
+  CharData_Init(&storage);
+  XML_SetUserData(parser, &storage);
+  XML_SetCharacterDataHandler(parser, accumulate_characters);
+  if (XML_Parse(parser, doc, (int)strlen(doc), XML_TRUE) != XML_STATUS_OK)
+    xml_failure(parser);
+  CharData_CheckXMLChars(&storage, expected);
+  XML_ParserFree(parser);
+}
+END_TEST
+
 static void XMLCALL
 check_second_attr_normalization(void *userData, const XML_Char *name,
                                 const XML_Char **atts) {
@@ -4949,6 +5051,34 @@ START_TEST(test_unknown_ascii_encoding_fail) {
 }
 END_TEST
 
+/* Application-supplied encodings may re-type ASCII bytes that the bulk
+   scan would otherwise skip.  Short and >8-byte runs must both reject. */
+START_TEST(test_unknown_encoding_retyped_ascii_in_long_text) {
+  const char *const cases[] = {
+      "<?xml version='1.0' encoding='invalid-ascii-malform'?>\n"
+      "<doc>ab$cd</doc>",
+      "<?xml version='1.0' encoding='invalid-ascii-malform'?>\n"
+      "<doc>aaaaaaaaaaaa$aaaaaaaaaaaa</doc>",
+      "<?xml version='1.0' encoding='invalid-ascii-malform'?>\n"
+      "<doc><![CDATA[aaaaaaaaaaaa$aaaaaaaaaaaa]]></doc>",
+      "<?xml version='1.0' encoding='invalid-ascii-nonxml'?>\n"
+      "<doc>ab~cd</doc>",
+      "<?xml version='1.0' encoding='invalid-ascii-nonxml'?>\n"
+      "<doc>aaaaaaaaaaaa~aaaaaaaaaaaa</doc>",
+      "<?xml version='1.0' encoding='invalid-ascii-nonxml'?>\n"
+      "<doc><![CDATA[aaaaaaaaaaaa~aaaaaaaaaaaa]]></doc>",
+  };
+  int i;
+  for (i = 0; i < (int)(sizeof(cases) / sizeof(cases[0])); i++) {
+    if (i > 0)
+      XML_ParserReset(g_parser, NULL);
+    XML_SetUnknownEncodingHandler(g_parser, MiscEncodingHandler, NULL);
+    expect_failure(cases[i], XML_ERROR_INVALID_TOKEN,
+                   "re-typed ASCII byte in unknown encoding not faulted");
+  }
+}
+END_TEST
+
 START_TEST(test_unknown_encoding_invalid_length) {
   const char *text = "<?xml version='1.0' encoding='invalid-len'?>\n"
                      "<doc>Hello, world</doc>";
@@ -6810,6 +6940,8 @@ make_basic_test_case(Suite *s) {
   tcase_add_test(tc_basic,
                  test_duplicate_cdata_attribute_multiple_attlistdecl_3);
   tcase_add_test(tc_basic, test_duplicate_id_attribute_multiple_attlistdecl);
+  tcase_add_test(tc_basic, test_bulk_scan_chunk_boundaries);
+  tcase_add_test(tc_basic, test_iso8859_1_long_chardata);
   tcase_add_test__if_xml_ge(tc_basic, test_default_attr_index_after_dtd_copy);
   tcase_add_test__if_xml_ge(tc_basic, test_reset_in_entity);
   tcase_add_test(tc_basic, test_resume_invalid_parse);
@@ -6913,6 +7045,7 @@ make_basic_test_case(Suite *s) {
   tcase_add_test(tc_basic, test_invalid_unknown_encoding);
   tcase_add_test(tc_basic, test_unknown_ascii_encoding_ok);
   tcase_add_test(tc_basic, test_unknown_ascii_encoding_fail);
+  tcase_add_test(tc_basic, test_unknown_encoding_retyped_ascii_in_long_text);
   tcase_add_test(tc_basic, test_unknown_encoding_invalid_length);
   tcase_add_test(tc_basic, test_unknown_encoding_invalid_topbit);
   tcase_add_test(tc_basic, test_unknown_encoding_invalid_surrogate);

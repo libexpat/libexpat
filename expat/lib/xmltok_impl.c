@@ -18,6 +18,7 @@
    Copyright (c) 2020      Boris Kolpackov <boris@codesynthesis.com>
    Copyright (c) 2022      Martin Ettl <ettl.martin78@googlemail.com>
    Copyright (c) 2026      Nick Begg <nick@stunttruck.net>
+   Copyright (c) 2026      Artem Kulyk
    Licensed under the MIT license:
 
    Permission is  hereby granted,  free of charge,  to any  person obtaining
@@ -46,6 +47,21 @@
 
 #  ifndef IS_INVALID_CHAR // i.e. for UTF-16 and XML_MIN_SIZE not defined
 #    define IS_INVALID_CHAR(enc, ptr, n) (0)
+#  endif
+
+/* Return non-zero if any of the eight bytes in x terminates a run of
+   plain character data for a 1-byte encoding, i.e. is a byte < 0x20, one
+   of '&' (0x26), '<' (0x3C), ']' (0x5D) or a byte >= 0x80.  All other
+   byte values are advanced over by the default case of the character
+   data scanning loops, so runs of them can be consumed in bulk.
+   Both helpers are defined only once at the end of this file (this file
+   is included multiple times per translation unit). */
+#  ifndef XML_TOK_IMPL_DEFINED_PLAIN_ASCII_DATA8
+#    define XML_TOK_IMPL_DEFINED_PLAIN_ASCII_DATA8
+static int data8HasStopByte(uint64_t x);
+/* Like data8HasStopByte but for CDATA sections, where '&' and '<' are
+   plain data and only ']' can terminate a run among the ASCII bytes. */
+static int data8HasCdataStopByte(uint64_t x);
 #  endif
 
 #  define INVALID_LEAD_CASE(n, ptr, nextTokPtr)                                \
@@ -398,6 +414,25 @@ PREFIX(cdataSectionTok)(const ENCODING *enc, const char *ptr, const char *end,
     break;
   }
   while (HAS_CHAR(enc, ptr, end)) {
+    /* bulk-consume plain data bytes (default case below).  skip the
+       8-byte scan when the first remaining byte is already a stop.
+       application-supplied encodings may re-type ASCII bytes. */
+    if (MINBPC(enc) == 1 && ! AS_NORMAL_ENCODING(enc)->appDefinedByteTypes
+        && end - ptr >= 8) {
+      const unsigned char first = (unsigned char)*ptr;
+      if (first >= 0x20 && first < 0x80 && first != ASCII_RSQB) {
+        while (end - ptr >= 8) {
+          uint64_t chunk;
+          memcpy(&chunk, ptr, sizeof(chunk));
+          if (data8HasCdataStopByte(chunk)) {
+            break;
+          }
+          ptr += 8;
+        }
+        if (! HAS_CHAR(enc, ptr, end))
+          break;
+      }
+    }
     switch (BYTE_TYPE(enc, ptr)) {
 #  define LEAD_CASE(n)                                                         \
   case BT_LEAD##n:                                                             \
@@ -873,6 +908,26 @@ PREFIX(contentTok)(const ENCODING *enc, const char *ptr, const char *end,
     break;
   }
   while (HAS_CHAR(enc, ptr, end)) {
+    /* bulk-consume plain data bytes (default case below).  skip the
+       8-byte scan when the first remaining byte is already a stop.
+       application-supplied encodings may re-type ASCII bytes. */
+    if (MINBPC(enc) == 1 && ! AS_NORMAL_ENCODING(enc)->appDefinedByteTypes
+        && end - ptr >= 8) {
+      const unsigned char first = (unsigned char)*ptr;
+      if (first >= 0x20 && first < 0x80 && first != ASCII_AMP
+          && first != ASCII_LT && first != ASCII_RSQB) {
+        while (end - ptr >= 8) {
+          uint64_t chunk;
+          memcpy(&chunk, ptr, sizeof(chunk));
+          if (data8HasStopByte(chunk)) {
+            break;
+          }
+          ptr += 8;
+        }
+        if (! HAS_CHAR(enc, ptr, end))
+          break;
+      }
+    }
     switch (BYTE_TYPE(enc, ptr)) {
 #  define LEAD_CASE(n)                                                         \
   case BT_LEAD##n:                                                             \
@@ -1818,5 +1873,34 @@ PREFIX(updatePosition)(const ENCODING *enc, const char *ptr, const char *end,
 #  undef CHECK_NAME_CASES
 #  undef CHECK_NMSTRT_CASE
 #  undef CHECK_NMSTRT_CASES
+
+#  ifndef XML_TOK_IMPL_DEFINED_PLAIN_ASCII_DATA8_HELPER
+#    define XML_TOK_IMPL_DEFINED_PLAIN_ASCII_DATA8_HELPER
+static int
+data8HasStopByte(uint64_t x) {
+  const uint64_t ones = 0x0101010101010101ULL;
+  const uint64_t high_bits = 0x8080808080808080ULL;
+  const uint64_t high_set = x & high_bits;
+  const uint64_t below_space = ((x - ones * 0x20) & ~x) & high_bits;
+  const uint64_t amp = x ^ (ones * 0x26);
+  const uint64_t lt = x ^ (ones * 0x3C);
+  const uint64_t rsqb = x ^ (ones * 0x5D);
+  const uint64_t amp_set = ((amp - ones) & ~amp) & high_bits;
+  const uint64_t lt_set = ((lt - ones) & ~lt) & high_bits;
+  const uint64_t rsqb_set = ((rsqb - ones) & ~rsqb) & high_bits;
+  return (high_set | below_space | amp_set | lt_set | rsqb_set) != 0;
+}
+
+static int
+data8HasCdataStopByte(uint64_t x) {
+  const uint64_t ones = 0x0101010101010101ULL;
+  const uint64_t high_bits = 0x8080808080808080ULL;
+  const uint64_t high_set = x & high_bits;
+  const uint64_t below_space = ((x - ones * 0x20) & ~x) & high_bits;
+  const uint64_t rsqb = x ^ (ones * 0x5D);
+  const uint64_t rsqb_set = ((rsqb - ones) & ~rsqb) & high_bits;
+  return (high_set | below_space | rsqb_set) != 0;
+}
+#  endif
 
 #endif /* XML_TOK_IMPL_C */
