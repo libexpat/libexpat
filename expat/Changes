@@ -29,6 +29,9 @@ Release 2.8.4 XXX XXXXXX XX XXXX
                     AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H (CVSS score: 7.5)
                     (Note the "AV:N" for network/remote.)
 
+        Other changes:
+           #1341  lib: Memoize interned element and UTF-8 attribute names
+
         Special thanks to:
             Fabian Wahle (Hap Security)
                  and

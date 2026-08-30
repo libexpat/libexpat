@@ -52,6 +52,7 @@
    Copyright (c) 2026      Haris Hussain <hextheshadow0x@gmail.com>
    Copyright (c) 2026      Evgeny Kotkov <kotkov@apache.org>
    Copyright (c) 2026      Alberto Maschietto <albertomaschietto9@gmail.com>
+   Copyright (c) 2026      Artem Kulyk
    Licensed under the MIT license:
 
    Permission is  hereby granted,  free of charge,  to any  person obtaining
@@ -376,6 +377,22 @@ typedef struct attribute_id {
   XML_Bool xmlns;
 } ATTRIBUTE_ID;
 
+#ifndef XML_UNICODE
+/* Number of slots of the raw attribute name memo, must be a power of two. */
+#  define RAW_ATT_ID_MEMO_SLOTS 64
+
+/* Raw attribute names longer than this many bytes are not memoized. */
+#  define RAW_ATT_ID_MEMO_MAX_LEN 128
+
+/* Direct-mapped memo from raw UTF-8 attribute name bytes to interned
+   ATTRIBUTE_ID (conversion is the identity; see MUST_CONVERT). */
+typedef struct {
+  ATTRIBUTE_ID *id;     /* interned attribute id */
+  unsigned int hash;    /* FNV-1a of the raw name, index and tag */
+  unsigned int nameLen; /* strlen of id->name */
+} RAW_ATT_ID_MEMO;
+#endif /* ! XML_UNICODE */
+
 typedef struct {
   const ATTRIBUTE_ID *id;
   XML_Bool isCdata;
@@ -413,6 +430,31 @@ typedef struct {
   DEFAULT_ATTRIBUTE *defaultAtts;
   HASH_TABLE defaultAttForName;
 } ELEMENT_TYPE;
+
+/* Number of slots of the element type memo, must be a power of two. */
+#define ELEMENT_TYPE_MEMO_SLOTS 64
+
+/* Element names longer than this many XML_Char units are not memoized
+   because hashing them costs more than the lookup it would save. */
+#define ELEMENT_TYPE_MEMO_MAX_LEN 128
+
+/* Direct-mapped memo from element name to interned ELEMENT_TYPE.
+   The stored name is interned in the DTD pool. */
+typedef struct {
+  ELEMENT_TYPE *elemType; /* interned element type */
+  unsigned int hash;      /* FNV-1a of the name, index and tag */
+  unsigned int nameLen;   /* strlen of elemType->name */
+} ELEMENT_TYPE_MEMO;
+
+/* Name memos of a parser, allocated on first use so that parsers that
+   never see a start tag do not pay for them.  Kept even under
+   XML_MIN_SIZE; first-use allocation is the size control. */
+typedef struct {
+#ifndef XML_UNICODE
+  RAW_ATT_ID_MEMO attIds[RAW_ATT_ID_MEMO_SLOTS];
+#endif
+  ELEMENT_TYPE_MEMO elemTypes[ELEMENT_TYPE_MEMO_SLOTS];
+} NAME_MEMOS;
 
 typedef struct {
   HASH_TABLE generalEntities;
@@ -819,6 +861,7 @@ struct XML_ParserStruct {
   POSITION m_position;
   STRING_POOL m_tempPool;
   STRING_POOL m_temp2Pool;
+  NAME_MEMOS *m_nameMemos;
   char *m_groupConnector;
   size_t m_groupSize;
   XML_Char m_namespaceSeparator;
@@ -1417,6 +1460,7 @@ parserCreate(const XML_Char *encodingName,
     FREE(parser, parser);
     return NULL;
   }
+  parser->m_nameMemos = NULL;
 #ifdef XML_ATTR_INFO
   parser->m_attInfo = MALLOC(parser, parser->m_attsSize * sizeof(XML_AttrInfo));
   if (parser->m_attInfo == NULL) {
@@ -1563,6 +1607,8 @@ parserInit(XML_Parser parser, const XML_Char *encodingName) {
   parser->m_tagStack = NULL;
   parser->m_inheritedBindings = NULL;
   parser->m_nSpecifiedAtts = 0;
+  if (parser->m_nameMemos != NULL)
+    memset(parser->m_nameMemos, 0, sizeof(NAME_MEMOS));
   parser->m_unknownEncodingMem = NULL;
   parser->m_unknownEncodingConvert = NULL;
   parser->m_unknownEncodingRelease = NULL;
@@ -1944,6 +1990,7 @@ XML_ParserFree(XML_Parser parser) {
 #endif /* XML_DTD */
     dtdDestroy(parser->m_dtd, (XML_Bool)! parser->m_parentParser, parser);
   FREE(parser, parser->m_atts);
+  FREE(parser, parser->m_nameMemos);
 #ifdef XML_ATTR_INFO
   FREE(parser, parser->m_attInfo);
 #endif
@@ -3846,6 +3893,20 @@ freeBindings(XML_Parser parser, BINDING *bindings) {
   }
 }
 
+/* FNV-1a, used as a cheap tag for the name memos. */
+static unsigned int
+fnv1a_bytes(const char *p, const char *end) {
+  unsigned int fold = 2166136261u;
+  for (; p != end; p++)
+    fold = (fold ^ (unsigned char)*p) * 16777619u;
+  return fold;
+}
+
+static unsigned int
+fnv1a_chars(const XML_Char *s, size_t n) {
+  return fnv1a_bytes((const char *)s, (const char *)s + n * sizeof(XML_Char));
+}
+
 /* Precondition: all arguments must be non-NULL;
    Purpose:
    - normalize attributes
@@ -3867,21 +3928,60 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
   BINDING *binding;
   const XML_Char *localPart;
 
+  /* the name memos are allocated on first use, see NAME_MEMOS */
+  if (parser->m_nameMemos == NULL) {
+    parser->m_nameMemos = MALLOC(parser, sizeof(NAME_MEMOS));
+    if (parser->m_nameMemos == NULL)
+      return XML_ERROR_NO_MEMORY;
+    memset(parser->m_nameMemos, 0, sizeof(NAME_MEMOS));
+  }
+
   /* lookup the element type name */
-  ELEMENT_TYPE *elementType
-      = (ELEMENT_TYPE *)lookup(parser, &dtd->elementTypes, tagNamePtr->str, 0);
-  if (! elementType) {
-    const XML_Char *name = poolCopyString(&dtd->pool, tagNamePtr->str);
-    if (! name)
-      return XML_ERROR_NO_MEMORY;
-    elementType = (ELEMENT_TYPE *)lookup(parser, &dtd->elementTypes, name,
-                                         sizeof(ELEMENT_TYPE));
-    if (! elementType)
-      return XML_ERROR_NO_MEMORY;
-    if (! elementType->defaultAttForName.parser)
-      hashTableInit(&(elementType->defaultAttForName), parser);
-    if (parser->m_ns && ! setElementTypePrefix(parser, elementType))
-      return XML_ERROR_NO_MEMORY;
+  ELEMENT_TYPE *elementType = NULL;
+  {
+    const XML_Char *const elemName = tagNamePtr->str;
+    const size_t elemNameLen = xcslen(elemName);
+    unsigned int fold = 0;
+    XML_Bool memoEligible = XML_FALSE;
+    if (elemNameLen <= ELEMENT_TYPE_MEMO_MAX_LEN) {
+      memoEligible = XML_TRUE;
+      fold = fnv1a_chars(elemName, elemNameLen);
+      ELEMENT_TYPE_MEMO *const slot
+          = &parser->m_nameMemos
+                 ->elemTypes[fold & (ELEMENT_TYPE_MEMO_SLOTS - 1)];
+      /* the name length check before memcmp keeps both reads in bounds */
+      if (slot->elemType && slot->hash == fold && slot->nameLen == elemNameLen
+          && memcmp(elemName, slot->elemType->name,
+                    elemNameLen * sizeof(XML_Char))
+                 == 0) {
+        elementType = slot->elemType;
+      }
+    }
+    if (! elementType) {
+      elementType
+          = (ELEMENT_TYPE *)lookup(parser, &dtd->elementTypes, elemName, 0);
+      if (! elementType) {
+        const XML_Char *name = poolCopyString(&dtd->pool, elemName);
+        if (! name)
+          return XML_ERROR_NO_MEMORY;
+        elementType = (ELEMENT_TYPE *)lookup(parser, &dtd->elementTypes, name,
+                                             sizeof(ELEMENT_TYPE));
+        if (! elementType)
+          return XML_ERROR_NO_MEMORY;
+        if (! elementType->defaultAttForName.parser)
+          hashTableInit(&(elementType->defaultAttForName), parser);
+        if (parser->m_ns && ! setElementTypePrefix(parser, elementType))
+          return XML_ERROR_NO_MEMORY;
+      }
+      if (memoEligible) {
+        ELEMENT_TYPE_MEMO *const slot
+            = &parser->m_nameMemos
+                   ->elemTypes[fold & (ELEMENT_TYPE_MEMO_SLOTS - 1)];
+        slot->hash = fold;
+        slot->elemType = elementType;
+        slot->nameLen = (unsigned int)xcslen(elementType->name);
+      }
+    }
   }
   const size_t nDefaultAtts = elementType->nDefaultAtts;
 
@@ -7385,6 +7485,24 @@ getAttributeId(XML_Parser parser, const ENCODING *enc, const char *start,
   DTD *const dtd = parser->m_dtd; /* save one level of indirection */
   ATTRIBUTE_ID *id;
   const XML_Char *name;
+#ifndef XML_UNICODE
+  /* reuse a recently interned attribute id for a raw UTF-8 name */
+  unsigned int fold = 0;
+  const XML_Bool memoEligible
+      = (XML_Bool)(parser->m_nameMemos != NULL && enc->isUtf8
+                   && (size_t)(end - start) <= RAW_ATT_ID_MEMO_MAX_LEN);
+  if (memoEligible) {
+    const unsigned int rawLen = (unsigned int)(end - start);
+    fold = fnv1a_bytes(start, end);
+    const RAW_ATT_ID_MEMO *const m
+        = &parser->m_nameMemos->attIds[fold & (RAW_ATT_ID_MEMO_SLOTS - 1)];
+    /* the name length check before memcmp keeps both reads in bounds */
+    if (m->id && m->hash == fold && m->nameLen == rawLen
+        && memcmp(start, m->id->name, rawLen) == 0) {
+      return m->id;
+    }
+  }
+#endif
   if (! poolAppendChar(&dtd->pool, XML_T('\0')))
     return NULL;
   name = poolStoreString(&dtd->pool, enc, start, end);
@@ -7438,6 +7556,15 @@ getAttributeId(XML_Parser parser, const ENCODING *enc, const char *start,
       }
     }
   }
+#ifndef XML_UNICODE
+  if (memoEligible) {
+    RAW_ATT_ID_MEMO *const m
+        = &parser->m_nameMemos->attIds[fold & (RAW_ATT_ID_MEMO_SLOTS - 1)];
+    m->hash = fold;
+    m->id = id;
+    m->nameLen = (unsigned int)xcslen(id->name);
+  }
+#endif
   return id;
 }
 
@@ -7676,6 +7803,9 @@ dtdReset(DTD *p, XML_Parser parser) {
   hashTableClear(&(p->prefixes));
   poolClear(&(p->pool));
   poolClear(&(p->entityValuePool));
+  /* the memoized attribute ids and element types were freed above */
+  if (parser->m_nameMemos != NULL)
+    memset(parser->m_nameMemos, 0, sizeof(NAME_MEMOS));
   p->defaultPrefix.name = NULL;
   p->defaultPrefix.binding = NULL;
 

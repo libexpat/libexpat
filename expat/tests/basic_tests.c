@@ -23,6 +23,7 @@
    Copyright (c) 2026      Francesco Bertolaccini
    Copyright (c) 2026      Matthew Fernandez <matthew.fernandez@gmail.com>
    Copyright (c) 2026      Kartik Kenchi <netliomax25@gmail.com>
+   Copyright (c) 2026      Artem Kulyk
    Licensed under the MIT license:
 
    Permission is  hereby granted,  free of charge,  to any  person obtaining
@@ -2806,6 +2807,156 @@ START_TEST(test_duplicate_id_attribute_multiple_attlistdecl) {
     xml_failure(parser);
 
   XML_ParserFree(parser);
+}
+END_TEST
+
+/* Exercise the attribute name interning fast path with attribute names
+   that repeat across many elements. */
+START_TEST(test_attribute_interning_repeated_names) {
+  const int repetitions = 200;
+  char *text;
+  char *text_end;
+  int i;
+  AttrInfo e_info[]
+      = {{XCS("a"), XCS("x")}, {XCS("b"), XCS("y")}, {NULL, NULL}};
+  ElementInfo info[] = {{XCS("doc"), 0, 0, NULL, NULL},
+                        {XCS("e"), 2, 0, NULL, e_info},
+                        {NULL, 0, 0, NULL, NULL}};
+  XML_Parser parser;
+  ParserAndElementInfo parserAndElementInfos;
+
+  /* <doc><e a='x' b='y'/>(repetitions times)</doc> */
+  text = (char *)malloc((size_t)repetitions * 20 + 16);
+  assert_true(text != NULL);
+  strcpy(text, "<doc>");
+  text_end = text + strlen(text);
+  for (i = 0; i < repetitions; i++) {
+    strcpy(text_end, "<e a='x' b='y'/>");
+    text_end += strlen(text_end);
+  }
+  strcpy(text_end, "</doc>");
+
+  parser = XML_ParserCreate(NULL);
+  assert_true(parser != NULL);
+
+  parserAndElementInfos.parser = parser;
+  parserAndElementInfos.info = info;
+
+  XML_SetStartElementHandler(parser, counting_start_element_handler);
+  XML_SetUserData(parser, &parserAndElementInfos);
+
+  if (_XML_Parse_SINGLE_BYTES(parser, text, (int)strlen(text), XML_TRUE)
+      != XML_STATUS_OK)
+    xml_failure(parser);
+
+  XML_ParserFree(parser);
+  free(text);
+}
+END_TEST
+
+/* Detect a duplicate attribute after other attributes of the same name
+   have been seen (and memoized) on earlier elements. */
+START_TEST(test_duplicate_attribute_after_interning) {
+  const char *text
+      = "<doc><e a='x' b='y'/><e a='1' b='2'/><e a='3' a='4'/></doc>";
+  XML_Parser parser = XML_ParserCreate(NULL);
+  assert_true(parser != NULL);
+
+  if (_XML_Parse_SINGLE_BYTES(parser, text, (int)strlen(text), XML_TRUE)
+      != XML_STATUS_ERROR)
+    xml_failure(parser);
+
+  if (XML_GetErrorCode(parser) != XML_ERROR_DUPLICATE_ATTRIBUTE)
+    xml_failure(parser);
+
+  XML_ParserFree(parser);
+}
+END_TEST
+
+/* Exercise parsing of names longer than the interning memo length limit. */
+START_TEST(test_oversize_attribute_and_element_names) {
+  const int name_len = 300; /* more than the memo length limit of 128 */
+  char *text;
+  char *elem_bytes;
+  char *attr_bytes;
+  XML_Char *elem_name;
+  XML_Char *attr_name;
+  int i;
+  AttrInfo *e_info;
+  ElementInfo info[3];
+  XML_Parser parser;
+  ParserAndElementInfo parserAndElementInfos;
+
+  text = (char *)malloc((size_t)2 * name_len + 32);
+  elem_bytes = (char *)malloc((size_t)name_len + 1);
+  attr_bytes = (char *)malloc((size_t)name_len + 1);
+  elem_name = (XML_Char *)malloc(((size_t)name_len + 1) * sizeof(XML_Char));
+  attr_name = (XML_Char *)malloc(((size_t)name_len + 1) * sizeof(XML_Char));
+  e_info = (AttrInfo *)malloc(2 * sizeof(AttrInfo));
+  assert_true(text != NULL);
+  assert_true(elem_bytes != NULL);
+  assert_true(attr_bytes != NULL);
+  assert_true(elem_name != NULL);
+  assert_true(attr_name != NULL);
+  assert_true(e_info != NULL);
+
+  for (i = 0; i < name_len; i++) {
+    elem_bytes[i] = (char)('a' + (i % 26));
+    attr_bytes[i] = (char)('A' + (i % 26));
+    elem_name[i] = (XML_Char)('a' + (i % 26));
+    attr_name[i] = (XML_Char)('A' + (i % 26));
+  }
+  elem_bytes[name_len] = '\0';
+  attr_bytes[name_len] = '\0';
+  elem_name[name_len] = 0;
+  attr_name[name_len] = 0;
+
+  strcpy(text, "<doc><");
+  strcat(text, elem_bytes);
+  strcat(text, " ");
+  strcat(text, attr_bytes);
+  strcat(text, "='v'/></doc>");
+
+  e_info[0].name = attr_name;
+  e_info[0].value = XCS("v");
+  e_info[1].name = NULL;
+  e_info[1].value = NULL;
+  info[0].name = XCS("doc");
+  info[0].attr_count = 0;
+  info[0].default_attr_count = 0;
+  info[0].id_name = NULL;
+  info[0].attributes = NULL;
+  info[1].name = elem_name;
+  info[1].attr_count = 1;
+  info[1].default_attr_count = 0;
+  info[1].id_name = NULL;
+  info[1].attributes = e_info;
+  info[2].name = NULL;
+  info[2].attr_count = 0;
+  info[2].default_attr_count = 0;
+  info[2].id_name = NULL;
+  info[2].attributes = NULL;
+
+  parser = XML_ParserCreate(NULL);
+  assert_true(parser != NULL);
+
+  parserAndElementInfos.parser = parser;
+  parserAndElementInfos.info = info;
+
+  XML_SetStartElementHandler(parser, counting_start_element_handler);
+  XML_SetUserData(parser, &parserAndElementInfos);
+
+  if (_XML_Parse_SINGLE_BYTES(parser, text, (int)strlen(text), XML_TRUE)
+      != XML_STATUS_OK)
+    xml_failure(parser);
+
+  XML_ParserFree(parser);
+  free(text);
+  free(elem_bytes);
+  free(attr_bytes);
+  free(elem_name);
+  free(attr_name);
+  free(e_info);
 }
 END_TEST
 
@@ -6810,6 +6961,9 @@ make_basic_test_case(Suite *s) {
   tcase_add_test(tc_basic,
                  test_duplicate_cdata_attribute_multiple_attlistdecl_3);
   tcase_add_test(tc_basic, test_duplicate_id_attribute_multiple_attlistdecl);
+  tcase_add_test(tc_basic, test_attribute_interning_repeated_names);
+  tcase_add_test(tc_basic, test_duplicate_attribute_after_interning);
+  tcase_add_test(tc_basic, test_oversize_attribute_and_element_names);
   tcase_add_test__if_xml_ge(tc_basic, test_default_attr_index_after_dtd_copy);
   tcase_add_test__if_xml_ge(tc_basic, test_reset_in_entity);
   tcase_add_test(tc_basic, test_resume_invalid_parse);
