@@ -79,6 +79,8 @@ jobs:
 
         scan-build \
             -o html/ \
+            --exclude "${PWD}"/build/CMakeFiles/ \
+            --exclude /usr/ \
             $(sed 's,^,-enable-checker ,' <<<"${enabled_checkers}") \
             sh -c 'cmake -S expat/ -B build/ && make -C build -j$(nproc) VERBOSE=1'
 
