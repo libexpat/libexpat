@@ -4551,6 +4551,7 @@ addBinding(XML_Parser parser, PREFIX *prefix, const ATTRIBUTE_ID *attId,
     /* Detect and prevent integer overflow */
     if (len > SIZE_MAX - EXPAND_SPARE
         || len + EXPAND_SPARE > SIZE_MAX / sizeof(XML_Char)) {
+      FREE(parser, b);
       return XML_ERROR_NO_MEMORY;
     }
 
