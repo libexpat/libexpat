@@ -331,7 +331,7 @@ typedef struct {
   const XML_Char *base;
   const XML_Char *publicId;
   const XML_Char *notation;
-  XML_Bool open;
+  bool open;
   XML_Bool hasMore; /* true if entity has not been completely processed */
   /* An entity can be open while being already completely processed (hasMore ==
     XML_FALSE). The reason is the delayed closing of entities until their inner
@@ -3451,9 +3451,9 @@ doContent(XML_Parser parser, int startTagLevel, const ENCODING *enc,
           return result;
       } else if (parser->m_externalEntityRefHandler) {
         const XML_Char *context;
-        entity->open = XML_TRUE;
+        entity->open = true;
         context = getContext(parser);
-        entity->open = XML_FALSE;
+        entity->open = false;
         if (! context)
           return XML_ERROR_NO_MEMORY;
         beforeHandler(parser);
@@ -6145,7 +6145,7 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
         }
         if (parser->m_externalEntityRefHandler) {
           dtd->paramEntityRead = XML_FALSE;
-          entity->open = XML_TRUE;
+          entity->open = true;
           entityTrackingOnOpen(parser, entity, __LINE__);
           beforeHandler(parser);
           const int status = parser->m_externalEntityRefHandler(
@@ -6154,11 +6154,11 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
           afterHandler(parser);
           if (! status) {
             entityTrackingOnClose(parser, entity, __LINE__);
-            entity->open = XML_FALSE;
+            entity->open = false;
             return XML_ERROR_EXTERNAL_ENTITY_HANDLING;
           }
           entityTrackingOnClose(parser, entity, __LINE__);
-          entity->open = XML_FALSE;
+          entity->open = false;
           handleDefault = XML_FALSE;
           if (! dtd->paramEntityRead) {
             dtd->keepProcessing = dtd->standalone;
@@ -6482,7 +6482,7 @@ processEntity(XML_Parser parser, ENTITY *entity, XML_Bool betweenDecl,
     if (! openEntity)
       return XML_ERROR_NO_MEMORY;
   }
-  entity->open = XML_TRUE;
+  entity->open = true;
   entity->hasMore = XML_TRUE;
 #if XML_GE == 1
   entityTrackingOnOpen(parser, entity, __LINE__);
@@ -6573,7 +6573,7 @@ internalEntityProcessor(XML_Parser parser, const char *s, const char *end,
   // to false. This means we can directly remove the head of
   // m_openInternalEntities
   assert(parser->m_openInternalEntities == openEntity);
-  entity->open = XML_FALSE;
+  entity->open = false;
   parser->m_openInternalEntities = parser->m_openInternalEntities->next;
 
   /* put openEntity back in list of free instances */
@@ -6651,7 +6651,7 @@ storeAttributeValue(XML_Parser parser, const ENCODING *enc, XML_Bool isCdata,
       // with hasMore set to false. This means we can directly remove the head
       // of m_openAttributeEntities
       assert(parser->m_openAttributeEntities == openEntity);
-      entity->open = XML_FALSE;
+      entity->open = false;
       parser->m_openAttributeEntities = parser->m_openAttributeEntities->next;
 
       /* put openEntity back in list of free instances */
@@ -6947,7 +6947,7 @@ storeEntityValue(XML_Parser parser, const ENCODING *enc,
         if (entity->systemId) {
           if (parser->m_externalEntityRefHandler) {
             dtd->paramEntityRead = XML_FALSE;
-            entity->open = XML_TRUE;
+            entity->open = true;
             entityTrackingOnOpen(parser, entity, __LINE__);
             beforeHandler(parser);
             const int status = parser->m_externalEntityRefHandler(
@@ -6956,12 +6956,12 @@ storeEntityValue(XML_Parser parser, const ENCODING *enc,
             afterHandler(parser);
             if (! status) {
               entityTrackingOnClose(parser, entity, __LINE__);
-              entity->open = XML_FALSE;
+              entity->open = false;
               result = XML_ERROR_EXTERNAL_ENTITY_HANDLING;
               goto endEntityValue;
             }
             entityTrackingOnClose(parser, entity, __LINE__);
-            entity->open = XML_FALSE;
+            entity->open = false;
             if (! dtd->paramEntityRead)
               dtd->keepProcessing = dtd->standalone;
           } else
@@ -7111,7 +7111,7 @@ callStoreEntityValue(XML_Parser parser, const ENCODING *enc,
       // with hasMore set to false. This means we can directly remove the head
       // of m_openValueEntities
       assert(parser->m_openValueEntities == openEntity);
-      entity->open = XML_FALSE;
+      entity->open = false;
       parser->m_openValueEntities = parser->m_openValueEntities->next;
 
       /* put openEntity back in list of free instances */
@@ -7546,7 +7546,7 @@ setContext(XML_Parser parser, const XML_Char *context) {
       e = (ENTITY *)lookup(parser, &dtd->generalEntities,
                            poolStart(&parser->m_tempPool), 0);
       if (e)
-        e->open = XML_TRUE;
+        e->open = true;
       if (*s != XML_T('\0'))
         s++;
       context = s;
