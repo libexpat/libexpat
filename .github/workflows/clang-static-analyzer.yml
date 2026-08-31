@@ -49,17 +49,17 @@ jobs:
       with:
         persist-credentials: false
 
-    - name: Install Clang 22 (including scan-build)
+    - name: Install Clang 23 (including scan-build)
       run: |-
         set -x
         source /etc/os-release
         wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
-        sudo add-apt-repository "deb https://apt.llvm.org/${UBUNTU_CODENAME}/ llvm-toolchain-${UBUNTU_CODENAME}-22 main"
+        sudo add-apt-repository "deb https://apt.llvm.org/${UBUNTU_CODENAME}/ llvm-toolchain-${UBUNTU_CODENAME}-23 main"
         sudo apt-get update  # due to new repository
         sudo timeout 10m apt-get install --yes --no-install-recommends -V \
-            clang-22 \
-            clang-tools-22
-        echo /usr/lib/llvm-22/bin >>"${GITHUB_PATH}"
+            clang-23 \
+            clang-tools-23
+        echo /usr/lib/llvm-23/bin >>"${GITHUB_PATH}"
 
     - name: Build using scan-build
       run: |
