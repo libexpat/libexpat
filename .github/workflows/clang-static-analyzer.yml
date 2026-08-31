@@ -84,7 +84,7 @@ jobs:
             $(sed 's,^,-enable-checker ,' <<<"${enabled_checkers}") \
             sh -c 'cmake -S expat/ -B build/ && make -C build -j$(nproc) VERBOSE=1'
 
-        rmdir html || false 'The report directory is non-empty, i.e. Clang Static Analyzer found an issue! Please download and inspect the zip file artifact attached to this CI run. Thanks!'
+        ! ls -l html/*/report-*.html 2>/dev/null || false 'Clang Static Analyzer found an issue! Please download and inspect the zip file artifact attached to this CI run. Thanks!'
 
     - name: Store scan-build report
       if: always()
