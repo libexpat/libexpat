@@ -51,6 +51,9 @@ Release 2.8.4 XXX XXXXXX XX XXXX
            #1340  lib: Use a C99 bool for `ENTITY.open`
            #1319  Fix typo in comment
            #1320  Sync file headers
+     #1328 #1329  Version info bumped from 13:3:12 (libexpat*.so.1.12.3)
+                    to 13:4:12 (libexpat*.so.1.12.4); see https://verbump.de/
+                    for what these numbers do
 
         Infrastructure:
      #1317 #1335  CI: Cover compilation and execution with Fil-C

@@ -557,7 +557,7 @@ foreach(build_type_upper
 endforeach()
 
 set(LIBCURRENT 13)  # sync
-set(LIBREVISION 3)  # with
+set(LIBREVISION 4)  # with
 set(LIBAGE 12)      # configure.ac!
 math(EXPR LIBCURRENT_MINUS_AGE "${LIBCURRENT} - ${LIBAGE}")
 
