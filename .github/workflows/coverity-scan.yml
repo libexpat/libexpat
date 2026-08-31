@@ -65,18 +65,18 @@ jobs:
         tee    "${GITHUB_OUTPUT}" <<< "version=$(git describe --tags | sed -e 's,^R_,,' -e 's,_,.,g')"
         tee -a "${GITHUB_OUTPUT}" <<< "git_commit=$(git rev-parse HEAD)"
 
-    - name: Install Clang 22
+    - name: Install Clang 23
       run: |-
         set -x
         source /etc/os-release
         wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
-        sudo add-apt-repository "deb https://apt.llvm.org/${UBUNTU_CODENAME}/ llvm-toolchain-${UBUNTU_CODENAME}-22 main"
+        sudo add-apt-repository "deb https://apt.llvm.org/${UBUNTU_CODENAME}/ llvm-toolchain-${UBUNTU_CODENAME}-23 main"
         sudo apt-get update  # due to new repository
         sudo timeout 10m apt-get install --yes --no-install-recommends -V \
-            clang-22 \
-            libclang-rt-22-dev \
-            llvm-22
-        echo /usr/lib/llvm-22/bin >>"${GITHUB_PATH}"
+            clang-23 \
+            libclang-rt-23-dev \
+            llvm-23
+        echo /usr/lib/llvm-23/bin >>"${GITHUB_PATH}"
 
     - name: Install build dependencies
       run: |-
