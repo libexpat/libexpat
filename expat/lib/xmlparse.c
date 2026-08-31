@@ -1,4 +1,4 @@
-/* ee5f82c3ffd57c5224394ba46f348dbce466d34d6c925a527ae46b1cfe6adf1d (2.8.3+)
+/* 13c4e8da8fccffb0e8e599684e0d447ad14c1bb0b48792cf5dd77d8712301871 (2.8.4+)
                             __  __            _
                          ___\ \/ /_ __   __ _| |_
                         / _ \\  /| '_ \ / _` | __|
@@ -51,7 +51,9 @@
    Copyright (c) 2026      Kartik Kenchi <netliomax25@gmail.com>
    Copyright (c) 2026      Haris Hussain <hextheshadow0x@gmail.com>
    Copyright (c) 2026      Evgeny Kotkov <kotkov@apache.org>
+   Copyright (c) 2026      Darren Carreras <carrerasdarren@gmail.com>
    Copyright (c) 2026      Alberto Maschietto <albertomaschietto9@gmail.com>
+   Copyright (c) 2026      Zeyou Liu <zeyouliu@tencent.com>
    Licensed under the MIT license:
 
    Permission is  hereby granted,  free of charge,  to any  person obtaining
