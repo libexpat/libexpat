@@ -16,7 +16,7 @@
 !!                                   Sebastian Pipping -- Berlin, 2026-08-03 !!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-Release 2.8.4 XXX XXXXXX XX XXXX
+Release 2.8.4 Mon August 31 2026
         Security fixes:
      #1321 #1331  CVE-2026-66046, CVE-2026-76641 -- Fix quadratic runtime from
                     "attribute isCdata lookups" that allowed denial of service
