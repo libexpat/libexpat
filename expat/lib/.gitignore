@@ -1,3 +1,4 @@
+/libexpat.map
 Makefile
 .libs
 *.lo
