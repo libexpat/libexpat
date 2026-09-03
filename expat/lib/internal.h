@@ -94,6 +94,14 @@
 #  define PTRFASTCALL
 #endif
 
+#if ! defined(XML_NONTESTING_STATIC)
+#  if defined(XML_TESTING)
+#    define XML_NONTESTING_STATIC // empty i.e. not static
+#  else
+#    define XML_NONTESTING_STATIC static
+#  endif
+#endif
+
 #ifndef XML_MIN_SIZE
 #  if ! defined(__cplusplus) && ! defined(inline)
 #    ifdef __GNUC__
