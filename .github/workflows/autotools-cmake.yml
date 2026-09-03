@@ -102,6 +102,7 @@ jobs:
       if: "${{ runner.os == 'macOS' }}"
       run: |
         brew uninstall cmake
+        brew update --auto-update
         brew install \
             autoconf \
             automake \
