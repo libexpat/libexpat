@@ -69,13 +69,13 @@ EXTRA_DIST = \
     common.h \
     dummy.h \
     handlers.h \
+    memcheck.h \
+    minicheck.h \
     misc_tests.h \
     ns_tests.h \
     nsalloc_tests.h \
-    structdata.h \
-    minicheck.h \
-    memcheck.h \
     README.md \
+    structdata.h \
     udiffer.py \
     xmltest.log.expected \
     xmltest.sh
