@@ -338,7 +338,7 @@ typedef struct {
   /* An entity can be open while being already completely processed (!hasMore).
     The reason is the delayed closing of entities until their inner
     entities are processed and closed */
-  XML_Bool is_param;
+  bool is_param;
   XML_Bool is_internal; /* true if declared in internal subset outside PE */
 } ENTITY;
 
@@ -5873,7 +5873,7 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
         } else {
           poolFinish(&dtd->pool);
           parser->m_declEntity->publicId = NULL;
-          parser->m_declEntity->is_param = XML_FALSE;
+          parser->m_declEntity->is_param = false;
           /* if we have a parent parser or are reading an internal parameter
              entity, then the entity declaration is not considered "internal"
           */
@@ -5903,7 +5903,7 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
         } else {
           poolFinish(&dtd->pool);
           parser->m_declEntity->publicId = NULL;
-          parser->m_declEntity->is_param = XML_TRUE;
+          parser->m_declEntity->is_param = true;
           /* if we have a parent parser or are reading an internal parameter
              entity, then the entity declaration is not considered "internal"
           */
