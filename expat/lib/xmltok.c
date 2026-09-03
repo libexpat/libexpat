@@ -1154,6 +1154,11 @@ static const char KW_yes[] = {ASCII_y, ASCII_e, ASCII_s, '\0'};
 
 static const char KW_no[] = {ASCII_n, ASCII_o, '\0'};
 
+/* The only XML version this library implements is 1.0, per the XML 1.0
+   Fourth Edition VersionNum production and the requirement that a processor
+   reject a document declaring a different version. */
+static const char KW_1_0[] = {ASCII_1, ASCII_PERIOD, ASCII_0, '\0'};
+
 static int
 doParseXmlDecl(const ENCODING *(*encodingFinder)(const ENCODING *, const char *,
                                                  const char *),
@@ -1185,6 +1190,13 @@ doParseXmlDecl(const ENCODING *(*encodingFinder)(const ENCODING *, const char *,
        one character.  The encoding and standalone pseudo-attributes below
        already reject an empty value, so keep version consistent. */
     if (val == ptr - enc->minBytesPerChar) {
+      *badPtr = val;
+      return 0;
+    }
+    /* Expat implements XML 1.0 only, so any version other than "1.0" is
+       rejected rather than silently accepted (or misreported downstream
+       as if the document had declared "1.0"). */
+    if (! XmlNameMatchesAscii(enc, val, ptr - enc->minBytesPerChar, KW_1_0)) {
       *badPtr = val;
       return 0;
     }
