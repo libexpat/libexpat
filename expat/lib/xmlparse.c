@@ -817,6 +817,7 @@ struct XML_ParserStruct {
   unsigned char m_nsAttsPower;
 #ifdef XML_ATTR_INFO
   XML_AttrInfo *m_attInfo;
+  XML_AttrInfo64 *m_attInfo64;
 #endif
   POSITION m_position;
   STRING_POOL m_tempPool;
@@ -1426,12 +1427,21 @@ parserCreate(const XML_Char *encodingName,
     FREE(parser, parser);
     return NULL;
   }
+  parser->m_attInfo64
+      = MALLOC(parser, parser->m_attsSize * sizeof(XML_AttrInfo64));
+  if (parser->m_attInfo64 == NULL) {
+    FREE(parser, parser->m_attInfo);
+    FREE(parser, parser->m_atts);
+    FREE(parser, parser);
+    return NULL;
+  }
 #endif
   parser->m_dataBuf = MALLOC(parser, INIT_DATA_BUF_SIZE * sizeof(XML_Char));
   if (parser->m_dataBuf == NULL) {
     FREE(parser, parser->m_atts);
 #ifdef XML_ATTR_INFO
     FREE(parser, parser->m_attInfo);
+    FREE(parser, parser->m_attInfo64);
 #endif
     FREE(parser, parser);
     return NULL;
@@ -1447,6 +1457,7 @@ parserCreate(const XML_Char *encodingName,
       FREE(parser, parser->m_atts);
 #ifdef XML_ATTR_INFO
       FREE(parser, parser->m_attInfo);
+      FREE(parser, parser->m_attInfo64);
 #endif
       FREE(parser, parser);
       return NULL;
@@ -1948,6 +1959,7 @@ XML_ParserFree(XML_Parser parser) {
   FREE(parser, parser->m_atts);
 #ifdef XML_ATTR_INFO
   FREE(parser, parser->m_attInfo);
+  FREE(parser, parser->m_attInfo64);
 #endif
   FREE(parser, parser->m_groupConnector);
   // NOTE: We are avoiding FREE(..) here because parser->m_buffer
@@ -2040,6 +2052,14 @@ XML_GetIdAttributeIndex(XML_Parser parser) {
 }
 
 #ifdef XML_ATTR_INFO
+const XML_AttrInfo64 *XMLCALL
+XML_GetAttributeInfo64(XML_Parser parser) {
+  if (parser == NULL)
+    return NULL;
+  return parser->m_attInfo64;
+}
+
+// DEPRECATED since Expat 2.9.0.
 const XML_AttrInfo *XMLCALL
 XML_GetAttributeInfo(XML_Parser parser) {
   if (parser == NULL)
@@ -2728,41 +2748,57 @@ XML_GetErrorCode(XML_Parser parser) {
   return parser->m_errorCode;
 }
 
-XML_Index XMLCALL
-XML_GetCurrentByteIndex(XML_Parser parser) {
+int64_t XMLCALL
+XML_GetCurrentByteIndex64(XML_Parser parser) {
   if (parser == NULL)
     return -1;
   if (parser->m_eventPtr) {
-    // NOTE: XML_Index is known to wrap around for >2 GiB content
-    //       on 32bit machines and 64bit Windows, unless (non-default and
-    //       uncommon) XML_LARGE_SIZE is defined.
-    //       That's a bug and it only lives on because we cannot break
-    //       ABI compatibility of public API.
-    return (XML_Index)(parser->m_parseEndByteIndex
-                       - (parser->m_parseEndPtr - parser->m_eventPtr));
+    return (int64_t)(parser->m_parseEndByteIndex
+                     - (parser->m_parseEndPtr - parser->m_eventPtr));
   }
   return -1;
 }
 
-int XMLCALL
-XML_GetCurrentByteCount(XML_Parser parser) {
+// DEPRECATED since Expat 2.9.0.
+XML_Index XMLCALL
+XML_GetCurrentByteIndex(XML_Parser parser) {
+  // NOTE: XML_Index is known to wrap around for >2 GiB content
+  //       on 32bit machines and 64bit Windows, unless (non-default and
+  //       uncommon) XML_LARGE_SIZE is defined.
+  //       That's a bug and it only lives on because we cannot break
+  //       ABI compatibility of public API.
+  return (XML_Index)XML_GetCurrentByteIndex64(parser);
+}
+
+uint64_t XMLCALL
+XML_GetCurrentByteCount64(XML_Parser parser) {
   if (parser == NULL)
     return 0;
-  if (parser->m_eventEndPtr && parser->m_eventPtr)
-    return (int)(parser->m_eventEndPtr - parser->m_eventPtr);
+  if (parser->m_eventEndPtr && parser->m_eventPtr) {
+    return parser->m_eventEndPtr - parser->m_eventPtr;
+  }
   return 0;
 }
 
+// DEPRECATED since Expat 2.9.0.
+int XMLCALL
+XML_GetCurrentByteCount(XML_Parser parser) {
+  // NOTE: int is known to wrap around for >2 GiB content.
+  //       That's a bug and it only lives on because we cannot break
+  //       ABI compatibility of public API.
+  return (int)XML_GetCurrentByteCount64(parser);
+}
+
 const char *XMLCALL
-XML_GetInputContext(XML_Parser parser, int *offset, int *size) {
+XML_GetInputContext64(XML_Parser parser, int64_t *offset, uint64_t *size) {
 #if XML_CONTEXT_BYTES > 0
   if (parser == NULL)
     return NULL;
   if (parser->m_eventPtr && parser->m_buffer) {
     if (offset != NULL)
-      *offset = (int)(parser->m_eventPtr - parser->m_buffer);
+      *offset = parser->m_eventPtr - parser->m_buffer;
     if (size != NULL)
-      *size = (int)(parser->m_bufferEnd - parser->m_buffer);
+      *size = parser->m_bufferEnd - parser->m_buffer;
     return parser->m_buffer;
   }
 #else
@@ -2773,25 +2809,41 @@ XML_GetInputContext(XML_Parser parser, int *offset, int *size) {
   return NULL;
 }
 
-XML_Size XMLCALL
-XML_GetCurrentLineNumber(XML_Parser parser) {
+// DEPRECATED since Expat 2.9.0.
+const char *XMLCALL
+XML_GetInputContext(XML_Parser parser, int *offset, int *size) {
+#if XML_CONTEXT_BYTES > 0
   if (parser == NULL)
-    return 0;
-  if (parser->m_eventPtr && parser->m_eventPtr >= parser->m_positionPtr) {
-    XmlUpdatePosition(parser->m_encoding, parser->m_positionPtr,
-                      parser->m_eventPtr, &parser->m_position);
-    parser->m_positionPtr = parser->m_eventPtr;
-  }
-  // NOTE: XML_Size is known to wrap around for >4 GiB content
-  //       on 32bit machines and 64bit Windows, unless (non-default and
-  //       uncommon) XML_LARGE_SIZE is defined.
+    return NULL;
+
+  int64_t offset64;
+  uint64_t size64;
+
+  const char *const buffer = XML_GetInputContext64(parser, &offset64, &size64);
+
+  if (buffer == NULL)
+    return NULL;
+
+  // NOTE: int is known to wrap around for >2 GiB content.
   //       That's a bug and it only lives on because we cannot break
   //       ABI compatibility of public API.
-  return (XML_Size)(parser->m_position.lineNumber + 1);
+  if (offset != NULL)
+    *offset = (int)offset64;
+
+  if (size != NULL)
+    *size = (int)size64;
+
+  return buffer;
+#else
+  (void)parser;
+  (void)offset;
+  (void)size;
+#endif /* XML_CONTEXT_BYTES > 0 */
+  return NULL;
 }
 
-XML_Size XMLCALL
-XML_GetCurrentColumnNumber(XML_Parser parser) {
+uint64_t XMLCALL
+XML_GetCurrentLineNumber64(XML_Parser parser) {
   if (parser == NULL)
     return 0;
   if (parser->m_eventPtr && parser->m_eventPtr >= parser->m_positionPtr) {
@@ -2799,12 +2851,41 @@ XML_GetCurrentColumnNumber(XML_Parser parser) {
                       parser->m_eventPtr, &parser->m_position);
     parser->m_positionPtr = parser->m_eventPtr;
   }
+  return parser->m_position.lineNumber + 1;
+}
+
+// DEPRECATED since Expat 2.9.0.
+XML_Size XMLCALL
+XML_GetCurrentLineNumber(XML_Parser parser) {
   // NOTE: XML_Size is known to wrap around for >4 GiB content
   //       on 32bit machines and 64bit Windows, unless (non-default and
   //       uncommon) XML_LARGE_SIZE is defined.
   //       That's a bug and it only lives on because we cannot break
   //       ABI compatibility of public API.
-  return (XML_Size)parser->m_position.columnNumber;
+  return (XML_Size)XML_GetCurrentLineNumber64(parser);
+}
+
+uint64_t XMLCALL
+XML_GetCurrentColumnNumber64(XML_Parser parser) {
+  if (parser == NULL)
+    return 0;
+  if (parser->m_eventPtr && parser->m_eventPtr >= parser->m_positionPtr) {
+    XmlUpdatePosition(parser->m_encoding, parser->m_positionPtr,
+                      parser->m_eventPtr, &parser->m_position);
+    parser->m_positionPtr = parser->m_eventPtr;
+  }
+  return parser->m_position.columnNumber;
+}
+
+// DEPRECATED since Expat 2.9.0.
+XML_Size XMLCALL
+XML_GetCurrentColumnNumber(XML_Parser parser) {
+  // NOTE: XML_Size is known to wrap around for >4 GiB content
+  //       on 32bit machines and 64bit Windows, unless (non-default and
+  //       uncommon) XML_LARGE_SIZE is defined.
+  //       That's a bug and it only lives on because we cannot break
+  //       ABI compatibility of public API.
+  return (XML_Size)XML_GetCurrentColumnNumber64(parser);
 }
 
 void XMLCALL
@@ -3938,6 +4019,15 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
       return XML_ERROR_NO_MEMORY;
     }
     parser->m_attInfo = temp2;
+
+    XML_AttrInfo64 *const temp3
+        = REALLOC(parser, parser->m_attInfo64,
+                  parser->m_attsSize * sizeof(XML_AttrInfo64));
+    if (temp3 == NULL) {
+      parser->m_attsSize = oldAttsSize;
+      return XML_ERROR_NO_MEMORY;
+    }
+    parser->m_attInfo64 = temp3;
 #endif
     if (n > oldAttsSize) {
       /* Detect and prevent integer overflow. */
@@ -3952,7 +4042,8 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
   for (size_t i = 0; i < n; i++) {
     ATTRIBUTE *currAtt = &parser->m_atts[i];
 #ifdef XML_ATTR_INFO
-    XML_AttrInfo *currAttInfo = &parser->m_attInfo[i];
+    XML_AttrInfo *const currAttInfo = &parser->m_attInfo[i];
+    XML_AttrInfo64 *const currAttInfo64 = &parser->m_attInfo64[i];
 #endif
     /* add the name and value to the attribute list */
     ATTRIBUTE_ID *attId
@@ -3961,22 +4052,27 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
     if (! attId)
       return XML_ERROR_NO_MEMORY;
 #ifdef XML_ATTR_INFO
+    const int64_t nameStart64
+        = (int64_t)(parser->m_parseEndByteIndex
+                    - (parser->m_parseEndPtr - currAtt->name));
+    currAttInfo64->nameStart = nameStart64;
+    currAttInfo64->nameEnd = nameStart64 + XmlNameLength(enc, currAtt->name);
+    currAttInfo64->valueStart
+        = (int64_t)(parser->m_parseEndByteIndex
+                    - (parser->m_parseEndPtr - currAtt->valuePtr));
+    currAttInfo64->valueEnd
+        = (int64_t)(parser->m_parseEndByteIndex
+                    - (parser->m_parseEndPtr - currAtt->valueEnd));
+
     // NOTE: XML_Index is known to wrap around for >2 GiB content
     //       on 32bit machines and 64bit Windows, unless (non-default and
     //       uncommon) XML_LARGE_SIZE is defined.
     //       That's a bug and it only lives on because we cannot break
     //       ABI compatibility of public API.
-    currAttInfo->nameStart
-        = (XML_Index)(parser->m_parseEndByteIndex
-                      - (parser->m_parseEndPtr - currAtt->name));
-    currAttInfo->nameEnd
-        = currAttInfo->nameStart + XmlNameLength(enc, currAtt->name);
-    currAttInfo->valueStart
-        = (XML_Index)(parser->m_parseEndByteIndex
-                      - (parser->m_parseEndPtr - currAtt->valuePtr));
-    currAttInfo->valueEnd
-        = (XML_Index)(parser->m_parseEndByteIndex
-                      - (parser->m_parseEndPtr - currAtt->valueEnd));
+    currAttInfo->nameStart = (XML_Index)currAttInfo64->nameStart;
+    currAttInfo->nameEnd = (XML_Index)currAttInfo64->nameEnd;
+    currAttInfo->valueStart = (XML_Index)currAttInfo64->valueStart;
+    currAttInfo->valueEnd = (XML_Index)currAttInfo64->valueEnd;
 #endif
     /* Detect duplicate attributes by their QNames. This does not work when
        namespace processing is turned on and different prefixes for the same
