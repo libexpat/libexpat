@@ -334,9 +334,9 @@ typedef struct {
   const XML_Char *publicId;
   const XML_Char *notation;
   bool open;
-  XML_Bool hasMore; /* true if entity has not been completely processed */
-  /* An entity can be open while being already completely processed (hasMore ==
-    XML_FALSE). The reason is the delayed closing of entities until their inner
+  bool hasMore; /* true if entity has not been completely processed */
+  /* An entity can be open while being already completely processed (!hasMore).
+    The reason is the delayed closing of entities until their inner
     entities are processed and closed */
   XML_Bool is_param;
   XML_Bool is_internal; /* true if declared in internal subset outside PE */
@@ -6486,7 +6486,7 @@ processEntity(XML_Parser parser, ENTITY *entity, XML_Bool betweenDecl,
       return XML_ERROR_NO_MEMORY;
   }
   entity->open = true;
-  entity->hasMore = XML_TRUE;
+  entity->hasMore = true;
 #if XML_GE == 1
   entityTrackingOnOpen(parser, entity, __LINE__);
 #endif
@@ -6558,7 +6558,7 @@ internalEntityProcessor(XML_Parser parser, const char *s, const char *end,
     // Entity is complete. We cannot close it here since we need to first
     // process its possible inner entities (which are added to the
     // m_openInternalEntities during doProlog or doContent calls above)
-    entity->hasMore = XML_FALSE;
+    entity->hasMore = false;
     if (! entity->is_param
         && (openEntity->startTagLevel != parser->m_tagLevel)) {
       return XML_ERROR_ASYNC_ENTITY;
@@ -6641,7 +6641,7 @@ storeAttributeValue(XML_Parser parser, const ENCODING *enc, XML_Bool isCdata,
         // Entity is complete. We cannot close it here since we need to first
         // process its possible inner entities (which are added to the
         // m_openAttributeEntities during appendAttributeValue)
-        entity->hasMore = XML_FALSE;
+        entity->hasMore = false;
         continue;
       } // End of entity processing, "if" block skips the rest
 
@@ -7101,7 +7101,7 @@ callStoreEntityValue(XML_Parser parser, const ENCODING *enc,
         // Entity is complete. We cannot close it here since we need to first
         // process its possible inner entities (which are added to the
         // m_openValueEntities during storeEntityValue)
-        entity->hasMore = XML_FALSE;
+        entity->hasMore = false;
         continue;
       } // End of entity processing, "if" block skips the rest
 
