@@ -49,6 +49,7 @@ runtests_SOURCES = \
     common.c \
     dummy.c \
     handlers.c \
+    hash_tests.c \
     memcheck.c \
     minicheck.c \
     misc_tests.c \
@@ -69,6 +70,7 @@ EXTRA_DIST = \
     common.h \
     dummy.h \
     handlers.h \
+    hash_tests.h \
     memcheck.h \
     minicheck.h \
     misc_tests.h \
