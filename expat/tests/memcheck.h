@@ -33,10 +33,6 @@
    SPDX-License-Identifier: MIT
 */
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #ifndef XML_MEMCHECK_H
 #  define XML_MEMCHECK_H 1
 
@@ -53,7 +49,3 @@ void *tracking_realloc(void *ptr, size_t size);
 int tracking_report(void);
 
 #endif /* XML_MEMCHECK_H */
-
-#ifdef __cplusplus
-}
-#endif
