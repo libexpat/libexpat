@@ -458,7 +458,7 @@ typedef struct open_internal_entity {
   struct open_internal_entity *next;
   ENTITY *entity;
   int startTagLevel;
-  XML_Bool betweenDecl; /* WFC: PE Between Declarations */
+  bool betweenDecl; /* WFC: PE Between Declarations */
   enum EntityType type;
 } OPEN_INTERNAL_ENTITY;
 
@@ -528,7 +528,7 @@ static enum XML_Error doProlog(XML_Parser parser, const ENCODING *enc,
                                XML_Bool haveMore, XML_Bool allowClosingDoctype,
                                enum XML_Account account);
 static enum XML_Error processEntity(XML_Parser parser, ENTITY *entity,
-                                    XML_Bool betweenDecl, enum EntityType type);
+                                    bool betweenDecl, enum EntityType type);
 static enum XML_Error doContent(XML_Parser parser, int startTagLevel,
                                 const ENCODING *enc, const char *start,
                                 const char *end, const char **endPtr,
@@ -6138,8 +6138,7 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
           return XML_ERROR_RECURSIVE_ENTITY_REF;
         if (entity->textPtr) {
           enum XML_Error result;
-          XML_Bool betweenDecl
-              = (role == XML_ROLE_PARAM_ENTITY_REF ? XML_TRUE : XML_FALSE);
+          bool betweenDecl = (role == XML_ROLE_PARAM_ENTITY_REF);
           result = processEntity(parser, entity, betweenDecl, ENTITY_INTERNAL);
           if (result != XML_ERROR_NONE)
             return result;
@@ -6450,7 +6449,7 @@ epilogProcessor(XML_Parser parser, const char *s, const char *end,
 }
 
 static enum XML_Error
-processEntity(XML_Parser parser, ENTITY *entity, XML_Bool betweenDecl,
+processEntity(XML_Parser parser, ENTITY *entity, bool betweenDecl,
               enum EntityType type) {
   OPEN_INTERNAL_ENTITY *openEntity, **openEntityList;
   OPEN_INTERNAL_ENTITY **const freeEntityList = &parser->m_freeEntities;
