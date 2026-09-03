@@ -374,7 +374,7 @@ typedef struct {
 typedef struct attribute_id {
   XML_Char *name;
   PREFIX *prefix;
-  XML_Bool maybeTokenized;
+  bool maybeTokenized;
   XML_Bool xmlns;
 } ATTRIBUTE_ID;
 
@@ -7329,7 +7329,7 @@ defineAttribute(ELEMENT_TYPE *type, ATTRIBUTE_ID *attId, XML_Bool isCdata,
   att->value = value;
   att->isCdata = isCdata;
   if (! isCdata)
-    attId->maybeTokenized = XML_TRUE;
+    attId->maybeTokenized = true;
 
   NAME_AND_DEFAULT_ATTRIBUTE *const nameAndDefaultAttribute
       = (NAME_AND_DEFAULT_ATTRIBUTE *)lookup(
