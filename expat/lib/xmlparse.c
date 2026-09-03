@@ -436,7 +436,7 @@ typedef struct {
 #endif /* XML_DTD */
   PREFIX defaultPrefix;
   /* === scaffolding for building content model === */
-  XML_Bool in_eldecl;
+  bool in_eldecl;
   CONTENT_SCAFFOLD *scaffold;
   unsigned contentStringLen;
   unsigned scaffSize;
@@ -6191,7 +6191,7 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
           return XML_ERROR_NO_MEMORY;
         dtd->scaffLevel = 0;
         dtd->scaffCount = 0;
-        dtd->in_eldecl = XML_TRUE;
+        dtd->in_eldecl = true;
         handleDefault = XML_FALSE;
       }
       break;
@@ -6220,7 +6220,7 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
           afterHandler(parser);
           handleDefault = XML_FALSE;
         }
-        dtd->in_eldecl = XML_FALSE;
+        dtd->in_eldecl = false;
       }
       break;
 
@@ -6302,7 +6302,7 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
                 parser->m_handlerArg, parser->m_declElementType->name, model);
             afterHandler(parser);
           }
-          dtd->in_eldecl = XML_FALSE;
+          dtd->in_eldecl = false;
           dtd->contentStringLen = 0;
         }
       }
@@ -7643,7 +7643,7 @@ dtdCreate(XML_Parser parser) {
   p->defaultPrefix.name = NULL;
   p->defaultPrefix.binding = NULL;
 
-  p->in_eldecl = XML_FALSE;
+  p->in_eldecl = false;
   p->scaffIndex = NULL;
   p->scaffIndexSize = 0;
   p->scaffold = NULL;
@@ -7682,7 +7682,7 @@ dtdReset(DTD *p, XML_Parser parser) {
   p->defaultPrefix.name = NULL;
   p->defaultPrefix.binding = NULL;
 
-  p->in_eldecl = XML_FALSE;
+  p->in_eldecl = false;
 
   FREE(parser, p->scaffIndex);
   p->scaffIndex = NULL;
