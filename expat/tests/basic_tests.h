@@ -42,17 +42,9 @@
    SPDX-License-Identifier: MIT
 */
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #ifndef XML_BASIC_TESTS_H
-#  define XML_BASIC_TESTS_H
+#define XML_BASIC_TESTS_H
 
 extern void make_basic_test_case(Suite *s);
 
 #endif /* XML_BASIC_TESTS_H */
-
-#ifdef __cplusplus
-}
-#endif

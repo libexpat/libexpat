@@ -32,10 +32,6 @@
    SPDX-License-Identifier: MIT
 */
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #ifndef XML_STRUCTDATA_H
 #  define XML_STRUCTDATA_H 1
 
@@ -65,7 +61,3 @@ void StructData_CheckItems(StructData *storage, const StructDataEntry *expected,
 void StructData_Dispose(StructData *storage);
 
 #endif /* XML_STRUCTDATA_H */
-
-#ifdef __cplusplus
-}
-#endif

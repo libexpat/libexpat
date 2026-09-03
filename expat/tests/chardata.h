@@ -34,10 +34,6 @@
    SPDX-License-Identifier: MIT
 */
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #ifndef XML_CHARDATA_H
 #  define XML_CHARDATA_H 1
 
@@ -57,7 +53,3 @@ void CharData_AppendXMLChars(CharData *storage, const XML_Char *s, int len);
 int CharData_CheckXMLChars(CharData *storage, const XML_Char *s);
 
 #endif /* XML_CHARDATA_H */
-
-#ifdef __cplusplus
-}
-#endif
