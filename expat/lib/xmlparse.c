@@ -226,24 +226,9 @@ typedef char ICHAR;
 #define EXPAT_MIN(a, b) (((a) < (b)) ? (a) : (b))
 
 #include "internal.h"
+#include "hash_table.h"
 #include "xmltok.h"
 #include "xmlrole.h"
-
-typedef const XML_Char *KEY;
-
-typedef struct {
-  KEY name;
-} NAMED;
-
-typedef struct {
-  NAMED **v;
-  unsigned char power;
-  size_t size;
-  size_t used;
-  XML_Parser parser;
-} HASH_TABLE;
-
-static size_t keylen(KEY s);
 
 static void copy_salt_to_sipkey(XML_Parser parser, struct sipkey *key);
 
@@ -259,11 +244,6 @@ static void copy_salt_to_sipkey(XML_Parser parser, struct sipkey *key);
   ((((hash) & ~(mask)) >> ((power) - 1)) & ((mask) >> 2))
 #define PROBE_STEP(hash, mask, power)                                          \
   ((unsigned char)((SECOND_HASH(hash, mask, power)) | 1))
-
-typedef struct {
-  NAMED **p;
-  NAMED **end;
-} HASH_TABLE_ITER;
 
 #define INIT_TAG_BUF_SIZE 32 /* must be a multiple of sizeof(XML_Char) */
 #define INIT_DATA_BUF_SIZE 1024
@@ -598,16 +578,6 @@ static int dtdCopy(XML_Parser oldParser, DTD *newDtd, const DTD *oldDtd,
                    XML_Parser parser);
 static int copyEntityTable(XML_Parser oldParser, HASH_TABLE *newTable,
                            STRING_POOL *newPool, const HASH_TABLE *oldTable);
-static NAMED *lookupWithLength(XML_Parser parser, HASH_TABLE *table, KEY name,
-                               size_t nameLen, size_t createSize);
-static NAMED *lookup(XML_Parser parser, HASH_TABLE *table, KEY name,
-                     size_t createSize);
-static void FASTCALL hashTableInit(HASH_TABLE *table, XML_Parser parser);
-static void FASTCALL hashTableClear(HASH_TABLE *table);
-static void FASTCALL hashTableDestroy(HASH_TABLE *table);
-static void FASTCALL hashTableIterInit(HASH_TABLE_ITER *iter,
-                                       const HASH_TABLE *table);
-static NAMED *FASTCALL hashTableIterNext(HASH_TABLE_ITER *iter);
 
 static void FASTCALL poolInit(STRING_POOL *pool, XML_Parser parser);
 static void FASTCALL poolClear(STRING_POOL *pool);
@@ -7949,7 +7919,7 @@ copyEntityTable(XML_Parser oldParser, HASH_TABLE *newTable,
 // Compares two strings `s1` and `s2` whereas:
 // - `s2` is zero-terminated but
 // - `s1` is made up of exactly (not just up to) `s1len` non-zero characters.
-static XML_Bool FASTCALL
+XML_NONTESTING_STATIC XML_Bool FASTCALL
 keyeq(KEY s1, size_t s1len, KEY s2) {
 #ifdef XML_UNICODE
 #  ifdef XML_UNICODE_WCHAR_T
@@ -7966,7 +7936,7 @@ keyeq(KEY s1, size_t s1len, KEY s2) {
 #endif
 }
 
-static size_t
+XML_NONTESTING_STATIC size_t
 keylen(KEY s) {
   return xcslen(s);
 }
@@ -8009,7 +7979,7 @@ hash(XML_Parser parser, KEY s, size_t keyLen) {
 //       read-write mode does, because keys can be re-hashed later and the
 //       hash table does not store key length information.
 //
-static NAMED *
+XML_NONTESTING_STATIC NAMED *
 lookupWithLength(XML_Parser parser, HASH_TABLE *table, KEY name, size_t nameLen,
                  size_t createSize) {
   size_t i;
@@ -8116,12 +8086,12 @@ lookupWithLength(XML_Parser parser, HASH_TABLE *table, KEY name, size_t nameLen,
 // be used to tell cases "existed and found" and "newly inserted" apart
 // with the structure returned.
 //
-static NAMED *
+XML_NONTESTING_STATIC NAMED *
 lookup(XML_Parser parser, HASH_TABLE *table, KEY name, size_t createSize) {
   return lookupWithLength(parser, table, name, keylen(name), createSize);
 }
 
-static void FASTCALL
+XML_NONTESTING_STATIC void FASTCALL
 hashTableClear(HASH_TABLE *table) {
   size_t i;
   for (i = 0; i < table->size; i++) {
@@ -8131,7 +8101,7 @@ hashTableClear(HASH_TABLE *table) {
   table->used = 0;
 }
 
-static void FASTCALL
+XML_NONTESTING_STATIC void FASTCALL
 hashTableDestroy(HASH_TABLE *table) {
   size_t i;
   for (i = 0; i < table->size; i++)
@@ -8139,7 +8109,7 @@ hashTableDestroy(HASH_TABLE *table) {
   FREE(table->parser, table->v);
 }
 
-static void FASTCALL
+XML_NONTESTING_STATIC void FASTCALL
 hashTableInit(HASH_TABLE *p, XML_Parser parser) {
   p->power = 0;
   p->size = 0;
@@ -8148,13 +8118,13 @@ hashTableInit(HASH_TABLE *p, XML_Parser parser) {
   p->parser = parser;
 }
 
-static void FASTCALL
+XML_NONTESTING_STATIC void FASTCALL
 hashTableIterInit(HASH_TABLE_ITER *iter, const HASH_TABLE *table) {
   iter->p = table->v;
   iter->end = iter->p ? iter->p + table->size : NULL;
 }
 
-static NAMED *FASTCALL
+XML_NONTESTING_STATIC NAMED *FASTCALL
 hashTableIterNext(HASH_TABLE_ITER *iter) {
   while (iter->p != iter->end) {
     NAMED *tem = *(iter->p)++;
