@@ -375,7 +375,7 @@ typedef struct attribute_id {
   XML_Char *name;
   PREFIX *prefix;
   bool maybeTokenized;
-  XML_Bool xmlns;
+  bool xmlns;
 } ATTRIBUTE_ID;
 
 typedef struct {
@@ -7414,7 +7414,7 @@ getAttributeId(XML_Parser parser, const ENCODING *enc, const char *start,
       else
         id->prefix = (PREFIX *)lookup(parser, &dtd->prefixes, name + 6,
                                       sizeof(PREFIX));
-      id->xmlns = XML_TRUE;
+      id->xmlns = true;
     } else {
       int i;
       for (i = 0; name[i]; i++) {
