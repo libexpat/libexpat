@@ -339,7 +339,7 @@ typedef struct {
     The reason is the delayed closing of entities until their inner
     entities are processed and closed */
   bool is_param;
-  XML_Bool is_internal; /* true if declared in internal subset outside PE */
+  bool is_internal; /* true if declared in internal subset outside PE */
 } ENTITY;
 
 typedef struct {
