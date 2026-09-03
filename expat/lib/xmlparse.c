@@ -431,7 +431,7 @@ typedef struct {
   XML_Bool standalone;
 #ifdef XML_DTD
   /* indicates if external PE has been read */
-  XML_Bool paramEntityRead;
+  bool paramEntityRead;
   HASH_TABLE paramEntities;
 #endif /* XML_DTD */
   PREFIX defaultPrefix;
@@ -5046,7 +5046,7 @@ externalParEntInitProcessor(XML_Parser parser, const char *s, const char *end,
 
   /* we know now that XML_Parse(Buffer) has been called,
      so we consider the external parameter entity read */
-  parser->m_dtd->paramEntityRead = XML_TRUE;
+  parser->m_dtd->paramEntityRead = true;
 
   if (parser->m_prologState.inEntityValue) {
     parser->m_processor = entityValueInitProcessor;
@@ -5480,7 +5480,7 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
           }
           if (parser->m_useForeignDTD)
             entity->base = parser->m_curBase;
-          dtd->paramEntityRead = XML_FALSE;
+          dtd->paramEntityRead = false;
           beforeHandler(parser);
           const int status = parser->m_externalEntityRefHandler(
               parser->m_externalEntityRefHandlerArg, 0, entity->base,
@@ -5530,7 +5530,7 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
           if (! entity)
             return XML_ERROR_NO_MEMORY;
           entity->base = parser->m_curBase;
-          dtd->paramEntityRead = XML_FALSE;
+          dtd->paramEntityRead = false;
           beforeHandler(parser);
           const int status = parser->m_externalEntityRefHandler(
               parser->m_externalEntityRefHandlerArg, 0, entity->base,
@@ -6147,7 +6147,7 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
           break;
         }
         if (parser->m_externalEntityRefHandler) {
-          dtd->paramEntityRead = XML_FALSE;
+          dtd->paramEntityRead = false;
           entity->open = true;
           entityTrackingOnOpen(parser, entity, __LINE__);
           beforeHandler(parser);
@@ -6949,7 +6949,7 @@ storeEntityValue(XML_Parser parser, const ENCODING *enc,
         }
         if (entity->systemId) {
           if (parser->m_externalEntityRefHandler) {
-            dtd->paramEntityRead = XML_FALSE;
+            dtd->paramEntityRead = false;
             entity->open = true;
             entityTrackingOnOpen(parser, entity, __LINE__);
             beforeHandler(parser);
@@ -7637,7 +7637,7 @@ dtdCreate(XML_Parser parser) {
   hashTableInit(&(p->attributeIds), parser);
   hashTableInit(&(p->prefixes), parser);
 #ifdef XML_DTD
-  p->paramEntityRead = XML_FALSE;
+  p->paramEntityRead = false;
   hashTableInit(&(p->paramEntities), parser);
 #endif /* XML_DTD */
   p->defaultPrefix.name = NULL;
@@ -7671,7 +7671,7 @@ dtdReset(DTD *p, XML_Parser parser) {
   }
   hashTableClear(&(p->generalEntities));
 #ifdef XML_DTD
-  p->paramEntityRead = XML_FALSE;
+  p->paramEntityRead = false;
   hashTableClear(&(p->paramEntities));
 #endif /* XML_DTD */
   hashTableClear(&(p->elementTypes));
