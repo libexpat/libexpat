@@ -1154,10 +1154,30 @@ static const char KW_yes[] = {ASCII_y, ASCII_e, ASCII_s, '\0'};
 
 static const char KW_no[] = {ASCII_n, ASCII_o, '\0'};
 
-/* The only XML version this library implements is 1.0, per the XML 1.0
-   Fourth Edition VersionNum production and the requirement that a processor
-   reject a document declaring a different version. */
-static const char KW_1_0[] = {ASCII_1, ASCII_PERIOD, ASCII_0, '\0'};
+/* Checks a version pseudo-attribute value against the VersionNum production.
+   XML 1.0 Fourth Edition only allows the literal "1.0", but the Fifth
+   Edition relaxed this to "1." followed by one or more digits, since Expat
+   only implements 1.0 itself but plans to track the Fifth Edition's laxer
+   grammar here so that "1.1" and similar aren't rejected only to have that
+   rejection reverted later. Returns true for a value matching "1.[0-9]+".  */
+static int
+checkXmlDeclVersionNum(const ENCODING *enc, const char *ptr, const char *end,
+                        const char *valEnd) {
+  if (ptr == valEnd || toAscii(enc, ptr, end) != ASCII_1)
+    return 0;
+  ptr += enc->minBytesPerChar;
+  if (ptr == valEnd || toAscii(enc, ptr, end) != ASCII_PERIOD)
+    return 0;
+  ptr += enc->minBytesPerChar;
+  if (ptr == valEnd)
+    return 0;
+  for (; ptr != valEnd; ptr += enc->minBytesPerChar) {
+    int c = toAscii(enc, ptr, end);
+    if (c < ASCII_0 || c > ASCII_9)
+      return 0;
+  }
+  return 1;
+}
 
 static int
 doParseXmlDecl(const ENCODING *(*encodingFinder)(const ENCODING *, const char *,
@@ -1193,10 +1213,13 @@ doParseXmlDecl(const ENCODING *(*encodingFinder)(const ENCODING *, const char *,
       *badPtr = val;
       return 0;
     }
-    /* Expat implements XML 1.0 only, so any version other than "1.0" is
-       rejected rather than silently accepted (or misreported downstream
-       as if the document had declared "1.0"). */
-    if (! XmlNameMatchesAscii(enc, val, ptr - enc->minBytesPerChar, KW_1_0)) {
+    /* Expat implements XML 1.0 only, so any version outside the "1.0"/"1.x"
+       family is rejected rather than silently accepted (or misreported
+       downstream as if the document had declared "1.0"). Following the
+       Fifth Edition's VersionNum production (rather than the Fourth
+       Edition's exact "1.0") avoids rejecting "1.1" now only to have to
+       revert that once Expat tracks the newer edition. */
+    if (! checkXmlDeclVersionNum(enc, val, end, ptr - enc->minBytesPerChar)) {
       *badPtr = val;
       return 0;
     }
