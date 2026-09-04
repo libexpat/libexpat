@@ -1162,7 +1162,7 @@ static const char KW_no[] = {ASCII_n, ASCII_o, '\0'};
    rejection reverted later. Returns true for a value matching "1.[0-9]+".  */
 static int
 checkXmlDeclVersionNum(const ENCODING *enc, const char *ptr, const char *end,
-                        const char *valEnd) {
+                       const char *valEnd) {
   if (ptr == valEnd || toAscii(enc, ptr, end) != ASCII_1)
     return 0;
   ptr += enc->minBytesPerChar;

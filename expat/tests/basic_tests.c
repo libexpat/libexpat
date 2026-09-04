@@ -1024,10 +1024,11 @@ START_TEST(test_xmldecl_wrong_version_number) {
                  "Failed to reject XML declaration with version '10'");
 
   XML_ParserReset(g_parser, NULL);
-  expect_failure("<?xml version='1.'?>\n"
-                 "<doc/>",
-                 XML_ERROR_XML_DECL,
-                 "Failed to reject XML declaration with version '1.' (no digit)");
+  expect_failure(
+      "<?xml version='1.'?>\n"
+      "<doc/>",
+      XML_ERROR_XML_DECL,
+      "Failed to reject XML declaration with version '1.' (no digit)");
 }
 END_TEST
 
