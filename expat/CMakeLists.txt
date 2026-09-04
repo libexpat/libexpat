@@ -732,6 +732,7 @@ if(EXPAT_BUILD_TESTS)
         tests/misc_tests.c
         tests/ns_tests.c
         tests/nsalloc_tests.c
+        tests/props_tests.c
         tests/runtests.c
         tests/structdata.c
         ${_EXPAT_C_SOURCES}

@@ -644,6 +644,25 @@ static bool poolAppendChar(STRING_POOL *pool, XML_Char c);
 
 static bool poolAppendChars(STRING_POOL *pool, const XML_Char *s, size_t len);
 
+#if XML_GE == 1
+static enum XML_Prop_Error setBillionLaughsAttackProtectionMaximumAmplification(
+    XML_Parser parser, float maximumAmplificationFactor);
+
+static enum XML_Prop_Error setBillionLaughsAttackProtectionActivationThreshold(
+    XML_Parser parser, unsigned long long activationThresholdBytes);
+
+static enum XML_Prop_Error
+setAllocTrackerMaximumAmplification(XML_Parser parser,
+                                    float maximumAmplificationFactor);
+
+static enum XML_Prop_Error
+setAllocTrackerActivationThreshold(XML_Parser parser,
+                                   unsigned long long activationThresholdBytes);
+#endif /* XML_GE == 1 */
+
+static enum XML_Prop_Error setReparseDeferralEnabled(XML_Parser parser,
+                                                     XML_Bool enabled);
+
 #define poolStart(pool) ((pool)->start)
 #define poolLength(pool) ((pool)->ptr - (pool)->start)
 #define poolChop(pool) ((void)--(pool->ptr))
@@ -3027,59 +3046,294 @@ XML_GetFeatureList(void) {
 }
 
 #if XML_GE == 1
+static enum XML_Prop_Error
+setBillionLaughsAttackProtectionMaximumAmplification(
+    XML_Parser parser, float maximumAmplificationFactor) {
+  if (parser == NULL)
+    return XML_PROP_ERROR_PARSER_NULL;
+
+  if (parser->m_parentParser != NULL)
+    return XML_PROP_ERROR_PARSER_NOT_ROOT;
+
+  if (isnan(maximumAmplificationFactor) || (maximumAmplificationFactor < 1.0f))
+    return XML_PROP_ERROR_INVALID_VALUE;
+
+  parser->m_accounting.maximumAmplificationFactor = maximumAmplificationFactor;
+
+  return XML_PROP_ERROR_NONE;
+}
+
 XML_Bool XMLCALL
 XML_SetBillionLaughsAttackProtectionMaximumAmplification(
     XML_Parser parser, float maximumAmplificationFactor) {
-  if ((parser == NULL) || (parser->m_parentParser != NULL)
-      || isnan(maximumAmplificationFactor)
-      || (maximumAmplificationFactor < 1.0f)) {
-    return XML_FALSE;
-  }
-  parser->m_accounting.maximumAmplificationFactor = maximumAmplificationFactor;
-  return XML_TRUE;
+  return (setBillionLaughsAttackProtectionMaximumAmplification(
+              parser, maximumAmplificationFactor)
+          == XML_PROP_ERROR_NONE)
+             ? XML_TRUE
+             : XML_FALSE;
+}
+
+static enum XML_Prop_Error
+setBillionLaughsAttackProtectionActivationThreshold(
+    XML_Parser parser, unsigned long long activationThresholdBytes) {
+  if (parser == NULL)
+    return XML_PROP_ERROR_PARSER_NULL;
+
+  if (parser->m_parentParser != NULL)
+    return XML_PROP_ERROR_PARSER_NOT_ROOT;
+
+  parser->m_accounting.activationThresholdBytes = activationThresholdBytes;
+
+  return XML_PROP_ERROR_NONE;
 }
 
 XML_Bool XMLCALL
 XML_SetBillionLaughsAttackProtectionActivationThreshold(
     XML_Parser parser, unsigned long long activationThresholdBytes) {
-  if ((parser == NULL) || (parser->m_parentParser != NULL)) {
-    return XML_FALSE;
-  }
-  parser->m_accounting.activationThresholdBytes = activationThresholdBytes;
-  return XML_TRUE;
+  return (setBillionLaughsAttackProtectionActivationThreshold(
+              parser, activationThresholdBytes)
+          == XML_PROP_ERROR_NONE)
+             ? XML_TRUE
+             : XML_FALSE;
+}
+
+static enum XML_Prop_Error
+setAllocTrackerMaximumAmplification(XML_Parser parser,
+                                    float maximumAmplificationFactor) {
+  if (parser == NULL)
+    return XML_PROP_ERROR_PARSER_NULL;
+
+  if (parser->m_parentParser != NULL)
+    return XML_PROP_ERROR_PARSER_NOT_ROOT;
+
+  if (isnan(maximumAmplificationFactor) || (maximumAmplificationFactor < 1.0f))
+    return XML_PROP_ERROR_INVALID_VALUE;
+
+  parser->m_alloc_tracker.maximumAmplificationFactor
+      = maximumAmplificationFactor;
+
+  return XML_PROP_ERROR_NONE;
 }
 
 XML_Bool XMLCALL
 XML_SetAllocTrackerMaximumAmplification(XML_Parser parser,
                                         float maximumAmplificationFactor) {
-  if ((parser == NULL) || (parser->m_parentParser != NULL)
-      || isnan(maximumAmplificationFactor)
-      || (maximumAmplificationFactor < 1.0f)) {
-    return XML_FALSE;
-  }
-  parser->m_alloc_tracker.maximumAmplificationFactor
-      = maximumAmplificationFactor;
-  return XML_TRUE;
+  return (setAllocTrackerMaximumAmplification(parser,
+                                              maximumAmplificationFactor)
+          == XML_PROP_ERROR_NONE)
+             ? XML_TRUE
+             : XML_FALSE;
+}
+
+static enum XML_Prop_Error
+setAllocTrackerActivationThreshold(
+    XML_Parser parser, unsigned long long activationThresholdBytes) {
+  if (parser == NULL)
+    return XML_PROP_ERROR_PARSER_NULL;
+
+  if (parser->m_parentParser != NULL)
+    return XML_PROP_ERROR_PARSER_NOT_ROOT;
+
+  parser->m_alloc_tracker.activationThresholdBytes = activationThresholdBytes;
+
+  return XML_PROP_ERROR_NONE;
 }
 
 XML_Bool XMLCALL
 XML_SetAllocTrackerActivationThreshold(
     XML_Parser parser, unsigned long long activationThresholdBytes) {
-  if ((parser == NULL) || (parser->m_parentParser != NULL)) {
-    return XML_FALSE;
-  }
-  parser->m_alloc_tracker.activationThresholdBytes = activationThresholdBytes;
-  return XML_TRUE;
+  return (setAllocTrackerActivationThreshold(parser, activationThresholdBytes)
+          == XML_PROP_ERROR_NONE)
+             ? XML_TRUE
+             : XML_FALSE;
 }
 #endif /* XML_GE == 1 */
 
+static enum XML_Prop_Error
+setReparseDeferralEnabled(XML_Parser parser, XML_Bool enabled) {
+  if (parser == NULL)
+    return XML_PROP_ERROR_PARSER_NULL;
+
+  if (enabled != XML_TRUE && enabled != XML_FALSE)
+    return XML_PROP_ERROR_INVALID_VALUE;
+
+  parser->m_reparseDeferralEnabled = enabled;
+
+  return XML_PROP_ERROR_NONE;
+}
+
 XML_Bool XMLCALL
 XML_SetReparseDeferralEnabled(XML_Parser parser, XML_Bool enabled) {
-  if (parser != NULL && (enabled == XML_TRUE || enabled == XML_FALSE)) {
-    parser->m_reparseDeferralEnabled = enabled;
-    return XML_TRUE;
+  return (setReparseDeferralEnabled(parser, enabled) == XML_PROP_ERROR_NONE)
+             ? XML_TRUE
+             : XML_FALSE;
+}
+
+enum XML_Prop_Error XMLCALL
+XML_SetPropertyBool(XML_Parser parser, enum XML_PARSER_PROPERTY property,
+                    XML_Bool value) {
+  if (parser == NULL)
+    return XML_PROP_ERROR_PARSER_NULL;
+
+  switch (property) {
+#if XML_GE == 1
+  case XML_PROP_ALLOC_TRACKER_ACTIVATION_THRESHOLD:
+  case XML_PROP_ALLOC_TRACKER_MAXIMUM_AMPLIFICATION:
+  case XML_PROP_BILLION_LAUGHS_ACTIVATION_THRESHOLD:
+  case XML_PROP_BILLION_LAUGHS_MAXIMUM_AMPLIFICATION:
+    return XML_PROP_ERROR_INVALID_TYPE;
+#endif /* XML_GE == 1 */
+  case XML_PROP_REPARSE_DEFERRAL_ENABLED:
+    return setReparseDeferralEnabled(parser, value);
+  default:
+    return XML_PROP_ERROR_INVALID_KEY;
   }
-  return XML_FALSE;
+
+  assert(0 && "considered unreachable");
+}
+
+enum XML_Prop_Error XMLCALL
+XML_SetPropertyDouble(XML_Parser parser, enum XML_PARSER_PROPERTY property,
+                      double value) {
+  if (parser == NULL)
+    return XML_PROP_ERROR_PARSER_NULL;
+
+#if XML_GE == 0
+  UNUSED_P(value);
+#endif
+
+  switch (property) {
+#if XML_GE == 1
+  case XML_PROP_ALLOC_TRACKER_MAXIMUM_AMPLIFICATION:
+    return setAllocTrackerMaximumAmplification(parser, (float)value);
+  case XML_PROP_BILLION_LAUGHS_MAXIMUM_AMPLIFICATION:
+    return setBillionLaughsAttackProtectionMaximumAmplification(parser,
+                                                                (float)value);
+  case XML_PROP_ALLOC_TRACKER_ACTIVATION_THRESHOLD:
+  case XML_PROP_BILLION_LAUGHS_ACTIVATION_THRESHOLD:
+#endif /* XML_GE == 1 */
+  case XML_PROP_REPARSE_DEFERRAL_ENABLED:
+    return XML_PROP_ERROR_INVALID_TYPE;
+  default:
+    return XML_PROP_ERROR_INVALID_KEY;
+  }
+
+  assert(0 && "considered unreachable");
+}
+
+enum XML_Prop_Error XMLCALL
+XML_SetPropertyUInt64(XML_Parser parser, enum XML_PARSER_PROPERTY property,
+                      uint64_t value) {
+  if (parser == NULL)
+    return XML_PROP_ERROR_PARSER_NULL;
+
+#if XML_GE == 0
+  UNUSED_P(value);
+#endif
+
+  switch (property) {
+#if XML_GE == 1
+  case XML_PROP_ALLOC_TRACKER_ACTIVATION_THRESHOLD:
+    return setAllocTrackerActivationThreshold(parser,
+                                              (unsigned long long)value);
+  case XML_PROP_BILLION_LAUGHS_ACTIVATION_THRESHOLD:
+    return setBillionLaughsAttackProtectionActivationThreshold(
+        parser, (unsigned long long)value);
+  case XML_PROP_ALLOC_TRACKER_MAXIMUM_AMPLIFICATION:
+  case XML_PROP_BILLION_LAUGHS_MAXIMUM_AMPLIFICATION:
+#endif /* XML_GE == 1 */
+  case XML_PROP_REPARSE_DEFERRAL_ENABLED:
+    return XML_PROP_ERROR_INVALID_TYPE;
+  default:
+    return XML_PROP_ERROR_INVALID_KEY;
+  }
+
+  assert(0 && "considered unreachable");
+}
+
+enum XML_Prop_Error XMLCALL
+XML_GetPropertyBool(XML_Parser parser, enum XML_PARSER_PROPERTY property,
+                    XML_Bool *value) {
+  if (parser == NULL)
+    return XML_PROP_ERROR_PARSER_NULL;
+
+  if (value == NULL)
+    return XML_PROP_ERROR_INVALID_VALUE;
+
+  switch (property) {
+#if XML_GE == 1
+  case XML_PROP_ALLOC_TRACKER_ACTIVATION_THRESHOLD:
+  case XML_PROP_ALLOC_TRACKER_MAXIMUM_AMPLIFICATION:
+  case XML_PROP_BILLION_LAUGHS_ACTIVATION_THRESHOLD:
+  case XML_PROP_BILLION_LAUGHS_MAXIMUM_AMPLIFICATION:
+    return XML_PROP_ERROR_INVALID_TYPE;
+#endif /* XML_GE == 1 */
+  case XML_PROP_REPARSE_DEFERRAL_ENABLED:
+    *value = parser->m_reparseDeferralEnabled;
+    break;
+  default:
+    return XML_PROP_ERROR_INVALID_KEY;
+  }
+
+  return XML_PROP_ERROR_NONE;
+}
+
+enum XML_Prop_Error XMLCALL
+XML_GetPropertyDouble(XML_Parser parser, enum XML_PARSER_PROPERTY property,
+                      double *value) {
+  if (parser == NULL)
+    return XML_PROP_ERROR_PARSER_NULL;
+
+  if (value == NULL)
+    return XML_PROP_ERROR_INVALID_VALUE;
+
+  switch (property) {
+#if XML_GE == 1
+  case XML_PROP_BILLION_LAUGHS_MAXIMUM_AMPLIFICATION:
+    *value = (double)parser->m_accounting.maximumAmplificationFactor;
+    break;
+  case XML_PROP_ALLOC_TRACKER_MAXIMUM_AMPLIFICATION:
+    *value = (double)parser->m_alloc_tracker.maximumAmplificationFactor;
+    break;
+  case XML_PROP_ALLOC_TRACKER_ACTIVATION_THRESHOLD:
+  case XML_PROP_BILLION_LAUGHS_ACTIVATION_THRESHOLD:
+#endif /* XML_GE == 1 */
+  case XML_PROP_REPARSE_DEFERRAL_ENABLED:
+    return XML_PROP_ERROR_INVALID_TYPE;
+  default:
+    return XML_PROP_ERROR_INVALID_KEY;
+  }
+
+  return XML_PROP_ERROR_NONE;
+}
+
+enum XML_Prop_Error XMLCALL
+XML_GetPropertyUInt64(XML_Parser parser, enum XML_PARSER_PROPERTY property,
+                      uint64_t *value) {
+  if (parser == NULL)
+    return XML_PROP_ERROR_PARSER_NULL;
+
+  if (value == NULL)
+    return XML_PROP_ERROR_INVALID_VALUE;
+
+  switch (property) {
+#if XML_GE == 1
+  case XML_PROP_BILLION_LAUGHS_ACTIVATION_THRESHOLD:
+    *value = parser->m_accounting.activationThresholdBytes;
+    break;
+  case XML_PROP_ALLOC_TRACKER_ACTIVATION_THRESHOLD:
+    *value = parser->m_alloc_tracker.activationThresholdBytes;
+    break;
+  case XML_PROP_ALLOC_TRACKER_MAXIMUM_AMPLIFICATION:
+  case XML_PROP_BILLION_LAUGHS_MAXIMUM_AMPLIFICATION:
+#endif /* XML_GE == 1 */
+  case XML_PROP_REPARSE_DEFERRAL_ENABLED:
+    return XML_PROP_ERROR_INVALID_TYPE;
+  default:
+    return XML_PROP_ERROR_INVALID_KEY;
+  }
+
+  return XML_PROP_ERROR_NONE;
 }
 
 /* Initially tag->rawName always points into the parse buffer;
