@@ -334,12 +334,12 @@ typedef struct {
   const XML_Char *publicId;
   const XML_Char *notation;
   bool open;
-  XML_Bool hasMore; /* true if entity has not been completely processed */
-  /* An entity can be open while being already completely processed (hasMore ==
-    XML_FALSE). The reason is the delayed closing of entities until their inner
+  bool hasMore; /* true if entity has not been completely processed */
+  /* An entity can be open while being already completely processed (!hasMore).
+    The reason is the delayed closing of entities until their inner
     entities are processed and closed */
-  XML_Bool is_param;
-  XML_Bool is_internal; /* true if declared in internal subset outside PE */
+  bool is_param;
+  bool is_internal; /* true if declared in internal subset outside PE */
 } ENTITY;
 
 typedef struct {
@@ -374,8 +374,8 @@ typedef struct {
 typedef struct attribute_id {
   XML_Char *name;
   PREFIX *prefix;
-  XML_Bool maybeTokenized;
-  XML_Bool xmlns;
+  bool maybeTokenized;
+  bool xmlns;
 } ATTRIBUTE_ID;
 
 typedef struct {
@@ -431,12 +431,12 @@ typedef struct {
   XML_Bool standalone;
 #ifdef XML_DTD
   /* indicates if external PE has been read */
-  XML_Bool paramEntityRead;
+  bool paramEntityRead;
   HASH_TABLE paramEntities;
 #endif /* XML_DTD */
   PREFIX defaultPrefix;
   /* === scaffolding for building content model === */
-  XML_Bool in_eldecl;
+  bool in_eldecl;
   CONTENT_SCAFFOLD *scaffold;
   unsigned contentStringLen;
   unsigned scaffSize;
@@ -458,7 +458,7 @@ typedef struct open_internal_entity {
   struct open_internal_entity *next;
   ENTITY *entity;
   int startTagLevel;
-  XML_Bool betweenDecl; /* WFC: PE Between Declarations */
+  bool betweenDecl; /* WFC: PE Between Declarations */
   enum EntityType type;
 } OPEN_INTERNAL_ENTITY;
 
@@ -528,7 +528,7 @@ static enum XML_Error doProlog(XML_Parser parser, const ENCODING *enc,
                                XML_Bool haveMore, XML_Bool allowClosingDoctype,
                                enum XML_Account account);
 static enum XML_Error processEntity(XML_Parser parser, ENTITY *entity,
-                                    XML_Bool betweenDecl, enum EntityType type);
+                                    bool betweenDecl, enum EntityType type);
 static enum XML_Error doContent(XML_Parser parser, int startTagLevel,
                                 const ENCODING *enc, const char *start,
                                 const char *end, const char **endPtr,
@@ -5046,7 +5046,7 @@ externalParEntInitProcessor(XML_Parser parser, const char *s, const char *end,
 
   /* we know now that XML_Parse(Buffer) has been called,
      so we consider the external parameter entity read */
-  parser->m_dtd->paramEntityRead = XML_TRUE;
+  parser->m_dtd->paramEntityRead = true;
 
   if (parser->m_prologState.inEntityValue) {
     parser->m_processor = entityValueInitProcessor;
@@ -5480,7 +5480,7 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
           }
           if (parser->m_useForeignDTD)
             entity->base = parser->m_curBase;
-          dtd->paramEntityRead = XML_FALSE;
+          dtd->paramEntityRead = false;
           beforeHandler(parser);
           const int status = parser->m_externalEntityRefHandler(
               parser->m_externalEntityRefHandlerArg, 0, entity->base,
@@ -5530,7 +5530,7 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
           if (! entity)
             return XML_ERROR_NO_MEMORY;
           entity->base = parser->m_curBase;
-          dtd->paramEntityRead = XML_FALSE;
+          dtd->paramEntityRead = false;
           beforeHandler(parser);
           const int status = parser->m_externalEntityRefHandler(
               parser->m_externalEntityRefHandlerArg, 0, entity->base,
@@ -5873,7 +5873,7 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
         } else {
           poolFinish(&dtd->pool);
           parser->m_declEntity->publicId = NULL;
-          parser->m_declEntity->is_param = XML_FALSE;
+          parser->m_declEntity->is_param = false;
           /* if we have a parent parser or are reading an internal parameter
              entity, then the entity declaration is not considered "internal"
           */
@@ -5903,7 +5903,7 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
         } else {
           poolFinish(&dtd->pool);
           parser->m_declEntity->publicId = NULL;
-          parser->m_declEntity->is_param = XML_TRUE;
+          parser->m_declEntity->is_param = true;
           /* if we have a parent parser or are reading an internal parameter
              entity, then the entity declaration is not considered "internal"
           */
@@ -6138,8 +6138,7 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
           return XML_ERROR_RECURSIVE_ENTITY_REF;
         if (entity->textPtr) {
           enum XML_Error result;
-          XML_Bool betweenDecl
-              = (role == XML_ROLE_PARAM_ENTITY_REF ? XML_TRUE : XML_FALSE);
+          bool betweenDecl = (role == XML_ROLE_PARAM_ENTITY_REF);
           result = processEntity(parser, entity, betweenDecl, ENTITY_INTERNAL);
           if (result != XML_ERROR_NONE)
             return result;
@@ -6147,7 +6146,7 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
           break;
         }
         if (parser->m_externalEntityRefHandler) {
-          dtd->paramEntityRead = XML_FALSE;
+          dtd->paramEntityRead = false;
           entity->open = true;
           entityTrackingOnOpen(parser, entity, __LINE__);
           beforeHandler(parser);
@@ -6191,7 +6190,7 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
           return XML_ERROR_NO_MEMORY;
         dtd->scaffLevel = 0;
         dtd->scaffCount = 0;
-        dtd->in_eldecl = XML_TRUE;
+        dtd->in_eldecl = true;
         handleDefault = XML_FALSE;
       }
       break;
@@ -6220,7 +6219,7 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
           afterHandler(parser);
           handleDefault = XML_FALSE;
         }
-        dtd->in_eldecl = XML_FALSE;
+        dtd->in_eldecl = false;
       }
       break;
 
@@ -6302,7 +6301,7 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
                 parser->m_handlerArg, parser->m_declElementType->name, model);
             afterHandler(parser);
           }
-          dtd->in_eldecl = XML_FALSE;
+          dtd->in_eldecl = false;
           dtd->contentStringLen = 0;
         }
       }
@@ -6450,7 +6449,7 @@ epilogProcessor(XML_Parser parser, const char *s, const char *end,
 }
 
 static enum XML_Error
-processEntity(XML_Parser parser, ENTITY *entity, XML_Bool betweenDecl,
+processEntity(XML_Parser parser, ENTITY *entity, bool betweenDecl,
               enum EntityType type) {
   OPEN_INTERNAL_ENTITY *openEntity, **openEntityList;
   OPEN_INTERNAL_ENTITY **const freeEntityList = &parser->m_freeEntities;
@@ -6486,7 +6485,7 @@ processEntity(XML_Parser parser, ENTITY *entity, XML_Bool betweenDecl,
       return XML_ERROR_NO_MEMORY;
   }
   entity->open = true;
-  entity->hasMore = XML_TRUE;
+  entity->hasMore = true;
 #if XML_GE == 1
   entityTrackingOnOpen(parser, entity, __LINE__);
 #endif
@@ -6558,7 +6557,7 @@ internalEntityProcessor(XML_Parser parser, const char *s, const char *end,
     // Entity is complete. We cannot close it here since we need to first
     // process its possible inner entities (which are added to the
     // m_openInternalEntities during doProlog or doContent calls above)
-    entity->hasMore = XML_FALSE;
+    entity->hasMore = false;
     if (! entity->is_param
         && (openEntity->startTagLevel != parser->m_tagLevel)) {
       return XML_ERROR_ASYNC_ENTITY;
@@ -6641,7 +6640,7 @@ storeAttributeValue(XML_Parser parser, const ENCODING *enc, XML_Bool isCdata,
         // Entity is complete. We cannot close it here since we need to first
         // process its possible inner entities (which are added to the
         // m_openAttributeEntities during appendAttributeValue)
-        entity->hasMore = XML_FALSE;
+        entity->hasMore = false;
         continue;
       } // End of entity processing, "if" block skips the rest
 
@@ -6949,7 +6948,7 @@ storeEntityValue(XML_Parser parser, const ENCODING *enc,
         }
         if (entity->systemId) {
           if (parser->m_externalEntityRefHandler) {
-            dtd->paramEntityRead = XML_FALSE;
+            dtd->paramEntityRead = false;
             entity->open = true;
             entityTrackingOnOpen(parser, entity, __LINE__);
             beforeHandler(parser);
@@ -7101,7 +7100,7 @@ callStoreEntityValue(XML_Parser parser, const ENCODING *enc,
         // Entity is complete. We cannot close it here since we need to first
         // process its possible inner entities (which are added to the
         // m_openValueEntities during storeEntityValue)
-        entity->hasMore = XML_FALSE;
+        entity->hasMore = false;
         continue;
       } // End of entity processing, "if" block skips the rest
 
@@ -7329,7 +7328,7 @@ defineAttribute(ELEMENT_TYPE *type, ATTRIBUTE_ID *attId, XML_Bool isCdata,
   att->value = value;
   att->isCdata = isCdata;
   if (! isCdata)
-    attId->maybeTokenized = XML_TRUE;
+    attId->maybeTokenized = true;
 
   NAME_AND_DEFAULT_ATTRIBUTE *const nameAndDefaultAttribute
       = (NAME_AND_DEFAULT_ATTRIBUTE *)lookup(
@@ -7414,7 +7413,7 @@ getAttributeId(XML_Parser parser, const ENCODING *enc, const char *start,
       else
         id->prefix = (PREFIX *)lookup(parser, &dtd->prefixes, name + 6,
                                       sizeof(PREFIX));
-      id->xmlns = XML_TRUE;
+      id->xmlns = true;
     } else {
       int i;
       for (i = 0; name[i]; i++) {
@@ -7637,13 +7636,13 @@ dtdCreate(XML_Parser parser) {
   hashTableInit(&(p->attributeIds), parser);
   hashTableInit(&(p->prefixes), parser);
 #ifdef XML_DTD
-  p->paramEntityRead = XML_FALSE;
+  p->paramEntityRead = false;
   hashTableInit(&(p->paramEntities), parser);
 #endif /* XML_DTD */
   p->defaultPrefix.name = NULL;
   p->defaultPrefix.binding = NULL;
 
-  p->in_eldecl = XML_FALSE;
+  p->in_eldecl = false;
   p->scaffIndex = NULL;
   p->scaffIndexSize = 0;
   p->scaffold = NULL;
@@ -7671,7 +7670,7 @@ dtdReset(DTD *p, XML_Parser parser) {
   }
   hashTableClear(&(p->generalEntities));
 #ifdef XML_DTD
-  p->paramEntityRead = XML_FALSE;
+  p->paramEntityRead = false;
   hashTableClear(&(p->paramEntities));
 #endif /* XML_DTD */
   hashTableClear(&(p->elementTypes));
@@ -7682,7 +7681,7 @@ dtdReset(DTD *p, XML_Parser parser) {
   p->defaultPrefix.name = NULL;
   p->defaultPrefix.binding = NULL;
 
-  p->in_eldecl = XML_FALSE;
+  p->in_eldecl = false;
 
   FREE(parser, p->scaffIndex);
   p->scaffIndex = NULL;
