@@ -54,13 +54,13 @@
 #include "minicheck.h"
 #include "common.h"
 
+#include "acc_tests.h"
+#include "alloc_tests.h"
 #include "basic_tests.h"
 #include "hash_tests.h"
-#include "ns_tests.h"
 #include "misc_tests.h"
-#include "alloc_tests.h"
+#include "ns_tests.h"
 #include "nsalloc_tests.h"
-#include "acc_tests.h"
 
 XML_Parser g_parser = NULL;
 
@@ -68,15 +68,15 @@ static Suite *
 make_suite(void) {
   Suite *s = suite_create("basic");
 
-  make_basic_test_case(s);
-  make_hash_test_case(s);
-  make_namespace_test_case(s);
-  make_miscellaneous_test_case(s);
-  make_alloc_test_case(s);
-  make_nsalloc_test_case(s);
 #if XML_GE == 1
   make_accounting_test_case(s);
 #endif
+  make_alloc_test_case(s);
+  make_basic_test_case(s);
+  make_hash_test_case(s);
+  make_miscellaneous_test_case(s);
+  make_namespace_test_case(s);
+  make_nsalloc_test_case(s);
 
   return s;
 }
