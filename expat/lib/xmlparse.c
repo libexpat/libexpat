@@ -7919,7 +7919,7 @@ copyEntityTable(XML_Parser oldParser, HASH_TABLE *newTable,
 // Compares two strings `s1` and `s2` whereas:
 // - `s2` is zero-terminated but
 // - `s1` is made up of exactly (not just up to) `s1len` non-zero characters.
-XML_NONTESTING_STATIC XML_Bool FASTCALL
+XML_NONTESTING_STATIC XML_Bool
 keyeq(KEY s1, size_t s1len, KEY s2) {
 #ifdef XML_UNICODE
 #  ifdef XML_UNICODE_WCHAR_T
@@ -8091,7 +8091,7 @@ lookup(XML_Parser parser, HASH_TABLE *table, KEY name, size_t createSize) {
   return lookupWithLength(parser, table, name, keylen(name), createSize);
 }
 
-XML_NONTESTING_STATIC void FASTCALL
+XML_NONTESTING_STATIC void
 hashTableClear(HASH_TABLE *table) {
   size_t i;
   for (i = 0; i < table->size; i++) {
@@ -8101,7 +8101,7 @@ hashTableClear(HASH_TABLE *table) {
   table->used = 0;
 }
 
-XML_NONTESTING_STATIC void FASTCALL
+XML_NONTESTING_STATIC void
 hashTableDestroy(HASH_TABLE *table) {
   size_t i;
   for (i = 0; i < table->size; i++)
@@ -8109,7 +8109,7 @@ hashTableDestroy(HASH_TABLE *table) {
   FREE(table->parser, table->v);
 }
 
-XML_NONTESTING_STATIC void FASTCALL
+XML_NONTESTING_STATIC void
 hashTableInit(HASH_TABLE *p, XML_Parser parser) {
   p->power = 0;
   p->size = 0;
@@ -8118,13 +8118,13 @@ hashTableInit(HASH_TABLE *p, XML_Parser parser) {
   p->parser = parser;
 }
 
-XML_NONTESTING_STATIC void FASTCALL
+XML_NONTESTING_STATIC void
 hashTableIterInit(HASH_TABLE_ITER *iter, const HASH_TABLE *table) {
   iter->p = table->v;
   iter->end = iter->p ? iter->p + table->size : NULL;
 }
 
-XML_NONTESTING_STATIC NAMED *FASTCALL
+XML_NONTESTING_STATIC NAMED *
 hashTableIterNext(HASH_TABLE_ITER *iter) {
   while (iter->p != iter->end) {
     NAMED *tem = *(iter->p)++;

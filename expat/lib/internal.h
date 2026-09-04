@@ -68,8 +68,8 @@
    #define FASTCALL __attribute__((stdcall, regparm(3)))
    and let's try this:
 */
-#  define FASTCALL __attribute__((regparm(3)))
-#  define PTRFASTCALL __attribute__((regparm(3)))
+#  define FASTCALL
+#  define PTRFASTCALL
 #endif
 
 /* Using __fastcall seems to have an unexpected negative effect under

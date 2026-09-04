@@ -64,15 +64,14 @@ XML_NONTESTING_STATIC NAMED *lookupWithLength(XML_Parser parser,
 XML_NONTESTING_STATIC NAMED *lookup(XML_Parser parser, HASH_TABLE *table,
                                     KEY name, size_t createSize);
 
-XML_NONTESTING_STATIC void FASTCALL hashTableInit(HASH_TABLE *table,
-                                                  XML_Parser parser);
-XML_NONTESTING_STATIC void FASTCALL hashTableClear(HASH_TABLE *table);
-XML_NONTESTING_STATIC void FASTCALL hashTableDestroy(HASH_TABLE *table);
-XML_NONTESTING_STATIC void FASTCALL hashTableIterInit(HASH_TABLE_ITER *iter,
-                                                      const HASH_TABLE *table);
-XML_NONTESTING_STATIC NAMED *FASTCALL hashTableIterNext(HASH_TABLE_ITER *iter);
+XML_NONTESTING_STATIC void hashTableInit(HASH_TABLE *table, XML_Parser parser);
+XML_NONTESTING_STATIC void hashTableClear(HASH_TABLE *table);
+XML_NONTESTING_STATIC void hashTableDestroy(HASH_TABLE *table);
+XML_NONTESTING_STATIC void hashTableIterInit(HASH_TABLE_ITER *iter,
+                                             const HASH_TABLE *table);
+XML_NONTESTING_STATIC NAMED *hashTableIterNext(HASH_TABLE_ITER *iter);
 
-XML_NONTESTING_STATIC XML_Bool FASTCALL keyeq(KEY s1, size_t s1len, KEY s2);
+XML_NONTESTING_STATIC XML_Bool keyeq(KEY s1, size_t s1len, KEY s2);
 
 XML_NONTESTING_STATIC size_t keylen(KEY s);
 
