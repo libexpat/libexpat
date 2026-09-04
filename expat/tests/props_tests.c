@@ -175,10 +175,34 @@ START_TEST(test_props_getter_error_parser_null) {
 }
 END_TEST
 
+START_TEST(test_props_getter_error_parser_not_root) {
+  // TODO
+}
+END_TEST
+
+START_TEST(test_props_getter_error_invalid_key) {
+  // TODO
+}
+END_TEST
+
+START_TEST(test_props_getter_error_invalid_type) {
+  // TODO
+}
+END_TEST
+
+START_TEST(test_props_getter_error_invalid_value) {
+  // TODO
+}
+END_TEST
+
 void
 make_props_test_case(Suite *s) {
   TCase *const tc_props = tcase_create("properties tests");
   suite_add_tcase(s, tc_props);
   tcase_add_test(tc_props, test_props_getter_defaults);
   tcase_add_test(tc_props, test_props_getter_error_parser_null);
+  tcase_add_test(tc_props, test_props_getter_error_parser_not_root);
+  tcase_add_test(tc_props, test_props_getter_error_invalid_key);
+  tcase_add_test(tc_props, test_props_getter_error_invalid_type);
+  tcase_add_test(tc_props, test_props_getter_error_invalid_value);
 }
