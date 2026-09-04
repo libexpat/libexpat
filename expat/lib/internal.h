@@ -67,6 +67,14 @@
 #  endif
 #endif
 
+#if ! defined(XML_NONTESTING_STATIC)
+#  if defined(XML_TESTING)
+#    define XML_NONTESTING_STATIC // empty i.e. not static
+#  else
+#    define XML_NONTESTING_STATIC static
+#  endif
+#endif
+
 #include <limits.h> // ULONG_MAX
 #include <stddef.h> // size_t
 
