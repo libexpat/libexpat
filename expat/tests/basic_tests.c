@@ -998,6 +998,51 @@ START_TEST(test_xmldecl_empty_version) {
 }
 END_TEST
 
+/* Regression test for GH #967: Expat only implements XML 1.0, so a
+   declared version outside the "1.x" family must be rejected rather than
+   silently accepted. A version matching the Fifth Edition's VersionNum
+   production ("1." followed by one or more digits) is accepted even
+   though Expat itself only implements 1.0, per GH #967's review thread:
+   rejecting "1.1" now would just have to be reverted once Expat tracks
+   the Fifth Edition, so it's let through rather than blocked twice. */
+START_TEST(test_xmldecl_wrong_version_number) {
+  expect_failure("<?xml version='2.3'?>\n"
+                 "<doc/>",
+                 XML_ERROR_XML_DECL,
+                 "Failed to reject XML declaration with version '2.3'");
+
+  XML_ParserReset(g_parser, NULL);
+  expect_failure("<?xml version='0.9'?>\n"
+                 "<doc/>",
+                 XML_ERROR_XML_DECL,
+                 "Failed to reject XML declaration with version '0.9'");
+
+  XML_ParserReset(g_parser, NULL);
+  expect_failure("<?xml version='10'?>\n"
+                 "<doc/>",
+                 XML_ERROR_XML_DECL,
+                 "Failed to reject XML declaration with version '10'");
+
+  XML_ParserReset(g_parser, NULL);
+  expect_failure(
+      "<?xml version='1.'?>\n"
+      "<doc/>",
+      XML_ERROR_XML_DECL,
+      "Failed to reject XML declaration with version '1.' (no digit)");
+}
+END_TEST
+
+/* GH #967's review pointed out that XML 1.0 Fifth Edition relaxed
+   VersionNum to "1." followed by one or more digits, so a version like
+   "1.1" should parse rather than being rejected as if it were "2.3". */
+START_TEST(test_xmldecl_accepts_1_x_version) {
+  const char *text = "<?xml version='1.1'?>\n<doc/>";
+  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+      == XML_STATUS_ERROR)
+    xml_failure(g_parser);
+}
+END_TEST
+
 /* Regression test for SF bug #584832. */
 START_TEST(test_unknown_encoding_internal_entity) {
   const char *text = "<?xml version='1.0' encoding='unsupported-encoding'?>\n"
@@ -6756,6 +6801,8 @@ make_basic_test_case(Suite *s) {
   tcase_add_test(tc_basic, test_xmldecl_missing_attr);
   tcase_add_test(tc_basic, test_xmldecl_missing_value);
   tcase_add_test(tc_basic, test_xmldecl_empty_version);
+  tcase_add_test(tc_basic, test_xmldecl_wrong_version_number);
+  tcase_add_test(tc_basic, test_xmldecl_accepts_1_x_version);
   tcase_add_test__if_xml_ge(tc_basic, test_unknown_encoding_internal_entity);
   tcase_add_test(tc_basic, test_unrecognised_encoding_internal_entity);
   tcase_add_test__ifdef_xml_dtd(tc_basic, test_ext_entity_set_encoding);
