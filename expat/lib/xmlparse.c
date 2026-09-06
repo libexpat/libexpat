@@ -336,7 +336,11 @@ typedef struct {
   XmlBigCount expandedSize;
   bool beingAnalyzed; /* on the resolveEntityClosureExpandedSize depth-first
                              search stack; used for cycle detection */
-#endif                /* XML_GE == 1 */
+  const XML_Char
+      *scanPtr; /* cursor position into the entity's replacement text; NULL when
+                   `textPtr` is NULL, else a pointer into the entity value,
+                   ranging from `.textPtr` to `.textPtr + .textLen`. */
+#endif          /* XML_GE == 1 */
 } ENTITY;
 
 typedef struct {
@@ -494,8 +498,7 @@ typedef struct entity_stats {
    resolveEntityClosureExpandedSize's depth-first search over the entity
    reference graph. */
 typedef struct {
-  ENTITY *entity;      /* entity currently being scanned */
-  const XML_Char *pos; /* cursor position into the entity's replacement text */
+  ENTITY *entity; /* entity currently being scanned */
 } ENTITY_ANALYSIS_TASK;
 #endif /* XML_GE == 1 */
 
@@ -666,6 +669,10 @@ static void entityTrackingOnOpen(XML_Parser parser, ENTITY *entity,
                                  int sourceLine);
 static void entityTrackingOnClose(XML_Parser parser, ENTITY *entity,
                                   int sourceLine);
+static void entityTrackingOnScanStart(XML_Parser parser, ENTITY *entity,
+                                      int sourceLine);
+static void entityTrackingOnScanStop(XML_Parser parser, ENTITY *entity,
+                                     int sourceLine);
 #endif /* XML_GE == 1 */
 
 static XML_Parser getRootParserOf(XML_Parser parser,
@@ -5974,8 +5981,10 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
             poolDiscard(&dtd->entityValuePool);
             return XML_ERROR_NO_MEMORY;
           }
-          parser->m_declEntity->textPtr = poolStart(&dtd->entityValuePool);
+          const XML_Char *const valueStart = poolStart(&dtd->entityValuePool);
+          parser->m_declEntity->textPtr = valueStart;
           parser->m_declEntity->textLen = poolLength(&dtd->entityValuePool);
+          parser->m_declEntity->scanPtr = valueStart;
           poolFinish(&dtd->entityValuePool);
           if (parser->m_entityDeclHandler) {
             *eventEndPP = s;
@@ -6797,7 +6806,8 @@ enum EntityScanResult {
 static enum EntityScanResult
 scanEntityText(XML_Parser parser, ENTITY *entity, const XML_Char **posPtr,
                XmlBigCount *expandedSize, ENTITY **blockerOut) {
-  *blockerOut = NULL;
+  if (blockerOut != NULL)
+    *blockerOut = NULL;
   const XML_Char refChar = entity->is_param ? XML_T('%') : XML_T('&');
   HASH_TABLE *const refTable
 #  ifdef XML_DTD
@@ -6875,7 +6885,8 @@ scanEntityText(XML_Parser parser, ENTITY *entity, const XML_Char **posPtr,
          report refEntity as a blocker so the caller can compute its size
          first. */
       *posPtr = pos;
-      *blockerOut = refEntity;
+      if (blockerOut != NULL)
+        *blockerOut = refEntity;
       return ENTITY_SCAN_BLOCKED;
     } else if (refEntity->expandedSize > 0) {
       /* refEntity is fully resolved: expandedSize holds its final expanded
@@ -6934,7 +6945,6 @@ resolveEntityClosureExpandedSize(XML_Parser parser, HASH_TABLE *table,
 
   size_t top = 0;
   stack[top].entity = root;
-  stack[top].pos = root->textPtr;
   root->beingAnalyzed = XML_TRUE;
   top++;
 
@@ -6943,8 +6953,27 @@ resolveEntityClosureExpandedSize(XML_Parser parser, HASH_TABLE *table,
     ENTITY *e = task->entity;
     XmlBigCount sizeSoFar = e->expandedSize;
     ENTITY *blocker = NULL;
+
+    entityTrackingOnScanStart(parser, e, __LINE__);
+
     const enum EntityScanResult scanResult
-        = scanEntityText(parser, e, &task->pos, &sizeSoFar, &blocker);
+        = scanEntityText(parser, e, &e->scanPtr, &sizeSoFar, &blocker);
+    switch (scanResult) {
+    case ENTITY_SCAN_COMPLETE:
+    case ENTITY_SCAN_BLOCKED:
+      /* Save the size accumulated so far; together with task->pos it is
+         the state that lets the scan resume once the blocker's size has
+         been computed. This is the one place where expandedSize briefly
+         holds neither 0 nor the final size - only while the entity is
+         on the stack, where the beingAnalyzed check in scanEntityText
+         keeps every other reader away from the intermediate value. */
+      e->expandedSize = sizeSoFar;
+      break;
+    default:
+      break;
+    }
+
+    entityTrackingOnScanStop(parser, e, __LINE__);
 
     switch (scanResult) {
     case ENTITY_SCAN_OVERFLOW:
@@ -6956,27 +6985,17 @@ resolveEntityClosureExpandedSize(XML_Parser parser, HASH_TABLE *table,
       return XML_ERROR_AMPLIFICATION_LIMIT_BREACH;
 
     case ENTITY_SCAN_COMPLETE:
-      e->expandedSize = sizeSoFar;
       e->beingAnalyzed = XML_FALSE;
       top--;
       break;
 
     case ENTITY_SCAN_BLOCKED:
-      /* Save the size accumulated so far; together with task->pos it is
-         the state that lets the scan resume once the blocker's size has
-         been computed. This is the one place where expandedSize briefly
-         holds neither 0 nor the final size - only while the entity is
-         on the stack, where the beingAnalyzed check in scanEntityText
-         keeps every other reader away from the intermediate value. */
-      e->expandedSize = sizeSoFar;
-
       /* Push the blocker. A blocker's expanded size is always still
          uncomputed and it is never already on the stack, so each entity
          is pushed at most once and top <= table->used. */
       assert(! blocker->beingAnalyzed);
       assert(top < table->used);
       stack[top].entity = blocker;
-      stack[top].pos = blocker->textPtr;
       blocker->beingAnalyzed = XML_TRUE;
       top++;
       break;
@@ -7722,7 +7741,8 @@ storeSelfEntityValue(XML_Parser parser, ENTITY *entity) {
     poolDiscard(pool);
     return XML_ERROR_NO_MEMORY;
   }
-  entity->textPtr = poolStart(pool);
+  const XML_Char *const valueStart = poolStart(pool);
+  entity->textPtr = valueStart;
   entity->textLen = poolLength(pool);
   poolFinish(pool);
 
@@ -8500,6 +8520,9 @@ copyEntityTable(XML_Parser oldParser, HASH_TABLE *newTable,
         return 0;
       newE->textPtr = tem;
       newE->textLen = oldE->textLen;
+#if XML_GE == 1
+      newE->scanPtr = tem;
+#endif /* XML_GE == 1 */
     }
     if (oldE->notation) {
       const XML_Char *tem = poolCopyString(newPool, oldE->notation);
@@ -9473,15 +9496,21 @@ entityTrackingReportStats(XML_Parser rootParser, ENTITY *entity,
       = limitingNeeded ? (maxLimitedDepth - /* make space for ellipis */ 2)
                        : candidateIndentDepth;
 
+  const ptrdiff_t scannedLength
+      = EXPAT_SAFE_PTR_DIFF(entity->scanPtr, entity->textPtr);
+  const char *const confidenceMarker
+      = ((size_t)scannedLength == entity->textLen) ? "!" : "?";
+
   fprintf(
       stderr,
-      "expat: Entities(%p): Count %9u, depth %2u/%2u %*s%s%s%s; %s length " EXPAT_FMT_SIZE_T(
-          "") " (xmlparse.c:%d)\n",
+      "expat: Entities(%p): Count %9u, depth %2u/%2u %*s%s%s%s; %s scanned " EXPAT_FMT_PTRDIFF_T(
+          "") "/" EXPAT_FMT_SIZE_T("") ", expanded " EXPAT_FMT_ULL("") "%s (xmlparse.c:%d)\n",
       (void *)rootParser, rootParser->m_entity_stats.countEverOpened,
       rootParser->m_entity_stats.currentDepth,
       rootParser->m_entity_stats.maximumDepthSeen, indentDepth * 2, "",
       ellipisOrEmpty, entity->is_param ? "%" : "&", entityName, action,
-      entity->textLen, sourceLine);
+      scannedLength, entity->textLen, entity->expandedSize, confidenceMarker,
+      sourceLine);
 }
 
 static void
@@ -9496,6 +9525,7 @@ entityTrackingOnOpen(XML_Parser originParser, ENTITY *entity, int sourceLine) {
     rootParser->m_entity_stats.maximumDepthSeen++;
   }
 
+  // NOTE: The space at the end of "OPEN " is for length alignment with "CLOSE"
   entityTrackingReportStats(rootParser, entity, "OPEN ", sourceLine);
 }
 
@@ -9506,6 +9536,29 @@ entityTrackingOnClose(XML_Parser originParser, ENTITY *entity, int sourceLine) {
 
   entityTrackingReportStats(rootParser, entity, "CLOSE", sourceLine);
   rootParser->m_entity_stats.currentDepth--;
+}
+
+static void
+entityTrackingOnScanStart(XML_Parser originParser, ENTITY *entity,
+                          int sourceLine) {
+  const XML_Parser rootParser = getRootParserOf(originParser, NULL);
+  assert(! rootParser->m_parentParser);
+
+  rootParser->m_entity_stats.currentDepth += 1;
+  entityTrackingReportStats(rootParser, entity, "START", sourceLine);
+  rootParser->m_entity_stats.currentDepth -= 1;
+}
+
+static void
+entityTrackingOnScanStop(XML_Parser originParser, ENTITY *entity,
+                         int sourceLine) {
+  const XML_Parser rootParser = getRootParserOf(originParser, NULL);
+  assert(! rootParser->m_parentParser);
+
+  rootParser->m_entity_stats.currentDepth += 1;
+  // NOTE: The space at the end of "STOP " is for length alignment with "START"
+  entityTrackingReportStats(rootParser, entity, "STOP ", sourceLine);
+  rootParser->m_entity_stats.currentDepth -= 1;
 }
 
 #endif /* XML_GE == 1 */
