@@ -178,7 +178,7 @@ externalEntityRefFilemap(XML_Parser parser, const XML_Char *context,
   int result;
   XML_Char *s;
   const XML_Char *filename;
-  XML_Parser entParser = XML_ExternalEntityParserCreate(parser, context, 0);
+  XML_Parser entParser = XML_ExternalEntityParserCreate(parser, context, NULL);
   int filemapRes;
   PROCESS_ARGS args;
   UNUSED_P(publicId);
