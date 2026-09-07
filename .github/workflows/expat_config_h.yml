@@ -65,3 +65,7 @@ jobs:
             <(sort < .github/workflows/data/expat_config_h_in__expected.txt) \
             <(sort < .github/workflows/data/expat_config_h_cmake__expected.txt) \
             || true
+
+    - name: Check for missing expat_config.h includes
+      run: |
+        exec .github/workflows/scripts/check_for_missing_config_header_includes.sh
