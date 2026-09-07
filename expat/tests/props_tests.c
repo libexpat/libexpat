@@ -39,6 +39,12 @@ __  __            _
 #include "expat.h"
 #include "internal.h" // for e.g. EXPAT_ALLOC_TRACKER_ACTIVATION_THRESHOLD_DEFAULT
 
+enum ExpectedType {
+  TYPE_BOOL,
+  TYPE_DOUBLE,
+  TYPE_UINT64,
+};
+
 START_TEST(test_props_getter_defaults) {
   // The test is not doing any parsing, so a single run
   // (with `g_chunkSize == 0`) is enough
@@ -179,6 +185,60 @@ START_TEST(test_props_getter_error_parser_null) {
 }
 END_TEST
 
+START_TEST(test_props_getter_error_invalid_type) {
+  // The test is not doing any parsing, so a single run
+  // (with `g_chunkSize == 0`) is enough
+  if (g_chunkSize != 0)
+    return;
+
+  struct TestCase {
+    enum XML_PARSER_PROPERTY key;
+    enum ExpectedType expectedType;
+  };
+
+  struct TestCase cases[] = {
+#if XML_GE == 1
+      {XML_PROP_ALLOC_TRACKER_ACTIVATION_THRESHOLD, TYPE_UINT64},
+      {XML_PROP_ALLOC_TRACKER_MAXIMUM_AMPLIFICATION, TYPE_DOUBLE},
+      {XML_PROP_BILLION_LAUGHS_ACTIVATION_THRESHOLD, TYPE_UINT64},
+      {XML_PROP_BILLION_LAUGHS_MAXIMUM_AMPLIFICATION, TYPE_DOUBLE},
+#endif
+      {XML_PROP_REPARSE_DEFERRAL_ENABLED, TYPE_BOOL},
+  };
+
+  XML_Bool dummyBool = XML_FALSE;
+  double dummyDouble = 123.456;
+  uint64_t dummyUInt64 = 123;
+
+  XML_Parser parser = XML_ParserCreate(NULL);
+  assert_true(parser != NULL);
+
+  for (size_t i = 0; i < sizeof(cases) / sizeof(cases[0]); i++) {
+    struct TestCase *const testCase = cases + i;
+    set_subtest("property %d", (int)testCase->key);
+
+    const enum XML_Prop_Error expectedBoolError
+        = (testCase->expectedType == TYPE_BOOL) ? XML_PROP_ERROR_NONE
+                                                : XML_PROP_ERROR_INVALID_TYPE;
+    const enum XML_Prop_Error expectedDoubleError
+        = (testCase->expectedType == TYPE_DOUBLE) ? XML_PROP_ERROR_NONE
+                                                  : XML_PROP_ERROR_INVALID_TYPE;
+    const enum XML_Prop_Error expectedUInt64Error
+        = (testCase->expectedType == TYPE_UINT64) ? XML_PROP_ERROR_NONE
+                                                  : XML_PROP_ERROR_INVALID_TYPE;
+
+    assert_true(XML_GetPropertyBool(parser, testCase->key, &dummyBool)
+                == expectedBoolError);
+    assert_true(XML_GetPropertyDouble(parser, testCase->key, &dummyDouble)
+                == expectedDoubleError);
+    assert_true(XML_GetPropertyUInt64(parser, testCase->key, &dummyUInt64)
+                == expectedUInt64Error);
+  }
+
+  XML_ParserFree(parser);
+}
+END_TEST
+
 void
 make_props_test_case(Suite *s) {
   TCase *const tc_props = tcase_create("properties tests");
@@ -186,4 +246,5 @@ make_props_test_case(Suite *s) {
 
   tcase_add_test(tc_props, test_props_getter_defaults);
   tcase_add_test(tc_props, test_props_getter_error_parser_null);
+  tcase_add_test(tc_props, test_props_getter_error_invalid_type);
 }
