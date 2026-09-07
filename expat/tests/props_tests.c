@@ -534,6 +534,27 @@ START_TEST(test_props_setter_error_parser_not_root) {
 }
 END_TEST
 
+START_TEST(test_props_setter_error_invalid_key) {
+  // The test is not doing any parsing, so a single run
+  // (with `g_chunkSize == 0`) is enough
+  if (g_chunkSize != 0)
+    return;
+
+  XML_Parser parser = XML_ParserCreate(NULL);
+  assert_true(parser != NULL);
+
+  assert_true(XML_SetPropertyBool(parser, XML_PROP_INVALID,
+                                  ! g_reparseDeferralEnabledDefault)
+              == XML_PROP_ERROR_INVALID_KEY);
+  assert_true(XML_SetPropertyDouble(parser, XML_PROP_INVALID, 123.456)
+              == XML_PROP_ERROR_INVALID_KEY);
+  assert_true(XML_SetPropertyUInt64(parser, XML_PROP_INVALID, 123)
+              == XML_PROP_ERROR_INVALID_KEY);
+
+  XML_ParserFree(parser);
+}
+END_TEST
+
 void
 make_props_test_case(Suite *s) {
   TCase *const tc_props = tcase_create("properties tests");
@@ -548,4 +569,5 @@ make_props_test_case(Suite *s) {
   tcase_add_test(tc_props, test_props_setter_effective);
   tcase_add_test(tc_props, test_props_setter_error_parser_null);
   tcase_add_test(tc_props, test_props_setter_error_parser_not_root);
+  tcase_add_test(tc_props, test_props_setter_error_invalid_key);
 }
