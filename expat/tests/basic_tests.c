@@ -998,6 +998,50 @@ START_TEST(test_xmldecl_empty_version) {
 }
 END_TEST
 
+/* Regression test for GH #967: Expat only implements XML 1.0 Fourth
+   Edition, so a declared version outside the "1.x" family must be
+   rejected rather than silently accepted. A version matching the Fifth
+   Edition's VersionNum production ("1." followed by one or more digits)
+   is accepted even though Expat itself only implements 1.0 Fourth
+   Edition, per GH #967's review thread: rejecting "1.1" now would just
+   have to be reverted once Expat tracks the Fifth Edition, so it's let
+   through rather than blocked twice. */
+START_TEST(test_xmldecl_wrong_version_number) {
+  const char *const badVersions[] = {"2.3", "0.9", "10", "1.", "1", " 1.0 "};
+
+  for (size_t i = 0; i < sizeof(badVersions) / sizeof(badVersions[0]); i++) {
+    char doc[64];
+    snprintf(doc, sizeof(doc), "<?xml version='%s'?>\n<doc/>", badVersions[i]);
+    set_subtest("version='%s'", badVersions[i]);
+
+    XML_Parser parser = XML_ParserCreate(NULL);
+    assert_true(_XML_Parse_SINGLE_BYTES(parser, doc, (int)strlen(doc), XML_TRUE)
+                == XML_STATUS_ERROR);
+    assert_true(XML_GetErrorCode(parser) == XML_ERROR_XML_DECL);
+    XML_ParserFree(parser);
+  }
+}
+END_TEST
+
+/* GH #967's review pointed out that XML 1.0 Fifth Edition relaxed
+   VersionNum to "1." followed by one or more digits, so versions like
+   "1.1" and "1.123" should parse rather than being rejected. */
+START_TEST(test_xmldecl_accepts_1_x_version) {
+  const char *const goodVersions[] = {"1.1", "1.123"};
+
+  for (size_t i = 0; i < sizeof(goodVersions) / sizeof(goodVersions[0]); i++) {
+    char doc[64];
+    snprintf(doc, sizeof(doc), "<?xml version='%s'?>\n<doc/>", goodVersions[i]);
+    set_subtest("version='%s'", goodVersions[i]);
+
+    XML_Parser parser = XML_ParserCreate(NULL);
+    assert_true(_XML_Parse_SINGLE_BYTES(parser, doc, (int)strlen(doc), XML_TRUE)
+                == XML_STATUS_OK);
+    XML_ParserFree(parser);
+  }
+}
+END_TEST
+
 /* Regression test for SF bug #584832. */
 START_TEST(test_unknown_encoding_internal_entity) {
   const char *text = "<?xml version='1.0' encoding='unsupported-encoding'?>\n"
@@ -6756,6 +6800,8 @@ make_basic_test_case(Suite *s) {
   tcase_add_test(tc_basic, test_xmldecl_missing_attr);
   tcase_add_test(tc_basic, test_xmldecl_missing_value);
   tcase_add_test(tc_basic, test_xmldecl_empty_version);
+  tcase_add_test(tc_basic, test_xmldecl_wrong_version_number);
+  tcase_add_test(tc_basic, test_xmldecl_accepts_1_x_version);
   tcase_add_test__if_xml_ge(tc_basic, test_unknown_encoding_internal_entity);
   tcase_add_test(tc_basic, test_unrecognised_encoding_internal_entity);
   tcase_add_test__ifdef_xml_dtd(tc_basic, test_ext_entity_set_encoding);

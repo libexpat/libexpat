@@ -1154,6 +1154,34 @@ static const char KW_yes[] = {ASCII_y, ASCII_e, ASCII_s, '\0'};
 
 static const char KW_no[] = {ASCII_n, ASCII_o, '\0'};
 
+static const char KW_1_dot[] = {ASCII_1, ASCII_PERIOD, '\0'};
+
+/* Checks a version pseudo-attribute value against the VersionNum production.
+   XML 1.0 Fourth Edition only allows the literal "1.0", but the Fifth
+   Edition relaxed this to "1." followed by one or more digits, since Expat
+   only implements 1.0 itself but plans to track the Fifth Edition's laxer
+   grammar here so that "1.1" and similar aren't rejected only to have that
+   rejection reverted later. Returns true for a value matching "1.[0-9]+".
+   val/valEnd bound the value itself; valEnd is the upper bound used when
+   decoding the individual characters between them. */
+static bool
+checkXmlDeclVersionNum(const ENCODING *enc, const char *val,
+                       const char *valEnd) {
+  if (valEnd - val < 2 * enc->minBytesPerChar
+      || ! XmlNameMatchesAscii(enc, val, val + 2 * enc->minBytesPerChar,
+                               KW_1_dot))
+    return false;
+  val += 2 * enc->minBytesPerChar;
+  if (val == valEnd)
+    return false;
+  for (; val != valEnd; val += enc->minBytesPerChar) {
+    int c = toAscii(enc, val, valEnd);
+    if (c < ASCII_0 || c > ASCII_9)
+      return false;
+  }
+  return true;
+}
+
 static int
 doParseXmlDecl(const ENCODING *(*encodingFinder)(const ENCODING *, const char *,
                                                  const char *),
@@ -1185,6 +1213,15 @@ doParseXmlDecl(const ENCODING *(*encodingFinder)(const ENCODING *, const char *,
        one character.  The encoding and standalone pseudo-attributes below
        already reject an empty value, so keep version consistent. */
     if (val == ptr - enc->minBytesPerChar) {
+      *badPtr = val;
+      return 0;
+    }
+    /* Expat implements XML 1.0 only, so any version outside the "1.0"/"1.x"
+       family is rejected. Following the Fifth Edition's VersionNum
+       production (rather than the Fourth Edition's exact "1.0") avoids
+       rejecting "1.1" now only to have to revert that once Expat tracks
+       the newer edition. */
+    if (! checkXmlDeclVersionNum(enc, val, ptr - enc->minBytesPerChar)) {
       *badPtr = val;
       return 0;
     }
