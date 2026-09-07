@@ -39,6 +39,8 @@ __  __            _
 #include "expat.h"
 #include "internal.h" // for e.g. EXPAT_ALLOC_TRACKER_ACTIVATION_THRESHOLD_DEFAULT
 
+#include <stdbool.h>
+
 enum ExpectedType {
   TYPE_BOOL,
   TYPE_DOUBLE,
@@ -302,6 +304,74 @@ START_TEST(test_props_getter_error_invalid_value) {
 }
 END_TEST
 
+START_TEST(test_props_setter_error_parser_not_root) {
+  // The test is not doing any parsing, so a single run
+  // (with `g_chunkSize == 0`) is enough
+  if (g_chunkSize != 0)
+    return;
+
+  struct TestCase {
+    enum XML_PARSER_PROPERTY key;
+    enum ExpectedType expectedType;
+    bool needsRootParser;
+  };
+
+  struct TestCase cases[] = {
+#if XML_GE == 1
+      {XML_PROP_ALLOC_TRACKER_ACTIVATION_THRESHOLD, TYPE_UINT64, true},
+      {XML_PROP_ALLOC_TRACKER_MAXIMUM_AMPLIFICATION, TYPE_DOUBLE, true},
+      {XML_PROP_BILLION_LAUGHS_ACTIVATION_THRESHOLD, TYPE_UINT64, true},
+      {XML_PROP_BILLION_LAUGHS_MAXIMUM_AMPLIFICATION, TYPE_DOUBLE, true},
+#endif
+      {XML_PROP_REPARSE_DEFERRAL_ENABLED, TYPE_BOOL, false},
+  };
+
+  XML_Parser parser = XML_ParserCreate(NULL);
+  assert_true(parser != NULL);
+  XML_Parser subParser = XML_ExternalEntityParserCreate(parser, NULL, NULL);
+#if defined(XML_DTD)
+  assert_true(subParser != NULL);
+
+  for (size_t i = 0; i < sizeof(cases) / sizeof(cases[0]); i++) {
+    struct TestCase *const testCase = cases + i;
+    set_subtest("property %d", (int)testCase->key);
+
+    const enum XML_Prop_Error expected
+        = (testCase->needsRootParser ? XML_PROP_ERROR_PARSER_NOT_ROOT
+                                     : XML_PROP_ERROR_NONE);
+
+    enum XML_Prop_Error actual
+        = XML_PROP_ERROR_INVALID_TYPE; // i.e. some value unequal to `expected`
+                                       // above
+    assert_true(actual != expected);   // self-test
+
+    switch (testCase->expectedType) {
+    case TYPE_BOOL:
+      actual = XML_SetPropertyBool(subParser, testCase->key,
+                                   ! g_reparseDeferralEnabledDefault);
+      break;
+    case TYPE_DOUBLE:
+      actual = XML_SetPropertyDouble(subParser, testCase->key, 456.789);
+      break;
+    case TYPE_UINT64:
+      actual = XML_SetPropertyUInt64(subParser, testCase->key, 456);
+      break;
+    default:
+      fail("unsupported type");
+    }
+
+    assert_true(actual == expected);
+  }
+
+  XML_ParserFree(subParser);
+#else // ! defined(XML_DTD)
+  assert_true(subParser == NULL);
+  UNUSED_P(cases);
+#endif
+  XML_ParserFree(parser);
+}
+END_TEST
+
 void
 make_props_test_case(Suite *s) {
   TCase *const tc_props = tcase_create("properties tests");
@@ -312,4 +382,6 @@ make_props_test_case(Suite *s) {
   tcase_add_test(tc_props, test_props_getter_error_invalid_key);
   tcase_add_test(tc_props, test_props_getter_error_invalid_type);
   tcase_add_test(tc_props, test_props_getter_error_invalid_value);
+
+  tcase_add_test(tc_props, test_props_setter_error_parser_not_root);
 }
