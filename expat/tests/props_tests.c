@@ -555,6 +555,59 @@ START_TEST(test_props_setter_error_invalid_key) {
 }
 END_TEST
 
+START_TEST(test_props_setter_error_invalid_type) {
+  // The test is not doing any parsing, so a single run
+  // (with `g_chunkSize == 0`) is enough
+  if (g_chunkSize != 0)
+    return;
+
+  struct TestCase {
+    enum XML_PARSER_PROPERTY key;
+    enum ExpectedType expectedType;
+  };
+
+  struct TestCase cases[] = {
+#if XML_GE == 1
+      {XML_PROP_ALLOC_TRACKER_ACTIVATION_THRESHOLD, TYPE_UINT64},
+      {XML_PROP_ALLOC_TRACKER_MAXIMUM_AMPLIFICATION, TYPE_DOUBLE},
+      {XML_PROP_BILLION_LAUGHS_ACTIVATION_THRESHOLD, TYPE_UINT64},
+      {XML_PROP_BILLION_LAUGHS_MAXIMUM_AMPLIFICATION, TYPE_DOUBLE},
+#endif
+      {XML_PROP_REPARSE_DEFERRAL_ENABLED, TYPE_BOOL},
+  };
+
+  XML_Parser parser = XML_ParserCreate(NULL);
+  assert_true(parser != NULL);
+
+  for (size_t i = 0; i < sizeof(cases) / sizeof(cases[0]); i++) {
+    struct TestCase *const testCase = cases + i;
+    set_subtest("property %d", (int)testCase->key);
+
+    const enum XML_Prop_Error expectedErrorBool
+        = ((testCase->expectedType == TYPE_BOOL) ? XML_PROP_ERROR_NONE
+                                                 : XML_PROP_ERROR_INVALID_TYPE);
+    const enum XML_Prop_Error expectedErrorDouble
+        = ((testCase->expectedType == TYPE_DOUBLE)
+               ? XML_PROP_ERROR_NONE
+               : XML_PROP_ERROR_INVALID_TYPE);
+    const enum XML_Prop_Error expectedErrorUInt64
+        = ((testCase->expectedType == TYPE_UINT64)
+               ? XML_PROP_ERROR_NONE
+               : XML_PROP_ERROR_INVALID_TYPE);
+
+    assert_true(XML_SetPropertyBool(parser, testCase->key,
+                                    ! g_reparseDeferralEnabledDefault)
+                == expectedErrorBool);
+    assert_true(XML_SetPropertyDouble(parser, testCase->key, 456.789)
+                == expectedErrorDouble);
+    assert_true(XML_SetPropertyUInt64(parser, testCase->key, 456)
+                == expectedErrorUInt64);
+  }
+
+  XML_ParserFree(parser);
+}
+END_TEST
+
 void
 make_props_test_case(Suite *s) {
   TCase *const tc_props = tcase_create("properties tests");
@@ -570,4 +623,5 @@ make_props_test_case(Suite *s) {
   tcase_add_test(tc_props, test_props_setter_error_parser_null);
   tcase_add_test(tc_props, test_props_setter_error_parser_not_root);
   tcase_add_test(tc_props, test_props_setter_error_invalid_key);
+  tcase_add_test(tc_props, test_props_setter_error_invalid_type);
 }
