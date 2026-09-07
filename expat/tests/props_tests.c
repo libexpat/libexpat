@@ -39,6 +39,7 @@ __  __            _
 #include "expat.h"
 #include "internal.h" // for e.g. EXPAT_ALLOC_TRACKER_ACTIVATION_THRESHOLD_DEFAULT
 
+#include <math.h>
 #include <stdbool.h>
 
 enum ExpectedType {
@@ -608,6 +609,58 @@ START_TEST(test_props_setter_error_invalid_type) {
 }
 END_TEST
 
+START_TEST(test_props_setter_error_invalid_value) {
+  // The test is not doing any parsing, so a single run
+  // (with `g_chunkSize == 0`) is enough
+  if (g_chunkSize != 0)
+    return;
+
+  XML_Parser parser = XML_ParserCreate(NULL);
+  assert_true(parser != NULL);
+
+#if XML_GE == 1
+  struct TestCase {
+    enum XML_PARSER_PROPERTY key;
+    // NOTE: Neither `uint64_t`- nor `XML_Bool`-based properties have any
+    //       invalid in-dimension values, so we are only testing `double`-based
+    //       property values here.
+    double value;
+    bool valueValid;
+  };
+
+  struct TestCase cases[] = {
+      // XML_PROP_ALLOC_TRACKER_MAXIMUM_AMPLIFICATION
+      {XML_PROP_ALLOC_TRACKER_MAXIMUM_AMPLIFICATION, -HUGE_VAL, false},
+      {XML_PROP_ALLOC_TRACKER_MAXIMUM_AMPLIFICATION, -1.0, false},
+      {XML_PROP_ALLOC_TRACKER_MAXIMUM_AMPLIFICATION, -0.9, false},
+      {XML_PROP_ALLOC_TRACKER_MAXIMUM_AMPLIFICATION, 0.0, false},
+      {XML_PROP_ALLOC_TRACKER_MAXIMUM_AMPLIFICATION, 0.9, false},
+      {XML_PROP_ALLOC_TRACKER_MAXIMUM_AMPLIFICATION, 1.0, true},
+      {XML_PROP_ALLOC_TRACKER_MAXIMUM_AMPLIFICATION, HUGE_VAL, true},
+      // XML_PROP_BILLION_LAUGHS_MAXIMUM_AMPLIFICATION
+      {XML_PROP_BILLION_LAUGHS_MAXIMUM_AMPLIFICATION, -HUGE_VAL, false},
+      {XML_PROP_BILLION_LAUGHS_MAXIMUM_AMPLIFICATION, -1.0, false},
+      {XML_PROP_BILLION_LAUGHS_MAXIMUM_AMPLIFICATION, -0.9, false},
+      {XML_PROP_BILLION_LAUGHS_MAXIMUM_AMPLIFICATION, 0.0, false},
+      {XML_PROP_BILLION_LAUGHS_MAXIMUM_AMPLIFICATION, 0.9, false},
+      {XML_PROP_BILLION_LAUGHS_MAXIMUM_AMPLIFICATION, 1.0, true},
+      {XML_PROP_BILLION_LAUGHS_MAXIMUM_AMPLIFICATION, HUGE_VAL, true},
+  };
+
+  for (size_t i = 0; i < sizeof(cases) / sizeof(cases[0]); i++) {
+    struct TestCase *const testCase = cases + i;
+    const enum XML_Prop_Error expected
+        = (testCase->valueValid ? XML_PROP_ERROR_NONE
+                                : XML_PROP_ERROR_INVALID_VALUE);
+    assert_true(XML_SetPropertyDouble(parser, testCase->key, testCase->value)
+                == expected);
+  }
+#endif
+
+  XML_ParserFree(parser);
+}
+END_TEST
+
 void
 make_props_test_case(Suite *s) {
   TCase *const tc_props = tcase_create("properties tests");
@@ -624,4 +677,5 @@ make_props_test_case(Suite *s) {
   tcase_add_test(tc_props, test_props_setter_error_parser_not_root);
   tcase_add_test(tc_props, test_props_setter_error_invalid_key);
   tcase_add_test(tc_props, test_props_setter_error_invalid_type);
+  tcase_add_test(tc_props, test_props_setter_error_invalid_value);
 }
