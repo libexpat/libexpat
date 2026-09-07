@@ -119,10 +119,71 @@ START_TEST(test_props_getter_defaults) {
 }
 END_TEST
 
+START_TEST(test_props_getter_error_parser_null) {
+  // The test is not doing any parsing, so a single run
+  // (with `g_chunkSize == 0`) is enough
+  if (g_chunkSize != 0)
+    return;
+
+  XML_Parser parserNonNull = XML_ParserCreate(NULL);
+  XML_Parser parsers[] = {parserNonNull, NULL};
+  assert_true(parserNonNull != NULL);
+
+  for (size_t i = 0; i < sizeof(parsers) / sizeof(parsers[0]); i++) {
+    XML_Parser parser = parsers[i];
+    const enum XML_Prop_Error validKeyExpectedError
+        = (parser == NULL) ? XML_PROP_ERROR_PARSER_NULL : XML_PROP_ERROR_NONE;
+    // NOTE: Currently the parser is checked for being `NULL` before the key is
+    //       being checked for being valid.
+    //       That precedence among errors is not considered part of the API
+    //       contract: either error would be fine to return.
+    const enum XML_Prop_Error invalidKeyExpectedError
+        = (parser == NULL) ? XML_PROP_ERROR_PARSER_NULL
+                           : XML_PROP_ERROR_INVALID_KEY;
+
+    XML_Bool dummyBool = XML_FALSE;
+    double dummyDouble = 123.456;
+    uint64_t dummyUInt64 = 123;
+
+#if XML_GE == 1
+    assert_true(
+        XML_GetPropertyUInt64(
+            parser, XML_PROP_ALLOC_TRACKER_ACTIVATION_THRESHOLD, &dummyUInt64)
+        == validKeyExpectedError);
+    assert_true(
+        XML_GetPropertyDouble(
+            parser, XML_PROP_ALLOC_TRACKER_MAXIMUM_AMPLIFICATION, &dummyDouble)
+        == validKeyExpectedError);
+    assert_true(
+        XML_GetPropertyUInt64(
+            parser, XML_PROP_BILLION_LAUGHS_ACTIVATION_THRESHOLD, &dummyUInt64)
+        == validKeyExpectedError);
+    assert_true(
+        XML_GetPropertyDouble(
+            parser, XML_PROP_BILLION_LAUGHS_MAXIMUM_AMPLIFICATION, &dummyDouble)
+        == validKeyExpectedError);
+#endif
+    assert_true(XML_GetPropertyBool(parser, XML_PROP_REPARSE_DEFERRAL_ENABLED,
+                                    &dummyBool)
+                == validKeyExpectedError);
+
+    assert_true(XML_GetPropertyBool(parser, XML_PROP_INVALID, &dummyBool)
+                == invalidKeyExpectedError);
+    assert_true(XML_GetPropertyDouble(parser, XML_PROP_INVALID, &dummyDouble)
+                == invalidKeyExpectedError);
+    assert_true(XML_GetPropertyUInt64(parser, XML_PROP_INVALID, &dummyUInt64)
+                == invalidKeyExpectedError);
+  }
+
+  XML_ParserFree(parserNonNull);
+}
+END_TEST
+
 void
 make_props_test_case(Suite *s) {
   TCase *const tc_props = tcase_create("properties tests");
   suite_add_tcase(s, tc_props);
 
   tcase_add_test(tc_props, test_props_getter_defaults);
+  tcase_add_test(tc_props, test_props_getter_error_parser_null);
 }
