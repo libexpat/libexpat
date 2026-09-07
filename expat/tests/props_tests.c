@@ -239,6 +239,45 @@ START_TEST(test_props_getter_error_invalid_type) {
 }
 END_TEST
 
+START_TEST(test_props_getter_error_invalid_value) {
+  // The test is not doing any parsing, so a single run
+  // (with `g_chunkSize == 0`) is enough
+  if (g_chunkSize != 0)
+    return;
+
+  enum XML_PARSER_PROPERTY keys[] = {
+#if XML_GE == 1
+      XML_PROP_ALLOC_TRACKER_ACTIVATION_THRESHOLD,
+      XML_PROP_ALLOC_TRACKER_MAXIMUM_AMPLIFICATION,
+      XML_PROP_BILLION_LAUGHS_ACTIVATION_THRESHOLD,
+      XML_PROP_BILLION_LAUGHS_MAXIMUM_AMPLIFICATION,
+#endif
+      XML_PROP_REPARSE_DEFERRAL_ENABLED,
+  };
+
+  XML_Parser parser = XML_ParserCreate(NULL);
+  assert_true(parser != NULL);
+
+  for (size_t i = 0; i < sizeof(keys) / sizeof(keys[0]); i++) {
+    const enum XML_PARSER_PROPERTY key = keys[i];
+    set_subtest("property %d", (int)key);
+
+    // NOTE: Currently the value output pointer is checked for being `NULL`
+    //       before the key is being checked for being valid.
+    //       That precedence among errors is not considered part of the API
+    //       contract: either error would be fine to return.
+    assert_true(XML_GetPropertyBool(parser, key, NULL)
+                == XML_PROP_ERROR_INVALID_VALUE);
+    assert_true(XML_GetPropertyDouble(parser, key, NULL)
+                == XML_PROP_ERROR_INVALID_VALUE);
+    assert_true(XML_GetPropertyUInt64(parser, key, NULL)
+                == XML_PROP_ERROR_INVALID_VALUE);
+  }
+
+  XML_ParserFree(parser);
+}
+END_TEST
+
 void
 make_props_test_case(Suite *s) {
   TCase *const tc_props = tcase_create("properties tests");
@@ -247,4 +286,5 @@ make_props_test_case(Suite *s) {
   tcase_add_test(tc_props, test_props_getter_defaults);
   tcase_add_test(tc_props, test_props_getter_error_parser_null);
   tcase_add_test(tc_props, test_props_getter_error_invalid_type);
+  tcase_add_test(tc_props, test_props_getter_error_invalid_value);
 }
