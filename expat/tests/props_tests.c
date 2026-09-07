@@ -185,6 +185,30 @@ START_TEST(test_props_getter_error_parser_null) {
 }
 END_TEST
 
+START_TEST(test_props_getter_error_invalid_key) {
+  // The test is not doing any parsing, so a single run
+  // (with `g_chunkSize == 0`) is enough
+  if (g_chunkSize != 0)
+    return;
+
+  XML_Bool dummyBool = XML_FALSE;
+  double dummyDouble = 123.456;
+  uint64_t dummyUInt64 = 123;
+
+  XML_Parser parser = XML_ParserCreate(NULL);
+  assert_true(parser != NULL);
+
+  assert_true(XML_GetPropertyBool(parser, XML_PROP_INVALID, &dummyBool)
+              == XML_PROP_ERROR_INVALID_KEY);
+  assert_true(XML_GetPropertyDouble(parser, XML_PROP_INVALID, &dummyDouble)
+              == XML_PROP_ERROR_INVALID_KEY);
+  assert_true(XML_GetPropertyUInt64(parser, XML_PROP_INVALID, &dummyUInt64)
+              == XML_PROP_ERROR_INVALID_KEY);
+
+  XML_ParserFree(parser);
+}
+END_TEST
+
 START_TEST(test_props_getter_error_invalid_type) {
   // The test is not doing any parsing, so a single run
   // (with `g_chunkSize == 0`) is enough
@@ -285,6 +309,7 @@ make_props_test_case(Suite *s) {
 
   tcase_add_test(tc_props, test_props_getter_defaults);
   tcase_add_test(tc_props, test_props_getter_error_parser_null);
+  tcase_add_test(tc_props, test_props_getter_error_invalid_key);
   tcase_add_test(tc_props, test_props_getter_error_invalid_type);
   tcase_add_test(tc_props, test_props_getter_error_invalid_value);
 }
