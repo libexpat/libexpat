@@ -37,6 +37,8 @@
    SPDX-License-Identifier: MIT
 */
 
+#include "expat_config.h" // for off_t
+
 #include <sys/types.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
