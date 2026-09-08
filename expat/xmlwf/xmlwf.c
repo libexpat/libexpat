@@ -1351,18 +1351,27 @@ tmain(int argc, XML_Char **argv) {
       XML_SetUnknownEncodingHandler(parser, unknownEncoding, 0);
     const bool processingSuccess
         = XML_ProcessFile(parser, useStdin ? NULL : argv[i], processFlags);
+    bool closingSuccess = true;
     if (outputDir) {
       if (outputType == 'm')
         metaEndDocument(parser);
-      fclose(userData.fp);
-      if (! processingSuccess) {
+      closingSuccess = (fclose(userData.fp) == 0);
+      if (! closingSuccess)
+        tperror(outName);
+      if (! processingSuccess || ! closingSuccess) {
         tremove(outName);
       }
       free(outName);
     }
     XML_ParserFree(parser);
-    if (! processingSuccess) {
-      exitCode = XMLWF_EXIT_NOT_WELLFORMED;
+    if (! processingSuccess || ! closingSuccess) {
+      // NOTE: If both failed, the last error should determine the exit code.
+      //       Failure to close happened after failure to process.
+      if (! closingSuccess)
+        exitCode = XMLWF_EXIT_OUTPUT_ERROR;
+      else if (! processingSuccess)
+        exitCode = XMLWF_EXIT_NOT_WELLFORMED;
+
       cleanupUserData(&userData);
       if (! continueOnError) {
         break;
