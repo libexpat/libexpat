@@ -969,7 +969,7 @@ usage(const XML_Char *prog, int rc) {
       T("  0              the input files are well-formed and the output (if requested) was written successfully\n")
       T("  1              could not allocate data structures, signals a serious problem with execution environment\n")
       T("  2              one or more input files were not well-formed\n")
-      T("  3              could not create an output file\n")
+      T("  3              one or more output files could not be written\n")
       T("  4              command-line argument error\n")
       T("\n")
       T("xmlwf of libexpat is software libre, licensed under the MIT license.\n")
