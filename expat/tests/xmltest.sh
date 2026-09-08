@@ -172,3 +172,4 @@ done
 
 echo "Passed: $SUCCESS"
 echo "Failed: $ERROR"
+test "$ERROR" -eq 0
