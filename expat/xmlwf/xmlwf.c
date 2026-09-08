@@ -1349,19 +1349,19 @@ tmain(int argc, XML_Char **argv) {
     }
     if (windowsCodePages)
       XML_SetUnknownEncodingHandler(parser, unknownEncoding, 0);
-    const int result
+    const bool processingSuccess
         = XML_ProcessFile(parser, useStdin ? NULL : argv[i], processFlags);
     if (outputDir) {
       if (outputType == 'm')
         metaEndDocument(parser);
       fclose(userData.fp);
-      if (! result) {
+      if (! processingSuccess) {
         tremove(outName);
       }
       free(outName);
     }
     XML_ParserFree(parser);
-    if (! result) {
+    if (! processingSuccess) {
       exitCode = XMLWF_EXIT_NOT_WELLFORMED;
       cleanupUserData(&userData);
       if (! continueOnError) {

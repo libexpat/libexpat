@@ -266,7 +266,7 @@ externalEntityRefStream(XML_Parser parser, const XML_Char *context,
   return ret;
 }
 
-int
+bool
 XML_ProcessFile(XML_Parser parser, const XML_Char *filename, unsigned flags) {
   int result;
 
@@ -299,5 +299,5 @@ XML_ProcessFile(XML_Parser parser, const XML_Char *filename, unsigned flags) {
     }
   } else
     result = processStream(filename, parser);
-  return result;
+  return (bool)result;
 }

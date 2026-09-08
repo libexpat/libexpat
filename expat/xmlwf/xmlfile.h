@@ -35,6 +35,8 @@
    SPDX-License-Identifier: MIT
 */
 
+#include <stdbool.h>
+
 #define XML_MAP_FILE 01
 #define XML_EXTERNAL_ENTITIES 02
 
@@ -46,5 +48,5 @@
 
 extern int g_read_size_bytes;
 
-extern int XML_ProcessFile(XML_Parser parser, const XML_Char *filename,
-                           unsigned flags);
+extern bool XML_ProcessFile(XML_Parser parser, const XML_Char *filename,
+                            unsigned flags);
