@@ -30,7 +30,11 @@
 #
 # SPDX-License-Identifier: MIT
 
-./xmlwf/xmlwf_helpgen.py | sed \
+set -e
+
+cd "$(dirname "$(type -P "$0")")"
+
+./xmlwf_helpgen.py | sed \
         -e 's,usage: ,usage:,' \
         -e 's,  xmlwf,  %s,' \
         -e 's, \[-h | -v\],,' \
