@@ -933,7 +933,7 @@ usage(const XML_Char *prog, int rc) {
       T("  -w             enable support for [W]indows code pages\n")
       T("  -r             disable memory-mapping and use [r]ead calls instead\n")
       T("  -g BYTES       buffer size to request per call pair to XML_[G]etBuffer and read (default: 8 KiB)\n")
-      T("  -k             when processing multiple files, [k]eep processing after first file with error\n")
+      T("  -k             when processing multiple files, [k]eep processing after first file with error, and make the last error determine the exit code.\n")
       T("\n")
       T("output control arguments:\n")
       T("  -d DIRECTORY   output [d]estination directory\n")

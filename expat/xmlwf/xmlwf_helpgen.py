@@ -116,7 +116,10 @@ input_related.add_argument(
 input_related.add_argument(
     "-k",
     action="store_true",
-    help="when processing multiple files, [k]eep processing after first file with error",
+    help=(
+        "when processing multiple files, [k]eep processing after first file with error"
+        ", and make the last error determine the exit code."
+    ),
 )
 
 output_related = parser.add_argument_group("output control arguments")
