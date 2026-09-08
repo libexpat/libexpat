@@ -47,7 +47,7 @@
 #ifndef Expat_INCLUDED
 #  define Expat_INCLUDED 1
 
-#  include <stdint.h> // for uint8_t
+#  include <stdint.h> // for int64_t, uint8_t, uint64_t
 #  include <stdlib.h>
 #  include "expat_external.h"
 
@@ -769,6 +769,19 @@ typedef struct {
   XML_Index valueEnd;   /* Offset after the attribute value's last byte. */
 } XML_AttrInfo;
 
+/* Source file byte offsets for the start and end of attribute names and values.
+   The value indices are exclusive of surrounding quotes; thus in a UTF-8 source
+   file an attribute value of "blah" will yield:
+   info->valueEnd - info->valueStart = 4 bytes.
+   Added in Expat 2.9.0.
+*/
+typedef struct {
+  int64_t nameStart;  /* Offset to beginning of the attribute name. */
+  int64_t nameEnd;    /* Offset after the attribute name's last byte. */
+  int64_t valueStart; /* Offset to beginning of the attribute value. */
+  int64_t valueEnd;   /* Offset after the attribute value's last byte. */
+} XML_AttrInfo64;
+
 /* Returns an array of XML_AttrInfo structures for the attribute/value pairs
    passed in last call to the XML_StartElementHandler that were specified
    in the start-tag rather than defaulted. Each attribute/value pair counts
@@ -777,6 +790,8 @@ typedef struct {
 */
 XMLPARSEAPI(const XML_AttrInfo *)
 XML_GetAttributeInfo(XML_Parser parser);
+XMLPARSEAPI(const XML_AttrInfo64 *)
+XML_GetAttributeInfo64(XML_Parser parser);
 #  endif
 
 /* Parses some input. Returns XML_STATUS_ERROR if a fatal error is
@@ -962,14 +977,19 @@ XML_GetErrorCode(XML_Parser parser);
    Note: XML_GetCurrentByteIndex returns -1 to indicate an error.
 */
 XMLPARSEAPI(XML_Size) XML_GetCurrentLineNumber(XML_Parser parser);
+XMLPARSEAPI(uint64_t) XML_GetCurrentLineNumber64(XML_Parser parser);
 XMLPARSEAPI(XML_Size) XML_GetCurrentColumnNumber(XML_Parser parser);
+XMLPARSEAPI(uint64_t) XML_GetCurrentColumnNumber64(XML_Parser parser);
 XMLPARSEAPI(XML_Index) XML_GetCurrentByteIndex(XML_Parser parser);
+XMLPARSEAPI(int64_t) XML_GetCurrentByteIndex64(XML_Parser parser);
 
 /* Return the number of bytes in the current event.
    Returns 0 if the event is in an internal entity.
 */
 XMLPARSEAPI(int)
 XML_GetCurrentByteCount(XML_Parser parser);
+XMLPARSEAPI(uint64_t)
+XML_GetCurrentByteCount64(XML_Parser parser);
 
 /* If XML_CONTEXT_BYTES is >=1, returns the input buffer, sets
    the integer pointed to by offset to the offset within this buffer
@@ -983,6 +1003,8 @@ XML_GetCurrentByteCount(XML_Parser parser);
 */
 XMLPARSEAPI(const char *)
 XML_GetInputContext(XML_Parser parser, int *offset, int *size);
+XMLPARSEAPI(const char *)
+XML_GetInputContext64(XML_Parser parser, int64_t *offset, uint64_t *size);
 
 /* For backwards compatibility with previous versions. */
 #  define XML_GetErrorLineNumber XML_GetCurrentLineNumber

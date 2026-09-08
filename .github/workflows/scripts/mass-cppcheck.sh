@@ -46,6 +46,8 @@ for xml_context_bytes in 0 1024; do
             '-D__has_feature(x)=1'
             '-DEXPAT_FMT_SIZE_T(x)=%llu'
             '-DEXPAT_FMT_ULL(x)=%llu'
+            '-DPRId64="lld"'
+            '-DPRIu64="llu"'
             -DXML_CONTEXT_BYTES=${xml_context_bytes}
             -DXML_GE=${xml_ge}
         )

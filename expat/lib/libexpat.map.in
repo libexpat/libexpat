@@ -122,3 +122,13 @@ LIBEXPAT_2.8.0 {
  global:
   XML_SetHashSalt16Bytes;
 } LIBEXPAT_2.7.2;
+
+LIBEXPAT_2.9.0 {
+ global:
+@_EXPAT_COMMENT_ATTR_INFO@ XML_GetAttributeInfo64;
+  XML_GetCurrentByteCount64;
+  XML_GetCurrentByteIndex64;
+  XML_GetCurrentColumnNumber64;
+  XML_GetCurrentLineNumber64;
+  XML_GetInputContext64;
+} LIBEXPAT_2.8.0;
