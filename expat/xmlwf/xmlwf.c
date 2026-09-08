@@ -1194,7 +1194,6 @@ tmain(int argc, XML_Char **argv) {
   }
   for (; i < argc; i++) {
     XML_Char *outName = 0;
-    int result;
     XML_Parser parser;
     if (useNamespaces)
       parser = XML_ParserCreateNS(encoding, NSSEP);
@@ -1350,7 +1349,8 @@ tmain(int argc, XML_Char **argv) {
     }
     if (windowsCodePages)
       XML_SetUnknownEncodingHandler(parser, unknownEncoding, 0);
-    result = XML_ProcessFile(parser, useStdin ? NULL : argv[i], processFlags);
+    const int result
+        = XML_ProcessFile(parser, useStdin ? NULL : argv[i], processFlags);
     if (outputDir) {
       if (outputType == 'm')
         metaEndDocument(parser);
