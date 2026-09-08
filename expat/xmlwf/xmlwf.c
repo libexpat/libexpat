@@ -1195,6 +1195,7 @@ tmain(int argc, XML_Char **argv) {
   for (; i < argc; i++) {
     XML_Char *outName = 0;
     int result;
+    int outputError = 0;
     XML_Parser parser;
     if (useNamespaces)
       parser = XML_ParserCreateNS(encoding, NSSEP);
@@ -1354,8 +1355,13 @@ tmain(int argc, XML_Char **argv) {
     if (outputDir) {
       if (outputType == 'm')
         metaEndDocument(parser);
-      fclose(userData.fp);
-      if (! result) {
+      if (fclose(userData.fp) != 0) {
+        tperror(outName);
+        outputError = 1;
+        if (result && exitCode != XMLWF_EXIT_NOT_WELLFORMED)
+          exitCode = XMLWF_EXIT_OUTPUT_ERROR;
+      }
+      if (! result || outputError) {
         tremove(outName);
       }
       free(outName);
@@ -1367,6 +1373,8 @@ tmain(int argc, XML_Char **argv) {
       if (! continueOnError) {
         break;
       }
+    } else if (outputError && ! continueOnError) {
+      break;
     }
   }
   return exitCode;
