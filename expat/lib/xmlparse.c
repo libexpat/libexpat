@@ -2236,9 +2236,10 @@ XML_SetParamEntityParsing(XML_Parser parser,
 #endif
 }
 
-// DEPRECATED since Expat 2.8.0.
-int XMLCALL
-XML_SetHashSalt(XML_Parser parser, unsigned long hash_salt) {
+/* The body of XML_SetHashSalt, so that Expat's own tests can reach it
+   without tripping the deprecation of the public function. */
+XML_NONTESTING_STATIC int
+xmlSetHashSalt(XML_Parser parser, unsigned long hash_salt) {
   if (parser == NULL)
     return 0;
 
@@ -2262,6 +2263,12 @@ XML_SetHashSalt(XML_Parser parser, unsigned long hash_salt) {
   }
 
   return 1;
+}
+
+// DEPRECATED since Expat 2.8.0.
+int XMLCALL
+XML_SetHashSalt(XML_Parser parser, unsigned long hash_salt) {
+  return xmlSetHashSalt(parser, hash_salt);
 }
 
 XML_Bool XMLCALL

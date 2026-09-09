@@ -143,6 +143,9 @@ extern
 #endif
     XML_Bool g_reparseDeferralEnabledDefault; // written ONLY in runtests.c
 #if defined(XML_TESTING)
+
+int xmlSetHashSalt(XML_Parser parser, unsigned long hash_salt);
+
 void *expat_malloc(XML_Parser parser, size_t size, int sourceLine);
 void expat_free(XML_Parser parser, void *ptr, int sourceLine);
 void *expat_realloc(XML_Parser parser, void *ptr, size_t size, int sourceLine);
