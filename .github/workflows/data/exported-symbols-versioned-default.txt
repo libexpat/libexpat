@@ -15,6 +15,9 @@ XML_GetFeatureList@@LIBEXPAT_1.95.5
 XML_GetIdAttributeIndex@@LIBEXPAT_1.95.0
 XML_GetInputContext@@LIBEXPAT_1.95.0
 XML_GetParsingStatus@@LIBEXPAT_1.95.8
+XML_GetPropertyBool@@LIBEXPAT_2.9.0
+XML_GetPropertyDouble@@LIBEXPAT_2.9.0
+XML_GetPropertyUInt64@@LIBEXPAT_2.9.0
 XML_GetSpecifiedAttributeCount@@LIBEXPAT_1.1.0
 XML_MemFree@@LIBEXPAT_1.95.6
 XML_MemMalloc@@LIBEXPAT_1.95.6
@@ -56,6 +59,9 @@ XML_SetNotationDeclHandler@@LIBEXPAT_1.0.0
 XML_SetNotStandaloneHandler@@LIBEXPAT_1.1.0
 XML_SetParamEntityParsing@@LIBEXPAT_1.95.0
 XML_SetProcessingInstructionHandler@@LIBEXPAT_1.0.0
+XML_SetPropertyBool@@LIBEXPAT_2.9.0
+XML_SetPropertyDouble@@LIBEXPAT_2.9.0
+XML_SetPropertyUInt64@@LIBEXPAT_2.9.0
 XML_SetReparseDeferralEnabled@@LIBEXPAT_2.6.0
 XML_SetReturnNSTriplet@@LIBEXPAT_1.95.0
 XML_SetSkippedEntityHandler@@LIBEXPAT_1.95.4
