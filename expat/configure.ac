@@ -74,7 +74,19 @@ AC_CONFIG_SRCDIR([Makefile.in])
 AC_CONFIG_AUX_DIR([conftools])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CANONICAL_HOST
-AM_INIT_AUTOMAKE([dist-bzip2 dist-lzip dist-xz foreign subdir-objects])
+
+dnl NOTE: Macro AM_OPTIONAL_AUTOMAKE is available with Automake >=1.19
+dnl       and serves as our proxy for robust Automake >=1.19 detection.
+dnl       `dist-bzip3` was introduce with Automake 1.18 already but there
+dnl       is no robust way of checking for Automake >=1.18.
+m4_ifdef([AM_OPTIONAL_AUTOMAKE], [
+  AM_INIT_AUTOMAKE([dist-bzip2 dist-bzip3 dist-lzip dist-xz foreign subdir-objects])
+
+  dnl NOTE: Without this dummy call in the file, the `m4_ifdef` above never hits true
+  AM_OPTIONAL_AUTOMAKE([])
+], [
+  AM_INIT_AUTOMAKE([dist-bzip2            dist-lzip dist-xz foreign subdir-objects])
+])
 AM_MAINTAINER_MODE([enable])  # to allow argument --disable-maintainer-mode
 
 
