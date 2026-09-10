@@ -74,7 +74,7 @@ AC_CONFIG_SRCDIR([Makefile.in])
 AC_CONFIG_AUX_DIR([conftools])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CANONICAL_HOST
-AM_INIT_AUTOMAKE
+AM_INIT_AUTOMAKE([dist-bzip2 dist-lzip dist-xz foreign subdir-objects])
 AM_MAINTAINER_MODE([enable])  # to allow argument --disable-maintainer-mode
 
 
