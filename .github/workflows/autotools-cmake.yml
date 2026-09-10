@@ -106,6 +106,7 @@ jobs:
         brew install \
             autoconf \
             automake \
+            bzip3 \
             cmake \
             docbook2x \
             libtool \
