@@ -52,19 +52,15 @@
 */
 
 #ifndef XML_MIN_SIZE
-#  if ! defined(__cplusplus) && ! defined(inline)
+#  if ! defined(inline)
 #    ifdef __GNUC__
 #      define inline __inline
 #    endif /* __GNUC__ */
 #  endif
 #endif /* XML_MIN_SIZE */
 
-#ifdef __cplusplus
-#  define inline inline
-#else
-#  ifndef inline
-#    define inline
-#  endif
+#ifndef inline
+#  define inline
 #endif
 
 #if ! defined(XML_NONTESTING_STATIC)
@@ -124,10 +120,6 @@
 
 #include "expat.h" // so we can use type XML_Parser below
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 void _INTERNAL_trim_to_complete_utf8_characters(const char *from,
                                                 const char **fromLimRef);
 
@@ -150,8 +142,4 @@ void *expat_malloc(XML_Parser parser, size_t size, int sourceLine);
 void expat_free(XML_Parser parser, void *ptr, int sourceLine);
 void *expat_realloc(XML_Parser parser, void *ptr, size_t size, int sourceLine);
 extern unsigned int g_bytesScanned; // used for testing only
-#endif
-
-#ifdef __cplusplus
-}
 #endif
