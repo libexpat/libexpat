@@ -535,6 +535,114 @@ START_TEST(test_props_setter_error_parser_not_root) {
 }
 END_TEST
 
+START_TEST(test_props_setter_error_parser_started) {
+  // The test is not doing any (real) parsing, so a single run
+  // (with `g_chunkSize == 0`) is enough
+  if (g_chunkSize != 0)
+    return;
+
+  struct TestCase {
+    enum XML_Parser_Property key;
+    enum ExpectedType expectedType;
+  };
+
+  struct TestCase cases[] = {
+#if XML_GE == 1
+      {XML_PROP_ALLOC_TRACKER_ACTIVATION_THRESHOLD, TYPE_UINT64},
+      {XML_PROP_ALLOC_TRACKER_MAXIMUM_AMPLIFICATION, TYPE_DOUBLE},
+      {XML_PROP_BILLION_LAUGHS_ACTIVATION_THRESHOLD, TYPE_UINT64},
+      {XML_PROP_BILLION_LAUGHS_MAXIMUM_AMPLIFICATION, TYPE_DOUBLE},
+#endif
+      {XML_PROP_REPARSE_DEFERRAL_ENABLED, TYPE_BOOL},
+  };
+
+  XML_Parser parser = XML_ParserCreate(NULL);
+  assert_true(parser != NULL);
+
+  // Get the parser into state "parsing started"
+  XML_ParsingStatus parsingStatus;
+  XML_GetParsingStatus(parser, &parsingStatus);
+  assert_true(parsingStatus.parsing == XML_INITIALIZED); // Self-test
+  assert_true(_XML_Parse_SINGLE_BYTES(parser, "", 0, /*isFInal=*/XML_FALSE)
+              == XML_STATUS_OK);
+  XML_GetParsingStatus(parser, &parsingStatus);
+  assert_true(parsingStatus.parsing == XML_PARSING);
+
+  for (size_t i = 0; i < sizeof(cases) / sizeof(cases[0]); i++) {
+    struct TestCase *const testCase = cases + i;
+    set_subtest("property %d", (int)testCase->key);
+
+    switch (testCase->expectedType) {
+    case TYPE_BOOL: {
+      // Get original value
+      XML_Bool valueOne = ! g_reparseDeferralEnabledDefault;
+      assert_true(XML_GetPropertyBool(parser, testCase->key, &valueOne)
+                  == XML_PROP_ERROR_NONE);
+      const XML_Bool valueTwo = ((valueOne == XML_TRUE) ? XML_FALSE : XML_TRUE);
+      assert_true(valueTwo != valueOne); // self-test
+
+      // Test: Set with reported success
+      assert_true(XML_SetPropertyBool(parser, testCase->key, valueTwo)
+                  == XML_PROP_ERROR_NONE);
+      XML_Bool valueThree = valueOne;
+      assert_true(valueThree != valueTwo); // self-test
+
+      // Test: Whether the new value has become effective
+      assert_true(XML_GetPropertyBool(parser, testCase->key, &valueThree)
+                  == XML_PROP_ERROR_NONE);
+      assert_true(valueThree == valueTwo); // i.e. new value applied
+      break;
+    }
+    case TYPE_DOUBLE: {
+      // Get original value
+      double valueOne = 1.23;
+      assert_true(XML_GetPropertyDouble(parser, testCase->key, &valueOne)
+                  == XML_PROP_ERROR_NONE);
+      const double valueTwo = 4.56;
+      assert_true(valueTwo != valueOne); // self-test
+
+      // Test: Set with reported success
+      assert_true(XML_SetPropertyDouble(parser, testCase->key, valueTwo)
+                  == XML_PROP_ERROR_NONE);
+      double valueThree = 7.89;
+      assert_true(valueThree != valueTwo); // self-test
+
+      // Test: Whether the new value has become effective
+      assert_true(XML_GetPropertyDouble(parser, testCase->key, &valueThree)
+                  == XML_PROP_ERROR_NONE);
+      assert_true((float)valueThree
+                  == (float)valueTwo); // i.e. new value applied
+      break;
+    }
+    case TYPE_UINT64: {
+      // Get original value
+      uint64_t valueOne = 123;
+      assert_true(XML_GetPropertyUInt64(parser, testCase->key, &valueOne)
+                  == XML_PROP_ERROR_NONE);
+      const uint64_t valueTwo = 456;
+      assert_true(valueTwo != valueOne); // self-test
+
+      // Test: Set with reported success
+      assert_true(XML_SetPropertyUInt64(parser, testCase->key, valueTwo)
+                  == XML_PROP_ERROR_NONE);
+      uint64_t valueThree = 789;
+      assert_true(valueThree != valueTwo); // self-test
+
+      // Test: Whether the new value has become effective
+      assert_true(XML_GetPropertyUInt64(parser, testCase->key, &valueThree)
+                  == XML_PROP_ERROR_NONE);
+      assert_true(valueThree == valueTwo); // i.e. new value applied
+      break;
+    }
+    default:
+      fail("unsupported type");
+    }
+  }
+
+  XML_ParserFree(parser);
+}
+END_TEST
+
 START_TEST(test_props_setter_error_invalid_key) {
   // The test is not doing any parsing, so a single run
   // (with `g_chunkSize == 0`) is enough
@@ -675,6 +783,7 @@ make_props_test_case(Suite *s) {
   tcase_add_test(tc_props, test_props_setter_effective);
   tcase_add_test(tc_props, test_props_setter_error_parser_null);
   tcase_add_test(tc_props, test_props_setter_error_parser_not_root);
+  tcase_add_test(tc_props, test_props_setter_error_parser_started);
   tcase_add_test(tc_props, test_props_setter_error_invalid_key);
   tcase_add_test(tc_props, test_props_setter_error_invalid_type);
   tcase_add_test(tc_props, test_props_setter_error_invalid_value);
