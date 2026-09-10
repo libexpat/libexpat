@@ -40,10 +40,6 @@
 
 #  include "xmltok.h"
 
-#  ifdef __cplusplus
-extern "C" {
-#  endif
-
 enum {
   XML_ROLE_ERROR = -1,
   XML_ROLE_NONE = 0,
@@ -130,9 +126,5 @@ void XmlPrologStateInitExternalEntity(PROLOG_STATE *state);
 
 #  define XmlTokenRole(state, tok, ptr, end, enc)                              \
     (((state)->handler)(state, tok, ptr, end, enc))
-
-#  ifdef __cplusplus
-}
-#  endif
 
 #endif /* not XmlRole_INCLUDED */
