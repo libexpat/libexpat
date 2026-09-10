@@ -214,7 +214,7 @@ START_TEST(test_hash_collision) {
         "<d8>This triggers the table growth and collides with b2</d8>\n"
         "</doc>\n";
 
-  XML_SetHashSalt(g_parser, COLLIDING_HASH_SALT);
+  xmlSetHashSalt(g_parser, COLLIDING_HASH_SALT);
   if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
@@ -2402,7 +2402,7 @@ START_TEST(test_set_foreign_dtd) {
   ExtTest test_data = {"<!ELEMENT doc (#PCDATA)*>", NULL, NULL};
 
   /* Check hash salt is passed through too */
-  XML_SetHashSalt(g_parser, 0x12345678);
+  xmlSetHashSalt(g_parser, 0x12345678);
   XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
   XML_SetUserData(g_parser, &test_data);
   XML_SetExternalEntityRefHandler(g_parser, external_entity_loader);
@@ -2421,7 +2421,7 @@ START_TEST(test_set_foreign_dtd) {
       != XML_ERROR_CANT_CHANGE_FEATURE_ONCE_PARSING)
     fail("Failed to reject late foreign DTD setting");
   /* Ditto for the hash salt */
-  if (XML_SetHashSalt(g_parser, 0x23456789))
+  if (xmlSetHashSalt(g_parser, 0x23456789))
     fail("Failed to reject late hash salt change");
 
   /* Now finish the parse */
@@ -2472,7 +2472,7 @@ START_TEST(test_foreign_dtd_with_doctype) {
   ExtTest test_data = {"<!ELEMENT doc (#PCDATA)*>", NULL, NULL};
 
   /* Check hash salt is passed through too */
-  XML_SetHashSalt(g_parser, 0x12345678);
+  xmlSetHashSalt(g_parser, 0x12345678);
   XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
   XML_SetUserData(g_parser, &test_data);
   XML_SetExternalEntityRefHandler(g_parser, external_entity_loader);
@@ -2491,7 +2491,7 @@ START_TEST(test_foreign_dtd_with_doctype) {
       != XML_ERROR_CANT_CHANGE_FEATURE_ONCE_PARSING)
     fail("Failed to reject late foreign DTD setting");
   /* Ditto for the hash salt */
-  if (XML_SetHashSalt(g_parser, 0x23456789))
+  if (xmlSetHashSalt(g_parser, 0x23456789))
     fail("Failed to reject late hash salt change");
 
   /* Now finish the parse */

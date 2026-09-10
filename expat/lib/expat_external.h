@@ -125,6 +125,17 @@
 #    define XML_ATTR_ALLOC_SIZE(x)
 #  endif
 
+/* Marks a function that Expat still provides but that callers should move off
+   of. */
+#  if defined(__clang__) || defined(__GNUC__)
+#    define XML_ATTR_DEPRECATED(message)                                       \
+      __attribute__((__deprecated__(message)))
+#  elif defined(_MSC_VER)
+#    define XML_ATTR_DEPRECATED(message) __declspec(deprecated(message))
+#  else
+#    define XML_ATTR_DEPRECATED(message) // empty i.e. no deprecation
+#  endif
+
 #  define XMLPARSEAPI(type) XMLIMPORT type XMLCALL
 
 #  ifdef __cplusplus

@@ -921,7 +921,9 @@ XML_SetParamEntityParsing(XML_Parser parser,
    Returns 1 if successful, 0 when called after parsing has started.
    Note: If parser == NULL, the function will do nothing and return 0.
    DEPRECATED since Expat 2.8.0.
+   Please use XML_SetHashSalt16Bytes instead.
 */
+XML_ATTR_DEPRECATED("please use XML_SetHashSalt16Bytes instead")
 XMLPARSEAPI(int)
 XML_SetHashSalt(XML_Parser parser, unsigned long hash_salt);
 
