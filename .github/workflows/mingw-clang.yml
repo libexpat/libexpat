@@ -110,8 +110,8 @@ jobs:
 
     - name: Install build dependencies (Clang-based MinGW toolchain)
       run: |-
-        version=20260826  # with LLVM/Clang 23.0.1
-        sha256sum=cee8d2ce3da5145ce4dc882e70d0b0719a783d53a99752c60948fc0659975a65
+        version=20260908  # with LLVM/Clang 23.1.1
+        sha256sum=2258c745e3155870c80793f3e8c80b28fbde11b9ff73c4c78783635b3440b092
 
         dirname="llvm-mingw-${version}-ucrt-ubuntu-22.04-x86_64"
         tarball="${dirname}.tar.xz"
