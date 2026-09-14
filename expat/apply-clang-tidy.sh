@@ -64,7 +64,6 @@ flags=(
     -Ilib/
 
     -DENCODING_FOR_FUZZING=UTF-8
-    -DXML_ATTR_INFO
     -DXML_CLANG_TIDY
     -DXML_DTD
     -DXML_GE
