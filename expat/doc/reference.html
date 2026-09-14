@@ -417,10 +417,6 @@
                 </li>
 
                 <li>
-                  <a href="#XML_GetAttributeInfo">XML_GetAttributeInfo</a>
-                </li>
-
-                <li>
                   <a href="#XML_SetEncoding">XML_SetEncoding</a>
                 </li>
 
@@ -854,16 +850,6 @@ make install
           On Windows, this should be set if Expat is going to be linked statically with
           the code that calls it; this is required to get all the right MSVC magic
           annotations correct. This is ignored on other platforms.
-        </dd>
-
-        <dt>
-          <a id="XML_ATTR_INFO" name="XML_ATTR_INFO">XML_ATTR_INFO</a>
-        </dt>
-
-        <dd>
-          If defined, makes the additional function <code><a href=
-          "#XML_GetAttributeInfo">XML_GetAttributeInfo</a></code> available for reporting
-          attribute byte offsets.
         </dd>
       </dl>
 
@@ -3602,38 +3588,6 @@ XML_GetIdAttributeIndex(XML_Parser p);
         or -1 if there is no ID attribute. If called inside a start handler, then that
         means the current call.
       </div>
-
-      <h4 id="XML_GetAttributeInfo">
-        XML_GetAttributeInfo
-      </h4>
-
-      <pre class="fcndec">
-const XML_AttrInfo * XMLCALL
-XML_GetAttributeInfo(XML_Parser parser);
-</pre>
-
-      <pre class="signature">
-typedef struct {
-  XML_Index  nameStart;  /* Offset to beginning of the attribute name. */
-  XML_Index  nameEnd;    /* Offset after the attribute name's last byte. */
-  XML_Index  valueStart; /* Offset to beginning of the attribute value. */
-  XML_Index  valueEnd;   /* Offset after the attribute value's last byte. */
-} XML_AttrInfo;
-</pre>
-      <div class="fcndef">
-        Returns an array of <code>XML_AttrInfo</code> structures for the attribute/value
-        pairs passed in the last call to the <code>XML_StartElementHandler</code> that
-        were specified in the start-tag rather than defaulted. Each attribute/value pair
-        counts as 1; thus the number of entries in the array is
-        <code>XML_GetSpecifiedAttributeCount(parser) / 2</code>.
-      </div>
-
-      <p>
-        <strong>Note:</strong> Type <code>XML_Index</code> is known to wrap around on
-        32bit platforms and 64bit Windows unless Expat has been compiled with
-        (non-default and uncommon) macro <code><a href=
-        "#XML_LARGE_SIZE">XML_LARGE_SIZE</a></code>.
-      </p>
 
       <h4 id="XML_SetEncoding">
         XML_SetEncoding
