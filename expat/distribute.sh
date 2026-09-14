@@ -43,6 +43,7 @@ make distcheck
 extensions=(
     gz
     bz2
+    bz3
     lz
     xz
 )
