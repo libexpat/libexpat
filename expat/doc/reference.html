@@ -330,6 +330,35 @@
             </li>
 
             <li>
+              <a href="#properties">Properties / Security Tuning</a>
+              <ul>
+                <li>
+                  <a href="#XML_GetPropertyBool">XML_GetPropertyBool</a>
+                </li>
+
+                <li>
+                  <a href="#XML_GetPropertyDouble">XML_GetPropertyDouble</a>
+                </li>
+
+                <li>
+                  <a href="#XML_GetPropertyUInt64">XML_GetPropertyUInt64</a>
+                </li>
+
+                <li>
+                  <a href="#XML_SetPropertyBool">XML_SetPropertyBool</a>
+                </li>
+
+                <li>
+                  <a href="#XML_SetPropertyDouble">XML_SetPropertyDouble</a>
+                </li>
+
+                <li>
+                  <a href="#XML_SetPropertyUInt64">XML_SetPropertyUInt64</a>
+                </li>
+              </ul>
+            </li>
+
+            <li>
               <a href="#attack-protection">Attack Protection</a>
               <ul>
                 <li>
@@ -3020,9 +3049,388 @@ XML_GetInputContext(XML_Parser p,
       </div>
 
       <h3>
+        <a id="properties" name="properties">Properties / Security Tuning</a>
+      </h3>
+
+      <p>
+        Expat 2.9.0 introduced a new Properties API. Think of properties as the control
+        knobs of a parser. The key motivations behind its introduction are:
+      </p>
+
+      <ul>
+        <li>to allow Expat to add more properties — both security-related and non-
+        security ones — in the future (without need to also add new related getter and
+        setter functions for each of them as was the case in the past),
+        </li>
+
+        <li>to allow users to read (not just to set) the current values, and
+        </li>
+
+        <li>to allow users to distinuish the different sources of error beyond a mere
+        "did not work".
+        </li>
+      </ul>
+
+      <p>
+        There is one setter function and one getter function — a pair — per supported
+        data type:
+      </p>
+
+      <ul>
+        <li>For <code>XML_Bool</code>:
+          <ul>
+            <li>
+              <code><a href="#XML_GetPropertyBool">XML_GetPropertyBool</a></code>
+            </li>
+
+            <li>
+              <code><a href="#XML_SetPropertyBool">XML_SetPropertyBool</a></code>
+            </li>
+          </ul>
+        </li>
+
+        <li>For <code>double</code>:
+          <ul>
+            <li>
+              <code><a href="#XML_GetPropertyDouble">XML_GetPropertyDouble</a></code>
+            </li>
+
+            <li>
+              <code><a href="#XML_SetPropertyDouble">XML_SetPropertyDouble</a></code>
+            </li>
+          </ul>
+        </li>
+
+        <li>For <code>uint64_t</code>:
+          <ul>
+            <li>
+              <code><a href="#XML_GetPropertyUInt64">XML_GetPropertyUInt64</a></code>
+            </li>
+
+            <li>
+              <code><a href="#XML_SetPropertyUInt64">XML_SetPropertyUInt64</a></code>
+            </li>
+          </ul>
+        </li>
+      </ul>
+
+      <p>
+        They all share these two key enums:
+      </p>
+
+      <h4 id="XML_Parser_Property">
+        XML_Parser_Property
+      </h4>
+
+      <pre>
+/* Added in Expat 2.9.0. */
+enum XML_Parser_Property {
+#  if XML_GE == 1
+  XML_PROP_ALLOC_TRACKER_ACTIVATION_THRESHOLD = 1,   // of type `uint64_t`
+  XML_PROP_ALLOC_TRACKER_MAXIMUM_AMPLIFICATION = 2,  // of type `double`
+  XML_PROP_BILLION_LAUGHS_ACTIVATION_THRESHOLD = 3,  // of type `uint64_t`
+  XML_PROP_BILLION_LAUGHS_MAXIMUM_AMPLIFICATION = 4, // of type `double`
+#  endif
+  XML_PROP_REPARSE_DEFERRAL_ENABLED = 5, // of type `XML_Bool`
+  /* more properties upcoming here */
+};</pre>
+      <h4 id="XML_Prop_Error">
+        XML_Prop_Error
+      </h4>
+
+      <pre>
+/* Added in 2.9.0. */
+enum XML_Prop_Error {
+  XML_PROP_ERROR_NONE = 0, // i.e. success
+
+  XML_PROP_ERROR_INVALID_KEY = 1,   // i.e. the property is not known at all
+  XML_PROP_ERROR_INVALID_TYPE = 2,  // i.e. the property is known but expects a
+                                    // different type (so a different
+                                    // getter/setter would need to be called)
+  XML_PROP_ERROR_INVALID_VALUE = 3, // i.e. the value is invalid (with a setter
+                                    // function) or a NULL-pointer (with a
+                                    // getter function)
+
+  XML_PROP_ERROR_PARSER_NULL = 4,     // i.e. the parser argument is NULL
+  XML_PROP_ERROR_PARSER_NOT_ROOT = 5, // i.e. the parser is not a root parser
+                                      // but a subparser (and a root parser is
+                                      // needed)
+
+  /* potentially more error codes upcoming here */
+};</pre>
+      <p>
+        Let us look at these functions in more detail:
+      </p>
+
+      <h4 id="XML_GetPropertyBool">
+        XML_GetPropertyBool
+      </h4>
+
+      <pre class="fcndec">
+/* Added in Expat 2.9.0. */
+enum XML_Prop_Error
+XML_GetPropertyBool(XML_Parser parser, enum XML_Parser_Property property,
+                    XML_Bool *value);
+</pre>
+      <div class="fcndef">
+        <p>
+          Writes the current value of boolean property <code>property</code> of parser
+          <code>parser</code> to output variable <code>value</code>. Supported properties
+          are:
+        </p>
+
+        <ul>
+          <li>
+            <code>XML_PROP_REPARSE_DEFERRAL_ENABLED</code> — whether <a href=
+            "#XML_SetReparseDeferralEnabled">reparse deferral</a> is active or not
+          </li>
+        </ul>
+
+        <p>
+          Both parameters <code>parser</code> and <code>value</code> must be
+          non-<code>NULL</code>. On success <code>XML_PROP_ERROR_NONE</code> is returned;
+          on error one of the other variants of <a href=
+          "#XML_Prop_Error">XML_Prop_Error</a> is returned.
+        </p>
+
+        <p>
+          <strong>Note:</strong> There may be more error codes introduced into <a href=
+          "#XML_Prop_Error">XML_Prop_Error</a> in the future, so user code must be robust
+          towards error codes from the future at runtime that were not known at compile
+          time.
+        </p>
+      </div>
+
+      <h4 id="XML_GetPropertyDouble">
+        XML_GetPropertyDouble
+      </h4>
+
+      <pre class="fcndec">
+/* Added in Expat 2.9.0. */
+enum XML_Prop_Error
+XML_GetPropertyDouble(XML_Parser parser, enum XML_Parser_Property property,
+                      double *value);
+</pre>
+      <div class="fcndef">
+        <p>
+          Writes the current value of floating point property <code>property</code> of
+          parser <code>parser</code> to output variable <code>value</code>. Supported
+          properties are:
+        </p>
+
+        <ul>
+          <li>
+            <code>XML_PROP_ALLOC_TRACKER_MAXIMUM_AMPLIFICATION</code> — the maximum
+            tolerated amplification with the <a href=
+            "#XML_SetAllocTrackerMaximumAmplification">allocation tracker</a>
+          </li>
+
+          <li>
+            <code>XML_PROP_BILLION_LAUGHS_MAXIMUM_AMPLIFICATION</code> — the maximum
+            tolerated amplification with <a href=
+            "#XML_SetBillionLaughsAttackProtectionMaximumAmplification">billion laughs
+            attack protection</a>
+          </li>
+        </ul>
+
+        <p>
+          Both parameters <code>parser</code> and <code>value</code> must be
+          non-<code>NULL</code>. On success <code>XML_PROP_ERROR_NONE</code> is returned;
+          on error one of the other variants of <a href=
+          "#XML_Prop_Error">XML_Prop_Error</a> is returned.
+        </p>
+
+        <p>
+          <strong>Note:</strong> There may be more error codes introduced into <a href=
+          "#XML_Prop_Error">XML_Prop_Error</a> in the future, so user code must be robust
+          towards error codes from the future at runtime that were not known at compile
+          time.
+        </p>
+      </div>
+
+      <h4 id="XML_GetPropertyUInt64">
+        XML_GetPropertyUInt64
+      </h4>
+
+      <pre class="fcndec">
+/* Added in Expat 2.9.0. */
+enum XML_Prop_Error
+XML_GetPropertyUInt64(XML_Parser parser, enum XML_Parser_Property property,
+                      uint64_t *value);
+</pre>
+      <div class="fcndef">
+        <p>
+          Writes the current value of integral property <code>property</code> of parser
+          <code>parser</code> to output variable <code>value</code>. Supported properties
+          are:
+        </p>
+
+        <ul>
+          <li>
+            <code>XML_PROP_ALLOC_TRACKER_ACTIVATION_THRESHOLD</code> — the activation
+            threshold in bytes with the <a href=
+            "#XML_SetAllocTrackerActivationThreshold">allocation tracker</a>
+          </li>
+
+          <li>
+            <code>XML_PROP_BILLION_LAUGHS_ACTIVATION_THRESHOLD</code> — the activation
+            threshold in bytes with <a href=
+            "#XML_SetBillionLaughsAttackProtectionActivationThreshold">billion laughs
+            attack protection</a>
+          </li>
+        </ul>
+
+        <p>
+          Both parameters <code>parser</code> and <code>value</code> must be
+          non-<code>NULL</code>. On success <code>XML_PROP_ERROR_NONE</code> is returned;
+          on error one of the other variants of <a href=
+          "#XML_Prop_Error">XML_Prop_Error</a> is returned.
+        </p>
+
+        <p>
+          <strong>Note:</strong> There may be more error codes introduced into <a href=
+          "#XML_Prop_Error">XML_Prop_Error</a> in the future, so user code must be robust
+          towards error codes from the future at runtime that were not known at compile
+          time.
+        </p>
+      </div>
+
+      <h3>
         <a id="attack-protection" name="attack-protection">Attack Protection</a><a id=
         "billion-laughs" name="billion-laughs"></a>
       </h3>
+
+      <h4 id="XML_SetPropertyBool">
+        XML_SetPropertyBool
+      </h4>
+
+      <pre class="fcndec">
+/* Added in Expat 2.9.0. */
+enum XML_Prop_Error
+XML_SetPropertyBool(XML_Parser parser, enum XML_Parser_Property property,
+                    XML_Bool value);
+</pre>
+      <div class="fcndef">
+        <p>
+          Applies the given value <code>value</code> to boolean property
+          <code>property</code> of parser <code>parser</code>. Supported properties are:
+        </p>
+
+        <ul>
+          <li>
+            <code>XML_PROP_REPARSE_DEFERRAL_ENABLED</code> — whether <a href=
+            "#XML_SetReparseDeferralEnabled">reparse deferral</a> is active or not
+          </li>
+        </ul>
+
+        <p>
+          Parameter <code>parser</code> must be non-<code>NULL</code>. On success
+          <code>XML_PROP_ERROR_NONE</code> is returned; on error one of the other
+          variants of <a href="#XML_Prop_Error">XML_Prop_Error</a> is returned.
+        </p>
+
+        <p>
+          <strong>Note:</strong> There may be more error codes introduced into <a href=
+          "#XML_Prop_Error">XML_Prop_Error</a> in the future, so user code must be robust
+          towards error codes from the future at runtime that were not known at compile
+          time.
+        </p>
+      </div>
+
+      <h4 id="XML_SetPropertyDouble">
+        XML_SetPropertyDouble
+      </h4>
+
+      <pre class="fcndec">
+/* Added in Expat 2.9.0. */
+enum XML_Prop_Error
+XML_SetPropertyDouble(XML_Parser parser, enum XML_Parser_Property property,
+                      double value);
+</pre>
+      <div class="fcndef">
+        <p>
+          Applies the given value <code>value</code> to floating point property
+          <code>property</code> of parser <code>parser</code>. Supported properties are:
+        </p>
+
+        <ul>
+          <li>
+            <code>XML_PROP_ALLOC_TRACKER_MAXIMUM_AMPLIFICATION</code> — the maximum
+            tolerated amplification with the <a href=
+            "#XML_SetAllocTrackerMaximumAmplification">allocation tracker</a>
+          </li>
+
+          <li>
+            <code>XML_PROP_BILLION_LAUGHS_MAXIMUM_AMPLIFICATION</code> — the maximum
+            tolerated amplification with <a href=
+            "#XML_SetBillionLaughsAttackProtectionMaximumAmplification">billion laughs
+            attack protection</a>
+          </li>
+        </ul>
+
+        <p>
+          Value <code>value</code> may or may not be cast to <code>float</code>
+          internally.
+        </p>
+
+        <p>
+          Parameter <code>parser</code> must be non-<code>NULL</code>. On success
+          <code>XML_PROP_ERROR_NONE</code> is returned; on error one of the other
+          variants of <a href="#XML_Prop_Error">XML_Prop_Error</a> is returned.
+        </p>
+
+        <p>
+          <strong>Note:</strong> There may be more error codes introduced into <a href=
+          "#XML_Prop_Error">XML_Prop_Error</a> in the future, so user code must be robust
+          towards error codes from the future at runtime that were not known at compile
+          time.
+        </p>
+      </div>
+
+      <h4 id="XML_SetPropertyUInt64">
+        XML_SetPropertyUInt64
+      </h4>
+
+      <pre class="fcndec">
+/* Added in Expat 2.9.0. */
+enum XML_Prop_Error
+XML_SetPropertyUInt64(XML_Parser parser, enum XML_Parser_Property property,
+                      uint64_t value);
+</pre>
+      <div class="fcndef">
+        <p>
+          Applies the given value <code>value</code> to integral property
+          <code>property</code> of parser <code>parser</code>. Supported properties are:
+        </p>
+
+        <ul>
+          <li>
+            <code>XML_PROP_ALLOC_TRACKER_ACTIVATION_THRESHOLD</code> — the activation
+            threshold in bytes with the <a href=
+            "#XML_SetAllocTrackerActivationThreshold">allocation tracker</a>
+          </li>
+
+          <li>
+            <code>XML_PROP_BILLION_LAUGHS_ACTIVATION_THRESHOLD</code> — the activation
+            threshold in bytes with <a href=
+            "#XML_SetBillionLaughsAttackProtectionActivationThreshold">billion laughs
+            attack protection</a>
+          </li>
+        </ul>
+
+        <p>
+          Parameter <code>parser</code> must be non-<code>NULL</code>. On success
+          <code>XML_PROP_ERROR_NONE</code> is returned; on error one of the other
+          variants of <a href="#XML_Prop_Error">XML_Prop_Error</a> is returned.
+        </p>
+
+        <p>
+          <strong>Note:</strong> There may be more error codes introduced into <a href=
+          "#XML_Prop_Error">XML_Prop_Error</a> in the future, so user code must be robust
+          towards error codes from the future at runtime that were not known at compile
+          time.
+        </p>
+      </div>
 
       <h4 id="XML_SetBillionLaughsAttackProtectionMaximumAmplification">
         XML_SetBillionLaughsAttackProtectionMaximumAmplification
