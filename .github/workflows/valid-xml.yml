@@ -68,20 +68,10 @@ jobs:
 
     - name: Enforce clean XML
       run: |
-        tidy_args=(
-            --indent 1
-            --tidy-mark no
-            --vertical-space yes
-            --wrap 90
-            --write-back yes
-        )
         set -x -o pipefail
 
-        # Re-indent XHTML
-        tidy "${tidy_args[@]}" expat/doc/reference.html
-
-        # Drop trailing whitespace
-        sed 's, \+$,,' -i.bak expat/doc/reference.html
+        # Re-format XHTML
+        ./expat/apply-htmltidy.sh
 
         # Replace leading tabs by spaces
         expand -i -t 2 expat/doc/xmlwf.xml | sponge expat/doc/xmlwf.xml
