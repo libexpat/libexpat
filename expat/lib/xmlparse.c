@@ -785,9 +785,6 @@ struct XML_ParserStruct {
   NS_ATT *m_nsAtts;
   unsigned long m_nsAttsVersion;
   unsigned char m_nsAttsPower;
-#ifdef XML_ATTR_INFO
-  XML_AttrInfo *m_attInfo;
-#endif
   POSITION m_position;
   STRING_POOL m_tempPool;
   STRING_POOL m_temp2Pool;
@@ -1389,20 +1386,9 @@ parserCreate(const XML_Char *encodingName,
     FREE(parser, parser);
     return NULL;
   }
-#ifdef XML_ATTR_INFO
-  parser->m_attInfo = MALLOC(parser, parser->m_attsSize * sizeof(XML_AttrInfo));
-  if (parser->m_attInfo == NULL) {
-    FREE(parser, parser->m_atts);
-    FREE(parser, parser);
-    return NULL;
-  }
-#endif
   parser->m_dataBuf = MALLOC(parser, INIT_DATA_BUF_SIZE * sizeof(XML_Char));
   if (parser->m_dataBuf == NULL) {
     FREE(parser, parser->m_atts);
-#ifdef XML_ATTR_INFO
-    FREE(parser, parser->m_attInfo);
-#endif
     FREE(parser, parser);
     return NULL;
   }
@@ -1415,9 +1401,6 @@ parserCreate(const XML_Char *encodingName,
     if (parser->m_dtd == NULL) {
       FREE(parser, parser->m_dataBuf);
       FREE(parser, parser->m_atts);
-#ifdef XML_ATTR_INFO
-      FREE(parser, parser->m_attInfo);
-#endif
       FREE(parser, parser);
       return NULL;
     }
@@ -1920,9 +1903,6 @@ XML_ParserFree(XML_Parser parser) {
 #endif /* XML_DTD */
     dtdDestroy(parser->m_dtd, (XML_Bool)! parser->m_parentParser, parser);
   FREE(parser, parser->m_atts);
-#ifdef XML_ATTR_INFO
-  FREE(parser, parser->m_attInfo);
-#endif
   FREE(parser, parser->m_groupConnector);
   // NOTE: We are avoiding FREE(..) here because parser->m_buffer
   //       is not being allocated with MALLOC(..) but with plain
@@ -2012,15 +1992,6 @@ XML_GetIdAttributeIndex(XML_Parser parser) {
     return -1;
   return parser->m_idAttIndex;
 }
-
-#ifdef XML_ATTR_INFO
-const XML_AttrInfo *XMLCALL
-XML_GetAttributeInfo(XML_Parser parser) {
-  if (parser == NULL)
-    return NULL;
-  return parser->m_attInfo;
-}
-#endif
 
 void XMLCALL
 XML_SetElementHandler(XML_Parser parser, XML_StartElementHandler start,
@@ -3072,9 +3043,6 @@ XML_GetFeatureList(void) {
 #ifdef XML_LARGE_SIZE
       {XML_FEATURE_LARGE_SIZE, XML_L("XML_LARGE_SIZE"), 0},
 #endif
-#ifdef XML_ATTR_INFO
-      {XML_FEATURE_ATTR_INFO, XML_L("XML_ATTR_INFO"), 0},
-#endif
 #if XML_GE == 1
       /* Added in Expat 2.4.0 for XML_DTD defined and
        * added in Expat 2.6.0 for XML_GE == 1. */
@@ -3966,21 +3934,6 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
       return XML_ERROR_NO_MEMORY;
     }
     parser->m_atts = temp;
-#ifdef XML_ATTR_INFO
-    /* Detect and prevent integer overflow. */
-    if (parser->m_attsSize > SIZE_MAX / sizeof(XML_AttrInfo)) {
-      parser->m_attsSize = oldAttsSize;
-      return XML_ERROR_NO_MEMORY;
-    }
-
-    XML_AttrInfo *const temp2 = REALLOC(
-        parser, parser->m_attInfo, parser->m_attsSize * sizeof(XML_AttrInfo));
-    if (temp2 == NULL) {
-      parser->m_attsSize = oldAttsSize;
-      return XML_ERROR_NO_MEMORY;
-    }
-    parser->m_attInfo = temp2;
-#endif
     if (n > oldAttsSize) {
       /* Detect and prevent integer overflow. */
       if (n > (size_t)INT_MAX)
@@ -3993,33 +3946,12 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
   const XML_Char **const appAtts = (const XML_Char **)parser->m_atts;
   for (size_t i = 0; i < n; i++) {
     ATTRIBUTE *currAtt = &parser->m_atts[i];
-#ifdef XML_ATTR_INFO
-    XML_AttrInfo *currAttInfo = &parser->m_attInfo[i];
-#endif
     /* add the name and value to the attribute list */
     ATTRIBUTE_ID *attId
         = getAttributeId(parser, enc, currAtt->name,
                          currAtt->name + XmlNameLength(enc, currAtt->name));
     if (! attId)
       return XML_ERROR_NO_MEMORY;
-#ifdef XML_ATTR_INFO
-    // NOTE: XML_Index is known to wrap around for >2 GiB content
-    //       on 32bit machines and 64bit Windows, unless (non-default and
-    //       uncommon) XML_LARGE_SIZE is defined.
-    //       That's a bug and it only lives on because we cannot break
-    //       ABI compatibility of public API.
-    currAttInfo->nameStart
-        = (XML_Index)(parser->m_parseEndByteIndex
-                      - (parser->m_parseEndPtr - currAtt->name));
-    currAttInfo->nameEnd
-        = currAttInfo->nameStart + XmlNameLength(enc, currAtt->name);
-    currAttInfo->valueStart
-        = (XML_Index)(parser->m_parseEndByteIndex
-                      - (parser->m_parseEndPtr - currAtt->valuePtr));
-    currAttInfo->valueEnd
-        = (XML_Index)(parser->m_parseEndByteIndex
-                      - (parser->m_parseEndPtr - currAtt->valueEnd));
-#endif
     /* Detect duplicate attributes by their QNames. This does not work when
        namespace processing is turned on and different prefixes for the same
        namespace are used. For this case we have a check further down.

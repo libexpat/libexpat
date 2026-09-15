@@ -72,7 +72,7 @@ EXPORTS
   XML_ResumeParser @64
   XML_GetParsingStatus @65
 ; added with version 2.1.0
-@_EXPAT_COMMENT_ATTR_INFO@ XML_GetAttributeInfo @66
+; XML_GetAttributeInfo @66
   XML_SetHashSalt @67
 ; internal @68 removed with version 2.3.1
 ; added with version 2.4.0
