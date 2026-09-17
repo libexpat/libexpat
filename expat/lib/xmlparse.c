@@ -2714,6 +2714,7 @@ XML_GetCurrentByteIndex64(XML_Parser parser) {
   return -1;
 }
 
+// DEPRECATED since Expat 2.9.0.
 XML_Index XMLCALL
 XML_GetCurrentByteIndex(XML_Parser parser) {
   // NOTE: XML_Index is known to wrap around for >2 GiB content
@@ -2734,6 +2735,7 @@ XML_GetCurrentByteCount64(XML_Parser parser) {
   return 0;
 }
 
+// DEPRECATED since Expat 2.9.0.
 int XMLCALL
 XML_GetCurrentByteCount(XML_Parser parser) {
   // NOTE: int is known to wrap around for >2 GiB content.
@@ -2762,6 +2764,7 @@ XML_GetInputContext64(XML_Parser parser, int64_t *offset, uint64_t *size) {
   return NULL;
 }
 
+// DEPRECATED since Expat 2.9.0.
 const char *XMLCALL
 XML_GetInputContext(XML_Parser parser, int *offset, int *size) {
 #if XML_CONTEXT_BYTES > 0
@@ -2806,6 +2809,7 @@ XML_GetCurrentLineNumber64(XML_Parser parser) {
   return parser->m_position.lineNumber + 1;
 }
 
+// DEPRECATED since Expat 2.9.0.
 XML_Size XMLCALL
 XML_GetCurrentLineNumber(XML_Parser parser) {
   // NOTE: XML_Size is known to wrap around for >4 GiB content
@@ -2828,6 +2832,7 @@ XML_GetCurrentColumnNumber64(XML_Parser parser) {
   return parser->m_position.columnNumber;
 }
 
+// DEPRECATED since Expat 2.9.0.
 XML_Size XMLCALL
 XML_GetCurrentColumnNumber(XML_Parser parser) {
   // NOTE: XML_Size is known to wrap around for >4 GiB content

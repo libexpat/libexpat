@@ -963,16 +963,20 @@ XML_GetErrorCode(XML_Parser parser);
    return 0 to indicate an error.
    Note: XML_GetCurrentByteIndex returns -1 to indicate an error.
 */
+XML_ATTR_DEPRECATED("please use XML_GetCurrentLineNumber64 instead")
 XMLPARSEAPI(XML_Size) XML_GetCurrentLineNumber(XML_Parser parser);
 XMLPARSEAPI(uint64_t) XML_GetCurrentLineNumber64(XML_Parser parser);
+XML_ATTR_DEPRECATED("please use XML_GetCurrentColumnNumber64 instead")
 XMLPARSEAPI(XML_Size) XML_GetCurrentColumnNumber(XML_Parser parser);
 XMLPARSEAPI(uint64_t) XML_GetCurrentColumnNumber64(XML_Parser parser);
+XML_ATTR_DEPRECATED("please use XML_GetCurrentByteIndex64 instead")
 XMLPARSEAPI(XML_Index) XML_GetCurrentByteIndex(XML_Parser parser);
 XMLPARSEAPI(int64_t) XML_GetCurrentByteIndex64(XML_Parser parser);
 
 /* Return the number of bytes in the current event.
    Returns 0 if the event is in an internal entity.
 */
+XML_ATTR_DEPRECATED("please use XML_GetCurrentByteCount64 instead")
 XMLPARSEAPI(int)
 XML_GetCurrentByteCount(XML_Parser parser);
 XMLPARSEAPI(uint64_t)
@@ -988,6 +992,7 @@ XML_GetCurrentByteCount64(XML_Parser parser);
    NOTE: The character pointer returned should not be used outside
    the handler that makes the call.
 */
+XML_ATTR_DEPRECATED("please use XML_GetInputContext64 instead")
 XMLPARSEAPI(const char *)
 XML_GetInputContext(XML_Parser parser, int *offset, int *size);
 XMLPARSEAPI(const char *)
