@@ -95,15 +95,16 @@ start_element_event_handler2(void *userData, const XML_Char *name,
                              const XML_Char **attr) {
   StructData *storage = (StructData *)userData;
   UNUSED_P(attr);
-  StructData_AddItem(storage, name, (int)XML_GetCurrentColumnNumber(g_parser),
-                     (int)XML_GetCurrentLineNumber(g_parser), STRUCT_START_TAG);
+  StructData_AddItem(storage, name, (int)XML_GetCurrentColumnNumber64(g_parser),
+                     (int)XML_GetCurrentLineNumber64(g_parser),
+                     STRUCT_START_TAG);
 }
 
 void XMLCALL
 end_element_event_handler2(void *userData, const XML_Char *name) {
   StructData *storage = (StructData *)userData;
-  StructData_AddItem(storage, name, (int)XML_GetCurrentColumnNumber(g_parser),
-                     (int)XML_GetCurrentLineNumber(g_parser), STRUCT_END_TAG);
+  StructData_AddItem(storage, name, (int)XML_GetCurrentColumnNumber64(g_parser),
+                     (int)XML_GetCurrentLineNumber64(g_parser), STRUCT_END_TAG);
 }
 
 void XMLCALL

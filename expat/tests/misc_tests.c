@@ -395,8 +395,8 @@ START_TEST(test_misc_deny_internal_entity_closing_doctype_issue_317) {
       XML_Parser parser;
       enum XML_Status parseResult;
       int setParamEntityResult;
-      XML_Size lineNumber;
-      XML_Size columnNumber;
+      uint64_t lineNumber;
+      uint64_t columnNumber;
 
       parser = XML_ParserCreate(NULL);
       setParamEntityResult
@@ -445,13 +445,13 @@ START_TEST(test_misc_deny_internal_entity_closing_doctype_issue_317) {
       if (XML_GetErrorCode(parser) != XML_ERROR_INVALID_TOKEN)
         fail("Error code does not match XML_ERROR_INVALID_TOKEN");
 
-      lineNumber = XML_GetCurrentLineNumber(parser);
+      lineNumber = XML_GetCurrentLineNumber64(parser);
       if (lineNumber != 6)
-        fail("XML_GetCurrentLineNumber does not work as expected.");
+        fail("XML_GetCurrentLineNumber64 does not work as expected.");
 
-      columnNumber = XML_GetCurrentColumnNumber(parser);
+      columnNumber = XML_GetCurrentColumnNumber64(parser);
       if (columnNumber != 0)
-        fail("XML_GetCurrentColumnNumber does not work as expected.");
+        fail("XML_GetCurrentColumnNumber64 does not work as expected.");
 
       XML_ParserFree(parser);
     }
@@ -722,8 +722,8 @@ START_TEST(test_misc_async_entity_rejected) {
     const char *doc;
     enum XML_Status expectedStatusNoGE;
     enum XML_Error expectedErrorNoGE;
-    XML_Size expectedErrorLine;
-    XML_Size expectedErrorColumn;
+    uint64_t expectedErrorLine;
+    uint16_t expectedErrorColumn;
   };
   const struct test_case cases[] = {
       // Opened by one entity, closed by another
@@ -782,8 +782,9 @@ START_TEST(test_misc_async_entity_rejected) {
                 == expectedStatus);
     assert_true(XML_GetErrorCode(parser) == expectedError);
 #if XML_GE == 1
-    assert_true(XML_GetCurrentLineNumber(parser) == testCase.expectedErrorLine);
-    assert_true(XML_GetCurrentColumnNumber(parser)
+    assert_true(XML_GetCurrentLineNumber64(parser)
+                == testCase.expectedErrorLine);
+    assert_true(XML_GetCurrentColumnNumber64(parser)
                 == testCase.expectedErrorColumn);
 #endif
     XML_ParserFree(parser);
