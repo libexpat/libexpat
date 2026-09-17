@@ -1665,7 +1665,7 @@ byte_character_handler(void *userData, const XML_Char *s, int len) {
     fail("CDATA length reported incorrectly");
   if (size != (uint64_t)data->total_string_len)
     fail("Context size is not full buffer");
-  if (XML_GetCurrentByteIndex(g_parser) != offset)
+  if (XML_GetCurrentByteIndex64(g_parser) != offset)
     fail("Character byte index incorrect");
   if (XML_GetCurrentByteCount(g_parser) != len)
     fail("Character byte count incorrect");
