@@ -3646,11 +3646,12 @@ END_TEST
 #define END_ELEMENT "</e>"
 START_TEST(test_byte_info_at_cdata) {
   const char *text = START_ELEMENT CDATA_TEXT END_ELEMENT;
-  int offset, size;
+  int64_t offset;
+  uint64_t size;
   ByteTestData data;
 
   /* Check initial context is empty */
-  if (XML_GetInputContext(g_parser, &offset, &size) != NULL)
+  if (XML_GetInputContext64(g_parser, &offset, &size) != NULL)
     fail("Unexpected context at start of parse");
 
   data.start_element_len = (int)strlen(START_ELEMENT);
