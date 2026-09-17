@@ -634,11 +634,6 @@ dup_original_string(XML_Parser parser) {
 
   assert_true(byte_count >= 0);
 
-  int offset = -1;
-  int size = -1;
-
-  const char *const context = XML_GetInputContext(parser, &offset, &size);
-
   int64_t offset64 = -1;
   uint64_t size64 = UINT64_MAX;
 
@@ -646,17 +641,12 @@ dup_original_string(XML_Parser parser) {
       = XML_GetInputContext64(parser, &offset64, &size64);
 
 #if XML_CONTEXT_BYTES > 0
-  assert_true(context != NULL);
-  assert_true(offset >= 0);
-  assert_true(size >= 0);
-
   assert_true(context64 != NULL);
   assert_true(offset64 != -1);
   assert_true(size64 != UINT64_MAX);
 
-  return portable_strndup(context + offset, byte_count);
+  return portable_strndup(context64 + offset64, byte_count);
 #else
-  assert_true(context == NULL);
   assert_true(context64 == NULL);
   return NULL;
 #endif
