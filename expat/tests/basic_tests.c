@@ -55,7 +55,8 @@
 #include "expat_config.h"
 
 #include <assert.h>
-#include <limits.h> // ULONG_MAX
+#include <inttypes.h> // PRIu64
+#include <limits.h>   // ULONG_MAX
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
@@ -644,16 +645,15 @@ START_TEST(test_line_number_after_parse) {
   const char *text = "<tag>\n"
                      "\n"
                      "\n</tag>";
-  XML_Size lineno;
+  uint64_t lineno;
 
   if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
-  lineno = XML_GetCurrentLineNumber(g_parser);
+  lineno = XML_GetCurrentLineNumber64(g_parser);
   if (lineno != 4) {
     char buffer[100];
-    snprintf(buffer, sizeof(buffer),
-             "expected 4 lines, saw %" XML_FMT_INT_MOD "u", lineno);
+    snprintf(buffer, sizeof(buffer), "expected 4 lines, saw %" PRIu64, lineno);
     fail(buffer);
   }
 }
@@ -662,16 +662,16 @@ END_TEST
 /* Regression test #2 for SF bug #653180. */
 START_TEST(test_column_number_after_parse) {
   const char *text = "<tag></tag>";
-  XML_Size colno;
+  uint64_t colno;
 
   if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
-  colno = XML_GetCurrentColumnNumber(g_parser);
+  colno = XML_GetCurrentColumnNumber64(g_parser);
   if (colno != 11) {
     char buffer[100];
-    snprintf(buffer, sizeof(buffer),
-             "expected 11 columns, saw %" XML_FMT_INT_MOD "u", colno);
+    snprintf(buffer, sizeof(buffer), "expected 11 columns, saw %" PRIu64,
+             colno);
     fail(buffer);
   }
 }
@@ -714,16 +714,15 @@ START_TEST(test_line_number_after_error) {
   const char *text = "<a>\n"
                      "  <b>\n"
                      "  </a>"; /* missing </b> */
-  XML_Size lineno;
+  uint64_t lineno;
   if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
       != XML_STATUS_ERROR)
     fail("Expected a parse error");
 
-  lineno = XML_GetCurrentLineNumber(g_parser);
+  lineno = XML_GetCurrentLineNumber64(g_parser);
   if (lineno != 3) {
     char buffer[100];
-    snprintf(buffer, sizeof(buffer),
-             "expected 3 lines, saw %" XML_FMT_INT_MOD "u", lineno);
+    snprintf(buffer, sizeof(buffer), "expected 3 lines, saw %" PRIu64, lineno);
     fail(buffer);
   }
 }
@@ -734,16 +733,15 @@ START_TEST(test_column_number_after_error) {
   const char *text = "<a>\n"
                      "  <b>\n"
                      "  </a>"; /* missing </b> */
-  XML_Size colno;
+  uint64_t colno;
   if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
       != XML_STATUS_ERROR)
     fail("Expected a parse error");
 
-  colno = XML_GetCurrentColumnNumber(g_parser);
+  colno = XML_GetCurrentColumnNumber64(g_parser);
   if (colno != 4) {
     char buffer[100];
-    snprintf(buffer, sizeof(buffer),
-             "expected 4 columns, saw %" XML_FMT_INT_MOD "u", colno);
+    snprintf(buffer, sizeof(buffer), "expected 4 columns, saw %" PRIu64, colno);
     fail(buffer);
   }
 }
