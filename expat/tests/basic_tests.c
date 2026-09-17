@@ -3906,13 +3906,13 @@ START_TEST(test_byte_info_at_end) {
   const char *text = "<doc></doc>";
 
   if (XML_GetCurrentByteIndex64(g_parser) != -1
-      || XML_GetCurrentByteCount(g_parser) != 0)
+      || XML_GetCurrentByteCount64(g_parser) != 0)
     fail("Byte index/count incorrect at start of parse");
   if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
   /* At end, the count will be zero and the index the end of string */
-  if (XML_GetCurrentByteCount(g_parser) != 0)
+  if (XML_GetCurrentByteCount64(g_parser) != 0)
     fail("Terminal byte count incorrect");
   if (XML_GetCurrentByteIndex64(g_parser) != (int64_t)strlen(text))
     fail("Terminal byte index incorrect");
@@ -3928,7 +3928,7 @@ START_TEST(test_byte_info_at_error) {
   if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
       == XML_STATUS_OK)
     fail("Syntax error not faulted");
-  if (XML_GetCurrentByteCount(g_parser) != 0)
+  if (XML_GetCurrentByteCount64(g_parser) != 0)
     fail("Error byte count incorrect");
   if (XML_GetCurrentByteIndex64(g_parser) != strlen(PRE_ERROR_STR))
     fail("Error byte index incorrect");
