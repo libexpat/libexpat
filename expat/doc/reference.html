@@ -1763,12 +1763,16 @@ XML_StopParser(XML_Parser p,
 </pre>
       <div class="fcndef">
         <p>
-          Stops parsing, causing <code><a href="#XML_Parse">XML_Parse</a></code> or
-          <code><a href="#XML_ParseBuffer">XML_ParseBuffer</a></code> to return. Must be
-          called from within a call-back handler, except when aborting (when
-          <code>resumable</code> is <code>XML_FALSE</code>) an already suspended parser.
-          Some call-backs may still follow because they would otherwise get lost,
-          including
+          Stops parsing as soon as possible, causing <code><a href=
+          "#XML_Parse">XML_Parse</a></code> or <code><a href=
+          "#XML_ParseBuffer">XML_ParseBuffer</a></code> to return. Must be called from
+          within a call-back handler, except when aborting (when <code>resumable</code>
+          is <code>XML_FALSE</code>) an already suspended parser.
+        </p>
+
+        <p>
+          <strong>Note:</strong> Some call-backs may still follow because they would
+          otherwise get lost, including
         </p>
 
         <ul>
