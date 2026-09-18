@@ -428,13 +428,11 @@ AS_IF([test "x${with_dev_urandom}" = "xyes"],
 
 
 AC_ARG_ENABLE([xml-attr-info],
-  [AS_HELP_STRING([--enable-xml-attr-info],
-     [Enable retrieving the byte offsets for attribute names and values @<:@default=no@:>@])],
+  [],
   [],
   [enable_xml_attr_info=no])
 AS_IF([test "x${enable_xml_attr_info}" = "xyes"],
-      [AC_DEFINE([XML_ATTR_INFO], 1,
-         [Define to allow retrieving the byte offsets for attribute names and values.])])
+      [AC_MSG_ERROR([Feature --enable-xml-attr-info has been removed. Please open a GitHub issue if you need it back.])])
 
 AC_ARG_ENABLE([xml-context],
   AS_HELP_STRING([--enable-xml-context @<:@COUNT@:>@],
@@ -495,12 +493,6 @@ dnl Configure CMake file templates
 dnl NOTE: The *_TRUE variables read here are Automake conditionals
 dnl       that are either set to "" when enabled or to "#" when disabled
 dnl       (because they are used to dynamically comment out certain things)
-AS_IF([test "x${enable_xml_attr_info}" = xyes],
-  [EXPAT_ATTR_INFO=ON
-   _EXPAT_COMMENT_ATTR_INFO=" "],
-  [EXPAT_ATTR_INFO=OFF
-   _EXPAT_COMMENT_ATTR_INFO="#"])
-AC_SUBST([_EXPAT_COMMENT_ATTR_INFO])
 EXPAT_DTD=ON
 _EXPAT_COMMENT_DTD_OR_GE=" "
 AC_SUBST([_EXPAT_COMMENT_DTD_OR_GE])
@@ -525,7 +517,6 @@ LIBDIR_BASENAME="$(basename "${libdir}")"
 SO_MAJOR="$(expr "${LIBCURRENT}" - "${LIBAGE}")"
 SO_MINOR="${LIBAGE}"
 SO_PATCH="${LIBREVISION}"
-AC_SUBST([EXPAT_ATTR_INFO])
 AC_SUBST([EXPAT_DTD])
 AC_SUBST([EXPAT_LARGE_SIZE])
 AC_SUBST([EXPAT_MIN_SIZE])
