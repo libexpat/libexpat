@@ -2273,6 +2273,40 @@ START_TEST(test_alloc_tracker_api) {
 }
 END_TEST
 
+START_TEST(test_alloc_tracker_api_float_round_trip) {
+  const float values[] = {1.0f, 1.1f, INFINITY};
+
+  for (size_t i = 0; i < sizeof(values) / sizeof(values[0]); i++) {
+    set_subtest("float %f", (double)i);
+    const float wanted = values[i];
+
+    XML_Parser parser = XML_ParserCreate(NULL);
+    assert_true(parser != NULL);
+
+    // Self-Test: Original value not already at target value
+    double actual = 123.456;
+    assert_true((float)actual != wanted);
+#if XML_GE == 1
+    assert_true(
+        XML_GetPropertyDouble(
+            parser, XML_PROP_ALLOC_TRACKER_MAXIMUM_AMPLIFICATION, &actual)
+        == XML_PROP_ERROR_NONE);
+    assert_true((float)actual != wanted); // Self-Test
+
+    // Test: Target value applied successfully
+    assert_true(XML_SetAllocTrackerMaximumAmplification(parser, wanted)
+                == XML_TRUE);
+    assert_true(
+        XML_GetPropertyDouble(
+            parser, XML_PROP_ALLOC_TRACKER_MAXIMUM_AMPLIFICATION, &actual)
+        == XML_PROP_ERROR_NONE);
+    assert_true((float)actual == wanted);
+#endif // XML_GE == 1
+    XML_ParserFree(parser);
+  }
+}
+END_TEST
+
 START_TEST(test_mem_api_cycle) {
   XML_Parser parser = XML_ParserCreate(NULL);
 
@@ -2386,6 +2420,7 @@ make_alloc_test_case(Suite *s) {
   tcase_add_test__if_xml_ge(tc_alloc, test_alloc_tracker_threshold);
   tcase_add_test__if_xml_ge(tc_alloc, test_alloc_tracker_getbuffer_unlimited);
   tcase_add_test__if_xml_ge(tc_alloc, test_alloc_tracker_api);
+  tcase_add_test__if_xml_ge(tc_alloc, test_alloc_tracker_api_float_round_trip);
 
   tcase_add_test(tc_alloc, test_mem_api_cycle);
   tcase_add_test__if_xml_ge(tc_alloc, test_mem_api_unlimited);
