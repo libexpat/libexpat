@@ -80,6 +80,6 @@ jobs:
         [[ $(type -P cppcheck) == /usr/local/bin/cppcheck ]]
         cppcheck --version
 
-    - name: Run Cppcheck (less than 6 minutes)
+    - name: Run Cppcheck (less than 11 minutes)
       run: |
         exec .github/workflows/scripts/mass-cppcheck.sh
