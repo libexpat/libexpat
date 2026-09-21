@@ -21,7 +21,7 @@
 !!                                   Sebastian Pipping -- Berlin, 2026-09-22 !!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-Release 2.8.5 XXX XXXXXXXXXX XX XXXX
+Release 2.8.5 Tue September 22 2026
         Security fixes:
            #1282  CVE-2026-93990 -- Reject high surrogates not followed by a
                     low surrogate during UTF-16 decoding; previously, malformed
