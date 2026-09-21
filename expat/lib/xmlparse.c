@@ -2996,9 +2996,6 @@ XML_GetFeatureList(void) {
       {XML_FEATURE_CONTEXT_BYTES, XML_L("XML_CONTEXT_BYTES"),
        XML_CONTEXT_BYTES},
 #endif
-#ifdef XML_MIN_SIZE
-      {XML_FEATURE_MIN_SIZE, XML_L("XML_MIN_SIZE"), 0},
-#endif
 #ifdef XML_NS
       {XML_FEATURE_NS, XML_L("XML_NS"), 0},
 #endif
