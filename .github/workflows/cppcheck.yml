@@ -53,7 +53,7 @@ jobs:
 
     - name: Build and install Cppcheck (less than 2 minutes)
       run: |
-        commit=e73bf44c3e49686b7495fab352d03a6c6075516b  # 2.21.0
+        commit=a436ca35ed1887bee789765122b65ed2d7a7e045  # 2.22.0
 
         cmake_args=(
             -G Ninja  # for faster builds
