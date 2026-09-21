@@ -75,6 +75,9 @@ Release 2.8.5 XXX XXXXXXXXXX XX XXXX
                     allocation
            #1376  docs: Emphasize that XML_StopParser is not immediate
            #1381  docs: Sync XML_FeatureEnum value list in doc/reference.html
+     #1356 #1361  Version info bumped from 13:4:12 (libexpat*.so.1.12.4)
+                    to 13:5:12 (libexpat*.so.1.12.5); see https://verbump.de/
+                    for what these numbers do
 
         Infrastructure:
            #1347  Add missing .gitignore entries
