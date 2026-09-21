@@ -8,6 +8,7 @@
 
    Copyright (c) 2022 Mark Brand <markbrand@google.com>
    Copyright (c) 2025 Sebastian Pipping <sebastian@pipping.org>
+   Copyright (c) 2026 Braian Plaku <braianplaku@gmail.com>
    Licensed under the MIT license:
 
    Permission is  hereby granted,  free of charge,  to any  person obtaining
