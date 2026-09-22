@@ -20,6 +20,7 @@
    Copyright (c) 2023      Sony Corporation / Snild Dolkow <snild@sony.com>
    Copyright (c) 2024      Taichi Haradaguchi <20001722@ymail.ne.jp>
    Copyright (c) 2025      Matthew Fernandez <matthew.fernandez@gmail.com>
+   Copyright (c) 2026      Braian Plaku <braianplaku@gmail.com>
    Licensed under the MIT license:
 
    Permission is  hereby granted,  free of charge,  to any  person obtaining
@@ -1101,7 +1102,7 @@ XML_SetReparseDeferralEnabled(XML_Parser parser, XML_Bool enabled);
 */
 #  define XML_MAJOR_VERSION 2
 #  define XML_MINOR_VERSION 8
-#  define XML_MICRO_VERSION 4
+#  define XML_MICRO_VERSION 5
 
 #  ifdef __cplusplus
 }

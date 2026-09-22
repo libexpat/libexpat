@@ -1,4 +1,4 @@
-/* 13c4e8da8fccffb0e8e599684e0d447ad14c1bb0b48792cf5dd77d8712301871 (2.8.4+)
+/* 0864fe2d216f47b742263b698bc051c865b342e8b820e42c234717098ea507e3 (2.8.5+)
                             __  __            _
                          ___\ \/ /_ __   __ _| |_
                         / _ \\  /| '_ \ / _` | __|
@@ -54,6 +54,8 @@
    Copyright (c) 2026      Darren Carreras <carrerasdarren@gmail.com>
    Copyright (c) 2026      Alberto Maschietto <albertomaschietto9@gmail.com>
    Copyright (c) 2026      Zeyou Liu <zeyouliu@tencent.com>
+   Copyright (c) 2026      Stan Ulbrych <stan@python.org>
+   Copyright (c) 2026      Braian Plaku <braianplaku@gmail.com>
    Licensed under the MIT license:
 
    Permission is  hereby granted,  free of charge,  to any  person obtaining

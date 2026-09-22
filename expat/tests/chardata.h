@@ -9,7 +9,7 @@
 
    Copyright (c) 2002-2004 Fred L. Drake, Jr. <fdrake@users.sourceforge.net>
    Copyright (c) 2017      Rhodri James <rhodri@wildebeest.org.uk>
-   Copyright (c) 2017      Sebastian Pipping <sebastian@pipping.org>
+   Copyright (c) 2017-2026 Sebastian Pipping <sebastian@pipping.org>
    Licensed under the MIT license:
 
    Permission is  hereby granted,  free of charge,  to any  person obtaining

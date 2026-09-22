@@ -27,6 +27,8 @@
    Copyright (c) 2023-2024 Sony Corporation / Snild Dolkow <snild@sony.com>
    Copyright (c) 2024      Taichi Haradaguchi <20001722@ymail.ne.jp>
    Copyright (c) 2026      Matthew Wozniczka <mattheww@simba.com>
+   Copyright (c) 2026      Braian Plaku <braianplaku@gmail.com>
+   Copyright (c) 2026      Florian Schmaus <florian.schmaus@codasip.com>
    Licensed under the MIT license:
 
    Permission is  hereby granted,  free of charge,  to any  person obtaining

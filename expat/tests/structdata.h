@@ -8,6 +8,7 @@
                                  |_| XML parser
 
    Copyright (c) 2017 Rhodri James <rhodri@wildebeest.org.uk>
+   Copyright (c) 2026 Sebastian Pipping <sebastian@pipping.org>
    Licensed under the MIT license:
 
    Permission is  hereby granted,  free of charge,  to any  person obtaining
