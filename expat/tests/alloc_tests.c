@@ -563,7 +563,8 @@ START_TEST(test_alloc_explicit_encoding) {
 }
 END_TEST
 
-/* Test robustness of XML_ParserReset() with a failing allocator when setting encoding */
+/* Test robustness of XML_ParserReset() with a failing allocator when setting
+ * encoding */
 START_TEST(test_alloc_reset_encoding) {
   int i;
   const int max_alloc_count = 5;
