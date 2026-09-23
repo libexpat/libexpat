@@ -1624,6 +1624,10 @@ XML_ParserReset(XML_Parser parser, const XML_Char *encodingName) {
   parser->m_protocolEncodingName = NULL;
   parserInit(parser, encodingName);
   dtdReset(parser->m_dtd, parser);
+  if (encodingName && ! parser->m_protocolEncodingName) {
+    parser->m_errorCode = XML_ERROR_NO_MEMORY;
+    return XML_FALSE;
+  }
   return XML_TRUE;
 }
 
