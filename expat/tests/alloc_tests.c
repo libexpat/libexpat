@@ -563,6 +563,24 @@ START_TEST(test_alloc_explicit_encoding) {
 }
 END_TEST
 
+/* Test robustness of XML_ParserReset() with a failing allocator when setting
+ * encoding */
+START_TEST(test_alloc_reset_encoding) {
+  int i;
+  const int max_alloc_count = 5;
+
+  for (i = 0; i < max_alloc_count; i++) {
+    g_allocation_count = i;
+    if (XML_ParserReset(g_parser, XCS("us-ascii")) == XML_TRUE)
+      break;
+  }
+  if (i == 0)
+    fail("Reset with encoding succeeded despite failing allocator");
+  else if (i == max_alloc_count)
+    fail("Reset with encoding failed at max allocation count");
+}
+END_TEST
+
 /* Test robustness of XML_SetBase against a failing allocator */
 START_TEST(test_alloc_set_base) {
   const XML_Char *new_base = XCS("/local/file/name.xml");
@@ -2336,6 +2354,7 @@ make_alloc_test_case(Suite *s) {
   tcase_add_test__ifdef_xml_dtd(tc_alloc, test_alloc_parameter_entity);
   tcase_add_test__ifdef_xml_dtd(tc_alloc, test_alloc_dtd_default_handling);
   tcase_add_test(tc_alloc, test_alloc_explicit_encoding);
+  tcase_add_test(tc_alloc, test_alloc_reset_encoding);
   tcase_add_test(tc_alloc, test_alloc_set_base);
   tcase_add_test(tc_alloc, test_alloc_realloc_buffer);
   tcase_add_test__if_xml_ge(tc_alloc, test_alloc_ext_entity_realloc_buffer);
