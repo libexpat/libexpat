@@ -2954,7 +2954,40 @@ enum XML_Error XMLCALL
 XML_GetErrorCode(XML_Parser p);
 </pre>
       <div class="fcndef">
-        Return what type of error has occurred.
+        <p>
+          Return what type of error has occurred inside the main Expat parsing machinery.
+        </p>
+
+        <p>
+          Only the following functions record the type of error for retrivial via
+          <code>XML_GetErrorCode</code>:
+        </p>
+
+        <ul>
+          <li>
+            <code><a href="#XML_GetBuffer">XML_GetBuffer</a></code>
+          </li>
+
+          <li>
+            <code><a href="#XML_Parse">XML_Parse</a></code>
+          </li>
+
+          <li>
+            <code><a href="#XML_ParseBuffer">XML_ParseBuffer</a></code>
+          </li>
+
+          <li>
+            <code><a href="#XML_ParserReset">XML_ParserReset</a></code>
+          </li>
+
+          <li>
+            <code><a href="#XML_ResumeParser">XML_ResumeParser</a></code>
+          </li>
+
+          <li>
+            <code><a href="#XML_StopParser">XML_StopParser</a></code>
+          </li>
+        </ul>
       </div>
 
       <h4 id="XML_ErrorString">
