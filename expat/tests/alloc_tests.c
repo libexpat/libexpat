@@ -555,6 +555,8 @@ START_TEST(test_alloc_explicit_encoding) {
     g_allocation_count = i;
     if (XML_SetEncoding(g_parser, XCS("us-ascii")) == XML_STATUS_OK)
       break;
+    if (XML_GetErrorCode(g_parser) != XML_ERROR_NO_MEMORY)
+      fail("Encoding failed without XML_ERROR_NO_MEMORY");
   }
   if (i == 0)
     fail("Encoding set despite failing allocator");
@@ -573,6 +575,8 @@ START_TEST(test_alloc_reset_encoding) {
     g_allocation_count = i;
     if (XML_ParserReset(g_parser, XCS("us-ascii")) == XML_TRUE)
       break;
+    if (XML_GetErrorCode(g_parser) != XML_ERROR_NO_MEMORY)
+      fail("Reset with encoding failed without XML_ERROR_NO_MEMORY");
   }
   if (i == 0)
     fail("Reset with encoding succeeded despite failing allocator");
@@ -591,6 +595,8 @@ START_TEST(test_alloc_set_base) {
     g_allocation_count = i;
     if (XML_SetBase(g_parser, new_base) == XML_STATUS_OK)
       break;
+    if (XML_GetErrorCode(g_parser) != XML_ERROR_NO_MEMORY)
+      fail("Base failed without XML_ERROR_NO_MEMORY");
   }
   if (i == 0)
     fail("Base set despite failing allocator");

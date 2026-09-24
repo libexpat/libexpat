@@ -1664,8 +1664,10 @@ XML_SetEncoding(XML_Parser parser, const XML_Char *encodingName) {
   else {
     /* Copy the new encoding name into allocated memory */
     parser->m_protocolEncodingName = copyString(encodingName, parser);
-    if (! parser->m_protocolEncodingName)
+    if (! parser->m_protocolEncodingName) {
+      parser->m_errorCode = XML_ERROR_NO_MEMORY;
       return XML_STATUS_ERROR;
+    }
   }
   return XML_STATUS_OK;
 }
@@ -1984,8 +1986,10 @@ XML_SetBase(XML_Parser parser, const XML_Char *p) {
     return XML_STATUS_ERROR;
   if (p) {
     p = poolCopyString(&parser->m_dtd->pool, p);
-    if (! p)
+    if (! p) {
+      parser->m_errorCode = XML_ERROR_NO_MEMORY;
       return XML_STATUS_ERROR;
+    }
     parser->m_curBase = p;
   } else
     parser->m_curBase = NULL;
@@ -8115,9 +8119,15 @@ hashTableClear(HASH_TABLE *table) {
 XML_NONTESTING_STATIC void
 hashTableDestroy(HASH_TABLE *table) {
   size_t i;
+  if (! table->v)
+    return;
   for (i = 0; i < table->size; i++)
     FREE(table->parser, table->v[i]);
   FREE(table->parser, table->v);
+  table->v = NULL;
+  table->size = 0;
+  table->used = 0;
+  table->power = 0;
 }
 
 XML_NONTESTING_STATIC void

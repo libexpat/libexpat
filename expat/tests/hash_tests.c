@@ -145,6 +145,13 @@ START_TEST(test_hash_table) {
   }
 
   hashTableDestroy(&table);
+  assert_true(table.v == NULL);
+  assert_true(table.size == 0);
+  assert_true(table.used == 0);
+  assert_true(table.power == 0);
+  /* Verify idempotency: repeated destruction should be a safe no-op */
+  hashTableDestroy(&table);
+
   XML_ParserFree(parser);
 }
 END_TEST
