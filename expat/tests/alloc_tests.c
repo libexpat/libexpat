@@ -2136,6 +2136,10 @@ START_TEST(test_alloc_tracker_size_recorded) {
     assert_true(ptr != NULL);
     assert_true(sizeRecordedFor(ptr) == 10);
 
+    assert_true(expat_realloc(parser, ptr, SIZE_MAX, -1) == NULL);
+
+    assert_true(sizeRecordedFor(ptr) == 10); // i.e. unchanged
+
     assert_true(expat_realloc(parser, ptr, SIZE_MAX / 2, -1) == NULL);
 
     assert_true(sizeRecordedFor(ptr) == 10); // i.e. unchanged
