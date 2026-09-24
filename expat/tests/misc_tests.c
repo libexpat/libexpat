@@ -55,6 +55,7 @@
 #include "expat_config.h"
 
 #include <assert.h>
+#include <stdint.h>
 #include <string.h>
 
 #include "expat.h"
@@ -394,8 +395,8 @@ START_TEST(test_misc_deny_internal_entity_closing_doctype_issue_317) {
       XML_Parser parser;
       enum XML_Status parseResult;
       int setParamEntityResult;
-      XML_Size lineNumber;
-      XML_Size columnNumber;
+      uint64_t lineNumber;
+      uint64_t columnNumber;
 
       parser = XML_ParserCreate(NULL);
       setParamEntityResult
@@ -444,13 +445,13 @@ START_TEST(test_misc_deny_internal_entity_closing_doctype_issue_317) {
       if (XML_GetErrorCode(parser) != XML_ERROR_INVALID_TOKEN)
         fail("Error code does not match XML_ERROR_INVALID_TOKEN");
 
-      lineNumber = XML_GetCurrentLineNumber(parser);
+      lineNumber = XML_GetCurrentLineNumber64(parser);
       if (lineNumber != 6)
-        fail("XML_GetCurrentLineNumber does not work as expected.");
+        fail("XML_GetCurrentLineNumber64 does not work as expected.");
 
-      columnNumber = XML_GetCurrentColumnNumber(parser);
+      columnNumber = XML_GetCurrentColumnNumber64(parser);
       if (columnNumber != 0)
-        fail("XML_GetCurrentColumnNumber does not work as expected.");
+        fail("XML_GetCurrentColumnNumber64 does not work as expected.");
 
       XML_ParserFree(parser);
     }
@@ -629,22 +630,23 @@ END_TEST
 // Inspired by function XML_OriginalString of Perl's XML::Parser
 static char *
 dup_original_string(XML_Parser parser) {
-  const int byte_count = XML_GetCurrentByteCount(parser);
+  const uint64_t byte_count = XML_GetCurrentByteCount64(parser);
 
-  assert_true(byte_count >= 0);
+  int64_t offset64 = -1;
+  uint64_t size64 = UINT64_MAX;
 
-  int offset = -1;
-  int size = -1;
-
-  const char *const context = XML_GetInputContext(parser, &offset, &size);
+  const char *const context64
+      = XML_GetInputContext64(parser, &offset64, &size64);
 
 #if XML_CONTEXT_BYTES > 0
-  assert_true(context != NULL);
-  assert_true(offset >= 0);
-  assert_true(size >= 0);
-  return portable_strndup(context + offset, byte_count);
+  assert_true(context64 != NULL);
+  assert_true(offset64 != -1);
+  assert_true(size64 != UINT64_MAX);
+
+  return portable_strndup(context64 + offset64, byte_count);
 #else
-  assert_true(context == NULL);
+  UNUSED_P(byte_count);
+  assert_true(context64 == NULL);
   return NULL;
 #endif
 }
@@ -709,8 +711,8 @@ START_TEST(test_misc_async_entity_rejected) {
     const char *doc;
     enum XML_Status expectedStatusNoGE;
     enum XML_Error expectedErrorNoGE;
-    XML_Size expectedErrorLine;
-    XML_Size expectedErrorColumn;
+    uint64_t expectedErrorLine;
+    uint16_t expectedErrorColumn;
   };
   const struct test_case cases[] = {
       // Opened by one entity, closed by another
@@ -769,8 +771,9 @@ START_TEST(test_misc_async_entity_rejected) {
                 == expectedStatus);
     assert_true(XML_GetErrorCode(parser) == expectedError);
 #if XML_GE == 1
-    assert_true(XML_GetCurrentLineNumber(parser) == testCase.expectedErrorLine);
-    assert_true(XML_GetCurrentColumnNumber(parser)
+    assert_true(XML_GetCurrentLineNumber64(parser)
+                == testCase.expectedErrorLine);
+    assert_true(XML_GetCurrentColumnNumber64(parser)
                 == testCase.expectedErrorColumn);
 #endif
     XML_ParserFree(parser);

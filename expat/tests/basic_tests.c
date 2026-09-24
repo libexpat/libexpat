@@ -57,7 +57,8 @@
 #include "expat_config.h"
 
 #include <assert.h>
-#include <limits.h> // ULONG_MAX
+#include <inttypes.h> // PRIu64
+#include <limits.h>   // ULONG_MAX
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
@@ -646,16 +647,15 @@ START_TEST(test_line_number_after_parse) {
   const char *text = "<tag>\n"
                      "\n"
                      "\n</tag>";
-  XML_Size lineno;
+  uint64_t lineno;
 
   if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
-  lineno = XML_GetCurrentLineNumber(g_parser);
+  lineno = XML_GetCurrentLineNumber64(g_parser);
   if (lineno != 4) {
     char buffer[100];
-    snprintf(buffer, sizeof(buffer),
-             "expected 4 lines, saw %" XML_FMT_INT_MOD "u", lineno);
+    snprintf(buffer, sizeof(buffer), "expected 4 lines, saw %" PRIu64, lineno);
     fail(buffer);
   }
 }
@@ -664,16 +664,16 @@ END_TEST
 /* Regression test #2 for SF bug #653180. */
 START_TEST(test_column_number_after_parse) {
   const char *text = "<tag></tag>";
-  XML_Size colno;
+  uint64_t colno;
 
   if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
-  colno = XML_GetCurrentColumnNumber(g_parser);
+  colno = XML_GetCurrentColumnNumber64(g_parser);
   if (colno != 11) {
     char buffer[100];
-    snprintf(buffer, sizeof(buffer),
-             "expected 11 columns, saw %" XML_FMT_INT_MOD "u", colno);
+    snprintf(buffer, sizeof(buffer), "expected 11 columns, saw %" PRIu64,
+             colno);
     fail(buffer);
   }
 }
@@ -716,16 +716,15 @@ START_TEST(test_line_number_after_error) {
   const char *text = "<a>\n"
                      "  <b>\n"
                      "  </a>"; /* missing </b> */
-  XML_Size lineno;
+  uint64_t lineno;
   if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
       != XML_STATUS_ERROR)
     fail("Expected a parse error");
 
-  lineno = XML_GetCurrentLineNumber(g_parser);
+  lineno = XML_GetCurrentLineNumber64(g_parser);
   if (lineno != 3) {
     char buffer[100];
-    snprintf(buffer, sizeof(buffer),
-             "expected 3 lines, saw %" XML_FMT_INT_MOD "u", lineno);
+    snprintf(buffer, sizeof(buffer), "expected 3 lines, saw %" PRIu64, lineno);
     fail(buffer);
   }
 }
@@ -736,16 +735,15 @@ START_TEST(test_column_number_after_error) {
   const char *text = "<a>\n"
                      "  <b>\n"
                      "  </a>"; /* missing </b> */
-  XML_Size colno;
+  uint64_t colno;
   if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
       != XML_STATUS_ERROR)
     fail("Expected a parse error");
 
-  colno = XML_GetCurrentColumnNumber(g_parser);
+  colno = XML_GetCurrentColumnNumber64(g_parser);
   if (colno != 4) {
     char buffer[100];
-    snprintf(buffer, sizeof(buffer),
-             "expected 4 columns, saw %" XML_FMT_INT_MOD "u", colno);
+    snprintf(buffer, sizeof(buffer), "expected 4 columns, saw %" PRIu64, colno);
     fail(buffer);
   }
 }
@@ -3907,16 +3905,16 @@ END_TEST
 START_TEST(test_byte_info_at_end) {
   const char *text = "<doc></doc>";
 
-  if (XML_GetCurrentByteIndex(g_parser) != -1
-      || XML_GetCurrentByteCount(g_parser) != 0)
+  if (XML_GetCurrentByteIndex64(g_parser) != -1
+      || XML_GetCurrentByteCount64(g_parser) != 0)
     fail("Byte index/count incorrect at start of parse");
   if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
   /* At end, the count will be zero and the index the end of string */
-  if (XML_GetCurrentByteCount(g_parser) != 0)
+  if (XML_GetCurrentByteCount64(g_parser) != 0)
     fail("Terminal byte count incorrect");
-  if (XML_GetCurrentByteIndex(g_parser) != (XML_Index)strlen(text))
+  if (XML_GetCurrentByteIndex64(g_parser) != (int64_t)strlen(text))
     fail("Terminal byte index incorrect");
 }
 END_TEST
@@ -3930,9 +3928,9 @@ START_TEST(test_byte_info_at_error) {
   if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
       == XML_STATUS_OK)
     fail("Syntax error not faulted");
-  if (XML_GetCurrentByteCount(g_parser) != 0)
+  if (XML_GetCurrentByteCount64(g_parser) != 0)
     fail("Error byte count incorrect");
-  if (XML_GetCurrentByteIndex(g_parser) != strlen(PRE_ERROR_STR))
+  if (XML_GetCurrentByteIndex64(g_parser) != strlen(PRE_ERROR_STR))
     fail("Error byte index incorrect");
 }
 END_TEST
@@ -3945,11 +3943,12 @@ END_TEST
 #define END_ELEMENT "</e>"
 START_TEST(test_byte_info_at_cdata) {
   const char *text = START_ELEMENT CDATA_TEXT END_ELEMENT;
-  int offset, size;
+  int64_t offset;
+  uint64_t size;
   ByteTestData data;
 
   /* Check initial context is empty */
-  if (XML_GetInputContext(g_parser, &offset, &size) != NULL)
+  if (XML_GetInputContext64(g_parser, &offset, &size) != NULL)
     fail("Unexpected context at start of parse");
 
   data.start_element_len = (int)strlen(START_ELEMENT);

@@ -38,14 +38,9 @@
    SPDX-License-Identifier: MIT
 */
 
+#include <inttypes.h> // PRIu64
 #include <stdio.h>
 #include <expat.h>
-
-#ifdef XML_LARGE_SIZE
-#  define XML_FMT_INT_MOD "ll"
-#else
-#  define XML_FMT_INT_MOD "l"
-#endif
 
 #ifdef XML_UNICODE_WCHAR_T
 #  define XML_FMT_STR "ls"
@@ -112,9 +107,8 @@ main(void) {
     done = feof(stdin);
 
     if (XML_ParseBuffer(parser, (int)len, done) == XML_STATUS_ERROR) {
-      fprintf(stderr,
-              "Parse error at line %" XML_FMT_INT_MOD "u:\n%" XML_FMT_STR "\n",
-              XML_GetCurrentLineNumber(parser),
+      fprintf(stderr, "Parse error at line %" PRIu64 ":\n%" XML_FMT_STR "\n",
+              XML_GetCurrentLineNumber64(parser),
               XML_ErrorString(XML_GetErrorCode(parser)));
       XML_ParserFree(parser);
       return 1;

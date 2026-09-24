@@ -2709,41 +2709,57 @@ XML_GetErrorCode(XML_Parser parser) {
   return parser->m_errorCode;
 }
 
-XML_Index XMLCALL
-XML_GetCurrentByteIndex(XML_Parser parser) {
+int64_t XMLCALL
+XML_GetCurrentByteIndex64(XML_Parser parser) {
   if (parser == NULL)
     return -1;
   if (parser->m_eventPtr) {
-    // NOTE: XML_Index is known to wrap around for >2 GiB content
-    //       on 32bit machines and 64bit Windows, unless (non-default and
-    //       uncommon) XML_LARGE_SIZE is defined.
-    //       That's a bug and it only lives on because we cannot break
-    //       ABI compatibility of public API.
-    return (XML_Index)(parser->m_parseEndByteIndex
-                       - (parser->m_parseEndPtr - parser->m_eventPtr));
+    return (int64_t)(parser->m_parseEndByteIndex
+                     - (parser->m_parseEndPtr - parser->m_eventPtr));
   }
   return -1;
 }
 
-int XMLCALL
-XML_GetCurrentByteCount(XML_Parser parser) {
+// DEPRECATED since Expat 2.9.0.
+XML_Index XMLCALL
+XML_GetCurrentByteIndex(XML_Parser parser) {
+  // NOTE: XML_Index is known to wrap around for >2 GiB content
+  //       on 32bit machines and 64bit Windows, unless (non-default and
+  //       uncommon) XML_LARGE_SIZE is defined.
+  //       That's a bug and it only lives on because we cannot break
+  //       ABI compatibility of public API.
+  return (XML_Index)XML_GetCurrentByteIndex64(parser);
+}
+
+uint64_t XMLCALL
+XML_GetCurrentByteCount64(XML_Parser parser) {
   if (parser == NULL)
     return 0;
-  if (parser->m_eventEndPtr && parser->m_eventPtr)
-    return (int)(parser->m_eventEndPtr - parser->m_eventPtr);
+  if (parser->m_eventEndPtr && parser->m_eventPtr) {
+    return parser->m_eventEndPtr - parser->m_eventPtr;
+  }
   return 0;
 }
 
+// DEPRECATED since Expat 2.9.0.
+int XMLCALL
+XML_GetCurrentByteCount(XML_Parser parser) {
+  // NOTE: int is known to wrap around for >2 GiB content.
+  //       That's a bug and it only lives on because we cannot break
+  //       ABI compatibility of public API.
+  return (int)XML_GetCurrentByteCount64(parser);
+}
+
 const char *XMLCALL
-XML_GetInputContext(XML_Parser parser, int *offset, int *size) {
+XML_GetInputContext64(XML_Parser parser, int64_t *offset, uint64_t *size) {
 #if XML_CONTEXT_BYTES > 0
   if (parser == NULL)
     return NULL;
   if (parser->m_eventPtr && parser->m_buffer) {
     if (offset != NULL)
-      *offset = (int)(parser->m_eventPtr - parser->m_buffer);
+      *offset = parser->m_eventPtr - parser->m_buffer;
     if (size != NULL)
-      *size = (int)(parser->m_bufferEnd - parser->m_buffer);
+      *size = parser->m_bufferEnd - parser->m_buffer;
     return parser->m_buffer;
   }
 #else
@@ -2754,25 +2770,41 @@ XML_GetInputContext(XML_Parser parser, int *offset, int *size) {
   return NULL;
 }
 
-XML_Size XMLCALL
-XML_GetCurrentLineNumber(XML_Parser parser) {
+// DEPRECATED since Expat 2.9.0.
+const char *XMLCALL
+XML_GetInputContext(XML_Parser parser, int *offset, int *size) {
+#if XML_CONTEXT_BYTES > 0
   if (parser == NULL)
-    return 0;
-  if (parser->m_eventPtr && parser->m_eventPtr >= parser->m_positionPtr) {
-    XmlUpdatePosition(parser->m_encoding, parser->m_positionPtr,
-                      parser->m_eventPtr, &parser->m_position);
-    parser->m_positionPtr = parser->m_eventPtr;
-  }
-  // NOTE: XML_Size is known to wrap around for >4 GiB content
-  //       on 32bit machines and 64bit Windows, unless (non-default and
-  //       uncommon) XML_LARGE_SIZE is defined.
+    return NULL;
+
+  int64_t offset64;
+  uint64_t size64;
+
+  const char *const buffer = XML_GetInputContext64(parser, &offset64, &size64);
+
+  if (buffer == NULL)
+    return NULL;
+
+  // NOTE: int is known to wrap around for >2 GiB content.
   //       That's a bug and it only lives on because we cannot break
   //       ABI compatibility of public API.
-  return (XML_Size)(parser->m_position.lineNumber + 1);
+  if (offset != NULL)
+    *offset = (int)offset64;
+
+  if (size != NULL)
+    *size = (int)size64;
+
+  return buffer;
+#else
+  (void)parser;
+  (void)offset;
+  (void)size;
+#endif /* XML_CONTEXT_BYTES > 0 */
+  return NULL;
 }
 
-XML_Size XMLCALL
-XML_GetCurrentColumnNumber(XML_Parser parser) {
+uint64_t XMLCALL
+XML_GetCurrentLineNumber64(XML_Parser parser) {
   if (parser == NULL)
     return 0;
   if (parser->m_eventPtr && parser->m_eventPtr >= parser->m_positionPtr) {
@@ -2780,12 +2812,41 @@ XML_GetCurrentColumnNumber(XML_Parser parser) {
                       parser->m_eventPtr, &parser->m_position);
     parser->m_positionPtr = parser->m_eventPtr;
   }
+  return parser->m_position.lineNumber + 1;
+}
+
+// DEPRECATED since Expat 2.9.0.
+XML_Size XMLCALL
+XML_GetCurrentLineNumber(XML_Parser parser) {
   // NOTE: XML_Size is known to wrap around for >4 GiB content
   //       on 32bit machines and 64bit Windows, unless (non-default and
   //       uncommon) XML_LARGE_SIZE is defined.
   //       That's a bug and it only lives on because we cannot break
   //       ABI compatibility of public API.
-  return (XML_Size)parser->m_position.columnNumber;
+  return (XML_Size)XML_GetCurrentLineNumber64(parser);
+}
+
+uint64_t XMLCALL
+XML_GetCurrentColumnNumber64(XML_Parser parser) {
+  if (parser == NULL)
+    return 0;
+  if (parser->m_eventPtr && parser->m_eventPtr >= parser->m_positionPtr) {
+    XmlUpdatePosition(parser->m_encoding, parser->m_positionPtr,
+                      parser->m_eventPtr, &parser->m_position);
+    parser->m_positionPtr = parser->m_eventPtr;
+  }
+  return parser->m_position.columnNumber;
+}
+
+// DEPRECATED since Expat 2.9.0.
+XML_Size XMLCALL
+XML_GetCurrentColumnNumber(XML_Parser parser) {
+  // NOTE: XML_Size is known to wrap around for >4 GiB content
+  //       on 32bit machines and 64bit Windows, unless (non-default and
+  //       uncommon) XML_LARGE_SIZE is defined.
+  //       That's a bug and it only lives on because we cannot break
+  //       ABI compatibility of public API.
+  return (XML_Size)XML_GetCurrentColumnNumber64(parser);
 }
 
 void XMLCALL
