@@ -46,7 +46,7 @@ endmacro()
 expat_register_component(attr_info          @EXPAT_ATTR_INFO@)
 expat_register_component(dtd                @EXPAT_DTD@)
 expat_register_component(large_size         @EXPAT_LARGE_SIZE@)
-expat_register_component(min_size           @EXPAT_MIN_SIZE@)
+expat_register_component(min_size           OFF)
 expat_register_component(ns                 @EXPAT_NS@)
 
 if(@EXPAT_CONTEXT_BYTES@)

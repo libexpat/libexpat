@@ -226,8 +226,10 @@ AM_CONDITIONAL([MINGW], [test x${EXPATCFG_ON_MINGW} = xyes])
 dnl Note: Prefix "_INTERNAL_" here means exclusive use inside of file configure.ac
 AM_CONDITIONAL([UNICODE], [echo -- "${CPPFLAGS}${CFLAGS}" | ${FGREP} XML_UNICODE >/dev/null])
 AM_CONDITIONAL([_INTERNAL_UNICODE_WCHAR_T], [echo -- "${CPPFLAGS}${CFLAGS}" | ${FGREP} XML_UNICODE_WCHAR_T >/dev/null])
-AM_CONDITIONAL([_INTERNAL_MIN_SIZE], [echo -- "${CPPFLAGS}${CFLAGS}" | ${FGREP} XML_MIN_SIZE >/dev/null])
 AM_CONDITIONAL([_INTERNAL_LARGE_SIZE], [echo -- "${CPPFLAGS}${CFLAGS}" | ${FGREP} XML_LARGE_SIZE >/dev/null])
+
+AS_IF([echo -- "${CPPFLAGS}${CFLAGS}" | ${FGREP} XML_MIN_SIZE >/dev/null],
+  [AC_MSG_ERROR([Feature XML_MIN_SIZE has been removed. Please open a GitHub issue if you need it back.])])
 
 LT_LIB_M
 
@@ -507,9 +509,6 @@ AC_SUBST([_EXPAT_COMMENT_DTD_OR_GE])
 AS_IF([test "x${_INTERNAL_LARGE_SIZE_TRUE}" = x],
   [EXPAT_LARGE_SIZE=ON],
   [EXPAT_LARGE_SIZE=OFF])
-AS_IF([test "x${_INTERNAL_MIN_SIZE_TRUE}" = x],
-  [EXPAT_MIN_SIZE=ON],
-  [EXPAT_MIN_SIZE=OFF])
 EXPAT_NS=ON
 AS_IF([test "x${enable_xml_context}" != xno],
   [EXPAT_CONTEXT_BYTES=${enable_xml_context}],
@@ -528,7 +527,6 @@ SO_PATCH="${LIBREVISION}"
 AC_SUBST([EXPAT_ATTR_INFO])
 AC_SUBST([EXPAT_DTD])
 AC_SUBST([EXPAT_LARGE_SIZE])
-AC_SUBST([EXPAT_MIN_SIZE])
 AC_SUBST([EXPAT_NS])
 AC_SUBST([EXPAT_CONTEXT_BYTES])
 AC_SUBST([EXPAT_CHAR_TYPE])
