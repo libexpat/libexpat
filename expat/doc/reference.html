@@ -1759,6 +1759,17 @@ XML_ParseBuffer(XML_Parser p,
         </p>
 
         <p>
+          <strong>Note:</strong> It is the responsibility of the application code to pass
+          a value for <code>len</code> that does not exceed the length of the remaining
+          unparsed XML content that was previously copied into the buffer obtained from
+          <code><a href="#XML_GetBuffer">XML_GetBuffer</a></code>. The documentation of
+          <code><a href="#XML_GetBuffer">XML_GetBuffer</a></code> below has an <a href=
+          "#XML_GetBuffer">example of typical use</a> of functions <code><a href=
+          "#XML_GetBuffer">XML_GetBuffer</a></code> and <code><a href=
+          "#XML_ParseBuffer">XML_ParseBuffer</a></code> in tandem.
+        </p>
+
+        <p>
           Negative values for <code>len</code> are rejected since Expat 2.6.3.
         </p>
       </div>
