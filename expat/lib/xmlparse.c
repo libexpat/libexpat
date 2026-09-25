@@ -2426,6 +2426,11 @@ XML_ParseBuffer(XML_Parser parser, int len, int isFinal) {
     parser->m_parsingStatus.parsing = XML_PARSING;
   }
 
+  if (len > EXPAT_SAFE_PTR_DIFF(parser->m_bufferLim, parser->m_bufferEnd)) {
+    parser->m_errorCode = XML_ERROR_INVALID_ARGUMENT;
+    return XML_STATUS_ERROR;
+  }
+
   // Detect and avoid integer overflow
   if ((uint64_t)len > UINT64_MAX - parser->m_parseEndByteIndex) {
     parser->m_errorCode = XML_ERROR_NO_MEMORY;
