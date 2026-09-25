@@ -1579,6 +1579,10 @@ XML_ParserReset(XML_Parser parser, const XML_Char *encodingName) {
 
   if (parser->m_parentParser)
     return XML_FALSE;
+  // The application-defined release callback may access the parser, so it
+  // must run before any parser state is freed.
+  if (parser->m_unknownEncodingRelease)
+    callUnknownEncodingRelease(parser);
   /* move m_tagStack to m_freeTagList */
   tStk = parser->m_tagStack;
   while (tStk) {
@@ -1599,8 +1603,6 @@ XML_ParserReset(XML_Parser parser, const XML_Char *encodingName) {
   moveEntityList(&parser->m_freeEntities, &parser->m_openValueEntities);
   moveToFreeBindingList(parser, parser->m_inheritedBindings);
   FREE(parser, parser->m_unknownEncodingMem);
-  if (parser->m_unknownEncodingRelease)
-    callUnknownEncodingRelease(parser);
   poolClear(&parser->m_tempPool);
   poolClear(&parser->m_temp2Pool);
   FREE(parser, (void *)parser->m_protocolEncodingName);
@@ -1843,6 +1845,10 @@ XML_ParserFree(XML_Parser parser) {
   TAG *tagList;
   if ((parser == NULL) || isCalledFromInsideHandler(parser))
     return;
+  // The application-defined release callback may access the parser, so it
+  // must run before any parser state is freed.
+  if (parser->m_unknownEncodingRelease)
+    callUnknownEncodingRelease(parser);
   /* free m_tagStack and m_freeTagList */
   tagList = parser->m_tagStack;
   for (;;) {
@@ -1911,8 +1917,6 @@ XML_ParserFree(XML_Parser parser) {
   FREE(parser, parser->m_dataBuf);
   FREE(parser, parser->m_nsAtts);
   FREE(parser, parser->m_unknownEncodingMem);
-  if (parser->m_unknownEncodingRelease)
-    callUnknownEncodingRelease(parser);
   FREE(parser, parser);
 }
 
