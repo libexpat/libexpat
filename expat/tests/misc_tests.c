@@ -55,6 +55,7 @@
 #include "expat_config.h"
 
 #include <assert.h>
+#include <stdbool.h>
 #include <stdint.h>
 #include <string.h>
 
@@ -897,6 +898,66 @@ START_TEST(test_misc_unknown_encoding_callbacks_protected) {
 }
 END_TEST
 
+typedef struct {
+  XML_Parser parser;
+  int releaseCallCount;
+  uint64_t lineAtRelease;
+} EncodingReleaseData;
+
+static void XMLCALL
+position_reading_encoding_release(void *userData) {
+  EncodingReleaseData *const data = userData;
+  data->releaseCallCount++;
+  data->lineAtRelease = XML_GetCurrentLineNumber64(data->parser);
+}
+
+static int XMLCALL
+position_reading_encoding_handler(void *userData, const XML_Char *name,
+                                  XML_Encoding *info) {
+  UNUSED_P(name);
+
+  for (int i = 0; i < 256; i++)
+    info->map[i] = i;
+  info->data = userData;
+  info->convert = NULL;
+  info->release = position_reading_encoding_release;
+  return XML_STATUS_OK;
+}
+
+static void
+run_unknown_encoding_release_getter_test(bool resetParser) {
+  const char *const doc = "<?xml version='1.0' encoding='release-order'?>\n"
+                          "<root>\n"
+                          "  <unclosed>\n"
+                          "</root>\n";
+  XML_Parser parser = XML_ParserCreate(NULL);
+  EncodingReleaseData data = {parser, 0, 0};
+
+  assert_true(parser != NULL);
+  XML_SetUnknownEncodingHandler(parser, position_reading_encoding_handler,
+                                &data);
+  assert_true(XML_Parse(parser, doc, (int)strlen(doc), /*isFinal=*/XML_TRUE)
+              == XML_STATUS_ERROR);
+  assert_true(XML_GetErrorCode(parser) == XML_ERROR_TAG_MISMATCH);
+
+  if (resetParser)
+    assert_true(XML_ParserReset(parser, NULL) == XML_TRUE);
+  XML_ParserFree(parser);
+
+  assert_true(data.releaseCallCount == 1);
+  assert_true(data.lineAtRelease == 4);
+}
+
+START_TEST(test_misc_unknown_encoding_release_getter_parser_free) {
+  run_unknown_encoding_release_getter_test(false);
+}
+END_TEST
+
+START_TEST(test_misc_unknown_encoding_release_getter_parser_reset) {
+  run_unknown_encoding_release_getter_test(true);
+}
+END_TEST
+
 // General attack payload idea by Jason Kratzer of Mozilla
 START_TEST(test_misc_low_surrogate_mozilla_bug_2053153) {
   const char doc_before[] = "<\0!\0D\0O\0C\0T\0Y\0P\0E\0 \0d\0 \0[\0\n\0"
@@ -995,6 +1056,10 @@ make_miscellaneous_test_case(Suite *s) {
   tcase_add_test(tc_misc, test_misc_calls_forbidden_from_handlers);
   tcase_add_test(tc_misc, test_misc_resume_parser_forbidden_from_handler);
   tcase_add_test(tc_misc, test_misc_unknown_encoding_callbacks_protected);
+  tcase_add_test(tc_misc,
+                 test_misc_unknown_encoding_release_getter_parser_free);
+  tcase_add_test(tc_misc,
+                 test_misc_unknown_encoding_release_getter_parser_reset);
   tcase_add_test(tc_misc, test_misc_input_2gb);
   tcase_add_test(tc_misc, test_misc_low_surrogate_mozilla_bug_2053153);
 }
