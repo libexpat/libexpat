@@ -3723,6 +3723,46 @@ START_TEST(test_negative_len_parse_buffer) {
 }
 END_TEST
 
+/* Test XML_ParseBuffer rejects calls where len exceeds available buffer */
+START_TEST(test_parse_buffer_exceeds_buffer) {
+  for (int isFinal = 0; isFinal < 2; isFinal++) {
+    set_subtest("isFinal=%d", isFinal);
+
+    XML_Parser parser = XML_ParserCreate(NULL);
+
+    /* Calling XML_ParseBuffer without any prior XML_GetBuffer call */
+    if (XML_ParseBuffer(parser, 10, isFinal) != XML_STATUS_ERROR)
+      fail("XML_ParseBuffer without XML_GetBuffer was expected to fail.");
+    if (XML_GetErrorCode(parser) != XML_ERROR_NO_BUFFER)
+      fail("Expected XML_ERROR_NO_BUFFER.");
+
+    /* Acquire a small buffer */
+    void *const buffer = XML_GetBuffer(parser, 10);
+    if (buffer == NULL)
+      fail("XML_GetBuffer failed.");
+
+    /* Calling XML_ParseBuffer with len exceeding available buffer capacity */
+    if (XML_ParseBuffer(parser, 10000, isFinal) != XML_STATUS_ERROR)
+      fail("XML_ParseBuffer with len > capacity was expected to fail.");
+    if (XML_GetErrorCode(parser) != XML_ERROR_INVALID_ARGUMENT)
+      fail("Expected XML_ERROR_INVALID_ARGUMENT.");
+
+    /* Valid parse */
+    memcpy(buffer, "<r></r>", 7);
+    if (XML_ParseBuffer(parser, 7, XML_FALSE) != XML_STATUS_OK)
+      xml_failure(parser);
+
+    /* Subsequent XML_ParseBuffer where len exceeds remaining capacity */
+    if (XML_ParseBuffer(parser, 10000, isFinal) != XML_STATUS_ERROR)
+      fail("XML_ParseBuffer on subsequent chunk was expected to fail.");
+    if (XML_GetErrorCode(parser) != XML_ERROR_INVALID_ARGUMENT)
+      fail("Expected XML_ERROR_INVALID_ARGUMENT.");
+
+    XML_ParserFree(parser);
+  }
+}
+END_TEST
+
 /* Test odd corners of the XML_GetBuffer interface */
 static enum XML_Status
 get_feature(enum XML_FeatureEnum feature_id, long *presult) {
@@ -7180,6 +7220,7 @@ make_basic_test_case(Suite *s) {
   tcase_add_test(tc_basic, test_empty_parse);
   tcase_add_test(tc_basic, test_negative_len_parse);
   tcase_add_test(tc_basic, test_negative_len_parse_buffer);
+  tcase_add_test(tc_basic, test_parse_buffer_exceeds_buffer);
   tcase_add_test(tc_basic, test_get_buffer_1);
   tcase_add_test(tc_basic, test_get_buffer_2);
 #if XML_CONTEXT_BYTES > 0
