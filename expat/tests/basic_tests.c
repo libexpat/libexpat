@@ -2596,6 +2596,57 @@ START_TEST(test_default_current) {
 }
 END_TEST
 
+/* Test XML_DefaultCurrent does not dereference NULL when outside an event */
+START_TEST(test_default_current_outside_event) {
+  struct handler_record_list handlerCalls;
+  handlerCalls.count = 0;
+
+  set_subtest("NULL parser");
+  XML_DefaultCurrent(NULL);
+
+  set_subtest("before parse");
+  {
+    XML_Parser parser = XML_ParserCreate(NULL);
+    XML_SetDefaultHandler(parser, record_default_handler);
+    XML_SetUserData(parser, &handlerCalls);
+
+    XML_DefaultCurrent(parser);
+    assert_true(handlerCalls.count == 0);
+
+    XML_ParserFree(parser);
+  }
+
+  set_subtest("after parse");
+  {
+    const char *text = "<r>hello</r>";
+    XML_Parser parser = XML_ParserCreate(NULL);
+    if (XML_Parse(parser, text, (int)strlen(text), XML_TRUE)
+        == XML_STATUS_ERROR)
+      xml_failure(parser);
+
+    XML_SetDefaultHandler(parser, record_default_handler);
+    XML_SetUserData(parser, &handlerCalls);
+
+    XML_DefaultCurrent(parser);
+    assert_true(handlerCalls.count == 0);
+
+    XML_ParserFree(parser);
+  }
+
+  set_subtest("explicit encoding before parse");
+  {
+    XML_Parser parser = XML_ParserCreate(XCS("ISO-8859-1"));
+    XML_SetDefaultHandler(parser, record_default_handler);
+    XML_SetUserData(parser, &handlerCalls);
+
+    XML_DefaultCurrent(parser);
+    assert_true(handlerCalls.count == 0);
+
+    XML_ParserFree(parser);
+  }
+}
+END_TEST
+
 /* Test DTD element parsing code paths */
 START_TEST(test_dtd_elements) {
   const char *text = "<!DOCTYPE doc [\n"
@@ -7178,6 +7229,7 @@ make_basic_test_case(Suite *s) {
   tcase_add_test(tc_basic, test_suspend_parser_between_cdata_calls);
   tcase_add_test(tc_basic, test_memory_allocation);
   tcase_add_test__if_xml_ge(tc_basic, test_default_current);
+  tcase_add_test(tc_basic, test_default_current_outside_event);
   tcase_add_test(tc_basic, test_dtd_elements);
   tcase_add_test(tc_basic, test_dtd_elements_nesting);
   tcase_add_test__ifdef_xml_dtd(tc_basic, test_set_foreign_dtd);

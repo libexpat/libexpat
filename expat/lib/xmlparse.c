@@ -2873,7 +2873,7 @@ XML_MemFree(XML_Parser parser, void *ptr) {
 
 void XMLCALL
 XML_DefaultCurrent(XML_Parser parser) {
-  if (parser == NULL)
+  if (parser == NULL || ! isCalledFromInsideHandler(parser))
     return;
   if (parser->m_defaultHandler) {
     if (parser->m_openInternalEntities)
