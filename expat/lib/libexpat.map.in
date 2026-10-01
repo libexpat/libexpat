@@ -130,4 +130,10 @@ LIBEXPAT_2.9.0 {
   XML_GetCurrentColumnNumber64;
   XML_GetCurrentLineNumber64;
   XML_GetInputContext64;
+  XML_GetPropertyBool;
+  XML_GetPropertyDouble;
+  XML_GetPropertyUInt64;
+  XML_SetPropertyBool;
+  XML_SetPropertyDouble;
+  XML_SetPropertyUInt64;
 } LIBEXPAT_2.8.0;

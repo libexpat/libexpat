@@ -91,3 +91,9 @@ EXPORTS
   XML_GetCurrentColumnNumber64 @77
   XML_GetCurrentLineNumber64 @78
   XML_GetInputContext64 @79
+  XML_GetPropertyBool @80
+  XML_GetPropertyDouble @81
+  XML_GetPropertyUInt64 @82
+  XML_SetPropertyBool @83
+  XML_SetPropertyDouble @84
+  XML_SetPropertyUInt64 @85
