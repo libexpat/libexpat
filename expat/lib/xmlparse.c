@@ -107,6 +107,7 @@
 #include <stdint.h> /* SIZE_MAX, UINT64_MAX, uint64_t, uintptr_t */
 #include <math.h>   /* isnan */
 #include <errno.h>
+#include <wchar.h> /* wcsncmp */
 
 #ifdef _WIN32
 #  define getpid GetCurrentProcessId
