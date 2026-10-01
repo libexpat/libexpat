@@ -1726,7 +1726,7 @@ void XMLCALL
 record_element_start_handler(void *userData, const XML_Char *name,
                              const XML_Char **atts) {
   UNUSED_P(atts);
-  CharData_AppendXMLChars((CharData *)userData, name, (int)xcstrlen(name));
+  CharData_AppendXMLChars((CharData *)userData, name, (int)xcslen(name));
 }
 
 void XMLCALL
@@ -1771,7 +1771,7 @@ param_entity_match_handler(void *userData, const XML_Char *entityName,
      * the vertical, and we therefore know our strings are never
      * going to overflow an int.
      */
-    if (value_length != (int)xcstrlen(entity_value_to_match)
+    if (value_length != (int)xcslen(entity_value_to_match)
         || xcsncmp(value, entity_value_to_match, value_length) != 0) {
       entity_match_flag = ENTITY_MATCH_FAIL;
     } else {

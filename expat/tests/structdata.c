@@ -47,23 +47,22 @@
 
 #include "structdata.h"
 #include "minicheck.h"
+#include "../lib/xcs.h"
 
 #define STRUCT_EXTENSION_COUNT 8
 
 #ifdef XML_UNICODE_WCHAR_T
 #  include <wchar.h>
 #  define XML_FMT_STR "ls"
-#  define xcstrlen(s) wcslen(s)
 #  define xcstrcmp(s, t) wcscmp((s), (t))
 #else
 #  define XML_FMT_STR "s"
-#  define xcstrlen(s) strlen(s)
 #  define xcstrcmp(s, t) strcmp((s), (t))
 #endif
 
 static XML_Char *
 xmlstrdup(const XML_Char *s) {
-  size_t byte_count = (xcstrlen(s) + 1) * sizeof(XML_Char);
+  size_t byte_count = (xcslen(s) + 1) * sizeof(XML_Char);
   XML_Char *const dup = malloc(byte_count);
 
   assert(dup != NULL);
