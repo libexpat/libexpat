@@ -67,6 +67,7 @@
 #include "ascii.h" /* for ASCII_xxx */
 #include "handlers.h"
 #include "misc_tests.h"
+#include "../lib/xcs.h"
 
 void XMLCALL accumulate_characters_ext_handler(void *userData,
                                                const XML_Char *s, int len);
@@ -220,7 +221,7 @@ START_TEST(test_misc_version) {
   if (! versions_equal(&read_version, &parsed_version))
     fail("Version mismatch");
 
-  if (xcstrcmp(version_text, XCS("expat_2.8.5"))
+  if (xcscmp(version_text, XCS("expat_2.8.5"))
       != 0) /* needs bump on releases */
     fail("XML_*_VERSION in expat.h out of sync?\n");
 }

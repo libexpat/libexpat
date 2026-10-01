@@ -54,10 +54,8 @@
 #ifdef XML_UNICODE_WCHAR_T
 #  include <wchar.h>
 #  define XML_FMT_STR "ls"
-#  define xcstrcmp(s, t) wcscmp((s), (t))
 #else
 #  define XML_FMT_STR "s"
-#  define xcstrcmp(s, t) strcmp((s), (t))
 #endif
 
 static XML_Char *
@@ -127,7 +125,7 @@ StructData_CheckItems(StructData *storage, const StructDataEntry *expected,
       assert(got != NULL);
       assert(want != NULL);
 
-      if (xcstrcmp(got->str, want->str) != 0) {
+      if (xcscmp(got->str, want->str) != 0) {
         StructData_Dispose(storage);
         fail("structure got bad string");
       } else {
