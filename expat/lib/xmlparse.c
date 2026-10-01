@@ -125,7 +125,7 @@
 #include "ascii.h"
 #include "expat.h"
 #include "siphash.h"
-#include "xcsinc.c"
+#include "xcs.h"
 
 #if defined(HAVE_ARC4RANDOM)
 #  include "random_arc4random.h"

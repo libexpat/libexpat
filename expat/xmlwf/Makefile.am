@@ -32,6 +32,7 @@ bin_PROGRAMS = xmlwf
 
 xmlwf_LDADD = ../lib/libexpat.la
 xmlwf_SOURCES = \
+    ../lib/xcs.c \
     xmlwf.c \
     xmlfile.c \
     codepage.c \

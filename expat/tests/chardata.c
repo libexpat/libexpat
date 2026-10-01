@@ -49,7 +49,7 @@
 #include <string.h>
 
 #include "chardata.h"
-#include "../lib/xcsinc.c"
+#include "../lib/xcs.h"
 
 void
 CharData_Init(CharData *storage) {

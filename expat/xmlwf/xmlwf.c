@@ -73,7 +73,7 @@
 #  include <wchar.h>
 #endif
 
-#include "../lib/xcsinc.c"
+#include "../lib/xcs.h"
 
 enum ExitCode {
   XMLWF_EXIT_SUCCESS = 0,
