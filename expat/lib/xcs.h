@@ -38,4 +38,7 @@
 
 extern size_t xcslen(const XML_Char *s);
 
+extern int xcscmp(const XML_Char *a, const XML_Char *b);
+extern int xcsncmp(const XML_Char *a, const XML_Char *b, size_t len);
+
 #endif // ! defined(EXPAT_XCS_H)

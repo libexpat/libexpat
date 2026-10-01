@@ -35,10 +35,10 @@
 
 #if defined(XML_UNICODE)
 #  if defined(XML_UNICODE_WCHAR_T)
-#    include <wchar.h> // for wcslen
+#    include <wchar.h> // for wcscmp, wcslen, wcsncmp
 #  endif
 #else
-#  include <string.h> // for strlen
+#  include <string.h> // for strcmp, strlen, strncmp
 #endif
 
 size_t
@@ -56,5 +56,35 @@ xcslen(const XML_Char *s) {
 #  endif
 #else
   return strlen(s);
+#endif
+}
+
+int
+xcscmp(const XML_Char *a, const XML_Char *b) {
+#if defined(XML_UNICODE)
+#  if defined(XML_UNICODE_WCHAR_T)
+  return wcscmp(a, b);
+#  else
+  for (; a[0] && b[0]; a++, b++)
+    ;
+  return a[0] - b[0];
+#  endif
+#else
+  return strcmp(a, b);
+#endif
+}
+
+int
+xcsncmp(const XML_Char *a, const XML_Char *b, size_t len) {
+#if defined(XML_UNICODE)
+#  if defined(XML_UNICODE_WCHAR_T)
+  return wcsncmp(a, b, len);
+#  else
+  for (; len > 0 && a[0] && b[0]; len--, a++, b++)
+    ;
+  return a[0] - b[0];
+#  endif
+#else
+  return strncmp(a, b, len);
 #endif
 }
