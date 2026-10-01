@@ -63,6 +63,7 @@
 #include "structdata.h"
 #include "common.h"
 #include "handlers.h"
+#include "../lib/xcs.h"
 
 /* Global variables for user parameter settings tests */
 /* Variable holding the expected handler userData */
@@ -1771,7 +1772,7 @@ param_entity_match_handler(void *userData, const XML_Char *entityName,
      * going to overflow an int.
      */
     if (value_length != (int)xcstrlen(entity_value_to_match)
-        || xcstrncmp(value, entity_value_to_match, value_length) != 0) {
+        || xcsncmp(value, entity_value_to_match, value_length) != 0) {
       entity_match_flag = ENTITY_MATCH_FAIL;
     } else {
       entity_match_flag = ENTITY_MATCH_SUCCESS;

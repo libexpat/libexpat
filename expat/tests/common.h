@@ -61,7 +61,6 @@
 #  include <wchar.h>
 #  define xcstrlen(s) wcslen(s)
 #  define xcstrcmp(s, t) wcscmp((s), (t))
-#  define xcstrncmp(s, t, n) wcsncmp((s), (t), (n))
 #  define XCS(s) _XCS(s)
 #  define _XCS(s) L##s
 #else
@@ -71,7 +70,6 @@
 #    define XML_FMT_STR "s"
 #    define xcstrlen(s) strlen(s)
 #    define xcstrcmp(s, t) strcmp((s), (t))
-#    define xcstrncmp(s, t, n) strncmp((s), (t), (n))
 #    define XCS(s) s
 #  endif /* XML_UNICODE */
 #endif   /* XML_UNICODE_WCHAR_T */
