@@ -361,23 +361,6 @@ cleanupUserData(XmlwfUserData *userData) {
 }
 
 static int
-xcscmp(const XML_Char *xs, const XML_Char *xt) {
-  while (*xs != 0 && *xt != 0) {
-    if (*xs < *xt)
-      return -1;
-    if (*xs > *xt)
-      return 1;
-    xs++;
-    xt++;
-  }
-  if (*xs < *xt)
-    return -1;
-  if (*xs > *xt)
-    return 1;
-  return 0;
-}
-
-static int
 notationCmp(const void *a, const void *b) {
   const NotationList *const n1 = *(const NotationList *const *)a;
   const NotationList *const n2 = *(const NotationList *const *)b;
