@@ -52,7 +52,7 @@ jobs:
     - name: Install build dependencies
       run: |-
         set -x
-        sudo apt-get update
+        sudo timeout 10m apt-get update
         sudo timeout 10m apt-get install --yes --no-install-recommends -V \
             cmake \
             emscripten \

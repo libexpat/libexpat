@@ -59,7 +59,7 @@ jobs:
       if: "${{ matrix.xml_parser_commit != '7096c4e45a62a23837382cf822d8c2dab780a3a1' }}"
       run: |
         set -x
-        sudo apt-get update
+        sudo timeout 10m apt-get update
         sudo timeout 10m apt-get install --yes --no-install-recommends -V \
             libfile-sharedir-install-perl \
             libfile-sharedir-perl

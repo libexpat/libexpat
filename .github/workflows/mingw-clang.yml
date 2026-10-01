@@ -95,7 +95,7 @@ jobs:
         if [[ ${wine_packages} =~ :i386 ]]; then
             dpkg --add-architecture i386
         fi
-        apt-get update
+        timeout 10m apt-get update
         timeout 10m apt-get install --yes --no-install-recommends -V \
             ca-certificates \
             cmake \

@@ -55,7 +55,7 @@ jobs:
         tidy_version: 5.8.0
       run: |-
         set -x
-        sudo apt-get update
+        sudo timeout 10m apt-get update
         sudo timeout 10m apt-get install --yes --no-install-recommends -V \
             docbook \
             libxml2-utils \
