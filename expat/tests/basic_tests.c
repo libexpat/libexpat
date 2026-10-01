@@ -4401,17 +4401,27 @@ START_TEST(test_attribute_enum_value) {
 }
 END_TEST
 
-/* Slightly bizarrely, the library seems to silently ignore entity
- * definitions for predefined entities, even when they are wrong.  The
- * language of the XML 1.0 spec is somewhat unhelpful as to what ought
- * to happen, so this is currently treated as acceptable.
- */
 START_TEST(test_predefined_entity_redefinition) {
   const char *text = "<!DOCTYPE doc [\n"
                      "<!ENTITY apos 'foo'>\n"
                      "]>\n"
                      "<doc>&apos;</doc>";
-  run_character_check(text, XCS("'"));
+
+#if XML_GE == 1
+  const enum XML_Error expectedError
+      = XML_ERROR_BAD_PREDEFINED_ENTITY_REDEFINITION;
+#else
+  const enum XML_Error expectedError = XML_ERROR_NONE;
+#endif
+  const enum XML_Status expectedStatus
+      = (expectedError == XML_ERROR_NONE) ? XML_STATUS_OK : XML_STATUS_ERROR;
+
+  XML_Parser parser = XML_ParserCreate(NULL);
+  assert_true(_XML_Parse_SINGLE_BYTES(parser, text, (int)strlen(text),
+                                      /*isFinal=*/XML_TRUE)
+              == expectedStatus);
+  assert_true(XML_GetErrorCode(parser) == expectedError);
+  XML_ParserFree(parser);
 }
 END_TEST
 
