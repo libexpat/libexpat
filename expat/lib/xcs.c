@@ -65,7 +65,7 @@ xcscmp(const XML_Char *a, const XML_Char *b) {
 #  if defined(XML_UNICODE_WCHAR_T)
   return wcscmp(a, b);
 #  else
-  for (; a[0] && b[0]; a++, b++)
+  for (; a[0] && b[0] && a[0] == b[0]; a++, b++)
     ;
   return a[0] - b[0];
 #  endif
