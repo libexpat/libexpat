@@ -33,8 +33,54 @@ __  __            _
 
 #include "xcs_tests.h"
 
+#include "ascii.h"
+#include "common.h" // for g_chunkSize
+#include "xcs.h"    // for xcslen, xcscmp, xcsncmp
+
+static const XML_Char empty[] = {'\0'};
+static const XML_Char test[] = {ASCII_T, ASCII_E, ASCII_S, ASCII_T, '\0'};
+static const XML_Char testing[]
+    = {ASCII_T, ASCII_E, ASCII_S, ASCII_T, ASCII_I, ASCII_N, ASCII_G, '\0'};
+
+START_TEST(test_xcs_len) {
+  if (g_chunkSize != 0)
+    return;
+
+  assert_true(xcslen(empty) == 0);
+  assert_true(xcslen(test) == 4);
+}
+END_TEST
+
+START_TEST(test_xcs_cmp) {
+  if (g_chunkSize != 0)
+    return;
+
+  assert_true(xcscmp(test, test) == 0);
+  assert_true(xcscmp(test, testing) < 0);
+  assert_true(xcscmp(testing, test) > 0);
+}
+END_TEST
+
+START_TEST(test_xcs_ncmp) {
+  if (g_chunkSize != 0)
+    return;
+
+  assert_true(xcsncmp(test, test, 0) == 0);
+  assert_true(xcsncmp(test, test, 4) == 0);
+
+  assert_true(xcsncmp(test, testing, 4) == 0);
+  assert_true(xcsncmp(testing, test, 4) == 0);
+
+  assert_true(xcsncmp(test, testing, 5) < 0);
+  assert_true(xcsncmp(testing, test, 5) > 0);
+}
+END_TEST
+
 void
 make_xcs_test_case(Suite *s) {
   TCase *const tc_xcs = tcase_create("xcs tests");
   suite_add_tcase(s, tc_xcs);
+  tcase_add_test(tc_xcs, test_xcs_len);
+  tcase_add_test(tc_xcs, test_xcs_cmp);
+  tcase_add_test(tc_xcs, test_xcs_ncmp);
 }
