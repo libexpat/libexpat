@@ -80,9 +80,9 @@ xcsncmp(const XML_Char *a, const XML_Char *b, size_t len) {
 #  if defined(XML_UNICODE_WCHAR_T)
   return wcsncmp(a, b, len);
 #  else
-  for (; len > 0 && a[0] && b[0]; len--, a++, b++)
-    ;
-  return a[0] - b[0];
+  for (; len > 0 && a[0] && b[0] && a[0] == b[0]; len--, a++, b++) {
+  }
+  return (len == 0) ? 0 : (a[0] - b[0]);
 #  endif
 #else
   return strncmp(a, b, len);
