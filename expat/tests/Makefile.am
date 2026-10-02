@@ -57,7 +57,8 @@ runtests_SOURCES = \
     nsalloc_tests.c \
     props_tests.c \
     runtests.c \
-    structdata.c
+    structdata.c \
+    xcs_tests.c
 
 runtests_LDADD = ../lib/libtestpat.la
 
@@ -81,5 +82,6 @@ EXTRA_DIST = \
     README.md \
     structdata.h \
     udiffer.py \
+    xcs_tests.h \
     xmltest.log.expected \
     xmltest.sh

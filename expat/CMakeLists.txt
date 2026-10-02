@@ -737,6 +737,7 @@ if(EXPAT_BUILD_TESTS)
         tests/props_tests.c
         tests/runtests.c
         tests/structdata.c
+        tests/xcs_tests.c
         ${_EXPAT_C_SOURCES}
     )
 

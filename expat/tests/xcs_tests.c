@@ -1,12 +1,12 @@
-/*
-                            __  __            _
+/* Tests related to the XCS (XML character string) functionality
+__  __            _
                          ___\ \/ /_ __   __ _| |_
                         / _ \\  /| '_ \ / _` | __|
                        |  __//  \| |_) | (_| | |_
                         \___/_/\_\ .__/ \__,_|\__|
                                  |_| XML parser
 
-   Copyright (c) 2022-2026 Sebastian Pipping <sebastian@pipping.org>
+   Copyright (c) 2026 Sebastian Pipping <sebastian@pipping.org>
    Licensed under the MIT license:
 
    Permission is  hereby granted,  free of charge,  to any  person obtaining
@@ -31,60 +31,56 @@
    SPDX-License-Identifier: MIT
 */
 
-#include "xcs.h"
+#include "xcs_tests.h"
 
-#if defined(XML_UNICODE)
-#  if defined(XML_UNICODE_WCHAR_T)
-#    include <wchar.h> // for wcscmp, wcslen, wcsncmp
-#  endif
-#else
-#  include <string.h> // for strcmp, strlen, strncmp
-#endif
+#include "ascii.h"
+#include "common.h" // for g_chunkSize
+#include "xcs.h"    // for xcslen, xcscmp, xcsncmp
 
-size_t
-xcslen(const XML_Char *s) {
-#ifdef XML_UNICODE
-#  ifdef XML_UNICODE_WCHAR_T
-  return wcslen(s);
-#  else
-  // XML_Char is unsigned short
-  size_t len = 0;
-  while (s[len]) {
-    len++;
-  }
-  return len;
-#  endif
-#else
-  return strlen(s);
-#endif
+static const XML_Char empty[] = {'\0'};
+static const XML_Char test[] = {ASCII_T, ASCII_E, ASCII_S, ASCII_T, '\0'};
+static const XML_Char testing[]
+    = {ASCII_T, ASCII_E, ASCII_S, ASCII_T, ASCII_I, ASCII_N, ASCII_G, '\0'};
+
+START_TEST(test_xcs_len) {
+  if (g_chunkSize != 0)
+    return;
+
+  assert_true(xcslen(empty) == 0);
+  assert_true(xcslen(test) == 4);
 }
+END_TEST
 
-int
-xcscmp(const XML_Char *a, const XML_Char *b) {
-#if defined(XML_UNICODE)
-#  if defined(XML_UNICODE_WCHAR_T)
-  return wcscmp(a, b);
-#  else
-  for (; a[0] && b[0] && a[0] == b[0]; a++, b++)
-    ;
-  return a[0] - b[0];
-#  endif
-#else
-  return strcmp(a, b);
-#endif
+START_TEST(test_xcs_cmp) {
+  if (g_chunkSize != 0)
+    return;
+
+  assert_true(xcscmp(test, test) == 0);
+  assert_true(xcscmp(test, testing) < 0);
+  assert_true(xcscmp(testing, test) > 0);
 }
+END_TEST
 
-int
-xcsncmp(const XML_Char *a, const XML_Char *b, size_t len) {
-#if defined(XML_UNICODE)
-#  if defined(XML_UNICODE_WCHAR_T)
-  return wcsncmp(a, b, len);
-#  else
-  for (; len > 0 && a[0] && b[0] && a[0] == b[0]; len--, a++, b++) {
-  }
-  return (len == 0) ? 0 : (a[0] - b[0]);
-#  endif
-#else
-  return strncmp(a, b, len);
-#endif
+START_TEST(test_xcs_ncmp) {
+  if (g_chunkSize != 0)
+    return;
+
+  assert_true(xcsncmp(test, test, 0) == 0);
+  assert_true(xcsncmp(test, test, 4) == 0);
+
+  assert_true(xcsncmp(test, testing, 4) == 0);
+  assert_true(xcsncmp(testing, test, 4) == 0);
+
+  assert_true(xcsncmp(test, testing, 5) < 0);
+  assert_true(xcsncmp(testing, test, 5) > 0);
+}
+END_TEST
+
+void
+make_xcs_test_case(Suite *s) {
+  TCase *const tc_xcs = tcase_create("xcs tests");
+  suite_add_tcase(s, tc_xcs);
+  tcase_add_test(tc_xcs, test_xcs_len);
+  tcase_add_test(tc_xcs, test_xcs_cmp);
+  tcase_add_test(tc_xcs, test_xcs_ncmp);
 }
