@@ -4401,17 +4401,174 @@ START_TEST(test_attribute_enum_value) {
 }
 END_TEST
 
-/* Slightly bizarrely, the library seems to silently ignore entity
- * definitions for predefined entities, even when they are wrong.  The
- * language of the XML 1.0 spec is somewhat unhelpful as to what ought
- * to happen, so this is currently treated as acceptable.
- */
 START_TEST(test_predefined_entity_redefinition) {
-  const char *text = "<!DOCTYPE doc [\n"
-                     "<!ENTITY apos 'foo'>\n"
-                     "]>\n"
-                     "<doc>&apos;</doc>";
-  run_character_check(text, XCS("'"));
+  struct TestCase {
+    const char *comment;
+    const char *entityLine;
+    enum XML_Error expectedError;
+  };
+
+  struct TestCase testCases[] = {
+      // General entity, redefine correctly, escaped
+      {"Redefine &amp; correctly escaped 1", "<!ENTITY amp '&#38;#38;'>",
+       XML_ERROR_NONE},
+      {"Redefine &amp; correctly escaped 2", "<!ENTITY amp '&#38;#x26;'>",
+       XML_ERROR_NONE},
+      {"Redefine &amp; correctly escaped 3", "<!ENTITY amp '&#x26;#38;'>",
+       XML_ERROR_NONE},
+      {"Redefine &amp; correctly escaped 4", "<!ENTITY amp '&#x26;#x26;'>",
+       XML_ERROR_NONE},
+      //
+      {"Redefine &apos; correctly escaped 1", "<!ENTITY apos '&#39;'>",
+       XML_ERROR_NONE},
+      {"Redefine &apos; correctly escaped 2", "<!ENTITY apos '&#x27;'>",
+       XML_ERROR_NONE},
+      {"Redefine &apos; correctly escaped 3", "<!ENTITY apos '&#38;#39;'>",
+       XML_ERROR_NONE},
+      {"Redefine &apos; correctly escaped 4", "<!ENTITY apos '&#38;#x27;'>",
+       XML_ERROR_NONE},
+      {"Redefine &apos; correctly escaped 5", "<!ENTITY apos '&#x26;#39;'>",
+       XML_ERROR_NONE},
+      {"Redefine &apos; correctly escaped 6", "<!ENTITY apos '&#x26;#x27;'>",
+       XML_ERROR_NONE},
+      //
+      {"Redefine &gt; correctly escaped 1", "<!ENTITY gt '&#62;'>",
+       XML_ERROR_NONE},
+      {"Redefine &gt; correctly escaped 2", "<!ENTITY gt '&#x3e;'>",
+       XML_ERROR_NONE},
+      {"Redefine &gt; correctly escaped 3", "<!ENTITY gt '&#x3E;'>",
+       XML_ERROR_NONE},
+      {"Redefine &gt; correctly escaped 4", "<!ENTITY gt '&#38;#62;'>",
+       XML_ERROR_NONE},
+      {"Redefine &gt; correctly escaped 5", "<!ENTITY gt '&#38;#x3e;'>",
+       XML_ERROR_NONE},
+      {"Redefine &gt; correctly escaped 6", "<!ENTITY gt '&#38;#x3E;'>",
+       XML_ERROR_NONE},
+      {"Redefine &gt; correctly escaped 7", "<!ENTITY gt '&#x26;#62;'>",
+       XML_ERROR_NONE},
+      {"Redefine &gt; correctly escaped 8", "<!ENTITY gt '&#x26;#x3E;'>",
+       XML_ERROR_NONE},
+      {"Redefine &gt; correctly escaped 9", "<!ENTITY gt '&#x26;#x3E;'>",
+       XML_ERROR_NONE},
+      //
+      {"Redefine &lt; correctly escaped 1", "<!ENTITY lt '&#38;#60;'>",
+       XML_ERROR_NONE},
+      {"Redefine &lt; correctly escaped 2", "<!ENTITY lt '&#38;#x3c;'>",
+       XML_ERROR_NONE},
+      {"Redefine &lt; correctly escaped 3", "<!ENTITY lt '&#38;#x3C;'>",
+       XML_ERROR_NONE},
+      {"Redefine &lt; correctly escaped 4", "<!ENTITY lt '&#x26;#60;'>",
+       XML_ERROR_NONE},
+      {"Redefine &lt; correctly escaped 5", "<!ENTITY lt '&#x26;#x3c;'>",
+       XML_ERROR_NONE},
+      {"Redefine &lt; correctly escaped 6", "<!ENTITY lt '&#x26;#x3C;'>",
+       XML_ERROR_NONE},
+      //
+      {"Redefine &quot; correctly escaped 1", "<!ENTITY quot '&#34;'>",
+       XML_ERROR_NONE},
+      {"Redefine &quot; correctly escaped 1", "<!ENTITY quot '&#x22;'>",
+       XML_ERROR_NONE},
+      {"Redefine &quot; correctly escaped 2", "<!ENTITY quot '&#38;#34;'>",
+       XML_ERROR_NONE},
+      {"Redefine &quot; correctly escaped 2", "<!ENTITY quot '&#38;#x22;'>",
+       XML_ERROR_NONE},
+      {"Redefine &quot; correctly escaped 3", "<!ENTITY quot '&#x26;#34;'>",
+       XML_ERROR_NONE},
+      {"Redefine &quot; correctly escaped 3", "<!ENTITY quot '&#x26;#x22;'>",
+       XML_ERROR_NONE},
+      //
+      // General entity, redefine literal
+      {"Redefine &amp; literal", "<!ENTITY apos '&'>", XML_ERROR_INVALID_TOKEN},
+      {"Redefine &apos; literal", "<!ENTITY apos \"'\">", XML_ERROR_NONE},
+      {"Redefine &gt; literal", "<!ENTITY gt '>'>", XML_ERROR_NONE},
+      {"Redefine &lt; literal", "<!ENTITY lt '<'>",
+       XML_ERROR_BAD_PREDEFINED_ENTITY_REDEFINITION},
+      {"Redefine &quot; literal", "<!ENTITY quot '\"'>", XML_ERROR_NONE},
+      //
+      // General entity, redefine incorrectly, internal
+      {"Redefine &amp; incorrectly internal", "<!ENTITY amp 'forbidden'>",
+       XML_ERROR_BAD_PREDEFINED_ENTITY_REDEFINITION},
+      {"Redefine &apos; incorrectly internal", "<!ENTITY apos 'forbidden'>",
+       XML_ERROR_BAD_PREDEFINED_ENTITY_REDEFINITION},
+      {"Redefine &gt; incorrectly internal", "<!ENTITY gt 'forbidden'>",
+       XML_ERROR_BAD_PREDEFINED_ENTITY_REDEFINITION},
+      {"Redefine &lt; incorrectly internal", "<!ENTITY lt 'forbidden'>",
+       XML_ERROR_BAD_PREDEFINED_ENTITY_REDEFINITION},
+      {"Redefine &quot; incorrectly internal", "<!ENTITY quot 'forbidden'>",
+       XML_ERROR_BAD_PREDEFINED_ENTITY_REDEFINITION},
+      //
+      // General entity, redefine incorrectly, external PUBLIC
+      {"Redefine &amp; incorrectly PUBLIC",
+       "<!ENTITY amp PUBLIC 'for' 'bidden'>",
+       XML_ERROR_BAD_PREDEFINED_ENTITY_REDEFINITION},
+      {"Redefine &apos; incorrectly PUBLIC",
+       "<!ENTITY apos PUBLIC 'for' 'bidden'>",
+       XML_ERROR_BAD_PREDEFINED_ENTITY_REDEFINITION},
+      {"Redefine &gt; incorrectly PUBLIC", "<!ENTITY gt PUBLIC 'for' 'bidden'>",
+       XML_ERROR_BAD_PREDEFINED_ENTITY_REDEFINITION},
+      {"Redefine &lt; incorrectly PUBLIC", "<!ENTITY lt PUBLIC 'for' 'bidden'>",
+       XML_ERROR_BAD_PREDEFINED_ENTITY_REDEFINITION},
+      {"Redefine &quot; incorrectly PUBLIC",
+       "<!ENTITY quot PUBLIC 'for' 'bidden'>",
+       XML_ERROR_BAD_PREDEFINED_ENTITY_REDEFINITION},
+      //
+      // General entity, redefine incorrectly, external SYSTEM
+      {"Redefine &amp; incorrectly SYSTEM ", "<!ENTITY amp SYSTEM 'forbidden'>",
+       XML_ERROR_BAD_PREDEFINED_ENTITY_REDEFINITION},
+      {"Redefine &apos; incorrectly SYSTEM",
+       "<!ENTITY apos SYSTEM 'forbidden'>",
+       XML_ERROR_BAD_PREDEFINED_ENTITY_REDEFINITION},
+      {"Redefine &gt; incorrectly SYSTEM", "<!ENTITY gt SYSTEM 'forbidden'>",
+       XML_ERROR_BAD_PREDEFINED_ENTITY_REDEFINITION},
+      {"Redefine &lt; incorrectly SYSTEM", "<!ENTITY lt SYSTEM 'forbidden'>",
+       XML_ERROR_BAD_PREDEFINED_ENTITY_REDEFINITION},
+      {"Redefine &quot; incorrectly SYSTEM",
+       "<!ENTITY quot SYSTEM 'forbidden'>",
+       XML_ERROR_BAD_PREDEFINED_ENTITY_REDEFINITION},
+      //
+      // General entity name-clash but wrong case
+      {"Define &AMP;", "<!ENTITY AMP 'anything'>", XML_ERROR_NONE},
+      {"Define &APOS;", "<!ENTITY APOS 'anything'>", XML_ERROR_NONE},
+      {"Define &GT;", "<!ENTITY GT 'anything'>", XML_ERROR_NONE},
+      {"Define &LT;", "<!ENTITY LT 'anything'>", XML_ERROR_NONE},
+      {"Define &QUOT;", "<!ENTITY QUOT 'anything'>", XML_ERROR_NONE},
+      //
+      // Parameter entity name-clash
+      {"Define %amp;", "<!ENTITY % amp 'anything'>", XML_ERROR_NONE},
+      {"Define %apos;", "<!ENTITY % apos 'anything'>", XML_ERROR_NONE},
+      {"Define %gt;", "<!ENTITY % gt 'anything'>", XML_ERROR_NONE},
+      {"Define %lt;", "<!ENTITY % lt 'anything'>", XML_ERROR_NONE},
+      {"Define %quot;", "<!ENTITY % quot 'anything'>", XML_ERROR_NONE},
+  };
+
+  for (size_t i = 0; i < sizeof(testCases) / sizeof(testCases[0]); i++) {
+    set_subtest("%s", testCases[i].comment);
+
+#if XML_GE == 1
+    const enum XML_Error expectedError = testCases[i].expectedError;
+#else
+    const enum XML_Error expectedError = XML_ERROR_NONE;
+#endif
+    const char *const before = "<!DOCTYPE doc [\n";
+    const char *const entityLine = testCases[i].entityLine;
+    const char *const after = "]><doc/>\n";
+
+    XML_Parser parser = XML_ParserCreate(NULL);
+
+    assert_true(_XML_Parse_SINGLE_BYTES(parser, before, (int)strlen(before),
+                                        /*isFinal=*/XML_FALSE)
+                == XML_STATUS_OK);
+    _XML_Parse_SINGLE_BYTES(parser, entityLine, (int)strlen(entityLine),
+                            /*isFinal=*/XML_FALSE);
+    _XML_Parse_SINGLE_BYTES(parser, after, (int)strlen(after),
+                            /*isFinal=*/XML_TRUE);
+
+    const enum XML_Error actualError = XML_GetErrorCode(parser);
+
+    XML_ParserFree(parser);
+
+    assert_true(actualError == expectedError);
+  }
 }
 END_TEST
 

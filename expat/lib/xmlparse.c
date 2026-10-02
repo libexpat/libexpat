@@ -3010,6 +3010,9 @@ XML_ErrorString(enum XML_Error code) {
   /* Added in 2.6.4. */
   case XML_ERROR_NOT_STARTED:
     return XML_L("parser not started");
+  /* Added in 2.9.0. */
+  case XML_ERROR_BAD_PREDEFINED_ENTITY_REDEFINITION:
+    return XML_L("bad redefinition of predefined entity");
   }
   return NULL;
 }
@@ -5483,6 +5486,131 @@ prologProcessor(XML_Parser parser, const char *s, const char *end,
                   XML_ACCOUNT_DIRECT);
 }
 
+#if XML_GE == 1
+
+// Checks `name` for being a predefined entity (i.e. on of "amp", "apos", "gt",
+// "lt", "quot"). Similar in implementation to function
+// `PREFIX(predefinedEntityName)` but operating on a zero-terminated `XML_Char`
+// string, instead. Returns ASCII_AMP/ASCII_APOS/ASCII_GT/ASCII_LT/ASCII_QUOT
+// for a match or 0 for no match.
+static int
+isPredefinedEntityName(const XML_Char *name) {
+  switch (xcslen(name)) {
+  case 2:
+    // Wanted: "lt" or "gt"
+    if (name[1] != XML_T(ASCII_t))
+      break;
+    switch (name[0]) {
+    case XML_T(ASCII_l):
+      return ASCII_LT;
+    case XML_T(ASCII_g):
+      return ASCII_GT;
+    }
+    break;
+  case 3:
+    // Wanted: "amp"
+    if (name[0] == XML_T(ASCII_a) && name[1] == XML_T(ASCII_m)
+        && name[2] == XML_T(ASCII_p))
+      return ASCII_AMP;
+    break;
+  case 4:
+    // Wanted: "apos" or "quot"
+    switch (name[0]) {
+    case XML_T(ASCII_a):
+      if (name[1] == XML_T(ASCII_p) && name[2] == XML_T(ASCII_o)
+          && name[3] == XML_T(ASCII_s))
+        return ASCII_APOS;
+      break;
+    case XML_T(ASCII_q):
+      if (name[1] == XML_T(ASCII_u) && name[2] == XML_T(ASCII_o)
+          && name[3] == XML_T(ASCII_t))
+        return ASCII_QUOT;
+      break;
+    }
+  }
+  return 0;
+}
+
+// Check a definition of a general entity against section "4.6 Predefined
+// Entities" of XML 1.0r4.
+static bool
+isBadRedefinitionOfPredefinedEntity(const XML_Char *name, const XML_Char *value,
+                                    const size_t valueLen) {
+  switch (isPredefinedEntityName(name)) {
+  case ASCII_AMP: {
+    // Example: <!ENTITY amp "&#38;#38;">
+    // Valid: "&#38;" OR "&#x26;"
+    const XML_Char ampDecimal[]
+        = {ASCII_AMP, ASCII_HASH, ASCII_3, ASCII_8, ASCII_SEMI, '\0'};
+    const XML_Char ampHexadecimal[]
+        = {ASCII_AMP, ASCII_HASH, ASCII_x, ASCII_2, ASCII_6, ASCII_SEMI, '\0'};
+    const bool matches = (xcsncmp(value, ampDecimal, valueLen) == 0
+                          || xcsncmp(value, ampHexadecimal, valueLen) == 0);
+    return ! matches;
+  }
+  case ASCII_APOS: {
+    // Example: <!ENTITY apos "&#39;">
+    // Valid: "'" OR "&#39;" OR "&#x27"
+    const XML_Char aposLiteral[] = {ASCII_APOS, '\0'};
+    const XML_Char aposDecimal[]
+        = {ASCII_AMP, ASCII_HASH, ASCII_3, ASCII_9, ASCII_SEMI, '\0'};
+    const XML_Char aposHexadecimal[]
+        = {ASCII_AMP, ASCII_HASH, ASCII_x, ASCII_2, ASCII_7, ASCII_SEMI, '\0'};
+    const bool matches = (xcsncmp(value, aposLiteral, valueLen) == 0
+                          || xcsncmp(value, aposDecimal, valueLen) == 0
+                          || xcsncmp(value, aposHexadecimal, valueLen) == 0);
+    return ! matches;
+  }
+  case ASCII_GT: {
+    // Example: <!ENTITY gt "&#62;">
+    // Valid: ">" OR "&#62;" OR "&#x3e;" OR "&#x3E;"
+    const XML_Char gtLiteral[] = {ASCII_GT, '\0'};
+    const XML_Char gtDecimal[]
+        = {ASCII_AMP, ASCII_HASH, ASCII_6, ASCII_2, ASCII_SEMI, '\0'};
+    const XML_Char gtHexadecimalLower[]
+        = {ASCII_AMP, ASCII_HASH, ASCII_x, ASCII_3, ASCII_e, ASCII_SEMI, '\0'};
+    const XML_Char gtHexadecimalUpper[]
+        = {ASCII_AMP, ASCII_HASH, ASCII_x, ASCII_3, ASCII_E, ASCII_SEMI, '\0'};
+    const bool matches = (xcsncmp(value, gtLiteral, valueLen) == 0
+                          || xcsncmp(value, gtDecimal, valueLen) == 0
+                          || xcsncmp(value, gtHexadecimalLower, valueLen) == 0
+                          || xcsncmp(value, gtHexadecimalUpper, valueLen) == 0);
+    return ! matches;
+  }
+  case ASCII_LT: {
+    // Example: <!ENTITY lt "&#38;#60;">
+    // Valid: "&#60;" OR "&#3c;" OR "&#3C;" (but NOT "<")
+    const XML_Char ltDecimal[]
+        = {ASCII_AMP, ASCII_HASH, ASCII_6, ASCII_0, ASCII_SEMI, '\0'};
+    const XML_Char letHexadecimalUpper[]
+        = {ASCII_AMP, ASCII_HASH, ASCII_x, ASCII_3, ASCII_c, ASCII_SEMI, '\0'};
+    const XML_Char letHexadecimalLower[]
+        = {ASCII_AMP, ASCII_HASH, ASCII_x, ASCII_3, ASCII_C, ASCII_SEMI, '\0'};
+    const bool matches
+        = (xcsncmp(value, ltDecimal, valueLen) == 0
+           || xcsncmp(value, letHexadecimalUpper, valueLen) == 0
+           || xcsncmp(value, letHexadecimalLower, valueLen) == 0);
+    return ! matches;
+  }
+  case ASCII_QUOT: {
+    // Example: <!ENTITY quot "&#34;">
+    // Valid: "\"" OR "&#34;" OR "&#x22;"
+    const XML_Char quotLiteral[] = {ASCII_QUOT, '\0'};
+    const XML_Char quotDecimal[]
+        = {ASCII_AMP, ASCII_HASH, ASCII_3, ASCII_4, ASCII_SEMI, '\0'};
+    const XML_Char quotHexadecimal[]
+        = {ASCII_AMP, ASCII_HASH, ASCII_x, ASCII_2, ASCII_2, ASCII_SEMI, '\0'};
+    const bool matches = (xcsncmp(value, quotLiteral, valueLen) == 0
+                          || xcsncmp(value, quotDecimal, valueLen) == 0
+                          || xcsncmp(value, quotHexadecimal, valueLen) == 0);
+    return ! matches;
+  }
+  default:
+    return false;
+  }
+}
+#endif // XML_GE == 1
+
 static enum XML_Error
 doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
          int tok, const char *next, const char **nextPtr, XML_Bool haveMore,
@@ -5946,6 +6074,16 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
           parser->m_declEntity->textLen
               = (int)(poolLength(&dtd->entityValuePool));
           poolFinish(&dtd->entityValuePool);
+
+          // Detect and reject bad redefinitions of predefined general
+          // entities (section "4.6 Predefined Entities" of XML 1.0r4)
+          if (! parser->m_declEntity->is_param
+              && isBadRedefinitionOfPredefinedEntity(
+                  parser->m_declEntity->name, parser->m_declEntity->textPtr,
+                  parser->m_declEntity->textLen)) {
+            return XML_ERROR_BAD_PREDEFINED_ENTITY_REDEFINITION;
+          }
+
           if (parser->m_entityDeclHandler) {
             *eventEndPP = s;
             beforeHandler(parser);
@@ -6028,6 +6166,11 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
       EXPAT_FALLTHROUGH;
     case XML_ROLE_ENTITY_SYSTEM_ID:
       if (dtd->keepProcessing && parser->m_declEntity) {
+#if XML_GE == 1
+        if (isPredefinedEntityName(parser->m_declEntity->name)) {
+          return XML_ERROR_BAD_PREDEFINED_ENTITY_REDEFINITION;
+        }
+#endif
         parser->m_declEntity->systemId
             = poolStoreString(&dtd->pool, enc, s + enc->minBytesPerChar,
                               next - enc->minBytesPerChar);
@@ -6094,10 +6237,6 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
       }
       break;
     case XML_ROLE_GENERAL_ENTITY_NAME: {
-      if (XmlPredefinedEntityName(enc, s, next)) {
-        parser->m_declEntity = NULL;
-        break;
-      }
       if (dtd->keepProcessing) {
         const XML_Char *name = poolStoreString(&dtd->pool, enc, s, next);
         if (! name)
