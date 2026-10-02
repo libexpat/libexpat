@@ -62,6 +62,7 @@
 #include "ns_tests.h"
 #include "nsalloc_tests.h"
 #include "props_tests.h"
+#include "xcs_tests.h"
 
 XML_Parser g_parser = NULL;
 
@@ -79,6 +80,7 @@ make_suite(void) {
   make_namespace_test_case(s);
   make_nsalloc_test_case(s);
   make_props_test_case(s);
+  make_xcs_test_case(s);
 
   return s;
 }
