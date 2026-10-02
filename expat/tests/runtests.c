@@ -103,8 +103,10 @@ main(int argc, char *argv[]) {
       return 2;
     }
   }
+#if ! defined(XML_UNICODE) || defined(XML_UNICODE_WCHAR_T)
   if (verbosity != CK_SILENT)
     printf("Expat version: %" XML_FMT_STR "\n", XML_ExpatVersion());
+#endif
 
   for (g_chunkSize = 0; g_chunkSize <= 5; g_chunkSize++) {
     for (int enabled = 0; enabled <= 1; ++enabled) {
