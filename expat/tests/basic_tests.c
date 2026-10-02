@@ -2300,6 +2300,7 @@ START_TEST(test_bad_cdata_utf16) {
     assert(actual_status == XML_STATUS_ERROR);
     actual_error = XML_GetErrorCode(g_parser);
     if (actual_error != cases[i].expected_error) {
+#if ! defined(XML_UNICODE) || defined(XML_UNICODE_WCHAR_T)
       char message[1024];
 
       snprintf(message, sizeof(message),
@@ -2309,6 +2310,9 @@ START_TEST(test_bad_cdata_utf16) {
                XML_ErrorString(cases[i].expected_error), actual_error,
                XML_ErrorString(actual_error), (long unsigned)(i + 1));
       fail(message);
+#else
+      fail("unexpected error code");
+#endif
     }
     XML_ParserReset(g_parser, NULL);
   }

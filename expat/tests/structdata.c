@@ -131,11 +131,15 @@ StructData_CheckItems(StructData *storage, const StructDataEntry *expected,
       } else {
         if (got->data0 != want->data0 || got->data1 != want->data1
             || got->data2 != want->data2) {
+#if ! defined(XML_UNICODE) || defined(XML_UNICODE_WCHAR_T)
           snprintf(buffer, sizeof(buffer),
                    "struct '%" XML_FMT_STR
                    "' expected (%d,%d,%d), got (%d,%d,%d)",
                    got->str, want->data0, want->data1, want->data2, got->data0,
                    got->data1, got->data2);
+#else
+          snprintf(buffer, sizeof(buffer), "unexpected data");
+#endif
           StructData_Dispose(storage);
           fail(buffer);
         }
