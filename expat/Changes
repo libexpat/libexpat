@@ -21,6 +21,82 @@
 !!                                   Sebastian Pipping -- Berlin, 2026-09-22 !!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
+Release 2.9.0 XXX XXXXXXXXX XX XXXX
+        Security fixes:
+           #1392  CVE-2026-102633 -- Integer overflow in function
+                    expat_realloc on 32bit platforms
+           #1393  CVE-2026-77214 -- Validate parameter `len` against available
+                    buffer capacity in XML_ParseBuffer
+
+        Bug fixes:
+           #1387  lib: Handle OOM when copying encodingName in XML_ParserReset
+
+        New features:
+           #1327  lib: Introduce new "Properties API" to get and set
+                    scalar properties for a single parser instance.
+                    There are six new functions:
+                    - XML_GetPropertyBool
+                    - XML_GetPropertyDouble
+                    - XML_GetPropertyUInt64
+                    - XML_SetPropertyBool
+                    - XML_SetPropertyDouble
+                    - XML_SetPropertyUInt64
+                    And two new enums:
+                    - XML_Prop_Error
+                    - XML_Parser_Property
+           #1323  lib: Introduce five new 64bit location API functions:
+                    - XML_GetCurrentByteCount64
+                    - XML_GetCurrentByteIndex64
+                    - XML_GetCurrentColumnNumber64
+                    - XML_GetCurrentLineNumber64
+                    - XML_GetInputContext64
+                    These five functions closely mirror their predecessors
+                    but are not prone to 32bit integer wrap-around.
+
+        Other changes:
+           #1391  docs: Document the scope of function XML_GetErrorCode
+           #1395  docs: Document length expectations for XML_ParseBuffer
+           #1394  lib: Call unknown encoding release before parser teardown
+     #1370 #1373  lib: Drop (disabled-by-default) attribute info feature
+                    These things are now gone:
+                    - Public function XML_GetAttributeInfo
+                    - Public struct XML_AttrInfo
+                    - Macro XML_ATTR_INFO
+                    These things are now causing build errors:
+                    - Configure option --enable-xml-attr-info
+                    - CMake option -DEXPAT_ATTR_INFO=ON
+           #1323  lib: Deprecate macro XML_LARGE_SIZE (use the new 64bit
+                    location API functions instead please)
+           #1323  lib: Deprecate five location API functions that are cursed
+                    with integer wrap-around:
+                    - XML_GetCurrentByteCount
+                    - XML_GetCurrentByteIndex
+                    - XML_GetCurrentColumnNumber
+                    - XML_GetCurrentLineNumber
+                    - XML_GetInputContext
+           #1399  lib: Guard against out-of-handler use of XML_DefaultCurrent
+  #1401 #1402 ..
+     #1404 #1405  lib|xmlwf|tests: Unify use of xcslen, xcscmp and xcsncmp
+           #1402  xmlwf|tests: Rewrite xcscmp
+
+        Infrastructure:
+           #1386  CI: Bump MinGW Clang from 23.1.1 to 23.1.2
+           #1388  CI: Adapt to breaking changes regarding windows-11-arm image
+           #1403  CI: Limit package cache download runtime
+
+        Special thanks to:
+            Bénédikt Tran
+            Berkay Eren Ürün
+            Fabian Wahle (Hap Security)
+            Filippo Tedeschi
+            Junki Lee
+            Matthew Fernandez
+            Scott Moore
+            Wade Sparks III
+                 and
+            City of Munich Open Source Sabbatical
+            VulnCheck
+
 Release 2.8.5 Tue September 22 2026
         Security fixes:
            #1282  CVE-2026-93990 -- Reject high surrogates not followed by a
