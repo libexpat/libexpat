@@ -63,7 +63,9 @@
 #  define _XCS(s) L##s
 #else
 #  ifdef XML_UNICODE
-#    error "No support for UTF-16 character without wchar_t in tests"
+#    define XML_FMT_STR "ls"
+#    define XCS(s) _XCS(s)
+#    define _XCS(s) L##s
 #  else
 #    define XML_FMT_STR "s"
 #    define XCS(s) s
