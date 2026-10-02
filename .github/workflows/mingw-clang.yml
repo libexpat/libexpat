@@ -53,6 +53,11 @@ jobs:
             mingw_arch: i686
             wine_arch: win32
             wine_packages: wine32:i386 wine32-preloader:i386
+          - name: ushort
+            cmake_args: -DEXPAT_CHAR_TYPE=ushort -DEXPAT_BUILD_EXAMPLES=OFF -DEXPAT_BUILD_TOOLS=OFF
+            mingw_arch: x86_64
+            wine_arch: win64
+            wine_package: wine64 wine64-preloader
           - name: wchar_t
             cmake_args: -DEXPAT_CHAR_TYPE=wchar_t
             mingw_arch: x86_64
