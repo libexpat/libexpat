@@ -188,11 +188,20 @@ void
 _xml_failure(XML_Parser parser, const char *file, int line) {
   char buffer[1024];
   enum XML_Error err = XML_GetErrorCode(parser);
+#if ! defined(XML_UNICODE) || defined(XML_UNICODE_WCHAR_T)
+
   snprintf(buffer, sizeof(buffer),
            "    %d: %" XML_FMT_STR " (line %" PRIu64 ", offset %" PRIu64
            ")\n    reported from %s, line %d\n",
            err, XML_ErrorString(err), XML_GetCurrentLineNumber64(parser),
            XML_GetCurrentColumnNumber64(parser), file, line);
+#else
+  snprintf(buffer, sizeof(buffer),
+           "    %d (line %" PRIu64 ", offset %" PRIu64
+           ")\n    reported from %s, line %d\n",
+           err, XML_GetCurrentLineNumber64(parser),
+           XML_GetCurrentColumnNumber64(parser), file, line);
+#endif
   _fail(file, line, buffer);
 }
 
