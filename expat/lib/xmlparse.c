@@ -463,8 +463,8 @@ typedef struct accounting {
 } ACCOUNTING;
 
 typedef struct MALLOC_TRACKER {
-  XmlBigCount bytesAllocated;
-  XmlBigCount peakBytesAllocated; // updated live only for debug level >=2
+  size_t bytesAllocated;
+  size_t peakBytesAllocated; // updated live only for debug level >=2
   unsigned long debugLevel;
   float maximumAmplificationFactor; // >=1.0
   XmlBigCount activationThresholdBytes;
@@ -841,30 +841,30 @@ struct XML_ParserStruct {
 
 #if XML_GE == 1
 static void
-expat_heap_stat(XML_Parser rootParser, char operator, XmlBigCount absDiff,
-                XmlBigCount newTotal, XmlBigCount peakTotal, int sourceLine) {
+expat_heap_stat(XML_Parser rootParser, char operator, size_t absDiff,
+                size_t newTotal, size_t peakTotal, int sourceLine) {
   // NOTE: This can be +infinity or -nan
   const float amplification
       = (float)newTotal / (float)rootParser->m_accounting.countBytesDirect;
   fprintf(
       stderr,
-      "expat: Allocations(%p): Direct " EXPAT_FMT_ULL("10") ", allocated %c" EXPAT_FMT_ULL(
-          "10") " to " EXPAT_FMT_ULL("10") " (" EXPAT_FMT_ULL("10") " peak), amplification %8.2f (xmlparse.c:%d)\n",
+      "expat: Allocations(%p): Direct " EXPAT_FMT_ULL("10") ", allocated %c" EXPAT_FMT_SIZE_T(
+          "10") " to " EXPAT_FMT_SIZE_T("10") " (" EXPAT_FMT_SIZE_T("10") " peak), amplification %8.2f (xmlparse.c:%d)\n",
       (void *)rootParser, rootParser->m_accounting.countBytesDirect, operator,
       absDiff, newTotal, peakTotal, (double)amplification, sourceLine);
 }
 
 static bool
-expat_heap_increase_tolerable(XML_Parser rootParser, XmlBigCount increase,
+expat_heap_increase_tolerable(XML_Parser rootParser, size_t increase,
                               int sourceLine) {
   assert(rootParser != NULL);
   assert(increase > 0);
 
-  XmlBigCount newTotal = 0;
+  size_t newTotal = 0;
   bool tolerable = true;
 
   // Detect integer overflow
-  if ((XmlBigCount)-1 - rootParser->m_alloc_tracker.bytesAllocated < increase) {
+  if (SIZE_MAX - rootParser->m_alloc_tracker.bytesAllocated < increase) {
     tolerable = false;
   } else {
     newTotal = rootParser->m_alloc_tracker.bytesAllocated + increase;
@@ -904,8 +904,7 @@ expat_malloc(XML_Parser parser, size_t size, int sourceLine) {
 
   const size_t bytesToAllocate = sizeof(size_t) + EXPAT_MALLOC_PADDING + size;
 
-  if ((XmlBigCount)-1 - rootParser->m_alloc_tracker.bytesAllocated
-      < bytesToAllocate) {
+  if (SIZE_MAX - rootParser->m_alloc_tracker.bytesAllocated < bytesToAllocate) {
     return NULL; // i.e. signal integer overflow as out-of-memory
   }
 
@@ -1030,8 +1029,7 @@ expat_realloc(XML_Parser parser, void *ptr, size_t size, int sourceLine) {
 
   // Update accounting
   if (isIncrease) {
-    assert((XmlBigCount)-1 - rootParser->m_alloc_tracker.bytesAllocated
-           >= absDiff);
+    assert(SIZE_MAX - rootParser->m_alloc_tracker.bytesAllocated >= absDiff);
     rootParser->m_alloc_tracker.bytesAllocated += absDiff;
   } else { // i.e. decrease
     assert(rootParser->m_alloc_tracker.bytesAllocated >= absDiff);
