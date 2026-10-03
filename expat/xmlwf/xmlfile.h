@@ -37,6 +37,8 @@
 
 #include <stdbool.h>
 
+#include "expat.h" // for XML_Parser, XML_Char
+
 #define XML_MAP_FILE 01
 #define XML_EXTERNAL_ENTITIES 02
 
