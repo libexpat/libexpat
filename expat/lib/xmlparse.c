@@ -56,6 +56,8 @@
    Copyright (c) 2026      Zeyou Liu <zeyouliu@tencent.com>
    Copyright (c) 2026      Stan Ulbrych <stan@python.org>
    Copyright (c) 2026      Braian Plaku <braianplaku@gmail.com>
+   Copyright (c) 2026      Filippo Tedeschi <filippotedeschi98@gmail.com>
+   Copyright (c) 2026      Junki Lee <junkilee80@gmail.com>
    Licensed under the MIT license:
 
    Permission is  hereby granted,  free of charge,  to any  person obtaining
