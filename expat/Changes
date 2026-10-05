@@ -117,17 +117,6 @@ Release 2.8.5 Tue September 22 2026
                     Upstream CVSS 3.1 vector:
                     AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H (CVSS score: 9.8)
 
-///////////////////////////////////////////////////////////////////////////////
-// The next release will drop two (disabled-by-default) features:            //
-//                                                                           //
-// - ATTR_INFO (-DXML_ATTR_INFO, -DEXPAT_ATTR_INFO, --enable-xml-attr-info,  //
-//              function XML_GetAttributeInfo, struct XML_AttrInfo)          //
-// - MIN_SIZE (-DXML_MIN_SIZE, -DEXPAT_MIN_SIZE)                             //
-//                                                                           //
-// If you need them in 2026 and beyond, please share your scenario at        //
-// GitHub issues #1370 (for ATTR_INFO) and/or #1379 (for MIN_SIZE). Thanks!  //
-///////////////////////////////////////////////////////////////////////////////
-
         Bug fixes:
            #1346  lib: Fix OOM-related memory leak on a failed overflow check
            #1371  lib: Fix memory alignment for architectures with 128bit
