@@ -129,5 +129,11 @@ jobs:
     - name: Perform check "${{ matrix.MODE }}"
       env:
         MODE: ${{ matrix.MODE }}
+        drop_warning: "${{ contains(matrix.FLAT_ENV, '-DEXPAT_LARGE_SIZE=ON') && 'true' || 'false' }}"
       run: |
+        if ${drop_warning} ; then
+          sed 's|^# *warning|// &|' -i.bak expat/lib/expat_external.h
+          rm                               expat/lib/expat_external.h.bak
+        fi
+
         env ${{ matrix.FLAT_ENV }} ./.ci.sh
