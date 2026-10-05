@@ -85,6 +85,9 @@ Release 2.9.0 XXX XXXXXXXXX XX XXXX
   #1401 #1402 ..
      #1404 #1405  lib|xmlwf|tests: Unify use of xcslen, xcscmp and xcsncmp
            #1406  xmlwf: Add missing `#include "expat.h"`
+     #1389 #1396  Version info bumped from 13:5:12 (libexpat*.so.1.12.5)
+                    to 14:0:13 (libexpat*.so.1.13.0); see https://verbump.de/
+                    for what these numbers do
 
         Infrastructure:
            #1386  CI: Bump MinGW Clang from 23.1.1 to 23.1.2
