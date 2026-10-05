@@ -5,21 +5,21 @@
                        \___/_/\_\ .__/ \__,_|\__|
                                 |_| XML parser
 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!! <blink>Expat has UNFIXED SECURITY ISSUES!</blink>                         !!
-!! Please see https://github.com/libexpat/libexpat/issues/1160 for details.  !!
-!!                                                                           !!
-!! Starting 2026-08-01, for up to six months my work maintaining libexpat    !!
-!! will be funded by the City of Munich as part of their                     !!
-!! Open Source Sabbatical (https://opensource.muenchen.de/sabbatical.html)   !!
-!! — thank you!                                                              !!
-!!                                                                           !!
-!! If your business relies on Expat beyond January 2027, please consider     !!
-!! funding the maintenance of Expat to ensure its health and security for    !!
-!! you and others. Thank you!                                                !!
-!!                                                                           !!
-!!                                   Sebastian Pipping -- Berlin, 2026-09-22 !!
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+///////////////////////////////////////////////////////////////////////////////
+// <blink>Expat has UNFIXED SECURITY ISSUES!</blink>                         //
+// Please see https://github.com/libexpat/libexpat/issues/1160 for details.  //
+//                                                                           //
+// Starting 2026-08-01, for up to six months my work maintaining libexpat    //
+// will be funded by the City of Munich as part of their                     //
+// Open Source Sabbatical (https://opensource.muenchen.de/sabbatical.html)   //
+// — thank you!                                                              //
+//                                                                           //
+// If your business relies on Expat beyond January 2027, please consider     //
+// funding the maintenance of Expat to ensure its health and security for    //
+// you and others. Thank you!                                                //
+//                                                                           //
+//                                   Sebastian Pipping -- Berlin, 2026-09-22 //
+///////////////////////////////////////////////////////////////////////////////
 
 Release 2.9.0 XXX XXXXXXXXX XX XXXX
         Security fixes:
