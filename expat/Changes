@@ -21,7 +21,7 @@
 //                                   Sebastian Pipping -- Berlin, 2026-09-22 //
 ///////////////////////////////////////////////////////////////////////////////
 
-Release 2.9.0 XXX XXXXXXXXX XX XXXX
+Release 2.9.0 Mon October 5 2026
         Security fixes:
            #1392  CVE-2026-102633 -- Integer overflow in function
                     expat_realloc on 32bit platforms
