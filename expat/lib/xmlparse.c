@@ -1,4 +1,4 @@
-/* 0864fe2d216f47b742263b698bc051c865b342e8b820e42c234717098ea507e3 (2.8.5+)
+/* e3ca845466942140c9af531ac57808c4650116df5d6dbeda3b6546d2548a586e (2.9.0+)
                             __  __            _
                          ___\ \/ /_ __   __ _| |_
                         / _ \\  /| '_ \ / _` | __|
@@ -56,6 +56,8 @@
    Copyright (c) 2026      Zeyou Liu <zeyouliu@tencent.com>
    Copyright (c) 2026      Stan Ulbrych <stan@python.org>
    Copyright (c) 2026      Braian Plaku <braianplaku@gmail.com>
+   Copyright (c) 2026      Filippo Tedeschi <filippotedeschi98@gmail.com>
+   Copyright (c) 2026      Junki Lee <junkilee80@gmail.com>
    Licensed under the MIT license:
 
    Permission is  hereby granted,  free of charge,  to any  person obtaining
