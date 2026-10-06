@@ -49,7 +49,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: macos-14
+          - os: macoS-26
             configure_args:
             cmake_args:
           - os: ubuntu-22.04
