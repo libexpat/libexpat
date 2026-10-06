@@ -1084,7 +1084,7 @@ enum XML_Parser_Property {
 #  if defined(XML_TESTING)
   XML_PROP_INVALID = 0,
 #  endif
-#  if XML_GE == 1
+#  if defined(XML_GE) && XML_GE == 1
   XML_PROP_ALLOC_TRACKER_ACTIVATION_THRESHOLD = 1,   // of type `uint64_t`
   XML_PROP_ALLOC_TRACKER_MAXIMUM_AMPLIFICATION = 2,  // of type `double`
   XML_PROP_BILLION_LAUGHS_ACTIVATION_THRESHOLD = 3,  // of type `uint64_t`
