@@ -47,7 +47,7 @@ jobs:
     timeout-minutes: 15
     strategy:
       matrix:
-        os: [macos-14, macos-15]
+        os: [macos-15, macos-26]
         include:
           - MODE: cmake-oos
           - MODE: distcheck
