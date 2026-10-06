@@ -5931,9 +5931,13 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
 #if XML_GE == 1
         // This will store the given replacement text in
         // parser->m_declEntity->textPtr.
-        enum XML_Error result = callStoreEntityValue(
+        const enum XML_Error result = callStoreEntityValue(
             parser, enc, s + enc->minBytesPerChar, next - enc->minBytesPerChar,
             XML_ACCOUNT_NONE);
+        if (result != XML_ERROR_NONE) {
+          poolDiscard(&dtd->entityValuePool);
+          return result;
+        }
         if (parser->m_declEntity) {
           /* Detect and prevent signed integer overflow */
           if ((size_t)poolLength(&dtd->entityValuePool) > (size_t)INT_MAX) {
@@ -5954,8 +5958,6 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
           }
         } else
           poolDiscard(&dtd->entityValuePool);
-        if (result != XML_ERROR_NONE)
-          return result;
 #else
         // This will store "&amp;entity123;" in parser->m_declEntity->textPtr
         // to end up as "&entity123;" in the handler.
