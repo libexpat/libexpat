@@ -312,8 +312,8 @@ typedef struct tag {
 typedef struct {
   const XML_Char *name;
   const XML_Char *textPtr;
-  int textLen;   /* length in XML_Chars */
-  int processed; /* # of processed bytes - when suspended */
+  size_t textLen;   /* length in XML_Chars */
+  size_t processed; /* # of processed bytes - when suspended */
   const XML_Char *systemId;
   const XML_Char *base;
   const XML_Char *publicId;
@@ -597,7 +597,7 @@ static const XML_Char *poolCopyString(STRING_POOL *pool, const XML_Char *s);
 static const XML_Char *poolCopyStringNoFinish(STRING_POOL *pool,
                                               const XML_Char *s);
 static const XML_Char *poolCopyStringN(STRING_POOL *pool, const XML_Char *s,
-                                       int n);
+                                       size_t n);
 static const XML_Char *poolAppendString(STRING_POOL *pool, const XML_Char *s);
 
 static int nextScaffoldPart(XML_Parser parser);
@@ -5940,8 +5940,7 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
             return XML_ERROR_NO_MEMORY;
           }
           parser->m_declEntity->textPtr = poolStart(&dtd->entityValuePool);
-          parser->m_declEntity->textLen
-              = (int)(poolLength(&dtd->entityValuePool));
+          parser->m_declEntity->textLen = poolLength(&dtd->entityValuePool);
           poolFinish(&dtd->entityValuePool);
           if (parser->m_entityDeclHandler) {
             *eventEndPP = s;
@@ -5949,7 +5948,7 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
             parser->m_entityDeclHandler(
                 parser->m_handlerArg, parser->m_declEntity->name,
                 parser->m_declEntity->is_param, parser->m_declEntity->textPtr,
-                parser->m_declEntity->textLen, parser->m_curBase, 0, 0, 0);
+                (int)parser->m_declEntity->textLen, parser->m_curBase, 0, 0, 0);
             afterHandler(parser);
             handleDefault = XML_FALSE;
           }
@@ -5972,7 +5971,7 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
             parser->m_entityDeclHandler(
                 parser->m_handlerArg, parser->m_declEntity->name,
                 parser->m_declEntity->is_param, parser->m_declEntity->textPtr,
-                parser->m_declEntity->textLen, parser->m_curBase, 0, 0, 0);
+                (int)parser->m_declEntity->textLen, parser->m_curBase, 0, 0, 0);
             afterHandler(parser);
             handleDefault = XML_FALSE;
           }
@@ -6786,7 +6785,7 @@ internalEntityProcessor(XML_Parser parser, const char *s, const char *end,
         && (parser->m_parsingStatus.parsing == XML_SUSPENDED
             || (parser->m_parsingStatus.parsing == XML_PARSING
                 && parser->m_reenter))) {
-      entity->processed = (int)(next - (const char *)entity->textPtr);
+      entity->processed = next - (const char *)entity->textPtr;
       return result;
     }
 
@@ -6867,8 +6866,7 @@ storeAttributeValue(XML_Parser parser, const ENCODING *enc, XML_Bool isCdata,
         // processed. A XML_SUSPENDED check here is not required as
         // appendAttributeValue will never suspend the parser.
         if (nextInEntity < textEnd) {
-          entity->processed
-              = (int)(nextInEntity - (const char *)entity->textPtr);
+          entity->processed = nextInEntity - (const char *)entity->textPtr;
           continue;
         }
         assert(nextInEntity == textEnd);
@@ -7328,8 +7326,7 @@ callStoreEntityValue(XML_Parser parser, const ENCODING *enc,
         // processed. A XML_SUSPENDED check here is not required as
         // appendAttributeValue will never suspend the parser.
         if (textEnd != nextInEntity) {
-          entity->processed
-              = (int)(nextInEntity - (const char *)entity->textPtr);
+          entity->processed = nextInEntity - (const char *)entity->textPtr;
           continue;
         }
 
@@ -7390,7 +7387,7 @@ storeSelfEntityValue(XML_Parser parser, ENTITY *entity) {
     return XML_ERROR_NO_MEMORY;
   }
   entity->textPtr = poolStart(pool);
-  entity->textLen = (int)(poolLength(pool));
+  entity->textLen = poolLength(pool);
   poolFinish(pool);
 
   return XML_ERROR_NONE;
@@ -8489,7 +8486,7 @@ poolCopyStringNoFinish(STRING_POOL *pool, const XML_Char *s) {
 }
 
 static const XML_Char *
-poolCopyStringN(STRING_POOL *pool, const XML_Char *s, int n) {
+poolCopyStringN(STRING_POOL *pool, const XML_Char *s, size_t n) {
   if (! pool->ptr && ! poolGrow(pool)) {
     /* The following line is unreachable given the current usage of
      * poolCopyStringN().  Currently it is called from exactly one
@@ -9107,7 +9104,8 @@ entityTrackingReportStats(XML_Parser rootParser, ENTITY *entity,
 
   fprintf(
       stderr,
-      "expat: Entities(%p): Count %9u, depth %2u/%2u %*s%s%s%s; %s length %d (xmlparse.c:%d)\n",
+      "expat: Entities(%p): Count %9u, depth %2u/%2u %*s%s%s%s; %s length " EXPAT_FMT_SIZE_T(
+          "") " (xmlparse.c:%d)\n",
       (void *)rootParser, rootParser->m_entity_stats.countEverOpened,
       rootParser->m_entity_stats.currentDepth,
       rootParser->m_entity_stats.maximumDepthSeen, indentDepth * 2, "",

@@ -2862,6 +2862,12 @@ typedef void
           The <code>notationName</code> argument will have a non-<code>NULL</code> value
           only for unparsed entity declarations.
         </p>
+
+        <p>
+          <strong>Note:</strong> Length <code>value_length</code> can wrap around on
+          platforms where <code>int</code> is smaller than <code>size_t</code> including
+          <code>x86_64</code>.
+        </p>
       </div>
 
       <div class="handler">
