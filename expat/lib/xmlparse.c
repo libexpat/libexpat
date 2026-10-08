@@ -5941,6 +5941,7 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
         if (parser->m_declEntity) {
           /* Detect and prevent signed integer overflow */
           if ((size_t)poolLength(&dtd->entityValuePool) > (size_t)INT_MAX) {
+            poolDiscard(&dtd->entityValuePool);
             return XML_ERROR_NO_MEMORY;
           }
           parser->m_declEntity->textPtr = poolStart(&dtd->entityValuePool);
