@@ -365,7 +365,7 @@ typedef struct attribute_id {
 
 typedef struct {
   const ATTRIBUTE_ID *id;
-  XML_Bool isCdata;
+  bool isCdata;
   const XML_Char *value;
 } DEFAULT_ATTRIBUTE;
 
@@ -537,15 +537,15 @@ static enum XML_Error addBinding(XML_Parser parser, PREFIX *prefix,
                                  const ATTRIBUTE_ID *attId, const XML_Char *uri,
                                  BINDING **bindingsPtr);
 static int defineAttribute(ELEMENT_TYPE *type, ATTRIBUTE_ID *attId,
-                           XML_Bool isCdata, XML_Bool isId,
-                           const XML_Char *value, XML_Parser parser);
+                           bool isCdata, bool isId, const XML_Char *value,
+                           XML_Parser parser);
 static enum XML_Error storeAttributeValue(XML_Parser parser,
-                                          const ENCODING *enc, XML_Bool isCdata,
+                                          const ENCODING *enc, bool isCdata,
                                           const char *ptr, const char *end,
                                           STRING_POOL *pool,
                                           enum XML_Account account);
 static enum XML_Error
-appendAttributeValue(XML_Parser parser, const ENCODING *enc, XML_Bool isCdata,
+appendAttributeValue(XML_Parser parser, const ENCODING *enc, bool isCdata,
                      const char *ptr, const char *end, STRING_POOL *pool,
                      enum XML_Account account, const char **nextPtr);
 static ATTRIBUTE_ID *getAttributeId(XML_Parser parser, const ENCODING *enc,
@@ -792,8 +792,8 @@ struct XML_ParserStruct {
   const XML_Char *m_declNotationPublicId;
   ELEMENT_TYPE *m_declElementType;
   ATTRIBUTE_ID *m_declAttributeId;
-  XML_Bool m_declAttributeIsCdata;
-  XML_Bool m_declAttributeIsId;
+  bool m_declAttributeIsCdata;
+  bool m_declAttributeIsId;
   DTD *m_dtd;
   const XML_Char *m_curBase;
   TAG *m_tagStack;
@@ -1524,8 +1524,8 @@ parserInit(XML_Parser parser, const XML_Char *encodingName) {
   parser->m_declAttributeType = NULL;
   parser->m_declNotationName = NULL;
   parser->m_declNotationPublicId = NULL;
-  parser->m_declAttributeIsCdata = XML_FALSE;
-  parser->m_declAttributeIsId = XML_FALSE;
+  parser->m_declAttributeIsCdata = false;
+  parser->m_declAttributeIsId = false;
   memset(&parser->m_position, 0, sizeof(POSITION));
   parser->m_errorCode = XML_ERROR_NONE;
   parser->m_eventPtr = NULL;
@@ -4226,7 +4226,7 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
     (attId->name)[-1] = 1;
     appAtts[attIndex++] = attId->name;
     if (! parser->m_atts[i].normalized) {
-      XML_Bool isCdata = XML_TRUE;
+      bool isCdata = true;
 
       /* figure out whether declared as other than CDATA */
       if (attId->maybeTokenized) {
@@ -5804,16 +5804,16 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
       parser->m_declAttributeId = getAttributeId(parser, enc, s, next);
       if (! parser->m_declAttributeId)
         return XML_ERROR_NO_MEMORY;
-      parser->m_declAttributeIsCdata = XML_FALSE;
+      parser->m_declAttributeIsCdata = false;
       parser->m_declAttributeType = NULL;
-      parser->m_declAttributeIsId = XML_FALSE;
+      parser->m_declAttributeIsId = false;
       goto checkAttListDeclHandler;
     case XML_ROLE_ATTRIBUTE_TYPE_CDATA:
-      parser->m_declAttributeIsCdata = XML_TRUE;
+      parser->m_declAttributeIsCdata = true;
       parser->m_declAttributeType = atypeCDATA;
       goto checkAttListDeclHandler;
     case XML_ROLE_ATTRIBUTE_TYPE_ID:
-      parser->m_declAttributeIsId = XML_TRUE;
+      parser->m_declAttributeIsId = true;
       parser->m_declAttributeType = atypeID;
       goto checkAttListDeclHandler;
     case XML_ROLE_ATTRIBUTE_TYPE_IDREF:
@@ -5901,7 +5901,7 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
         /* ID attributes aren't allowed to have a default */
         if (! defineAttribute(
                 parser->m_declElementType, parser->m_declAttributeId,
-                parser->m_declAttributeIsCdata, XML_FALSE, attVal, parser))
+                parser->m_declAttributeIsCdata, false, attVal, parser))
           return XML_ERROR_NO_MEMORY;
         if (parser->m_attlistDeclHandler && parser->m_declAttributeType) {
           if (*parser->m_declAttributeType == XML_T(ASCII_LPAREN)
@@ -6837,7 +6837,7 @@ errorProcessor(XML_Parser parser, const char *s, const char *end,
 }
 
 static enum XML_Error
-storeAttributeValue(XML_Parser parser, const ENCODING *enc, XML_Bool isCdata,
+storeAttributeValue(XML_Parser parser, const ENCODING *enc, bool isCdata,
                     const char *ptr, const char *end, STRING_POOL *pool,
                     enum XML_Account account) {
   const char *next = ptr;
@@ -6914,7 +6914,7 @@ storeAttributeValue(XML_Parser parser, const ENCODING *enc, XML_Bool isCdata,
 }
 
 static enum XML_Error
-appendAttributeValue(XML_Parser parser, const ENCODING *enc, XML_Bool isCdata,
+appendAttributeValue(XML_Parser parser, const ENCODING *enc, bool isCdata,
                      const char *ptr, const char *end, STRING_POOL *pool,
                      enum XML_Account account, const char **nextPtr) {
   DTD *const dtd = parser->m_dtd; /* save one level of indirection */
@@ -7523,8 +7523,8 @@ reportDefault(XML_Parser parser, const ENCODING *enc, const char *s,
 }
 
 static int
-defineAttribute(ELEMENT_TYPE *type, ATTRIBUTE_ID *attId, XML_Bool isCdata,
-                XML_Bool isId, const XML_Char *value, XML_Parser parser) {
+defineAttribute(ELEMENT_TYPE *type, ATTRIBUTE_ID *attId, bool isCdata,
+                bool isId, const XML_Char *value, XML_Parser parser) {
   DEFAULT_ATTRIBUTE *att;
   if (value || isId) {
     /* The handling of default attributes gets messed up if we have
@@ -7685,7 +7685,7 @@ static const XML_Char *
 getContext(XML_Parser parser) {
   DTD *const dtd = parser->m_dtd; /* save one level of indirection */
   HASH_TABLE_ITER iter;
-  XML_Bool needSep = XML_FALSE;
+  bool needSep = false;
 
   if (dtd->defaultPrefix.binding) {
     if (! poolAppendChar(&parser->m_tempPool, XML_T(ASCII_EQUALS)))
@@ -7716,7 +7716,7 @@ getContext(XML_Parser parser) {
        */
       return NULL; /* LCOV_EXCL_LINE */
     }
-    needSep = XML_TRUE;
+    needSep = true;
   }
 
   hashTableIterInit(&iter, &(dtd->prefixes));
@@ -7745,7 +7745,7 @@ getContext(XML_Parser parser) {
       len--;
     if (! poolAppendChars(&parser->m_tempPool, prefix->binding->uri, len))
       return NULL;
-    needSep = XML_TRUE;
+    needSep = true;
   }
 
   hashTableIterInit(&iter, &(dtd->generalEntities));
@@ -7759,7 +7759,7 @@ getContext(XML_Parser parser) {
       return NULL;
     if (! poolAppendChars(&parser->m_tempPool, e->name, xcslen(e->name)))
       return NULL;
-    needSep = XML_TRUE;
+    needSep = true;
   }
 
   if (! poolAppendChar(&parser->m_tempPool, XML_T('\0')))
