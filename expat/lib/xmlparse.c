@@ -7682,7 +7682,7 @@ static const XML_Char *
 getContext(XML_Parser parser) {
   DTD *const dtd = parser->m_dtd; /* save one level of indirection */
   HASH_TABLE_ITER iter;
-  XML_Bool needSep = XML_FALSE;
+  bool needSep = false;
 
   if (dtd->defaultPrefix.binding) {
     if (! poolAppendChar(&parser->m_tempPool, XML_T(ASCII_EQUALS)))
@@ -7713,7 +7713,7 @@ getContext(XML_Parser parser) {
        */
       return NULL; /* LCOV_EXCL_LINE */
     }
-    needSep = XML_TRUE;
+    needSep = true;
   }
 
   hashTableIterInit(&iter, &(dtd->prefixes));
@@ -7742,7 +7742,7 @@ getContext(XML_Parser parser) {
       len--;
     if (! poolAppendChars(&parser->m_tempPool, prefix->binding->uri, len))
       return NULL;
-    needSep = XML_TRUE;
+    needSep = true;
   }
 
   hashTableIterInit(&iter, &(dtd->generalEntities));
@@ -7756,7 +7756,7 @@ getContext(XML_Parser parser) {
       return NULL;
     if (! poolAppendChars(&parser->m_tempPool, e->name, xcslen(e->name)))
       return NULL;
-    needSep = XML_TRUE;
+    needSep = true;
   }
 
   if (! poolAppendChar(&parser->m_tempPool, XML_T('\0')))
