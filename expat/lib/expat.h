@@ -138,6 +138,8 @@ enum XML_Error {
   XML_ERROR_AMPLIFICATION_LIMIT_BREACH,
   /* Added in 2.6.4. */
   XML_ERROR_NOT_STARTED,
+  /* Added in 2.9.0. */
+  XML_ERROR_BAD_PREDEFINED_ENTITY_REDEFINITION,
 };
 
 /* Added in 2.9.0. */
