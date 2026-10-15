@@ -6522,6 +6522,38 @@ START_TEST(test_nested_entity_suspend_2) {
 }
 END_TEST
 
+/* Regression test for issue #1419: a CDATA section inside an internal
+ * entity used to be resumed against the document buffer, so the markup
+ * following it was reported as character data (and a benign document could
+ * fail with XML_ERROR_UNCLOSED_CDATA_SECTION).
+ */
+START_TEST(test_cdata_in_internal_entity_suspend) {
+  const char *const text = "<!DOCTYPE doc [\n"
+                           "  <!ENTITY e '<![CDATA[beforeZ<b>hi</b>]]>'>\n"
+                           "]>\n"
+                           "<doc>&e;Y</doc>";
+  const XML_Char *const expected = XCS("beforeZ<b>hi</b>") XCS("Y");
+
+  CharData storage;
+  CharData_Init(&storage);
+  XML_Parser parser = XML_ParserCreate(NULL);
+  ParserPlusStorage parserPlusStorage = {parser, &storage};
+
+  XML_SetCharacterDataHandler(parser, accumulate_char_data_and_suspend);
+  XML_SetUserData(parser, &parserPlusStorage);
+
+  enum XML_Status status = XML_Parse(parser, text, (int)strlen(text), XML_TRUE);
+  while (status == XML_STATUS_SUSPENDED) {
+    status = XML_ResumeParser(parser);
+  }
+  if (status != XML_STATUS_OK)
+    xml_failure(parser);
+
+  CharData_CheckXMLChars(&storage, expected);
+  XML_ParserFree(parser);
+}
+END_TEST
+
 /* Regression test for quadratic parsing on large tokens */
 START_TEST(test_big_tokens_scale_linearly) {
   const struct {
@@ -7410,6 +7442,7 @@ make_basic_test_case(Suite *s) {
   tcase_add_test__if_xml_ge(tc_basic,
                             test_deep_nested_entity_delayed_interpretation);
   tcase_add_test__if_xml_ge(tc_basic, test_nested_entity_suspend);
+  tcase_add_test__if_xml_ge(tc_basic, test_cdata_in_internal_entity_suspend);
   tcase_add_test__if_xml_ge(tc_basic, test_nested_entity_suspend_2);
   tcase_add_test(tc_basic, test_big_tokens_scale_linearly);
   tcase_add_test(tc_basic, test_set_reparse_deferral);
