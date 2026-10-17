@@ -1630,6 +1630,9 @@ XML_ParserReset(XML_Parser parser, const XML_Char *encodingName) {
   parser->m_protocolEncodingName = NULL;
   parserInit(parser, encodingName);
   dtdReset(parser->m_dtd, parser);
+
+  // NOTE: This effectively checks for `copyString` having failed during the
+  //       call to `parserInit` above
   if (encodingName && ! parser->m_protocolEncodingName) {
     parser->m_errorCode = XML_ERROR_NO_MEMORY;
     return XML_FALSE;
