@@ -467,6 +467,7 @@ typedef struct accounting {
 typedef struct MALLOC_TRACKER {
   size_t bytesAllocated;
   size_t peakBytesAllocated; // updated live only for debug level >=2
+  size_t bytesAllocatedWhenLastReset;
   unsigned long debugLevel;
   float maximumAmplificationFactor; // >=1.0
   XmlBigCount activationThresholdBytes;
@@ -865,7 +866,16 @@ expat_heap_increase_tolerable(XML_Parser rootParser, size_t increase,
   size_t newTotal = 0;
   bool tolerable = true;
 
-  const size_t bytesAllocated = rootParser->m_alloc_tracker.bytesAllocated;
+  // The idea is to subtract the amount of memory that was already
+  // allocated the last time that `XML_ParserReset` was called for
+  // this parser, the memory use of one document could skew the
+  // memory statso of the next document.
+  const size_t bytesAllocated
+      = (rootParser->m_alloc_tracker.bytesAllocatedWhenLastReset
+         > rootParser->m_alloc_tracker.bytesAllocated)
+            ? 0
+            : (rootParser->m_alloc_tracker.bytesAllocated
+               - rootParser->m_alloc_tracker.bytesAllocatedWhenLastReset);
 
   // Detect integer overflow
   if (SIZE_MAX - bytesAllocated < increase) {
@@ -1632,6 +1642,11 @@ XML_ParserReset(XML_Parser parser, const XML_Char *encodingName) {
   parser->m_protocolEncodingName = NULL;
   parserInit(parser, encodingName);
   dtdReset(parser->m_dtd, parser);
+
+#if XML_GE == 1
+  parser->m_alloc_tracker.bytesAllocatedWhenLastReset
+      = parser->m_alloc_tracker.bytesAllocated;
+#endif
 
   // NOTE: This effectively checks for `copyString` having failed during the
   //       call to `parserInit` above
