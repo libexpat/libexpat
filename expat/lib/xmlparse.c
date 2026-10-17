@@ -865,11 +865,13 @@ expat_heap_increase_tolerable(XML_Parser rootParser, size_t increase,
   size_t newTotal = 0;
   bool tolerable = true;
 
+  const size_t bytesAllocated = rootParser->m_alloc_tracker.bytesAllocated;
+
   // Detect integer overflow
-  if (SIZE_MAX - rootParser->m_alloc_tracker.bytesAllocated < increase) {
+  if (SIZE_MAX - bytesAllocated < increase) {
     tolerable = false;
   } else {
-    newTotal = rootParser->m_alloc_tracker.bytesAllocated + increase;
+    newTotal = bytesAllocated + increase;
 
     if (newTotal >= rootParser->m_alloc_tracker.activationThresholdBytes) {
       assert(newTotal > 0);
