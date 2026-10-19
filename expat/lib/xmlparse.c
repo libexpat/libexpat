@@ -616,7 +616,8 @@ static XML_Parser parserCreate(const XML_Char *encodingName,
                                const XML_Char *nameSep, DTD *dtd,
                                XML_Parser parentParser);
 
-static void parserInit(XML_Parser parser, const XML_Char *encodingName);
+static void parserInit(XML_Parser parser, const XML_Char *encodingName,
+                       bool isReset);
 
 #if XML_GE == 1
 static float accountingGetCurrentAmplification(XML_Parser rootParser);
@@ -1461,7 +1462,7 @@ parserCreate(const XML_Char *encodingName,
 
   poolInit(&parser->m_tempPool, parser);
   poolInit(&parser->m_temp2Pool, parser);
-  parserInit(parser, encodingName);
+  parserInit(parser, encodingName, /*isReset=*/false);
 
   if (encodingName && ! parser->m_protocolEncodingName) {
     if (dtd) {
@@ -1488,7 +1489,7 @@ parserCreate(const XML_Char *encodingName,
 }
 
 static void
-parserInit(XML_Parser parser, const XML_Char *encodingName) {
+parserInit(XML_Parser parser, const XML_Char *encodingName, bool isReset) {
   parser->m_processor = prologInitProcessor;
   XmlPrologStateInit(&parser->m_prologState);
   if (encodingName != NULL) {
@@ -1569,15 +1570,24 @@ parserInit(XML_Parser parser, const XML_Char *encodingName) {
   parser->m_hash_secret_salt_set = XML_FALSE;
 
 #if XML_GE == 1
-  memset(&parser->m_accounting, 0, sizeof(ACCOUNTING));
-  parser->m_accounting.debugLevel = getDebugLevel("EXPAT_ACCOUNTING_DEBUG", 0u);
-  parser->m_accounting.maximumAmplificationFactor
-      = EXPAT_BILLION_LAUGHS_ATTACK_PROTECTION_MAXIMUM_AMPLIFICATION_DEFAULT;
-  parser->m_accounting.activationThresholdBytes
-      = EXPAT_BILLION_LAUGHS_ATTACK_PROTECTION_ACTIVATION_THRESHOLD_DEFAULT;
+  parser->m_accounting.countBytesDirect = 0;
+  parser->m_accounting.countBytesIndirect = 0;
+  if (! isReset) {
+    parser->m_accounting.debugLevel
+        = getDebugLevel("EXPAT_ACCOUNTING_DEBUG", 0u);
+    parser->m_accounting.maximumAmplificationFactor
+        = EXPAT_BILLION_LAUGHS_ATTACK_PROTECTION_MAXIMUM_AMPLIFICATION_DEFAULT;
+    parser->m_accounting.activationThresholdBytes
+        = EXPAT_BILLION_LAUGHS_ATTACK_PROTECTION_ACTIVATION_THRESHOLD_DEFAULT;
+  }
 
-  memset(&parser->m_entity_stats, 0, sizeof(ENTITY_STATS));
-  parser->m_entity_stats.debugLevel = getDebugLevel("EXPAT_ENTITY_DEBUG", 0u);
+  parser->m_entity_stats.countEverOpened = 0;
+  parser->m_entity_stats.currentDepth = 0;
+  parser->m_entity_stats.maximumDepthSeen = 0;
+  if (! isReset)
+    parser->m_entity_stats.debugLevel = getDebugLevel("EXPAT_ENTITY_DEBUG", 0u);
+#else
+  UNUSED_P(isReset);
 #endif
 }
 
@@ -1640,7 +1650,7 @@ XML_ParserReset(XML_Parser parser, const XML_Char *encodingName) {
   poolClear(&parser->m_temp2Pool);
   FREE(parser, (void *)parser->m_protocolEncodingName);
   parser->m_protocolEncodingName = NULL;
-  parserInit(parser, encodingName);
+  parserInit(parser, encodingName, /*isReset=*/true);
   dtdReset(parser->m_dtd, parser);
 
 #if XML_GE == 1
