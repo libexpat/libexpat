@@ -208,7 +208,8 @@ START_TEST(test_hash_collision) {
    * tests invoked from qa.sh usually provide a hash collision, but
    * not always.  This is an attempt to provide insurance.
    */
-#define COLLIDING_HASH_SALT (unsigned long)SIP_ULL(0xffffffffU, 0xff99fc90U)
+  const uint8_t entropy[16] = {0,    0,    0,    0,    0,    0,    0,    0,
+                               0x90, 0xfc, 0x99, 0xff, 0xff, 0xff, 0xff, 0xff};
   const char *text
       = "<doc>\n"
         "<a1/><a2/><a3/><a4/><a5/><a6/><a7/><a8/>\n"
@@ -219,13 +220,12 @@ START_TEST(test_hash_collision) {
         "<d8>This triggers the table growth and collides with b2</d8>\n"
         "</doc>\n";
 
-  xmlSetHashSalt(g_parser, COLLIDING_HASH_SALT);
+  XML_SetHashSalt16Bytes(g_parser, entropy);
   if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
 }
 END_TEST
-#undef COLLIDING_HASH_SALT
 
 START_TEST(test_hash_salt_setter) {
   const uint8_t entropy[16] = {'0', '1', '2', '3', '4', '5', '6', '7',
@@ -246,6 +246,29 @@ START_TEST(test_hash_salt_setter) {
   assert_true(XML_Parse(parser, "", 0, XML_FALSE /* isFinal */)
               == XML_STATUS_OK);
   assert_true(XML_SetHashSalt16Bytes(parser, entropy) == XML_FALSE);
+
+  XML_ParserFree(parser);
+}
+END_TEST
+
+START_TEST(test_hash_salt_ulong) {
+  const unsigned long salt = 0x12345678;
+  XML_Parser parser = XML_ParserCreate(NULL);
+
+  // NULL parser should be rejected
+  assert_true(xmlSetHashSalt(NULL, salt) == 0);
+
+  // salt 0 is ignored, but accepted
+  assert_true(xmlSetHashSalt(parser, 0) == 1);
+
+  // Setting should be allowed more than once
+  assert_true(xmlSetHashSalt(parser, salt) == 1);
+  assert_true(xmlSetHashSalt(parser, salt) == 1);
+
+  // But not after parsing has started
+  assert_true(XML_Parse(parser, "", 0, XML_FALSE /* isFinal */)
+              == XML_STATUS_OK);
+  assert_true(xmlSetHashSalt(parser, salt) == 0);
 
   XML_ParserFree(parser);
 }
@@ -2743,12 +2766,13 @@ END_TEST
 
 /* Test foreign DTD handling */
 START_TEST(test_set_foreign_dtd) {
+  const uint8_t entropy[16] = {0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8};
   const char *text1 = "<?xml version='1.0' encoding='us-ascii'?>\n";
   const char *text2 = "<doc>&entity;</doc>";
   ExtTest test_data = {"<!ELEMENT doc (#PCDATA)*>", NULL, NULL};
 
   /* Check hash salt is passed through too */
-  xmlSetHashSalt(g_parser, 0x12345678);
+  XML_SetHashSalt16Bytes(g_parser, entropy);
   XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
   XML_SetUserData(g_parser, &test_data);
   XML_SetExternalEntityRefHandler(g_parser, external_entity_loader);
@@ -2767,7 +2791,7 @@ START_TEST(test_set_foreign_dtd) {
       != XML_ERROR_CANT_CHANGE_FEATURE_ONCE_PARSING)
     fail("Failed to reject late foreign DTD setting");
   /* Ditto for the hash salt */
-  if (xmlSetHashSalt(g_parser, 0x23456789))
+  if (XML_SetHashSalt16Bytes(g_parser, entropy))
     fail("Failed to reject late hash salt change");
 
   /* Now finish the parse */
@@ -2812,13 +2836,14 @@ END_TEST
 
 /* Test foreign DTD use with a doctype */
 START_TEST(test_foreign_dtd_with_doctype) {
+  const uint8_t entropy[16] = {0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8};
   const char *text1 = "<?xml version='1.0' encoding='us-ascii'?>\n"
                       "<!DOCTYPE doc [<!ENTITY entity 'hello world'>]>\n";
   const char *text2 = "<doc>&entity;</doc>";
   ExtTest test_data = {"<!ELEMENT doc (#PCDATA)*>", NULL, NULL};
 
   /* Check hash salt is passed through too */
-  xmlSetHashSalt(g_parser, 0x12345678);
+  XML_SetHashSalt16Bytes(g_parser, entropy);
   XML_SetParamEntityParsing(g_parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
   XML_SetUserData(g_parser, &test_data);
   XML_SetExternalEntityRefHandler(g_parser, external_entity_loader);
@@ -2837,7 +2862,7 @@ START_TEST(test_foreign_dtd_with_doctype) {
       != XML_ERROR_CANT_CHANGE_FEATURE_ONCE_PARSING)
     fail("Failed to reject late foreign DTD setting");
   /* Ditto for the hash salt */
-  if (xmlSetHashSalt(g_parser, 0x23456789))
+  if (XML_SetHashSalt16Bytes(g_parser, entropy))
     fail("Failed to reject late hash salt change");
 
   /* Now finish the parse */
@@ -7154,6 +7179,7 @@ make_basic_test_case(Suite *s) {
   tcase_add_test(tc_basic, test_nobom_utf16_le);
   tcase_add_test(tc_basic, test_hash_collision);
   tcase_add_test(tc_basic, test_hash_salt_setter);
+  tcase_add_test(tc_basic, test_hash_salt_ulong);
   tcase_add_test(tc_basic, test_illegal_utf8);
   tcase_add_test(tc_basic, test_utf8_auto_align);
   tcase_add_test(tc_basic, test_utf16);
