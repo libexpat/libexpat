@@ -21,7 +21,7 @@
 //                                   Sebastian Pipping -- Berlin, 2026-09-22 //
 ///////////////////////////////////////////////////////////////////////////////
 
-Release 2.10.0 XXX XXXXXXX X XXXX
+Release 2.10.0 Mon November 2 2026
         Security fixes:
            #1431  CVE-2026-113351 -- Fix denial of service with use of
                     `XML_ParserReset`
