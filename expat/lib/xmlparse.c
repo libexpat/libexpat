@@ -482,6 +482,7 @@ typedef struct accounting {
 typedef struct MALLOC_TRACKER {
   size_t bytesAllocated;
   size_t peakBytesAllocated; // updated live only for debug level >=2
+  size_t bytesAllocatedWhenLastReset;
   unsigned long debugLevel;
   float maximumAmplificationFactor; // >=1.0
   XmlBigCount activationThresholdBytes;
@@ -640,7 +641,8 @@ static XML_Parser parserCreate(const XML_Char *encodingName,
                                const XML_Char *nameSep, DTD *dtd,
                                XML_Parser parentParser);
 
-static void parserInit(XML_Parser parser, const XML_Char *encodingName);
+static void parserInit(XML_Parser parser, const XML_Char *encodingName,
+                       bool isReset);
 
 #if XML_GE == 1
 static float accountingGetCurrentAmplification(XML_Parser rootParser,
@@ -901,11 +903,22 @@ expat_heap_increase_tolerable(XML_Parser rootParser, size_t increase,
   size_t newTotal = 0;
   bool tolerable = true;
 
+  // The idea is to subtract the amount of memory that was already
+  // allocated the last time that `XML_ParserReset` was called for
+  // this parser, the memory use of one document could skew the
+  // memory statso of the next document.
+  const size_t bytesAllocated
+      = (rootParser->m_alloc_tracker.bytesAllocatedWhenLastReset
+         > rootParser->m_alloc_tracker.bytesAllocated)
+            ? 0
+            : (rootParser->m_alloc_tracker.bytesAllocated
+               - rootParser->m_alloc_tracker.bytesAllocatedWhenLastReset);
+
   // Detect integer overflow
-  if (SIZE_MAX - rootParser->m_alloc_tracker.bytesAllocated < increase) {
+  if (SIZE_MAX - bytesAllocated < increase) {
     tolerable = false;
   } else {
-    newTotal = rootParser->m_alloc_tracker.bytesAllocated + increase;
+    newTotal = bytesAllocated + increase;
 
     if (newTotal >= rootParser->m_alloc_tracker.activationThresholdBytes) {
       assert(newTotal > 0);
@@ -1485,7 +1498,7 @@ parserCreate(const XML_Char *encodingName,
 
   poolInit(&parser->m_tempPool, parser);
   poolInit(&parser->m_temp2Pool, parser);
-  parserInit(parser, encodingName);
+  parserInit(parser, encodingName, /*isReset=*/false);
 
   if (encodingName && ! parser->m_protocolEncodingName) {
     if (dtd) {
@@ -1512,7 +1525,7 @@ parserCreate(const XML_Char *encodingName,
 }
 
 static void
-parserInit(XML_Parser parser, const XML_Char *encodingName) {
+parserInit(XML_Parser parser, const XML_Char *encodingName, bool isReset) {
   parser->m_processor = prologInitProcessor;
   XmlPrologStateInit(&parser->m_prologState);
   if (encodingName != NULL) {
@@ -1593,15 +1606,24 @@ parserInit(XML_Parser parser, const XML_Char *encodingName) {
   parser->m_hash_secret_salt_set = XML_FALSE;
 
 #if XML_GE == 1
-  memset(&parser->m_accounting, 0, sizeof(ACCOUNTING));
-  parser->m_accounting.debugLevel = getDebugLevel("EXPAT_ACCOUNTING_DEBUG", 0u);
-  parser->m_accounting.maximumAmplificationFactor
-      = EXPAT_BILLION_LAUGHS_ATTACK_PROTECTION_MAXIMUM_AMPLIFICATION_DEFAULT;
-  parser->m_accounting.activationThresholdBytes
-      = EXPAT_BILLION_LAUGHS_ATTACK_PROTECTION_ACTIVATION_THRESHOLD_DEFAULT;
+  parser->m_accounting.countBytesDirect = 0;
+  parser->m_accounting.countBytesIndirect = 0;
+  if (! isReset) {
+    parser->m_accounting.debugLevel
+        = getDebugLevel("EXPAT_ACCOUNTING_DEBUG", 0u);
+    parser->m_accounting.maximumAmplificationFactor
+        = EXPAT_BILLION_LAUGHS_ATTACK_PROTECTION_MAXIMUM_AMPLIFICATION_DEFAULT;
+    parser->m_accounting.activationThresholdBytes
+        = EXPAT_BILLION_LAUGHS_ATTACK_PROTECTION_ACTIVATION_THRESHOLD_DEFAULT;
+  }
 
-  memset(&parser->m_entity_stats, 0, sizeof(ENTITY_STATS));
-  parser->m_entity_stats.debugLevel = getDebugLevel("EXPAT_ENTITY_DEBUG", 0u);
+  parser->m_entity_stats.countEverOpened = 0;
+  parser->m_entity_stats.currentDepth = 0;
+  parser->m_entity_stats.maximumDepthSeen = 0;
+  if (! isReset)
+    parser->m_entity_stats.debugLevel = getDebugLevel("EXPAT_ENTITY_DEBUG", 0u);
+#else
+  UNUSED_P(isReset);
 #endif
 }
 
@@ -1664,8 +1686,16 @@ XML_ParserReset(XML_Parser parser, const XML_Char *encodingName) {
   poolClear(&parser->m_temp2Pool);
   FREE(parser, (void *)parser->m_protocolEncodingName);
   parser->m_protocolEncodingName = NULL;
-  parserInit(parser, encodingName);
+  parserInit(parser, encodingName, /*isReset=*/true);
   dtdReset(parser->m_dtd, parser);
+
+#if XML_GE == 1
+  parser->m_alloc_tracker.bytesAllocatedWhenLastReset
+      = parser->m_alloc_tracker.bytesAllocated;
+#endif
+
+  // NOTE: This effectively checks for `copyString` having failed during the
+  //       call to `parserInit` above
   if (encodingName && ! parser->m_protocolEncodingName) {
     parser->m_errorCode = XML_ERROR_NO_MEMORY;
     return XML_FALSE;
