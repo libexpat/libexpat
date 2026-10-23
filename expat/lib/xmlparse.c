@@ -6973,10 +6973,18 @@ resolveEntityClosureExpandedSize(XML_Parser parser, HASH_TABLE *table,
   if (stack == NULL)
     return XML_ERROR_NO_MEMORY;
 
+  const XML_Parser rootParser = getRootParserOf(parser, NULL);
+  assert(! rootParser->m_parentParser);
+
   size_t top = 0;
   stack[top].entity = root;
   root->beingAnalyzed = XML_TRUE;
   top++;
+  rootParser->m_entity_stats.currentDepth++;
+  if (rootParser->m_entity_stats.currentDepth
+      > rootParser->m_entity_stats.maximumDepthSeen) {
+    rootParser->m_entity_stats.maximumDepthSeen++;
+  }
 
   while (top > 0) {
     ENTITY_ANALYSIS_TASK *task = &stack[top - 1];
@@ -7017,6 +7025,7 @@ resolveEntityClosureExpandedSize(XML_Parser parser, HASH_TABLE *table,
     case ENTITY_SCAN_COMPLETE:
       e->beingAnalyzed = XML_FALSE;
       top--;
+      rootParser->m_entity_stats.currentDepth--;
       break;
 
     case ENTITY_SCAN_BLOCKED:
@@ -7028,6 +7037,11 @@ resolveEntityClosureExpandedSize(XML_Parser parser, HASH_TABLE *table,
       stack[top].entity = blocker;
       blocker->beingAnalyzed = XML_TRUE;
       top++;
+      rootParser->m_entity_stats.currentDepth++;
+      if (rootParser->m_entity_stats.currentDepth
+          > rootParser->m_entity_stats.maximumDepthSeen) {
+        rootParser->m_entity_stats.maximumDepthSeen++;
+      }
       break;
     }
   }
@@ -9574,9 +9588,7 @@ entityTrackingOnScanStart(XML_Parser originParser, ENTITY *entity,
   const XML_Parser rootParser = getRootParserOf(originParser, NULL);
   assert(! rootParser->m_parentParser);
 
-  rootParser->m_entity_stats.currentDepth += 1;
   entityTrackingReportStats(rootParser, entity, "START", sourceLine);
-  rootParser->m_entity_stats.currentDepth -= 1;
 }
 
 static void
@@ -9585,10 +9597,8 @@ entityTrackingOnScanStop(XML_Parser originParser, ENTITY *entity,
   const XML_Parser rootParser = getRootParserOf(originParser, NULL);
   assert(! rootParser->m_parentParser);
 
-  rootParser->m_entity_stats.currentDepth += 1;
   // NOTE: The space at the end of "STOP " is for length alignment with "START"
   entityTrackingReportStats(rootParser, entity, "STOP ", sourceLine);
-  rootParser->m_entity_stats.currentDepth -= 1;
 }
 
 #endif /* XML_GE == 1 */
