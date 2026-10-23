@@ -58,6 +58,7 @@
    Copyright (c) 2026      Braian Plaku <braianplaku@gmail.com>
    Copyright (c) 2026      Filippo Tedeschi <filippotedeschi98@gmail.com>
    Copyright (c) 2026      Junki Lee <junkilee80@gmail.com>
+   Copyright (c) 2026      Shani Yosef <shani.yosef@echo.ai>
    Licensed under the MIT license:
 
    Permission is  hereby granted,  free of charge,  to any  person obtaining
