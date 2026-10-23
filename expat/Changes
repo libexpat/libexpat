@@ -69,6 +69,9 @@ Release 2.10.0 XXX XXXXXXX X XXXX
                     predefined entities
            #1432  tests: Replace `XML_SetHashSalt` with
                     `XML_SetHashSalt16Bytes`
+     #1416 #1435  Version info bumped from 14:0:13 (libexpat*.so.1.13.0)
+                    to 14:1:13 (libexpat*.so.1.13.1); see https://verbump.de/
+                    for what these numbers do
 
         Infrastructure:
            #1414  CI: Stop using about-to-be-removed image "macos-14"
