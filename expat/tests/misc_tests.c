@@ -1024,6 +1024,46 @@ START_TEST(test_misc_input_2gb) {
 }
 END_TEST
 
+static void
+dummy_start_doctype(void *userData, const XML_Char *name,
+                    const XML_Char *systemId, const XML_Char *publicId,
+                    int has_internal_subset) {
+  UNUSED_P(userData);
+  UNUSED_P(name);
+  UNUSED_P(systemId);
+  UNUSED_P(publicId);
+  UNUSED_P(has_internal_subset);
+}
+
+static int
+reset_start_doctype_decl_handler_not_standalone(void *userData) {
+  XML_Parser parser = userData;
+  XML_SetStartDoctypeDeclHandler(parser, NULL);
+  return XML_STATUS_OK;
+}
+
+START_TEST(test_misc_start_doctype_decl_handler_reset) {
+  // Speed up the test, chunk size expected to not matter in this test
+  if (g_chunkSize != 0)
+    return;
+
+  const char *const doc = "<!DOCTYPE r SYSTEM \"s\"><r/>";
+
+  XML_Parser parser = XML_ParserCreate(NULL);
+
+  XML_SetUserData(parser, parser);
+  XML_SetStartDoctypeDeclHandler(parser, dummy_start_doctype);
+  XML_SetNotStandaloneHandler(parser,
+                              reset_start_doctype_decl_handler_not_standalone);
+
+  assert_true(_XML_Parse_SINGLE_BYTES(parser, doc, (int)strlen(doc),
+                                      /*isFinal=*/XML_TRUE)
+              == XML_STATUS_OK);
+
+  XML_ParserFree(parser);
+}
+END_TEST
+
 void
 make_miscellaneous_test_case(Suite *s) {
   TCase *tc_misc = tcase_create("miscellaneous tests");
@@ -1064,4 +1104,5 @@ make_miscellaneous_test_case(Suite *s) {
                  test_misc_unknown_encoding_release_getter_parser_reset);
   tcase_add_test(tc_misc, test_misc_input_2gb);
   tcase_add_test(tc_misc, test_misc_low_surrogate_mozilla_bug_2053153);
+  tcase_add_test(tc_misc, test_misc_start_doctype_decl_handler_reset);
 }
