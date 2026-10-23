@@ -5751,7 +5751,7 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
         return XML_ERROR_INVALID_TOKEN;
       }
 
-      if (parser->m_doctypeName) {
+      if (parser->m_doctypeName && parser->m_startDoctypeDeclHandler) {
         beforeHandler(parser);
         parser->m_startDoctypeDeclHandler(
             parser->m_handlerArg, parser->m_doctypeName, parser->m_doctypeSysid,
