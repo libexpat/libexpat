@@ -106,6 +106,7 @@ Release 2.9.0 Mon October 5 2026
             Wade Sparks III
                  and
             City of Munich Open Source Sabbatical
+            Siemens
             VulnCheck
 
 Release 2.8.5 Tue September 22 2026
@@ -239,6 +240,7 @@ Release 2.8.4 Mon August 31 2026
                  and
             City of Munich Open Source Sabbatical
             Moonshot AI
+            Siemens
             VulnCheck
             Z.ai
 
@@ -425,6 +427,8 @@ Release 2.8.1 Sun May 10 2026
             Matthew Fernandez
             Nick Wellnhofer
             Tania Somanna
+                 and
+            Siemens
 
 Release 2.8.0 Fri April 24 2026
         Security fixes:
@@ -537,6 +541,7 @@ Release 2.7.5 Tue March 17 2026
             AddressSanitizer
             Buttercup
             OSS-Fuzz / ClusterFuzz
+            Siemens
             Trail of Bits
 
 Release 2.7.4 Sat January 31 2026
@@ -678,6 +683,7 @@ Release 2.7.3 Wed September 24 2025
                  and
             Clang/GCC UndefinedBehaviorSanitizer
             OSS-Fuzz / ClusterFuzz
+            Siemens
             Z3 Theorem Prover
 
 Release 2.7.2 Tue September 16 2025
@@ -791,6 +797,7 @@ Release 2.7.1 Thu March 27 2025
             Matthew Fernandez
                  and
             Perl XML::Parser
+            Siemens
 
 Release 2.7.0 Thu March 13 2025
         Security fixes:
@@ -950,6 +957,8 @@ Release 2.6.3 Wed September 4 2024
             Dag-Erling Smørgrav
             Ferenc Géczi
             TaiYou
+                 and
+            Siemens
 
 Release 2.6.2 Wed March 13 2024
         Security fixes:
