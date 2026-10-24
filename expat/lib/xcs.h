@@ -38,7 +38,12 @@
 
 extern size_t xcslen(const XML_Char *s);
 
+extern size_t xcsnlen(const XML_Char *s, size_t maxLen);
+
 extern int xcscmp(const XML_Char *a, const XML_Char *b);
 extern int xcsncmp(const XML_Char *a, const XML_Char *b, size_t len);
+
+extern const XML_Char *xcsnstr(const XML_Char *haystack, const XML_Char *needle,
+                               size_t maxLen);
 
 #endif // ! defined(EXPAT_XCS_H)

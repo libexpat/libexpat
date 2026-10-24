@@ -113,6 +113,7 @@
 #define ASCII_LT 0x3C
 #define ASCII_EQUALS 0x3D
 #define ASCII_GT 0x3E
+#define ASCII_QUEST 0x3F
 #define ASCII_LSQB 0x5B
 #define ASCII_RSQB 0x5D
 #define ASCII_UNDERSCORE 0x5F
