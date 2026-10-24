@@ -309,8 +309,6 @@ typedef struct tag {
   BINDING *bindings;
 } TAG;
 
-typedef unsigned long long XmlBigCount;
-
 typedef struct {
   const XML_Char *name;
   const XML_Char *textPtr;
