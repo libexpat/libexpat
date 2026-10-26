@@ -615,15 +615,7 @@ static XML_Parser parserCreate(const XML_Char *encodingName,
 static void parserInit(XML_Parser parser, const XML_Char *encodingName,
                        bool isReset);
 
-static void *xmlGetBuffer64(XML_Parser parser, size_t len);
-
 static void *internalGetBuffer64(XML_Parser parser, size_t len);
-
-static enum XML_Status xmlParse64(XML_Parser parser, const char *s, size_t len,
-                                  XML_Bool isFinal);
-
-static enum XML_Status xmlParseBuffer64(XML_Parser parser, size_t len,
-                                        XML_Bool isFinal);
 
 #if XML_GE == 1
 static float accountingGetCurrentAmplification(XML_Parser rootParser,
@@ -2351,11 +2343,11 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal) {
     parser->m_errorCode = XML_ERROR_INVALID_ARGUMENT;
     return XML_STATUS_ERROR;
   }
-  return xmlParse64(parser, s, (size_t)len, isFinal ? XML_TRUE : XML_FALSE);
+  return XML_Parse64(parser, s, (size_t)len, isFinal ? XML_TRUE : XML_FALSE);
 }
 
-static enum XML_Status
-xmlParse64(XML_Parser parser, const char *s, size_t len, XML_Bool isFinal) {
+enum XML_Status XMLCALL
+XML_Parse64(XML_Parser parser, const char *s, size_t len, XML_Bool isFinal) {
   if (parser == NULL || isCalledFromInsideHandler(parser))
     return XML_STATUS_ERROR;
 
@@ -2470,14 +2462,14 @@ xmlParse64(XML_Parser parser, const char *s, size_t len, XML_Bool isFinal) {
     return result;
   }
 #endif /* XML_CONTEXT_BYTES == 0 */
-  void *buff = xmlGetBuffer64(parser, len);
+  void *buff = XML_GetBuffer64(parser, len);
   if (buff == NULL)
     return XML_STATUS_ERROR;
   if (len > 0) {
     assert(s != NULL); // make sure s==NULL && len!=0 was rejected above
     memcpy(buff, s, len);
   }
-  return xmlParseBuffer64(parser, len, isFinal);
+  return XML_ParseBuffer64(parser, len, isFinal);
 }
 
 enum XML_Status XMLCALL
@@ -2490,11 +2482,11 @@ XML_ParseBuffer(XML_Parser parser, int len, int isFinal) {
     return XML_STATUS_ERROR;
   }
 
-  return xmlParseBuffer64(parser, (size_t)len, isFinal ? XML_TRUE : XML_FALSE);
+  return XML_ParseBuffer64(parser, (size_t)len, isFinal ? XML_TRUE : XML_FALSE);
 }
 
-static enum XML_Status
-xmlParseBuffer64(XML_Parser parser, size_t len, XML_Bool isFinal) {
+enum XML_Status XMLCALL
+XML_ParseBuffer64(XML_Parser parser, size_t len, XML_Bool isFinal) {
   if ((parser == NULL) || isCalledFromInsideHandler(parser))
     return XML_STATUS_ERROR;
 
@@ -2608,11 +2600,11 @@ XML_GetBuffer(XML_Parser parser, int len) {
     return NULL;
   }
 
-  return xmlGetBuffer64(parser, (size_t)len);
+  return XML_GetBuffer64(parser, (size_t)len);
 }
 
-static void *
-xmlGetBuffer64(XML_Parser parser, size_t len) {
+void *XMLCALL
+XML_GetBuffer64(XML_Parser parser, size_t len) {
   if ((parser == NULL) || isCalledFromInsideHandler(parser))
     return NULL;
 
