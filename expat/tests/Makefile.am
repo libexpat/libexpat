@@ -60,9 +60,9 @@ runtests_SOURCES = \
     structdata.c \
     xcs_tests.c
 
-runtests_LDADD = ../lib/libtestpat.la
+runtests_LDADD = ../lib/libtestpat.la @LIBM@
 
-runtests_LDFLAGS = @AM_LDFLAGS@ @LIBM@
+runtests_LDFLAGS = @AM_LDFLAGS@
 
 EXTRA_DIST = \
     acc_tests.h \
