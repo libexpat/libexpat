@@ -6811,6 +6811,65 @@ enum EntityScanResult {
                            callers must abort parsing */
 };
 
+static const XML_Char cdataOpen[]
+    = {ASCII_LT, ASCII_EXCL, ASCII_LSQB, ASCII_C,    ASCII_D,
+       ASCII_A,  ASCII_T,    ASCII_A,    ASCII_LSQB, '\0'}; // i.e. "<![CDATA["
+static const XML_Char cdataClose[]
+    = {ASCII_RSQB, ASCII_RSQB, ASCII_GT, '\0'}; // e.i. "]]>"
+static const XML_Char commentOpen[]
+    = {ASCII_LT, ASCII_EXCL, ASCII_MINUS, ASCII_MINUS, '\0'}; // i.e. "<!--"
+static const XML_Char commentClose[]
+    = {ASCII_MINUS, ASCII_MINUS, ASCII_GT, '\0'};                // i.e. "-->"
+static const XML_Char piClose[] = {ASCII_QUEST, ASCII_GT, '\0'}; // i.e. "?>"
+
+static const size_t cdataOpenLen = sizeof(cdataOpen) / sizeof(cdataOpen[0]) - 1;
+static const size_t cdataCloseLen
+    = sizeof(cdataClose) / sizeof(cdataClose[0]) - 1;
+static const size_t commentOpenLen
+    = sizeof(commentOpen) / sizeof(commentOpen[0]) - 1;
+static const size_t commentCloseLen
+    = sizeof(commentClose) / sizeof(commentClose[0]) - 1;
+static const size_t piCloseLen = sizeof(piClose) / sizeof(piClose[0]) - 1;
+
+// Checks the string starting at `pos` for starting a CDATA section, a comment
+// or processing instructions. Returns
+// XML_TOK_CDATA_SECT_OPEN/XML_TOK_COMMENT/XML_TOK_PI for a match or
+// XML_TOK_INVALID (=0) for no match. Only in the success case, the length
+// of the token is written to `*openTextLen`.
+static int
+isCDataCommentOrPIStart(const XML_Char *pos, size_t maxLen,
+                        size_t *openTextLen) {
+  assert(pos != NULL);
+  assert(openTextLen != NULL);
+
+  if (maxLen < 2)
+    return XML_TOK_INVALID;
+
+  if (pos[0] != XML_T(ASCII_LT))
+    return XML_TOK_INVALID;
+
+  if (pos[1] == XML_T(ASCII_QUEST)) {
+    *openTextLen = 2;
+    return XML_TOK_PI;
+  }
+
+  if (pos[1] != XML_T(ASCII_EXCL))
+    return XML_TOK_INVALID;
+
+  if (maxLen >= cdataOpenLen && xcsncmp(pos, cdataOpen, cdataOpenLen) == 0) {
+    *openTextLen = cdataOpenLen;
+    return XML_TOK_CDATA_SECT_OPEN;
+  }
+
+  if (maxLen >= commentOpenLen
+      && xcsncmp(pos, commentOpen, commentOpenLen) == 0) {
+    *openTextLen = commentOpenLen;
+    return XML_TOK_COMMENT;
+  }
+
+  return XML_TOK_INVALID;
+}
+
 /* Scan `entity`'s body, starting at `*posPtr`, accumulating the expanded
    size into `*expandedSize`.
 
@@ -6851,6 +6910,71 @@ scanEntityText(XML_Parser parser, ENTITY *entity, const XML_Char **posPtr,
   const XML_Char *const end = entity->textPtr + entity->textLen;
 
   while (pos < end) {
+    // Detect and skip CDATA/comment/PI sections
+    // because entities have no effect in these places
+    if (*pos == XML_T('<')) {
+      // Detect CDATA/comment/PI section start
+      size_t openTextLen = 0;
+      const int tok = isCDataCommentOrPIStart(pos, end - pos, &openTextLen);
+      if (tok != XML_TOK_INVALID) {
+        assert(openTextLen != 0);
+
+        // Detect and avoid integer overflow
+        if (openTextLen > (XmlBigCount)(-1) - *expandedSize)
+          return ENTITY_SCAN_OVERFLOW;
+
+        *expandedSize += openTextLen;
+        pos += openTextLen;
+
+        // Detect CDATA/comment/PI section end
+        const XML_Char *closeText = NULL;
+        size_t closeLen = 0;
+
+        switch (tok) {
+        case XML_TOK_CDATA_SECT_OPEN:
+          closeText = cdataClose;
+          closeLen = cdataCloseLen;
+          break;
+        case XML_TOK_COMMENT:
+          closeText = commentClose;
+          closeLen = commentCloseLen;
+          break;
+        case XML_TOK_PI:
+          closeText = piClose;
+          closeLen = piCloseLen;
+          break;
+        default:
+          assert(0 && "never gets here");
+          break;
+        }
+
+        const size_t remainderLen = end - pos;
+        const XML_Char *const closeStart
+            = xcsnstr(pos, closeText, remainderLen);
+        if (closeStart == NULL) {
+          // The CDATA/comment/PI section is NOT terminated
+          if (remainderLen > (XmlBigCount)(-1) - *expandedSize)
+            return ENTITY_SCAN_OVERFLOW;
+          *expandedSize += remainderLen;
+          *posPtr = end;
+          return ENTITY_SCAN_COMPLETE;
+        }
+
+        // The CDATA/comment/PI section is NOT terminated
+        const size_t skippedLen = closeStart + closeLen - pos;
+
+        // Detect and avoid integer overflow
+        if (skippedLen > (XmlBigCount)(-1) - *expandedSize)
+          return ENTITY_SCAN_OVERFLOW;
+
+        *expandedSize += skippedLen;
+        pos += skippedLen;
+
+        continue;
+      }
+    }
+
+    // Detect an entity reference
     if (*pos != refChar) {
       // Detect and avoid integer overflow
       if (*expandedSize == (XmlBigCount)(-1))
