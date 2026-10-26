@@ -51,8 +51,8 @@ jobs:
 
     - name: Install Fil-C toolchain
       run: |-
-        version=0.686  # of 2026-10-05
-        sha256sum=60bfbe8ee63d7e462394aa8d5e44fee675de892bcf800d9cc80d86378cad6b07
+        version=0.687  # of 2026-10-23
+        sha256sum=aab538401f78a47ab261ee79afed8c6b99e1d4848e263ae159a75b03c1288da1
 
         dirname="filc-${version}-linux-$(uname -m)"
         tarball="${dirname}.tar.xz"
