@@ -36,9 +36,13 @@ __  __            _
 
 #include "ascii.h"    // for ASCII_*
 #include "common.h"   // for g_chunkSize, xcsdup_str
-#include "entities.h" // for isCDataCommentOrPIStart
+#include "entities.h" // for isCDataCommentOrPIStart, isPredefinedEntityName
 #include "xmltok.h"   // for XML_TOK_*
 #include "xcs.h"      // for xcslen
+
+static void
+assert_entity_expanded_size_equals(XML_Parser parser, const char *text,
+                                   XmlBigCount expectedExpandedSize);
 
 START_TEST(test_is_cdata_comment_or_pi_start) {
   // Speed up the test, chunk size expected to not matter in this test
@@ -83,9 +87,38 @@ START_TEST(test_is_cdata_comment_or_pi_start) {
 }
 END_TEST
 
+static void
+assert_predefined_entity_name_match(const char *text, int expectedCharacter) {
+  XML_Char *const xcsText = xcsdup_str(text);
+  assert_true(xcsText != NULL);
+
+#if XML_GE == 1
+  assert_true(isPredefinedEntityName(xcsText, xcslen(xcsText))
+              == expectedCharacter);
+#else
+  UNUSED_P(expectedCharacter);
+#endif // XML_GE == 1
+
+  free(xcsText);
+}
+
+START_TEST(test_is_predefined_entity_name) {
+  // Speed up the test, chunk size expected to not matter in this test
+  if (g_chunkSize != 0)
+    return;
+
+  assert_predefined_entity_name_match("amp", ASCII_AMP);
+  assert_predefined_entity_name_match("apos", ASCII_APOS);
+  assert_predefined_entity_name_match("gt", ASCII_GT);
+  assert_predefined_entity_name_match("lt", ASCII_LT);
+  assert_predefined_entity_name_match("quot", ASCII_QUOT);
+}
+END_TEST
+
 void
 make_entities_test_case(Suite *s) {
   TCase *const tc_entities = tcase_create("entities tests");
   suite_add_tcase(s, tc_entities);
   tcase_add_test(tc_entities, test_is_cdata_comment_or_pi_start);
+  tcase_add_test(tc_entities, test_is_predefined_entity_name);
 }
