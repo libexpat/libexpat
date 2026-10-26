@@ -1116,6 +1116,68 @@ START_TEST(test_misc_storeatts_attssize_allocation) {
 }
 END_TEST
 
+static void
+comparingPiHandler(void *userData, const XML_Char *target,
+                   const XML_Char *data) {
+  UNUSED_P(userData);
+
+  XML_Char *const literalTarget = xcsdup_str("target");
+  XML_Char *const literalData = xcsdup_str("data");
+  assert_true(literalTarget != NULL);
+  assert_true(literalData != NULL);
+
+  assert_true(xcscmp(target, literalTarget) == 0);
+  assert_true(xcscmp(data, literalData) == 0);
+
+  free(literalTarget);
+  free(literalData);
+}
+
+static int XMLCALL
+piParsingExternalEntityHandler(XML_Parser parent, const XML_Char *context,
+                               const XML_Char *base, const XML_Char *systemId,
+                               const XML_Char *publicId) {
+  UNUSED_P(base);
+  UNUSED_P(systemId);
+  UNUSED_P(publicId);
+
+  const char *const doc = "<?target data?>";
+
+  XML_Parser subParser = XML_ExternalEntityParserCreate(parent, context, NULL);
+  assert_true(subParser != NULL);
+
+  // NOTE: Related test "test_empty_ext_param_entity_in_value" could be of
+  // interest
+  assert_true(_XML_Parse_SINGLE_BYTES(subParser, "", 0, /*isFinal=*/XML_FALSE)
+              == XML_STATUS_OK);
+  assert_true(_XML_Parse_SINGLE_BYTES(subParser, doc, (int)strlen(doc),
+                                      /*isFinal=*/XML_TRUE)
+              == XML_STATUS_OK);
+
+  XML_ParserFree(subParser);
+
+  return XML_STATUS_OK;
+}
+
+START_TEST(test_misc_empty_nonfinal_subparser_parse) {
+  const char *const doc = "<!DOCTYPE root [\n"
+                          "  <!ENTITY ext SYSTEM 'external.dtd'>\n"
+                          "]>\n"
+                          "<root>&ext;</root>\n";
+
+  XML_Parser parser = XML_ParserCreate(NULL);
+  assert_true(parser != NULL);
+
+  XML_SetProcessingInstructionHandler(parser, comparingPiHandler);
+  XML_SetExternalEntityRefHandler(parser, piParsingExternalEntityHandler);
+
+  assert_true(_XML_Parse_SINGLE_BYTES(parser, doc, (int)strlen(doc),
+                                      /*isFinal=*/XML_TRUE));
+
+  XML_ParserFree(parser);
+}
+END_TEST
+
 void
 make_miscellaneous_test_case(Suite *s) {
   TCase *tc_misc = tcase_create("miscellaneous tests");
@@ -1158,4 +1220,5 @@ make_miscellaneous_test_case(Suite *s) {
   tcase_add_test(tc_misc, test_misc_low_surrogate_mozilla_bug_2053153);
   tcase_add_test(tc_misc, test_misc_storeatts_attssize_allocation);
   tcase_add_test(tc_misc, test_misc_start_doctype_decl_handler_reset);
+  tcase_add_test(tc_misc, test_misc_empty_nonfinal_subparser_parse);
 }
