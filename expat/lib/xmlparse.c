@@ -232,6 +232,7 @@ typedef char ICHAR;
 
 #include "internal.h"
 #include "hash_table.h"
+#include "entities.h"
 #include "xmltok.h"
 #include "xmlrole.h"
 
@@ -308,40 +309,6 @@ typedef struct tag {
   char *bufEnd;    /* end of the buffer */
   BINDING *bindings;
 } TAG;
-
-typedef unsigned long long XmlBigCount;
-
-typedef struct {
-  const XML_Char *name;
-  const XML_Char *textPtr;
-  size_t textLen;   /* length in XML_Chars */
-  size_t processed; /* # of processed bytes - when suspended */
-  const XML_Char *systemId;
-  const XML_Char *base;
-  const XML_Char *publicId;
-  const XML_Char *notation;
-  bool open;
-  bool hasMore; /* true if entity has not been completely processed */
-  /* An entity can be open while being already completely processed (!hasMore).
-    The reason is the delayed closing of entities until their inner
-    entities are processed and closed */
-  bool is_param;
-  bool is_internal; /* true if declared in internal subset outside PE */
-#if XML_GE == 1
-  /* Indirect accounting bytes charged when this entity is expanded: 1 per text
-     character, plus each reference's "&name;"/"%name;" token length and its own
-     expansion. Matches XML_ACCOUNT_ENTITY_EXPANSION, so it is not the
-     replacement-text size. 0 means "not computed yet" (an empty entity is 0
-     too, told apart by textLen == 0). */
-  XmlBigCount expandedSize;
-  bool beingAnalyzed; /* on the resolveEntityClosureExpandedSize depth-first
-                             search stack; used for cycle detection */
-  const XML_Char
-      *scanPtr; /* cursor position into the entity's replacement text; NULL when
-                   `textPtr` is NULL, else a pointer into the entity value,
-                   ranging from `.textPtr` to `.textPtr + .textLen`. */
-#endif          /* XML_GE == 1 */
-} ENTITY;
 
 typedef struct {
   enum XML_Content_Type type;
@@ -6762,7 +6729,7 @@ epilogProcessor(XML_Parser parser, const char *s, const char *end,
 // explicit length, instead. Returns
 // ASCII_AMP/ASCII_APOS/ASCII_GT/ASCII_LT/ASCII_QUOT for a match or 0 for no
 // match.
-static int
+XML_NONTESTING_STATIC int
 isPredefinedEntityName(const XML_Char *name, size_t nameLen) {
   switch (nameLen) {
   case 2:
@@ -6800,17 +6767,6 @@ isPredefinedEntityName(const XML_Char *name, size_t nameLen) {
   return 0;
 }
 
-/* How a scanEntityText call ended. */
-enum EntityScanResult {
-  ENTITY_SCAN_COMPLETE, /* reached end of text; *expandedSize is final */
-  ENTITY_SCAN_BLOCKED,  /* stopped at a defined entity whose expanded
-                           size has not been computed yet; *blockerOut
-                           names the entity whose size to compute
-                           first */
-  ENTITY_SCAN_OVERFLOW  /* the expanded size would exceed XmlBigCount;
-                           callers must abort parsing */
-};
-
 static const XML_Char cdataOpen[]
     = {ASCII_LT, ASCII_EXCL, ASCII_LSQB, ASCII_C,    ASCII_D,
        ASCII_A,  ASCII_T,    ASCII_A,    ASCII_LSQB, '\0'}; // i.e. "<![CDATA["
@@ -6836,7 +6792,7 @@ static const size_t piCloseLen = sizeof(piClose) / sizeof(piClose[0]) - 1;
 // XML_TOK_CDATA_SECT_OPEN/XML_TOK_COMMENT/XML_TOK_PI for a match or
 // XML_TOK_INVALID (=0) for no match. Only in the success case, the length
 // of the token is written to `*openTextLen`.
-static int
+XML_NONTESTING_STATIC int
 isCDataCommentOrPIStart(const XML_Char *pos, size_t maxLen,
                         size_t *openTextLen) {
   assert(pos != NULL);
@@ -6892,7 +6848,7 @@ isCDataCommentOrPIStart(const XML_Char *pos, size_t maxLen,
      of entities it references), not a total across all entities. Not
      meaningful after ENTITY_SCAN_OVERFLOW; the overflowing value is never
      stored anywhere. */
-static enum EntityScanResult
+XML_NONTESTING_STATIC enum EntityScanResult
 scanEntityText(XML_Parser parser, ENTITY *entity, const XML_Char **posPtr,
                XmlBigCount *expandedSize, ENTITY **blockerOut) {
   if (blockerOut != NULL)

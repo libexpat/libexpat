@@ -728,6 +728,7 @@ if(EXPAT_BUILD_TESTS)
         tests/dummy.c
         tests/handlers.c
         tests/hash_tests.c
+        tests/entities_tests.c
         tests/memcheck.c
         tests/minicheck.c
         tests/misc_tests.c

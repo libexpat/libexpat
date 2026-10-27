@@ -114,6 +114,7 @@ uninstall-local:
 EXTRA_DIST = \
     ascii.h \
     asciitab.h \
+    entities.h \
     expat_external.h \
     expat.h \
     fallthrough.h \

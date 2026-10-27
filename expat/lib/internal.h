@@ -127,6 +127,8 @@ union expat_align {
 
 #  include "expat.h" // so we can use type XML_Parser below
 
+typedef unsigned long long XmlBigCount;
+
 void _INTERNAL_trim_to_complete_utf8_characters(const char *from,
                                                 const char **fromLimRef);
 
