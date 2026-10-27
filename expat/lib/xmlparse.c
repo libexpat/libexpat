@@ -4238,6 +4238,17 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
   }
 
   /* the attribute list for the application */
+  // NOTE: `parser->m_atts` is used to read `ATTRIBUTE` elements
+  //       from start to end while at the same time writing `XML_Char *`
+  //       elements from start to end *to the same block of memory*.
+  //       That black magic only works because the first member `.name` in
+  //       `ATTRIBUTE` is no longer being read after `appAtts[attIndex]`
+  //       has been written, which fir the first element is the very same
+  //       address in memory.
+  //       And because `attIndex` is increased twice for default attributes
+  //       further down, struct `ATTRIBUTE` must be at least twice the size
+  //       of a pointer, or the allocation size math for `m_attsSize` starts
+  //       to underallocate.
   const XML_Char **const appAtts = (const XML_Char **)parser->m_atts;
   for (size_t i = 0; i < n; i++) {
     ATTRIBUTE *currAtt = &parser->m_atts[i];
@@ -4257,6 +4268,8 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
       return XML_ERROR_DUPLICATE_ATTRIBUTE;
     }
     (attId->name)[-1] = 1;
+    // NOTE: The next call overwrites `parser->m_atts`, so we cannot use
+    //       e.g. `parser->m_atts[i].name;` after this line!
     appAtts[attIndex++] = attId->name;
     if (! parser->m_atts[i].normalized) {
       bool isCdata = true;
