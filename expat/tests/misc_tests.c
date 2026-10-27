@@ -591,6 +591,26 @@ START_TEST(test_misc_stopparser_rejects_unstarted_parser) {
 }
 END_TEST
 
+static void *
+nonzero_filling_malloc(size_t size) {
+  void *const ptr = malloc(size);
+  if (ptr != NULL)
+    memset(ptr, 0xA5, size);
+  return ptr;
+}
+
+START_TEST(test_misc_parsing_status_of_unstarted_parser) {
+  XML_Memory_Handling_Suite memsuite = {nonzero_filling_malloc, realloc, free};
+  XML_Parser parser = XML_ParserCreate_MM(NULL, &memsuite, NULL);
+  assert_true(parser != NULL);
+  XML_ParsingStatus status;
+  XML_GetParsingStatus(parser, &status);
+  assert_true(status.parsing == XML_INITIALIZED);
+  assert_true(status.finalBuffer == XML_FALSE);
+  XML_ParserFree(parser);
+}
+END_TEST
+
 /* Adaptation of accumulate_characters that takes ExtHdlrData input to work with
  * test_renter_loop_finite_content below */
 void XMLCALL
@@ -1090,6 +1110,7 @@ make_miscellaneous_test_case(Suite *s) {
   tcase_add_test(tc_misc, test_misc_char_handler_stop_without_leak);
   tcase_add_test(tc_misc, test_misc_resumeparser_not_crashing);
   tcase_add_test(tc_misc, test_misc_stopparser_rejects_unstarted_parser);
+  tcase_add_test(tc_misc, test_misc_parsing_status_of_unstarted_parser);
   tcase_add_test__if_xml_ge(tc_misc, test_renter_loop_finite_content);
   tcase_add_test(tc_misc, test_misc_expected_event_ptr_issue_980);
   tcase_add_test(tc_misc, test_misc_sync_entity_tolerated);
