@@ -603,7 +603,7 @@ START_TEST(test_misc_parsing_status_of_unstarted_parser) {
   XML_Memory_Handling_Suite memsuite = {nonzero_filling_malloc, realloc, free};
   XML_Parser parser = XML_ParserCreate_MM(NULL, &memsuite, NULL);
   assert_true(parser != NULL);
-  XML_ParsingStatus status;
+  XML_ParsingStatus status = {.parsing = XML_PARSING, .finalBuffer = XML_TRUE};
   XML_GetParsingStatus(parser, &status);
   assert_true(status.parsing == XML_INITIALIZED);
   assert_true(status.finalBuffer == XML_FALSE);
