@@ -6142,6 +6142,17 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
       }
       break;
     case XML_ROLE_GENERAL_ENTITY_NAME: {
+      // NOTE: XML 1.0 fourth edition demands in section
+      //       "4.6 Predefined Entities" that bad redefinitions of predefined
+      //       general entities must be detected and rejected. Expat has been
+      //       ignoring both conforming and non-conforming redefinitions and
+      //       thus has been failing to reject bad redefinitions, for years.
+      //       As a result, users learned that they can get away with
+      //       `<!ENTITY lt "<">` in practice. We cannot start conforming to
+      //       that part of the spec now, or we risk rejecting many documents
+      //       that parsed fine for years and that may not be fixable now or
+      //       in time. So Expat continues to discard redefinitions of
+      //       predefined entities altogether.
       if (XmlPredefinedEntityName(enc, s, next)) {
         parser->m_declEntity = NULL;
         break;
