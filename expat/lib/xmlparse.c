@@ -4170,7 +4170,7 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
   DTD *const dtd = parser->m_dtd; /* save one level of indirection */
   int attIndex = 0;
   XML_Char *uri;
-  int nPrefixes = 0;
+  size_t nPrefixes = 0;
   BINDING *binding;
   const XML_Char *localPart;
 
