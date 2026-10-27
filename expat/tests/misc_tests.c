@@ -60,6 +60,7 @@
 #include <stdint.h>
 #include <string.h>
 
+#include "dummy.h" // for dummy_start_element
 #include "expat.h"
 #include "internal.h"
 #include "minicheck.h"
@@ -1064,6 +1065,57 @@ START_TEST(test_misc_start_doctype_decl_handler_reset) {
 }
 END_TEST
 
+START_TEST(test_misc_storeatts_attssize_allocation) {
+  // Speed up the test, chunk size expected to not matter in this test
+  if (g_chunkSize != 0)
+    return;
+
+  // NOTE: This has 17 attributes defined because `INIT_ATTS_SIZE` is 16.
+  //       Array size is calculated as
+  //         parser->m_attsSize = n + nDefaultAtts + INIT_ATTS_SIZE
+  //       when I expected it would have needed to be
+  //         parser->m_attsSize = n + 2 * nDefaultAtts + INIT_ATTS_SIZE .
+  //       Please see the in-code comments in `storeAtts` for the black magic
+  //       that makes it work nonetheless. The same memory is used as an array
+  //       of `ATTRIBUTE` elements first, and then as an array of `XML_Char *`
+  //       elements after.
+  const char *const doc = "<!DOCTYPE doc [\n"
+                          "  <!ELEMENT doc EMPTY>\n"
+                          "  <!ATTLIST doc\n"
+                          "              a01 CDATA '01'\n"
+                          "              a02 CDATA '02'\n"
+                          "              a03 CDATA '03'\n"
+                          "              a04 CDATA '04'\n"
+                          "              a05 CDATA '05'\n"
+                          "              a06 CDATA '06'\n"
+                          "              a07 CDATA '07'\n"
+                          "              a08 CDATA '08'\n"
+                          "              a09 CDATA '09'\n"
+                          "              a10 CDATA '10'\n"
+                          "              a11 CDATA '11'\n"
+                          "              a12 CDATA '12'\n"
+                          "              a13 CDATA '13'\n"
+                          "              a14 CDATA '14'\n"
+                          "              a15 CDATA '15'\n"
+                          "              a16 CDATA '16'\n"
+                          "              a17 CDATA '17'\n"
+                          "  >\n"
+                          "]>\n"
+                          "<doc/>\n";
+
+  init_dummy_handlers();
+
+  XML_Parser parser = XML_ParserCreate(NULL);
+  XML_SetStartElementHandler(
+      parser, dummy_start_element); // i.e. ask for calling `storeAtts`
+  assert_true(_XML_Parse_SINGLE_BYTES(parser, doc, (int)strlen(doc),
+                                      /*isFinal=*/XML_TRUE));
+  XML_ParserFree(parser);
+
+  assert_true(get_dummy_handler_flags() == DUMMY_START_ELEMENT_HANDLER_FLAG);
+}
+END_TEST
+
 void
 make_miscellaneous_test_case(Suite *s) {
   TCase *tc_misc = tcase_create("miscellaneous tests");
@@ -1104,5 +1156,6 @@ make_miscellaneous_test_case(Suite *s) {
                  test_misc_unknown_encoding_release_getter_parser_reset);
   tcase_add_test(tc_misc, test_misc_input_2gb);
   tcase_add_test(tc_misc, test_misc_low_surrogate_mozilla_bug_2053153);
+  tcase_add_test(tc_misc, test_misc_storeatts_attssize_allocation);
   tcase_add_test(tc_misc, test_misc_start_doctype_decl_handler_reset);
 }
