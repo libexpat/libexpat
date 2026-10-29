@@ -2358,7 +2358,13 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal) {
   }
 
 #if XML_CONTEXT_BYTES == 0
+  // Is the buffer empty?
   if (parser->m_bufferPtr == parser->m_bufferEnd) {
+#else
+  // Is this the first parse on the document (that has no chance at any past
+  // context bytes anyway)?
+  if (parser->m_parseEndByteIndex == 0) {
+#endif
     // This null-object trick allows us to stop worrying about case `s == NULL`
     // within this branch, e.g. with `s + len - end`.
     const char * const empty = "";
@@ -2383,8 +2389,28 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal) {
     parser->m_positionPtr = s;
     parser->m_parsingStatus.finalBuffer = (XML_Bool)isFinal;
 
+#if XML_CONTEXT_BYTES > 0
+    // Fake presence of a buffer to functions that needed it
+    /*.*/ char * const bufferBackup = parser->m_buffer;
+    const char * const bufferPtrBackup = parser->m_bufferPtr;
+    /*.*/ char * const bufferEndBackup = parser->m_bufferEnd;
+    const char * const bufferLimBackup = parser->m_bufferLim;
+    parser->m_bufferPtr = s;
+    parser->m_bufferEnd = (char *)s + len;
+    parser->m_buffer = (char *)parser->m_bufferPtr;
+    parser->m_bufferLim = parser->m_bufferEnd;
+#endif
+
     parser->m_errorCode
         = callProcessor(parser, s, parser->m_parseEndPtr = s + len, &end);
+
+#if XML_CONTEXT_BYTES > 0
+    // Reset fake buffer
+    parser->m_buffer = bufferBackup;
+    parser->m_bufferPtr = bufferPtrBackup;
+    parser->m_bufferEnd = bufferEndBackup;
+    parser->m_bufferLim = bufferLimBackup;
+#endif
 
     if (parser->m_errorCode != XML_ERROR_NONE) {
       parser->m_eventEndPtr = parser->m_eventPtr;
@@ -2446,7 +2472,7 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal) {
     parser->m_eventEndPtr = parser->m_bufferPtr;
     return result;
   }
-#endif /* XML_CONTEXT_BYTES == 0 */
+
   void *buff = XML_GetBuffer(parser, len);
   if (buff == NULL)
     return XML_STATUS_ERROR;
