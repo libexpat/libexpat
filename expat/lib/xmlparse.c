@@ -1560,6 +1560,7 @@ parserInit(XML_Parser parser, const XML_Char *encodingName, bool isReset) {
   parser->m_unknownEncodingRelease = NULL;
   parser->m_unknownEncodingData = NULL;
   parser->m_parsingStatus.parsing = XML_INITIALIZED;
+  parser->m_parsingStatus.finalBuffer = XML_FALSE;
   // Reentry can only be triggered inside m_processor calls
   parser->m_reenter = XML_FALSE;
   parser->m_handlerCallDepth = 0;
