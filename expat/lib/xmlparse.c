@@ -4168,9 +4168,9 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
           TAG_NAME *tagNamePtr, BINDING **bindingsPtr,
           enum XML_Account account) {
   DTD *const dtd = parser->m_dtd; /* save one level of indirection */
-  int attIndex = 0;
+  size_t attIndex = 0;
   XML_Char *uri;
-  int nPrefixes = 0;
+  size_t nPrefixes = 0;
   BINDING *binding;
   const XML_Char *localPart;
 
@@ -4324,11 +4324,16 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
   }
 
   /* set-up for XML_GetSpecifiedAttributeCount and XML_GetIdAttributeIndex */
-  parser->m_nSpecifiedAtts = attIndex;
+  // Detect and reject integer overflow
+  if (attIndex > INT_MAX)
+    return XML_ERROR_NO_MEMORY;
+  parser->m_nSpecifiedAtts = (int)attIndex;
   if (elementType->idAtt && (elementType->idAtt->name)[-1]) {
-    for (int i = 0; i < attIndex; i += 2)
+    for (size_t i = 0; i < attIndex; i += 2)
       if (appAtts[i] == elementType->idAtt->name) {
-        parser->m_idAttIndex = i;
+        if (i > INT_MAX)
+          return XML_ERROR_NO_MEMORY;
+        parser->m_idAttIndex = (int)i;
         break;
       }
   } else
@@ -4361,7 +4366,7 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
 
   /* expand prefixed attribute names, check for duplicates,
      and clear flags that say whether attributes were specified */
-  int i = 0;
+  size_t i = 0;
   if (nPrefixes) {
     unsigned int j; /* hash table index */
     unsigned long version = parser->m_nsAttsVersion;
