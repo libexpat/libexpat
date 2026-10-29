@@ -3537,6 +3537,11 @@ externalEntityInitProcessor2(XML_Parser parser, const char *start,
     }
     parser->m_eventPtr = start;
     return XML_ERROR_PARTIAL_CHAR;
+  case XML_TOK_NONE:
+    if (! parser->m_parsingStatus.finalBuffer) {
+      *endPtr = start;
+    }
+    return XML_ERROR_NONE;
   }
   parser->m_processor = externalEntityInitProcessor3;
   return externalEntityInitProcessor3(parser, start, end, endPtr);
