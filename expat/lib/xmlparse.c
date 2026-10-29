@@ -2359,6 +2359,13 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal) {
 
 #if XML_CONTEXT_BYTES == 0
   if (parser->m_bufferPtr == parser->m_bufferEnd) {
+    // This null-object trick allows us to stop worrying about case `s == NULL`
+    // within this branch, e.g. with `s + len - end`.
+    const char *const empty = "";
+    if (s == NULL) {
+      assert(len == 0);
+      s = empty;
+    }
     const char *end;
     int nLeftOver;
     enum XML_Status result;
