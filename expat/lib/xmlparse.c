@@ -2359,8 +2359,15 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal) {
 
 #if XML_CONTEXT_BYTES == 0
   if (parser->m_bufferPtr == parser->m_bufferEnd) {
-    const char *end;
-    int nLeftOver;
+    // This null-object trick allows us to stop worrying about case `s == NULL`
+    // within this branch, e.g. with `s + len - end`.
+    const char *const empty = "";
+    if (s == NULL) {
+      assert(len == 0);
+      s = empty;
+    }
+    const char *end = s + len;
+    size_t nLeftOver;
     enum XML_Status result;
     /* Detect overflow (a+b > MAX <==> b > MAX-a) */
     if ((uint64_t)len > UINT64_MAX - parser->m_parseEndByteIndex) {
@@ -2408,7 +2415,13 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal) {
       // (and XML_ERROR_FINISHED) from XML_GetBuffer.
       const enum XML_Parsing originalStatus = parser->m_parsingStatus.parsing;
       parser->m_parsingStatus.parsing = XML_PARSING;
-      void *const temp = XML_GetBuffer(parser, nLeftOver);
+      if (nLeftOver > INT_MAX) {
+        parser->m_errorCode = XML_ERROR_NO_MEMORY;
+        parser->m_eventPtr = parser->m_eventEndPtr = NULL;
+        parser->m_processor = errorProcessor;
+        return XML_STATUS_ERROR;
+      }
+      void *const temp = XML_GetBuffer(parser, (int)nLeftOver);
       parser->m_parsingStatus.parsing = originalStatus;
       // GetBuffer may have overwritten this, but we want to remember what the
       // app requested, not how many bytes were left over after parsing.
