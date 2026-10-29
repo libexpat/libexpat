@@ -2366,7 +2366,7 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal) {
       assert(len == 0);
       s = empty;
     }
-    const char *end;
+    const char *end = s + len;
     size_t nLeftOver;
     enum XML_Status result;
     /* Detect overflow (a+b > MAX <==> b > MAX-a) */
