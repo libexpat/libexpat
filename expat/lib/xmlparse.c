@@ -2367,7 +2367,7 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal) {
       s = empty;
     }
     const char *end;
-    int nLeftOver;
+    size_t nLeftOver;
     enum XML_Status result;
     /* Detect overflow (a+b > MAX <==> b > MAX-a) */
     if ((uint64_t)len > UINT64_MAX - parser->m_parseEndByteIndex) {
@@ -2415,7 +2415,13 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal) {
       // (and XML_ERROR_FINISHED) from XML_GetBuffer.
       const enum XML_Parsing originalStatus = parser->m_parsingStatus.parsing;
       parser->m_parsingStatus.parsing = XML_PARSING;
-      void *const temp = XML_GetBuffer(parser, nLeftOver);
+      if (nLeftOver > INT_MAX) {
+        parser->m_errorCode = XML_ERROR_NO_MEMORY;
+        parser->m_eventPtr = parser->m_eventEndPtr = NULL;
+        parser->m_processor = errorProcessor;
+        return XML_STATUS_ERROR;
+      }
+      void *const temp = XML_GetBuffer(parser, (int)nLeftOver);
       parser->m_parsingStatus.parsing = originalStatus;
       // GetBuffer may have overwritten this, but we want to remember what the
       // app requested, not how many bytes were left over after parsing.
