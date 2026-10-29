@@ -150,6 +150,7 @@ expat_shy_set(EXPAT_BUILD_PKGCONFIG ${_EXPAT_BUILD_PKGCONFIG_DEFAULT} CACHE BOOL
 expat_shy_set(EXPAT_OSSFUZZ_BUILD OFF CACHE BOOL "Build fuzzers via OSS-Fuzz for the expat library")
 mark_as_advanced(EXPAT_OSSFUZZ_BUILD)
 expat_shy_set(EXPAT_ENABLE_INSTALL ON CACHE BOOL "Install expat files in cmake install target")
+expat_shy_set(EXPAT_ENABLE_EXPORT ON CACHE BOOL "Write a build-tree CMake targets file via export(); install(EXPORT) is governed by EXPAT_ENABLE_INSTALL")
 expat_shy_set(EXPAT_CONTEXT_BYTES 1024 CACHE STRING "Define to specify how much context to retain around the current parse point, 0 to disable")
 mark_as_advanced(EXPAT_CONTEXT_BYTES)
 expat_shy_set(EXPAT_SYMBOL_VERSIONING OFF CACHE BOOL "Define to provide symbol versioning for dependency generation")
@@ -971,12 +972,15 @@ write_basic_package_version_file(
     cmake/expat-config-version.cmake
     COMPATIBILITY SameMajorVersion  # i.e. semver
 )
-export(
-    TARGETS
-        expat
-    FILE
-        cmake/expat-targets.cmake  # not going to be installed
-)
+# Build-tree targets file (not installed).
+if(EXPAT_ENABLE_EXPORT)
+    export(
+        TARGETS
+            expat
+        FILE
+            cmake/expat-targets.cmake
+    )
+endif()
 expat_install(
     FILES
         ${CMAKE_CURRENT_BINARY_DIR}/cmake/expat-config.cmake
@@ -1058,6 +1062,7 @@ message(STATUS "  Build tests ................ ${EXPAT_BUILD_TESTS}")
 message(STATUS "  Build tools (xmlwf) ........ ${EXPAT_BUILD_TOOLS}")
 message(STATUS "  Build pkg-config file ...... ${EXPAT_BUILD_PKGCONFIG}")
 message(STATUS "  Install files .............. ${EXPAT_ENABLE_INSTALL}")
+message(STATUS "  Export targets file ........ ${EXPAT_ENABLE_EXPORT}")
 message(STATUS "")
 message(STATUS "  Features")
 message(STATUS "    // Advanced options, changes not advised")

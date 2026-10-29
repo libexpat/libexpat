@@ -286,6 +286,9 @@ EXPAT_BUILD_TOOLS:BOOL=ON
 // Character type to use (char|ushort|wchar_t) [default=char]
 EXPAT_CHAR_TYPE:STRING=char
 
+// Write a build-tree CMake targets file via export(); install(EXPORT) is governed by EXPAT_ENABLE_INSTALL
+EXPAT_ENABLE_EXPORT:BOOL=ON
+
 // Install expat files in cmake install target
 EXPAT_ENABLE_INSTALL:BOOL=ON
 
