@@ -9058,7 +9058,7 @@ poolStoreString(STRING_POOL *pool, const ENCODING *enc, const char *ptr,
 }
 
 static size_t
-poolBytesToAllocateFor(int blockSize) {
+poolBytesToAllocateFor(size_t blockSize) {
   /* Unprotected math would be:
   ** return offsetof(BLOCK, s) + blockSize * sizeof(XML_Char);
   **
@@ -9068,21 +9068,19 @@ poolBytesToAllocateFor(int blockSize) {
   */
   const size_t stretch = sizeof(XML_Char); /* can be 4 bytes */
 
-  if (blockSize <= 0)
+  // Detect integer overflow
+  if (blockSize > SIZE_MAX / stretch)
     return 0;
 
-  if (blockSize > (int)(INT_MAX / stretch))
+  const size_t stretchedBlockSize = blockSize * stretch;
+
+  // Detect integer overflow
+  if (offsetof(BLOCK, s) > SIZE_MAX - stretchedBlockSize)
     return 0;
 
-  {
-    const int stretchedBlockSize = blockSize * (int)stretch;
-    const int bytesToAllocate
-        = (int)(offsetof(BLOCK, s) + (unsigned)stretchedBlockSize);
-    if (bytesToAllocate < 0)
-      return 0;
+  const size_t bytesToAllocate = offsetof(BLOCK, s) + stretchedBlockSize;
 
-    return (size_t)bytesToAllocate;
-  }
+  return bytesToAllocate;
 }
 
 static XML_Bool
