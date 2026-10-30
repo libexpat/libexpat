@@ -612,6 +612,14 @@ static XML_Parser parserCreate(const XML_Char *encodingName,
 static void parserInit(XML_Parser parser, const XML_Char *encodingName,
                        bool isReset);
 
+static void *xmlGetBuffer64(XML_Parser parser, size_t len);
+
+static enum XML_Status xmlParse64(XML_Parser parser, const char *s, size_t len,
+                                  XML_Bool isFinal);
+
+static enum XML_Status xmlParseBuffer64(XML_Parser parser, size_t len,
+                                        XML_Bool isFinal);
+
 #if XML_GE == 1
 static float accountingGetCurrentAmplification(XML_Parser rootParser,
                                                XmlBigCount extraIndirectBytes);
@@ -739,7 +747,7 @@ struct XML_ParserStruct {
   const char *m_parseEndPtr;
   size_t m_partialTokenBytesBefore; /* used in heuristic to avoid O(n^2) */
   XML_Bool m_reparseDeferralEnabled;
-  int m_lastBufferRequestSize;
+  size_t m_lastBufferRequestSize;
   XML_Char *m_dataBuf;
   XML_Char *m_dataBufEnd;
   XML_StartElementHandler m_startElementHandler;
@@ -1243,9 +1251,8 @@ callProcessor(XML_Parser parser, const char *start, const char *end,
     available_buffer
         += EXPAT_SAFE_PTR_DIFF(parser->m_bufferLim, parser->m_bufferEnd);
     // m_lastBufferRequestSize is never assigned a value < 0, so the cast is ok
-    const bool enough
-        = (have_now >= 2 * had_before)
-          || ((size_t)parser->m_lastBufferRequestSize > available_buffer);
+    const bool enough = (have_now >= 2 * had_before)
+                        || (parser->m_lastBufferRequestSize > available_buffer);
 
     if (! enough) {
       *endPtr = start; // callers may expect this to be set
@@ -2336,10 +2343,23 @@ enum XML_Status XMLCALL
 XML_Parse(XML_Parser parser, const char *s, int len, int isFinal) {
   if (parser == NULL || isCalledFromInsideHandler(parser))
     return XML_STATUS_ERROR;
-  if ((len < 0) || ((s == NULL) && (len != 0))) {
+  if (len < 0) {
     parser->m_errorCode = XML_ERROR_INVALID_ARGUMENT;
     return XML_STATUS_ERROR;
   }
+  return xmlParse64(parser, s, (size_t)len, isFinal ? XML_TRUE : XML_FALSE);
+}
+
+static enum XML_Status
+xmlParse64(XML_Parser parser, const char *s, size_t len, XML_Bool isFinal) {
+  if (parser == NULL || isCalledFromInsideHandler(parser))
+    return XML_STATUS_ERROR;
+
+  if ((s == NULL) && (len != 0)) {
+    parser->m_errorCode = XML_ERROR_INVALID_ARGUMENT;
+    return XML_STATUS_ERROR;
+  }
+
   switch (parser->m_parsingStatus.parsing) {
   case XML_SUSPENDED:
     parser->m_errorCode = XML_ERROR_SUSPENDED;
@@ -2381,7 +2401,7 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal) {
     parser->m_lastBufferRequestSize = len;
     parser->m_parseEndByteIndex += len;
     parser->m_positionPtr = s;
-    parser->m_parsingStatus.finalBuffer = (XML_Bool)isFinal;
+    parser->m_parsingStatus.finalBuffer = isFinal;
 
     parser->m_errorCode
         = callProcessor(parser, s, parser->m_parseEndPtr = end, &end);
@@ -2421,7 +2441,7 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal) {
         return XML_STATUS_ERROR;
       }
       parser->m_parsingStatus.parsing = XML_PARSING;
-      void *const temp = XML_GetBuffer(parser, (int)nLeftOver);
+      void *const temp = xmlGetBuffer64(parser, nLeftOver);
       parser->m_parsingStatus.parsing = originalStatus;
       // GetBuffer may have overwritten this, but we want to remember what the
       // app requested, not how many bytes were left over after parsing.
@@ -2447,21 +2467,18 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal) {
     return result;
   }
 #endif /* XML_CONTEXT_BYTES == 0 */
-  void *buff = XML_GetBuffer(parser, len);
+  void *buff = xmlGetBuffer64(parser, len);
   if (buff == NULL)
     return XML_STATUS_ERROR;
   if (len > 0) {
     assert(s != NULL); // make sure s==NULL && len!=0 was rejected above
     memcpy(buff, s, len);
   }
-  return XML_ParseBuffer(parser, len, isFinal);
+  return xmlParseBuffer64(parser, len, isFinal);
 }
 
 enum XML_Status XMLCALL
 XML_ParseBuffer(XML_Parser parser, int len, int isFinal) {
-  const char *start;
-  enum XML_Status result = XML_STATUS_OK;
-
   if ((parser == NULL) || isCalledFromInsideHandler(parser))
     return XML_STATUS_ERROR;
 
@@ -2469,6 +2486,17 @@ XML_ParseBuffer(XML_Parser parser, int len, int isFinal) {
     parser->m_errorCode = XML_ERROR_INVALID_ARGUMENT;
     return XML_STATUS_ERROR;
   }
+
+  return xmlParseBuffer64(parser, (size_t)len, isFinal ? XML_TRUE : XML_FALSE);
+}
+
+static enum XML_Status
+xmlParseBuffer64(XML_Parser parser, size_t len, XML_Bool isFinal) {
+  if ((parser == NULL) || isCalledFromInsideHandler(parser))
+    return XML_STATUS_ERROR;
+
+  const char *start;
+  enum XML_Status result = XML_STATUS_OK;
 
   switch (parser->m_parsingStatus.parsing) {
   case XML_SUSPENDED:
@@ -2493,7 +2521,8 @@ XML_ParseBuffer(XML_Parser parser, int len, int isFinal) {
     parser->m_parsingStatus.parsing = XML_PARSING;
   }
 
-  if (len > EXPAT_SAFE_PTR_DIFF(parser->m_bufferLim, parser->m_bufferEnd)) {
+  if (len
+      > (size_t)EXPAT_SAFE_PTR_DIFF(parser->m_bufferLim, parser->m_bufferEnd)) {
     parser->m_errorCode = XML_ERROR_INVALID_ARGUMENT;
     return XML_STATUS_ERROR;
   }
@@ -2511,7 +2540,7 @@ XML_ParseBuffer(XML_Parser parser, int len, int isFinal) {
   parser->m_bufferEnd += len;
   parser->m_parseEndPtr = parser->m_bufferEnd;
   parser->m_parseEndByteIndex += len;
-  parser->m_parsingStatus.finalBuffer = (XML_Bool)isFinal;
+  parser->m_parsingStatus.finalBuffer = isFinal;
 
   parser->m_errorCode = callProcessor(parser, start, parser->m_parseEndPtr,
                                       &parser->m_bufferPtr);
@@ -2544,11 +2573,12 @@ XML_ParseBuffer(XML_Parser parser, int len, int isFinal) {
 
 /* Modifies `parser`’s buffer to be backed by `newBuf`. */
 static void
-setParserBuffer(XML_Parser parser, char *newBuf, int newBufSize, int keep) {
+setParserBuffer(XML_Parser parser, char *newBuf, size_t newBufSize,
+                size_t keep) {
   parser->m_bufferLim = newBuf + newBufSize;
   if (parser->m_bufferPtr) {
-    const int parsing
-        = (int)EXPAT_SAFE_PTR_DIFF(parser->m_bufferEnd, parser->m_bufferPtr);
+    const size_t parsing
+        = EXPAT_SAFE_PTR_DIFF(parser->m_bufferEnd, parser->m_bufferPtr);
     memcpy(newBuf, parser->m_bufferPtr - keep, parsing + keep);
     // NOTE: We are avoiding FREE(..) here because parser->m_buffer
     //       is not being allocated with MALLOC(..) but with plain
@@ -2569,10 +2599,20 @@ void *XMLCALL
 XML_GetBuffer(XML_Parser parser, int len) {
   if ((parser == NULL) || isCalledFromInsideHandler(parser))
     return NULL;
+
   if (len < 0) {
     parser->m_errorCode = XML_ERROR_NO_MEMORY;
     return NULL;
   }
+
+  return xmlGetBuffer64(parser, (size_t)len);
+}
+
+static void *
+xmlGetBuffer64(XML_Parser parser, size_t len) {
+  if ((parser == NULL) || isCalledFromInsideHandler(parser))
+    return NULL;
+
   switch (parser->m_parsingStatus.parsing) {
   case XML_SUSPENDED:
     parser->m_errorCode = XML_ERROR_SUSPENDED;
@@ -2586,37 +2626,38 @@ XML_GetBuffer(XML_Parser parser, int len) {
   // whether or not the request succeeds, `len` seems to be the app's preferred
   // buffer fill size; remember it.
   parser->m_lastBufferRequestSize = len;
-  if (len > EXPAT_SAFE_PTR_DIFF(parser->m_bufferLim, parser->m_bufferEnd)
+  if (len > (size_t)EXPAT_SAFE_PTR_DIFF(parser->m_bufferLim,
+                                        parser->m_bufferEnd)
       || parser->m_buffer == NULL) {
     /* Do not invoke signed arithmetic overflow: */
-    int neededSize = (int)((unsigned)len
-                           + (unsigned)EXPAT_SAFE_PTR_DIFF(
-                               parser->m_bufferEnd, parser->m_bufferPtr));
-    if (neededSize < 0) {
+    const size_t leftUnparsed
+        = EXPAT_SAFE_PTR_DIFF(parser->m_bufferEnd, parser->m_bufferPtr);
+    if (len > SIZE_MAX - leftUnparsed) {
       parser->m_errorCode = XML_ERROR_NO_MEMORY;
       return NULL;
     }
+    size_t neededSize = len + leftUnparsed;
 #if XML_CONTEXT_BYTES > 0
-    const int parsed
-        = (int)EXPAT_SAFE_PTR_DIFF(parser->m_bufferPtr, parser->m_buffer);
-    int keep = parsed;
+    const size_t parsed
+        = EXPAT_SAFE_PTR_DIFF(parser->m_bufferPtr, parser->m_buffer);
+    size_t keep = parsed;
     if (keep > XML_CONTEXT_BYTES)
       keep = XML_CONTEXT_BYTES;
     /* Detect and prevent integer overflow */
-    if (keep > INT_MAX - neededSize) {
+    if (keep > SIZE_MAX - neededSize) {
       parser->m_errorCode = XML_ERROR_NO_MEMORY;
       return NULL;
     }
 #else
-    int keep = 0;
+    size_t keep = 0;
 #endif /* XML_CONTEXT_BYTES > 0 */
     neededSize += keep;
     if (parser->m_buffer && parser->m_bufferPtr
-        && neededSize
-               <= EXPAT_SAFE_PTR_DIFF(parser->m_bufferLim, parser->m_buffer)) {
+        && neededSize <= (size_t)EXPAT_SAFE_PTR_DIFF(parser->m_bufferLim,
+                                                     parser->m_buffer)) {
 #if XML_CONTEXT_BYTES > 0
       if (keep < parsed) {
-        int offset = parsed - keep;
+        size_t offset = parsed - keep;
         /* The buffer pointers cannot be NULL here; we have at least some bytes
          * in the buffer */
         memmove(parser->m_buffer, &parser->m_buffer[offset],
@@ -2633,15 +2674,15 @@ XML_GetBuffer(XML_Parser parser, int len) {
       parser->m_bufferPtr = parser->m_buffer;
 #endif /* XML_CONTEXT_BYTES > 0 */
     } else {
-      int bufferSize
-          = (int)EXPAT_SAFE_PTR_DIFF(parser->m_bufferLim, parser->m_buffer);
+      size_t bufferSize
+          = EXPAT_SAFE_PTR_DIFF(parser->m_bufferLim, parser->m_buffer);
       if (bufferSize == 0)
         bufferSize = INIT_BUFFER_SIZE;
-      do {
-        /* Do not invoke signed arithmetic overflow: */
-        bufferSize = (int)(2U * (unsigned)bufferSize);
-      } while (bufferSize < neededSize && bufferSize > 0);
-      if (bufferSize <= 0) {
+      while (bufferSize < neededSize && bufferSize <= SIZE_MAX / 2)
+        bufferSize *= 2;
+      // NOTE: The artificial boundary will be dropped once that more of
+      //       Expat's internals have been migrated from `size_t` to `int`.
+      if (bufferSize < neededSize || /*artificial*/ bufferSize > INT_MAX) {
         parser->m_errorCode = XML_ERROR_NO_MEMORY;
         return NULL;
       }
