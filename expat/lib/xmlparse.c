@@ -4263,7 +4263,7 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
   //       elements from start to end *to the same block of memory*.
   //       That black magic only works because the first member `.name` in
   //       `ATTRIBUTE` is no longer being read after `appAtts[attIndex]`
-  //       has been written, which fir the first element is the very same
+  //       has been written, which for the first element is the very same
   //       address in memory.
   //       And because `attIndex` is increased twice for default attributes
   //       further down, struct `ATTRIBUTE` must be at least twice the size
