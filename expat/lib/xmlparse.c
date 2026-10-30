@@ -325,7 +325,7 @@ typedef struct {
 
 typedef struct block {
   struct block *next;
-  int size;
+  size_t size;
   XML_Char s[];
 } BLOCK;
 
@@ -9056,7 +9056,7 @@ poolStoreString(STRING_POOL *pool, const ENCODING *enc, const char *ptr,
 }
 
 static size_t
-poolBytesToAllocateFor(int blockSize) {
+poolBytesToAllocateFor(size_t blockSize) {
   /* Unprotected math would be:
   ** return offsetof(BLOCK, s) + blockSize * sizeof(XML_Char);
   **
@@ -9066,21 +9066,19 @@ poolBytesToAllocateFor(int blockSize) {
   */
   const size_t stretch = sizeof(XML_Char); /* can be 4 bytes */
 
-  if (blockSize <= 0)
+  // Detect integer overflow
+  if (blockSize > SIZE_MAX / stretch)
     return 0;
 
-  if (blockSize > (int)(INT_MAX / stretch))
+  const size_t stretchedBlockSize = blockSize * stretch;
+
+  // Detect integer overflow
+  if (offsetof(BLOCK, s) > SIZE_MAX - stretchedBlockSize)
     return 0;
 
-  {
-    const int stretchedBlockSize = blockSize * (int)stretch;
-    const int bytesToAllocate
-        = (int)(offsetof(BLOCK, s) + (unsigned)stretchedBlockSize);
-    if (bytesToAllocate < 0)
-      return 0;
+  const size_t bytesToAllocate = offsetof(BLOCK, s) + stretchedBlockSize;
 
-    return (size_t)bytesToAllocate;
-  }
+  return bytesToAllocate;
 }
 
 static XML_Bool
@@ -9095,7 +9093,7 @@ poolGrow(STRING_POOL *pool) {
       pool->ptr = pool->start;
       return XML_TRUE;
     }
-    if (pool->end - pool->start < pool->freeBlocks->size) {
+    if ((size_t)(pool->end - pool->start) < pool->freeBlocks->size) {
       BLOCK *tem = pool->freeBlocks->next;
       pool->freeBlocks->next = pool->blocks;
       pool->blocks = pool->freeBlocks;
@@ -9110,23 +9108,17 @@ poolGrow(STRING_POOL *pool) {
   }
   if (pool->blocks && pool->start == pool->blocks->s) {
     BLOCK *temp;
-    int blockSize = (int)((unsigned)(pool->end - pool->start) * 2U);
+    const size_t len = pool->end - pool->start;
+    // Detect integer overflow
+    if (len > SIZE_MAX / 2)
+      return XML_FALSE; /* LCOV_EXCL_LINE */
+    const size_t blockSize = len * 2;
     size_t bytesToAllocate;
 
     /* NOTE: Needs to be calculated prior to calling `realloc`
              to avoid dangling pointers: */
     const ptrdiff_t offsetInsideBlock
         = EXPAT_SAFE_PTR_DIFF(pool->ptr, pool->start);
-
-    if (blockSize < 0) {
-      /* This condition traps a situation where either more than
-       * INT_MAX/2 bytes have already been allocated.  This isn't
-       * readily testable, since it is unlikely that an average
-       * machine will have that much memory, so we exclude it from the
-       * coverage statistics.
-       */
-      return XML_FALSE; /* LCOV_EXCL_LINE */
-    }
 
     bytesToAllocate = poolBytesToAllocateFor(blockSize);
     if (bytesToAllocate == 0)
@@ -9142,29 +9134,15 @@ poolGrow(STRING_POOL *pool) {
     pool->end = pool->start + blockSize;
   } else {
     BLOCK *tem;
-    int blockSize = (int)(pool->end - pool->start);
+    size_t blockSize = pool->end - pool->start;
     size_t bytesToAllocate;
-
-    if (blockSize < 0) {
-      /* This condition traps a situation where either more than
-       * INT_MAX bytes have already been allocated (which is prevented
-       * by various pieces of program logic, not least this one, never
-       * mind the unlikelihood of actually having that much memory) or
-       * the pool control fields have been corrupted (which could
-       * conceivably happen in an extremely buggy user handler
-       * function).  Either way it isn't readily testable, so we
-       * exclude it from the coverage statistics.
-       */
-      return XML_FALSE; /* LCOV_EXCL_LINE */
-    }
 
     if (blockSize < INIT_BLOCK_SIZE)
       blockSize = INIT_BLOCK_SIZE;
     else {
-      /* Detect overflow, avoiding _signed_ overflow undefined behavior */
-      if ((int)((unsigned)blockSize * 2U) < 0) {
-        return XML_FALSE;
-      }
+      // Detect integer overflow
+      if (blockSize > SIZE_MAX / 2)
+        return XML_FALSE; /* LCOV_EXCL_LINE */
       blockSize *= 2;
     }
 
