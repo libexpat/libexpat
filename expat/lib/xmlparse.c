@@ -315,10 +315,10 @@ typedef struct {
   enum XML_Content_Type type;
   enum XML_Content_Quant quant;
   const XML_Char *name;
-  int firstchild;
-  int lastchild;
-  int childcnt;
-  int nextsib;
+  size_t firstchild;
+  size_t lastchild;
+  size_t childcnt;
+  size_t nextsib;
 } CONTENT_SCAFFOLD;
 
 #define INIT_SCAFFOLD_ELEMENTS 32
@@ -407,10 +407,10 @@ typedef struct {
   /* === scaffolding for building content model === */
   bool in_eldecl;
   CONTENT_SCAFFOLD *scaffold;
-  unsigned contentStringLen;
-  unsigned scaffSize;
-  unsigned scaffCount;
-  int scaffLevel;
+  size_t contentStringLen;
+  size_t scaffSize;
+  size_t scaffCount;
+  size_t scaffLevel;
   int *scaffIndex;
   size_t scaffIndexSize;
 } DTD;
@@ -594,7 +594,7 @@ static const XML_Char *poolCopyStringN(STRING_POOL *pool, const XML_Char *s,
                                        size_t n);
 static const XML_Char *poolAppendString(STRING_POOL *pool, const XML_Char *s);
 
-static int nextScaffoldPart(XML_Parser parser);
+static expat_ssize_t nextScaffoldPart(XML_Parser parser);
 static XML_Content *build_model(XML_Parser parser);
 static ELEMENT_TYPE *getElementType(XML_Parser parser, const ENCODING *enc,
                                     const char *ptr, const char *end);
@@ -6349,11 +6349,11 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
       }
       parser->m_groupConnector[parser->m_prologState.level] = 0;
       if (dtd->in_eldecl) {
-        int myindex = nextScaffoldPart(parser);
+        expat_ssize_t myindex = nextScaffoldPart(parser);
         if (myindex < 0)
           return XML_ERROR_NO_MEMORY;
         assert(dtd->scaffIndex != NULL);
-        if ((size_t)dtd->scaffLevel >= dtd->scaffIndexSize) {
+        if (dtd->scaffLevel >= dtd->scaffIndexSize) {
           /* Detect and prevent integer overflow */
           if (dtd->scaffIndexSize > SIZE_MAX / 2 / sizeof(int)) {
             return XML_ERROR_NO_MEMORY;
@@ -6571,7 +6571,7 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
         size_t nameLen;
         const char *nxt
             = (quant == XML_CQUANT_NONE ? next : next - enc->minBytesPerChar);
-        int myindex = nextScaffoldPart(parser);
+        expat_ssize_t myindex = nextScaffoldPart(parser);
         if (myindex < 0)
           return XML_ERROR_NO_MEMORY;
         dtd->scaffold[myindex].type = XML_CTYPE_NAME;
@@ -6584,11 +6584,11 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
         nameLen = xcslen(name) + /*null terminator*/ 1;
 
         /* Detect and prevent integer overflow */
-        if (nameLen > UINT_MAX - dtd->contentStringLen) {
+        if (nameLen > SIZE_MAX - dtd->contentStringLen) {
           return XML_ERROR_NO_MEMORY;
         }
 
-        dtd->contentStringLen += (unsigned)nameLen;
+        dtd->contentStringLen += nameLen;
         if (parser->m_elementDeclHandler)
           handleDefault = XML_FALSE;
       }
@@ -9201,11 +9201,11 @@ poolGrowUntil(STRING_POOL *pool, size_t needed) {
   }
 }
 
-static int
+static expat_ssize_t
 nextScaffoldPart(XML_Parser parser) {
   DTD *const dtd = parser->m_dtd; /* save one level of indirection */
   CONTENT_SCAFFOLD *me;
-  int next;
+  expat_ssize_t next;
 
   if (! dtd->scaffIndex) {
     /* Detect and prevent integer overflow. */
@@ -9228,7 +9228,7 @@ nextScaffoldPart(XML_Parser parser) {
     CONTENT_SCAFFOLD *temp;
     if (dtd->scaffold) {
       /* Detect and prevent integer overflow */
-      if (dtd->scaffSize > UINT_MAX / 2u) {
+      if (dtd->scaffSize > SIZE_MAX / 2u) {
         return -1;
       }
       /* Detect and prevent integer overflow.
@@ -9254,7 +9254,10 @@ nextScaffoldPart(XML_Parser parser) {
     }
     dtd->scaffold = temp;
   }
-  next = (int)dtd->scaffCount++;
+  if (dtd->scaffCount > EXPAT_SSIZE_MAX) {
+    return -1;
+  }
+  next = dtd->scaffCount++;
   me = &dtd->scaffold[next];
   if (dtd->scaffLevel) {
     CONTENT_SCAFFOLD *parent
@@ -9395,15 +9398,24 @@ build_model(XML_Parser parser) {
       dest->children = NULL;
     } else {
       unsigned int i;
-      int cn;
+      size_t cn;
+      if (dtd->scaffold[src_node].childcnt > UINT_MAX) {
+        parser->m_mem.free_fcn(ret);
+        return NULL;
+      }
       dest->name = NULL;
       dest->numchildren = dtd->scaffold[src_node].childcnt;
       dest->children = jobDest;
 
       /* Append scaffold indices of children to array */
       for (i = 0, cn = dtd->scaffold[src_node].firstchild;
-           i < dest->numchildren; i++, cn = dtd->scaffold[cn].nextsib)
+           i < dest->numchildren; i++, cn = dtd->scaffold[cn].nextsib) {
+        if (cn > UINT_MAX) {
+          parser->m_mem.free_fcn(ret);
+          return NULL;
+        }
         (jobDest++)->numchildren = (unsigned int)cn;
+      }
     }
   }
 
