@@ -2384,7 +2384,7 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal) {
     parser->m_parsingStatus.finalBuffer = (XML_Bool)isFinal;
 
     parser->m_errorCode
-        = callProcessor(parser, s, parser->m_parseEndPtr = s + len, &end);
+        = callProcessor(parser, s, parser->m_parseEndPtr = end, &end);
 
     if (parser->m_errorCode != XML_ERROR_NONE) {
       parser->m_eventEndPtr = parser->m_eventPtr;
