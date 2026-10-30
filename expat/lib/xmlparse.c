@@ -428,6 +428,9 @@ typedef struct open_internal_entity {
   int startTagLevel;
   bool betweenDecl; /* WFC: PE Between Declarations */
   enum EntityType type;
+  /* Position in the document buffer just past this entity reference; used to
+     resume the document when a CDATA section inside the entity is suspended. */
+  const char *docResumePtr;
 } OPEN_INTERNAL_ENTITY;
 
 enum XML_Account {
@@ -3775,6 +3778,7 @@ doContent(XML_Parser parser, int startTagLevel, const ENCODING *enc,
         result = processEntity(parser, entity, XML_FALSE, ENTITY_INTERNAL);
         if (result != XML_ERROR_NONE)
           return result;
+        parser->m_openInternalEntities->docResumePtr = next;
       } else if (parser->m_externalEntityRefHandler) {
         const XML_Char *context;
         entity->open = true;
@@ -4038,6 +4042,15 @@ doContent(XML_Parser parser, int startTagLevel, const ENCODING *enc,
       if (result != XML_ERROR_NONE)
         return result;
       else if (! next) {
+        if (enc != parser->m_encoding && parser->m_openInternalEntities) {
+          /* CDATA opened inside an internal entity: remember where the section
+             content starts in the entity text so that cdataSectionProcessor
+             continues in that buffer on resume. */
+          OPEN_INTERNAL_ENTITY *const openEntity
+              = parser->m_openInternalEntities;
+          openEntity->entity->processed
+              = *nextPtr - (const char *)openEntity->entity->textPtr;
+        }
         parser->m_processor = cdataSectionProcessor;
         return result;
       }
@@ -4898,12 +4911,51 @@ addBinding(XML_Parser parser, PREFIX *prefix, const ATTRIBUTE_ID *attId,
 static enum XML_Error
 cdataSectionProcessor(XML_Parser parser, const char *start, const char *end,
                       const char **endPtr) {
-  enum XML_Error result = doCdataSection(
-      parser, parser->m_encoding, &start, end, endPtr,
-      (XML_Bool)! parser->m_parsingStatus.finalBuffer, XML_ACCOUNT_DIRECT);
+  enum XML_Error result;
+  const ENCODING *enc = parser->m_encoding;
+  /* doContent switches to this processor when a CDATA section is left open on
+     suspend.  If that section is inside an internal entity then the caller
+     (XML_ResumeParser) hands us the document buffer; continue the section in
+     the entity text buffer instead, starting where doContent recorded it. */
+  if (parser->m_openInternalEntities
+      && parser->m_openInternalEntities->type == ENTITY_INTERNAL) {
+    OPEN_INTERNAL_ENTITY *const openEntity = parser->m_openInternalEntities;
+    enc = parser->m_internalEncoding;
+    start = (const char *)openEntity->entity->textPtr
+            + openEntity->entity->processed;
+    end = (const char *)(openEntity->entity->textPtr
+                         + openEntity->entity->textLen);
+  }
+  result = doCdataSection(parser, enc, &start, end, endPtr,
+                          (XML_Bool)! parser->m_parsingStatus.finalBuffer,
+                          XML_ACCOUNT_DIRECT);
   if (result != XML_ERROR_NONE)
     return result;
   if (start) {
+    if (enc != parser->m_encoding) {
+      /* The section closed inside an internal entity: skip past the rest of
+         the entity and continue in the document buffer. */
+      OPEN_INTERNAL_ENTITY *const openEntity = parser->m_openInternalEntities;
+      const char *const entityEnd
+          = (const char *)(openEntity->entity->textPtr
+                           + openEntity->entity->textLen);
+      if (start == entityEnd) {
+        /* The section consumed the entity text to its end: mark the entity
+           done, and let internalEntityProcessor pop it and continue in the
+           document buffer from where the entity reference ended. */
+        openEntity->entity->hasMore = false;
+        *endPtr = openEntity->docResumePtr;
+      } else {
+        /* More of the entity text follows: carry on with it where the
+           section's closing delimiter ended. */
+        openEntity->entity->processed
+            = start - (const char *)openEntity->entity->textPtr;
+        parser->m_processor = internalEntityProcessor;
+        return internalEntityProcessor(parser, start, end, endPtr);
+      }
+      parser->m_processor = internalEntityProcessor;
+      return internalEntityProcessor(parser, *endPtr, end, endPtr);
+    }
     if (parser->m_parentParser) { /* we are parsing an external entity */
       parser->m_processor = externalEntityContentProcessor;
       return externalEntityContentProcessor(parser, start, end, endPtr);
