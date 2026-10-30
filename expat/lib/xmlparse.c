@@ -410,8 +410,8 @@ typedef struct {
   bool in_eldecl;
   CONTENT_SCAFFOLD *scaffold;
   size_t contentStringLen;
-  unsigned scaffSize;
-  unsigned scaffCount;
+  size_t scaffSize;
+  size_t scaffCount;
   int scaffLevel;
   size_t *scaffIndex;
   size_t scaffIndexSize;
@@ -9232,7 +9232,7 @@ nextScaffoldPart(XML_Parser parser) {
     CONTENT_SCAFFOLD *temp;
     if (dtd->scaffold) {
       /* Detect and prevent integer overflow */
-      if (dtd->scaffSize > UINT_MAX / 2u) {
+      if (dtd->scaffSize > SIZE_MAX / 2u) {
         return -1;
       }
       /* Detect and prevent integer overflow.
