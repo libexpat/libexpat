@@ -2359,7 +2359,13 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal) {
   }
 
 #if XML_CONTEXT_BYTES == 0
+  // Is the buffer empty?
   if (parser->m_bufferPtr == parser->m_bufferEnd) {
+#else
+  // Is this the first parse on the document (that has no chance at any past
+  // context bytes anyway)?
+  if (parser->m_parseEndByteIndex == 0) {
+#endif
     // This null-object trick allows us to stop worrying about case `s == NULL`
     // within this branch, e.g. with `s + len - end`.
     const char *const empty = "";
@@ -2384,8 +2390,29 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal) {
     parser->m_positionPtr = s;
     parser->m_parsingStatus.finalBuffer = (XML_Bool)isFinal;
 
+#if XML_CONTEXT_BYTES > 0
+    // Fake presence of a buffer to functions like XML_GetInputContext64 that
+    // rely on these pointers being set
+    /*.*/ char *const bufferBackup = parser->m_buffer;
+    const char *const bufferPtrBackup = parser->m_bufferPtr;
+    /*.*/ char *const bufferEndBackup = parser->m_bufferEnd;
+    const char *const bufferLimBackup = parser->m_bufferLim;
+    parser->m_buffer = (char *)s;
+    parser->m_bufferPtr = s;
+    parser->m_bufferEnd = (char *)end;
+    parser->m_bufferLim = end;
+#endif
+
     parser->m_errorCode
         = callProcessor(parser, s, parser->m_parseEndPtr = end, &end);
+
+#if XML_CONTEXT_BYTES > 0
+    // Reset fake buffer
+    parser->m_buffer = bufferBackup;
+    parser->m_bufferPtr = bufferPtrBackup;
+    parser->m_bufferEnd = bufferEndBackup;
+    parser->m_bufferLim = bufferLimBackup;
+#endif
 
     if (parser->m_errorCode != XML_ERROR_NONE) {
       parser->m_eventEndPtr = parser->m_eventPtr;
@@ -2410,6 +2437,7 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal) {
 
     XmlUpdatePosition(parser->m_encoding, parser->m_positionPtr, end,
                       &parser->m_position);
+    // NOTE: parser->m_positionPtr is set after the next block
     nLeftOver = s + len - end;
     if (nLeftOver) {
       // Back up and restore the parsing status to avoid XML_ERROR_SUSPENDED
@@ -2433,21 +2461,26 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal) {
         parser->m_processor = errorProcessor;
         return XML_STATUS_ERROR;
       }
-      // Since we know that the buffer was empty and XML_CONTEXT_BYTES is 0, we
-      // don't have any data to preserve, and can copy straight into the start
-      // of the buffer rather than the GetBuffer return pointer (which may be
-      // pointing further into the allocated buffer).
+      // Since we know that the buffer was empty and either XML_CONTEXT_BYTES
+      // is 0 or this is the first parse, we don't have any data to preserve,
+      // and can copy straight into the start of the buffer rather than the
+      // XML_GetBuffer return pointer (which may be pointing further into the
+      // allocated buffer).
       memcpy(parser->m_buffer, end, nLeftOver);
     }
     parser->m_bufferPtr = parser->m_buffer;
     parser->m_bufferEnd = EXPAT_SAFE_PTR_ADD(parser->m_buffer, nLeftOver);
     parser->m_positionPtr = parser->m_bufferPtr;
     parser->m_parseEndPtr = parser->m_bufferEnd;
+    // NOTE: The following guard is to just keep compilation with
+    //       `XML_CONTEXT_BYTES > 0` backwards compatible, for now.
+#if XML_CONTEXT_BYTES == 0
     parser->m_eventPtr = parser->m_bufferPtr;
     parser->m_eventEndPtr = parser->m_bufferPtr;
+#endif
     return result;
   }
-#endif /* XML_CONTEXT_BYTES == 0 */
+
   void *buff = XML_GetBuffer(parser, len);
   if (buff == NULL)
     return XML_STATUS_ERROR;
