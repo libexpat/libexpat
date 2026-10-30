@@ -90,11 +90,10 @@
 #      define EXPAT_FMT_SIZE_T(midpart) "%" midpart "u"
 #    endif
 #  else
-#    include <inttypes.h> // PRIdPTR, PRIuPTR
 #    define EXPAT_FMT_LLX(midpart) "%" midpart "llx"
 #    define EXPAT_FMT_ULL(midpart) "%" midpart "llu"
-#    define EXPAT_FMT_PTRDIFF_T(midpart) "%" midpart PRIdPTR
-#    define EXPAT_FMT_SIZE_T(midpart) "%" midpart PRIuPTR
+#    define EXPAT_FMT_PTRDIFF_T(midpart) "%" midpart "td"
+#    define EXPAT_FMT_SIZE_T(midpart) "%" midpart "zu"
 #  endif
 
 #  ifndef UNUSED_P
