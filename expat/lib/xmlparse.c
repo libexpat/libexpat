@@ -407,7 +407,7 @@ typedef struct {
   /* === scaffolding for building content model === */
   bool in_eldecl;
   CONTENT_SCAFFOLD *scaffold;
-  unsigned contentStringLen;
+  size_t contentStringLen;
   unsigned scaffSize;
   unsigned scaffCount;
   int scaffLevel;
@@ -6584,11 +6584,11 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
         nameLen = xcslen(name) + /*null terminator*/ 1;
 
         /* Detect and prevent integer overflow */
-        if (nameLen > UINT_MAX - dtd->contentStringLen) {
+        if (nameLen > SIZE_MAX - dtd->contentStringLen) {
           return XML_ERROR_NO_MEMORY;
         }
 
-        dtd->contentStringLen += (unsigned)nameLen;
+        dtd->contentStringLen += nameLen;
         if (parser->m_elementDeclHandler)
           handleDefault = XML_FALSE;
       }
