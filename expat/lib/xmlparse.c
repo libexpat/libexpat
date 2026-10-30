@@ -227,6 +227,7 @@ typedef char ICHAR;
 
 /* Do safe (NULL-aware) pointer arithmetic */
 #define EXPAT_SAFE_PTR_DIFF(p, q) (((p) && (q)) ? ((p) - (q)) : 0)
+#define EXPAT_SAFE_PTR_ADD(p, a) ((p) ? ((p) + (a)) : NULL)
 
 #define EXPAT_MIN(a, b) (((a) < (b)) ? (a) : (b))
 
@@ -2439,7 +2440,7 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal) {
       memcpy(parser->m_buffer, end, nLeftOver);
     }
     parser->m_bufferPtr = parser->m_buffer;
-    parser->m_bufferEnd = parser->m_buffer + nLeftOver;
+    parser->m_bufferEnd = EXPAT_SAFE_PTR_ADD(parser->m_buffer, nLeftOver);
     parser->m_positionPtr = parser->m_bufferPtr;
     parser->m_parseEndPtr = parser->m_bufferEnd;
     parser->m_eventPtr = parser->m_bufferPtr;
