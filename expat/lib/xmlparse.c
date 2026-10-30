@@ -227,6 +227,7 @@ typedef char ICHAR;
 
 /* Do safe (NULL-aware) pointer arithmetic */
 #define EXPAT_SAFE_PTR_DIFF(p, q) (((p) && (q)) ? ((p) - (q)) : 0)
+#define EXPAT_SAFE_PTR_ADD(p, a) ((p) ? ((p) + (a)) : NULL)
 
 #define EXPAT_MIN(a, b) (((a) < (b)) ? (a) : (b))
 
@@ -2384,7 +2385,7 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal) {
     parser->m_parsingStatus.finalBuffer = (XML_Bool)isFinal;
 
     parser->m_errorCode
-        = callProcessor(parser, s, parser->m_parseEndPtr = s + len, &end);
+        = callProcessor(parser, s, parser->m_parseEndPtr = end, &end);
 
     if (parser->m_errorCode != XML_ERROR_NONE) {
       parser->m_eventEndPtr = parser->m_eventPtr;
@@ -2414,13 +2415,13 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal) {
       // Back up and restore the parsing status to avoid XML_ERROR_SUSPENDED
       // (and XML_ERROR_FINISHED) from XML_GetBuffer.
       const enum XML_Parsing originalStatus = parser->m_parsingStatus.parsing;
-      parser->m_parsingStatus.parsing = XML_PARSING;
       if (nLeftOver > INT_MAX) {
         parser->m_errorCode = XML_ERROR_NO_MEMORY;
         parser->m_eventPtr = parser->m_eventEndPtr = NULL;
         parser->m_processor = errorProcessor;
         return XML_STATUS_ERROR;
       }
+      parser->m_parsingStatus.parsing = XML_PARSING;
       void *const temp = XML_GetBuffer(parser, (int)nLeftOver);
       parser->m_parsingStatus.parsing = originalStatus;
       // GetBuffer may have overwritten this, but we want to remember what the
@@ -2439,7 +2440,7 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal) {
       memcpy(parser->m_buffer, end, nLeftOver);
     }
     parser->m_bufferPtr = parser->m_buffer;
-    parser->m_bufferEnd = parser->m_buffer + nLeftOver;
+    parser->m_bufferEnd = EXPAT_SAFE_PTR_ADD(parser->m_buffer, nLeftOver);
     parser->m_positionPtr = parser->m_bufferPtr;
     parser->m_parseEndPtr = parser->m_bufferEnd;
     parser->m_eventPtr = parser->m_bufferPtr;
