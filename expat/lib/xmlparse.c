@@ -5992,6 +5992,8 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
           poolFinish(&dtd->entityValuePool);
           if (parser->m_entityDeclHandler) {
             *eventEndPP = s;
+            if (parser->m_declEntity->textLen > INT_MAX)
+              return XML_ERROR_NO_MEMORY;
             beforeHandler(parser);
             parser->m_entityDeclHandler(
                 parser->m_handlerArg, parser->m_declEntity->name,
@@ -6013,6 +6015,8 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
 
           if (parser->m_entityDeclHandler) {
             *eventEndPP = s;
+            if (parser->m_declEntity->textLen > INT_MAX)
+              return XML_ERROR_NO_MEMORY;
             beforeHandler(parser);
             parser->m_entityDeclHandler(
                 parser->m_handlerArg, parser->m_declEntity->name,
