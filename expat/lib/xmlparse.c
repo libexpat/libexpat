@@ -412,7 +412,7 @@ typedef struct {
   size_t contentStringLen;
   size_t scaffSize;
   size_t scaffCount;
-  int scaffLevel;
+  size_t scaffLevel;
   size_t *scaffIndex;
   size_t scaffIndexSize;
 } DTD;
@@ -6357,7 +6357,7 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
         if (myindex < 0)
           return XML_ERROR_NO_MEMORY;
         assert(dtd->scaffIndex != NULL);
-        if ((size_t)dtd->scaffLevel >= dtd->scaffIndexSize) {
+        if (dtd->scaffLevel >= dtd->scaffIndexSize) {
           /* Detect and prevent integer overflow */
           if (dtd->scaffIndexSize > SIZE_MAX / 2 / sizeof(size_t)) {
             return XML_ERROR_NO_MEMORY;
