@@ -27,6 +27,7 @@
    Copyright (c) 2026      Afonso Januário <afonso-januario@hotmail.com>
    Copyright (c) 2026      Braian Plaku <braianplaku@gmail.com>
    Copyright (c) 2026      Filippo Tedeschi <filippotedeschi98@gmail.com>
+   Copyright (c) 2026      Alexander Bluhm <alexander.bluhm@gmx.net>
    Licensed under the MIT license:
 
    Permission is  hereby granted,  free of charge,  to any  person obtaining

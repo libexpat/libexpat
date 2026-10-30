@@ -10,6 +10,7 @@
 # Copyright (c) 2017-2022 Rhodri James <rhodri@wildebeest.org.uk>
 # Copyright (c) 2020      Jeffrey Walton <noloader@gmail.com>
 # Copyright (c) 2024      Dag-Erling Smørgrav <des@des.dev>
+# Copyright (c) 2026      Funda Wang <fundawang@yeah.net>
 # Licensed under the MIT license:
 #
 # Permission is  hereby granted,  free of charge,  to any  person obtaining
