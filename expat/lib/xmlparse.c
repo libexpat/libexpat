@@ -4269,7 +4269,7 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
   //       further down, struct `ATTRIBUTE` must be at least twice the size
   //       of a pointer, or the allocation size math for `m_attsSize` starts
   //       to underallocate.
-  const XML_Char **const appAtts = (const XML_Char **)parser->m_atts;
+  const XML_Char **const appAtts = (const XML_Char **)(char **)parser->m_atts;
   for (size_t i = 0; i < n; i++) {
     ATTRIBUTE *currAtt = &parser->m_atts[i];
     /* add the name and value to the attribute list */
