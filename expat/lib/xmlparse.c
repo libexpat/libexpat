@@ -7970,10 +7970,16 @@ reportComment(XML_Parser parser, const ENCODING *enc, const char *start,
 }
 
 static void
-callDefaultHandler(XML_Parser parser, const XML_Char *s, int len) {
+callDefaultHandler(XML_Parser parser, const XML_Char *s, size_t len) {
   assert(parser->m_defaultHandler != NULL);
   beforeHandler(parser);
-  parser->m_defaultHandler(parser->m_handlerArg, s, len);
+  while (len > INT_MAX) {
+    parser->m_defaultHandler(parser->m_handlerArg, s, INT_MAX);
+    s += INT_MAX;
+    len -= INT_MAX;
+  }
+  assert(len <= INT_MAX);
+  parser->m_defaultHandler(parser->m_handlerArg, s, (int)len);
   afterHandler(parser);
 }
 
@@ -8014,13 +8020,13 @@ reportDefault(XML_Parser parser, const ENCODING *enc, const char *s,
           = XmlConvert(enc, &s, end, &dataPtr, (ICHAR *)parser->m_dataBufEnd);
       *eventEndPP = s;
       callDefaultHandler(parser, parser->m_dataBuf,
-                         (int)(dataPtr - (ICHAR *)parser->m_dataBuf));
+                         dataPtr - (ICHAR *)parser->m_dataBuf);
       *eventPP = s;
     } while ((convert_res != XML_CONVERT_COMPLETED)
              && (convert_res != XML_CONVERT_INPUT_INCOMPLETE));
   } else {
     callDefaultHandler(parser, (const XML_Char *)s,
-                       (int)((const XML_Char *)end - (const XML_Char *)s));
+                       (const XML_Char *)end - (const XML_Char *)s);
   }
 }
 
