@@ -563,6 +563,7 @@ static int reportComment(XML_Parser parser, const ENCODING *enc,
                          const char *start, const char *end);
 static void reportDefault(XML_Parser parser, const ENCODING *enc,
                           const char *start, const char *end);
+static void reportCharacterData(XML_Parser parser, const XML_Char *s, int len);
 
 static const XML_Char *getContext(XML_Parser parser);
 static XML_Bool setContext(XML_Parser parser, const XML_Char *context);
@@ -3669,9 +3670,7 @@ doContent(XML_Parser parser, int startTagLevel, const ENCODING *enc,
       *eventEndPP = end;
       if (parser->m_characterDataHandler) {
         XML_Char c = 0xA;
-        beforeHandler(parser);
-        parser->m_characterDataHandler(parser->m_handlerArg, &c, 1);
-        afterHandler(parser);
+        reportCharacterData(parser, &c, 1);
       } else if (parser->m_defaultHandler)
         reportDefault(parser, enc, s, end);
       /* We are at the end of the final buffer, should we check for
@@ -3725,9 +3724,7 @@ doContent(XML_Parser parser, int startTagLevel, const ENCODING *enc,
                                 XML_ACCOUNT_ENTITY_EXPANSION);
 #endif /* XML_GE == 1 */
         if (parser->m_characterDataHandler) {
-          beforeHandler(parser);
-          parser->m_characterDataHandler(parser->m_handlerArg, &ch, 1);
-          afterHandler(parser);
+          reportCharacterData(parser, &ch, 1);
         } else if (parser->m_defaultHandler)
           reportDefault(parser, enc, s, next);
         break;
@@ -3988,10 +3985,7 @@ doContent(XML_Parser parser, int startTagLevel, const ENCODING *enc,
         return XML_ERROR_BAD_CHAR_REF;
       if (parser->m_characterDataHandler) {
         XML_Char buf[XML_ENCODE_MAX];
-        beforeHandler(parser);
-        parser->m_characterDataHandler(parser->m_handlerArg, buf,
-                                       XmlEncode(n, (ICHAR *)buf));
-        afterHandler(parser);
+        reportCharacterData(parser, buf, XmlEncode(n, (ICHAR *)buf));
       } else if (parser->m_defaultHandler)
         reportDefault(parser, enc, s, next);
     } break;
@@ -4000,9 +3994,7 @@ doContent(XML_Parser parser, int startTagLevel, const ENCODING *enc,
     case XML_TOK_DATA_NEWLINE:
       if (parser->m_characterDataHandler) {
         XML_Char c = 0xA;
-        beforeHandler(parser);
-        parser->m_characterDataHandler(parser->m_handlerArg, &c, 1);
-        afterHandler(parser);
+        reportCharacterData(parser, &c, 1);
       } else if (parser->m_defaultHandler)
         reportDefault(parser, enc, s, next);
       break;
@@ -4026,10 +4018,7 @@ doContent(XML_Parser parser, int startTagLevel, const ENCODING *enc,
            easier to let the user deal with this.
         */
       } else if ((0) && parser->m_characterDataHandler) {
-        beforeHandler(parser);
-        parser->m_characterDataHandler(parser->m_handlerArg, parser->m_dataBuf,
-                                       0);
-        afterHandler(parser);
+        reportCharacterData(parser, parser->m_dataBuf, 0);
         /* END disabled code */
       } else if (parser->m_defaultHandler)
         reportDefault(parser, enc, s, next);
@@ -4051,17 +4040,12 @@ doContent(XML_Parser parser, int startTagLevel, const ENCODING *enc,
         if (MUST_CONVERT(enc, s)) {
           ICHAR *dataPtr = (ICHAR *)parser->m_dataBuf;
           XmlConvert(enc, &s, end, &dataPtr, (ICHAR *)parser->m_dataBufEnd);
-          beforeHandler(parser);
-          parser->m_characterDataHandler(
-              parser->m_handlerArg, parser->m_dataBuf,
-              (int)(dataPtr - (ICHAR *)parser->m_dataBuf));
-          afterHandler(parser);
+          reportCharacterData(parser, parser->m_dataBuf,
+                              (int)(dataPtr - (ICHAR *)parser->m_dataBuf));
         } else {
-          beforeHandler(parser);
-          parser->m_characterDataHandler(
-              parser->m_handlerArg, (const XML_Char *)s,
+          reportCharacterData(
+              parser, (const XML_Char *)s,
               (int)((const XML_Char *)end - (const XML_Char *)s));
-          afterHandler(parser);
         }
       } else if (parser->m_defaultHandler)
         reportDefault(parser, enc, s, end);
@@ -4079,8 +4063,7 @@ doContent(XML_Parser parser, int startTagLevel, const ENCODING *enc,
       *nextPtr = end;
       return XML_ERROR_NONE;
     case XML_TOK_DATA_CHARS: {
-      XML_CharacterDataHandler charDataHandler = parser->m_characterDataHandler;
-      if (charDataHandler) {
+      if (parser->m_characterDataHandler) {
         if (MUST_CONVERT(enc, s)) {
           for (;;) {
             ICHAR *dataPtr = (ICHAR *)parser->m_dataBuf;
@@ -4088,10 +4071,8 @@ doContent(XML_Parser parser, int startTagLevel, const ENCODING *enc,
                 enc, &s, next, &dataPtr, (ICHAR *)parser->m_dataBufEnd);
             *eventEndPP = s;
             if (parser->m_characterDataHandler) {
-              beforeHandler(parser);
-              charDataHandler(parser->m_handlerArg, parser->m_dataBuf,
-                              (int)(dataPtr - (ICHAR *)parser->m_dataBuf));
-              afterHandler(parser);
+              reportCharacterData(parser, parser->m_dataBuf,
+                                  (int)(dataPtr - (ICHAR *)parser->m_dataBuf));
             }
             if ((convert_res == XML_CONVERT_COMPLETED)
                 || (convert_res == XML_CONVERT_INPUT_INCOMPLETE))
@@ -4099,10 +4080,9 @@ doContent(XML_Parser parser, int startTagLevel, const ENCODING *enc,
             *eventPP = s;
           }
         } else {
-          beforeHandler(parser);
-          charDataHandler(parser->m_handlerArg, (const XML_Char *)s,
-                          (int)((const XML_Char *)next - (const XML_Char *)s));
-          afterHandler(parser);
+          reportCharacterData(
+              parser, (const XML_Char *)s,
+              (int)((const XML_Char *)next - (const XML_Char *)s));
         }
       } else if (parser->m_defaultHandler)
         reportDefault(parser, enc, s, next);
@@ -4959,10 +4939,7 @@ doCdataSection(XML_Parser parser, const ENCODING *enc, const char **startPtr,
       /* BEGIN disabled code */
       /* see comment under XML_TOK_CDATA_SECT_OPEN */
       else if ((0) && parser->m_characterDataHandler) {
-        beforeHandler(parser);
-        parser->m_characterDataHandler(parser->m_handlerArg, parser->m_dataBuf,
-                                       0);
-        afterHandler(parser);
+        reportCharacterData(parser, parser->m_dataBuf, 0);
         /* END disabled code */
       } else if (parser->m_defaultHandler)
         reportDefault(parser, enc, s, next);
@@ -4975,35 +4952,29 @@ doCdataSection(XML_Parser parser, const ENCODING *enc, const char **startPtr,
     case XML_TOK_DATA_NEWLINE:
       if (parser->m_characterDataHandler) {
         XML_Char c = 0xA;
-        beforeHandler(parser);
-        parser->m_characterDataHandler(parser->m_handlerArg, &c, 1);
-        afterHandler(parser);
+        reportCharacterData(parser, &c, 1);
       } else if (parser->m_defaultHandler)
         reportDefault(parser, enc, s, next);
       break;
     case XML_TOK_DATA_CHARS: {
-      XML_CharacterDataHandler charDataHandler = parser->m_characterDataHandler;
-      if (charDataHandler) {
+      if (parser->m_characterDataHandler) {
         if (MUST_CONVERT(enc, s)) {
           for (;;) {
             ICHAR *dataPtr = (ICHAR *)parser->m_dataBuf;
             const enum XML_Convert_Result convert_res = XmlConvert(
                 enc, &s, next, &dataPtr, (ICHAR *)parser->m_dataBufEnd);
             *eventEndPP = next;
-            beforeHandler(parser);
-            charDataHandler(parser->m_handlerArg, parser->m_dataBuf,
-                            (int)(dataPtr - (ICHAR *)parser->m_dataBuf));
-            afterHandler(parser);
+            reportCharacterData(parser, parser->m_dataBuf,
+                                (int)(dataPtr - (ICHAR *)parser->m_dataBuf));
             if ((convert_res == XML_CONVERT_COMPLETED)
                 || (convert_res == XML_CONVERT_INPUT_INCOMPLETE))
               break;
             *eventPP = s;
           }
         } else {
-          beforeHandler(parser);
-          charDataHandler(parser->m_handlerArg, (const XML_Char *)s,
-                          (int)((const XML_Char *)next - (const XML_Char *)s));
-          afterHandler(parser);
+          reportCharacterData(
+              parser, (const XML_Char *)s,
+              (int)((const XML_Char *)next - (const XML_Char *)s));
         }
       } else if (parser->m_defaultHandler)
         reportDefault(parser, enc, s, next);
@@ -8046,6 +8017,14 @@ reportDefault(XML_Parser parser, const ENCODING *enc, const char *s,
         (int)((const XML_Char *)end - (const XML_Char *)s));
     afterHandler(parser);
   }
+}
+
+static void
+reportCharacterData(XML_Parser parser, const XML_Char *s, int len) {
+  assert(parser->m_characterDataHandler != NULL);
+  beforeHandler(parser);
+  parser->m_characterDataHandler(parser->m_handlerArg, s, len);
+  afterHandler(parser);
 }
 
 static int
