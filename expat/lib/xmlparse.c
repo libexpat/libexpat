@@ -7970,6 +7970,14 @@ reportComment(XML_Parser parser, const ENCODING *enc, const char *start,
 }
 
 static void
+callDefaultHandler(XML_Parser parser, const XML_Char *s, int len) {
+  assert(parser->m_defaultHandler != NULL);
+  beforeHandler(parser);
+  parser->m_defaultHandler(parser->m_handlerArg, s, len);
+  afterHandler(parser);
+}
+
+static void
 reportDefault(XML_Parser parser, const ENCODING *enc, const char *s,
               const char *end) {
   if (MUST_CONVERT(enc, s)) {
@@ -8005,19 +8013,14 @@ reportDefault(XML_Parser parser, const ENCODING *enc, const char *s,
       convert_res
           = XmlConvert(enc, &s, end, &dataPtr, (ICHAR *)parser->m_dataBufEnd);
       *eventEndPP = s;
-      beforeHandler(parser);
-      parser->m_defaultHandler(parser->m_handlerArg, parser->m_dataBuf,
-                               (int)(dataPtr - (ICHAR *)parser->m_dataBuf));
-      afterHandler(parser);
+      callDefaultHandler(parser, parser->m_dataBuf,
+                         (int)(dataPtr - (ICHAR *)parser->m_dataBuf));
       *eventPP = s;
     } while ((convert_res != XML_CONVERT_COMPLETED)
              && (convert_res != XML_CONVERT_INPUT_INCOMPLETE));
   } else {
-    beforeHandler(parser);
-    parser->m_defaultHandler(
-        parser->m_handlerArg, (const XML_Char *)s,
-        (int)((const XML_Char *)end - (const XML_Char *)s));
-    afterHandler(parser);
+    callDefaultHandler(parser, (const XML_Char *)s,
+                       (int)((const XML_Char *)end - (const XML_Char *)s));
   }
 }
 
