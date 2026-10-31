@@ -1,4 +1,4 @@
-/* e3ca845466942140c9af531ac57808c4650116df5d6dbeda3b6546d2548a586e (2.9.0+)
+/* d0712c5efef760b5355ed61473a927256c6474aecb853016d2e335e571c64b0c (2.10.0+)
                             __  __            _
                          ___\ \/ /_ __   __ _| |_
                         / _ \\  /| '_ \ / _` | __|
@@ -58,6 +58,8 @@
    Copyright (c) 2026      Braian Plaku <braianplaku@gmail.com>
    Copyright (c) 2026      Filippo Tedeschi <filippotedeschi98@gmail.com>
    Copyright (c) 2026      Junki Lee <junkilee80@gmail.com>
+   Copyright (c) 2026      Shani Yosef <shani.yosef@echo.ai>
+   Copyright (c) 2026      Pu Cheng <geekshampoo@qq.com>
    Licensed under the MIT license:
 
    Permission is  hereby granted,  free of charge,  to any  person obtaining
