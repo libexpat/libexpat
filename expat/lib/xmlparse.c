@@ -563,7 +563,8 @@ static int reportComment(XML_Parser parser, const ENCODING *enc,
                          const char *start, const char *end);
 static void reportDefault(XML_Parser parser, const ENCODING *enc,
                           const char *start, const char *end);
-static void reportCharacterData(XML_Parser parser, const XML_Char *s, int len);
+static void reportCharacterData(XML_Parser parser, const XML_Char *s,
+                                size_t len);
 
 static const XML_Char *getContext(XML_Parser parser);
 static XML_Bool setContext(XML_Parser parser, const XML_Char *context);
@@ -4041,11 +4042,10 @@ doContent(XML_Parser parser, int startTagLevel, const ENCODING *enc,
           ICHAR *dataPtr = (ICHAR *)parser->m_dataBuf;
           XmlConvert(enc, &s, end, &dataPtr, (ICHAR *)parser->m_dataBufEnd);
           reportCharacterData(parser, parser->m_dataBuf,
-                              (int)(dataPtr - (ICHAR *)parser->m_dataBuf));
+                              dataPtr - (ICHAR *)parser->m_dataBuf);
         } else {
-          reportCharacterData(
-              parser, (const XML_Char *)s,
-              (int)((const XML_Char *)end - (const XML_Char *)s));
+          reportCharacterData(parser, (const XML_Char *)s,
+                              (const XML_Char *)end - (const XML_Char *)s);
         }
       } else if (parser->m_defaultHandler)
         reportDefault(parser, enc, s, end);
@@ -4072,7 +4072,7 @@ doContent(XML_Parser parser, int startTagLevel, const ENCODING *enc,
             *eventEndPP = s;
             if (parser->m_characterDataHandler) {
               reportCharacterData(parser, parser->m_dataBuf,
-                                  (int)(dataPtr - (ICHAR *)parser->m_dataBuf));
+                                  dataPtr - (ICHAR *)parser->m_dataBuf);
             }
             if ((convert_res == XML_CONVERT_COMPLETED)
                 || (convert_res == XML_CONVERT_INPUT_INCOMPLETE))
@@ -4080,9 +4080,8 @@ doContent(XML_Parser parser, int startTagLevel, const ENCODING *enc,
             *eventPP = s;
           }
         } else {
-          reportCharacterData(
-              parser, (const XML_Char *)s,
-              (int)((const XML_Char *)next - (const XML_Char *)s));
+          reportCharacterData(parser, (const XML_Char *)s,
+                              (const XML_Char *)next - (const XML_Char *)s);
         }
       } else if (parser->m_defaultHandler)
         reportDefault(parser, enc, s, next);
@@ -4965,16 +4964,15 @@ doCdataSection(XML_Parser parser, const ENCODING *enc, const char **startPtr,
                 enc, &s, next, &dataPtr, (ICHAR *)parser->m_dataBufEnd);
             *eventEndPP = next;
             reportCharacterData(parser, parser->m_dataBuf,
-                                (int)(dataPtr - (ICHAR *)parser->m_dataBuf));
+                                dataPtr - (ICHAR *)parser->m_dataBuf);
             if ((convert_res == XML_CONVERT_COMPLETED)
                 || (convert_res == XML_CONVERT_INPUT_INCOMPLETE))
               break;
             *eventPP = s;
           }
         } else {
-          reportCharacterData(
-              parser, (const XML_Char *)s,
-              (int)((const XML_Char *)next - (const XML_Char *)s));
+          reportCharacterData(parser, (const XML_Char *)s,
+                              (const XML_Char *)next - (const XML_Char *)s);
         }
       } else if (parser->m_defaultHandler)
         reportDefault(parser, enc, s, next);
@@ -8020,10 +8018,16 @@ reportDefault(XML_Parser parser, const ENCODING *enc, const char *s,
 }
 
 static void
-reportCharacterData(XML_Parser parser, const XML_Char *s, int len) {
+reportCharacterData(XML_Parser parser, const XML_Char *s, size_t len) {
   assert(parser->m_characterDataHandler != NULL);
   beforeHandler(parser);
-  parser->m_characterDataHandler(parser->m_handlerArg, s, len);
+  while (len > INT_MAX) {
+    parser->m_characterDataHandler(parser->m_handlerArg, s, INT_MAX);
+    s += INT_MAX;
+    len -= INT_MAX;
+  }
+  assert(len <= INT_MAX);
+  parser->m_characterDataHandler(parser->m_handlerArg, s, (int)len);
   afterHandler(parser);
 }
 
