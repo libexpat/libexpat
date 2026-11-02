@@ -4992,10 +4992,12 @@ doCdataSection(XML_Parser parser, const ENCODING *enc, const char **startPtr,
             const enum XML_Convert_Result convert_res = XmlConvert(
                 enc, &s, next, &dataPtr, (ICHAR *)parser->m_dataBufEnd);
             *eventEndPP = next;
-            beforeHandler(parser);
-            charDataHandler(parser->m_handlerArg, parser->m_dataBuf,
-                            (int)(dataPtr - (ICHAR *)parser->m_dataBuf));
-            afterHandler(parser);
+            if (parser->m_characterDataHandler) {
+              beforeHandler(parser);
+              charDataHandler(parser->m_handlerArg, parser->m_dataBuf,
+                              (int)(dataPtr - (ICHAR *)parser->m_dataBuf));
+              afterHandler(parser);
+            }
             if ((convert_res == XML_CONVERT_COMPLETED)
                 || (convert_res == XML_CONVERT_INPUT_INCOMPLETE))
               break;
