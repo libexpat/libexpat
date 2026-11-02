@@ -2434,12 +2434,6 @@ xmlParse64(XML_Parser parser, const char *s, size_t len, XML_Bool isFinal) {
                       &parser->m_position);
     nLeftOver = s + len - end;
     if (nLeftOver) {
-      if (nLeftOver > INT_MAX) {
-        parser->m_errorCode = XML_ERROR_NO_MEMORY;
-        parser->m_eventPtr = parser->m_eventEndPtr = NULL;
-        parser->m_processor = errorProcessor;
-        return XML_STATUS_ERROR;
-      }
       void *const temp = internalGetBuffer64(parser, nLeftOver);
       if (temp == NULL) {
         // NOTE: parser->m_errorCode has already been set by XML_GetBuffer().
