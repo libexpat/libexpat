@@ -2411,21 +2411,21 @@ xmlParse64(XML_Parser parser, const char *s, size_t len, XML_Bool isFinal) {
       parser->m_eventEndPtr = parser->m_eventPtr;
       parser->m_processor = errorProcessor;
       return XML_STATUS_ERROR;
-    } else {
-      switch (parser->m_parsingStatus.parsing) {
-      case XML_SUSPENDED:
-        result = XML_STATUS_SUSPENDED;
-        break;
-      case XML_INITIALIZED:
-      case XML_PARSING:
-        if (isFinal) {
-          parser->m_parsingStatus.parsing = XML_FINISHED;
-          return XML_STATUS_OK;
-        }
-        EXPAT_FALLTHROUGH;
-      default:
-        result = XML_STATUS_OK;
+    }
+
+    switch (parser->m_parsingStatus.parsing) {
+    case XML_SUSPENDED:
+      result = XML_STATUS_SUSPENDED;
+      break;
+    case XML_INITIALIZED:
+    case XML_PARSING:
+      if (isFinal) {
+        parser->m_parsingStatus.parsing = XML_FINISHED;
+        return XML_STATUS_OK;
       }
+      EXPAT_FALLTHROUGH;
+    default:
+      result = XML_STATUS_OK;
     }
 
     XmlUpdatePosition(parser->m_encoding, parser->m_positionPtr, end,
@@ -2550,20 +2550,20 @@ xmlParseBuffer64(XML_Parser parser, size_t len, XML_Bool isFinal) {
     parser->m_eventEndPtr = parser->m_eventPtr;
     parser->m_processor = errorProcessor;
     return XML_STATUS_ERROR;
-  } else {
-    switch (parser->m_parsingStatus.parsing) {
-    case XML_SUSPENDED:
-      result = XML_STATUS_SUSPENDED;
-      break;
-    case XML_INITIALIZED:
-    case XML_PARSING:
-      if (isFinal) {
-        parser->m_parsingStatus.parsing = XML_FINISHED;
-        return result;
-      }
-      break;
-    default:; /* should not happen */
+  }
+
+  switch (parser->m_parsingStatus.parsing) {
+  case XML_SUSPENDED:
+    result = XML_STATUS_SUSPENDED;
+    break;
+  case XML_INITIALIZED:
+  case XML_PARSING:
+    if (isFinal) {
+      parser->m_parsingStatus.parsing = XML_FINISHED;
+      return result;
     }
+    break;
+  default:; /* should not happen */
   }
 
   XmlUpdatePosition(parser->m_encoding, parser->m_positionPtr,
@@ -2762,20 +2762,20 @@ XML_ResumeParser(XML_Parser parser) {
     parser->m_eventEndPtr = parser->m_eventPtr;
     parser->m_processor = errorProcessor;
     return XML_STATUS_ERROR;
-  } else {
-    switch (parser->m_parsingStatus.parsing) {
-    case XML_SUSPENDED:
-      result = XML_STATUS_SUSPENDED;
-      break;
-    case XML_INITIALIZED:
-    case XML_PARSING:
-      if (parser->m_parsingStatus.finalBuffer) {
-        parser->m_parsingStatus.parsing = XML_FINISHED;
-        return result;
-      }
-      break;
-    default:;
+  }
+
+  switch (parser->m_parsingStatus.parsing) {
+  case XML_SUSPENDED:
+    result = XML_STATUS_SUSPENDED;
+    break;
+  case XML_INITIALIZED:
+  case XML_PARSING:
+    if (parser->m_parsingStatus.finalBuffer) {
+      parser->m_parsingStatus.parsing = XML_FINISHED;
+      return result;
     }
+    break;
+  default:;
   }
 
   XmlUpdatePosition(parser->m_encoding, parser->m_positionPtr,
