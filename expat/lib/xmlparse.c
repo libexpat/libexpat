@@ -1128,7 +1128,7 @@ gather_time_entropy(void) {
 
 static struct sipkey
 ENTROPY_DEBUG(const char *label, struct sipkey entropy_128) {
-  if (getDebugLevel("EXPAT_ENTROPY_DEBUG", 0) >= 1u) {
+  if (getDebugLevel("EXPAT_ENTROPY_DEBUG", 0) >= 1) {
     fprintf(stderr,
             "expat: Entropy: %s --> [0x" EXPAT_FMT_LLX(
                 "016") ", 0x" EXPAT_FMT_LLX("016") "] (16 bytes)\n",
@@ -1380,8 +1380,7 @@ parserCreate(const XML_Char *encodingName,
   // Initialize .m_alloc_tracker
   memset(&parser->m_alloc_tracker, 0, sizeof(MALLOC_TRACKER));
   if (parentParser == NULL) {
-    parser->m_alloc_tracker.debugLevel
-        = getDebugLevel("EXPAT_MALLOC_DEBUG", 0u);
+    parser->m_alloc_tracker.debugLevel = getDebugLevel("EXPAT_MALLOC_DEBUG", 0);
     parser->m_alloc_tracker.maximumAmplificationFactor
         = EXPAT_ALLOC_TRACKER_MAXIMUM_AMPLIFICATION_DEFAULT;
     parser->m_alloc_tracker.activationThresholdBytes
@@ -1581,7 +1580,7 @@ parserInit(XML_Parser parser, const XML_Char *encodingName, bool isReset) {
   parser->m_accounting.countBytesIndirect = 0;
   if (! isReset) {
     parser->m_accounting.debugLevel
-        = getDebugLevel("EXPAT_ACCOUNTING_DEBUG", 0u);
+        = getDebugLevel("EXPAT_ACCOUNTING_DEBUG", 0);
     parser->m_accounting.maximumAmplificationFactor
         = EXPAT_BILLION_LAUGHS_ATTACK_PROTECTION_MAXIMUM_AMPLIFICATION_DEFAULT;
     parser->m_accounting.activationThresholdBytes
@@ -1592,7 +1591,7 @@ parserInit(XML_Parser parser, const XML_Char *encodingName, bool isReset) {
   parser->m_entity_stats.currentDepth = 0;
   parser->m_entity_stats.maximumDepthSeen = 0;
   if (! isReset)
-    parser->m_entity_stats.debugLevel = getDebugLevel("EXPAT_ENTITY_DEBUG", 0u);
+    parser->m_entity_stats.debugLevel = getDebugLevel("EXPAT_ENTITY_DEBUG", 0);
 #else
   UNUSED_P(isReset);
 #endif
@@ -9489,7 +9488,7 @@ accountingReportStats(XML_Parser originParser, const char *epilog,
   const XML_Parser rootParser = getRootParserOf(originParser, NULL);
   assert(! rootParser->m_parentParser);
 
-  if (rootParser->m_accounting.debugLevel == 0u) {
+  if (rootParser->m_accounting.debugLevel == 0) {
     return;
   }
 
@@ -9540,7 +9539,7 @@ accountingReportDiff(XML_Parser rootParser,
 
   /* Note: Performance is of no concern here */
   const char *walker = before;
-  if ((rootParser->m_accounting.debugLevel >= 3u)
+  if ((rootParser->m_accounting.debugLevel >= 3)
       || (after - before)
              <= (ptrdiff_t)(contextLength + ellipsisLength + contextLength)) {
     for (; walker < after; walker++) {
@@ -9624,7 +9623,7 @@ accountingDiffTolerated(XML_Parser originParser, int tok, const char *before,
   const XML_Bool tolerated
       = accountingCurrentAmplificationTolerated(rootParser, 0);
 
-  if (rootParser->m_accounting.debugLevel >= 2u) {
+  if (rootParser->m_accounting.debugLevel >= 2) {
     accountingReportStats(rootParser, "", 0, 0);
     accountingReportDiff(rootParser, levelsAwayFromRootParser, before, after,
                          bytesMore, source_line, account);
@@ -9651,7 +9650,7 @@ static void
 entityTrackingReportStats(XML_Parser rootParser, ENTITY *entity,
                           const char *action, int sourceLine) {
   assert(! rootParser->m_parentParser);
-  if (rootParser->m_entity_stats.debugLevel == 0u)
+  if (rootParser->m_entity_stats.debugLevel == 0)
     return;
 
 #  if defined(XML_UNICODE)
