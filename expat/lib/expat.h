@@ -21,6 +21,7 @@
    Copyright (c) 2024      Taichi Haradaguchi <20001722@ymail.ne.jp>
    Copyright (c) 2025      Matthew Fernandez <matthew.fernandez@gmail.com>
    Copyright (c) 2026      Braian Plaku <braianplaku@gmail.com>
+   Copyright (c) 2026      Xisco Fauli <xiscofauli@libreoffice.org>
    Licensed under the MIT license:
 
    Permission is  hereby granted,  free of charge,  to any  person obtaining
@@ -1146,7 +1147,7 @@ XML_SetReparseDeferralEnabled(XML_Parser parser, XML_Bool enabled);
    See https://semver.org
 */
 #  define XML_MAJOR_VERSION 2
-#  define XML_MINOR_VERSION 9
+#  define XML_MINOR_VERSION 10
 #  define XML_MICRO_VERSION 0
 
 #  ifdef __cplusplus

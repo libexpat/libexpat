@@ -29,6 +29,7 @@
    Copyright (c) 2026      Matthew Wozniczka <mattheww@simba.com>
    Copyright (c) 2026      Braian Plaku <braianplaku@gmail.com>
    Copyright (c) 2026      Florian Schmaus <florian.schmaus@codasip.com>
+   Copyright (c) 2026      Brooks Davis <brooks@one-eyed-alien.net>
    Licensed under the MIT license:
 
    Permission is  hereby granted,  free of charge,  to any  person obtaining

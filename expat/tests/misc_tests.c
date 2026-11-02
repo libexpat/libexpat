@@ -25,6 +25,7 @@
    Copyright (c) 2026      Evgeny Kotkov <kotkov@apache.org>
    Copyright (c) 2026      Darren Carreras <carrerasdarren@gmail.com>
    Copyright (c) 2026      Junki Lee <junkilee80@gmail.com>
+   Copyright (c) 2026      Pu Cheng <geekshampoo@qq.com>
    Licensed under the MIT license:
 
    Permission is  hereby granted,  free of charge,  to any  person obtaining
@@ -223,7 +224,7 @@ START_TEST(test_misc_version) {
   if (! versions_equal(&read_version, &parsed_version))
     fail("Version mismatch");
 
-  if (xcscmp(version_text, XCS("expat_2.9.0"))
+  if (xcscmp(version_text, XCS("expat_2.10.0"))
       != 0) /* needs bump on releases */
     fail("XML_*_VERSION in expat.h out of sync?\n");
 }
