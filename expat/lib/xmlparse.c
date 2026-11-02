@@ -4029,9 +4029,9 @@ doContent(XML_Parser parser, int startTagLevel, const ENCODING *enc,
         return XML_ERROR_BAD_CHAR_REF;
       if (parser->m_characterDataHandler) {
         XML_Char buf[XML_ENCODE_MAX];
+        const int len = XmlEncode(n, (ICHAR *)buf);
         beforeHandler(parser);
-        parser->m_characterDataHandler(parser->m_handlerArg, buf,
-                                       XmlEncode(n, (ICHAR *)buf));
+        parser->m_characterDataHandler(parser->m_handlerArg, buf, len);
         afterHandler(parser);
       } else if (parser->m_defaultHandler)
         reportDefault(parser, enc, s, next);
