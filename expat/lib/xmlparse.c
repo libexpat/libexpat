@@ -616,6 +616,8 @@ static void parserInit(XML_Parser parser, const XML_Char *encodingName,
 
 static void *xmlGetBuffer64(XML_Parser parser, size_t len);
 
+static void *internalGetBuffer64(XML_Parser parser, size_t len);
+
 static enum XML_Status xmlParse64(XML_Parser parser, const char *s, size_t len,
                                   XML_Bool isFinal);
 
@@ -2432,21 +2434,7 @@ xmlParse64(XML_Parser parser, const char *s, size_t len, XML_Bool isFinal) {
                       &parser->m_position);
     nLeftOver = s + len - end;
     if (nLeftOver) {
-      // Back up and restore the parsing status to avoid XML_ERROR_SUSPENDED
-      // (and XML_ERROR_FINISHED) from XML_GetBuffer.
-      const enum XML_Parsing originalStatus = parser->m_parsingStatus.parsing;
-      if (nLeftOver > INT_MAX) {
-        parser->m_errorCode = XML_ERROR_NO_MEMORY;
-        parser->m_eventPtr = parser->m_eventEndPtr = NULL;
-        parser->m_processor = errorProcessor;
-        return XML_STATUS_ERROR;
-      }
-      parser->m_parsingStatus.parsing = XML_PARSING;
-      void *const temp = xmlGetBuffer64(parser, nLeftOver);
-      parser->m_parsingStatus.parsing = originalStatus;
-      // GetBuffer may have overwritten this, but we want to remember what the
-      // app requested, not how many bytes were left over after parsing.
-      parser->m_lastBufferRequestSize = len;
+      void *const temp = internalGetBuffer64(parser, nLeftOver);
       if (temp == NULL) {
         // NOTE: parser->m_errorCode has already been set by XML_GetBuffer().
         parser->m_eventPtr = parser->m_eventEndPtr = NULL;
@@ -2627,6 +2615,17 @@ xmlGetBuffer64(XML_Parser parser, size_t len) {
   // whether or not the request succeeds, `len` seems to be the app's preferred
   // buffer fill size; remember it.
   parser->m_lastBufferRequestSize = len;
+
+  return internalGetBuffer64(parser, len);
+}
+
+// Like `XML_GetBuffer*` but:
+// - without checking parser status
+// - without recording `len` to `parser->m_lastBufferRequestSize`
+static void *
+internalGetBuffer64(XML_Parser parser, size_t len) {
+  assert(parser != NULL);
+
   if (len > (size_t)EXPAT_SAFE_PTR_DIFF(parser->m_bufferLim,
                                         parser->m_bufferEnd)
       || parser->m_buffer == NULL) {
