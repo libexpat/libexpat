@@ -413,7 +413,7 @@ typedef struct {
   unsigned scaffSize;
   unsigned scaffCount;
   int scaffLevel;
-  int *scaffIndex;
+  size_t *scaffIndex;
   size_t scaffIndexSize;
 } DTD;
 
@@ -6359,13 +6359,13 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
         assert(dtd->scaffIndex != NULL);
         if ((size_t)dtd->scaffLevel >= dtd->scaffIndexSize) {
           /* Detect and prevent integer overflow */
-          if (dtd->scaffIndexSize > SIZE_MAX / 2 / sizeof(int)) {
+          if (dtd->scaffIndexSize > SIZE_MAX / 2 / sizeof(size_t)) {
             return XML_ERROR_NO_MEMORY;
           }
           assert(dtd->scaffIndexSize > 0);
           const size_t new_size = dtd->scaffIndexSize * 2;
-          int *const new_scaff_index
-              = REALLOC(parser, dtd->scaffIndex, new_size * sizeof(int));
+          size_t *const new_scaff_index
+              = REALLOC(parser, dtd->scaffIndex, new_size * sizeof(size_t));
           if (new_scaff_index == NULL) {
             return XML_ERROR_NO_MEMORY;
           }
@@ -9213,10 +9213,10 @@ nextScaffoldPart(XML_Parser parser) {
 
   if (! dtd->scaffIndex) {
     /* Detect and prevent integer overflow. */
-    if (parser->m_groupSize > SIZE_MAX / sizeof(int)) {
+    if (parser->m_groupSize > SIZE_MAX / sizeof(size_t)) {
       return -1;
     }
-    dtd->scaffIndex = MALLOC(parser, parser->m_groupSize * sizeof(int));
+    dtd->scaffIndex = MALLOC(parser, parser->m_groupSize * sizeof(size_t));
     if (! dtd->scaffIndex)
       return -1;
     dtd->scaffIndexSize = parser->m_groupSize;
