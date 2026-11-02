@@ -1199,6 +1199,35 @@ START_TEST(test_misc_empty_nonfinal_subparser_parse) {
 }
 END_TEST
 
+START_TEST(test_misc_getinputcontext_from_handlers_only) {
+  // Speed up the test, chunk size expected to not matter in this test
+  if (g_chunkSize != 0)
+    return;
+
+  XML_Parser parser = XML_ParserCreate(NULL);
+
+  // The idea behind the document is that it triggers code…
+  //   parser->m_eventPtr = encodingName;
+  //   return XML_ERROR_INCORRECT_ENCODING;
+  // …so that `XML_GetInputContext64` has a chance to do actual work.
+  const char *const doc = "<?xml version='1.0' encoding='utf-16'?><doc/>";
+
+  int64_t offset = 123;
+  uint64_t size = 456;
+  assert_true(_XML_Parse_SINGLE_BYTES(parser, doc, (int)strlen(doc),
+                                      /*isFinal=*/XML_TRUE)
+              == XML_STATUS_ERROR);
+  assert_true(XML_GetErrorCode(parser) == XML_ERROR_INCORRECT_ENCODING);
+
+  assert_true(XML_GetInputContext64(parser, &offset, &size) == NULL);
+
+  assert_true(offset == 123); // i.e. unchanged
+  assert_true(size == 456);   // i.e. unchanged
+
+  XML_ParserFree(parser);
+}
+END_TEST
+
 void
 make_miscellaneous_test_case(Suite *s) {
   TCase *tc_misc = tcase_create("miscellaneous tests");
@@ -1243,4 +1272,5 @@ make_miscellaneous_test_case(Suite *s) {
   tcase_add_test(tc_misc, test_misc_storeatts_attssize_allocation);
   tcase_add_test(tc_misc, test_misc_start_doctype_decl_handler_reset);
   tcase_add_test(tc_misc, test_misc_empty_nonfinal_subparser_parse);
+  tcase_add_test(tc_misc, test_misc_getinputcontext_from_handlers_only);
 }
