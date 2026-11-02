@@ -4121,8 +4121,7 @@ doContent(XML_Parser parser, int startTagLevel, const ENCODING *enc,
       *nextPtr = end;
       return XML_ERROR_NONE;
     case XML_TOK_DATA_CHARS: {
-      XML_CharacterDataHandler charDataHandler = parser->m_characterDataHandler;
-      if (charDataHandler) {
+      if (parser->m_characterDataHandler) {
         if (MUST_CONVERT(enc, s)) {
           for (;;) {
             ICHAR *dataPtr = (ICHAR *)parser->m_dataBuf;
@@ -4131,8 +4130,9 @@ doContent(XML_Parser parser, int startTagLevel, const ENCODING *enc,
             *eventEndPP = s;
             if (parser->m_characterDataHandler) {
               beforeHandler(parser);
-              charDataHandler(parser->m_handlerArg, parser->m_dataBuf,
-                              (int)(dataPtr - (ICHAR *)parser->m_dataBuf));
+              parser->m_characterDataHandler(
+                  parser->m_handlerArg, parser->m_dataBuf,
+                  (int)(dataPtr - (ICHAR *)parser->m_dataBuf));
               afterHandler(parser);
             }
             if ((convert_res == XML_CONVERT_COMPLETED)
@@ -4142,8 +4142,9 @@ doContent(XML_Parser parser, int startTagLevel, const ENCODING *enc,
           }
         } else {
           beforeHandler(parser);
-          charDataHandler(parser->m_handlerArg, (const XML_Char *)s,
-                          (int)((const XML_Char *)next - (const XML_Char *)s));
+          parser->m_characterDataHandler(
+              parser->m_handlerArg, (const XML_Char *)s,
+              (int)((const XML_Char *)next - (const XML_Char *)s));
           afterHandler(parser);
         }
       } else if (parser->m_defaultHandler)
@@ -5024,18 +5025,20 @@ doCdataSection(XML_Parser parser, const ENCODING *enc, const char **startPtr,
         reportDefault(parser, enc, s, next);
       break;
     case XML_TOK_DATA_CHARS: {
-      XML_CharacterDataHandler charDataHandler = parser->m_characterDataHandler;
-      if (charDataHandler) {
+      if (parser->m_characterDataHandler) {
         if (MUST_CONVERT(enc, s)) {
           for (;;) {
             ICHAR *dataPtr = (ICHAR *)parser->m_dataBuf;
             const enum XML_Convert_Result convert_res = XmlConvert(
                 enc, &s, next, &dataPtr, (ICHAR *)parser->m_dataBufEnd);
             *eventEndPP = next;
-            beforeHandler(parser);
-            charDataHandler(parser->m_handlerArg, parser->m_dataBuf,
-                            (int)(dataPtr - (ICHAR *)parser->m_dataBuf));
-            afterHandler(parser);
+            if (parser->m_characterDataHandler) {
+              beforeHandler(parser);
+              parser->m_characterDataHandler(
+                  parser->m_handlerArg, parser->m_dataBuf,
+                  (int)(dataPtr - (ICHAR *)parser->m_dataBuf));
+              afterHandler(parser);
+            }
             if ((convert_res == XML_CONVERT_COMPLETED)
                 || (convert_res == XML_CONVERT_INPUT_INCOMPLETE))
               break;
@@ -5043,8 +5046,9 @@ doCdataSection(XML_Parser parser, const ENCODING *enc, const char **startPtr,
           }
         } else {
           beforeHandler(parser);
-          charDataHandler(parser->m_handlerArg, (const XML_Char *)s,
-                          (int)((const XML_Char *)next - (const XML_Char *)s));
+          parser->m_characterDataHandler(
+              parser->m_handlerArg, (const XML_Char *)s,
+              (int)((const XML_Char *)next - (const XML_Char *)s));
           afterHandler(parser);
         }
       } else if (parser->m_defaultHandler)
