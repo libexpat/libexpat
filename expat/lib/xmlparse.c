@@ -4234,10 +4234,6 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
   }
   const size_t nDefaultAtts = elementType->nDefaultAtts;
 
-  /* Detect and prevent integer overflow. */
-  if (parser->m_attsSize > (size_t)INT_MAX)
-    return XML_ERROR_NO_MEMORY;
-
   /* get the attributes from the tokenizer */
   size_t n = XmlGetAttributes(enc, attStr, parser->m_attsSize, parser->m_atts);
 
@@ -4271,9 +4267,6 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
     }
     parser->m_atts = temp;
     if (n > oldAttsSize) {
-      /* Detect and prevent integer overflow. */
-      if (n > (size_t)INT_MAX)
-        return XML_ERROR_NO_MEMORY;
       XmlGetAttributes(enc, attStr, n, parser->m_atts);
     }
   }
