@@ -2842,7 +2842,7 @@ XML_GetCurrentByteCount(XML_Parser parser) {
 const char *XMLCALL
 XML_GetInputContext64(XML_Parser parser, int64_t *offset, uint64_t *size) {
 #if XML_CONTEXT_BYTES > 0
-  if (parser == NULL)
+  if (parser == NULL || ! isCalledFromInsideHandler(parser))
     return NULL;
   if (parser->m_eventPtr && parser->m_buffer) {
     if (offset != NULL)
@@ -2863,7 +2863,7 @@ XML_GetInputContext64(XML_Parser parser, int64_t *offset, uint64_t *size) {
 const char *XMLCALL
 XML_GetInputContext(XML_Parser parser, int *offset, int *size) {
 #if XML_CONTEXT_BYTES > 0
-  if (parser == NULL)
+  if (parser == NULL || ! isCalledFromInsideHandler(parser))
     return NULL;
 
   int64_t offset64;
