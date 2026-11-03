@@ -6017,11 +6017,6 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
           return result;
         }
         if (parser->m_declEntity) {
-          /* Detect and prevent signed integer overflow */
-          if ((size_t)poolLength(&dtd->entityValuePool) > (size_t)INT_MAX) {
-            poolDiscard(&dtd->entityValuePool);
-            return XML_ERROR_NO_MEMORY;
-          }
           const XML_Char *const valueStart = poolStart(&dtd->entityValuePool);
           parser->m_declEntity->textPtr = valueStart;
           parser->m_declEntity->textLen = poolLength(&dtd->entityValuePool);
@@ -6029,6 +6024,7 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
           poolFinish(&dtd->entityValuePool);
           if (parser->m_entityDeclHandler) {
             *eventEndPP = s;
+            // Check if follow-up cast to (int) would be truncating
             if (parser->m_declEntity->textLen > INT_MAX)
               return XML_ERROR_NO_MEMORY;
             beforeHandler(parser);
@@ -6052,6 +6048,7 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
 
           if (parser->m_entityDeclHandler) {
             *eventEndPP = s;
+            // Check if follow-up cast to (int) would be truncating
             if (parser->m_declEntity->textLen > INT_MAX)
               return XML_ERROR_NO_MEMORY;
             beforeHandler(parser);
@@ -7919,11 +7916,6 @@ storeSelfEntityValue(XML_Parser parser, ENTITY *entity) {
     return XML_ERROR_NO_MEMORY;
   }
 
-  /* Detect and prevent signed integer overflow */
-  if ((size_t)poolLength(pool) > (size_t)INT_MAX) {
-    poolDiscard(pool);
-    return XML_ERROR_NO_MEMORY;
-  }
   const XML_Char *const valueStart = poolStart(pool);
   entity->textPtr = valueStart;
   entity->textLen = poolLength(pool);
