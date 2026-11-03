@@ -4234,10 +4234,6 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
   }
   const size_t nDefaultAtts = elementType->nDefaultAtts;
 
-  /* Detect and prevent integer overflow. */
-  if (parser->m_attsSize > (size_t)INT_MAX)
-    return XML_ERROR_NO_MEMORY;
-
   /* get the attributes from the tokenizer */
   size_t n = XmlGetAttributes(enc, attStr, parser->m_attsSize, parser->m_atts);
 
@@ -4271,9 +4267,6 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
     }
     parser->m_atts = temp;
     if (n > oldAttsSize) {
-      /* Detect and prevent integer overflow. */
-      if (n > (size_t)INT_MAX)
-        return XML_ERROR_NO_MEMORY;
       XmlGetAttributes(enc, attStr, n, parser->m_atts);
     }
   }
@@ -6024,11 +6017,6 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
           return result;
         }
         if (parser->m_declEntity) {
-          /* Detect and prevent signed integer overflow */
-          if ((size_t)poolLength(&dtd->entityValuePool) > (size_t)INT_MAX) {
-            poolDiscard(&dtd->entityValuePool);
-            return XML_ERROR_NO_MEMORY;
-          }
           const XML_Char *const valueStart = poolStart(&dtd->entityValuePool);
           parser->m_declEntity->textPtr = valueStart;
           parser->m_declEntity->textLen = poolLength(&dtd->entityValuePool);
@@ -6036,6 +6024,7 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
           poolFinish(&dtd->entityValuePool);
           if (parser->m_entityDeclHandler) {
             *eventEndPP = s;
+            // Check if follow-up cast to (int) would be truncating
             if (parser->m_declEntity->textLen > INT_MAX)
               return XML_ERROR_NO_MEMORY;
             beforeHandler(parser);
@@ -6060,6 +6049,7 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
 
           if (parser->m_entityDeclHandler) {
             *eventEndPP = s;
+            // Check if follow-up cast to (int) would be truncating
             if (parser->m_declEntity->textLen > INT_MAX)
               return XML_ERROR_NO_MEMORY;
             beforeHandler(parser);
@@ -7929,11 +7919,6 @@ storeSelfEntityValue(XML_Parser parser, ENTITY *entity) {
     return XML_ERROR_NO_MEMORY;
   }
 
-  /* Detect and prevent signed integer overflow */
-  if ((size_t)poolLength(pool) > (size_t)INT_MAX) {
-    poolDiscard(pool);
-    return XML_ERROR_NO_MEMORY;
-  }
   const XML_Char *const valueStart = poolStart(pool);
   entity->textPtr = valueStart;
   entity->textLen = poolLength(pool);
@@ -9240,11 +9225,6 @@ nextScaffoldPart(XML_Parser parser) {
       return -1;
     dtd->scaffIndexSize = parser->m_groupSize;
     dtd->scaffIndex[0] = 0;
-  }
-
-  // Will casting to int be safe further down?
-  if (dtd->scaffCount > INT_MAX) {
-    return -1;
   }
 
   if (dtd->scaffCount >= dtd->scaffSize) {
