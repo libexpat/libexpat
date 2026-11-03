@@ -2686,9 +2686,7 @@ internalGetBuffer64(XML_Parser parser, size_t len) {
         bufferSize = INIT_BUFFER_SIZE;
       while (bufferSize < neededSize && bufferSize <= SIZE_MAX / 2)
         bufferSize *= 2;
-      // NOTE: The artificial boundary will be dropped once that more of
-      //       Expat's internals have been migrated from `size_t` to `int`.
-      if (bufferSize < neededSize || /*artificial*/ bufferSize > INT_MAX) {
+      if (bufferSize < neededSize) {
         parser->m_errorCode = XML_ERROR_NO_MEMORY;
         return NULL;
       }

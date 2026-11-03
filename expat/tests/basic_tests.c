@@ -3856,20 +3856,18 @@ START_TEST(test_get_buffer_1) {
   if (XML_ParseBuffer(g_parser, (int)strlen(text), XML_FALSE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
-  if (XML_GetBuffer(g_parser, INT_MAX) != NULL)
-    fail("INT_MAX buffer not failed");
 
   /* Now try extending it a more reasonable but still too large
    * amount.  The allocator in XML_GetBuffer() doubles the buffer
-   * size until it exceeds the requested amount or INT_MAX.  If it
-   * exceeds INT_MAX, it rejects the request, so we want a request
-   * between INT_MAX and INT_MAX/2.  A gap of 1K seems comfortable,
+   * size until it exceeds the requested amount or SIZE_MAX.  If it
+   * exceeds SIZE_MAX, it rejects the request, so we want a request
+   * between SIZE_MAX and SIZE_MAX/2.  A gap of 1K seems comfortable,
    * with an extra byte just to ensure that the request is off any
    * boundary.  The request will be inflated internally by
    * XML_CONTEXT_BYTES (if >=1), so we subtract that from our
    * request.
    */
-  if (XML_GetBuffer(g_parser, INT_MAX - (XML_CONTEXT_BYTES + 1025)) != NULL)
+  if (XML_GetBuffer64(g_parser, SIZE_MAX - (XML_CONTEXT_BYTES + 1025)) != NULL)
     fail("INT_MAX- buffer not failed");
 
   /* Now try extending it a carefully crafted amount */
@@ -3915,7 +3913,7 @@ START_TEST(test_get_buffer_3_overflow) {
     xml_failure(parser);
 
   assert(expectedKeepValue > 0);
-  if (XML_GetBuffer(parser, INT_MAX - expectedKeepValue + 1) != NULL)
+  if (XML_GetBuffer64(parser, SIZE_MAX - expectedKeepValue + 1) != NULL)
     fail("enlarging buffer not failed");
 
   XML_ParserFree(parser);
@@ -3974,7 +3972,9 @@ START_TEST(test_buffer_can_grow_to_max) {
     assert_true(XML_GetBuffer(parser, maxbuf - prefix_len) != NULL);
     // The limit should be consistent; no prefix should allow us to
     // reach above the max buffer size.
+#  if ULONG_MAX == 4294967295 // i.e. 32bit
     assert_true(XML_GetBuffer(parser, maxbuf + 1) == NULL);
+#  endif
 #else
     UNUSED_P(maxbuf);
 #endif
