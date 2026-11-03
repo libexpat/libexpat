@@ -9224,11 +9224,6 @@ nextScaffoldPart(XML_Parser parser) {
     dtd->scaffIndex[0] = 0;
   }
 
-  // Will casting to int be safe further down?
-  if (dtd->scaffCount > INT_MAX) {
-    return -1;
-  }
-
   if (dtd->scaffCount >= dtd->scaffSize) {
     CONTENT_SCAFFOLD *temp;
     if (dtd->scaffold) {
