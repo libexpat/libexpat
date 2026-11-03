@@ -1512,7 +1512,7 @@ parserInit(XML_Parser parser, const XML_Char *encodingName, bool isReset) {
     parser->m_protocolEncodingName = copyString(encodingName, parser);
   }
   parser->m_curBase = NULL;
-  XmlInitEncoding(&parser->m_initEncoding, &parser->m_encoding, 0);
+  XmlInitEncoding(&parser->m_initEncoding, &parser->m_encoding, NULL);
   parser->m_userData = NULL;
   parser->m_handlerArg = NULL;
   parser->m_startElementHandler = NULL;
@@ -4403,7 +4403,7 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
       }
     }
   }
-  appAtts[attIndex] = 0;
+  appAtts[attIndex] = NULL;
 
   /* expand prefixed attribute names, check for duplicates,
      and clear flags that say whether attributes were specified */
@@ -5803,7 +5803,7 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
           dtd->paramEntityRead = false;
           beforeHandler(parser);
           const int status = parser->m_externalEntityRefHandler(
-              parser->m_externalEntityRefHandlerArg, 0, entity->base,
+              parser->m_externalEntityRefHandlerArg, NULL, entity->base,
               entity->systemId, entity->publicId);
           afterHandler(parser);
           if (! status)
@@ -5853,7 +5853,7 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
           dtd->paramEntityRead = false;
           beforeHandler(parser);
           const int status = parser->m_externalEntityRefHandler(
-              parser->m_externalEntityRefHandlerArg, 0, entity->base,
+              parser->m_externalEntityRefHandlerArg, NULL, entity->base,
               entity->systemId, entity->publicId);
           afterHandler(parser);
           if (! status)
@@ -5946,7 +5946,7 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
         if (! defineAttribute(parser->m_declElementType,
                               parser->m_declAttributeId,
                               parser->m_declAttributeIsCdata,
-                              parser->m_declAttributeIsId, 0, parser))
+                              parser->m_declAttributeIsId, NULL, parser))
           return XML_ERROR_NO_MEMORY;
         if (parser->m_attlistDeclHandler && parser->m_declAttributeType) {
           if (*parser->m_declAttributeType == XML_T(ASCII_LPAREN)
@@ -5963,8 +5963,8 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
           beforeHandler(parser);
           parser->m_attlistDeclHandler(
               parser->m_handlerArg, parser->m_declElementType->name,
-              parser->m_declAttributeId->name, parser->m_declAttributeType, 0,
-              role == XML_ROLE_REQUIRED_ATTRIBUTE_VALUE);
+              parser->m_declAttributeId->name, parser->m_declAttributeType,
+              NULL, role == XML_ROLE_REQUIRED_ATTRIBUTE_VALUE);
           afterHandler(parser);
           handleDefault = XML_FALSE;
         }
@@ -6042,7 +6042,8 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
             parser->m_entityDeclHandler(
                 parser->m_handlerArg, parser->m_declEntity->name,
                 parser->m_declEntity->is_param, parser->m_declEntity->textPtr,
-                (int)parser->m_declEntity->textLen, parser->m_curBase, 0, 0, 0);
+                (int)parser->m_declEntity->textLen, parser->m_curBase, NULL,
+                NULL, NULL);
             afterHandler(parser);
             handleDefault = XML_FALSE;
           }
@@ -6065,7 +6066,8 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
             parser->m_entityDeclHandler(
                 parser->m_handlerArg, parser->m_declEntity->name,
                 parser->m_declEntity->is_param, parser->m_declEntity->textPtr,
-                (int)parser->m_declEntity->textLen, parser->m_curBase, 0, 0, 0);
+                (int)parser->m_declEntity->textLen, parser->m_curBase, NULL,
+                NULL, NULL);
             afterHandler(parser);
             handleDefault = XML_FALSE;
           }
@@ -6149,8 +6151,9 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
         beforeHandler(parser);
         parser->m_entityDeclHandler(
             parser->m_handlerArg, parser->m_declEntity->name,
-            parser->m_declEntity->is_param, 0, 0, parser->m_declEntity->base,
-            parser->m_declEntity->systemId, parser->m_declEntity->publicId, 0);
+            parser->m_declEntity->is_param, NULL, 0, parser->m_declEntity->base,
+            parser->m_declEntity->systemId, parser->m_declEntity->publicId,
+            NULL);
         afterHandler(parser);
         handleDefault = XML_FALSE;
       }
@@ -6175,7 +6178,7 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
           *eventEndPP = s;
           beforeHandler(parser);
           parser->m_entityDeclHandler(
-              parser->m_handlerArg, parser->m_declEntity->name, 0, 0, 0,
+              parser->m_handlerArg, parser->m_declEntity->name, 0, NULL, 0,
               parser->m_declEntity->base, parser->m_declEntity->systemId,
               parser->m_declEntity->publicId, parser->m_declEntity->notation);
           afterHandler(parser);
@@ -6491,7 +6494,7 @@ doProlog(XML_Parser parser, const ENCODING *enc, const char *s, const char *end,
           entityTrackingOnOpen(parser, entity, __LINE__);
           beforeHandler(parser);
           const int status = parser->m_externalEntityRefHandler(
-              parser->m_externalEntityRefHandlerArg, 0, entity->base,
+              parser->m_externalEntityRefHandlerArg, NULL, entity->base,
               entity->systemId, entity->publicId);
           afterHandler(parser);
           if (! status) {
@@ -7732,7 +7735,7 @@ storeEntityValue(XML_Parser parser, const ENCODING *enc,
             entityTrackingOnOpen(parser, entity, __LINE__);
             beforeHandler(parser);
             const int status = parser->m_externalEntityRefHandler(
-                parser->m_externalEntityRefHandlerArg, 0, entity->base,
+                parser->m_externalEntityRefHandlerArg, NULL, entity->base,
                 entity->systemId, entity->publicId);
             afterHandler(parser);
             if (! status) {
