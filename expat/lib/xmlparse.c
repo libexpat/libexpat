@@ -9395,7 +9395,7 @@ build_model(XML_Parser parser) {
 
   for (; dest < destLimit; dest++) {
     /* Retrieve source tree array index from job storage */
-    const int src_node = (int)dest->numchildren;
+    const size_t src_node = dest->numchildren;
 
     /* Convert item */
     dest->type = dtd->scaffold[src_node].type;
