@@ -303,7 +303,7 @@ typedef struct {
 typedef struct tag {
   struct tag *parent;  /* parent of this element */
   const char *rawName; /* tagName in the original encoding */
-  int rawNameLength;
+  size_t rawNameLength;
   TAG_NAME name; /* tagName in the API encoding */
   union {
     char *raw;     /* for byte-level access (rawName storage) */
@@ -3956,7 +3956,7 @@ doContent(XML_Parser parser, int startTagLevel, const ENCODING *enc,
       if (parser->m_tagLevel == startTagLevel)
         return XML_ERROR_ASYNC_ENTITY;
       else {
-        int len;
+        size_t len;
         const char *rawName;
         TAG *tag = parser->m_tagStack;
         rawName = s + enc->minBytesPerChar * 2;

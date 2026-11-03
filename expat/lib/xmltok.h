@@ -174,7 +174,7 @@ struct encoding {
   SCANNER literalScanners[XML_N_LITERAL_TYPES];
   int (*nameMatchesAscii)(const ENCODING *, const char *, const char *,
                           const char *);
-  int (*nameLength)(const ENCODING *, const char *);
+  size_t (*nameLength)(const ENCODING *, const char *);
   const char *(*skipS)(const ENCODING *, const char *);
   size_t (*getAtts)(const ENCODING *enc, const char *ptr, size_t attsMax,
                     ATTRIBUTE *atts);
