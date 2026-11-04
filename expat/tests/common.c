@@ -147,7 +147,7 @@ XML_Bool g_resumable = XML_FALSE;
 /* Used to control abort checks in some tests */
 XML_Bool g_abortable = XML_FALSE;
 
-/* Used to control _XML_Parse_SINGLE_BYTES() chunk size */
+/* Used to control XML_Parse_SINGLE_BYTES() chunk size */
 int g_chunkSize = 1;
 
 /* Common test functions */
@@ -197,11 +197,10 @@ _xml_failure(XML_Parser parser, const char *file, int line) {
 }
 
 enum XML_Status
-_XML_Parse_SINGLE_BYTES(XML_Parser parser, const char *s, int len,
-                        int isFinal) {
+XML_Parse_SINGLE_BYTES(XML_Parser parser, const char *s, int len, int isFinal) {
   // This ensures that tests have to run pathological parse cases
   // (e.g. when `s` is NULL) against plain XML_Parse rather than
-  // chunking _XML_Parse_SINGLE_BYTES.
+  // chunking XML_Parse_SINGLE_BYTES.
   assert((parser != NULL) && (s != NULL) && (len >= 0));
   const int chunksize = g_chunkSize;
   if (chunksize > 0) {
@@ -210,7 +209,7 @@ _XML_Parse_SINGLE_BYTES(XML_Parser parser, const char *s, int len,
       enum XML_Status res = XML_Parse(parser, s, chunksize, XML_FALSE);
       if (res != XML_STATUS_OK) {
         if ((res == XML_STATUS_SUSPENDED) && (len > chunksize)) {
-          fail("Use of function _XML_Parse_SINGLE_BYTES with a chunk size "
+          fail("Use of function XML_Parse_SINGLE_BYTES with a chunk size "
                "greater than 0 (from g_chunkSize) does not work well with "
                "suspension. Please consider use of plain XML_Parse at this "
                "place in your test, instead.");
@@ -227,7 +226,7 @@ enum XML_Status XMLCALL
 XML_ParseBuffer_SINGLE_BYTES(XML_Parser parser, int len, int isFinal) {
   // This ensures that tests have to run pathological parse cases
   // (e.g. when `s` is NULL) against plain XML_Parse rather than
-  // chunking _XML_Parse_SINGLE_BYTES.
+  // chunking XML_Parse_SINGLE_BYTES.
   assert((parser != NULL) && (len >= 0));
   const int chunksize = g_chunkSize;
   if (chunksize > 0) {
@@ -236,7 +235,7 @@ XML_ParseBuffer_SINGLE_BYTES(XML_Parser parser, int len, int isFinal) {
       enum XML_Status res = XML_ParseBuffer(parser, chunksize, XML_FALSE);
       if (res != XML_STATUS_OK) {
         if ((res == XML_STATUS_SUSPENDED) && (len > chunksize)) {
-          fail("Use of function _XML_Parse_SINGLE_BYTES with a chunk size "
+          fail("Use of function XML_Parse_SINGLE_BYTES with a chunk size "
                "greater than 0 (from g_chunkSize) does not work well with "
                "suspension. Please consider use of plain XML_Parse at this "
                "place in your test, instead.");
@@ -252,7 +251,7 @@ XML_ParseBuffer_SINGLE_BYTES(XML_Parser parser, int len, int isFinal) {
 void
 _expect_failure(const char *text, enum XML_Error errorCode,
                 const char *errorMessage, const char *file, int lineno) {
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
       == XML_STATUS_OK)
     /* Hackish use of _fail() macro, but lets us report
        the right filename and line number. */
@@ -269,7 +268,7 @@ _run_character_check(const char *text, const XML_Char *expected,
   CharData_Init(&storage);
   XML_SetUserData(g_parser, &storage);
   XML_SetCharacterDataHandler(g_parser, accumulate_characters);
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
       == XML_STATUS_ERROR)
     _xml_failure(g_parser, file, line);
   CharData_CheckXMLChars(&storage, expected);
@@ -283,7 +282,7 @@ _run_attribute_check(const char *text, const XML_Char *expected,
   CharData_Init(&storage);
   XML_SetUserData(g_parser, &storage);
   XML_SetStartElementHandler(g_parser, accumulate_attribute);
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
       == XML_STATUS_ERROR)
     _xml_failure(g_parser, file, line);
   CharData_CheckXMLChars(&storage, expected);
@@ -298,7 +297,7 @@ _run_ext_character_check(const char *text, ExtTest *test_data,
   test_data->storage = storage;
   XML_SetUserData(g_parser, test_data);
   XML_SetCharacterDataHandler(g_parser, ext_accumulate_characters);
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+  if (XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
       == XML_STATUS_ERROR)
     _xml_failure(g_parser, file, line);
   CharData_CheckXMLChars(storage, expected);

@@ -295,7 +295,7 @@ START_TEST(test_misc_utf16le) {
   CharData_Init(&storage);
   XML_SetUserData(g_parser, &storage);
   XML_SetCharacterDataHandler(g_parser, accumulate_characters);
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)sizeof(text) - 1, XML_TRUE)
+  if (XML_Parse_SINGLE_BYTES(g_parser, text, (int)sizeof(text) - 1, XML_TRUE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
   CharData_CheckXMLChars(&storage, expected);
@@ -316,7 +316,7 @@ START_TEST(test_misc_stop_during_end_handler_issue_240_1) {
   mydata->deep = 0;
   XML_SetUserData(parser, mydata);
 
-  result = _XML_Parse_SINGLE_BYTES(parser, doc1, (int)strlen(doc1), 1);
+  result = XML_Parse_SINGLE_BYTES(parser, doc1, (int)strlen(doc1), 1);
   XML_ParserFree(parser);
   free(mydata);
   if (result != XML_STATUS_ERROR)
@@ -338,7 +338,7 @@ START_TEST(test_misc_stop_during_end_handler_issue_240_2) {
   mydata->deep = 0;
   XML_SetUserData(parser, mydata);
 
-  result = _XML_Parse_SINGLE_BYTES(parser, doc2, (int)strlen(doc2), 1);
+  result = XML_Parse_SINGLE_BYTES(parser, doc2, (int)strlen(doc2), 1);
   XML_ParserFree(parser);
   free(mydata);
   if (result != XML_STATUS_ERROR)
@@ -389,7 +389,7 @@ START_TEST(test_misc_deny_internal_entity_closing_doctype_issue_317) {
       const char *const input = inputs[inputIndex];
       const XML_Bool suspend = suspendOrNot[suspendOrNotIndex];
       if (suspend && (g_chunkSize > 0)) {
-        // We cannot use _XML_Parse_SINGLE_BYTES below due to suspension, and
+        // We cannot use XML_Parse_SINGLE_BYTES below due to suspension, and
         // so chunk sizes >0 would only repeat the very same test
         // due to use of plain XML_Parse; we are saving upon that runtime:
         return;
@@ -436,10 +436,10 @@ START_TEST(test_misc_deny_internal_entity_closing_doctype_issue_317) {
         }
       } else {
         parseResult
-            = _XML_Parse_SINGLE_BYTES(parser, input, (int)strlen(input), 0);
+            = XML_Parse_SINGLE_BYTES(parser, input, (int)strlen(input), 0);
 
         if (parseResult != XML_STATUS_ERROR) {
-          parseResult = _XML_Parse_SINGLE_BYTES(parser, "", 0, 1);
+          parseResult = XML_Parse_SINGLE_BYTES(parser, "", 0, 1);
         }
       }
 
@@ -469,7 +469,7 @@ START_TEST(test_misc_tag_mismatch_reset_leak) {
   const char *const text = "<open xmlns='https://namespace1.test'></close>";
   XML_Parser parser = XML_ParserCreateNS(NULL, XCS('\n'));
 
-  if (_XML_Parse_SINGLE_BYTES(parser, text, (int)strlen(text), XML_TRUE)
+  if (XML_Parse_SINGLE_BYTES(parser, text, (int)strlen(text), XML_TRUE)
       != XML_STATUS_ERROR)
     fail("Call to parse was expected to fail");
   if (XML_GetErrorCode(parser) != XML_ERROR_TAG_MISMATCH)
@@ -477,7 +477,7 @@ START_TEST(test_misc_tag_mismatch_reset_leak) {
 
   XML_ParserReset(parser, NULL);
 
-  if (_XML_Parse_SINGLE_BYTES(parser, text, (int)strlen(text), XML_TRUE)
+  if (XML_Parse_SINGLE_BYTES(parser, text, (int)strlen(text), XML_TRUE)
       != XML_STATUS_ERROR)
     fail("Call to parse was expected to fail");
   if (XML_GetErrorCode(parser) != XML_ERROR_TAG_MISMATCH)
@@ -524,7 +524,7 @@ START_TEST(test_misc_general_entities_support) {
   XML_SetEntityDeclHandler(parser, accumulate_entity_decl);
   XML_SetCharacterDataHandler(parser, accumulate_characters);
 
-  if (_XML_Parse_SINGLE_BYTES(parser, doc, (int)strlen(doc), XML_TRUE)
+  if (XML_Parse_SINGLE_BYTES(parser, doc, (int)strlen(doc), XML_TRUE)
       != XML_STATUS_OK) {
     xml_failure(parser);
   }
@@ -566,7 +566,7 @@ START_TEST(test_misc_char_handler_stop_without_leak) {
   assert_true(parser != NULL);
   XML_SetUserData(parser, parser);
   XML_SetCharacterDataHandler(parser, resumable_stopping_character_handler);
-  _XML_Parse_SINGLE_BYTES(parser, data, (int)strlen(data), XML_FALSE);
+  XML_Parse_SINGLE_BYTES(parser, data, (int)strlen(data), XML_FALSE);
   XML_ParserFree(parser);
 }
 END_TEST
@@ -643,7 +643,7 @@ START_TEST(test_renter_loop_finite_content) {
   XML_SetUserData(parser, &test_data);
   XML_SetExternalEntityRefHandler(parser, external_entity_oneshot_loader);
   XML_SetCharacterDataHandler(parser, accumulate_characters_ext_handler);
-  if (_XML_Parse_SINGLE_BYTES(parser, text, (int)strlen(text), XML_TRUE)
+  if (XML_Parse_SINGLE_BYTES(parser, text, (int)strlen(text), XML_TRUE)
       == XML_STATUS_ERROR)
     xml_failure(parser);
 
@@ -705,8 +705,8 @@ START_TEST(test_misc_expected_event_ptr_issue_980) {
   XML_SetUserData(parser, parser);
   XML_SetCharacterDataHandler(parser, on_characters_issue_980);
 
-  assert_true(_XML_Parse_SINGLE_BYTES(parser, doc, (int)strlen(doc),
-                                      /*isFinal=*/XML_TRUE)
+  assert_true(XML_Parse_SINGLE_BYTES(parser, doc, (int)strlen(doc),
+                                     /*isFinal=*/XML_TRUE)
               == XML_STATUS_OK);
 
   XML_ParserFree(parser);
@@ -723,8 +723,8 @@ START_TEST(test_misc_sync_entity_tolerated) {
                           "<t0>&a;&b;&c;&d;</t0>\n";
   XML_Parser parser = XML_ParserCreate(NULL);
 
-  assert_true(_XML_Parse_SINGLE_BYTES(parser, doc, (int)strlen(doc),
-                                      /*isFinal=*/XML_TRUE)
+  assert_true(XML_Parse_SINGLE_BYTES(parser, doc, (int)strlen(doc),
+                                     /*isFinal=*/XML_TRUE)
               == XML_STATUS_OK);
 
   XML_ParserFree(parser);
@@ -791,8 +791,8 @@ START_TEST(test_misc_async_entity_rejected) {
 #endif
 
     XML_Parser parser = XML_ParserCreate(NULL);
-    assert_true(_XML_Parse_SINGLE_BYTES(parser, doc, (int)strlen(doc),
-                                        /*isFinal=*/XML_TRUE)
+    assert_true(XML_Parse_SINGLE_BYTES(parser, doc, (int)strlen(doc),
+                                       /*isFinal=*/XML_TRUE)
                 == expectedStatus);
     assert_true(XML_GetErrorCode(parser) == expectedError);
 #if XML_GE == 1
@@ -822,7 +822,7 @@ START_TEST(test_misc_no_infinite_loop_issue_1161) {
   XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
   XML_SetExternalEntityRefHandler(parser, external_entity_optioner);
 
-  assert_true(_XML_Parse_SINGLE_BYTES(parser, text, (int)strlen(text), XML_TRUE)
+  assert_true(XML_Parse_SINGLE_BYTES(parser, text, (int)strlen(text), XML_TRUE)
               == XML_STATUS_ERROR);
 
 #if defined(XML_DTD)
@@ -994,21 +994,21 @@ START_TEST(test_misc_low_surrogate_mozilla_bug_2053153) {
 
     XML_Parser parser = XML_ParserCreate(NULL);
 
-    assert_true(_XML_Parse_SINGLE_BYTES(parser, doc_before,
-                                        (int)sizeof(doc_before) - 1,
-                                        /*isFinal=*/XML_FALSE));
+    assert_true(XML_Parse_SINGLE_BYTES(parser, doc_before,
+                                       (int)sizeof(doc_before) - 1,
+                                       /*isFinal=*/XML_FALSE));
 
     for (size_t j = 0; j < i; j++) {
       assert_true(
-          _XML_Parse_SINGLE_BYTES(parser, "a\\0", 2, /*isFinal=*/XML_FALSE));
+          XML_Parse_SINGLE_BYTES(parser, "a\\0", 2, /*isFinal=*/XML_FALSE));
     }
 
     // Thinking Python, this is:
     // ''.join([f'\\x{e:02x}' for e in '😀'.encode('UTF-16-LE')])
-    assert_true(_XML_Parse_SINGLE_BYTES(parser, "\x3d\xd8\x00\xde", 4,
-                                        /*isFinal=*/XML_FALSE));
+    assert_true(XML_Parse_SINGLE_BYTES(parser, "\x3d\xd8\x00\xde", 4,
+                                       /*isFinal=*/XML_FALSE));
 
-    assert_true(_XML_Parse_SINGLE_BYTES(
+    assert_true(XML_Parse_SINGLE_BYTES(
         parser, doc_after, (int)sizeof(doc_after) - 1, /*isFinal=*/XML_TRUE));
 
     XML_ParserFree(parser);
@@ -1023,7 +1023,7 @@ START_TEST(test_misc_input_2gb) {
   char buf[4096];
 
   if (g_chunkSize != 0) {
-    return; // this test is slow, and doesn't use _XML_Parse_SINGLE_BYTES().
+    return; // this test is slow, and doesn't use XML_Parse_SINGLE_BYTES().
   }
 
   memset(buf, ' ', sizeof(buf));
@@ -1078,8 +1078,8 @@ START_TEST(test_misc_start_doctype_decl_handler_reset) {
   XML_SetNotStandaloneHandler(parser,
                               reset_start_doctype_decl_handler_not_standalone);
 
-  assert_true(_XML_Parse_SINGLE_BYTES(parser, doc, (int)strlen(doc),
-                                      /*isFinal=*/XML_TRUE)
+  assert_true(XML_Parse_SINGLE_BYTES(parser, doc, (int)strlen(doc),
+                                     /*isFinal=*/XML_TRUE)
               == XML_STATUS_OK);
 
   XML_ParserFree(parser);
@@ -1129,8 +1129,8 @@ START_TEST(test_misc_storeatts_attssize_allocation) {
   XML_Parser parser = XML_ParserCreate(NULL);
   XML_SetStartElementHandler(
       parser, dummy_start_element); // i.e. ask for calling `storeAtts`
-  assert_true(_XML_Parse_SINGLE_BYTES(parser, doc, (int)strlen(doc),
-                                      /*isFinal=*/XML_TRUE));
+  assert_true(XML_Parse_SINGLE_BYTES(parser, doc, (int)strlen(doc),
+                                     /*isFinal=*/XML_TRUE));
   XML_ParserFree(parser);
 
   assert_true(get_dummy_handler_flags() == DUMMY_START_ELEMENT_HANDLER_FLAG);
@@ -1169,10 +1169,10 @@ piParsingExternalEntityHandler(XML_Parser parent, const XML_Char *context,
 
   // NOTE: Related test "test_empty_ext_param_entity_in_value" could be of
   // interest
-  assert_true(_XML_Parse_SINGLE_BYTES(subParser, "", 0, /*isFinal=*/XML_FALSE)
+  assert_true(XML_Parse_SINGLE_BYTES(subParser, "", 0, /*isFinal=*/XML_FALSE)
               == XML_STATUS_OK);
-  assert_true(_XML_Parse_SINGLE_BYTES(subParser, doc, (int)strlen(doc),
-                                      /*isFinal=*/XML_TRUE)
+  assert_true(XML_Parse_SINGLE_BYTES(subParser, doc, (int)strlen(doc),
+                                     /*isFinal=*/XML_TRUE)
               == XML_STATUS_OK);
 
   XML_ParserFree(subParser);
@@ -1192,8 +1192,8 @@ START_TEST(test_misc_empty_nonfinal_subparser_parse) {
   XML_SetProcessingInstructionHandler(parser, comparingPiHandler);
   XML_SetExternalEntityRefHandler(parser, piParsingExternalEntityHandler);
 
-  assert_true(_XML_Parse_SINGLE_BYTES(parser, doc, (int)strlen(doc),
-                                      /*isFinal=*/XML_TRUE));
+  assert_true(XML_Parse_SINGLE_BYTES(parser, doc, (int)strlen(doc),
+                                     /*isFinal=*/XML_TRUE));
 
   XML_ParserFree(parser);
 }
@@ -1214,8 +1214,8 @@ START_TEST(test_misc_getinputcontext_from_handlers_only) {
 
   int64_t offset = 123;
   uint64_t size = 456;
-  assert_true(_XML_Parse_SINGLE_BYTES(parser, doc, (int)strlen(doc),
-                                      /*isFinal=*/XML_TRUE)
+  assert_true(XML_Parse_SINGLE_BYTES(parser, doc, (int)strlen(doc),
+                                     /*isFinal=*/XML_TRUE)
               == XML_STATUS_ERROR);
   assert_true(XML_GetErrorCode(parser) == XML_ERROR_INCORRECT_ENCODING);
 
