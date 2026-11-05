@@ -52,15 +52,14 @@
 
 static void XMLCALL
 startElement(void *userData, const XML_Char *name, const XML_Char **atts) {
-  int i;
   int *const depthPtr = userData;
 
-  for (i = 0; i < *depthPtr; i++)
+  for (int i = 0; i < *depthPtr; i++)
     printf("  ");
 
   printf("%" XML_FMT_STR, name);
 
-  for (i = 0; atts[i]; i += 2) {
+  for (int i = 0; atts[i]; i += 2) {
     printf(" %" XML_FMT_STR "='%" XML_FMT_STR "'", atts[i], atts[i + 1]);
   }
 
