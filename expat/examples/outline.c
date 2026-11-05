@@ -52,9 +52,9 @@
 
 static void XMLCALL
 startElement(void *userData, const XML_Char *name, const XML_Char **atts) {
-  int *const depthPtr = userData;
+  size_t *const depthPtr = userData;
 
-  for (int i = 0; i < *depthPtr; i++)
+  for (size_t i = 0; i < *depthPtr; i++)
     printf("  ");
 
   printf("%" XML_FMT_STR, name);
@@ -69,7 +69,7 @@ startElement(void *userData, const XML_Char *name, const XML_Char **atts) {
 
 static void XMLCALL
 endElement(void *userData, const XML_Char *name) {
-  int *const depthPtr = userData;
+  size_t *const depthPtr = userData;
   (void)name;
 
   *depthPtr -= 1;
@@ -79,7 +79,7 @@ int
 main(void) {
   XML_Parser parser = XML_ParserCreate(NULL);
   XML_Bool done;
-  int depth = 0;
+  size_t depth = 0;
 
   if (! parser) {
     fprintf(stderr, "Couldn't allocate memory for parser\n");
