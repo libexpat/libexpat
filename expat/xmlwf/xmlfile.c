@@ -85,7 +85,7 @@
 #  endif
 #endif
 
-int g_read_size_bytes = 1024 * 8;
+int g_read_size_bytes = 1024 * 32; // i.e. the default buffer size
 
 typedef struct {
   XML_Parser parser;

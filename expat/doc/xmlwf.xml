@@ -281,7 +281,7 @@
           <para>
             Sets the buffer size to request per call pair to
             <function>XML_GetBuffer</function> and <function>read</function>
-            (default: 8 KiB).
+            (default: 32 KiB).
           </para>
         </listitem>
       </varlistentry>
