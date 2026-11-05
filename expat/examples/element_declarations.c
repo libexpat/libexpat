@@ -41,7 +41,7 @@
    SPDX-License-Identifier: MIT
 */
 
-#include <inttypes.h> // PRIu64
+#include <inttypes.h> // PRIu64, PRIuPTR
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -128,7 +128,7 @@ dumpContentModelElement(const XML_Content *model, size_t level,
   }
 
   // Node
-  printf("[%u] type=%s(%u), quant=%s(%u)", (unsigned)(model - root),
+  printf("[%" PRIuPTR "] type=%s(%u), quant=%s(%u)", (uintptr_t)(model - root),
          contentTypeName(model->type), (unsigned int)model->type,
          contentQuantName(model->quant), (unsigned int)model->quant);
   if (model->name) {
