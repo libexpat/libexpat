@@ -3845,6 +3845,7 @@ START_TEST(test_get_buffer_1) {
   /* Attempt to allocate a negative length buffer */
   if (XML_GetBuffer(g_parser, -12) != NULL)
     fail("Negative length buffer not failed");
+  assert_true(XML_GetErrorCode(g_parser) == XML_ERROR_NO_MEMORY);
 
   /* Now get a small buffer and extend it past valid length */
   void *const buffer = XML_GetBuffer(g_parser, 1536);
