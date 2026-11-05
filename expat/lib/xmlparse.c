@@ -8221,12 +8221,8 @@ getAttributeId(XML_Parser parser, const ENCODING *enc, const char *start,
                                       sizeof(PREFIX));
       id->xmlns = true;
     } else {
-      int i;
+      size_t i;
       for (i = 0; name[i]; i++) {
-        /* Detect and prevent signed integer overflow */
-        if (i == INT_MAX) {
-          return NULL;
-        }
         /* attributes without prefix are *not* in the default namespace */
         if (name[i] == XML_T(ASCII_COLON)) {
           if (! poolAppendChars(&dtd->pool, name, i))
