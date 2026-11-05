@@ -93,6 +93,9 @@ extern void _xml_failure(XML_Parser parser, const char *file, int line);
 extern enum XML_Status _XML_Parse_SINGLE_BYTES(XML_Parser parser, const char *s,
                                                int len, int isFinal);
 
+enum XML_Status XMLCALL XML_ParseBuffer_SINGLE_BYTES(XML_Parser parser, int len,
+                                                     int isFinal);
+
 extern void _expect_failure(const char *text, enum XML_Error errorCode,
                             const char *errorMessage, const char *file,
                             int lineno);

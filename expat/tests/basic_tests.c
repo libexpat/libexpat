@@ -6926,6 +6926,142 @@ counting_malloc(size_t size) {
   return counting_realloc(NULL, size);
 }
 
+START_TEST(test_eventptr_after_nonerror_parse_final) {
+  const char *const doc = "<doc/>";
+  const size_t docLen = strlen(doc);
+
+  const bool cases[] = {true, false};
+  for (size_t i = 0; i < sizeof(cases) / sizeof(cases[0]); i++) {
+    const bool useParseBuffer = cases[i];
+
+    XML_Parser parser = XML_ParserCreate(NULL);
+    if (useParseBuffer) {
+      char *const buffer = XML_GetBuffer(parser, (int)docLen);
+      assert_true(buffer != NULL);
+      memcpy(buffer, doc, docLen);
+
+      assert_true(XML_ParseBuffer_SINGLE_BYTES(parser, (int)docLen,
+                                               /*isFinal=*/XML_TRUE)
+                  == XML_STATUS_OK);
+    } else {
+      assert_true(_XML_Parse_SINGLE_BYTES(parser, doc, (int)docLen,
+                                          /*isFinal=*/XML_TRUE)
+                  == XML_STATUS_OK);
+    }
+
+    assert_true(XML_GetCurrentByteIndex64(parser) == (int64_t)docLen);
+
+    XML_ParserFree(parser);
+  }
+}
+END_TEST
+
+START_TEST(test_eventptr_after_nonerror_parse_nonfinal_with_suspend) {
+  if (g_reparseDeferralEnabledDefault)
+    return;
+
+  const char *const intro = "<doc><!--this-comment-suspends-->";
+  const char *const outro = "</doc>";
+  const size_t docLen = strlen(intro) + strlen(outro);
+
+  const bool cases[] = {true, false};
+  for (size_t i = 0; i < sizeof(cases) / sizeof(cases[0]); i++) {
+    const bool useParseBuffer = cases[i];
+
+    XML_Parser parser = XML_ParserCreate(NULL);
+    XML_SetUserData(parser, parser);
+    XML_SetCommentHandler(parser, suspending_comment_handler);
+
+    if (useParseBuffer) {
+      char *const doc = XML_GetBuffer(parser, (int)docLen);
+      assert_true(doc != NULL);
+      memcpy(doc, intro, strlen(intro));
+      memcpy(doc + strlen(intro), outro, strlen(outro));
+
+      assert_true(XML_ParseBuffer_SINGLE_BYTES(parser, (int)strlen(intro),
+                                               /*isFinal*/ XML_FALSE)
+                  == XML_STATUS_SUSPENDED);
+    } else {
+      assert_true(_XML_Parse_SINGLE_BYTES(parser, intro, (int)strlen(intro),
+                                          /*isFinal*/ XML_FALSE)
+                  == XML_STATUS_SUSPENDED);
+    }
+
+    enum XML_Status status;
+    do {
+      status = XML_ResumeParser(parser);
+      assert_true(status == XML_STATUS_OK || status == XML_STATUS_SUSPENDED);
+
+      const int64_t byteIndex = XML_GetCurrentByteIndex64(parser);
+      assert_true(byteIndex >= 0 && byteIndex <= (int64_t)strlen(intro));
+    } while (status == XML_STATUS_SUSPENDED);
+
+    const int64_t byteIndex = XML_GetCurrentByteIndex64(parser);
+    assert_true(byteIndex == (int64_t)strlen(intro));
+
+    if (useParseBuffer) {
+      assert_true(XML_ParseBuffer_SINGLE_BYTES(parser, (int)strlen(outro),
+                                               /*isFinal*/ XML_TRUE)
+                  == XML_STATUS_OK);
+    } else
+      assert_true(_XML_Parse_SINGLE_BYTES(parser, outro, (int)strlen(outro),
+                                          /*isFinal*/ XML_TRUE)
+                  == XML_STATUS_OK);
+
+    assert_true(XML_GetCurrentByteIndex64(parser) == (int64_t)docLen);
+
+    XML_ParserFree(parser);
+  }
+}
+END_TEST
+
+START_TEST(test_eventptr_after_nonerror_parse_nonfinal_without_suspend) {
+  const char *const intro = "<x>";
+  const char *const outro = "</x>";
+  const size_t docLen = strlen(intro) + strlen(outro);
+
+  const bool cases[] = {true, false};
+  for (size_t i = 0; i < sizeof(cases) / sizeof(cases[0]); i++) {
+    XML_Parser parser = XML_ParserCreate(NULL);
+    bool useParseBuffer = cases[i];
+
+    if (useParseBuffer) {
+      char *const doc = XML_GetBuffer(parser, (int)docLen);
+      assert_true(doc != NULL);
+      memcpy(doc, intro, strlen(intro));
+      memcpy(doc + strlen(intro), outro, strlen(outro));
+
+      assert_true(XML_ParseBuffer_SINGLE_BYTES(parser, (int)strlen(intro),
+                                               /*isFinal*/ XML_FALSE)
+                  == XML_STATUS_OK);
+    } else {
+      assert_true(_XML_Parse_SINGLE_BYTES(parser, intro, (int)strlen(intro),
+                                          /*isFinal*/ XML_FALSE)
+                  == XML_STATUS_OK);
+    }
+
+    const int64_t byteIndex = XML_GetCurrentByteIndex64(parser);
+    if (g_reparseDeferralEnabledDefault) {
+      assert_true(byteIndex >= 0 && byteIndex <= (int64_t)strlen(intro));
+    } else
+      assert_true(byteIndex == (int64_t)strlen(intro));
+
+    if (useParseBuffer) {
+      assert_true(XML_ParseBuffer_SINGLE_BYTES(parser, (int)strlen(outro),
+                                               /*isFinal*/ XML_TRUE)
+                  == XML_STATUS_OK);
+    } else
+      assert_true(_XML_Parse_SINGLE_BYTES(parser, outro, (int)strlen(outro),
+                                          /*isFinal*/ XML_TRUE)
+                  == XML_STATUS_OK);
+
+    assert_true(XML_GetCurrentByteIndex64(parser) == (int64_t)docLen);
+
+    XML_ParserFree(parser);
+  }
+}
+END_TEST
+
 START_TEST(test_bypass_heuristic_when_close_to_bufsize) {
   if (g_chunkSize != 0) {
     // this test does not use SINGLE_BYTES, because it depends on very precise
@@ -7450,6 +7586,11 @@ make_basic_test_case(Suite *s) {
   tcase_add_test(tc_basic, test_set_reparse_deferral_on_null_parser);
   tcase_add_test(tc_basic, test_set_reparse_deferral_on_the_fly);
   tcase_add_test(tc_basic, test_set_bad_reparse_option);
+  tcase_add_test(tc_basic, test_eventptr_after_nonerror_parse_final);
+  tcase_add_test(tc_basic,
+                 test_eventptr_after_nonerror_parse_nonfinal_with_suspend);
+  tcase_add_test(tc_basic,
+                 test_eventptr_after_nonerror_parse_nonfinal_without_suspend);
   tcase_add_test(tc_basic, test_bypass_heuristic_when_close_to_bufsize);
   tcase_add_test(tc_basic, test_varying_buffer_fills);
 }

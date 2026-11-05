@@ -229,7 +229,6 @@ typedef char ICHAR;
 
 /* Do safe (NULL-aware) pointer arithmetic */
 #define EXPAT_SAFE_PTR_DIFF(p, q) (((p) && (q)) ? ((p) - (q)) : 0)
-#define EXPAT_SAFE_PTR_ADD(p, a) ((p) ? ((p) + (a)) : NULL)
 
 #define EXPAT_MIN(a, b) (((a) < (b)) ? (a) : (b))
 
@@ -2449,8 +2448,21 @@ xmlParse64(XML_Parser parser, const char *s, size_t len, XML_Bool isFinal) {
       // pointing further into the allocated buffer).
       memcpy(parser->m_buffer, end, nLeftOver);
     }
+
+    // Ensure presence of a buffer so that we can point `parser->m_eventPtr`
+    // into it to avoid `parser->m_eventPtr == NULL`.
+    if (! parser->m_buffer) {
+      if (! internalGetBuffer64(parser, 1)) {
+        // NOTE: parser->m_errorCode has already been set by XML_GetBuffer().
+        parser->m_eventPtr = parser->m_eventEndPtr = NULL;
+        parser->m_processor = errorProcessor;
+        return XML_STATUS_ERROR;
+      }
+    }
+    assert(parser->m_buffer != NULL);
+
     parser->m_bufferPtr = parser->m_buffer;
-    parser->m_bufferEnd = EXPAT_SAFE_PTR_ADD(parser->m_buffer, nLeftOver);
+    parser->m_bufferEnd = parser->m_buffer + nLeftOver;
     parser->m_positionPtr = parser->m_bufferPtr;
     parser->m_parseEndPtr = parser->m_bufferEnd;
     parser->m_eventPtr = parser->m_bufferPtr;
