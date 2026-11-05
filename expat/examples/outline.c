@@ -59,7 +59,7 @@ startElement(void *userData, const XML_Char *name, const XML_Char **atts) {
 
   printf("%" XML_FMT_STR, name);
 
-  for (int i = 0; atts[i]; i += 2) {
+  for (size_t i = 0; atts[i]; i += 2) {
     printf(" %" XML_FMT_STR "='%" XML_FMT_STR "'", atts[i], atts[i + 1]);
   }
 
