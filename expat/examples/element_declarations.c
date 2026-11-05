@@ -187,7 +187,7 @@ handleElementDeclaration(void *userData, const XML_Char *name,
 int
 main(void) {
   XML_Parser parser = XML_ParserCreate(NULL);
-  int done;
+  XML_Bool done;
 
   if (! parser) {
     fprintf(stderr, "Couldn't allocate memory for parser\n");
@@ -213,9 +213,9 @@ main(void) {
       return 1;
     }
 
-    done = feof(stdin);
+    done = feof(stdin) ? XML_TRUE : XML_FALSE;
 
-    if (XML_ParseBuffer(parser, (int)len, done) == XML_STATUS_ERROR) {
+    if (XML_ParseBuffer64(parser, len, done) == XML_STATUS_ERROR) {
       enum XML_Error errorCode = XML_GetErrorCode(parser);
       if (errorCode == XML_ERROR_ABORTED) {
         errorCode = XML_ERROR_NO_MEMORY;
