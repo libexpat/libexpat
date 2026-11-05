@@ -178,7 +178,7 @@ dumpContentModel(const XML_Char *name, const XML_Content *root) {
 static void XMLCALL
 handleElementDeclaration(void *userData, const XML_Char *name,
                          XML_Content *model) {
-  XML_Parser parser = (XML_Parser)userData;
+  XML_Parser parser = userData;
   const bool success = dumpContentModel(name, model);
   XML_FreeContentModel(parser, model);
   if (! success) {
