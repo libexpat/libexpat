@@ -8080,13 +8080,15 @@ static void
 reportCharacterData(XML_Parser parser, const XML_Char *s, size_t len) {
   assert(parser->m_characterDataHandler != NULL);
   beforeHandler(parser);
-  while (len > INT_MAX) {
+  while (parser->m_characterDataHandler && len > INT_MAX) {
     parser->m_characterDataHandler(parser->m_handlerArg, s, INT_MAX);
     s += INT_MAX;
     len -= INT_MAX;
   }
-  assert(len <= INT_MAX);
-  parser->m_characterDataHandler(parser->m_handlerArg, s, (int)len);
+  if (parser->m_characterDataHandler) {
+    assert(len <= INT_MAX);
+    parser->m_characterDataHandler(parser->m_handlerArg, s, (int)len);
+  }
   afterHandler(parser);
 }
 
