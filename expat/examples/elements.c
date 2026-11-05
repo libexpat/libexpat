@@ -51,6 +51,8 @@
 #  define XML_FMT_STR "s"
 #endif
 
+#define BUFFER_SIZE (1024 * 32)
+
 static void XMLCALL
 startElement(void *userData, const XML_Char *name, const XML_Char **atts) {
   int i;
@@ -86,14 +88,14 @@ main(void) {
   XML_SetElementHandler(parser, startElement, endElement);
 
   do {
-    void *const buf = XML_GetBuffer(parser, BUFSIZ);
+    void *const buf = XML_GetBuffer(parser, BUFFER_SIZE);
     if (! buf) {
       fprintf(stderr, "Couldn't allocate memory for buffer\n");
       XML_ParserFree(parser);
       return 1;
     }
 
-    const size_t len = fread(buf, 1, BUFSIZ, stdin);
+    const size_t len = fread(buf, 1, BUFFER_SIZE, stdin);
 
     if (ferror(stdin)) {
       fprintf(stderr, "Read error\n");

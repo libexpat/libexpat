@@ -53,6 +53,8 @@
 #  define XML_FMT_STR "s"
 #endif
 
+#define BUFFER_SIZE (1024 * 32)
+
 // While traversing the XML_Content tree, we avoid recursion
 // to not be vulnerable to a denial of service attack.
 typedef struct StackStruct {
@@ -198,14 +200,14 @@ main(void) {
   XML_SetElementDeclHandler(parser, handleElementDeclaration);
 
   do {
-    void *const buf = XML_GetBuffer(parser, BUFSIZ);
+    void *const buf = XML_GetBuffer(parser, BUFFER_SIZE);
     if (! buf) {
       fprintf(stderr, "Couldn't allocate memory for buffer\n");
       XML_ParserFree(parser);
       return 1;
     }
 
-    const size_t len = fread(buf, 1, BUFSIZ, stdin);
+    const size_t len = fread(buf, 1, BUFFER_SIZE, stdin);
 
     if (ferror(stdin)) {
       fprintf(stderr, "Read error\n");
