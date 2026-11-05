@@ -99,6 +99,53 @@ basic_setup(void) {
     fail("Parser not created.");
 }
 
+START_TEST(test_parse64) {
+  const char *const doc = "<hello>world!</hello>";
+  XML_Parser parser = XML_ParserCreate(NULL);
+
+  assert_true(
+      XML_Parse64_SINGLE_BYTES(parser, doc, strlen(doc), /*isFinal=*/XML_TRUE)
+      == XML_STATUS_OK);
+
+  XML_ParserReset(parser, NULL);
+
+  assert_true(XML_Parse64_SINGLE_BYTES(parser, "", 0, /*isFinal=*/XML_FALSE)
+              == XML_STATUS_OK);
+  assert_true(
+      XML_Parse64_SINGLE_BYTES(parser, doc, strlen(doc), /*isFinal=*/XML_FALSE)
+      == XML_STATUS_OK);
+  assert_true(XML_Parse64_SINGLE_BYTES(parser, "", 0, /*isFinal=*/XML_TRUE)
+              == XML_STATUS_OK);
+
+  XML_ParserFree(parser);
+}
+END_TEST
+
+START_TEST(test_parsebuffer64) {
+  const char *const doc = "<hello>world!</hello>";
+  XML_Parser parser = XML_ParserCreate(NULL);
+
+  char *const buffer = XML_GetBuffer64(parser, strlen(doc));
+  memcpy(buffer, doc, strlen(doc));
+  assert_true(
+      XML_ParseBuffer64_SINGLE_BYTES(parser, strlen(doc), /*isFinal=*/XML_TRUE)
+      == XML_STATUS_OK);
+
+  XML_ParserReset(parser, NULL);
+
+  memcpy(buffer, doc, strlen(doc));
+  assert_true(XML_ParseBuffer64_SINGLE_BYTES(parser, 0, /*isFinal=*/XML_FALSE)
+              == XML_STATUS_OK);
+  assert_true(
+      XML_ParseBuffer64_SINGLE_BYTES(parser, strlen(doc), /*isFinal=*/XML_FALSE)
+      == XML_STATUS_OK);
+  assert_true(XML_ParseBuffer64_SINGLE_BYTES(parser, 0, /*isFinal=*/XML_TRUE)
+              == XML_STATUS_OK);
+
+  XML_ParserFree(parser);
+}
+END_TEST
+
 /*
  * Character & encoding tests.
  */
@@ -7292,6 +7339,8 @@ make_basic_test_case(Suite *s) {
   suite_add_tcase(s, tc_basic);
   tcase_add_checked_fixture(tc_basic, basic_setup, basic_teardown);
 
+  tcase_add_test(tc_basic, test_parse64);
+  tcase_add_test(tc_basic, test_parsebuffer64);
   tcase_add_test(tc_basic, test_nul_byte);
   tcase_add_test(tc_basic, test_u0000_char);
   tcase_add_test(tc_basic, test_siphash_self);
