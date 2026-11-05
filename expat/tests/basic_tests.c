@@ -3839,25 +3839,8 @@ START_TEST(test_parse_buffer_exceeds_buffer) {
 END_TEST
 
 /* Test odd corners of the XML_GetBuffer interface */
-static enum XML_Status
-get_feature(enum XML_FeatureEnum feature_id, long *presult) {
-  const XML_Feature *feature = XML_GetFeatureList();
-
-  if (feature == NULL)
-    return XML_STATUS_ERROR;
-  for (; feature->feature != XML_FEATURE_END; feature++) {
-    if (feature->feature == feature_id) {
-      *presult = feature->value;
-      return XML_STATUS_OK;
-    }
-  }
-  return XML_STATUS_ERROR;
-}
-
-/* Test odd corners of the XML_GetBuffer interface */
 START_TEST(test_get_buffer_1) {
   const char *text = get_buffer_test_text;
-  long context_bytes;
 
   /* Attempt to allocate a negative length buffer */
   if (XML_GetBuffer(g_parser, -12) != NULL)
@@ -3885,9 +3868,7 @@ START_TEST(test_get_buffer_1) {
    * XML_CONTEXT_BYTES (if >=1), so we subtract that from our
    * request.
    */
-  if (get_feature(XML_FEATURE_CONTEXT_BYTES, &context_bytes) != XML_STATUS_OK)
-    context_bytes = 0;
-  if (XML_GetBuffer(g_parser, INT_MAX - (context_bytes + 1025)) != NULL)
+  if (XML_GetBuffer(g_parser, INT_MAX - (XML_CONTEXT_BYTES + 1025)) != NULL)
     fail("INT_MAX- buffer not failed");
 
   /* Now try extending it a carefully crafted amount */
