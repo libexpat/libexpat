@@ -222,6 +222,33 @@ XML_Parse_SINGLE_BYTES(XML_Parser parser, const char *s, int len, int isFinal) {
   return XML_Parse(parser, s, len, isFinal);
 }
 
+enum XML_Status
+XML_Parse64_SINGLE_BYTES(XML_Parser parser, const char *s, size_t len,
+                         XML_Bool isFinal) {
+  // This ensures that tests have to run pathological parse cases
+  // (e.g. when `s` is NULL) against plain XML_Parse rather than
+  // chunking XML_Parse_SINGLE_BYTES.
+  assert((parser != NULL) && (s != NULL));
+  const size_t chunksize = g_chunkSize;
+  if (chunksize > 0) {
+    // parse in chunks of `chunksize` bytes as long as not exhausting
+    for (; len > chunksize; len -= chunksize, s += chunksize) {
+      enum XML_Status res = XML_Parse64(parser, s, chunksize, XML_FALSE);
+      if (res != XML_STATUS_OK) {
+        if ((res == XML_STATUS_SUSPENDED) && (len > chunksize)) {
+          fail("Use of function XML_Parse_SINGLE_BYTES with a chunk size "
+               "greater than 0 (from g_chunkSize) does not work well with "
+               "suspension. Please consider use of plain XML_Parse at this "
+               "place in your test, instead.");
+        }
+        return res;
+      }
+    }
+  }
+  // parse the final chunk, the size of which will be <= chunksize
+  return XML_Parse64(parser, s, len, isFinal);
+}
+
 enum XML_Status XMLCALL
 XML_ParseBuffer_SINGLE_BYTES(XML_Parser parser, int len, int isFinal) {
   // This ensures that tests have to run pathological parse cases
@@ -246,6 +273,33 @@ XML_ParseBuffer_SINGLE_BYTES(XML_Parser parser, int len, int isFinal) {
   }
   // parse the final chunk, the size of which will be <= chunksize
   return XML_ParseBuffer(parser, len, isFinal);
+}
+
+enum XML_Status XMLCALL
+XML_ParseBuffer64_SINGLE_BYTES(XML_Parser parser, size_t len,
+                               XML_Bool isFinal) {
+  // This ensures that tests have to run pathological parse cases
+  // (e.g. when `s` is NULL) against plain XML_Parse rather than
+  // chunking XML_Parse_SINGLE_BYTES.
+  assert(parser != NULL);
+  const size_t chunksize = g_chunkSize;
+  if (chunksize > 0) {
+    // parse in chunks of `chunksize` bytes as long as not exhausting
+    for (; len > chunksize; len -= chunksize) {
+      enum XML_Status res = XML_ParseBuffer64(parser, chunksize, XML_FALSE);
+      if (res != XML_STATUS_OK) {
+        if ((res == XML_STATUS_SUSPENDED) && (len > chunksize)) {
+          fail("Use of function XML_Parse_SINGLE_BYTES with a chunk size "
+               "greater than 0 (from g_chunkSize) does not work well with "
+               "suspension. Please consider use of plain XML_Parse at this "
+               "place in your test, instead.");
+        }
+        return res;
+      }
+    }
+  }
+  // parse the final chunk, the size of which will be <= chunksize
+  return XML_ParseBuffer64(parser, len, isFinal);
 }
 
 void

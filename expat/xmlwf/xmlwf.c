@@ -1090,15 +1090,14 @@ tmain(int argc, XML_Char **argv) {
 
       errno = 0;
       XML_Char *afterValueText = (XML_Char *)valueText;
-      const long long read_size_bytes_candidate
+      const unsigned long long read_size_bytes_candidate
           = tcstoull(valueText, &afterValueText, 10);
       if ((errno != 0) || (afterValueText[0] != T('\0'))
-          || (read_size_bytes_candidate < 1)
-          || (read_size_bytes_candidate > (INT_MAX / 2 + 1))) {
+          || (read_size_bytes_candidate > INT_MAX)) {
         // This prevents tperror(..) from reporting misleading "[..]: Success"
         errno = ERANGE;
         tperror(T("invalid buffer size") T(
-            " (needs an integer from 1 to INT_MAX/2+1 i.e. 1,073,741,824 on most platforms)"));
+            " (needs an integer from 1 to INT_MAX i.e. 2,147,483,647 (2^31-1) on most platforms)"));
         exit(XMLWF_EXIT_USAGE_ERROR);
       }
       g_read_size_bytes = (int)read_size_bytes_candidate;

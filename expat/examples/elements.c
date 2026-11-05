@@ -74,7 +74,7 @@ endElement(void *userData, const XML_Char *name) {
 int
 main(void) {
   XML_Parser parser = XML_ParserCreate(NULL);
-  int done;
+  XML_Bool done;
   int depth = 0;
 
   if (! parser) {
@@ -101,9 +101,9 @@ main(void) {
       return 1;
     }
 
-    done = feof(stdin);
+    done = feof(stdin) ? XML_TRUE : XML_FALSE;
 
-    if (XML_ParseBuffer(parser, (int)len, done) == XML_STATUS_ERROR) {
+    if (XML_ParseBuffer64(parser, len, done) == XML_STATUS_ERROR) {
       fprintf(stderr, "Parse error at line %" PRIu64 ":\n%" XML_FMT_STR "\n",
               XML_GetCurrentLineNumber64(parser),
               XML_ErrorString(XML_GetErrorCode(parser)));

@@ -6,6 +6,7 @@ XML_ExternalEntityParserCreate
 XML_FreeContentModel
 XML_GetBase
 XML_GetBuffer
+XML_GetBuffer64
 XML_GetCurrentByteCount
 XML_GetCurrentByteCount64
 XML_GetCurrentByteIndex
@@ -28,7 +29,9 @@ XML_MemFree
 XML_MemMalloc
 XML_MemRealloc
 XML_Parse
+XML_Parse64
 XML_ParseBuffer
+XML_ParseBuffer64
 XML_ParserCreate
 XML_ParserCreate_MM
 XML_ParserCreateNS
