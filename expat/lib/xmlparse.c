@@ -2439,16 +2439,16 @@ XML_Parse64(XML_Parser parser, const char *s, size_t len, XML_Bool isFinal) {
       // of the buffer rather than the GetBuffer return pointer (which may be
       // pointing further into the allocated buffer).
       memcpy(parser->m_buffer, end, nLeftOver);
-    }
-
-    // Ensure presence of a buffer so that we can point `parser->m_eventPtr`
-    // into it to avoid `parser->m_eventPtr == NULL`.
-    if (! parser->m_buffer) {
-      if (! internalGetBuffer64(parser, 1)) {
-        // NOTE: parser->m_errorCode has already been set by XML_GetBuffer().
-        parser->m_eventPtr = parser->m_eventEndPtr = NULL;
-        parser->m_processor = errorProcessor;
-        return XML_STATUS_ERROR;
+    } else {
+      // Ensure presence of a buffer so that we can point `parser->m_eventPtr`
+      // into it to avoid `parser->m_eventPtr == NULL`.
+      if (! parser->m_buffer) {
+        if (! internalGetBuffer64(parser, 1)) {
+          // NOTE: parser->m_errorCode has already been set by XML_GetBuffer().
+          parser->m_eventPtr = parser->m_eventEndPtr = NULL;
+          parser->m_processor = errorProcessor;
+          return XML_STATUS_ERROR;
+        }
       }
     }
     assert(parser->m_buffer != NULL);
