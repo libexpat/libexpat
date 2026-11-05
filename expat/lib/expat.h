@@ -781,11 +781,6 @@ XML_GetIdAttributeIndex(XML_Parser parser);
 /* Parses some input. Returns XML_STATUS_ERROR if a fatal error is
    detected.  The last call to XML_Parse must have isFinal true; len
    may be zero for this call (or any other).
-
-   Though the return values for these functions has always been
-   described as a Boolean value, the implementation, at least for the
-   1.95.x series, has always returned exactly one of the XML_Status
-   values.
 */
 XMLPARSEAPI(enum XML_Status)
 XML_Parse(XML_Parser parser, const char *s, int len, int isFinal);
