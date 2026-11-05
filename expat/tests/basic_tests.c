@@ -7163,7 +7163,7 @@ START_TEST(test_bypass_heuristic_when_close_to_bufsize) {
         // we need to know how many bytes of our big token were included in the
         // first push that contained _any_ bytes of the big token:
         const int bigtok_first_chunk_bytes = *fillsize - (*leading % *fillsize);
-        if (bigtok_first_chunk_bytes >= *bigtoken && XML_CONTEXT_BYTES == 0) {
+        if (bigtok_first_chunk_bytes >= *bigtoken) {
           // Special case: we aren't saving any context, and the whole big token
           // was covered by a single fill, so Expat may have parsed directly
           // from our input pointer, without allocating an internal buffer.
