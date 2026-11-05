@@ -1090,10 +1090,9 @@ tmain(int argc, XML_Char **argv) {
 
       errno = 0;
       XML_Char *afterValueText = (XML_Char *)valueText;
-      const long long read_size_bytes_candidate
+      const unsigned long long read_size_bytes_candidate
           = tcstoull(valueText, &afterValueText, 10);
       if ((errno != 0) || (afterValueText[0] != T('\0'))
-          || (read_size_bytes_candidate < 1)
           || (read_size_bytes_candidate > (INT_MAX / 2 + 1))) {
         // This prevents tperror(..) from reporting misleading "[..]: Success"
         errno = ERANGE;
