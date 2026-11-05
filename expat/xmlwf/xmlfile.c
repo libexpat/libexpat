@@ -113,7 +113,8 @@ processFile(const void *data, size_t size, const XML_Char *filename,
             void *args) {
   XML_Parser parser = ((PROCESS_ARGS *)args)->parser;
   int *retPtr = ((PROCESS_ARGS *)args)->retPtr;
-  if (XML_Parse(parser, (const char *)data, (int)size, 1) == XML_STATUS_ERROR) {
+  if (XML_Parse64(parser, (const char *)data, size, XML_TRUE)
+      == XML_STATUS_ERROR) {
     reportError(parser, filename);
     *retPtr = 0;
   } else
@@ -233,7 +234,8 @@ processStream(const XML_Char *filename, XML_Parser parser) {
         close(fd);
       return 0;
     }
-    if (XML_ParseBuffer(parser, (int)nread, nread == 0) == XML_STATUS_ERROR) {
+    if (XML_ParseBuffer64(parser, nread, (nread == 0) ? XML_TRUE : XML_FALSE)
+        == XML_STATUS_ERROR) {
       reportError(parser, filename != NULL ? filename : T("STDIN"));
       if (filename != NULL)
         close(fd);
