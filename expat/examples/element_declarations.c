@@ -59,12 +59,12 @@
 // to not be vulnerable to a denial of service attack.
 typedef struct StackStruct {
   const XML_Content *model;
-  unsigned level;
+  size_t level;
   struct StackStruct *prev;
 } Stack;
 
 static Stack *
-stackPushMalloc(Stack *stackTop, const XML_Content *model, unsigned level) {
+stackPushMalloc(Stack *stackTop, const XML_Content *model, size_t level) {
   Stack *const newStackTop = malloc(sizeof(Stack));
   if (! newStackTop) {
     return NULL;
@@ -119,10 +119,10 @@ contentQuantName(enum XML_Content_Quant contentQuant) {
 }
 
 static void
-dumpContentModelElement(const XML_Content *model, unsigned level,
+dumpContentModelElement(const XML_Content *model, size_t level,
                         const XML_Content *root) {
   // Indent
-  unsigned u = 0;
+  size_t u = 0;
   for (; u < level; u++) {
     printf("  ");
   }
@@ -150,7 +150,7 @@ dumpContentModel(const XML_Char *name, const XML_Content *root) {
 
   while (stackTop) {
     const XML_Content *const model = stackTop->model;
-    const unsigned level = stackTop->level;
+    const size_t level = stackTop->level;
 
     dumpContentModelElement(model, level, root);
 
