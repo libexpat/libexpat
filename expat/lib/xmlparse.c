@@ -2472,6 +2472,26 @@ XML_Parse64(XML_Parser parser, const char *s, size_t len, XML_Bool isFinal) {
   return XML_ParseBuffer64(parser, len, isFinal);
 }
 
+// Advances or sets `parser->m_eventPtr` if (a) it is `NULL` or (b) it points
+// into the parse buffer but behind `parser->m_bufferPtr`.
+static void
+advanceEventPtr(XML_Parser parser) {
+  if (! parser->m_bufferPtr)
+    return;
+
+  // Note: The `uintptr_t` casts intend to address `6.5.8 Relational operators`
+  //       of C99 that says that comparison of pointers that do not point into
+  //       the same array object is undefined behavior.
+  if (parser->m_eventPtr == NULL
+      || ((uintptr_t)parser->m_buffer <= (uintptr_t)parser->m_eventPtr
+          && (uintptr_t)parser->m_eventPtr < (uintptr_t)parser->m_bufferPtr)) {
+    parser->m_eventPtr = parser->m_bufferPtr;
+    if (parser->m_eventEndPtr != NULL
+        && (uintptr_t)parser->m_eventEndPtr < (uintptr_t)parser->m_eventPtr)
+      parser->m_eventEndPtr = parser->m_bufferPtr;
+  }
+}
+
 enum XML_Status XMLCALL
 XML_ParseBuffer(XML_Parser parser, int len, int isFinal) {
   if ((parser == NULL) || isCalledFromInsideHandler(parser))
@@ -2563,6 +2583,7 @@ XML_ParseBuffer64(XML_Parser parser, size_t len, XML_Bool isFinal) {
   XmlUpdatePosition(parser->m_encoding, parser->m_positionPtr,
                     parser->m_bufferPtr, &parser->m_position);
   parser->m_positionPtr = parser->m_bufferPtr;
+  advanceEventPtr(parser);
   return result;
 }
 
@@ -2784,6 +2805,7 @@ XML_ResumeParser(XML_Parser parser) {
   XmlUpdatePosition(parser->m_encoding, parser->m_positionPtr,
                     parser->m_bufferPtr, &parser->m_position);
   parser->m_positionPtr = parser->m_bufferPtr;
+  advanceEventPtr(parser);
   return result;
 }
 
