@@ -1317,8 +1317,8 @@ unknown_toUtf16(const ENCODING *enc, const char **fromP, const char *fromLim,
 
   if ((*toP == toLim) && (*fromP < fromLim))
     return XML_CONVERT_OUTPUT_EXHAUSTED;
-  else
-    return XML_CONVERT_COMPLETED;
+
+  return XML_CONVERT_COMPLETED;
 }
 
 ENCODING *
