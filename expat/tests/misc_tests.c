@@ -982,6 +982,73 @@ START_TEST(test_misc_unknown_encoding_release_getter_parser_reset) {
 }
 END_TEST
 
+struct DecoderInfo {
+  size_t docLen;
+  const char *buffer;
+};
+
+static int
+decodeUnknownEncoding(void *data, const char *s) {
+  struct DecoderInfo *const info = data;
+  assert_true(info != NULL);
+
+  // Determine the sequence length in accordence with encoding map
+  const unsigned char lead = (unsigned char)s[0];
+  const int length = (lead == 0xC3) ? 2 : ((lead == 0xA9) ? 4 : 1);
+
+  const size_t offset = s - info->buffer;
+  assert_true(offset + length <= info->docLen); // or we would overread
+
+  if (lead == 0xC3 && (unsigned char)s[1] == 0xA9)
+    return 0x49;
+
+  return -1;
+}
+
+static int
+unknown_encoding_handler(void *data, const XML_Char *name, XML_Encoding *info) {
+  XML_Char *const expectedEncodingName = xcsdup_str("x-q5");
+  assert_true(expectedEncodingName != NULL);
+  assert_true(xcscmp(name, expectedEncodingName) == 0);
+  free(expectedEncodingName);
+
+  for (int i = 0; i < 256; i++)
+    info->map[i] = (i < 128) ? i : -1;
+
+  info->map[0xC3] = -2;
+  info->map[0xA9] = -4;
+
+  info->convert = decodeUnknownEncoding;
+  info->data = data;
+  info->release = NULL;
+
+  return XML_STATUS_OK;
+}
+
+START_TEST(test_misc_unknown_encoding_no_source_overread) {
+  const char *const doc = "<?xml \xC3\xA9?>";
+  const size_t docLen = strlen(doc);
+
+  XML_Char *const encodingName = xcsdup_str("x-q5");
+  assert_true(encodingName != NULL);
+
+  XML_Parser parser = XML_ParserCreate(encodingName);
+
+  char *const buffer = XML_GetBuffer64(parser, docLen);
+  assert_true(buffer != NULL);
+  memcpy(buffer, doc, docLen);
+
+  struct DecoderInfo info = {docLen, buffer};
+  XML_SetUnknownEncodingHandler(parser, unknown_encoding_handler, &info);
+
+  assert_true(XML_ParseBuffer(parser, docLen, /*isFinal=*/XML_TRUE)
+              == XML_STATUS_ERROR);
+
+  XML_ParserFree(parser);
+  free(encodingName);
+}
+END_TEST
+
 // General attack payload idea by Jason Kratzer of Mozilla
 START_TEST(test_misc_low_surrogate_mozilla_bug_2053153) {
   const char doc_before[] = "<\0!\0D\0O\0C\0T\0Y\0P\0E\0 \0d\0 \0[\0\n\0"
@@ -1267,6 +1334,7 @@ make_miscellaneous_test_case(Suite *s) {
                  test_misc_unknown_encoding_release_getter_parser_free);
   tcase_add_test(tc_misc,
                  test_misc_unknown_encoding_release_getter_parser_reset);
+  tcase_add_test(tc_misc, test_misc_unknown_encoding_no_source_overread);
   tcase_add_test(tc_misc, test_misc_input_2gb);
   tcase_add_test(tc_misc, test_misc_low_surrogate_mozilla_bug_2053153);
   tcase_add_test(tc_misc, test_misc_storeatts_attssize_allocation);
