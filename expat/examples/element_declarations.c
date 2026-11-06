@@ -41,7 +41,7 @@
    SPDX-License-Identifier: MIT
 */
 
-#include <inttypes.h> // PRIu64
+#include <inttypes.h> // PRIu64, PRIuPTR
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -59,12 +59,12 @@
 // to not be vulnerable to a denial of service attack.
 typedef struct StackStruct {
   const XML_Content *model;
-  unsigned level;
+  size_t level;
   struct StackStruct *prev;
 } Stack;
 
 static Stack *
-stackPushMalloc(Stack *stackTop, const XML_Content *model, unsigned level) {
+stackPushMalloc(Stack *stackTop, const XML_Content *model, size_t level) {
   Stack *const newStackTop = malloc(sizeof(Stack));
   if (! newStackTop) {
     return NULL;
@@ -119,16 +119,16 @@ contentQuantName(enum XML_Content_Quant contentQuant) {
 }
 
 static void
-dumpContentModelElement(const XML_Content *model, unsigned level,
+dumpContentModelElement(const XML_Content *model, size_t level,
                         const XML_Content *root) {
   // Indent
-  unsigned u = 0;
+  size_t u = 0;
   for (; u < level; u++) {
     printf("  ");
   }
 
   // Node
-  printf("[%u] type=%s(%u), quant=%s(%u)", (unsigned)(model - root),
+  printf("[%" PRIuPTR "] type=%s(%u), quant=%s(%u)", (uintptr_t)(model - root),
          contentTypeName(model->type), (unsigned int)model->type,
          contentQuantName(model->quant), (unsigned int)model->quant);
   if (model->name) {
@@ -150,7 +150,7 @@ dumpContentModel(const XML_Char *name, const XML_Content *root) {
 
   while (stackTop) {
     const XML_Content *const model = stackTop->model;
-    const unsigned level = stackTop->level;
+    const size_t level = stackTop->level;
 
     dumpContentModelElement(model, level, root);
 
@@ -178,7 +178,7 @@ dumpContentModel(const XML_Char *name, const XML_Content *root) {
 static void XMLCALL
 handleElementDeclaration(void *userData, const XML_Char *name,
                          XML_Content *model) {
-  XML_Parser parser = (XML_Parser)userData;
+  XML_Parser parser = userData;
   const bool success = dumpContentModel(name, model);
   XML_FreeContentModel(parser, model);
   if (! success) {
