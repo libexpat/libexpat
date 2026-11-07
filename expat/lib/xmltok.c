@@ -1283,13 +1283,17 @@ unknown_toUtf8(const ENCODING *enc, const char **fromP, const char *fromLim,
     utf8 = uenc->utf8[(unsigned char)**fromP];
     n = *utf8++;
     if (n == 0) {
+      const size_t readLen
+          = (AS_NORMAL_ENCODING(enc)->type[(unsigned char)**fromP]
+             - (BT_LEAD2 - 2));
+      if (readLen > (size_t)(fromLim - *fromP))
+        return XML_CONVERT_INPUT_INCOMPLETE;
       int c = uenc->convert(uenc->userData, *fromP);
       n = XmlUtf8Encode(c, buf);
       if (n > toLim - *toP)
         return XML_CONVERT_OUTPUT_EXHAUSTED;
       utf8 = buf;
-      *fromP += (AS_NORMAL_ENCODING(enc)->type[(unsigned char)**fromP]
-                 - (BT_LEAD2 - 2));
+      *fromP += readLen;
     } else {
       if (n > toLim - *toP)
         return XML_CONVERT_OUTPUT_EXHAUSTED;
@@ -1307,9 +1311,13 @@ unknown_toUtf16(const ENCODING *enc, const char **fromP, const char *fromLim,
   while (*fromP < fromLim && *toP < toLim) {
     unsigned short c = uenc->utf16[(unsigned char)**fromP];
     if (c == 0) {
+      const size_t readLen
+          = (AS_NORMAL_ENCODING(enc)->type[(unsigned char)**fromP]
+             - (BT_LEAD2 - 2));
+      if (readLen > (size_t)(fromLim - *fromP))
+        return XML_CONVERT_INPUT_INCOMPLETE;
       c = (unsigned short)uenc->convert(uenc->userData, *fromP);
-      *fromP += (AS_NORMAL_ENCODING(enc)->type[(unsigned char)**fromP]
-                 - (BT_LEAD2 - 2));
+      *fromP += readLen;
     } else
       (*fromP)++;
     *(*toP)++ = c;
@@ -1317,8 +1325,8 @@ unknown_toUtf16(const ENCODING *enc, const char **fromP, const char *fromLim,
 
   if ((*toP == toLim) && (*fromP < fromLim))
     return XML_CONVERT_OUTPUT_EXHAUSTED;
-  else
-    return XML_CONVERT_COMPLETED;
+
+  return XML_CONVERT_COMPLETED;
 }
 
 ENCODING *
