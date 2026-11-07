@@ -21,6 +21,102 @@
 //                                   Sebastian Pipping -- Berlin, 2026-09-22 //
 ///////////////////////////////////////////////////////////////////////////////
 
+Release 2.11.0 XXX XXXXXXX XX XXXX
+        Security fixes:
+           #1492⁠  CVE-2026-124317 -- Fix overread in unknown encoding decoder
+           #1502⁠  CVE-2026-128241 -- xmlwf: Plug symlink attacks with the
+                    `-d <directory>` mode. The xmlwf CLI of libexpat was
+                    vulnerable to symlink attacks in the `-d <directory>` mode
+                    with a target directory writable by other users.
+                    The attack allowed truncation or overwriting the symlink
+                    target file depending on the well-formedness of the XML
+                    being parsed.
+           #1495  Restore and document `-fno-strict-aliasing` for security.
+                    libexpat comntinues to be `-Wstrict-aliasing=3` clean and
+                    to reject violations via CI but there are known strict
+                    aliasing violations within libexpat that despite
+                    `-Wstrict-aliasing=3` are not detected by GCC and which
+                    are hard to impossible to resolve — e.g. with the hash
+                    tables that accept type-variable input and with the
+                    cross-type reuse of memory with `m_atts` to reduce the
+                    memory footprint — and these and potentially others
+                    run the risk of miscompilation with `-O2/-O3/Os` without
+                    `-fno-strict-aliasing`. Hence `-fno-strict-aliasing`
+                    is brought back to both build systems and is recommended
+                    to everyone embedding libexpat to avoid surprises from
+                    potential miscompilation. For the article that motivated
+                    this move: https://blog.regehr.org/archives/1307 .
+
+        Bug fixes:
+     #1469 #1485  lib: Be robust towards handler reset
+     #1430 #1481⁠  lib: Ensure non-NULL `parser->m_eventPtr` for non-error calls
+                    to `XML_Parse` with `XML_CONTEXT_BYTES == 0`
+     #1430 #1491  lib: Advance `m_eventPtr` to `m_bufferPtr` when possible
+           #1501  lib: Ensure healthy `m_eventPtr` and `m_positionPtr` pairing
+                    after final parse
+     #1505 #1506  lib: Make `eventPtr` independent in initial error parse
+           #1490  xmlwf: Reject zero read buffer size
+           #1502  xmlwf: Create files with 0600 rather than 0666 mode
+
+        New features:
+           #1476  lib: Add new `size_t`-based public parsing functions:
+                  - XML_GetBuffer64
+                  - XML_Parse64
+                  - XML_ParseBuffer64
+     #1476 #1503  lib: Allow total buffer size beyond `INT_MAX`
+           #1455  lib: Leverage initial no-buffer parse with
+                    `XML_CONTEXT_BYTES > 0` as well
+           #1476  xmlwf: Raise limit for `-g <buffersize>` from `INT_MAX/2+1`
+                    to `INT_MAX`
+
+        Other changes:
+  #1462 #1464 ..
+  #1465 #1466 ..
+  #1475 #1479 ..
+     #1480 #1487  lib: Migrate to `size_t` internally
+           #1471  lib: Enforce that `XML_GetInputContext*` can only be called
+                    from within handlers
+     #1422 #1468⁠  lib: Drop "u" suffixes for literals used in debug level
+                    comparisons
+           #1472  lib: Extract function `internalGetBuffer64`
+           #1473  lib: Resolve redundant `else` near `parser->m_errorCode
+                    != XML_ERROR_NONE`
+           #1496  lib: A couple of `lookupWithLength` simplifications
+           #1477⁠  lib|xmlwf: Pass `NULL` instead of 0 for a pointer
+           #1497  xmlwf: Migrate to `size_t` internally
+           #1489⁠  xmlwf|examples: Increase buffer size to 32 KiB
+           #1488  examples: Migrate to `size_t`
+           #1483  tests: Drop leading underscore from `_XML_Parse_SINGLE_BYTES`
+                    because it is forbidden by C99
+           #1493  tests: Check for leaks on allocation-failure code paths
+                    in the absence of LeakSanitizer
+           #1504  Autotools|macOS: Sync CMake templates with CMake
+
+        Infrastructure:
+           #1484  CI: Fix runner image typo "macoS-26" in `autotools-cmake.yml`
+           #1486  CI: Bump MinGW Clang from 23.1.4 to 23.1.5
+
+        Special thanks to:
+            Aziz Elbelaychy
+            Basheer Al-Jarrah
+            Berkay Eren Ürün
+            Cameron Sparks
+            Huang Wenbin
+            Ion Tereshenko
+            John Regehr
+            Matthew Fernandez
+            Oğuzhan Demirbaş
+            Ryan VanderMeulen
+            Scott Moore
+            Tsukiko Hakura
+            Wei-Lun Li
+                 and
+            City of Munich Open Source Sabbatical
+            OSS-Fuzz / ClusterFuzz
+            Ostorlab
+            Siemens
+            VulnCheck
+
 Release 2.10.0 Mon November 2 2026
         Security fixes:
            #1431  CVE-2026-113351 -- Fix denial of service with use of
