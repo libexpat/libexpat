@@ -77,7 +77,8 @@ void XMLCALL accumulate_characters_ext_handler(void *userData,
 
 /* Test that a failure to allocate the parser structure fails gracefully */
 START_TEST(test_misc_alloc_create_parser) {
-  XML_Memory_Handling_Suite memsuite = {duff_allocator, realloc, free};
+  XML_Memory_Handling_Suite memsuite
+      = {duff_allocator, tracking_realloc, tracking_free};
   unsigned int i;
   const unsigned int max_alloc_count = 10;
 
@@ -97,7 +98,8 @@ END_TEST
 
 /* Test memory allocation failures for a parser with an encoding */
 START_TEST(test_misc_alloc_create_parser_with_encoding) {
-  XML_Memory_Handling_Suite memsuite = {duff_allocator, realloc, free};
+  XML_Memory_Handling_Suite memsuite
+      = {duff_allocator, tracking_realloc, tracking_free};
   unsigned int i;
   const unsigned int max_alloc_count = 10;
 

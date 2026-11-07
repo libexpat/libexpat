@@ -57,6 +57,7 @@
 #include "internal.h"
 #include "chardata.h"
 #include "minicheck.h"
+#include "memcheck.h"
 #include "common.h"
 #include "handlers.h"
 
@@ -374,7 +375,7 @@ duff_allocator(size_t size) {
     return NULL;
   if (g_allocation_count != ALLOC_ALWAYS_SUCCEED)
     g_allocation_count--;
-  return malloc(size);
+  return tracking_malloc(size);
 }
 
 /* Crocked reallocator for allocation failure tests */
@@ -384,7 +385,7 @@ duff_reallocator(void *ptr, size_t size) {
     return NULL;
   if (g_reallocation_count != REALLOC_ALWAYS_SUCCEED)
     g_reallocation_count--;
-  return realloc(ptr, size);
+  return tracking_realloc(ptr, size);
 }
 
 // Portable remake of strnlen(3) for C99

@@ -53,6 +53,7 @@
 #include <assert.h>
 
 #include "expat.h"
+#include "memcheck.h"
 #include "common.h"
 #include "minicheck.h"
 #include "dummy.h"
@@ -61,7 +62,8 @@
 
 static void
 nsalloc_setup(void) {
-  XML_Memory_Handling_Suite memsuite = {duff_allocator, duff_reallocator, free};
+  XML_Memory_Handling_Suite memsuite
+      = {duff_allocator, duff_reallocator, tracking_free};
   XML_Char ns_sep[2] = {' ', '\0'};
 
   /* Ensure the parser creation will go through */
@@ -75,6 +77,8 @@ nsalloc_setup(void) {
 static void
 nsalloc_teardown(void) {
   basic_teardown();
+  if (! tracking_report())
+    fail("Memory leak on an allocation-failure code path");
 }
 
 /* Test the effects of allocation failure in simple namespace parsing.
