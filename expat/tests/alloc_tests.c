@@ -60,6 +60,7 @@
 
 #include "expat.h"
 #include "internal.h"
+#include "memcheck.h"
 #include "common.h"
 #include "minicheck.h"
 #include "dummy.h"
@@ -68,7 +69,8 @@
 
 static void
 alloc_setup(void) {
-  XML_Memory_Handling_Suite memsuite = {duff_allocator, duff_reallocator, free};
+  XML_Memory_Handling_Suite memsuite
+      = {duff_allocator, duff_reallocator, tracking_free};
 
   /* Ensure the parser creation will go through */
   g_allocation_count = ALLOC_ALWAYS_SUCCEED;
@@ -81,6 +83,11 @@ alloc_setup(void) {
 static void
 alloc_teardown(void) {
   basic_teardown();
+  /* The allocation-failure tests above drive expat through its out-of-memory
+     error paths. Those paths must still release everything they allocated, so
+     check that here rather than only checking that parsing failed cleanly. */
+  if (! tracking_report())
+    fail("Memory leak on an allocation-failure code path");
 }
 
 /* Test the effects of allocation failures on xml declaration processing */
