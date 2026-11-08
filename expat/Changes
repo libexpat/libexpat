@@ -208,9 +208,9 @@ Release 2.8.5 Tue September 22 2026
            #1367  xmlwf: Handle errors when closing output files
 
         Other changes:
-           #1354  lib: Reject an XML declaration version other than `1.[0-9]+`
+      #967 #1354  lib: Reject an XML declaration version other than `1.[0-9]+`
                     (which is less strict than XML 1.0r4 (fourth edition)
-                    and matches XML 1.0r5 (fifth edition))
+                    pre-errata and matches XML 1.0r5 (fifth edition))
            #1362  lib: Make Clang, GCC and MSVC warn about use of function
                     XML_SetHashSalt that is deprecated since Expat 2.8.0
            #1357  lib: Drop internal macros FASTCALL, PTRCALL, PTRFASTCALL
