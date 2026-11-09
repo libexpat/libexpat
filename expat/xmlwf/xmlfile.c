@@ -107,7 +107,6 @@ reportError(XML_Parser parser, const XML_Char *filename) {
              (unsigned int)code);
 }
 
-/* This implementation will give problems on files larger than INT_MAX. */
 static void
 processFile(const void *data, size_t size, const XML_Char *filename,
             void *args) {
