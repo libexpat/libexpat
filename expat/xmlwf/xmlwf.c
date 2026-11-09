@@ -841,7 +841,9 @@ unknownEncoding(void *userData, const XML_Char *name, XML_Encoding *info) {
     if (! s)
       return 0;
     cp *= 10;
-    cp += (int)(s - digits);
+    const size_t digit = s - digits;
+    assert(digit < 10);
+    cp += (int)digit;
     if (cp >= 0x10000)
       return 0;
   }
