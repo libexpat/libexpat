@@ -2373,8 +2373,16 @@ XML_Parse64(XML_Parser parser, const char *s, size_t len, XML_Bool isFinal) {
     parser->m_parsingStatus.parsing = XML_PARSING;
   }
 
+  // NOTE: This checks if we can get away without copying `s` into the buffer
+  //       and allocating the needed space for it.
 #if XML_CONTEXT_BYTES == 0
+  // Is the buffer empty?
   if (parser->m_bufferPtr == parser->m_bufferEnd) {
+#else
+  // Is this the first parse on the document (that has no chance at any past
+  // context bytes anyway)?
+  if (parser->m_parseEndByteIndex == 0) {
+#endif
     // This null-object trick allows us to stop worrying about case `s == NULL`
     // within this branch, e.g. with `s + len - end`.
     const char *const empty = "";
@@ -2399,8 +2407,29 @@ XML_Parse64(XML_Parser parser, const char *s, size_t len, XML_Bool isFinal) {
     parser->m_positionPtr = s;
     parser->m_parsingStatus.finalBuffer = isFinal;
 
+#if XML_CONTEXT_BYTES > 0
+    // Fake presence of a buffer to functions like `XML_GetInputContext64` that
+    // rely on these pointers being set
+    /*.*/ char *const bufferBackup = parser->m_buffer;
+    const char *const bufferPtrBackup = parser->m_bufferPtr;
+    /*.*/ char *const bufferEndBackup = parser->m_bufferEnd;
+    const char *const bufferLimBackup = parser->m_bufferLim;
+    parser->m_buffer = (char *)s;
+    parser->m_bufferPtr = /**/ s;
+    parser->m_bufferEnd = (char *)end;
+    parser->m_bufferLim = /*...*/ end;
+#endif
+
     parser->m_errorCode
         = callProcessor(parser, s, parser->m_parseEndPtr = end, &end);
+
+#if XML_CONTEXT_BYTES > 0
+    // Undo fake buffer
+    parser->m_buffer = bufferBackup;
+    parser->m_bufferPtr = bufferPtrBackup;
+    parser->m_bufferEnd = bufferEndBackup;
+    parser->m_bufferLim = bufferLimBackup;
+#endif
 
     if (parser->m_errorCode != XML_ERROR_NONE) {
       parser->m_eventEndPtr = parser->m_eventPtr;
@@ -2425,43 +2454,55 @@ XML_Parse64(XML_Parser parser, const char *s, size_t len, XML_Bool isFinal) {
 
     XmlUpdatePosition(parser->m_encoding, parser->m_positionPtr, end,
                       &parser->m_position);
+    parser->m_positionPtr = end;
+
     nLeftOver = s + len - end;
-    if (nLeftOver) {
-      void *const temp = internalGetBuffer64(parser, nLeftOver);
+    assert(nLeftOver <= len);
+
+    const size_t bytesToCopy = (XML_CONTEXT_BYTES > len - nLeftOver)
+                                   ? len
+                                   : (XML_CONTEXT_BYTES + nLeftOver);
+    assert(bytesToCopy <= len);
+
+    if (bytesToCopy) {
+      void *const temp = internalGetBuffer64(parser, bytesToCopy);
       if (temp == NULL) {
         // NOTE: parser->m_errorCode has already been set by XML_GetBuffer().
         parser->m_eventPtr = parser->m_eventEndPtr = NULL;
         parser->m_processor = errorProcessor;
         return XML_STATUS_ERROR;
       }
-      // Since we know that the buffer was empty and XML_CONTEXT_BYTES is 0, we
-      // don't have any data to preserve, and can copy straight into the start
-      // of the buffer rather than the GetBuffer return pointer (which may be
-      // pointing further into the allocated buffer).
-      memcpy(parser->m_buffer, end, nLeftOver);
-    }
 
-    // Ensure presence of a buffer so that we can point `parser->m_eventPtr`
-    // into it to avoid `parser->m_eventPtr == NULL`.
-    if (! parser->m_buffer) {
-      if (! internalGetBuffer64(parser, 1)) {
-        // NOTE: parser->m_errorCode has already been set by XML_GetBuffer().
-        parser->m_eventPtr = parser->m_eventEndPtr = NULL;
-        parser->m_processor = errorProcessor;
-        return XML_STATUS_ERROR;
+      // Since we know that the buffer was empty and either XML_CONTEXT_BYTES
+      // is 0 or this is the first parse, we don't have any data to preserve,
+      // and can copy straight into the start of the buffer rather than the
+      // XML_GetBuffer return pointer (which may be pointing further into the
+      // allocated buffer).
+      const char *const copyFrom = s + (len - bytesToCopy);
+      memcpy(parser->m_buffer, copyFrom, bytesToCopy);
+    } else {
+      // Ensure presence of a buffer so that we can point `parser->m_eventPtr`
+      // into it to avoid `parser->m_eventPtr == NULL`.
+      if (! parser->m_buffer) {
+        if (! internalGetBuffer64(parser, 1)) {
+          // NOTE: parser->m_errorCode has already been set by XML_GetBuffer().
+          parser->m_eventPtr = parser->m_eventEndPtr = NULL;
+          parser->m_processor = errorProcessor;
+          return XML_STATUS_ERROR;
+        }
       }
     }
     assert(parser->m_buffer != NULL);
 
-    parser->m_bufferPtr = parser->m_buffer;
-    parser->m_bufferEnd = parser->m_buffer + nLeftOver;
+    parser->m_bufferPtr = parser->m_buffer + (bytesToCopy - nLeftOver);
+    parser->m_bufferEnd = parser->m_buffer + bytesToCopy;
     parser->m_positionPtr = parser->m_bufferPtr;
     parser->m_parseEndPtr = parser->m_bufferEnd;
     parser->m_eventPtr = parser->m_bufferPtr;
     parser->m_eventEndPtr = parser->m_bufferPtr;
     return result;
   }
-#endif /* XML_CONTEXT_BYTES == 0 */
+
   void *buff = XML_GetBuffer64(parser, len);
   if (buff == NULL)
     return XML_STATUS_ERROR;
