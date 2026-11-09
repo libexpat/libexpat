@@ -126,6 +126,22 @@ jobs:
             lzip \
             moreutils
 
+    - name: Detect strict aliasing violations with GCC
+      if: "${{ contains(matrix.FLAT_ENV, 'gcc') }}"
+      run: |
+        set -o pipefail
+
+        before='-fno-strict-aliasing'
+        after='-fstrict-aliasing -Wstrict-aliasing=3'
+
+        git grep -q -- "${before}"
+        ! git grep -q -- "${after}"
+
+        git grep -l -- "${before}" | xargs -r -t sed "s,${before},${after},g" -i.bak
+
+        ! git grep -q -- "${before}"
+        git grep -q -- "${after}"
+
     - name: Perform check "${{ matrix.MODE }}"
       env:
         MODE: ${{ matrix.MODE }}
