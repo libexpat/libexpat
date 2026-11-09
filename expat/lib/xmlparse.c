@@ -8825,9 +8825,8 @@ lookupWithLength(XML_Parser parser, HASH_TABLE *table, KEY name, size_t nameLen,
   } else {
     unsigned long h = hash(parser, name, nameLen);
     unsigned long mask = (unsigned long)table->size - 1;
-    unsigned char step = 0;
     i = h & mask;
-    while (table->v[i]) {
+    for (unsigned char step = 0; table->v[i];) {
       if (keyeq(name, nameLen, table->v[i]->name))
         return table->v[i];
       if (! step)
@@ -8864,8 +8863,7 @@ lookupWithLength(XML_Parser parser, HASH_TABLE *table, KEY name, size_t nameLen,
           KEY const key = table->v[i]->name;
           unsigned long newHash = hash(parser, key, keylen(key));
           size_t j = newHash & newMask;
-          step = 0;
-          while (newV[j]) {
+          for (unsigned char step = 0; newV[j];) {
             if (! step)
               step = PROBE_STEP(newHash, newMask, newPower);
             j < step ? (j += newSize - step) : (j -= step);
@@ -8877,8 +8875,7 @@ lookupWithLength(XML_Parser parser, HASH_TABLE *table, KEY name, size_t nameLen,
       table->power = newPower;
       table->size = newSize;
       i = h & newMask;
-      step = 0;
-      while (table->v[i]) {
+      for (unsigned char step = 0; table->v[i];) {
         if (! step)
           step = PROBE_STEP(h, newMask, newPower);
         i < step ? (i += newSize - step) : (i -= step);
