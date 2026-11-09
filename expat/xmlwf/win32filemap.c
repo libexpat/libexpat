@@ -49,6 +49,7 @@
 #  define _UNICODE
 #endif /* XML_UNICODE */
 #include <windows.h>
+#include <stdint.h> // for SIZE_MAX
 #include <stdio.h>
 #include <tchar.h>
 #include "filemap.h"
@@ -77,9 +78,9 @@ filemap(const TCHAR *name,
     CloseHandle(f);
     return 0;
   }
-  if (sizeHi || (size > XML_MAX_CHUNK_LEN)) {
+  if (sizeHi || (size > SIZE_MAX)) {
     CloseHandle(f);
-    return 2; /* Cannot be passed to XML_Parse in one go */
+    return 2; /* Cannot be passed to XML_Parse64 in one go */
   }
   /* CreateFileMapping barfs on zero length files */
   if (size == 0) {

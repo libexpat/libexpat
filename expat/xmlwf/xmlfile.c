@@ -107,12 +107,12 @@ reportError(XML_Parser parser, const XML_Char *filename) {
              (unsigned int)code);
 }
 
-/* This implementation will give problems on files larger than INT_MAX. */
 static void
 processFile(const void *data, size_t size, const XML_Char *filename,
             void *args) {
-  XML_Parser parser = ((PROCESS_ARGS *)args)->parser;
-  int *retPtr = ((PROCESS_ARGS *)args)->retPtr;
+  PROCESS_ARGS *const processArgs = args;
+  XML_Parser parser = processArgs->parser;
+  int *const retPtr = processArgs->retPtr;
   if (XML_Parse64(parser, (const char *)data, size, XML_TRUE)
       == XML_STATUS_ERROR) {
     reportError(parser, filename);
