@@ -333,8 +333,11 @@ expat_install(FILES "${CMAKE_CURRENT_BINARY_DIR}/expat_config.h" DESTINATION ${C
 
 
 set(EXTRA_COMPILE_FLAGS)
-if(FLAG_WSTRICT_ALIASING)
-    set(EXTRA_COMPILE_FLAGS "${EXTRA_COMPILE_FLAGS} -Wstrict-aliasing=3")
+if(FLAG_NO_STRICT_ALIASING)
+    # Argument `-Wstrict-aliasing=3` is documented to not be able to catch all
+    # violations of strict aliasing, so we apply `-fno-strict-aliasing`
+    # for security.
+    set(EXTRA_COMPILE_FLAGS "${EXTRA_COMPILE_FLAGS} -fno-strict-aliasing")
 endif()
 if(FLAG_WIMPLICIT_FALLTHROUGH)
     set(EXTRA_COMPILE_FLAGS "${EXTRA_COMPILE_FLAGS} -Wimplicit-fallthrough")
