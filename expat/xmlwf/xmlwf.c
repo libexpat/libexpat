@@ -249,7 +249,7 @@ nsattcmp(const void *p1, const void *p2) {
 static void XMLCALL
 startElementNS(void *userData, const XML_Char *name, const XML_Char **atts) {
   size_t nAtts;
-  int nsi;
+  size_t nsi;
   const XML_Char **p;
   FILE *fp = ((XmlwfUserData *)userData)->fp;
   const XML_Char *sep;
@@ -278,13 +278,13 @@ startElementNS(void *userData, const XML_Char *name, const XML_Char **atts) {
     sep = tcsrchr(name, NSSEP);
     puttc(T(' '), fp);
     if (sep) {
-      ftprintf(fp, T("n%d:"), nsi);
+      ftprintf(fp, T("n") T_EXPAT_FMT_SIZE_T(T("")) T(":"), nsi);
       fputts(sep + 1, fp);
     } else
       fputts(name, fp);
     attributeValue(fp, *atts);
     if (sep) {
-      ftprintf(fp, T(" xmlns:n%d"), nsi++);
+      ftprintf(fp, T(" xmlns:n") T_EXPAT_FMT_SIZE_T(T("")), nsi++);
       attributeValue(fp, name);
     }
     atts++;

@@ -79,3 +79,16 @@
 #  define tcstof strtof
 #  define tcstoull strtoull
 #endif /* not XML_UNICODE */
+
+// This is the T(..) version of `EXPAT_FMT_SIZE_T` from `internal.h`
+#if defined(_WIN32)                                                            \
+    && (! defined(__USE_MINGW_ANSI_STDIO)                                      \
+        || (1 - __USE_MINGW_ANSI_STDIO - 1 == 0))
+#  if defined(_WIN64) // Note: modifiers "td" and "zu" do not work for MinGW
+#    define T_EXPAT_FMT_SIZE_T(midpart) T("%") midpart T("I64u")
+#  else
+#    define T_EXPAT_FMT_SIZE_T(midpart) T("%") midpart T("u")
+#  endif
+#else
+#  define T_EXPAT_FMT_SIZE_T(midpart) T("%") midpart T("zu")
+#endif
