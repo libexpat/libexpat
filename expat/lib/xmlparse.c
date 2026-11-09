@@ -8809,13 +8809,12 @@ lookupWithLength(XML_Parser parser, HASH_TABLE *table, KEY name, size_t nameLen,
                  size_t createSize) {
   size_t i;
   if (table->size == 0) {
-    size_t tsize;
     if (! createSize)
       return NULL;
     table->power = INIT_POWER;
     /* table->size is a power of 2 */
     table->size = (size_t)1 << INIT_POWER;
-    tsize = table->size * sizeof(NAMED *);
+    const size_t tsize = table->size * sizeof(NAMED *);
     table->v = MALLOC(table->parser, tsize);
     if (! table->v) {
       table->size = 0;
@@ -8855,7 +8854,7 @@ lookupWithLength(XML_Parser parser, HASH_TABLE *table, KEY name, size_t nameLen,
         return NULL;
       }
 
-      size_t tsize = newSize * sizeof(NAMED *);
+      const size_t tsize = newSize * sizeof(NAMED *);
       NAMED **newV = MALLOC(table->parser, tsize);
       if (! newV)
         return NULL;
