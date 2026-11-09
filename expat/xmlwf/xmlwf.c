@@ -194,7 +194,7 @@ attcmp(const void *att1, const void *att2) {
 
 static void XMLCALL
 startElement(void *userData, const XML_Char *name, const XML_Char **atts) {
-  int nAtts;
+  size_t nAtts;
   const XML_Char **p;
   FILE *fp = ((XmlwfUserData *)userData)->fp;
   puttc(T('<'), fp);
@@ -203,7 +203,7 @@ startElement(void *userData, const XML_Char *name, const XML_Char **atts) {
   p = atts;
   while (*p)
     ++p;
-  nAtts = (int)((p - atts) >> 1);
+  nAtts = ((p - atts) >> 1);
   if (nAtts > 1)
     qsort(atts, nAtts, sizeof(XML_Char *) * 2, attcmp);
   while (*atts) {
@@ -237,7 +237,7 @@ nsattcmp(const void *p1, const void *p2) {
 
 static void XMLCALL
 startElementNS(void *userData, const XML_Char *name, const XML_Char **atts) {
-  int nAtts;
+  size_t nAtts;
   int nsi;
   const XML_Char **p;
   FILE *fp = ((XmlwfUserData *)userData)->fp;
@@ -259,7 +259,7 @@ startElementNS(void *userData, const XML_Char *name, const XML_Char **atts) {
   p = atts;
   while (*p)
     ++p;
-  nAtts = (int)((p - atts) >> 1);
+  nAtts = ((p - atts) >> 1);
   if (nAtts > 1)
     qsort(atts, nAtts, sizeof(XML_Char *) * 2, nsattcmp);
   while (*atts) {
