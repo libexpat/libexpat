@@ -136,6 +136,17 @@ characterData(void *userData, const XML_Char *s, int len) {
   }
 }
 
+static void XMLCALL
+characterData64(void *userData, const XML_Char *s, size_t len) {
+  while (len > INT_MAX) {
+    characterData(userData, s, INT_MAX);
+    s += INT_MAX;
+    len -= INT_MAX;
+  }
+  assert(len <= INT_MAX);
+  characterData(userData, s, (int)len);
+}
+
 static void
 attributeValue(FILE *fp, const XML_Char *s) {
   puttc(T('='), fp);
@@ -567,7 +578,7 @@ metaLocation(XML_Parser parser) {
   FILE *fp = ((XmlwfUserData *)XML_GetUserData(parser))->fp;
   if (uri) {
     fputts(T(" uri=\""), fp);
-    characterData(XML_GetUserData(parser), uri, (int)tcslen(uri));
+    characterData64(XML_GetUserData(parser), uri, tcslen(uri));
     puttc(T('"'), fp);
   }
   ftprintf(fp,
@@ -603,16 +614,16 @@ metaStartElement(void *userData, const XML_Char *name, const XML_Char **atts) {
     idAttPtr = atts + idAttIndex;
 
   fputts(T("<starttag name=\""), fp);
-  characterData(data, name, (int)tcslen(name));
+  characterData64(data, name, tcslen(name));
   puttc(T('"'), fp);
   metaLocation(parser);
   if (*atts) {
     fputts(T(">\n"), fp);
     do {
       fputts(T("<attribute name=\""), fp);
-      characterData(data, atts[0], (int)tcslen(atts[0]));
+      characterData64(data, atts[0], tcslen(atts[0]));
       fputts(T("\" value=\""), fp);
-      characterData(data, atts[1], (int)tcslen(atts[1]));
+      characterData64(data, atts[1], tcslen(atts[1]));
       if (atts >= specifiedAttsEnd)
         fputts(T("\" defaulted=\"yes\"/>\n"), fp);
       else if (atts == idAttPtr)
@@ -631,7 +642,7 @@ metaEndElement(void *userData, const XML_Char *name) {
   XmlwfUserData *data = XML_GetUserData(parser);
   FILE *fp = data->fp;
   fputts(T("<endtag name=\""), fp);
-  characterData(data, name, (int)tcslen(name));
+  characterData64(data, name, tcslen(name));
   puttc(T('"'), fp);
   metaLocation(parser);
   fputts(T("/>\n"), fp);
@@ -644,7 +655,7 @@ metaProcessingInstruction(void *userData, const XML_Char *target,
   XmlwfUserData *usrData = XML_GetUserData(parser);
   FILE *fp = usrData->fp;
   ftprintf(fp, T("<pi target=\"%s\" data=\""), target);
-  characterData(usrData, data, (int)tcslen(data));
+  characterData64(usrData, data, tcslen(data));
   puttc(T('"'), fp);
   metaLocation(parser);
   fputts(T("/>\n"), fp);
@@ -656,7 +667,7 @@ metaComment(void *userData, const XML_Char *data) {
   XmlwfUserData *usrData = XML_GetUserData(parser);
   FILE *fp = usrData->fp;
   fputts(T("<comment data=\""), fp);
-  characterData(usrData, data, (int)tcslen(data));
+  characterData64(usrData, data, tcslen(data));
   puttc(T('"'), fp);
   metaLocation(parser);
   fputts(T("/>\n"), fp);
@@ -732,7 +743,7 @@ metaNotationDecl(void *userData, const XML_Char *notationName,
     ftprintf(fp, T(" public=\"%s\""), publicId);
   if (systemId) {
     fputts(T(" system=\""), fp);
-    characterData(data, systemId, (int)tcslen(systemId));
+    characterData64(data, systemId, tcslen(systemId));
     puttc(T('"'), fp);
   }
   metaLocation(parser);
@@ -761,7 +772,7 @@ metaEntityDecl(void *userData, const XML_Char *entityName, int is_param,
     if (publicId)
       ftprintf(fp, T(" public=\"%s\""), publicId);
     fputts(T(" system=\""), fp);
-    characterData(data, systemId, (int)tcslen(systemId));
+    characterData64(data, systemId, tcslen(systemId));
     puttc(T('"'), fp);
     ftprintf(fp, T(" notation=\"%s\""), notationName);
     metaLocation(parser);
@@ -771,7 +782,7 @@ metaEntityDecl(void *userData, const XML_Char *entityName, int is_param,
     if (publicId)
       ftprintf(fp, T(" public=\"%s\""), publicId);
     fputts(T(" system=\""), fp);
-    characterData(data, systemId, (int)tcslen(systemId));
+    characterData64(data, systemId, tcslen(systemId));
     puttc(T('"'), fp);
     metaLocation(parser);
     fputts(T("/>\n"), fp);
@@ -789,7 +800,7 @@ metaStartNamespaceDecl(void *userData, const XML_Char *prefix,
     ftprintf(fp, T(" prefix=\"%s\""), prefix);
   if (uri) {
     fputts(T(" ns=\""), fp);
-    characterData(data, uri, (int)tcslen(uri));
+    characterData64(data, uri, tcslen(uri));
     fputts(T("\"/>\n"), fp);
   } else
     fputts(T("/>\n"), fp);
