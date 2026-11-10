@@ -1151,7 +1151,10 @@ tmain(int argc, XML_Char **argv) {
       errno = 0;
       XML_Char *afterValueText = (XML_Char *)valueText;
       attackThresholdBytes = tcstoull(valueText, &afterValueText, 10);
-      if ((errno != 0) || (afterValueText[0] != T('\0'))) {
+      if ((errno != 0) || (afterValueText == valueText)
+          || (afterValueText[0] != T('\0'))
+          || ((attackThresholdBytes != 0)
+              && (tcsrchr(valueText, T('-')) != NULL))) {
         // This prevents tperror(..) from reporting misleading "[..]: Success"
         errno = ERANGE;
         tperror(T("invalid ignore threshold")

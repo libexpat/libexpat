@@ -744,6 +744,12 @@ if(EXPAT_BUILD_TESTS)
     target_compile_definitions(runtests PRIVATE -DXML_TESTING)
     set_property(TARGET runtests PROPERTY RUNTIME_OUTPUT_DIRECTORY tests)
     expat_add_test(runtests $<TARGET_FILE:runtests>)
+    if(EXPAT_BUILD_TOOLS AND NOT CMAKE_CROSSCOMPILING)
+        add_test(NAME xmlwf-thresholds
+            COMMAND ${CMAKE_COMMAND}
+                "-DXMLWF=$<TARGET_FILE:xmlwf>"
+                -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/xmlwf-thresholds.cmake")
+    endif()
     if(_EXPAT_LIBM_FOUND)
         target_link_libraries(runtests m)
     endif()
