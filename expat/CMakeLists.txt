@@ -748,6 +748,8 @@ if(EXPAT_BUILD_TESTS)
         add_test(NAME xmlwf-thresholds
             COMMAND ${CMAKE_COMMAND}
                 "-DXMLWF=$<TARGET_FILE:xmlwf>"
+                "-DEXPAT_LIBRARY_DIR=$<TARGET_FILE_DIR:expat>"
+                "-DEXPAT_TESTS_DIR=$<TARGET_FILE_DIR:runtests>"
                 -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/xmlwf-thresholds.cmake")
     endif()
     if(_EXPAT_LIBM_FOUND)
