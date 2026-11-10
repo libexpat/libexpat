@@ -2458,9 +2458,10 @@ XML_Parse64(XML_Parser parser, const char *s, size_t len, XML_Bool isFinal) {
     nLeftOver = s + len - end;
     assert(nLeftOver <= len);
 
-    const size_t bytesToCopy = (XML_CONTEXT_BYTES > len - nLeftOver)
-                                   ? len
-                                   : (XML_CONTEXT_BYTES + nLeftOver);
+    const size_t contextSize = XML_CONTEXT_BYTES;
+
+    const size_t bytesToCopy
+        = (contextSize > len - nLeftOver) ? len : (contextSize + nLeftOver);
     assert(bytesToCopy <= len);
 
     if (bytesToCopy) {
