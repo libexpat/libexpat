@@ -6983,6 +6983,40 @@ START_TEST(test_eventptr_after_nonerror_parse_final) {
 }
 END_TEST
 
+START_TEST(test_eventptr_after_nonerror_parse_final_subparser) {
+  // Speed up the test, chunk size expected to not matter in this test
+  if (g_chunkSize != 0 || ! g_reparseDeferralEnabledDefault)
+    return;
+
+  const bool bools[] = {false, true};
+  for (size_t i = 0; i < sizeof(bools) / sizeof(bools[0]); i++) {
+    const bool withParentParser = bools[i];
+    XML_Parser parentParser = XML_ParserCreate(NULL);
+    assert_true(parentParser != NULL);
+
+    XML_Char *const context = xcsdup_str("e1");
+    XML_Parser parser
+        = (withParentParser
+               ? XML_ExternalEntityParserCreate(parentParser, context, NULL)
+               : XML_ParserCreate(NULL));
+    assert_true(parser != NULL);
+
+    assert_true(XML_Parse(parser, "", 0, /*isFinal=*/XML_FALSE)
+                == XML_STATUS_OK);
+    assert_true(XML_Parse(parser, "", 0,
+                          /*isFinal=*/XML_TRUE)
+                == (withParentParser ? XML_STATUS_OK : XML_STATUS_ERROR));
+
+    assert_true(XML_GetCurrentLineNumber64(parser) == 1);
+    assert_true(XML_GetCurrentColumnNumber64(parser) == 0);
+
+    XML_ParserFree(parser);
+    XML_ParserFree(parentParser);
+    free(context);
+  }
+}
+END_TEST
+
 START_TEST(test_eventptr_after_nonerror_parse_nonfinal_with_suspend) {
   if (g_reparseDeferralEnabledDefault)
     return;
@@ -7616,6 +7650,7 @@ make_basic_test_case(Suite *s) {
   tcase_add_test(tc_basic, test_set_reparse_deferral_on_the_fly);
   tcase_add_test(tc_basic, test_set_bad_reparse_option);
   tcase_add_test(tc_basic, test_eventptr_after_nonerror_parse_final);
+  tcase_add_test(tc_basic, test_eventptr_after_nonerror_parse_final_subparser);
   tcase_add_test(tc_basic,
                  test_eventptr_after_nonerror_parse_nonfinal_with_suspend);
   tcase_add_test(tc_basic,
