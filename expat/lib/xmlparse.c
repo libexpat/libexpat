@@ -2445,7 +2445,6 @@ XML_Parse64(XML_Parser parser, const char *s, size_t len, XML_Bool isFinal) {
     case XML_PARSING:
       if (isFinal) {
         parser->m_parsingStatus.parsing = XML_FINISHED;
-        return XML_STATUS_OK;
       }
       EXPAT_FALLTHROUGH;
     default:
