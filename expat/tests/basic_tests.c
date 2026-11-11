@@ -7123,6 +7123,205 @@ START_TEST(test_eventptr_after_nonerror_parse_nonfinal_without_suspend) {
 }
 END_TEST
 
+struct ByteIndexLogEntry {
+  bool fromHandler;
+  int64_t index;
+};
+
+struct ByteIndexLog {
+  XML_Parser parser;
+  bool suspend;
+  size_t size;
+  size_t len;
+  struct ByteIndexLogEntry *entries;
+};
+
+static void
+log_and_stop_pi_handler(void *userData, const XML_Char *target,
+                        const XML_Char *data) {
+  UNUSED_P(target);
+  UNUSED_P(data);
+  struct ByteIndexLog *const log = userData;
+
+  assert_true(log != NULL);
+  assert_true(log->parser != NULL);
+  assert_true(log->len < log->size);
+  log->entries[log->len].fromHandler = true;
+  log->entries[log->len++].index = XML_GetCurrentByteIndex64(log->parser);
+
+  if (log->suspend)
+    XML_StopParser(log->parser, /*resumable=*/XML_TRUE);
+}
+
+START_TEST(test_eventptr_fresh) {
+  // The test uses suspension, speed things up
+  if (g_reparseDeferralEnabledDefault || g_chunkSize != 0)
+    return;
+
+  struct TestCase {
+    const char *doc;
+    const struct ByteIndexLogEntry *expectedEntriesSuspend;
+    const struct ByteIndexLogEntry *expectedEntriesNoSuspend;
+    size_t expectedEntriesSuspendLen;
+    size_t expectedEntriesNoSuspendLen;
+  };
+
+  //                                           1      2     2
+  //                             0      7      4      1     7
+  const char *const docProlog = "<?a x?><?b y?><?c z?><doc/>";
+  const struct ByteIndexLogEntry expectedIndicesPrologSuspend[] = {
+      {true, 0},  {false, 7},  {true, 7},   {false, 14},
+      {true, 14}, {false, 21}, {false, 27},
+  };
+  const struct ByteIndexLogEntry expectedIndicesPrologNoSuspend[] = {
+      {true, 0},
+      {true, 7},
+      {true, 14},
+      {false, 27},
+  };
+
+  //                                          1      1      2     3
+  //                              0    5      2      9      6     2
+  const char *const docContent = "<doc><?a x?><?b y?><?c z?></doc>";
+  const struct ByteIndexLogEntry expectedIndicesContentSuspend[] = {
+      {true, 5},  {false, 12}, {true, 12},  {false, 19},
+      {true, 19}, {false, 26}, {false, 32},
+  };
+  const struct ByteIndexLogEntry expectedIndicesContentNoSuspend[] = {
+      {true, 5},
+      {true, 12},
+      {true, 19},
+      {false, 32},
+  };
+
+  //                                                        5  5      6     6
+  //     0                                                  1  4      1     7
+  const char *const docEntity
+      = "<!DOCTYPE doc [<!ENTITY e '<?a x?><?b y?>t'>]><doc>&e;<?c z?></doc>";
+  const struct ByteIndexLogEntry expectedIndicesEntitySuspend[] = {
+#if XML_GE == 1
+      {true, 51}, {false, 51}, {true, 51},  {false, 51},
+#endif
+      {true, 54}, {false, 61}, {false, 67},
+  };
+  const struct ByteIndexLogEntry expectedIndicesEntityNoSuspend[] = {
+#if XML_GE == 1
+      {true, 51},
+      {true, 51},
+#endif
+      {true, 54},
+      {false, 67},
+  };
+
+  struct TestCase cases[] = {
+      {
+          docProlog,
+          expectedIndicesPrologSuspend,
+          expectedIndicesPrologNoSuspend,
+          sizeof(expectedIndicesPrologSuspend)
+              / sizeof(expectedIndicesPrologSuspend[0]),
+          sizeof(expectedIndicesPrologNoSuspend)
+              / sizeof(expectedIndicesPrologNoSuspend[0]),
+      },
+      {
+          docContent,
+          expectedIndicesContentSuspend,
+          expectedIndicesContentNoSuspend,
+          sizeof(expectedIndicesContentSuspend)
+              / sizeof(expectedIndicesContentSuspend[0]),
+          sizeof(expectedIndicesContentNoSuspend)
+              / sizeof(expectedIndicesContentNoSuspend[0]),
+      },
+      {
+          docEntity,
+          expectedIndicesEntitySuspend,
+          expectedIndicesEntityNoSuspend,
+          sizeof(expectedIndicesEntitySuspend)
+              / sizeof(expectedIndicesEntitySuspend[0]),
+          sizeof(expectedIndicesEntityNoSuspend)
+              / sizeof(expectedIndicesEntityNoSuspend[0]),
+      },
+  };
+
+  const bool bools[] = {false, true};
+
+  for (size_t i = 0; i < sizeof(cases) / sizeof(cases[0]); i++) {
+    for (size_t j = 0; j < sizeof(bools) / sizeof(bools[0]); j++) {
+      for (size_t k = 0; k < sizeof(bools) / sizeof(bools[0]); k++) {
+        const char *const doc = cases[i].doc;
+        const bool useParseBuffer = bools[j];
+        const bool suspend = bools[k];
+
+        const struct ByteIndexLogEntry *const expectedEntries
+            = suspend ? cases[i].expectedEntriesSuspend
+                      : cases[i].expectedEntriesNoSuspend;
+        const size_t expectedEntriesLen
+            = suspend ? cases[i].expectedEntriesSuspendLen
+                      : cases[i].expectedEntriesNoSuspendLen;
+
+        set_subtest(
+            "chunks=%d reparse=%d doc=%d usebuffer=%d suspend=%d len=%d",
+            g_chunkSize, (int)g_reparseDeferralEnabledDefault, (int)(i + 1),
+            (int)useParseBuffer, (int)suspend, (int)expectedEntriesLen);
+
+        XML_Parser parser = XML_ParserCreate(NULL);
+
+        struct ByteIndexLog log
+            = {parser, suspend, expectedEntriesLen, 0,
+               malloc(expectedEntriesLen * sizeof(struct ByteIndexLogEntry))};
+        assert_true(log.entries != NULL);
+
+        XML_SetUserData(parser, &log);
+        XML_SetProcessingInstructionHandler(parser, log_and_stop_pi_handler);
+
+        enum XML_Status status;
+        if (useParseBuffer) {
+          char *const buffer = XML_GetBuffer64(parser, strlen(doc));
+          assert_true(buffer != NULL);
+          memcpy(buffer, doc, strlen(doc));
+          status = XML_ParseBuffer64(parser, strlen(doc), /*isFinal=*/XML_TRUE);
+        } else {
+          status = XML_Parse64(parser, doc, strlen(doc), /*isFinal=*/XML_TRUE);
+        }
+
+        if (suspend) {
+          assert_true(status == XML_STATUS_SUSPENDED);
+
+          assert_true(log.len < log.size);
+          log.entries[log.len].fromHandler = false;
+          log.entries[log.len++].index = XML_GetCurrentByteIndex64(parser);
+
+          while (status == XML_STATUS_SUSPENDED) {
+            status = XML_ResumeParser(parser);
+
+            assert_true(log.len < log.size);
+            log.entries[log.len].fromHandler = false;
+            log.entries[log.len++].index = XML_GetCurrentByteIndex64(parser);
+          }
+        } else {
+          assert_true(status == XML_STATUS_OK);
+
+          assert_true(log.len < log.size);
+          log.entries[log.len].fromHandler = false;
+          log.entries[log.len++].index = XML_GetCurrentByteIndex64(parser);
+        }
+
+        XML_ParserFree(parser);
+
+        for (size_t m = 0; m < log.len; m++) {
+          assert_true(log.entries[m].fromHandler
+                      == expectedEntries[m].fromHandler);
+          assert_true(log.entries[m].index == expectedEntries[m].index);
+        }
+        assert_true(log.len == log.size); // i.e. all log entries received
+
+        free(log.entries);
+      }
+    }
+  }
+}
+END_TEST
+
 START_TEST(test_bypass_heuristic_when_close_to_bufsize) {
   if (g_chunkSize != 0) {
     // this test does not use SINGLE_BYTES, because it depends on very precise
@@ -7655,6 +7854,7 @@ make_basic_test_case(Suite *s) {
                  test_eventptr_after_nonerror_parse_nonfinal_with_suspend);
   tcase_add_test(tc_basic,
                  test_eventptr_after_nonerror_parse_nonfinal_without_suspend);
+  tcase_add_test(tc_basic, test_eventptr_fresh);
   tcase_add_test(tc_basic, test_bypass_heuristic_when_close_to_bufsize);
   tcase_add_test(tc_basic, test_varying_buffer_fills);
 }
