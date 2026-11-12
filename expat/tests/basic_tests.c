@@ -4019,7 +4019,7 @@ START_TEST(test_buffer_can_grow_to_max) {
     assert_true(XML_GetBuffer(parser, maxbuf - prefix_len) != NULL);
     // The limit should be consistent; no prefix should allow us to
     // reach above the max buffer size.
-#  if ULONG_MAX == 4294967295 // i.e. 32bit
+#  if ULONG_MAX == 4294967295 && ! defined(_WIN64) // i.e. 32bit
     assert_true(XML_GetBuffer(parser, maxbuf + 1) == NULL);
 #  endif
 #else
