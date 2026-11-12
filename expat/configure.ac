@@ -135,7 +135,12 @@ AS_IF([test "$GCC" = yes],
    dnl GCC don't support it and it causes extra warnings that are only
    dnl distracting; avoid.
    AX_APPEND_COMPILE_FLAGS([-fexceptions], [AM_CFLAGS])
-   AX_APPEND_COMPILE_FLAGS([-Wstrict-aliasing=3 -Wmissing-prototypes -Wstrict-prototypes], [AM_CFLAGS])
+   dnl
+   dnl  Argument `-Wstrict-aliasing=3` is documented to not be able to catch all
+   dnl  violations of strict aliasing, so we apply `-fno-strict-aliasing`
+   dnl  for security.
+   dnl
+   AX_APPEND_COMPILE_FLAGS([-fno-strict-aliasing -Wmissing-prototypes -Wstrict-prototypes], [AM_CFLAGS])
    AX_APPEND_COMPILE_FLAGS([-pedantic -Wduplicated-cond -Wduplicated-branches -Wlogical-op], [AM_CFLAGS])
    AX_APPEND_COMPILE_FLAGS([-Wrestrict -Wnull-dereference -Wjump-misses-init -Wdouble-promotion], [AM_CFLAGS])
    AX_APPEND_COMPILE_FLAGS([-Wshadow -Wformat=2 -Wmisleading-indentation], [AM_CFLAGS])
@@ -151,11 +156,19 @@ AS_IF([test "$GCC" = yes],
    dnl GCC don't support it and it causes extra warnings that are only
    dnl distracting; avoid.
    AX_APPEND_COMPILE_FLAGS([-fexceptions], [AM_CXXFLAGS])
-   AX_APPEND_COMPILE_FLAGS([-Wstrict-aliasing=3], [AM_CXXFLAGS])])
+   dnl
+   dnl  Argument `-Wstrict-aliasing=3` is documented to not be able to catch all
+   dnl  violations of strict aliasing, so we apply `-fno-strict-aliasing`
+   dnl  for security.
+   dnl
+   AX_APPEND_COMPILE_FLAGS([-fno-strict-aliasing], [AM_CXXFLAGS])])
 AC_LANG_POP([C++])
 
+dnl NOTE: Argument `-fno-strict-aliasing` is documented as being forwarded
+dnl       to the linker by GCC with LTO at
+dnl       https://gcc.gnu.org/onlinedocs/gcc/Optimize-Options.html .
 AS_IF([test "$GCC" = yes],
-  [AX_APPEND_LINK_FLAGS([-Wstrict-aliasing=3],[AM_LDFLAGS])])
+  [AX_APPEND_LINK_FLAGS([-fno-strict-aliasing],[AM_LDFLAGS])])
 
 AC_ARG_ENABLE([symbol-versioning],
   [AS_HELP_STRING([--enable-symbol-versioning],

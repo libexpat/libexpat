@@ -1297,6 +1297,30 @@ START_TEST(test_misc_getinputcontext_from_handlers_only) {
 }
 END_TEST
 
+static bool
+strict_aliasing_issues(int *x, long *y) {
+  assert_true(x != NULL);                    // self-test
+  assert_true(y != NULL);                    // self-test
+  assert_true((uintptr_t)x == (uintptr_t)y); // self-test
+  *x = 1;
+  *y = 0; // may be optimized out with strict aliasing active
+  return *x != 0;
+}
+
+// This tries to detect `-O2/-O3/-Os` without `-fno-strict-aliasing`.
+// Expat should be compiled with `-fno-strict-aliasing`.
+// The fact that GCC does not detect the violation in this test despite
+// `-fstrict-aliasing -Wstrict-aliasing=3` (in CI) proves the point.
+START_TEST(test_misc_no_proven_strict_aliasing) {
+  // Speed up the test (because it does no parsing)
+  if (g_chunkSize != 0 || g_reparseDeferralEnabledDefault)
+    return;
+
+  long l = 1;
+  assert_true(! strict_aliasing_issues((int *)&l, &l));
+}
+END_TEST
+
 void
 make_miscellaneous_test_case(Suite *s) {
   TCase *tc_misc = tcase_create("miscellaneous tests");
@@ -1343,4 +1367,5 @@ make_miscellaneous_test_case(Suite *s) {
   tcase_add_test(tc_misc, test_misc_start_doctype_decl_handler_reset);
   tcase_add_test(tc_misc, test_misc_empty_nonfinal_subparser_parse);
   tcase_add_test(tc_misc, test_misc_getinputcontext_from_handlers_only);
+  tcase_add_test(tc_misc, test_misc_no_proven_strict_aliasing);
 }
