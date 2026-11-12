@@ -1312,7 +1312,7 @@ tmain(int argc, XML_Char **argv) {
 
       errno = 0;
       userData.fd = topen(
-          outName, O_WRONLY | O_CREAT | O_TRUNC | O_NOFOLLOW | O_BINARY, 0666);
+          outName, O_WRONLY | O_CREAT | O_TRUNC | O_NOFOLLOW | O_BINARY, 0600);
       const int openCallErrno = errno;
       userData.fp = (userData.fd == -1) ? NULL : tfdopen(userData.fd, T("wb"));
       const int fdopenCallErrno = errno;
