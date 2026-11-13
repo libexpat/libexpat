@@ -2438,7 +2438,45 @@ XML_Parse64(XML_Parser parser, const char *s, size_t len, XML_Bool isFinal) {
 #endif
 
     if (parser->m_errorCode != XML_ERROR_NONE) {
-      parser->m_eventEndPtr = parser->m_eventPtr;
+      // Do we need to rescue `parser->m_eventPtr`?
+      // It cannot continue pointing into `s` after the call because we have
+      // no guarantee that that that buffer lives on.
+      //
+      // Note: The `uintptr_t` casts intend to address `6.5.8 Relational
+      //       operators` of C99 that says that comparison of pointers that do
+      //       not point into the same array object is undefined behavior.
+      if (parser->m_eventPtr && (uintptr_t)parser->m_eventPtr >= (uintptr_t)s
+          && (uintptr_t)parser->m_eventPtr <= (uintptr_t)(s + len)) {
+        const size_t rewindBy = s + len - parser->m_eventPtr;
+
+        XmlUpdatePosition(parser->m_encoding, parser->m_positionPtr,
+                          parser->m_eventPtr, &parser->m_position);
+        parser->m_positionPtr = parser->m_eventPtr;
+
+        // Ensure presence of a buffer so that we can point `parser->m_eventPtr`
+        // into it to avoid `parser->m_eventPtr == NULL`.
+        if (! parser->m_buffer) {
+          const enum XML_Error errorCodeBackup = parser->m_errorCode;
+          if (! internalGetBuffer64(parser, 1)) {
+            // NOTE: parser->m_errorCode has already been set by
+            //       XML_GetBuffer().
+            parser->m_errorCode = errorCodeBackup;
+            parser->m_eventPtr = parser->m_eventEndPtr = NULL;
+            parser->m_processor = errorProcessor;
+            return XML_STATUS_ERROR;
+          }
+        }
+        assert(parser->m_buffer != NULL);
+
+        parser->m_eventPtr = parser->m_eventEndPtr = parser->m_bufferPtr;
+        parser->m_positionPtr = parser->m_eventPtr;
+        parser->m_parseEndPtr = parser->m_eventPtr;
+        // To make `XML_GetCurrentByteIndex64` work:
+        parser->m_parseEndByteIndex -= rewindBy;
+      } else {
+        parser->m_eventPtr = parser->m_eventEndPtr = NULL;
+        parser->m_positionPtr = NULL;
+      }
       parser->m_processor = errorProcessor;
       return XML_STATUS_ERROR;
     }
