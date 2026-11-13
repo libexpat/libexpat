@@ -7322,6 +7322,28 @@ START_TEST(test_eventptr_fresh) {
 }
 END_TEST
 
+// Test idea by Ion Tereshenko
+START_TEST(test_eventptr_after_initial_error_parse) {
+  const char *const doc = "<unclosed>";
+  const size_t docLen = strlen(doc);
+  char *const buffer = malloc(docLen);
+  assert_true(buffer != NULL);
+  memcpy(buffer, doc, docLen);
+
+  XML_Parser parser = XML_ParserCreate(NULL);
+
+  assert_true(
+      XML_Parse64_SINGLE_BYTES(parser, buffer, docLen, /*isFinal=*/XML_TRUE)
+      == XML_STATUS_ERROR);
+  free(buffer);
+
+  assert_true(XML_GetCurrentLineNumber64(parser) == 1);
+  assert_true(XML_GetCurrentColumnNumber64(parser) == docLen);
+
+  XML_ParserFree(parser);
+}
+END_TEST
+
 START_TEST(test_bypass_heuristic_when_close_to_bufsize) {
   if (g_chunkSize != 0) {
     // this test does not use SINGLE_BYTES, because it depends on very precise
@@ -7855,6 +7877,7 @@ make_basic_test_case(Suite *s) {
   tcase_add_test(tc_basic,
                  test_eventptr_after_nonerror_parse_nonfinal_without_suspend);
   tcase_add_test(tc_basic, test_eventptr_fresh);
+  tcase_add_test(tc_basic, test_eventptr_after_initial_error_parse);
   tcase_add_test(tc_basic, test_bypass_heuristic_when_close_to_bufsize);
   tcase_add_test(tc_basic, test_varying_buffer_fills);
 }
