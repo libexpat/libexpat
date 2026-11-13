@@ -49,7 +49,16 @@
 
 #include "expat_config.h"
 
+#if ! defined(_POSIX_C_SOURCE) || (_POSIX_C_SOURCE < 200809L)
+#  define _POSIX_C_SOURCE 200809L // for O_NOFOLLOW
+#endif
+
+#if defined(__APPLE__) && ! defined(_DARWIN_C_SOURCE)
+#  define _DARWIN_C_SOURCE 1 // for O_NOFOLLOW
+#endif
+
 #include <assert.h>
+#include <fcntl.h>    // for O_WRONLY and friends
 #include <inttypes.h> // for PRIu64
 #include <stdio.h>
 #include <stdlib.h>
@@ -57,6 +66,10 @@
 #include <string.h>
 #include <math.h> /* for isnan */
 #include <errno.h>
+
+#if ! defined(WIN32)
+#  include <unistd.h> // for close
+#endif
 
 #include "expat.h"
 #include "codepage.h"
@@ -75,6 +88,16 @@
 
 #include "../lib/xcs.h"
 
+#if defined(_WIN32) && ! defined(O_NOFOLLOW)
+#  define O_NOFOLLOW 0
+#endif
+
+#if defined(_WIN32)
+#  define O_BINARY _O_BINARY
+#else
+#  define O_BINARY 0
+#endif
+
 enum ExitCode {
   XMLWF_EXIT_SUCCESS = 0,
   XMLWF_EXIT_INTERNAL_ERROR = 1,
@@ -92,6 +115,7 @@ typedef struct NotationList {
 } NotationList;
 
 typedef struct xmlwfUserData {
+  int fd;
   FILE *fp;
   NotationList *notationListHead;
   const XML_Char *currentDoctypeName;
@@ -1018,7 +1042,7 @@ tmain(int argc, XML_Char **argv) {
   enum XML_ParamEntityParsing paramEntityParsing
       = XML_PARAM_ENTITY_PARSING_NEVER;
   int useStdin = 0;
-  XmlwfUserData userData = {NULL, NULL, NULL};
+  XmlwfUserData userData = {-1, NULL, NULL, NULL};
 
 #ifdef _MSC_VER
   _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
@@ -1285,8 +1309,21 @@ tmain(int argc, XML_Char **argv) {
       tcscpy(outName, outputDir);
       tcscat(outName, delim);
       tcscat(outName, file);
-      userData.fp = tfopen(outName, T("wb"));
-      if (! userData.fp) {
+
+      errno = 0;
+      userData.fd = topen(
+          outName, O_WRONLY | O_CREAT | O_TRUNC | O_NOFOLLOW | O_BINARY, 0600);
+      const int openCallErrno = errno;
+      userData.fp = (userData.fd == -1) ? NULL : tfdopen(userData.fd, T("wb"));
+      const int fdopenCallErrno = errno;
+
+      if (userData.fd == -1 || userData.fp == NULL) {
+        if (userData.fd == -1) {
+          errno = openCallErrno;
+        } else {
+          close(userData.fd);
+          errno = fdopenCallErrno;
+        }
         tperror(outName);
         exitCode = XMLWF_EXIT_OUTPUT_ERROR;
         free(outName);
