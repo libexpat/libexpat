@@ -87,4 +87,5 @@ EXTRA_DIST = \
     udiffer.py \
     xcs_tests.h \
     xmltest.log.expected \
-    xmltest.sh
+    xmltest.sh \
+    xmlwf-thresholds.cmake
