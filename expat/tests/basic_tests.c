@@ -600,10 +600,10 @@ END_TEST
 START_TEST(test_long_utf8_character) {
   const char *text
       = "<?xml version='1.0' encoding='utf-8'?>\n"
-        /* 0xf0 0x90 0x80 0x80 = U+10000, the first Linear B character */
-        "<do\xf0\x90\x80\x80/>";
+        /* 0xf3 0xb0 0x80 0x80 = U+F0000, a Private Use Character */
+        "<do\xf3\xb0\x80\x80/>";
   expect_failure(text, XML_ERROR_INVALID_TOKEN,
-                 "4-byte UTF-8 character in element name not faulted");
+                 "non-name 4-byte UTF-8 character in element name not faulted");
 }
 END_TEST
 
