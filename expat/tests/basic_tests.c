@@ -5809,9 +5809,6 @@ START_TEST(test_utf8_in_start_tags) {
   };
 
   // The idea with the tests below is this:
-  // We want to cover 1-, 2- and 3-byte sequences, 4-byte sequences
-  // go to isNever and are hence not a concern.
-  //
   // We start with a character that is a valid name character
   // (or even name-start character, see XML 1.0r5 spec) and then we flip
   // single bits at places where (1) the result leaves the UTF-8 encoding space
@@ -5854,6 +5851,18 @@ START_TEST(test_utf8_in_start_tags) {
       {false, false, "\xE0\xE4\x81"}, // [1110 0000] [1<1>10 0100] [1000 0001]
       {false, false, "\xE0\xA4\x01"}, // [1110 0000] [1010 0100] [<0>000 0001]
       {false, false, "\xE0\xA4\xC1"}, // [1110 0000] [1010 0100] [1<1>00 0001]
+
+      // 4-byte UTF-8: [11110xxx] [10xxxxxx] [10xxxxxx] [10xxxxxx]
+      {true, true,
+       "\xf0\x90\x80\x80"}, // [1111 0000] [1001 0000] [1000 0000] [1000 0000]
+      {false, false,
+       "\xb0\x90\x80\x80"}, // [1<0>11 0000] [1001 0000] [1000 0000] [1000 0000]
+      {false, false,
+       "\xf0\xC0\x80\x80"}, // [1111 0000] [1<1>01 0000] [1000 0000] [1000 0000]
+      {false, false,
+       "\xf0\x90\xC0\x80"}, // [1111 0000] [1001 0000] [1<1>00 0000] [1000 0000]
+      {false, false,
+       "\xf0\x90\x80\xC0"}, // [1111 0000] [1001 0000] [1000 0000] [1<1>00 0000]
   };
   const bool atNameStart[] = {true, false};
 
