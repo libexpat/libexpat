@@ -1002,18 +1002,18 @@ START_TEST(test_fifth_edition_name_characters) {
 
     assert_true(nameCharCountFourth == COUNT_FOURTH);
     assert_true(truePositivesFourth == COUNT_FOURTH);
-    assert_true(falsePositivesFourth == 0);
-    assert_true(trueNegativesFourth == EXPAT_COUNT_CODEPOINTS - COUNT_FOURTH);
+    assert_true(falsePositivesFourth == truePositivesFifth - COUNT_FOURTH);
+    assert_true(trueNegativesFourth == EXPAT_COUNT_CODEPOINTS - COUNT_FIFTH);
     assert_true(falseNegativesFourth == 0);
     assert_true(truePositivesFourth + falsePositivesFourth + trueNegativesFourth
                     + falseNegativesFourth
                 == EXPAT_COUNT_CODEPOINTS);
 
     assert_true(nameCharCountFifth == COUNT_FIFTH);
-    assert_true(truePositivesFifth == COUNT_FOURTH);
+    assert_true(truePositivesFifth == COUNT_FIFTH);
     assert_true(falsePositivesFifth == 0);
     assert_true(trueNegativesFifth == EXPAT_COUNT_CODEPOINTS - COUNT_FIFTH);
-    assert_true(falseNegativesFifth == COUNT_FIFTH - COUNT_FOURTH);
+    assert_true(falseNegativesFifth == 0);
     assert_true(truePositivesFifth + falsePositivesFifth + trueNegativesFifth
                     + falseNegativesFifth
                 == EXPAT_COUNT_CODEPOINTS);
