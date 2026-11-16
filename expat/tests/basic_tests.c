@@ -5813,7 +5813,7 @@ START_TEST(test_utf8_in_start_tags) {
   // go to isNever and are hence not a concern.
   //
   // We start with a character that is a valid name character
-  // (or even name-start character, see XML 1.0r4 spec) and then we flip
+  // (or even name-start character, see XML 1.0r5 spec) and then we flip
   // single bits at places where (1) the result leaves the UTF-8 encoding space
   // and (2) we stay in the same n-byte sequence family.
   //
@@ -5847,7 +5847,7 @@ START_TEST(test_utf8_in_start_tags) {
       {false, false, "\xE0\xE4\x85"}, // [1110 0000] [1<1>10 0100] [1000 0101]
       {false, false, "\xE0\xA4\x05"}, // [1110 0000] [1010 0100] [<0>000 0101]
       {false, false, "\xE0\xA4\xC5"}, // [1110 0000] [1010 0100] [1<1>00 0101]
-      {true, false, "\xE0\xA4\x81"},  // [1110 0000] [1010 0100] [1000 0001] =
+      {true, true, "\xE0\xA4\x81"},   // [1110 0000] [1010 0100] [1000 0001] =
                                       // combining char U+0901
       {false, false, "\xA0\xA4\x81"}, // [1<0>10 0000] [1010 0100] [1000 0001]
       {false, false, "\xE0\x24\x81"}, // [1110 0000] [<0>010 0100] [1000 0001]
