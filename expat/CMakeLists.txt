@@ -909,7 +909,7 @@ if(EXPAT_BUILD_TOOLS AND NOT MSVC)
     add_custom_target(
         xmlts-zip-downloaded
         COMMAND
-            sh -c 'test -f xmlts.zip || wget --output-document=xmlts.zip https://www.w3.org/XML/Test/xmlts20080827.zip'
+            sh -c 'test -f xmlts.zip || wget --output-document=xmlts.zip https://www.w3.org/XML/Test/xmlts20130923.zip'
         BYPRODUCTS
             tests/xmlts.zip
         WORKING_DIRECTORY
