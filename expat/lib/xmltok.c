@@ -137,6 +137,9 @@
            : ((p)[1] & 0x80) == 0                                              \
                  || ((*p) == 0xF4 ? (p)[1] > 0x8F : ((p)[1] & 0xC0) == 0xC0)))
 
+static const uint8_t b_0000_0111 = 0x07;
+static const uint8_t b_0011_1111 = 0x3F;
+
 static int
 utf8_isName2(const ENCODING *enc, const char *p) {
   UNUSED_P(enc);
@@ -166,8 +169,14 @@ utf8_isNmstrt3(const ENCODING *enc, const char *p) {
 static int
 utf8_isNmstrt4(const ENCODING *enc, const char *p) {
   UNUSED_P(enc);
-  UNUSED_P(p);
-  return 0;
+
+  // This is a four-byte-unit UTF-8 decoder but:
+  // - We only need the two upper bytes for the check below
+  // - Malformed continuation bytes have been rejected before
+  const unsigned codepoint
+      = ((p[0] & b_0000_0111) << 18) | ((p[1] & b_0011_1111) << 12);
+
+  return ((codepoint >= 0x10000) && (codepoint <= 0xEFFFF));
 }
 
 static int
