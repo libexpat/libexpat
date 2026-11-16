@@ -138,13 +138,6 @@
                  || ((*p) == 0xF4 ? (p)[1] > 0x8F : ((p)[1] & 0xC0) == 0xC0)))
 
 static int
-isNever(const ENCODING *enc, const char *p) {
-  UNUSED_P(enc);
-  UNUSED_P(p);
-  return 0;
-}
-
-static int
 utf8_isName2(const ENCODING *enc, const char *p) {
   UNUSED_P(enc);
   return UTF8_GET_NAMING2(namePages, (const unsigned char *)p);
@@ -156,7 +149,7 @@ utf8_isName3(const ENCODING *enc, const char *p) {
   return UTF8_GET_NAMING3(namePages, (const unsigned char *)p);
 }
 
-#define utf8_isName4 isNever
+#define utf8_isName4 utf8_isNmstrt4
 
 static int
 utf8_isNmstrt2(const ENCODING *enc, const char *p) {
@@ -170,7 +163,12 @@ utf8_isNmstrt3(const ENCODING *enc, const char *p) {
   return UTF8_GET_NAMING3(nmstrtPages, (const unsigned char *)p);
 }
 
-#define utf8_isNmstrt4 isNever
+static int
+utf8_isNmstrt4(const ENCODING *enc, const char *p) {
+  UNUSED_P(enc);
+  UNUSED_P(p);
+  return 0;
+}
 
 static int
 utf8_isInvalid2(const ENCODING *enc, const char *p) {
