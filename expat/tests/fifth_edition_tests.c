@@ -1013,6 +1013,40 @@ isNameCharacterFifth(unsigned codepoint) {
   return result[codepoint];
 }
 
+static uint8_t *
+dup_utf8_to_utf16(const uint8_t *utf8, size_t *outLenBytes,
+                  Endianness endianness) {
+  assert_true(utf8 != NULL);
+  size_t maxLength = strlen((const char *)utf8);
+  assert_true(maxLength <= (SIZE_MAX - 2) / 4);
+  const size_t pessimisticBytesNeeded = maxLength * 4 + /*terminator*/ 2;
+
+  uint8_t *const utf16 = malloc(pessimisticBytesNeeded);
+  if (utf16 == NULL)
+    return NULL;
+
+  const uint8_t *source = utf8;
+  const uint8_t *const sourceEnd = utf8 + maxLength;
+  uint8_t *target = utf16;
+
+  while (source < sourceEnd) {
+    const unsigned codepoint = decodeCharUtf8(source, maxLength);
+    assert_true(codepoint <= EXPAT_MAX_CODEPOINT);
+    const unsigned bytesWritten
+        = encodeCharUtf16(codepoint, target, endianness);
+    assert_true(bytesWritten == 2 || bytesWritten == 4);
+    source += utf8CharLen(codepoint);
+    target += bytesWritten;
+  }
+  target[0] = '\0';
+  target[1] = '\0';
+
+  if (outLenBytes)
+    *outLenBytes = target - utf16;
+
+  return utf16;
+}
+
 START_TEST(test_fifth_edition_name_characters) {
   // Speed things up, the test does not use `XML_Parser`.
   if (g_chunkSize != 0 || g_reparseDeferralEnabledDefault)
@@ -1070,6 +1104,36 @@ START_TEST(test_fifth_edition_name_characters) {
       const bool utf8Success = (XML_Parse64(parser, doc, strlen(doc),
                                             /*isFinal=*/XML_TRUE)
                                 == XML_STATUS_OK);
+
+      const bool isIsolatedSurrogate
+          = (0xD800 <= codepoint && codepoint <= 0xDFFF);
+      if (! isIsolatedSurrogate) {
+        const Endianness endiannessOptions[]
+            = {EXPAT_LITTLE_ENDIAN, EXPAT_BIG_ENDIAN};
+        for (size_t j = 0;
+             j < sizeof(endiannessOptions) / sizeof(endiannessOptions[0]);
+             j++) {
+          const Endianness endianness = endiannessOptions[j];
+
+          assert_true(XML_ParserReset(parser, NULL) == XML_STATUS_OK);
+
+          size_t utf16LenBytes = 0;
+          char *const docUtf16 = (char *)dup_utf8_to_utf16(
+              (const uint8_t *)doc, &utf16LenBytes, endianness);
+          assert_true(docUtf16 != NULL);
+          assert_true(utf16LenBytes > 0);
+
+          const bool utf16Success
+              = (XML_Parse64(parser, docUtf16, utf16LenBytes,
+                             /*isFinal=*/XML_TRUE)
+                 == XML_STATUS_OK);
+
+          free(docUtf16);
+
+          assert_true(utf16Success == utf8Success);
+        }
+      }
+
       XML_ParserFree(parser);
 
       const bool expectedSuccessFourth
