@@ -54,6 +54,7 @@
 
 #include "expat_config.h"
 
+#include <assert.h>
 #include <stddef.h>
 #include <string.h> /* memcpy */
 #include <stdbool.h>
@@ -690,6 +691,7 @@ DEFINE_UTF16_TO_UTF16(big2_)
   ((p)[1] == 0 ? SB_BYTE_TYPE(enc, p) : unicode_byte_type((p)[1], (p)[0]))
 #define LITTLE2_BYTE_TO_ASCII(p) ((p)[1] == 0 ? (p)[0] : -1)
 #define LITTLE2_CHAR_MATCHES(p, c) ((p)[1] == 0 && (p)[0] == (c))
+#define LITTLE2_IS_NAME_CHAR(enc, p, n) LITTLE2_IS_NMSTRT_CHAR(enc, p, n)
 #define LITTLE2_IS_NAME_CHAR_MINBPC(p)                                         \
   UCS2_GET_NAMING(namePages, (unsigned char)p[1], (unsigned char)p[0])
 #define LITTLE2_IS_NMSTRT_CHAR_MINBPC(p)                                       \
@@ -700,6 +702,20 @@ DEFINE_UTF16_TO_UTF16(big2_)
 #define LITTLE2_IS_INVALID_CHAR(p, n)                                          \
   ((n) == 4 && ((unsigned char)(p)[3] & 0xFC) != 0xDC)
 
+static bool
+LITTLE2_IS_NMSTRT_CHAR(const ENCODING *enc, const char *p, size_t n) {
+  UNUSED_P(enc);
+  assert(n == 4);
+  const uint8_t *const source = (const uint8_t *)p;
+
+  const uint16_t high = (source[1] << 8) | source[0];
+  const uint16_t low = (source[3] << 8) | source[2];
+
+  const unsigned codepoint = (high - 0xD800) * 0x400 + (low - 0xDC00) + 0x10000;
+
+  return ((codepoint >= 0x10000) && (codepoint <= 0xEFFFF));
+}
+
 #undef PREFIX
 #define PREFIX(ident) little2_##ident
 #define MINBPC(enc) 2
@@ -707,9 +723,9 @@ DEFINE_UTF16_TO_UTF16(big2_)
 #define BYTE_TYPE(enc, p) LITTLE2_BYTE_TYPE(enc, p)
 #define BYTE_TO_ASCII(enc, p) LITTLE2_BYTE_TO_ASCII(p)
 #define CHAR_MATCHES(enc, p, c) LITTLE2_CHAR_MATCHES(p, c)
-#define IS_NAME_CHAR(enc, p, n) 0
+#define IS_NAME_CHAR(enc, p, n) LITTLE2_IS_NAME_CHAR(enc, p, n)
 #define IS_NAME_CHAR_MINBPC(enc, p) LITTLE2_IS_NAME_CHAR_MINBPC(p)
-#define IS_NMSTRT_CHAR(enc, p, n) (0)
+#define IS_NMSTRT_CHAR(enc, p, n) LITTLE2_IS_NMSTRT_CHAR(enc, p, n)
 #define IS_NMSTRT_CHAR_MINBPC(enc, p) LITTLE2_IS_NMSTRT_CHAR_MINBPC(p)
 #define IS_INVALID_CHAR(enc, p, n) LITTLE2_IS_INVALID_CHAR(p, n)
 
@@ -791,6 +807,7 @@ static const struct normal_encoding internal_little2_encoding
   ((p)[0] == 0 ? SB_BYTE_TYPE(enc, p + 1) : unicode_byte_type((p)[0], (p)[1]))
 #define BIG2_BYTE_TO_ASCII(p) ((p)[0] == 0 ? (p)[1] : -1)
 #define BIG2_CHAR_MATCHES(p, c) ((p)[0] == 0 && (p)[1] == (c))
+#define BIG2_IS_NAME_CHAR(enc, p, n) BIG2_IS_NMSTRT_CHAR(enc, p, n)
 #define BIG2_IS_NAME_CHAR_MINBPC(p)                                            \
   UCS2_GET_NAMING(namePages, (unsigned char)p[0], (unsigned char)p[1])
 #define BIG2_IS_NMSTRT_CHAR_MINBPC(p)                                          \
@@ -801,6 +818,20 @@ static const struct normal_encoding internal_little2_encoding
 #define BIG2_IS_INVALID_CHAR(p, n)                                             \
   ((n) == 4 && ((unsigned char)(p)[2] & 0xFC) != 0xDC)
 
+static bool
+BIG2_IS_NMSTRT_CHAR(const ENCODING *enc, const char *p, size_t n) {
+  UNUSED_P(enc);
+  assert(n == 4);
+  const uint8_t *const source = (const uint8_t *)p;
+
+  const uint16_t high = (source[0] << 8) | source[1];
+  const uint16_t low = (source[2] << 8) | source[3];
+
+  const unsigned codepoint = (high - 0xD800) * 0x400 + (low - 0xDC00) + 0x10000;
+
+  return ((codepoint >= 0x10000) && (codepoint <= 0xEFFFF));
+}
+
 #undef PREFIX
 #define PREFIX(ident) big2_##ident
 #define MINBPC(enc) 2
@@ -808,9 +839,9 @@ static const struct normal_encoding internal_little2_encoding
 #define BYTE_TYPE(enc, p) BIG2_BYTE_TYPE(enc, p)
 #define BYTE_TO_ASCII(enc, p) BIG2_BYTE_TO_ASCII(p)
 #define CHAR_MATCHES(enc, p, c) BIG2_CHAR_MATCHES(p, c)
-#define IS_NAME_CHAR(enc, p, n) 0
+#define IS_NAME_CHAR(enc, p, n) BIG2_IS_NAME_CHAR(enc, p, n)
 #define IS_NAME_CHAR_MINBPC(enc, p) BIG2_IS_NAME_CHAR_MINBPC(p)
-#define IS_NMSTRT_CHAR(enc, p, n) (0)
+#define IS_NMSTRT_CHAR(enc, p, n) BIG2_IS_NMSTRT_CHAR(enc, p, n)
 #define IS_NMSTRT_CHAR_MINBPC(enc, p) BIG2_IS_NMSTRT_CHAR_MINBPC(p)
 #define IS_INVALID_CHAR(enc, p, n) BIG2_IS_INVALID_CHAR(p, n)
 
