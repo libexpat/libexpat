@@ -47,6 +47,7 @@ __  __            _
 #define EXPAT_COUNT_CODEPOINTS (EXPAT_MAX_CODEPOINT + 1)
 #define EXPAT_PARTIAL_CHARACTER (EXPAT_MAX_CODEPOINT + 1)
 #define EXPAT_MALFORMED_CHARACTER (EXPAT_MAX_CODEPOINT + 2)
+#define EXPAT_SURROGATE_REJECTED (EXPAT_MAX_CODEPOINT + 3)
 
 static const uint8_t b_0000_0111 = 0x07;
 static const uint8_t b_0000_1111 = 0x0F;
@@ -363,6 +364,95 @@ decodeCharUtf8(const uint8_t *source, size_t maxLength) {
   return len;
 }
 
+static unsigned
+utf16CharLen(unsigned codepoint) {
+  if (codepoint > EXPAT_MAX_CODEPOINT)
+    return 0;
+  if (codepoint <= 0xD7FF)
+    return 2;
+  if (codepoint <= 0xDFFF) // isolated surrogates
+    return 0;
+  if (codepoint <= 0xFFFF)
+    return 2;
+  return 4;
+}
+
+typedef enum {
+  EXPAT_LITTLE_ENDIAN,
+  EXPAT_BIG_ENDIAN,
+} Endianness;
+
+static unsigned
+encodeCharUtf16(unsigned codepoint, uint8_t *target, Endianness endianness) {
+  assert_true(target != NULL);
+  const bool littleEndian = (endianness == EXPAT_LITTLE_ENDIAN);
+
+  if (codepoint > EXPAT_MAX_CODEPOINT)
+    return 0;
+
+  if (codepoint <= 0xD7FF) {
+    target[littleEndian ? 0 : 1] = codepoint & 0xFF;
+    target[littleEndian ? 1 : 0] = (codepoint >> 8);
+    return 2;
+  }
+
+  if (codepoint <= 0xDFFF) { // isolated surrogates
+    return EXPAT_SURROGATE_REJECTED;
+  }
+
+  if (codepoint <= 0xFFFF) {
+    target[littleEndian ? 0 : 1] = codepoint & 0xFF;
+    target[littleEndian ? 1 : 0] = (codepoint >> 8);
+    return 2;
+  }
+
+  const unsigned twenty = codepoint - 0x10000;
+  const uint16_t high = (twenty >> 10) | 0xD800;
+  const uint16_t low = (twenty & /*11_1111_1111*/ 0x03FF) | 0xDC00;
+
+  target[littleEndian ? 0 : 1] = high & 0xFF;
+  target[littleEndian ? 1 : 0] = high >> 8;
+  target[littleEndian ? 2 : 3] = low & 0xFF;
+  target[littleEndian ? 3 : 2] = low >> 8;
+  return 4;
+}
+
+static unsigned
+decodeCharUtf16(const uint8_t *source, size_t maxLength,
+                Endianness endianness) {
+  assert_true(source != NULL);
+  if (maxLength < 2)
+    return EXPAT_PARTIAL_CHARACTER;
+
+  const bool littleEndian = (endianness == EXPAT_LITTLE_ENDIAN);
+
+  // Any surrogate? (xxxx_xxxx_1101_1xxx)
+  if ((source[littleEndian ? 1 : 0] & 0xF8) != 0xD8) {
+    return source[littleEndian ? 0 : 1] | (source[littleEndian ? 1 : 0] << 8);
+  }
+
+  // Both surrogates readable?
+  if (maxLength < 4)
+    return EXPAT_PARTIAL_CHARACTER;
+
+  // High surrogate? (xxxx_xxxx_1101_10xx)
+  if ((source[littleEndian ? 1 : 0] & 0xFC) != 0xD8) {
+    return EXPAT_MALFORMED_CHARACTER;
+  }
+
+  // Followed by a low surrogate? (xxxx_xxxx_1101_11xx)
+  if ((source[littleEndian ? 3 : 2] & 0xFC) != 0xDC) {
+    return EXPAT_MALFORMED_CHARACTER;
+  }
+
+  const uint16_t high
+      = (source[littleEndian ? 1 : 0] << 8) | source[littleEndian ? 0 : 1];
+  const uint16_t low
+      = (source[littleEndian ? 3 : 2] << 8) | source[littleEndian ? 2 : 3];
+
+  return (high - 0xD800) * 0x400 + (low - 0xDC00) + 0x10000;
+}
+
 START_TEST(test_fifth_edition_utf8_encoding_helper) {
   // Speed things up, the test does not use `XML_Parser`.
   if (g_chunkSize != 0 || g_reparseDeferralEnabledDefault)
@@ -382,6 +472,44 @@ START_TEST(test_fifth_edition_utf8_encoding_helper) {
     const unsigned decodedCodepoint
         = decodeCharUtf8(fiveBytes, actualBytesWritten);
     assert_true(decodedCodepoint == codepoint);
+  }
+}
+END_TEST
+
+START_TEST(test_fifth_edition_utf16_encoding_helper) {
+  // Speed things up, the test does not use `XML_Parser`.
+  if (g_chunkSize != 0 || g_reparseDeferralEnabledDefault)
+    return;
+
+  uint8_t fiveBytes[5];
+  const Endianness endiannessOptions[]
+      = {EXPAT_LITTLE_ENDIAN, EXPAT_BIG_ENDIAN};
+  for (size_t i = 0;
+       i < sizeof(endiannessOptions) / sizeof(endiannessOptions[0]); i++) {
+    const Endianness endianness = endiannessOptions[i];
+    for (unsigned codepoint = 0; codepoint <= EXPAT_MAX_CODEPOINT;
+         codepoint++) {
+      const unsigned expectedBytesWritten = utf16CharLen(codepoint);
+
+      const bool isIsolatedSurrogate
+          = (0xD800 <= codepoint && codepoint <= 0xDFFF);
+      if (isIsolatedSurrogate) {
+        assert_true(expectedBytesWritten == 0);
+        continue;
+      }
+
+      const unsigned actualBytesWritten
+          = encodeCharUtf16(codepoint, fiveBytes, endianness);
+      assert_true(actualBytesWritten == expectedBytesWritten);
+      fiveBytes[actualBytesWritten] = '\0';
+
+      assert_true(decodeCharUtf16(fiveBytes, actualBytesWritten - 1, endianness)
+                  == EXPAT_PARTIAL_CHARACTER);
+
+      const unsigned decodedCodepoint
+          = decodeCharUtf16(fiveBytes, actualBytesWritten, endianness);
+      assert_true(decodedCodepoint == codepoint);
+    }
   }
 }
 END_TEST
@@ -1026,5 +1154,6 @@ make_fifth_edition_test_case(Suite *s) {
   TCase *const tc_fifth_edition = tcase_create("fifth edition tests");
   suite_add_tcase(s, tc_fifth_edition);
   tcase_add_test(tc_fifth_edition, test_fifth_edition_utf8_encoding_helper);
+  tcase_add_test(tc_fifth_edition, test_fifth_edition_utf16_encoding_helper);
   tcase_add_test(tc_fifth_edition, test_fifth_edition_name_characters);
 }
