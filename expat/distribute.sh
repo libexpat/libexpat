@@ -48,8 +48,17 @@ extensions=(
     xz
 )
 
-for ext in ${extensions[@]} ; do
-    archive=expat-${version}.tar.${ext}
-    gpg --armor --output ${archive}.asc --detach-sign ${archive}
-    gpg --verify ${archive}.asc ${archive}
+archives=()
+for ext in "${extensions[@]}" ; do
+    archive="expat-${version}.tar.${ext}"
+    if [[ ! -f "${archive}" || ! -s "${archive}" ]] ; then
+        printf 'Missing or empty release archive: %s\n' "${archive}" >&2
+        exit 1
+    fi
+    archives+=("${archive}")
+done
+
+for archive in "${archives[@]}" ; do
+    gpg --armor --output "${archive}.asc" --detach-sign "${archive}"
+    gpg --verify "${archive}.asc" "${archive}"
 done
