@@ -74,9 +74,16 @@ jobs:
 
     - name: Install Inno Setup
       shell: pwsh
+      env:
+        # Published in the release asset metadata for is-6_1_2.
+        EXPECTED_SHA256: a3ce1c40ef9c71a92691aaff0f413f530c8c9e3c766be481bc63ca7cc74e35e7
       run: |-
-        Invoke-WebRequest -Uri https://github.com/jrsoftware/issrc/releases/download/is-6_1_2/innosetup-6.1.2.exe -OutFile D:\\is.exe
-        Start-Process -FilePath D:\\is.exe -ArgumentList "/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART" -Wait
+        $installer = 'D:\is.exe'
+        Invoke-WebRequest -Uri https://github.com/jrsoftware/issrc/releases/download/is-6_1_2/innosetup-6.1.2.exe -OutFile $installer
+        if ((Get-FileHash -Algorithm SHA256 -LiteralPath $installer).Hash -ne $env:EXPECTED_SHA256) {
+          throw 'Unexpected SHA-256 for the Inno Setup installer'
+        }
+        Start-Process -FilePath $installer -ArgumentList "/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART" -Wait
 
     - name: 'Add Inno Setup compiler to ${PATH}'
       run: |-
@@ -85,13 +92,17 @@ jobs:
     - name: Install Innoextract
       env:
         version: 1.9
+        # https://constexpr.org/innoextract/files/innoextract-1.9/SHA256SUMS
+        EXPECTED_SHA256: 6989342c9b026a00a72a38f23b62a8e6a22cc5de69805cf47d68ac2fec993065
       run: |-
         set -x
         mkdir innoextract
         cd innoextract
         export PATH="${PATH}:/c/msys64/usr/bin"  # for wget
-        wget -q https://github.com/dscharrer/innoextract/releases/download/${version}/innoextract-${version}-windows.zip
-        unzip innoextract-${version}-windows.zip
+        archive="innoextract-${version}-windows.zip"
+        wget -q "https://github.com/dscharrer/innoextract/releases/download/${version}/${archive}"
+        printf '%s  %s\n' "${EXPECTED_SHA256}" "${archive}" | sha256sum -c -
+        unzip "${archive}"
         echo "${GITHUB_WORKSPACE}\innoextract" >> "${GITHUB_PATH}"
 
     - name: Prepare win64 installer
