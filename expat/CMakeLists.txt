@@ -650,7 +650,7 @@ if(EXPAT_BUILD_PKGCONFIG)
 endif()
 
 #
-# C command line tool xmlwf
+# C command line tool xmlwf + its documentation and internal command "gennmtab"
 #
 if(EXPAT_BUILD_TOOLS)
     set(xmlwf_SRCS
@@ -673,6 +673,9 @@ if(EXPAT_BUILD_TOOLS)
         # https://gcc.gnu.org/onlinedocs/gcc/x86-Windows-Options.html
         target_link_options(xmlwf PRIVATE -municode)
     endif()
+
+    add_executable(gennmtab gennmtab/gennmtab.c)
+    set_property(TARGET gennmtab PROPERTY RUNTIME_OUTPUT_DIRECTORY gennmtab)
 
     if(EXPAT_BUILD_DOCS)
         file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/doc)
