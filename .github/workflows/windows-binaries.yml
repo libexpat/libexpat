@@ -73,10 +73,15 @@ jobs:
     - uses: microsoft/setup-msbuild@30375c66a4eea26614e0d39710365f22f8b0af57  # v3.0.0
 
     - name: Install Inno Setup
-      shell: pwsh
+      env:
+        version: 6.1.2
       run: |-
-        Invoke-WebRequest -Uri https://github.com/jrsoftware/issrc/releases/download/is-6_1_2/innosetup-6.1.2.exe -OutFile D:\\is.exe
-        Start-Process -FilePath D:\\is.exe -ArgumentList "/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART" -Wait
+        set -x
+        aria2c.exe -d /d/ -o is.exe "https://github.com/jrsoftware/issrc/releases/download/is-${version//./_}/innosetup-${version}.exe"
+        MSYS2_ARG_CONV_EXCL='*' /d/is.exe \
+          /VERYSILENT \
+          /SUPPRESSMSGBOXES \
+          /NORESTART
 
     - name: 'Add Inno Setup compiler to ${PATH}'
       run: |-
