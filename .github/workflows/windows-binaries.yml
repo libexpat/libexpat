@@ -161,9 +161,11 @@ jobs:
         if-no-files-found: error
 
     - name: Run installer
-      shell: pwsh
       run: |-
-        Start-Process -FilePath D:\\expat-installer.exe -ArgumentList "/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART" -Wait
+        MSYS2_ARG_CONV_EXCL='*' /d/expat-installer.exe \
+          /VERYSILENT \
+          /SUPPRESSMSGBOXES \
+          /NORESTART
 
     - name: Build installed code — Configure
       env:
