@@ -140,7 +140,7 @@ run-benchmark:
 download-xmlts-zip:
 	if test "$(XMLTS_ZIP)" = ""; then \
 		wget --output-document=tests/xmlts.zip \
-			https://www.w3.org/XML/Test/xmlts20080827.zip; \
+			https://www.w3.org/XML/Test/xmlts20130923.zip; \
 	else \
 		cp $(XMLTS_ZIP) tests/xmlts.zip; \
 	fi

@@ -732,6 +732,7 @@ if(EXPAT_BUILD_TESTS)
         tests/handlers.c
         tests/hash_tests.c
         tests/entities_tests.c
+        tests/fifth_edition_tests.c
         tests/memcheck.c
         tests/minicheck.c
         tests/misc_tests.c
@@ -908,7 +909,7 @@ if(EXPAT_BUILD_TOOLS AND NOT MSVC)
     add_custom_target(
         xmlts-zip-downloaded
         COMMAND
-            sh -c 'test -f xmlts.zip || wget --output-document=xmlts.zip https://www.w3.org/XML/Test/xmlts20080827.zip'
+            sh -c 'test -f xmlts.zip || wget --output-document=xmlts.zip https://www.w3.org/XML/Test/xmlts20130923.zip'
         BYPRODUCTS
             tests/xmlts.zip
         WORKING_DIRECTORY

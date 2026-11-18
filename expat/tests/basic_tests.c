@@ -600,10 +600,10 @@ END_TEST
 START_TEST(test_long_utf8_character) {
   const char *text
       = "<?xml version='1.0' encoding='utf-8'?>\n"
-        /* 0xf0 0x90 0x80 0x80 = U+10000, the first Linear B character */
-        "<do\xf0\x90\x80\x80/>";
+        /* 0xf3 0xb0 0x80 0x80 = U+F0000, a Private Use Character */
+        "<do\xf3\xb0\x80\x80/>";
   expect_failure(text, XML_ERROR_INVALID_TOKEN,
-                 "4-byte UTF-8 character in element name not faulted");
+                 "non-name 4-byte UTF-8 character in element name not faulted");
 }
 END_TEST
 
@@ -5809,11 +5809,8 @@ START_TEST(test_utf8_in_start_tags) {
   };
 
   // The idea with the tests below is this:
-  // We want to cover 1-, 2- and 3-byte sequences, 4-byte sequences
-  // go to isNever and are hence not a concern.
-  //
   // We start with a character that is a valid name character
-  // (or even name-start character, see XML 1.0r4 spec) and then we flip
+  // (or even name-start character, see XML 1.0r5 spec) and then we flip
   // single bits at places where (1) the result leaves the UTF-8 encoding space
   // and (2) we stay in the same n-byte sequence family.
   //
@@ -5847,13 +5844,25 @@ START_TEST(test_utf8_in_start_tags) {
       {false, false, "\xE0\xE4\x85"}, // [1110 0000] [1<1>10 0100] [1000 0101]
       {false, false, "\xE0\xA4\x05"}, // [1110 0000] [1010 0100] [<0>000 0101]
       {false, false, "\xE0\xA4\xC5"}, // [1110 0000] [1010 0100] [1<1>00 0101]
-      {true, false, "\xE0\xA4\x81"},  // [1110 0000] [1010 0100] [1000 0001] =
+      {true, true, "\xE0\xA4\x81"},   // [1110 0000] [1010 0100] [1000 0001] =
                                       // combining char U+0901
       {false, false, "\xA0\xA4\x81"}, // [1<0>10 0000] [1010 0100] [1000 0001]
       {false, false, "\xE0\x24\x81"}, // [1110 0000] [<0>010 0100] [1000 0001]
       {false, false, "\xE0\xE4\x81"}, // [1110 0000] [1<1>10 0100] [1000 0001]
       {false, false, "\xE0\xA4\x01"}, // [1110 0000] [1010 0100] [<0>000 0001]
       {false, false, "\xE0\xA4\xC1"}, // [1110 0000] [1010 0100] [1<1>00 0001]
+
+      // 4-byte UTF-8: [11110xxx] [10xxxxxx] [10xxxxxx] [10xxxxxx]
+      {true, true,
+       "\xf0\x90\x80\x80"}, // [1111 0000] [1001 0000] [1000 0000] [1000 0000]
+      {false, false,
+       "\xb0\x90\x80\x80"}, // [1<0>11 0000] [1001 0000] [1000 0000] [1000 0000]
+      {false, false,
+       "\xf0\xC0\x80\x80"}, // [1111 0000] [1<1>01 0000] [1000 0000] [1000 0000]
+      {false, false,
+       "\xf0\x90\xC0\x80"}, // [1111 0000] [1001 0000] [1<1>00 0000] [1000 0000]
+      {false, false,
+       "\xf0\x90\x80\xC0"}, // [1111 0000] [1001 0000] [1000 0000] [1<1>00 0000]
   };
   const bool atNameStart[] = {true, false};
 

@@ -52,6 +52,7 @@ runtests_SOURCES = \
     handlers.c \
     hash_tests.c \
     entities_tests.c \
+    fifth_edition_tests.c \
     memcheck.c \
     minicheck.c \
     misc_tests.c \
@@ -76,6 +77,7 @@ EXTRA_DIST = \
     handlers.h \
     hash_tests.h \
     entities_tests.h \
+    fifth_edition_tests.h \
     memcheck.h \
     minicheck.h \
     misc_tests.h \
