@@ -44,7 +44,7 @@ if WITH_TESTS
 SUBDIRS += tests  
 endif
 if WITH_XMLWF
-SUBDIRS += xmlwf doc
+SUBDIRS += gennmtab xmlwf doc
 endif
 
 pkgconfig_DATA = expat.pc
