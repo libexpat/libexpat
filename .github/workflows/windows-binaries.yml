@@ -75,9 +75,11 @@ jobs:
     - name: Install Inno Setup
       env:
         version: 6.1.2
+        sha256sum: a3ce1c40ef9c71a92691aaff0f413f530c8c9e3c766be481bc63ca7cc74e35e7
       run: |-
         set -x
         aria2c.exe -d /d/ -o is.exe "https://github.com/jrsoftware/issrc/releases/download/is-${version//./_}/innosetup-${version}.exe"
+        sha256sum --check - <<<"${sha256sum}  /d/is.exe"
         MSYS2_ARG_CONV_EXCL='*' /d/is.exe \
           /VERYSILENT \
           /SUPPRESSMSGBOXES \
