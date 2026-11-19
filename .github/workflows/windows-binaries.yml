@@ -91,12 +91,13 @@ jobs:
       env:
         version: 1.9
       run: |-
+        zipname="innoextract-${version}-windows.zip"
         set -x
         mkdir innoextract
         cd innoextract
         export PATH="${PATH}:/c/msys64/usr/bin"  # for wget
-        wget -q https://github.com/dscharrer/innoextract/releases/download/${version}/innoextract-${version}-windows.zip
-        unzip innoextract-${version}-windows.zip
+        wget -q https://github.com/dscharrer/innoextract/releases/download/${version}/${zipname}
+        unzip ${zipname}
         echo "${GITHUB_WORKSPACE}\innoextract" >> "${GITHUB_PATH}"
 
     - name: Prepare win64 installer
