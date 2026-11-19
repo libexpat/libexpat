@@ -74,11 +74,11 @@ jobs:
 
     - name: Install Inno Setup
       env:
-        version: 6.1.2
-        sha256sum: a3ce1c40ef9c71a92691aaff0f413f530c8c9e3c766be481bc63ca7cc74e35e7
+        version: 7.1.1
+        sha256sum: 8a5a6711c3766a6e5fb74f280ba0e3551e719ce94538d901fdbd1f8f9920b3f0
       run: |-
         set -x
-        aria2c.exe -d /d/ -o is.exe "https://github.com/jrsoftware/issrc/releases/download/is-${version//./_}/innosetup-${version}.exe"
+        aria2c.exe -d /d/ -o is.exe "https://github.com/jrsoftware/issrc/releases/download/is-${version//./_}/innosetup-${version}-x64.exe"
         sha256sum --check - <<<"${sha256sum}  /d/is.exe"
         MSYS2_ARG_CONV_EXCL='*' /d/is.exe \
           /VERYSILENT \
@@ -91,17 +91,17 @@ jobs:
 
     - name: Install Innoextract
       env:
-        version: 1.9
-        sha256sum: 6989342c9b026a00a72a38f23b62a8e6a22cc5de69805cf47d68ac2fec993065
+        version: 1.13.0
+        sha256sum: 5700fb1e82e6812bb341b964470537161e07a127d29eecfe176f5198cf215a59
       run: |-
-        zipname="innoextract-${version}-windows.zip"
+        filename=innoextract-windows-amd64.exe
         set -x
         mkdir innoextract
         cd innoextract
         export PATH="${PATH}:/c/msys64/usr/bin"  # for wget
-        wget -q https://github.com/dscharrer/innoextract/releases/download/${version}/${zipname}
-        sha256sum --check - <<<"${sha256sum}  ${zipname}"
-        unzip ${zipname}
+        wget -q https://github.com/crazy-max/innoextract/releases/download/v${version}/${filename}
+        sha256sum --check - <<<"${sha256sum}  ${filename}"
+        mv ${filename} innoextract.exe
         echo "${GITHUB_WORKSPACE}\innoextract" >> "${GITHUB_PATH}"
 
     - name: Prepare win64 installer
@@ -148,14 +148,6 @@ jobs:
 
         cd "expat/${expat_platform}"
         zip_name="$(echo expat-*bin-*.exe | sed 's,\.exe$,.zip,')"
-
-        # Workaround issues with innoextract 1.9 as documented at
-        # https://github.com/dscharrer/innoextract/issues/178#issue-2505033557
-        innoextract -l expat-*bin-*.exe \
-            | awk -F'"' '{print $2}' \
-            | xargs dirname \
-            | sort -u \
-            | xargs mkdir -v -p
 
         innoextract -e expat-*bin-*.exe
 
