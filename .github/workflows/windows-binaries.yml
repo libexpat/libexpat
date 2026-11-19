@@ -91,17 +91,17 @@ jobs:
 
     - name: Install Innoextract
       env:
-        version: 1.9
-        sha256sum: 6989342c9b026a00a72a38f23b62a8e6a22cc5de69805cf47d68ac2fec993065
+        version: 1.13.0
+        sha256sum: 5700fb1e82e6812bb341b964470537161e07a127d29eecfe176f5198cf215a59
       run: |-
-        zipname="innoextract-${version}-windows.zip"
+        filename=innoextract-windows-amd64.exe
         set -x
         mkdir innoextract
         cd innoextract
         export PATH="${PATH}:/c/msys64/usr/bin"  # for wget
-        wget -q https://github.com/dscharrer/innoextract/releases/download/${version}/${zipname}
-        sha256sum --check - <<<"${sha256sum}  ${zipname}"
-        unzip ${zipname}
+        wget -q https://github.com/crazy-max/innoextract/releases/download/v${version}/${filename}
+        sha256sum --check - <<<"${sha256sum}  ${filename}"
+        mv ${filename} innoextract.exe
         echo "${GITHUB_WORKSPACE}\innoextract" >> "${GITHUB_PATH}"
 
     - name: Prepare win64 installer
