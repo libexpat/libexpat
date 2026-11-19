@@ -125,6 +125,22 @@ typedef struct xmlwfUserData {
 
 #define NSSEP T('\001')
 
+// Strict non-negative number conversion
+static unsigned long long
+strict_tcstoull(const XML_Char *s, bool *outSuccess) {
+  assert(s != NULL);
+  assert(outSuccess != NULL);
+
+  errno = 0;
+  XML_Char *end = NULL;
+  const unsigned long long result = tcstoull(s, &end, 10);
+
+  *outSuccess = (errno == 0 && end != NULL && end[0] == T('\0') && end > s
+                 && T('1') <= s[0] && s[0] <= T('9'));
+
+  return result;
+}
+
 static void XMLCALL
 characterData(void *userData, const XML_Char *s, int len) {
   FILE *fp = ((XmlwfUserData *)userData)->fp;
@@ -1125,13 +1141,11 @@ tmain(int argc, XML_Char **argv) {
       const XML_Char *valueText = NULL;
       XMLWF_SHIFT_ARG_INTO(valueText, argc, argv, i, j);
 
-      errno = 0;
-      XML_Char *afterValueText = (XML_Char *)valueText;
+      bool success = false;
       const unsigned long long read_size_bytes_candidate
-          = tcstoull(valueText, &afterValueText, 10);
-      if ((errno != 0) || (read_size_bytes_candidate == 0)
-          || (afterValueText[0] != T('\0'))
-          || (read_size_bytes_candidate > INT_MAX)) {
+          = strict_tcstoull(valueText, &success);
+      if (! success || read_size_bytes_candidate == 0
+          || read_size_bytes_candidate > INT_MAX) {
         // This prevents tperror(..) from reporting misleading "[..]: Success"
         errno = ERANGE;
         tperror(T("invalid buffer size") T(
@@ -1172,10 +1186,9 @@ tmain(int argc, XML_Char **argv) {
       const XML_Char *valueText = NULL;
       XMLWF_SHIFT_ARG_INTO(valueText, argc, argv, i, j);
 
-      errno = 0;
-      XML_Char *afterValueText = (XML_Char *)valueText;
-      attackThresholdBytes = tcstoull(valueText, &afterValueText, 10);
-      if ((errno != 0) || (afterValueText[0] != T('\0'))) {
+      bool success = false;
+      attackThresholdBytes = strict_tcstoull(valueText, &success);
+      if (! success) {
         // This prevents tperror(..) from reporting misleading "[..]: Success"
         errno = ERANGE;
         tperror(T("invalid ignore threshold")
