@@ -74,11 +74,11 @@ jobs:
 
     - name: Install Inno Setup
       env:
-        version: 6.1.2
-        sha256sum: a3ce1c40ef9c71a92691aaff0f413f530c8c9e3c766be481bc63ca7cc74e35e7
+        version: 7.1.1
+        sha256sum: 8a5a6711c3766a6e5fb74f280ba0e3551e719ce94538d901fdbd1f8f9920b3f0
       run: |-
         set -x
-        aria2c.exe -d /d/ -o is.exe "https://github.com/jrsoftware/issrc/releases/download/is-${version//./_}/innosetup-${version}.exe"
+        aria2c.exe -d /d/ -o is.exe "https://github.com/jrsoftware/issrc/releases/download/is-${version//./_}/innosetup-${version}-x64.exe"
         sha256sum --check - <<<"${sha256sum}  /d/is.exe"
         MSYS2_ARG_CONV_EXCL='*' /d/is.exe \
           /VERYSILENT \
