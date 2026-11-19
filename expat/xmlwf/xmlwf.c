@@ -135,7 +135,8 @@ strict_tcstoull(const XML_Char *s, bool *outSuccess) {
   XML_Char *end = NULL;
   const unsigned long long result = tcstoull(s, &end, 10);
 
-  *outSuccess = (errno == 0 && end != NULL && end[0] == T('\0'));
+  *outSuccess = (errno == 0 && end != NULL && end[0] == T('\0') && end > s
+                 && T('1') <= s[0] && s[0] <= T('9'));
 
   return result;
 }
