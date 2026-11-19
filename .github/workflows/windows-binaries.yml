@@ -75,9 +75,11 @@ jobs:
     - name: Install Inno Setup
       env:
         version: 6.1.2
+        sha256sum: a3ce1c40ef9c71a92691aaff0f413f530c8c9e3c766be481bc63ca7cc74e35e7
       run: |-
         set -x
         aria2c.exe -d /d/ -o is.exe "https://github.com/jrsoftware/issrc/releases/download/is-${version//./_}/innosetup-${version}.exe"
+        sha256sum --check - <<<"${sha256sum}  /d/is.exe"
         MSYS2_ARG_CONV_EXCL='*' /d/is.exe \
           /VERYSILENT \
           /SUPPRESSMSGBOXES \
@@ -90,13 +92,16 @@ jobs:
     - name: Install Innoextract
       env:
         version: 1.9
+        sha256sum: 6989342c9b026a00a72a38f23b62a8e6a22cc5de69805cf47d68ac2fec993065
       run: |-
+        zipname="innoextract-${version}-windows.zip"
         set -x
         mkdir innoextract
         cd innoextract
         export PATH="${PATH}:/c/msys64/usr/bin"  # for wget
-        wget -q https://github.com/dscharrer/innoextract/releases/download/${version}/innoextract-${version}-windows.zip
-        unzip innoextract-${version}-windows.zip
+        wget -q https://github.com/dscharrer/innoextract/releases/download/${version}/${zipname}
+        sha256sum --check - <<<"${sha256sum}  ${zipname}"
+        unzip ${zipname}
         echo "${GITHUB_WORKSPACE}\innoextract" >> "${GITHUB_PATH}"
 
     - name: Prepare win64 installer
