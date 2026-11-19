@@ -615,6 +615,15 @@ START_TEST(test_misc_parsing_status_of_unstarted_parser) {
 }
 END_TEST
 
+START_TEST(test_misc_id_attribute_index_of_unstarted_parser) {
+  XML_Memory_Handling_Suite memsuite = {nonzero_filling_malloc, realloc, free};
+  XML_Parser parser = XML_ParserCreate_MM(NULL, &memsuite, NULL);
+  assert_true(parser != NULL);
+  assert_true(XML_GetIdAttributeIndex(parser) == -1);
+  XML_ParserFree(parser);
+}
+END_TEST
+
 /* Adaptation of accumulate_characters that takes ExtHdlrData input to work with
  * test_renter_loop_finite_content below */
 void XMLCALL
@@ -1348,6 +1357,7 @@ make_miscellaneous_test_case(Suite *s) {
   tcase_add_test(tc_misc, test_misc_resumeparser_not_crashing);
   tcase_add_test(tc_misc, test_misc_stopparser_rejects_unstarted_parser);
   tcase_add_test(tc_misc, test_misc_parsing_status_of_unstarted_parser);
+  tcase_add_test(tc_misc, test_misc_id_attribute_index_of_unstarted_parser);
   tcase_add_test__if_xml_ge(tc_misc, test_renter_loop_finite_content);
   tcase_add_test(tc_misc, test_misc_expected_event_ptr_issue_980);
   tcase_add_test(tc_misc, test_misc_sync_entity_tolerated);
