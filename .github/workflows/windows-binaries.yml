@@ -149,14 +149,6 @@ jobs:
         cd "expat/${expat_platform}"
         zip_name="$(echo expat-*bin-*.exe | sed 's,\.exe$,.zip,')"
 
-        # Workaround issues with innoextract 1.9 as documented at
-        # https://github.com/dscharrer/innoextract/issues/178#issue-2505033557
-        innoextract -l expat-*bin-*.exe \
-            | awk -F'"' '{print $2}' \
-            | xargs dirname \
-            | sort -u \
-            | xargs mkdir -v -p
-
         innoextract -e expat-*bin-*.exe
 
         ls -lh app/Bin/
