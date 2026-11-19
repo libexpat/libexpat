@@ -1559,6 +1559,7 @@ parserInit(XML_Parser parser, const XML_Char *encodingName, bool isReset) {
   parser->m_tagStack = NULL;
   parser->m_inheritedBindings = NULL;
   parser->m_nSpecifiedAtts = 0;
+  parser->m_idAttIndex = -1;
   parser->m_unknownEncodingMem = NULL;
   parser->m_unknownEncodingConvert = NULL;
   parser->m_unknownEncodingRelease = NULL;
