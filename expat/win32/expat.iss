@@ -90,6 +90,7 @@ Flags: ignoreversion; Source: expat_config.h.cmake;         DestDir: "{app}\Sour
 Flags: ignoreversion; Source: run.sh.in;                    DestDir: "{app}\Source"
 Flags: ignoreversion; Source: cmake\expat-config.cmake.in;  DestDir: "{app}\Source\cmake"
 Flags: ignoreversion; Source: fuzz\*.c;                     DestDir: "{app}\Source\fuzz"
+Flags: ignoreversion; Source: gennmtab/gennmtab.c;          DestDir: "{app}\Source\gennmtab"
 Flags: ignoreversion; Source: lib\*.c;                      DestDir: "{app}\Source\lib"
 Flags: ignoreversion; Source: lib\*.h;                      DestDir: "{app}\Source\lib"
 Flags: ignoreversion; Source: lib\*.def.cmake;              DestDir: "{app}\Source\lib"
