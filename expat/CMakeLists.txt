@@ -550,9 +550,9 @@ foreach(build_type_upper
     set_property(TARGET expat PROPERTY ${build_type_upper}_POSTFIX ${EXPAT_${build_type_upper}_POSTFIX})
 endforeach()
 
-set(LIBCURRENT 14)  # sync
-set(LIBREVISION 1)  # with
-set(LIBAGE 13    )  # configure.ac!
+set(LIBCURRENT 15)  # sync
+set(LIBREVISION 0)  # with
+set(LIBAGE 14    )  # configure.ac!
 math(EXPR LIBCURRENT_MINUS_AGE "${LIBCURRENT} - ${LIBAGE}")
 
 if(NOT WIN32)

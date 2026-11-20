@@ -107,6 +107,9 @@ Release 2.11.0 XXX XXXXXXX XX XXXX
            #1507⁠  tests: Upgrade W3C XML test suite from 2008 to 2013
            #1504  Autotools|macOS: Sync macOS CMake templates with CMake 4.5.0
            #1512⁠  Autotools|CMake: Integrate gennmtab.c with both build systems
+     #1470 #1494  Version info bumped from 14:1:13 (libexpat*.so.1.13.1)
+                    to 15:0:14 (libexpat*.so.1.14.0); see https://verbump.de/
+                    for what these numbers do
 
         Infrastructure:
            #1484  CI: Fix runner image typo "macoS-26" in `autotools-cmake.yml`
