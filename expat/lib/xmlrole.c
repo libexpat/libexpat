@@ -745,15 +745,24 @@ attlist2(PROLOG_STATE *state, int tok, const char *ptr, const char *end,
   case XML_TOK_PROLOG_S:
     return XML_ROLE_ATTLIST_NONE;
   case XML_TOK_NAME: {
-    static const char *const types[] = {
-        KW_CDATA,  KW_ID,       KW_IDREF,   KW_IDREFS,
-        KW_ENTITY, KW_ENTITIES, KW_NMTOKEN, KW_NMTOKENS,
+    struct TextToRole {
+      const char *text;
+      int role;
     };
-    int i;
-    for (i = 0; i < (int)(sizeof(types) / sizeof(types[0])); i++)
-      if (XmlNameMatchesAscii(enc, ptr, end, types[i])) {
+    static const struct TextToRole pairs[] = {
+        {KW_CDATA, /*****/ XML_ROLE_ATTRIBUTE_TYPE_CDATA},
+        {KW_ID, /********/ XML_ROLE_ATTRIBUTE_TYPE_ID},
+        {KW_IDREF, /*****/ XML_ROLE_ATTRIBUTE_TYPE_IDREF},
+        {KW_IDREFS, /****/ XML_ROLE_ATTRIBUTE_TYPE_IDREFS},
+        {KW_ENTITY, /****/ XML_ROLE_ATTRIBUTE_TYPE_ENTITY},
+        {KW_ENTITIES, /**/ XML_ROLE_ATTRIBUTE_TYPE_ENTITIES},
+        {KW_NMTOKEN, /***/ XML_ROLE_ATTRIBUTE_TYPE_NMTOKEN},
+        {KW_NMTOKENS, /**/ XML_ROLE_ATTRIBUTE_TYPE_NMTOKENS},
+    };
+    for (size_t i = 0; i < (sizeof(pairs) / sizeof(pairs[0])); i++)
+      if (XmlNameMatchesAscii(enc, ptr, end, pairs[i].text)) {
         state->handler = attlist8;
-        return XML_ROLE_ATTRIBUTE_TYPE_CDATA + i;
+        return pairs[i].role;
       }
   }
     if (XmlNameMatchesAscii(enc, ptr, end, KW_NOTATION)) {
