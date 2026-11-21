@@ -36,30 +36,13 @@ __  __            _
 #include "expat.h"    // for XML_Parse
 #include "common.h"   // for g_chunksize
 #include "internal.h" // for g_reparseDeferralEnabledDefault
+#include "utfx.h"     // for decodeCharUtf16 etc
 
 #include <stdbool.h>
 #include <stddef.h> // for size_t
 #include <stdint.h>
 #include <stdio.h>  // for snprintf
 #include <string.h> // for strlen
-
-#define EXPAT_MAX_CODEPOINT 0x10FFFF
-#define EXPAT_COUNT_CODEPOINTS (EXPAT_MAX_CODEPOINT + 1)
-#define EXPAT_PARTIAL_CHARACTER (EXPAT_MAX_CODEPOINT + 1)
-#define EXPAT_MALFORMED_CHARACTER (EXPAT_MAX_CODEPOINT + 2)
-#define EXPAT_SURROGATE_REJECTED (EXPAT_MAX_CODEPOINT + 3)
-
-static const uint8_t b_0000_0111 = 0x07;
-static const uint8_t b_0000_1111 = 0x0F;
-static const uint8_t b_0001_1111 = 0x1F;
-static const uint8_t b_0011_1111 = 0x3F;
-static const uint8_t b_1000_0000 = 0x80;
-static const uint8_t b_1100_0000 = 0xC0;
-static const uint8_t b_1110_0000 = 0xE0;
-static const uint8_t b_1111_0000 = 0xF0;
-
-#define EXPAT_COUNT_SINGLE(c) 1
-#define EXPAT_COUNT_RANGE(a, b) ((b) - (a) + 1)
 
 #define EXPAT_COUNT_BASECHAR_CHARS_FOURTH                                      \
   (EXPAT_COUNT_RANGE(0x41, 0x5A) + EXPAT_COUNT_RANGE(0x61, 0x7A)               \
@@ -265,193 +248,6 @@ static const uint8_t b_1111_0000 = 0xF0;
    + EXPAT_COUNT_SINGLE('.') + EXPAT_COUNT_RANGE('0', '9')                     \
    + EXPAT_COUNT_SINGLE(0xB7) + EXPAT_COUNT_RANGE(0x0300, 0x036F)              \
    + EXPAT_COUNT_RANGE(0x203F, 0x2040))
-
-static unsigned
-encodeCharUtf8(unsigned codepoint, uint8_t *target) {
-  assert_true(target != NULL);
-
-  if (codepoint > EXPAT_MAX_CODEPOINT)
-    return 0;
-
-  if (codepoint <= 0x7F) { // 7 bits
-    target[0] = codepoint;
-    return 1;
-  }
-
-  if (codepoint <= 0x07FF) { // 11 bits
-    target[0] = b_1100_0000 | (codepoint >> 6);
-    target[1] = b_1000_0000 | (codepoint & b_0011_1111);
-    return 2;
-  }
-
-  if (codepoint <= 0xFFFF) { // 16 bits
-    target[0] = b_1110_0000 | (codepoint >> 12);
-    target[1] = b_1000_0000 | ((codepoint >> 6) & b_0011_1111);
-    target[2] = b_1000_0000 | (codepoint & b_0011_1111);
-    return 3;
-  }
-
-  assert_true(codepoint <= 0x10FFFF); // 21 bits
-  target[0] = b_1111_0000 + (codepoint >> 18);
-  target[1] = b_1000_0000 + ((codepoint >> 12) & b_0011_1111);
-  target[2] = b_1000_0000 + ((codepoint >> 6) & b_0011_1111);
-  target[3] = b_1000_0000 + (codepoint & b_0011_1111);
-  return 4;
-}
-
-static unsigned
-utf8LeadLen(uint8_t leadByte) {
-  if ((leadByte & b_1100_0000) == b_1000_0000)
-    return 0;
-  if ((leadByte & b_1000_0000) == 0)
-    return 1;
-  if ((leadByte & b_1110_0000) == b_1100_0000)
-    return 2;
-  if ((leadByte & b_1111_0000) == b_1110_0000)
-    return 3;
-  return 4;
-}
-
-static unsigned
-utf8CharLen(unsigned codepoint) {
-  if (codepoint > EXPAT_MAX_CODEPOINT)
-    return 0;
-  if (codepoint <= 0x7F)
-    return 1;
-  if (codepoint <= 0x07FF)
-    return 2;
-  if (codepoint <= 0xFFFF)
-    return 3;
-  return 4;
-}
-
-static unsigned
-decodeCharUtf8(const uint8_t *source, size_t maxLength) {
-  assert_true(source != NULL);
-  if (maxLength == 0)
-    return EXPAT_PARTIAL_CHARACTER;
-
-  const uint8_t source_0 = source[0];
-
-  const unsigned len = utf8LeadLen(source_0);
-
-  if (len == 0)
-    return EXPAT_MALFORMED_CHARACTER;
-
-  if (len > maxLength)
-    return EXPAT_PARTIAL_CHARACTER;
-
-  // Reject invalid continuation bytes
-  for (size_t u = 1; u < len - 1; u++) {
-    if ((source[u] & b_1100_0000) != b_1000_0000)
-      return EXPAT_MALFORMED_CHARACTER;
-  }
-
-  switch (len) {
-  case 1:
-    return source_0;
-  case 2:
-    return ((source_0 & b_0001_1111) << 6) | (source[1] & b_0011_1111);
-  case 3:
-    return ((source_0 & b_0000_1111) << 12) | ((source[1] & b_0011_1111) << 6)
-           | (source[2] & b_0011_1111);
-  case 4:
-    return ((source_0 & b_0000_0111) << 18) | ((source[1] & b_0011_1111) << 12)
-           | ((source[2] & b_0011_1111) << 6) | (source[3] & b_0011_1111);
-  default:
-    assert_true(0 && "never gets here");
-  }
-  return len;
-}
-
-static unsigned
-utf16CharLen(unsigned codepoint) {
-  if (codepoint > EXPAT_MAX_CODEPOINT)
-    return 0;
-  if (codepoint <= 0xD7FF)
-    return 2;
-  if (codepoint <= 0xDFFF) // isolated surrogates
-    return 0;
-  if (codepoint <= 0xFFFF)
-    return 2;
-  return 4;
-}
-
-typedef enum {
-  EXPAT_LITTLE_ENDIAN,
-  EXPAT_BIG_ENDIAN,
-} Endianness;
-
-static unsigned
-encodeCharUtf16(unsigned codepoint, uint8_t *target, Endianness endianness) {
-  assert_true(target != NULL);
-  const bool littleEndian = (endianness == EXPAT_LITTLE_ENDIAN);
-
-  if (codepoint > EXPAT_MAX_CODEPOINT)
-    return 0;
-
-  if (codepoint <= 0xD7FF) {
-    target[littleEndian ? 0 : 1] = codepoint & 0xFF;
-    target[littleEndian ? 1 : 0] = (codepoint >> 8);
-    return 2;
-  }
-
-  if (codepoint <= 0xDFFF) { // isolated surrogates
-    return EXPAT_SURROGATE_REJECTED;
-  }
-
-  if (codepoint <= 0xFFFF) {
-    target[littleEndian ? 0 : 1] = codepoint & 0xFF;
-    target[littleEndian ? 1 : 0] = (codepoint >> 8);
-    return 2;
-  }
-
-  const unsigned twenty = codepoint - 0x10000;
-  const uint16_t high = (twenty >> 10) | 0xD800;
-  const uint16_t low = (twenty & /*11_1111_1111*/ 0x03FF) | 0xDC00;
-
-  target[littleEndian ? 0 : 1] = high & 0xFF;
-  target[littleEndian ? 1 : 0] = high >> 8;
-  target[littleEndian ? 2 : 3] = low & 0xFF;
-  target[littleEndian ? 3 : 2] = low >> 8;
-  return 4;
-}
-
-static unsigned
-decodeCharUtf16(const uint8_t *source, size_t maxLength,
-                Endianness endianness) {
-  assert_true(source != NULL);
-  if (maxLength < 2)
-    return EXPAT_PARTIAL_CHARACTER;
-
-  const bool littleEndian = (endianness == EXPAT_LITTLE_ENDIAN);
-
-  // Any surrogate? (xxxx_xxxx_1101_1xxx)
-  if ((source[littleEndian ? 1 : 0] & 0xF8) != 0xD8) {
-    return source[littleEndian ? 0 : 1] | (source[littleEndian ? 1 : 0] << 8);
-  }
-
-  // Both surrogates readable?
-  if (maxLength < 4)
-    return EXPAT_PARTIAL_CHARACTER;
-
-  // High surrogate? (xxxx_xxxx_1101_10xx)
-  if ((source[littleEndian ? 1 : 0] & 0xFC) != 0xD8) {
-    return EXPAT_MALFORMED_CHARACTER;
-  }
-
-  // Followed by a low surrogate? (xxxx_xxxx_1101_11xx)
-  if ((source[littleEndian ? 3 : 2] & 0xFC) != 0xDC) {
-    return EXPAT_MALFORMED_CHARACTER;
-  }
-
-  const uint16_t high
-      = (source[littleEndian ? 1 : 0] << 8) | source[littleEndian ? 0 : 1];
-  const uint16_t low
-      = (source[littleEndian ? 3 : 2] << 8) | source[littleEndian ? 2 : 3];
-
-  return (high - 0xD800) * 0x400 + (low - 0xDC00) + 0x10000;
-}
 
 START_TEST(test_fifth_edition_utf8_encoding_helper) {
   // Speed things up, the test does not use `XML_Parser`.
@@ -1011,40 +807,6 @@ isNameCharacterFifth(unsigned codepoint) {
   }
 
   return result[codepoint];
-}
-
-static uint8_t *
-dup_utf8_to_utf16(const uint8_t *utf8, size_t *outLenBytes,
-                  Endianness endianness) {
-  assert_true(utf8 != NULL);
-  size_t maxLength = strlen((const char *)utf8);
-  assert_true(maxLength <= (SIZE_MAX - 2) / 4);
-  const size_t pessimisticBytesNeeded = maxLength * 4 + /*terminator*/ 2;
-
-  uint8_t *const utf16 = malloc(pessimisticBytesNeeded);
-  if (utf16 == NULL)
-    return NULL;
-
-  const uint8_t *source = utf8;
-  const uint8_t *const sourceEnd = utf8 + maxLength;
-  uint8_t *target = utf16;
-
-  while (source < sourceEnd) {
-    const unsigned codepoint = decodeCharUtf8(source, maxLength);
-    assert_true(codepoint <= EXPAT_MAX_CODEPOINT);
-    const unsigned bytesWritten
-        = encodeCharUtf16(codepoint, target, endianness);
-    assert_true(bytesWritten == 2 || bytesWritten == 4);
-    source += utf8CharLen(codepoint);
-    target += bytesWritten;
-  }
-  target[0] = '\0';
-  target[1] = '\0';
-
-  if (outLenBytes)
-    *outLenBytes = target - utf16;
-
-  return utf16;
 }
 
 START_TEST(test_fifth_edition_name_characters) {
