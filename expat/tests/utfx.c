@@ -44,20 +44,29 @@ static const uint8_t b_0001_1111 = 0x1F;
 static const uint8_t b_0011_1111 = 0x3F;
 static const uint8_t b_1000_0000 = 0x80;
 static const uint8_t b_1100_0000 = 0xC0;
+static const uint8_t b_1100_0010 = 0xC2;
 static const uint8_t b_1110_0000 = 0xE0;
 static const uint8_t b_1111_0000 = 0xF0;
+static const uint8_t b_1111_1000 = 0xF8;
+static const uint8_t b_1111_0100 = 0xF4;
 
 unsigned
 utf8LeadLen(uint8_t leadByte) {
-  if ((leadByte & b_1100_0000) == b_1000_0000)
-    return 0;
   if ((leadByte & b_1000_0000) == 0)
     return 1;
-  if ((leadByte & b_1110_0000) == b_1100_0000)
+  if ((leadByte & b_1110_0000) == b_1100_0000) {
+    if (leadByte < b_1100_0010) // due to minimum 0x80
+      return 0;
     return 2;
+  }
   if ((leadByte & b_1111_0000) == b_1110_0000)
     return 3;
-  return 4;
+  if ((leadByte & b_1111_1000) == b_1111_0000) {
+    if (leadByte > b_1111_0100) // due to maximum 0x10FFFF
+      return 0;
+    return 4;
+  }
+  return 0; // e.g. a continuation byte
 }
 
 unsigned
