@@ -127,7 +127,7 @@ decodeCharUtf8(const uint8_t *source, size_t maxLength) {
     return EXPAT_PARTIAL_CHARACTER;
 
   // Reject invalid continuation bytes
-  for (size_t u = 1; u < len - 1; u++) {
+  for (size_t u = 1; u < len; u++) {
     if ((source[u] & b_1100_0000) != b_1000_0000)
       return EXPAT_MALFORMED_CHARACTER;
   }
