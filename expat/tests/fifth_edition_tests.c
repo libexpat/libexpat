@@ -256,10 +256,17 @@ START_TEST(test_fifth_edition_utf8_encoding_helper) {
 
   uint8_t fiveBytes[5];
   for (unsigned codepoint = 0; codepoint <= EXPAT_MAX_CODEPOINT; codepoint++) {
-    const unsigned expectedBytesWritten = utf8CharLen(codepoint);
+    const bool isIsolatedSurrogate
+        = (0xD800 <= codepoint && codepoint <= 0xDFFF);
 
+    const unsigned expectedBytesWritten = isIsolatedSurrogate
+                                              ? EXPAT_SURROGATE_REJECTED
+                                              : utf8CharLen(codepoint);
     const unsigned actualBytesWritten = encodeCharUtf8(codepoint, fiveBytes);
+
     assert_true(actualBytesWritten == expectedBytesWritten);
+    if (isIsolatedSurrogate)
+      continue;
     fiveBytes[actualBytesWritten] = '\0';
 
     assert_true(decodeCharUtf8(fiveBytes, actualBytesWritten - 1)
@@ -834,6 +841,11 @@ START_TEST(test_fifth_edition_name_characters) {
 
     for (unsigned codepoint = 0; codepoint <= EXPAT_MAX_CODEPOINT;
          codepoint++) {
+      const bool isIsolatedSurrogate
+          = (0xD800 <= codepoint && codepoint <= 0xDFFF);
+      if (isIsolatedSurrogate)
+        continue;
+
       uint8_t fiveBytes[5];
       unsigned bytesWritten = encodeCharUtf8(codepoint, fiveBytes);
       assert_true(bytesWritten == utf8CharLen(codepoint));
@@ -867,9 +879,7 @@ START_TEST(test_fifth_edition_name_characters) {
                                             /*isFinal=*/XML_TRUE)
                                 == XML_STATUS_OK);
 
-      const bool isIsolatedSurrogate
-          = (0xD800 <= codepoint && codepoint <= 0xDFFF);
-      if (! isIsolatedSurrogate) {
+      if (true) {
         const Endianness endiannessOptions[]
             = {EXPAT_LITTLE_ENDIAN, EXPAT_BIG_ENDIAN};
         for (size_t j = 0;
@@ -957,20 +967,20 @@ START_TEST(test_fifth_edition_name_characters) {
     assert_true(nameCharCountFourth == COUNT_FOURTH);
     assert_true(truePositivesFourth == COUNT_FOURTH);
     assert_true(falsePositivesFourth == truePositivesFifth - COUNT_FOURTH);
-    assert_true(trueNegativesFourth == EXPAT_COUNT_CODEPOINTS - COUNT_FIFTH);
+    assert_true(trueNegativesFourth == EXPAT_COUNT_NONSURROGATES - COUNT_FIFTH);
     assert_true(falseNegativesFourth == 0);
     assert_true(truePositivesFourth + falsePositivesFourth + trueNegativesFourth
                     + falseNegativesFourth
-                == EXPAT_COUNT_CODEPOINTS);
+                == EXPAT_COUNT_NONSURROGATES);
 
     assert_true(nameCharCountFifth == COUNT_FIFTH);
     assert_true(truePositivesFifth == COUNT_FIFTH);
     assert_true(falsePositivesFifth == 0);
-    assert_true(trueNegativesFifth == EXPAT_COUNT_CODEPOINTS - COUNT_FIFTH);
+    assert_true(trueNegativesFifth == EXPAT_COUNT_NONSURROGATES - COUNT_FIFTH);
     assert_true(falseNegativesFifth == 0);
     assert_true(truePositivesFifth + falsePositivesFifth + trueNegativesFifth
                     + falseNegativesFifth
-                == EXPAT_COUNT_CODEPOINTS);
+                == EXPAT_COUNT_NONSURROGATES);
   }
 }
 END_TEST

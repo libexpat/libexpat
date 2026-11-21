@@ -91,6 +91,10 @@ encodeCharUtf8(unsigned codepoint, uint8_t *target) {
     return 2;
   }
 
+  if (0xD800 <= codepoint && codepoint <= 0xDFFF) { // isolated surrogates
+    return EXPAT_SURROGATE_REJECTED;
+  }
+
   if (codepoint <= 0xFFFF) { // 16 bits
     target[0] = b_1110_0000 | (codepoint >> 12);
     target[1] = b_1000_0000 | ((codepoint >> 6) & b_0011_1111);
