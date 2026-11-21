@@ -34,6 +34,8 @@ __  __            _
 #if ! defined(EXPAT_TESTS_UTFX_H)
 #  define EXPAT_TESTS_UTFX_H 1
 
+#  include "expat_config.h" // for BYTEORDER
+
 #  include <stdint.h> // for uint8_t
 #  include <stddef.h> // for size_t
 
@@ -54,6 +56,13 @@ __  __            _
 typedef enum {
   EXPAT_LITTLE_ENDIAN,
   EXPAT_BIG_ENDIAN,
+#  if BYTEORDER == 1234
+  NATIVE_ENDIAN = EXPAT_LITTLE_ENDIAN,
+  OPPOSITE_ENDIAN = EXPAT_BIG_ENDIAN,
+#  elif BYTEORDER == 4321
+  NATIVE_ENDIAN = EXPAT_BIG_ENDIAN,
+  OPPOSITE_ENDIAN = EXPAT_LITTLE_ENDIAN,
+#  endif
 } Endianness;
 
 unsigned utf8LeadLen(uint8_t leadByte);

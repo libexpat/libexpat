@@ -653,20 +653,31 @@ unicode_byte_type(char hi, char lo) {
       unsigned short **toP, const unsigned short *toLim) {                     \
     enum XML_Convert_Result res = XML_CONVERT_COMPLETED;                       \
     UNUSED_P(enc);                                                             \
-    fromLim = *fromP + (((fromLim - *fromP) >> 1) << 1); /* shrink to even */  \
-    /* Avoid copying the first half (2 bytes) of surrogate pairs (4 bytes) */  \
-    if (fromLim - *fromP > ((toLim - *toP) << 1)                               \
-        && /* are the last two bytes a high surrogate (0xD800-0xDBFF)? */      \
-        (GET_HI(fromLim - 2) & 0xFC) == 0xD8) {                                \
-      fromLim -= 2;                                                            \
-      res = XML_CONVERT_INPUT_INCOMPLETE;                                      \
+    const size_t maxBytesToCopy = (toLim - *toP) * sizeof(short);              \
+                                                                               \
+    if ((size_t)(fromLim - *fromP) > maxBytesToCopy) {                         \
+      /* Shrink to the (even) maximum amount able to copy */                   \
+      fromLim = *fromP + maxBytesToCopy;                                       \
+      res = XML_CONVERT_OUTPUT_EXHAUSTED;                                      \
+    } else {                                                                   \
+      /* Shrink to even number of bytes */                                     \
+      fromLim = *fromP + (((fromLim - *fromP) >> 1) << 1);                     \
     }                                                                          \
+                                                                               \
+    /* Avoid copying the first half (2 bytes) of surrogate pairs (4 bytes) */  \
+    /* Are the last about-to-be-copied two bytes a high surrogate              \
+     * (0xD800-0xDBFF)? */                                                     \
+    if ((fromLim - *fromP) >= 2 && (GET_HI(fromLim - 2) & 0xFC) == 0xD8) {     \
+      fromLim -= 2;                                                            \
+      if (res != XML_CONVERT_OUTPUT_EXHAUSTED)                                 \
+        res = XML_CONVERT_INPUT_INCOMPLETE;                                    \
+    }                                                                          \
+                                                                               \
+    /* Copy bytes respecting endianness */                                     \
     for (; *fromP < fromLim && *toP < toLim; *fromP += 2)                      \
       *(*toP)++ = (GET_HI(*fromP) << 8) | GET_LO(*fromP);                      \
-    if ((*toP == toLim) && (*fromP < fromLim))                                 \
-      return XML_CONVERT_OUTPUT_EXHAUSTED;                                     \
-    else                                                                       \
-      return res;                                                              \
+                                                                               \
+    return res;                                                                \
   }
 
 #define GET_LO(ptr) ((unsigned char)(ptr)[0])
