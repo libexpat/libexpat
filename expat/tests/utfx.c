@@ -134,18 +134,24 @@ decodeCharUtf8(const uint8_t *source, size_t maxLength) {
   case 2: {
     const unsigned codepoint
         = ((source_0 & b_0001_1111) << 6) | (source[1] & b_0011_1111);
+    if (codepoint < 0x80) // overlong sequence?
+      return EXPAT_MALFORMED_CHARACTER;
     return codepoint;
   }
   case 3: {
     const unsigned codepoint = ((source_0 & b_0000_1111) << 12)
                                | ((source[1] & b_0011_1111) << 6)
                                | (source[2] & b_0011_1111);
+    if (codepoint < 0x0800) // overlong sequence?
+      return EXPAT_MALFORMED_CHARACTER;
     return codepoint;
   }
   case 4: {
     const unsigned codepoint
         = ((source_0 & b_0000_0111) << 18) | ((source[1] & b_0011_1111) << 12)
           | ((source[2] & b_0011_1111) << 6) | (source[3] & b_0011_1111);
+    if (codepoint < 0x10000) // overlong sequence?
+      return EXPAT_MALFORMED_CHARACTER;
     return codepoint;
   }
   default:
