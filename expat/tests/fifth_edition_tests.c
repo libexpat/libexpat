@@ -321,6 +321,50 @@ START_TEST(test_fifth_edition_utf8_decoding_helper_lead_len) {
 }
 END_TEST
 
+START_TEST(test_fifth_edition_utf8_decoding_helper_malformed_utf8) {
+  // Speed things up, the test does not use `XML_Parser`.
+  if (g_chunkSize != 0 || g_reparseDeferralEnabledDefault)
+    return;
+
+  struct TestCase {
+    size_t lenBytes;
+    uint8_t bytes[4];
+    unsigned expectedCodepoint;
+  };
+
+  struct TestCase testCases[] = {
+      {0, {0, 0, 0, 0}, EXPAT_PARTIAL_CHARACTER},
+      {1, {0, 0, 0, 0}, 0},
+      // Bad lead byte (continuation byte)
+      {1, {0x80, 0, 0, 0}, EXPAT_MALFORMED_CHARACTER},
+      // Bad continuation bytes
+      {2, {0xC0, 0xC0}, EXPAT_MALFORMED_CHARACTER},
+      {3, {0xE0, 0xC0, 0x80}, EXPAT_MALFORMED_CHARACTER},
+      {3, {0xE0, 0x80, 0xC0}, EXPAT_MALFORMED_CHARACTER},
+      {4, {0xF0, 0xC0, 0x80, 0x80}, EXPAT_MALFORMED_CHARACTER},
+      {4, {0xF0, 0x80, 0xC0, 0x80}, EXPAT_MALFORMED_CHARACTER},
+      {4, {0xF0, 0x80, 0x80, 0xC0}, EXPAT_MALFORMED_CHARACTER},
+      // Overlong sequence
+      {2, {0xC0, 0x80}, EXPAT_MALFORMED_CHARACTER},
+      {3, {0xE0, 0x80, 0x80}, EXPAT_MALFORMED_CHARACTER},
+      {4, {0xF0, 0x80, 0x80, 0x80}, EXPAT_MALFORMED_CHARACTER},
+      // Over the top
+      {4, {0xf4, 0x8f, 0xbf, 0xbf}, EXPAT_MAX_CODEPOINT},
+      {4, {0xf5, 0x8f, 0xbf, 0xbf}, EXPAT_MALFORMED_CHARACTER},
+      // Surrogates (0xD800 to 0xDFFF)
+      {3, {0xED, 0xA0, 0x80}, EXPAT_MALFORMED_CHARACTER},
+      {3, {0xED, 0xBF, 0xBF}, EXPAT_MALFORMED_CHARACTER},
+  };
+
+  for (size_t i = 0; i < sizeof(testCases) / sizeof(testCases[0]); i++) {
+    const uint8_t *const source = testCases[i].bytes;
+    const size_t maxLength = testCases[i].lenBytes;
+    const unsigned expectedCodepoint = testCases[i].expectedCodepoint;
+    assert_true(decodeCharUtf8(source, maxLength) == expectedCodepoint);
+  }
+}
+END_TEST
+
 START_TEST(test_fifth_edition_utf16_encoding_helper) {
   // Speed things up, the test does not use `XML_Parser`.
   if (g_chunkSize != 0 || g_reparseDeferralEnabledDefault)
@@ -1030,6 +1074,8 @@ make_fifth_edition_test_case(Suite *s) {
   tcase_add_test(tc_fifth_edition, test_fifth_edition_utf8_encoding_helper);
   tcase_add_test(tc_fifth_edition,
                  test_fifth_edition_utf8_decoding_helper_lead_len);
+  tcase_add_test(tc_fifth_edition,
+                 test_fifth_edition_utf8_decoding_helper_malformed_utf8);
   tcase_add_test(tc_fifth_edition, test_fifth_edition_utf16_encoding_helper);
   tcase_add_test(tc_fifth_edition, test_fifth_edition_name_characters);
 }
