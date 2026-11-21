@@ -77,6 +77,8 @@ utf8CharLen(unsigned codepoint) {
     return 1;
   if (codepoint <= 0x07FF)
     return 2;
+  if (0xD800 <= codepoint && codepoint <= 0xDFFF) // isolated surrogates
+    return 0;
   if (codepoint <= 0xFFFF)
     return 3;
   return 4;
