@@ -28,7 +28,7 @@
 #
 # Copyright (c) 2002-2004 Fred L. Drake, Jr. <fdrake@users.sourceforge.net>
 # Copyright (c) 2002      Karl Waclawek <karl@waclawek.net>
-# Copyright (c) 2008-2019 Sebastian Pipping <sebastian@pipping.org>
+# Copyright (c) 2008-2026 Sebastian Pipping <sebastian@pipping.org>
 # Copyright (c) 2017      Rhodri James <rhodri@wildebeest.org.uk>
 # Copyright (c) 2025      Hanno Böck <hanno@gentoo.org>
 # Copyright (c) 2026      Huang Wenbin <huangwenbin@kylinos.cn>
