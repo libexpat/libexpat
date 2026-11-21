@@ -114,10 +114,10 @@ encodeCharUtf8(unsigned codepoint, uint8_t *target) {
   }
 
   assert_true(codepoint <= 0x10FFFF); // 21 bits
-  target[0] = b_1111_0000 + (codepoint >> 18);
-  target[1] = b_1000_0000 + ((codepoint >> 12) & b_0011_1111);
-  target[2] = b_1000_0000 + ((codepoint >> 6) & b_0011_1111);
-  target[3] = b_1000_0000 + (codepoint & b_0011_1111);
+  target[0] = b_1111_0000 | (codepoint >> 18);
+  target[1] = b_1000_0000 | ((codepoint >> 12) & b_0011_1111);
+  target[2] = b_1000_0000 | ((codepoint >> 6) & b_0011_1111);
+  target[3] = b_1000_0000 | (codepoint & b_0011_1111);
   return 4;
 }
 
