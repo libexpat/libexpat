@@ -154,7 +154,8 @@ decodeCharUtf8(const uint8_t *source, size_t maxLength) {
     const unsigned codepoint
         = ((source_0 & b_0000_0111) << 18) | ((source[1] & b_0011_1111) << 12)
           | ((source[2] & b_0011_1111) << 6) | (source[3] & b_0011_1111);
-    if (codepoint < 0x10000) // overlong sequence?
+    if (codepoint < 0x10000 // overlong sequence?
+        || codepoint > EXPAT_MAX_CODEPOINT)
       return EXPAT_MALFORMED_CHARACTER;
     return codepoint;
   }
