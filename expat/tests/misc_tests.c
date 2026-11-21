@@ -70,6 +70,7 @@
 #include "ascii.h" /* for ASCII_xxx */
 #include "handlers.h"
 #include "misc_tests.h"
+#include "utfx.h"
 #include "../lib/xcs.h"
 #include "xmltok.h"
 
@@ -278,6 +279,58 @@ START_TEST(test_misc_attribute_leak) {
 
   if (! tracking_report())
     fail("Memory leak found");
+}
+END_TEST
+
+static void
+check_for_isolated_surrogates(void *userData, const XML_Char *s, int len) {
+  UNUSED_P(userData);
+#ifdef XML_UNICODE
+  // The last unit must not be a high surrogate (or we would serve
+  // isolated surrogate non-characters to the application using Expat).
+  assert_true(len >= 1);
+  const XML_Char lastUnit = s[len - 1];
+  const bool isHighSurrogate = (0xD800 <= lastUnit && lastUnit <= 0xDBFF);
+  assert_true(! isHighSurrogate);
+#else
+  UNUSED_P(s);
+  UNUSED_P(len);
+#endif
+}
+
+// Idea by Cameron Sparks
+START_TEST(test_misc_utf16_no_trailing_high_surrogate) {
+  // Speed things up
+  if (g_chunkSize != 0 || g_reparseDeferralEnabledDefault)
+    return;
+
+  uint8_t buffer[10000];
+  uint8_t *writer = buffer;
+
+  // NOTE: We want the opposite of native endianness so that
+  //       conversion needs to be run.
+  const Endianness endianness = OPPOSITE_ENDIAN;
+
+  writer += encodeCharUtf16('<', writer, endianness);
+  writer += encodeCharUtf16('a', writer, endianness);
+  writer += encodeCharUtf16('>', writer, endianness);
+  for (size_t i = 1; i <= 1023; i++)
+    writer += encodeCharUtf16('b', writer, endianness);
+  writer += encodeCharUtf16(0x1F600, writer, endianness);
+  writer += encodeCharUtf16('<', writer, endianness);
+  writer += encodeCharUtf16('/', writer, endianness);
+  writer += encodeCharUtf16('a', writer, endianness);
+  writer += encodeCharUtf16('>', writer, endianness);
+  assert_true(writer <= buffer + sizeof(buffer));
+
+  XML_Parser parser = XML_ParserCreate(NULL);
+
+  XML_SetCharacterDataHandler(parser, check_for_isolated_surrogates);
+  assert_true(XML_Parse64_SINGLE_BYTES(parser, (const char *)buffer,
+                                       writer - buffer, /*isFinal*/ XML_TRUE)
+              == XML_STATUS_OK);
+
+  XML_ParserFree(parser);
 }
 END_TEST
 
@@ -1415,6 +1468,7 @@ make_miscellaneous_test_case(Suite *s) {
   tcase_add_test(tc_misc, test_misc_version);
   tcase_add_test(tc_misc, test_misc_features);
   tcase_add_test(tc_misc, test_misc_attribute_leak);
+  tcase_add_test(tc_misc, test_misc_utf16_no_trailing_high_surrogate);
   tcase_add_test(tc_misc, test_misc_utf16le);
   tcase_add_test(tc_misc, test_misc_utf16_conversion);
   tcase_add_test(tc_misc, test_misc_stop_during_end_handler_issue_240_1);
