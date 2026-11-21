@@ -131,14 +131,23 @@ decodeCharUtf8(const uint8_t *source, size_t maxLength) {
   switch (len) {
   case 1:
     return source_0;
-  case 2:
-    return ((source_0 & b_0001_1111) << 6) | (source[1] & b_0011_1111);
-  case 3:
-    return ((source_0 & b_0000_1111) << 12) | ((source[1] & b_0011_1111) << 6)
-           | (source[2] & b_0011_1111);
-  case 4:
-    return ((source_0 & b_0000_0111) << 18) | ((source[1] & b_0011_1111) << 12)
-           | ((source[2] & b_0011_1111) << 6) | (source[3] & b_0011_1111);
+  case 2: {
+    const unsigned codepoint
+        = ((source_0 & b_0001_1111) << 6) | (source[1] & b_0011_1111);
+    return codepoint;
+  }
+  case 3: {
+    const unsigned codepoint = ((source_0 & b_0000_1111) << 12)
+                               | ((source[1] & b_0011_1111) << 6)
+                               | (source[2] & b_0011_1111);
+    return codepoint;
+  }
+  case 4: {
+    const unsigned codepoint
+        = ((source_0 & b_0000_0111) << 18) | ((source[1] & b_0011_1111) << 12)
+          | ((source[2] & b_0011_1111) << 6) | (source[3] & b_0011_1111);
+    return codepoint;
+  }
   default:
     assert_true(0 && "never gets here");
   }
