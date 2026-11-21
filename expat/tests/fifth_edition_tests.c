@@ -279,6 +279,48 @@ START_TEST(test_fifth_edition_utf8_encoding_helper) {
 }
 END_TEST
 
+START_TEST(test_fifth_edition_utf8_decoding_helper_lead_len) {
+  // Speed things up, the test does not use `XML_Parser`.
+  if (g_chunkSize != 0 || g_reparseDeferralEnabledDefault)
+    return;
+
+  struct TestCase {
+    uint8_t leadByte;
+    unsigned expectedLen;
+  };
+
+  struct TestCase testCases[] = {
+      // 1 [0xxx xxxx]
+      {0x00, 1},
+      {0x7F, 1},
+      // x [10xx xxxx]
+      {0x80, 0},
+      {0xBF, 0},
+      // 2 [110x xxxx]
+      {0xC0, 0},
+      {0xC1, 0},
+      {0xC2, 2},
+      {0xDF, 2},
+      // 3 [1110 xxxx]
+      {0xE0, 3},
+      {0xEF, 3},
+      // 4 [1111 0xxx]
+      {0xF0, 4},
+      {0xF4, 4},
+      {0xF5, 0},
+      {0xF7, 0},
+      // x [1111 1xxx]
+      {0xF8, 0},
+      {0xFF, 0},
+  };
+  for (size_t i = 0; i < sizeof(testCases) / sizeof(testCases[0]); i++) {
+    uint8_t leadByte = testCases[i].leadByte;
+    unsigned expectedLen = testCases[i].expectedLen;
+    assert_true(utf8LeadLen(leadByte) == expectedLen);
+  }
+}
+END_TEST
+
 START_TEST(test_fifth_edition_utf16_encoding_helper) {
   // Speed things up, the test does not use `XML_Parser`.
   if (g_chunkSize != 0 || g_reparseDeferralEnabledDefault)
@@ -986,6 +1028,8 @@ make_fifth_edition_test_case(Suite *s) {
   TCase *const tc_fifth_edition = tcase_create("fifth edition tests");
   suite_add_tcase(s, tc_fifth_edition);
   tcase_add_test(tc_fifth_edition, test_fifth_edition_utf8_encoding_helper);
+  tcase_add_test(tc_fifth_edition,
+                 test_fifth_edition_utf8_decoding_helper_lead_len);
   tcase_add_test(tc_fifth_edition, test_fifth_edition_utf16_encoding_helper);
   tcase_add_test(tc_fifth_edition, test_fifth_edition_name_characters);
 }
