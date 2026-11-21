@@ -278,7 +278,7 @@ dup_utf8_to_utf16(const uint8_t *utf8, size_t *outLenBytes,
   uint8_t *target = utf16;
 
   while (source < sourceEnd) {
-    const unsigned codepoint = decodeCharUtf8(source, maxLength);
+    const unsigned codepoint = decodeCharUtf8(source, sourceEnd - source);
     assert_true(codepoint <= EXPAT_MAX_CODEPOINT);
     const unsigned bytesWritten
         = encodeCharUtf16(codepoint, target, endianness);
