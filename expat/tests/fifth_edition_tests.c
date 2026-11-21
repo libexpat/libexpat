@@ -879,31 +879,27 @@ START_TEST(test_fifth_edition_name_characters) {
                                             /*isFinal=*/XML_TRUE)
                                 == XML_STATUS_OK);
 
-      if (true) {
-        const Endianness endiannessOptions[]
-            = {EXPAT_LITTLE_ENDIAN, EXPAT_BIG_ENDIAN};
-        for (size_t j = 0;
-             j < sizeof(endiannessOptions) / sizeof(endiannessOptions[0]);
-             j++) {
-          const Endianness endianness = endiannessOptions[j];
+      const Endianness endiannessOptions[]
+          = {EXPAT_LITTLE_ENDIAN, EXPAT_BIG_ENDIAN};
+      for (size_t j = 0;
+           j < sizeof(endiannessOptions) / sizeof(endiannessOptions[0]); j++) {
+        const Endianness endianness = endiannessOptions[j];
 
-          assert_true(XML_ParserReset(parser, NULL) == XML_STATUS_OK);
+        assert_true(XML_ParserReset(parser, NULL) == XML_STATUS_OK);
 
-          size_t utf16LenBytes = 0;
-          char *const docUtf16 = (char *)dup_utf8_to_utf16(
-              (const uint8_t *)doc, &utf16LenBytes, endianness);
-          assert_true(docUtf16 != NULL);
-          assert_true(utf16LenBytes > 0);
+        size_t utf16LenBytes = 0;
+        char *const docUtf16 = (char *)dup_utf8_to_utf16(
+            (const uint8_t *)doc, &utf16LenBytes, endianness);
+        assert_true(docUtf16 != NULL);
+        assert_true(utf16LenBytes > 0);
 
-          const bool utf16Success
-              = (XML_Parse64(parser, docUtf16, utf16LenBytes,
-                             /*isFinal=*/XML_TRUE)
-                 == XML_STATUS_OK);
+        const bool utf16Success = (XML_Parse64(parser, docUtf16, utf16LenBytes,
+                                               /*isFinal=*/XML_TRUE)
+                                   == XML_STATUS_OK);
 
-          free(docUtf16);
+        free(docUtf16);
 
-          assert_true(utf16Success == utf8Success);
-        }
+        assert_true(utf16Success == utf8Success);
       }
 
       XML_ParserFree(parser);
