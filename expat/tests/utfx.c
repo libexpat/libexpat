@@ -261,6 +261,13 @@ decodeCharUtf16(const uint8_t *source, size_t maxLength,
   return (high - 0xD800) * 0x400 + (low - 0xDC00) + 0x10000;
 }
 
+// Converts zero terminated UTF-8 input to UTF-16
+// NOTE:
+// - non-NULL `outLenBytes` receives the length of the UTF-16 in bytes
+//   string without the terminator (a bit like `strlen`)
+// - Assumes all-valid UTF-8 input!
+// - The result includes a 2-byte UTF-16 zero terminator.
+// - The result is malloced and needs to be freed.
 uint8_t *
 dup_utf8_to_utf16(const uint8_t *utf8, size_t *outLenBytes,
                   Endianness endianness) {
