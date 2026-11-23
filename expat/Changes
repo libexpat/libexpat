@@ -2040,6 +2040,7 @@ Release 2.2.3 Wed August 2 2017
             Viktor Szakats
                  and
             Core Infrastructure Initiative
+            TrustInSoft
 
 Release 2.2.2 Wed July 12 2017
         Security fixes:
@@ -2205,6 +2206,7 @@ Release 2.2.1 Sat June 17 2017
             Core Infrastructure Initiative
             Mozilla Foundation (MOSS Track 3: Secure Open Source)
             Radically Open Security
+            TrustInSoft
 
 Release 2.2.0 Tue June 21 2016
         Security fixes:
@@ -2254,6 +2256,8 @@ Release 2.2.0 Tue June 21 2016
             Thomas Beutlich
             Warren Young
             Yann Droneaud
+                 and
+            TrustInSoft
 
 Release 2.1.1 Sat March 12 2016
         Security fixes:
