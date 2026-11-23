@@ -408,7 +408,7 @@ START_TEST(test_misc_utf16_conversion) {
     const ENCODING *const encoding = testCases[i].encoding;
 
     for (size_t j = 0; j <= sizeof(output); j++) {
-      memset(output, '\xFF', sizeof(output));
+      memset(output, 0xFF, sizeof(output));
       const char *inputStart = input;
       unsigned short *outputStart = output;
 
