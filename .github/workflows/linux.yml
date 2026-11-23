@@ -71,6 +71,8 @@ jobs:
           - MODE: qa-sh
             FLAT_ENV: CC=clang CXX=clang++ LD=clang++ QA_SANITIZER=memory
           - MODE: qa-sh
+            FLAT_ENV: CC=clang CXX=clang++ LD=clang++ QA_SANITIZER=type
+          - MODE: qa-sh
             FLAT_ENV: CC=clang CXX=clang++ LD=clang++ QA_SANITIZER=undefined
           - MODE: qa-sh
             FLAT_ENV: CC=gcc CXX=g++ LD=ld QA_PROCESSOR=gcov
