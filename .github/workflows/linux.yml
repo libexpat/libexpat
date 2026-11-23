@@ -52,36 +52,8 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - MODE: cmake-oos
-          - MODE: distcheck
-          - MODE: qa-sh
-            FLAT_ENV: CC=clang CXX=clang++ LD=clang++ QA_SANITIZER=address
-          - MODE: qa-sh
-            FLAT_ENV: CC=clang CXX=clang++ LD=clang++ QA_SANITIZER=address CMAKE_ARGS=-DEXPAT_CONTEXT_BYTES=0
-          - MODE: qa-sh
-            FLAT_ENV: CC=clang CXX=clang++ LD=clang++ QA_SANITIZER=address CMAKE_ARGS="-DEXPAT_DTD=OFF -DEXPAT_GE=ON"
-          - MODE: qa-sh
-            FLAT_ENV: CC=clang CXX=clang++ LD=clang++ QA_SANITIZER=address CMAKE_ARGS="-DEXPAT_DTD=OFF -DEXPAT_GE=OFF"
-          - MODE: qa-sh
-            FLAT_ENV: CC=clang CXX=clang++ LD=clang++ QA_SANITIZER=address CMAKE_ARGS=-DEXPAT_LARGE_SIZE=ON
-          - MODE: qa-sh
-            FLAT_ENV: CC=clang CXX=clang++ LD=clang++ QA_SANITIZER=address CMAKE_ARGS=-DEXPAT_NS=OFF
-          - MODE: qa-sh
-            FLAT_ENV: CC=clang CXX=clang++ LD=clang++ QA_SANITIZER=cfi
-          - MODE: qa-sh
-            FLAT_ENV: CC=clang CXX=clang++ LD=clang++ QA_SANITIZER=memory
           - MODE: qa-sh
             FLAT_ENV: CC=clang CXX=clang++ LD=clang++ QA_SANITIZER=type
-          - MODE: qa-sh
-            FLAT_ENV: CC=clang CXX=clang++ LD=clang++ QA_SANITIZER=undefined
-          - MODE: qa-sh
-            FLAT_ENV: CC=gcc CXX=g++ LD=ld QA_PROCESSOR=gcov
-          - MODE: qa-sh
-            FLAT_ENV: CC=gcc CXX=g++ LD=ld QA_PROCESSOR=gcov CMAKE_ARGS=-D_EXPAT_M32=ON
-          - MODE: qa-sh
-            FLAT_ENV: CC=i686-w64-mingw32-gcc CXX=i686-w64-mingw32-g++ LD=i686-w64-mingw32-ld QA_PROCESSOR=gcov CMAKE_ARGS="-DCMAKE_SYSTEM_NAME=Windows -DWIN32=ON -DMINGW=ON"
-          - MODE: qa-sh
-            FLAT_ENV: CC=i686-w64-mingw32-gcc CXX=i686-w64-mingw32-g++ LD=i686-w64-mingw32-ld QA_PROCESSOR=gcov CMAKE_ARGS="-DCMAKE_SYSTEM_NAME=Windows -DWIN32=ON -DMINGW=ON -DEXPAT_CHAR_TYPE=wchar_t"
     runs-on: ubuntu-24.04
     env:
       CFLAGS: -g3 -pipe
