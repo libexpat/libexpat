@@ -312,6 +312,9 @@ Environment variables
   QA_COMPILER=(clang|gcc)                           # default: auto-detected
   QA_PROCESSOR=(egypt|gcov)                         # default: gcov
   QA_SANITIZER=(address|cfi|memory|type|undefined)  # default: address
+                         ^    ^     ^
+                         |    |     |
+                         +----+-----+-- Clang only
 EOF
 }
 
