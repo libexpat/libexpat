@@ -46,12 +46,12 @@ ANNOUNCE() {
 }
 
 
-WARNING() {
-    local open='\e[1;33m'
+ERROR() {
+    local open='\e[1;31m'
     local close='\e[0m'
 
     echo -e -n "${open}" >&2
-    echo -n "WARNING: $*" >&2
+    echo -n "ERROR: $*" >&2
     echo -e "${close}" >&2
 }
 
@@ -282,7 +282,8 @@ process_config() {
 
 
     if [[ ${QA_COMPILER} != gcc && -n ${QA_PROCESSOR:-} ]]; then
-        WARNING "QA_COMPILER=${QA_COMPILER} is not 'gcc' -- ignoring QA_PROCESSOR=${QA_PROCESSOR}"
+        ERROR "QA_COMPILER=${QA_COMPILER} is not 'gcc' -- cannot satisfy QA_PROCESSOR=${QA_PROCESSOR}."
+        exit 1
     fi
 
     case "${QA_PROCESSOR:=gcov}" in
@@ -292,8 +293,8 @@ process_config() {
 
 
     if [[ ${QA_COMPILER} != clang && ( ${QA_SANITIZER:-} == cfi || ${QA_SANITIZER:-} == memory || ${QA_SANITIZER:-} == type ) ]]; then
-        WARNING "QA_COMPILER=${QA_COMPILER} is not 'clang' -- ignoring QA_SANITIZER=${QA_SANITIZER}" >&2
-        QA_SANITIZER=
+        ERROR "QA_COMPILER=${QA_COMPILER} is not 'clang' -- cannot satisfy QA_SANITIZER=${QA_SANITIZER}."
+        exit 1
     fi
 
     case "${QA_SANITIZER:=address}" in
