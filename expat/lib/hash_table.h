@@ -41,9 +41,7 @@
 
 typedef const XML_Char *KEY;
 
-typedef struct {
-  KEY name;
-} NAMED;
+typedef void NAMED;
 
 typedef struct {
   NAMED **v;

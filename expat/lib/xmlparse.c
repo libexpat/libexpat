@@ -357,8 +357,7 @@ typedef struct {
 // This structure allows mapping attribute names to instances of
 // `DEFAULT_ATTRIBUTE`.
 typedef struct {
-  // Member `name` goes first to make this structure compatible with structure
-  // `NAMED` (further up), which is needed to support use of structure
+  // Member `name` goes first to allow use of structure
   // `NAME_AND_DEFAULT_ATTRIBUTE` in a hash table as implemented by function
   // `lookup` (further down).
   const XML_Char *name;
@@ -8927,7 +8926,7 @@ hash(XML_Parser parser, KEY s, size_t keyLen) {
 //
 // When inserting, a block of `createSize` number of bytes will be allocated
 // and set to zero, and the resulting block of memory will be considered
-// to start with a `NAMED` structure, and `->name = name;` is performed.
+// to start with an `XML_CHAR *` member, and it is set to `name`.
 // The fact that all other bytes in the structure are initially zero can
 // be used to tell cases "existed and found" and "newly inserted" apart
 // with the structure returned.
@@ -8959,7 +8958,7 @@ lookupWithLength(XML_Parser parser, HASH_TABLE *table, KEY name, size_t nameLen,
     unsigned long mask = (unsigned long)table->size - 1;
     i = h & mask;
     for (unsigned char step = 0; table->v[i];) {
-      if (keyeq(name, nameLen, table->v[i]->name))
+      if (keyeq(name, nameLen, *(KEY *)(table->v[i])))
         return table->v[i];
       if (! step)
         step = PROBE_STEP(h, mask, table->power);
@@ -8992,7 +8991,7 @@ lookupWithLength(XML_Parser parser, HASH_TABLE *table, KEY name, size_t nameLen,
       memset(newV, 0, tsize);
       for (i = 0; i < table->size; i++)
         if (table->v[i]) {
-          KEY const key = table->v[i]->name;
+          KEY const key = *(KEY *)(table->v[i]);
           unsigned long newHash = hash(parser, key, keylen(key));
           size_t j = newHash & newMask;
           for (unsigned char step = 0; newV[j];) {
@@ -9014,12 +9013,13 @@ lookupWithLength(XML_Parser parser, HASH_TABLE *table, KEY name, size_t nameLen,
       }
     }
   }
-  assert(createSize >= sizeof(NAMED));
+  assert(createSize >= sizeof(KEY));
   table->v[i] = MALLOC(table->parser, createSize);
   if (! table->v[i])
     return NULL;
   memset(table->v[i], 0, createSize);
-  table->v[i]->name = name; // NOTE: This requires and assumes zero termination!
+  *(KEY *)(table->v[i])
+      = name; // NOTE: This requires and assumes zero termination!
   (table->used)++;
   return table->v[i];
 }
@@ -9034,7 +9034,7 @@ lookupWithLength(XML_Parser parser, HASH_TABLE *table, KEY name, size_t nameLen,
 //
 // When inserting, a block of `createSize` number of bytes will be allocated
 // and set to zero, and the resulting block of memory will be considered
-// to start with a `NAMED` structure, and `->name = name;` is performed.
+// to start with an `XML_CHAR *` member, and it is set to `name`.
 // The fact that all other bytes in the structure are initially zero can
 // be used to tell cases "existed and found" and "newly inserted" apart
 // with the structure returned.
