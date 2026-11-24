@@ -1589,6 +1589,15 @@ START_TEST(test_dtd_attr_handling) {
           "]>"
           "<doc/>",
           XCS("doc"), XCS("a"), XCS("NOTATION(foo)"), XCS("bar"), XML_FALSE},
+         /* #FIXED attributes report the fixed value and isrequired true */
+         {"<!ATTLIST doc a CDATA #FIXED 'fixed'>\n"
+          "]>"
+          "<doc/>",
+          XCS("doc"), XCS("a"), XCS("CDATA"), XCS("fixed"), XML_TRUE},
+         {"<!ATTLIST doc a ( one | two ) #FIXED 'one'>\n"
+          "]>"
+          "<doc a='one'/>",
+          XCS("doc"), XCS("a"), XCS("(one|two)"), XCS("one"), XML_TRUE},
          {"<!ATTLIST doc a CDATA '\xdb\xb2'>\n"
           "]>"
           "<doc/>",
