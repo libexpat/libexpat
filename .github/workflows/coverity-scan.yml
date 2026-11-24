@@ -69,8 +69,14 @@ jobs:
       run: |-
         set -x
         source /etc/os-release
-        wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
-        sudo timeout 10m add-apt-repository "deb https://apt.llvm.org/${UBUNTU_CODENAME}/ llvm-toolchain-${UBUNTU_CODENAME}-23 main"
+        llvm_keyring=/etc/apt/keyrings/llvm-snapshot.asc
+        sudo install -d -m 0755 /etc/apt/keyrings
+        wget --no-verbose -O "${RUNNER_TEMP}/llvm-snapshot.asc" https://apt.llvm.org/llvm-snapshot.gpg.key
+        sudo install -m 0644 "${RUNNER_TEMP}/llvm-snapshot.asc" "${llvm_keyring}"
+        printf 'deb [signed-by=%s] https://apt.llvm.org/%s/ llvm-toolchain-%s-23 main\n' \
+            "${llvm_keyring}" "${UBUNTU_CODENAME}" "${UBUNTU_CODENAME}" \
+          | sudo tee /etc/apt/sources.list.d/llvm-toolchain-23.list >/dev/null
+        sudo timeout 10m apt-get update
         sudo timeout 10m apt-get install --yes --no-install-recommends -V \
             clang-23 \
             libclang-rt-23-dev \
