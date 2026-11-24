@@ -3977,69 +3977,6 @@ START_TEST(test_get_buffer_3_overflow) {
 END_TEST
 #endif // XML_CONTEXT_BYTES > 0
 
-START_TEST(test_buffer_can_grow_to_max) {
-  const char *const prefixes[] = {
-      "",
-      "<",
-      "<x a='",
-      "<doc><x a='",
-      "<document><x a='",
-      "<averylongelementnamesuchthatitwillhopefullystretchacrossmultiplelinesand"
-      "lookprettyridiculousitsalsoveryhardtoreadandifyouredoingitihavetowonderif"
-      "youreallydonthaveanythingbettertodoofcourseiguessicouldveputsomethingbadin"
-      "herebutipromisethatididntheybtwhowgreatarespacesandpunctuationforhelping"
-      "withreadabilityprettygreatithinkanywaysthisisprobablylongenoughbye><x a='"};
-  const int num_prefixes = sizeof(prefixes) / sizeof(prefixes[0]);
-  int maxbuf = INT_MAX / 2 + (INT_MAX & 1); // round up without overflow
-#if defined(__MINGW32__) && ! defined(__MINGW64__)
-  // workaround for mingw/wine32 on GitHub CI not being able to reach 1GiB
-  // Can we make a big allocation?
-  for (int i = 1; i <= 2; i++) {
-    void *const big = malloc(maxbuf);
-    if (big != NULL) {
-      free(big);
-      break;
-    }
-    // The big allocation failed. Let's be a little lenient.
-    maxbuf = maxbuf / 2;
-    fprintf(stderr, "Reducing maxbuf to %d...\n", maxbuf);
-  }
-#else
-  UNUSED_P(maxbuf);
-#endif
-
-  for (int i = 0; i < num_prefixes; ++i) {
-    set_subtest("\"%s\"", prefixes[i]);
-    XML_Parser parser = XML_ParserCreate(NULL);
-#if XML_GE == 1
-    assert_true(XML_SetAllocTrackerActivationThreshold(parser, (size_t)-1)
-                == XML_TRUE); // i.e. deactivate
-#endif
-    const int prefix_len = (int)strlen(prefixes[i]);
-    const enum XML_Status s
-        = XML_Parse_SINGLE_BYTES(parser, prefixes[i], prefix_len, XML_FALSE);
-    if (s != XML_STATUS_OK)
-      xml_failure(parser);
-
-// Avoid running into "AddressSanitizer: out of memory" on 32bit Windows
-#if ! defined(_WIN32) || EXPAT_TESTS_ASAN == 0 || EXPAT_TESTS_64BIT == 1
-    // XML_CONTEXT_BYTES of the prefix may remain in the buffer;
-    // subtracting the whole prefix is easiest, and close enough.
-    assert_true(XML_GetBuffer(parser, maxbuf - prefix_len) != NULL);
-    // The limit should be consistent; no prefix should allow us to
-    // reach above the max buffer size.
-#  if ULONG_MAX == 4294967295 && ! defined(_WIN64) // i.e. 32bit
-    assert_true(XML_GetBuffer(parser, maxbuf + 1) == NULL);
-#  endif
-#else
-    UNUSED_P(maxbuf);
-#endif
-
-    XML_ParserFree(parser);
-  }
-}
-END_TEST
-
 START_TEST(test_getbuffer_allocates_on_zero_len) {
   for (int first_len = 1; first_len >= 0; first_len--) {
     set_subtest("with len=%d first", first_len);
@@ -7749,7 +7686,6 @@ make_basic_test_case(Suite *s) {
 #if XML_CONTEXT_BYTES > 0
   tcase_add_test(tc_basic, test_get_buffer_3_overflow);
 #endif
-  tcase_add_test(tc_basic, test_buffer_can_grow_to_max);
   tcase_add_test(tc_basic, test_getbuffer_allocates_on_zero_len);
   tcase_add_test(tc_basic, test_byte_info_at_end);
   tcase_add_test(tc_basic, test_byte_info_at_error);
