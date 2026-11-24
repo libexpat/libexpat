@@ -57,9 +57,11 @@ jobs:
 
         needed_cmake_version="$(sed -n 's/cmake_minimum_required(VERSION \(.*\))/\1/p' expat/CMakeLists.txt)"
 
+        installer_sha256=cf82affa1d497eae372c2412129a2f043f6868517c8a88a7f52d3751d1812eaf
         installer_filename="cmake-${needed_cmake_version}-linux-x86_64.sh"
         download_url="https://github.com/Kitware/CMake/releases/download/v${needed_cmake_version}/${installer_filename}"
         wget --no-verbose "${download_url}"
+        sha256sum --check --strict <<< "${installer_sha256}  ${installer_filename}"
 
         chmod +x "${installer_filename}"
         mkdir -p ~/.local/
