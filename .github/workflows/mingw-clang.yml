@@ -132,8 +132,8 @@ jobs:
         args=(
             -DCMAKE_TOOLCHAIN_FILE=cmake/mingw-toolchain-${wine_arch}.cmake
 
-            -DCMAKE_{C,CXX}_FLAGS='-Wall -Wextra -pedantic -O1 -g -fsanitize=address,undefined -fno-sanitize-recover=all -fno-omit-frame-pointer'
-            -DCMAKE_{EXE,MODULE,SHARED}_LINKER_FLAGS='-g -fsanitize=address,undefined'
+            -DCMAKE_{C,CXX}_FLAGS='-Wall -Wextra -pedantic -O1 -g -fsanitize=type -fno-sanitize-recover=all -fno-omit-frame-pointer -fno-optimize-sibling-calls'
+            -DCMAKE_{EXE,MODULE,SHARED}_LINKER_FLAGS='-g -fsanitize=type'
 
             -DEXPAT_BUILD_DOCS=OFF
             -DEXPAT_BUILD_TESTS=ON

@@ -46,12 +46,12 @@ ANNOUNCE() {
 }
 
 
-WARNING() {
-    local open='\e[1;33m'
+ERROR() {
+    local open='\e[1;31m'
     local close='\e[0m'
 
     echo -e -n "${open}" >&2
-    echo -n "WARNING: $*" >&2
+    echo -n "ERROR: $*" >&2
     echo -e "${close}" >&2
 }
 
@@ -100,6 +100,11 @@ populate_environment() {
             memory)
                 # https://clang.llvm.org/docs/MemorySanitizer.html
                 BASE_COMPILE_FLAGS+=" -fsanitize=memory -fno-omit-frame-pointer -g -O2 -fsanitize-memory-track-origins"
+                ;;
+            type)
+                # https://clang.llvm.org/docs/TypeSanitizer.html
+                BASE_COMPILE_FLAGS+=" -fsanitize=type -fno-omit-frame-pointer -g -O1 -fno-optimize-sibling-calls"
+                export TYSAN_OPTIONS=print_stacktrace=1:halt_on_error=1
                 ;;
             undefined)
                 # https://clang.llvm.org/docs/UndefinedBehaviorSanitizer.html
@@ -277,7 +282,8 @@ process_config() {
 
 
     if [[ ${QA_COMPILER} != gcc && -n ${QA_PROCESSOR:-} ]]; then
-        WARNING "QA_COMPILER=${QA_COMPILER} is not 'gcc' -- ignoring QA_PROCESSOR=${QA_PROCESSOR}"
+        ERROR "QA_COMPILER=${QA_COMPILER} is not 'gcc' -- cannot satisfy QA_PROCESSOR=${QA_PROCESSOR}."
+        exit 1
     fi
 
     case "${QA_PROCESSOR:=gcov}" in
@@ -286,13 +292,13 @@ process_config() {
     esac
 
 
-    if [[ ${QA_COMPILER} != clang && ( ${QA_SANITIZER:-} == cfi || ${QA_SANITIZER:-} == memory ) ]]; then
-        WARNING "QA_COMPILER=${QA_COMPILER} is not 'clang' -- ignoring QA_SANITIZER=${QA_SANITIZER}" >&2
-        QA_SANITIZER=
+    if [[ ${QA_COMPILER} != clang && ( ${QA_SANITIZER:-} == cfi || ${QA_SANITIZER:-} == memory || ${QA_SANITIZER:-} == type ) ]]; then
+        ERROR "QA_COMPILER=${QA_COMPILER} is not 'clang' -- cannot satisfy QA_SANITIZER=${QA_SANITIZER}."
+        exit 1
     fi
 
     case "${QA_SANITIZER:=address}" in
-        address|cfi|memory|undefined) ;;
+        address|cfi|memory|type|undefined) ;;
         *) usage; exit 1 ;;
     esac
 }
@@ -304,10 +310,12 @@ Usage:
   $ ./qa.sh [ARG ..]
 
 Environment variables
-  QA_COMPILER=(clang|gcc)                      # default: auto-detected
-  QA_PROCESSOR=(egypt|gcov)                    # default: gcov
-  QA_SANITIZER=(address|cfi|memory|undefined)  # default: address
-
+  QA_COMPILER=(clang|gcc)                           # default: auto-detected
+  QA_PROCESSOR=(egypt|gcov)                         # default: gcov
+  QA_SANITIZER=(address|cfi|memory|type|undefined)  # default: address
+                         ^    ^     ^
+                         |    |     |
+                         +----+-----+-- Clang only
 EOF
 }
 
