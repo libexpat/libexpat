@@ -53,6 +53,7 @@ jobs:
     - name: Install build dependencies
       env:
         tidy_version: 5.8.0
+        tidy_sha256sum: 59e594312207234f5a17455683c13c6bc47a89cb7bf994d493acfffb591d9830
       run: |-
         set -x
         sudo timeout 10m apt-get update
@@ -63,8 +64,11 @@ jobs:
             w3c-sgml-lib
 
         # NOTE: Ubuntu 24.04 has tidy 5.6.0 while we need more recent tidy 5.8.0
-        wget --progress=dot:giga "https://github.com/htacg/tidy-html5/releases/download/${tidy_version}/tidy-${tidy_version}-Linux-64bit.deb"
-        sudo timeout 10m apt-get install --yes "./tidy-${tidy_version}-Linux-64bit.deb"
+        tidy_deb="tidy-${tidy_version}-Linux-64bit.deb"
+        wget --progress=dot:giga \
+            "https://github.com/htacg/tidy-html5/releases/download/${tidy_version}/${tidy_deb}"
+        sha256sum --check --strict <<< "${tidy_sha256sum}  ${tidy_deb}"
+        sudo timeout 10m apt-get install --yes "./${tidy_deb}"
 
     - name: Enforce clean XML
       run: |
