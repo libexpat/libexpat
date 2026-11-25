@@ -159,6 +159,22 @@ START_TEST(test_misc_error_string) {
 }
 END_TEST
 
+/* Test that XML_ErrorString has a message for every known error code */
+START_TEST(test_misc_error_string_known_codes) {
+  if (XML_ErrorString(XML_ERROR_NONE) != NULL)
+    fail("XML_ERROR_NONE got a message");
+
+  for (int i = XML_ERROR_NO_MEMORY; i <= XML_ERROR_NOT_STARTED; i++) {
+    set_subtest("error code %d", i);
+    const XML_LChar *const message = XML_ErrorString((enum XML_Error)i);
+    if (message == NULL)
+      fail("Known error code got no message");
+    if (message[0] == 0)
+      fail("Known error code got an empty message");
+  }
+}
+END_TEST
+
 /* Test the version information is consistent */
 
 /* Since we are working in XML_LChars (potentially 16-bits), we
@@ -1466,6 +1482,7 @@ make_miscellaneous_test_case(Suite *s) {
   tcase_add_test(tc_misc, test_misc_alloc_create_parser_with_encoding);
   tcase_add_test(tc_misc, test_misc_null_parser);
   tcase_add_test(tc_misc, test_misc_error_string);
+  tcase_add_test(tc_misc, test_misc_error_string_known_codes);
   tcase_add_test(tc_misc, test_misc_version);
   tcase_add_test(tc_misc, test_misc_features);
   tcase_add_test(tc_misc, test_misc_attribute_leak);
