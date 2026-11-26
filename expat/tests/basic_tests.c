@@ -3354,6 +3354,130 @@ START_TEST(test_default_attr_index_after_dtd_copy) {
 }
 END_TEST
 
+static void XMLCALL
+record_attributes_handler(void *userData, const XML_Char *name,
+                          const XML_Char **atts) {
+  CharData *const storage = userData;
+  UNUSED_P(name);
+
+  for (size_t i = 0; atts[i] != NULL; i += 2) {
+    CharData_AppendXMLChars(storage, atts[i], -1);
+    CharData_AppendXMLChars(storage, XCS("="), 1);
+    CharData_AppendXMLChars(storage, atts[i + 1], -1);
+    CharData_AppendXMLChars(storage, XCS(";"), 1);
+  }
+}
+
+START_TEST(test_implied_attribute_specified) {
+  /* Declarations without a default value (e.g. #IMPLIED) are not reported
+   * by themselves, but must still take part in whitespace normalization and
+   * duplicate detection when the attribute is specified in the document. */
+  const char *const text = "<!DOCTYPE doc [\n"
+                           "  <!ATTLIST doc a CDATA #IMPLIED>\n"
+                           "  <!ATTLIST doc b NMTOKENS #IMPLIED>\n"
+                           "]>\n"
+                           "<doc a=' x  y ' b=' x  y '/>";
+  CharData storage;
+
+  CharData_Init(&storage);
+  XML_SetUserData(g_parser, &storage);
+  XML_SetStartElementHandler(g_parser, record_attributes_handler);
+  if (XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+      == XML_STATUS_ERROR)
+    xml_failure(g_parser);
+  CharData_CheckXMLChars(&storage, XCS("a= x  y ;b=x y;"));
+
+  /* The declaration alone yields no attributes */
+  XML_ParserReset(g_parser, NULL);
+  CharData_Init(&storage);
+  XML_SetUserData(g_parser, &storage);
+  XML_SetStartElementHandler(g_parser, record_attributes_handler);
+  {
+    const char *const bare = "<!DOCTYPE doc [\n"
+                             "  <!ATTLIST doc a CDATA #IMPLIED>\n"
+                             "]>\n"
+                             "<doc/>";
+    if (XML_Parse_SINGLE_BYTES(g_parser, bare, (int)strlen(bare), XML_TRUE)
+        == XML_STATUS_ERROR)
+      xml_failure(g_parser);
+  }
+  CharData_CheckXMLChars(&storage, XCS(""));
+}
+END_TEST
+
+START_TEST(test_implied_attribute_duplicate) {
+  expect_failure("<!DOCTYPE doc [\n"
+                 "  <!ATTLIST doc a CDATA #IMPLIED>\n"
+                 "]>\n"
+                 "<doc a='1' a='2'/>",
+                 XML_ERROR_DUPLICATE_ATTRIBUTE,
+                 "Duplicate #IMPLIED attribute not faulted");
+}
+END_TEST
+
+START_TEST(test_implied_attribute_with_value_default) {
+  /* Valueless declarations before, between and after a declaration with a
+   * default value must not prevent the default from being applied. */
+  const char *const text = "<!DOCTYPE doc [\n"
+                           "  <!ATTLIST doc a CDATA #IMPLIED\n"
+                           "               b CDATA 'dflt'\n"
+                           "               c CDATA #IMPLIED\n"
+                           "               d CDATA 'other'\n"
+                           "               e CDATA #IMPLIED>\n"
+                           "]>\n"
+                           "<doc d='given'/>";
+  CharData storage;
+
+  CharData_Init(&storage);
+  XML_SetUserData(g_parser, &storage);
+  XML_SetStartElementHandler(g_parser, record_attributes_handler);
+  if (XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+      == XML_STATUS_ERROR)
+    xml_failure(g_parser);
+  CharData_CheckXMLChars(&storage, XCS("d=given;b=dflt;"));
+}
+END_TEST
+
+static void XMLCALL
+count_start_element_handler(void *userData, const XML_Char *name,
+                            const XML_Char **atts) {
+  UNUSED_P(name);
+  UNUSED_P(atts);
+  (*(size_t *)userData)++;
+}
+
+START_TEST(test_many_implied_attributes_many_tags) {
+  /* Many valueless declarations on one element type combined with many start
+   * tags of that type used to cost O(declarations * tags). */
+  enum { DECLS = 500, TAGS = 5000 };
+  const size_t capacity = 64 * (DECLS + TAGS);
+  char *const text = malloc(capacity);
+  size_t len = 0;
+  size_t tags_seen = 0;
+
+  assert_true(text != NULL);
+  len += (size_t)snprintf(text + len, capacity - len,
+                          "<!DOCTYPE doc [\n<!ATTLIST e\n");
+  for (int i = 0; i < DECLS; i++)
+    len += (size_t)snprintf(text + len, capacity - len,
+                            "  a%d CDATA #IMPLIED\n", i);
+  len += (size_t)snprintf(text + len, capacity - len,
+                          "  v CDATA 'dflt'>\n]>\n<doc>");
+  for (int i = 0; i < TAGS; i++)
+    len += (size_t)snprintf(text + len, capacity - len, "<e/>");
+  len += (size_t)snprintf(text + len, capacity - len, "</doc>");
+
+  XML_SetUserData(g_parser, &tags_seen);
+  XML_SetStartElementHandler(g_parser, count_start_element_handler);
+  if (XML_Parse(g_parser, text, (int)len, XML_TRUE) == XML_STATUS_ERROR) {
+    free(text);
+    xml_failure(g_parser);
+  }
+  free(text);
+  assert_true(tags_seen == TAGS + 1); // + <doc>
+}
+END_TEST
+
 /* Test reset works correctly in the middle of processing an internal
  * entity.  Exercises some obscure code in XML_ParserReset().
  */
@@ -7659,6 +7783,10 @@ make_basic_test_case(Suite *s) {
                  test_duplicate_cdata_attribute_multiple_attlistdecl_3);
   tcase_add_test(tc_basic, test_duplicate_id_attribute_multiple_attlistdecl);
   tcase_add_test__if_xml_ge(tc_basic, test_default_attr_index_after_dtd_copy);
+  tcase_add_test(tc_basic, test_implied_attribute_specified);
+  tcase_add_test(tc_basic, test_implied_attribute_duplicate);
+  tcase_add_test(tc_basic, test_implied_attribute_with_value_default);
+  tcase_add_test(tc_basic, test_many_implied_attributes_many_tags);
   tcase_add_test__if_xml_ge(tc_basic, test_reset_in_entity);
   tcase_add_test(tc_basic, test_resume_invalid_parse);
   tcase_add_test(tc_basic, test_resume_resuspended);

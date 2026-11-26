@@ -383,6 +383,11 @@ typedef struct {
   size_t nDefaultAtts;
   size_t allocDefaultAtts;
   DEFAULT_ATTRIBUTE *defaultAtts;
+  // Indices into `defaultAtts` of entries that carry a value, so that
+  // storeAtts can skip valueless declarations (e.g. #IMPLIED).
+  // Capacity is `allocDefaultAtts`, same as for `defaultAtts`.
+  size_t nValueDefaults;
+  size_t *valueDefaultIndex;
   HASH_TABLE defaultAttForName;
 } ELEMENT_TYPE;
 
@@ -4508,9 +4513,10 @@ storeAtts(XML_Parser parser, const ENCODING *enc, const char *attStr,
     parser->m_idAttIndex = -1;
 
   /* do attribute defaulting */
-  for (size_t i = 0; i < nDefaultAtts; i++) {
-    const DEFAULT_ATTRIBUTE *da = elementType->defaultAtts + i;
-    if (! (da->id->name)[-1] && da->value) {
+  for (size_t i = 0; i < elementType->nValueDefaults; i++) {
+    const DEFAULT_ATTRIBUTE *da
+        = elementType->defaultAtts + elementType->valueDefaultIndex[i];
+    if (! (da->id->name)[-1]) {
       if (da->id->prefix) {
         if (da->id->xmlns) {
           enum XML_Error result = addBinding(parser, da->id->prefix, da->id,
@@ -8244,12 +8250,21 @@ defineAttribute(ELEMENT_TYPE *type, ATTRIBUTE_ID *attId, bool isCdata,
       return 0;
     }
 
+    /* Grow the index list first: if the second allocation fails, the
+     * element type is left with its previous, still consistent capacity
+     * and defineAttribute() can be retried by the next declaration. */
+    size_t *const tempIndex = REALLOC(parser, type->valueDefaultIndex,
+                                      (count * sizeof(size_t)));
+    if (tempIndex == NULL)
+      return 0;
+    type->valueDefaultIndex = tempIndex;
+
     DEFAULT_ATTRIBUTE *const temp = REALLOC(
         parser, type->defaultAtts, (count * sizeof(DEFAULT_ATTRIBUTE)));
     if (temp == NULL)
       return 0;
-    type->allocDefaultAtts = count;
     type->defaultAtts = temp;
+    type->allocDefaultAtts = count;
   }
   att = type->defaultAtts + type->nDefaultAtts;
   att->id = attId;
@@ -8276,6 +8291,8 @@ defineAttribute(ELEMENT_TYPE *type, ATTRIBUTE_ID *attId, bool isCdata,
     nameAndDefaultAttribute->initialized = true;
   }
 
+  if (value)
+    type->valueDefaultIndex[type->nValueDefaults++] = type->nDefaultAtts;
   type->nDefaultAtts += 1;
   return 1;
 }
@@ -8591,6 +8608,7 @@ dtdReset(DTD *p, XML_Parser parser) {
       break;
     hashTableDestroy(&(e->defaultAttForName));
     FREE(parser, e->defaultAtts);
+    FREE(parser, e->valueDefaultIndex);
   }
   hashTableClear(&(p->generalEntities));
 #ifdef XML_DTD
@@ -8633,6 +8651,7 @@ dtdDestroy(DTD *p, XML_Bool isDocEntity, XML_Parser parser) {
       break;
     hashTableDestroy(&(e->defaultAttForName));
     FREE(parser, e->defaultAtts);
+    FREE(parser, e->valueDefaultIndex);
   }
   hashTableDestroy(&(p->generalEntities));
 #ifdef XML_DTD
@@ -8737,11 +8756,20 @@ dtdCopy(XML_Parser oldParser, DTD *newDtd, const DTD *oldDtd,
       if (! newE->defaultAtts) {
         return 0;
       }
+      newE->valueDefaultIndex
+          = MALLOC(parser, oldE->nDefaultAtts * sizeof(size_t));
+      if (! newE->valueDefaultIndex) {
+        return 0;
+      }
     }
     if (oldE->idAtt)
       newE->idAtt = (ATTRIBUTE_ID *)lookup(oldParser, &(newDtd->attributeIds),
                                            oldE->idAtt->name, 0);
     newE->allocDefaultAtts = newE->nDefaultAtts = oldE->nDefaultAtts;
+    newE->nValueDefaults = oldE->nValueDefaults;
+    if (oldE->nValueDefaults)
+      memcpy(newE->valueDefaultIndex, oldE->valueDefaultIndex,
+             oldE->nValueDefaults * sizeof(size_t));
     if (oldE->prefix)
       newE->prefix = (PREFIX *)lookup(oldParser, &(newDtd->prefixes),
                                       oldE->prefix->name, 0);
