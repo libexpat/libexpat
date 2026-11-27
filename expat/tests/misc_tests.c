@@ -1471,6 +1471,65 @@ START_TEST(test_misc_no_proven_strict_aliasing) {
 }
 END_TEST
 
+struct XmlDeclTestCase {
+  const char *externalDoc;
+  const enum XML_Error expectedError;
+  unsigned handlerCallCount;
+  XML_Parser subParser;
+};
+
+static void
+onXmlDeclaration(void *userData, const XML_Char *version,
+                 const XML_Char *encoding, int standalone) {
+  UNUSED_P(version);
+  UNUSED_P(encoding);
+  UNUSED_P(standalone);
+  struct XmlDeclTestCase *const testCase = userData;
+  testCase->handlerCallCount++;
+  XML_StopParser(testCase->subParser, /*resumable=*/XML_TRUE);
+}
+
+START_TEST(test_misc_xml_declaration_handler_suspension) {
+  if (g_chunkSize != 0)
+    return; // because the test uses suspension
+
+  struct XmlDeclTestCase testCases[] = {
+      {"<?xml encoding='utf-8'?><?xml encoding='utf-8'?><e/>",
+       XML_ERROR_MISPLACED_XML_PI, 0, NULL},
+      {"<?xml encoding='utf-8'?><e/>", XML_ERROR_NONE, 0, NULL},
+  };
+
+  for (size_t i = 0; i < sizeof(testCases) / sizeof(testCases[0]); i++) {
+    struct XmlDeclTestCase *const testCase = testCases + i;
+    enum XML_Status expectedStatus
+        = ((testCase->expectedError == XML_ERROR_NONE) ? XML_STATUS_OK
+                                                       : XML_STATUS_ERROR);
+    XML_Parser parentParser = XML_ParserCreate(NULL); // not really used
+    const XML_Char context[] = {'\0'};
+
+    XML_Parser subParser
+        = XML_ExternalEntityParserCreate(parentParser, context, NULL);
+    XML_SetUserData(subParser, testCase);
+    XML_SetXmlDeclHandler(subParser, onXmlDeclaration);
+    testCase->subParser = subParser;
+
+    enum XML_Status status = XML_Parse64_SINGLE_BYTES(
+        subParser, testCase->externalDoc, strlen(testCase->externalDoc),
+        /*isFinal=*/XML_TRUE);
+    while (status == XML_STATUS_SUSPENDED) {
+      status = XML_ResumeParser(subParser);
+    }
+
+    assert_true(testCase->handlerCallCount == 1);
+    assert_true(status == expectedStatus);
+    assert_true(XML_GetErrorCode(subParser) == testCase->expectedError);
+
+    XML_ParserFree(subParser);
+    XML_ParserFree(parentParser);
+  }
+}
+END_TEST
+
 void
 make_miscellaneous_test_case(Suite *s) {
   TCase *tc_misc = tcase_create("miscellaneous tests");
@@ -1522,4 +1581,5 @@ make_miscellaneous_test_case(Suite *s) {
   tcase_add_test(tc_misc, test_misc_empty_nonfinal_subparser_parse);
   tcase_add_test(tc_misc, test_misc_getinputcontext_from_handlers_only);
   tcase_add_test(tc_misc, test_misc_no_proven_strict_aliasing);
+  tcase_add_test(tc_misc, test_misc_xml_declaration_handler_suspension);
 }
