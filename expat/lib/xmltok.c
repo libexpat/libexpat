@@ -279,7 +279,7 @@ void
 trimToCompleteUtf8Characters(const char *from, const char **fromLimRef) {
   const char *fromLim = *fromLimRef;
   size_t walked = 0;
-  for (; fromLim > from; fromLim--, walked++) {
+  for (; fromLim > from; fromLim--) {
     const unsigned char prev = (unsigned char)fromLim[-1];
     if ((prev & 0xf8u)
         == 0xf0u) { /* 4-byte character, lead by 0b11110xxx byte */
@@ -305,6 +305,10 @@ trimToCompleteUtf8Characters(const char *from, const char **fromLimRef) {
     } else if ((prev & 0x80u)
                == 0x00u) { /* 1-byte character, matching 0b0xxxxxxx */
       break;
+    } else if ((prev & 0xC0u) == 0x80u) { /* continuation byte */
+      walked++;
+    } else {
+      walked = 0;
     }
   }
   *fromLimRef = fromLim;
