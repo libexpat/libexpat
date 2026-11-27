@@ -276,8 +276,7 @@ enum { /* UTF8_cvalN is value of masked first byte of N byte sequence */
 };
 
 void
-_INTERNAL_trim_to_complete_utf8_characters(const char *from,
-                                           const char **fromLimRef) {
+trimToCompleteUtf8Characters(const char *from, const char **fromLimRef) {
   const char *fromLim = *fromLimRef;
   size_t walked = 0;
   for (; fromLim > from; fromLim--, walked++) {
@@ -332,7 +331,7 @@ utf8_toUtf8(const ENCODING *enc, const char **fromP, const char *fromLim,
   /* Avoid copying partial characters (from incomplete input). */
   {
     const char *const fromLimBefore = fromLim;
-    _INTERNAL_trim_to_complete_utf8_characters(*fromP, &fromLim);
+    trimToCompleteUtf8Characters(*fromP, &fromLim);
     if (fromLim < fromLimBefore) {
       input_incomplete = true;
     }
