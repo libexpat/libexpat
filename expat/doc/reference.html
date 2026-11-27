@@ -2900,8 +2900,8 @@ typedef void
           <code>NULL</code> in the case of "#IMPLIED" or "#REQUIRED" attributes. You can
           distinguish these two cases by checking the <code>isrequired</code> parameter,
           which will be true in the case of "#REQUIRED" attributes. Attributes which are
-          "#FIXED" will have also have a true <code>isrequired</code>, but they will have
-          the non-<code>NULL</code> fixed value in the <code>dflt</code> parameter.
+          "#FIXED" will also have a true <code>isrequired</code>, but they will have the
+          non-<code>NULL</code> fixed value in the <code>dflt</code> parameter.
         </p>
       </div>
 
@@ -3340,8 +3340,8 @@ XML_GetInputContext(XML_Parser p,
 /* Added in Expat 2.9.0. */
 const char * XMLCALL
 XML_GetInputContext64(XML_Parser p,
-                    int64_t *offset,
-                    zint64_t *size);
+                      int64_t *offset,
+                      uint64_t *size);
 </pre>
       <div class="fcndef">
         <p>
@@ -3870,7 +3870,7 @@ XML_SetBillionLaughsAttackProtectionActivationThreshold(XML_Parser p,
 
       <pre class="fcndec">
 /* Added in Expat 2.7.2. */
-XML_Bool
+XML_Bool XMLCALL
 XML_SetAllocTrackerMaximumAmplification(XML_Parser p,
                                         float maximumAmplificationFactor);
 </pre>
@@ -3955,7 +3955,7 @@ XML_SetAllocTrackerMaximumAmplification(XML_Parser p,
 
       <pre class="fcndec">
 /* Added in Expat 2.7.2. */
-XML_Bool
+XML_Bool XMLCALL
 XML_SetAllocTrackerActivationThreshold(XML_Parser p,
                                        unsigned long long activationThresholdBytes);
 </pre>
@@ -4129,9 +4129,10 @@ XML_GetIdAttributeIndex(XML_Parser p);
 </pre>
       <div class="fcndef">
         Returns the index of the ID attribute passed in the atts array in the last call
-        to <code><a href="#XML_StartElementHandler">XML_StartElementHandler</a></code>,
-        or -1 if there is no ID attribute. If called inside a start handler, then that
-        means the current call.
+        to <code><a href=
+        "#XML_SetStartElementHandler">XML_StartElementHandler</a></code>, or -1 if there
+        is no ID attribute. If called inside a start handler, then that means the current
+        call.
       </div>
 
       <h4 id="XML_SetEncoding">
@@ -4351,8 +4352,8 @@ XML_DefaultCurrent(XML_Parser parser);
       </h4>
 
       <pre class="fcndec">
-XML_LChar * XMLCALL
-XML_ExpatVersion();
+const XML_LChar * XMLCALL
+XML_ExpatVersion(void);
 </pre>
       <div class="fcndef">
         Return the library version as a string (e.g. <code>"expat_1.95.1"</code>).
@@ -4363,8 +4364,8 @@ XML_ExpatVersion();
       </h4>
 
       <pre class="fcndec">
-struct XML_Expat_Version XMLCALL
-XML_ExpatVersionInfo();
+XML_Expat_Version XMLCALL
+XML_ExpatVersionInfo(void);
 </pre>
 
       <pre class="signature">
@@ -4400,7 +4401,7 @@ typedef struct {
 
       <pre class="fcndec">
 const XML_Feature * XMLCALL
-XML_GetFeatureList();
+XML_GetFeatureList(void);
 </pre>
 
       <pre class="signature">
