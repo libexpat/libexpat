@@ -8042,8 +8042,9 @@ static enum XML_Error
 storeSelfEntityValue(XML_Parser parser, ENTITY *entity) {
   // This will store "&amp;entity123;" in entity->textPtr
   // to end up as "&entity123;" in the handler.
-  const char *const entity_start = "&amp;";
-  const char *const entity_end = ";";
+  const XML_Char entity_start[]
+      = {ASCII_AMP, ASCII_a, ASCII_m, ASCII_p, ASCII_SEMI, '\0'};
+  const XML_Char entity_end[] = {ASCII_SEMI, '\0'};
 
   STRING_POOL *const pool = &(parser->m_dtd->entityValuePool);
   if (! poolAppendString(pool, entity_start)

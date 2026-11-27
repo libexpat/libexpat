@@ -58,6 +58,11 @@ jobs:
             mingw_arch: x86_64
             wine_arch: win64
             wine_package: wine64 wine64-preloader
+          - name: wchar_t
+            cmake_args: -DEXPAT_CHAR_TYPE=wchar_t -DEXPAT_DTD=OFF -DEXPAT_GE=OFF
+            mingw_arch: x86_64
+            wine_arch: win64
+            wine_package: wine64 wine64-preloader
     runs-on: ubuntu-26.04
     container:
       # We use Debian trixie here because combination "Clang MinGW ASan Wine"
