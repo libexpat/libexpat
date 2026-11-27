@@ -278,37 +278,37 @@ enum { /* UTF8_cvalN is value of masked first byte of N byte sequence */
 void
 trimToCompleteUtf8Characters(const char *from, const char **fromLimRef) {
   const char *fromLim = *fromLimRef;
-  size_t walked = 0;
+  size_t continuationBytes = 0;
   for (; fromLim > from; fromLim--) {
     const unsigned char prev = (unsigned char)fromLim[-1];
     if ((prev & 0xf8u)
         == 0xf0u) { /* 4-byte character, lead by 0b11110xxx byte */
-      if (walked + 1 >= 4) {
+      if (continuationBytes + 1 >= 4) {
         fromLim += 4 - 1;
         break;
       }
-      walked = 0;
+      continuationBytes = 0;
     } else if ((prev & 0xf0u)
                == 0xe0u) { /* 3-byte character, lead by 0b1110xxxx byte */
-      if (walked + 1 >= 3) {
+      if (continuationBytes + 1 >= 3) {
         fromLim += 3 - 1;
         break;
       }
-      walked = 0;
+      continuationBytes = 0;
     } else if ((prev & 0xe0u)
                == 0xc0u) { /* 2-byte character, lead by 0b110xxxxx byte */
-      if (walked + 1 >= 2) {
+      if (continuationBytes + 1 >= 2) {
         fromLim += 2 - 1;
         break;
       }
-      walked = 0;
+      continuationBytes = 0;
     } else if ((prev & 0x80u)
                == 0x00u) { /* 1-byte character, matching 0b0xxxxxxx */
       break;
     } else if ((prev & 0xC0u) == 0x80u) { /* continuation byte */
-      walked++;
+      continuationBytes++;
     } else {
-      walked = 0;
+      continuationBytes = 0;
     }
   }
   *fromLimRef = fromLim;
