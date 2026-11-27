@@ -438,6 +438,10 @@ END_TEST
 #define UTF8_FOLLOW "\xbf" /* 0b10111111 */
 
 START_TEST(test_utf8_auto_align) {
+  // Speed things up, the test does not use `XML_Parser`.
+  if (g_chunkSize != 0 || g_reparseDeferralEnabledDefault)
+    return;
+
   struct TestCase {
     ptrdiff_t expectedMovementInChars;
     const char *input;
