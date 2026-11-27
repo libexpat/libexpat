@@ -139,6 +139,8 @@ enum XML_Error {
   XML_ERROR_AMPLIFICATION_LIMIT_BREACH,
   /* Added in 2.6.4. */
   XML_ERROR_NOT_STARTED,
+  /* When adding new codes here, please keep
+   * test `test_misc_error_string_known_codes` in sync. */
 };
 
 /* Added in 2.9.0. */
