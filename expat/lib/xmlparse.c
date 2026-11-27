@@ -3760,6 +3760,8 @@ externalEntityInitProcessor3(XML_Parser parser, const char *start,
     switch (parser->m_parsingStatus.parsing) {
     case XML_SUSPENDED:
       *endPtr = next;
+      parser->m_processor = externalEntityContentProcessor;
+      parser->m_tagLevel = 1;
       return XML_ERROR_NONE;
     case XML_FINISHED:
       return XML_ERROR_ABORTED;
