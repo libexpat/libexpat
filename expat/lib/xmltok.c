@@ -286,25 +286,22 @@ trimToCompleteUtf8Characters(const char *from, const char **fromLimRef) {
       if (walked + 1 >= 4) {
         fromLim += 4 - 1;
         break;
-      } else {
-        walked = 0;
       }
+      walked = 0;
     } else if ((prev & 0xf0u)
                == 0xe0u) { /* 3-byte character, lead by 0b1110xxxx byte */
       if (walked + 1 >= 3) {
         fromLim += 3 - 1;
         break;
-      } else {
-        walked = 0;
       }
+      walked = 0;
     } else if ((prev & 0xe0u)
                == 0xc0u) { /* 2-byte character, lead by 0b110xxxxx byte */
       if (walked + 1 >= 2) {
         fromLim += 2 - 1;
         break;
-      } else {
-        walked = 0;
       }
+      walked = 0;
     } else if ((prev & 0x80u)
                == 0x00u) { /* 1-byte character, matching 0b0xxxxxxx */
       break;
