@@ -303,7 +303,7 @@
         <listitem>
           <para>
             When processing multiple files, <command>&dhpackage;</command>
-            by default halts after the the first file with an error.
+            by default halts after the first file with an error.
             This tells <command>&dhpackage;</command> to report the error
             but to keep processing.
             This can be useful, for example, when testing a filter that converts
