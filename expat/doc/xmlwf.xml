@@ -303,7 +303,7 @@
         <listitem>
           <para>
             When processing multiple files, <command>&dhpackage;</command>
-            by default halts after the the first file with an error.
+            by default halts after the first file with an error.
             This tells <command>&dhpackage;</command> to report the error
             but to keep processing.
             This can be useful, for example, when testing a filter that converts
@@ -548,6 +548,36 @@
   </para>
   </refsect1>
 
+  <refsect1>
+    <title>ENVIRONMENT</title>
+    <para>
+      The following environment variables control debug output
+      of the Expat library to standard error.
+      They are of interest mostly to developers.
+    </para>
+    <variablelist>
+      <varlistentry>
+        <term><envar>EXPAT_ACCOUNTING_DEBUG</envar>=(0|1|2|3)</term>
+        <listitem><para>Control verbosity of accounting debugging (default: 0).</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><envar>EXPAT_ENTITY_DEBUG</envar>=(0|1|2)</term>
+        <listitem><para>Control verbosity of entity debugging (default: 0).</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><envar>EXPAT_ENTROPY_DEBUG</envar>=(0|1)</term>
+        <listitem><para>Control verbosity of entropy debugging (default: 0).</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><envar>EXPAT_MALLOC_DEBUG</envar>=(0|1|2)</term>
+        <listitem><para>Control verbosity of allocation tracker (default: 0).</para>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
   
   <refsect1>
     <title>BUGS</title>
