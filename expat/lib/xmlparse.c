@@ -8221,16 +8221,15 @@ static int
 defineAttribute(ELEMENT_TYPE *type, ATTRIBUTE_ID *attId, bool isCdata,
                 bool isId, const XML_Char *value, XML_Parser parser) {
   DEFAULT_ATTRIBUTE *att;
-  if (value || isId) {
-    /* The handling of default attributes gets messed up if we have
-       a default which duplicates a non-default. */
-    NAMED *const nameFound
-        = lookup(parser, &(type->defaultAttForName), attId->name, 0);
-    if (nameFound)
-      return 1;
-    if (isId && ! type->idAtt && ! attId->xmlns)
-      type->idAtt = attId;
-  }
+
+  NAMED *const nameFound
+      = lookup(parser, &(type->defaultAttForName), attId->name, 0);
+  if (nameFound)
+    return 1;
+
+  if (isId && ! type->idAtt && ! attId->xmlns)
+    type->idAtt = attId;
+
   if (type->nDefaultAtts == type->allocDefaultAtts) {
     /* Detect and prevent integer overflow */
     if (type->allocDefaultAtts > SIZE_MAX / 2) {
