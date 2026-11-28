@@ -133,8 +133,7 @@ typedef unsigned long long XmlBigCount;
 typedef long expat_ssize_t;
 #  define EXPAT_SSIZE_MAX LONG_MAX
 
-void _INTERNAL_trim_to_complete_utf8_characters(const char *from,
-                                                const char **fromLimRef);
+void trimToCompleteUtf8Characters(const char *from, const char **fromLimRef);
 
 #  if defined(XML_GE) && XML_GE == 1
 unsigned long long testingAccountingGetCountBytesDirect(XML_Parser parser);

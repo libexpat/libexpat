@@ -276,39 +276,39 @@ enum { /* UTF8_cvalN is value of masked first byte of N byte sequence */
 };
 
 void
-_INTERNAL_trim_to_complete_utf8_characters(const char *from,
-                                           const char **fromLimRef) {
+trimToCompleteUtf8Characters(const char *from, const char **fromLimRef) {
   const char *fromLim = *fromLimRef;
-  size_t walked = 0;
-  for (; fromLim > from; fromLim--, walked++) {
+  size_t continuationBytes = 0;
+  for (; fromLim > from; fromLim--) {
     const unsigned char prev = (unsigned char)fromLim[-1];
     if ((prev & 0xf8u)
         == 0xf0u) { /* 4-byte character, lead by 0b11110xxx byte */
-      if (walked + 1 >= 4) {
+      if (continuationBytes + 1 >= 4) {
         fromLim += 4 - 1;
         break;
-      } else {
-        walked = 0;
       }
+      continuationBytes = 0;
     } else if ((prev & 0xf0u)
                == 0xe0u) { /* 3-byte character, lead by 0b1110xxxx byte */
-      if (walked + 1 >= 3) {
+      if (continuationBytes + 1 >= 3) {
         fromLim += 3 - 1;
         break;
-      } else {
-        walked = 0;
       }
+      continuationBytes = 0;
     } else if ((prev & 0xe0u)
                == 0xc0u) { /* 2-byte character, lead by 0b110xxxxx byte */
-      if (walked + 1 >= 2) {
+      if (continuationBytes + 1 >= 2) {
         fromLim += 2 - 1;
         break;
-      } else {
-        walked = 0;
       }
+      continuationBytes = 0;
     } else if ((prev & 0x80u)
                == 0x00u) { /* 1-byte character, matching 0b0xxxxxxx */
       break;
+    } else if ((prev & 0xC0u) == 0x80u) { /* continuation byte */
+      continuationBytes++;
+    } else {
+      continuationBytes = 0;
     }
   }
   *fromLimRef = fromLim;
@@ -332,7 +332,7 @@ utf8_toUtf8(const ENCODING *enc, const char **fromP, const char *fromLim,
   /* Avoid copying partial characters (from incomplete input). */
   {
     const char *const fromLimBefore = fromLim;
-    _INTERNAL_trim_to_complete_utf8_characters(*fromP, &fromLim);
+    trimToCompleteUtf8Characters(*fromP, &fromLim);
     if (fromLim < fromLimBefore) {
       input_incomplete = true;
     }

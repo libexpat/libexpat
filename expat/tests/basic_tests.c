@@ -438,12 +438,17 @@ END_TEST
 #define UTF8_FOLLOW "\xbf" /* 0b10111111 */
 
 START_TEST(test_utf8_auto_align) {
+  // Speed things up, the test does not use `XML_Parser`.
+  if (g_chunkSize != 0 || g_reparseDeferralEnabledDefault)
+    return;
+
   struct TestCase {
     ptrdiff_t expectedMovementInChars;
     const char *input;
   };
 
   struct TestCase cases[] = {
+      // Well-formed, single
       {00, ""},
 
       {00, UTF8_LEAD_1},
@@ -459,6 +464,35 @@ START_TEST(test_utf8_auto_align) {
       {-2, UTF8_LEAD_4 UTF8_FOLLOW},
       {-3, UTF8_LEAD_4 UTF8_FOLLOW UTF8_FOLLOW},
       {00, UTF8_LEAD_4 UTF8_FOLLOW UTF8_FOLLOW UTF8_FOLLOW},
+
+      // Well-formed, chain
+      {00, UTF8_LEAD_1 UTF8_LEAD_1},
+      {00, UTF8_LEAD_1 UTF8_LEAD_2 UTF8_FOLLOW},
+      {00, UTF8_LEAD_1 UTF8_LEAD_3 UTF8_FOLLOW UTF8_FOLLOW},
+      {00, UTF8_LEAD_1 UTF8_LEAD_4 UTF8_FOLLOW UTF8_FOLLOW UTF8_FOLLOW},
+
+      {00, UTF8_LEAD_1 UTF8_LEAD_1},
+      {00, UTF8_LEAD_2 UTF8_FOLLOW UTF8_LEAD_1},
+      {00, UTF8_LEAD_3 UTF8_FOLLOW UTF8_FOLLOW UTF8_LEAD_1},
+      {00, UTF8_LEAD_4 UTF8_FOLLOW UTF8_FOLLOW UTF8_FOLLOW UTF8_LEAD_1},
+
+      // Malformed
+      {-1, UTF8_FOLLOW},
+      {-2, UTF8_FOLLOW UTF8_FOLLOW},
+      {-3, UTF8_FOLLOW UTF8_FOLLOW UTF8_FOLLOW},
+      {-4, UTF8_FOLLOW UTF8_FOLLOW UTF8_FOLLOW UTF8_FOLLOW},
+
+      {-2, UTF8_LEAD_2 UTF8_LEAD_4},
+
+      {-3, UTF8_LEAD_3 UTF8_LEAD_4 UTF8_FOLLOW},
+      {-3, UTF8_LEAD_3 UTF8_FOLLOW UTF8_LEAD_4},
+
+      {-4, UTF8_LEAD_4 UTF8_LEAD_4 UTF8_FOLLOW UTF8_FOLLOW},
+      {-4, UTF8_LEAD_4 UTF8_FOLLOW UTF8_LEAD_4 UTF8_FOLLOW},
+      {-4, UTF8_LEAD_4 UTF8_FOLLOW UTF8_FOLLOW UTF8_LEAD_4},
+
+      {-1, "\xF8"},
+      {-3, UTF8_LEAD_2 "\xF8" UTF8_FOLLOW},
   };
 
   size_t i = 0;
@@ -468,7 +502,7 @@ START_TEST(test_utf8_auto_align) {
     const char *const fromLimInitially = fromLim;
     ptrdiff_t actualMovementInChars;
 
-    _INTERNAL_trim_to_complete_utf8_characters(cases[i].input, &fromLim);
+    trimToCompleteUtf8Characters(cases[i].input, &fromLim);
 
     actualMovementInChars = (fromLim - fromLimInitially);
     if (actualMovementInChars != cases[i].expectedMovementInChars) {
